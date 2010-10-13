@@ -12,11 +12,16 @@ using ResponseInfo = RTParser.Unifiable;
 namespace RTParser.Utils
 {
     [Serializable]
-    abstract public class CategoryInfoImpl1 : GraphLinkInfo, IAIMLInfo, IComparable<TemplateInfo>
+    abstract public class CategoryInfoImpl1 : GraphLinkInfo, IAIMLInfo, IComparable<TemplateInfo>,CategoryInfo
     {
-        public string Filename { get; set; }
+        public Unifiable Filename { get; set; }
+
+        public abstract GuardInfo Guard { get; set; }
+        public abstract ResponseInfo Response { get; set; }
+        public GraphMaster InGraph { get; set; }
+
         public PatternInfo Pattern { get; set; }
-        public List<ConversationCondition> Preconds;
+        public List<ConversationCondition> Preconds { get; set; }
         public TemplateInfo Template { get { return (TemplateInfo)this; } }
         public ThatInfo That { get; set; }
         public TopicInfo Topic { get; set; }
@@ -29,7 +34,10 @@ namespace RTParser.Utils
 
         //private TemplateInfo ParentCategory;
 
-        public bool IsTraced { get; set; }
+        abstract public bool IsTraced { get; set; }
+        virtual public bool IsDisabled { get; set; }
+        abstract public bool IsDisabledOutput { get; set; }
+        abstract public bool IsSearchDisabled { get; set; }
 
         protected CategoryInfoImpl1(PatternInfo pattern, XmlNode cateNode, LoaderOptions options)
             : base(cateNode)
@@ -38,8 +46,6 @@ namespace RTParser.Utils
             Filename = options.CurrentFilename;
         }
 
-        public bool IsDisabledOutput { get; set; }
-        public virtual bool IsDisabled { get; set; }
         public string WhyDisabled
         {
             get
@@ -48,7 +54,11 @@ namespace RTParser.Utils
                 {
                     return "IsDisabledOutput";
                 }
-                else if (IsDisabled)
+                else if (IsSearchDisabled)
+                {
+                    return "IsSearchDisabled";
+                }
+                else if (this.IsDisabled)
                 {
                     return "IsDisabled";
                 }
@@ -56,28 +66,28 @@ namespace RTParser.Utils
             }
         }
 
-        public XmlNode CategoryXml { get { return CheckXml(StaticXMLUtils.FindNode("category", CheckXml(srcNode), null)); } }
+        public XmlNode CategoryXml { get { return CheckXml(StaticXMLUtils.FindNodeOrHigher("category", CheckXml(srcNode), null)); } }
 
-        public XmlNode TemplateXmlNode
+        public virtual XmlNode TemplateXml
         {
-            get { return CheckXml(StaticXMLUtils.FindNode("template", CategoryXml, null)); }
+            get { return CheckXml(StaticXMLUtils.FindNode("template", srcNode, null)); }
         }
 
         public XmlNode TopicXml
         {
-            get { return CheckXml(StaticXMLUtils.FindNode("topic", CategoryXml, null)); }
+            get { return CheckXml(StaticXMLUtils.FindNode("topic", CategoryXml, null)) ?? StaticXMLUtils.FindHigher("topic", CategoryXml, null) ?? TopicStar; }
         }
 
         public XmlNode ThatXml
         {
-            get { return CheckXml(StaticXMLUtils.FindNode("that", CategoryXml, null)); }
+            get { return CheckXml(StaticXMLUtils.FindNode("that", CategoryXml, null)) ?? StaticXMLUtils.FindHigher("that", CategoryXml, null) ?? ThatStar; }
         }
 
         #region IAIMLInfo Members
 
         string IAIMLInfo.SourceInfo()
         {
-            return StaticXMLUtils.LocationInfo(CategoryXml);
+            return StaticXMLUtils.LocationInfo(TemplateXml);
         }
 
         public GraphMaster Graph
@@ -87,9 +97,8 @@ namespace RTParser.Utils
 
         //protected abstract XmlNode TemplateXml { get; set; }
         public virtual Node GraphmasterNode { get; set; }
-        public abstract XmlNode TemplateXml { get; }
 
-        public string ToFileString(PrintOptions printOptions)
+        virtual public string ToFileString(PrintOptions printOptions)
         {
             //if (XmlDocumentLineInfo.SkipXmlns && this.srcNode.Attributes != null) this.srcNode.Attributes.RemoveNamedItem("xmlns");
             string s = "";
@@ -175,7 +184,7 @@ namespace RTParser.Utils
                 s += "\">";
             }
 
-            s += printOptions.FormatXML(srcNode);
+            s += printOptions.FormatXML(CategoryXml);
             s += GetRuleStrings;
 
             if (hasTopic) s += "</topic>";
@@ -225,7 +234,7 @@ namespace RTParser.Utils
             XmlNode templateNode, ResponseInfo template, GuardInfo guard, TopicInfo topicInfo, Node patternNode, ThatInfo thatInfo, IEnumerable<ConversationCondition> conds)
         {
             if (NoInfo) return null;
-            var vv = new TemplateInfo(info, cateNode, templateNode, filename, template, guard, thatInfo, patternNode,
+            var vv = new TemplateInfoImpl(info, cateNode, templateNode, filename, template, guard, thatInfo, patternNode,
                                       thatInfo);
             vv.AddRules(conds);
             return vv;
@@ -276,20 +285,149 @@ namespace RTParser.Utils
 #endif
             // keep count of the number of categories that have been processed
         }
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            GraphMaster useRef = InGraph ?? Graph;
+            if (useRef == null)
+            {
+                TemplateInfo ci = obj as TemplateInfo;
+                if (ci != null)
+                {
+                    useRef = ci.InGraph ?? ci.Graph;
+                }
+            }
+            if (useRef == null || useRef.CompareTemplatesForReferenceIdentity)
+            {
+                return ReferenceEquals(this, obj);
+            }
+            return Equals(obj as CategoryInfo, true, false);
+        }
+        public bool Equals(CategoryInfo other, bool compareGraphs, bool comparePaths)
+        {
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+            bool vv;
+            var otherNode = other.GraphmasterNode;
+            var GraphmasterNode = this.GraphmasterNode;
+            if (!comparePaths)
+            {
+                if (otherNode == null || GraphmasterNode == null)
+                {
+                    comparePaths = true;
+                    compareGraphs = false;
+                }
+            }
+            if (compareGraphs)
+            {
+                vv = ReferenceEquals(otherNode, GraphmasterNode);
+                if (!vv) return false;
+            }
+            else
+            {
+                vv = (otherNode ?? GraphmasterNode) == (GraphmasterNode ?? otherNode);
+                if (!vv)
+                {
+                    return false;
+                }
+            }
+            if (comparePaths)
+            {
+                vv = Unifiable.SAME_MEANING(other.Pattern, Pattern);
+                if (!vv) return false;
+                vv = Unifiable.SAME_MEANING(other.That, That) && Unifiable.SAME_MEANING(other.Topic, Topic);
+                if (!vv) return false;
+            }
+            if (!SameTemplate(other.Template)) return false;
+            if (!SamePreconds(other.Preconds)) return false;
+            if (CategoryXml.OuterXml != other.CategoryXml.OuterXml)
+            {
+                return false;
+            }
+            if (Filename != other.Filename)
+            {
+                return true;
+            }
+            return true;
+        }
+
+        private bool SamePreconds(List<ConversationCondition> otherPreconds)
+        {
+            if (Preconds == null || Preconds.Count == 0)
+            {
+                return otherPreconds == null || otherPreconds.Count == 0;
+            }
+            if (otherPreconds == null || otherPreconds.Count == 0)
+            {
+                return Preconds.Count == 0;
+            }
+            lock (Preconds)
+            {
+                lock (otherPreconds)
+                    foreach (var precond in Preconds)
+                    {
+                        if (!otherPreconds.Contains(precond)) return false;
+                    }
+            }
+            return true;
+        }
+
+        virtual public bool SameTemplate(TemplateInfo other)
+        {
+            if (!ReferenceEquals(Template, this))
+            {
+                if (!Equals(other, Template))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                if (!Unifiable.SAME_MEANING(other.Response, Response)) return false;
+                if (!Unifiable.SAME_MEANING(other.Guard, Guard)) return false;
+            }
+            return true;
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = (Preconds != null ? Preconds.GetHashCode() : 0);
+                result = (result*397) ^ (Pattern != null ? Pattern.GetHashCode() : 0);
+                result = (result*397) ^ (That != null ? That.GetHashCode() : 0);
+                result = (result*397) ^ (Topic != null ? Topic.GetHashCode() : 0);
+                result = (result*397) ^ (GraphmasterNode != null ? GraphmasterNode.GetHashCode() : 0);
+                return result;
+            }
+        }
     }
 
-    public interface CategoryInfo
+    public interface CategoryInfo : IAIMLInfo
     {
-        ThatInfo That { get; set; }
-        bool IsDisabled { get; set; }
+        TopicInfo Topic { get; }
         PatternInfo Pattern { get; }
-        TemplateInfo Template { get; }
-        bool IsTraced { get; set; }
+        ThatInfo That { get; set; }
+
+        List<ConversationCondition> Preconds { get; }
+
+        bool IsDisabled { get; set; }
+        bool IsDisabledOutput { get; set; }
+        bool IsSearchDisabled { get; set; }
+
         XmlNode CategoryXml { get; }
-        Node GraphmasterNode { get; set; }
-        string Filename { get; }
+
+        TemplateInfo Template { get; }
+
         
-        void SetCategoryTag(Unifiable categoryPath, PatternInfo patternInfo, CategoryInfo categoryInfo, XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo);
+        bool IsTraced { get; set; }
+        Node GraphmasterNode { get; set; }
+        Unifiable Filename { get; }
+        ResponseInfo Response { get; set; }
+
+        //  void SetCategoryTag(Unifiable categoryPath, PatternInfo patternInfo, CategoryInfo categoryInfo, XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo);
         bool Matches(string match);
         void AddPrecondition(ThatInfo node);
         void AddPrecondition(ConversationCondition node);

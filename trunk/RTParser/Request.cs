@@ -15,7 +15,7 @@ using RTParser.Variables;
 namespace RTParser
 {
 
-    public interface Request : QuerySettingsSettable, QuerySettingsReadOnly
+    public interface Request : QuerySettingsSettable, QuerySettingsReadOnly, RequestOrQuery
     {
         int depth { get; set; }
         Unifiable Topic { get; set; }
@@ -25,6 +25,8 @@ namespace RTParser
         TimeSpan Durration { get; set; }
         //int DebugLevel { get; set; }
         //List<SubQuery> SubQueries { get; set; }
+
+
         /// <summary>
         /// The user that made this request
         /// </summary>
@@ -40,11 +42,12 @@ namespace RTParser
         /// <summary>
         /// The get/set bot dictionary (or user)
         /// </summary>
-        ISettingsDictionary ResponderPredicates { get; set; }
+        ISettingsDictionary ResponderPredicates { get; }
         /// <summary>
         /// If loading/saing settings from this request this may be eitehr the requestor/responders Dictipoanry
         /// </summary>
         ISettingsDictionary TargetSettings { get; set; }
+
 
         IEnumerable<Unifiable> ResponderOutputs { get; }
         Result CurrentResult { get; set; }
@@ -134,6 +137,7 @@ namespace RTParser
         void DisableTemplateUntilFinished(TemplateInfo templateInfo);
         void MarkTemplate(TemplateInfo queryTemplate);
         CommitQueue ExitQueue { get; }
+        int RequestDepth { get; set; }
         void Exit();
     }
 
@@ -144,6 +148,7 @@ namespace RTParser
     {
         #region Attributes
 
+        public int RequestDepth { get; set; }
         private int _MaxCanEvalResult = -1;
         public int MaxCanEvalResult
         {
@@ -425,7 +430,16 @@ namespace RTParser
 
         public override string ToString()
         {
-            return ToRequestString();
+            StringBuilder sb = new StringBuilder(ToRequestString());
+            sb.AppendLine();
+            Request r = this.ParentRequest;
+            while (r!=null)
+            {
+                string rToRequestString = r.ToRequestString();
+                sb.AppendLine(rToRequestString);
+                r = r.ParentRequest;
+            }
+            return sb.ToString().TrimEnd();
         }
         public string ToRequestString()
         {
@@ -444,9 +458,11 @@ namespace RTParser
                     }
                 }
             }
-            return String.Format("{0}: {1}, \"{2}\"", Requester == null ? "NULL" : (string) Requester.UserID,
-                                 Responder == null ? "Anyone" : (string) Responder.UserID,
-                                 unifiableToVMString);
+            return DLRConsole.SafeFormat(
+                "{0}: {1}, \"{2}\"",
+                RequestDepth + " " + Requester == null ? "NULL" : (string) Requester.UserID,
+                Responder == null ? "Anyone" : (string) Responder.UserID,
+                unifiableToVMString);
         }
 
         public RequestImpl OriginalSalientRequest { get; set; }
@@ -480,6 +496,7 @@ namespace RTParser
                 Requester = parent.Requester;
                 depth = parent.depth + 1;
                 OriginalSalientRequest = parent.OriginalSalientRequest;
+                RequestDepth = parent.RequestDepth + 1;
             }
             else
             {
@@ -883,7 +900,7 @@ namespace RTParser
             {
                 if (TargetSettings is SettingsDictionary) return (SettingsDictionary) TargetSettings;
                 var currentResult = CurrentResult;
-                return currentResult.Predicates;
+                return currentResult.RequesterPredicates;
             }
         }
         #if LESS_LEAN
@@ -895,12 +912,12 @@ namespace RTParser
 #endif
         public Unifiable grabSetting(string name)
         {
-            return RequesterPredicates.grabSetting(name);
+            return TargetSettings.grabSetting(name);
         }
 
         public bool addSetting(string name, Unifiable value)
         {
-            return RequesterPredicates.addSetting(name, value);
+            return TargetSettings.addSetting(name, value);
         }
 
         readonly private IList<TemplateInfo> RequestTemplates1 = new List<TemplateInfo>();
@@ -1044,12 +1061,34 @@ namespace RTParser
             request.ExitQueue.Add("exit subRequest", subRequest.Exit);
             return subRequest;
         }
+
         public bool CanUseRequestTemplate(TemplateInfo info)
         {
+            if (!CanUseRequestTemplate0(info)) return false;
+            return true;
+        }
+
+        public bool CanUseRequestTemplate0(TemplateInfo info)
+        {
+            if (info == null) return false;
             if (FoundInParents(info, thisRequest))
             {
                 //user.WriteLine("!CanUseTemplate ", info);
                 return false;
+            }
+            var prf0 = Proof;
+            if (prf0.Contains(info))
+            {
+                return false;
+            }
+            if (ParentRequest != null)
+            {
+                var prf1 = ParentRequest.Proof;
+                if (prf1 != prf0)
+                {
+                    bool fnd = prf1.Contains(info);
+                    return !fnd;
+                }
             }
             return true;
         }
@@ -1592,12 +1631,15 @@ namespace RTParser
             {
                 // writeToLog("Diableding temporily " + templateInfo);
             }
+            string infoName = "" + templateInfo;
+            //writeToLog("disabling0 " + infoName);
             rr.AddUndo(() =>
             {
+                //writeToLog("un-disabling0 " + infoName);
                 templateInfo.IsDisabledOutput = false;
             });
             rr.ExitQueue.Add(
-                "un-disable " + templateInfo,
+                "re-enabling " + infoName,
                 () =>
                     {
                         templateInfo.IsDisabledOutput = false;
@@ -1658,12 +1700,18 @@ namespace RTParser
         {
             try
             {
+              //  writeToLog("DOING NOW " + start.Key);
                 start.Value();
             }
             catch (Exception exception)
             {
                 RTPBot.writeDebugLine("ERROR in " + start.Key + " " + exception);
             }
+        }
+
+        public static void writeToLog(string p)
+        {
+           // throw new NotImplementedException();
         }
 
         readonly object SyncLock = new object();

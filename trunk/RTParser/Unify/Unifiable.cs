@@ -352,9 +352,48 @@ namespace RTParser
             return !(t == s);
         }
 
+        public bool SameMeaning(Unifiable t)
+        {
+            return SAME_MEANING(this, t);
+        }
+        static public bool SAME_MEANING(Unifiable t, Unifiable s)
+        {
+            return SAME_KEY(t, s, false);
+        }
+
+        static public bool SAME_KEY(Unifiable t, Unifiable s, bool caseSensitive)
+        {
+            if (!ReferenceEquals(t, null)) return t.SameMeaningCS(s, caseSensitive);
+            return ReferenceEquals(s, null);
+        }
+
+        protected virtual bool SameMeaningCS(Unifiable s, bool caseSensitive)
+        {
+            if (ReferenceEquals(this, s)) return true;
+            bool null2 = ReferenceEquals(s, null);
+            if (null2) return false;            
+            if (Equals(SpecialName, s.SpecialName))
+            {
+                return true;
+            }
+            if (caseSensitive)
+            {
+                if (AsString() == s.AsString())
+                {
+                    return true;
+                }
+                return false;
+            }
+            if (ToUpper() == s.ToUpper())
+            {
+                return true;
+            }
+            return false;
+        }
+
         static public bool operator ==(Unifiable t, object s)
         {
-            if (ReferenceEquals(t, s)) return true;
+            if (s is Unifiable) return SAME_KEY(t, (Unifiable) s, true);
             if (s is string)
             {
                 string ss = (string)s;
@@ -383,9 +422,14 @@ namespace RTParser
         }
         static public bool EQ(string t, string u)
         {
+            var unull = IsNull(u);
             if (t == null || t == "$NULL")
             {
-                return IsNull(u);
+                return unull;
+            }
+            if (unull)
+            {
+               return IsIncomplete(t);
             }
             if (t == "")
             {
@@ -399,7 +443,11 @@ namespace RTParser
             {
                 return IsMissing(u);
             }
-            if (IsNull(u) || IsIncomplete(u) || IsEMPTY(u))
+            if (IsValue(u))
+            {
+                return ToUpper(t) == u.ToUpper();
+            }
+            if (IsNull(u) || IsIncomplete(u) || IsEMPTY(u) || IsMissing(u))
             {
                 return false;
             }
@@ -531,7 +579,7 @@ namespace RTParser
             get { return Raw != null && ToUpper().Length == 0; }
         }
 
-        public abstract object SpecialName { get; }
+        public abstract string SpecialName { get; }
 
         public virtual bool IsFalse()
         {
@@ -1029,14 +1077,38 @@ namespace RTParser
 
         }
 
-
-        public virtual void AddCategory(CategoryInfo template)
+        public static bool NOCateIndex = true;
+        protected static readonly Dictionary<string, List<CategoryInfo>> categoryInfosDictionary = new Dictionary<string, List<CategoryInfo>>();
+        public List<CategoryInfo> CategoryInfos
         {
+            get
+            {
+                string strU = ToUpper();
+                List<CategoryInfo> categoryInfos1;
+                lock (categoryInfosDictionary)
+                {
+                    if (!categoryInfosDictionary.TryGetValue(strU, out categoryInfos1))
+                    {
+                        return null;
+                    }
+                }
+                return categoryInfos1;
+            }
+            set
+            {
+                string strU = ToUpper();
+                lock (categoryInfosDictionary) categoryInfosDictionary[strU] = value;
+            }
+        }
+        public virtual bool AddCategory(CategoryInfo template)
+        {
+            if (NOCateIndex) return false;
             throw new NotImplementedException();
         }
 
-        public virtual void RemoveCategory(CategoryInfo template)
+        public virtual bool RemoveCategory(CategoryInfo template)
         {
+            if (NOCateIndex) return false;
             throw new NotImplementedException();
         }
 
@@ -1080,7 +1152,7 @@ namespace RTParser
             }
             string p = StaticAIMLUtils.MakeAimlMatchable(FullPath.AsString().Replace("_", "*"));
             p = "<srai>" + p + "</srai>";
-            string t = StaticAIMLUtils.MakeAimlMatchable(newTemplateInfo.InnerXml);
+            string t = StaticAIMLUtils.MakeAimlMatchable(newTemplateInfo.TemplateXml.InnerXml);
 
             int firstTP = FirstMismatch(t, p);
             int lastTP = LastMismatch(t, p);
@@ -1115,6 +1187,43 @@ namespace RTParser
 
     public class SpecialStringUnifiable : StringUnifiable
     {
+        protected override bool SameMeaningCS(Unifiable s, bool caseSensitive)
+        {
+            if (ReferenceEquals(this, s)) return true;
+            bool null2 = ReferenceEquals(s, null);
+            if (null2) return false;
+            if (Equals(SpecialName, s.SpecialName))
+            {
+                return true;
+            }
+            if (caseSensitive)
+            {
+                if (str == s.AsString())
+                {
+                    return true;
+                }
+                return false;
+            }
+            if (ToUpper() == s.ToUpper())
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public override bool AddCategory(CategoryInfo template)
+        {
+            if (NOCateIndex) return false;
+            return base.AddCategory(template);
+            throw new NotImplementedException();
+        }
+
+        public override bool RemoveCategory(CategoryInfo template)
+        {
+            if (NOCateIndex) return false;
+            throw new NotImplementedException();
+        }
+
         private readonly string DebugName1;
 
         public override string ToUpper()
@@ -1148,7 +1257,7 @@ namespace RTParser
         {
             get { return str; }
         }
-        public override object SpecialName
+        public override string SpecialName
         {
             get { return DebugName1; }
         }

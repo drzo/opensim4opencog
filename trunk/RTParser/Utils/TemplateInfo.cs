@@ -14,30 +14,30 @@ using ResponseInfo = RTParser.Unifiable;
 namespace RTParser.Utils
 {
     [Serializable]
-    public sealed class TemplateInfo : CategoryInfoImpl1, CategoryInfo
+    public sealed class TemplateInfoImpl : CategoryInfoImpl1, TemplateInfo
     {
         //public CategoryInfo ParentCategoryInfo;
         public CategoryInfo CategoryInfo { get { return this; } }
         //public Node GraphmasterNode;
-        public GuardInfo Guard;
-        public ResponseInfo Response;
-        public SubQuery Query;
-        public double Rating = 1.0;
-        public Unifiable TextSaved;
-        public bool NeckCut = true;
+        public override GuardInfo Guard { get; set; }
+        public override ResponseInfo Response { get; set; }
+        public SubQuery Query { get; set; }
+        public double Rating { get; set; }
+        public Unifiable TextSaved { get; set; }
+        public bool NeckCut = true;        
 
-        public event Func<SubQuery, Request, bool> OutputsCreateOnSuccees;
-        public event Func<SubQuery, Request, bool> TemplateSucceededCallback;
-        public event Func<SubQuery, Request, bool> TemplateFailedCallback;
+//        public event Func<SubQuery, Request, bool> OutputsCreateOnSuccees;
+//        public event Func<SubQuery, Request, bool> TemplateSucceededCallback;
+//        public event Func<SubQuery, Request, bool> TemplateFailedCallback;
 
         public void OnOutputsCreated(SubQuery query, Request request)
         {
-            if (OutputsCreateOnSuccees != null) OutputsCreateOnSuccees(query, request);
+            //if (OutputsCreateOnSuccees != null) OutputsCreateOnSuccees(query, request);
         }
 
         public void OnTemplatesSucceeded(SubQuery query, Request request)
         {
-            if (TemplateSucceededCallback != null) TemplateSucceededCallback(query, request);
+            //if (TemplateSucceededCallback != null) TemplateSucceededCallback(query, request);
         }
         public void OnTemplatesFailed(SubQuery query, Request request)
         {
@@ -49,7 +49,7 @@ namespace RTParser.Utils
                     request.SuspendSearchLimits = false;
                 }
             }
-            if (TemplateFailedCallback != null) TemplateFailedCallback(query, request);
+            //if (TemplateFailedCallback != null) TemplateFailedCallback(query, request);
         }
 
         string _templateKey;
@@ -67,17 +67,17 @@ namespace RTParser.Utils
         {
             get
             {
-                var tn = StaticXMLUtils.FindNode("template", CategoryXml, null);
+                var tn = StaticXMLUtils.FindNode("template", srcNode, null);
                 if (tn != null) return tn;
                 var response = Response;
                 if (response != null && response.PatternNode != null) return response.PatternNode;
-                return TemplateXmlNode;
+                return TemplateXml;
             }
             // set { Response.srcNode = value; }
         }
 
 
-        public TemplateInfo(PatternInfo pattern, XmlNode cateNode, XmlNode templateNode,
+        public TemplateInfoImpl(PatternInfo pattern, XmlNode cateNode, XmlNode templateNode,
             LoaderOptions options, ResponseInfo responseInfo,
             GuardInfo guard, TopicInfo topicInfo, Node patternNode, ThatInfo thatInfo)
             : base(pattern, cateNode, options)
@@ -86,9 +86,13 @@ namespace RTParser.Utils
             {
                 throw new UnauthorizedAccessException();
             }
+            srcNode = templateNode;
+            Rating = 1.0;
             Guard = guard;
             That = thatInfo;
             Response = responseInfo;
+            Topic = topicInfo;
+            Pattern = pattern;
             GraphmasterNode = patternNode;
             //ParentCategoryInfo = categoryInfo;
             try
@@ -133,37 +137,31 @@ namespace RTParser.Utils
             get { return CategoryInfo.IsTraced; }
             set { CategoryInfo.IsTraced = value; }
         }*/
+        override public bool IsTraced { get; set; }
+        
+        override public bool IsDisabledOutput { get; set; }
+        override public bool IsSearchDisabled { get; set; }
 
         public override bool IsDisabled
         {
-            get { return base.IsDisabledOutput || base.IsDisabled; }
+            get { return IsDisabledOutput || IsSearchDisabled || base.IsDisabled; }
             set
             {
                 if (value != base.IsDisabled)
                 {
                     base.IsDisabled = value;
                     SetDisabledInNode(value);
-                }
+                }                
+                IsSearchDisabled = value;
+                IsDisabledOutput = value;
             }
         }
 
         public void SetDisabledInNode(bool value)
         {
             Node node = GraphmasterNode;
-            if (value)
-            {
-                if (node.TemplateInfos != null) node.TemplateInfos.Remove(this);
-                node.TemplateInfosDisabled = node.TemplateInfosDisabled ?? new List<TemplateInfo>();
-                node.TemplateInfosDisabled.Add(this);
-            }
-            else
-            {
-                //node.TemplateInfosDisabled = node.TemplateInfosDisabled ?? new List<TemplateInfo>();                        
-                node.TemplateInfosDisabled.Remove(this);
-
-                node.TemplateInfos = node.TemplateInfos ?? new List<TemplateInfo>();
-                node.TemplateInfos.Add(this);
-            }
+            if (node!=null) node.SetDisabled(this, value);
+            if (InGraph != null) InGraph.SetDisabled(this, value);
         }
 
         public bool IsSilent
@@ -191,7 +189,7 @@ namespace RTParser.Utils
             get { return GraphmasterNode.Graph; }
         }
 
-        public string ToFileString(PrintOptions printOptions)
+        override public string ToFileString(PrintOptions printOptions)
         {
             if (CategoryInfo != null) return base.ToFileString(printOptions);
             return ToString();
@@ -229,7 +227,7 @@ namespace RTParser.Utils
                     rules = "\n" + rules;
                 }
                 string disables = WhyDisabled ?? "";
-                return "" + TextPatternUtils.CleanWhitepaces(tryit.OuterXml) + " " + disables +
+                return "" + disables + " " + TextPatternUtils.CleanWhitepaces(tryit.OuterXml) + " " +
                        StaticXMLUtils.LocationEscapedInfo(tryit) + rules;
             }
             //string s = base.ToString();
@@ -245,7 +243,7 @@ namespace RTParser.Utils
             //            return s;
         }
 
-        public override Unifiable FullPath { get; set; }
+        //public override Unifiable FullPath { get; set; }
 
         public static TemplateInfo GetTemplateInfo(XmlNode template, GuardInfo guard, ThatInfo thatInfo, Node node,
                                                    CategoryInfo category, GraphMaster graphMaster)
@@ -269,10 +267,18 @@ namespace RTParser.Utils
                 NoInfo = prev;
             }
         }
-
-        static public string MakeKey(XmlNode templateNode, XmlNode guard, XmlNode thatInfo)
+        internal static string MakeKey(XmlNode templateNode, XmlNode guard, List<ConversationCondition> additionalRules)
         {
-            return MakeKey(makeStar(templateNode), makeStar(guard), true ? null : makeStar(thatInfo));
+            if (additionalRules == null || additionalRules.Count==0)
+            {
+                return MakeKey(makeStar(templateNode), makeStar(guard), null);
+            }
+            return MakeKey(makeStar(templateNode), makeStar(guard), true ? null : MakeRuleStrings(additionalRules));
+        }
+
+        static public string MakeKey(XmlNode templateNode, XmlNode guard/*, XmlNode thatInfo*/)
+        {
+            return MakeKey(makeStar(templateNode), makeStar(guard), null);//true ? null : makeStar(thatInfo));
         }
 
         private static string makeStar(XmlNode templateNode)
@@ -291,10 +297,10 @@ namespace RTParser.Utils
 
         static public string MakeKey(string newStr, string newGuard, string newThat)
         {
-            var f = AsStar(newStr);
+            var f = AsStar(newStr) + " " + AsStar(newThat);
             string gs = AsStar(newGuard);
-            if (gs == "*") return StaticAIMLUtils.MakeAimlMatchable(f);
-            return StaticAIMLUtils.MakeAimlMatchable(f + " guardbom " + gs);
+            if (gs != "*") return StaticAIMLUtils.MakeAimlMatchable(f);
+             return StaticAIMLUtils.MakeAimlMatchable(f + " guardbom " + gs);
         }
 
         internal static string AsStar(string that)
@@ -331,7 +337,7 @@ namespace RTParser.Utils
             {
                 if (_templateKey == null)
                 {
-                    return MakeKey(Pattern, Guard != null ? Guard.FullPath : null, That.FullPath);
+                    _templateKey = MakeKey(Response, Guard != null ? Guard.FullPath : null, GetRuleStrings);
                     //  _templateKey = MakeKey(Output, Guard != null ? Guard.Output : null, That.PatternNode);
                 }
                 return _templateKey;
@@ -342,7 +348,7 @@ namespace RTParser.Utils
             }
         }
 
-        public void AppendTemplate(XmlNode node, XmlNode category, List<ConversationCondition> nodes)
+        public TemplateInfo AppendTemplate(XmlNode templateNode, XmlNode category, List<ConversationCondition> nodes)
         {
             throw new NotImplementedException();
         }
@@ -376,6 +382,14 @@ namespace RTParser.Utils
                 string s = "";
                 var templateInfo = this.Template;
                 var addRules = templateInfo.Preconds;
+                return MakeRuleStrings(addRules);
+            }
+        }
+
+        static public string MakeRuleStrings(IEnumerable<ConversationCondition> addRules )
+        {
+            {
+                string s = "";
                 if (addRules != null)
                 {
                     int c = 1;
@@ -388,6 +402,103 @@ namespace RTParser.Utils
                 return s;
             }
         }
+
+        public bool BuildIndexes()
+        {
+           return BuildIndex(GetIndexObjects());
+        }
+        public bool RemoveIndexes()
+        {
+           return RemoveIndex(GetIndexObjects());
+        }
+
+        private IEnumerable<Unifiable> GetIndexObjects()
+        {
+            return new[]
+                       {
+                           makeStarNamed(Filename, "Filename"),
+                           makeStarNamed(Pattern, "Pattern"),
+                           makeStarNamed(Guard, null),
+                           makeStarNamed(Response, "Response"), 
+                           makeStarNamed(That, null),
+                           makeStarNamed(Topic, null)
+                       };
+        }
+
+        private Unifiable makeStarNamed(Unifiable phrase, string ifNullOrStar)
+        {
+            if (phrase == null)
+            {
+                if (ifNullOrStar == null) return ifNullOrStar;
+                return "No" + ifNullOrStar;
+            }
+            if (phrase == "*")
+            {
+                if (ifNullOrStar == null) return ifNullOrStar;
+                return "Star" + ifNullOrStar;
+            }
+            if (phrase == "_")
+            {
+                if (ifNullOrStar == null) return ifNullOrStar;
+                return "One" + ifNullOrStar;
+            }
+            return phrase;
+        }
+
+        private bool BuildIndex(IEnumerable<Unifiable> names)
+        {
+            if (names == null) return false;
+            bool didSomething = false;
+            foreach (var name in names)
+            {
+                if (name != null)
+                {
+                    didSomething |= name.AddCategory(this);                   
+                }
+            }
+            return didSomething;
+        }
+
+        private bool RemoveIndex(IEnumerable<Unifiable> names)
+        {
+            if (names == null) return false;
+            bool didSomething = false;
+            foreach (var name in names)
+            {
+                if (name != null)
+                {
+                    didSomething |= name.RemoveCategory(this);
+                }
+            }
+            return didSomething;
+        }
+    }
+
+    public interface TemplateResult
+    {
+        Unifiable TextSaved { get; set; }
+        double Rating { get; set; }
+    }
+    public interface TemplateInfo : CategoryInfo, TemplateResult
+    {
+        XmlNode TemplateXml { get; }
+        bool IsSilent { get; }
+        XmlNode ClonedOutput { get; }
+        CategoryInfo CategoryInfo { get; }
+        GuardInfo Guard { get; set; }
+        SubQuery Query { get; set; }
+        string TemplateKey { get; set; }
+        GraphMaster InGraph { get; set; }
+        //double Rating { get; }
+        bool IsSatisfied(SubQuery query);
+        void AddRules(IEnumerable<ConversationCondition> additionalRules);
+        TemplateInfo AppendTemplate(XmlNode templateNode, XmlNode cateNode, List<ConversationCondition> additionalRules);
+        bool AimlSameKey(string templateKey);
+        void OnTemplatesFailed(SubQuery query, Request request);
+        void OnTemplatesSucceeded(SubQuery query, Request request);
+        void OnOutputsCreated(SubQuery query, Request request);
+        bool BuildIndexes();
+        bool RemoveIndexes();
     }
 
     public interface IAIMLInfo
@@ -396,6 +507,7 @@ namespace RTParser.Utils
         string ToFileString(PrintOptions printOptions);
         string SourceInfo();
         TemplateInfo Template { get; }
-        bool IsDisabled { get; set; }
+        bool IsDisabledOutput { get; set; }
+        bool IsSearchDisabled { get; set; }
     }
 }

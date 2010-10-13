@@ -44,7 +44,7 @@ namespace RTParser
 
         private object ChatWithThisUser(string cmd, Request request)
         {
-            Request req = request.CreateSubRequest(cmd);
+            RequestImpl req = request.CreateSubRequest(cmd);
             req.Responder = this;
             req.IsToplevelRequest = request.IsToplevelRequest;
             return bot.LightWeigthBotDirective(cmd, req);
@@ -916,7 +916,26 @@ namespace RTParser
                         break;
                 }
             }
-            //if (input == "") return false;
+            string output;
+            string cmd;
+            if (!SplitOff(input," ", out cmd, out output))
+            {
+                cmd = "";
+                output = input;
+            }
+            if (cmd.StartsWith("@"))
+            {
+                cmd = cmd.Substring(1).Trim();
+                if (cmd == "proof")
+                {
+                    var cis = UsedTemplates;
+                    console("-----------------------------------------------------------------");
+                    console("LS: count=" + cis.Count + " local=" + ListeningGraph);
+                    GraphMaster.PrintToWriter(cis, PrintOptions.SAVE_TO_FILE, new OutputDelegateWriter(console), null);
+                    console("-----------------------------------------------------------------");
+                }
+            }
+            if (input == "") return false;
             if (input == "")
             {
                 console(Predicates.ToDebugString());

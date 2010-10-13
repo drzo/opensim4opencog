@@ -10,7 +10,7 @@ using UPath = RTParser.Unifiable;
 
 namespace RTParser
 {
-    public interface Result: InteractionResult
+    public interface Result : InteractionResult, RequestOrQuery
     {
         /// <summary>
         /// The bot that is providing the answer
@@ -85,7 +85,7 @@ namespace RTParser
 
         bool IsEmpty { get; }
         int OutputSentenceCount { get; }
-        ISettingsDictionary Predicates { get; }
+        ISettingsDictionary RequesterPredicates { get; }
         // SubQuery CurrentQuery { get; set; }
         // bool IsComplete { get; set; }
         bool IsSalient { get; }
@@ -390,11 +390,22 @@ namespace RTParser
             get { lock (OutputSentences) return OutputSentences.Count; }
         }
 
-        public ISettingsDictionary Predicates
+        public ISettingsDictionary RequesterPredicates
         {
-            get { return Requester.Predicates; }
+            get { return CurrentQuery.RequesterPredicates; }
         }
 
+        public ISettingsDictionary ResponderPredicates
+        {
+            get { return CurrentQuery.ResponderPredicates; }
+        }
+
+        public ISettingsDictionary TargetSettings
+        {
+            get { return CurrentQuery.TargetSettings; }
+            set { CurrentQuery.TargetSettings = value; }
+        }
+        
         public User Responder
         {
             get { return request.Responder; }

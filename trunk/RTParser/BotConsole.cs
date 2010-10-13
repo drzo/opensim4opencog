@@ -291,7 +291,7 @@ namespace RTParser
             {
                 User BotAsAUser = myBot.BotAsUser;
                 myUser = myBot.LastUser;
-                string myName = myUser.UserName;
+                string myName = BotAsAUser.UserName;
                 writeLine("-----------------------------------------------------------------");
                 string input = TextFilter.ReadLineFromInput(DLRConsole.SystemWrite, myUser.UserName + "> ");
                 if (input == null)

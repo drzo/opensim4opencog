@@ -44,7 +44,7 @@ namespace RTParser.Utils
 
         internal abstract XmlNode srcNode { get; set; }
         abstract public override string ToString();
-        abstract public Unifiable FullPath { get; set; }
+        //abstract public Unifiable FullPath { get; set; }
 
     }
 }

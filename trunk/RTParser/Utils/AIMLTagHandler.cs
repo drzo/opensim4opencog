@@ -57,7 +57,20 @@ namespace RTParser.Utils
         /// <summary>
         /// A representation of the user who made the request
         /// </summary>
-        public User user { get; set; }
+        public User user
+        {
+            get { return request.Requester; }
+            set
+            {
+                if (value != null)
+                {
+                    if (value != request.Requester)
+                    {
+                        return;                        
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Default ctor to use when late binding
@@ -82,14 +95,14 @@ namespace RTParser.Utils
                               Result result,
                               XmlNode templateNode)
             : base(bot, templateNode.OuterXml)
-        {
-            this.user = user;
+        {            
             this.query = query;
             this._request = request;
             this.result = result;
             this.templateNode = templateNode;
             inputString = templateNode.OuterXml;
             initialString = inputString;
+            this.user = user;
             if (this.templateNode.Attributes != null) this.templateNode.Attributes.RemoveNamedItem("xmlns");
         }
 

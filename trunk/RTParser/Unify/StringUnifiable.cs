@@ -37,7 +37,7 @@ namespace RTParser
                     throw;
                 }
             }
-            if (restCache != null) total++;
+            if (!ReferenceEquals(restCache, null)) total++;
             restCache = null;
             if (upperCache != null) total++;
             upperCache = null;
@@ -137,19 +137,40 @@ namespace RTParser
             return strictness.CompareTo(otherStrictness);
         }
 
-        private List<CategoryInfo> categoryInfos = null;
-        public static bool NOCateIndex = true;
-        public override void AddCategory(CategoryInfo template)
+        public override bool AddCategory(CategoryInfo template)
         {
-            if (NOCateIndex) return;
-            categoryInfos = categoryInfos ?? new List<CategoryInfo>();
+            if (NOCateIndex) return false;
+            List<CategoryInfo> categoryInfos;
+            lock (categoryInfosDictionary)
+            {
+                categoryInfos = CategoryInfos = CategoryInfos ?? new List<CategoryInfo>();
+            }
+            lock (categoryInfos)
+            {
+                categoryInfos.Add(template);
+            }
+            if (categoryInfos.Count%10000 == 0)
+            {
+                writeToLog("AddCategory '" + SpecialName + "' Count=" + categoryInfos.Count + " for " + template);
+            }
+            return false;
         }
-        public override void RemoveCategory(CategoryInfo template)
+
+        public override bool RemoveCategory(CategoryInfo template)
         {
-            if (template != null && categoryInfos != null)
+            if (NOCateIndex) return false;
+            if (template == null) return false;
+            List<CategoryInfo> categoryInfos;
+            lock (categoryInfosDictionary)
+            {
+                categoryInfos = CategoryInfos;
+                if (categoryInfos == null) return false;
+            }
+            lock (categoryInfos)
             {
                 categoryInfos.Remove(template);
-                if (categoryInfos.Count == 0) categoryInfos = null;
+                if (categoryInfos.Count == 0) CategoryInfos = null;
+                return true;
             }
         }
 
@@ -181,8 +202,22 @@ namespace RTParser
 
         public override string ToUpper()
         {
-            if (upperCache == null)
+            if (upperCache != null) return upperCache;
+            try
             {
+                if (upperCache != null) return upperCache;
+            }
+            finally
+            {
+                if (upperCache == null) upperCache = ToUpper0();
+            }
+            return upperCache;
+        }
+
+        public string ToUpper0()
+        {
+            string upperCache = null;
+            {               
                 string schached = str;
                 if (ContainsXml(schached))
                 {                
@@ -595,6 +630,30 @@ namespace RTParser
                                Replace("/ ", "/").
                 Replace(" >", ">").Replace("> ", ">").
                                Replace(" <", "<").Replace("< ", "<"));*/
+        }
+
+        protected override bool SameMeaningCS(Unifiable s, bool caseSensitive)
+        {
+            if (ReferenceEquals(this, s)) return true;
+            bool null2 = ReferenceEquals(s, null);
+            if (null2) return false;
+            if (str == (string)s.SpecialName)
+            {
+                return true;
+            }
+            if (caseSensitive)
+            {
+                if (str == s.AsString())
+                {
+                    return true;
+                }
+                return false;
+            }
+            if (ToUpper() == s.ToUpper())
+            {
+                return true;
+            }
+            return false;
         }
 
         public override string ToString()
@@ -1052,7 +1111,7 @@ namespace RTParser
             get { return ToArray().Length; }
         }
 
-        public override object SpecialName
+        public override string SpecialName
         {
             get { return AsString(); }
         }

@@ -37,7 +37,7 @@ namespace RTParser.AIMLTagHandlers
             : base(bot, user, query, request, result, templateNode)
         {
 
-            GetTargetSettings = pp ?? (() => this.request.TargetSettings);
+            GetTargetSettings = pp ?? (() => this.query.TargetSettings);
         }
 
         protected override Unifiable ProcessLoad(LoaderOptions loaderOptions)

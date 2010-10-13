@@ -10,7 +10,7 @@ namespace RTParser.Utils
     {
         public PrintOptions()
         {
-            //tw = new StringWriter(sw);
+            ClearHistory();
         }   
         public XmlWriterSettings XMLWriterSettings = new XmlWriterSettings();
 
@@ -112,8 +112,8 @@ namespace RTParser.Utils
         public void ClearHistory()
         {
             InsideAiml = false;
-            InsideTopic = null;
-            InsideThat = null;
+            InsideTopic = "*";
+            InsideThat = "*";
             InsideFilename = null;
             CurrentGraphName = null;
             dontPrint.Clear();
