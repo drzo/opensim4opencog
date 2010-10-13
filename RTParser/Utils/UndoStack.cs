@@ -15,6 +15,11 @@ namespace RTParser.Utils
 
         private UndoStack(object o)
         {
+            UndoStackHolder holder = o as UndoStackHolder;
+            if (holder != null)
+            {
+                holder.UndoStackValue = this;
+            }
             objext = o;
         }
 
@@ -112,7 +117,6 @@ namespace RTParser.Utils
             }
         }
 
-
         public void CommitAll()
         {
             lock (this)
@@ -124,35 +128,74 @@ namespace RTParser.Utils
 
         public static UndoStack GetStackFor(object o)
         {
+            UndoStackHolder holder = o as UndoStackHolder;
+            UndoStack u;
+            if (holder != null)
+            {                
+                u = holder.UndoStackValue;
+                if (u != null) return u;
+            }            
             lock (ObjectUndoStacks)
-            {
-                UndoStack u;
+            {                
                 if (!ObjectUndoStacks.TryGetValue(o, out u))
                 {
                     u = ObjectUndoStacks[o] = new UndoStack(o);
+                    if (holder != null) holder.UndoStackValue = u;
                 }
                 return u;
             }
         }
 
-        public static UndoStack FindStackFor(object o)
+        public static UndoStack FindStackFor(object o, bool remove)
         {
             if (o == null) return null;
-            lock (ObjectUndoStacks)
+            UndoStackHolder holder = o as UndoStackHolder;
+            UndoStack u;
+            if (holder != null)
             {
-                UndoStack u;
-                if (ObjectUndoStacks.TryGetValue(o, out u))
-                {
-                    return u;
-                }
-                return null;
+                u = holder.UndoStackValue;
+                if (u != null) return u;
             }
+            if (remove)
+            {
+                lock (ObjectUndoStacks)
+                {
+                    if (ObjectUndoStacks.TryGetValue(o, out u))
+                    {                       
+                        ObjectUndoStacks.Remove(o);
+                        return u;
+                    }
+                }
+            }
+            return null;
         }
 
-        public static void FindUndoAll(object query)
+        public static void FindUndoAll(object o, bool remove)
         {
-            UndoStack u = FindStackFor(query);
-            if (u != null) u.UndoAll();
+            UndoStackHolder holder = o as UndoStackHolder;
+            UndoStack u;
+            if (holder != null)
+            {
+                u = holder.UndoStackValue;
+                if (u != null)
+                {
+                    u.UndoAll();           
+                    return;
+                }
+            }       
+            lock (ObjectUndoStacks)
+            {
+                if (ObjectUndoStacks.TryGetValue(o, out u))
+                {
+                    ObjectUndoStacks.Remove(o);
+                    u.UndoAll();
+                }
+            }
         }
     }
+    public interface UndoStackHolder
+    {
+        UndoStack UndoStackValue { get; set; }
+    }
+   
 }

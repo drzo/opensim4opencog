@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using AIMLbot.Utils;
 using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using RTParser.Database;
 using RTParser.Normalize;
 using RTParser.Utils;
@@ -74,7 +75,7 @@ namespace RTParser
                 foreach (var list in EnglishSentences)
                 {
                     if (gather == 0) break;
-                    string list0 = list.Trim();
+                    string list0 = StaticXMLUtils.Trim(list);
                     if (list0.Length > 0)
                     {
                         result.AppendLine(list);

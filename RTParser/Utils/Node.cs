@@ -415,13 +415,20 @@ namespace RTParser.Utils
                 {
                     return null;
                 }
-                t.IsDisabled = false;
+                t.IsSearchDisabled = false;
                 bool isTraced;
                 if (TryParseBool(nodes, "isTraced", out isTraced))
                 {
                     t.IsTraced = isTraced;
                 }
+                t.IsDisabledOutput = false;
                 if (t != null) t.AddRules(additionalRules);
+
+                bool isDisabled;
+                if (TryParseBool(nodes, "disabled", out isDisabled))
+                {
+                    t.IsDisabled = isDisabled;
+                }
                 return new List<CategoryInfo> { t };
             }
         }
@@ -456,8 +463,8 @@ namespace RTParser.Utils
                                                 LoaderOptions loaderOptions, PatternInfo patternInfo,
                                                 List<ConversationCondition> additionalRules)
         {
-            string templateKey = TemplateInfo.MakeKey(templateNode, (guard != null ? guard.PatternNode : null),
-                                                      thatInfo != null ? thatInfo.PatternNode : XmlStar);
+            string templateKey = TemplateInfoImpl.MakeKey(templateNode, (guard != null ? guard.PatternNode : null),
+                                                      additionalRules);
 
             GraphMaster master = loaderOptions.CtxGraph;
             if (TemplateInfos == null)
@@ -529,7 +536,7 @@ namespace RTParser.Utils
             // last in first out addition
             ResponseInfo responseInfo = templateNode.InnerXml;
             TemplateInfo newTemplateInfo =
-                (TemplateInfo) TemplateInfo.GetCategoryInfo(patternInfo, cateNode, loaderOptions, templateNode,
+                (TemplateInfo)CategoryInfoImpl1.GetCategoryInfo(patternInfo, cateNode, loaderOptions, templateNode,
                                                             responseInfo, guard, topicInfo, this, thatInfo,
                                                             additionalRules);
             /*
@@ -592,6 +599,7 @@ namespace RTParser.Utils
                 throw new InvalidCastException("weird");
             }
             TemplateInfos.Insert(0, newTemplateInfo);
+            newTemplateInfo.BuildIndexes();
             return newTemplateInfo;
         }
 
@@ -607,24 +615,68 @@ namespace RTParser.Utils
                         foreach (TemplateInfo list in newUList)
                         {
                             if (onlyNonSilent && list.IsSilent) continue;
-                            DisableTemplate(list);
+                            DeleteTemplate(list);
                         }
                     }
-                    TemplateInfos.Clear();
-                    TemplateInfos = null;
+                    if (TemplateInfos != null)
+                    {
+                        TemplateInfos.Clear();
+                        TemplateInfos = null;
+                    }
                 }
             }
         }
 
 
-        private void DisableTemplate(TemplateInfo info)
+        public void DeleteTemplate(TemplateInfo info)
         {
             lock (SyncObject)
             {
-                if (TemplateInfos != null) TemplateInfos.Remove(info);
-                if (TemplateInfosDisabled == null) TemplateInfosDisabled = new UList();
-                info.Graph.DisableTemplate(info);
-                TemplateInfosDisabled.Add(info);
+                //writeToLog("DeleteTemplate: " + info);
+                info.IsTraced = true;
+                Node prevNode = info.GraphmasterNode;
+                if (prevNode == this)
+                {
+                    info.GraphmasterNode = null;
+                }
+                else if (prevNode != null)
+                {
+                    writeToLog("DeleteTemplate: otherNode " + prevNode + " " + info);
+                    prevNode.DeleteTemplate(info);
+                }
+                else
+                {
+                    writeToLog("DeleteTemplate: nodeless " + info);
+                }
+                bool found = false;
+                info.IsDisabled = true;
+                if (TemplateInfosDisabled != null)
+                {
+                    if (TemplateInfosDisabled.Remove(info))
+                    {
+                        found = true;
+                        if (TemplateInfosDisabled.Count == 0) TemplateInfosDisabled = null;
+                    }
+                }
+                if (TemplateInfos != null)
+                {
+                    if (TemplateInfos.Remove(info))
+                    {
+                        found = true;
+                        if (TemplateInfos.Count == 0) TemplateInfos = null;
+
+                    }
+                }
+                if (!found)
+                {
+                    writeToLog("DeleteTemplate: Unknown " + info);
+                }
+                if (info.InGraph == Graph)
+                {
+                    Graph.RemoveTemplate(info);
+                }
+                info.BuildIndexes();
+                info.GraphmasterNode = prevNode;
             }
         }
 
@@ -679,8 +731,7 @@ namespace RTParser.Utils
             // if we do then pass the handling of this sentence down the branch to the 
             // child nodemapper otherwise the child nodemapper doesn't yet exist, so create a new one  \
             bool found = false;
-            string fs = firstWord.ToUpper();
-            fs = ToKey(fs);
+            string fs = ToKey(firstWord);
             Node childNode;
             lock (SyncObject)
             {
@@ -764,11 +815,11 @@ namespace RTParser.Utils
             return children.TryGetValue(fs, out childNode);
         }
 
-        private static string ToKey(string fs0)
+        private static string ToKey(Unifiable fs0W)
         {
             const bool doEs = true;
             const bool doSEs = true;
-            fs0 = Unifiable.Intern(ToUpper(Trim(fs0)));
+            string fs0 = fs0W.ToUpper();
             if (false && NatLangDb.BeAUX.Contains(" " + fs0 + " ")) return "BeAux";
 
             if (fs0.StartsWith("FAV")) return "FAV";
@@ -1294,9 +1345,13 @@ namespace RTParser.Utils
             get
             {
                 if (TemplateInfos == null) return true;
-                int tc = TemplateInfos.Count;
-                if (tc == 0) return true;
-                if (tc == 1) return TemplateInfos[0].IsDisabled;
+                lock (SyncObject)
+                {
+                    int tc = TemplateInfos.Count;
+
+                    if (tc == 0) return true;
+                    if (tc == 1) return TemplateInfos[0].IsDisabled;
+                }
                 return false;
             }
         }
@@ -1394,6 +1449,39 @@ namespace RTParser.Utils
         public ParentChild ParentObject
         {
             get { return _parentObject; }
+        }
+
+        internal void SetDisabled(TemplateInfo templateInfo, bool value)
+        {
+            lock (SyncObject)
+            {
+                if (value)
+                {
+                    bool found = false;
+                    if (this.TemplateInfos != null)
+                    {
+                        found = this.TemplateInfos.Remove(templateInfo);
+                        if (found && this.TemplateInfos.Count == 0) this.TemplateInfos = null;
+                    }
+
+                    this.TemplateInfosDisabled = this.TemplateInfosDisabled ?? new List<TemplateInfo>();
+                    if (!found && this.TemplateInfosDisabled.Contains(templateInfo)) return;
+                    this.TemplateInfosDisabled.Add(templateInfo);
+                }
+                else
+                {
+                    bool found = false;                        
+                    if (this.TemplateInfosDisabled != null)
+                    {
+                        found = this.TemplateInfosDisabled.Remove(templateInfo);
+                        if (found && this.TemplateInfosDisabled.Count == 0) this.TemplateInfosDisabled = null;
+                    }
+
+                    this.TemplateInfos = this.TemplateInfos ?? new List<TemplateInfo>();
+                    if (!found && this.TemplateInfos.Contains(templateInfo)) return;
+                    this.TemplateInfos.Add(templateInfo);
+                }
+            }
         }
     }
 

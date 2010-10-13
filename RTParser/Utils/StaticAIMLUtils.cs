@@ -229,7 +229,8 @@ namespace RTParser.Utils
                 foreach (XmlAttribute node in collection)
                 {
                     bool found;
-                    switch (node.Name.ToLower())
+                    string n = node.Name.ToLower();
+                    switch (n)
                     {
                         case "graph":
                             {                                
@@ -284,7 +285,6 @@ namespace RTParser.Utils
 
                         default:
                             {
-                                string n = node.Name;
                                 lock (ReservedAttributes)
                                 {
                                     if (ReservedAttributes.Contains(n))
@@ -325,7 +325,7 @@ namespace RTParser.Utils
                                 }
 
                                 Unifiable v = ReduceStar<Unifiable>(node.Value, query, dict, out found);
-                                UndoStack.FindUndoAll(thiz);
+                                UndoStack.FindUndoAll(thiz, true);
                                 savedValues = savedValues ?? UndoStack.GetStackFor(thiz);
                                 //savedValues = savedValues ?? query.GetFreshUndoStack();
                                 savedValues.pushValues(dict, n, v);

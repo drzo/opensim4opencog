@@ -128,6 +128,7 @@ namespace RTParser.Utils
         public bool DistinguishSilenetTags = true;
 
         public bool IsParallel = false;
+        public bool CompareTemplatesForReferenceIdentity = true;
 
         static GraphMaster()
         {
@@ -364,12 +365,15 @@ namespace RTParser.Utils
 
         private void CheckMismatch(GraphLinkInfo info, string pats)
         {
+            throw new NotImplementedException();
+/*
             if (info.FullPath.AsNodeXML().ToString().ToUpper() != pats.ToUpper())
             {
                 string s = "CheckMismatch " + info.FullPath.AsNodeXML() + "!=" + pats;
                 writeToLog(s);
                 throw new Exception(s);
             }
+        */
         }
 
         private XmlNode GetMatchableXMLNode(string nodeName, Unifiable topicName)
@@ -435,7 +439,7 @@ namespace RTParser.Utils
         public CategoryInfo FindCategoryInfo(PatternInfo info, XmlNode node, LoaderOptions filename, XmlNode templateNode,
             ResponseInfo template, GuardInfo guard, TopicInfo topicInfo, Node patternNode, ThatInfo thatInfo, IEnumerable<ConversationCondition> conds)
         {
-            return TemplateInfo.MakeCategoryInfo(info, node, filename, templateNode, template, guard, topicInfo, patternNode,
+            return TemplateInfoImpl.MakeCategoryInfo(info, node, filename, templateNode, template, guard, topicInfo, patternNode,
                                                  thatInfo, conds);
         }
 
@@ -938,7 +942,7 @@ namespace RTParser.Utils
 
                         p.UnTraced = Size > 0;
 
-                        var req = new AIMLbot.MasterRequest(request.rawInput, request.Requester, request.TargetBot, null,
+                        var req = new AIMLbot.MasterRequest(request.rawInput, request.Requester, request.TargetBot, request,
                                                           request.Responder);
                         req.OriginalSalientRequest = request.OriginalSalientRequest;
                         req.Graph = p;
@@ -967,60 +971,100 @@ namespace RTParser.Utils
             lock (LockerObject)
             {
                 //if (Templates != null) lock (Templates) Templates.Add(templateInfo);
-                if (CategoryInfos != null) lock (CategoryInfos)
-                        CategoryInfos.Add(templateInfo.CategoryInfo);
-                if (templateInfo.IsTraced || templateInfo.IsDisabled)
-                {
-                    if (UnusedTemplates != null) UnusedTemplates.Remove(templateInfo);
-                }
+                SetDisabled(templateInfo, false);
             }
         }
 
         public void RemoveTemplate(TemplateInfo templateInfo)
         {
-            if (templateInfo == null) return;
+            if (templateInfo == null) return;           
             //System.writeToLog("removing " + templateInfo.CategoryInfo.ToString());
             lock (LockerObject)
             {
+                bool found = true;
                 CategoryInfo categoryInfo = templateInfo.CategoryInfo;
                 templateInfo.IsTraced = true;
+                if (templateInfo.InGraph == this)
+                {
+                    found = false;
+                    templateInfo.InGraph = null;
+                }
                 categoryInfo.IsDisabled = true;
                 //if (Templates != null) lock (Templates) Templates.Remove(templateInfo);
-                bool found = false;
                 if (CategoryInfos != null)
                 {
                     lock (CategoryInfos)
                     {
                         found = CategoryInfos.Remove(categoryInfo);
+                        Size = CategoryInfos.Count;
                     }
                 }
                 if (!found)
                 {
                     if (UnusedTemplates != null)
                     {
-                        lock (UnusedTemplates) UnusedTemplates.Remove(templateInfo);
-                        categoryInfo.IsDisabled = false;
+                        lock (UnusedTemplates)
+                        {
+                            found = UnusedTemplates.Remove(templateInfo);
+                        }
+                        categoryInfo.IsSearchDisabled = false;
                     }
+                }
+                if (found)
+                {
+                    writeToLog("removed " + templateInfo);
                 }
             }
         }
 
+
+        internal void SetDisabled(TemplateInfo templateInfo, bool value)
+        {
+            lock (LockerObject)
+            {
+                if (value)
+                {
+                    bool found = false;
+                    if (this.CategoryInfos != null)
+                    {
+                        if (templateInfo.InGraph == this)
+                        {
+                            found = this.CategoryInfos.Remove(templateInfo);
+                        }
+                        //if (found && this.CategoryInfos.Count == 0) this.CategoryInfos = null;
+                    }
+                    if (this.UnusedTemplates == null) return;
+                    this.UnusedTemplates = this.UnusedTemplates ?? new List<TemplateInfo>();
+                    if (!found && this.UnusedTemplates.Contains(templateInfo)) return;
+                    this.UnusedTemplates.Add(templateInfo);
+                }
+                else
+                {
+                    bool found = false;
+                    if (this.UnusedTemplates != null)
+                    {
+                        found = this.UnusedTemplates.Remove(templateInfo);
+                        //if (found && this.UnusedTemplates.Count == 0) this.UnusedTemplates = null;
+                    }
+                    if (this.CategoryInfos == null) return;
+                    this.CategoryInfos = this.CategoryInfos ?? new List<CategoryInfo>();
+                    bool inGraph = templateInfo.InGraph == this;
+                    if (!found && inGraph && this.CategoryInfos.Contains(templateInfo)) return;
+                    if (!inGraph)
+                    {
+                        templateInfo.InGraph = this;
+                        this.CategoryInfos.Add(templateInfo);
+                    }
+                }
+            }
+        }
 
         public void EnableTemplate(TemplateInfo templateInfo)
         {
             if (templateInfo == null) return;
             lock (LockerObject)
             {
-                templateInfo.CategoryInfo.IsDisabled = false;
-                bool found = true;
-                if (UnusedTemplates != null)
-                {
-                    found = UnusedTemplates.Remove(templateInfo);
-                }
-                //if (Templates != null) lock (Templates) Templates.Remove(templateInfo);
-                if (CategoryInfos != null) lock (CategoryInfos)
-                        CategoryInfos.Add(templateInfo.CategoryInfo);
-                templateInfo.IsTraced = !found;
+                templateInfo.IsDisabled = false;
             }
         }
 
@@ -1030,11 +1074,7 @@ namespace RTParser.Utils
             lock (LockerObject)
             {
                 templateInfo.IsTraced = true;
-                templateInfo.CategoryInfo.IsDisabled = true;
-                //if (Templates != null) lock (Templates) Templates.Remove(templateInfo);
-                if (CategoryInfos != null) lock (CategoryInfos)
-                        CategoryInfos.Remove(templateInfo.CategoryInfo);
-                if (UnusedTemplates != null) UnusedTemplates.Add(templateInfo);
+                templateInfo.IsDisabled = true;
             }
         }
 
@@ -1392,6 +1432,25 @@ namespace RTParser.Utils
                     console("-----------------------------------------------------------------");
                     console("DISABLE: count=" + cis.Count + " local=" + G + " key='" + n + "'");
                     foreach (var ci in cis) G.DisableTemplate(ci.Template);
+                }
+                console(cmd + ": foundResults=" + foundResults);
+                return true;
+            }
+
+            if (showHelp) console("@enable <graph> - <tmatch>   --  enables all graph elements matching <tmatch>");
+            if (cmd == "enable")
+            {
+                var matchingGraphs = request.GetMatchingGraphs(graphname, this);
+                foreach (var ggg in matchingGraphs)
+                {
+                    string n = ggg.Key;
+                    GraphMaster G = ggg.Value;
+                    var cis = G.GetCategoriesMatching(match);
+                    if (cis.Count == 0) continue;
+                    foundResults += cis.Count;
+                    console("-----------------------------------------------------------------");
+                    console("ENABLE: count=" + cis.Count + " local=" + G + " key='" + n + "'");
+                    foreach (var ci in cis) G.EnableTemplate(ci.Template);
                 }
                 console(cmd + ": foundResults=" + foundResults);
                 return true;

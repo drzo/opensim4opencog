@@ -15,7 +15,7 @@ namespace RTParser.Utils
     /// interrogation of the graphmaster.
     /// </summary>
     [Serializable]
-    public class SubQuery : StaticAIMLUtils, ISettingsDictionary, IComparable<SubQuery>
+    public class SubQuery : StaticAIMLUtils, ISettingsDictionary, IComparable<SubQuery>, RequestOrQuery, UndoStackHolder
     {
         public
             //static 
@@ -50,12 +50,14 @@ namespace RTParser.Utils
             Result = res;
             Request = request;
             Graph = request.Graph;
+            TargetSettings = request.TargetSettings;
             this.FullPath = fullPath;
         }
 
         public ISettingsDictionary TargetSettings
         {
             get { return Request.TargetSettings; }
+            set { Request.TargetSettings = value; }
         }
 
         public User CurrentUser
@@ -112,7 +114,7 @@ namespace RTParser.Utils
         /// </summary>
         public List<Unifiable> TopicStar = new List<Unifiable>();
 
-        protected Result ParentRequest
+        public Result ParentResult
         {
             get { return Result; }
         }
@@ -120,7 +122,7 @@ namespace RTParser.Utils
         private int _hasFailed = 0;
         public int HasFailed
         {
-            get { return _hasFailed + (useParentSF ? ParentRequest.HasFailed : 0); }
+            get { return _hasFailed + (useParentSF ? ParentResult.HasFailed : 0); }
             set
             {
                 if (_hasFailed < 1)
@@ -129,11 +131,11 @@ namespace RTParser.Utils
                     {
                         if (value == 0)
                         {
-                            ParentRequest.HasFailed -= 1;
+                            ParentResult.HasFailed -= 1;
                         }
                         else
                         {
-                            ParentRequest.HasFailed += 1;
+                            ParentResult.HasFailed += 1;
                         }
                     }
                 }
@@ -144,7 +146,7 @@ namespace RTParser.Utils
         private int _hasSuceeded = 0;
         public int HasSuceeded
         {
-            get { return _hasSuceeded + (useParentSF ? ParentRequest.HasSuceeded : 0); }
+            get { return _hasSuceeded + (useParentSF ? ParentResult.HasSuceeded : 0); }
             set
             {
                 if (_hasSuceeded < 1)
@@ -153,11 +155,11 @@ namespace RTParser.Utils
                     {
                         if (value == 0)
                         {
-                            ParentRequest.HasSuceeded -= 1;
+                            ParentResult.HasSuceeded -= 1;
                         }
                         else
                         {
-                            ParentRequest.HasSuceeded += 1;
+                            ParentResult.HasSuceeded += 1;
                         }
                     }
                 }
@@ -218,7 +220,7 @@ namespace RTParser.Utils
         /// <param name="name">The name of the setting to remove</param>
         public bool removeSetting(string name)
         {
-            return SettingsDictionary.removeSettingWithUndoCommit(this, RequesterPredicates, name);
+            return SettingsDictionary.removeSettingWithUndoCommit(this, TargetSettings, name);
         }
 
         /// <summary>
@@ -229,7 +231,7 @@ namespace RTParser.Utils
         /// <param name="value">the new value</param>
         public bool updateSetting(string name, Unifiable value)
         {
-            return SettingsDictionary.addSettingWithUndoCommit(this, RequesterPredicates, RequesterPredicates.updateSetting, name, value);
+            return SettingsDictionary.addSettingWithUndoCommit(this, TargetSettings, TargetSettings.updateSetting, name, value);
         }
 
         /// <summary>
@@ -245,12 +247,22 @@ namespace RTParser.Utils
 
         public bool containsLocalCalled(string name)
         {
-            return RequesterPredicates.containsLocalCalled(name);
+            return TargetSettings.containsLocalCalled(name);
         }
 
         public string NameSpace
         {
-            get { return RequesterPredicates.NameSpace; }
+            get { return TargetSettings.NameSpace; }
+        }
+
+        public User Requester
+        {
+            get { return CurrentUser; }
+        }
+
+        public User Responder
+        {
+            get { return Request.Responder; }
         }
 
         public ISettingsDictionary RequesterPredicates
@@ -316,7 +328,7 @@ namespace RTParser.Utils
 
         public override string ToString()
         {
-            string nodePattern =((object)Pattern ?? "-no-pattern-").ToString().Trim();
+            string nodePattern = ((object)Pattern ?? "-no-pattern-").ToString().Trim();
             string s = SafeFormat("\nINPUT='{6}'\nPATTERN='{0}' InThToGu={1}:{2}:{3}:{4} Tc={5} Graph={7}\n",
                          nodePattern,
                                      InputStar.Count, ThatStar.Count, TopicStar.Count,
@@ -468,7 +480,7 @@ namespace RTParser.Utils
 
         public void UndoAll()
         {
-            UndoStack.FindUndoAll(this);
+            UndoStack.FindUndoAll(this, true);
         }
 
         public void AddLocalUndo(ThreadStart undo)
@@ -491,7 +503,7 @@ namespace RTParser.Utils
         {
             lock (this)
             {
-                UndoStack.FindUndoAll(this);
+                UndoStack.FindUndoAll(this, false);
                 return UndoStack.GetStackFor(this);
             }
         }
@@ -507,7 +519,7 @@ namespace RTParser.Utils
             if (named == null) return query;
             string lnamed = named.ToLower();
             if (lnamed == "query") return query;
-            return Request.GetDictionary(named,(ISettingsDictionary)this);
+            return Request.GetDictionary(named, (ISettingsDictionary)this);
         }
 
         public T ReduceStarAttribute<T>(IConvertible value) where T : IConvertible
@@ -531,12 +543,13 @@ namespace RTParser.Utils
         {
             if (this.HasSuceeded > 0)
             {
+                writeDebugLine("Commiting Sidefffect " + effectName);
                 //if (HasFailed == 0) 
                 action();
             }
             else
             {
-                writeDebugLine("Skipping Sidefffect " + effectName);
+                //writeDebugLine("Skipping Sidefffect " + effectName);
             }
         }
 
@@ -556,7 +569,7 @@ namespace RTParser.Utils
             }
             int compare = Pattern.CompareTo(other.Pattern);
             if (compare != 0) return compare;
-            compare = CollectionCompare(Templates, other.Templates, TemplateInfo.CompareTemplates);
+            compare = CollectionCompare(Templates, other.Templates, TemplateInfoImpl.CompareTemplates);
             if (compare != 0) return compare;
             return ReferenceCompare(this, other);
         }
@@ -600,7 +613,7 @@ namespace RTParser.Utils
         public bool EqualsMeaning(SubQuery other)
         {
             if (ReferenceEquals(this, other)) return true;
-            if (Pattern==null) return false;
+            if (Pattern == null) return false;
             //if (!Equals(other.FullPath.ToLower(), FullPath.ToLower())) return false;
             bool same = //Equals(other.ov_TargetBot, ov_TargetBot)
                 //  && Equals(other.CurrentTemplate, CurrentTemplate)
@@ -642,7 +655,7 @@ namespace RTParser.Utils
                 ////result = (result * 397) ^ (Result != null ? Result.GetHashCode() : 0);
                 ////result = (result * 397) ^ (TopLevel != null ? TopLevel.GetHashCode() : 0);
                 ////result = (result * 397) ^ (Flags != null ? Flags.GetHashCode() : 0);
-              //  result = (result * 397) ^ (FullPath != null ? FullPath.GetHashCode() : 0);
+                //  result = (result * 397) ^ (FullPath != null ? FullPath.GetHashCode() : 0);
                 ////result = (result * 397) ^ (GuardStar != null ? GuardStar.GetHashCode() : 0);
                 ////result = (result * 397) ^ (InputStar != null ? InputStar.GetHashCode() : 0);
                 ////result = (result * 397) ^ (Templates != null ? Templates.GetHashCode() : 0);
@@ -652,11 +665,37 @@ namespace RTParser.Utils
                 //result = (result*397) ^ HasSuceeded;
                 //result = (result*397) ^ GetDictValue;
                 //result = (result*397) ^ SetDictValue;
-               // result = (result * 397) ^ (Graph != null ? Graph.GetHashCode() : 0);
+                // result = (result * 397) ^ (Graph != null ? Graph.GetHashCode() : 0);
                 //result = (result*397) ^ IsTraced.GetHashCode();
                 return result;
             }
         }
+
+        public UndoStack UndoStackValue { get; set; }
+    }
+
+    public interface RequestOrQuery
+    {
+        /// <summary>
+        /// The user that made this request
+        /// </summary>
+        User Requester { get; }
+        /// <summary>
+        /// The user respoinding to the request
+        /// </summary>
+        User Responder { get; }
+        /// <summary>
+        /// The get/set user dictionary
+        /// </summary>
+        ISettingsDictionary RequesterPredicates { get; }
+        /// <summary>
+        /// The get/set bot dictionary (or user)
+        /// </summary>
+        ISettingsDictionary ResponderPredicates { get; }
+        /// <summary>
+        /// If loading/saing settings from this request this may be eitehr the requestor/responders Dictipoanry
+        /// </summary>
+        ISettingsDictionary TargetSettings { get; set; }
     }
 
 #if _FALSE_

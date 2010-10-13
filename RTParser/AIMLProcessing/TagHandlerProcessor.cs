@@ -65,9 +65,11 @@ namespace RTParser
                 switch (nodeNameLower)
                 {
                     case "template":
+                    case "answer": //CML
                         tagHandler = new template(targetBot, user, query, request, result, node);
                         break;
                     case "aiml":
+                    case "cml": //CML
                         tagHandler = new aiml(targetBot, user, query, request, result, node);
                         break;
                     case "aimlexec":
@@ -76,8 +78,8 @@ namespace RTParser
                         break;
                     case "vars":
                     case "root":
-                    case "predicates":
-                        tagHandler = new root(targetBot, user, query, request, result, node, (() => request.TargetSettings));
+                    case "predicates": //CML
+                        tagHandler = new root(targetBot, user, query, request, result, node, (() => query.TargetSettings));
                         break;
                     case "properties":
                     case "bots":
@@ -89,9 +91,11 @@ namespace RTParser
                                               (() => request.TargetBot.InputSubstitutions));
                         break;
                     case "topic":
+                    case "conversation": //CML
                         tagHandler = new topic(targetBot, user, query, request, result, node);
                         break;
                     case "category":
+                    case "conv": //CML
                         tagHandler = new category(targetBot, user, query, request, result, node);
                         break;
                     case "and":
@@ -110,6 +114,7 @@ namespace RTParser
                         tagHandler = new bot(targetBot, user, query, request, result, node);
                         break;
                     case "condition":
+                    case "options": //cml
                         tagHandler = new condition(targetBot, user, query, request, result, node);
                         break;
                     case "li":
@@ -121,7 +126,7 @@ namespace RTParser
                         break;
                     case "personf":
                         tagHandler = new format(targetBot, user, query, request, result, node,
-                                                new Func<string, string>((s) => HttpUtility.UrlEncode(s)),
+                                                new Func<string, string>(HttpUtility.UrlEncode),
                                                 null);
                         break;
                     case "date":

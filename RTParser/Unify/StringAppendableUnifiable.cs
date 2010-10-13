@@ -7,14 +7,37 @@ namespace RTParser
 {
     public class StringAppendableUnifiableImpl : StringUnifiable, UnifiableList
     {
-        public override void AddCategory(CategoryInfo template)
+        public override bool AddCategory(CategoryInfo template)
         {
-            throw new NotImplementedException();
+            if (NOCateIndex) return false;
+            Unifiable unify = ToUpper();
+            return unify.AddCategory(template);            
+        }
+        public override bool RemoveCategory(CategoryInfo template)
+        {
+            if (NOCateIndex) return false;
+            Unifiable unify = ToUpper();
+            return unify.RemoveCategory(template);
         }
 
-        public override void RemoveCategory(CategoryInfo template)
+        protected override bool SameMeaningCS(Unifiable s, bool caseSensitive)
         {
-            throw new NotImplementedException();
+            if (ReferenceEquals(this, s)) return true;
+            bool null2 = ReferenceEquals(s, null);
+            if (null2) return false;
+            if (caseSensitive)
+            {
+                if (str == s.AsString())
+                {
+                    return true;
+                }
+                return false;
+            }
+            if (ToUpper(str) == s.ToUpper())
+            {
+                return true;
+            }
+            return false;
         }
 
         public override Unifiable FullPath
@@ -55,6 +78,7 @@ namespace RTParser
 
         public override string ToUpper()
         {
+            if (Trim(str).Length == 0) return "";
             return base.ToUpper();
         }
 

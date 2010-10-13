@@ -8,9 +8,9 @@ namespace RTParser
 
     {
 
-        public override object SpecialName
+        public override string SpecialName
         {
-            get { return Raw; }
+            get { return AsString(); }
         }
 
         public override bool IsLitteral()
