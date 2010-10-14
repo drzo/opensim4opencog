@@ -42,12 +42,12 @@ namespace MushDLR223.Utilities
         }
 
         private XmlDocumentLineInfo _docLineInfo;
-      /*  {
-            get { return null; }
-            // ReSharper disable ValueParameterNotUsed
-            set { }
-            // ReSharper restore ValueParameterNotUsed
-        }*/
+        /*  {
+              get { return null; }
+              // ReSharper disable ValueParameterNotUsed
+              set { }
+              // ReSharper restore ValueParameterNotUsed
+          }*/
         public string outValueReplaced = null;
         public XmlSourceLineInfo lParent;
         public bool protect = false;
@@ -91,7 +91,7 @@ namespace MushDLR223.Utilities
         {
             get
             {
-                XmlNode sib = (XmlNode) lParent;
+                XmlNode sib = (XmlNode)lParent;
                 if (sib == null)
                 {
                     return IndexInBaseParent;
@@ -121,7 +121,7 @@ namespace MushDLR223.Utilities
             get
             {
                 if (lParent == null) return base.ParentNode;
-                return (XmlNode) lParent;
+                return (XmlNode)lParent;
             }
         }
 
@@ -140,12 +140,12 @@ namespace MushDLR223.Utilities
                     {
                         var vv = StaticXMLUtils.XmlValueSettable(outValueReplaced);
                         return vv;
-                    }                    
+                    }
                     var ixml = base.InnerXml;
                     if (StaticXMLUtils.IsValueSetter(ixml))
                     {
                         writeToLog("IsValueSetter?! " + ixml);
-                        ixml =  StaticXMLUtils.ValueText(ixml);
+                        ixml = StaticXMLUtils.ValueText(ixml);
                     }
                     return ixml;
                 }
@@ -211,7 +211,7 @@ namespace MushDLR223.Utilities
                 }
                 if (wasSetter)
                 {
-                    outValueReplaced = ir;                   
+                    outValueReplaced = ir;
                 }
                 return true;
             }
@@ -329,7 +329,7 @@ namespace MushDLR223.Utilities
 
         private void CheckOutVlaueReplaced()
         {
-            if (outValueReplaced==null) return;
+            if (outValueReplaced == null) return;
         }
 
         #region XmlSourceLineInfo Members
@@ -346,14 +346,16 @@ namespace MushDLR223.Utilities
                 if (lineNumData == null)
                 {
                     lineNumData = new LineInfoData(linenum, linepos);
-                } else
+                }
+                else
                 {
                     if (lineNumData is LineInfoData)
                     {
                         var lid = lineNumData as LineInfoData;
                         lid.LineNumber = linenum;
-                        lid.LinePosition = linepos;                        
-                    } else
+                        lid.LinePosition = linepos;
+                    }
+                    else
                     {
                         lineNumData = new LineInfoData(linenum, linepos);
                     }
@@ -386,7 +388,7 @@ namespace MushDLR223.Utilities
 
         public void SetPos(long position)
         {
-           
+
         }
 
         public bool ReadOnly
@@ -421,7 +423,7 @@ namespace MushDLR223.Utilities
                 {
                     if (node is XmlSourceInfo)
                     {
-                        ((XmlSourceInfo) node).ReadOnly = value;
+                        ((XmlSourceInfo)node).ReadOnly = value;
                     }
                     else
                     {
@@ -443,7 +445,7 @@ namespace MushDLR223.Utilities
                 {
                     if (node is XmlSourceInfo)
                     {
-                        ((XmlSourceInfo) node).ReadOnly = value;
+                        ((XmlSourceInfo)node).ReadOnly = value;
                     }
                     else
                     {
@@ -458,15 +460,15 @@ namespace MushDLR223.Utilities
             XmlNode pn = xmlNode.ParentNode;
             if (pn is LineInfoElementImpl)
             {
-                lParent = (LineInfoElementImpl) pn;
+                lParent = (LineInfoElementImpl)pn;
                 XmlDocumentLineInfo.SuggestLineNo(lParent, this);
             }
             if (!(xmlNode is IXmlLineInfo))
             {
-                xmlNode = (XmlNode) lParent;
+                xmlNode = (XmlNode)lParent;
             }
             if (xmlNode is LineInfoElementImpl)
-            {                
+            {
                 LineInfoElementImpl lie = (LineInfoElementImpl)xmlNode;
                 lineNumData = lie;
                 XmlDocumentLineInfo.SuggestLineNo(lie, this);
@@ -536,8 +538,7 @@ namespace MushDLR223.Utilities
 
         public override XmlNode CloneNode(bool deep)
         {
-            XmlNode highestClone = CloneOf ?? this;
-            ;
+            XmlNode highestClone = CloneOf ?? this; ;
             var od = highestClone.OwnerDocument as XmlDocumentLineInfo;
             //od.Normalize();
             LineInfoElementImpl newnode = new LineInfoElementImpl(Prefix, LocalName, NamespaceURI, od);
@@ -546,32 +547,27 @@ namespace MushDLR223.Utilities
             newnode.outerXMLCache = outerXMLCache;
 #endif
             newnode.SetLineInfo(LineNumber, LinePosition);
-            bool newnodeWas = newnode.protect;
-            newnode.protect = false;
-            try
+            if (deep)
             {
-
-                if (deep)
-                {
-                    if (HasChildNodes)
-                        foreach (XmlNode a in ChildNodes)
+                bool newnodeWas = newnode.protect;
+                newnode.protect = false;
+                if (HasChildNodes)
+                    foreach (XmlNode a in ChildNodes)
+                    {
+                        try
                         {
-                            try
-                            {
-                                XmlNode a2 = a.CloneNode(deep);
-                                bool a2ro = a2.IsReadOnly;
-                                XmlSourceInfo a22 = a2 as XmlSourceInfo;
-                                if (a22 != null) a22.ReadOnly = false;
-                                newnode.AppendChild(a2);
-                                if (a22 != null) a22.ReadOnly = a2ro;
-                            }
-                            catch (Exception e)
-                            {
-                                writeToLog("ERROR: newnode.AppendChild " + e);
-                            }
+                            XmlNode a2 = a.CloneNode(deep);
+                            bool a2ro = a2.IsReadOnly;
+                            XmlSourceInfo a22 = a2 as XmlSourceInfo;
+                            if (a22 != null) a22.ReadOnly = false;
+                            newnode.AppendChild(a2);
+                            if (a22 != null) a22.ReadOnly = a2ro;
                         }
-                }
-
+                        catch (Exception e)
+                        {
+                            writeToLog("ERROR: newnode.AppendChild " + e);
+                        }
+                    }
                 XmlAttributeCollection ats = Attributes;
                 if (ats != null)
                     foreach (XmlAttribute a in ats)
@@ -579,16 +575,7 @@ namespace MushDLR223.Utilities
                         try
                         {
                             if (XmlDocumentLineInfo.SkipXmlns && a.Name == "xmlns") continue;
-                            XmlDocument newnodeOwnerDocument = newnode.OwnerDocument;
-                            XmlAttribute a2;
-                            if (newnodeOwnerDocument != null)
-                            {
-                                a2 = newnodeOwnerDocument.CreateAttribute(a.Prefix, a.LocalName, a.NamespaceURI);
-                            }
-                            else
-                            {
-                                a2 = (XmlAttribute) a.CloneNode(deep);
-                            }
+                            XmlAttribute a2 = (XmlAttribute)a.CloneNode(deep);
                             bool a2ro = a2.IsReadOnly;
                             XmlSourceInfo a22 = a2 as XmlSourceInfo;
                             if (a22 != null) a22.ReadOnly = false;
@@ -600,12 +587,32 @@ namespace MushDLR223.Utilities
                             newnode.writeToLog("ERROR: newnode.AppendChild " + e);
                         }
                     }
-                return newnode;
-            }
-            finally
-            {
                 newnode.protect = newnodeWas;
             }
+            else
+            {
+                XmlAttributeCollection ats = Attributes;
+                if (ats != null)
+                    foreach (XmlAttribute a in ats)
+                    {
+                        try
+                        {
+                            if (XmlDocumentLineInfo.SkipXmlns && a.Name == "xmlns") continue;
+                            XmlAttribute a2 = (XmlAttribute)a.CloneNode(deep);
+                            bool a2ro = a2.IsReadOnly && false;
+                            XmlSourceInfo a22 = a2 as XmlSourceInfo;
+                            if (a22 != null) a22.ReadOnly = false;
+                            newnode.Attributes.Append(a2);
+                            if (a22 != null) a22.ReadOnly = a2ro;
+                        }
+                        catch (Exception e)
+                        {
+                            newnode.writeToLog("ERROR: newnode.AppendChild " + e);
+                        }
+                    }
+                newnode.protect = false;
+            }
+            return newnode;
         }
 
         public override XmlNode RemoveChild(XmlNode newChild)
@@ -616,7 +623,7 @@ namespace MushDLR223.Utilities
 #if OUTXML_CACHE
                 outerXMLCache = null;
 #endif
-                if (ReadOnly)   
+                if (ReadOnly)
                 {
                     writeToLog("ERROR RemoveChild on ReadOnly ");
                     ReadOnly = false;
@@ -668,7 +675,7 @@ namespace MushDLR223.Utilities
             {
                 writeToLog("ERROR: newnode.RemoveAll " + e);
                 return;
-            } 
+            }
         }
         public override XmlNode NextSibling
         {
@@ -693,7 +700,7 @@ namespace MushDLR223.Utilities
             }
             catch (Exception e)
             {
-                writeToLog("ERROR: newnode.PrependChild " + e +  " " + newChild);
+                writeToLog("ERROR: newnode.PrependChild " + e + " " + newChild);
                 throw;
             }
         }
@@ -704,7 +711,7 @@ namespace MushDLR223.Utilities
             if (pattern == null) return null;
             if (pattern is IXmlLineInfo)
             {
-                return (IXmlLineInfo) pattern;
+                return (IXmlLineInfo)pattern;
             }
             return null; // CopyNode(pattern, true);
         }
@@ -768,7 +775,7 @@ namespace MushDLR223.Utilities
             {
                 lie.ReadOnly = liewas;
             }
-            
+
         }
 
         public static XmlNode SetReadOnly(XmlNode node)
@@ -783,7 +790,7 @@ namespace MushDLR223.Utilities
 
         public static void SetParentFromNode(XmlNode newLineInfoPattern, XmlNode patternNode)
         {
-            ((LineInfoElementImpl) newLineInfoPattern).SetParentFromNode(patternNode);
+            ((LineInfoElementImpl)newLineInfoPattern).SetParentFromNode(patternNode);
         }
 
         public override void WriteContentTo(XmlWriter w)
