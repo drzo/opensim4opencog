@@ -64,9 +64,7 @@ namespace TestApplication
             InitializeComponent();
 
             // init framenet
-            string root = Program.GetDataRoot;
-            _frameNetEngine = new FrameNetEngine(root + @"FrameNet1.3\basicXML\frXML",
-                                                 root + @"FrameNet1.3\basicXML\luXML");
+            _frameNetEngine = new FrameNetEngine(Directory.GetDirectoryRoot(".") + @"NLP\Resources\FrameNet1.5", FrameNetEngine.Version.FrameNet_1_5);
 
             // add frames
             foreach (Frame frame in _frameNetEngine.Frames)
