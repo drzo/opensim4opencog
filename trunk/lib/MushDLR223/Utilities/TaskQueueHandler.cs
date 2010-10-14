@@ -278,8 +278,7 @@ namespace MushDLR223.Utilities
                            {
                                lock (DebugStringLock)
                                {
-                                   WaitingString = s + WaitingString;
-                                   if (!String.IsNullOrEmpty(named)) LastOpString = named;
+                                   TrySetThreadName(s);
                                }
                                action();
                            }
@@ -287,7 +286,7 @@ namespace MushDLR223.Utilities
                            {
                                lock (DebugStringLock)
                                {
-                                   WaitingString = WaitingString.Replace(s, "");
+                                   WaitingString = WaitingString.Replace(s, "").Trim();
                                }
                            }
                        };
@@ -898,7 +897,7 @@ namespace MushDLR223.Utilities
             bool wasKillTasksOverTimeLimit = KillTasksOverTimeLimit;
             TimeSpan prev = OperationKillTimeout;
             OperationKillTimeout = maxTime;
-            control = control ?? new ThreadControl(null);
+            control = control ?? new ThreadControl();
             var ctrl = control != null;
             lock (BusyTrackingLock)
             {
@@ -928,10 +927,8 @@ namespace MushDLR223.Utilities
                 lock (DebugStringLock)
                 {
                     before = WaitingString;
-                    WaitingString = name + "\n" + before;
-                    if (!String.IsNullOrEmpty(name)) LastOpString = name;
                 }
-                DoInteruptably(ref this.TaskThread, evt, maxTime, control);
+                DoInteruptably(ref this.TaskThread, NamedTask(name, evt), maxTime, control);
             }
             finally
             {
@@ -1265,20 +1262,30 @@ namespace MushDLR223.Utilities
             Set();
         }
 
-        public bool InvokeJoin(string s, int millisecondsTimeout)
+
+        private void TrySetThreadName(string s)
         {
+            if (s==null)
+            {
+                return;
+            }
             lock (DebugStringLock)
             {
                 if (WaitingString.Length > 0)
                 {
-                    WaitingString += "\n" + s;
+                    WaitingString = s.Trim() + "\n" + WaitingString;
                 }
                 else
                 {
-                    WaitingString = "\n" + s;
+                    WaitingString = s;
                 }
                 if (!String.IsNullOrEmpty(s)) LastOpString = s;
             }
+        }
+
+        public bool InvokeJoin(string s, int millisecondsTimeout)
+        {
+            TrySetThreadName(s);
             ManualResetEvent are = new ManualResetEvent(false);
             Enqueue(() =>
                         {
@@ -1331,7 +1338,7 @@ namespace MushDLR223.Utilities
         public void MakeSyncronousTask(TASK action, string name, TimeSpan maxTime)
         {
             EventWaitHandle IsComplete = new EventWaitHandle(false, EventResetMode.ManualReset);
-            Thread t = CreateTask(action, name, IsComplete);
+            Thread t = new Thread(CreateTask(action, name, null, IsComplete));
             Thread tr = new Thread(() =>
                                        {
                                            Thread threadKillThread = Thread.CurrentThread;
@@ -1363,29 +1370,62 @@ namespace MushDLR223.Utilities
             tr.Start();
         }
 
-        public Thread CreateTask(TASK action, string name, EventWaitHandle isComplete)
+        public void CreateTask(TaskType taskType, string name, TASK action, bool blockUntilComplete)
         {
-            Thread tr = new Thread(() =>
-                                       {
-                                           Thread self = Thread.CurrentThread;
-                                           try
-                                           {
-                                               lock (InteruptableThreads) InteruptableThreads.Add(self);
-                                               try
-                                               {
-                                                   action();
-                                               }
-                                               catch (Exception e)
-                                               {
-                                                   WriteLine("ERROR " + name + " " + e);
-                                               }
-                                           }
-                                           finally
-                                           {
-                                               lock (InteruptableThreads) InteruptableThreads.Remove(self);
-                                               NoExceptions<bool>(isComplete.Set);
-                                           }
-                                       }) { Name = name };
+            ThreadControl threadControl =  new ThreadControl();
+
+            switch(taskType)
+            {
+                case TaskType.DoForground:
+                    break;
+                case TaskType.InteruptAndReplaceCurrentTaskAndAllQueued:
+                    break;
+                case TaskType.InteruptAndReplaceCurrentTask:
+                    break;
+                case TaskType.DoSoonAsCurrentTaskIsCompleteButBeforeAllOtherTasks:
+                    break;
+                case TaskType.DoAfterAllPreviousTasksComplete:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException("taskType");
+            }
+            if (blockUntilComplete)
+            {
+                threadControl.WaitUntilComplete();
+            }
+        }
+
+        public void DestroyAllCurrentTasks(bool clearQueue)
+        {
+            throw new NotImplementedException();
+        }
+
+        public TASK CreateTask(TASK action, string name,EventWaitHandle isStarted, EventWaitHandle isComplete)
+        {
+            TaskQueueHandler handler = this;
+            TASK tr = (() =>
+                           {
+                               Thread self = Thread.CurrentThread;
+                               try
+                               {
+                                   lock (InteruptableThreads) InteruptableThreads.Add(self);
+                                   try
+                                   {
+                                       handler.TrySetThreadName(name);
+                                       if (isStarted != null) NoExceptions<bool>(isStarted.Set);
+                                       action();
+                                   }
+                                   catch (Exception e)
+                                   {
+                                       WriteLine("ERROR " + name + " " + e);
+                                   }
+                               }
+                               finally
+                               {
+                                   lock (InteruptableThreads) InteruptableThreads.Remove(self);
+                                   NoExceptions<bool>(isComplete.Set);
+                               }
+                           });// { Name = name };
             return tr;
         }
 
@@ -1499,6 +1539,15 @@ namespace MushDLR223.Utilities
         }
     }
 
+    public enum TaskType
+    {
+        DoForground,
+        InteruptAndReplaceCurrentTaskAndAllQueued,
+        InteruptAndReplaceCurrentTask,
+        DoSoonAsCurrentTaskIsCompleteButBeforeAllOtherTasks,
+        DoAfterAllPreviousTasksComplete,
+    }
+
     public class ThreadControl
     {
         public event Action<ThreadControl, ThreadAbortException> AbortRaised;
@@ -1523,9 +1572,25 @@ namespace MushDLR223.Utilities
         public bool CancelInterp = false;
         public bool CancelException = false;
 
+
+        public ThreadControl()
+        {
+            ManualResetEvent newManualResetEvent = new ManualResetEvent(false);
+            TaskComplete = newManualResetEvent;
+        }
         public ThreadControl(EventWaitHandle onComplete)
         {
             TaskComplete = onComplete;
+        }
+        public ThreadControl(ThreadControl parent)
+        {
+            TaskStart = parent.TaskStart;
+            TaskEnded = parent.TaskEnded;
+            TaskComplete = parent.TaskComplete;
+            parent.AbortRaised += (c, e) => InvokeAbortRaised(e);
+            parent.InterruptRaised += (c, e) => InvokeInterruptRaised(e);
+            parent.AbortOrInteruptedRaised += (c, e) => InvokeAbortOrInteruptedRaised(e);
+            parent.ExceptionRaised += (c, e) => InvokeExceptionRaised(e);
         }
 
         public void InvokeExceptionRaised(Exception exception)
