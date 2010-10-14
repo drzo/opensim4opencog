@@ -280,6 +280,7 @@ namespace TestApplication
             this.fe1.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
             this.fe1.DropDownHeight = 250;
             this.fe1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.fe1.DropDownWidth = 300;
             this.fe1.FormattingEnabled = true;
             this.fe1.IntegralHeight = false;
             this.fe1.Location = new System.Drawing.Point(81, 170);
@@ -303,6 +304,7 @@ namespace TestApplication
             this.fe2.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
             this.fe2.DropDownHeight = 250;
             this.fe2.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.fe2.DropDownWidth = 300;
             this.fe2.FormattingEnabled = true;
             this.fe2.IntegralHeight = false;
             this.fe2.Location = new System.Drawing.Point(81, 494);
@@ -394,7 +396,7 @@ namespace TestApplication
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
             this.Name = "TestForm";
-            this.Text = "Test Application";
+            this.Text = "FrameNet test application";
             this.ResumeLayout(false);
             this.PerformLayout();
 
