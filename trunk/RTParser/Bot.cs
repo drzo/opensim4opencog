@@ -109,7 +109,8 @@ namespace RTParser
             var botAsUser1 = BotAsUser;
             s = Trim(s);
             if (!s.StartsWith("<")) s = "<!-- " + s.Replace("<!--", "<#").Replace("-->", "#>") + " -->";
-            var r = new AIMLbot.MasterRequest(s, botAsUser1, this, null, botAsUser1);
+            var r = new AIMLbot.MasterRequest(s, botAsUser1, "Missing that for robot request", botAsUser1, this, null,
+                                              GraphMaster);
             //r.ChatOutput.RawText = s;
             r.writeToLog = writeToLog;
             //Result res = new AIMLbot.MasterRequest(s, botAsUser1, this, r, null, null);            
@@ -117,7 +118,7 @@ namespace RTParser
             OnBotCreated(() =>
                              {
                                  User BotAsUser1 = this.BotAsUser;
-                                 ((Request)r).SetFromUserToUser(BotAsUser1, BotAsUser1);
+                                 ((Request)r).SetSpeakerAndResponder(BotAsUser1, BotAsUser1);
                              });
             r.IsTraced = this.IsTraced;
             r.depth = 0;
@@ -1648,8 +1649,8 @@ The AIMLbot program.
             NamePath = ToScriptableName(NameAsSet);
             thisBotAsUser.UserID = NamePath;
 
-            var OnTaskAtATimeHandler = thisBotAsUser.OnTaskAtATimeHandler = HeardSelfSayQueue;
-            OnTaskAtATimeHandler.Name = "TaskQueue For " + myName;
+            //var OnTaskAtATimeHandler = HeardSelfSayQueue = thisBotAsUser.OnTaskAtATimeHandler;
+            //OnTaskAtATimeHandler.Name = "TaskQueue For " + myName;
 
             thisBotAsUser.SaveDirectory(thisBotAsUser.UserDirectory);
             string dgn = NamePath + "_default";
@@ -1699,10 +1700,12 @@ The AIMLbot program.
                 var tc = DLRConsole.TransparentCallers;
                 lock (tc)
                 {
-                    tc.Add(typeof(RTPBot));
-                    tc.Add(typeof(AIMLbot.MasterRequest));
-                    tc.Add(typeof(RequestImpl));
-                    tc.Add(typeof(Request));
+                    tc.Add(typeof (RTPBot));
+                    tc.Add(typeof (AIMLbot.MasterRequest));
+                    // ReSharper disable AssignNullToNotNullAttribute
+                    tc.Add(typeof (MasterResult).BaseType);
+                    // ReSharper restore AssignNullToNotNullAttribute
+                    tc.Add(typeof (Request));
                 }
 
                 TagHandlerProcessor.InitTagHandlers();
@@ -2089,8 +2092,7 @@ The AIMLbot program.
             User theUser = FindOrCreateUser(userName);
             return (txt, req) =>
                        {
-                           req.Requester = theUser;
-                           req.Responder = BotAsUser;
+                           req.SetSpeakerAndResponder(theUser,BotAsUser);
                            var ret = ChatWithThisBot(txt, req);
                            return ret;
                        };

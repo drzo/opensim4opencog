@@ -18,7 +18,7 @@ namespace AIMLbot
             base.loadAIMLFromDefaults();
         }
     }
-    public class MasterUser : RTParser.User
+    public class MasterUser : RTParser.UserImpl
     {
         public MasterUser(string UserID, Bot bot)
             : base(UserID, bot)
@@ -30,7 +30,11 @@ namespace AIMLbot
         }
     }
 
-    sealed public class MasterRequest : RequestImpl, Request
+    sealed public class MasterRequest :
+#if interface
+        RequestImpl, 
+#endif
+ Request
     {
 /*
         public Request(String rawInput, RTParser.User user, RTPBot bot)
@@ -43,13 +47,17 @@ namespace AIMLbot
         {
         }
 */
-        public MasterRequest(string rawInput, User user, RTPBot bot, Request parent, User targetUser)
-            : base(rawInput, user, bot, parent, targetUser)
+        public MasterRequest(string rawInput, User user, string thatSaid, User targetUser, RTPBot bot, Request parent, GraphMaster graphMaster)
+            : base(rawInput, user, thatSaid, targetUser, bot, parent, graphMaster)
         {
         }
     }
 
-    sealed public class MasterResult : RTParser.ResultImpl, Result , InteractionResult 
+    sealed public class MasterResult :
+#if interface
+ ResultImpl, 
+#endif
+        Result , InteractionResult 
     {
         public MasterResult(string rawInput, User user, RTPBot bot, Request parent, User targetUser)
             : base(rawInput, user, bot, parent, targetUser)

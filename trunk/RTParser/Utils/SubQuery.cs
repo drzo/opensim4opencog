@@ -265,6 +265,16 @@ namespace RTParser.Utils
             get { return Request.Responder; }
         }
 
+        public Unifiable That
+        {
+            get { return Request.That; }
+        }
+
+        public Unifiable rawInput
+        {
+            get { return Request.rawInput; }
+        }
+
         public ISettingsDictionary RequesterPredicates
         {
             get { return Request.RequesterPredicates; }
@@ -674,16 +684,9 @@ namespace RTParser.Utils
         public UndoStack UndoStackValue { get; set; }
     }
 
-    public interface RequestOrQuery
+    public interface RequestOrQuery : Utterance
     {
-        /// <summary>
-        /// The user that made this request
-        /// </summary>
-        User Requester { get; }
-        /// <summary>
-        /// The user respoinding to the request
-        /// </summary>
-        User Responder { get; }
+
         /// <summary>
         /// The get/set user dictionary
         /// </summary>
@@ -696,6 +699,26 @@ namespace RTParser.Utils
         /// If loading/saing settings from this request this may be eitehr the requestor/responders Dictipoanry
         /// </summary>
         ISettingsDictionary TargetSettings { get; set; }
+    }
+
+    public interface Utterance
+    {
+        /// <summary>
+        /// The user that made this request
+        /// </summary>
+        User Requester { get; }
+        /// <summary>
+        /// The user respoinding to the request
+        /// </summary>
+        User Responder { get; }
+        /// <summary>
+        /// 
+        /// </summary>
+        Unifiable That { get; }
+        /// <summary>
+        /// The raw input from the user
+        /// </summary>
+        Unifiable rawInput { get; }
     }
 
 #if _FALSE_

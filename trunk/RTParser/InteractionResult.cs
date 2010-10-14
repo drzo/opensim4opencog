@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using RTParser.Utils;
 using RTParser.Variables;
 
 namespace RTParser
 {
-    public interface InteractionResult
+    public interface InteractionResult : Utterance
     {
         /// <summary>
         /// The bot that is providing the answer
@@ -57,7 +58,7 @@ namespace RTParser
         /// <summary>
         /// The raw input from the user
         /// </summary>
-        Unifiable RawInput { get; }
+        //   Unifiable rawInput { get; }
 
         /// <summary>
         /// The result from the bot with logging and checking
@@ -71,7 +72,7 @@ namespace RTParser
         /// </summary>
         Unifiable RawOutput { get; }
 
-        bool IsEmpty { get; }
+        //bool IsEmpty { get; }
 
         ISettingsDictionary RequesterChanges { get; }
         ISettingsDictionary ResponderChanges { get; }
@@ -83,8 +84,8 @@ namespace RTParser
         bool Started { get; set; }
         TimeSpan Durration { get; }
         string WhyResultComplete { get; set; }
-        User Requester { get; set; }
-        User Responder { get; }
+        //   User Requester { get; set; }
+        //   User Responder { get; }
         string ToString();
         Unifiable GetInputSentence(int sentence);
         Unifiable GetOutputSentence(int sentence);

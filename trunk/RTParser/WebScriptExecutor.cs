@@ -6,7 +6,7 @@ using RTParser.Utils;
 
 namespace RTParser.Web
 {
-    internal class WebScriptExecutor : ScriptExecutorGetter, ScriptExecutor
+    public class WebScriptExecutor : ScriptExecutorGetter, ScriptExecutor
     {
         #region Implementation of ScriptExecutorGetter
 

@@ -7,10 +7,9 @@ namespace RTParser
     public class BestUnifiable : Unifiable
 
     {
-
-        public override string SpecialName
+        protected override string GenerateSpecialName
         {
-            get { return AsString(); }
+            get { return ToUpper(AsString()); }
         }
 
         public override bool IsLitteral()

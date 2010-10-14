@@ -10,11 +10,13 @@ using RTParser.Database;
 using RTParser.Utils;
 using UPath = RTParser.Unifiable;
 using StringAppendableUnifiable = RTParser.StringAppendableUnifiableImpl;
-//using StringAppendableUnifiable = System.Text.StringBuilder;
+using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
+using IndexTargetList = System.Collections.Generic.ICollection<RTParser.IndexTarget>;
+using IndexTargetListImpl = System.Collections.Generic.HashSet<RTParser.IndexTarget>;
 
 namespace RTParser
 {
-    abstract public class Unifiable : StaticAIMLUtils, IConvertible, IComparable<Unifiable>
+    abstract public class Unifiable : BaseUnifiable, IConvertible, IComparable<Unifiable>, Indexable, IndexTarget
     {
         static Unifiable()
         {
@@ -114,6 +116,8 @@ namespace RTParser
         }
 
 
+        public string SpecialCache;
+        public string KeyCache;
         public UFlags Flags = UFlags.NO_FLAGS;
         public bool IsFlag(UFlags f)
         {
@@ -371,7 +375,7 @@ namespace RTParser
         {
             if (ReferenceEquals(this, s)) return true;
             bool null2 = ReferenceEquals(s, null);
-            if (null2) return false;            
+            if (null2) return false;
             if (Equals(SpecialName, s.SpecialName))
             {
                 return true;
@@ -422,6 +426,7 @@ namespace RTParser
         }
         static public bool EQ(string t, string u)
         {
+            if (t == u) return true;
             var unull = IsNull(u);
             if (t == null || t == "$NULL")
             {
@@ -578,8 +583,6 @@ namespace RTParser
         {
             get { return Raw != null && ToUpper().Length == 0; }
         }
-
-        public abstract string SpecialName { get; }
 
         public virtual bool IsFalse()
         {
@@ -1077,14 +1080,44 @@ namespace RTParser
 
         }
 
-        public static bool NOCateIndex = true;
-        protected static readonly Dictionary<string, List<CategoryInfo>> categoryInfosDictionary = new Dictionary<string, List<CategoryInfo>>();
-        public List<CategoryInfo> CategoryInfos
+
+        public sealed override string SpecialName
         {
             get
             {
-                string strU = ToUpper();
-                List<CategoryInfo> categoryInfos1;
+                if (SpecialCache == null)
+                {
+                    SpecialCache = GenerateSpecialName;
+                }
+                return SpecialCache;
+            }
+        }
+
+        public bool IsExactKey
+        {
+            get { return OverlyMatchableString == AsString(); }
+        }
+        public bool IsStarContent
+        {
+            get { return OverlyMatchableString == "*"; }
+        }
+        public bool IsMixedContent
+        {
+            get { return ToArray().Length > 1; }
+        }
+        public static bool UpcaseXMLSource = true;
+        public static bool NOCateIndex = false;        
+        public static int MaxCategories = 10000;
+        public static int PrintCategories = 200;
+        protected static readonly Dictionary<string, IndexTargetList> categoryInfosDictionary = new Dictionary<string, IndexTargetList>();
+        virtual public IndexTargetList CategoryInfos
+        {
+            get
+            {
+                string strU = OverlyMatchableString;
+                var su = this as StringUnifiable;
+                IndexTargetList categoryInfos1 = su == null ? null : su.valueCache as IndexTargetList;
+                if (categoryInfos1 != null) return categoryInfos1;
                 lock (categoryInfosDictionary)
                 {
                     if (!categoryInfosDictionary.TryGetValue(strU, out categoryInfos1))
@@ -1096,17 +1129,53 @@ namespace RTParser
             }
             set
             {
-                string strU = ToUpper();
+                string strU = OverlyMatchableString;
                 lock (categoryInfosDictionary) categoryInfosDictionary[strU] = value;
+                if (this is StringUnifiable)
+                {
+                    var su = ((StringUnifiable) this);
+                    if (ReferenceEquals(su.valueCache, null))
+                    {
+                        su.valueCache = ((object) value ?? SpecialCache);
+                    }
+                }
             }
         }
-        public virtual bool AddCategory(CategoryInfo template)
+
+        public override string OverlyMatchableString
+        {
+            get
+            {
+                if (KeyCache == null)
+                {
+                    var local = KeyCache = SpecialName;
+                    var strUn = Replace(local, new[]
+                                                   {
+                                                       new[] {"_", "*",},
+                                                       new[] {"<SR>", " ",},
+                                                       new[] {"<SR />", " ",},
+                                                       new[] {"<STAR />", " * "},
+                                                       new[] {"<PERSON2 />", " * "},
+                                                       new[] {"<THATSTAR />", " * ",},
+                                                       new[] {"<STAR INDEX=\"1\" />", " * ",},
+                                                   });
+                    if (!ReferenceEquals(local, strUn))
+                    {
+                        KeyCache = ReTrimAndspace(strUn);
+                    }
+                    KeyCache = Trim(KeyCache);
+                }
+                return KeyCache;
+            }
+        }
+
+        public virtual bool AddCategory(IndexTarget template)
         {
             if (NOCateIndex) return false;
             throw new NotImplementedException();
         }
 
-        public virtual bool RemoveCategory(CategoryInfo template)
+        public virtual bool RemoveCategory(IndexTarget template)
         {
             if (NOCateIndex) return false;
             throw new NotImplementedException();
@@ -1127,6 +1196,8 @@ namespace RTParser
         {
             get { return IsWildCard(); }
         }
+
+        protected abstract string GenerateSpecialName { get; }
 
         internal bool LoopsFrom(string innerXml)
         {
@@ -1185,6 +1256,25 @@ namespace RTParser
         }
     }
 
+    public abstract class BaseUnifiable : StaticAIMLUtils
+    {
+        public abstract string SpecialName { get; }
+        public abstract string OverlyMatchableString { get; }
+    }
+
+    public interface IndexTarget
+    {
+       
+    }
+
+    public interface Indexable
+    {
+        string OverlyMatchableString { get; }
+        string SpecialName { get; }
+        bool AddCategory(IndexTarget ci);
+        bool RemoveCategory(IndexTarget ci);
+    }
+
     public class SpecialStringUnifiable : StringUnifiable
     {
         protected override bool SameMeaningCS(Unifiable s, bool caseSensitive)
@@ -1211,20 +1301,20 @@ namespace RTParser
             return false;
         }
 
-        public override bool AddCategory(CategoryInfo template)
+        public override bool AddCategory(IndexTarget template)
         {
             if (NOCateIndex) return false;
             return base.AddCategory(template);
             throw new NotImplementedException();
         }
 
-        public override bool RemoveCategory(CategoryInfo template)
+        public override bool RemoveCategory(IndexTarget template)
         {
             if (NOCateIndex) return false;
             throw new NotImplementedException();
         }
 
-        private readonly string DebugName1;
+       // private readonly string DebugName1;
 
         public override string ToUpper()
         {
@@ -1241,12 +1331,12 @@ namespace RTParser
         }
         public override string ToString()
         {
-            return DebugName1 + "-" + Unifiable.DescribeUnifiable(this);
+            return SpecialCache + "-" + Unifiable.DescribeUnifiable(this);
         }
         public SpecialStringUnifiable(string value, string debugName)
             : base(value)
         {
-            DebugName1 = debugName;
+            SpecialCache = debugName;
             upperCache = value;
         }
         public override int SpoilCache()
@@ -1257,9 +1347,9 @@ namespace RTParser
         {
             get { return str; }
         }
-        public override string SpecialName
+        protected override string GenerateSpecialName
         {
-            get { return DebugName1; }
+            get { return SpecialCache; }
         }
         public override void Append(Unifiable p)
         {

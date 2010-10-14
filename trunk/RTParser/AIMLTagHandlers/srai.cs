@@ -62,6 +62,7 @@ namespace RTParser.AIMLTagHandlers
         public static bool UseOriginalProcess = false;
         public bool KnowsCanProcess;
 
+#if false
         // unsuesd/... just code refernce
         protected string OriginalProcessChange()
         {
@@ -80,6 +81,7 @@ namespace RTParser.AIMLTagHandlers
             }
             return string.Empty;
         }
+#endif
 
         protected override Unifiable ProcessChange()
         {
@@ -102,7 +104,7 @@ namespace RTParser.AIMLTagHandlers
                         writeToLog("WARNING Depth pretty deep " + templateNode + " returning empty");
                         if (!request.SuspendSearchLimits) return RecurseResult;
                     }
-                    var vv = UseOriginalProcess ? (Unifiable)OriginalProcessChange() : ProcessChange0();
+                    var vv = /*UseOriginalProcess  ? (Unifiable)OriginalProcessChange() : */ ProcessChange0();
                     if (!IsNullOrEmpty(vv))
                     {
                         RecurseResult = vv;
@@ -259,7 +261,7 @@ namespace RTParser.AIMLTagHandlers
                 writeToLog("ERROR BAD REQUEST " + request);
                 return templateNodeInnerValue;
             }
-            var salientRequest = RequestImpl.GetOriginalSalientRequest(request);
+            var salientRequest = MasterRequest.GetOriginalSalientRequest(request);
             try
             {
                 Unifiable prevResult;
@@ -319,7 +321,7 @@ namespace RTParser.AIMLTagHandlers
                     //Unifiable templateNodeInnerValue = Recurse();
                     try
                     {
-                        var subRequest = request.CreateSubRequest(templateNodeInnerValue, user, mybot, null);
+                        Request subRequest = request.CreateSubRequest(templateNodeInnerValue, null);
 
 
                         string requestGraphSrai = request.Graph.Srai;
@@ -360,7 +362,7 @@ namespace RTParser.AIMLTagHandlers
 
                         AIMLbot.MasterResult subResult;
                         string subQueryRawOutputText;
-                        subResult = GetSubResult(prefix, request, user, mybot, subRequest, showDebug,
+                        subResult = GetSubResult(prefix, request, user, mybot, (MasterRequest) subRequest, showDebug,
                                                  out subResultOutput,
                                                  out subQueryRawOutputText, writeToLog);
 
@@ -470,7 +472,7 @@ namespace RTParser.AIMLTagHandlers
             MasterResult subResult = subRequest.CreateResult(subRequest);
             try
             {
-                var originalSalientRequest = RequestImpl.GetOriginalSalientRequest(request);
+                var originalSalientRequest = MasterRequest.GetOriginalSalientRequest(request);
                 var sraiMark = originalSalientRequest.CreateSRAIMark();
                 subRequest.GraphsAcceptingUserInput = true;
                 //var newresult = new AIMLbot.Result(request.user, Proc, request);

@@ -11,6 +11,7 @@ using ThatInfo = RTParser.Unifiable;
 using TopicInfo = RTParser.Unifiable;
 using GuardInfo = RTParser.Unifiable;
 using ResponseInfo = RTParser.Unifiable;
+using AIMLbot;
 
 namespace RTParser
 {
@@ -722,7 +723,7 @@ namespace RTParser
                                   AIMLTagHandler parent, bool protectChild, bool copyParent,
                                   AIMLTagHandler tagHandler, bool suspendLimits)
         {
-            RequestImpl originalSalientRequest = RequestImpl.GetOriginalSalientRequest(request);
+            Request originalSalientRequest = MasterRequest.GetOriginalSalientRequest(request);
             var wasSuspendRestrati = request.SuspendSearchLimits;
             request.SuspendSearchLimits = suspendLimits;
             var sraiMark = originalSalientRequest.CreateSRAIMark();

@@ -1,50 +1,240 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 using AIMLbot;
-using com.hp.hpl.jena.graph;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using RTParser;
-using RTParser.AIMLTagHandlers;
-using RTParser.Utils;
 using MushDLR223.Virtualization;
+using RTParser.AIMLTagHandlers;
+using RTParser.Database;
+using RTParser.Utils;
 using RTParser.Variables;
 
 namespace RTParser
 {
+    public interface IUserConverationScope
+    {
+        /// <summary>
+        /// Returns the sematantic meaning to use for the next <that/> part of a subsequent path
+        /// </summary>
+        /// <returns>the Unifiable to use for that</returns>
+        Unifiable LastSaidByReponder(User responder);
+
+        /// <summary>
+        /// Returns the first sentence of the last output from the bot
+        /// </summary>
+        /// <returns>the first sentence of the last output from the bot</returns>
+        Unifiable getThat(User responder);
+
+        /// <summary>
+        /// Returns the first sentence of the output "n" steps ago from the bot
+        /// </summary>
+        /// <param name="n">the number of steps back to go</param>
+        /// <returns>the first sentence of the output "n" steps ago from the bot</returns>
+        Unifiable getThat(int n, User responder);
+
+        /// <summary>
+        /// Returns the sentence numbered by "sentence" of the output "n" steps ago from the bot
+        /// </summary>
+        /// <param name="n">the number of steps back to go</param>
+        /// <param name="sentence">the sentence number to get</param>
+        /// <returns>the sentence numbered by "sentence" of the output "n" steps ago from the bot</returns>
+        Unifiable getThat(int n, int sentence, User responder);
+
+        /// <summary>
+        /// Returns the first sentence of the last output from the bot
+        /// </summary>
+        /// <returns>the first sentence of the last output from the bot</returns>
+        Unifiable getInputSentence(User responder);
+
+        /// <summary>
+        /// Returns the first sentence from the output from the bot "n" steps ago
+        /// </summary>
+        /// <param name="n">the number of steps back to go</param>
+        /// <returns>the first sentence from the output from the bot "n" steps ago</returns>
+        Unifiable getInputSentence(int n, User responder);
+
+        /// <summary>
+        /// Returns the identified sentence number from the input from the bot "n" steps ago
+        /// </summary>
+        /// <param name="n">the number of steps back to go</param>
+        /// <param name="sentence">the sentence number to return</param>
+        /// <returns>the identified sentence number from the input from the bot "n" steps ago</returns>
+        Unifiable getInputSentence(int n, int sentence, User responder);
+
+        /// <summary>
+        /// Returns the identified sentence number from the input from the bot "n" steps ago
+        /// </summary>
+        /// <param name="n">the number of steps back to go</param>
+        /// <param name="sentence">the sentence number to return</param>
+        /// <returns>the identified sentence number from the input from the bot "n" steps ago</returns>
+        Unifiable getRequestSentence(int n, int sentence, User responder);
+
+        /// <summary>
+        /// Returns the first sentence of the last output from the bot
+        /// </summary>
+        /// <returns>the first sentence of the last output from the bot</returns>
+        Unifiable getResultSentence(User responder);
+
+        /// <summary>
+        /// Returns the first sentence from the output from the bot "n" steps ago
+        /// </summary>
+        /// <param name="n">the number of steps back to go</param>
+        /// <returns>the first sentence from the output from the bot "n" steps ago</returns>
+        Unifiable getResultSentence(int n, User responder);
+
+        /// <summary>
+        /// Returns the identified sentence number from the output from the bot "n" steps ago
+        /// </summary>
+        /// <param name="n">the number of steps back to go</param>
+        /// <param name="sentence">the sentence number to return</param>
+        /// <returns>the identified sentence number from the output from the bot "n" steps ago</returns>
+        Unifiable getResultSentence(int n, int sentence, User responder);
+
+        Result GetResult(int i);
+        Result GetResult(int i, bool mustBeSalient);
+        Result GetResult(int i, bool mustBeSalient, User responder);
+
+        Result LastResult { get; }
+        int SailentResultCount { get; }
+        Unifiable That { get; set; }
+        Unifiable ResponderJustSaid { get; set; }
+        User LastResponder { get; set; }
+        Unifiable JustSaid { get; set; }
+        Unifiable TopicSetting { get; set; }
+        IList<Unifiable> Topics { get; }
+
+        string GraphName { get; set; }
+
+        Unifiable Topic { get; }
+
+        IEnumerable<Unifiable> BotOutputs { get; }
+    }
+
+    public interface IUserImpl2
+    {
+        actMSM botActionMSM { get; }
+
+        //void SetOutputSentences(string args, User responder);
+        bool CanUseTemplate(TemplateInfo info, Result request);
+
+        ListAsSet<TemplateInfo> UsedTemplates { get; set; }
+        ListAsSet<TemplateInfo> DisabledTemplates { get; set; }
+        ICollection<GraphMaster> DisallowedGraphs { get; set; }
+        ListAsSet<GraphQuery> AllQueries { get; set; }
+
+        int depth { get; set; }
+
+        Unifiable grabSettingNoDebug(string arg);
+        void Enter(AIMLTagHandler srai);
+        void Exit(AIMLTagHandler srai);
+
+        GraphMaster ListeningGraph { get; set; }
+        void addResultTemplates(Result result);
+        void addRequestTemplates(Request request);
+        void addResult(Result result);
+
+        SettingsDictionary Predicates { get; set; }
+        Request CurrentRequest { get; set; }
+        bool SuspendAddResultToUser { get; set; }
+    }
+
+    public interface IUser
+    {
+        User Value { get; }
+    }
+
+    public interface User : ISettingsDictionary, IUserConverationScope, IUserImpl2, IDisposable
+    {
+        RTPBot bot { get; }
+        string UserID { get; set; }
+        string UserName { get; set; }
+
+        GraphMaster GetResponseGraph(User target);
+        void StampResponseGiven();
+        bool CanGiveResponseNow();
+        int MaxInputs { get; set; }
+        bool IsRoleAcct { get; set; }
+        OutputDelegate userTrace { set; }
+        DateTime NameUsedOrGivenTime { get; set; }
+        PrintOptions WriterOptions { get; }
+        bool RespondToChat { get; set; }
+        int MaxRespondToChatPerMinute { get; set; }
+        MasterRequest CreateRequest(Unifiable input, User targetUser);
+        MasterRequest CreateRequest(Unifiable message, User target, GraphMaster G, Request parentRequest);
+
+        TaskQueueHandler GetTaskQueueHandler(string find);
+
+        string UserDirectory { get; }
+        void LoadDirectory(string userdir);
+        void SaveDirectory(string userDirectory);
+        void SyncDirectory(string userdir);
+        bool DoUserCommand(string args, OutputDelegate console);
+
+        void WriteToUserTrace(string s, params object[] args);
+
+        /// <summary>
+        /// the value of the "topic" predicate
+        /// </summary>
+        void InsertProvider(ParentProvider pp);
+
+        QuerySettings GetQuerySettings();
+        QuerySettings GetQuerySettingsSRAI();
+
+        
+    }
+
     /// <summary>
     /// Encapsulates information and history of a user who has interacted with the bot
     /// </summary>
-    abstract public class User : StaticAIMLUtils, IDisposable, ISettingsDictionary, IUser
+    public abstract class UserImpl : StaticAIMLUtils, IDisposable, ISettingsDictionary, IUser, User, IUserConverationScope,
+                                     IUserImpl2
     {
         public static bool ThatIsStoredBetweenUsers = true;
         public readonly object QueryLock = new object();
 
         #region Attributes
 
-        public ListAsSet<TemplateInfo> UsedTemplates = new ListAsSet<TemplateInfo>();
-        public ListAsSet<TemplateInfo> DisabledTemplates = new ListAsSet<TemplateInfo>();
-        public ICollection<GraphMaster> DisallowedGraphs = new HashSet<GraphMaster>();
-        public ListAsSet<GraphQuery> AllQueries = new ListAsSet<GraphQuery>();
+        public readonly Dictionary<string, TaskQueueHandler> TaskQueueHandlers =
+            new Dictionary<string, TaskQueueHandler>();
 
-        public DateTime LastResponseGivenTime = DateTime.Now;
-        public bool RespondToChat = true;
-        public int MaxRespondToChatPerMinute = 10;
-        public DateTime NameUsedOrGivenTime = DateTime.Now;
+        public TaskQueueHandler GetTaskQueueHandler(string find)
+        {
+            find = (find ?? "").Trim().ToLower();
+            if (find == "") find = "conversation";
+
+            lock (TaskQueueHandlers)
+            {
+                TaskQueueHandler tqh;
+                if (!TaskQueueHandlers.TryGetValue(find, out tqh))
+                {
+                    tqh = new TaskQueueHandler(UserName + " tq " + find, 1);
+                    TaskQueueHandlers[find] = tqh;
+                    tqh.Start();
+                    return tqh;
+                }
+                return tqh;
+            }
+        }
+
+        public ListAsSet<TemplateInfo> UsedTemplates { get; set; }
+        public ListAsSet<TemplateInfo> DisabledTemplates { get; set; }
+        public ICollection<GraphMaster> DisallowedGraphs { get; set; }
+        public ListAsSet<GraphQuery> AllQueries { get; set; }
+
+        public DateTime LastResponseGivenTime { get; set; }
+        public bool RespondToChat { get; set; }
+        public int MaxRespondToChatPerMinute { get; set; }
+        public DateTime NameUsedOrGivenTime { get; set; }
 
         public static int DefaultMaxResultsSaved = 5;
-        public static bool NeverSaveUsers = false;
+        public static bool NeverSaveUsers;
         public int MaxResultsSaved = DefaultMaxResultsSaved;
-        public bool IsRoleAcct = false;
+        public bool IsRoleAcct { get; set; }
 
         private object ChatWithThisUser(string cmd, Request request)
         {
-            RequestImpl req = request.CreateSubRequest(cmd);
+            Request req = request.CreateSubRequest(cmd, null);
             req.Responder = this;
             req.IsToplevelRequest = request.IsToplevelRequest;
             return bot.LightWeigthBotDirective(cmd, req);
@@ -58,22 +248,24 @@ namespace RTParser
         /// <summary>
         /// The bot this user is using
         /// </summary>
-        public RTParser.RTPBot bot;
+        public RTPBot bot { get; set; }
 
-        public TaskQueueHandler OnTaskAtATimeHandler;
+        public TaskQueueHandler OnTaskAtATimeHandler
+        {
+            get { return GetTaskQueueHandler("HeardSelfSsy"); }
+        }
+
         public Timer SaveTimer;
 
-        public void Enqueue(ThreadStart evt)
+        public void Enqueue(string queuename, TaskType taskType, string taskName, ThreadStart evt)
         {
-            if (OnTaskAtATimeHandler == null)
-            {
-                OnTaskAtATimeHandler = new TaskQueueHandler("TaskQueue For " + UserID, 10);
-                OnTaskAtATimeHandler.Start();
-            }
+            TaskQueueHandler queueHandler = GetTaskQueueHandler(queuename);
+            queueHandler.CreateTask(taskType, taskName, evt, true);
             OnTaskAtATimeHandler.Enqueue(evt);
         }
 
-        readonly object SaveLock = new object();
+        private readonly object SaveLock = new object();
+
         private void SaveOften(object state)
         {
             if (IsRoleAcct) return;
@@ -82,7 +274,7 @@ namespace RTParser
             {
                 if (!needsSave)
                 {
-                    WriteLine("Skipping save");
+                    WriteToUserTrace("Skipping save");
                     return;
                 }
                 needsSave = false;
@@ -94,7 +286,7 @@ namespace RTParser
             }
             catch (Exception exception)
             {
-                WriteLine("ERROR saving " + exception);
+                WriteToUserTrace("ERROR saving " + exception);
             }
             lock (SaveLock)
             {
@@ -137,6 +329,7 @@ namespace RTParser
                 }
             }
         }
+
         public string GraphName
         {
             get
@@ -216,7 +409,7 @@ namespace RTParser
         {
             if (value.ToLower() == "friend")
             {
-                WriteLine("Friend: " + value);
+                WriteToUserTrace("Friend: " + value);
                 return false;
             }
             return true;
@@ -224,10 +417,7 @@ namespace RTParser
 
         public string UserName
         {
-            get
-            {
-                return GetValueORElse(this.Predicates, "name", () => UserID.Replace("_", " "));
-            }
+            get { return GetValueORElse(this.Predicates, "name", () => UserID.Replace("_", " ")); }
 
             set
             {
@@ -257,13 +447,13 @@ namespace RTParser
             var prev = Predicates.IsIdentityReadOnly;
             try
             {
-                string[] split = value.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                string[] split = value.Split(new[] {" "}, StringSplitOptions.RemoveEmptyEntries);
                 Predicates.IsIdentityReadOnly = false;
-                Predicates["name"] = value;                
+                Predicates["name"] = value;
                 Predicates["me"] = value;
                 Predicates["myself"] = value;
                 Predicates["i"] = value;
-                Predicates["my"] = RTParser.Database.NatLangDb.MakePossesive(value);
+                Predicates["my"] = NatLangDb.MakePossesive(value);
                 Predicates["firstname"] = split[0];
                 if (split.Length > 1)
                 {
@@ -287,7 +477,7 @@ namespace RTParser
             if (dictionary != null && dictionary.containsLocalCalled(settingname))
             {
                 string value = dictionary.grabSetting(settingname);
-                if (!Unifiable.IsNullOrEmpty(value)) return value.Trim();
+                if (!IsNullOrEmpty(value)) return value.Trim();
             }
             return func();
         }
@@ -305,12 +495,13 @@ namespace RTParser
         private readonly List<InteractionResult> Interactions = new List<InteractionResult>();
 
 
-        List<Unifiable> _topics = new List<Unifiable>();
+        private readonly List<Unifiable> _topics = new List<Unifiable>();
+
         public IList<Unifiable> Topics
         {
             get
             {
-                if (_topics.Count == 0) return new List<Unifiable>() { Topic };
+                if (_topics.Count == 0) return new List<Unifiable> {Topic};
                 return _topics;
             }
         }
@@ -320,11 +511,7 @@ namespace RTParser
         /// </summary>
         public Unifiable Topic
         {
-            get
-            {
-                return TopicSetting;
-            }
-
+            get { return TopicSetting; }
         }
 
         public Unifiable TopicSetting
@@ -336,22 +523,20 @@ namespace RTParser
                     return bot.NOTOPIC;
                 }
                 var t = this.Predicates.grabSetting("topic");
-                if (Unifiable.IsNullOrEmpty(t))
+                if (IsNullOrEmpty(t))
                 {
                     return bot.NOTOPIC;
                 }
                 return t;
             }
-            set
-            {
-                Predicates.addSetting("topic", value);
-            }
+            set { Predicates.addSetting("topic", value); }
         }
 
         /// <summary>
         /// the predicates associated with this particular user
         /// </summary>
-        public SettingsDictionary Predicates;
+        public SettingsDictionary Predicates { get; set; }
+
         //public SettingsDictionary Predicates0;
 
         /// <summary>
@@ -359,10 +544,7 @@ namespace RTParser
         /// </summary>
         public Result LastResult
         {
-            get
-            {
-                return GetResult(0, true);
-            }
+            get { return GetResult(0, true); }
         }
 
 
@@ -375,7 +557,8 @@ namespace RTParser
                 string lastOutput = "";
                 if (this.SailentResultCount > 0)
                 {
-                    lock (Results) foreach (var result in Results)
+                    lock (Results)
+                        foreach (var result in Results)
                         {
                             if (result.Responder == this) continue;
                             string thisOutput = result.RawOutput;
@@ -393,7 +576,6 @@ namespace RTParser
             }
         }
 
-
         #endregion
 
         #region Methods
@@ -402,12 +584,13 @@ namespace RTParser
         {
             Predicates.InsertProvider(pp);
         }
+
         /// <summary>
         /// Ctor
         /// </summary>
         /// <param name="UserID">The GUID of the user</param>
         /// <param name="bot">the bot the user is connected to</param>
-        internal User(string userID, RTParser.RTPBot bot)
+        internal UserImpl(string userID, RTPBot bot)
             : this(userID, bot, null)
         {
         }
@@ -417,10 +600,17 @@ namespace RTParser
         /// </summary>
         /// <param name="userID">The GUID of the user</param>
         /// <param name="bot">the bot the user is connected to</param>
-        protected User(string userID, RTParser.RTPBot bot, ParentProvider provider)
-        // : base(bot)
+        protected internal UserImpl(string userID, RTPBot bot, ParentProvider provider)
+            // : base(bot)
         {
-            WriteLine = WriteLine0;
+            userTrace = WriteToUserTrace;
+            MaxRespondToChatPerMinute = 10;
+            RespondToChat = true;
+            LastResponseGivenTime = DateTime.Now;
+            NameUsedOrGivenTime = DateTime.Now;
+            UsedTemplates = new ListAsSet<TemplateInfo>();
+            DisabledTemplates = new ListAsSet<TemplateInfo>();
+            DisallowedGraphs = new HashSet<GraphMaster>();
             qsbase = new QuerySettingsImpl(bot.GetQuerySettings());
             if (userID.Length > 0)
             {
@@ -445,6 +635,7 @@ namespace RTParser
                 needsSave = true;
                 StampResponseGiven();
                 bot.AddExcuteHandler(userID, ChatWithThisUser);
+                AllQueries = new ListAsSet<GraphQuery>();
             }
             else
             {
@@ -462,6 +653,7 @@ namespace RTParser
         }
 
         private readonly QuerySettings qsbase;
+
         public QuerySettings GetQuerySettings()
         {
             //if (CurrentRequest != null)
@@ -495,7 +687,6 @@ namespace RTParser
                 }
                 catch (Exception)
                 {
-
                 }
                 lock (ShutdownHooks)
                 {
@@ -520,7 +711,7 @@ namespace RTParser
         /// Returns the Unifiable to use for the next that part of a subsequent path
         /// </summary>
         /// <returns>the Unifiable to use for that</returns>
-        private Unifiable getLastBotOutput(User responder)
+        public Unifiable LastSaidByReponder(User responder)
         {
             if (this.SailentResultCount > 0)
             {
@@ -566,7 +757,7 @@ namespace RTParser
                 if (historicResult == null) return "";
                 if ((sentence >= 0) & (sentence < historicResult.OutputSentenceCount))
                 {
-                    return (Unifiable)historicResult.GetOutputSentence(sentence);
+                    return historicResult.GetOutputSentence(sentence);
                 }
             }
             return Unifiable.Empty;
@@ -610,7 +801,7 @@ namespace RTParser
                 Result historicInput = GetResult(n, false, responder);
                 if ((sentence >= 0) & (sentence < historicInput.InputSentences.Count))
                 {
-                    return (Unifiable)historicInput.InputSentences[sentence];
+                    return historicInput.InputSentences[sentence];
                 }
             }
             return Unifiable.Empty;
@@ -634,7 +825,7 @@ namespace RTParser
                 Result historicInput = GetResult(n, false, responder);
                 if ((sentence >= 0) & (sentence < historicInput.InputSentences.Count))
                 {
-                    return (Unifiable)historicInput.InputSentences[sentence];
+                    return historicInput.InputSentences[sentence];
                 }
             }
             return Unifiable.Empty;
@@ -672,14 +863,15 @@ namespace RTParser
                 Result historicResult = GetResult(n, false, responder);
                 if ((sentence >= 0) & (sentence < historicResult.InputSentences.Count))
                 {
-                    return (Unifiable)historicResult.InputSentences[sentence];
+                    return historicResult.InputSentences[sentence];
                 }
             }
             return Unifiable.Empty;
         }
 
-        public bool SuspendAddResultToUser;
-        private int SailentResultCount
+        public bool SuspendAddResultToUser { get; set; }
+
+        public int SailentResultCount
         {
             get
             {
@@ -723,6 +915,7 @@ namespace RTParser
             }
             addResultTemplates(latestResult);
         }
+
         #endregion
 
         public Unifiable That
@@ -733,7 +926,7 @@ namespace RTParser
                 Result r = GetResult(0, true) ?? GetResult(0, false, LastResponder);
                 if (r != null && IsSomething(r.NormalizedOutput, out something)) return something;
                 if (LastResponder != null && IsSomething(LastResponder.JustSaid, out something)) return something;
-                if (User.ThatIsStoredBetweenUsers)
+                if (ThatIsStoredBetweenUsers)
                 {
                     return "Nothing";
                 }
@@ -743,7 +936,7 @@ namespace RTParser
                 {
                     var frithat = fr.ithat;
                     if (IsSomething(frithat, out something)) return something;
-                    fr = (MasterRequest)fr.ParentRequest;
+                    fr = fr.ParentRequest;
                 }
                 if (IsSomething(getLastBotOutputForThat(), out something)) return something;
                 return "Nothing";
@@ -760,7 +953,6 @@ namespace RTParser
                     LastResponder.JustSaid = value;
                 }
             }
-
         }
 
         private string getLastBotOutputForThat()
@@ -772,8 +964,9 @@ namespace RTParser
             return "Nothing";
         }
 
-        private string _JustSaid;
-        public string JustSaid
+        private Unifiable _JustSaid;
+
+        public Unifiable JustSaid
         {
             get
             {
@@ -800,7 +993,7 @@ namespace RTParser
                     bot.RaiseError(new InvalidOperationException("set_That: " + this));
                     return;
                 }
-                if (value.Contains("TAG-"))
+                if (!IsValue(value))
                 {
                     bot.RaiseError(new InvalidOperationException("set_That: TAG: " + value + " for " + this));
                     return;
@@ -820,7 +1013,7 @@ namespace RTParser
             }
         }
 
-        public string ResponderJustSaid
+        public Unifiable ResponderJustSaid
         {
             get
             {
@@ -838,9 +1031,10 @@ namespace RTParser
                     bot.RaiseError(new InvalidOperationException("set_ResponderJustSaid: " + this));
                     return;
                 }
-                if (value.Contains("TAG-"))
+                if (!IsValue(value))
                 {
-                    bot.RaiseError(new InvalidOperationException("set_ResponderJustSaid: TAG: " + value + " for " + this));
+                    bot.RaiseError(
+                        new InvalidOperationException("set_ResponderJustSaid: !IsValue: " + value + " for " + this));
                     return;
                 }
 
@@ -863,11 +1057,11 @@ namespace RTParser
                     string lname =
                         WithoutTrace(Predicates,
                                      () =>
-                                     {
-                                         string realName;
-                                         return SettingsDictionary.grabSettingDefaultDict(Predicates, name1,
-                                                                             out realName);
-                                     });
+                                         {
+                                             string realName;
+                                             return SettingsDictionary.grabSettingDefaultDict(Predicates, name1,
+                                                                                              out realName);
+                                         });
                     if (!string.IsNullOrEmpty(lname))
                     {
                         User user = bot.FindUser(lname);
@@ -894,7 +1088,7 @@ namespace RTParser
                 Predicates["lastusername"] = value.UserName;
                 Predicates["you"] = value.UserName;
                 Predicates["yourself"] = value.UserName;
-                Predicates["your"] = RTParser.Database.NatLangDb.MakePossesive(value.UserName);
+                Predicates["your"] = NatLangDb.MakePossesive(value.UserName);
             }
         }
 
@@ -904,7 +1098,7 @@ namespace RTParser
             input = input.Trim();
             if (input.StartsWith("@"))
             {
-                input = input.TrimStart(new[] { ' ', '@' });
+                input = input.TrimStart(new[] {' ', '@'});
                 switch (input)
                 {
                     case "save":
@@ -918,7 +1112,7 @@ namespace RTParser
             }
             string output;
             string cmd;
-            if (!SplitOff(input," ", out cmd, out output))
+            if (!SplitOff(input, " ", out cmd, out output))
             {
                 cmd = "";
                 output = input;
@@ -945,9 +1139,9 @@ namespace RTParser
             return Predicates.DoSettingsCommand(input, console);
         }
 
-        internal OutputDelegate userTrace;
-        internal OutputDelegate WriteLine;
-        internal void WriteLine0(string s, params object[] objects)
+        public OutputDelegate userTrace { get; set; }
+
+        public void WriteToUserTrace(string s, params object[] objects)
         {
             try
             {
@@ -1021,7 +1215,7 @@ namespace RTParser
             }
         }
 
-        public MasterRequest CurrentRequest;
+        public Request CurrentRequest { get; set; }
 
         public Result GetResult(int i)
         {
@@ -1079,10 +1273,11 @@ namespace RTParser
         private bool insideSave;
         private bool noLoad = true;
         public bool NeverSave = NeverSaveUsers;
-        private bool needAiml = false;
+        private bool needAiml;
         private readonly List<CrossAppDomainDelegate> ShutdownHooks = new List<CrossAppDomainDelegate>();
         private readonly List<CrossAppDomainDelegate> OnNeedAIML = new List<CrossAppDomainDelegate>();
-        public int depth;
+        public int depth { get; set; }
+
 
         public void SyncDirectory(string userdir)
         {
@@ -1125,12 +1320,12 @@ namespace RTParser
         {
             if (userdir == null && _saveToDirectory == null)
             {
-                WriteLine("no saveto dir specified");
+                WriteToUserTrace("no saveto dir specified");
                 return;
             }
             if (!HostSystem.CreateDirectory(userdir))
             {
-                WriteLine("Cannot SaveDirectory {0}", userdir);
+                WriteToUserTrace("Cannot SaveDirectory {0}", userdir);
                 return;
             }
             // or WriteLine but this is spammy 
@@ -1168,11 +1363,11 @@ namespace RTParser
                 if (noLoad) return;
                 LoadUserSettings(userdir);
                 LoadUserAiml(userdir);
-                WriteLine("USERTRACE: LoadDirectory " + userdir + " -DEBUG9");
+                WriteToUserTrace("LoadDirectory " + userdir + " -DEBUG9");
             }
             else
             {
-                WriteLine("USERTRACE: Not LoadDirectory " + userdir);
+                WriteToUserTrace("Not LoadDirectory " + userdir);
             }
         }
 
@@ -1205,40 +1400,37 @@ namespace RTParser
         {
             if (HostSystem.DirExists(userdir))
             {
-                AddTodoItem(() =>
-                            {
-                                string[] hostSystemGetFiles = HostSystem.GetFiles(userdir, "*.aiml");
-                                if (hostSystemGetFiles != null && hostSystemGetFiles.Length > 0)
-                                {
-                                    var request1 = new AIMLbot.MasterRequest("@echo load user aiml ", this, bot, null, null);
-                                    request1.TimesOutAt = DateTime.Now + new TimeSpan(0, 15, 0);
-                                    request1.Graph = ListeningGraph;
-                                    request1.LoadingFrom = userdir;
-                                    var options1 = request1.LoadOptions; //LoaderOptions.GetDefault(request);
-                                    var gs = bot.GlobalSettings;
-                                    try
-                                    {
-                                        bot.GlobalSettings = Predicates;
-                                        request1.Loader.loadAIMLURI(userdir, options1.Value);
-                                    }
-                                    finally
-                                    {
-                                        bot.GlobalSettings = gs;
-                                    }
-                                    return;
-                                }
-                            });
+                AddTodoItem(() => LoadUserAiml0(userdir));
                 return;
             }
             // process previous todo list
             DoPendingTodoList();
-            if (!HostSystem.FileExists(userdir) || !userdir.EndsWith(".aiml")) return;
-            var request = new AIMLbot.MasterRequest("@echo load user aiml ", this, bot, null, null);
+            LoadUserAiml0(userdir);
+        }
+
+        private void LoadUserAiml0(string userdir)
+        {
+            string[] hostSystemGetFiles = HostSystem.GetFiles(userdir, "*.aiml");
+            if (hostSystemGetFiles == null || hostSystemGetFiles.Length <= 0) return;
+            var request = new MasterRequest("@echo load user aiml ", this, "Nothing", bot.BotAsUser, bot,
+                                            null, ListeningGraph);
             request.TimesOutAt = DateTime.Now + new TimeSpan(0, 15, 0);
             request.Graph = ListeningGraph;
             request.LoadingFrom = userdir;
             var options = request.LoadOptions; //LoaderOptions.GetDefault(request);
-            request.Loader.loadAIMLURI(userdir, options.Value);
+            var gs = bot.GlobalSettings;
+            try
+            {
+                if (bot.BotAsUser == this)
+                {
+                    bot.GlobalSettings = Predicates;
+                }
+                request.Loader.loadAIMLURI(userdir, options.Value);
+            }
+            finally
+            {
+                bot.GlobalSettings = gs;
+            }
         }
 
         public void AddTodoItem(CrossAppDomainDelegate action)
@@ -1350,10 +1542,7 @@ namespace RTParser
 
         public string NameSpace
         {
-            get
-            {
-                return UserID;
-            }
+            get { return UserID; }
         }
 
         public PrintOptions WriterOptions { get; set; }
@@ -1366,7 +1555,9 @@ namespace RTParser
         public IEnumerable<string> SettingNames(int depth)
         {
             //get 
-            { return Predicates.SettingNames(depth); }
+            {
+                return Predicates.SettingNames(depth);
+            }
         }
 
         #endregion
@@ -1376,17 +1567,30 @@ namespace RTParser
             if (target != null) return target.ListeningGraph;
             return ListeningGraph;
         }
-        public AIMLbot.MasterRequest CreateRequest(string message, User target)
+
+        public MasterRequest CreateRequest(Unifiable message, User target)
         {
-            return CreateRequest(message, target, null, null);
+            return CreateRequest(message, target, GetResponseGraph(target), null);
         }
 
-        public AIMLbot.MasterRequest CreateRequest(string message, User target, GraphMaster G, Request parentRequest)
+        public MasterRequest CreateRequest(Unifiable message, User target, GraphMaster G, Request parentRequest)
         {
             if (G == null) G = GetResponseGraph(target);
             bool asIsToplevelRequest = true;
             depth = 0;
-            var request = new AIMLbot.MasterRequest(message, this, bot, parentRequest, target);
+            MasterRequest request;
+
+            target = target ?? LastResponder;
+            Unifiable targetJustSaid = ResponderJustSaid;
+            if (target != null) targetJustSaid = target.JustSaid;
+            if (parentRequest == null)
+            {
+                request = new MasterRequest(message, this, targetJustSaid, target, bot, parentRequest, G);
+            }
+            else
+            {
+                request = parentRequest.CreateSubRequest(message, this, target.JustSaid, target, bot, parentRequest, G);
+            }
             if (parentRequest != null)
             {
                 asIsToplevelRequest = false;
@@ -1400,7 +1604,8 @@ namespace RTParser
                 asIsToplevelRequest = true;
                 request.OriginalSalientRequest = request;
             }
-           
+            DoPendingTodoList();
+
             if (asIsToplevelRequest)
             {
                 request.depth = 0;
@@ -1411,8 +1616,9 @@ namespace RTParser
                 request.writeToLog = writeDebugLine;
                 //request.TimesOutAt = DateTime.Now + TimeSpan.FromSeconds(10);
                 request.ResetValues(true);
+                Result res = request.FindOrCreateCurrentResult();
+                request.ExitQueue.Add("LastResponder = target;", () => { LastResponder = target; });
             }
-            DoPendingTodoList();
             return request;
         }
 
@@ -1429,11 +1635,11 @@ namespace RTParser
             DateTime thisResponseTime = DateTime.Now;
             TimeSpan TSP = thisResponseTime.Subtract(LastResponseGivenTime);
             double timedelay = Math.Abs(TSP.TotalSeconds);
-            double secPerChat = (double)((double)60 / (double)MaxRespondToChatPerMinute);
+            double secPerChat = (60/(double) MaxRespondToChatPerMinute);
             return (timedelay >
-                // ReSharper disable PossibleLossOfFraction
-                     secPerChat
-             );
+                    // ReSharper disable PossibleLossOfFraction
+                    secPerChat
+                   );
             // ReSharper restore PossibleLossOfFraction
         }
 
@@ -1460,10 +1666,5 @@ namespace RTParser
         {
             get { return this; }
         }
-    }
-
-    public interface IUser
-    {
-        User Value { get; }
     }
 }

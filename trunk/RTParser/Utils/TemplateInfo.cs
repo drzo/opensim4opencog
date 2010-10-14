@@ -89,11 +89,13 @@ namespace RTParser.Utils
             srcNode = templateNode;
             Rating = 1.0;
             Guard = guard;
+            //CategoryXml = cateNode;
             That = thatInfo;
             Response = responseInfo;
             Topic = topicInfo;
             Pattern = pattern;
             GraphmasterNode = patternNode;
+            PreconditionKey = patternNode.GetPath();
             //ParentCategoryInfo = categoryInfo;
             try
             {
@@ -168,8 +170,7 @@ namespace RTParser.Utils
         {
             get
             {
-                string s = TemplateXml.InnerXml;
-                if (s.StartsWith("<think") && s.EndsWith("k>"))
+                if (IsSilentTag(TemplateXml))
                 {
                     return true;
                 }
@@ -184,15 +185,20 @@ namespace RTParser.Utils
 
         #region IAIMLInfo Members
 
-        public GraphMaster Graph
+        public override GraphMaster Graph
         {
-            get { return GraphmasterNode.Graph; }
+            get
+            {
+                Node gmNode = Template.GraphmasterNode;
+                var g = gmNode != null ? gmNode.Graph : base.Graph;
+                return g;
+            }
         }
 
         override public string ToFileString(PrintOptions printOptions)
         {
             if (CategoryInfo != null) return base.ToFileString(printOptions);
-            return ToString();
+            return base.ToFileString(printOptions);
         }
 
         public string SourceInfo()
@@ -344,7 +350,7 @@ namespace RTParser.Utils
             }
             set
             {
-                //_templateKey = value;
+                _templateKey = value;
             }
         }
 
@@ -355,7 +361,10 @@ namespace RTParser.Utils
 
         public void AddRules(IEnumerable<ConversationCondition> rules)
         {
-            foreach (var r in rules) base.AddPrecondition(r);
+            if (rules != null)
+            {
+                foreach (var r in rules) base.AddPrecondition(r);
+            }
         }
 
 
@@ -414,15 +423,16 @@ namespace RTParser.Utils
 
         private IEnumerable<Unifiable> GetIndexObjects()
         {
-            return new[]
+            var v = new[]
                        {
-                           makeStarNamed(Filename, "Filename"),
+                         //  makeStarNamed(Filename, "Filename"),
                            makeStarNamed(Pattern, "Pattern"),
-                           makeStarNamed(Guard, null),
+                          // makeStarNamed(Guard, null),
                            makeStarNamed(Response, "Response"), 
                            makeStarNamed(That, null),
                            makeStarNamed(Topic, null)
                        };
+            return v;
         }
 
         private Unifiable makeStarNamed(Unifiable phrase, string ifNullOrStar)

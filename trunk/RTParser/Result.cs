@@ -10,7 +10,11 @@ using UPath = RTParser.Unifiable;
 
 namespace RTParser
 {
+#if interfaces   
     public interface Result : InteractionResult, RequestOrQuery
+#else
+    public interface ResultImpl : InteractionResult, RequestOrQuery
+#endif
     {
         /// <summary>
         /// The bot that is providing the answer
@@ -69,7 +73,7 @@ namespace RTParser
         /// <summary>
         /// The raw input from the user
         /// </summary>
-        Unifiable RawInput { get; }
+        //Unifiable rawInput { get; }
 
         /// <summary>
         /// The result from the bot with logging and checking
@@ -100,7 +104,7 @@ namespace RTParser
         string WhyResultComplete { get; set; }
         IList<TemplateInfo> ResultTemplates { get; }
         RTPBot TargetBot { get; }
-        User Requester { get; set; }
+     //   User Requester { get; set; }
         GraphMaster Graph { get; }
         void AddSubqueries(GraphQuery queries);
         void AddOutputSentences(TemplateInfo ti, string unifiable);
@@ -112,7 +116,7 @@ namespace RTParser
         bool CanResultUseTemplate(TemplateInfo info);
         OutputDelegate writeToLog { get; set; }
         ChatLabel CatchLabel { get; set; }
-        User Responder { get; }
+    //    User Responder { get; }
         SubQuery CurrentQuery { get; set; }
         int MaxCanEvalResult { get; set; }
         bool IsComplete { get; set; }
@@ -124,7 +128,12 @@ namespace RTParser
     /// <summary>
     /// Encapsulates information about the result of a request to the bot
     /// </summary>
-    public abstract class ResultImpl : QuerySettings, Result
+#if interfaces   
+    public abstract class ResultImpl : QuerySettings, Result, InteractionResult, RequestOrQuery
+#else
+    public abstract class Result : QuerySettings, ResultImpl, InteractionResult, RequestOrQuery
+#endif
+   
     {
         /// <summary>
         /// The subQueries processed by the bot's graphmaster that contain the templates that 
@@ -159,9 +168,9 @@ namespace RTParser
         public void CollectRequest()
         {
             Request req = request;
-            if (request == null || request == this) return;
-            Responder = req.Responder;
-            Requester = req.Requester;
+            if (request == null || ReferenceEquals(request, this)) return;
+            //Responder = req.Responder;
+            //Requester = req.Requester;
             //request = null;
         }
 
@@ -182,7 +191,7 @@ namespace RTParser
                     }
                     if (string.IsNullOrEmpty(s)) s = null;
                     var request1 = this.request;
-                    if (request1 != null && request1 != this) t = request1.WhyRequestComplete;
+                    if (request1 != null && !ReferenceEquals(request1, this)) t = request1.WhyRequestComplete;
                     t = (s == null) ? t : (s + " " + t);
                     t = (userSetResultComplete == null) ? t : (s + " " + userSetResultComplete);
                     return t;
@@ -197,7 +206,7 @@ namespace RTParser
         public abstract Result result { get; }
         public ParsedSentences ChatOutput { get; private set; }
 
-        public bool IsTraced { get; set; }
+        //public override bool IsTraced { get; set; }
 
         /// <summary>
         /// The individual sentences that constitute the raw input from the user
@@ -249,22 +258,30 @@ namespace RTParser
         /// <param name="user">The user for whom this is a result</param>
         /// <param name="bot">The bot providing the result</param>
         /// <param name="request">The request that originated this result</param>
-        public ResultImpl(string rawInput, User user, RTPBot bot, Request parent, User targetUser)
+        public 
+            
+#if interface
+            ResultImpl
+#else
+            Result
+#endif // interface
+            
+            (string rawInput, User user, RTPBot bot, Request parent, User targetUser)
             : base(parent)
         {
+            this.request = parent;
             ExitQueue = new CommitQueue();
             matchable = matchable ?? MakeMatchable(rawInput);
             SubQueries = new List<SubQuery>();
             MaxCanEvalResult = 10;
             request = parent;
             ChatInput = parent.ChatInput;
-            this.Requester = user;
+            //this.Requester = user;
+            //this.Responder = targetUser;
             request.TargetBot = bot;
-            this.request = parent;
-            this.Responder = targetUser;
             ChatOutput = new ParsedSentences(bot.EnsureEnglish, MaxPrintResults);
             OutputSentences = ChatOutput.SemanticSentences;
-            writeToLog = writeToLog ?? user.WriteLine;
+            writeToLog = writeToLog ?? user.WriteToUserTrace;
             writeToLog = writeToLog ?? request.WriteLine;
             //this.request.TheCurrentResult = this;
         }
@@ -281,7 +298,7 @@ namespace RTParser
             get
             {
                 Request request1 = request;
-                if (request1 != null && request1 != this) return request1.TopLevelQuery;
+                if (request1 != null && !ReferenceEquals(request1, this)) return request1.TopLevelQuery;
                 SubQuery cc = CurrentQuery;
                 if (cc != null) return cc.TopLevel;
                 return TopLevel;
@@ -313,10 +330,15 @@ namespace RTParser
             }
         }
 
+        public Unifiable That
+        {
+            get { return request.That; }
+        }
+
         /// <summary>
         /// The raw input from the user
         /// </summary>
-        public Unifiable RawInput
+        public Unifiable rawInput
         {
             get
             {
@@ -341,7 +363,7 @@ namespace RTParser
                     {
                         if (request.IsComplete(this))
                         {
-                            writeToLog("ERROR: " + request.WhyComplete + " on " + RawInput +
+                            writeToLog("ERROR: " + request.WhyComplete + " on " + rawInput +
                                        " from the user with an id: " + Requester.UserID);
                             return Unifiable.INCOMPLETE;
                             return TargetBot.TimeOutMessage;
@@ -354,7 +376,7 @@ namespace RTParser
                                 //return pattern;
                                 paths.Append(pattern.LegacyPath + Environment.NewLine);
                             }
-                            writeToLog("The bot could not find any response for the input: " + RawInput +
+                            writeToLog("The bot could not find any response for the input: " + rawInput +
                                        " with the path(s): " +
                                        Environment.NewLine + Unifiable.DescribeUnifiable(paths) + " from the user with an id: " +
                                        Requester.UserID);
@@ -409,7 +431,7 @@ namespace RTParser
         public User Responder
         {
             get { return request.Responder; }
-            set { request.Responder = value; }
+          //  set { request.Responder = value; }
         }
 
         public SubQuery CurrentQuery
@@ -546,7 +568,7 @@ namespace RTParser
         public User Requester
         {
             get { return request.Requester; }
-            set { request.Requester = value; }
+           // set { request.Requester = value; }
         }
 
         public string _normalizedOutput;
@@ -815,7 +837,8 @@ namespace RTParser
             {
                 var temps = ResultTemplates;
                 if (temps == null) return;
-                lock (temps)
+                var tempsLock = temps;
+                lock (tempsLock)
                 {
                     temps = new List<TemplateInfo>(temps);
                     if (RotatedTemplate == temps.Count) return;

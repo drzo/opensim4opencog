@@ -37,10 +37,18 @@ namespace RTParser
         public bool AlwaysUseImmediateAimlInImput = true;
         public static bool RotateUsedTemplate = true;
         public bool DontUseSplitters = true;
-
-        public readonly TaskQueueHandler HeardSelfSayQueue = new TaskQueueHandler("AIMLBot HeardSelf",
+        /*
+        public readonly TaskQueueHandler HeardSelfSayQueue0 = new TaskQueueHandler("AIMLBot HeardSelf",
                                                                                    TimeSpan.FromMilliseconds(10),
-                                                                                   TimeSpan.FromSeconds(10), true);
+                                                                                   TimeSpan.FromSeconds(10), true);*/
+        public TaskQueueHandler HeardSelfSayQueue
+        {
+            get
+            {
+              //  if (BotAsUser == null) return HeardSelfSayQueue0;
+                return BotAsUser.GetTaskQueueHandler("HeardSelfSay");
+            }
+        }
         private readonly Object chatTraceO = new object();
         public List<Thread> ThreadList { get { return HeardSelfSayQueue.InteruptableThreads; } }
         public bool chatTrace = true;
@@ -326,7 +334,7 @@ namespace RTParser
             AIMLbot.MasterRequest r = findOrCreateUser.CreateRequest(rawInput, rtarget); 
             if (rtarget==null)
             {
-                OnBotCreated(() => r.SetFromUserToUser(findOrCreateUser, BotAsUser));
+                OnBotCreated(() => r.SetSpeakerAndResponder(findOrCreateUser, BotAsUser));
             }
             findOrCreateUser.CurrentRequest = r;
             r.depth = 0;
@@ -433,7 +441,7 @@ namespace RTParser
                     request.UndoAll();
                     request.CommitSideEffects(true);
                     request.Exit();
-                    request.Requester = user;
+                    request.SetSpeakerAndResponder(user, parentResultIn.Responder);
                 }
             }
         }
@@ -487,7 +495,7 @@ namespace RTParser
             finally
             {
                 label.PopScope();
-                request.Requester = originalRequestor;
+                request.SetSpeakerAndResponder(originalRequestor, originalTargetUser);
             }
         }
 
@@ -1289,7 +1297,7 @@ namespace RTParser
 
         private void SetupConveration()
         {
-            HeardSelfSayQueue.Start();
+            //HeardSelfSayQueue.Start();
             AddBotCommand("do16", () =>
                                       {
                                           Enqueue(() => Sleep16Seconds(10));
@@ -1413,8 +1421,8 @@ namespace RTParser
 
         private object ChatWithThisBot(string cmd, Request request)
         {
-            Request req = request.CreateSubRequest(cmd);
-            req.Responder = BotAsUser;
+            Request req = request.CreateSubRequest(cmd, request.Graph);
+            req.SetSpeakerAndResponder(req.Requester, BotAsUser);
             req.IsToplevelRequest = request.IsToplevelRequest;
             return LightWeigthBotDirective(cmd, req);
         }

@@ -112,7 +112,7 @@ namespace RTParser.Utils
             object s = name;
             if (name is Unifiable)
             {
-                s = ((Unifiable) name).SpecialName;
+                s = ((Unifiable)name).SpecialName;
             }
             if (s is string)
             {

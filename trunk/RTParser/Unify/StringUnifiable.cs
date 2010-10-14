@@ -11,7 +11,8 @@ using RTParser.Database;
 using RTParser.Utils;
 using Console=System.Console;
 using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
-
+using IndexTargetList = System.Collections.Generic.ICollection<RTParser.IndexTarget>;
+using IndexTargetListImpl = System.Collections.Generic.HashSet<RTParser.IndexTarget>;
 namespace RTParser
 {
     public class StringUnifiable : Unifiable
@@ -137,30 +138,41 @@ namespace RTParser
             return strictness.CompareTo(otherStrictness);
         }
 
-        public override bool AddCategory(CategoryInfo template)
+        public override bool AddCategory(IndexTarget template)
         {
             if (NOCateIndex) return false;
-            List<CategoryInfo> categoryInfos;
+            IndexTargetList categoryInfos;
             lock (categoryInfosDictionary)
             {
-                categoryInfos = CategoryInfos = CategoryInfos ?? new List<CategoryInfo>();
+                categoryInfos = CategoryInfos;
+                if (categoryInfos==null)
+                {
+                    CategoryInfos = new IndexTargetListImpl() {template};
+                    return true;
+                }
             }
             lock (categoryInfos)
             {
+                int countAlready = categoryInfos.Count;
+                if (countAlready > MaxCategories)
+                {
+                    return false;
+                }
                 categoryInfos.Add(template);
-            }
-            if (categoryInfos.Count%10000 == 0)
-            {
-                writeToLog("AddCategory '" + SpecialName + "' Count=" + categoryInfos.Count + " for " + template);
+                countAlready++;
+                if (countAlready%PrintCategories == 0)
+                {
+                    writeToLog("AddCategory '" + SpecialName + "' Count=" + categoryInfos.Count + " for " + template);
+                }
             }
             return false;
         }
 
-        public override bool RemoveCategory(CategoryInfo template)
+        public override bool RemoveCategory(IndexTarget template)
         {
             if (NOCateIndex) return false;
             if (template == null) return false;
-            List<CategoryInfo> categoryInfos;
+            IndexTargetList categoryInfos;
             lock (categoryInfosDictionary)
             {
                 categoryInfos = CategoryInfos;
@@ -168,9 +180,24 @@ namespace RTParser
             }
             lock (categoryInfos)
             {
-                categoryInfos.Remove(template);
-                if (categoryInfos.Count == 0) CategoryInfos = null;
-                return true;
+                int countAlready = categoryInfos.Count;
+                switch (countAlready)
+                {
+                    case 0:
+                        CategoryInfos = null;
+                        return false;
+                    case 1:
+                        {
+                            if (categoryInfos.Remove(template))
+                            {
+                                CategoryInfos = null;
+                                return true;
+                            }
+                            return false;
+                        }
+                    default:
+                        return categoryInfos.Remove(template);
+                }
             }
         }
 
@@ -230,7 +257,7 @@ namespace RTParser
                     if (vv.Length == 1)
                     {
                         upperCache = vv[0].AsString();
-                        return upperCache;
+                        return UpcaseXMLSource ? ToUpper(upperCache) : upperCache;
                     }
                     var fupperCache = Unifiable.CreateAppendable();
                     foreach (Unifiable part in vv)
@@ -593,6 +620,7 @@ namespace RTParser
             if (str==null)
             {
                 if (DebugNulls) writeToLog("ERROR AsString  -U-NULL- !! DEBUG9");
+                else throw new NullReferenceException("ERROR AsString  -U-NULL- !! DEBUG9");
                 return null;
             }
             return str;
@@ -1111,9 +1139,9 @@ namespace RTParser
             get { return ToArray().Length; }
         }
 
-        public override string SpecialName
+        protected override string GenerateSpecialName
         {
-            get { return AsString(); }
+            get { return ToUpper(AsString()); }
         }
 
         public override float Unify(Unifiable other, SubQuery query)
