@@ -128,13 +128,15 @@ namespace cogbot.Listeners
             if (m_TheSimAvatar != null)
             {
                 List<SimObject> set = TheSimAvatar.GetKnownObjects().CopyOf();
-                lock (set)
+                object lockSet = set;
+                lock (lockSet)
                     if (set.Count == 0)
                     {
                         TheSimAvatar.ScanNewObjects(5, 100, false);
                         set = TheSimAvatar.GetKnownObjects().CopyOf();
                     }
-                lock (set)
+                object lockSet2 = set;
+                lock (lockSet2)
                     foreach (SimObject obj in set)
                     {
                         if (obj.Matches(name))

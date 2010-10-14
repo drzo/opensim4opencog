@@ -303,7 +303,9 @@ namespace cogbot.Listeners
         private static void Debug(string p)
         {
             if (Settings.LOG_LEVEL != Helpers.LogLevel.None)
-                ;// DLRConsole.WriteLine(p);
+            {
+                // DLRConsole.WriteLine(p);                
+            }
         }
 
         // these will be shared between Clients and regions

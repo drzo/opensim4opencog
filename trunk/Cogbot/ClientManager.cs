@@ -5,6 +5,7 @@ using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 using System.Threading;
+using cogbot;
 using cogbot.Actions.Agent;
 using cogbot.ScriptEngines;
 using cogbot.Utilities;
@@ -65,7 +66,7 @@ namespace cogbot
         }
 
 
-        static private ClientManagerHttpServer clientManagerHttpServer;
+        static private IDisposable clientManagerHttpServer;
         public void AddTool(BotClient client, string name, string text, EventHandler threadStart)
         {
             client.InvokeGUI(() => AddTool0(client, name, text, threadStart));
@@ -170,7 +171,7 @@ namespace cogbot
             nextTcpPort = config.tcpPort;
             if (clientManagerHttpServer == null)
             {
-                clientManagerHttpServer = new ClientManagerHttpServer(this, 5580);
+                clientManagerHttpServer = MushDLR223.Utilities.HttpServerUtil.CreateHttpServer(this, 5580);
             }
             //LoginDetails details = GetDetailsFromConfig(config);
             //  CurrentClient = new BotClient(this);// Login(details);
