@@ -442,7 +442,7 @@ Hmm. Please remind me.</template>
 <category>
 <pattern>VIVALDI</pattern>
 
-<template>Antonio Lucio <a href="http://en.wikipedia.org/wiki/Vivaldi" target="_blank">Vivaldi</a> (March 4, 1678 – July 28 or 27, 1741), nicknamed <i>Il Prete Rosso</i> ("The Red Priest"), was a Venetian priest and <a href="http://en.wikipedia.org/wiki/Baroque_music" title="Baroque music" target="_blank">baroque music</a> composer, as well as a famous violinist. <i><a href="http://en.wikipedia.org/wiki/The_Four_Seasons_%28Vivaldi%29" title="The Four Seasons (Vivaldi)" target="_blank">The Four Seasons</a></i>, a series of four <a href="http://en.wikipedia.org/wiki/Violin_concerto" title="Violin concerto" target="_blank">violin concertos</a>, are his best known works and highly popular Baroque music pieces.</template>
+<template>Antonio Lucio <a href="http://en.wikipedia.org/wiki/Vivaldi" target="_blank">Vivaldi</a> (March 4, 1678 ? July 28 or 27, 1741), nicknamed <i>Il Prete Rosso</i> ("The Red Priest"), was a Venetian priest and <a href="http://en.wikipedia.org/wiki/Baroque_music" title="Baroque music" target="_blank">baroque music</a> composer, as well as a famous violinist. <i><a href="http://en.wikipedia.org/wiki/The_Four_Seasons_%28Vivaldi%29" title="The Four Seasons (Vivaldi)" target="_blank">The Four Seasons</a></i>, a series of four <a href="http://en.wikipedia.org/wiki/Violin_concerto" title="Violin concerto" target="_blank">violin concertos</a>, are his best known works and highly popular Baroque music pieces.</template>
 </category>
 
  
@@ -6195,7 +6195,7 @@ Ireland is to the west of Britain.</template>
 
 <template><think><set name="topic">Idi Amin</set></think>
 <think><set name="emotion">OK</set></think>
-<a href="http://en.wikipedia.org/wiki/Idi_amin" target="_blank">Idi Amin</a> Dada was a Field Marshal and President of Uganda (1971–1979). </template>
+<a href="http://en.wikipedia.org/wiki/Idi_amin" target="_blank">Idi Amin</a> Dada was a Field Marshal and President of Uganda (1971?1979). </template>
 </category>
 
  
@@ -18788,4 +18788,3 @@ I don't think that is odd.</template>
 
 
 </aiml>
-

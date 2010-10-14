@@ -5,7 +5,7 @@
   <category>
     <pattern>*</pattern>
     <template>
-      <srai>STDCATCHALL-NEXVER</srai>
+      <srai>CATCHALL-NEXVER</srai>
     </template>
   </category>
 -->
@@ -25,6 +25,33 @@
 
 
   <aiml graph="default">
+
+   <!-- deletes all previous super defaults
+
+the worst is 
+
+<category>
+<pattern>*</pattern>
+<template>
+<think><set name="it"><set name="topic"><star/></set></set></think>
+<srai>CATCHALL</srai>
+</template>
+</category>
+
+   -->
+    <category>
+      <pattern>*</pattern>
+      <that>*</that>
+    </category>
+
+  <category>
+    <pattern>*</pattern>
+    <template>
+      <srai>
+        STDCATCHALL <star/>
+      </srai>
+    </template>
+  </category>
 
 
     <!-- deletes all previous XFINDS -->
@@ -108,9 +135,7 @@
         <condition>
           <li name="yours_question" value="*">
             <srai>
-              <think>
-                <get name="yours_question" />
-              </think>
+               <get name="yours_question" />
             </srai>
           </li>
         </condition>
