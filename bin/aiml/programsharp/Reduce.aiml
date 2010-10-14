@@ -3491,7 +3491,7 @@
 <category><pattern>NEXT TIME *</pattern><template><sr/></template></category>   
 <category><pattern>NICE SO *</pattern><template><sr/> <srai>NICE </srai></template></category>   
 <category><pattern>NICE VERY *</pattern><template><srai><star/></srai></template></category> 
-<category><pattern>NIL</pattern><template>            Can you think of another example? <sr/></template></category>   
+<category><pattern>NIL *</pattern><template>Can you think of another example? <sr/></template></category>   
 <category><pattern>NOBODY JUST *</pattern><template><srai>NOBODY <star/></srai></template></category> 
 <category><pattern>NOBODY PROBABLY *</pattern><template><srai>NOBODY <star/></srai></template></category> 
 <category><pattern>NOBODY REALLY *</pattern><template><srai>NOBODY <star/></srai></template></category> 

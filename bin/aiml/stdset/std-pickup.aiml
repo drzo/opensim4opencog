@@ -67,16 +67,18 @@
 </template>
 </category>
 
+<!--
 <category>
 <pattern>*</pattern>
 <template>
 <think><set name="it"><set name="topic"><star/></set></set></think>
-<srai>CATCHALL</srai>
+<srai>STDCATCHALL</srai>
 </template>
 </category>
+-->
 
 <category>
-<pattern>CATCHALL</pattern>
+<pattern>STDCATCHALL</pattern>
 <template>
 <srai>SAY CONFUSION STATEMENT</srai>
 <br />

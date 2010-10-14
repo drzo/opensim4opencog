@@ -13,7 +13,7 @@
 		<template>yes, I totally have stus latest AND greatest content</template>
 	</category>
 	<category>
-		<pattern>*</pattern>
+		<pattern>POINT5CATCHALL *</pattern>
 		<template score="0.5">
 			<random>
 				<li>I thought I heard you say <star/></li>

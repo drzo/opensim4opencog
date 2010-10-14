@@ -6,7 +6,7 @@ This is the file that listens to things the bot says and leans from itself..
 Since not all authoprial content is not semantic!
 
 -->
-<aiml graph="HeardSelfSay">
+<aiml graph="HeardSelfSayInfoBot">
 <aiml graph="parent">  
   <category>
     <pattern>HeardSelfSay *</pattern>
