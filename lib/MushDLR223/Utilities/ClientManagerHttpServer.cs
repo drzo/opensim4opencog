@@ -1,4 +1,5 @@
-﻿using System;
+﻿#define USE_HTTPSERVER_DLL
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,24 +8,31 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Web;
-using HttpServer;
-using HttpServer.FormDecoders;
 using MushDLR223.ScriptEngines;
 
+
+#if USE_HTTPSERVER_DLL
+using HttpServer;
+using HttpServer.FormDecoders;
+#else
+using IHttpResponse = System.Web.HttpResponse;
+using IHttpRequest = System.Web.HttpRequest;
+using IHttpClientContext = System.Web.HttpContext;
+#endif
 
 namespace MushDLR223.Utilities
 {
     //.. tonight i am writing them a webserver in .net 
-    public class WriteLineToResponse
+    internal class WriteLineToResponse
     {
-        public IHttpResponse response;
-        private ClientManagerHttpServer Server;
-        public WriteLineToResponse(ClientManagerHttpServer server, IHttpResponse r)
+        internal IHttpResponse response;
+        private JobGiver Server;
+        internal WriteLineToResponse(JobGiver server, IHttpResponse r)
         {
             response = r;
             Server = server;
         }
-        public void WriteLine(string str, params object[] args)
+        internal void WriteLine(string str, params object[] args)
         {
             try
             {
@@ -38,7 +46,8 @@ namespace MushDLR223.Utilities
                 {
                     Server.LogInfo("no respnse object for " + s);
                 }
-            } catch(Exception e)
+            }
+            catch (Exception e)
             {
                 DLRConsole.DebugWriteLine("" + e);
                 Server.LogInfo("WriteLine exception" + e);
@@ -46,7 +55,7 @@ namespace MushDLR223.Utilities
         }
     }
 
-    public class ClientManagerHttpServer : ILogWriter
+    internal class ClientManagerHttpServer : JobGiver, IDisposable
     {
         private ScriptExecutorGetter getter;
         HttpServer.HttpListener _listener;
@@ -54,22 +63,24 @@ namespace MushDLR223.Utilities
         private ScriptExecutorGetter clientManager;
         private string defaultUser = "null";
 
-        public ClientManagerHttpServer(ScriptExecutorGetter bc, int port)
+        internal ClientManagerHttpServer(ScriptExecutorGetter bc, int port)
         {
             clientManager = bc;
             _port = port;
             Init();
         }
-        public void Init()
+        internal void Init()
         {
-            _listener = HttpServer.HttpListener.Create(this, IPAddress.Any, _port);
+            _listener = HttpServer.HttpListener.Create(new CHLogger(this), IPAddress.Any, _port);
             _listener.Accepted += _listener_Accepted;
             _listener.Set404Handler(_listener_404);
-            workArroundReuse();
+
+            HttpServerUtil.workArroundReuse(_port);
             try
             {
                 _listener.Start(10);
                 LogInfo("Ready for HTTPD port " + _port);
+                new SystemHttpServer(clientManager, 5590);
                 WriteLine("Ready for HTTPD port " + _port);
             }
             catch (Exception e)
@@ -83,24 +94,11 @@ namespace MushDLR223.Utilities
             clientManager.WriteLine(s);
         }
 
-        private void workArroundReuse()
-        {
-            try
-            {
-                TcpClient client = new TcpClient();
-                client.Connect("localhost", _port);
-            }
-            catch (Exception exception)
-            {
-                LogInfo("Listener workarround: " + exception.Message);
-            }
-        }
+        readonly internal static object HttpLock = new object();
+        internal readonly List<HttpJob> HttpJobs = new List<HttpJob>(100);
+        internal TimeSpan waitForEachTime = TimeSpan.FromSeconds(5);
 
-        readonly public static object HttpLock = new object();
-        public readonly List<HttpJob> HttpJobs = new List<HttpJob>(100);
-        public TimeSpan waitForEachTime = TimeSpan.FromSeconds(5);
-
-        private void _listener_404(IHttpClientContext context, IHttpRequest request, IHttpResponse response)
+        internal void _listener_404(IHttpClientContext context, IHttpRequest request, IHttpResponse response)
         {
             HttpJob httpJob = new HttpJob(this, context, request, response);
 
@@ -122,7 +120,7 @@ namespace MushDLR223.Utilities
                 DoJob(httpJob);
             } 
         }
-        private void DoJob(HttpJob httpJob)
+        internal void DoJob(HttpJob httpJob)
         {
             try
             {
@@ -151,9 +149,9 @@ namespace MushDLR223.Utilities
             }
         }
 
-        public void BlockingHandler(IHttpClientContext context, IHttpRequest request, IHttpResponse response)
+        public void BlockingHandler(IHttpClientContext context0, IHttpRequest request, IHttpResponse response)
         {
-          //  UUID capsID;
+            //  UUID capsID;
             bool success;
 
             string path = request.Uri.PathAndQuery;//.TrimEnd('/');
@@ -169,7 +167,8 @@ namespace MushDLR223.Utilities
             string botname = GetVariable(request, "bot", GetVariable(request, "botid", null));
 
             ScriptExecutor _botClient = clientManager.GetScriptExecuter(botname);
-            if (_botClient==null){
+            if (_botClient == null)
+            {
                 response.Status = HttpStatusCode.ServiceUnavailable;
                 response.Send();
                 return;
@@ -181,7 +180,7 @@ namespace MushDLR223.Utilities
                 string slot = path;
                 string value = "";
                 value = _botClient.getPosterBoard(slot) as string;
-                if (value!=null)                    
+                if (value != null)
                     if (value.Length > 0) { LogInfo(String.Format(" board response: {0} = {1}", slot, value)); }
                 AddToBody(response, "<xml>");
                 AddToBody(response, "<slot>");
@@ -241,7 +240,7 @@ namespace MushDLR223.Utilities
                 // this is our default handler
                 if (cmd != "MeNe")
                 {
-                    res = _botClient.ExecuteXmlCommand(cmd  + " " + GetVariable(request, "args", ""), wrresp.WriteLine);
+                    res = _botClient.ExecuteXmlCommand(cmd + " " + GetVariable(request, "args", ""), wrresp.WriteLine);
 
                 }
                 else
@@ -261,10 +260,10 @@ namespace MushDLR223.Utilities
                         while (text.Contains("<"))
                         {
                             int p1 = text.IndexOf("<");
-                            int p2 = text.IndexOf(">",p1);
-                            if (p2>p1) 
+                            int p2 = text.IndexOf(">", p1);
+                            if (p2 > p1)
                             {
-                                string fragment = text.Substring(p1, (p2+1) - p1);
+                                string fragment = text.Substring(p1, (p2 + 1) - p1);
                                 text = text.Replace(fragment, " ");
                             }
                         }
@@ -298,7 +297,8 @@ namespace MushDLR223.Utilities
                 try
                 {
                     response.Send();
-                } catch(Exception e)
+                }
+                catch (Exception e)
                 {
                     LogInfo("Exception sening respose: " + e);
                 }
@@ -310,12 +310,12 @@ namespace MushDLR223.Utilities
             // Console.WriteLine("[HTTP SERVER] " + s);
         }
 
-        static public void AddToBody(IHttpResponse response, string text)
+        static internal void AddToBody(IHttpResponse response, string text)
         {
             response.AddToBody(text + Environment.NewLine);
         }
 
-        static public string GetVariable(IHttpRequest request, string varName, string defaultValue)
+        static internal string GetVariable(IHttpRequest request, string varName, string defaultValue)
         {
             if (request.Param.Contains(varName))
             {
@@ -336,40 +336,57 @@ namespace MushDLR223.Utilities
             LogInfo("_listener_Accepted " + e.Socket);
         }
 
-        #region Implementation of ILogWriter
+        //#region Implementation of ILogWriter
 
-        public void Write(object source, LogPrio priority, string message)
+        internal void Write(object source, LogPrio priority, string message)
         {
             WriteLine(priority + " " + message);
         }
 
-        #endregion
+       // #endregion
+        public void Dispose()
+        {
+            
+        }
     }
 
-    public class HttpJob
+    internal class CHLogger : ILogWriter
+    {
+        private ClientManagerHttpServer Logger;
+        internal CHLogger(ClientManagerHttpServer hd)
+        {
+            Logger = hd;
+        }
+        public void Write(object source, LogPrio priority, string message)
+        {
+            Logger.Write(source, priority, message);
+        }
+    }
+
+    internal class HttpJob
     {
         private static long serialNum = 0;
-        public long Serial = ++serialNum;
-        public ClientManagerHttpServer Server;
+        internal long Serial = ++serialNum;
+        internal JobGiver Server;
         private string Name;
-        public IHttpClientContext Context;
-        public IHttpRequest Request;
-        public IHttpResponse Response;
-        public Thread Thread;
-        public DateTime StarTime =  DateTime.Now;
-        public DateTime EndTimeOrDateTimeMax = DateTime.MaxValue;
-        public bool OutOfLock;
-        public bool ActuallyStarted = false;
-        public Exception Error;
-        public static bool DoWorkInThread = false;
-        public Thread WorkerThread;
+        internal IHttpClientContext Context;
+        internal IHttpRequest Request;
+        internal IHttpResponse Response;
+        internal Thread Thread;
+        internal DateTime StarTime =  DateTime.Now;
+        internal DateTime EndTimeOrDateTimeMax = DateTime.MaxValue;
+        internal bool OutOfLock;
+        internal bool ActuallyStarted = false;
+        internal Exception Error;
+        internal static bool DoWorkInThread = false;
+        internal Thread WorkerThread;
 
-        public TimeSpan Runtime
+        internal TimeSpan Runtime
         {
             get { return EndTimeOrDateTimeMax - StarTime; }
         }
 
-        public void KillIt()
+        internal void KillIt()
         {
             Thread w = WorkerThread;
             if (w != null && w.IsAlive)
@@ -378,7 +395,7 @@ namespace MushDLR223.Utilities
             }
         }
 
-        public void DoWork()
+        internal void DoWork()
         {
             WorkerThread = new Thread(DoWorkNow, 0)
                                {
@@ -388,12 +405,12 @@ namespace MushDLR223.Utilities
             if (!DoWorkInThread) WorkerThread.Join();
         }
 
-        public string GetName()
+        internal string GetName()
         {
             return Name;
         }
 
-        public void DoWorkNow()
+        internal void DoWorkNow()
         {
             try
             {
@@ -425,12 +442,12 @@ namespace MushDLR223.Utilities
             }
         }
 
-        public void WriteLine(string e)
+        internal void WriteLine(string e)
         {
             Server.WriteLine("JOB-" + e + " named " + Name);
         }
 
-        public HttpJob(ClientManagerHttpServer server, IHttpClientContext context, IHttpRequest request, IHttpResponse response)
+        internal HttpJob(JobGiver server, IHttpClientContext context, IHttpRequest request, IHttpResponse response)
         {
             this.Server = server;
             this.Context = context;
@@ -439,6 +456,14 @@ namespace MushDLR223.Utilities
             Thread = Thread.CurrentThread;
             Name = request.UriPath;
         }
+    }
+
+    internal interface JobGiver
+    {
+        void WriteLine(string s);
+        void JobFinished(HttpJob httpJob);
+        void BlockingHandler(IHttpClientContext context, IHttpRequest request, IHttpResponse response);
+        void LogInfo(string p0);
     }
 
     public interface ScriptExecutorGetter
@@ -454,4 +479,26 @@ namespace MushDLR223.Utilities
         string GetName();
         object getPosterBoard(object slot);
     }
+    public static class HttpServerUtil
+    {
+        public static IDisposable CreateHttpServer(ScriptExecutorGetter clientManager, int i)
+        {
+            return new ClientManagerHttpServer(clientManager, i);
+        }
+
+        static public void workArroundReuse(int port)
+        {
+            try
+            {
+                TcpClient client = new TcpClient();
+                client.Connect("localhost", port);
+            }
+            catch (Exception exception)
+            {
+                DLRConsole.DebugWriteLine("Listener workarround: " + exception.Message);
+            }
+        }
+    }
 }
+
+
