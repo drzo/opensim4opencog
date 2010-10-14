@@ -524,7 +524,7 @@ namespace LAIR.ResourceAPIs.WordNet
                 foreach (string indexPath in indexPaths)
                 {
                     // create binary search stream for index file
-                    BinarySearchTextStream searchStream = new BinarySearchTextStream(indexPath, new BinarySearchTextStream.SearchComparisonDelegate(delegate(object searchWord, string currentLine)
+                    BinarySearchTextStream searchStream = new BinarySearchTextStream(indexPath, new BinarySearchTextStream.SearchComparisonDelegate(delegate(string searchWord, string currentLine)
                         {
                             // if we landed on the header text, search further down
                             if (currentLine[0] == ' ')

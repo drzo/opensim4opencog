@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -642,8 +643,8 @@ namespace LAIR.ResourceAPIs.SemLink
             foreach (string frameElement in FrameElements)
             {
                 string[] parts = frameElement.Split('.');
-                string frame = parts[0].InitialCharactersToUpper(1);
-                string fe = parts[1].InitialCharactersToUpper(1);
+                string frame = InitialCharactersToUpper(parts[0],1);
+                string fe = InitialCharactersToUpper(parts[1],1);
 
                 fnVnLinking.EnsureContainsKey(frame, typeof(Dictionary<string, List<Tuple<string, string>>>));
 
@@ -675,6 +676,55 @@ namespace LAIR.ResourceAPIs.SemLink
 
             file.WriteLine("</verbnetRoles-framenetFEs_RoleMappingData>");
             file.Close();
+        }
+
+        private string InitialCharactersToUpper(string p0, int len)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class SortedSet<T> : IEnumerable<T>
+    {
+        public SortedSet(object keys)
+        {
+            throw new NotImplementedException();
+        }
+        public SortedSet(Dictionary<string, List<Tuple<string, string>>>.KeyCollection keys)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            throw new NotImplementedException();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+    }
+
+    public class Tuple<T, T1>
+    {
+        public Tuple(T i, T1 themeRole)
+        {
+            throw new NotImplementedException();
+            
+        }
+
+        public string Item1
+        {
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
+        }
+
+        public string Item2
+
+        {
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
         }
     }
 }

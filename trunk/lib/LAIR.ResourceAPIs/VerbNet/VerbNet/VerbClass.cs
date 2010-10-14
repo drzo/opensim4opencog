@@ -276,7 +276,8 @@ namespace LAIR.ResourceAPIs.VerbNet
         public VerbClass GetLowestCommonAncestor(VerbClass verbClass)
         {
             // append period to both IDs to remove any ambiguity about classes...then get common substring
-            string lcaID = (_id + ".").GetCommonInitialSubstring(verbClass.ID + ".");
+            string lcaID = GetCommonInitialSubstring((_id + "."), (verbClass.ID + "."));
+            ;
             int lastPeriod = lcaID.LastIndexOf('.');
             lcaID = lcaID.Substring(0, lastPeriod);
 
@@ -286,6 +287,11 @@ namespace LAIR.ResourceAPIs.VerbNet
                 lca = lca.Parent;
 
             return lca;
+        }
+
+        private string GetCommonInitialSubstring(string p, string p_2)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>

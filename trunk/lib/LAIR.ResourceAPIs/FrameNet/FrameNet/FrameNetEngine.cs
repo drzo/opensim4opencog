@@ -76,11 +76,11 @@ namespace LAIR.ResourceAPIs.FrameNet
             if (version == Version.FrameNet_1_3)
             {
                 // init annotation engine
-                _lexicalUnitAnnotationEngine = new LexicalUnitAnnotationEngine(LAIR.IO.Directory.FindDirectory(frameNetDirectory, "luXML"), version);
+                _lexicalUnitAnnotationEngine = new LexicalUnitAnnotationEngine(CommonPort.IO.Directory.FindDirectory(frameNetDirectory, "luXML"), version);
 
             #region get frames
             Set<int> uniqueFrameIDCheck = new Set<int>();
-                XmlParser framesP = new XmlParser(File.ReadAllText(LAIR.IO.Directory.FindFile(frameNetDirectory, "frames.xml")));
+                XmlParser framesP = new XmlParser(File.ReadAllText(CommonPort.IO.Directory.FindFile(frameNetDirectory, "frames.xml")));
             while (framesP.SkipToElement("frame"))
             {
                 // create frame
@@ -166,7 +166,7 @@ namespace LAIR.ResourceAPIs.FrameNet
                 #endregion
 
                 #region get frame relations
-                framesP = new XmlParser(File.ReadAllText(LAIR.IO.Directory.FindFile(frameNetDirectory, "frRelation.xml")));
+                framesP = new XmlParser(File.ReadAllText(CommonPort.IO.Directory.FindFile(frameNetDirectory, "frRelation.xml")));
             string relationsXML;
             while ((relationsXML = framesP.OuterXML("frame-relation-type")) != null)
             {
@@ -206,11 +206,11 @@ namespace LAIR.ResourceAPIs.FrameNet
             else if (version == Version.FrameNet_1_5)
             {
                 // init annotation engine
-                _lexicalUnitAnnotationEngine = new LexicalUnitAnnotationEngine(LAIR.IO.Directory.FindDirectory(frameNetDirectory, "lu"), version);
+                _lexicalUnitAnnotationEngine = new LexicalUnitAnnotationEngine(CommonPort.IO.Directory.FindDirectory(frameNetDirectory, "lu"), version);
 
                 #region get frames
                 Set<int> uniqueFrameIDCheck = new Set<int>();
-                foreach (string framePath in System.IO.Directory.GetFiles(LAIR.IO.Directory.FindDirectory(frameNetDirectory, "frame"), "*.xml"))
+                foreach (string framePath in System.IO.Directory.GetFiles(CommonPort.IO.Directory.FindDirectory(frameNetDirectory, "frame"), "*.xml"))
                 {
                     // create frame
                     XmlParser frameP = new XmlParser(File.ReadAllText(framePath));
@@ -290,7 +290,7 @@ namespace LAIR.ResourceAPIs.FrameNet
                 #endregion
 
                 #region get relations
-                XmlParser allRelationsP = new XmlParser(File.ReadAllText(LAIR.IO.Directory.FindFile(frameNetDirectory, "frRelation.xml")));
+                XmlParser allRelationsP = new XmlParser(File.ReadAllText(CommonPort.IO.Directory.FindFile(frameNetDirectory, "frRelation.xml")));
                 string relationsXML;
                 while ((relationsXML = allRelationsP.OuterXML("frameRelationType")) != null)
                 {
