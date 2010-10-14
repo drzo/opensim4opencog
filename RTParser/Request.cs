@@ -15,7 +15,11 @@ using RTParser.Variables;
 namespace RTParser
 {
 
+#if interfaces   
     public interface Request : QuerySettingsSettable, QuerySettingsReadOnly, RequestOrQuery
+#else
+    public interface RequestImpl : QuerySettingsSettable, QuerySettingsReadOnly, RequestOrQuery
+#endif 
     {
         int depth { get; set; }
         Unifiable Topic { get; set; }
@@ -30,23 +34,23 @@ namespace RTParser
         /// <summary>
         /// The user that made this request
         /// </summary>
-        User Requester { get; set; }
+    //    User Requester { get; set; }
         /// <summary>
         /// The user respoinding to the request
         /// </summary>
-        User Responder { get; set; }
+   //     User Responder { get; set; }
         /// <summary>
         /// The get/set user dictionary
         /// </summary>
-        ISettingsDictionary RequesterPredicates { get; }
+    //    ISettingsDictionary RequesterPredicates { get; }
         /// <summary>
         /// The get/set bot dictionary (or user)
         /// </summary>
-        ISettingsDictionary ResponderPredicates { get; }
+     //   ISettingsDictionary ResponderPredicates { get; }
         /// <summary>
         /// If loading/saing settings from this request this may be eitehr the requestor/responders Dictipoanry
         /// </summary>
-        ISettingsDictionary TargetSettings { get; set; }
+   //     ISettingsDictionary TargetSettings { get; set; }
 
 
         IEnumerable<Unifiable> ResponderOutputs { get; }
@@ -57,7 +61,7 @@ namespace RTParser
         GraphQuery TopLevelQuery { get; set; }
         SubQuery CurrentQuery { get; set; }
         RTPBot TargetBot { get; set; }
-        Unifiable rawInput { get; }
+   //     Unifiable rawInput { get; }
         ParsedSentences ChatInput { get; }
         IList<Result> UsedResults { get; set; }
         IList<TemplateInfo> RequestTemplates { get; }
@@ -88,8 +92,11 @@ namespace RTParser
         AIMLbot.MasterResult CreateResult(Request res);
         bool IsToplevelRequest { get; set; }
 
-        AIMLbot.MasterRequest CreateSubRequest(string cmd);
-        AIMLbot.MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, User user, RTPBot rTPBot, User requestee);
+        AIMLbot.MasterRequest CreateSubRequest(Unifiable cmd, GraphMaster graphMaster);
+
+        AIMLbot.MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, User requester, Unifiable thatSaid,
+                                               User requestee, RTPBot rTPBot, Request parent, GraphMaster graphMaster);
+
         bool CanUseResultTemplate(TemplateInfo info, Result request);
         bool CanUseRequestTemplate(TemplateInfo sol);
         OutputDelegate writeToLog { get; set; }
@@ -97,7 +104,7 @@ namespace RTParser
         Unifiable That { get; set; }
         PrintOptions WriterOptions { get; }
         MasterRequest ParentMostRequest { get; }
-        RequestImpl OriginalSalientRequest { get; set; }
+        Request OriginalSalientRequest { get; set; }
         AIMLTagHandler LastHandler { get; set; }
         ChatLabel PushScope { get; }
         ChatLabel CatchLabel { get; set; }
@@ -126,7 +133,7 @@ namespace RTParser
         bool RemoveSalientSRAI(Unifiable templateNodeInnerValue, string resultOutput);
         string ToRequestString();
 
-        void SetFromUserToUser(User BotAsUser1, User BotAsUser1_2);
+        void SetSpeakerAndResponder(User fromUser, User toUser);
 
         bool CanProcess(string starContent);
         bool ResponderSelfListens { get; set; }
@@ -144,7 +151,11 @@ namespace RTParser
     /// <summary>
     /// Encapsulates all sorts of information about a request to the Proccessor for processing
     /// </summary>
+#if interfaces   
     public class RequestImpl : QuerySettings, Request
+#else
+    public class Request : QuerySettings, RequestImpl, QuerySettingsSettable, QuerySettingsReadOnly, RequestOrQuery
+#endif 
     {
         #region Attributes
 
@@ -295,9 +306,15 @@ namespace RTParser
             get
             {
                 if (_responderUser != null) return _responderUser;
-                return ParentRequest.Responder;
+                var parentRequest = this.ParentRequest;
+                if (parentRequest != null) return parentRequest.Responder;
+                return null;
             }
-            set { _responderUser = value; }
+            set
+            {
+                _responderUser = value;
+                if (value != null) ithat = value.JustSaid;
+            }
         }
 
         /// <summary>
@@ -465,10 +482,13 @@ namespace RTParser
                 unifiableToVMString);
         }
 
-        public RequestImpl OriginalSalientRequest { get; set; }
+        public Request OriginalSalientRequest { get; set; }
 
-
-        protected RequestImpl(QuerySettingsReadOnly defaults)
+#if interface
+        protected RequestImpl(QuerySettingsReadOnly defaults)        
+#else
+        protected Request(QuerySettingsReadOnly defaults)
+#endif // interface
             : base(defaults)
         {
             ApplySettings(defaults, this);
@@ -479,16 +499,24 @@ namespace RTParser
         /// <param name="rawInput">The raw input from the user</param>
         /// <param name="user">The user who made the request</param>
         /// <param name="bot">The bot to which this is a request</param>
-        protected RequestImpl(string rawInput, User user, RTPBot bot, Request parent, User targetUser)
+        protected 
+#if interface
+            RequestImpl
+#else
+            Request
+#endif // interface
+            (Unifiable rawInput, User user, Unifiable thatSaid, User targetUser, RTPBot bot, Request parent, GraphMaster graphMaster)
             :  this(bot.GetQuerySettings()) // Get query settings intially from user
         {
             ExitQueue = new CommitQueue();
             SideEffects = new CommitQueue();
+            TargetBot = bot;
             IsToplevelRequest = parent == null;
             this.Stage = SideEffectStage.UNSTARTED;
             matchable = matchable ?? MakeMatchable(rawInput);
             qsbase = this;
             SuspendSearchLimits = true;
+            Graph = graphMaster;
             if (parent != null)
             {
                 //ChatInput = parent.ChatInput;
@@ -516,6 +544,7 @@ namespace RTParser
             }
             if (targetUser != null) Responder = targetUser;
             _responderUser = targetUser;
+            That = thatSaid;
             UsedResults = new List<Result>();
             Flags = "Nothing";
             QuerySettingsSettable querySettings = GetQuerySettings();
@@ -538,7 +567,7 @@ namespace RTParser
             {
                 if (user != null)
                 {
-                    writeToLog = user.WriteLine;
+                    writeToLog = user.WriteToUserTrace;
                     MaxInputs = user.MaxInputs;
                 }
                 else MaxInputs = 1;
@@ -572,9 +601,9 @@ namespace RTParser
         }
 
 
-        public void SetFromUserToUser(User user, User targetUser)
+        public void SetSpeakerAndResponder(User speaker, User targetUser)
         {
-            SetUser(user);
+            SetUser(speaker);
             SetTargetUser(targetUser);
         }
 
@@ -609,7 +638,7 @@ namespace RTParser
                     ReduceMinMaxesForSubRequest(user.GetQuerySettingsSRAI());
                 }
                 IsTraced = user.IsTraced;
-                writeToLog = user.WriteLine;
+                writeToLog = user.WriteToUserTrace;
                 MaxInputs = user.MaxInputs;
                 TargetSettings = user.Predicates;
                 if (user.CurrentRequest == null) user.CurrentRequest = thisRequest;
@@ -737,7 +766,7 @@ namespace RTParser
                         var newprobably = TargetBot.GetGraph(ovGraph, probably);
                         if (newprobably != probably)
                         {
-                            Requester.WriteLine("Changing request graph " + probably + " -> " + newprobably + " for " + this);
+                            Requester.WriteToUserTrace("Changing request graph " + probably + " -> " + newprobably + " for " + this);
                             probably = newprobably;
                         }
                     }
@@ -745,7 +774,7 @@ namespace RTParser
                     {
                         probably = TargetBot.GetGraph(ovGraph, TargetBot.GraphMaster);
                         {
-                            Requester.WriteLine("Changing request graph " + probably + " -> " + null + " for " + this);
+                            Requester.WriteToUserTrace("Changing request graph " + probably + " -> " + null + " for " + this);
                         }
                     }
                 }
@@ -1020,46 +1049,32 @@ namespace RTParser
             get { return (MasterRequest)this; }
         }
 
-        public MasterRequest CreateSubRequest(string templateNodeInnerValue)
+        public MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, GraphMaster graphMaster)
         {
-            Request request = (MasterRequest)this;
-            var user= this.Requester;
-            var  rTPBot = this.TargetBot;
-            var requestee = this.Responder;
-            //Request thisRequest = (Request)this;
-            Request subRequest = new MasterRequest(templateNodeInnerValue, user ?? Requester,
-                                                       rTPBot ?? this.TargetBot, thisRequest, requestee ?? Responder);
-            Result res = request.CurrentResult;
-            subRequest.CurrentResult = res;
-            subRequest.Graph = request.Graph;
-            depth = subRequest.depth = request.depth + 1;
-            subRequest.ParentRequest = request;
-            subRequest.StartedOn = request.StartedOn;
-            subRequest.TimesOutAt = request.TimesOutAt;
-            subRequest.TargetSettings = request.TargetSettings;
-            request.ExitQueue.Add("exit subRequest: " + templateNodeInnerValue, subRequest.Exit);
-            return (MasterRequest)subRequest;
+            Request subRequest = CreateSubRequest(templateNodeInnerValue, Requester,
+                                                  That, Responder, TargetBot, this, graphMaster);
+            return (MasterRequest) subRequest;
         }
 
-        public MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, User user, RTPBot rTPBot, User requestee)
+        public MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, User requester, Unifiable thatSaid, User requestee, 
+            RTPBot rTPBot, Request parent, GraphMaster graphMaster)
         {
-            var request = (MasterRequest) this;
-            user = user ?? this.Requester;
-            rTPBot = rTPBot ?? this.TargetBot;
-            //Request thisRequest = (Request)this;
-            var subRequest = new MasterRequest(templateNodeInnerValue, user ?? Requester,
-                                                       rTPBot ?? this.TargetBot, thisRequest, requestee ?? Responder);
-            //Result res = request.TheCurrentResult;
-            //subRequest.currentResult = res;
+            var subRequest = new MasterRequest(templateNodeInnerValue, requester ?? Requester, thatSaid ?? That,
+                                               requestee ?? Responder,
+                                               rTPBot ?? TargetBot, parent, graphMaster ?? Graph);
+            CopyToRequest(this, subRequest);
+            return subRequest;
+        }
+
+        public static void CopyToRequest(Request request, Request subRequest)
+        {
             subRequest.Graph = request.Graph;
-            depth = subRequest.depth = request.depth + 1;
+            subRequest.depth = request.depth + 1;
             subRequest.ParentRequest = request;
             subRequest.StartedOn = request.StartedOn;
             subRequest.TimesOutAt = request.TimesOutAt;
             subRequest.TargetSettings = request.TargetSettings;
-            //subRequest.Responder = request.Responder;
-            request.ExitQueue.Add("exit subRequest", subRequest.Exit);
-            return subRequest;
+            request.ExitQueue.Add("exit subRequest: " + subRequest.rawInput, subRequest.Exit);
         }
 
         public bool CanUseRequestTemplate(TemplateInfo info)
@@ -1177,7 +1192,7 @@ namespace RTParser
             get
             {
                 string something;
-                if (User.ThatIsStoredBetweenUsers)
+                if (UserImpl.ThatIsStoredBetweenUsers)
                 {
                     if (Requester != null && IsSomething(Requester.That, out something)) return something;
                     if (Responder != null && IsSomething(Responder.JustSaid, out something)) return something;
@@ -1223,15 +1238,20 @@ namespace RTParser
             }
             set
             {
-                if (User.ThatIsStoredBetweenUsers) throw new InvalidOperationException("must User.set_That()");
                 if (IsNullOrEmpty(value)) throw new NullReferenceException("set_That: " + this);
                 ithat = value;
+                if (UserImpl.ThatIsStoredBetweenUsers)
+                {
+                    var responder = Responder;
+                    if (responder != null) responder.JustSaid = value;
+                 //   throw new InvalidOperationException("must User.set_That()");
+                }
             }
         }
 
         public string RequestThat()
         {
-            if (User.ThatIsStoredBetweenUsers) throw new InvalidOperationException("must User.get_That()");
+            if (UserImpl.ThatIsStoredBetweenUsers) throw new InvalidOperationException("must User.get_That()");
             var req = this;
             while (req != null)
             {
@@ -1240,7 +1260,7 @@ namespace RTParser
 
                     return something;
 
-                req = req.ParentRequest as RequestImpl;
+                req = req.ParentRequest as Request;
             }
             return null;
         }
@@ -1461,7 +1481,7 @@ namespace RTParser
             get
             {
                 Result r = _CurrentResult;
-                if (r != null && r != this)
+                if (r != null && !ReferenceEquals(r, this))
                 {
                     SubQuery sq = r.CurrentQuery;
                     if (sq != null) return sq;
@@ -1500,12 +1520,12 @@ namespace RTParser
             return true;
         }
 
-        internal static RequestImpl GetOriginalSalientRequest(Request request)
+        internal static Request GetOriginalSalientRequest(Request request)
         {
-            RequestImpl originalSalientRequest = request.OriginalSalientRequest;//?? request as RequestImpl;// .OriginalSalientRequest;
+            Request originalSalientRequest = request.OriginalSalientRequest;//?? request as RequestImpl;// .OriginalSalientRequest;
             if (originalSalientRequest == null)
             {
-                originalSalientRequest = request as RequestImpl;
+                originalSalientRequest = request as Request;
                 request.OriginalSalientRequest = originalSalientRequest;
             }
             return originalSalientRequest;
@@ -1548,7 +1568,8 @@ namespace RTParser
             //prevResults = null;
             //return true;
             Dictionary<Unifiable, Unifiable> dict = _SRAIResults;
-            lock (dict)
+            var dictLock = dict;
+            lock (dictLock)
             {
                 string errorCycle = "ERROR CYCLE: " + templateNodeInnerValue;
                 if (!TryGetSalientSRAI(templateNodeInnerValue, out prevResults, out dict))

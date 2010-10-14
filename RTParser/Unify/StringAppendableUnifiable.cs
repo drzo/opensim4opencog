@@ -7,13 +7,13 @@ namespace RTParser
 {
     public class StringAppendableUnifiableImpl : StringUnifiable, UnifiableList
     {
-        public override bool AddCategory(CategoryInfo template)
+        public override bool AddCategory(IndexTarget template)
         {
             if (NOCateIndex) return false;
             Unifiable unify = ToUpper();
             return unify.AddCategory(template);            
         }
-        public override bool RemoveCategory(CategoryInfo template)
+        public override bool RemoveCategory(IndexTarget template)
         {
             if (NOCateIndex) return false;
             Unifiable unify = ToUpper();
@@ -73,13 +73,18 @@ namespace RTParser
 
         public override string AsString()
         {
-            return base.AsString();
+            return str;
         }
 
         public override string ToUpper()
         {
             if (Trim(str).Length == 0) return "";
             return base.ToUpper();
+        }
+
+        protected override string GenerateSpecialName
+        {
+            get { return ToUpper(str); }
         }
 
         public override int RunLowMemHooks()

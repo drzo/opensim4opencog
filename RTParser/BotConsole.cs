@@ -117,7 +117,7 @@ namespace RTParser
         }
 
         public Object LoggingLock = new object();
-        private static ClientManagerHttpServer HttpTextServer;
+        private static IDisposable HttpTextServer;
 
         public void writeToFileLog(string message)
         {
@@ -207,7 +207,7 @@ namespace RTParser
             if (usedHttpd)
             {
                 ScriptExecutorGetter geter = new WebScriptExecutor(myBot);
-                HttpTextServer = new ClientManagerHttpServer(geter, 5580);
+                HttpTextServer = MushDLR223.Utilities.HttpServerUtil.CreateHttpServer(geter, 5580);
             }            
         }
 
@@ -374,7 +374,7 @@ namespace RTParser
             try
             {
                 User requester = (user ?? LastUser ?? BotAsUser);
-                Request request = requester.CreateRequest(input, null);
+                Request request = requester.CreateRequest(input, requester.LastResponder);
                 return BotDirective(request, input, console);
             }
             catch (Exception e)
@@ -461,13 +461,13 @@ namespace RTParser
                 request.ResponderSelfListens = false;
                 // detect a user "rename"
                 bool userChanged = DetectUserChange(myUser, user);
+                User theResponder = res.Responder ?? res.request.Responder;
                 if (userChanged)
                 {
                     //myUser = FindUser(user);
-                    request.Requester = myUser;                    
+                    request.SetSpeakerAndResponder(myUser, theResponder);
                 }
                 var justsaid = OutputResult(res, console, false);
-                User theResponder = res.Responder ?? res.request.Responder;
                 if (theResponder == null)
                 {
                     theResponder = (myUser == targetBotUser) ? request.Requester : targetBotUser;
@@ -628,7 +628,7 @@ namespace RTParser
             if (cmd == "proof")
             {
                 console("-----------------------------------------------------------------");
-                RequestImpl ur = MakeRequestToBot(args, myUser);
+                Request ur = MakeRequestToBot(args, myUser);
                 int i;
                 Result r = myUser.LastResult;
                 if (args.StartsWith("save"))

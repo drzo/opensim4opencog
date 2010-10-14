@@ -675,7 +675,7 @@ namespace RTParser.Utils
                 {
                     Graph.RemoveTemplate(info);
                 }
-                info.BuildIndexes();
+                info.RemoveIndexes();
                 info.GraphmasterNode = prevNode;
             }
         }

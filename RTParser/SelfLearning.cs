@@ -46,8 +46,9 @@ namespace RTParser
             HeardSelfSay1Sentence(theFactSpeaker, toWhom, message, result, control);
         }
 
-        public Result HeardSelfSayResponse(User theFactSpeaker, User toWhom, string message, Result result, ThreadControl control)
+        public Result HeardSelfSayResponse(User theFactSpeaker, User toWhom, string message, Result resultOfToWhomSpeakingToFactSpeaker, ThreadControl control)
         {
+            var result = resultOfToWhomSpeakingToFactSpeaker;
             Result LR = null;
             if (message == null) return result;
             bool lts = ListeningToSelf;
@@ -275,11 +276,11 @@ namespace RTParser
         private GraphMaster SetupUserWithGraph(string newname, string newkey, User newuser)
         {
             GraphMaster graph = GetUserGraph(newkey);
-            graph.AddParallelMT(RTPBot.TheUserListernerGraph, newuser.WriteLine);
+            graph.AddParallelMT(RTPBot.TheUserListernerGraph, newuser.WriteToUserTrace);
             newuser.ListeningGraph = graph;
             newuser.UserID = newkey;
             newuser.UserName = newname;
-            OnBotCreated(() => graph.AddGenlMT(GraphMaster, newuser.WriteLine));
+            OnBotCreated(() => graph.AddGenlMT(GraphMaster, newuser.WriteToUserTrace));
             newuser.Predicates.IsIdentityReadOnly = false;
             newuser.Predicates.addSetting("name", newname);
             newuser.Predicates.addSetting("id", newkey);

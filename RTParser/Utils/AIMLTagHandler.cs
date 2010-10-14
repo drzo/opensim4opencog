@@ -1554,12 +1554,13 @@ namespace RTParser.Utils
             return true;
         }
 
-        protected Unifiable OutputFromTagHandlers(IEnumerable<AIMLTagHandler> aimlTagHandlers)
+        protected Unifiable OutputFromTagHandlers(IEnumerable<AIMLTagHandler> aimlTagHandlers0)
         {
+            IEnumerable<AIMLTagHandler> aimlTagHandlers = null;
             Unifiable appendable = Unifiable.CreateAppendable();
-            lock (aimlTagHandlers)
+            lock (aimlTagHandlers0)
             {
-                List<AIMLTagHandler> LoopOver = new List<AIMLTagHandler>(aimlTagHandlers);
+                var LoopOver = new List<AIMLTagHandler>(aimlTagHandlers0);
                 aimlTagHandlers = LoopOver;
             }
             Request request = this.request;
@@ -2064,7 +2065,9 @@ namespace RTParser.Utils
                         aimlTagHandlers.Add(childTagHandler);
                     }
                 }
-                lock (aimlTagHandlers)
+                var aimlTagHandlerz = aimlTagHandlers;
+
+                lock (aimlTagHandlerz)
                 {
                     if (aimlTagHandlers.Count == this.TagHandlerChilds.Count)
                     {

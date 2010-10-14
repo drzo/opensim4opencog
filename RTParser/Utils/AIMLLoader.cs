@@ -752,7 +752,7 @@ namespace RTParser.Utils
             var additionalRules = loadOpts.AdditionalPreconditions;
             long total = LoaderOper(() => loadAIMLNode0(currentNode, loadOpts, request, additionalRules),
                                     loadOpts.CtxGraph, loadOpts);
-            TotalCheck(TextAndSourceInfo(currentNode), total, loadOpts);
+            //TotalCheck(TextAndSourceInfo(currentNode), total, loadOpts);
             return total;
         }
 
@@ -822,7 +822,7 @@ namespace RTParser.Utils
                 {
                     if (false && !request.IsToplevelRequest && !request.SraiDepth.IsOverMax)
                     {
-                        var res = request.CreateSubRequest(StaticAIMLUtils.ToTemplateXML(currentNode), null, null, null);
+                        Request res = request.CreateSubRequest(StaticAIMLUtils.ToTemplateXML(currentNode), null);
                         res.IsToplevelRequest = true;
                         loadOpts.RProcessor.ImmediateAiml(currentNode, res, this, null);
                         total += 1;

@@ -941,9 +941,7 @@ namespace RTParser.Utils
                         if (wasTopLevel) request.IsToplevelRequest = false;
 
                         p.UnTraced = Size > 0;
-
-                        var req = new AIMLbot.MasterRequest(request.rawInput, request.Requester, request.TargetBot, request,
-                                                          request.Responder);
+                        var req = request.CreateSubRequest(request.rawInput, p);
                         req.OriginalSalientRequest = request.OriginalSalientRequest;
                         req.Graph = p;
                         req.IsToplevelRequest = false;

@@ -12,7 +12,7 @@ using ResponseInfo = RTParser.Unifiable;
 namespace RTParser.Utils
 {
     [Serializable]
-    abstract public class CategoryInfoImpl1 : GraphLinkInfo, IAIMLInfo, IComparable<TemplateInfo>,CategoryInfo
+    abstract public class CategoryInfoImpl1 : GraphLinkInfo, IAIMLInfo, IComparable<TemplateInfo>, CategoryInfo
     {
         public Unifiable Filename { get; set; }
 
@@ -90,9 +90,13 @@ namespace RTParser.Utils
             return StaticXMLUtils.LocationInfo(TemplateXml);
         }
 
-        public GraphMaster Graph
+        public virtual GraphMaster Graph
         {
-            get { return Template.GraphmasterNode.Graph; }
+            get
+            {
+                Node gmNode = Template.GraphmasterNode;
+                return gmNode == null ? InGraph : gmNode.Graph;
+            }
         }
 
         //protected abstract XmlNode TemplateXml { get; set; }
@@ -202,6 +206,8 @@ namespace RTParser.Utils
 
         public abstract string GetRuleStrings { get; }
 
+        protected virtual string PreconditionKey { get; set; }
+
         #endregion
 
         public abstract int CompareTo(TemplateInfo other);
@@ -234,7 +240,7 @@ namespace RTParser.Utils
             XmlNode templateNode, ResponseInfo template, GuardInfo guard, TopicInfo topicInfo, Node patternNode, ThatInfo thatInfo, IEnumerable<ConversationCondition> conds)
         {
             if (NoInfo) return null;
-            var vv = new TemplateInfoImpl(info, cateNode, templateNode, filename, template, guard, thatInfo, patternNode,
+            var vv = new TemplateInfoImpl(info, cateNode, templateNode, filename, template, guard, topicInfo, patternNode,
                                       thatInfo);
             vv.AddRules(conds);
             return vv;
@@ -255,6 +261,10 @@ namespace RTParser.Utils
 
         public void AddPrecondition(ConversationCondition info)
         {
+            if (info == null)
+            {
+                return;
+            }
             if (Preconds == null) Preconds = new List<ConversationCondition>();
             if (Preconds.Contains(info)) return;
             Preconds.Add(info);
@@ -262,6 +272,10 @@ namespace RTParser.Utils
 
         public void AddPrecondition(ThatInfo info)
         {
+            if (info == null)
+            {
+                return;
+            } 
             AddPrecondition(new ConversationCondition(info.PatternNode));
         }
 
@@ -405,7 +419,7 @@ namespace RTParser.Utils
         }
     }
 
-    public interface CategoryInfo : IAIMLInfo
+    public interface CategoryInfo : IAIMLInfo, IndexTarget
     {
         TopicInfo Topic { get; }
         PatternInfo Pattern { get; }
