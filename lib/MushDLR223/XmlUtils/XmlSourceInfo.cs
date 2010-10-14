@@ -536,7 +536,8 @@ namespace MushDLR223.Utilities
 
         public override XmlNode CloneNode(bool deep)
         {
-            XmlNode highestClone = CloneOf ?? this;;
+            XmlNode highestClone = CloneOf ?? this;
+            ;
             var od = highestClone.OwnerDocument as XmlDocumentLineInfo;
             //od.Normalize();
             LineInfoElementImpl newnode = new LineInfoElementImpl(Prefix, LocalName, NamespaceURI, od);
@@ -545,27 +546,32 @@ namespace MushDLR223.Utilities
             newnode.outerXMLCache = outerXMLCache;
 #endif
             newnode.SetLineInfo(LineNumber, LinePosition);
-            if (deep)
+            bool newnodeWas = newnode.protect;
+            newnode.protect = false;
+            try
             {
-                bool newnodeWas = newnode.protect;
-                newnode.protect = false;
-                if (HasChildNodes)
-                    foreach (XmlNode a in ChildNodes)
-                    {
-                        try
+
+                if (deep)
+                {
+                    if (HasChildNodes)
+                        foreach (XmlNode a in ChildNodes)
                         {
-                            XmlNode a2 = a.CloneNode(deep);
-                            bool a2ro = a2.IsReadOnly;
-                            XmlSourceInfo a22 = a2 as XmlSourceInfo;
-                            if (a22 != null) a22.ReadOnly = false;
-                            newnode.AppendChild(a2);
-                            if (a22 != null) a22.ReadOnly = a2ro;
+                            try
+                            {
+                                XmlNode a2 = a.CloneNode(deep);
+                                bool a2ro = a2.IsReadOnly;
+                                XmlSourceInfo a22 = a2 as XmlSourceInfo;
+                                if (a22 != null) a22.ReadOnly = false;
+                                newnode.AppendChild(a2);
+                                if (a22 != null) a22.ReadOnly = a2ro;
+                            }
+                            catch (Exception e)
+                            {
+                                writeToLog("ERROR: newnode.AppendChild " + e);
+                            }
                         }
-                        catch (Exception e)
-                        {
-                            writeToLog("ERROR: newnode.AppendChild " + e);
-                        }
-                    }
+                }
+
                 XmlAttributeCollection ats = Attributes;
                 if (ats != null)
                     foreach (XmlAttribute a in ats)
@@ -573,7 +579,16 @@ namespace MushDLR223.Utilities
                         try
                         {
                             if (XmlDocumentLineInfo.SkipXmlns && a.Name == "xmlns") continue;
-                            XmlAttribute a2 = (XmlAttribute) a.CloneNode(deep);
+                            XmlDocument newnodeOwnerDocument = newnode.OwnerDocument;
+                            XmlAttribute a2;
+                            if (newnodeOwnerDocument != null)
+                            {
+                                a2 = newnodeOwnerDocument.CreateAttribute(a.Prefix, a.LocalName, a.NamespaceURI);
+                            }
+                            else
+                            {
+                                a2 = (XmlAttribute) a.CloneNode(deep);
+                            }
                             bool a2ro = a2.IsReadOnly;
                             XmlSourceInfo a22 = a2 as XmlSourceInfo;
                             if (a22 != null) a22.ReadOnly = false;
@@ -585,32 +600,12 @@ namespace MushDLR223.Utilities
                             newnode.writeToLog("ERROR: newnode.AppendChild " + e);
                         }
                     }
+                return newnode;
+            }
+            finally
+            {
                 newnode.protect = newnodeWas;
             }
-            else
-            {
-                XmlAttributeCollection ats = Attributes;
-                if (ats != null)
-                    foreach (XmlAttribute a in ats)
-                    {
-                        try
-                        {
-                            if (XmlDocumentLineInfo.SkipXmlns && a.Name == "xmlns") continue;
-                            XmlAttribute a2 = (XmlAttribute) a.CloneNode(deep);
-                            bool a2ro = a2.IsReadOnly && false;
-                            XmlSourceInfo a22 = a2 as XmlSourceInfo;
-                            if (a22 != null) a22.ReadOnly = false;
-                            newnode.Attributes.Append(a2);
-                            if (a22 != null) a22.ReadOnly = a2ro;
-                        }
-                        catch (Exception e)
-                        {
-                            newnode.writeToLog("ERROR: newnode.AppendChild " + e);
-                        }
-                    }
-                newnode.protect = false;
-            }
-            return newnode;
         }
 
         public override XmlNode RemoveChild(XmlNode newChild)
