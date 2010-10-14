@@ -815,7 +815,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
                 }
             }
             ICollection<NamedParam> infomap = im;
-            lock (infomap)
+            lock (im)
             {
                 infomap = new List<NamedParam>(infomap);
             }

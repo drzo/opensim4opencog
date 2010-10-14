@@ -17,7 +17,7 @@ namespace TheSimiansModule
     {
         private delegate void ShowDelegate();
         
-        public event FormClosedEventHandler Closing;
+        //public event FormClosedEventHandler Closing;
         private MenuStrip _MainMenuStrip;
 
         public MenuStrip MainMenuStrip

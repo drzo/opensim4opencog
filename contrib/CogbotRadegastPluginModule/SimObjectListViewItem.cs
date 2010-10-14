@@ -19,16 +19,12 @@ namespace CogbotRadegastPluginModule
 
         public override string ToString()
         {
-            return this.Text.ToString();// _simObject.ToString();   
+            return ""+this.Text.ToString();// _simObject.ToString();   
         }
 
         public SimObject TheSimObject
         {
             get { return _simObject; }
-        }
-        public override bool Equals(object obj)
-        {
-            return base.Equals(obj);
         }
     }
 
