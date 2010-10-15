@@ -171,7 +171,7 @@ namespace cogbot
             nextTcpPort = config.tcpPort;
             if (clientManagerHttpServer == null)
             {
-                clientManagerHttpServer = MushDLR223.Utilities.HttpServerUtil.CreateHttpServer(this, 5580);
+                clientManagerHttpServer = MushDLR223.Utilities.HttpServerUtil.CreateHttpServer(this, 5580, "first_robot");
             }
             //LoginDetails details = GetDetailsFromConfig(config);
             //  CurrentClient = new BotClient(this);// Login(details);

@@ -1,5 +1,4 @@
-﻿#define USE_HTTPSERVER_DLL
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,6 +37,7 @@ namespace MushDLR223.Utilities
             {
 
                 string s = DLRConsole.SafeFormat(str, args);
+#if USE_HTTPSERVER_DLL
                 if (response != null)
                 {
                     response.AddToBody(s + Environment.NewLine);
@@ -46,6 +46,7 @@ namespace MushDLR223.Utilities
                 {
                     Server.LogInfo("no respnse object for " + s);
                 }
+#endif
             }
             catch (Exception e)
             {
@@ -71,16 +72,17 @@ namespace MushDLR223.Utilities
         }
         internal void Init()
         {
+            #if USE_HTTPSERVER_DLL
             _listener = HttpServer.HttpListener.Create(new CHLogger(this), IPAddress.Any, _port);
             _listener.Accepted += _listener_Accepted;
             _listener.Set404Handler(_listener_404);
-
+#endif
             HttpServerUtil.workArroundReuse(_port);
             try
             {
                 _listener.Start(10);
                 LogInfo("Ready for HTTPD port " + _port);
-                new SystemHttpServer(clientManager, 5590);
+                new SystemHttpServer(clientManager, _port + 10, "the_robot_name_10");
                 WriteLine("Ready for HTTPD port " + _port);
             }
             catch (Exception e)
@@ -149,6 +151,7 @@ namespace MushDLR223.Utilities
             }
         }
 
+#if USE_HTTPSERVER_DLL
         public void BlockingHandler(IHttpClientContext context0, IHttpRequest request, IHttpResponse response)
         {
             //  UUID capsID;
@@ -304,6 +307,7 @@ namespace MushDLR223.Utilities
                 }
             }
         }
+#endif
 
         public void LogInfo(string s)
         {
@@ -312,11 +316,14 @@ namespace MushDLR223.Utilities
 
         static internal void AddToBody(IHttpResponse response, string text)
         {
-            response.AddToBody(text + Environment.NewLine);
+#if USE_HTTPSERVER_DLL 
+            response.AddToBody(text + Environment.NewLine);            
+#endif
         }
 
         static internal string GetVariable(IHttpRequest request, string varName, string defaultValue)
         {
+#if USE_HTTPSERVER_DLL
             if (request.Param.Contains(varName))
             {
                 var single = request.Param[varName].Value;
@@ -328,9 +335,11 @@ namespace MushDLR223.Utilities
             {
                 return HttpUtility.UrlDecode(request.QueryString[varName].Value);
             }
+#endif
             return HttpUtility.UrlDecode(defaultValue);
         }
 
+#if USE_HTTPSERVER_DLL
         private void _listener_Accepted(object sender, ClientAcceptedEventArgs e)
         {
             LogInfo("_listener_Accepted " + e.Socket);
@@ -342,14 +351,14 @@ namespace MushDLR223.Utilities
         {
             WriteLine(priority + " " + message);
         }
-
+#endif
        // #endregion
         public void Dispose()
         {
             
         }
     }
-
+    #if USE_HTTPSERVER_DLL 
     internal class CHLogger : ILogWriter
     {
         private ClientManagerHttpServer Logger;
@@ -362,7 +371,7 @@ namespace MushDLR223.Utilities
             Logger.Write(source, priority, message);
         }
     }
-
+     #endif
     internal class HttpJob
     {
         private static long serialNum = 0;
@@ -414,8 +423,10 @@ namespace MushDLR223.Utilities
         {
             try
             {
-                ActuallyStarted = true;
+                ActuallyStarted = true;      
+#if USE_HTTPSERVER_DLL
                 Server.BlockingHandler(Context, Request, Response);
+#endif
             }
             catch (ThreadAbortException e)
             {
@@ -453,16 +464,21 @@ namespace MushDLR223.Utilities
             this.Context = context;
             this.Request = request;
             this.Response = response;
-            Thread = Thread.CurrentThread;
+            Thread = Thread.CurrentThread;            
+#if USE_HTTPSERVER_DLL
             Name = request.UriPath;
+#endif
         }
     }
 
     internal interface JobGiver
     {
         void WriteLine(string s);
-        void JobFinished(HttpJob httpJob);
+        void JobFinished(HttpJob httpJob);     
+#if USE_HTTPSERVER_DLL
         void BlockingHandler(IHttpClientContext context, IHttpRequest request, IHttpResponse response);
+#else
+        #endif
         void LogInfo(string p0);
     }
 
@@ -481,9 +497,13 @@ namespace MushDLR223.Utilities
     }
     public static class HttpServerUtil
     {
-        public static IDisposable CreateHttpServer(ScriptExecutorGetter clientManager, int i)
+        public static IDisposable CreateHttpServer(ScriptExecutorGetter clientManager, int port, string robotName)
         {
-            return new ClientManagerHttpServer(clientManager, i);
+#if USE_HTTPSERVER_DLL
+            return new ClientManagerHttpServer(clientManager, port);
+#else
+            return new SystemHttpServer(clientManager, port, robotName);
+#endif
         }
 
         static public void workArroundReuse(int port)
