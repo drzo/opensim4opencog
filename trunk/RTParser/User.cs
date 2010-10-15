@@ -122,9 +122,10 @@ namespace RTParser
         ListAsSet<TemplateInfo> UsedTemplates { get; set; }
         ListAsSet<TemplateInfo> DisabledTemplates { get; set; }
         ICollection<GraphMaster> DisallowedGraphs { get; set; }
+#if DEBUG_ALLQUERIES
         ListAsSet<GraphQuery> AllQueries { get; set; }
-
-        int depth { get; set; }
+#endif
+        //int depth { get; set; }
 
         Unifiable grabSettingNoDebug(string arg);
         void Enter(ConversationScopeHolder srai);
@@ -137,7 +138,7 @@ namespace RTParser
 
         string GraphName { get; set; }
         SettingsDictionary Predicates { get; set; }
-       // void InsertProvider(ParentProvider pp);
+        void InsertProvider(ParentProvider pp);
         Request CurrentRequest { get; set; }
         bool SuspendAddResultToUser { get; set; }
     }
@@ -181,6 +182,7 @@ namespace RTParser
 
         QuerySettings GetQuerySettings();
         QuerySettings GetQuerySettingsSRAI();
+        ConversationLog GetConversationLog(string userName, bool createIfMissing);
     }
 
     public interface User : IUser, UserStaticModel, UserConversationScope, UserDuringProcessing
@@ -207,6 +209,7 @@ namespace RTParser
         {
             find = (find ?? "").Trim().ToLower();
             if (find == "") find = "conversation";
+            if (find == "conversation") find = UserID;
 
             lock (TaskQueueHandlers)
             {
@@ -220,6 +223,15 @@ namespace RTParser
                 }
                 return tqh;
             }
+        }
+
+        public ConversationLog GetConversationLog(string find, bool createIfMissing)
+        {
+            find = (find ?? "").Trim().ToLower();
+            if (find == "") find = UserName;
+            User userFound = bot.FindOrCreateUser(find);
+            ConversationLog log = ConversationLog.GetConversationLog(this, userFound, createIfMissing);
+            return log;
         }
 
         public ListAsSet<TemplateInfo> UsedTemplates { get; set; }
@@ -1281,7 +1293,7 @@ namespace RTParser
         private bool needAiml;
         private readonly List<CrossAppDomainDelegate> ShutdownHooks = new List<CrossAppDomainDelegate>();
         private readonly List<CrossAppDomainDelegate> OnNeedAIML = new List<CrossAppDomainDelegate>();
-        public int depth { get; set; }
+        //public int depth { get; set; }
 
 
         public void SyncDirectory(string userdir)
@@ -1582,7 +1594,7 @@ namespace RTParser
         {
             if (G == null) G = GetResponseGraph(target);
             bool asIsToplevelRequest = true;
-            depth = 0;
+            //depth = 0;
             MasterRequest request;
 
             target = target ?? LastResponder;
@@ -1650,13 +1662,13 @@ namespace RTParser
 
         public void Enter(ConversationScopeHolder srai)
         {
-            depth++;
+            //depth++;
         }
 
         public void Exit(ConversationScopeHolder srai)
         {
-            depth--;
-            if (depth == 0)
+            //depth--;
+            if (false)
             {
                 SituationInConversation sraiContextScope = srai.ContextScope;
                 if (sraiContextScope != null)
@@ -1695,6 +1707,58 @@ namespace RTParser
         public void DisposeObject()
         {
             Dispose();
+        }
+    }
+
+    public class ConversationLog
+    {
+        static public readonly Dictionary<string, ConversationLog> ConversationLogs = new Dictionary<string, ConversationLog>();
+
+        private string Key;
+        private User User1;
+        private User User2;
+        private ConversationLog(string find, User user1, User user2)
+        {
+
+            Key = find;
+            User1 = user1;
+            User2 = user2;
+        }
+
+        public static ConversationLog GetConversationLog(RTPBot robot, string userName1In, string userName2In, bool createIfMissing)
+        {
+            User user1 = robot.FindOrCreateUser(userName1In);
+            User user2 = robot.FindOrCreateUser(userName2In);
+            return GetConversationLog(user1, user2, createIfMissing);
+        }
+
+        public static ConversationLog GetConversationLog(User user1, User user2, bool createIfMissing)
+        {
+
+            // have to order the user names
+            if (user1.UserID.CompareTo(user2.UserID) > 0)
+            {
+                User userMid = user2;
+                user2 = user1;
+                user1 = userMid;
+            }
+
+            string find = user1.UserID + "<->" + user2.UserID;
+            lock (ConversationLogs)
+            {
+                ConversationLog tqh;
+                if (!ConversationLogs.TryGetValue(find, out tqh))
+                {
+                    if (!createIfMissing)
+                    {
+                        return null;
+                    }
+                    tqh = new ConversationLog(find, user1, user2);
+                    ConversationLogs[find] = tqh;
+                    return tqh;
+                }
+                return tqh;
+            }
         }
     }
 
