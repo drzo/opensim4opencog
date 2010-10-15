@@ -88,7 +88,7 @@ namespace MushDLR223.Utilities
                     if (StaticXMLUtils.IsValueSetter(ixml))
                     {
                         writeToLog("IsValueSetter?! " + ixml);
-                        ixml = /*StaticXMLUtils.ValueText*/(ixml);
+                      //  ixml = /*StaticXMLUtils.ValueText*/(ixml);
                     }
                     return ixml;
                 }
