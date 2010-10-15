@@ -1065,32 +1065,50 @@ namespace MushDLR223.Utilities
         }
 
 
-        public static string Replace(string strTrim, string[][] pairs)
+        public static string ReplaceMap(string strTrim, string[][] pairs)
         {
             foreach (string[] pair in pairs)
             {
-                strTrim = Replace(strTrim, pair[0], pair[1]);
+                string pair1 = pair[0];
+                string pair2 = pair[1];
+                if (strTrim.Contains(pair1))
+                {
+                    strTrim = ReplaceAll(strTrim, pair1, pair2);
+                    if (strTrim.Contains(pair1))
+                    {
+                        strTrim = strTrim.Replace(pair1, pair2);
+                    }
+                }
             }
             return strTrim;
         }
-        public static string Replace(string strTrim, params string[] pairs)
+        public static string ReplacePairs(string strTrim, params string[] pairs)
         {
-            for (int index = 0; index < pairs.Length; index++)
+            int index = 0;
+            int pairsLength = pairs.Length;
+            while (index < pairsLength)
             {
-                strTrim = Replace(strTrim, pairs[index++], pairs[index]);
+                strTrim = ReplaceAll(strTrim, pairs[index++], pairs[index++]);
             }
             return strTrim;
         }
 
-        protected static string Replace(string source, string b, string a)
+        public static string ReplaceAll(string source, string b, string a)
         {
-            return OlderReference(source, source.Replace(b, a));
+            string sourceReplace = source.Replace(b, a);
+            var result = OlderReference(source, sourceReplace);
+            while (result.Contains(b))
+            {
+                sourceReplace = result.Replace(b, a);
+                result = OlderReference(source, sourceReplace);
+            }
+            return result;
         }
 
         public static string ReTrimAndspace(string substitute)
         {
             if (substitute == null) return null;
-            var s = OlderReference(substitute, substitute.Replace("  ", " "));
+            var s = OlderReference(substitute, substitute.Replace("> ", ">").Replace(" <", "<").Replace("  ", " "));
             if (s.Length == 1)
             {
                 if (s != " ") return s;
@@ -1398,7 +1416,7 @@ namespace MushDLR223.Utilities
 
         public static string MakeXmlCommentSafe(string unescapedStuff)
         {
-            return Replace(unescapedStuff, "<!--", "<#--", "-->", "--#>");
+            return ReplacePairs(unescapedStuff, "<!--", "<#--", "-->", "--#>");
         }
     }
 
