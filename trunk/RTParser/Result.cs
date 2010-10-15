@@ -338,7 +338,7 @@ namespace RTParser
         /// <summary>
         /// The raw input from the user
         /// </summary>
-        public Unifiable rawInput
+        public Unifiable RawInput
         {
             get
             {
@@ -363,7 +363,7 @@ namespace RTParser
                     {
                         if (request.IsComplete(this))
                         {
-                            writeToLog("ERROR: " + request.WhyComplete + " on " + rawInput +
+                            writeToLog("ERROR: " + request.WhyComplete + " on " + RawInput +
                                        " from the user with an id: " + Requester.UserID);
                             return Unifiable.INCOMPLETE;
                             return TargetBot.TimeOutMessage;
@@ -376,7 +376,7 @@ namespace RTParser
                                 //return pattern;
                                 paths.Append(pattern.LegacyPath + Environment.NewLine);
                             }
-                            writeToLog("The bot could not find any response for the input: " + rawInput +
+                            writeToLog("The bot could not find any response for the input: " + RawInput +
                                        " with the path(s): " +
                                        Environment.NewLine + Unifiable.DescribeUnifiable(paths) + " from the user with an id: " +
                                        Requester.UserID);
@@ -894,6 +894,39 @@ namespace RTParser
                 }
             }
             return false;
+        }
+
+        public SituationInConversation ContextScope
+        {
+            get
+            {
+                ConversationScopeHolder currentScopeHolder;
+                SituationInConversation scope = null;
+
+                currentScopeHolder = CurrentQuery as ConversationScopeHolder;
+                if (currentScopeHolder != null)
+                {
+                    scope = currentScopeHolder.ContextScope;
+                    if (scope != null) return scope;
+                }
+
+                currentScopeHolder = ParentResult as ConversationScopeHolder;
+                if (currentScopeHolder != null)
+                {
+                    scope = currentScopeHolder.ContextScope;
+                    if (scope != null) return scope;
+                }
+
+
+                currentScopeHolder = ParentRequest as ConversationScopeHolder;
+                if (currentScopeHolder != null)
+                {
+                    scope = currentScopeHolder.ContextScope;
+                    if (scope != null) return scope;
+                }
+
+                return scope;    
+            }
         }
     }
 }

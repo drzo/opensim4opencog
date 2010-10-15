@@ -1108,7 +1108,7 @@ namespace RTParser
         public static bool UpcaseXMLSource = true;
         public static bool NOCateIndex = false;        
         public static int MaxCategories = 10000;
-        public static int PrintCategories = 200;
+        public static int PrintCategories = 1000;
         protected static readonly Dictionary<string, IndexTargetList> categoryInfosDictionary = new Dictionary<string, IndexTargetList>();
         virtual public IndexTargetList CategoryInfos
         {
@@ -1148,22 +1148,8 @@ namespace RTParser
             {
                 if (KeyCache == null)
                 {
-                    var local = KeyCache = SpecialName;
-                    var strUn = Replace(local, new[]
-                                                   {
-                                                       new[] {"_", "*",},
-                                                       new[] {"<SR>", " ",},
-                                                       new[] {"<SR />", " ",},
-                                                       new[] {"<STAR />", " * "},
-                                                       new[] {"<PERSON2 />", " * "},
-                                                       new[] {"<THATSTAR />", " * ",},
-                                                       new[] {"<STAR INDEX=\"1\" />", " * ",},
-                                                   });
-                    if (!ReferenceEquals(local, strUn))
-                    {
-                        KeyCache = ReTrimAndspace(strUn);
-                    }
-                    KeyCache = Trim(KeyCache);
+                    var local = Trim(SpecialName);
+                    KeyCache = SPLITMATCHABLE(SpecialName);
                 }
                 return KeyCache;
             }
@@ -1192,9 +1178,9 @@ namespace RTParser
             get { return this; }
         }
 
-        public bool IsCatchAll
+        public virtual bool IsCatchAll
         {
-            get { return IsWildCard(); }
+            get { return AsString() == "*"; }
         }
 
         protected abstract string GenerateSpecialName { get; }

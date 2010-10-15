@@ -25,7 +25,7 @@ namespace RTParser
         /// <summary>
         /// The raw input from the user
         /// </summary>
-        public Unifiable rawInput { get; private set; }
+        public Unifiable RawInput { get; private set; }
 
         #endregion
     }

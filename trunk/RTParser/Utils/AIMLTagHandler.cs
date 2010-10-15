@@ -16,8 +16,17 @@ namespace RTParser.Utils
     /// The template for all classes that handle the AIML tags found within template nodes of a
     /// category.
     /// </summary>
-    public abstract partial class AIMLTagHandler : TextTransformer, IAIMLTransaction, IXmlLineInfo, IDisposable
+    public abstract partial class AIMLTagHandler : TextTransformer, IAIMLTransaction, IXmlLineInfo, IDisposable, ConversationScopeHolder
     {
+        public SituationInConversation ContextScope
+        {
+            get
+            {
+                ConversationScopeHolder use = query ?? (ConversationScopeHolder) result ?? request;
+                if (use != null) return use.ContextScope;
+                return null;
+            }
+        }
         /// <summary>
         /// A representation of the input into the Proc made by the user
         /// </summary>

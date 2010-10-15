@@ -296,12 +296,131 @@ namespace RTParser.Utils
             //}
         }
 
+        private static string[][] wasThese = null;
+        public static string SPLITMATCHABLE(string local)
+        {
+            var these = new string[][]
+                            {
+                                new[] {"_", "*",},
+
+
+                                new[] {"<BR>", "<BR />"},
+
+                                new[] {"RN'T ", "RE NOT "},
+                                new[] {"N'T ", " NOT "},
+
+                                new[] {"<P>", "<BR />",},
+                                new[] {"</P>", "<BR />",},
+                                new[] {"<P />", "<BR />",},
+                                
+                                new[] {"<EM>", " ",},
+                                new[] {"</EM>", " ",},
+                                new[] {"<EM />", " ",},
+
+                                new[] {"<B>", " ",},
+                                new[] {"</B>", " ",},
+                                new[] {"<B />", " ",},
+                                
+
+
+
+                                new[] {" VAR=", " NAME="},
+                                new[] {" IDX=", " INDEX="},
+                                new[] {" VAL=", " VALUE="},
+
+                                new[] {"1", "2"},
+                                new[] {"3", "2"},
+
+                                new[] {"2,2", "2"},
+                                new[] {"2,*", "2"},
+                                new[] {"*,2", "2"},
+
+                                new[] {" INDEX=\"2\"", " "},
+
+                                new[] {" NAME=\"*\"", " "},
+
+                                new[] {"2>", ">"},
+                                new[] {"2 />", " />"},
+
+
+                                new[] {" NAME=\"*\"", " "},
+
+                                new[] {"<SR />", "<SRAI><STAR /></SRAI>",},
+
+                                new[] {"<SRAI>", " ",},
+                                new[] {"</SRAI>", " ",},
+
+                                new[] {"PERSON2", "PERSON",},
+                                new[] {"PATTERN", "STAR",},
+                                new[] {"INPUT", "STAR",},                                                                
+                                new[] {"THATSTAR", "STAR",},
+
+
+                                new[] {"<PERSON>", " ",},
+                                new[] {"</PERSON>", " ",},
+
+                                new[] {"<RANDOM>", " ",},
+                                new[] {"</RANDOM>", " ",},
+
+                                new[] {"?", " <BR />",},
+                                new[] {",", " ",},
+                                new[] {".", "<BR />",},
+                                new[] {"!", "<BR />",},
+                                new[] {"</LI>", "<BR />",},
+                                new[] {"<LI>", "<BR />",},
+
+                                new[] {"<SR />", " * ",},
+                                new[] {"<STAR />", " * "},
+                                new[] {"<PERSON />", " * "},
+                                
+                                new[] {"  ", " ",},
+                                new[] {" <", "<",},
+                                new[] {"> ", ">",},
+                                new[] {"<BR /><BR />", "<BR />",},
+
+                            };
+            if (wasThese != these)
+            {
+                wasThese = these;
+            }
+            var strUn = ReplaceMap(local, wasThese);
+            bool bred = false;
+            if (strUn.Contains("<BR /><BR />"))
+            {
+                strUn = strUn.Replace("<BR /><BR />", "<BR />");
+                bred = true;
+            }
+            while (strUn.StartsWith("<BR />"))
+            {
+                strUn = strUn.Substring(6);
+            }
+            while (strUn.EndsWith("<BR />"))
+            {
+                strUn = strUn.Substring(0, strUn.Length - 6);
+            }
+            if (ReferenceEquals(local, strUn))
+            {
+                return Unifiable.Intern(local);
+            }
+
+            local = ReTrimAndspace(strUn);
+            if (local.Contains("<BR />"))
+            {
+                strUn = local.Replace("<BR />", " ");
+                if (strUn.Contains("<"))
+                {
+                    return Unifiable.Intern(local);
+                }
+            }
+            return Unifiable.Intern(local);
+        }
+
         public static string MakeMatchable(string xml2)
         {
             if (xml2 == null) return xml2;
             if (!ContainsXml(xml2))
             {
-                xml2 = Replace(xml2, new[]
+                xml2 = ReplaceMap(xml2, new[]
                                      {
                                          new string[] {".", " "},
                                          new string[] {",", " "},

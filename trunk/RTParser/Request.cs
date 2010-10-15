@@ -18,7 +18,7 @@ namespace RTParser
 #if interfaces   
     public interface Request : QuerySettingsSettable, QuerySettingsReadOnly, RequestOrQuery
 #else
-    public interface RequestImpl : QuerySettingsSettable, QuerySettingsReadOnly, RequestOrQuery
+    public interface RequestImpl : QuerySettingsSettable, QuerySettingsReadOnly, RequestOrQuery, ConversationScopeHolder
 #endif 
     {
         int depth { get; set; }
@@ -155,7 +155,7 @@ namespace RTParser
     public class RequestImpl : QuerySettings, Request
 #else
     public class Request : QuerySettings, RequestImpl, QuerySettingsSettable, QuerySettingsReadOnly, RequestOrQuery
-#endif 
+#endif
     {
         #region Attributes
 
@@ -196,7 +196,7 @@ namespace RTParser
         internal bool useParentSF = false;
         private int _hasFailed = -1;
         public int HasFailed
-        {            
+        {
             get { return _hasFailed + (useParentSF ? ParentRequest.HasFailed : 0); }
             set
             {
@@ -256,7 +256,7 @@ namespace RTParser
         }
 
         public Proof Proof { get; set; }
-        
+
         public bool ResponderSelfListens { get; set; }
         public bool SaveResultsOnJustHeard { get; set; }
         public bool IsSynchronis { get; set; }
@@ -387,7 +387,7 @@ namespace RTParser
             {
                 if (SuspendSearchLimits) return false;
                 var retWhyComplete = WhyRequestComplete;
-                if (retWhyComplete != null) return true;                
+                if (retWhyComplete != null) return true;
                 if (SraiDepth.IsOverMax)
                 {
                     retWhyComplete = (WhyComplete ?? "") + "SraiDepth=" + SraiDepth + " ";
@@ -397,7 +397,7 @@ namespace RTParser
                     retWhyComplete = string.Format("{0}TimesOutAt={1:0} ", (retWhyComplete ?? ""), Durration.Seconds);
                 }
                 string whyNoSearch = WhyNoSearch(CurrentResult);
-                if (whyNoSearch!=null)
+                if (whyNoSearch != null)
                 {
                     retWhyComplete = (retWhyComplete ?? "") + whyNoSearch + " ";
                 }
@@ -437,7 +437,7 @@ namespace RTParser
                 if (ParentRequest != null)
                 {
                     return ParentRequest.ResponderPredicates;
-                } 
+                }
                 RTPBot.writeDebugLine("ERROR Cant find responder Dictionary !!!");
                 return null; // TargetSettings;
             }
@@ -450,7 +450,7 @@ namespace RTParser
             StringBuilder sb = new StringBuilder(ToRequestString());
             sb.AppendLine();
             Request r = this.ParentRequest;
-            while (r!=null)
+            while (r != null)
             {
                 string rToRequestString = r.ToRequestString();
                 sb.AppendLine(rToRequestString);
@@ -477,8 +477,8 @@ namespace RTParser
             }
             return DLRConsole.SafeFormat(
                 "{0}: {1}, \"{2}\"",
-                RequestDepth + " " + Requester == null ? "NULL" : (string) Requester.UserID,
-                Responder == null ? "Anyone" : (string) Responder.UserID,
+                RequestDepth + " " + Requester == null ? "NULL" : (string)Requester.UserID,
+                Responder == null ? "Anyone" : (string)Responder.UserID,
                 unifiableToVMString);
         }
 
@@ -499,14 +499,14 @@ namespace RTParser
         /// <param name="rawInput">The raw input from the user</param>
         /// <param name="user">The user who made the request</param>
         /// <param name="bot">The bot to which this is a request</param>
-        protected 
+        protected
 #if interface
             RequestImpl
 #else
-            Request
+ Request
 #endif // interface
-            (Unifiable rawInput, User user, Unifiable thatSaid, User targetUser, RTPBot bot, Request parent, GraphMaster graphMaster)
-            :  this(bot.GetQuerySettings()) // Get query settings intially from user
+(Unifiable rawInput, User user, Unifiable thatSaid, User targetUser, RTPBot bot, Request parent, GraphMaster graphMaster)
+            : this(bot.GetQuerySettings()) // Get query settings intially from user
         {
             ExitQueue = new CommitQueue();
             SideEffects = new CommitQueue();
@@ -532,7 +532,7 @@ namespace RTParser
             }
             DebugLevel = -1;
             if (parent != null) targetUser = parent.Responder;
-            Requester = Requester ?? user;            
+            Requester = Requester ?? user;
             if (Requester != null)
             {
                 ApplySettings(Requester.GetQuerySettings(), this);
@@ -586,7 +586,7 @@ namespace RTParser
                 {
                     if (pmaybe != null)
                     {
-                       // ParentRequest = pmaybe;
+                        // ParentRequest = pmaybe;
                     }
                     user.CurrentRequest = thisRequest;
                 }
@@ -668,9 +668,9 @@ namespace RTParser
             get
             {
                 // when we change to s struct, lastOptions will never be null
-// ReSharper disable ConditionIsAlwaysTrueOrFalse
+                // ReSharper disable ConditionIsAlwaysTrueOrFalse
                 if (lastOptions == null || lastOptions.TheRequest != null)
-// ReSharper restore ConditionIsAlwaysTrueOrFalse
+                // ReSharper restore ConditionIsAlwaysTrueOrFalse
                 {
                     lastOptions = new LoaderOptions(thisRequest, Graph);
                 }
@@ -705,11 +705,11 @@ namespace RTParser
                 //{
                 //    _loadingfrom = _filename;
                 //}
-               if (_loadingfrom == null)
-               {
-                   _loadingfrom = null;
+                if (_loadingfrom == null)
+                {
+                    _loadingfrom = null;
                     //_loadingfrom = value;
-               }
+                }
                 _filename = value;
             }
         }
@@ -720,10 +720,11 @@ namespace RTParser
             {
                 if (_filename == null)
                 {
-                  //   _filename = value;
-                } else
+                    //   _filename = value;
+                }
+                else
                 {
-                 //   Filename = null;
+                    //   Filename = null;
                 }
                 _loadingfrom = value;
             }
@@ -817,7 +818,7 @@ namespace RTParser
             }
             set
             {
-               // if (sGraph != null)
+                // if (sGraph != null)
                 sGraph = GetGraph(value);
                 ovGraph = value;
             }
@@ -825,7 +826,7 @@ namespace RTParser
 
         public GraphMaster GetGraph(string value)
         {
-           return TargetBot.GetGraph(value, sGraph);
+            return TargetBot.GetGraph(value, sGraph);
         }
 
         public void ExcludeGraph(string srai)
@@ -852,7 +853,7 @@ namespace RTParser
         public void AddOutputSentences(TemplateInfo ti, string nai, Result result)
         {
             result = result ?? CurrentResult;
-            result.AddOutputSentences(ti, nai);   
+            result.AddOutputSentences(ti, nai);
         }
 
         private Unifiable _topic;
@@ -871,7 +872,7 @@ namespace RTParser
             }
             set
             {
-                if(true)
+                if (true)
                 {
                     Requester.TopicSetting = value;
                     return;
@@ -909,7 +910,7 @@ namespace RTParser
             get
             {
                 var tops = Requester.Topics;
-                if (_topic!=null)
+                if (_topic != null)
                 {
                     if (!tops.Contains(_topic)) tops.Insert(0, _topic);
                 }
@@ -927,12 +928,12 @@ namespace RTParser
         {
             get
             {
-                if (TargetSettings is SettingsDictionary) return (SettingsDictionary) TargetSettings;
+                if (TargetSettings is SettingsDictionary) return (SettingsDictionary)TargetSettings;
                 var currentResult = CurrentResult;
                 return currentResult.RequesterPredicates;
             }
         }
-        #if LESS_LEAN
+#if LESS_LEAN
         public int GetCurrentDepth()
         {
            // int here = new StackTrace().FrameCount - framesAtStart;
@@ -953,11 +954,11 @@ namespace RTParser
         public IList<TemplateInfo> RequestTemplates
         {
             get
-            {                
+            {
                 return RequestTemplates1;
             }
         }
-        
+
         public DateTime TimesOutAt { get; set; }
 
         public void WriteLine(string s, params object[] args)
@@ -1011,7 +1012,7 @@ namespace RTParser
                 if (result1.OutputSentenceCount > 0)
                 {
                     w = w ?? "";
-                    w+= "MaxTemplates ";
+                    w += "MaxTemplates ";
                 }
                 // return null;
             }
@@ -1041,7 +1042,7 @@ namespace RTParser
                 currentResult = r;
             }
             TimeOutFromNow = parentReq.TimeOut;
-            return (MasterResult) currentResult;
+            return (MasterResult)currentResult;
         }
 
         private MasterRequest thisRequest
@@ -1053,10 +1054,10 @@ namespace RTParser
         {
             Request subRequest = CreateSubRequest(templateNodeInnerValue, Requester,
                                                   That, Responder, TargetBot, this, graphMaster);
-            return (MasterRequest) subRequest;
+            return (MasterRequest)subRequest;
         }
 
-        public MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, User requester, Unifiable thatSaid, User requestee, 
+        public MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, User requester, Unifiable thatSaid, User requestee,
             RTPBot rTPBot, Request parent, GraphMaster graphMaster)
         {
             var subRequest = new MasterRequest(templateNodeInnerValue, requester ?? Requester, thatSaid ?? That,
@@ -1135,7 +1136,7 @@ namespace RTParser
                     lock (resultUsedTemplates)
                     {
                         if (resultUsedTemplates.Contains(info))
-                        {                            
+                        {
                             return true;
                         }
                     }
@@ -1170,7 +1171,7 @@ namespace RTParser
         {
             get
             {
-        
+
                 int baseDebugLevel = base.DebugLevel;
                 if (baseDebugLevel > 0) return baseDebugLevel;
                 var parentRequest = (QuerySettingsReadOnly)this.ParentRequest;
@@ -1244,7 +1245,7 @@ namespace RTParser
                 {
                     var responder = Responder;
                     if (responder != null) responder.JustSaid = value;
-                 //   throw new InvalidOperationException("must User.set_That()");
+                    //   throw new InvalidOperationException("must User.set_That()");
                 }
             }
         }
@@ -1319,7 +1320,7 @@ namespace RTParser
             set { _label = value; }
         }
 
-        public SideEffectStage Stage{ get; set;}
+        public SideEffectStage Stage { get; set; }
 
         public ISettingsDictionary GetSubstitutions(string named, bool createIfMissing)
         {
@@ -1330,7 +1331,7 @@ namespace RTParser
         {
             if (CurrentQuery == null)
             {
-             //   writeToLog("ERROR: Cannot get CurrentQuery!?");
+                //   writeToLog("ERROR: Cannot get CurrentQuery!?");
             }
             return GetDictionary(named, CurrentQuery);
         }
@@ -1382,15 +1383,16 @@ namespace RTParser
                     var G = ggg.Value;
                     if (G != null && !graphs.ContainsValue(G)) graphs[ggg.Key] = G;
                 }
-            } else
+            }
+            else
             {
                 var G = t.GetGraph(graphname, master);
                 if (G != null && !graphs.ContainsValue(G)) graphs[graphname] = G;
             }
-            return graphs;        
+            return graphs;
         }
 
-        public TimeSpan TimeOutFromNow 
+        public TimeSpan TimeOutFromNow
         {
             set
             {
@@ -1402,17 +1404,17 @@ namespace RTParser
                 }
                 else
                 {
-                    TimeOut = value;                    
+                    TimeOut = value;
                 }
             }
         }
 
         public ISettingsDictionary GetDictionary(string named, ISettingsDictionary dictionary)
         {
-            ISettingsDictionary dict =  GetDictionary0(named, dictionary);
+            ISettingsDictionary dict = GetDictionary0(named, dictionary);
             if (IsTraced && dict == TargetBot.GlobalSettings)
-            {                
-             //   writeToLog("BETTER MEAN BOT " + named + " for " + dictionary);
+            {
+                //   writeToLog("BETTER MEAN BOT " + named + " for " + dictionary);
             }
             if (dict != null) return dict;
             writeToLog("ERROR MISSING DICTIONARY " + named + " for " + dictionary);
@@ -1436,7 +1438,7 @@ namespace RTParser
             if (named == "get") return CheckedValue(Requester.UserID, Requester);
             if (named == "query") return CheckedValue(named, CurrentQuery);
             if (named == "request") return CheckedValue(named, TargetSettings);
-            if (named == "bot.globalsettings") return CheckedValue(named, TargetBot.GlobalSettings);     
+            if (named == "bot.globalsettings") return CheckedValue(named, TargetBot.GlobalSettings);
             if (named == "bot")
             {
                 if (ResponderPredicates != null) return ResponderPredicates;
@@ -1603,7 +1605,7 @@ namespace RTParser
         public Dictionary<Unifiable, Unifiable> CreateSRAIMark()
         {
             var originalSalientRequest = GetOriginalSalientRequest(thisRequest);
-            var dict =  new Dictionary<Unifiable, Unifiable>(originalSalientRequest._SRAIResults);
+            var dict = new Dictionary<Unifiable, Unifiable>(originalSalientRequest._SRAIResults);
             var pr = ParentRequest;
             while (pr != null)
             {
@@ -1662,9 +1664,9 @@ namespace RTParser
             rr.ExitQueue.Add(
                 "re-enabling " + infoName,
                 () =>
-                    {
-                        templateInfo.IsDisabledOutput = false;
-                    });
+                {
+                    templateInfo.IsDisabledOutput = false;
+                });
         }
 
         public void MarkTemplate(TemplateInfo queryTemplate)
@@ -1683,7 +1685,7 @@ namespace RTParser
             lock (ExitQueue)
             {
                 if (HasExited) return;
-                this.HasExited = true;                
+                this.HasExited = true;
             }
             CommitSideEffects(false);
             UndoAll();
@@ -1694,6 +1696,51 @@ namespace RTParser
         }
         #endregion
 
+        public void EnterContext()
+        {
+            Requester.Enter(this);
+        }
+        public void ExitContext()
+        {
+            Requester.Exit(this);
+        }
+
+        public SituationInConversation ContextScope
+        {
+            get
+            {
+                ConversationScopeHolder currentScopeHolder;
+                SituationInConversation scope = null;
+
+                currentScopeHolder = CurrentQuery as ConversationScopeHolder;
+                if (currentScopeHolder != null)
+                {
+                    scope = currentScopeHolder.ContextScope;
+                    if (scope != null) return scope;
+                }
+
+                currentScopeHolder = CurrentResult as ConversationScopeHolder;
+                if (currentScopeHolder != null)
+                {
+                    Request currentResultrequest = CurrentResult.request;
+                    if (currentResultrequest != this)
+                    {
+                        writeToLog("switching request contexts (looking for ContextScope): " + currentResultrequest);
+                        scope = currentScopeHolder.ContextScope;
+                        if (scope != null) return scope;
+                    }
+                }
+
+                currentScopeHolder = ParentRequest as ConversationScopeHolder;
+                if (currentScopeHolder != null)
+                {
+                    scope = currentScopeHolder.ContextScope;
+                    if (scope != null) return scope;
+                }
+
+                return scope;   
+            }
+        }
     }
 
     public class CommitQueue

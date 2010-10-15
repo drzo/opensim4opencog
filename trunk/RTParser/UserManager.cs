@@ -215,13 +215,13 @@ namespace RTParser
             User user;
             if (BotUsers.TryGetValue(name, out user))
             {
-                user.Dispose();
+                user.DisposeObject();
                 BotUsers.Remove(name);
                 writeToUserLog("REMOVED " + name);
             }
             else if (BotUsers.TryGetValue(keyname, out user))
             {
-                user.Dispose();
+                user.DisposeObject();
                 BotUsers.Remove(keyname);
                 writeToUserLog("REMOVED " + keyname);
             }
@@ -533,7 +533,7 @@ namespace RTParser
                         // remove old "new" acct from dict
                         BotUsers.Remove(newkey);
                         // kill its timer!
-                        newuser.Dispose();
+                        newuser.DisposeObject();
                         newuser = FindOrCreateUser(newname);
                         LastUser = newuser;
                         return newuser;
@@ -690,7 +690,7 @@ namespace RTParser
                         // remove old "new" acct from dict
                         BotUsers.Remove(newkey);
                         // kill its timer!
-                        newuser.Dispose();
+                        newuser.DisposeObject();
                         newuser = FindOrCreateUser(newname);
                         return newuser;
                     }
