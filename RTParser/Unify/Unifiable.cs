@@ -25,14 +25,15 @@ namespace RTParser
         public static long LowMemExpireUnifiableCaches()
         {
             long total = 0;
-            foreach (KeyValuePair<string, Unifiable> internedUnifiable in internedUnifiables)
-            {
-                var u = internedUnifiable.Value;
-                if (u != null)
+            lock (internedUnifiables)
+                foreach (var internedUnifiable in internedUnifiables.Values)
                 {
-                   total += u.RunLowMemHooks();
+                    var u = internedUnifiable; //.Value;
+                    if (u != null)
+                    {
+                        total += u.RunLowMemHooks();
+                    }
                 }
-            }
             return total;
         }
 
