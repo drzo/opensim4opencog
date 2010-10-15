@@ -27,7 +27,7 @@ namespace MushDLR223.Utilities
         private string defaultUser = "null";
 
         public bool SynchronouslyHandle;
-        
+
 
         internal SystemHttpServer(ScriptExecutorGetter bc, int port, string robotName)
         {
@@ -231,9 +231,13 @@ namespace MushDLR223.Utilities
             string requestData = GetRequestString(request);
             //  UUID capsID;
             bool success;
+            if (requestData == null)
+            {
+                requestData = request.Url.PathAndQuery;
+            }
 
-            string path = request.Url.PathAndQuery; //.TrimEnd('/');
-            string pathd = HttpUtility.UrlDecode(request.Url.PathAndQuery); //.TrimEnd('/');
+            string path = requestData;
+            string pathd = HttpUtility.UrlDecode(path);
             LogInfo("_listener " + path + " from " + request.RemoteEndPoint);
 
             if (request.Url.AbsolutePath.EndsWith(".ico"))
@@ -242,19 +246,9 @@ namespace MushDLR223.Utilities
                 return;
             }
 
-            NameValueCollection getvars = request.QueryString;
             bool useHtml = false;
-            NameValueCollection postvars = null;
-            if (request.HttpMethod == "POST")
-            {
-                string input = null;
-                using (StreamReader reader = new StreamReader(request.InputStream))
-                {
-                    input = reader.ReadToEnd();
-                }
-                // this evdently creates post varaibles?
-                postvars = HttpUtility.ParseQueryString(input);
-            }
+            NameValueCollection getvars = request.QueryString;
+            NameValueCollection postvars = requestData == null ? null : HttpUtility.ParseQueryString(requestData);
 
             string botname = GetVariable(getvars, postvars, "bot", () => GetVariable(getvars, postvars, "botid", null));
 
@@ -463,7 +457,7 @@ namespace MushDLR223.Utilities
         private void WriteCodeAndClose(HttpListenerContext context, HttpStatusCode statusCode)
         {
             var responseW = context.Response;
-            responseW.StatusCode = (int) statusCode;
+            responseW.StatusCode = (int)statusCode;
             responseW.Close();
         }
 
@@ -479,12 +473,12 @@ namespace MushDLR223.Utilities
         public string GetVariable1(NameValueCollection get, string varname, Func<string> missing)
         {
             if (get == null) return missing == null ? null : missing();
-            var values =  get.GetValues(varname);
+            var values = get.GetValues(varname);
             if (values == null || values.Length == 0)
             {
-                return missing();
+                return missing == null ? null : missing();
             }
-            return values[0];
+            return HttpUtility.UrlDecode(values[0]);
         }
 
         private void WriteResponse(HttpListenerContext context, string responseString)
@@ -521,7 +515,7 @@ namespace MushDLR223.Utilities
             return null;
         }
 
-        private static void LogInfo(string requestData, params object [] args)
+        private static void LogInfo(string requestData, params object[] args)
         {
             Debug.WriteLine(DLRConsole.SafeFormat(requestData, args));
         }
