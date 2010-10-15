@@ -34,6 +34,7 @@ namespace RTParser
     public partial class RTPBot
     {
         private readonly Dictionary<string, SystemExecHandler> ConsoleCommands = new Dictionary<string, SystemExecHandler>();
+        int UseHttpd = -1;
         private static Bot ConsoleRobot;
         public static string AIMLDEBUGSETTINGS =
             "clear -spam +user +bina +error +aimltrace +cyc -dictlog -tscore +loaded";
@@ -117,7 +118,10 @@ namespace RTParser
         }
 
         public Object LoggingLock = new object();
-        private static IDisposable HttpTextServer;
+        public IDisposable HttpTextServer;
+        public static int NextHttp = 5580;
+        public static int NextHttpIncrement = 100;
+        
 
         public void writeToFileLog(string message)
         {
@@ -193,22 +197,40 @@ namespace RTParser
             RTPBot myBot = new Bot();
             ConsoleRobot = myBot as Bot;
             OutputDelegate writeLine = MainConsoleWriteLn;
-            bool usedHttpd = false;
-            foreach (string s in args)
+            for (int index = 0; index < args.Length; index++)
             {
+                string s = args[index];
                 if (s == "--httpd")
-                {
+                {                    
                     UseBreakpointOnError = false;
-                    usedHttpd = true;
+                    if (index+1 < args.Length)
+                    {
+                        int portNum;
+                        if (int.TryParse(args[index + 1], out portNum))
+                        {
+                            if (portNum == NextHttp)
+                            {
+                                NextHttp += NextHttpIncrement;
+                            }
+                            myBot.UseHttpd = portNum;
+                        }
+                        else
+                        {
+                            myBot.UseHttpd = NextHttp + NextHttpIncrement;
+                        }
+                    }
                 }
             }
+        }
 
+        public void StartHttpServer()
+        {
             string[] oArgs;
-            if (usedHttpd)
+            if (UseHttpd > 0 && this.HttpTextServer == null)
             {
-                ScriptExecutorGetter geter = new WebScriptExecutor(myBot);
-                HttpTextServer = MushDLR223.Utilities.HttpServerUtil.CreateHttpServer(geter, 5580);
-            }            
+                ScriptExecutorGetter geter = new WebScriptExecutor(this);
+                HttpTextServer = MushDLR223.Utilities.HttpServerUtil.CreateHttpServer(geter, UseHttpd, UserID);
+            }
         }
 
         public static void Load(string[] args, RTPBot myBot, OutputDelegate writeLine)
@@ -437,9 +459,10 @@ namespace RTParser
                     user = myUser.UserName;
                     said = args;
                 }
+                User wasUser = FindUser(user);
                 Result res = GlobalChatWithUser(said, user, null, writeDebugLine, true, false);
                 // detect a user "rename"
-                DetectUserChange(myUser, user);
+                DetectUserChange(myUser, wasUser, user);
                 OutputResult(res, console, false);                
                 return true;
             }
@@ -456,11 +479,12 @@ namespace RTParser
                     user = myUser.UserName;
                     said = args;
                 }
+                User wasUser = FindUser(user);
                 Result res = GlobalChatWithUser(said, user, null, writeDebugLine, true, true);
                 request = res.request;
                 request.ResponderSelfListens = false;
                 // detect a user "rename"
-                bool userChanged = DetectUserChange(myUser, user);
+                bool userChanged = DetectUserChange(myUser, wasUser, user);
                 User theResponder = res.Responder ?? res.request.Responder;
                 if (userChanged)
                 {

@@ -19,6 +19,7 @@ namespace MushDLR223.Utilities
         private readonly AutoResetEvent listenForNextRequest = new AutoResetEvent(false);
         private static int requestCounter;
         public int PortNum { get; set; }
+        public string RobotName { get; set; }
         public bool IsStarted { get; set; }
         private ScriptExecutorGetter getter;
         private HttpServer.HttpListener _listener;
@@ -28,10 +29,11 @@ namespace MushDLR223.Utilities
         public bool SynchronouslyHandle;
         
 
-        internal SystemHttpServer(ScriptExecutorGetter bc, int port)
+        internal SystemHttpServer(ScriptExecutorGetter bc, int port, string robotName)
         {
             clientManager = bc;
             PortNum = port;
+            RobotName = robotName;
             Init();
         }
 
@@ -98,8 +100,9 @@ namespace MushDLR223.Utilities
                     {
                         if (httpListener.Prefixes.Count == 0)
                         {
-                            httpListener.Prefixes.Add("http://*:" + PortNum + "/");
-                            httpListener.Prefixes.Add("http://*:" + PortNum + "/HttpListenerTest/");
+                            PrefixAdd("http://*:" + PortNum + "/");
+                            PrefixAdd("http://*:" + PortNum + "/hanson_robotics/");
+                            if (RobotName != null) PrefixAdd("http://*:" + PortNum + "/" + RobotName + "/");
                         }
                         httpListener.Start();
                         if (!SynchronouslyHandle)
@@ -111,6 +114,7 @@ namespace MushDLR223.Utilities
                         }
                         else
                         {
+                            // Also moves our listening loop off to a worker thread so that the GUI doesn't lock up.
                             ThreadPool.QueueUserWorkItem(HandleSynchronously);
                         }
                     }
@@ -119,6 +123,15 @@ namespace MushDLR223.Utilities
                 {
                     IsStarted = false;
                 }
+            }
+        }
+
+        private void PrefixAdd(string prefix)
+        {
+            var prefixes = httpListener.Prefixes;
+            lock (prefixes)
+            {
+                if (!prefixes.Contains(prefix)) prefixes.Add(prefix);
             }
         }
 
@@ -156,7 +169,7 @@ namespace MushDLR223.Utilities
                 // because there will be a thread stopped waiting on the .EndGetContext()
                 // method, and again, that is just the way most Begin/End asynchronous
                 // methods of the .NET Framework work.
-                LogInfo(ex.ToString());
+                LogInfo("ERROR: EndGetContext, " + ex);
                 return;
             }
             finally
@@ -165,7 +178,14 @@ namespace MushDLR223.Utilities
                 // so that it calls the BeginGetContext() (or possibly exits if we're not
                 // listening any more) method to start handling the next incoming request
                 // while we continue to process this request on a different thread.
-                listenForNextRequest.Set();
+                try
+                {
+                    listenForNextRequest.Set();
+                }
+                catch (Exception ex2)
+                {
+                    LogInfo("ERROR: listenForNextRequest.Set, " + ex2);
+                }
             }
 
             // ReSharper disable ConditionIsAlwaysTrueOrFalse
@@ -218,7 +238,7 @@ namespace MushDLR223.Utilities
 
             if (request.Url.AbsolutePath.EndsWith(".ico"))
             {
-                WriteCode(context, HttpStatusCode.NotFound);
+                WriteCodeAndClose(context, HttpStatusCode.NotFound);
                 return;
             }
 
@@ -232,6 +252,7 @@ namespace MushDLR223.Utilities
                 {
                     input = reader.ReadToEnd();
                 }
+                // this evdently creates post varaibles?
                 postvars = HttpUtility.ParseQueryString(input);
             }
 
@@ -240,7 +261,7 @@ namespace MushDLR223.Utilities
             ScriptExecutor _botClient = clientManager.GetScriptExecuter(botname);
             if (_botClient == null)
             {
-                WriteCode(context, HttpStatusCode.ServiceUnavailable);
+                WriteCodeAndClose(context, HttpStatusCode.ServiceUnavailable);
                 return;
             }
 
@@ -373,9 +394,17 @@ namespace MushDLR223.Utilities
             if (getvars == null) return;
             foreach (var p in getvars.AllKeys)
             {
-                foreach (var item in getvars.GetValues(p))
+                string[] getvarsGetValues = getvars.GetValues(p);
+                if (getvarsGetValues != null)
                 {
-                    AddToBody(response, "" + p + " = " + item);
+                    foreach (var item in getvarsGetValues)
+                    {
+                        AddToBody(response, "" + p + " = " + item);
+                    }
+                }
+                else
+                {
+                    AddToBody(response, "" + p + " = NULL");
                 }
             }
         }
@@ -431,13 +460,7 @@ namespace MushDLR223.Utilities
 
         }
 
-
-        private NameValueCollection Params(HttpListenerRequest request)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void WriteCode(HttpListenerContext context, HttpStatusCode statusCode)
+        private void WriteCodeAndClose(HttpListenerContext context, HttpStatusCode statusCode)
         {
             var responseW = context.Response;
             responseW.StatusCode = (int) statusCode;

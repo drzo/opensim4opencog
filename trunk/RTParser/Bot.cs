@@ -1687,6 +1687,7 @@ The AIMLbot program.
             string official = LoadPersonalDirectories(myName);
             thisBotAsUser.SaveDirectory(thisBotAsUser.UserDirectory);
             AddExcuteHandler(NamePath, ChatWithThisBot);
+            this.StartHttpServer();
             return official ?? thisBotAsUser.UserDirectory;
         }
 
