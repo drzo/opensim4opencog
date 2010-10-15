@@ -12,7 +12,7 @@ using RTParser.Variables;
 
 namespace RTParser
 {
-    public interface IUserConverationScope
+    public interface UserConversationScope : IUser
     {
         /// <summary>
         /// Returns the sematantic meaning to use for the next <that/> part of a subsequent path
@@ -101,17 +101,18 @@ namespace RTParser
         Unifiable ResponderJustSaid { get; set; }
         User LastResponder { get; set; }
         Unifiable JustSaid { get; set; }
-        Unifiable TopicSetting { get; set; }
-        IList<Unifiable> Topics { get; }
-
-        string GraphName { get; set; }
+        /// <summary>
+        /// the value of the "topic" predicate
+        /// </summary>
 
         Unifiable Topic { get; }
+        Unifiable TopicSetting { get; set; }
+        IList<Unifiable> Topics { get; }
 
         IEnumerable<Unifiable> BotOutputs { get; }
     }
 
-    public interface IUserImpl2
+    public interface UserDuringProcessing: ISettingsDictionary, IUser
     {
         actMSM botActionMSM { get; }
 
@@ -126,25 +127,30 @@ namespace RTParser
         int depth { get; set; }
 
         Unifiable grabSettingNoDebug(string arg);
-        void Enter(AIMLTagHandler srai);
-        void Exit(AIMLTagHandler srai);
+        void Enter(ConversationScopeHolder srai);
+        void Exit(ConversationScopeHolder srai);
 
         GraphMaster ListeningGraph { get; set; }
         void addResultTemplates(Result result);
         void addRequestTemplates(Request request);
         void addResult(Result result);
 
+        string GraphName { get; set; }
         SettingsDictionary Predicates { get; set; }
+       // void InsertProvider(ParentProvider pp);
         Request CurrentRequest { get; set; }
         bool SuspendAddResultToUser { get; set; }
     }
 
     public interface IUser
     {
+        UserStaticModel StaticModel { get; }
+        UserConversationScope ConversationScope { get; }
+        UserDuringProcessing DuringProcessing { get; }
         User Value { get; }
     }
 
-    public interface User : ISettingsDictionary, IUserConverationScope, IUserImpl2, IDisposable
+    public interface UserStaticModel: IUser
     {
         RTPBot bot { get; }
         string UserID { get; set; }
@@ -173,22 +179,21 @@ namespace RTParser
 
         void WriteToUserTrace(string s, params object[] args);
 
-        /// <summary>
-        /// the value of the "topic" predicate
-        /// </summary>
-        void InsertProvider(ParentProvider pp);
-
         QuerySettings GetQuerySettings();
         QuerySettings GetQuerySettingsSRAI();
+    }
 
-        
+    public interface User : IUser, UserStaticModel, UserConversationScope, UserDuringProcessing
+    {
+        void DisposeObject();
     }
 
     /// <summary>
     /// Encapsulates information and history of a user who has interacted with the bot
     /// </summary>
-    public abstract class UserImpl : StaticAIMLUtils, IDisposable, ISettingsDictionary, IUser, User, IUserConverationScope,
-                                     IUserImpl2
+    public abstract class UserImpl : StaticAIMLUtils, IUser, IDisposable, ISettingsDictionary, UserConversationScope,
+                                     UserDuringProcessing, 
+                                     User
     {
         public static bool ThatIsStoredBetweenUsers = true;
         public readonly object QueryLock = new object();
@@ -1643,17 +1648,22 @@ namespace RTParser
             // ReSharper restore PossibleLossOfFraction
         }
 
-        public void Enter(AIMLTagHandler srai)
+        public void Enter(ConversationScopeHolder srai)
         {
             depth++;
         }
 
-        public void Exit(AIMLTagHandler srai)
+        public void Exit(ConversationScopeHolder srai)
         {
             depth--;
             if (depth == 0)
             {
-                srai.query.PurgeTagHandlers();
+                SituationInConversation sraiContextScope = srai.ContextScope;
+                if (sraiContextScope != null)
+                {
+                    var query = sraiContextScope.CurrentQuery;
+                    if (query != null) query.PurgeTagHandlers();
+                }
             }
         }
 
@@ -1666,5 +1676,38 @@ namespace RTParser
         {
             get { return this; }
         }
+
+        public UserStaticModel StaticModel
+        {
+            get { return this; }
+        }
+
+        public UserConversationScope ConversationScope
+        {
+            get { return this; }
+        }
+
+        public UserDuringProcessing DuringProcessing
+        {
+            get { return this; }
+        }
+
+        public void DisposeObject()
+        {
+            Dispose();
+        }
+    }
+
+    public interface ConversationScopeHolder
+    {
+        SituationInConversation ContextScope { get; }
+    }
+
+    public interface SituationInConversation
+    {
+        UserConversationScope Requester { get; }
+        Utterance TheUtterence { get; }
+        IEnumerable<UserConversationScope> Receivers { get; }
+        SubQuery CurrentQuery { get; set; }
     }
 }

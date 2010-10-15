@@ -15,7 +15,8 @@ namespace RTParser.Utils
     /// interrogation of the graphmaster.
     /// </summary>
     [Serializable]
-    public class SubQuery : StaticAIMLUtils, ISettingsDictionary, IComparable<SubQuery>, RequestOrQuery, UndoStackHolder
+    public class SubQuery : StaticAIMLUtils, ISettingsDictionary, IComparable<SubQuery>, RequestOrQuery, UndoStackHolder,
+        ConversationScopeHolder, SituationInConversation
     {
         public
             //static 
@@ -255,7 +256,7 @@ namespace RTParser.Utils
             get { return TargetSettings.NameSpace; }
         }
 
-        public User Requester
+        public UserConversationScope Requester
         {
             get { return CurrentUser; }
         }
@@ -283,6 +284,8 @@ namespace RTParser.Utils
         {
             get { return Request.ResponderPredicates; }
         }
+
+        public SituationInConversation ContextScope { get; set; }
 
         public Unifiable grabSetting(string name)
         {
@@ -682,9 +685,44 @@ namespace RTParser.Utils
         }
 
         public UndoStack UndoStackValue { get; set; }
+
+        public void EnterContent()
+        {
+            Request.EnterContext();
+        }
+        public void ExitContext()
+        {
+            Request.ExitContext();
+        }
+
+        #region SituationInConversation Members
+
+        public Utterance TheUtterence
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public IEnumerable<UserConversationScope> Receivers
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public SubQuery CurrentQuery
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        #endregion
     }
 
-    public interface RequestOrQuery : Utterance
+    public interface RequestOrQuery : ConversationScopeHolder
     {
 
         /// <summary>
@@ -712,13 +750,14 @@ namespace RTParser.Utils
         /// </summary>
         User Responder { get; }
         /// <summary>
-        /// 
+        /// The last meaning unit extracted from what the responder said
         /// </summary>
         Unifiable That { get; }
         /// <summary>
         /// The raw input from the user
+        /// (also the last thing the requester said)
         /// </summary>
-        Unifiable rawInput { get; }
+        Unifiable RawInput { get; }
     }
 
 #if _FALSE_

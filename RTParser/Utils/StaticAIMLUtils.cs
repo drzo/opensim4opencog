@@ -207,10 +207,15 @@ namespace RTParser.Utils
 
         public static ThreadStart EnterTag(Request request, XmlNode templateNode, SubQuery query)
         {
+            if (templateNode.NodeType != XmlNodeType.Element)
+            {
+                throw new NotImplementedException("EnterTag: " + templateNode.NodeType);
+            }
             bool needsUnwind = false;
             object thiz = (object) query ?? request;
             ISettingsDictionary dict = query ?? request.TargetSettings;
             XmlAttributeCollection collection = templateNode.Attributes;
+            EnterContext(request, query);
             if (collection != null && collection.Count > 0)
             {
                 // graphmaster
@@ -340,6 +345,7 @@ namespace RTParser.Utils
                 {
                     return () =>
                                {
+                                   EnterContext(request, query);
                                    try
                                    {
                                        if (savedValues != null)
@@ -397,10 +403,24 @@ namespace RTParser.Utils
                                    {
                                        request.writeToLog("ERROR " + ex);
                                    }
+                                   ExitContext(request, query);
+                                   ExitContext(request, query);
                                };
                 }
             }
-            return () => { };
+            return () =>
+                       {
+                           ExitContext(request, query);
+                       };
+        }
+
+        private static void EnterContext(Request request, SubQuery query)
+        {
+            request.EnterContext();
+        }
+        private static void ExitContext(Request request, SubQuery query)
+        {
+            request.ExitContext();
         }
 
 
@@ -430,7 +450,7 @@ namespace RTParser.Utils
         {
             if (xml1 == null) return xml1;
             xml1 = MakeMatchable(xml1);
-            xml1 = Replace(xml1, new[]
+            xml1 = ReplaceMap(xml1, new[]
                                      {
                                          new string[] {" index=\"1\"", " "},
                                          new string[] {" index=\"1,1\"", " "},

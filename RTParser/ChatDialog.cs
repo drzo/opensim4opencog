@@ -330,7 +330,7 @@ namespace RTParser
 
         public MasterRequest MakeRequestToBot(string rawInput, User findOrCreateUser)
         {
-            User rtarget = BotAsUser;
+            var rtarget = BotAsUser;
             AIMLbot.MasterRequest r = findOrCreateUser.CreateRequest(rawInput, rtarget); 
             if (rtarget==null)
             {

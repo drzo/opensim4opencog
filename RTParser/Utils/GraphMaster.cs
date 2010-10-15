@@ -593,7 +593,7 @@ namespace RTParser.Utils
             QuerySettings.ApplySettings(request, ql);
             request.TopLevelQuery = ql;
             lock (LockerObject)
-                lock (request.Requester.AllQueries)
+                lock (request.Requester.DuringProcessing.AllQueries)
                 {
                     if (!request.Requester.AllQueries.Contains(ql)) request.Requester.AllQueries.Add(ql);
                 }

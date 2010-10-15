@@ -210,6 +210,11 @@ namespace RTParser
             }
         }
 
+        public override bool IsCatchAll
+        {
+            get { return str == "*"; }
+        }
+
         private string _str
         {
             set
@@ -763,7 +768,7 @@ namespace RTParser
 
             try
             {
-                if (false)strTrim = TextPatternUtils.Replace(strTrim,
+                if (false)strTrim = TextPatternUtils.ReplaceMap(strTrim,
                                                    new[]
                                                        {
                                                            new[] {"&gt;", "<gt />"},
