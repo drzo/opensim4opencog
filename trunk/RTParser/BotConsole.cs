@@ -208,15 +208,16 @@ namespace RTParser
                         int portNum;
                         if (int.TryParse(args[index + 1], out portNum))
                         {
+                            myBot.UseHttpd = portNum;
                             if (portNum == NextHttp)
                             {
                                 NextHttp += NextHttpIncrement;
                             }
-                            myBot.UseHttpd = portNum;
                         }
                         else
                         {
-                            myBot.UseHttpd = NextHttp + NextHttpIncrement;
+                            myBot.UseHttpd = NextHttp;
+                            NextHttp += NextHttpIncrement;
                         }
                     }
                 }
