@@ -90,7 +90,7 @@ namespace MushDLR223.Utilities
         {
             lock (StartupLock)
             {
-                if (!IsStarted) return;
+                if (IsStarted) return;
                 IsStarted = true;
                 try
                 {
@@ -98,6 +98,7 @@ namespace MushDLR223.Utilities
                     {
                         if (httpListener.Prefixes.Count == 0)
                         {
+                            httpListener.Prefixes.Add("http://*:" + PortNum + "/");
                             httpListener.Prefixes.Add("http://*:" + PortNum + "/HttpListenerTest/");
                         }
                         httpListener.Start();
@@ -172,7 +173,7 @@ namespace MushDLR223.Utilities
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
 
             LogInfo("Start: " + requestNumber + " at " + DateTime.Now);
-            ShowRequestProperties2(context.Request);
+            ShowRequestProperties(context.Request);
             HandleTheClientNew(context, requestNumber);
             LogInfo("End: " + requestNumber + " at " + DateTime.Now);
         }
@@ -185,7 +186,8 @@ namespace MushDLR223.Utilities
             //System.Threading.Thread.Sleep(r.Next(10000));
             WriteResponse(context, "Hi there");
         }
-        public static void ShowRequestProperties2(HttpListenerRequest request)
+
+        public static void ShowRequestProperties(HttpListenerRequest request)
         {
             LogInfo("KeepAlive: {0}", request.KeepAlive);
             LogInfo("Local end point: '{0}'", request.LocalEndPoint);
@@ -195,6 +197,11 @@ namespace MushDLR223.Utilities
             LogInfo("Protocol version: {0}", request.ProtocolVersion);
             LogInfo("Is authenticated: {0}", request.IsAuthenticated);
             LogInfo("Is secure: {0}", request.IsSecureConnection);
+            LogInfo("ContentType: {0}", request.ContentType);
+            LogInfo("ServiceName: {0}", request.ServiceName);
+            LogInfo("RawUrl: {0}", request.RawUrl);
+            LogInfo("Url: {0}", request.Url);
+            LogInfo("QueryString: {0}", request.QueryString);
 
         }
         public virtual void HandleTheClientNew(HttpListenerContext context, int requestNumber)
@@ -263,7 +270,7 @@ namespace MushDLR223.Utilities
 
 
 
-            if (path.StartsWith("/?") || path.StartsWith("/test"))
+            if (path.StartsWith("/?") || path.ToLower().StartsWith("/test"))
             {
                 useHtml = true;
             }
@@ -448,6 +455,7 @@ namespace MushDLR223.Utilities
         }
         public string GetVariable1(NameValueCollection get, string varname, Func<string> missing)
         {
+            if (get == null) return missing == null ? null : missing();
             var values =  get.GetValues(varname);
             if (values == null || values.Length == 0)
             {
