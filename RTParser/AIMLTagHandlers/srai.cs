@@ -96,11 +96,11 @@ namespace RTParser.AIMLTagHandlers
                 try
                 {
                     user.Enter(this);
-                   int userDepth = user.depth;
-                   // int sraiDepth = request.GetCurrentDepth();
+                   //int userDepth = user.depth;
+                    var sraiDepth = request.SraiDepth;
                     if (request.SraiDepth.IsOverMax)
                     {
-                        query.prefix = string.Format("{0}: SRAIDEPTH(user:{1}/request:{2})", request.Graph, userDepth, userDepth);
+                        query.prefix = string.Format("{0}: SRAIDEPTH({1})", request.Graph, sraiDepth);
                         writeToLog("WARNING Depth pretty deep " + templateNode + " returning empty");
                         if (!request.SuspendSearchLimits) return RecurseResult;
                     }
@@ -275,7 +275,7 @@ namespace RTParser.AIMLTagHandlers
                 writeToLog = writeToLog ?? DEVNULL;
                 RTPBot mybot = request.TargetBot;
                 User user = request.Requester;
-                int depth = user.depth;
+                int depth = request.SraiDepth.Current;
                 var thisrequest = request;
                 var thisresult = request.CurrentResult;
                 /*

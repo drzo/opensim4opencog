@@ -592,11 +592,14 @@ namespace RTParser.Utils
             ql.matchState = state;
             QuerySettings.ApplySettings(request, ql);
             request.TopLevelQuery = ql;
+#if DEBUG_ALLQUERIES
+
             lock (LockerObject)
                 lock (request.Requester.DuringProcessing.AllQueries)
                 {
                     if (!request.Requester.AllQueries.Contains(ql)) request.Requester.AllQueries.Add(ql);
                 }
+#endif
             return ql;
         }
 
