@@ -1648,6 +1648,7 @@ The AIMLbot program.
             thisBotAsUser.removeSetting("userdir");
             NamePath = ToScriptableName(NameAsSet);
             thisBotAsUser.UserID = NamePath;
+            this.StartHttpServer();
 
             //var OnTaskAtATimeHandler = HeardSelfSayQueue = thisBotAsUser.OnTaskAtATimeHandler;
             //OnTaskAtATimeHandler.Name = "TaskQueue For " + myName;
@@ -1687,7 +1688,6 @@ The AIMLbot program.
             string official = LoadPersonalDirectories(myName);
             thisBotAsUser.SaveDirectory(thisBotAsUser.UserDirectory);
             AddExcuteHandler(NamePath, ChatWithThisBot);
-            this.StartHttpServer();
             return official ?? thisBotAsUser.UserDirectory;
         }
 
