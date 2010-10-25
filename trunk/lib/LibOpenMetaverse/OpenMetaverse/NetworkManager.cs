@@ -890,7 +890,7 @@ namespace OpenMetaverse
                         }
 
                         // Fire the callback(s), if any
-                            PacketEvents.RaiseEvent(packet.Type, packet, simulator);
+                        PacketEvents.RaiseEvent(packet.Type, packet, simulator);
                     }
                 }
             }

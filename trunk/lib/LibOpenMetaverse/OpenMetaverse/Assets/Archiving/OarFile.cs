@@ -54,47 +54,46 @@ namespace OpenMetaverse.Assets
                 using (FileStream fileStream = new FileStream(filename, FileMode.Open, FileAccess.Read))
                 {
                     using (GZipStream loadStream = new GZipStream(fileStream, CompressionMode.Decompress))
-                {
-                    TarArchiveReader archive = new TarArchiveReader(loadStream);
-
-                    string filePath = "ERROR";
-
-                    byte[] data;
-                    TarArchiveReader.TarEntryType entryType;
-
-                    while ((data = archive.ReadEntry(out filePath, out entryType)) != null)
                     {
-                        if (filePath.StartsWith(ArchiveConstants.OBJECTS_PATH))
+                        TarArchiveReader archive = new TarArchiveReader(loadStream);
+
+                        string filePath;
+                        byte[] data;
+                        TarArchiveReader.TarEntryType entryType;
+
+                        while ((data = archive.ReadEntry(out filePath, out entryType)) != null)
                         {
+                            if (filePath.StartsWith(ArchiveConstants.OBJECTS_PATH))
+                            {
                                 // Deserialize the XML bytes
                                 if (objectCallback != null)
-                                LoadObjects(data, objectCallback, fileStream.Position, fileStream.Length);
-                        }
-                        else if (filePath.StartsWith(ArchiveConstants.ASSETS_PATH))
-                        {
+                                    LoadObjects(data, objectCallback, fileStream.Position, fileStream.Length);
+                            }
+                            else if (filePath.StartsWith(ArchiveConstants.ASSETS_PATH))
+                            {
                                 if (assetCallback != null)
                                 {
-                                if (LoadAsset(filePath, data, assetCallback, fileStream.Position, fileStream.Length))
-                                successfulAssetRestores++;
-                            else
-                                failedAssetRestores++;
-                        }
+                                    if (LoadAsset(filePath, data, assetCallback, fileStream.Position, fileStream.Length))
+                                        successfulAssetRestores++;
+                                    else
+                                        failedAssetRestores++;
+                                }
                             }
-                        else if (filePath.StartsWith(ArchiveConstants.TERRAINS_PATH))
-                        {
+                            else if (filePath.StartsWith(ArchiveConstants.TERRAINS_PATH))
+                            {
                                 if (terrainCallback != null)
-                                LoadTerrain(filePath, data, terrainCallback, fileStream.Position, fileStream.Length);
-                        }
-                        else if (filePath.StartsWith(ArchiveConstants.SETTINGS_PATH))
-                        {
+                                    LoadTerrain(filePath, data, terrainCallback, fileStream.Position, fileStream.Length);
+                            }
+                            else if (filePath.StartsWith(ArchiveConstants.SETTINGS_PATH))
+                            {
                                 if (settingsCallback != null)
                                     LoadRegionSettings(filePath, data, settingsCallback);
+                            }
                         }
-                    }
 
-                    archive.Close();
+                        archive.Close();
+                    }
                 }
-            }
             }
             catch (Exception e)
             {

@@ -61,10 +61,11 @@ namespace OpenMetaverse.Rendering
         SimpleMesh GenerateSimpleMesh(Primitive prim, DetailLevel lod);
 
         /// <summary>
-        /// Generates a series of faces, each face containing a mesh and
-        /// metadata
+        /// Generates a basic mesh structure from a sculpted primitive and
+        /// texture
         /// </summary>
-        /// <param name="prim">Primitive to generate the mesh from</param>
+        /// <param name="prim">Sculpted primitive to generate the mesh from</param>
+        /// <param name="sculptTexture">Sculpt texture</param>
         /// <param name="lod">Level of detail to generate the mesh at</param>
         /// <returns>The generated mesh</returns>
         FacetedMesh GenerateFacetedMesh(Primitive prim, DetailLevel lod);

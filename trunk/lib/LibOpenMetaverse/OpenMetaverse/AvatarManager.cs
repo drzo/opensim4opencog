@@ -744,27 +744,27 @@ namespace OpenMetaverse
 
                 AvatarAppearancePacket appearance = (AvatarAppearancePacket)packet;
 
-                        List<byte> visualParams = new List<byte>();
-                        foreach (AvatarAppearancePacket.VisualParamBlock block in appearance.VisualParam)
-                        {
-                            visualParams.Add(block.ParamValue);
-                        }
+                List<byte> visualParams = new List<byte>();
+                foreach (AvatarAppearancePacket.VisualParamBlock block in appearance.VisualParam)
+                {
+                    visualParams.Add(block.ParamValue);
+                }
 
-                        Primitive.TextureEntry textureEntry = new Primitive.TextureEntry(appearance.ObjectData.TextureEntry, 0,
-                                appearance.ObjectData.TextureEntry.Length);
+                Primitive.TextureEntry textureEntry = new Primitive.TextureEntry(appearance.ObjectData.TextureEntry, 0,
+                        appearance.ObjectData.TextureEntry.Length);
 
-                        Primitive.TextureEntryFace defaultTexture = textureEntry.DefaultTexture;
-                        Primitive.TextureEntryFace[] faceTextures = textureEntry.FaceTextures;
+                Primitive.TextureEntryFace defaultTexture = textureEntry.DefaultTexture;
+                Primitive.TextureEntryFace[] faceTextures = textureEntry.FaceTextures;
 
                 Avatar av = simulator.ObjectsAvatars.Find((Avatar a) => { return a.ID == appearance.Sender.ID; });
                 if (av != null)
                 {
-                        av.Textures = textureEntry;
-                        av.VisualParameters = visualParams.ToArray();
+                    av.Textures = textureEntry;
+                    av.VisualParameters = visualParams.ToArray();
                 }
 
-                            OnAvatarAppearance(new AvatarAppearanceEventArgs(simulator, appearance.Sender.ID, appearance.Sender.IsTrial,
-                                defaultTexture, faceTextures, visualParams));
+                OnAvatarAppearance(new AvatarAppearanceEventArgs(simulator, appearance.Sender.ID, appearance.Sender.IsTrial,
+                    defaultTexture, faceTextures, visualParams));
             }
         }
 
