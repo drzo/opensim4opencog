@@ -455,6 +455,7 @@ namespace RTParser.Utils
                                          new string[] {" index=\"1\"", " "},
                                          new string[] {" index=\"1,1\"", " "},
                                          new string[] {" var=", " name="},
+                                         new string[] {"yours", "your"},
                                      });
             //    ).Replace().Replace();
             //xml1 = CleanWhitepaces(xml1);

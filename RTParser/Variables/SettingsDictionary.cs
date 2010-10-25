@@ -270,7 +270,7 @@ namespace RTParser.Variables
                     }
                     result.AppendChild(root);
 
-                    foreach (var normalizedName in ProvidersFrom(this._overides))
+                    foreach (var normalizedName in Overides)
                     {
                         XmlNode item = result.CreateNode(XmlNodeType.Element, "override", "");
                         XmlAttribute name = result.CreateAttribute("name");
@@ -278,7 +278,7 @@ namespace RTParser.Variables
                         item.Attributes.Append(name);
                         root.AppendChild(item);
                     }
-                    foreach (var normalizedName in ProvidersFrom(this._fallbacks))
+                    foreach (var normalizedName in Fallbacks)
                     {
                         XmlNode item = result.CreateNode(XmlNodeType.Element, "fallback", "");
                         XmlAttribute name = result.CreateAttribute("name");
@@ -286,7 +286,7 @@ namespace RTParser.Variables
                         item.Attributes.Append(name);
                         root.AppendChild(item);
                     }
-                    foreach (var normalizedName in ProvidersFrom(this._listeners))
+                    foreach (var normalizedName in Listeners)
                     {
                         XmlNode item = result.CreateNode(XmlNodeType.Element, "synchon", "");
                         XmlAttribute name = result.CreateAttribute("name");
@@ -336,6 +336,16 @@ namespace RTParser.Variables
                 }
                 return result;
             }
+        }
+
+        public List<ISettingsDictionary> Listeners
+        {
+            get { return ProvidersFrom(this._listeners); }
+        }
+
+        public List<ISettingsDictionary> Overides
+        {
+            get { return ProvidersFrom(this._overides); }
         }
 
         #endregion
@@ -786,6 +796,7 @@ namespace RTParser.Variables
                         settingsDict.writeToLog("DEBUG9 Cannot ResolveToObject settings line {0} in {1}", name, settingsDict);
                         return;
                     }
+                    var pdict = pp();
                     switch (lower)
                     {
                         case "provider":
@@ -1098,7 +1109,8 @@ namespace RTParser.Variables
             if (IsIdentityReadOnly && (name.ToLower() == "name" || name.ToLower() == "id"))
             {
                 string s = (string)value;
-                if (s == null || TextPatternUtils.IsUnknown(value) || s.Length < 3 || s.ToLower() == "friend" || s.ToLower() == "that really")
+                if (s == null || TextPatternUtils.IsUnknown(value) || s.Length < 3 || s.ToLower() == "friend"
+                     || s.Contains(">") || s.ToLower() == "that really")
                 {
                     writeToLog("! NameValueCheck " + name + " = " + value);
                     return false;
@@ -1896,7 +1908,8 @@ namespace RTParser.Variables
                     if (inner == dictionary)
                     {
                         writeToLog("WARN: alread contains inner " + inner);
-                        return false;
+                        cols.Remove(deep);
+                        return true;
                     }
                     if (inner == this)
                     {
@@ -2239,7 +2252,7 @@ namespace RTParser.Variables
                     else query.AddUndo(() => dict.updateSetting(name, prevSetting));
                 }
             }
-            query.AddSideEffect("REMOVE " + dict + " " + name, () => dict.removeSetting(name));
+            query.AddSideEffect(String.Format("REMOVE {0} {1}", dict, name), () => dict.removeSetting(name));
             return locally;
         }
 
@@ -2274,7 +2287,11 @@ namespace RTParser.Variables
                                       }
                                   });
             }
-            query.AddSideEffect("ADD SETTING " + dict + " " + name + " " + newValue, () => SideEffect(name, newValue));
+            if (newValue.AsString().Contains(">"))
+            {
+                
+            }
+            query.AddSideEffect(String.Format("ADD SETTING {0} {1} {2}", dict, name, newValue), () => SideEffect(name, newValue));
             return !locally;
         }
 
@@ -2302,7 +2319,7 @@ namespace RTParser.Variables
                                       }
                                   }
                               });
-            query.AddSideEffect("ADD SETTING " + dict + " " + name + " " + newValue, () => SideEffect());
+            query.AddSideEffect(String.Format("ADD SETTING {0} {1} {2}", dict, name, newValue), () => SideEffect());
             return res;
         }
 

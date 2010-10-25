@@ -1,6 +1,7 @@
 using System;
 using System.Xml;
 using System.Text;
+using RTParser.Utils;
 
 namespace RTParser.AIMLTagHandlers
 {
@@ -37,6 +38,15 @@ namespace RTParser.AIMLTagHandlers
             : base(bot, user, query, request, result, templateNode, 1)
         {
             StarDict = () => TheQuery.ThatStar;
+        }
+        protected override Unifiable Format(Unifiable unifiable)
+        {
+            if(templateNode.ParentNode.Name=="srai")
+            {
+                var vv = RTParser.Normalize.ApplySubstitutions.Substitute(this.Proc.Person2Substitutions, unifiable);
+                return vv;
+            }
+            return unifiable;
         }
     }
 }

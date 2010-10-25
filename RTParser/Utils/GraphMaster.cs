@@ -12,7 +12,6 @@ using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
 using RTParser.AIMLTagHandlers;
 using UPath = RTParser.Unifiable;
-using StringAppendableUnifiable = RTParser.StringAppendableUnifiableImpl;
 using PatternInfo = RTParser.Unifiable;
 using ThatInfo = RTParser.Unifiable;
 using TopicInfo = RTParser.Unifiable;

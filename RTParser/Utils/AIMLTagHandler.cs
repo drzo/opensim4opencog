@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Xml;
 using MushDLR223.Utilities;
@@ -302,7 +303,13 @@ namespace RTParser.Utils
         {
             get
             {
-                if (!QueryHasFailed) QueryHasFailed = true;
+                if (!QueryHasFailed) if (!Debugger.IsAttached)
+                    {
+                        QueryHasFailed = true;
+                    }
+                    else
+                    {
+                    }
                 return null;
             }
         }
@@ -613,18 +620,15 @@ namespace RTParser.Utils
                 {
                     return src ?? OuterSource();
                 }
-                Unifiable test = CompleteProcess();
+                var test = CompleteProcess();
                 if (Unifiable.IsNull(test))
                 {
                     if (QueryHasFailed)
                     {
                         return FAIL;
                     }
-                    writeToLogWarn("NULL " + test);
-                }
-                if (Unifiable.IsNull(test))
-                {
                     test = GetTemplateNodeInnerText();
+                    writeToLogWarn("NULL response in " + query);
                     string value2;
                     if (CompleteEvaluatution(test, this, out value2))
                     {
@@ -699,13 +703,13 @@ namespace RTParser.Utils
             this.QueryHasFailedN++;
             return FAIL;
         }
-        protected Unifiable Failure(string p)
+        public Unifiable Failure(string p)
         {
             writeToLog("<!-- FAILURE: " + (p + ToString()).Replace("<!--", "<#-").Replace("-->", "-#>") + "-->");
             return GET_FAIL();
         }
 
-        protected Unifiable Succeed(string p)
+        public Unifiable Succeed(string p)
         {
             Succeed();
             return "<!-- SUCCEED: " + p.Replace("<!--", "<#-").Replace("-->", "-#>") + "-->";

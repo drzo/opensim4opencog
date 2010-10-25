@@ -140,15 +140,15 @@ namespace RTParser.Database
             string realName;
             Unifiable resultGet = SettingsDictionary.grabSettingDefaultDict(dict, name, out realName);
 
-            bool shouldSet = ShouldSet(templateNode, dict, realName, value, resultGet);
+            bool shouldSet = ShouldSet(templateNode, dict, realName, value, resultGet, query);
 
             User user = query.CurrentUser;
             ITripleStore userbotLuceneIndexer = (ITripleStore)user.bot.TripleStore;
             string userName = user.UserID;
             if (!shouldSet)
             {
-                writeToLog("!shouldSet ERROR " + dict + " name=" + realName + " value=" + value + " old=" + resultGet);
-                bool shouldSet2 = ShouldSet(templateNode, dict, realName, value, resultGet);
+                writeToLog("!shouldSet ERROR {0} name={1} value={2} old={3}", dict, realName, value, resultGet);
+                bool shouldSet2 = ShouldSet(templateNode, dict, realName, value, resultGet, query);
                 return ReturnSetSetting(dict, name, setReturn);
             }
             if (IsIncomplete(value))
@@ -168,10 +168,11 @@ namespace RTParser.Database
                 SettingsDictionary.addSettingWithUndoCommit(query, dict, dict.addSetting, name, value);
             }
             var retVal = ReturnSetSetting(dict, name, setReturn);
-            if (!IsNullOrEmpty(retVal)) return retVal;
-            if (!IsIncomplete(retVal))
+            if (!IsIncomplete(retVal) || !IsNullOrEmpty(retVal))
             {
-                return retVal;                
+                string comment = null;
+                //if (query.LastTagHandler!=null) comment = query.LastTagHandler.Succeed(" setting " + name);
+                return retVal;// +comment;
             }
             return retVal;
         }
@@ -190,20 +191,21 @@ namespace RTParser.Database
             }
         }
 
-        private static bool ShouldSet(XmlNode templateNode, ISettingsDictionary dictionary, string name, Unifiable newValue, Unifiable oldValue)
+        private static bool ShouldSet(XmlNode templateNode, ISettingsDictionary dictionary, string name, Unifiable newValue, Unifiable oldValue, SubQuery query)
         {
             if (templateNode == null) return true;
-
+            bool canSet = query.UseDictionaryForSet(dictionary);
+;
             bool onlyIfUnknown;
             if (StaticXMLUtils.TryParseBool(templateNode, "ifUnknown", out onlyIfUnknown))
             {
-                if (onlyIfUnknown) return Unifiable.IsUnknown(oldValue) || IsIncomplete(oldValue);
+                if (onlyIfUnknown) return (Unifiable.IsUnknown(oldValue) || IsIncomplete(oldValue)) && canSet;
             }
 
             bool overwriteExisting;
             if (StaticXMLUtils.TryParseBool(templateNode, "overwriteExisting", out overwriteExisting))
             {
-                if (!overwriteExisting) return Unifiable.IsNullOrEmpty(oldValue) || IsIncomplete(oldValue);
+                if (!overwriteExisting) return (Unifiable.IsNullOrEmpty(oldValue) || IsIncomplete(oldValue)) && canSet;
                 //if (overwriteExisting)                   
                 return true;
             }
@@ -236,7 +238,7 @@ namespace RTParser.Database
                     shouldSet = false;
                 }
             }
-            return shouldSet;
+            return shouldSet && canSet;
         }
 
         public static Unifiable ReturnSetSetting(ISettingsDictionary dict, string name, string setReturn)

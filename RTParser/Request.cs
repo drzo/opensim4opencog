@@ -1364,7 +1364,12 @@ namespace RTParser
 
         public readonly CommitQueue SideEffects;
         private readonly QuerySettings qsbase;
-        public bool SuspendSearchLimits { get; set; }
+        public bool _SuspendSearchLimits { get; set; }
+        public bool SuspendSearchLimits
+        {
+            get { return _SuspendSearchLimits && IsToplevelRequest; }
+            set { _SuspendSearchLimits = value; }
+        }
         protected Result _CurrentResult;
 
         public Dictionary<string, GraphMaster> GetMatchingGraphs(string graphname, GraphMaster master)

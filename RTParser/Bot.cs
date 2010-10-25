@@ -138,6 +138,8 @@ namespace RTParser
         /// </summary>
         public SettingsDictionary GlobalSettings;
 
+        public SettingsDictionary SharedGlobalSettings;
+
         #endregion
 
         /// <summary>
@@ -430,6 +432,7 @@ namespace RTParser
                 {
                     if (_PathToUserFiles != null) _RuntimeDirectories.Remove(_PathToUserFiles);
                     _PathToUserFiles = value;
+                    _RuntimeDirectories.Remove(value);
                     _RuntimeDirectories.Insert(0, value);
                 }
             }
@@ -739,7 +742,6 @@ namespace RTParser
             try
             {
                 isAcceptingUserInput = false;
-
                 RelationMetaProps = new SettingsDictionary("chat.relationprops", this, null);
                 RegisterDictionary("meta", RelationMetaProps);
                 RegisterDictionary("metaprops", RelationMetaProps);
@@ -774,7 +776,10 @@ namespace RTParser
 
 
                 User guser = ExemplarUser = LastUser = new MasterUser("globalPreds", this);
-                BotUsers["globalpreds"] = guser;
+                lock (microBotUsersLock)
+                {
+                    BotUsers["globalpreds"] = guser;
+                }
                 guser.IsRoleAcct = true;
                 guser.Predicates.clearSettings();
                 guser.Predicates.clearHierarchy();
@@ -966,6 +971,9 @@ namespace RTParser
             SaneLocalSettings(settings, "notacceptinguserinputmessage",
                               "This Proccessor is currently set to not accept user input.");
             SaneLocalSettings(settings, "stripperregex", "[^0-9a-zA-Z]");
+
+            SaneLocalSettings(settings, "systemlang", "bot");
+            SaneLocalSettings(settings, "interp", "cloj");
         }
 
         internal static Unifiable SaneLocalSettings(ISettingsDictionary settings, string name, object value)
@@ -1038,7 +1046,7 @@ namespace RTParser
 
         public void SetChatOnOff(string username, bool value)
         {
-            lock (BotUsers)
+            lock (microBotUsersLock)
             {
                 foreach (User u in BotUsers.Values)
                 {
@@ -1257,7 +1265,7 @@ The AIMLbot program.
         {
             if (IsNullOrEmpty(langu))
             {
-                langu = "bot";
+                langu = GlobalSettings.grabSettingOrDefault("systemlang", "bot");
             }
             else
             {
@@ -1638,8 +1646,13 @@ The AIMLbot program.
             this.BotAsUser = thisBotAsUser;
             clojureInterpreter.Intern("BotAsUser", thisBotAsUser);
             thisBotAsUser.IsRoleAcct = true;
-            thisBotAsUser.Predicates = GlobalSettings;
+            SharedGlobalSettings = this.GlobalSettings;
+            thisBotAsUser.Predicates = new SettingsDictionary(myName, this, () => SharedGlobalSettings);
+            thisBotAsUser.Predicates.InsertFallback(() => AllUserPreds);
+            AllUserPreds.InsertFallback(() => SharedGlobalSettings);
+
             GlobalSettings.IsTraced = true;
+            GlobalSettings = thisBotAsUser.Predicates;
             //BotAsUser.UserDirectory = "aiml/users/heardselfsay";
             //BotAsUser.UserID = "heardselfsay";
             //BotAsUser.UserName = "heardselfsay";
@@ -1679,13 +1692,19 @@ The AIMLbot program.
             {
                 foreach (Action list in OnBotCreatedHooks)
                 {
-                    list();
+                    try
+                    {
+                        list();
+                    } catch(Exception e)
+                    {
+                        writeDebugLine("OnBotCreatedHooks ERROR: " + list);
+                    }
                 }
                 OnBotCreatedHooks.Clear();
             }
             loadAIMLFromDefaults0();
             EnsureDefaultUsers();
-            string official = LoadPersonalDirectories(myName);
+            string official = LoadPersonalDirectories(myName);                
             thisBotAsUser.SaveDirectory(thisBotAsUser.UserDirectory);
             AddExcuteHandler(NamePath, ChatWithThisBot);
             return official ?? thisBotAsUser.UserDirectory;
@@ -2034,9 +2053,10 @@ The AIMLbot program.
 
         public void RegisterDictionary(string key, ISettingsDictionary dict, bool always)
         {
-            lock (AllDictionaries)
+            Action needsExit = LockInfo.MonitorTryEnter("RegisterDictionary " + key, AllDictionaries, MaxWaitTryEnter);
+            try
             {
-                var path = key.Split(new[] { '.' });
+                var path = key.Split(new[] {'.'});
                 if (always || !AllDictionaries.ContainsKey(key)) AllDictionaries[key] = dict;
                 if (path.Length > 1)
                 {
@@ -2046,6 +2066,10 @@ The AIMLbot program.
                         RegisterDictionary(join, dict, false);
                     }
                 }
+            }
+            finally
+            {
+                needsExit();
             }
         }
 

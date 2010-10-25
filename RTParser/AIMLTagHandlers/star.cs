@@ -139,7 +139,7 @@ namespace RTParser.AIMLTagHandlers
                     {
                         if (index <= starsCount && index > 0)
                         {
-                            return stars[index - 1];
+                            return Format(stars[index - 1]);
                         }
                         else
                         {
@@ -161,5 +161,9 @@ namespace RTParser.AIMLTagHandlers
             return ret;
         }
 
+        protected virtual Unifiable Format(Unifiable unifiable)
+        {
+            return unifiable;
+        }
     }
 }

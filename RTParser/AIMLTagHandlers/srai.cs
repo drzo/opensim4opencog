@@ -201,15 +201,18 @@ namespace RTParser.AIMLTagHandlers
                         templateNodeInnerValue = Recurse();
                     }
                     TemplateInfo queryTemplate = query.CurrentTemplate;
-                    if (!result.CanResultUseTemplate(queryTemplate))
+                    if (queryTemplate != null)
                     {
-                        writeToLogWarn("CurrentTemplate.IsDisabled " + queryTemplate);
-                        return Unifiable.INCOMPLETE;
-                    }
-                    if (!request.CanUseRequestTemplate(queryTemplate))
-                    {
-                        writeToLogWarn("CurrentTemplate.IsDisabled " + queryTemplate);
-                        return Unifiable.INCOMPLETE;
+                        if (!result.CanResultUseTemplate(queryTemplate))
+                        {
+                            writeToLogWarn("!result.CanResultUseTemplate " + queryTemplate);
+                            return Unifiable.INCOMPLETE;
+                        }
+                        if (!request.CanUseRequestTemplate(queryTemplate))
+                        {
+                            writeToLogWarn("!request.CanUseRequestTemplate " + queryTemplate);
+                            return Unifiable.INCOMPLETE;
+                        }
                     }
                     var vv = ProcessChangeSrai(request, query, templateNodeInnerValue, templateNode, initialString, writeToLog);
                     if (!Unifiable.IsNullOrEmpty(vv))
@@ -265,17 +268,34 @@ namespace RTParser.AIMLTagHandlers
             try
             {
                 Unifiable prevResult;
+                var CurrentTemplate = query.CurrentTemplate;
                 if (!salientRequest.EnterSalientSRAI(templateNodeInnerValue, out prevResult))
                 {
                     writeToLog("ERROR EnterSailentSRAI: " + prevResult);
+                    if (false)
+                    {
+                        var disable = CurrentTemplate;
+                        if (disable != null)
+                        {
+                            request.CurrentResult.ResultTemplates.Add(disable);
+                            disable.IsDisabled = true;
+                        }
+                    }
                     return null;
                 }
-                var CurrentTemplate = query.CurrentTemplate;
+                int depth = request.SraiDepth.Current;
+                if (CurrentTemplate != null)
+                {
+                    if (CurrentTemplate.IsHighlyUsefull)
+                    {
+                        request.SuspendSearchLimits = true;
+                        request.depth = 0;
+                    }
+                }
                 Unifiable subResultOutput = null;
                 writeToLog = writeToLog ?? DEVNULL;
                 RTPBot mybot = request.TargetBot;
                 User user = request.Requester;
-                int depth = request.SraiDepth.Current;
                 var thisrequest = request;
                 var thisresult = request.CurrentResult;
                 /*

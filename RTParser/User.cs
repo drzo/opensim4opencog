@@ -188,6 +188,7 @@ namespace RTParser
     public interface User : IUser, UserStaticModel, UserConversationScope, UserDuringProcessing
     {
         void DisposeObject();
+        bool IsValid { get; set; }
     }
 
     /// <summary>
@@ -199,7 +200,7 @@ namespace RTParser
     {
         public static bool ThatIsStoredBetweenUsers = true;
         public readonly object QueryLock = new object();
-
+        public bool IsValid { get; set; }
         #region Attributes
 
         public readonly Dictionary<string, TaskQueueHandler> TaskQueueHandlers =
@@ -464,7 +465,7 @@ namespace RTParser
             var prev = Predicates.IsIdentityReadOnly;
             try
             {
-                string[] split = value.Split(new[] {" "}, StringSplitOptions.RemoveEmptyEntries);
+                string[] split = value.Split(new[] {" ", "-", "_"}, StringSplitOptions.RemoveEmptyEntries);
                 Predicates.IsIdentityReadOnly = false;
                 Predicates["name"] = value;
                 Predicates["me"] = value;
@@ -474,7 +475,7 @@ namespace RTParser
                 Predicates["firstname"] = split[0];
                 if (split.Length > 1)
                 {
-                    Predicates["fullnane"] = value;
+                    Predicates["fullname"] = value;
                     if (split.Length == 2) Predicates["lastname"] = split[1];
                     if (split.Length == 3)
                     {
@@ -620,6 +621,7 @@ namespace RTParser
         protected internal UserImpl(string userID, RTPBot bot, ParentProvider provider)
             // : base(bot)
         {
+            IsValid = true;
             userTrace = WriteToUserTrace;
             MaxRespondToChatPerMinute = 10;
             RespondToChat = true;
@@ -640,10 +642,10 @@ namespace RTParser
                 this.Predicates = new SettingsDictionary(userID + ".predicates", this.bot, provider);
                 this.Predicates.IsTraced = qsbase.IsTraced;
                 this.Predicates.AddPrefix("user.", () => this);
-                this.bot.DefaultPredicates.Clone(this.Predicates);
+                this.bot.DefaultPredicates.Clone(this.Predicates);                
                 //this.Predicates.AddGetSetProperty("topic", new CollectionProperty(_topics, () => bot.NOTOPIC));
                 this.Predicates.addSetting("topic", bot.NOTOPIC);
-                //this.Predicates.InsertFallback(() => bot.DefaultPredicates);
+                this.Predicates.InsertFallback(() => bot.AllUserPreds);
                 UserID = userID;
                 UserName = userID;
                 SetMeMyselfAndI(UserName);
@@ -940,9 +942,10 @@ namespace RTParser
             get
             {
                 string something;
-                Result r = GetResult(0, true) ?? GetResult(0, false, LastResponder);
+                var lastResponder = this.LastResponder;
+                Result r = GetResult(0, true) ?? GetResult(0, false, lastResponder);
                 if (r != null && IsSomething(r.NormalizedOutput, out something)) return something;
-                if (LastResponder != null && IsSomething(LastResponder.JustSaid, out something)) return something;
+                if (lastResponder != null && IsSomething(lastResponder.JustSaid, out something)) return something;
                 if (ThatIsStoredBetweenUsers)
                 {
                     return "Nothing";
@@ -965,6 +968,7 @@ namespace RTParser
                 {
                     CurrentRequest.ithat = value;
                 }
+                var LastResponder = this.LastResponder;
                 if (LastResponder != null)
                 {
                     LastResponder.JustSaid = value;
@@ -1064,49 +1068,75 @@ namespace RTParser
             }
         }
 
+        private User LastReponderFromDictionary()
+        {
+            foreach (var name in NamesStrings("you,lastusername,lastuserid"))
+            {
+                string name1 = name;
+                string lname =
+                    WithoutTrace(Predicates,
+                                 () =>
+                                 {
+                                     string realName;
+                                     return SettingsDictionary.grabSettingDefaultDict(Predicates, name1,
+                                                                                      out realName);
+                                 });
+                if (!string.IsNullOrEmpty(lname))
+                {
+                    if (LastResult != null)
+                    {
+                        User user0 = LastResultOtherParticipant();
+                        if (user0.UserName == lname || user0.UserID == lname)
+                        {
+                            return user0;
+                        }
+                    }
+                    User user = bot.FindUser(lname);
+                    if (user != null && user != this)
+                    {
+                        return user;
+                    }
+                }
+            }
+            return null;
+        }
+        private User _LastResponderCahced = null;
         public User LastResponder
         {
             get
             {
-                foreach (var name in NamesStrings("you,lastusername,lastuserid"))
+                if (_LastResponderCahced != null)
                 {
-                    string name1 = name;
-                    string lname =
-                        WithoutTrace(Predicates,
-                                     () =>
-                                         {
-                                             string realName;
-                                             return SettingsDictionary.grabSettingDefaultDict(Predicates, name1,
-                                                                                              out realName);
-                                         });
-                    if (!string.IsNullOrEmpty(lname))
-                    {
-                        User user = bot.FindUser(lname);
-                        if (user != null && user != this)
-                        {
-                            return user;
-                        }
-                    }
-                }
-                if (LastResult != null)
-                {
-                    User lastResultResponder = LastResult.Responder;
-                    if (lastResultResponder != this && lastResultResponder != null) return lastResultResponder;
-                    lastResultResponder = LastResult.Requester;
-                    if (lastResultResponder != this && lastResultResponder != null) return lastResultResponder;
-                }
 
-                return null;
+                    if (_LastResponderCahced.IsValid) return _LastResponderCahced;                     
+                    _LastResponderCahced = null;
+                }
+                _LastResponderCahced = LastReponderFromDictionary();
+                if (_LastResponderCahced != null && _LastResponderCahced.IsValid) return _LastResponderCahced;
+                return LastResultOtherParticipant();
             }
             set
             {
                 if (value == null || value == this) return;
+                _LastResponderCahced = value;
                 Predicates["lastuserid"] = value.UserID;
                 Predicates["lastusername"] = value.UserName;
                 Predicates["you"] = value.UserName;
                 Predicates["yourself"] = value.UserName;
                 Predicates["your"] = NatLangDb.MakePossesive(value.UserName);
             }
+        }
+
+        private User LastResultOtherParticipant()
+        {
+            if (LastResult != null)
+            {
+                User lastResultResponder = LastResult.Responder;
+                if (lastResultResponder != this && lastResultResponder != null) return lastResultResponder;
+                lastResultResponder = LastResult.Requester;
+                if (lastResultResponder != this && lastResultResponder != null) return lastResultResponder;
+            }
+            return null;
         }
 
         public bool DoUserCommand(string input, OutputDelegate console)
@@ -1146,7 +1176,7 @@ namespace RTParser
                     console("-----------------------------------------------------------------");
                 }
             }
-            if (input == "") return false;
+            //if (input == "") return false;
             if (input == "")
             {
                 console(Predicates.ToDebugString());
@@ -1586,7 +1616,7 @@ namespace RTParser
         }
 
         public MasterRequest CreateRequest(Unifiable message, User target)
-        {
+        {            
             return CreateRequest(message, target, GetResponseGraph(target), null);
         }
 
@@ -1706,6 +1736,7 @@ namespace RTParser
 
         public void DisposeObject()
         {
+            IsValid = false;
             Dispose();
         }
     }

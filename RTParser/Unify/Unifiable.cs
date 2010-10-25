@@ -9,7 +9,6 @@ using MushDLR223.Utilities;
 using RTParser.Database;
 using RTParser.Utils;
 using UPath = RTParser.Unifiable;
-using StringAppendableUnifiable = RTParser.StringAppendableUnifiableImpl;
 using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
 using IndexTargetList = System.Collections.Generic.ICollection<RTParser.IndexTarget>;
 using IndexTargetListImpl = System.Collections.Generic.HashSet<RTParser.IndexTarget>;
@@ -37,6 +36,13 @@ namespace RTParser
             return total;
         }
 
+        public bool IsEmpty
+        {
+            get
+            {
+                return IsEMPTY(this);
+            }
+        }
         public readonly static char[] BRKCHARS = " \r\n\t".ToCharArray();
         public static Unifiable[] DontStore = new Unifiable[0];
         public static string[] DontStoreString = new string[0];
@@ -463,25 +469,41 @@ namespace RTParser
 
         public static Unifiable operator +(string u, Unifiable more)
         {
-            if (u.Length == 0) return more;
+            if (u.Length == 0)
+            {
+                return more;
+            }
             if (more == null)
             {
                 writeToLog("ERROR: appending NULL");
                 return u +" -NULL-";
             }
             string moreAsString = more.AsString();
-            if (moreAsString.Length == 0) return u;
+            if (moreAsString.Length == 0)
+            {
+                return u;
+            }
             return MakeStringUnifiable(u + more.AsString());
         }
         public static Unifiable operator +(Unifiable u, string more)
         {
+            if (more == null)
+            {
+                return "" + u;
+            }
             return MakeStringUnifiable("" + u.AsString() + more);
         }
         public static Unifiable operator +(Unifiable u, Unifiable more)
         {
-            if (IsNullOrEmpty(more)) return u;
+            if (IsNullOrEmpty(more))
+            {
+                return u;
+            }
             string moreAsString = more.AsString();
-            if (moreAsString.Length == 0) return u;
+            if (moreAsString.Length == 0)
+            {
+                return u;
+            }
             return MakeStringUnifiable(u.AsString() + " " + moreAsString);
         }
 
@@ -544,9 +566,9 @@ namespace RTParser
             return GetType().Name + "={" + Raw + "}";//Raw.ToString();}
         }
 
-        internal static StringAppendableUnifiable CreateAppendable()
+        internal static StringAppendableUnifiableImpl CreateAppendable()
         {
-            return new StringAppendableUnifiable();
+            return new StringAppendableUnifiableImpl();
             //   return new StringBuilder(10);
         }
 
@@ -596,6 +618,13 @@ namespace RTParser
         }
         public abstract bool IsLazyStar();
         public abstract bool IsLongWildCard();
+        public bool IsUnrestrictedLongWildCard
+        {
+            get
+            {
+                return AsString() == "*";
+            }
+        }
         public abstract bool IsFiniteWildCard();
 
         public abstract bool IsLazy();

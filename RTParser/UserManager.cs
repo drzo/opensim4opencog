@@ -23,16 +23,17 @@ namespace RTParser
             set { BotAsUser.Predicates = value; }
         }
 
-        private R UserOper<R>(Func<R> action, OutputDelegate output)
+        private R UserOper<R>(string operationType, Func<R> action, OutputDelegate output)
         {
             OutputDelegate prev = userTraceRedir;
+            //lock (OnBotCreatedHooks) 
+            Action needsExit = LockInfo.MonitorTryEnter("UserOper " + operationType, BotUsers, MaxWaitTryEnter);
             try
             {
                 userTraceRedir = output;
                 try
                 {
-                    //lock (OnBotCreatedHooks) 
-                    lock (BotUsers) return action();
+                    return action();
                 }
                 catch (ChatSignal ex)
                 {
@@ -48,6 +49,7 @@ namespace RTParser
             finally
             {
                 userTraceRedir = prev;
+                needsExit();
             }
         }
 
@@ -164,7 +166,7 @@ namespace RTParser
                 console("-----------------------------------------------------------------");
                 console("------------BEGIN USERS----------------------------------");
                 lock (myBot.BotUsers)
-                    foreach (KeyValuePair<string, User> kv in myBot.BotUsers)
+                    lock (microBotUsersLock) foreach (KeyValuePair<string, User> kv in myBot.BotUsers)
                     {
                         console("-----------------------------------------------------------------");
                         WriteUserInfo(console, "key=" + kv.Key, kv.Value);
@@ -206,36 +208,39 @@ namespace RTParser
 
         public bool RemoveUser(string name)
         {
-            return UserOper(() => RemoveUser0(name), QuietLogger);
+            return UserOper("RemoveUser " + name, () => RemoveUser0(name), QuietLogger);
         }
 
         internal bool RemoveUser0(string name)
         {
-            string keyname = KeyFromUsername(name);
-            User user;
-            if (BotUsers.TryGetValue(name, out user))
+            lock (microBotUsersLock)
             {
-                user.DisposeObject();
-                BotUsers.Remove(name);
-                writeToUserLog("REMOVED " + name);
-            }
-            else if (BotUsers.TryGetValue(keyname, out user))
-            {
-                user.DisposeObject();
-                BotUsers.Remove(keyname);
-                writeToUserLog("REMOVED " + keyname);
-            }
-            else
-            {
-                writeToUserLog("rmuser, No user by the name ='" + name + "'");
-                return false;
+                string keyname = KeyFromUsername(name);
+                User user;
+                if (BotUsers.TryGetValue(name, out user))
+                {
+                    user.DisposeObject();
+                    lock (microBotUsersLock) BotUsers.Remove(name);
+                    writeToUserLog("REMOVED " + name);
+                }
+                else if (BotUsers.TryGetValue(keyname, out user))
+                {
+                    user.DisposeObject();
+                    lock (microBotUsersLock) BotUsers.Remove(keyname);
+                    writeToUserLog("REMOVED " + keyname);
+                }
+                else
+                {
+                    writeToUserLog("rmuser, No user by the name ='" + name + "'");
+                    return false;
+                }
             }
             return true;
         }
 
         public User FindOrCreateUser(string fromname)
         {
-            return UserOper(() => FindOrCreateUser0(fromname), QuietLogger);
+            return UserOper("FindOrCreateUser " + fromname, () => FindOrCreateUser0(fromname), QuietLogger);
         }
 
         private User FindOrCreateUser0(string fromname)
@@ -244,17 +249,19 @@ namespace RTParser
             {
                 bool b;
                 User user = FindOrCreateUser(fromname, out b);
-                if (!IsLastKnownUser(fromname))
-                    user.UserName = fromname;
+                //if (!IsLastKnownUser(fromname)) user.UserName = fromname;
                 return user;
             }
         }
 
         public User FindUser(string fromname)
         {
-            return UserOper(() => FindUser0(fromname), QuietLogger);
+            User user = FindUser0(fromname);
+            if (user != null) return user;
+            return UserOper("FindUser " + fromname, () => FindUser0(fromname), QuietLogger);
         }
 
+        readonly object microBotUsersLock = new object();
         internal User FindUser0(string fromname)
         {
             if (fromname != null && fromname.Contains("????"))
@@ -263,15 +270,15 @@ namespace RTParser
             }
             if (IsLastKnownUser(fromname)) return LastUser;
             string key = fromname.ToLower().Trim();
-            //lock (BotUsers)
+            lock (microBotUsersLock)
             {
-                if (BotUsers.ContainsKey(key)) return BotUsers[key];
+                lock (microBotUsersLock) if (BotUsers.ContainsKey(key)) return BotUsers[key];
                 key = KeyFromUsername(fromname);
-                if (BotUsers.ContainsKey(key)) return BotUsers[key];
+                lock (microBotUsersLock) if (BotUsers.ContainsKey(key)) return BotUsers[key];
                 if (UnknowableName(fromname))
                 {
                     string unk = UNKNOWN_PARTNER.ToLower();
-                    if (BotUsers.ContainsKey(unk)) return BotUsers[unk];
+                    lock (microBotUsersLock) if (BotUsers.ContainsKey(unk)) return BotUsers[unk];
                 }
                 return null;
             }
@@ -279,7 +286,8 @@ namespace RTParser
 
         public User FindOrCreateUser(string fullname, out bool newlyCreated)
         {
-            var res = UserOper(() =>
+            var res = UserOper("FindOrCreateUser " + fullname,
+                               () =>
                                    {
                                        bool newlyCreated0;
                                        User user0 = FindOrCreateUser0(fullname, out newlyCreated0);
@@ -298,14 +306,14 @@ namespace RTParser
                 User myUser = FindUser(fullname);
                 if (myUser != null) return myUser;
                 newlyCreated = true;
-                myUser = CreateNewUser(fullname, key);
+                myUser = CreateNewUser0(fullname, key);
                 return myUser;
             }
         }
 
         internal User CreateNewUser(string fullname, string key)
         {
-            return UserOper(() => CreateNewUser0(fullname, key), QuietLogger);
+            return UserOper("CreateNewUser " + fullname, () => CreateNewUser0(fullname, key), QuietLogger);
         }
 
         private User CreateNewUser0(string fullname, string key)
@@ -319,7 +327,7 @@ namespace RTParser
                 myUser.userTrace = writeToUserLog;
                 myUser.UserName = fullname;
                 writeToUserLog("New User " + fullname + " -DEBUG9");
-                BotUsers[key] = myUser;
+                lock (microBotUsersLock) BotUsers[key] = myUser;
                 bool roleAcct = IsRoleAcctName(fullname);
                 myUser.IsRoleAcct = roleAcct;
                 SetupUserWithGraph(fullname, key, myUser);
@@ -346,7 +354,8 @@ namespace RTParser
 
         internal void EnsureDefaultUsers()
         {
-            UserOper(() =>
+            UserOper("EnsureDefaultUsers",
+                     () =>
                          {
                              EnsureDefaultUsers0();
                              return 0;
@@ -355,14 +364,14 @@ namespace RTParser
 
         private void EnsureDefaultUsers0()
         {
-            LastUser = FindOrCreateUser(UNKNOWN_PARTNER);
+            LastUser = FindOrCreateUser0(UNKNOWN_PARTNER);
             LastUser.IsRoleAcct = true;
             LoadUsers(".*");
         }
 
         public int LoadUsers(string key)
         {
-            return UserOper(() => LoadUsers0(key), QuietLogger);
+            return UserOper("LoadUsers " + key, () => LoadUsers0(key), QuietLogger);
         }
 
         internal int LoadUsers0(string key)
@@ -407,7 +416,7 @@ namespace RTParser
                     sk += s;
             }
             lock (ListUserDirs)
-                return UserOper(() => HostSystem.Slashify(GetUserDir0(key)), QuietLogger);
+                return UserOper("GetUserDir " + key, () => HostSystem.Slashify(GetUserDir0(key)), QuietLogger);
         }
 
         private string GetUserDir0(string key)
@@ -464,7 +473,8 @@ namespace RTParser
 
         public User ChangeUser(string oldname, string newname)
         {
-            return UserOper(() => ChangeUser0(oldname, newname), QuietLogger);
+            return UserOper("ChangeUser " + oldname + " " + newname,
+                            () => ChangeUser0(oldname, newname), QuietLogger);
         }
 
         public User ChangeUser0(string oldname, string newname)
@@ -531,17 +541,17 @@ namespace RTParser
                         }
                         writeToUserLog("New acct is RoleAcct .. so rebuilding: " + newkey);
                         // remove old "new" acct from dict
-                        BotUsers.Remove(newkey);
+                        lock (microBotUsersLock) BotUsers.Remove(newkey);
                         // kill its timer!
                         newuser.DisposeObject();
-                        newuser = FindOrCreateUser(newname);
+                        newuser = FindOrCreateUser0(newname);
                         LastUser = newuser;
                         return newuser;
                     }
                     else
                     {
                         writeToUserLog("old acct is just some other user so just switching to: " + newname);
-                        newuser = FindOrCreateUser(newname);
+                        newuser = FindOrCreateUser0(newname);
                         // maybe                olduser.Predicates.AddMissingKeys(newuser.Predicates); 
                         LastUser = newuser;
                         return newuser;
@@ -553,20 +563,20 @@ namespace RTParser
                     {
                         writeToUserLog("Copying old RoleAcct .. and making new: " + newuser);
                         // remove old acct from dict
-                        BotUsers.Remove(oldkey);
+                        lock (microBotUsersLock) BotUsers.Remove(oldkey);
                         // grab it into new user
                         LastUser = newuser = olduser;
-                        BotUsers[newkey] = newuser;
+                        lock (microBotUsersLock) BotUsers[newkey] = newuser;
                         newuser.IsRoleAcct = false;
                         SetupUserWithGraph(newname, newkey, newuser);
                         // rebuild an old one
-                        CreateNewUser(oldname, oldkey);
+                        CreateNewUser0(oldname, oldkey);
                         return newuser;
                     }
                     else
                     {
                         writeToUserLog("old acct is just some other user so just creating: " + newname);
-                        newuser = FindOrCreateUser(newname);
+                        newuser = FindOrCreateUser0(newname);
                         LastUser = newuser;
                         return newuser;
                     }
@@ -581,7 +591,8 @@ namespace RTParser
 
         public User RenameUser(string oldname, string newname)
         {
-            return UserOper(() => RenameUser0(oldname, newname), QuietLogger);
+            return UserOper("RenameUser " + oldname + " " + newname,
+                            () => RenameUser0(oldname, newname), QuietLogger);
         }
 
         public User RenameUser0(string oldname, string newname)
@@ -618,11 +629,11 @@ namespace RTParser
                 {
                     writeToUserLog("both users exists: " + newname);
                     // remove old acct from dict
-                    BotUsers.Remove(oldkey);
+                    lock (microBotUsersLock) BotUsers.Remove(oldkey);
                     // grab it into new user
                     olduser.Predicates.AddMissingKeys(newuser.Predicates);
                     newuser = olduser;
-                    BotUsers[newkey] = newuser;
+                    lock (microBotUsersLock) BotUsers[newkey] = newuser;
                     newuser.IsRoleAcct = false;
                     SetupUserWithGraph(newname, newkey, newuser);
                     // rebuild an old one
@@ -633,10 +644,10 @@ namespace RTParser
 
                 writeToUserLog("Copying old user .. and making new: " + newuser);
                 // remove old acct from dict
-                BotUsers.Remove(oldkey);
+                lock (microBotUsersLock) BotUsers.Remove(oldkey);
                 // grab it into new user
                 newuser = olduser;
-                BotUsers[newkey] = newuser;
+                lock (microBotUsersLock) BotUsers[newkey] = newuser;
                 newuser.IsRoleAcct = false;
                 SetupUserWithGraph(newname, newkey, newuser);
                 // rebuild an old one
@@ -688,7 +699,7 @@ namespace RTParser
                         }
                         writeToUserLog("New acct is RoleAcct .. so rebuilding: " + newkey);
                         // remove old "new" acct from dict
-                        BotUsers.Remove(newkey);
+                        lock (microBotUsersLock) BotUsers.Remove(newkey);
                         // kill its timer!
                         newuser.DisposeObject();
                         newuser = FindOrCreateUser(newname);
@@ -707,10 +718,10 @@ namespace RTParser
                     {
                         writeToUserLog("Copying old RoleAcct .. and making new: " + newuser);
                         // remove old acct from dict
-                        BotUsers.Remove(oldkey);
+                        lock (microBotUsersLock) BotUsers.Remove(oldkey);
                         // grab it into new user
                         newuser = olduser;
-                        BotUsers[newkey] = newuser;
+                        lock (microBotUsersLock) BotUsers[newkey] = newuser;
                         newuser.IsRoleAcct = false;
                         SetupUserWithGraph(newname, newkey, newuser);
                         // rebuild an old one
@@ -747,7 +758,7 @@ namespace RTParser
 
         public bool IsExistingUsername(string fullname)
         {
-            return UserOper(() => IsExistingUsername0(fullname), QuietLogger);
+            return UserOper("IsExistingUsername " + fullname, () => IsExistingUsername0(fullname), QuietLogger);
         }
 
         public bool IsExistingUsername0(string fullname)
@@ -766,7 +777,7 @@ namespace RTParser
                 }
                 String key = KeyFromUsername(fullname);
                 User user;
-                if (BotUsers.TryGetValue(key, out user))
+                lock (microBotUsersLock) if (BotUsers.TryGetValue(key, out user))
                 {
                     if (user.UserID == key || user.UserID == fromname) return true;
                     writeToLog("WARNING! {0} => {1} <= {2}", fromname, key, user.UserID);

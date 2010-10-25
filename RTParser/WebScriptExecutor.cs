@@ -48,7 +48,7 @@ namespace RTParser.Web
             }
             if (!s.StartsWith("@")) s = "@" + s;
        //     sw.WriteLine("AIMLTRACE " + s);
-            User myUser = TheBot.LastUser;
+            User myUser = null;// TheBot.LastUser;
             //OutputDelegate del = outputDelegate ?? sw.WriteLine;
             bool r = TheBot.BotDirective(myUser, s, sw.WriteLine);
             sw.Flush();

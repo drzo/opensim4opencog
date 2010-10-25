@@ -200,6 +200,20 @@ namespace RTParser.Utils
             }
         }
 
+        /// <summary>
+        /// All conditions must be right
+        /// </summary>
+        public bool CanSetDict
+        {
+            get
+            {
+                var Request = this.Request;
+                if (Request == null) return false;
+                if (Request.MaxSetVars == 0) return false;
+                return Request.depth <= Request.UseDictForSetMaxDepth;
+            }
+        }
+
         #endregion
 
         #region ISettingsDictionary Members
@@ -690,6 +704,14 @@ namespace RTParser.Utils
         {
             Request.EnterContext();
         }
+
+        public bool UseDictionaryForSet(ISettingsDictionary dictionary)
+        {
+            if (dictionary == null) return false;
+            if (!CanSetDict) return false;
+            return true;
+        }
+
         public void ExitContext()
         {
             Request.ExitContext();
