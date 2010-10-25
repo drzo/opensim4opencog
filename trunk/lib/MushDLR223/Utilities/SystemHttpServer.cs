@@ -483,14 +483,20 @@ namespace MushDLR223.Utilities
 
         private void WriteResponse(HttpListenerContext context, string responseString)
         {
-            // Obtain a response object
-            using (HttpListenerResponse response = context.Response)
+            try
             {
-                // Construct a response.
-                responseString = responseString ?? InfoString(context);
-                byte[] buffer = Encoding.UTF8.GetBytes(responseString);
-                response.ContentLength64 = buffer.LongLength;
-                response.OutputStream.Write(buffer, 0, buffer.Length);
+                // Obtain a response object
+                using (HttpListenerResponse response = context.Response)
+                {
+                    // Construct a response.
+                    responseString = responseString ?? InfoString(context);
+                    byte[] buffer = Encoding.UTF8.GetBytes(responseString);
+                    response.ContentLength64 = buffer.LongLength;
+                    response.OutputStream.Write(buffer, 0, buffer.Length);
+                }
+            }
+            catch
+            {
             }
         }
 
@@ -504,11 +510,18 @@ namespace MushDLR223.Utilities
         {
             if (request.HasEntityBody)
             {
-                using (StreamReader sr = new StreamReader(request.InputStream, request.ContentEncoding))
+                try
                 {
-                    string requestData = sr.ReadToEnd();
-                    LogInfo("GetRequestString: " + requestData);
-                    return requestData;
+                    using (StreamReader sr = new StreamReader(request.InputStream, request.ContentEncoding))
+                    {
+                        string requestData = sr.ReadToEnd();
+                        LogInfo("GetRequestString: " + requestData);
+                        return requestData;
+                    }
+                }
+                catch (Exception e)
+                {
+                    LogInfo("ERROR GetRequestString: " + e);
                 }
             }
             LogInfo("NoBody: " + request.HttpMethod);
