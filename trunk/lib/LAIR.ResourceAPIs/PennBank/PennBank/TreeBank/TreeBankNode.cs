@@ -1830,11 +1830,12 @@ namespace LAIR.ResourceAPIs.PennBank.TreeBank
         }
 
         /// <summary>
-        /// Gets token distance from another node. Throws exception if nodes are not from the same sentence (i.e., the files and sentence
-        /// numbers are not the same).
+        /// Gets signed token distance from another node. Throws exception if nodes are not from the same 
+        /// sentence (i.e., the files and sentence numbers are not the same).
         /// </summary>
         /// <param name="other">Node to get distance to from the current one</param>
-        /// <returns>Positive/negative number if the current token comes after/before the other one, or zero if the nodes overlap.</returns>
+        /// <returns>Positive/negative number if the current token comes after/before the other one, or zero 
+        /// if the nodes overlap.</returns>
         public int TokenDistanceFrom(TreeBankNode other)
         {
             // we don't care about the object references, just the token positions

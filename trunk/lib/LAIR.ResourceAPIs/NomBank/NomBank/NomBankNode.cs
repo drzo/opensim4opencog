@@ -64,10 +64,10 @@ namespace LAIR.ResourceAPIs.NomBank
         }
         #endregion
 
-        private NounInfo _information;
-        private List<NomBankNodeLabel> _labels;
-        private List<NomBankLabeledNodeCollection> _labeledNodeCollections;
-        private List<NomLexEntry> _nomLexEntries;
+        private Set<NomBankNodeLabel> _labels;                               // stored on all nodes
+        private NounInfo _information;                                       // stored on root node
+        private List<NomBankLabeledNodeCollection> _labeledNodeCollections;  // stored on root node
+        private List<NomLexEntry> _nomLexEntries;                            // stored on predicate node
 
         /// <summary>
         /// Gets the role set for this predicate tree. Only valid for root nodes.
@@ -96,16 +96,36 @@ namespace LAIR.ResourceAPIs.NomBank
         /// <summary>
         /// Gets all argument (Arg0-Arg9) labels on node
         /// </summary>
-        public List<NomBankNodeLabel> ArgumentLabels
+        public NomBankNodeLabel[] ArgumentLabels
         {
             get
             {
-                List<NomBankNodeLabel> labels = new List<NomBankNodeLabel>();
+                NomBankNodeLabel[] labels = new NomBankNodeLabel[ArgumentLabelCount];
+                int currIndex = 0;
                 foreach (NomBankNodeLabel label in _labels)
                     if (label.IsArgument)
-                        labels.Add(label);
+                        labels[currIndex++] = label;
+
+                if (currIndex != labels.Length)
+                    throw new Exception("Argument label count mismatch");
 
                 return labels;
+            }
+        }
+
+        /// <summary>
+        /// Gets number of argument (Arg0-Arg9) labels on node
+        /// </summary>
+        public int ArgumentLabelCount
+        {
+            get
+            {
+                int count = 0;
+                foreach (NomBankNodeLabel label in _labels)
+                    if (label.IsArgument)
+                        ++count;
+
+                return count;
             }
         }
 
@@ -128,16 +148,36 @@ namespace LAIR.ResourceAPIs.NomBank
         /// <summary>
         /// Gets all modifier (ArgM) labels on this node
         /// </summary>
-        public List<NomBankNodeLabel> ModifierLabels
+        public NomBankNodeLabel[] ModifierLabels
         {
             get
             {
-                List<NomBankNodeLabel> labels = new List<NomBankNodeLabel>();
+                NomBankNodeLabel[] labels = new NomBankNodeLabel[ModifierLabelCount];
+                int currIndex = 0;
                 foreach (NomBankNodeLabel label in _labels)
                     if (label.IsModifier)
-                        labels.Add(label);
+                        labels[currIndex++] = label;
+
+                if (currIndex != labels.Length)
+                    throw new Exception("Modifier label count mismatch");
 
                 return labels;
+            }
+        }
+
+        /// <summary>
+        /// Gets number of modifier (ArgM) labels on this node
+        /// </summary>
+        public int ModifierLabelCount
+        {
+            get
+            {
+                int count = 0;
+                foreach (NomBankNodeLabel label in _labels)
+                    if (label.IsModifier)
+                        ++count;
+
+                return count;
             }
         }
 
@@ -337,7 +377,7 @@ namespace LAIR.ResourceAPIs.NomBank
         protected NomBankNode(TreeBankNode treeBankNode, NomBankNode parent)
             : base(treeBankNode, parent, new TreeBankNodeConstructor(NomBankChildConstructor))
         {
-            _labels = new List<NomBankNodeLabel>();
+            _labels = new Set<NomBankNodeLabel>();
             _labeledNodeCollections = new List<NomBankLabeledNodeCollection>();
         }
 
@@ -565,10 +605,10 @@ namespace LAIR.ResourceAPIs.NomBank
         /// Gets labels matching given type
         /// </summary>
         /// <param name="type">Type of label to get</param>
-        /// <returns>List of labels</returns>
-        public List<NomBankNodeLabel> GetLabels(NomBankNodeLabel.NodeType type)
+        /// <returns>Set of labels</returns>
+        public Set<NomBankNodeLabel> GetLabels(NomBankNodeLabel.NodeType type)
         {
-            List<NomBankNodeLabel> labels = new List<NomBankNodeLabel>();
+            Set<NomBankNodeLabel> labels = new Set<NomBankNodeLabel>();
             foreach (NomBankNodeLabel label in _labels)
                 if (label.Type == type)
                     labels.Add(label);
@@ -583,10 +623,12 @@ namespace LAIR.ResourceAPIs.NomBank
         /// <returns>Matching label</returns>
         public NomBankNodeLabel GetLabel(NomBankNodeLabel label)
         {
-            if (!HasLabel(label))
-                throw new Exception("Given label not found");
+            // check each label
+            foreach (NomBankNodeLabel current in _labels)
+                if (current == label)
+                    return current;
 
-            return _labels[_labels.IndexOf(label)];
+            throw new Exception("Given label not found");
         }
 
         /// <summary>
@@ -599,11 +641,10 @@ namespace LAIR.ResourceAPIs.NomBank
         {
             matchingLabel = null;
 
-            int index = _labels.IndexOf(label);
-            if (index == -1)
+            if (!HasLabel(label))
                 return false;
 
-            matchingLabel = _labels[index];
+            matchingLabel = GetLabel(label);
 
             return true;
         }
@@ -618,9 +659,6 @@ namespace LAIR.ResourceAPIs.NomBank
         /// will do the synchronization on your own later, pass false.</param>
         public void AddLabel(NomBankNodeLabel label, bool syncWithRootNodeCollection)
         {
-            if (HasLabel(label))
-                throw new Exception("Duplicate label");
-
             _labels.Add(label);
 
             // add node to root's collection if needed
@@ -634,9 +672,6 @@ namespace LAIR.ResourceAPIs.NomBank
         /// <param name="label">Label to remove</param>
         public void RemoveLabel(NomBankNodeLabel label)
         {
-            if (!HasLabel(label))
-                throw new Exception("Invalid label");
-
             _labels.Remove(label);
 
             // remove from root node collection if it is present

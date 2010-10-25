@@ -62,7 +62,7 @@ namespace LAIR.ResourceAPIs.FrameNet
         /// <param name="frameNetDirectory">Path to FrameNet distribution directory</param>
         /// <param name="version">FrameNet version</param>
         public FrameNetEngine(string frameNetDirectory, Version version)
-                {
+        {
             if (!System.IO.Directory.Exists(frameNetDirectory))
                 throw new DirectoryNotFoundException("Invalid FrameNet directory");
 
@@ -76,144 +76,144 @@ namespace LAIR.ResourceAPIs.FrameNet
             if (version == Version.FrameNet_1_3)
             {
                 // init annotation engine
-                _lexicalUnitAnnotationEngine = new LexicalUnitAnnotationEngine(CommonPort.IO.Directory.FindDirectory(frameNetDirectory, "luXML"), version);
+                _lexicalUnitAnnotationEngine = new LexicalUnitAnnotationEngine(LAIR.CommonPort.IO.Directory.FindDirectory(frameNetDirectory, "luXML"), version);
 
-            #region get frames
-            Set<int> uniqueFrameIDCheck = new Set<int>();
-                XmlParser framesP = new XmlParser(File.ReadAllText(CommonPort.IO.Directory.FindFile(frameNetDirectory, "frames.xml")));
-            while (framesP.SkipToElement("frame"))
-            {
-                // create frame
-                string frameXML = framesP.OuterXML("frame");
+                #region get frames
+                Set<int> uniqueFrameIDCheck = new Set<int>();
+                XmlParser framesP = new XmlParser(System.IO.File.ReadAllText(LAIR.CommonPort.IO.Directory.FindFile(frameNetDirectory, "frames.xml")));
+                while (framesP.SkipToElement("frame"))
+                {
+                    // create frame
+                    string frameXML = framesP.OuterXML("frame");
                     XmlParser frameP = new XmlParser(frameXML);
-                int frameID = int.Parse(frameP.AttributeValue("frame", "ID"));
-                string frameName = frameP.AttributeValue("frame", "name").ToLower().Trim();  // use lowercase for all frame names
-                string frameDefinition = frameP.ElementText("definition");
-                Frame frame = new Frame(frameName, frameDefinition, frameID);
+                    int frameID = int.Parse(frameP.AttributeValue("frame", "ID"));
+                    string frameName = frameP.AttributeValue("frame", "name").ToLower().Trim();  // use lowercase for all frame names
+                    string frameDefinition = frameP.ElementText("definition");
+                    Frame frame = new Frame(frameName, frameDefinition, frameID);
 
-                // add to frame index index
-                _frameNameFrame.Add(frame.Name, frame);
-                uniqueFrameIDCheck.Add(frame.ID);
+                    // add to frame index index
+                    _frameNameFrame.Add(frame.Name, frame);
+                    uniqueFrameIDCheck.Add(frame.ID);
 
-                // get frame elements
-                string fesXML = frameP.OuterXML("fes");
+                    // get frame elements
+                    string fesXML = frameP.OuterXML("fes");
                     XmlParser fesP = new XmlParser(fesXML);
-                string feXML;
-                while ((feXML = fesP.OuterXML("fe")) != null)
-                {
-                    // get frame element
-                        XmlParser feParser = new XmlParser(feXML);
-                    int feID = int.Parse(feParser.AttributeValue("fe", "ID"));
-                    string feName = feParser.AttributeValue("fe", "name").Trim().ToLower();
-                    string feDef = feParser.ElementText("definition");
-                    FrameElement fe = new FrameElement(feID, feName, feDef, frame);
-                    frame.FrameElements.Add(fe);
-
-                    // add to index
-                    _frameElementIdFrameElement.Add(fe.ID, fe);
-                }
-
-                // get lexical units
-                string lusXML = frameP.OuterXML("lexunits");
-                    XmlParser lusParser = new XmlParser(lusXML);
-                string luXML;
-                while ((luXML = lusParser.OuterXML("lexunit")) != null)
-                {
-                        XmlParser luParser = new XmlParser(luXML);
-                    int luID = int.Parse(luParser.AttributeValue("lexunit", "ID"));
-                    string luName = luParser.AttributeValue("lexunit", "name");
-                    luName = luName.Substring(0, luName.IndexOf('.'));
-                    string luPos = luParser.AttributeValue("lexunit", "pos");
-                    string luDef = luParser.ElementText("definition");
-
-                    // get lexemes for this lexunit...we may get duplicates...don't worry about them
-                    Set<Lexeme> lexemes = new Set<Lexeme>(false);
-                    string lexemesXML = luParser.OuterXML("lexemes");
-                        XmlParser lexemesP = new XmlParser(lexemesXML);
-                    string lexemeXML;
-                    while ((lexemeXML = lexemesP.OuterXML("lexeme")) != null)
+                    string feXML;
+                    while ((feXML = fesP.OuterXML("fe")) != null)
                     {
-                            XmlParser lexemeP = new XmlParser(lexemeXML);
-                        string pos = lexemeP.AttributeValue("lexeme", "pos");
-                        bool breakBefore = bool.Parse(lexemeP.AttributeValue("lexeme", "breakBefore"));
-                        bool head = bool.Parse(lexemeP.AttributeValue("lexeme", "headword"));
-                        string value = lexemeP.ElementText("lexeme");
+                        // get frame element
+                        XmlParser feParser = new XmlParser(feXML);
+                        int feID = int.Parse(feParser.AttributeValue("fe", "ID"));
+                        string feName = feParser.AttributeValue("fe", "name").Trim().ToLower();
+                        string feDef = feParser.ElementText("definition");
+                        FrameElement fe = new FrameElement(feID, feName, feDef, frame);
+                        frame.FrameElements.Add(fe);
 
-                        lexemes.Add(new Lexeme(value, pos, breakBefore, head));
+                        // add to index
+                        _frameElementIdFrameElement.Add(fe.ID, fe);
                     }
 
-                    // create lexical unit and add to frame
-                    LexicalUnit lexicalUnit = new LexicalUnit(luID, luName, luPos, luDef, lexemes);
+                    // get lexical units
+                    string lusXML = frameP.OuterXML("lexunits");
+                    XmlParser lusParser = new XmlParser(lusXML);
+                    string luXML;
+                    while ((luXML = lusParser.OuterXML("lexunit")) != null)
+                    {
+                        XmlParser luParser = new XmlParser(luXML);
+                        int luID = int.Parse(luParser.AttributeValue("lexunit", "ID"));
+                        string luName = luParser.AttributeValue("lexunit", "name");
+                        luName = luName.Substring(0, luName.IndexOf('.'));
+                        string luPos = luParser.AttributeValue("lexunit", "pos");
+                        string luDef = luParser.ElementText("definition");
 
-                    frame.LexicalUnits.Add(lexicalUnit);
+                        // get lexemes for this lexunit...we may get duplicates...don't worry about them
+                        Set<Lexeme> lexemes = new Set<Lexeme>(false);
+                        string lexemesXML = luParser.OuterXML("lexemes");
+                        XmlParser lexemesP = new XmlParser(lexemesXML);
+                        string lexemeXML;
+                        while ((lexemeXML = lexemesP.OuterXML("lexeme")) != null)
+                        {
+                            XmlParser lexemeP = new XmlParser(lexemeXML);
+                            string pos = lexemeP.AttributeValue("lexeme", "pos");
+                            bool breakBefore = bool.Parse(lexemeP.AttributeValue("lexeme", "breakBefore"));
+                            bool head = bool.Parse(lexemeP.AttributeValue("lexeme", "headword"));
+                            string value = lexemeP.ElementText("lexeme");
 
-                    // add map from full lexeme string to lexical unit id
-                    string lexemeString = lexicalUnit.ToString();
-                    _lexemeLexicalUnitIDs.EnsureContainsKey(lexemeString, typeof(Set<int>), false);
-                    _lexemeLexicalUnitIDs[lexemeString].Add(luID);
+                            lexemes.Add(new Lexeme(value, pos, breakBefore, head));
+                        }
 
-                    // add map from lexical unit to frame
-                    _lexicalUnitIdFrame.Add(lexicalUnit.ID, frame);
+                        // create lexical unit and add to frame
+                        LexicalUnit lexicalUnit = new LexicalUnit(luID, luName, luPos, luDef, lexemes);
 
-                    // add map from lexical unit to lexical unit id
-                    _lexicalUnitLexicalUnitIDs.EnsureContainsKey(lexicalUnit.Name, typeof(Set<int>));
-                    _lexicalUnitLexicalUnitIDs[lexicalUnit.Name].Add(lexicalUnit.ID);
+                        frame.LexicalUnits.Add(lexicalUnit);
 
-                    // add map from lexical unit ID to lexical unit
-                    _lexicalUnitIdLexicalUnit.Add(lexicalUnit.ID, lexicalUnit);
+                        // add map from full lexeme string to lexical unit id
+                        string lexemeString = lexicalUnit.ToString();
+                        _lexemeLexicalUnitIDs.EnsureContainsKey(lexemeString, typeof(Set<int>), false);
+                        _lexemeLexicalUnitIDs[lexemeString].Add(luID);
+
+                        // add map from lexical unit to frame
+                        _lexicalUnitIdFrame.Add(lexicalUnit.ID, frame);
+
+                        // add map from lexical unit to lexical unit id
+                        _lexicalUnitLexicalUnitIDs.EnsureContainsKey(lexicalUnit.Name, typeof(Set<int>));
+                        _lexicalUnitLexicalUnitIDs[lexicalUnit.Name].Add(lexicalUnit.ID);
+
+                        // add map from lexical unit ID to lexical unit
+                        _lexicalUnitIdLexicalUnit.Add(lexicalUnit.ID, lexicalUnit);
+                    }
                 }
-            }
                 #endregion
 
                 #region get frame relations
-                framesP = new XmlParser(File.ReadAllText(CommonPort.IO.Directory.FindFile(frameNetDirectory, "frRelation.xml")));
-            string relationsXML;
-            while ((relationsXML = framesP.OuterXML("frame-relation-type")) != null)
-            {
-                // get relation type
-                    XmlParser relationsP = new XmlParser(relationsXML);
-                Frame.FrameRelation relation = Frame.GetFrameRelation(relationsP.AttributeValue("frame-relation-type", "name"));
-
-                string relationXML;
-                while ((relationXML = relationsP.OuterXML("frame-relation")) != null)
+                framesP = new XmlParser(System.IO.File.ReadAllText(LAIR.CommonPort.IO.Directory.FindFile(frameNetDirectory, "frRelation.xml")));
+                string relationsXML;
+                while ((relationsXML = framesP.OuterXML("frame-relation-type")) != null)
                 {
-                        XmlParser relationP = new XmlParser(relationXML);
-                    string superFrameName = relationP.AttributeValue("frame-relation", "superFrameName").ToLower();
-                    string subFrameName = relationP.AttributeValue("frame-relation", "subFrameName").ToLower();
+                    // get relation type
+                    XmlParser relationsP = new XmlParser(relationsXML);
+                    Frame.FrameRelation relation = Frame.GetFrameRelation(relationsP.AttributeValue("frame-relation-type", "name"));
 
-                    Frame superFrame = _frameNameFrame[superFrameName];
-                    Frame subFrame = _frameNameFrame[subFrameName];
-
-                    superFrame.GetSubFrames(relation).Add(subFrame);
-                    subFrame.GetSuperFrames(relation).Add(superFrame);
-
-                    // add FE relations
-                    while (relationP.SkipToElement("fe-relation"))
+                    string relationXML;
+                    while ((relationXML = relationsP.OuterXML("frame-relation")) != null)
                     {
-                        int superFeID = int.Parse(relationP.AttributeValue("fe-relation", "supId"));
-                        int subFeID = int.Parse(relationP.AttributeValue("fe-relation", "subId"));
+                        XmlParser relationP = new XmlParser(relationXML);
+                        string superFrameName = relationP.AttributeValue("frame-relation", "superFrameName").ToLower();
+                        string subFrameName = relationP.AttributeValue("frame-relation", "subFrameName").ToLower();
 
-                        FrameElement superFE = superFrame.FrameElements.Get(superFeID);
-                        FrameElement subFE = subFrame.FrameElements.Get(subFeID);
+                        Frame superFrame = _frameNameFrame[superFrameName];
+                        Frame subFrame = _frameNameFrame[subFrameName];
 
-                        superFE.AddSubFrameElement(subFE, relation);
-                        subFE.AddSuperFrameElement(superFE, relation);
+                        superFrame.GetSubFrames(relation).Add(subFrame);
+                        subFrame.GetSuperFrames(relation).Add(superFrame);
+
+                        // add FE relations
+                        while (relationP.SkipToElement("fe-relation"))
+                        {
+                            int superFeID = int.Parse(relationP.AttributeValue("fe-relation", "supId"));
+                            int subFeID = int.Parse(relationP.AttributeValue("fe-relation", "subId"));
+
+                            FrameElement superFE = superFrame.FrameElements.Get(superFeID);
+                            FrameElement subFE = subFrame.FrameElements.Get(subFeID);
+
+                            superFE.AddSubFrameElement(subFE, relation);
+                            subFE.AddSuperFrameElement(superFE, relation);
+                        }
                     }
                 }
-            }
                 #endregion
             }
             else if (version == Version.FrameNet_1_5)
             {
                 // init annotation engine
-                _lexicalUnitAnnotationEngine = new LexicalUnitAnnotationEngine(CommonPort.IO.Directory.FindDirectory(frameNetDirectory, "lu"), version);
+                _lexicalUnitAnnotationEngine = new LexicalUnitAnnotationEngine(LAIR.CommonPort.IO.Directory.FindDirectory(frameNetDirectory, "lu"), version);
 
                 #region get frames
                 Set<int> uniqueFrameIDCheck = new Set<int>();
-                foreach (string framePath in System.IO.Directory.GetFiles(CommonPort.IO.Directory.FindDirectory(frameNetDirectory, "frame"), "*.xml"))
+                foreach (string framePath in System.IO.Directory.GetFiles(LAIR.CommonPort.IO.Directory.FindDirectory(frameNetDirectory, "frame"), "*.xml"))
                 {
                     // create frame
-                    XmlParser frameP = new XmlParser(File.ReadAllText(framePath));
+                    XmlParser frameP = new XmlParser(System.IO.File.ReadAllText(framePath));
                     int frameID = int.Parse(frameP.AttributeValue("frame", "ID"));
                     string frameName = frameP.AttributeValue("frame", "name").ToLower().Trim();  // use lowercase for all frame names
                     string frameDefinition = frameP.ElementText("definition");
@@ -290,7 +290,7 @@ namespace LAIR.ResourceAPIs.FrameNet
                 #endregion
 
                 #region get relations
-                XmlParser allRelationsP = new XmlParser(File.ReadAllText(CommonPort.IO.Directory.FindFile(frameNetDirectory, "frRelation.xml")));
+                XmlParser allRelationsP = new XmlParser(System.IO.File.ReadAllText(LAIR.CommonPort.IO.Directory.FindFile(frameNetDirectory, "frRelation.xml")));
                 string relationsXML;
                 while ((relationsXML = allRelationsP.OuterXML("frameRelationType")) != null)
                 {

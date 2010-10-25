@@ -10,7 +10,7 @@ namespace LAIR.ResourceAPIs.PennBank.PropBank
     public class Frame
     {
         private string _verb;
-        private Dictionary<int, RoleSet> _roleSets;
+        private Dictionary<int, RoleSet> _idRoleSet;
 
         /// <summary>
         /// Gets or sets the verb. This is the lemma form, which is used in the verb.id role set notation
@@ -25,7 +25,7 @@ namespace LAIR.ResourceAPIs.PennBank.PropBank
         /// </summary>
         public IEnumerable<RoleSet> RoleSets
         {
-            get { return _roleSets.Values; }
+            get { return _idRoleSet.Values; }
         }
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace LAIR.ResourceAPIs.PennBank.PropBank
         /// </summary>
         public int RoleSetCount
         {
-            get { return _roleSets.Count; }
+            get { return _idRoleSet.Count; }
         }
 
         /// <summary>
@@ -44,21 +44,21 @@ namespace LAIR.ResourceAPIs.PennBank.PropBank
         {
             _verb = verb;
 
-            _roleSets = new Dictionary<int, RoleSet>();
+            _idRoleSet = new Dictionary<int, RoleSet>();
         }
 
         /// <summary>
-        /// Gets nicely formatting string representation of this frame
+        /// Gets nicely formatted string representation of this frame
         /// </summary>
         /// <returns>Frame description</returns>
         public override string ToString()
         {
-            StringBuilder s = new StringBuilder(_verb + " role sets:" + Environment.NewLine);
+            StringBuilder s = new StringBuilder(_verb + " role sets:" + Environment.NewLine + Environment.NewLine);
 
-            foreach (RoleSet r in _roleSets.Values)
-                s.Append(r.ToString() + Environment.NewLine);
+            foreach (RoleSet roleSet in _idRoleSet.Values)
+                s.Append(roleSet + Environment.NewLine + Environment.NewLine);
 
-            return s.ToString();
+            return s.ToString().Trim();
         }
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace LAIR.ResourceAPIs.PennBank.PropBank
         /// <param name="roleSet">Role set to add</param>
         public void AddRoleSet(RoleSet roleSet)
         {
-            _roleSets.Add(roleSet.ID, roleSet);
+            _idRoleSet.Add(roleSet.ID, roleSet);
         }
 
         /// <summary>
@@ -77,7 +77,7 @@ namespace LAIR.ResourceAPIs.PennBank.PropBank
         /// <returns>Role set</returns>
         public RoleSet GetRoleSet(int roleSetID)
         {
-            return _roleSets[roleSetID];
+            return _idRoleSet[roleSetID];
         }
 
         /// <summary>
@@ -87,7 +87,7 @@ namespace LAIR.ResourceAPIs.PennBank.PropBank
         /// <returns>True if role set is contained, false otherwise</returns>
         public bool Contains(int roleSetID)
         {
-            return _roleSets.ContainsKey(roleSetID);
+            return _idRoleSet.ContainsKey(roleSetID);
         }
     }
 }

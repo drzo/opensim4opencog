@@ -320,7 +320,7 @@ namespace LAIR.ResourceAPIs.NomBank
         /// <returns>True if labels are equal, false otherwise</returns>
         public static bool operator == (NomBankNodeLabel label1, NomBankNodeLabel label2)
         {
-            // check for null operand
+            // check for null labels
             if (!(label1 is NomBankNodeLabel))
                 return !(label2 is NomBankNodeLabel);
 
@@ -339,8 +339,9 @@ namespace LAIR.ResourceAPIs.NomBank
         }
         #endregion
 
-        private NodeType _type;
-        private NodeFeature _feature;
+        private readonly NodeType _type;
+        private readonly NodeFeature _feature;
+        private readonly int _hashCode;
         private List<HyphenationIndex> _hyphenIndexes;
         private float _confidence;
 
@@ -420,6 +421,7 @@ namespace LAIR.ResourceAPIs.NomBank
             _confidence = confidence;
             _feature = NodeFeature.None;
             _hyphenIndexes = new List<HyphenationIndex>();
+            _hashCode = type.ToString().GetHashCode();
         }
 
         /// <summary>
@@ -432,6 +434,7 @@ namespace LAIR.ResourceAPIs.NomBank
             : this(type, confidence)
         {
             _feature = feature;
+            _hashCode = (_type.ToString() + "-" + _feature.ToString()).GetHashCode();
         }
 
         /// <summary>
@@ -556,7 +559,7 @@ namespace LAIR.ResourceAPIs.NomBank
         /// <returns></returns>
         public override int GetHashCode()
         {
-            return ToString().GetHashCode();
+            return _hashCode;
         }
 
         /// <summary>
