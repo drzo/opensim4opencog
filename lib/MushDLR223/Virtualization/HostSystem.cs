@@ -507,6 +507,11 @@ namespace MushDLR223.Virtualization
             return null;
         }
 
+        public static string ToRelativePath(string userDir)
+        {
+            return ToRelativePath(userDir, ".");
+        }
+
         public static string ResolveToExistingPath(string path)
         {
             string ret = path;
@@ -678,9 +683,11 @@ namespace MushDLR223.Virtualization
             pathIn = pathIn.Trim();
             string prefix = null, fullPath = null;
 
-
+            string prevCombine = null;
             foreach (string s in combine)
             {
+                if (s == prevCombine) continue;
+                prevCombine = s;
                 string path = Combine(s, pathIn);
                 if (path == null) continue;
                 if (!FileOrDirExists(path)) continue;
