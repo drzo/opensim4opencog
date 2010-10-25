@@ -59,7 +59,7 @@ namespace OpenMetaverse.Rendering
         {
             PrimMesher.PrimMesh newPrim = GeneratePrimMesh(prim, lod, false);
             if (newPrim == null)
-            return null;
+                return null;
 
             SimpleMesh mesh = new SimpleMesh();
             mesh.Path = new Path();
@@ -67,22 +67,22 @@ namespace OpenMetaverse.Rendering
             mesh.Profile = new Profile();
             mesh.Vertices = new List<Vertex>(newPrim.coords.Count);
             for (int i = 0; i < newPrim.coords.Count; i++)
-        {
+            {
                 PrimMesher.Coord c = newPrim.coords[i];
                 mesh.Vertices.Add(new Vertex { Position = new Vector3(c.X, c.Y, c.Z) });
-                }
+            }
 
             mesh.Indices = new List<ushort>(newPrim.faces.Count * 3);
             for (int i = 0; i < newPrim.faces.Count; i++)
-                {
+            {
                 PrimMesher.Face face = newPrim.faces[i];
                 mesh.Indices.Add((ushort)face.v1);
                 mesh.Indices.Add((ushort)face.v2);
                 mesh.Indices.Add((ushort)face.v3);
-                }
+            }
 
             return mesh;
-            }
+        }
 
         /// <summary>
         /// Generates a basic mesh structure from a sculpted primitive
@@ -92,7 +92,7 @@ namespace OpenMetaverse.Rendering
         /// <param name="lod">Level of detail to generate the mesh at</param>
         /// <returns>The generated mesh or null on failure</returns>
         public OMVR.SimpleMesh GenerateSimpleSculptMesh(OMV.Primitive prim, System.Drawing.Bitmap sculptTexture, OMVR.DetailLevel lod)
-                {
+        {
             OMVR.FacetedMesh faceted = GenerateFacetedSculptMesh(prim, sculptTexture, lod);
 
             if (faceted != null && faceted.Faces.Count == 1)
@@ -111,7 +111,7 @@ namespace OpenMetaverse.Rendering
             }
 
             return null;
-            }
+        }
 
         /// <summary>
         /// Generates a a series of faces, each face containing a mesh and
@@ -121,7 +121,7 @@ namespace OpenMetaverse.Rendering
         /// <param name="lod">Level of detail to generate the mesh at</param>
         /// <returns>The generated mesh</returns >
         public OMVR.FacetedMesh GenerateFacetedMesh(OMV.Primitive prim, OMVR.DetailLevel lod)
-            {
+        {
             bool isSphere = ((OMV.ProfileCurve)(prim.PrimData.profileCurve & 0x07) == OMV.ProfileCurve.HalfCircle);
             PrimMesher.PrimMesh newPrim = GeneratePrimMesh(prim, lod, true);
             if (newPrim == null)

@@ -223,6 +223,7 @@ namespace OpenMetaverse
                 result = UUID.Zero;
                 return false;
             }
+
             try
             {
                 result = Parse(val);

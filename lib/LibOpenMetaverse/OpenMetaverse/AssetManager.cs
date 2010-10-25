@@ -307,6 +307,12 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="newAssetID">Asset UUID of the newly uploaded baked texture</param>
         public delegate void BakedTextureUploadedCallback(UUID newAssetID);
+        /// <summary>
+        /// A callback that fires upon the completition of the RequestMesh call
+        /// </summary>
+        /// <param name="success">Was the download successfull</param>
+        /// <param name="assetMesh">Resulting mesh or null on problems</param>
+        public delegate void MeshDownloadCallback(bool success, AssetMesh assetMesh);
 
         #endregion Delegates
 
@@ -530,24 +536,21 @@ namespace OpenMetaverse
             transfer.Callback = callback;
 
             // Check asset cache first
-            lock (this)
+            if (callback != null && Cache.HasAsset(assetID))
             {
-                if (callback != null && Cache.HasAsset(assetID))
-                {
-                    byte[] data = Cache.GetCachedAssetBytes(assetID);
-                    transfer.AssetData = data;
-                    transfer.Success = true;
-                    transfer.Status = StatusCode.OK;
+                byte[] data = Cache.GetCachedAssetBytes(assetID);
+                transfer.AssetData = data;
+                transfer.Success = true;
+                transfer.Status = StatusCode.OK;
 
-                    Asset asset = CreateAssetWrapper(type);
-                    asset.AssetData = data;
-                    asset.AssetID = assetID;
+                Asset asset = CreateAssetWrapper(type);
+                asset.AssetData = data;
+                asset.AssetID = assetID;
 
-                    try { callback(transfer, asset); }
-                    catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
+                try { callback(transfer, asset); }
+                catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
 
-                    return;
-                }
+                return;
             }
 
             // Add this transfer to the dictionary
@@ -1014,8 +1017,8 @@ namespace OpenMetaverse
             }
             else
             {
-            Texture.RequestTexture(textureID, imageType, priority, discardLevel, packetStart, callback, progress);
-        }
+                Texture.RequestTexture(textureID, imageType, priority, discardLevel, packetStart, callback, progress);
+            }
         }
 
         /// <summary>
@@ -1068,6 +1071,61 @@ namespace OpenMetaverse
         public void RequestImageCancel(UUID textureID)
         {
             Texture.AbortTextureRequest(textureID);
+        }
+
+        /// <summary>
+        /// Requests download of a mesh asset
+        /// </summary>
+        /// <param name="meshID">UUID of the mesh asset</param>
+        /// <param name="callback">Callback when the request completes</param>
+        public void RequestMesh(UUID meshID, MeshDownloadCallback callback)
+        {
+            if (meshID == UUID.Zero || callback == null)
+                return;
+
+            if (Client.Network.CurrentSim.Caps != null &&
+                Client.Network.CurrentSim.Caps.CapabilityURI("GetMesh") != null)
+            {
+                // Do we have this mesh asset in the cache?
+                if (Client.Assets.Cache.HasAsset(meshID))
+                {
+                    callback(true, new AssetMesh(meshID, Client.Assets.Cache.GetCachedAssetBytes(meshID)));
+                    return;
+                }
+
+                Uri url = Client.Network.CurrentSim.Caps.CapabilityURI("GetMesh");
+
+                DownloadRequest req = new DownloadRequest(
+                    new Uri(string.Format("{0}/?mesh_id={1}", url.ToString(), meshID.ToString())),
+                    Client.Settings.CAPS_TIMEOUT,
+                    null,
+                    null,
+                    (HttpWebRequest request, HttpWebResponse response, byte[] responseData, Exception error) =>
+                    {
+                        if (error == null && responseData != null) // success
+                        {
+                            callback(true, new AssetMesh(meshID, responseData));
+                            Client.Assets.Cache.SaveAssetToCache(meshID, responseData);
+                        }
+                        else // download failed
+                        {
+                            Logger.Log(
+                                string.Format("Failed to fetch mesh asset {0}: {1}",
+                                    meshID,
+                                    (error == null) ? "" : error.Message
+                                ),
+                                Helpers.LogLevel.Warning, Client);
+                        }
+                    }
+                );
+
+                HttpDownloads.QueueDownlad(req);
+            }
+            else
+            {
+                Logger.Log("GetMesh capability not available", Helpers.LogLevel.Error, Client);
+                callback(false, null);
+            }
         }
 
         /// <summary>

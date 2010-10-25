@@ -137,7 +137,7 @@ namespace OpenMetaverse
             
             // Default handler first, if one exists
             if (_EventTable.TryGetValue(PacketType.Default, out callback) && callback.Callback != null)
-            {                                
+            {
                 if (callback.IsAsync)
                 {
                     PacketCallbackWrapper wrapper;
@@ -145,16 +145,16 @@ namespace OpenMetaverse
                     wrapper.Packet = packet;
                     wrapper.Simulator = simulator;
                     ThreadPool.QueueUserWorkItem(ThreadPoolDelegate, wrapper);
-            }
+                }
                 else
-            {
-                    try { callback.Callback(this, new PacketReceivedEventArgs(packet, simulator)); }
-                catch (Exception ex)
                 {
+                    try { callback.Callback(this, new PacketReceivedEventArgs(packet, simulator)); }
+                    catch (Exception ex)
+                    {
                         Logger.Log("Default packet event handler: " + ex.ToString(), Helpers.LogLevel.Error, Client);
+                    }
                 }
             }
-        }
 
             if (_EventTable.TryGetValue(packetType, out callback) && callback.Callback != null)
             {
@@ -165,19 +165,19 @@ namespace OpenMetaverse
                     wrapper.Packet = packet;
                     wrapper.Simulator = simulator;
                     ThreadPool.QueueUserWorkItem(ThreadPoolDelegate, wrapper);
-            }
+                }
                 else
-            {
+                {
                     try { callback.Callback(this, new PacketReceivedEventArgs(packet, simulator)); }
                     catch (Exception ex)
-                {
+                    {
                         Logger.Log("Packet event handler: " + ex.ToString(), Helpers.LogLevel.Error, Client);
                     }
                 }
 
-                    return;
-                }
-
+                return;
+            }
+            
             if (packetType != PacketType.Default && packetType != PacketType.PacketAck)
             {
                 Logger.DebugLog("No handler registered for packet event " + packetType, Client);

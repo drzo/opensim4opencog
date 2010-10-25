@@ -327,7 +327,7 @@ namespace OpenMetaverse.StructuredData
         public static implicit operator ulong(OSD value) { return value.AsULong(); }
         public static implicit operator double(OSD value) { return value.AsReal(); }
         public static implicit operator float(OSD value) { return (float)value.AsReal(); }
-        public static explicit operator string(OSD value) { return value.AsString(); }
+        public static implicit operator string(OSD value) { return value.AsString(); }
         public static implicit operator UUID(OSD value) { return value.AsUUID(); }
         public static implicit operator DateTime(OSD value) { return value.AsDate(); }
         public static implicit operator Uri(OSD value) { return value.AsUri(); }

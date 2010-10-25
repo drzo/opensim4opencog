@@ -114,8 +114,8 @@ namespace OpenMetaverse
     /// </summary>
     public enum SimAccess : byte
     {
-        /// <summary>Minimum access level, no additional checks</summary>
-        Min = 0,
+        /// <summary>Unknown or invalid access level</summary>
+        Unknown = 0,
         /// <summary>Trial accounts allowed</summary>
         Trial = 7,
         /// <summary>PG rating</summary>
@@ -1023,30 +1023,30 @@ namespace OpenMetaverse
 
             if (packet.Header.Reliable)
             {
-            #region ACK Sending
+                #region ACK Sending
 
-            // Add this packet to the list of ACKs that need to be sent out
-            uint sequence = (uint)packet.Header.Sequence;
-            PendingAcks.Enqueue(sequence);
+                // Add this packet to the list of ACKs that need to be sent out
+                uint sequence = (uint)packet.Header.Sequence;
+                PendingAcks.Enqueue(sequence);
 
-            // Send out ACKs if we have a lot of them
+                // Send out ACKs if we have a lot of them
                 if (PendingAcks.Count >= Client.Settings.MAX_PENDING_ACKS)
-                SendAcks();
+                    SendAcks();
 
-            #endregion ACK Sending
+                #endregion ACK Sending
 
-            // Check the archive of received packet IDs to see whether we already received this packet
+                // Check the archive of received packet IDs to see whether we already received this packet
                 if (!PacketArchive.TryEnqueue(packet.Header.Sequence))
-            {
-                if (packet.Header.Resent)
-                    Logger.DebugLog("Received a resend of already processed packet #" + packet.Header.Sequence + ", type: " + packet.Type);
-                else
-                    Logger.Log("Received a duplicate (not marked as resend) of packet #" + packet.Header.Sequence + ", type: " + packet.Type,
-                        Helpers.LogLevel.Warning);
+                {
+                    if (packet.Header.Resent)
+                        Logger.DebugLog("Received a resend of already processed packet #" + packet.Header.Sequence + ", type: " + packet.Type);
+                    else
+                        Logger.Log("Received a duplicate (not marked as resend) of packet #" + packet.Header.Sequence + ", type: " + packet.Type,
+                            Helpers.LogLevel.Warning);
 
-                // Avoid firing a callback twice for the same packet
-                return;
-            }
+                    // Avoid firing a callback twice for the same packet
+                    return;
+                }
             }
 
             #region Inbox Insertion

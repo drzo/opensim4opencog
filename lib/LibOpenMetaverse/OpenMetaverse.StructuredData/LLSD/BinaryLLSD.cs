@@ -74,10 +74,10 @@ namespace OpenMetaverse.StructuredData
         private static readonly byte[] llsdBinaryHeadBytes = Encoding.ASCII.GetBytes(llsdBinaryHead);
 
         /// <summary>
-        /// 
+        /// Deserializes binary LLSD
         /// </summary>
-        /// <param name="binaryData"></param>
-        /// <returns></returns>
+        /// <param name="binaryData">Serialized data</param>
+        /// <returns>OSD containting deserialized data</returns>
         public static OSD DeserializeLLSDBinary(byte[] binaryData)
         {
 
@@ -88,10 +88,10 @@ namespace OpenMetaverse.StructuredData
         }
 
         /// <summary>
-        /// 
+        /// Deserializes binary LLSD
         /// </summary>
-        /// <param name="stream"></param>
-        /// <returns></returns>
+        /// <param name="stream">Stream to read the data from</param>
+        /// <returns>OSD containting deserialized data</returns>
         public static OSD DeserializeLLSDBinary(Stream stream)
         {
             if (!stream.CanSeek)
@@ -100,7 +100,9 @@ namespace OpenMetaverse.StructuredData
             SkipWhiteSpace(stream);
 
             if (!FindString(stream, llsdBinaryHead) && !FindString(stream, llsdBinaryHead2))
-                throw new OSDException("Failed to decode binary LLSD");
+            {
+                //throw new OSDException("Failed to decode binary LLSD");
+            }
 
             SkipWhiteSpace(stream);
 

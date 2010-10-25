@@ -257,7 +257,7 @@ namespace OpenMetaverse.Rendering
                             else
                             {
                                 Logger.Log("Rendering plugin does not support the [RendererName] attribute: " + f,
-                                        Helpers.LogLevel.Warning);
+                                    Helpers.LogLevel.Warning);
                             }
 
                             break;
