@@ -793,7 +793,7 @@ namespace cogbot
                         }
                     }
                     DisplayNotificationInChat("Accepting TP Lure from " + im.FromAgentName);
-                    Self.TeleportLureRespond(im.FromAgentID, true);
+                    Self.TeleportLureRespond(im.FromAgentID, im.IMSessionID, true);
                 }
                 else if (im.Dialog == InstantMessageDialog.FriendshipOffered)
                 {
