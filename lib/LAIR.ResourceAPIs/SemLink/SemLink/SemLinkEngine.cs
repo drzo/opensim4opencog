@@ -18,11 +18,11 @@ namespace LAIR.ResourceAPIs.SemLink
     {
         /// <summary>
         /// Ways of extending the SemLink mapping when VerbNet classes are involved. This is motivated by the following
-        /// example:  the PropBank predicate stack.1 maps to the VerbNet class 9.7.1; however, SemLink only maps VerbNet
-        /// class 9.7 to a FrameNet frame. Thus, if we're interested in mapping stack.1 to FrameNet, we need to do some
-        /// extra work. If we apply the SuperClass extension to the VerbNet-FrameNet mapping, the result is that we will
-        /// search super-classes of 9.7.1 for a FrameNet mapping, giving us the desired result that PropBank predicate
-        /// stack.1 maps to FrameNet frame Filling.
+        /// example:  the PropBank predicate spend.2 maps to the VerbNet class 66.1; however, SemLink maps VerbNet classes
+        /// 66 and 66.1 to a FrameNet frame. Thus, if we're interested in mapping spend.2 to FrameNet via VerbNet class
+        /// 66, we need to do some extra work. If we apply the SuperClass extension to the VerbNet-FrameNet mapping, the 
+        /// result is that we will search super-classes of 66.1 for a FrameNet mapping, giving us the desired result that 
+        /// PropBank predicate spend.2 maps to FrameNet frame Exhaust_resource (via 66) and Frugality (via 66.1).
         /// </summary>
         public enum VerbNetExtension
         {

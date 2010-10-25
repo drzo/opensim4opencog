@@ -273,9 +273,9 @@ namespace LAIR.ResourceAPIs.WordNet
         private string _wordNetDirectory;
         private bool _inMemory;
         private Dictionary<POS, BinarySearchTextStream> _posIndexWordSearchStream;  // disk-based search streams to get words from the index files
-        private Dictionary<POS, StreamReader> _posSynSetDataFile;                  // disk-based synset data files
-        private Dictionary<POS, Dictionary<string, Set<SynSet>>> _posWordSynSets;  // in-memory pos-word synsets lookup
-        private Dictionary<string, SynSet> _idSynset;                              // in-memory id-synset lookup where id is POS:Offset
+        private Dictionary<POS, StreamReader> _posSynSetDataFile;                   // disk-based synset data files
+        private Dictionary<POS, Dictionary<string, Set<SynSet>>> _posWordSynSets;   // in-memory pos-word synsets lookup
+        private Dictionary<string, SynSet> _idSynset;                               // in-memory id-synset lookup where id is POS:Offset
 
         /// <summary>
         /// Gets whether or not the data in this WordNetEngine is stored in memory
@@ -364,12 +364,12 @@ namespace LAIR.ResourceAPIs.WordNet
 
             // make sure all files exist
             foreach (string path in dataPaths.Union(indexPaths))
-                if (!File.Exists(path))
+                if (!System.IO.File.Exists(path))
                     throw new FileNotFoundException("Failed to find WordNet file:  " + path);
 
             #region index file sorting
             string sortFlagPath = Path.Combine(_wordNetDirectory, ".sorted_for_dot_net");
-            if (!File.Exists(sortFlagPath))
+            if (!System.IO.File.Exists(sortFlagPath))
             {
                 /* make sure the index files are sorted according to the current sort order. the index files in the
                  * wordnet distribution are sorted in the order needed for (presumably) the java api, which uses
@@ -415,8 +415,8 @@ namespace LAIR.ResourceAPIs.WordNet
                     tempFile.Close();
 
                     // replace original index file with properly sorted one
-                    File.Delete(indexPath);
-                    File.Move(tempPath, indexPath);
+                    System.IO.File.Delete(indexPath);
+                    System.IO.File.Move(tempPath, indexPath);
                 }
 
                 // create flag file, indicating that we've sorted the data

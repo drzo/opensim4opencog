@@ -59,32 +59,32 @@ namespace LAIR.ResourceAPIs.FrameNet
 
             if (_version == FrameNetEngine.Version.FrameNet_1_3)
             {
-            string annotationSetXML;
-            while ((annotationSetXML = attestationP.OuterXML("annotationSet")) != null)
-            {
+                string annotationSetXML;
+                while ((annotationSetXML = attestationP.OuterXML("annotationSet")) != null)
+                {
                     Attestation annotation = new Attestation();
 
-                // parser for entire annotation set
+                    // parser for entire annotation set
                     XmlParser annotationSetP = new XmlParser(annotationSetXML);
 
-                // first get sentence...it is below the annotation layers
+                    // first get sentence...it is below the annotation layers
                     annotation.Sentence = new XmlParser(annotationSetP.OuterXML("sentence")).ElementText("text").Trim();
 
                     #region get fe bindings
                     // parser is forward-only, so rewind
                     annotationSetP.Reset();
 
-                // get FE bindings
+                    // get FE bindings
                     if (!annotationSetP.SkipToElement("layer", feAttributeConstraints))
-                    throw new Exception("Failed to find FE layer in annotation set");
+                        throw new Exception("Failed to find FE layer in annotation set");
 
-                string feBindingXML = annotationSetP.OuterXML("layer");
+                    string feBindingXML = annotationSetP.OuterXML("layer");
                     XmlParser feBindingP = new XmlParser(feBindingXML);
 
-                // read off FE binding labels
-                string labelXML;
-                while ((labelXML = feBindingP.OuterXML("label")) != null)
-                {
+                    // read off FE binding labels
+                    string labelXML;
+                    while ((labelXML = feBindingP.OuterXML("label")) != null)
+                    {
                         XmlParser labelP = new XmlParser(labelXML);
 
                         // skip null instantiations, which don't have start/end values
@@ -98,7 +98,7 @@ namespace LAIR.ResourceAPIs.FrameNet
                         AnnotatedSpan span = new AnnotatedSpan(feStart, feText);
 
                         // add FE binding...we shouldn't have to check for the existence of a frame element, but errors abound!
-                    string feName = labelP.AttributeValue("label", "name");
+                        string feName = labelP.AttributeValue("label", "name");
                         if (frame.FrameElements.Contains(feName))
                         {
                             FrameElement fe = frame.FrameElements.Get(feName);
@@ -130,7 +130,7 @@ namespace LAIR.ResourceAPIs.FrameNet
 
                     attestations.Add(annotation);
                 }
-                    }
+            }
             else if (_version == FrameNetEngine.Version.FrameNet_1_5)
             {
                 string sentenceXML;
@@ -162,31 +162,31 @@ namespace LAIR.ResourceAPIs.FrameNet
                         string feText = annotation.Sentence.Substring(feStart, feEnd - feStart + 1);
                         AnnotatedSpan span = new AnnotatedSpan(feStart, feText);
 
-                    // add FE binding...we shouldn't have to check for the existence of a frame element, but errors abound!
+                        // add FE binding...we shouldn't have to check for the existence of a frame element, but errors abound!
                         int feID = int.Parse(labelP.AttributeValue("label", "feID"));
                         if (frame.FrameElements.Contains(feID))
-                    {
+                        {
                             FrameElement fe = frame.FrameElements.Get(feID);
                             annotation.FrameElementBindings.EnsureContainsKey(fe, typeof(List<AnnotatedSpan>));
                             annotation.FrameElementBindings[fe].Add(span);
+                        }
                     }
-                }
-                #endregion
+                    #endregion
 
-                #region targets
-                // get target annotation...reset parser...sometimes the target comes before the FE layer
+                    #region targets
+                    // get target annotation...reset parser...sometimes the target comes before the FE layer
                     sentenceP.Reset();
 
                     if (!sentenceP.SkipToElement("layer", targetAttributeConstraints))
-                    throw new Exception("Failed to find target layer in annotation set");
+                        throw new Exception("Failed to find target layer in annotation set");
 
                     // read all targets
                     XmlParser targetP = new XmlParser(sentenceP.OuterXML("layer"));
-                while ((labelXML = targetP.OuterXML("label")) != null)
-                {
+                    while ((labelXML = targetP.OuterXML("label")) != null)
+                    {
                         XmlParser labelP = new XmlParser(labelXML);
                         int targetEnd = int.Parse(labelP.AttributeValue("label", "end"));
-                    int targetStart = int.Parse(labelP.AttributeValue("label", "start"));
+                        int targetStart = int.Parse(labelP.AttributeValue("label", "start"));
 
                         // bug in framenet:  bad sentence
                         if (targetStart >= annotation.Sentence.Length || targetEnd >= annotation.Sentence.Length)
@@ -195,8 +195,8 @@ namespace LAIR.ResourceAPIs.FrameNet
                         string targetText = annotation.Sentence.Substring(targetStart, targetEnd - targetStart + 1);
 
                         annotation.Targets.Add(new AnnotatedSpan(targetStart, targetText));
-                }
-                #endregion
+                    }
+                    #endregion
 
                     attestations.Add(annotation);
                 }

@@ -10,7 +10,7 @@ namespace LAIR.ResourceAPIs.NomBank
     public class Frame
     {
         private string _noun;
-        private Dictionary<int, RoleSet> _roleSets;
+        private Dictionary<int, RoleSet> _idRoleSet;
 
         /// <summary>
         /// Gets the noun. This is the lemma form, which is used in the noun.id role set notation
@@ -25,7 +25,7 @@ namespace LAIR.ResourceAPIs.NomBank
         /// </summary>
         public int RoleSetCount
         {
-            get { return _roleSets.Count; }
+            get { return _idRoleSet.Count; }
         }
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace LAIR.ResourceAPIs.NomBank
         /// </summary>
         public IEnumerable<RoleSet> RoleSets
         {
-            get { return _roleSets.Values; }
+            get { return _idRoleSet.Values; }
         }
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace LAIR.ResourceAPIs.NomBank
         {
             _noun = noun;
 
-            _roleSets = new Dictionary<int, RoleSet>();
+            _idRoleSet = new Dictionary<int, RoleSet>();
         }
 
         /// <summary>
@@ -55,10 +55,10 @@ namespace LAIR.ResourceAPIs.NomBank
         {
             StringBuilder s = new StringBuilder(_noun + " role sets:" + Environment.NewLine + Environment.NewLine);
 
-            foreach (RoleSet r in _roleSets.Values)
-                s.Append(r.ToString() + Environment.NewLine);
+            foreach (RoleSet roleSet in _idRoleSet.Values)
+                s.Append(roleSet + Environment.NewLine + Environment.NewLine);
 
-            return s.ToString();
+            return s.ToString().Trim();
         }
 
         /// <summary>
@@ -67,17 +67,17 @@ namespace LAIR.ResourceAPIs.NomBank
         /// <param name="roleSet">Role set to add</param>
         public void AddRoleSet(RoleSet roleSet)
         {
-            _roleSets.Add(roleSet.ID, roleSet);
+            _idRoleSet.Add(roleSet.ID, roleSet);
         }
 
         /// <summary>
-        /// Gets a role set by ID
+        /// Gets role set by ID
         /// </summary>
         /// <param name="roleSetID">ID of role set to get</param>
-        /// <returns>RoleSet</returns>
+        /// <returns>Role set</returns>
         public RoleSet GetRoleSet(int roleSetID)
         {
-            return _roleSets[roleSetID];
+            return _idRoleSet[roleSetID];
         }
 
         /// <summary>
@@ -87,7 +87,7 @@ namespace LAIR.ResourceAPIs.NomBank
         /// <returns>True if role set is contained, false otherwise</returns>
         public bool Contains(int roleSetID)
         {
-            return _roleSets.ContainsKey(roleSetID);
+            return _idRoleSet.ContainsKey(roleSetID);
         }
     }
 }

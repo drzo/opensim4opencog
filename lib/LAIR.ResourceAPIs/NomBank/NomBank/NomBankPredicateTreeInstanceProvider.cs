@@ -21,6 +21,7 @@ namespace LAIR.ResourceAPIs.NomBank
         private IEnumerator<string> _nouns;
         private List<NounInfo>.Enumerator _nounInfo;
         private List<NomBankNode>.Enumerator _nodes;
+        private List<NomBankNode> _filteredNodes;
 
         /// <summary>
         /// Sets the nominalizations that training instances should be provided for (pass null for all nouns)
@@ -56,6 +57,7 @@ namespace LAIR.ResourceAPIs.NomBank
             : base(nomBankEngine, instanceFilter, sections)
         {
             Nouns = nouns;
+            _filteredNodes = new List<NomBankNode>();
         }
 
         /// <summary>
@@ -93,14 +95,14 @@ namespace LAIR.ResourceAPIs.NomBank
                     _nounInfo = nomBankEngine.GetNounInfo(_nouns.Current).GetEnumerator();
                 }
 
-                // filter all nodes in the tree, keeping the good ones
+                // filter all nodes in the tree, keeping the ones that pass
                 NomBankNode root = nomBankEngine.GetNomBankTree(_nounInfo.Current);
-                List<NomBankNode> filteredNodes = new List<NomBankNode>();
+                _filteredNodes.Clear();  // reuse node collection for better memory usage
                 foreach (NomBankNode n in root.AllNodes)
                     if (Filter(n))
-                        filteredNodes.Add(n);
+                        _filteredNodes.Add(n);
 
-                _nodes = filteredNodes.GetEnumerator();
+                _nodes = _filteredNodes.GetEnumerator();
             }
 
             return _nodes.Current;

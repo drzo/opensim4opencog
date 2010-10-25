@@ -10,8 +10,9 @@ namespace LAIR.ResourceAPIs.NomBank
     public class Role
     {
         private string _description;
-        private int _number;
         private int _source;
+        private readonly int _number;
+        private readonly int _hashCode;
 
         /// <summary>
         /// Gets or sets the source argument position within the source role set
@@ -48,6 +49,7 @@ namespace LAIR.ResourceAPIs.NomBank
             _description = description;
             _number = number;
             _source = source;
+            _hashCode = _number.GetHashCode();
         }
 
         /// <summary>
@@ -90,7 +92,7 @@ namespace LAIR.ResourceAPIs.NomBank
         /// <returns>Hash code</returns>
         public override int GetHashCode()
         {
-            return _number.GetHashCode();
+            return _hashCode;
         }
     }
 }

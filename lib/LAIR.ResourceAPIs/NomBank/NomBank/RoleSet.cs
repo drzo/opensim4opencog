@@ -89,18 +89,13 @@ namespace LAIR.ResourceAPIs.NomBank
         /// <returns>String</returns>
         public override string ToString()
         {
-            StringBuilder s = new StringBuilder("ID:  " + _id + ", Name:  " + _name + (_sourceVerb != null ? ", Source:  " + _sourceVerb + "." + _sourceRoleSet : "") + Environment.NewLine);
+            StringBuilder s = new StringBuilder("ID:  " + _id + ", Name:  " + _name + (_sourceVerb != null ? ", Source:  " + _sourceVerb + "." + _sourceRoleSet : ""));
 
             // get sorted list of role numbers
             List<int> numbers = new List<int>(_numberRole.Keys);
             numbers.Sort();
-
-            // append each role
             foreach (int number in numbers)
-            {
-                Role r = Get(number);
-                s.Append("  " + r.ToString() + Environment.NewLine);
-            }
+                s.Append(Environment.NewLine + "  " + Get(number));
 
             return s.ToString();
         }
