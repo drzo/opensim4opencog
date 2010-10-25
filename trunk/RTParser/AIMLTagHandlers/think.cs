@@ -44,8 +44,10 @@ namespace RTParser.AIMLTagHandlers
             {
                 return FAIL;
             }
-            var vv = GetAttribValue<Unifiable>(templateNode, "retval", Unifiable.Empty);
-            return vv;
+            var vv = GetAttribValue<Unifiable>(templateNode, "retval", null);
+            if (vv != null) return vv;
+            if (true) return Unifiable.Empty;
+            return Succeed(" THOUGHT: '" + templateNodeInnerText + "'");
         }
 
         protected override Unifiable templateNodeInnerText

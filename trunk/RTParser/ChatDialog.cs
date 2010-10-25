@@ -266,7 +266,25 @@ namespace RTParser
                 }
 
             traceConsole = traceConsole ?? writeDebugLine;
-            User CurrentUser = FindOrCreateUser(user) ?? LastUser;
+            User CurrentUser = null;
+            if (user != null)
+            {
+
+                User lckleyUser = null;
+                if (user == "null")
+                {
+                    CurrentUser = this.LastUser;
+                }
+                else
+                {
+                    CurrentUser = FindUser(user);
+                    CurrentUser = CurrentUser ?? FindOrCreateUser(user) ?? this.LastUser;
+                }
+            }
+            else
+            {
+                CurrentUser = this.LastUser;
+            }          
             var varMSM = this.pMSM;
             varMSM.clearEvidence();
             varMSM.clearNextStateValues();
@@ -316,23 +334,23 @@ namespace RTParser
             if (saveResults)
             {
                 LastResult = res;
-                LastUser = CurrentUser;
+                this.LastUser = CurrentUser;
             }
 
             traceConsole(useOut);
             return res;
         }
 
-        public MasterRequest MakeRequestToBot(string rawInput, string username)
+        public MasterRequest MakeRequestToBot(Unifiable rawInput, string username)
         {
             return MakeRequestToBot(rawInput, FindOrCreateUser(username));
         }
 
-        public MasterRequest MakeRequestToBot(string rawInput, User findOrCreateUser)
+        public MasterRequest MakeRequestToBot(Unifiable rawInput, User findOrCreateUser)
         {
             var rtarget = BotAsUser;
-            AIMLbot.MasterRequest r = findOrCreateUser.CreateRequest(rawInput, rtarget); 
-            if (rtarget==null)
+            AIMLbot.MasterRequest r = findOrCreateUser.CreateRequest(rawInput, rtarget);
+            if (rtarget == null)
             {
                 OnBotCreated(() => r.SetSpeakerAndResponder(findOrCreateUser, BotAsUser));
             }
@@ -813,7 +831,7 @@ namespace RTParser
             {
                 text = TheCyc.CleanupCyc(text);
             }
-            return Trim(text.Replace("#$", " ").Replace("  ", " "));
+            return Trim(CleanNops(text.Replace("#$", " ").Replace("  ", " ")));
         }
 
 
@@ -1178,8 +1196,15 @@ namespace RTParser
             return result;
         }
 
-        internal bool IsOutputSentence(string sentence)
+        internal bool IsOutputSentence(string sentence, string outputSentence)
         {
+            if (outputSentence != null)
+            {
+                if ((" " + outputSentence+" ").ToUpper().Contains(" BR "))
+                {
+                    return true;
+                }
+            }
             if (sentence == null) return false;
             string o = ToEnglish(sentence);
             if (o == null) return false;
@@ -1194,6 +1219,7 @@ namespace RTParser
             {
                 return message;
             }
+            message = CleanNops(message);
             message = Trim(message);
             if (message == "") return "";
             if (false && message.Contains("<"))
@@ -1219,6 +1245,17 @@ namespace RTParser
             return "  " + message;
         }
 
+        public static string CleanNops(string message)
+        {
+            string testBR = (" " + message + " ");
+            if (testBR.ToUpper().Contains(" BR "))
+            {
+                message =
+                    ReTrimAndspace(ReplacePairs(message, " br ", " \n ", " BR ", " \n ", " NOP ", " ", " nop ", " "));
+            }
+            return message;
+        }
+
         static char[] toCharArray = "@#$%^&*()_+<>,/{}[]\\\";'~~".ToCharArray();
         public string ToEnglish(string sentenceIn)
         {
@@ -1226,6 +1263,8 @@ namespace RTParser
             {
                 return null;
             }
+            sentenceIn = CleanNops(sentenceIn);
+ 
             sentenceIn = ReTrimAndspace(sentenceIn);
             if (sentenceIn == "")
             {

@@ -65,7 +65,7 @@ namespace RTParser.AIMLTagHandlers
                 }
                 string s = Unifiable.ToVMString(f);
                 XmlNode node =
-                    new XmlDocumentLineInfo(s, false).ReadNode(
+                    new MushDLR223.Utilities.XmlDocumentLineInfo(s, false).ReadNode(
                         XmlDocumentLineInfo.CreateXmlTextReader(new System.IO.StringReader(s)));
                 bool templateSucceeded;
                 bool createdOutput;

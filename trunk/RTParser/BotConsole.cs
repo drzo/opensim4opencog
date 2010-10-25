@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Net.Mail;
@@ -121,7 +120,8 @@ namespace RTParser
         public IDisposable HttpTextServer;
         public static int NextHttp = 5580;
         public static int NextHttpIncrement = 100;
-        
+        private TimeSpan MaxWaitTryEnter = TimeSpan.FromSeconds(10);
+
 
         public void writeToFileLog(string message)
         {
@@ -177,7 +177,8 @@ namespace RTParser
         {
             RTPBot myBot = null;
             TaskQueueHandler.TimeProcess("ROBOTCONSOLE: STARTUP", () => { myBot = Startup(args); });
-            TaskQueueHandler.TimeProcess("ROBOTCONSOLE: RUN", () => Run(args, myBot, MainConsoleWriteLn));}
+            TaskQueueHandler.TimeProcess("ROBOTCONSOLE: RUN", () => Run(args, myBot, MainConsoleWriteLn));
+        }
 
         private static RTPBot Startup(string[] args)
         {
@@ -201,9 +202,9 @@ namespace RTParser
             {
                 string s = args[index];
                 if (s == "--httpd")
-                {                    
+                {
                     UseBreakpointOnError = false;
-                    if (index+1 < args.Length)
+                    if (index + 1 < args.Length)
                     {
                         int portNum;
                         if (int.TryParse(args[index + 1], out portNum))
@@ -352,17 +353,17 @@ namespace RTParser
                     bool myBotBotDirective = false;
                     if (!input.StartsWith("@"))
                     {
-                  //      string userJustSaid = input;
+                        //      string userJustSaid = input;
                         input = "@locally " + myUser.UserName + " - " + input;
                     }
                     User user = myUser;
                     TaskQueueHandler.TimeProcess(
                         "ROBOTCONSOLE: " + input,
                         () =>
-                            {
-                                myBotBotDirective = myBot.BotDirective(user, input, writeLine);
-                            });
-                    if (!myBotBotDirective) continue;
+                        {
+                            myBotBotDirective = myBot.BotDirective(user, input, writeLine);
+                        });
+                    //if (!myBotBotDirective) continue;
                     writeLine("-----------------------------------------------------------------");
                     writeLine("{0}: {1}", myUser.UserName, myUser.JustSaid);
                     writeLine("---------------------");
@@ -397,7 +398,7 @@ namespace RTParser
             try
             {
                 User requester = (user ?? LastUser ?? BotAsUser);
-                Request request = requester.CreateRequest(input, requester.LastResponder);
+                Request request = requester.CreateRequest(input, null);
                 return BotDirective(request, input, console);
             }
             catch (Exception e)
@@ -464,7 +465,7 @@ namespace RTParser
                 Result res = GlobalChatWithUser(said, user, null, writeDebugLine, true, false);
                 // detect a user "rename"
                 DetectUserChange(myUser, wasUser, user);
-                OutputResult(res, console, false);                
+                OutputResult(res, console, false);
                 return true;
             }
 
@@ -634,7 +635,7 @@ namespace RTParser
             if (cmd == "setvar")
             {
                 myUser.DoUserCommand(args, console);
-                GlobalSettings.DoSettingsCommand(input, console);;                
+                GlobalSettings.DoSettingsCommand(input, console); ;
                 return targetBotUser.DoUserCommand(args, console);
             }
             if (showHelp) console("@bot [var [value]] -- lists or changes the bot GlobalPredicates.\n  example: @bot ProcessHeardPreds True or @bot ProcessHeardPreds False");
@@ -815,7 +816,7 @@ namespace RTParser
             if (cmd == "eval")
             {
                 cmd = "call";
-                args = "@cloj " + args;
+                args = "@" + myUser.Predicates.grabSettingOrDefault("interp", "cloj") + " " + args;
             }
 
             SystemExecHandler seh;
@@ -1067,7 +1068,7 @@ namespace RTParser
         public void TraceTest(String s, Action action)
         {
             return;
-            writeChatTrace(s);  
+            writeChatTrace(s);
             action();
         }
 

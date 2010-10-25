@@ -452,7 +452,7 @@ namespace RTParser
                 return null;
             }
             // now cant use it again
-            result.ResultTemplates.Add(templateInfo);
+            if (templateInfo != null) result.ResultTemplates.Add(templateInfo);
             UndoStack undoStack = UndoStack.GetStackFor(query);
             try
             {
@@ -595,7 +595,11 @@ namespace RTParser
             if (sGuard == null || sGuard.PatternNode != null)
             {
                 string o = Proc.ToEnglish(outputSentence);
-                if (Proc.IsOutputSentence(o))
+                if (outputSentence.Trim().Length > 0)
+                {
+                    templateSucceeded = true;
+                }
+                if (Proc.IsOutputSentence(o, outputSentence))
                 {
                     if (isTraced)
                     {
@@ -608,7 +612,6 @@ namespace RTParser
                         writeToLog("AIMLTRACE '{0}' IsOutputSentence={1}", o, aIMLLoaderParentTextAndSourceInfo);
                     }
                     createdOutput = true;
-                    templateSucceeded = true;
                     request.AddOutputSentences(templateInfo, o, result);
                 }
                 else
@@ -676,7 +679,7 @@ namespace RTParser
 
                 //part the BOM
                 string o = Proc.ToEnglish(outputSentence);
-                if (Proc.IsOutputSentence(o))
+                if (Proc.IsOutputSentence(o, outputSentence))
                 {
                     if (isTraced)
                         writeToLog(query.Graph + ": GUARD SUCCESS '{0}' TEMPLATE={1}", o,

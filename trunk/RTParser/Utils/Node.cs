@@ -8,7 +8,6 @@ using RTParser.AIMLTagHandlers;
 using RTParser.Database;
 using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
-using StringAppendableUnifiable = RTParser.StringAppendableUnifiableImpl;
 //using CategoryInfo = RTParser.Utils.TemplateInfo;
 //using StringAppendableUnifiable = System.Text.StringBuilder;
 using PatternInfo = RTParser.Unifiable;
@@ -1269,7 +1268,7 @@ namespace RTParser.Utils
                 {
                     Node childNode = childNodeKV.Value;
                     Unifiable childNodeWord = childNode.word; //.Key;
-                    if (!childNodeWord.IsLongWildCard()) continue;
+                    if (!childNodeWord.IsUnrestrictedLongWildCard) continue;
 
                     // o.k. look for the path in the child node denoted by "*"
                     //Node childNode = childNodeKV.Value;
@@ -1311,7 +1310,7 @@ namespace RTParser.Utils
             // valid if we proceed with the tail.
             //if ((this.word == "_") || (this.word == "*"))
             if (!wisTag)
-                if (word.IsAnySingleUnit() || word.IsLongWildCard())
+                if (word.IsAnySingleUnit() || word.IsUnrestrictedLongWildCard)
                 {
                     storeWildCard(firstWord, wildcard);
                     Node result = evaluateNext(at + 1, splitPath, query, request, matchstate, wildcard);

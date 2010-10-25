@@ -24,7 +24,7 @@ namespace RTParser.Utils
         public SubQuery Query { get; set; }
         public double Rating { get; set; }
         public Unifiable TextSaved { get; set; }
-        public bool NeckCut = true;        
+        public bool NeckCut = false;        
 
 //        public event Func<SubQuery, Request, bool> OutputsCreateOnSuccees;
 //        public event Func<SubQuery, Request, bool> TemplateSucceededCallback;
@@ -32,6 +32,14 @@ namespace RTParser.Utils
 
         public void OnOutputsCreated(SubQuery query, Request request)
         {
+            if (NeckCut)
+            {
+                query.Result.WhyResultComplete = "OnOutputsCreated cut from " + ToString();
+                if (request.SuspendSearchLimits)
+                {
+                    request.SuspendSearchLimits = false;
+                }
+            }
             //if (OutputsCreateOnSuccees != null) OutputsCreateOnSuccees(query, request);
         }
 
@@ -43,7 +51,7 @@ namespace RTParser.Utils
         {
             if (NeckCut)
             {
-                query.Result.WhyResultComplete = "cut from " + ToString();
+                query.Result.WhyResultComplete = "OnTemplatesFailed cut from " + ToString();
                 if (request.SuspendSearchLimits)
                 {
                     request.SuspendSearchLimits = false;
@@ -75,7 +83,7 @@ namespace RTParser.Utils
             }
             // set { Response.srcNode = value; }
         }
-
+        public bool IsHighlyUsefull { get; set; }
 
         public TemplateInfoImpl(PatternInfo pattern, XmlNode cateNode, XmlNode templateNode,
             LoaderOptions options, ResponseInfo responseInfo,
@@ -89,6 +97,11 @@ namespace RTParser.Utils
             srcNode = templateNode;
             Rating = 1.0;
             Guard = guard;
+            if ((thatInfo != null && !thatInfo.IsUnrestrictedLongWildCard) || (guard != null && !guard.IsUnrestrictedLongWildCard)
+                || (topicInfo != null && !topicInfo.IsUnrestrictedLongWildCard))
+            {
+                IsHighlyUsefull = true;
+            }
             //CategoryXml = cateNode;
             That = thatInfo;
             Response = responseInfo;
@@ -499,6 +512,7 @@ namespace RTParser.Utils
         SubQuery Query { get; set; }
         string TemplateKey { get; set; }
         GraphMaster InGraph { get; set; }
+        bool IsHighlyUsefull { get; set; }
         //double Rating { get; }
         bool IsSatisfied(SubQuery query);
         void AddRules(IEnumerable<ConversationCondition> additionalRules);
