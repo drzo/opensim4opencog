@@ -378,17 +378,16 @@ namespace RTParser
                 foreach (KeyValuePair<string, string> prefix in new[]
                                                                     {
                                                                         new KeyValuePair<string, string>("get_", "get"),
-                                                                        new KeyValuePair<string, string>("get", "get"),
                                                                         new KeyValuePair<string, string>("set_", "set"),
-                                                                        new KeyValuePair<string, string>("set", "set"),
                                                                         new KeyValuePair<string, string>("bot_", "bot"),
-                                                                        new KeyValuePair<string, string>("bot", "bot"),
-                                                                        new KeyValuePair<string, string>("favorite_",
-                                                                                                         "bot"),
-                                                                        new KeyValuePair<string, string>("favorite",
-                                                                                                         "bot"),
+                                                                        new KeyValuePair<string, string>("favorite_", "bot"), 
+                                                                        new KeyValuePair<string, string>("favorite", "bot"),
                                                                         new KeyValuePair<string, string>("fav_", "bot"),
                                                                         new KeyValuePair<string, string>("fav", "bot"),
+                                                                                                                       
+                                                                        new KeyValuePair<string, string>("get", "get"),
+                                                                        new KeyValuePair<string, string>("set", "set"),
+                                                                        new KeyValuePair<string, string>("bot", "bot"),
                                                                     })
                 {
                     if (nodeNameLower.StartsWith(prefix.Key) && node.Name.Length > prefix.Key.Length)

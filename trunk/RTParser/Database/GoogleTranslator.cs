@@ -55,7 +55,8 @@ namespace RTParser.Database
                 textstr = textstr + ".";
 
             string foriegn = GetGoogtextStr(textstr, "en", tolanguage);
-            return GetGoogtextStr(foriegn, tolanguage, "en");
+            var vv = GetGoogtextStr(foriegn, tolanguage, "en");
+            return vv;
         }
 
 

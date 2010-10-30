@@ -1106,16 +1106,21 @@ namespace RTParser.Variables
 
         protected bool AllowedNameValue(string name, Unifiable value)
         {
+            string s = (string)value;
+            if ((s == null) || s.Contains(">"))
+            {
+                writeToLog(String.Format("! NameValueCheck {0} = {1}", name, value));
+                return !SuspendUpdates;
+            }
             if (IsIdentityReadOnly && (name.ToLower() == "name" || name.ToLower() == "id"))
             {
-                string s = (string)value;
-                if (s == null || TextPatternUtils.IsUnknown(value) || s.Length < 3 || s.ToLower() == "friend"
-                     || s.Contains(">") || s.ToLower() == "that really")
+                if (TextPatternUtils.IsUnknown(value) || s.Length < 3 || s.ToLower() == "friend"
+                     ||  s.ToLower() == "that really")
                 {
-                    writeToLog("! NameValueCheck " + name + " = " + value);
+                    writeToLog(String.Format("! NameValueCheck {0} = {1}", name, value));
                     return false;
                 }
-                return true;
+                return !SuspendUpdates;
             }
             return !SuspendUpdates;
         }

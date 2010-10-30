@@ -288,6 +288,7 @@ namespace RTParser.AIMLTagHandlers
                 {
                     if (CurrentTemplate.IsHighlyUsefull)
                     {
+                        writeToLog("IsHighlyUsefull: " + CurrentTemplate);
                         request.SuspendSearchLimits = true;
                         request.depth = 0;
                     }
