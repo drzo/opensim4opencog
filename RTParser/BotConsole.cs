@@ -886,7 +886,8 @@ namespace RTParser
             SystemExecHandler handler;
             if (SettingsDictionary.TryGetValue(ExecuteHandlers, cmd, out handler))
             {
-                console("" + handler(args, request));
+                object result = handler(args, request);
+                console("" + result);
                 return true;
             }
 

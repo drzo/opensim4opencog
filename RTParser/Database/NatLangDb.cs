@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using MushDLR223.Virtualization;
 using RTParser;
 using RTParser.AIMLTagHandlers;
+using RTParser.Database.NLP;
 
 //using NLPlib = RTParser.Database.NatLangDb;
 ///uses System.Runtime.Serialization.Formatters.Soap.dll
@@ -31,7 +32,7 @@ namespace RTParser.Database
         }
 
         public static readonly string BeAUX = " IS WAS BE AM ARE WERE ";
-        private static readonly string Interjections = " hi hello yeah ";
+        private static readonly string Interjections = " hi hello yeah ok ";
         readonly static string StopWords =
           " a been get least our them whether about before getting left ourselves then which after being go" +
           " less out there while again between goes let over these who ago but going like per they whoever all by gone make" +
@@ -149,10 +150,21 @@ namespace RTParser.Database
 
         const string LEXICON = "LEXICON";
         private static Hashtable lexHash = null;
+        private static BrillTagger brillTagger;
 
         static void initNatLangDb()
         {
-            if (lexHash != null) return; // singleton pattern
+
+            if (lexHash != null)
+            {
+                if (lexHash.Contains("OK"))
+                {
+                    var typef = lexHash["OK"];
+                }
+                return; // singleton pattern           
+            }
+
+            bot.AddExcuteHandler("pos", (SystemExecHandler)NatLangTestHandler);
             try
             {
                 StringCachePOSWORD["hello"] =
@@ -177,6 +189,35 @@ namespace RTParser.Database
                 DLRConsole.DebugWriteLine("ERROR: " + exception);
             }
             NLPLibTest();
+        }
+
+        private static object NatLangTestHandler(string cmd, Request requestOrNull)
+        {
+
+            var toks = Tokenize(cmd);
+            var pos1 = POSTag(toks);
+            var pos2 = GetWordInfos(toks);
+            string collect = "";
+            for (int i = 0; i < toks.Count; i++)
+            {
+                string tw = (string)toks[i];
+                string p1 = (string)pos1[i];
+                string p2 = (string)pos2[i];
+                string o = tw + " " + p1 + " " + p2;
+                collect += o + "\n";
+            }
+            var tout = BrillTagger.CeateBrillTags(cmd, true, true, true);
+            return collect +"\n" + tout.ToString();
+        }
+
+        private static ArrayList GetWordInfos(ArrayList toks)
+        {
+            ArrayList v = new ArrayList();
+            foreach(string t in toks)
+            {
+                v.Add(GetWordInfo(t));
+            }
+            return v;
         }
 
         static public ArrayList Tokenize(string s)
@@ -214,6 +255,8 @@ namespace RTParser.Database
             return v;
         }
 
+
+
         public static ArrayList POSTag(ArrayList words)
         {
             initNatLangDb();
@@ -225,6 +268,8 @@ namespace RTParser.Database
                 // 1/22/2002 mod (from Lisp code): if not in hash, try lower case:
                 if (s == null)
                     s = (string)lexHash[((string)words[i]).ToLower()];
+                if (s == null)
+                    s = (string)lexHash[((string)words[i]).ToUpper()];
                 if (s != null)
                 {
                     int index = s.IndexOf(" ");

@@ -489,7 +489,7 @@ namespace RTParser
         {
             if (more == null)
             {
-                return "" + u;
+                return u;//.AsString();
             }
             return MakeStringUnifiable("" + u.AsString() + more);
         }

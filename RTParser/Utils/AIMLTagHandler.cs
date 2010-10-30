@@ -307,9 +307,6 @@ namespace RTParser.Utils
                     {
                         QueryHasFailed = true;
                     }
-                    else
-                    {
-                    }
                 return null;
             }
         }

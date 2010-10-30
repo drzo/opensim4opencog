@@ -921,8 +921,8 @@
         </Files>
     </Project>
 
-<!--
-    <Project name="CogbotLib" path="bin" type="exe" frameworkVersion="v3_5">
+
+    <Project name="CogbotLib" path="bin" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../bin/</OutputPath>
@@ -940,7 +940,9 @@
       <ReferencePath>../bin</ReferencePath>
       
       <Reference name="MushDLR223"  localCopy="false"/>
-      <Files>
+      <Files>        
+       <Match path="." pattern="*.pl" recurse="true" buildAction="EmbeddedResource" copyToOutput="Always"/>
+       <!--
           <Match path="." pattern="*.*l" recurse="true" buildAction="Content" copyToOutput="Always"/>
        <Match path="." pattern="*.*p" recurse="true" buildAction="Content" copyToOutput="Always"/>
        <Match path="." pattern="*.*j" recurse="true" buildAction="Content" copyToOutput="Always"/>
@@ -949,10 +951,7 @@
        <Match path="." pattern="*.json" recurse="true" buildAction="Content" copyToOutput="Always"/>
        <Match path="." pattern="*.*t" recurse="true" buildAction="Content" copyToOutput="Always"/>
        
-       <unused> 
-        
-       <Match path="." pattern="*.pl" recurse="true" buildAction="Content" copyToOutput="Always"/>
-       <Match path="." pattern="*.*j" recurse="true" buildAction="Content" copyToOutput="Always"/>
+       <unused>        <Match path="." pattern="*.*j" recurse="true" buildAction="Content" copyToOutput="Always"/>
        <Match path="nldata" pattern="*.xml" recurse="true" buildAction="Content" copyToOutput="Always"/>
        <Match path="." pattern="*.*" recurse="true" buildAction="Content" copyToOutput="Always"> 
                 <Exclude name=".svn"/>
@@ -968,11 +967,12 @@
                 <Exclude name="*.so"/>
                 <Exclude name="*.back"/>
         </Match>
-
        </unused> 
+        -->
+
         </Files>
  </Project>
-            -->
+            
 
      <Project name="Cogbot" path="Cogbot" type="exe" frameworkVersion="v3_5">
        <Configuration name="Debug">
