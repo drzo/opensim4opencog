@@ -17,7 +17,7 @@ namespace RTParser.Normalize
 
         protected override Unifiable ProcessChange()
         {
-            return this.inputString.ToCaseInsenitive();
+            return this.inputString.ToCaseInsensitive();
         }
 
         /// <summary>
@@ -27,7 +27,7 @@ namespace RTParser.Normalize
         /// <returns>The resulting Unifiable</returns>
         public static Unifiable TransformInput(Unifiable input)
         {
-            return input.ToCaseInsenitive();
+            return input.ToCaseInsensitive();
         }
         public static string TransformInput(string input)
         {

@@ -631,7 +631,7 @@ namespace RTParser
             return str;
         }
 
-        public override Unifiable ToCaseInsenitive()
+        public override Unifiable ToCaseInsensitive()
         {
             return Create(str.ToUpper());
         }
@@ -703,7 +703,7 @@ namespace RTParser
 
         public override int GetHashCode()
         {
-            if (IsWildCard()) return -1;
+            if (IsWildCard) return -1;
             return str.GetHashCode();
         }
 
@@ -724,29 +724,19 @@ namespace RTParser
             return false;
         }
 
-        public override bool IsWildCard()
+        public override bool IsWildCard
         {
-            if (string.IsNullOrEmpty(str)) return false;
-            char c = str[str.Length - 1];
-            if (c == '_' || c == '*') return true;
-            if (c=='>')
+            get
             {
-                return true;
+                if (string.IsNullOrEmpty(str)) return false;
+                char c = str[str.Length - 1];
+                if (c == '_' || c == '*') return true;
+                if (c == '>')
+                {
+                    return true;
+                }
+                return IsLazy;
             }
-
-            return false;
-
-            if (str == "*" || str == "_")
-            {
-                return true;
-            }
-            if (str.Contains("*") || str.Contains("_")) return true;
-            //if (IsMarkerTag()) return false;
-            if (str.StartsWith("<"))
-            {
-                return IsLazyStar();
-            }
-            return false;
         }
 
         public override Unifiable[] ToArray()
@@ -922,77 +912,84 @@ namespace RTParser
             //return Create(rest.Trim());
         }
 
-        public override bool IsShort()
+        public override bool IsHighPriory
         {
-            if (str == "_") return true;
-            if (str.EndsWith("_")) return true;
-            // if (this.IsMarkerTag()) return false; // tested by the next line
-            if (IsLazyStar()) return false;
-            if (IsLazy()) return true;
-            return false;
-        }
-
-        public override bool IsFiniteWildCard()
-        {
-            if (str == "_") return true;
-            // if (this.IsMarkerTag()) return false; // tested by the next line
-            if (IsLazyStar()) return false;
-            if (IsLazy()) return true;
-            return false;
-        }
-
-        public override bool IsLongWildCard()
-        {
-            if (str == null) return false;
-            if (str.Length == 0) return false;
-            if (str.EndsWith("*")) return true;
-            if (char.IsLetterOrDigit(str[0])) return false;
-            if (str.StartsWith("<regex")) return false;
-            if (str.StartsWith("<lexis")) return false;
-            if( IsFlag(UFlags.LONG_WILDCARD))
+            get
             {
+                if (str == "_") return true;
+                if (str.EndsWith("_")) return true;
+                if (IsLazy) return true;
+                return false;
+            }
+        }
+
+        public override bool IsLazy
+        {
+            get
+            {
+                if (this.IsMarkerTag) return false;
+                if (str == null) return false;
+                if (str == "") return false;
+                char fc = str[0];
+                if (fc == '~')
+                {
+                    return true;
+                }
+                if (fc == '<')
+                {
+                    if (str.Contains("star") || str.Contains("match="))
+                    {
+                        return true;
+                    }
+                    if (str.Contains("var="))
+                    {
+                        return true;
+                    }
+                    if (str.Contains("name="))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+
+        public override bool IsLitteral
+        {
+            get
+            {
+                if (this.IsLazy) return false;
+                if (this.IsMarkerTag) return true;
+                if (this.IsWildCard) return false;
                 return true;
             }
-            return false;
-            if (str == ("*")) return true;
-            if (str == ("^")) return true;
-            if (this.IsMarkerTag()) return false;
-            if (IsLazyStar()) return true;
-            return false;
         }
 
-        public override bool IsLazy()
+
+        public override bool IsAnyText
         {
-            if (this.IsMarkerTag()) return false;
-            if (str == null) return false;
-            if (str == "") return false;
-            if (str[0] == '~')
+            get
             {
+                if (!this.IsWildCard) return false;
+                if (this.IsLitteralText) return false;                
                 return true;
             }
-            return str.StartsWith("<");
         }
 
-        public override bool IsLitteral()
+        public override bool IsLitteralText
         {
-            if (this.IsLazy()) return false;
-            if (this.IsMarkerTag()) return true;
-            if (this.IsWildCard()) return false;
-            return true;
+            get
+            {
+                if (this.IsLazy) return false;
+                if (this.IsMarkerTag) return false;
+                if (this.IsWildCard) return false;
+                return true;
+            }
         }
 
-        public override bool IsLitteralText()
+        public virtual bool IsMarkerTag
         {
-            if (this.IsLazy()) return false;
-            if (this.IsMarkerTag()) return false;
-            if (this.IsWildCard()) return false;
-            if (this.IsAnySingleUnit()) return false;
-            return true;
-        }
-
-        public virtual bool IsMarkerTag()
-        {
-            return IsFlag(UFlags.IS_TAG);
+            get { return IsFlag(UFlags.IS_TAG); }
         }
 
         override public bool StoreWildCard()
@@ -1001,13 +998,16 @@ namespace RTParser
             return !str.StartsWith("~") && !str.StartsWith("<bot ");           
         }
 
-        public override bool IsAnySingleUnit()
+        public override bool IsPriorityWildCard
         {
-            if (str == "_")
+            get
             {
-                return true;
+                if (str == "_" || IsLazy)
+                {
+                    return true;
+                }
+                return false;
             }
-            return false;
         }
 
         public override bool ConsumePath(int at, string[] tokens, out string fw, out Unifiable after, out int newAt, SubQuery query)
@@ -1076,7 +1076,7 @@ namespace RTParser
             // if (upTo == 0) return false;
             int min = 1;
             Unifiable matchMe = this;
-            if (!IsLazy())
+            if (!IsLazy)
             {
                 upTo = matchMe.ToUpper().Split(new char[] {' '}).Length;
                 min = upTo;
@@ -1157,8 +1157,8 @@ namespace RTParser
             string su = ToUpper();
             string ou = other.ToUpper();
             if (su == ou) return UNIFY_TRUE;
-            bool otherIsLitteral = other.IsLitteral();
-            if (IsLitteral())
+            bool otherIsLitteral = other.IsLitteral;
+            if (IsLitteral)
             {
                 if (!otherIsLitteral)
                 {
@@ -1181,7 +1181,7 @@ namespace RTParser
             else if (su == "_")
             {
                 writeToLog("CALL CALL/WILL UNIFY");
-                return other.IsShort() ? UNIFY_TRUE : UNIFY_FALSE;
+                return other.IsHighPriory ? UNIFY_TRUE : UNIFY_FALSE;
             }
             else
             {
@@ -1192,11 +1192,11 @@ namespace RTParser
                     writeToLog("IsStringMatch({0}, {1})", sv, ov);
                     return UNIFY_TRUE;
                 }
-                if (IsLazy())
+                if (IsLazy)
                 {
                     return UnifyTagHandler(other, query) ? UNIFY_TRUE : UNIFY_FALSE;
                 }
-                if (IsWildCard())
+                if (IsWildCard)
                 {
                     writeToLog("UnifyLazy SUCCESS: " + other + " in " + query);
                     return UNIFY_TRUE;
@@ -1348,12 +1348,12 @@ namespace RTParser
         }
        protected string ToValue0(SubQuery query)
         {
-            if (IsLitteral()) return str;
+            if (IsLitteral) return str;
             if (str.Length < 2)
             {
                 return str;
             }
-            if (IsLazy())
+            if (IsLazy)
             {
                 //todo 
                 if (query == null) return AsString();
@@ -1371,31 +1371,11 @@ namespace RTParser
                 }
                 ///bot.GetTagHandler(templateNode, subquery, request, result, request.user);
             }
-            if (IsWildCard())
+            if (IsWildCard)
             {
                 return str;
             }
             return AsString();
-        }
-
-
-        public override bool IsLazyStar()
-        {
-            if (!IsLazy()) return false;
-            if (!str.StartsWith("<")) return false;
-            if (str.Contains("star") || str.Contains("match="))
-            {
-                return true;
-            }
-            if (str.Contains("var="))
-            {
-                return true;
-            }
-            if (str.Contains("name="))
-            {
-                return true;
-            }
-            return false;
         }
 
         public void OfferNode(XmlNode xmlNode, string inner)

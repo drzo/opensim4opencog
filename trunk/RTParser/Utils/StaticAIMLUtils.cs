@@ -776,7 +776,7 @@ namespace RTParser.Utils
                 return IsNullOrEmpty(actualValue);
             }
             required = required.Trim();
-            if (required.IsAnySingleUnit())
+            if (required.IsAnyText)
             {
                 return !IsNullOrEmpty(actualValue);
             }

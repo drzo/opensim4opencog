@@ -12,23 +12,28 @@ namespace RTParser
             get { return ToUpper(AsString()); }
         }
 
-        public override bool IsLitteral()
+        public override bool IsLitteral
         {
-            foreach (var u in List)
+            get
             {
-                if (!u.IsLitteral())
+                foreach (var u in List)
                 {
-                    return false;
+                    if (!u.IsLitteral)
+                    {
+                        return false;
+                    }
                 }
+                return true;
             }
-            return true;   
         }
 
-        public override bool IsLitteralText()
+        public override bool IsLitteralText
         {
-            if (best==null) throw noBest();
-            return best.IsLitteralText();
-            
+            get
+            {
+                if (best == null) throw noBest();
+                return best.IsLitteralText;
+            }
         }
 
         private Unifiable best;
@@ -109,56 +114,37 @@ namespace RTParser
             return false;
         }
         */
-        public override bool IsLazyStar()
+
+        public override bool IsAnyText
         {
-            foreach (var u in List)
+            get
             {
-                if (u.IsLazyStar())
+                foreach (var u in List)
                 {
-                    best = u;
-                    return true;
+                    if (u.IsAnyText)
+                    {
+                        best = u;
+                        return true;
+                    }
                 }
+                return false;
             }
-            return false;
         }
 
-        public override bool IsLongWildCard()
+        public override bool IsPriorityWildCard
         {
-            foreach (var u in List)
+            get
             {
-                if (u.IsLongWildCard())
+                foreach (var u in List)
                 {
-                    best = u;
-                    return true;
+                    if (u.IsPriorityWildCard)
+                    {
+                        best = u;
+                        return true;
+                    }
                 }
+                return true;
             }
-            return false;
-        }
-
-        public override bool IsFiniteWildCard()
-        {
-            foreach (var u in List)
-            {
-                if (u.IsFiniteWildCard())
-                {
-                    best = u;
-                    return true;
-                }
-            }
-            return true;
-        }
-
-        public override bool IsAnySingleUnit()
-        {
-            foreach (var u in List)
-            {
-                if (u.IsAnySingleUnit())
-                {
-                    best = u;
-                    return true;
-                }
-            }
-            return true;
         }
 
         public override string ToUpper()
@@ -192,18 +178,22 @@ namespace RTParser
             return strictness.CompareTo(otherStrictness);
         }
 
-        public override bool IsLazy()
+        public override bool IsLazy
         {
-            foreach (var list in List)
+            get
             {
-                if (list.IsLazy())
+                foreach (var list in List)
                 {
-                    best = list;
-                    return true;
+                    if (list.IsLazy)
+                    {
+                        best = list;
+                        return true;
+                    }
                 }
+                return false;
             }
-            return false;
         }
+
         /*
 
         public override float UnifyLazy(Unifiable unifiable, SubQuery query)
@@ -358,17 +348,20 @@ namespace RTParser
             return Empty;
         }
 
-        public override bool IsShort()
+        public override bool IsHighPriory
         {
-            foreach (var list in List)
+            get
             {
-                if (list.IsShort())
+                foreach (var list in List)
                 {
-                    best = list;
-                    return true;
+                    if (list.IsHighPriory)
+                    {
+                        best = list;
+                        return true;
+                    }
                 }
+                return false;
             }
-            return false;
         }
     }
 }

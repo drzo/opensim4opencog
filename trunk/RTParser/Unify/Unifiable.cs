@@ -286,11 +286,6 @@ namespace RTParser
         }
 
 
-        public string ToMatchPattern()
-        {
-            return ToUpper();
-        }
-
         public static string Join(string sep, Unifiable[] values, int startIndex, int count)
         {
             if (count == 0 || values.Length == 0)
@@ -592,15 +587,7 @@ namespace RTParser
             get { return this; }
         }
 
-        public virtual bool IsUnitMatcher
-        {
-            get { return IsShort(); }
-        }
-
-        public virtual bool IsStarMatcher
-        {
-            get { return !IsUnitMatcher && IsWildCard(); }
-        }
+        public abstract bool IsAnyText { get; }
 
         public bool CanMatchZero
         {
@@ -612,24 +599,23 @@ namespace RTParser
             return IsNullOrEmpty(this);
         }
         public abstract bool IsTag(string s);
-        public virtual bool IsWildCard()
+
+        public virtual bool IsWildCard
         {
-            return true;
+            get { return true; }
         }
-        public abstract bool IsLazyStar();
-        public abstract bool IsLongWildCard();
-        public bool IsUnrestrictedLongWildCard
+
+        public virtual bool IsCatchAll
         {
             get
             {
                 return AsString() == "*";
             }
         }
-        public abstract bool IsFiniteWildCard();
 
-        public abstract bool IsLazy();
-        public abstract bool IsLitteral();
-        public abstract bool IsLitteralText();
+        public abstract bool IsLazy { get; }
+        public abstract bool IsLitteral { get; }
+        public abstract bool IsLitteralText { get; }
 
         public static void writeToLog(string message, params object[] args)
         {
@@ -648,17 +634,15 @@ namespace RTParser
 
         public bool WillUnify(Unifiable other, SubQuery query)
         {
-            string su = ToUpper();
-            if (su == "*") return !IsNullOrEmpty(other);
-            if (su == "_") return other.IsShort();
+            if (IsAnyText) return !IsNullOrEmpty(other);
+            if (CanMatchZero) return other.CanMatchZero;
             return Unify(other, query) == UNIFY_TRUE;
         }
 
         public bool CanUnify(Unifiable other, SubQuery query)
         {
-            string su = ToUpper();
-            if (su == "*") return !IsNullOrEmpty(other);
-            if (su == "_") return other.IsShort();
+            if (IsAnyText) return !IsNullOrEmpty(other);
+            if (CanMatchZero) return other.CanMatchZero;
             return Unify(other, query) == UNIFY_TRUE;
         }
 
@@ -742,7 +726,7 @@ namespace RTParser
             return b;
         }
 
-        public virtual Unifiable ToCaseInsenitive()
+        public virtual Unifiable ToCaseInsensitive()
         {
             return this;
         }
@@ -779,7 +763,7 @@ namespace RTParser
 
         public abstract Unifiable Rest();
 
-        public abstract bool IsShort();
+        public abstract bool IsHighPriory { get; }
 
         public abstract object AsNodeXML();
 
@@ -825,14 +809,9 @@ namespace RTParser
             return "" + unifiable;
         }
 
-        public abstract bool IsAnySingleUnit();
+        public abstract bool IsPriorityWildCard { get; }
 
         public abstract string ToUpper();
-
-        public bool IsAnyWord()
-        {
-            return IsUnitMatcher;
-        }
 
         #region Implementation of IConvertible
 
@@ -1206,11 +1185,6 @@ namespace RTParser
         public virtual Unifiable FullPath
         {
             get { return this; }
-        }
-
-        public virtual bool IsCatchAll
-        {
-            get { return AsString() == "*"; }
         }
 
         protected abstract string GenerateSpecialName { get; }

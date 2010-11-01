@@ -1553,12 +1553,8 @@ namespace RTParser.Utils
                 Proc.TraceTest(problem, () => ProcessAChange());
                 return false;
             }
-            if (resultValue.IsWildCard())
+            if (resultValue.IsWildCard)
             {
-                if (resultValue.IsLazyStar())
-                {
-                    Proc.TraceTest("XML IN RESULT: " + resultValue, () => ProcessAChange());
-                }
                 return false;
             }
             return true;
