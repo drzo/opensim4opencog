@@ -1132,11 +1132,11 @@ namespace RTParser.Utils
             // second first option is to see if this node has a child denoted by the "_" 
             // wildcard. "_" comes first in precedence in the AIML alphabet
             //lock (SyncObject)
-            foreach (var childNodeKV in AnySingleUnit("_", children, true))
+            foreach (var childNodeKV in ChildrenMatchingKey("_", children, true))
             {
                 Node childNode = childNodeKV.Value;
                 Unifiable childNodeWord = childNode.word;
-                if (!childNodeWord.IsAnySingleUnit()) continue;
+                if (!childNodeWord.IsPriorityWildCard) continue;
 
                 // add the next word to the wildcard match 
                 StringAppendableUnifiableImpl newWildcard = Unifiable.CreateAppendable();
@@ -1223,10 +1223,7 @@ namespace RTParser.Utils
                     Unifiable childNodeWord = childNode.word;
                     if (!isTag)
                     {
-                        if (childNodeWord.IsLitteral())
-                        {
-                        }
-                        if (childNodeWord.IsWildCard())
+                        if (childNodeWord.IsWildCard)
                         {
                             if (childNodeWord.StoreWildCard())
                             {
@@ -1235,7 +1232,7 @@ namespace RTParser.Utils
                                 Insert(stars, firstWord);
                             }
                         }
-                        else if (childNodeWord.IsLazy())
+                        else if (childNodeWord.IsLazy)
                         {
                             if (childNodeWord.StoreWildCard())
                             {
@@ -1264,11 +1261,11 @@ namespace RTParser.Utils
             bool wisTag = firstWord.StartsWith("TAG-");
             if (!wisTag)
                 //   lock (SyncObject)
-                foreach (var childNodeKV in AnySingleUnit("*", children, !IsSpecial))
+                foreach (var childNodeKV in ChildrenMatchingKey("*", children, !IsSpecial))
                 {
                     Node childNode = childNodeKV.Value;
                     Unifiable childNodeWord = childNode.word; //.Key;
-                    if (!childNodeWord.IsUnrestrictedLongWildCard) continue;
+                    if (!childNodeWord.IsCatchAll) continue;
 
                     // o.k. look for the path in the child node denoted by "*"
                     //Node childNode = childNodeKV.Value;
@@ -1310,7 +1307,7 @@ namespace RTParser.Utils
             // valid if we proceed with the tail.
             //if ((this.word == "_") || (this.word == "*"))
             if (!wisTag)
-                if (word.IsAnySingleUnit() || word.IsUnrestrictedLongWildCard)
+                if (word.IsAnyText)
                 {
                     storeWildCard(firstWord, wildcard);
                     Node result = evaluateNext(at + 1, splitPath, query, request, matchstate, wildcard);
@@ -1325,7 +1322,7 @@ namespace RTParser.Utils
             return null; /// string.Empty;
         }
 
-        private IEnumerable<KeyValuePair<string, Node>> AnySingleUnit(string match, Dictionary<string, Node> dictionary, bool canDoSingle)
+        private IEnumerable<KeyValuePair<string, Node>> ChildrenMatchingKey(string match, Dictionary<string, Node> dictionary, bool canDoSingle)
         {
             if (!canDoSingle)
             {
@@ -1384,10 +1381,10 @@ namespace RTParser.Utils
                     return childNode;
                 }
             }
-            foreach (var childNodeKV in AnySingleUnit(fs, children, !IsSpecial))
+            foreach (var childNodeKV in ChildrenMatchingKey(fs, children, !IsSpecial))
             {
                 Unifiable childNodeWord = childNodeKV.Value.word;
-                if (childNodeWord.IsAnySingleUnit()) continue;
+                // if (childNodeWord.IsHighPriorityWildCard) continue;
                 // if (childNodeWord.IsLongWildCard()) continue;
                 // if (childNodeWord.IsWildCard()) continue;
                 childNode = childNodeKV.Value;

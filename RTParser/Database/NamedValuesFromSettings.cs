@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -99,7 +99,7 @@ namespace RTParser.Database
                 query.GetDictValue++;
                 if (!IsNullOrEmpty(gResult))
                 {
-                    if (resultGet.IsWildCard())
+                    if (resultGet.IsWildCard)
                     {
                         realName = realNameG;
                         // result=*, gResult=something => return gResult

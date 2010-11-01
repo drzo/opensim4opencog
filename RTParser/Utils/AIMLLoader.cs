@@ -1585,7 +1585,7 @@ namespace RTParser.Utils
                 }
                 else
                 {
-                    if (!normalizedThat.IsWildCard())
+                    if (!normalizedThat.IsWildCard)
                     {
                         // normalizedThat = "* " + normalizedThat;
                     }
@@ -1735,7 +1735,7 @@ namespace RTParser.Utils
                 }
                 else
                 {
-                    if (word.IsWildCard())
+                    if (word.IsWildCard)
                     {
                         normalizedWord = word;
                     }

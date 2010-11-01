@@ -235,7 +235,7 @@ namespace RTParser
                     {
                         Unifiable topic = topic0;
                         topicNum++;
-                        if (topic.IsUnrestrictedLongWildCard)
+                        if (topic.IsCatchAll)
                         {
                             topic = thiz.NOTOPIC;
                         }
@@ -248,13 +248,13 @@ namespace RTParser
                                                                  thats, request.Flags,
                                                                  //topicNum + " " +
                                                                  topic, true, normalizerT);
-                            if (that.IsUnrestrictedLongWildCard)
+                            if (that.IsCatchAll)
                             {
                                 if (thatNum > 1)
                                 {
                                     continue;
                                 }
-                                if (topic.IsUnrestrictedLongWildCard)
+                                if (topic.IsCatchAll)
                                 {
                                     topic = "NOTHAT";
                                 }

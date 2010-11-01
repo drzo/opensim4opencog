@@ -273,7 +273,7 @@ namespace RTParser.Utils
             if (b) return true;
             if (unifiable is Unifiable)
             {
-                if (!((Unifiable)unifiable).IsWildCard()) return false;
+                if (!((Unifiable)unifiable).IsWildCard) return false;
                 return true;
             }
             return false;

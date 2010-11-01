@@ -97,8 +97,8 @@ namespace RTParser.Utils
             srcNode = templateNode;
             Rating = 1.0;
             Guard = guard;
-            if ((thatInfo != null && !thatInfo.IsUnrestrictedLongWildCard) || (guard != null && !guard.IsUnrestrictedLongWildCard)
-                || (topicInfo != null && !topicInfo.IsUnrestrictedLongWildCard))
+            if ((thatInfo != null && !thatInfo.IsCatchAll) || (guard != null && !guard.IsCatchAll)
+                || (topicInfo != null && !topicInfo.IsCatchAll))
             {
                 IsHighlyUsefull = true;
             }
