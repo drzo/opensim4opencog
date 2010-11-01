@@ -793,6 +793,7 @@
       <Reference name="LAIR.ResourceAPIs.WordNet" localCopy="false"/>      
       <Reference name="Lucene.Net" localCopy="false"/>
       <Reference name="Microsoft.JScript"  localCopy="false"/>
+      <Reference name="Microsoft.VisualBasic"  localCopy="false"/>
       <Reference name="Microsoft.Vsa"  localCopy="false"/>
 
       <Files>
