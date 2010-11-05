@@ -78,7 +78,7 @@ directory_of_file(File,Start,Hints,Dir):- member(Dir,Hints),join_pathnames(Dir,F
 :- exists_file('cogbot.pl') -> cd('..') ; true.
 
 
-:-ensure_loaded('cynd/cyc').
+:-ensure_loaded('cynd/cyc_api/cyc').
 
 :-abolish(cyc:debugFmt/1).
 cyc:debugFmt(Stuff):- notrace((debugFmtS(Stuff))),!.
@@ -90,15 +90,16 @@ debugFmtS(Stuff):-!,debugFmt('% ~q~n',[Stuff]).
 
 
 hideIfNeeded(I,I):- (var(I);atomic(I)),!.
-hideIfNeeded([I|_],_):-nonvar(I),I=frame(_,_,_),!.
+hideIfNeeded([I|_],ctx):-nonvar(I),I=frame(_,_,_),!.
 hideIfNeeded([I|N],[I0|N0]):-!,hideIfNeeded(I,I0),hideIfNeeded(N,N0),!.
 hideIfNeeded(Comp,Comp2):-compound(Comp),Comp=..[L,I|ST],hideIfNeeded(I,II),Comp2=..[L,II|ST].
 hideIfNeeded(I,I):-!.
 
-noaimltrace(X):- X.
+noaimltrace(X):- X. %% notrace(X).
 
 :-ensure_loaded('cynd/logicmoo_module_aiml.pl').
 %%:-assertz(librar
 %file_search_path(X,Y).
+
 
 

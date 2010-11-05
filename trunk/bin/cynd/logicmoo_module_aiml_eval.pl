@@ -23,14 +23,28 @@
 
 aiml_call(Ctx,_ - Calls):- !,aiml_call(Ctx,Calls),!.
 
-aiml_call(Ctx,[Atomic|Rest]):-atom(Atomic),!, aiml_eval(Ctx,[Atomic|Rest],Output),!,debugFmt(Output),!.
+aiml_call(Ctx,[Atomic|Rest]):- atom(Atomic),!,trace, 
+            aiml_eval(Ctx,[Atomic|Rest],Output),!,
+            debugFmt(resultOf(aiml_call(Ctx,[Atomic|Rest]),Output)),!.
 
-aiml_call(Ctx,element(A, B, C)):-tagType(A, immediate),
+aiml_call(Ctx,[Atomic|Rest]):- !,trace, 
+            aiml_eval(Ctx,[Atomic|Rest],Output),!,
+            debugFmt(resultOf(aiml_call(Ctx,[Atomic|Rest]),Output)),!.
+
+aiml_call(Ctx,element(A, B, C)):-tagType(A, immediate), prolog_must(nonvar(C)),
       convert_name(A,AA),
       convert_attributes(Ctx,B,BB),
-      aiml_eval(Ctx,C,CC),
+      convert_template(Ctx,C,CC),
       (element(A, B, C) \== element(AA, BB, CC)),!,
-      aiml_call(Ctx,element(AA, BB, CC)),!.
+      aiml_call(Ctx,element(AA, BB, C)),!.
+
+
+aiml_call(Ctx,element(A, B, C)):- prolog_must(nonvar(C)),
+      convert_name(A,AA),
+      convert_attributes(Ctx,B,BB),
+      convert_template(Ctx,C,CC),
+      (element(A, B, C) \== element(AA, BB, CC)),!,trace,
+      aiml_call(Ctx,element(AA, BB, C)),!.
 
 aiml_call(Ctx,element(Learn, ATTRIBS, Value)):-  member(Learn,[load,learn]),!,
  debugOnFailureAiml((
@@ -48,7 +62,7 @@ aiml_call(Ctx,element(genlmt,TOFROM,_)):-
  debugOnFailureAiml((
       attributeValue(Ctx,TOFROM,[to,name],TO,'$error'),
       attributeValue(Ctx,TOFROM,[graph,from],FROM,'$current_value'),
-      assertz(genlMtGraph(TO,FROM)))),!.
+      immediateCall(Ctx,assertz(genlMtGraph(TO,FROM))))),!.
 
  aiml_call(Ctx,element(Learn, ATTRIBS, Value)):- aiml_error(aiml_call(Ctx,element(Learn, ATTRIBS, Value))),!.
 
@@ -70,16 +84,20 @@ aiml_eval_to_unit(Ctx,ValueI,ValueO):-aiml_eval0(Ctx,ValueI,ValueO),!.
 
 render_value(template,ListOut,Render):-aiml_eval(_Ctx,ListOut,Render),!.
 
-aiml_eval_each(Ctx,[A|ATTRXML],[R|RESULT]):-aiml_eval0(Ctx,A,R),!,aiml_eval_each(Ctx,ATTRXML,RESULT).
-aiml_eval_each(_Ctx,[],[]):-!.
+aiml_eval_each(Ctx,In,Out):-prolog_must((ground(In),var(Out))),aiml_eval_each_l(Ctx,In,Out).
+aiml_eval_each_l(Ctx,[A|ATTRXML],Output):-aiml_eval0(Ctx,A,R),!,aiml_eval_each_l(Ctx,ATTRXML,RESULT),prolog_must(Output=[R|RESULT]).
+aiml_eval_each_l(_Ctx,[],[]):-!.
 
+aiml_eval(_Ctx,TAGATTRXML,RESULT):- TAGATTRXML == [],!,RESULT=TAGATTRXML.
+aiml_eval(_Ctx,TAGATTRXML,_RESULT):- prolog_must(nonvar(TAGATTRXML)),fail.
+aiml_eval(Ctx,TAGATTRXML,RESULT):- immediateCall(Ctx,aiml_eval_now(Ctx,TAGATTRXML)),aiml_eval0(Ctx,TAGATTRXML,RESULT),!.
+aiml_eval_now(Ctx,TAGATTRXML):-aiml_eval(Ctx,TAGATTRXML,RESULT),!,debugFmt(aiml_eval_now(Ctx,TAGATTRXML,RESULT)).
 
-aiml_eval(Ctx,TAGATTRXML,RESULT):- immediateCall(aiml_eval(Ctx,TAGATTRXML,RESULT)),aiml_eval0(Ctx,TAGATTRXML,RESULT),!.
-
-
-immediateCall(:-(Call)):-!,immediateCall0(:-(Call)),!.
-immediateCall((Call)):-immediateCall0(:-(Call)),!.
-immediateCall0(C):-hideIfNeeded(C,Call), (format('~q.~n',[Call])),debugFmt(Call),!.
+immediateCall(Ctx,:-(Call)):-!,immediateCall0(Ctx,:-(Call)),!.
+immediateCall(Ctx,Call):-immediateCall0(Ctx,:-(Call)),!.
+immediateCall0(Ctx,C):-hideIfNeeded(C,Call),immediateCall1(Ctx,Call),!.
+immediateCall1(_Ctx,C):- prolog_must(ground(C)),fail.
+immediateCall1(_Ctx,Call):- (format('~q.~n',[Call])),debugFmt(Call),!.
 
 
 %aiml_eval0(Ctx,[ValueI],ValueO):-atom(ValueI),!,aiml_eval(Ctx,ValueI,ValueO),!.
@@ -98,10 +116,10 @@ aiml_eval0(Ctx,_Num - Msg,Result):-!,aiml_eval(Ctx,Msg,Result),!.
 
 aiml_eval0(_Ctx,A,B):-atomic(A),!,B=A.
 
-aiml_eval0(Ctx,element(srai,ATTRIBS,DOIT),RETURN):-
+aiml_eval0(Ctx,element(Srai,ATTRIBS,DOIT),RETURN):- memberchk(Srai,[srai,template]),
       withAttributes(Ctx,ATTRIBS,
          (noaimltrace(aiml_eval_each(Ctx,DOIT,INNER)),
-          computeAnswer(Ctx,1,element(srai,ATTRIBS,INNER),RMID,_Votes))),!,
+          computeAnswer(Ctx,1,element(Srai,ATTRIBS,INNER),RMID,_Votes))),!,
        RMID=RETURN.
 
 aiml_eval0(Ctx,element(A, B, C), XML):-tagType(A, immediate),
@@ -159,24 +177,32 @@ tag_eval(Ctx,element(system,ATTRIBS,INNER_XML),Output):-
 
 
 systemCall(Ctx,[Lang],Eval,Out):- nonvar(Lang),!, systemCall(Ctx,Lang,Eval,Out).
-systemCall(_Ctx,'bot',['@'|DONE],template([did,DONE])):-!.
+
+systemCall(_Ctx,_Lang,[],[]):-!.
 systemCall(Ctx,Bot,[FIRST|REST],DONE):-atom_concat_safe('@',CMD,FIRST),!,systemCall(Ctx,Bot,[CMD|REST],DONE).
-systemCall(_Ctx,'bot',['eval'|DONE],template([evaled,DONE])):-!.
-systemCall(Ctx,'bot',['set'],template([setted,Ctx])):-!,listing(dict).
-systemCall(Ctx,'bot',['ctx'],template([ctxed,Ctx])):-!,showCtx.
-systemCall(Ctx,'bot',['load'],template([loaded,Ctx])):-!.
-systemCall(Ctx,'bot',['load',File,Name|S],Output):-concat_atom_safe([File,Name|S],'',Filename),!,systemCall(Ctx,'bot',['load',Filename],Output).
-systemCall(Ctx,'bot',['load',Filename],template([loaded,Filename])):-
+systemCall(Ctx,'bot',REST,OUT):-!,debugOnFailure(systemCall_Bot(Ctx,REST,OUT)),!.
+systemCall(Ctx,Lang,[Eval],Out):-systemCall(Ctx,Lang,Eval,Out).
+systemCall(Ctx,Lang,Eval,Out):-once((atom(Eval),atomSplit(Eval,Atoms))),Atoms=[_,_|_],!,trace,systemCall(Ctx,Lang,Atoms,Out).
+systemCall(_Ctx,Lang,Eval,writeq(evaled(Lang,Eval))):- aiml_error(evaled(Lang,Eval)).
+
+
+systemCall_Bot(_Ctx,['@'|DONE],template([did,DONE])):-!.
+systemCall_Bot(Ctx,[FIRST|REST],DONE):-atom_concat_safe('@',CMD,FIRST),!,systemCall_Bot(Ctx,[CMD|REST],DONE).
+systemCall_Bot(_Ctx,['eval'|DONE],template([evaled,DONE])):-!.
+systemCall_Bot(Ctx,['set'],template([setted,Ctx])):-!,listing(dict).
+%systemCall_Bot(Ctx,['ctx'],template([ctxed,Ctx])):-!,showCtx.
+systemCall_Bot(Ctx,['load'|REST],OUT):-!,debugOnFailure(systemCall_Load(Ctx,REST,OUT)),!.
+systemCall_Bot(Ctx,['chgraph',Graph],['chgraph',Graph]):-  set_current_value(Ctx,graph,Graph),!.
+
+
+systemCall_Load(Ctx,[],template([loaded,Ctx])):-!.
+systemCall_Load(Ctx,[File,Name|S],Output):-concat_atom_safe([File,Name|S],'',Filename),!,systemCall(Ctx,'bot',['load',Filename],Output).
+systemCall_Load(Ctx,[Filename],template([loaded,Filename])):-
     current_value(Ctx,graph,GraphI), 
     (GraphI=='*'->Graph=default; Graph=GraphI),
     ATTRIBS=[srcfile=Filename,graph=Graph],
     gather_aiml_graph(Ctx,ATTRIBS,Graph,Filename,AIML),
     withAttributes(Ctx,ATTRIBS,load_aiml_structure(Ctx,AIML)),!.
-systemCall(Ctx,'bot',['chgraph',Graph],['chgraph',Graph]):-  set_current_value(Ctx,graph,Graph),!.
-systemCall(_Ctx,_Lang,[],[]):-!.
-systemCall(Ctx,Lang,[Eval],Out):-systemCall(Ctx,Lang,Eval,Out).
-systemCall(Ctx,Lang,Eval,Out):-once((atom(Eval),atomSplit(Eval,Atoms))),Atoms=[_,_|_],!,trace,systemCall(Ctx,Lang,Atoms,Out).
-systemCall(_Ctx,Lang,Eval,writeq(evaled(Lang,Eval))):- aiml_error(evaled(Lang,Eval)).
 
 % ===================================================================
 %  learn tag impl
@@ -201,16 +227,38 @@ gather_aiml_graph(Ctx,XML,Graph,Filename,AIML):-
  withAttributes(Ctx,ATTRIBS,graph_or_file(Ctx,ATTRIBS, Filename, AIML)),!.
 
 
-graph_or_file(_Ctx,_ATTRIB, [], []):-!.
+graph_or_file(_Ctx,_ATTRIBS, [], []):-!.
 graph_or_file(Ctx,ATTRIBS, [Filename], XML):-atomic(Filename),!,graph_or_file(Ctx,ATTRIBS, Filename, XML).
-graph_or_file(Ctx,ATTRIBS, F, [element(aiml,DIRTRIBS,OUT)]):- DIRTRIBS = [srcdir=F|ATTRIBS],
+
+graph_or_file(Ctx,ATTRIBS,Filename,XML):-graph_or_file_or_dir(Ctx,ATTRIBS,Filename,XML).
+graph_or_file(Ctx,ATTRIBS, Filename, XML):- 
+     getCurrentFileDir(Ctx, ATTRIBS, CurrentDir),join_path(CurrentDir,Filename,Name),
+     graph_or_file_or_dir(Ctx,[currentDir=CurrentDir|ATTRIBS],Name,XML),!.
+
+graph_or_file(_Ctx,ATTRIBS, Filename, [nosuchfile(Filename,ATTRIBS)]).
+
+join_path(CurrentDir,Filename,Name):-
+         atom_ensure_endswtih(CurrentDir,'/',Out),atom_ensure_endswtih('./',Right,Filename),
+         atom_concat(Out,Right,Name),!.
+
+atom_ensure_endswtih(A,E,A):-atom(E),atom_concat(_Left,E,A),!.
+atom_ensure_endswtih(A,E,O):-atom(A),atom(E),atom_concat(A,E,O),!.
+atom_ensure_endswtih(A,E,O):-atom(A),atom(O),atom_concat(A,E,O),!.
+atom_ensure_endswtih(A,O,O):-atom(A),atom(O),!.
+
+graph_or_file_or_dir(_Ctx,_ATTRIBS, Filename, XML):-exists_file(Filename),!,load_structure(Filename,XML,[dialect(xml),space(remove)]),!.
+graph_or_file_or_dir(Ctx,ATTRIBS, F, [element(aiml,DIRTRIBS,OUT)]):- DIRTRIBS = [srcdir=F|ATTRIBS],
       exists_directory(F), 
       aiml_files(F,Files), 
       findall(X, ((member(FF,Files), 
-                   graph_or_file(Ctx,[srcfile=FF|DIRTRIBS],FF,X))), OUT),!.
-graph_or_file(_Ctx,_ATTRIB, Filename, XML):-exists_file(Filename),!,load_structure(Filename,XML,[dialect(xml),space(remove)]),!.
-graph_or_file(_Ctx,ATTRIBS, Filename, [nosuchfile(Filename,ATTRIBS)]).
+                   graph_or_file_or_dir(Ctx,[srcfile=FF|DIRTRIBS],FF,X))), OUT),!.
 
+
+getCurrentFile(Ctx,_ATTRIBS,CurrentFile):-getItemValue(proof,Ctx,Proof),getItemValue(lastArg,Proof,CurrentFile).
+getCurrentFileDir(Ctx,ATTRIBS,Dir):-getCurrentFile(Ctx, ATTRIBS, CurrentFile),file_directory_name(CurrentFile,Dir).
+
+getItemValue(Name,Ctx,Value):-Name==lastArg,compound(Ctx),functor(Ctx,_F,A),arg(A,Ctx,Value),!.
+getItemValue(Name,Ctx,Value):-getCtxValue(Name,Ctx,Value),!.
 % ============================================
 % Test Suite 
 % ============================================

@@ -18,12 +18,61 @@
 
 throw_safe(Exc):-trace,throw(Exc).
 
-prolog_must(Call):-Call,!.
-prolog_must(Call):-!,aiml_error(Call).
+:-op(1150,fx,meta_predicate_transparent).
+
+prolog_must(Call):-prolog_must0(Call),!.
+
+prolog_must0(Call):-var(Call),!,trace,randomVars(Call).
+
+prolog_must0((X,Y)):-!,prolog_must0(X),prolog_must0(Y).
+prolog_must0(Call):-Call,!.
+prolog_must0(Call):-tracing,!,aiml_error(Call).
+prolog_must0(Call):-debugFmt(faileD(Call)),trace,Call,!.
 
 
-asserta_new(NEW):-ignore(retract(NEW)),asserta(NEW).
-writeqnl(NEW):-(format('~q.~n',[NEW])),!.
+/*
+
+prolog_must(Var):-var(Var),!,trace,vvvvvvvvvvv=Var,aiml_error(prolog_must_var(Var)).
+prolog_must(Var):-prolog_must0(Var),randomVars(Var).
+prolog_must0((X,Y)):-!,prolog_must0(X),prolog_must0(Y).
+prolog_must0(Call):-localCall(Call),!,Call.
+prolog_must0(Call):-noaimltrace(Call),!.
+prolog_must0(Call):-tracing,!,Call,!,aiml_error(Call).
+prolog_must0(Call):-trace,Call,!,aiml_error(Call).
+
+*/
+
+randomVars(Term):- random(R),Start is ( round(R * 1000000) div 2),!,
+    numbervars(Term, Start, _End, [attvar(skip),functor_name('$VAR')]).
+
+prolog_must_not(Call):-Call,!,trace,!,aiml_error(prolog_must_not(Call)).
+prolog_must_not(_Call):-!.
+
+%:- meta_predicate dynamic_if_missing(:).
+%:- meta_predicate meta_predicate_transparent(:).
+
+
+dynamic_if_missing(F/A):-functor(X,F,A),predicate_property(X,_),!.
+dynamic_if_missing(F/A):- 
+  dynamic([F/A]).
+
+meta_predicate_transparent(X):-strip_module(X,M,F),!, meta_predicate_transparent(M,F).
+meta_predicate_transparent(M,(X,Y)):-!,meta_predicate_transparent(M,X),meta_predicate_transparent(M,Y),!.
+meta_predicate_transparent(_M,X):-atom(X),!.
+meta_predicate_transparent(_M,X):- 
+   prolog_must((   
+   arg(1,X,A),functor(X,F,_),
+   FA=F/A,
+   dynamic_if_missing(FA),
+   %module_transparent(FA),
+   %%meta_predicate(X),
+   %trace(FA, -all),
+   %%'$hide'(FA),
+   !)).
+
+   asserta_new(_Ctx,NEW):-ignore(retract(NEW)),asserta(NEW).
+writeqnl(_Ctx,NEW):- format('~q.~n',[NEW]),!.
+
 
 revappend([], Ys, Ys).
 revappend([X|Xs], Ys, Zs) :- revappend(Xs, [X|Ys], Zs).
@@ -151,6 +200,7 @@ printAll(Call,Print):-forall(Call,(format('~q.~n',[Print]))).
 
 global_pathname(B,A):-absolute_file_name(B,A),!.
 global_pathname(B,A):-relative_pathname(B,A).
+
 relative_pathname(Path,Relative):-absolute_file_name(Path,[relative_to('./')],Absolute),member(Rel,['./','../','../../']),absolute_file_name(Rel,Clip),
    canonical_pathname(Absolute,AbsoluteA),
    canonical_pathname(Clip,ClipA),
@@ -205,7 +255,7 @@ all_upper_atom(X):-toUppercase(X,N),!,N=X.
 
 atom_concat_safe(L,R,A):- ((atom(A),(atom(L);atom(R))) ; ((atom(L),atom(R)))), !, atom_concat(L,R,A),!.
 
-concat_atom_safe(List,Sep,[Atom]):-atom(Atom),!,concat_atom(List,Sep,Atom),!.
+concat_atom_safe(List,Sep,[Atom]):-atom(Atom),!,debugOnError(concat_atom(List,Sep,Atom)),!.
 concat_atom_safe(List,Sep,Atom):-atom(Atom),!,concat_atom(ListM,Sep,Atom),!,List = ListM.
 concat_atom_safe(List,Sep,Atom):- concat_atom(List,Sep,Atom),!.
 
@@ -276,17 +326,16 @@ ifThen(When,Do):-When->Do;true.
 
 traceCall(A):-trace(A,[-all,+fail]),A,!.
 
-debugOnFailureAimlEach((A,B)):- !,debugOnFailureAimlEach(A),!,debugOnFailureAimlEach(B),!.
-debugOnFailureAimlEach(Call):-(Call;(trace,Call)),!.
+debugOnFailureAimlEach((A,B)):- !,debugOnFailureAimlEach(A),debugOnFailureAimlEach(B).
+debugOnFailureAimlEach(Call):-ignore((Call;(trace,Call))),!.
 
 
-/*
-debugOnFailureAiml(Call):- clause(Call,(_A,_B)),!,clause(Call,Body),trace,debugOnFailureAiml(Body),!.
-debugOnFailureAiml((A,B)):- !,debugOnFailureAiml(A),!,debugOnFailureAiml(B),!.
-*/
-debugOnFailureAiml(Call):-!,(Call;(trace,Call)),!.
-%debugOnFailureAiml(Call):- debugOnFailureAimlTrace(Call),!.
-debugOnFailureAiml(Call):- beenCaugth(Call),!.
+
+debugOnFailureAiml((A,B)):- !,debugOnFailureAiml(A),debugOnFailureAiml(B).
+%%%%%%%%%%%%%5%%debugOnFailureAiml(Call):- clause(Call,(_A,_B)),!,clause(Call,Body),trace,debugOnFailureAiml(Body),!.
+debugOnFailureAiml(Call):- Call,!.
+%%%%%%%%%%%%%%debugOnFailureAiml(Call):- debugOnFailureAimlTrace(Call),!.
+debugOnFailureAiml(Call):- beenCaught(Call),!.
 
 debugOnFailureAimlTrace(debugOnFailureAiml(Call)):-!,debugOnFailureAimlTrace(Call),!.
 debugOnFailureAimlTrace((A,B)):- !,debugOnFailureAimlTrace(A),!,debugOnFailureAimlTrace(B),!.
@@ -298,10 +347,11 @@ debugOnFailureAimlTrace1((A,B)):- !,debugOnFailureAimlTrace1(A),!,debugOnFailure
 debugOnFailureAimlTrace1(Call):- functor(Call,F,A),member(F/A,[retract/_,retractall/_]),!,debugFmt(fakingCall(Call)),numbervars(Call,0,_),!.
 debugOnFailureAimlTrace1(Call):- Call,!.
 
-beenCaugth(debugOnFailureAiml(Call)):- !, beenCaugth(Call).
-beenCaugth((A,B)):- !,debugOnFailureAiml(A),!,beenCaugth(B).
-%beenCaugth(Call):- catch(once(Call),E,(debugFmt(caugth(Call,E)),beenCaugth(Call))),!.
-beenCaugth(Call):- traceAll,debugFmt(tracing(Call)),debug,trace,Call.
+beenCaught(debugOnFailureAiml(Call)):- !, beenCaught(Call).
+beenCaught((A,B)):- !,beenCaught(A),beenCaught(B).
+beenCaught(Call):- clause(Call,(_A,_B)),!,clause(Call,Body),beenCaught(Body),!.
+beenCaught(Call):- catch(once(Call),E,(debugFmt(caugth(Call,E)),beenCaught(Call))),!.
+beenCaught(Call):- traceAll,debugFmt(tracing(Call)),debug,trace,Call.
 
 
 takeout(_,[],[]):-!.
@@ -337,4 +387,19 @@ traceAll:-!.
 
 
 lengthAtLeast(N,GE):-atom(N),atom_length(N,L),L>=GE.
+/*
+neverUse:- meta_predicate_transparent
+	maplist_safe(2,:),
+	maplist_safe(3,:,:),
+        asserta_new(2,:),
+        writeqnl(2,:),
+        debugOnFailureAimlTrace(1),
+        debugOnFailureAiml(1),
+        beenCaught(1),
+        debugOnFailureAimlEach(1),
+        prolog_must(1),ignore(1), %%withAttributes(3,:,:),call_cleanup(0,0),call_cleanup(0,?,0),
+        !.
+*/
+
+
 
