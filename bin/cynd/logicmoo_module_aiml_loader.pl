@@ -108,7 +108,7 @@ load_pending_aiml_file(Ctx,File,PLNAME):- debugFmt(load_pending_aiml_file(Ctx,Fi
 create_aiml_file2(_Ctx,File,PLNAME,FileMatch,_Load):- creating_aiml_file(File,PLNAME),!, throw_safe(already(creating_aiml_file(File,PLNAME),FileMatch)).
 create_aiml_file2(_Ctx,File,PLNAME,FileMatch,_Load):- loaded_aiml_file(File,PLNAME),!, throw_safe(already(loaded_aiml_file(File,PLNAME),FileMatch)).
 
-create_aiml_file2(_Ctx,File,PLNAME,_FileMatch,Load):-
+create_aiml_file2(_Ctx,File,PLNAME,_FileMatch,Load):- fail,
    exists_file(PLNAME),
    time_file_safe(PLNAME,PLTime), % fails on non-existent
    time_file_safe(File,FTime),
@@ -162,7 +162,9 @@ create_aiml_file2(Ctx,File,PLNAME,FileMatch,Load):-
          ignore(retract(OLD)),
 
         */
-asserta_cate(NEW):-asserta(NEW).
+asserta_cate(Ctx,NEW):-prolog_must(ground(NEW)),asserta_new(Ctx,NEW),immediateCall(Ctx,assert_cate_in_load(NEW)).
+
+assert_cate_in_load(NEW):-asserta(NEW).
 
 /*
 create_aiml_file2xxx(Ctx,File,PLNAME):-
@@ -223,7 +225,7 @@ load_inner_aiml_w_lineno(SrcFile,[OuterTag|PREV],Parent,Attributes,Ctx,element(T
    ignore(Line = nonfile),
    ignore(Offset = nonfile),
    appendAttributes(Ctx,Attributes,Attribs,RightAttribs),
-   appendAttributes(Ctx,[srcfile=SrcFile,srcinfo=Line:Offset],RightAttribs,NewAttribs),
+   appendAttributes(Ctx,[srcfile=SrcFile:Line-Offset,srcinfo=element(Tag,Attribs,ContentIn)],RightAttribs,NewAttribs),
    ignore(retract(MATCH)),
    (member(Tag,[aiml,topic]) ->  NextAttribs = NewAttribs ; NextAttribs = []),
    maplist_safe(load_inner_aiml_w_lineno(SrcFile,[Tag,OuterTag|PREV],Parent,NextAttribs,Ctx),ContentIn,ContentOut),!.
@@ -285,7 +287,7 @@ on_begin_ctx(_TAG, _URL, _Parser, _Context) :- !. %%, debugFmt(on_begin_ctx(URL,
 on_xmlns(rdf, URL, _Parser) :- !,debugFmt(on_xmlns(URL, rdf)),asserta(xmlns(URL, rdf, _)).
 on_xmlns(TAG, URL, _Parser) :- sub_atom(URL, _, _, _, 'rdf-syntax'), !,
         debugFmt('rdf-syntax'(URL, TAG)),
-        asserta(xmlns(URL, rdf, _)).
+        immediateCall(_Ctx,asserta(xmlns(URL, rdf, _))).
 on_xmlns(TAG, URL, _Parser) :- debugFmt(on_xmlns(URL, TAG)).
 
 on_decl(URL, _Parser) :- debugFmt(on_decl(URL)).
@@ -350,14 +352,15 @@ load_aiml_structure(Ctx,element(Tag,ALIST,INNER_XML)):- member(Tag,[topic,catego
      replaceAttribute(Ctx,name,Tag,ALIST,ATTRIBS),
          withAttributes(Ctx,ATTRIBS, pushCateElement(Ctx,ATTRIBS,element(Tag,ALIST,INNER_XML))),!.
 
-% substitute,learn,aiml,genlMt,srai,think,system,javascript,eval
+% substitute,learn,aiml,genlMt,srai,think,system,javascript,eval,template
 load_aiml_structure(Ctx,element(A,B,C)):-
    convert_name(A,Tag),tagType(Tag,immediate),
    convert_attributes(Ctx,B,ALIST),
    convert_template(Ctx,C,LIST),
    replaceAttribute(Ctx,name,Tag,ALIST,ATTRIBS),
-      withAttributes(Ctx,ATTRIBS,aiml_call(Ctx,element(Tag,ALIST,LIST))),!.
-   %%  debugFmt(call_immediate(Tag,ALIST,LIST))
+      withAttributes(Ctx,
+        ATTRIBS,
+          catch(aiml_call(Ctx,element(Tag,ALIST,LIST)),E,debugFmt(aiml_throw(element(Tag,ATTRIBS,LIST)=E)))),!.
 
 /*
 
@@ -460,9 +463,9 @@ load_dict_structure(Ctx,substitute(Dict,Find,Replace)):-
       load_dict_structure(Ctx,dict(substitutions(Dict),File,Resp)))),!.
 
 % actual assertions
-load_dict_structure(_Ctx,dict(Dict,Name,Value)):-
+load_dict_structure(Ctx,dict(Dict,Name,Value)):-
     debugFmt(dict(Dict,Name,Value)),
-      assertz(dict(Dict,Name,Value)),!.
+      setAliceMem(Ctx,Dict,Name,Value),!.
 
 
 
@@ -508,7 +511,7 @@ varize(Find,Replace,FindO,ReplaceO):-
       subst((FindM,ReplaceM),'*','$VAR'(0),(FindO,ReplaceO)),!.
 
 
-aiml_error(E):-  trace,debugFmt('~q~n',[error(E)]),!.
+aiml_error(E):-  randomVars(E),debugFmt('~q~n',[error(E)]),trace,randomVars(E),!,throw(E).
 
 
 % ===============================================================================================
@@ -520,8 +523,8 @@ assertCate(Ctx,Cate,DoWhat):-
 
 %% todo maybe this.. once((retract(NEW),asserta(NEW)) ; (asserta(NEW),(debugFmt('~q.~n',[NEW])))),!. 
 % assertCate3(Ctx,NEW,DoWhat):-NEW,!.
- assertCate3(_Ctx,NEW,DoWhat):- 
-  flag(cateSigCount,X,X+1), forall(member(Pred,DoWhat),call(Pred,NEW)).
+ assertCate3(Ctx,NEW,DoWhat):- 
+  flag(cateSigCount,X,X+1), forall(member(Pred,DoWhat),call(Pred,Ctx,NEW)).
 
 % ===============================================================================================
 %  Make AIML Categories
@@ -685,6 +688,7 @@ save:-tell(aimlCate),
 dt:- withAttributes(Ctx,[graph='ChomskyAIML'],load_aiml_files(Ctx,'aiml/chomskyAIML/*.aiml')).
 
 do:-load_aiml_files,alicebot.
+
 
 
 

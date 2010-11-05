@@ -87,11 +87,18 @@ convert_ele(Ctx,element(pre,[],B),BB):-!,convert_template(Ctx,B,BB).
 convert_ele(Ctx,element(catagory, A, B),Out):-convert_ele(Ctx,element(category, A, B),Out).
 %%convert_ele(Ctx,element(Tag, A, B),BB):- member(Tag,[category,srai]), convert_template(Ctx,element(Tag, A, B),BB).
 
+
+botGetSet(bot,bot,_NAME,_NUM).
+botGetSet(get,user,_NAME,_NUM).
+botGetSet(set,user,_NAME,0).
+
 % bot/get/set
-convert_ele(Ctx,element(bot, ALIST, VALUE),element(get,[type=bot,var=NAME|ALIST],VALUE)):-nameOrValue(ALIST,VALUE,NORV,_),convert_template(Ctx,NORV,NAME).
-convert_ele(Ctx,element(get, ALIST, VALUE),element(get,[type=user,var=NAME|ALIST],VALUE)):-nameOrValue(ALIST,VALUE,NORV,_),convert_template(Ctx,NORV,NAME).
-convert_ele(Ctx,element(set, ALIST, VALUE),element(set,[type=user,var=NAME|ALIST],VALUEO)):-nameOrValue(ALIST,VALUE,NORV,0),convert_template(Ctx,NORV,NAME),
-      convert_template(Ctx,VALUE,VALUEO),!.
+convert_ele(Ctx,element(TAG, ALIST, VALUE),element(TAG,NEWLIST,VALUEO)):-
+            botGetSet(TAG,TYPE,NAME,NUM),not(member(var=_,ALIST)),         
+            append(ALIST,[type=TYPE,var=NAME],NEWLIST),
+            nameOrValue(ALIST,VALUE,NORV,NUM), 
+            convert_template(Ctx,NORV,NAME), 
+            convert_template(Ctx,VALUE,VALUEO).
 
 % get_xxx/set_xxx
 convert_ele(Ctx,element(VAR_ATOM, ALIST, V),element(get,[name=N|ALIST],VV)):-atom_concat_safe('get_',N,VAR_ATOM),convert_template(Ctx,V,VV).
@@ -150,7 +157,9 @@ convert_ele(Ctx,element(A, B, C),INNER_XML):-
       convert_template(Ctx,C,CC),!, 
    (element(A, B, C) == element(AA, BB, CC) ->  INNER_XML=element(AA, BB, CC); convert_element(Ctx,element(AA, BB, CC),INNER_XML)),!.
 
-convert_ele(Ctx,element(Tag, A, B),element(Tag, A, BB)):- member(Tag,[category,srai]), convert_template(Ctx,B,BB).
+convert_ele(Ctx,element(Tag, A, B),element(Tag, A, BB)):- member(Tag,[category]), convert_template(Ctx,B,BB).
+
+convert_ele(Ctx,element(Tag, A, B),element(Tag, A, BB)):- member(Tag,[srai]),trace,convert_template(Ctx,B,BB).
 
 convert_ele(_Ctx,O,O).
 
@@ -201,7 +210,11 @@ transformTagData1(_Ctx,_TAG,_Default,PATTERN,PATTERN):-!.
 % ===============================================================================================
 % ===============================================================================================
 
-convert_pattern(Ctx,PATTERN_IN,PATTERN_OUT):- convert_template_pred(Ctx,upcase_atom_safe,PATTERN_IN,PATTERN_OUT),!.
+convert_pattern(Ctx,PATTERN_IN,PATTERN_OUT):- convert_template_pred(Ctx,upcase_atom_safe_non_special,PATTERN_IN,PATTERN_OUT),!.
+
+upcase_atom_safe_non_special(A,A):-not(atom(A)),!.
+upcase_atom_safe_non_special(Atom,Atom):-atom_prefix(Atom,'#$'),!.
+upcase_atom_safe_non_special(A,U):-upcase_atom_safe(A,U).
 
 convert_template_pred(Ctx,Pred,PATTERN_IN,PATTERN_OUT):- convert_template(Ctx,PATTERN_IN,PATTERN_MID),!,
      debugOnFailureAiml(map_tree_to_list(Pred,PATTERN_MID,PATTERN_OUT)),!.
@@ -233,7 +246,7 @@ formatterMethod(NamedMethod,NamedMethod):-formatterProc(NamedMethod).
 evaluatorsDicts(Dict):-member(Dict,[system,javascript,eval,
                                      cycquery,cycsystem,cycassert,
                                      fortunecookie,substitute,learn,aiml,genlMt,think,
-                                     substitute,srai,testsuite,testcase]).
+                                     substitute,srai,testsuite,testcase,template]).
 
 
 %substitutionDictsName(input,pattern).
