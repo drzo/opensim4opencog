@@ -20,14 +20,19 @@ throw_safe(Exc):-trace,throw(Exc).
 
 :-op(1150,fx,meta_predicate_transparent).
 
+prolog_must(Call):-tracing,!,prolog_must_tracing(Call).
 prolog_must(Call):-prolog_must0(Call),!.
 
 prolog_must0(Call):-var(Call),!,trace,randomVars(Call).
+prolog_must0(prolog_must(Call)):- !,Call,!.
+prolog_must0((X,Y)):-!, prolog_must0(X),prolog_must0(Y).
+prolog_must0(Call):- Call,!.
+prolog_must0(Call):- debugFmt(faileD(Call)),trace,Call,!.
 
-prolog_must0((X,Y)):-!,prolog_must0(X),prolog_must0(Y).
-prolog_must0(Call):-Call,!.
-prolog_must0(Call):-tracing,!,aiml_error(Call).
-prolog_must0(Call):-debugFmt(faileD(Call)),trace,Call,!.
+prolog_must_tracing(prolog_must(Call)):- !,Call,!.
+prolog_must_tracing(Call):- Call,!.
+prolog_must_tracing(Call):- hotrace(aiml_error(Call)).
+
 
 
 /*
@@ -105,7 +110,8 @@ delete_safe([H|List],E,[H|Rest]):-delete_safe(List,E,Rest).
 
 
 getKeyValue(FullList,N=V):-lastMember(N=V,FullList),!.
-addKeyValue(FullList,N=V):-append(_Closed,[N=V|_],FullList),!.
+%%addKeyValue(FullList,N=V):-nonvar(N),!,append(_Closed,[N=V|_],FullList),!.
+addKeyValue(FullList,NV):- prolog_must((not(ground(FullList)),nonvar(NV))),append(_Closed,[NV|_],FullList),!.
 
 
 lastMember2(E,List):-to_open_list(_,Closed,_Open,List),reverse(Closed,Rev),member(E,Rev).
@@ -249,7 +255,7 @@ clean_codes(X,X).
 %clean_out_atom(X,Y):-atomSplit(X,C),delete(C,'',O),concat_atom_safe(C,' ',Y).
 clean_out_atom(X,Y):-atom_codes(X,C),clean_codes(C,D),!,atom_codes(X,D),!,Y=X.
 
-atomSplit(A,B):-cyc:atomSplit(A,BB),BB=B.
+atomSplit(A,B):-prolog_must(hotrace((cyc:atomSplit(A,BB),BB=B))).
 
 all_upper_atom(X):-toUppercase(X,N),!,N=X.
 
@@ -261,7 +267,7 @@ concat_atom_safe(List,Sep,Atom):- concat_atom(List,Sep,Atom),!.
 
 upcase_atom_safe(A,B):-atom(A),upcase_atom(A,B),!.
 
-atom_contains(F,C):-notrace((atom(F),atom(C),sub_atom(F,_,_,_,C))).
+atom_contains(F,C):- hotrace((atom(F),atom(C),sub_atom(F,_,_,_,C))).
 
 toCodes(B,A):-cyc:stringToCodelist(B,AO),(is_list(A) -> A=AO ; string_to_list(AO,A)),!.
 

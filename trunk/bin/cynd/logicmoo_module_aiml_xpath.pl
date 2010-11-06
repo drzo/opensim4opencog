@@ -31,7 +31,7 @@ attributeOrTagValue(Ctx,ATTRIBS,NameS,ValueO,_Else):-compound(ATTRIBS),ATTRIBS=.
 attributeOrTagValue(Ctx,_,NameS,ValueO,ElseVar):-ElseVar\=='$failure',makeParamFallback(Ctx,NameS,ValueO,ElseVar),!.
 
 attributeValue(Ctx,ATTRIBS,NameS,ValueO,Else):- noaimltrace((attributeValue0(Ctx,ATTRIBS,NameS,ValueI,Else), aiml_eval_to_unit(Ctx,ValueI,ValueO))),!.
-attributeValue(Ctx,ATTRIBS,NameS,ValueO,Else):-   Else\=='$failure',attributeValue0(Ctx,ATTRIBS,NameS,ValueI,Else), aiml_eval_to_unit(Ctx,ValueI,ValueO),!.
+attributeValue(Ctx,ATTRIBS,NameS,ValueO,Else):-   Else\=='$failure',debugOnFailure((attributeValue0(Ctx,ATTRIBS,NameS,ValueI,Else), aiml_eval_to_unit(Ctx,ValueI,ValueO))),!.
 
 attributeValue0(_Ctx,ATTRIBS,NameS,ValueO,_Else):- member(Name,NameS), lastMember(NameE=ValueO,ATTRIBS), atomsSameCI(Name,NameE),!.
 attributeValue0(Ctx,_ATTRIBS,NameS,Value,ElseVar):- makeParamFallback(Ctx,NameS,Value,ElseVar),!.
@@ -77,10 +77,10 @@ aiml_select_unit(Ctx,_NameA,ValueI,ValueO):-aiml_eval_to_unit(Ctx,ValueI,ValueO)
 %['name'='SomeName','Description'='some descr','Input'='$error','ExpectedAnswer'='SomeAnswwer']
 /*
 getAttributeOrTags(Ctx,[N=Default|More],ATTRIBS,INNERXML,Var):- var(Var),!,
-  notrace((getAttributeOrTags1(Ctx,[N=Default|More],ATTRIBS,INNERXML,[_=Var|_NormalProps]))),!.
+  hotrace((getAttributeOrTags1(Ctx,[N=Default|More],ATTRIBS,INNERXML,[_=Var|_NormalProps]))),!.
 
 getAttributeOrTags(Ctx,[N=Default|More],ATTRIBS,INNERXML,[N0=Var|NormalProps]):-
-  notrace((getAttributeOrTags1(Ctx,[N=Default|More],ATTRIBS,INNERXML,[N0=Var|NormalProps]))),!.
+  hotrace((getAttributeOrTags1(Ctx,[N=Default|More],ATTRIBS,INNERXML,[N0=Var|NormalProps]))),!.
 
 :-trace(getAttributeOrTags/5, -fail).
 
@@ -326,7 +326,7 @@ unwrapValue1(Value,Value):-!.
 bestSetterFn(v(_,Setter,_),_OuterSetter,Setter):-!.
 bestSetterFn(_Value,OuterSetter,OuterSetter).
 
-getCtxValue(Name,Ctx,Value):-checkCtx(Ctx),notrace(get_ctx_holder(Ctx,Holder)),get_o_value(Name,Holder,HValue,_Setter),!, unwrapValue(HValue,Value).
+getCtxValue(Name,Ctx,Value):-checkCtx(Ctx),hotrace(get_ctx_holder(Ctx,Holder)),get_o_value(Name,Holder,HValue,_Setter),!, unwrapValue(HValue,Value).
 
 setCtxValue(Name,Ctx,Value):-checkCtx(Ctx),get_ctx_holder(Ctx,Holder),get_o_value(Name,Holder,HValue,Setter),unwrapValue(HValue,CurrentValue),!,(CurrentValue=Value;call(Setter,Value)),!.
 setCtxValue(Name,Ctx,Value):-checkCtx(Ctx),addCtxValue1(Name,Ctx,Value),!.
@@ -396,7 +396,7 @@ get_ctx_holderFreeSpot1(Ctx,'.',2,NamedValue,Destruct):-arg(2,Ctx,Try2),get_ctx_
 get_ctx_value(Name,Ctx,Value,Setter):-nonvar(Name),var(Value),get_o_value(Name,Ctx,Value,OuterSetter),bestSetterFn(Value,OuterSetter,Setter).
 
 get_o_value(Name,Ctx,Value,no_setter(Name)):-no_cyclic_terms,!,get_o_value0(Name,Ctx,Value,_HIDE_Setter),!.
-get_o_value(Name,Ctx,Value,Setter):-notrace(get_o_value0(Name,Ctx,Value,Setter)),!.
+get_o_value(Name,Ctx,Value,Setter):-hotrace(get_o_value0(Name,Ctx,Value,Setter)),!.
 
 get_o_value0(Name,Ctx,Value,Setter):-compound(Ctx),get_o_value1(Name,Ctx,Value,Setter).
 get_o_value1(Name,assoc(Ctx),Value,set_assoc):- get_assoc(Name,Ctx,Value),!.

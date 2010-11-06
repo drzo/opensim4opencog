@@ -78,7 +78,7 @@ directory_of_file(File,Start,Hints,Dir):- member(Dir,Hints),join_pathnames(Dir,F
 :- exists_file('cogbot.pl') -> cd('..') ; true.
 
 
-:-ensure_loaded('cynd/cyc_api/cyc').
+:-ensure_loaded('cynd/cyc_pl/cyc').
 
 :-abolish(cyc:debugFmt/1).
 cyc:debugFmt(Stuff):- notrace((debugFmtS(Stuff))),!.
