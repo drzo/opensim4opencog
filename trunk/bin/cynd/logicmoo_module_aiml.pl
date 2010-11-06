@@ -20,8 +20,10 @@
 :-dynamic(dict/3).
 :-multifile(dict/3).
 
-% notrace that allows tracing 
-hotrace(X):-X.
+% When you trust the code enough you dont to debug it
+%  but if that code does something wrong while your not debugging, you want to see the error
+hotrace(X):-tracing,!, notrace(X).
+hotrace(X):-call(X).
 
 :-dynamic(lineInfoElement/4).
 
@@ -103,15 +105,17 @@ alicebotCTX(_Ctx,In,Res):- !,ignore(Res='-no response-'(In)).
 
 alicebot2(Atoms,Resp):- currentContext(alicebot2(Atoms),Ctx),!,alicebot2(Ctx,Atoms,Resp).
 
-call_with_depth_limit_knot(G,_,_):-trace,G.
+%% dont really call_with_depth_limit/3 as it spoils the debugger
+call_with_depth_limit_traceable(G,_,_):-tracing,!,G.
+call_with_depth_limit_traceable(G,Depth,Used):-call_with_depth_limit(G,Depth,Used).
 
 alicebot2(Ctx,Atoms,Resp):-	
    retractall(posibleResponse(_,_)),
    flag(a_answers,_,0),!,
    ignore((
 
-   call_with_depth_limit_knot(computeInputOutput(Ctx,1,Atoms,Output,N),8000,_DL),
-	 ignore((nonvar(N),nonvar(Output),savePosibleResponse(N,Output))),flag(a_answers,X,X+1),X>3)),!,
+   call_with_depth_limit_traceable(computeInputOutput(Ctx,1,Atoms,Output,N),8000,_DL),
+	 prolog_must((nonvar(N),nonvar(Output),savePosibleResponse(N,Output))),flag(a_answers,X,X+1),X>3)),!,
    findall(NR-OR,posibleResponse(NR,OR),L),!,
    (format('~n-> ~w~n',[L])),
    keysort(L,S),
@@ -562,7 +566,7 @@ meansNothing0('*',['*']).
 
 
 get_matchit_cate(Ctx,StarName,InputNothing,MinCateSig,FindPattern,prolog_must(CommitPattern),Out,_MinedCates,ProofOut):- 
-  hotrace(meansNothing(InputNothing,InputPattern)),!,   
+  notrace(meansNothing(InputNothing,InputPattern)),!,   
   FindPattern = ((
      getCategoryArg(Ctx,StarName,MatchPattern,Out,MinCateSig),
      prolog_must(get_matchit(Ctx,StarName,InputPattern,MatchPattern,CommitPattern)),
@@ -583,7 +587,7 @@ get_matchit_cate(Ctx,StarName,TextPattern,MinCateSig,FindPattern,CommitPattern,O
 notSingletons(_Singleton_List):-!.
 
 generateMatchPatterns(Ctx,StarName,Out,InputNothing,CateSig,_NC_MinedCates,_NC_EachMatchSig):- 
-  hotrace(meansNothing(InputNothing,_InputPattern)),!,   
+  notrace(meansNothing(InputNothing,_InputPattern)),!,   
   must_be_openCate(CateSig),
   getCategoryArg(Ctx,StarName,'*',Out,CateSig),
   must_be_openCate(CateSig),!.
@@ -695,16 +699,16 @@ must_be_openCateArgs(List,CateSig):-trace, throw(List:CateSig),!.
 %%
 
 
-get_matchit(Ctx,StarName,InputNothing,MatchPattern,CommitPattern):-
-   prolog_must(get_matchit0(Ctx,StarName,InputNothing,MatchPattern,CommitPattern)),prolog_must(nonvar(CommitPattern)).
+get_matchit(Ctx,StarName,InputText,MatchPattern,CommitPattern):-
+   prolog_must(get_matchit0(Ctx,StarName,InputText,MatchPattern,CommitPattern)),prolog_must(nonvar(CommitPattern)).
 
-get_matchit0(_Ctx,_StarName,InputPattern,_MatchPattern,_CommitPattern):- prolog_must_not(not(ground(InputPattern))),!.
+get_matchit0(_Ctx,_StarName,InputPattern,_MatchPattern,_ComnotmitPattern):- prolog_must_not(not(ground(InputPattern))),!.
 get_matchit0(Ctx,StarName,InputNothing,MatchPattern,CommitPattern):- 
-   hotrace((InputNothing \== '*',(InputPattern==StarName;meansNothing(InputNothing,InputPattern)))),!,   
+   notrace((InputNothing \== '*',(InputPattern==StarName ; meansNothing(InputNothing,InputPattern)))),!,   
    get_matchit(Ctx,StarName,'*',MatchPattern,CommitPattern).
 
 get_matchit0(Ctx,StarName,TextPattern,MatchPattern,CommitPattern):-
-  hotrace((convertToMatchable(TextPattern,InputPattern),TextPattern \== InputPattern)),!,
+  notrace(((convertToMatchable(TextPattern,InputPattern),TextPattern \== InputPattern))),!,
   get_matchit(Ctx,StarName,InputPattern,MatchPattern,CommitPattern),!.
 
 get_matchit0(_Ctx,StarName,Pattern,MatchPattern,CommitPattern):-
