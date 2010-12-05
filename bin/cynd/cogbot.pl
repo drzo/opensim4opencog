@@ -14,6 +14,16 @@
 :-dynamic(cogbot_aiml_dir/1).
 :-dynamic(filepath_hints/1).
 
+%% ======================================================
+%% Add a library directory here
+%% ======================================================
+asserta_if_new_hlper2(C):-catch(C,_,fail),!.
+asserta_if_new_hlper2(C):-asserta(C),!.
+:-source_location(File,_Line),file_directory_name(File, ParentDir),
+   writeq(logicmoo_module_aiml:asserta(library_directory(ParentDir))),
+   asserta_if_new_hlper2(library_directory(ParentDir)).
+
+
 extern_pathname(FullPah,Hint):-current_stream(FullPah,read,_),join_pathnames(_,Hint,FullPah),!.
 
 expand_file_name_each(A,B):-expand_file_name(A,BB),!,member(B,BB).
@@ -80,6 +90,7 @@ directory_of_file(File,Start,Hints,Dir):- member(Dir,Hints),join_pathnames(Dir,F
 
 :-ensure_loaded('cynd/cyc_pl/cyc').
 
+/*
 :-abolish(cyc:debugFmt/1).
 cyc:debugFmt(Stuff):- notrace((debugFmtS(Stuff))),!.
 
@@ -94,12 +105,15 @@ hideIfNeeded([I|_],ctx):-nonvar(I),I=frame(_,_,_),!.
 hideIfNeeded([I|N],[I0|N0]):-!,hideIfNeeded(I,I0),hideIfNeeded(N,N0),!.
 hideIfNeeded(Comp,Comp2):-compound(Comp),Comp=..[L,I|ST],hideIfNeeded(I,II),Comp2=..[L,II|ST].
 hideIfNeeded(I,I):-!.
+*/
 
 noaimltrace(X):- X. %% notrace(X).
 
-:-ensure_loaded('cynd/logicmoo_module_aiml.pl').
+guitracer:-debug.
+
+:-ensure_loaded('cynd/programk/logicmoo_module_aiml.pl').
 %%:-assertz(librar
 %file_search_path(X,Y).
 
-
+:-ensure_loaded(library('programk/logicmoo_module_aiml_main.pl')).
 
