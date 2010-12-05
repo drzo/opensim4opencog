@@ -24,6 +24,20 @@ namespace SbsSW.SwiPlCs
     {
         public delegate object AnyMethod(params object[] any);
 
+        internal static bool Is64BitRuntime()
+        {
+#if _PL_X64
+            return true;
+#endif
+            int bits = IntPtr.Size * 8;
+            return bits == 64;
+        }
+
+        internal static bool Is64BitComputer()
+        {
+            return Is64BitRuntime() || !String.IsNullOrEmpty(Environment.GetEnvironmentVariable("ProgramFiles(x86)"));
+        }
+
         public static void InternMethod(string module, string pn, AnyMethod d)
         {
             InternMethod(module, pn, d.Method);
@@ -167,11 +181,18 @@ namespace SbsSW.SwiPlCs
 
         private static void SetupProlog()
         {
-            CogbotHome = Environment.CurrentDirectory;
-            SwiHomeDir = Environment.GetEnvironmentVariable("SWI_HOME_DIR");
+            SetupIKVM();
+
+            if (String.IsNullOrEmpty(SwiHomeDir)) SwiHomeDir = Environment.GetEnvironmentVariable("SWI_HOME_DIR");
             if (string.IsNullOrEmpty(SwiHomeDir))
             {
-                SwiHomeDir = "c:\\Program Files (x86)\\pl";
+
+                SwiHomeDir = "c:\\Program Files\\pl";
+
+                if (Is64BitComputer() && !Is64BitRuntime())
+                {
+                    SwiHomeDir = "c:\\Program Files (x86)\\pl";
+                }
                 Environment.SetEnvironmentVariable("SWI_HOME_DIR", SwiHomeDir);
             }
             if (!File.Exists(SwiHomeDir + "\\boot32.prc") && !File.Exists(SwiHomeDir + "\\boot.prc") && !File.Exists(SwiHomeDir + "\\boot64.prc"))
@@ -182,7 +203,7 @@ namespace SbsSW.SwiPlCs
             if (path != null)
                 if (!path.ToLower().StartsWith(SwiHomeDir.ToLower()))
                 {
-                    Environment.SetEnvironmentVariable("PATH", SwiHomeDir + "\\bin;" + CogbotHome + ";" + path);
+                    Environment.SetEnvironmentVariable("PATH", SwiHomeDir + "\\bin;" + IKVMHome + ";" + path);
                 }
             string libpath = "";
 
@@ -191,7 +212,7 @@ namespace SbsSW.SwiPlCs
             libpath += ";";
             libpath += SwiHomeDir + "\\bin";
             libpath += ";";
-            libpath += CogbotHome;
+            libpath += IKVMHome;
 
             string LD_LIBRARY_PATH = Environment.GetEnvironmentVariable("LD_LIBRARY_PATH");
             if (String.IsNullOrEmpty(LD_LIBRARY_PATH))
@@ -211,7 +232,7 @@ namespace SbsSW.SwiPlCs
             string jplcp = clasPathOf(new jpl.JPL());
 
             if (!JplDisabled) 
-                CLASSPATH = CogbotHome + "\\SWIJPL.dll" + ";" + CogbotHome + "\\SWIJPL.jar;" + CLASSPATH0;
+                CLASSPATH = IKVMHome + "\\SWIJPL.dll" + ";" + IKVMHome + "\\SWIJPL.jar;" + CLASSPATH0;
 
             Environment.SetEnvironmentVariable("CLASSPATH", CLASSPATH);
             java.lang.System.setProperty("java.class.path", CLASSPATH);
@@ -257,6 +278,50 @@ namespace SbsSW.SwiPlCs
                 return;
             }
         }
+
+        //FileInfo & DirectoryInfo are in System.IO
+        //This is something you should be able to tweak to your specific needs.
+
+        static void CopyFiles(DirectoryInfo source,
+                              DirectoryInfo destination,
+                              bool overwrite,
+                              string searchPattern)
+        {
+            FileInfo[] files = source.GetFiles(searchPattern);
+      
+            foreach (FileInfo file in files)
+            {
+                string destName = destination.FullName + "\\" + file.Name;
+                try
+                {
+                    file.CopyTo(destName, overwrite);
+                }
+                catch (Exception e)
+                {
+                    System.Console.Error.WriteLine("file: " + file + " copy to " + destName + " " + e);
+                }
+            }
+        }
+
+        private static void SetupIKVM()
+        {
+            if (String.IsNullOrEmpty(IKVMHome)) IKVMHome = Environment.GetEnvironmentVariable("IKVM_BINDIR");
+            if (String.IsNullOrEmpty(IKVMHome)) IKVMHome = new FileInfo(typeof(ikvm.runtime.Util).Assembly.Location).DirectoryName;
+            if (String.IsNullOrEmpty(IKVMHome)) IKVMHome = Environment.CurrentDirectory;
+            Environment.SetEnvironmentVariable("IKVM_BINDIR", IKVMHome);
+            DirectoryInfo destination = new DirectoryInfo(IKVMHome);
+            DirectoryInfo source;
+            if (Is64BitRuntime())
+            {
+                source = new DirectoryInfo(IKVMHome + "\\bin-x64\\");
+            }
+            else
+            {
+                source = new DirectoryInfo(IKVMHome + "\\bin-x86\\");
+            }
+            if (source.Exists) CopyFiles(source, destination, true, "*.*");
+        }
+
         public class ScriptingClassLoader : URLClassLoader
         {
             readonly IList<ClassLoader> lc = new List<ClassLoader>();
@@ -499,7 +564,7 @@ namespace SbsSW.SwiPlCs
             if (!JplDisabled)
                 SafelyRun(() =>
                               {
-                                  if (File.Exists(CogbotHome + "\\jpl_for_ikvm.phps"))
+                                  if (File.Exists(IKVMHome + "\\jpl_for_ikvm.phps"))
                                   {
                                       if (!File.Exists(SwiHomeDir + "\\library\\jpl.pl.old"))
                                       {
@@ -507,7 +572,7 @@ namespace SbsSW.SwiPlCs
                                                     SwiHomeDir + "\\library\\jpl.pl.old",
                                                     true);
                                       }
-                                      File.Copy(CogbotHome + "\\jpl_for_ikvm.phps", SwiHomeDir + "\\library\\jpl.pl", true);
+                                      File.Copy(IKVMHome + "\\jpl_for_ikvm.phps", SwiHomeDir + "\\library\\jpl.pl", true);
                                   }
                               });
             
@@ -982,7 +1047,7 @@ typedef struct // define a context structure  { ... } context;
         static private PinnedObject<NonDetTest> ndtp;
         public static bool JplDisabled = false;
         public static bool PlCsDisabled = false;
-        public static string CogbotHome;
+        public static string IKVMHome;
         public static string SwiHomeDir;
         public static bool JplSafeNativeMethodsDisabled = false;
         public static bool JplSafeNativeMethodsCalled = false;

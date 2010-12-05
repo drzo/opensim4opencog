@@ -134,7 +134,13 @@ namespace SbsSW.SwiPlCs
             Write = 1
         }
 
-
+        internal static bool Is64Bit() {
+#if _PL_X64
+            return true;
+#endif
+            int bits = IntPtr.Size * 8;
+            return bits == 64;
+        }
         internal static void SetStreamFunction(Streams.PlStreamType streamType, StreamsFunction functionType, Delegate function)
         {
             //int size_of_IOSTREAM = 136;
@@ -150,18 +156,39 @@ namespace SbsSW.SwiPlCs
             int offset_to_poninter_of_IOFUNCTIONS = 72;
             int size_of_pointer = 4;
 #endif
+            if (Is64Bit())
+            {
+                size_of_IOSTREAM = 232;
+                offset_to_poninter_of_IOFUNCTIONS = 104;
+                size_of_pointer = 8;
+            }
+            else
+            {
+                size_of_IOSTREAM = 144;
+                offset_to_poninter_of_IOFUNCTIONS = 72;
+                size_of_pointer = 4;
+            }
 
             IntPtr callbackFunctionPtr = Marshal.GetFunctionPointerForDelegate(function);
 
             IntPtr address_std_stream_array = NativeMethods.GetProcAddress(m_hLibrary, "S__iob");
             IntPtr function_array_out = Marshal.ReadIntPtr(address_std_stream_array, (size_of_IOSTREAM * (int)streamType) + offset_to_poninter_of_IOFUNCTIONS);
 
-
+#if false
 #if _PL_X64
             Marshal.WriteIntPtr(new IntPtr(function_array_out.ToInt64() + (size_of_pointer * (int)functionType)), callbackFunctionPtr);
 #else
             Marshal.WriteIntPtr(new IntPtr(function_array_out.ToInt32() + (size_of_pointer * (int)functionType)), callbackFunctionPtr);
 #endif
+#endif
+            if (Is64Bit())
+            {
+                Marshal.WriteIntPtr(new IntPtr(function_array_out.ToInt64() + (size_of_pointer * (int)functionType)), callbackFunctionPtr);
+            }
+            else
+            {
+                Marshal.WriteIntPtr(new IntPtr(function_array_out.ToInt32() + (size_of_pointer * (int)functionType)), callbackFunctionPtr);
+            }
         }
 
         internal static void LoadLibPl()
