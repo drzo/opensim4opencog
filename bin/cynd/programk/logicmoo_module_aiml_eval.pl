@@ -141,8 +141,8 @@ aiml_eval0(_Ctx,A,B):-atomic(A),!,B=A.
 
 aiml_eval0(Ctx,element(Srai,ATTRIBS,DOIT),RETURN):- memberchk(Srai,[srai,template]),
       withAttributes(Ctx,ATTRIBS,
-         (hotrace(aiml_eval_each(Ctx,DOIT,INNER),
-          computeAnswer(Ctx,1,element(Srai,ATTRIBS,INNER),RMID,_Votes)))),
+         (hotrace((aiml_eval_each(Ctx,DOIT,INNER),
+          computeAnswer(Ctx,1,element(Srai,ATTRIBS,INNER),RMID,_Votes))))),
        RMID=RETURN.
 
 aiml_eval0(Ctx,element(A, B, C), XML):-tagType(A, immediate),
@@ -220,22 +220,41 @@ systemCall_Bot(Ctx,[FIRST|REST],DONE):-atom_concat_safe('@',CMD,FIRST),CMD\=='',
 systemCall_Bot(_Ctx,['eval'|DONE],template([evaled,DONE])):-!.
 systemCall_Bot(_Ctx,['echo'|DONE],DONE):-!.
 systemCall_Bot(Ctx,['set'],template([setted,Ctx])):-!,unify_listing(getUserDicts(_User,_Name,_Value)),!.
-systemCall_Bot(Ctx,['get',Name|MajorMinor],template([getted,Dict,Value])):- getDictFromAttributes(Ctx,evalsrai,[],SYM),member(Dict,[SYM,user,robot,_]),
-  debugOnFailure(getIndexedValue(Ctx,Dict,Name,MajorMinor,Value)),!.
+systemCall_Bot(Ctx,['get',Name|MajorMinor],template([getted,Dict,Value,Found1])):- getDictFromAttributes(Ctx,evalsrai,[],SYM),
+  list_to_set_preserve_order([SYM,user,robot,Name],List),
+  debugFmt(getIndexedValue(Ctx,List,Name,MajorMinor,values)),
+  forall(member(Dict,List),ignore((unify_listing(getIndexedValue(Ctx,Dict,Name,MajorMinor,Value),Found),Found>0,Found1=Found))).
 systemCall_Bot(Ctx,['get'],template([getted,Passed])):- unify_listing(getContextStoredValue(Ctx,_,_,_),Passed).
-%systemCall_Bot(Ctx,['ctx'],template([ctxed,Ctx])):-!,showCtx.
+systemCall_Bot(Ctx,['ctx'],template([ctxed,Atom])):-!,term_to_atom(Ctx,Atom),!.
+systemCall_Bot(Ctx,['ctx'],template([ctxed,prologCall(Atom,term_to_atom(Ctx,Atom))])):-!,showCtx(Ctx).
 systemCall_Bot(Ctx,['load'|REST],OUT):- !, debugOnFailure(systemCall_Load(Ctx,REST,OUT)),!.
 systemCall_Bot(Ctx,['find'|REST],OUT):- !, debugOnFailure(systemCall_Find(Ctx,REST,OUT)),!.
-systemCall_Bot(Ctx,['chgraph',Graph],['chgraph',Graph]):- setAliceMem(Ctx,user,graph,Graph),!.
+systemCall_Bot(Ctx,['chgraph',Graph],['successfully','set','to','graph',Graph]):- setAliceMem(Ctx,user,graph,Graph),!.
 systemCall_Bot(_Ctx,['substs',DictName],['substsof',DictName]):- unify_listing(dictReplace(DictName,_,_)),!.
-systemCall_Bot(_Ctx,['substs'],['substsof',all]):- unify_listing(dictReplace(_DictName,_,_)),!.
+systemCall_Bot(_Ctx,['substs'],['substsof','all']):- unify_listing(dictReplace(_DictName,_,_)),!.
+
+
+systemCall_Bot(Ctx,['ctxlist'],template([ctxed])):-!,showCtx(Ctx),!.
+systemCall_Bot(Ctx,['ctxlist'],template([ctxed,getCtxValue(Name,Ctx,Value),Count])):-!,unify_listing(getCtxValue_nd(Name,Ctx,Value),Count),!.
+
+
+
+
+systemCall_Bot(Ctx,[FIRST|REST],DONE):-atom(FIRST),downcase_atom(FIRST,CMD),FIRST\==CMD,!,systemCall_Bot(Ctx,[CMD|REST],DONE).
+
+
+
 
 systemCall_Bot(_Ctx,DONE,template([delayed,DONE])):-!.
+
+showCtx(Ctx):-forall(
+  (get_ctx_frame_holder(Ctx,Dict,Frame,Held)),
+  writeq(get_ctx_frame_holder(Ctx,Dict,Frame,Held))).
 
 systemCall_Load(Ctx,[],template([loaded,Ctx])):-!.
 systemCall_Load(Ctx,[File,Name|S],Output):-concat_atom_safe([File,Name|S],'',Filename),!,systemCall(Ctx,'bot',['load',Filename],Output).
 systemCall_Load(Ctx,[Filename],template([loaded,Filename])):-
-    current_value(Ctx,graph,GraphI), 
+    peekNameValue(Ctx,_,graph,GraphI,'*'), 
     (GraphI=='*'->Graph=default; Graph=GraphI),
     ATTRIBS=[srcfile=Filename,graph=Graph],
     gather_aiml_graph(Ctx,ATTRIBS,Graph,Filename,AIML),
@@ -270,48 +289,6 @@ gather_aiml_graph(Ctx,XML,Graph,Filename,AIML):-
  ATTRIBS=[srcfile=Filename,graph=Graph|XML],
  withAttributes(Ctx,ATTRIBS,graph_or_file(Ctx,ATTRIBS, Filename, AIML)),!.
 
-
-graph_or_file(_Ctx,_ATTRIBS, [], []):-!.
-graph_or_file(Ctx,ATTRIBS, [Filename], XML):-atomic(Filename),!,graph_or_file(Ctx,ATTRIBS, Filename, XML),!.
-
-graph_or_file(Ctx,ATTRIBS,Filename,XML):-graph_or_file_or_dir(Ctx,ATTRIBS,Filename,XML),!.
-graph_or_file(Ctx,ATTRIBS, Filename, XML):- 
-     prolog_must((getCurrentFileDir(Ctx, ATTRIBS, CurrentDir),join_path(CurrentDir,Filename,Name))),
-     prolog_must(graph_or_file_or_dir(Ctx,[currentDir=CurrentDir|ATTRIBS],Name,XML)),!.
-
-graph_or_file(_Ctx,ATTRIBS, Filename, [nosuchfile(Filename,ATTRIBS)]):-trace.
-
-
-graph_or_file_or_dir(Ctx,ATTRIBS, Filename, XML):- Filename=[A,B|_C],atom(A),atom(B),
-                    concat_atom_safe(Filename,'',FileAtom),!,
-                    prolog_must(graph_or_file_or_dir(Ctx,ATTRIBS, FileAtom, XML)),!.
-
-graph_or_file_or_dir(_Ctx,_ATTRIBS, Filename, XML):- os_to_prolog_filename(Filename,AFName),
-               exists_file_safe(AFName),!,load_structure(AFName,XML,[dialect(xml),space(remove)]),!.
-
-graph_or_file_or_dir(Ctx,ATTRIBS, F, [element(aiml,DIRTRIBS,OUT)]):- DIRTRIBS = [srcdir=F|ATTRIBS],
-      os_to_prolog_filename(F,ADName),
-      exists_directory_safe(ADName),
-      aiml_files(ADName,Files),!, 
-      findall(X, ((member(FF,Files), 
-                   graph_or_file_or_dir(Ctx,[srcfile=FF|DIRTRIBS],FF,X))), OUT),!.
-
-
-getCurrentFile(Ctx,_ATTRIBS,CurrentFile):-getItemValue(proof,Ctx,Proof),nonvar(Proof),            
-            getItemValue(lastArg,Proof,CurrentFile1),getItemValue(lastArg,CurrentFile1,CurrentFile2),
-            getItemValue(arg(1),CurrentFile2,CurrentFile3),!,
-            absolute_file_name(CurrentFile3,CurrentFile),!.
-
-getCurrentFileDir(Ctx,ATTRIBS,Dir):- prolog_must((getCurrentFile(Ctx, ATTRIBS, CurrentFile),atom(CurrentFile),
-      file_directory_name(CurrentFile,Dir0),absolute_file_name(Dir0,Dir))).
-
-getCurrentFileDir(_Ctx,_ATTRIBS,Dir):- local_directory_search_combined(Dir).
-
-getItemValue(Name,Ctx,Value):-nonvar(Ctx),getCtxValue(Name,Ctx,Value),!.
-getItemValue(Name,Ctx,Value):-current_value(Ctx,Name,Value),!.
-getItemValue(Name,Ctx,Value):-getAliceMem(Ctx,_,Name,Value),!.
-getItemValue(Name,Ctx,Value):-findTagValue(Ctx,[],Name,Value,'$current_value').%%current_value(Ctx,Name,Value),!.
-
 % ============================================
 % Test Suite  (now uses aiml_call/2 instead of tag_eval/3)
 % ============================================
@@ -328,6 +305,7 @@ testIt(ATTRIBS,Input,ExpectedAnswer,ExpectedKeywords,Result,Name,Description,Ctx
    notrace(ExpectedKeywords==[[noExpectedKeywords]] -> PASSGOAL = sameBinding(Resp,ExpectedAnswer);  PASSGOAL = containsEachBinding(Resp,ExpectedKeywords)),    
   %% traceIf(ExpectedKeywords \== [[noExpectedKeywords]]),
     withAttributes(Ctx,ATTRIBS,(( runUnitTest(alicebot2(Ctx,Input,Resp),PASSGOAL,Result),
+     prolog_must(ground(Resp)),
     toReadableObject(testIt(Input,Name,Description,PASSGOAL),PRINTRESULT),
     toReadableObject([Result,Name,Description,Input], STORERESULT),
     debugFmt(PRINTRESULT)))),flush_output,
@@ -355,8 +333,8 @@ preserveTag(In,Out):- member(Out,['input','description',expectedAnswer,expectedk
 
 runUnitTest(Call,Req,Result):-runUnitTest1(Call,Result1),!,runUnitTest2(Req,Result2),!,Result=unit(Result1,Result2),debugFmt(Result),!.
 
-runUnitTest1(Req,Result):-hotrace(catch((Req-> Result=unit_passed(Req); Result=unit_failed(Req)),E,Result=unit_error(E,Req))).
-runUnitTest2(Req,Result):-hotrace(catch((Req-> Result=unit_passed(Req); Result=unit_failed(Req)),E,Result=unit_error(E,Req))).
+runUnitTest1(Req,Result):-hotrace(error_catch((Req-> Result=unit_passed(Req); Result=unit_failed(Req)),E,Result=unit_error(E,Req))).
+runUnitTest2(Req,Result):-hotrace(error_catch((Req-> Result=unit_passed(Req); Result=unit_failed(Req)),E,Result=unit_error(E,Req))).
 
 sameBinding(X,Y):-hotrace((sameBinding1(X,X1),sameBinding1(Y,Y1),!,X1=Y1)),!.
 

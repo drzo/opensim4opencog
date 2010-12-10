@@ -16,240 +16,17 @@
 :- style_check(-string).
 
 
-% ===============================================================================================
-% get / set  Global Variables
-% ===============================================================================================
-:-dynamic(dict/3).
-:-multifile(dict/3).
-
-getAliceMemElse(Ctx,Dict,Name,ValueO):-getAliceMemComplete(Ctx,Dict,Name,ValueO),!.
-getAliceMemElse(_Ctx,Dict,Name,[Dict,(s),unknown,Name]).
-
-getAliceMem(Ctx,Dict,DEFAULT,ValueOut):- compound(DEFAULT),DEFAULT=default(Name,Default),!, 
-     (getAliceMemComplete(Ctx,Dict,Name,ValueO) -> xformOutput(ValueO, ValueOut)  ; xformOutput(Default, ValueOut)). 
-
-getAliceMem(Ctx,IDict,NameI,ValueO):-
-     dictNameDictNameC(Ctx,IDict,NameI,Dict,Name),!,
-     getAliceMem(Ctx,Dict,Name,ValueO).
-getAliceMem(Ctx,Dict,Name,ValueO):- var(ValueO), !, getAliceMemElse(Ctx,Dict,Name,ValueO),!.
-
-getAliceMem(Ctx,Dict,Name,'OM'):- !,not((getAliceMemComplete(Ctx,Dict,Name,ValueO),ValueO\=='OM')).
-%%getAliceMem(Ctx,Dict,Name,ValueI):- %%unresultifyC(ValueI,ValueM),!,getAliceMem(Ctx,Dict,Name,ValueO),!,sameBinding(ValueI,ValueO).%%prolog_must(nonvar(ValueI)),!.
-getAliceMem(Ctx,Dict,Name,ValueI):- getAliceMemComplete(Ctx,Dict,Name,ValueO),!,sameBinding(ValueI,ValueO).
-
-getAliceMemComplete(Ctx,Dict,Name,ValueO):-getInheritedStoredValue(Ctx,Dict,Name,ValueO),!.
-
-dictNameKey(_Dict,Dict:Name,Key):-!,dictNameKey(Dict,Name,Key).
-dictNameKey(Dict,Name,Dict:Name).
-dictNameKey(_Dict,NameKey,NameKey):-!.
-
-getStoredValue(_Ctx,_Dict,_Name,Value):-prolog_must(var(Value)),fail.
-
-getStoredValue(Ctx,IDict,NameI,ValueO):-
-     dictNameDictNameC(Ctx,IDict,NameI,Dict,Name),!,
-     getStoredValue(Ctx,Dict,Name,ValueO).
-
-getStoredValue(Ctx,Dict,Name,Value):-getContextStoredValue(Ctx,Dict,Name,Value),!.
-
-% ===============================================================================================
-% named context via inheritance
-% ===============================================================================================
-
-getInheritedStoredValue(Ctx,IScope,NameI,Value):-dictNameDictNameC(Ctx,IScope,NameI,Scope,Name),!,getInheritedStoredValue(Ctx,Scope,Name,Value).
-getInheritedStoredValue(Ctx,Scope,DEFAULT,ValueOut):- compound(DEFAULT),DEFAULT=default(Name,Default),!, 
-         (getInheritedStoredValue(Ctx,Scope,Name,ValueO) -> xformOutput(ValueO, ValueOut)  ; xformOutput(Default, ValueOut)). 
-
-getInheritedStoredValue(Ctx,Scope,Name,Value):- getStoredValue(Ctx,Scope,Name,Value).
-getInheritedStoredValue(Ctx,Scope,Name,Value):- atom(Scope),inheritedFrom(Scope,InHerit),getInheritedStoredValue(Ctx,InHerit,Name,Value).
- 
-inheritedFrom([Scope],To):-nonvar(Scope),!,inheritedFrom(Scope,To).
-inheritedFrom(default,_):-!,fail.
-inheritedFrom(defaultValue(_),_):-!,fail.
-inheritedFrom(Scope,defaultValue(Scope)).
-inheritedFrom(_Scope,default).
-inheritedFrom(user,_):-!,fail.
-inheritedFrom(Atom,user):-atom(Atom).
-
-
-getIndexedValue(Ctx,IDict,Name,MajorMinor,Value):-unresultifyC(IDict,Dict),!,
-    getIndexedValue(Ctx,Dict,Name,MajorMinor,Value),!.
-
-getIndexedValue(Ctx,Dict,Name,[],Value):-!,
-    getIndexedValue(Ctx,Dict,Name,[1],Value).
-
-getIndexedValue(Ctx,Dict,Name,Major,Value):-atomic(Major),!,
-    getIndexedValue(Ctx,Dict,Name,[Major],Value).
-
-getIndexedValue(Ctx,Dict,Name,[Minor],Value):-atomic(Minor),!,
-    getIndexedValue(Ctx,Dict,Name,[1,Minor],Value).
-
-getIndexedValue(Ctx,Dict,Name,[Major,SEP|Minor],Value):- member(SEP,[',',':']),!,
-    getIndexedValue(Ctx,Dict,Name,[Major|Minor],Value).
-
-getIndexedValue(Ctx,Dict,Name,MajorMinor,ValueO):- numberFyList(MajorMinor,MajorMinorM),MajorMinor\==MajorMinorM,!,
-   getIndexedValue(Ctx,Dict,Name,MajorMinorM,ValueO).
-
-getIndexedValue(Ctx,Dict,DEFAULT,MajorMinor,ValueOut):- compound(DEFAULT),DEFAULT=default(Name,Default),!,
-    (getIndexedValue(Ctx,Dict,Name,MajorMinor,ValueO)  -> xformOutput(ValueO, ValueOut)  ; xformOutput(Default, ValueOut)). 
-
-
-getIndexedValue(Ctx,Dict,Name,MajorMinor,ValueO):-
-    notrace(getIndexedValue0(Ctx,Dict,Name,MajorMinor,Value)),
-    xformOutput(Value,ValueO).
-   
-getIndexedValue(Ctx,Dict,Name,MajorMinor,ValueO):-
-    unify_listing(getContextStoredValue(Ctx,Dict,_N,_V)),
-    %%unify_listing(getContextStoredValue(Ctx,_,Name,_)),
-    getIndexedValue0(Ctx,Dict,Name,MajorMinor,Value),
-    xformOutput(Value,ValueO).
-
-getIndexedValue0(Ctx,Dict,Name,[Major|Minor],Value):-
-   getMajorMinorIndexedValue(Ctx,Dict,Name,Major,Minor,Value),!.
-
-getMajorMinorIndexedValue(Ctx,Dict,Name,Major,Minor,Value):-
-   indexOntoKey(Name,Major,Item),
-   getInheritedStoredValue(Ctx,Dict,Item,ValueS),!,
-   getMajorMinorIndexedValue0(Ctx,Dict,Name,Major,Minor,ValueS,Value).
-
-getMajorMinorIndexedValue0(_Ctx,_Dict,_Name,_Major,Minor,ValueS,Value):-
-   getMinorSubscript(ValueS,Minor,Value),!.
-
-getMajorMinorIndexedValue0(Ctx,Dict,Name,Major,[M|Minor],ValueS,Value):-
-   prolog_must(is_list(ValueS)),
-   length(ValueS,ValueSLen),
-   MajorN is Major + 1,
-   N is M - ValueSLen,
-   trace,
-   getMajorMinorIndexedValue(Ctx,Dict,Name,MajorN,[N|Minor],Value),!.
-
-
-numberFyList([],[]).
-numberFyList([A|MajorMinor],[B|MajorMinorM]):-
-  atom(A),atom_to_number(A,B),
-  numberFyList(MajorMinor,MajorMinorM),!.
-numberFyList([A|MajorMinor],[A|MajorMinorM]):-numberFyList(MajorMinor,MajorMinorM).
-
-isStarValue(Value):-ground(Value),not([_,_|_]=Value),member(Value,[[ValueM],ValueM]),!,member(ValueM,['*','_']),!.
-
-xformOutput(Value,ValueO):-isStarValue(Value),!,trace,Value=ValueO.
-xformOutput(Value,ValueO):-listify(Value,ValueL),Value\==ValueL,!,xformOutput(ValueL,ValueO).
-xformOutput(Value,Value).
-
-subscriptZeroOrOne(Major):-nonvar(Major),member(Major,[0,1,'0','1']).
-
-
-
-%% getMinorSubscript(Items,Minor,Value).
-getMinorSubscript(ItemsO,Index,Value):- not(is_list(ItemsO)),answerOutput(ItemsO,Items),prolog_must(is_list(Items)),getMinorSubscript(Items,Index,Value),!.
-getMinorSubscript(Items,'*',Value):-!,prolog_must(flatten(Items,Value)),!.
-getMinorSubscript(Items,',',Value):- throw_safe(getMinorSubscript(Items,',',Value)), !,prolog_must(=(Items,Value)),!.
-getMinorSubscript(Items,[A|B],Value):-!,getMinorSubscript(Items,A,ValueS),!,getMinorSubscript(ValueS,B,Value),!.
-getMinorSubscript(Items,[],Value):-!,xformOutput(Items,Value),!.
-getMinorSubscript(Items,ANum,Value):-not(number(ANum)),!,prolog_must(atom_to_number(ANum,Num)),!,getMinorSubscript(Items,Num,Value).
-%%%
-getMinorSubscript(Items,Num,Value):- prolog_must(is_list(Items)),length(Items,Len),Index is Len-Num,nth0(Index,Items,Value),is_list(Value),!.
-getMinorSubscript([],1,[]):-!.
-getMinorSubscript(Items,1,Value):- trace,last(Items,Last), (is_list(Last)->Value=Last;Value=Items),!.
-getMinorSubscript(Items,1,Value):- xformOutput(Items,Value),!,trace.
-getMinorSubscript(Items,Num,Value):-debugFmt(getMinorSubscriptFailed(Items,Num,Value)),trace,fail.
-
-getUserDicts(User,Name,Value):-isPersonaUser(User),isPersonaPred(Name),once(getInheritedStoredValue(_Ctx,User,Name,Value)).
-
-isPersonaUser(User):-findall(User0,getContextStoredValue(_Ctx,User0,'is_type','agent'),Users),sort(Users,UsersS),!,member(User,UsersS).
-isPersonaPred(Name):-findall(Pred,(getContextStoredValue(_Ctx,_Dict,Pred,_Value),atom(Pred)),Preds),sort(Preds,PredsS),!,member(Name,PredsS).
-
-
-
-% ===============================================================================================
-% substs dictionaries
-% ===============================================================================================
-addReplacement(Ctx,IDict,Find,Replace):-dictNameDictNameC(Ctx,IDict,before,Dict,before),!,addReplacement(Ctx,Dict,Find,Replace).
-addReplacement(Ctx,SubstsNameI,Find,Replace):-
-      convert_dictname(Ctx,SubstsNameI,SubstsName),SubstsNameI \== SubstsName,
-      addReplacement(Ctx,SubstsName,Find,Replace).
-addReplacement(Ctx,SubstsName,Find,Replace):-
-      convert_substs(Find,FindM),
-      convert_replacement(Ctx,Replace,ReplaceM),
-      (Replace\==ReplaceM;Find\==FindM),!,
-      addReplacement(Ctx,SubstsName,FindM,ReplaceM).
-addReplacement(Ctx,Dict,Find,Replace):- immediateCall(Ctx,addReplacement(Dict,Find,Replace)),fail.
-addReplacement(_Ctx,Dict,Find,Replace):- assertz(dict(substitutions(Dict),Find,Replace)),!.
-
-addReplacement(Dict,Find,Replace):-currentContext(addReplacement(Dict,Find,Replace),Ctx), addReplacement(Ctx,Dict,Find,Replace).
-
-
-% ===============================================================================================
-% context/name cleanups
-% ===============================================================================================
-dictNameDictNameC(Ctx,IDict,NameI,Dict,Name):-dictNameDictName(Ctx,IDict,NameI,Dict,Name),!, IDict+NameI \==Dict+Name.
-
-dictNameDictName(Ctx,IDict,NameI,Dict,Name):- hotrace(dictNameDictName0(Ctx,IDict,NameI,Dict,Name)).
-dictNameDictName0(Ctx,_Dict,D:NameI,Dict,Name):- nonvar(D),!,dictNameDictName(Ctx,D,NameI,Dict,Name).
-dictNameDictName0(Ctx,IDict,NameI,Dict,Name):- convert_dictname(Ctx,IDict,Dict),unresultifyL(Ctx,NameI,Name).
-
-unresultifyL(Ctx,NameI,Name):-unresultifyLL(Ctx,NameI,NameU),toLowerIfAtom(NameU,Name),!.
-
-unresultifyLL(Ctx,NameI,NameO):-unresultify(NameI,Name),NameI \== Name,!,unresultifyLL(Ctx,Name,NameO).
-unresultifyLL(Ctx,NameI,NameO):-is_list(NameI),lastMember(Name,NameI),!,unresultifyLL(Ctx,Name,NameO).
-unresultifyLL(_Ctx,Name,Name).
-toLowerIfAtom(Dict,Down):-atom(Dict),downcase_atom(Dict,Down),!.
-toLowerIfAtom(Dict,Dict).
-
-
-% ===============================================================================================
-% Setting globals
-% ===============================================================================================
-setAliceMem(Ctx,IDict,NameI,Value):-dictNameDictNameC(Ctx,IDict,NameI,Dict,Name),!,setAliceMem(Ctx,Dict,Name,Value),!.
-setAliceMem(Ctx,Dict,Name,Var):-var(Var),!,setAliceMem(Ctx,Dict,Name,['$var'(Var)]).
-setAliceMem(Ctx,Dict,Name,Atomic):-atomic(Atomic),Atomic\==[],!,setAliceMem(Ctx,Dict,Name,[Atomic]).
-setAliceMem(Ctx,Dict,Name,NonList):-not(is_list(NonList)),trace,!,setAliceMem(Ctx,Dict,Name,[NonList]).
-setAliceMem(Ctx,IDict,Name,Value):-is_list(IDict),!,foreach(member(Dict,IDict),setAliceMem(Ctx,Dict,Name,Value)),!.
-setAliceMem(Ctx,Dict,Name,Value):-immediateCall(Ctx,setCurrentAliceMem(Dict,Name,Value)),fail.
-setAliceMem(Ctx,Dict,Name,Value):-isStarValue(Value),debugFmt(setAliceMem(Ctx,Dict,Name,Value)),trace.
-setAliceMem(Ctx,Dict,default(Name),DefaultValue):-getAliceMem(Ctx,Dict,Name,'OM')->setAliceMem(Ctx,Dict,Name,DefaultValue);true.
-setAliceMem(Ctx,Dict,Name,Value):-resetAliceMem(Ctx,Dict,Name,Value),!.
-
-% ===============================================================================================
-%    AIML Runtime Database
-% ===============================================================================================
-
-quitely(Ctx):-getCtxValueElse(quiteMemOps,Ctx,True,false),!,True=true.
-
-resetAliceMem(Ctx,IDict,NameI,Value):- dictNameDictName(Ctx,IDict,NameI,Dict,Name),
-   % for printing
-   %%%traceIf(Dict==filelevel),
-   currentContextValue(Ctx,Dict,Name,B),   
-   (atom_contains(Name,'(')->true;(not(quitely(Ctx))->true;debugFmt('/* ~q. */',[dict(Dict,Name,B->Value)]))),
-   % for cleaning
-   clearContextValues(Ctx,Dict,Name),
-   % for setting
-   addNewContextValue(Ctx,Dict,Name,Value),!.
-
-setCurrentAliceMem(Dict,X,E):-currentContext(setCurrentAliceMem(Dict,X,E),Ctx), setAliceMem(Ctx,Dict,X,E).
-
-%%getContextStoredValue(Ctx,Dict,Name,Value):-dictNameKey(Dict,Name,Key),debugOnError(getCtxValue(Key,Ctx,Value)),valuePresent(Value).
-currentContextValue(Ctx,Dict,Name,Value):- getContextStoredValue(Ctx,Dict,Name,Value),!.
-currentContextValue(_Ctx,_Dict,_Name,'OM'):-!.
-
-getContextStoredValue(Ctx,IDict,NameI,Value):-dictNameDictNameC(Ctx,IDict,NameI,Dict,Name),!,getContextStoredValue(Ctx,Dict,Name,Value).
-getContextStoredValue(_Ctx,Dict,Name,ValueO):- copy_term(ValueO,ValueI),dict(Dict,Name,ValueI),valuePresent(ValueI), ValueO=ValueI.
-
-removeContextValue(Ctx,IDict,NameI,Value):-dictNameDictName(Ctx,IDict,NameI,Dict,Name),copy_term(Value,Kill),ignore(retract(dict(Dict,Name,Kill))).
-clearContextValues(Ctx,IDict,NameI):-dictNameDictName(Ctx,IDict,NameI,Dict,Name),retractall(dict(Dict,Name,_Value)).
-
-addNewContextValue(Ctx,IDict,NameI,Value):-dictNameDictNameC(Ctx,IDict,NameI,Dict,Name),!,addNewContextValue(Ctx,Dict,Name,Value).
-addNewContextValue(Ctx,Dict,Name,OM):-OM=='OM',!,clearContextValues(Ctx,Dict,Name),!.
-addNewContextValue(Ctx,Dict,Name,Value):- 
-   dictNameKey(Dict,Name,Key),
-   addCtxValue(Key,Ctx,Value),
-   ifThen(nonvar(Value),asserta(dict(Dict,Name,Value))),
-   ifThen(not(ground(Value)),debugFmt(addCtxValue(Key,Ctx,Value))).
+getItemValue(Name,Ctx,Value):-nonvar(Ctx),getCtxValue(Name,Ctx,Value),!.
+getItemValue(Name,Ctx,Value):-current_value(Ctx,Name,Value),!.
+getItemValue(Name,Ctx,Value):-getAliceMem(Ctx,_,Name,Value),!.
+getItemValue(Name,Ctx,Value):-findTagValue(Ctx,[],Name,Value,'$current_value').%%current_value(Ctx,Name,Value),!.
 
 % ===============================================================================================
 %    Context values API
 % ===============================================================================================
 
 pushAttributes(Ctx,Scope,List):-pushCtxFrame(Scope,Ctx,List),pushAttributes0(Ctx,Scope,List),!.
+pushAttributes0(_Ctx,_Scope,_AnyPushed):-!.
 pushAttributes0(Ctx,Scope,[N=V|L]):-pushNameValue(Ctx,Scope,N,V),pushAttributes0(Ctx,Scope,L).
 pushAttributes0(_Ctx,_Scope,[]).
 
@@ -266,7 +43,7 @@ current_value(Ctx,Name,Value):-peekNameValue(Ctx,_,Name,Value,'$error').
 %%peekNameValue(Ctx,Scope,Name,Value):-Failed='$error',peekNameValue(Ctx,Scope,Name,Value,Failed),ignore((Value==Failed,trace,Value = '*')),!.
 
 peekNameValue(Ctx,Scope,Name,Value,Else):-nonvar(Value),!,checkNameValue(Ctx,Scope,Name,Value,Else).
-peekNameValue(Ctx,_Scope,Name,Value,_ElseVar):-notrace(getCtxValue(Name,Ctx,Value)),!.
+peekNameValue(Ctx,_Scope,Name,Value,_ElseVar):-hotrace(getCtxValue(Name,Ctx,Value)),!.
 peekNameValue(Ctx,List,Name,Value,_ElseVar):- nonvar(List),not(atom(List)),attributeOrTagValue(Ctx,List,Name,Value,'$failure'),!.
 peekNameValue(Ctx,Scope,Name,Value,_ElseVar):-getStoredValue(Ctx,Scope,Name,Value),checkAttribute(Scope,Name,Value),!.
 %%%%%%peekNameValue(Ctx,Scope,Name,Value,_ElseVar):-nonvar(Scope),getStoredValue(Ctx,Scope2,Name,Value),Scope\=Scope2,checkAttribute(Scope2,Name,Value),!,checkValue(Value),!.
@@ -277,7 +54,7 @@ peekNameValue(Ctx,_Scope,Name,Value,ElseVar):-makeParamFallback(Ctx,Name,Value,E
 %%peekNameValue(_Ctx,_Scope,_Name,Value,ElseVar):-ignore(Value=ElseVar),!.
 
 checkNameValue(Ctx,Scope,[Name],Value,Else):- nonvar(Name),!,checkNameValue(Ctx,Scope,Name,Value,Else).
-checkNameValue(Ctx,Scope,Name,Value,Else):-notrace(( peekNameValue(Ctx,Scope,Name,ValueVar,Else),!,checkValue(ValueVar),valuesMatch(Ctx,ValueVar,Value))),!. %%,trace.
+checkNameValue(Ctx,Scope,Name,Value,Else):-hotrace(( peekNameValue(Ctx,Scope,Name,ValueVar,Else),!,checkValue(ValueVar),valuesMatch(Ctx,ValueVar,Value))),!. %%,trace.
 
 valuesMatch(_Ctx,V,A):-V=A,!.
 valuesMatch(_Ctx,_V,A):-A=='*',!.
@@ -305,12 +82,22 @@ valuePresent(result(_)):- !.
 valuePresent(Value):- valueMP(Value,_M),!,fail.
 valuePresent(_):-!.
 
+isValid(Value):- var(Value),!,fail.
+isValid([X]):-!,isValid(X).
+isValid(result(_)):- !.
+isValid([]):-!.
+isValid(Value):- valueMP(Value,_M),!,fail.
+isValid(_):-!.
+
 % ===============================================================================================
 %    push/pop values API
 % ===============================================================================================
+popAttributes(Ctx,Scope,OldVals):- popCtxFrame(Scope,Ctx,PrevValues),ignore(PrevValues=OldVals),!,ignore(popAttributes0(Ctx,Scope,OldVals)).
+%%popAttributes(Ctx,Scope,List):- prolog_must(ground(Scope)),popAttributes0(Ctx,Scope,OldVals),!.
 
-popAttributes(Ctx,Scope,[N=V|L]):- !,checkAttribute(Scope,N,V),popNameValue(Ctx,Scope,N,V),!,popAttributes(Ctx,Scope,L),!.
-popAttributes(_Ctx,_Scope,[]).
+popAttributes0(Ctx,Scope,[N=V|L]):- nonvar(N),!,checkAttribute(Scope,N,V),popNameValue(Ctx,Scope,N,V),!,popAttributes0(Ctx,Scope,L),!.
+%%popAttributes0(_Ctx,Scope,[]):-unify_listing(retract(dict(Scope,_,_))),!.
+popAttributes0(_Ctx,Scope,_):-trace,unify_listing(retract(dict(Scope,_,_))),!.
 
 withAttributes(_Ctx,ATTRIBS,Call):-ATTRIBS==[],!,Call.
 withAttributes(Ctx,ATTRIBS,Call):-
@@ -321,6 +108,7 @@ withAttributes(Ctx,ATTRIBS,Call):-
     once(hotrace(pushAttributes(Ctx,Scope,ATTRIBS))),
       Call),
     once(hotrace(popAttributes(Ctx,Scope,ATTRIBS)))).
+    
 
 checkAttributes(Scope,ATTRIBS):-prolog_must(nonvar(ATTRIBS)),maplist(checkAttribute(Scope),ATTRIBS).
 checkAttribute(Scope,N=V):-checkAttribute(Scope,N,V).
@@ -341,7 +129,7 @@ popNameValue(Ctx,Scope,N,V):-
 %dyn_retract(dict(Scope,N,V)):-(retract(dict(Scope,N,V))),!.
 
 ensureScope(_Ctx,_ATTRIBS,Scope):-nonvar(Scope),!.
-ensureScope(_Ctx,_ATTRIBS,filelevel):-!.
+ensureScope(_Ctx,_ATTRIBS,Scope):-gensym(scope,Scope),!.
 
 
 
@@ -481,9 +269,10 @@ withCurrentContext(Goal):-prolog_must(atom(Goal)),debugOnFailureAiml((currentCon
 
 makeAimlContext(Name,Ctx):-makeContextBase(Name,Ctx),!,setCtxValue(ctx,Ctx,Name),!.
 
-currentContext(Name,X):-makeAimlContext(Name,X),!.
+currentContext(Name,Ctx):-ifThen(var(Ctx),makeAimlContext(Name,Ctx)),!.
 
 makeContextBase(CtxNameKey, [frame(CtxNameKey,ndestruct,[assoc(AL)|_])|_]):- list_to_assoc([],AL).
+%% WAS makeContextBase(CtxNameKey, [frame(CtxNameKey,ndestruct,[assoc(AL)|_])|_]):- list_to_assoc([],AL).
 
 makeContextBase__only_ForTesting(Gensym_Key, [frame(Gensym_Key,ndestruct,[assoc(AL)|_])|_]):-    
    list_to_assoc([
@@ -496,9 +285,14 @@ makeContextBase__only_ForTesting(Gensym_Key, [frame(Gensym_Key,ndestruct,[assoc(
 % push/pop frames
 % ===================================================================
 pushCtxFrame(Name,Ctx,NewValues):-checkCtx(Ctx),get_ctx_holderFreeSpot(Ctx,Holder,GuestDest),!,Holder=frame(Name,GuestDest,NewValues).
-popCtxFrame(Name,Ctx,PrevValues):-checkCtx(Ctx),get_ctx_frame_holder(Ctx,Name,Frame),Frame = frame(Name,Destructor,PrevValues),Destructor,!.
+popCtxFrame(Name,Ctx,PrevValuesIn):- hotrace((checkCtx(Ctx),get_ctx_frame_holder(Ctx,Name,Frame,_Held),Frame = frame(Name,Destructor,PrevValues),
+      call(Destructor,Name,Ctx,Frame),!,mustMatch(PrevValues,PrevValuesIn))).
+
+checkCtx(_):-!.
 checkCtx(Ctx):-prolog_must(nonvar(Ctx)).
 %%checkCtx(Ctx):-makeAimlContext(broken,Ctx),!.
+
+mustMatch(PrevValues,PrevValuesIn):-ignore(PrevValues=PrevValuesIn).
 
 :-dynamic(no_cyclic_terms).
 
@@ -510,6 +304,10 @@ no_cyclic_terms.
 % ===================================================================
 ndestruct:-trace.
 ndestruct(Holder):-debugFmt(unImplemented(ndestruct(Holder))).
+
+mdestruct(_Why,Name,_Ctx,Frame):-Frame=frame(NameF,_,_),prolog_must(Name==NameF),Dest = destroyed(Name),
+   setarg(1,Frame,Dest),setarg(2,Frame,Dest),setarg(3,Frame,Dest),!,Frame=Frame.
+mdestruct(Why,Name,Ctx,Value):-debugFmt(unImplemented11(mdestruct(Why,Name,Ctx,Value))).
 no_setter(Why,Name,Ctx,Value):-debugFmt(unImplemented2(no_setter(Why,Name,Ctx,Value))).
 
 
@@ -530,8 +328,10 @@ set_assoc(_OrigName,Name,CtxIn,Value):- prolog_must(setCtxValue(Name,CtxIn,Value
 unwrapValue(HValue,TValue):-TValue==deleted,!,not(unwrapValue1(HValue,_)),!.
 unwrapValue(HValue,TValue):-unwrapValue1(HValue,Value),!,TValue=Value.
 
-unwrapValue1(v(ValueHolder,_SetterFun,_KeyDestroyer),Value):-!,unwrapValue1(ValueHolder,Value).
+unwrapValue1(Value,ValueOut):-var(Value),!,trace,throw_safe(unwrapValue1(Value,ValueOut)),Value=ValueOut.
+unwrapValue1(v(ValueHolder,_SetterFun,_KeyDestroyer),Value):-!,unwrapValue1(ValueHolder,Value),!.
 unwrapValue1(deleted,_):-!,fail.
+unwrapValue1(Deleted,_):-compound(Deleted),functor(Deleted,deleted,_),!,fail.
 unwrapValue1(Value,Value):-!.
 
 bestSetterFn(v(_,Setter,_),_OuterSetter,Setter):-!.
@@ -541,26 +341,43 @@ getCtxValueElse(Name,Ctx,Value,_Else):-getCtxValue0(Name,Ctx,Value),!.
 getCtxValueElse(_Name,_Ctx,Else,Else).
 
 getCtxValue(Name,CtxI,Value):-getCtxValue0(Name,CtxI,Value).
-getCtxValue(Name,CtxI,Value):-debugFmt(not(getCtxValue(Name,CtxI,Value))),fail.
+getCtxValue(Name,CtxI,Value):-debugFmt(not(getCtxValue(Name,CtxI,Value))),!,fail.
 getCtxValue0(Name,CtxIn,Value):-checkCtx(CtxIn), hotrace(( get_ctx_holder(CtxIn,Ctx),get_o_value(Name,Ctx,HValue,_Setter),!, unwrapValue(HValue,Value))),!.
 getCtxValue0(Name,CtxI,Value):-checkCtx(CtxI),lastMember(Ctx,CtxI),hotrace(( get_ctx_holder(Ctx,CtxH),get_o_value(Name,CtxH,HValue,_Setter),!, unwrapValue(HValue,Value))),!.
 
-setCtxValue(Name,CtxIn,Value):-checkCtx(CtxIn),get_ctx_holder(CtxIn,Ctx),get_o_value(Name,Ctx,HValue,Setter),unwrapValue(HValue,CurrentValue),!,(CurrentValue=Value;call(Setter,Name,CtxIn,Value)),!.
-setCtxValue(Name,Ctx,Value):-checkCtx(Ctx),addCtxValue1(Name,Ctx,Value),!.
+
+getCtxValue_nd(Key,Ctx,Value):- getNamedCtxValue(Ctx,Dict,Name,Value),dictNameKey(Dict,Name,Key).
+
+getNamedCtxValue(CtxIn,Dict,Name,Value):-get_ctx_frame_holder(CtxIn,Dict,_Frame,Held),trace,get_c_value_wrapped(Held,Name,Value).
+getNamedCtxValue(CtxIn,Dict,Name,Value):-lastMember(Ctx,CtxIn),hotrace((get_ctx_holder(Ctx,CtxHolder),ctxDict(CtxHolder,Dict,Held),get_c_value_wrapped(Held,Name,Value) )).
+getNamedCtxValue(CtxIn,Dict,Name,deleted(CtxIn,Dict,Name)):-ignore(Dict=nodict),ignore(Name=noname).
+
+ctxDict(Ctx,Dict,[]):-var(Ctx),!,Dict=noctx.
+ctxDict(frame(Named,_,Held),Dict,Held):-!,Named=Dict.
+ctxDict(Ctx,Dict,Ctx):-!,Dict=unnamedctx.
+
+get_c_value_wrapped(Ctx,Name,Value):-get_o_value(Name,Ctx,Value,_Setter).%%,unwrapValue(HValue,Value).
+get_c_value_wrapped(_Ctx,Name,deleted(Name)):-ignore(Name=noname).
+
+setCtxValue(Name,Ctx,Value):-(getCtxValue0(Name,Ctx,PrevValue),!, Value==PrevValue) -> true; addCtxValue1(Name,Ctx,Value).
 
 addCtxValue(Name,Ctx,Value):-checkCtx(Ctx),addCtxValue1(Name,Ctx,Value),!.
-addCtxValue1(Name,Ctx,Value):-get_ctx_holderFreeSpot(Ctx,Name=v(Value,Setter,Destructor),Destructor),!,ignore(Setter=set_v3(Name)).
+%%addCtxValue1(Name,Ctx,Value):-get_ctx_holderFreeSpot(Ctx,Name=v(Value,Setter,Destructor),Destructor),!,ignore(Setter=set_v3(Name)).
+addCtxValue1(Name,CtxIn,Value):-get_ctx_frame_holder(CtxIn,_Dict,Ctx,_Held),get_ctx_holderFreeSpot(Ctx,NameValue,Destructor), NameValue = (Name=v(Value,set_v3(Name),Destructor)).
+                                                                                             
 
 remCtxValue(Name,Ctx,_Value):-checkCtx(Ctx),setCtxValue(Name,Ctx,deleted),!.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% get the frame holder
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-get_ctx_frame_holder(Ctx,Name,R):-compound(Ctx),get_ctx_frame_holder1(Ctx,Name,R).
-get_ctx_frame_holder1(v(_,_,_),_Name,_R):-!,fail.
-get_ctx_frame_holder1(frame(Name,Dest,Ctx),Name,R):- R = frame(Name,Dest,Ctx),!.
-get_ctx_frame_holder1([H|T],Name,R):- nonvar(H), !, ( get_ctx_frame_holder(T,Name,R);get_ctx_frame_holder1(H,Name,R)) .
-%%get_ctx_frame_holder1(Ctx,Name,Ctx):-!,get_ctx_frame_holder1(Ctx,Name,R).
+get_ctx_frame_holder(v(_,_,_),_Name,_R,_Held):-!,fail.
+get_ctx_frame_holder(R,NameIn,Frame,Held):- R = frame(Name,_,Inner),!, Name\=destroyed(_),
+                        (  get_ctx_frame_holder(Inner,NameIn,Frame,Held); 
+                           (Name=NameIn,debugOnFailureAimlEach((Held=Inner,R=Frame,Name=NameIn,!)))).
+
+get_ctx_frame_holder([H|T],Name,R,Held):- nonvar(H), !, ( get_ctx_frame_holder(T,Name,R,Held);get_ctx_frame_holder(H,Name,R,Held)) .
+%%get_ctx_frame_holder(Ctx,Name,Ctx):-!,get_ctx_frame_holder(Ctx,Name,R).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -572,8 +389,8 @@ get_ctx_holder(Ctx,R):-compound(Ctx),get_ctx_holder1(Ctx,R).
 get_ctx_holder1([H|T],R):- nonvar(H), !, ( get_ctx_holder(T,R);get_ctx_holder1(H,R)) .
 get_ctx_holder1(v(_,_,_),_R):-!,fail.%% get_ctx_holder(Ctx,R).
 get_ctx_holder1(frame(_N,_Dest,Ctx),R):-!,get_ctx_holder(Ctx,R).
-%get_ctx_holder1(Ctx,R):- functor(Ctx,F,A),A<3,!,fail.
 get_ctx_holder1(assoc(Ctx),assoc(Ctx)):-!.
+%get_ctx_holder1(Ctx,R):- functor(Ctx,F,A),A<3,!,fail.
 get_ctx_holder1(Ctx,Ctx).
 
 
@@ -582,17 +399,18 @@ get_ctx_holder1(Ctx,Ctx).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% get_ctx_holderFreeSpot(+Ctx, -Put_NV, -CallToRemoveNV)
 
-get_ctx_holderFreeSpot(Ctx,NamedValue,ndestruct(holder)):-no_cyclic_terms,!,get_ctx_holderFreeSpot0(Ctx,NamedValue,_NO_Destruct),!.
+get_ctx_holderFreeSpot(Ctx,NamedValue,mdestruct(no_cyclic_terms)):-no_cyclic_terms,!,get_ctx_holderFreeSpot0(Ctx,NamedValue,_NO_Destruct),!.
 get_ctx_holderFreeSpot(Ctx,NamedValue,Destruct):-get_ctx_holderFreeSpot0(Ctx,NamedValue,Destruct).
 
 get_ctx_holderFreeSpot0(Ctx,NamedValue,Destruct):-compound(Ctx),get_ctx_holderFreeSpot1(Ctx,NamedValue,Destruct).
 
 get_ctx_holderFreeSpot1(assoc(_Ctx),_,_):-!,fail.
 get_ctx_holderFreeSpot1(frame(Key,_Inner_Dest,Ctx),NamedValue,Destruct):- nonvar(Key), !, get_ctx_holderFreeSpot1(Ctx,NamedValue,Destruct).
-get_ctx_holderFreeSpot1(Ctx,NamedValue,Destruct):-functor(Ctx,F,A),!,get_ctx_holderFreeSpot1(Ctx,F,A,NamedValue,Destruct).
+get_ctx_holderFreeSpot1(Ctx,NamedValue,Destruct):-get_ctx_holderFreeSpot2(Ctx,Ctx,NamedValue,Destruct),!.
 
-get_ctx_holderFreeSpot1(Ctx,'.',2,NamedValue,nb_setarg(2,NEXT)):-arg(2,Ctx,Try1), var(Try1),!, Try1 = [NamedValue|NEXT].
-get_ctx_holderFreeSpot1(Ctx,'.',2,NamedValue,Destruct):-arg(2,Ctx,Try2),get_ctx_holderFreeSpot0(Try2,NamedValue,Destruct).
+get_ctx_holderFreeSpot2(_,Try1,NamedValue,nb_setarg(1,Try1)):- var(Try1),!, Try1 = [NamedValue|_NEXT],trace.
+get_ctx_holderFreeSpot2(_,[_|Try1],NamedValue,nb_setarg(1,Try1)):- var(Try1),!, Try1 = [NamedValue|_NEXT].
+get_ctx_holderFreeSpot2(_,[_|Try2],NamedValue,Destruct):-get_ctx_holderFreeSpot0(Try2,NamedValue,Destruct).
 
 %%get_ctx_holderFreeSpot1(Ctx,_,_,NamedValue,_):-!,fail.
 %%get_ctx_holderFreeSpot1(Ctx,_,_,NamedValue,nb_setarg(N,NEXT)):-arg(N,Ctx,Try3),var(Try3),!, Try3 = [NamedValue|NEXT].
@@ -604,14 +422,14 @@ get_ctx_holderFreeSpot1(Ctx,'.',2,NamedValue,Destruct):-arg(2,Ctx,Try2),get_ctx_
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 get_ctx_value(Name,Ctx,Value,Setter):-nonvar(Name),var(Value),get_o_value(Name,Ctx,Value,OuterSetter),bestSetterFn(Value,OuterSetter,Setter).
 
-get_o_value00(Name,Ctx,Value,Setter):-get_o_value0(Name,Ctx,Value,HIDE_Setter),!,((no_cyclic_terms,cyclic_term(HIDE_Setter))-> Setter=no_setter(cyclicOn(Name)) ; Setter =HIDE_Setter).
-get_o_value(Name,Ctx,Value,Setter):-hotrace(get_o_value00(Name,Ctx,Value,Setter)),!.
+get_o_value00(Name,Ctx,Value,Setter):-get_o_value0(Name,Ctx,Value,HIDE_Setter),((no_cyclic_terms,cyclic_term(HIDE_Setter))-> Setter=no_setter(cyclicOn(Name)) ; Setter =HIDE_Setter).
+get_o_value(Name,Ctx,Value,Setter):-hotrace(get_o_value00(Name,Ctx,Value,Setter)).
 
 get_o_value0(Name,Ctx,Value,Setter):-compound(Ctx),get_o_value1(Name,Ctx,Value,Setter).
 get_o_value1(Name,[H|T],Value,Setter):- !,(get_o_value0(Name,T,Value,Setter);get_o_value1(Name,H,Value,Setter)).
-get_o_value1(Name,ASSOC,Value,set_assoc(ASSOC)):- ASSOC = assoc(Ctx),!, get_assoc(Name,Ctx,Value),!.
-get_o_value1(Name,frame(Key,_Inner_Dest,Ctx),Value,Setter):- nonvar(Key), get_o_value0(Name,Ctx,Value,Setter),!.
-get_o_value1(Name,Pred,Value,Setter):-functor(Pred,F,A),!,get_n_value(Name,Pred,F,A,Value,Setter).
+get_o_value1(Name,ASSOC,Value,set_assoc(ASSOC)):- ASSOC = assoc(Ctx),!, get_assoc(Name,Ctx,Value).
+get_o_value1(Name,frame(Key,_Inner_Dest,Ctx),Value,Setter):- nonvar(Key),!, get_o_value0(Name,Ctx,Value,Setter).
+get_o_value1(Name,Pred,Value,Setter):-functor(Pred,F,A),!,get_n_value(Name,Pred,F,A,Value,Setter),!.
 
 get_n_value(Name,Name,_F,_A,_Value,_):-!,fail.
 get_n_value(Name,Pred,Name,1,Value,nb_setarg(1,Pred)):-arg(1,Pred,Value).
