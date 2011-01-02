@@ -1124,10 +1124,11 @@ namespace AIMLBotModule
 
         public ICollection GetGroup(string name)
         {
-            SUnifiable v = MyUser.Predicates.grabSetting(name);
+            SUnifiable v = null;
+            if (MyUser != null) v = MyUser.Predicates.grabSetting(name);
             if (v == null)
             {
-                v = MyBot.GlobalSettings.grabSetting(name);
+                if (MyBot != null) v = MyBot.GlobalSettings.grabSetting(name);
                 if (v == null) return null;
             }
             if (SUnifiable.IsNullOrEmpty(v)) return null;
