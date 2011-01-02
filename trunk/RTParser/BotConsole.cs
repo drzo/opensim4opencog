@@ -755,7 +755,7 @@ namespace RTParser
             {
                 GraphMaster current = myUser.ListeningGraph;
                 GraphMaster graph = FindGraph(args, current);
-                if (args == "" && graph != null && graph != current)
+                if (args != "" && graph != null && graph != current)
                 {
                     console("Changing to graph " + graph);
                     myUser.ListeningGraph = graph;

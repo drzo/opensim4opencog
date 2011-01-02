@@ -763,7 +763,7 @@ namespace RTParser
 
         public abstract Unifiable Rest();
 
-        public abstract bool IsHighPriory { get; }
+        public abstract bool IsHighPriority { get; }
 
         public abstract object AsNodeXML();
 
@@ -808,8 +808,6 @@ namespace RTParser
             }
             return "" + unifiable;
         }
-
-        public abstract bool IsPriorityWildCard { get; }
 
         public abstract string ToUpper();
 

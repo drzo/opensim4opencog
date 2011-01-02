@@ -311,7 +311,7 @@ namespace RTParser.Utils
             }
         }
 
-        public bool RecurseResultValid
+        public virtual bool RecurseResultValid
         {
             get
             {
@@ -371,7 +371,7 @@ namespace RTParser.Utils
         /// <summary>
         /// Final Result (not "innerResult!")
         /// </summary>
-        public Unifiable RecurseResult
+        public virtual Unifiable RecurseResult
         {
             get
             {

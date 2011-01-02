@@ -58,5 +58,28 @@ namespace RTParser.AIMLTagHandlers
             writeToLogWarn("CANUNIFY: " + with);
             return base.CanUnify(with);
         }
+
+        public override Unifiable RecurseResult
+        {
+            get { return data; }
+            set
+            {
+                if (data != value)
+                {
+                    base.RecurseResult = value;
+                }
+            }
+        }
+        public override bool RecurseResultValid
+        {
+            get
+            {
+                return true;
+            }
+            set
+            {
+                base.RecurseResultValid = value;
+            }
+        }
     }
 }

@@ -1611,7 +1611,8 @@ namespace RTParser
 
         public GraphMaster GetResponseGraph(User target)
         {
-            if (target != null) return target.ListeningGraph;
+            GraphMaster G = ListeningGraph;
+            if (G == null) if (target != null) return target.ListeningGraph;
             return ListeningGraph;
         }
 
