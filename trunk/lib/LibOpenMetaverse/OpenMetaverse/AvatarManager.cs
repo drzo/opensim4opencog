@@ -25,17 +25,94 @@
  */
 
 using System;
-using System.Text;
 using System.Collections.Generic;
-using System.Threading;
+using System.Text;
+using OpenMetaverse.Http;
 using OpenMetaverse.Packets;
 using OpenMetaverse.Interfaces;
 using OpenMetaverse.Messages.Linden;
+using OpenMetaverse.StructuredData;
 
 namespace OpenMetaverse
 {
 
     #region Structs
+    /// <summary> Information about agents display name </summary>
+    public struct AgentDisplayName
+    {
+        /// <summary> Agent UUID </summary>
+        public UUID ID;
+        /// <summary> Username </summary>
+        public string UserName;
+        /// <summary> Display name </summary>
+        public string DisplayName;
+        /// <summary> First name (legacy) </summary>
+        public string LegacyFirstName;
+        /// <summary> Last name (legacy) </summary>
+        public string LegacyLastName;
+        /// <summary> Full name (legacy) </summary>
+        public string LegacyFullName { get { return string.Format("{0} {1}", LegacyFirstName, LegacyLastName); }}
+        /// <summary> Is display name default display name </summary>
+        public bool IsDefaultDisplayName;
+        /// <summary> Cache display name until </summary>
+        public DateTime NextUpdate;
+
+        /// <summary>
+        /// Creates AgentDisplayName object from OSD
+        /// </summary>
+        /// <param name="data">Incoming OSD data</param>
+        /// <returns>AgentDisplayName object</returns>
+        public static AgentDisplayName FromOSD(OSD data)
+        {
+            AgentDisplayName ret = new AgentDisplayName();
+
+            OSDMap map = (OSDMap)data;
+            ret.ID = map["id"];
+            ret.UserName = map["username"];
+            ret.DisplayName = map["display_name"];
+            ret.LegacyFirstName = map["legacy_first_name"];
+            ret.LegacyLastName = map["legacy_last_name"];
+            ret.IsDefaultDisplayName = map["is_display_name_default"];
+            ret.NextUpdate = map["display_name_next_update"];
+
+            return ret;
+        }
+
+        /// <summary>
+        /// Return object as OSD map
+        /// </summary>
+        /// <returns>OSD containing agent's display name data</returns>
+        public OSD GetOSD()
+        {
+            OSDMap map = new OSDMap();
+            
+            map["id"] = ID;
+            map["username"] = UserName;
+            map["display_name"] = DisplayName;
+            map["legacy_first_name"] = LegacyFirstName;
+            map["legacy_last_name"] = LegacyLastName;
+            map["is_display_name_default"] = IsDefaultDisplayName;
+            map["display_name_next_update"] = NextUpdate;
+            
+            return map;
+        }
+
+        public override string ToString()
+        {
+            return Helpers.StructToString(this);
+            //StringBuilder result = new StringBuilder();
+            //result.AppendLine();
+            //result.AppendFormat("{0, 30}: {1,-40} [{2}]" + Environment.NewLine, "ID", ID, "UUID");
+            //result.AppendFormat("{0, 30}: {1,-40} [{2}]" + Environment.NewLine, "UserName", UserName, "string");
+            //result.AppendFormat("{0, 30}: {1,-40} [{2}]" + Environment.NewLine, "DisplayName", DisplayName, "string");
+            //result.AppendFormat("{0, 30}: {1,-40} [{2}]" + Environment.NewLine, "LegacyFirstName", LegacyFirstName, "string");
+            //result.AppendFormat("{0, 30}: {1,-40} [{2}]" + Environment.NewLine, "LegaacyLastName", LegaacyLastName, "string");
+            //result.AppendFormat("{0, 30}: {1,-40} [{2}]" + Environment.NewLine, "IsDefaultDisplayName", IsDefaultDisplayName, "bool");
+            //result.AppendFormat("{0, 30}: {1,-40} [{2}]", "NextUpdate", NextUpdate, "DateTime");
+            //return result.ToString();
+        }
+    }
+
     /// <summary>
     /// Holds group information for Avatars such as those you might find in a profile
     /// </summary>
@@ -114,6 +191,7 @@ namespace OpenMetaverse
     {
         const int MAX_UUIDS_PER_PACKET = 100;
 
+        #region Events
         /// <summary>The event subscribers, null of no subscribers</summary>
         private EventHandler<AvatarAnimationEventArgs> m_AvatarAnimation;
 
@@ -450,6 +528,42 @@ namespace OpenMetaverse
             remove { lock (m_ClassifiedInfoReplyLock) { m_ClassifiedInfoReply -= value; } }
         }
 
+        /// <summary>The event subscribers, null of no subscribers</summary>
+        private EventHandler<DisplayNameUpdateEventArgs> m_DisplayNameUpdate;
+
+        ///<summary>Raises the DisplayNameUpdate Event</summary>
+        /// <param name="e">A DisplayNameUpdateEventArgs object containing
+        /// the data sent from the simulator</param>
+        protected virtual void OnDisplayNameUpdate(DisplayNameUpdateEventArgs e)
+        {
+            EventHandler<DisplayNameUpdateEventArgs> handler = m_DisplayNameUpdate;
+            if (handler != null)
+                handler(this, e);
+        }
+
+        /// <summary>Thread sync lock object</summary>
+        private readonly object m_DisplayNameUpdateLock = new object();
+
+        /// <summary>Raised when the simulator sends us data containing
+        /// the details of display name change</summary>
+        public event EventHandler<DisplayNameUpdateEventArgs> DisplayNameUpdate
+        {
+            add { lock (m_DisplayNameUpdateLock) { m_DisplayNameUpdate += value; } }
+            remove { lock (m_DisplayNameUpdateLock) { m_DisplayNameUpdate -= value; } }
+        }
+
+        #endregion Events
+
+        #region Delegates
+        /// <summary>
+        /// Callback giving results when fetching display names
+        /// </summary>
+        /// <param name="success">If the request was successful</param>
+        /// <param name="names">Array of display names</param>
+        /// <param name="badIDs">Array of UUIDs that could not be fetched</param>
+        public delegate void DisplayNamesCallback(bool success, AgentDisplayName[] names, UUID[] badIDs);
+        #endregion Delegates
+
         private GridClient Client;
 
         /// <summary>
@@ -488,6 +602,8 @@ namespace OpenMetaverse
             // Classifieds callbacks
             Client.Network.RegisterCallback(PacketType.AvatarClassifiedReply, AvatarClassifiedReplyHandler);
             Client.Network.RegisterCallback(PacketType.ClassifiedInfoReply, ClassifiedInfoReplyHandler);
+
+            Client.Network.RegisterEventCallback("DisplayNameUpdate", DisplayNameUpdateMessageHandler);
         }
 
         /// <summary>Tracks the specified avatar on your map</summary>
@@ -555,6 +671,60 @@ namespace OpenMetaverse
 
                 Client.Network.SendPacket(request);
             }
+        }
+
+        /// <summary>
+        /// Check if Display Names functionality is available
+        /// </summary>
+        /// <returns>True if Display name functionality is available</returns>
+        public bool DisplayNamesAvailable()
+        {
+            return (Client.Network.CurrentSim != null && Client.Network.CurrentSim.Caps != null) && Client.Network.CurrentSim.Caps.CapabilityURI("GetDisplayNames") != null;
+        }
+
+        /// <summary>
+        /// Request retrieval of display names (max 90 names per request)
+        /// </summary>
+        /// <param name="ids">List of UUIDs to lookup</param>
+        /// <param name="callback">Callback to report result of the operation</param>
+        public void GetDisplayNames(List<UUID> ids, DisplayNamesCallback callback)
+        {
+            if (!DisplayNamesAvailable() || ids.Count == 0)
+            {
+                callback(false, null, null);
+            }
+
+            StringBuilder query = new StringBuilder();
+            for (int i = 0; i < ids.Count && i < 90; i++)
+            {
+                query.AppendFormat("ids={0}", ids[i]);
+                if (i < ids.Count - 1)
+                {
+                    query.Append("&");
+                }
+            }
+
+            Uri uri = new Uri(Client.Network.CurrentSim.Caps.CapabilityURI("GetDisplayNames").AbsoluteUri + "/?" + query);
+
+            CapsClient cap = new CapsClient(uri);
+            cap.OnComplete += (CapsClient client, OSD result, Exception error) =>
+                                  {
+                                      try
+                                      {
+                                          if (error != null)
+                                              throw error;
+                                          GetDisplayNamesMessage msg = new GetDisplayNamesMessage();
+                                          msg.Deserialize((OSDMap) result);
+                                          callback(true, msg.Agents, msg.BadIDs);
+                                      }
+                                      catch (Exception ex)
+                                      {
+                                          Logger.Log("Failed to call GetDisplayNames capability: ",
+                                                     Helpers.LogLevel.Warning, Client, ex);
+                                          callback(false, null, null);
+                                      }
+                                  };
+            cap.BeginGetResponse(null, String.Empty, Client.Settings.CAPS_TIMEOUT);
         }
 
         /// <summary>
@@ -829,6 +999,21 @@ namespace OpenMetaverse
                 interests.LanguagesText = Utils.BytesToString(airp.PropertiesData.LanguagesText);
 
                 OnAvatarInterestsReply(new AvatarInterestsReplyEventArgs(airp.AgentData.AvatarID, interests));
+            }
+        }
+
+        /// <summary>
+        /// EQ Message fired when someone nearby changes their display name
+        /// </summary>
+        /// <param name="capsKey">The message key</param>
+        /// <param name="message">the IMessage object containing the deserialized data sent from the simulator</param>
+        /// <param name="simulator">The <see cref="Simulator"/> which originated the packet</param>
+        protected void DisplayNameUpdateMessageHandler(string capsKey, IMessage message, Simulator simulator)
+        {
+            if (m_DisplayNameUpdate != null)
+            {
+                DisplayNameUpdateMessage msg = (DisplayNameUpdateMessage) message;
+                OnDisplayNameUpdate(new DisplayNameUpdateEventArgs(msg.OldDisplayName, msg.DisplayName));
             }
         }
 
@@ -1471,6 +1656,24 @@ namespace OpenMetaverse
             this.m_LookType = lookType;
             this.m_Duration = duration;
             this.m_EffectID = id;
+        }
+    }
+
+    /// <summary>
+    /// Event args class for display name notification messages
+    /// </summary>
+    public class DisplayNameUpdateEventArgs : EventArgs
+    {
+        private string oldDisplayName;
+        private AgentDisplayName displayName;
+
+        public string OldDisplayName { get { return oldDisplayName; }}
+        public AgentDisplayName DisplayName { get { return displayName; } }
+
+        public DisplayNameUpdateEventArgs(string oldDisplayName, AgentDisplayName displayName)
+        {
+            this.oldDisplayName = oldDisplayName;
+            this.displayName = displayName;
         }
     }
     #endregion
