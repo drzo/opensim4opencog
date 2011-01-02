@@ -1232,12 +1232,14 @@ namespace AIMLBotModule
                  RespondToChatByDefaultAllUsers = true;
                 SetChatOnOff(String.Join(" ", args, 1, args.Length - 1), true);
                 writeLine("WorldObjects.RespondToChatByDefaultAllUsers = true;");
+                return true;
             }
             if (s == "off" || s == "@off")
             {
                 RespondToChatByDefaultAllUsers = false;
                 SetChatOnOff(String.Join(" ", args, 1, args.Length - 1), false);
                 writeLine("WorldObjects.RespondToChatByDefaultAllUsers = false;");
+                return true;
             }
             if (MyBotNullWarning())
             {
