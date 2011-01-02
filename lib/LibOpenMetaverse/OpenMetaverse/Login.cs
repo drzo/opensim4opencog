@@ -819,7 +819,7 @@ namespace OpenMetaverse
 
         /// <summary>A list of packets obtained during the login process which 
         /// networkmanager will log but not process</summary>
-        public readonly List<string> UDPBlacklist = new List<string>();
+        private readonly List<string> UDPBlacklist = new List<string>();
         #endregion
 
         #region Public Methods
@@ -1115,7 +1115,7 @@ namespace OpenMetaverse
                                     request.Send(CurrentContext.URI, CurrentContext.Timeout),
                                     loginParams);
                             }
-                            catch (WebException e)
+                            catch (Exception e)
                             {
                                 UpdateLoginStatus(LoginStatus.Failed, "Error opening the login server connection: " + e.Message);
                             }
@@ -1153,16 +1153,24 @@ namespace OpenMetaverse
             }
         }
 
+
+		/// <summary>
+		/// LoginParams and the initial login XmlRpcRequest were made on a remote machine.
+		/// This method now initializes libomv with the results.
+		/// </summary>
+		public void RemoteLoginHandler(LoginResponseData response, LoginParams newContext) 
+		{
+			CurrentContext = newContext;
+			LoginReplyXmlRpcHandler(response, newContext);
+		}
+
+
         /// <summary>
         /// Handles response from XML-RPC login replies
         /// </summary>
         private void LoginReplyXmlRpcHandler(XmlRpcResponse response, LoginParams context)
         {
             LoginResponseData reply = new LoginResponseData();
-            ushort simPort = 0;
-            uint regionX = 0;
-            uint regionY = 0;
-
             // Fetch the login response
             if (response == null || !(response.Value is Hashtable))
             {
@@ -1187,7 +1195,18 @@ namespace OpenMetaverse
                 Logger.Log("Login response failure: " + e.Message + " " + e.StackTrace, Helpers.LogLevel.Warning);
                 return;
             }
+			LoginReplyXmlRpcHandler(reply, context);
+		}
 
+
+		/// <summary>
+		/// Handles response from XML-RPC login replies with already parsed LoginResponseData
+		/// </summary>
+		private void LoginReplyXmlRpcHandler(LoginResponseData reply, LoginParams context)
+		{
+			ushort simPort = 0;
+			uint regionX = 0;
+			uint regionY = 0;
             string reason = reply.Reason;
             string message = reply.Message;
 
