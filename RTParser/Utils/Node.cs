@@ -1136,7 +1136,7 @@ namespace RTParser.Utils
             {
                 Node childNode = childNodeKV.Value;
                 Unifiable childNodeWord = childNode.word;
-                if (!childNodeWord.IsPriorityWildCard) continue;
+                if (!childNodeWord.IsHighPriority) continue;
 
                 // add the next word to the wildcard match 
                 StringAppendableUnifiableImpl newWildcard = Unifiable.CreateAppendable();
@@ -1265,7 +1265,7 @@ namespace RTParser.Utils
                 {
                     Node childNode = childNodeKV.Value;
                     Unifiable childNodeWord = childNode.word; //.Key;
-                    if (!childNodeWord.IsCatchAll) continue;
+                    if (!childNodeWord.IsCatchAll || childNodeWord.IsHighPriority) continue;
 
                     // o.k. look for the path in the child node denoted by "*"
                     //Node childNode = childNodeKV.Value;
@@ -1386,7 +1386,7 @@ namespace RTParser.Utils
                 Unifiable childNodeWord = childNodeKV.Value.word;
                 // if (childNodeWord.IsHighPriorityWildCard) continue;
                 // if (childNodeWord.IsLongWildCard()) continue;
-                // if (childNodeWord.IsWildCard()) continue;
+                //if (childNodeWord.IsWildCard) continue;
                 childNode = childNodeKV.Value;
                 if (!query.CanUseNode(childNode))
                 {

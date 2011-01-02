@@ -131,13 +131,13 @@ namespace RTParser
             }
         }
 
-        public override bool IsPriorityWildCard
+        public override bool IsHighPriority
         {
             get
             {
                 foreach (var u in List)
                 {
-                    if (u.IsPriorityWildCard)
+                    if (u.IsHighPriority)
                     {
                         best = u;
                         return true;
@@ -348,20 +348,5 @@ namespace RTParser
             return Empty;
         }
 
-        public override bool IsHighPriory
-        {
-            get
-            {
-                foreach (var list in List)
-                {
-                    if (list.IsHighPriory)
-                    {
-                        best = list;
-                        return true;
-                    }
-                }
-                return false;
-            }
-        }
     }
 }

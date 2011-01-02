@@ -330,6 +330,7 @@ namespace RTParser
             {
                 useOut = "Interesting.";
                 res.TemplateRating = Math.Max(res.Score, 0.5d);
+                saveResults = false;
             }
             if (saveResults)
             {

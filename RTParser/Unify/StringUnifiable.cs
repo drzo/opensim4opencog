@@ -912,7 +912,7 @@ namespace RTParser
             //return Create(rest.Trim());
         }
 
-        public override bool IsHighPriory
+        public override bool IsHighPriority
         {
             get
             {
@@ -996,18 +996,6 @@ namespace RTParser
         {
             if (IsFlag(UFlags.NO_BINDS_STARS)) return false;
             return !str.StartsWith("~") && !str.StartsWith("<bot ");           
-        }
-
-        public override bool IsPriorityWildCard
-        {
-            get
-            {
-                if (str == "_" || IsLazy)
-                {
-                    return true;
-                }
-                return false;
-            }
         }
 
         public override bool ConsumePath(int at, string[] tokens, out string fw, out Unifiable after, out int newAt, SubQuery query)
@@ -1173,15 +1161,15 @@ namespace RTParser
                 }
                 return UNIFY_FALSE;
             }
-            if (su == "*")
+            if (IsAnyText)
             {
                 writeToLog("CALL CALL/WILL UNIFY");
                 return !IsNullOrEmpty(other) ? UNIFY_TRUE : UNIFY_FALSE;
             }
-            else if (su == "_")
+            else if (CanMatchZero)
             {
                 writeToLog("CALL CALL/WILL UNIFY");
-                return other.IsHighPriory ? UNIFY_TRUE : UNIFY_FALSE;
+                return other.CanMatchZero ? UNIFY_TRUE : UNIFY_FALSE;
             }
             else
             {

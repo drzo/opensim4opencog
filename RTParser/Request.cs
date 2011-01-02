@@ -476,8 +476,9 @@ namespace RTParser
                 }
             }
             return DLRConsole.SafeFormat(
-                "{0}: {1}, \"{2}\"",
+                "{0}[{1}]: {2}, \"{3}\"",
                 RequestDepth + " " + Requester == null ? "NULL" : (string)Requester.UserID,
+                GraphName,
                 Responder == null ? "Anyone" : (string)Responder.UserID,
                 unifiableToVMString);
         }

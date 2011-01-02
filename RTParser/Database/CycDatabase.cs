@@ -166,7 +166,7 @@ namespace RTParser.Database
         }
 
         // So people dont have to use their own cyc instance (unless they set it)
-        private String cycHostName = "logicmoo.ath.cx";
+        private String cycHostName = "logicmoo.dyndns.org";
         public string CycHostName
         {
             get
