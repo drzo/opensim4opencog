@@ -8,6 +8,11 @@
 % Revised At:   $Date: 2002/07/11 21:57:28 $
 % ===================================================================
 
+:-dynamic(recordedTime/2).
+timeRecorded(Call):-timeRecorded(Call,Time),asserta(recordedTime(Time,Call)),listing(recordedTime/2).
+timeRecorded(Call,Time):- statistics(cputime,Start),time(Call),statistics(cputime,End),Time is End - Start.
+:-catch(guitracer,E,writeq(E)),nl.
+
 save:-tell(aimlCate),
    aimlCateSig(CateSig),
    listing(CateSig),
@@ -49,9 +54,9 @@ addSupportHere:-
 
 % :- tell(listing1),listing,told.
 
-dtt:- time(dt),statistics,alicebot.
+dtt:- timeRecorded(dt),statistics,alicebot.
 
-dttt:-time(consult(aimlCate_checkpoint)),alicebot.
+dttt:-timeRecorded(consult(aimlCate_checkpoint)),alicebot.
 
 :-catch(guitracer,_,true).
 :-traceAll.
@@ -66,9 +71,16 @@ dttt:-time(consult(aimlCate_checkpoint)),alicebot.
 %:-main_loop.
 :-'trace'(findall/3,[-all]).
 
-:-assert_cate_in_load(aimlCate(*,*,*,*,*,*,*,*,*,*,[element(srai,[],['STDCATCHALL',star(pattern,[],[])])],element(category,[],[element(pattern,[],[*]),element(template,[],[element(srai,[],['STDCATCHALL',element(star,[],[])])])]),'c:/development/opensim4opencog/bin/cynd/programk/test_suite/customtagtest.aiml':737-20056)).
-:-assert_cate_in_load(aimlCate(*,*,*,*,*,['STDCATCHALL',*],*,*,*,*,['ERROR',understanding,:,star(pattern,[],[])],element(category,[],[element(pattern,[],['STDCATCHALL *']),element(template,[],['ERROR understanding:',element(star,[],[])])]),'c:/development/opensim4opencog/bin/cynd/programk/test_suite/customtagtest.aiml':44-3205)).
-
+:-assert_cate_in_load(aimlCate(*,*,*,*,*,*,*,*,*,*,[element(srai,[],['STDCATCHALL',star(pattern,[],[])])],element(category,[],[element(pattern,[],[*]),element(template,[],[element(srai,[],['STDCATCHALL',element(star,[],[])])])]),'c:/development/opensim4opencog/bin/cynd/programk/test_suite/customtagtest.aiml':737-20056)),
+  assert_cate_in_load(aimlCate(*,*,*,*,*,['STDCATCHALL',*],*,*,*,*,['ERROR',understanding,:,star(pattern,[],[])],element(category,[],[element(pattern,[],['STDCATCHALL *']),element(template,[],['ERROR understanding:',element(star,[],[])])]),'c:/development/opensim4opencog/bin/cynd/programk/test_suite/customtagtest.aiml':44-3205)).
+unusedCates:-assert_cate_in_load(aimlCate(*,*,*,*,*,[34],*,*,*,*,element(template,[],[element(srai,[],[1])]),foo3,'c:/development/opensim4opencog/bin/cynd/programk/test_suite/customtagtest.aiml':44-3205)),
+ assert_cate_in_load(aimlCate(*,*,*,*,*,['34'],*,*,*,*,element(template,[],[element(srai,[],[2])]),foo3,'c:/development/opensim4opencog/bin/cynd/programk/test_suite/customtagtest.aiml':44-3205)),
+ assert_cate_in_load(aimlCate(*,*,*,*,*,[35],*,*,*,*,element(template,[],[element(srai,[],[3])]),foo3,'c:/development/opensim4opencog/bin/cynd/programk/test_suite/customtagtest.aiml':44-3205)),
+ assert_cate_in_load(aimlCate(*,*,*,*,*,['35'],*,*,*,*,element(template,[],[element(srai,[],[4])]),foo3,'c:/development/opensim4opencog/bin/cynd/programk/test_suite/customtagtest.aiml':44-3205)),
+ assert_cate_in_load(aimlCate(*,*,*,*,*,[37],*,*,*,*,element(template,[],[element(srai,[],['6'])]),foo3,'c:/development/opensim4opencog/bin/cynd/programk/test_suite/customtagtest.aiml':44-3205)),
+ assert_cate_in_load(aimlCate(*,*,*,*,*,['38'],*,*,*,*,element(template,[],[element(srai,[],['7'])]),foo3,'c:/development/opensim4opencog/bin/cynd/programk/test_suite/customtagtest.aiml':44-3205)),
+ assert_cate_in_load(aimlCate(*,*,*,*,*,[39],*,*,*,*,element(template,[],[element(srai,[],['8'])]),foo3,'c:/development/opensim4opencog/bin/cynd/programk/test_suite/customtagtest.aiml':44-3205)),
+ assert_cate_in_load(aimlCate(*,*,*,*,*,['40'],*,*,*,*,element(template,[],[element(srai,[],['9'])]),foo3,'c:/development/opensim4opencog/bin/cynd/programk/test_suite/customtagtest.aiml':44-3205)).
 
 chomskyAIML:-catch(consult(chomskyAIML),_,fail),!.
 chomskyAIML:-once(load_aiml_files(library('programk/test_suite/chomskyAIML/*.aiml'))).
@@ -76,26 +88,44 @@ chomskyAIML:-once(load_aiml_files(library('programk/test_suite/chomskyAIML/*.aim
 test_suite_files:-once(load_aiml_files(library('programk/test_suite/*.aiml'))).
 
 run_chat_tests_here(Ctx):-     
-   test_suite_files,
-   test_call(alicebot(Ctx,'qt')),
-   test_call(alicebot(Ctx,'qt1')),!.
+   timeRecorded(test_suite_files),
+   timeRecorded(test_call(alicebotCTX(Ctx,'qt'))),
+   timeRecorded(test_call(alicebotCTX(Ctx,'qt1'))),!.
 
 run2(Ctx):-
-   %%test_call(alicebot(Ctx,'Hi')),
-   test_call(alicebot(Ctx,'What is your name')),
-   test_call(alicebot(Ctx,'What is your thing')),
-   test_call(alicebot(Ctx,'My name is Fred.')),
-   test_call(alicebot(Ctx,'what is my name?')).
+   %%test_call(alicebotCTX(Ctx,'Hi')),
+   test_call(alicebotCTX(Ctx,'What is your name')),
+   test_call(alicebotCTX(Ctx,'What is your thing')),
+   test_call(alicebotCTX(Ctx,'My name is Fred.')),
+   test_call(alicebotCTX(Ctx,'what is my name?')).
+
+blackjack_test_load:-  test_call(alicebot('@load blackjack.aiml')).
+blackjack_test:-
+   test_call(alicebotCTX(Ctx,'blackjack')),
+   test_call(alicebotCTX(Ctx,'d')),
+   test_call(alicebotCTX(Ctx,'3')),!.
+
+annie:-withNamedContext(toplevel,Ctx),timeRecorded(run_chat_tests_here(Ctx)).
+
+%%:-timeRecorded(test_suite_files).
+
+:-timeRecorded(blackjack_test_load).
+/*
+:-timeRecorded(load_aiml_files('programk/test_suite/chomskyAIML/update007.aiml')).
+:-timeRecorded(blackjack_test_load).
+:-timeRecorded(blackjack_test).
+%:-timeRecorded(chomskyAIML).
+:-timeRecorded(load_aiml_files('programk/test_suite/chomskyAIML/update013.aiml')).
+:-timeRecorded(load_aiml_files('programk/test_suite/chomskyAIML/update012.aiml')).
+:-timeRecorded(load_aiml_files('programk/test_suite/chomskyAIML/update007.aiml')).
+*/
+:-timeRecorded(annie).
+:-unify_listing(unitTestResult(unit_passed,_)).
+:-unify_listing(unitTestResult(unit_failed,_)).
+:-alicebot('<category><pattern>pppp</pattern><template>555555</template><that></that></category>').
+:-timeRecorded(alicebot).
 
 
-annie:-makeAimlContext(toplevel,Ctx),run_chat_tests_here(Ctx),alicebot(Ctx).
-
-%:-test_suite_files.
-
-:-time(annie).
-%:-time(chomskyAIML).
-:-alicebot.
-
-%%:-time(load_aiml_files('programk/test_suite/special/*.aiml')).
+%%:-timeRecorded(load_aiml_files('programk/test_suite/special/*.aiml')).
 
 

@@ -23,11 +23,11 @@
 
 aiml_call(Ctx,_ - Calls):- !,aiml_call(Ctx,Calls),!.
 
-aiml_call(Ctx,[Atomic|Rest]):- atom(Atomic),!, %%trace, 
+aiml_call(Ctx,[Atomic|Rest]):- atom(Atomic),!, %%ctrace, 
             aiml_eval(Ctx,[Atomic|Rest],Output),!,
             debugFmt(resultOf(aiml_call(Ctx,[Atomic|Rest]),Output)),!.
 
-aiml_call(Ctx,[Atomic|Rest]):- !, %%trace, 
+aiml_call(Ctx,[Atomic|Rest]):- !, %%ctrace, 
             aiml_eval(Ctx,[Atomic|Rest],Output),!,
             debugFmt(resultOf(aiml_call(Ctx,[Atomic|Rest]),Output)),!.
 
@@ -41,12 +41,12 @@ aiml_call(Ctx,element('testsuite',ATTRIBS,LIST)):-
      debugFmt(testsuite_passed_failed(Passed,Failed)),!.
 
 aiml_call(Ctx,Current):- Current=element(TC,ATTRIBS,_LIST), member(TC,['testcase','TestCase']),!,
-  debugOnFailureAiml((
-     attributeOrTagValue(Ctx,Current,['name'],Name,'SomeName'),
-     attributeOrTagValue(Ctx,Current,['Input','Pattern'],Input,'ERROR Input'),
-     attributeOrTagValue(Ctx,Current,['Description'],Description,'No Description'),
-     attributeOrTagValue(Ctx,Current,['ExpectedAnswer'],ExpectedAnswer,['noExpectedAnswer']),
-     findall(ExpectedKeywords0,(attributeOrTagValue(Ctx,Current,['ExpectedKeywords'],ExpectedKeywords,['noExpectedKeywords']),
+  prolog_must((
+     attributeValue(Ctx,Current,['name'],Name,'SomeName'),
+     attributeValue(Ctx,Current,['Input','Pattern'],Input,'ERROR Input'),
+     attributeValue(Ctx,Current,['Description'],Description,'No Description'),
+     attributeValue(Ctx,Current,['ExpectedAnswer'],ExpectedAnswer,['noExpectedAnswer']),
+     findall(ExpectedKeywords0,(attributeValue(Ctx,Current,['ExpectedKeywords'],ExpectedKeywords,['noExpectedKeywords']),
                                 listify(ExpectedKeywords,ExpectedKeywords0)),ExpectedKeywordsList),
      testIt(ATTRIBS,Input,ExpectedAnswer,ExpectedKeywordsList,_Result,Name,Description,Ctx))),!.
 
@@ -62,11 +62,11 @@ aiml_call(Ctx,element(A, B, C)):- prolog_must(nonvar(C)),
       convert_name(A,AA),
       convert_attributes(Ctx,B,BB),
       convert_template(Ctx,C,CC),
-      (element(A, B, C) \== element(AA, BB, CC)),!,trace,
+      (element(A, B, C) \== element(AA, BB, CC)),!,ctrace,
       aiml_call(Ctx,element(AA, BB, C)),!.
 
 aiml_call(Ctx,element(Learn, ATTRIBS, Value)):-  member(Learn,[load,learn]),!,
- debugOnFailureAiml((
+ prolog_must((
      attributeValue(Ctx,ATTRIBS,[graph],Graph,'$current_value'),
      pathAttrib(PathAttrib),
      attributeValue(Ctx,ATTRIBS,PathAttrib,Filename,Value),
@@ -78,7 +78,7 @@ aiml_call(Ctx,Call):- Call \= element(_,_,_), callEachElement(Ctx,Call),!.
 aiml_call(Ctx,INNER_XML):-aiml_eval(Ctx,INNER_XML,Rendered),!, debugFmt(Rendered),!.
 
 aiml_call(Ctx,element(genlmt,TOFROM,_)):-
- debugOnFailureAiml((
+ prolog_must((
       attributeValue(Ctx,TOFROM,[to,name],TO,'$error'),
       attributeValue(Ctx,TOFROM,[graph,from],FROM,'$current_value'),
       immediateCall(Ctx,assertz(genlMtGraph(TO,FROM))))),!.
@@ -116,9 +116,10 @@ aiml_eval(Ctx,TAGATTRXML,RESULT):-
 aiml_eval_now(Ctx,TAGATTRXML):-aiml_eval(Ctx,TAGATTRXML,RESULT),!,debugFmt(aiml_eval_now(Ctx,TAGATTRXML,RESULT)).
 
 
-%%immediateCall(Ctx,_):- getCtxValueElse(quiteMemOps,Ctx,True,false),True=true,!.
 immediateCall(Ctx,:-(Call)):-!,immediateCall0(Ctx,:-(Call)),!.
 immediateCall(Ctx,Call):-immediateCall0(Ctx,:-(Call)),!.
+
+immediateCall0(Ctx,C):-functor(C,call,_),prolog_mustEach((C=..[call,A|Args],A=..L,append(L,Args,Out),Call=..Out,!,immediateCall0(Ctx,Call))).
 immediateCall0(Ctx,C):-toReadableObject(C,Call),immediateCall1(Ctx,Call),!.
 %%immediateCall1(_Ctx,C):- prolog_mostly_ground((C)),fail.
 immediateCall1(_Ctx,Call):- fresh_line,(format('~q.',[Call])),fresh_line. %%,debugFmt(Call),!.
@@ -207,15 +208,16 @@ tag_eval(Ctx,element(system,ATTRIBS,INNER_XML),Output):-
 systemCall(Ctx,[Lang],Eval,Out):- nonvar(Lang),!, systemCall(Ctx,Lang,Eval,Out).
 
 systemCall(_Ctx,_Lang,[],[]):-!.
-systemCall(Ctx,Lang,[''|REST],DONE):-!,systemCall(Ctx,Lang,REST,DONE).
-systemCall(Ctx,Bot,[FIRST|REST],DONE):-atom_concat_safe('@',CMD,FIRST),!,systemCall(Ctx,Bot,[CMD|REST],DONE).
-systemCall(Ctx,'bot',REST,OUT):-!,debugOnFailure(systemCall_Bot(Ctx,REST,OUT)),!.
+systemCall(Ctx,Lang,[Skipable|REST],DONE):-isWhiteWord(Skipable),!,systemCall(Ctx,Lang,REST,DONE).
+systemCall(Ctx,Lang,[FIRST|REST],DONE):-atom_concat_safe('@',CMD,FIRST),!,systemCall(Ctx,Lang,[CMD|REST],DONE).
+systemCall(Ctx,Lang,[FIRST|REST],DONE):-atom_contains(FIRST,' '),atomWSplit(FIRST,CMD),append(CMD,REST,CMDREST),!,systemCall(Ctx,Lang,CMDREST,DONE).
+systemCall(Ctx,'bot',REST,OUT):-!,prolog_must(systemCall_Bot(Ctx,REST,OUT)),!.
 systemCall(Ctx,Lang,[Eval],Out):-systemCall(Ctx,Lang,Eval,Out).
-systemCall(Ctx,Lang,Eval,Out):-once((atom(Eval),atomSplit(Eval,Atoms))),Atoms=[_,_|_],!,trace,systemCall(Ctx,Lang,Atoms,Out).
+systemCall(Ctx,Lang,Eval,Out):-once((atom(Eval),atomWSplit(Eval,Atoms))),Atoms=[_,_|_],!,ctrace,systemCall(Ctx,Lang,Atoms,Out).
 systemCall(_Ctx,Lang,Eval,writeq(evaled(Lang,Eval))):- aiml_error(evaled(Lang,Eval)).
 
 systemCall_Bot(Ctx,['@'|REST],DONE):-!,systemCall_Bot(Ctx,REST,DONE).
-systemCall_Bot(Ctx,[''|REST],DONE):-!,systemCall_Bot(Ctx,REST,DONE).
+systemCall_Bot(Ctx,[Skipable|REST],DONE):-isWhiteWord(Skipable),!,systemCall_Bot(Ctx,REST,DONE).
 systemCall_Bot(Ctx,[FIRST|REST],DONE):-atom_concat_safe('@',CMD,FIRST),CMD\=='',!,systemCall_Bot(Ctx,['@',CMD|REST],DONE).
 systemCall_Bot(_Ctx,['eval'|DONE],template([evaled,DONE])):-!.
 systemCall_Bot(_Ctx,['echo'|DONE],DONE):-!.
@@ -227,23 +229,20 @@ systemCall_Bot(Ctx,['get',Name|MajorMinor],template([getted,Dict,Value,Found1]))
 systemCall_Bot(Ctx,['get'],template([getted,Passed])):- unify_listing(getContextStoredValue(Ctx,_,_,_),Passed).
 systemCall_Bot(Ctx,['ctx'],template([ctxed,Atom])):-!,term_to_atom(Ctx,Atom),!.
 systemCall_Bot(Ctx,['ctx'],template([ctxed,prologCall(Atom,term_to_atom(Ctx,Atom))])):-!,showCtx(Ctx).
-systemCall_Bot(Ctx,['load'|REST],OUT):- !, debugOnFailure(systemCall_Load(Ctx,REST,OUT)),!.
-systemCall_Bot(Ctx,['find'|REST],OUT):- !, debugOnFailure(systemCall_Find(Ctx,REST,OUT)),!.
+systemCall_Bot(Ctx,['load'|REST],OUT):- !, prolog_must(systemCall_Load(Ctx,REST,OUT)),!.
+systemCall_Bot(Ctx,['find'|REST],OUT):- !, prolog_must(systemCall_Find(Ctx,REST,OUT)),!.
 systemCall_Bot(Ctx,['chgraph',Graph],['successfully','set','to','graph',Graph]):- setAliceMem(Ctx,user,graph,Graph),!.
 systemCall_Bot(_Ctx,['substs',DictName],['substsof',DictName]):- unify_listing(dictReplace(DictName,_,_)),!.
 systemCall_Bot(_Ctx,['substs'],['substsof','all']):- unify_listing(dictReplace(_DictName,_,_)),!.
 
 
 systemCall_Bot(Ctx,['ctxlist'],template([ctxed])):-!,showCtx(Ctx),!.
-systemCall_Bot(Ctx,['ctxlist'],template([ctxed,getCtxValue(Name,Ctx,Value),Count])):-!,unify_listing(getCtxValue_nd(Name,Ctx,Value),Count),!.
+systemCall_Bot(Ctx,['ctxlist'],template([ctxed,current_value(Ctx,Name,Value),Count])):-!,unify_listing(getCtxValue_nd(Ctx,Name,Value),Count),!.
 
 
 
 
-systemCall_Bot(Ctx,[FIRST|REST],DONE):-atom(FIRST),downcase_atom(FIRST,CMD),FIRST\==CMD,!,systemCall_Bot(Ctx,[CMD|REST],DONE).
-
-
-
+systemCall_Bot(Ctx,[FIRST|REST],DONE):-toLowerIfAtom(FIRST,CMD),FIRST\==CMD,!,systemCall_Bot(Ctx,[CMD|REST],DONE).
 
 systemCall_Bot(_Ctx,DONE,template([delayed,DONE])):-!.
 
@@ -252,19 +251,21 @@ showCtx(Ctx):-forall(
   writeq(get_ctx_frame_holder(Ctx,Dict,Frame,Held))).
 
 systemCall_Load(Ctx,[],template([loaded,Ctx])):-!.
-systemCall_Load(Ctx,[File,Name|S],Output):-concat_atom_safe([File,Name|S],'',Filename),!,systemCall(Ctx,'bot',['load',Filename],Output).
+systemCall_Load(Ctx,[File,Name|S],Output):-joinAtoms([File,Name|S],'',Filename),!,systemCall(Ctx,'bot',['load',Filename],Output).
 systemCall_Load(Ctx,[Filename],template([loaded,Filename])):-
     peekNameValue(Ctx,_,graph,GraphI,'*'), 
     (GraphI=='*'->Graph=default; Graph=GraphI),
     ATTRIBS=[srcfile=Filename,graph=Graph],
     gather_aiml_graph(Ctx,ATTRIBS,Graph,Filename,AIML),
+    warnIf(not(atomic(Graph))),
+    warnIf(not(atomic(Filename))),
     withAttributes(Ctx,ATTRIBS,load_aiml_structure(Ctx,AIML)),!.
 
 systemCall_Find(_Ctx,REST,proof(CateSig,REST)):-
-         findall(U,(member(L,REST),litteral_atom(L,U)),UUs),
+         findall(U,(member(L,REST),literal_atom(L,U)),UUs),
          functor(CateSig,aimlCate,13),
          findall(CateSig,
-             (CateSig,once((term_to_atom(CateSig,Atom),litteral_atom(Atom,U1),member(U2,UUs),sub_atom(U1,_,_,_,U2),
+             (CateSig,once((term_to_atom(CateSig,Atom),literal_atom(Atom,U1),member(U2,UUs),sub_atom(U1,_,_,_,U2),
               debugFmt(CateSig)))),_List),!.
 
 % ===================================================================
@@ -273,7 +274,7 @@ systemCall_Find(_Ctx,REST,proof(CateSig,REST)):-
 
 % 0.9 version
 tag_eval(Ctx,element(Learn, ATTRIBS, EXTRA),[loaded,Filename,via,Learn,into,Graph]/*NEW*/):- member(Learn,[load,learn]),
- debugOnFailureAiml((
+ prolog_must((
      attributeValue(Ctx,ATTRIBS,[graph],Graph,'$current_value'),
      pathAttribS(PathAttribS),
      attributeValue(Ctx,ATTRIBS,PathAttribS,Filename,EXTRA),
@@ -304,7 +305,7 @@ prologCall(Call):-catch(prolog_must(Call),E,debugFmt(failed_prologCall(Call,E)))
 testIt(ATTRIBS,Input,ExpectedAnswer,ExpectedKeywords,Result,Name,Description,Ctx):- 
    notrace(ExpectedKeywords==[[noExpectedKeywords]] -> PASSGOAL = sameBinding(Resp,ExpectedAnswer);  PASSGOAL = containsEachBinding(Resp,ExpectedKeywords)),    
   %% traceIf(ExpectedKeywords \== [[noExpectedKeywords]]),
-    withAttributes(Ctx,ATTRIBS,(( runUnitTest(alicebot2(Ctx,Input,Resp),PASSGOAL,Result),
+    withAttributes(Ctx,ATTRIBS,(( runUnitTest(alicebotCTX(Ctx,Input,Resp),PASSGOAL,Result),
      prolog_must(ground(Resp)),
     toReadableObject(testIt(Input,Name,Description,PASSGOAL),PRINTRESULT),
     toReadableObject([Result,Name,Description,Input], STORERESULT),
@@ -340,8 +341,8 @@ sameBinding(X,Y):-hotrace((sameBinding1(X,X1),sameBinding1(Y,Y1),!,X1=Y1)),!.
 
 sameBinding1(X,X):-var(X),!.
 sameBinding1(_-X,Y):-nonvar(X),!,sameBinding1(X,Y).
-sameBinding1(X,Z):-convertToMatchable(X,Y),!,(X\==Y->sameBinding1(Y,Z);Y=Z),!.
-%sameBinding1([A|B],AB):-convertToMatchable([A|B],AB),!.
+sameBinding1(X,Z):- convertToMatchableCS(X,Y),X\==Y,!,sameBinding1(Y,Z).
+%sameBinding1([A|B],AB):-convertToMatchableCS([A|B],AB),!.
 sameBinding1(X,X):-!.
 sameBinding1(X,Y):- balanceBinding(X,Y),!.
 
