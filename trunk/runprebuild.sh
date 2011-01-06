@@ -9,7 +9,10 @@ cp lib/Radegast/*.config bin/
 rm -f lib/Radegast/libop*
 cp lib/Radegast/*.so bin/
 cp lib/Radegast/*.dylib bin/
-cp lib/PennBank.net/TreeBankGrapher/bin/Release/*.dll bin/
+svn revert bin/LAIR*.dll
+cp lib/LAIR.ResourceAPIs/PennBank/TreeBankGrapher/bin/Release/*.dll bin/
+svn revert bin/LAIR.MachineLearning.dll
+svn revert bin/LAIR.Collect*.dll
 
 cp lib/Radegast/*.ico /tmp
 cp -a lib/Radegast/Resources/ /tmp/
@@ -45,6 +48,7 @@ cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.Renderer.Ogre/LookingGl
 cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.World.OS/LookingGlass.World.OS.dll.build
 cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.World.Services/LookingGlass.World.Services.dll.build
 cp NullBuild.txt ./lib/xglore/xglore.exe.build
+cp NullBuild.txt ./lib/Lucene/src/Lucene.Net/Lucene.Net.dll.build
 
 rm -rf bin/LookingGlass*.*
 rm -rf bin/RadSpeechWin*.*
