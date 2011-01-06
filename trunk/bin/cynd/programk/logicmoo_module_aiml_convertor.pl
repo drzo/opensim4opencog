@@ -8,6 +8,7 @@
 % Revised At:   $Date: 2002/07/11 21:57:28 $
 % ===================================================================
 
+
 %:-module()
 %:-include('logicmoo_utils_header.pl'). %<?
 %:- style_check(-singleton).
@@ -19,16 +20,28 @@
 
 translate_single_aiml_file(Ctx,F0):-global_pathname(F0,File),F0\==File,!,translate_single_aiml_file(Ctx,File).
 translate_single_aiml_file(Ctx,F0):-
-  debugOnFailureAimlEach((
+  prolog_mustEach((
    global_pathname(F0,File),!,
    cateForFile(Ctx,File,FileMatch),!,
    atom_concat_safe(File,'.pl',PLNAME),
    translate_single_aiml_file(Ctx,File,PLNAME,FileMatch))),!.
 
-translate_aiml_structure(X,X).
+translate_aiml_structure(Ctx,Structure):- string(Structure),!,
+   debugFmt(translate_aiml_structure_string(Ctx,Structure)),
+   string_to_structure(Ctx,Structure,XMLStructures),
+   load_aiml_structure(Ctx,XMLStructures),!.
+
+translate_aiml_structure(Ctx,Structure):-not(atom(Structure)),!, trace,
+   debugFmt(translate_aiml_structure_no_atom(Ctx,Structure)),!.
+
+translate_aiml_structure(Ctx,Structure):- trace,
+   debugFmt(translate_aiml_structure_atom(Ctx,Structure)),!,
+   string_to_structure(Ctx,Structure,XMLStructures),
+   load_aiml_structure(Ctx,XMLStructures),!.
+
 
 cateForFile(_Ctx,SRCFILE,aimlCate(_GRAPH,_PRECALL,_TOPIC,_THAT,_INPUT,_PATTERN,_FLAGS,_CALL,_GUARD,_USERDICT,_TEMPLATE,_LINENO,SRCFILE:_-_)):-!.
-cateForFile(Ctx,File,FileMatch):- trace,withNamedValue(Ctx,[anonvarsFroCate=true], makeAimlCate(Ctx,[srcfile=File:_-_],FileMatch)),!.
+cateForFile(Ctx,File,FileMatch):- ctrace,withNamedValue(Ctx,[anonvarsFroCate=true], makeAimlCate(Ctx,[srcfile=File:_-_],FileMatch)),!.
 
 withNamedValue(Ctx,[N=V],Call):-withAttributes(Ctx,[N=V],Call),!.
 
@@ -44,7 +57,7 @@ do_pending_loads:-withCurrentContext(do_pending_loads).
 do_pending_loads(Ctx):-forall(retract(pending_aiml_file(File,PLNAME)),load_pending_aiml_file(Ctx,File,PLNAME)).
 
 load_pending_aiml_file(Ctx,File,PLNAME):- debugFmt(load_pending_aiml_file(Ctx,File,PLNAME)),
-  error_catch(debugOnFailureAiml(dynamic_load(File,PLNAME)),E,(debugFmt(E),assert(pending_aiml_file(File,PLNAME)))),!.
+  error_catch(prolog_must(dynamic_load(File,PLNAME)),E,(debugFmt(E),assert(pending_aiml_file(File,PLNAME)))),!.
 
 translate_single_aiml_file(_Ctx,File,PLNAME,FileMatch):- creating_aiml_file(File,PLNAME),!,
   throw_safe(already(creating_aiml_file(File,PLNAME),FileMatch)),!.
@@ -72,7 +85,7 @@ translate_single_aiml_file(Ctx,File,PLNAME,FileMatch):-
      translate_single_aiml_file1(File,PLNAME,FileMatch)).
 
 translate_single_aiml_file0(Ctx,File,PLNAME,FileMatch):-
- debugOnFailureAimlEach((
+ prolog_mustEach((
         asserta(creating_aiml_file(File,PLNAME)),
         debugFmt(doing(create_aiml_file(File,PLNAME))),
         aimlCateSig(CateSig),!,
@@ -105,9 +118,12 @@ translate_single_aiml_file0(Ctx,File,PLNAME,FileMatch):-
         printPredCount('Loaded',FileMatch, _FM),
         retractall(creating_aiml_file(File,PLNAME)))),!.
 
+stream_file(user,PLNAME):-!,ctrace,stream_property(user,file_name(Name)),prolog_must(PLNAME=Name).
+stream_file(PLNAMET,PLNAME):-ctrace,is_stream(PLNAMET),stream_property(PLNAMET,file_name(Name)),prolog_must(PLNAME=Name).
+stream_file(PLNAMET,PLNAME):-exists_file(PLNAMET),!,prolog_must(PLNAME=PLNAMET).
 
 translate_single_aiml_file1(File,PLNAME,FileMatch):-
-    ignore((telling(PLNAME),told(PLNAME))),
+    ignore((telling(PLNAMET),PLNAMET\==user,stream_file(PLNAMET,PLNAME),told)),
     ignore((creating_aiml_file(File,PLNAME),delete_file(PLNAME))),
     retractall(lineInfoElement(File,_,_,_)),
     retractall(FileMatch),
@@ -117,7 +133,7 @@ translate_single_aiml_file1(File,PLNAME,FileMatch):-
 
 /*
 translate_single_aiml_filexxx(Ctx,File,PLNAME):-
-  debugOnFailureAiml((
+  prolog_must((
      Dofile = true,
      aimlCateSig(CateSig),
    ifThen(Dofile,tell(PLNAME)),
@@ -146,14 +162,15 @@ convert_text_list([],[]):-!.
 convert_text_list([A],B):-!,convert_text_list(A,B).
 convert_text_list(M,C):-delete(M,'',B), (M == B -> C=B ; convert_text_list(B,C)).
 convert_text_list([A|AA],BBB):-convert_text(A,B),convert_text_list(AA,BB),!,flattem_append(B,BB,BBB0),!,BBB=BBB0.
-convert_text_list(A,C):-atom(A),atomSplit(A,M),([A]==M->C=M;convert_text(M,C)),!.
+convert_text_list(A,C):-atom(A),atomWSplit(A,M),([A]==M->C=M;convert_text(M,C)),!.
 convert_text_list(A,AA):-listify(A,AA).
 
 convert_atom(A,Z):-convert_atom0(A,Y),!,Y=Z.
 convert_atom(E,File):-aiml_error(convert_atom(E,File)),!,E=File.
 %convert_atom(A,C):-atom_to_number(A,C),!.
+convert_atom0(A,C):-atomWSplit(A,M),!,convert_text(M,C),!.
+convert_atom0(A,D):-literal_atom_safe(A,D),!.
 convert_atom0(A,A):-concat_atom_safe([A],' ',A).
-convert_atom0(A,C):-atomSplit(A,M),!,convert_text(M,C),!.
 convert_atom0(A,A). %%:-!listify(A,AA).
 
 flattem_append(A,B,BBB):-flatten([A],AA),!,flatten([B],BB),!,append(AA,BB,BBB),!.
@@ -169,8 +186,8 @@ convert_template(_Ctx,[],[]):-!.
 %%HIDE convert_template(Ctx,[I|P],L):-!,convert_template(I,IO),!,convert_template(Ctx,P,PO),append(IO,PO,L),!.
 convert_template(_Ctx,I,[]):-ignore_aiml(I),!.
 
-%%%HIDE            %%convert_template(_Ctx,[ATOM],O):-atom(ATOM),!,atomSplit(ATOM,LIST),!,toAtomList(LIST,O),!.
-convert_template(Ctx,I,GOOD):- atom(I),atomSplit(I,LIST),toAtomList(LIST,O),[I] \== O,!, convert_template(Ctx,O,GOOD),!.
+%%%HIDE            %%convert_template(_Ctx,[ATOM],O):-atom(ATOM),!,atomWSplit(ATOM,LIST),!,toAtomList(LIST,O),!.
+convert_template(Ctx,I,GOOD):- atom(I),atomWSplit(I,LIST),toAtomList(LIST,O),[I] \== O,!, convert_template(Ctx,O,GOOD),!.
 %%%HIDE            %%convert_template(Ctx,[I|P],GOOD):- is_list(I),!,append(I,P,IP),!,convert_template(Ctx,IP,GOOD),!.
 %%%HIDE            %%convert_template(Ctx,[I|P],GOOD):- convert_template(Ctx,I,O), I \== O,!, convert_template(Ctx,[O|P],GOOD),!.
 convert_template(Ctx,[I|P],GOOD):- convert_template(Ctx,I,O),!,convert_template(Ctx,P,L),!,append(O,L,GOOD),!.
@@ -181,8 +198,8 @@ convert_template(Ctx,P,POL):-convert_element(Ctx,P,PO),!,listify(PO,POL).
 toAtomList(A,O):-delete(A,'',O),!.
 
 convert_element(Ctx,element(Tag, A, B),Out):-!,convert_ele(Ctx,element(Tag, A, B),M),!,M=Out,!.
-convert_element(_Ctx,Input,Out):-atomic(Input),!,convert_text_list(Input,Out).
-convert_element(Ctx,Input,Out):-convert_ele(Ctx,Input,M),!,M=Out,!.
+convert_element(_Ctx,Input,Out):-atomic(Input),convert_text_list(Input,Out),!.
+convert_element(Ctx,Input,Out):-convert_ele(Ctx,Input,M),!,prolog_must(M=Out).
 
       
 nameOrValue(ALIST, _VALUE, NORV, 0):-lastMember(name=NORV,ALIST),!.
@@ -263,7 +280,7 @@ convert_ele(Ctx,L,LO):-is_list(L),flatten(L,M),!,
 
 %convert_ele(Ctx,A,B):-atom(A),atom_to_number(A,B).
 
-convert_ele(_Ctx,A,W):-atom(A),atomSplit(A,B),!,convert_text(B,W),!.
+convert_ele(_Ctx,A,W):-atom(A),atomWSplit(A,B),!,convert_text(B,W),!.
 
 convert_ele(Ctx,element(A, B, C),INNER_XML):-tagType(A, immediate),!,
       convert_name(A,AA),
@@ -279,12 +296,12 @@ convert_ele(Ctx,element(A, B, C),INNER_XML):-
 
 convert_ele(Ctx,element(Tag, A, B),element(Tag, A, BB)):- member(Tag,[category]), convert_template(Ctx,B,BB).
 
-convert_ele(Ctx,element(Tag, A, B),element(Tag, A, BB)):- member(Tag,[srai]),trace,convert_template(Ctx,B,BB).
+convert_ele(Ctx,element(Tag, A, B),element(Tag, A, BB)):- member(Tag,[srai]),ctrace,convert_template(Ctx,B,BB).
 
 convert_ele(_Ctx,O,O).
 
 
-convert_attributes(Ctx,A,AAA):- hotrace(debugOnFailure((convert_attributes0(Ctx,A,AA),list_to_set_safe(AA,AAA)))).
+convert_attributes(Ctx,A,AAA):- hotrace(prolog_must((convert_attributes0(Ctx,A,AA),list_to_set_safe(AA,AAA)))).
 convert_attributes0(Ctx,[B|A],[BB|AA]):-convert_attribute(B,BB),convert_attributes0(Ctx,A,AA).
 convert_attributes0(_Ctx,[],[]).
 
@@ -292,7 +309,7 @@ convert_attribute(A=B,AA=BB):-convert_name(A,AA),convert_template(_Ctx,B,BB).
 
 convert_name(A,AAA):-convert_name0(A,AA), (A==AA -> AAA=AA ; convert_name(AA,AAA)),!.
 
-convert_name0(A,AA):-toLowercase(A,AA).
+convert_name0(A,AA):-literal_atom_safe(A,AA).
 convert_name0(var,name).
 convert_name0(Attrib,uri):-pathAttrib(Attrib),!.
 
@@ -332,25 +349,25 @@ transformTagData0(Ctx,TAG,_Default,PATTERN_IN,PATTERN_OUT):-
     )))),
   convert_template_pred(Ctx,=,PATTERN_IN,_PATTERN_OUT_UNUSED).
 
-transformTagData1(_Ctx,TAG,_Default,PATTERN_IN,PATTERN_OUT):- member(TAG,[userdict,graph]),matchable_litteral_safe(PATTERN_IN,PATTERN_OUT),!.
+transformTagData1(_Ctx,TAG,_Default,PATTERN_IN,PATTERN_OUT):- member(TAG,[userdict,graph]),literal_atom_safe(PATTERN_IN,PATTERN_OUT),!.
 transformTagData1(_Ctx,TAG,_Default,PATTERN_IN,PATTERN_OUT):-infoTagLikeLineNumber(TAG),!,PATTERN_IN=PATTERN_OUT.
 
-transformTagData1(Ctx,TAG,Default,PATTERN_IN,PATTERN_OUT):- debugFmt(transformTagData(TAG,Default,PATTERN_IN)), 
-                 convert_template_pred(Ctx,matchable_litteral_safe,PATTERN_IN,PATTERN_OUT),!.
+transformTagData1(Ctx,_TAG,_Default,PATTERN_IN,PATTERN_OUT):- %%% debugFmt(transformTagData(TAG,Default,PATTERN_IN)), 
+                 convert_template_pred(Ctx,literal_atom_safe,PATTERN_IN,PATTERN_OUT),!.
 transformTagData1(Ctx,_N,_Default,R,RR):-convert_template(Ctx,R,RR),!. 
 transformTagData1(_Ctx,_TAG,_Default,PATTERN,PATTERN):-!.
 
 % ===============================================================================================
 % ===============================================================================================
 
-convert_pattern(Ctx,PATTERN_IN,PATTERN_OUT):- convert_template_pred(Ctx,matchable_litteral_safe_non_special,PATTERN_IN,PATTERN_OUT),!.
+convert_pattern(Ctx,PATTERN_IN,PATTERN_OUT):- convert_template_pred(Ctx,matchable_literal_safe_non_special,PATTERN_IN,PATTERN_OUT),!.
 
-matchable_litteral_safe_non_special(A,A):-not(atom(A)),!.
-matchable_litteral_safe_non_special(Atom,Atom):-atom_prefix(Atom,'#$'),!.
-matchable_litteral_safe_non_special(A,U):-matchable_litteral_safe(A,U).
+matchable_literal_safe_non_special(A,A):-not(atom(A)),!.
+matchable_literal_safe_non_special(Atom,Atom):-atom_prefix(Atom,'#$'),!.
+matchable_literal_safe_non_special(A,U):-literal_atom_safe(A,U).
 
 convert_template_pred(Ctx,Pred,PATTERN_IN,PATTERN_OUT):- convert_template(Ctx,PATTERN_IN,PATTERN_MID),!,
-     debugOnFailureAiml(map_tree_to_list(Pred,PATTERN_MID,PATTERN_OUT)),!.
+     prolog_must(map_tree_to_list(Pred,PATTERN_MID,PATTERN_OUT)),!.
 
 transform_aiml_structure(catagory,category,OldProps,OldProps,NEWPATTERN,NEWPATTERN).
 transform_aiml_structure(alice,aiml,OldProps,OldProps,NEWPATTERN,NEWPATTERN).

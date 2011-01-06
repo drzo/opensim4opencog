@@ -17,6 +17,10 @@
 
 :-discontiguous(convert_ele/3).
 
+:-ensure_loaded(library('programk/logicmoo_module_aiml_graphmaster.pl')).
+:-ensure_loaded(library('programk/logicmoo_module_aiml_convertor.pl')).
+:-ensure_loaded(library('programk/logicmoo_module_aiml_xpath.pl')).
+
 % =================================================================================
 % Entity Loading
 % =================================================================================
@@ -25,15 +29,17 @@ graph_or_file(_Ctx,_ATTRIBS, [], []):-!.
 graph_or_file(Ctx,ATTRIBS, [Filename], XML):-atomic(Filename),!,graph_or_file(Ctx,ATTRIBS, Filename, XML),!.
 
 graph_or_file(Ctx,ATTRIBS,Filename,XML):-graph_or_file_or_dir(Ctx,ATTRIBS,Filename,XML),!.
+graph_or_file(Ctx,ATTRIBS, Filename, XML):- atom(Filename),member(Quote-Pair,['\''-'\'','"'-'"','<'-'>','('-')']),
+     concat_atom([Quote,Mid,Pair],'',Filename),!,ctrace,graph_or_file(Ctx,ATTRIBS, Mid, XML).
 graph_or_file(Ctx,ATTRIBS, Filename, XML):- 
      prolog_must((getCurrentFileDir(Ctx, ATTRIBS, CurrentDir),join_path(CurrentDir,Filename,Name))),
      prolog_must(graph_or_file_or_dir(Ctx,[currentDir=CurrentDir|ATTRIBS],Name,XML)),!.
 
-graph_or_file(_Ctx,ATTRIBS, Filename, [nosuchfile(Filename,ATTRIBS)]):-trace.
+graph_or_file(_Ctx,ATTRIBS, Filename, [nosuchfile(Filename,ATTRIBS)]):-ctrace.
 
 
 graph_or_file_or_dir(Ctx,ATTRIBS, Filename, XML):- Filename=[A,B|_C],atom(A),atom(B),
-                    concat_atom_safe(Filename,'',FileAtom),!,
+                    joinAtoms(Filename,'',FileAtom),!,
                     prolog_must(graph_or_file_or_dir(Ctx,ATTRIBS, FileAtom, XML)),!.
 
 graph_or_file_or_dir(_Ctx,_ATTRIBS, Filename,[element(aiml, [srcfile=AbsoluteFilename], XML)]):- os_to_prolog_filename(Filename,AFName),
@@ -48,9 +54,9 @@ graph_or_file_or_dir(Ctx,ATTRIBS, F, [element(aiml,DIRTRIBS,OUT)]):- DIRTRIBS = 
                    graph_or_file_or_dir(Ctx,[srcfile=FF|DIRTRIBS],FF,X))), OUT),!.
 
 
-getCurrentFile(Ctx,_ATTRIBS,CurrentFile):-getItemValue(proof,Ctx,Proof),nonvar(Proof),            
-            getItemValue(lastArg,Proof,CurrentFile1),getItemValue(lastArg,CurrentFile1,CurrentFile2),
-            getItemValue(arg(1),CurrentFile2,CurrentFile3),!,
+getCurrentFile(Ctx,_ATTRIBS,CurrentFile):-current_value(Ctx,proof,Proof),nonvar(Proof),            
+            current_value(Proof,lastArg,CurrentFile1),current_value(CurrentFile1,lastArg,CurrentFile2),
+            current_value(CurrentFile2,arg(1),CurrentFile3),!,
             absolute_file_name(CurrentFile3,CurrentFile),!.
 
 getCurrentFileDir(Ctx,ATTRIBS,Dir):- prolog_must((getCurrentFile(Ctx, ATTRIBS, CurrentFile),atom(CurrentFile),
@@ -73,10 +79,11 @@ load_aiml_files.
 
 %%tell(f5),load_aiml_files('part5/*.aiml'),told.
 
-load_aiml_files(Files):-currentContext(load_aiml_files,Ctx),load_aiml_files(Ctx,Files),!,do_pending_loads(Ctx).
+load_aiml_files(Files):-currentContext(load_aiml_files,Ctx),prolog_must(load_aiml_files(Ctx,Files)),!,prolog_must(do_pending_loads(Ctx)).
 
-load_aiml_files(Ctx,element(Tag,Attribs,ContentIn)):- !, debugOnFailureAiml((load_aiml_structure(Ctx,element(Tag,Attribs,ContentIn)),!,do_pending_loads(Ctx))).
-load_aiml_files(Ctx,File):- withAttributes(Ctx,[withCategory=[writeqnl,asserta_new]],with_files(load_single_aiml_file(Ctx),File)),!,do_pending_loads(Ctx).
+% Detect between content vs filename
+load_aiml_files(Ctx,element(Tag,Attribs,ContentIn)):- !, prolog_must((load_aiml_structure(Ctx,element(Tag,Attribs,ContentIn)),!,do_pending_loads(Ctx))).
+load_aiml_files(Ctx,File):- withAttributes(Ctx,[withCategory=[writeqnl,assert_cate_in_load]],prolog_must(with_files(load_single_aiml_file(Ctx),File))),!,do_pending_loads(Ctx).
 
 
 translate_aiml_files(Files):-currentContext(translate_aiml_files,Ctx),translate_aiml_files(Ctx,Files),!.
@@ -92,7 +99,7 @@ with_files(Verb,File):-exists_directory_safe(File),!,prolog_must(atomic(File)),a
 with_files(Verb,File):-exists_file_safe(File),!,with_files(Verb,[File]).
 with_files(Verb,File):-file_name_extension(File,'aiml',Aiml), exists_file_safe(Aiml),!,with_files(Verb,[File]).
 with_files(Verb,File):-expand_file_name(File,FILES),not([File]=FILES),!,with_files(Verb,FILES),!.
-with_files(Verb,File):-debugOnFailureAiml(call(Verb,File)).
+with_files(Verb,File):-prolog_must(call(Verb,File)).
 %%with_files(Verb,File):-throw_safe(error(existence_error(source_sink, File),functor(Verb,F,A),context(F/A, 'No such file or directory'))).
 
 aiml_files(File,Files):-atom(File),sub_atom(File,_Before,_Len,_After,'*'),!,expand_file_name(File,Files),!.
@@ -106,7 +113,7 @@ aimlOption(rebuild_Aiml_Files,false).
 load_single_aiml_file(Ctx,F0):-global_pathname(F0,File),F0\==File,!,load_single_aiml_file(Ctx,File).
 
 load_single_aiml_file(Ctx,F0):-
-  debugOnFailureAimlEach((
+  prolog_mustEach((
    global_pathname(F0,File),
    cateForFile(Ctx,File,FileMatch),!,
    atom_concat_safe(File,'.pl',PLNAME),
@@ -120,28 +127,69 @@ load_single_aiml_file(Ctx,File,PLNAME,FileMatch):-
 
 %% sgml_parser_defs(PARSER_DEFAULTS,PARSER_CALLBACKS) /*shorttag(false),*/
 sgml_parser_defs(
-  [defaults(false), space(remove),number(integer), qualify_attributes(false),
+  [defaults(false), space(remove),/*number(integer),*/ qualify_attributes(false),
          %call(decl, on_decl),
-         %call(pi, on_pi),call(xmlns, on_xmlns),call(urlns, xmlns),call(error,xml_error),
+         %call(pi, on_pi),call(xmlns, on_xmlns),call(urlns, xmlns),
+         %%call(error,xml_error),
          dialect(xml)
          ],
          [max_errors(0),call(begin, on_begin),call(end, on_end)]).
 
 
+%% ?- string_to_structure('<?xml version="1.0" encoding="ISO-8859-1"?>\n<aiml><p>hi</p></aiml>',X).
+
+%% ?- string_to_structure('<category><pattern>_ PLANETS</pattern></category>',X).
+
+
+tls :- string_to_structure('<aiml><p>hi</p></aiml>',X),debugFmt(X).
+tls2 :- string_to_structure('<?xml version="1.0" encoding="ISO-8859-1"?>\n<aiml><p>hi</p></aiml>\n\n',X),debugFmt(X).
+
+string_to_structure(String,XMLSTRUCTURESIN):- fail, sformat(Strin0,'<pre>~s</pre>',[String]),string_to_structure0(Strin0,XMLSTRUCTURES),!,trace,
+   prolog_must([element(pre,[],XMLSTRUCTURESIN)]=XMLSTRUCTURES).
+   
+string_to_structure(String,XMLSTRUCTURES):- string_to_structure0(String,XMLSTRUCTURES),!.
+string_to_structure0(String,XMLSTRUCTURES):- 
+     %%sgml_parser_defs(PARSER_DEFAULTS,_PARSER_CALLBACKS),
+     PARSER_DEFAULTS = [defaults(false), space(remove),/*number(integer),*/ qualify_attributes(false),dialect(xml)],
+     string_to_structure0(String,PARSER_DEFAULTS,XMLSTRUCTURES),!.
+
+string_to_structure(String,PARSER_DEFAULTS0,XMLSTRUCTURES):-string_to_structure0(String,PARSER_DEFAULTS0,XMLSTRUCTURES).
+
+string_to_structure0(String,PARSER_DEFAULTS0,XMLSTRUCTURESIN):-
+        setup_call_cleanup(((string_to_stream(String,In),new_sgml_parser(Parser, []))),
+          prolog_must((                     
+           atom_length(String,Len),
+           append(PARSER_DEFAULTS0,[],PARSER_DEFAULTS),
+           maplist_safe(set_sgml_parser(Parser),PARSER_DEFAULTS),
+           string_parse_structure(Len, Parser, user:PARSER_DEFAULTS, XMLSTRUCTURES, In)
+           )),
+       (free_sgml_parser(Parser),close(In))),!,prolog_must(XMLSTRUCTURESIN=XMLSTRUCTURES).
+
+string_parse_structure(Len,Parser, M:Options, Document, In) :-
+	notrace((sgml:set_parser_options(Parser, Options, Options1),
+	sgml:parser_meta_options(Options1, M, Options2))),
+	sgml:sgml_parse(Parser,
+		   [ document(Document),
+		     source(In),
+                     parse(input),
+                     content_length(Len)
+		   | Options2
+		   ]).
+
 
 % gather line numbers
 fileToLineInfoElements(Ctx,F0,XMLSTRUCTURES):-
    global_pathname(F0,File),
- debugOnFailureAiml((
        retractall(lineInfoElement(File,_,_,_)),
-        open(File, read, In, [type(binary)]),
-        new_sgml_parser(Parser, []),
-        sgml_parser_defs(PARSER_DEFAULTS,PARSER_CALLBACKS),
-        maplist_safe(set_sgml_parser(Parser),[file(File)|PARSER_DEFAULTS]),
-        %% todo offset(Offset)
-        sgml_parse(Parser,[source(In)|PARSER_CALLBACKS]),
-        close(In),!,
-        fileToLineInfoElements2(Ctx,File,XMLSTRUCTURES))).
+        setup_call_cleanup((open(File, read, In, [type(binary)]),new_sgml_parser(Parser, [])),
+          prolog_must((           
+           sgml_parser_defs(PARSER_DEFAULTS,PARSER_CALLBACKS),
+           maplist_safe(set_sgml_parser(Parser),[file(File)|PARSER_DEFAULTS]),
+           %% todo offset(Offset)
+           sgml_parse(Parser,[source(In)|PARSER_CALLBACKS]))),
+        (free_sgml_parser(Parser),close(In))),!,
+        fileToLineInfoElements2(Ctx,File,XMLSTRUCTURES).
+
 
 % gather line contents
 fileToLineInfoElements2(Ctx,File,XMLSTRUCTURES):-!,
@@ -181,8 +229,8 @@ addAttribsToXML(Attribs,[H|T],OUT):-maplist_safe(addAttribsToXML(Attribs),[H|T],
 addAttribsToXML(Attribs,OUT,OUT):-!,debugFmt(addAttribsToXML(Attribs,OUT,OUT)),!.
 
 
-:-dynamic(in_aiml_tag/1).
-:-dynamic(inLineNum).
+:-thread_local(in_aiml_tag/1).
+:-thread_local(inLineNum).
 
 skipOver(_).
 
@@ -219,7 +267,7 @@ on_begin_ctx(_TAG, _URL, _Parser, _Context) :- !. %%, debugFmt(on_begin_ctx(URL,
 
 
 
-:- dynamic
+:- thread_local
         xmlns/3.
 
 on_xmlns(rdf, URL, _Parser) :- !,debugFmt(on_xmlns(URL, rdf)),asserta(xmlns(URL, rdf, _)).
@@ -242,7 +290,7 @@ load_aiml_structure_lineno(Attributes,Ctx,L):-maplist_safe(load_inner_aiml_linen
 %% offset
 load_inner_aiml_lineno(Attributes,Ctx,element(Tag,Attribs,ContentIn)):-
    appendAttributes(Ctx,Attributes,Attribs,RightAttribs),
-   debugOnFailureAiml(attributeValue(Ctx,RightAttribs,[srcfile,srcdir],File,'$error')),
+   prolog_must(attributeValue(Ctx,RightAttribs,[srcfile,srcdir],File,'$error')),
    MATCH = lineInfoElement(File,Line:Offset, Context, element(Tag, Attribs, no_content_yet)),
    ignore(MATCH),
    Context=[_Tag0,aiml|_More],
@@ -255,12 +303,12 @@ load_inner_aiml_lineno(Attributes,Ctx,element(Tag,Attribs,ContentIn)):-
    /*
 
    load_inner_aiml_lineno(Attributes,Ctx,element(Tag,Attribs,ContentIn)):-
-   debugOnFailureAiml(current_value(Ctx,srcfile,File)),
+   prolog_must(current_value(Ctx,srcfile,File)),
    retract((lineInfoElement(File0,Line0:Offset0,graph, element(_Tag0, _Attr0, _Content0)))),
-   debugOnFailureAiml(call(OLD)),
+   prolog_must(call(OLD)),
 
    MATCH = lineInfoElement(File,Line:Offset,Context, element(Tag, Attribs, _ContentIn)),!,
-   debugOnFailureAiml((call(MATCH),!,not(not((Line:Offset)==(Line0:Offset0))),retract(OLD),
+   prolog_must((call(MATCH),!,not(not((Line:Offset)==(Line0:Offset0))),retract(OLD),
    load_aiml_structure(Ctx,element(Tag,[srcinfo=File0:Line0-Offset0|Attribs],ContentIn)),
         NEW = lineInfoElement(File,Line:Offset,Attributes, element(Tag, Attribs, ContentIn)),
         assertz(NEW))),!.
@@ -268,7 +316,7 @@ load_inner_aiml_lineno(Attributes,Ctx,element(Tag,Attribs,ContentIn)):-
    */
 
 %catagory
-load_aiml_structure(Ctx,element(catagory,ALIST,LIST)):-load_aiml_structure(Ctx,element(category,ALIST,LIST)),!.
+load_aiml_structure(Ctx,element(catagory,ALIST,LIST)):-!,load_aiml_structure(Ctx,element(category,ALIST,LIST)),!.
 
 
 % aiml
@@ -288,7 +336,7 @@ load_aiml_structure(Ctx,O):-atomic(O),!,debugFmt(load_aiml_structure(Ctx,O)),!.
 % topic/category/flags/that
 load_aiml_structure(Ctx,element(Tag,ALIST,INNER_XML)):- member(Tag,[topic,category,flags,that]),!,
      replaceAttribute(Ctx,name,Tag,ALIST,ATTRIBS),
-         withAttributes(Ctx,ATTRIBS, pushCateElement(Ctx,ATTRIBS,element(Tag,ALIST,INNER_XML))),!.
+         withAttributes(Ctx,ATTRIBS, load_aiml_cate_element(Ctx,ATTRIBS,element(Tag,ALIST,INNER_XML))),!.
 
 % substitute,learn,aiml,genlMt,srai,think,system,javascript,eval,template
 load_aiml_structure(Ctx,element(A,B,C)):-
@@ -331,7 +379,7 @@ load_aiml_structure_diff(Ctx,BEFORE,AFTER):- BEFORE\==AFTER, load_aiml_structure
 */
 
 % <aiml>
-load_aiml_structure(Ctx,[A|B]):-!,debugOnFailureAiml(maplist_safe(load_aiml_structure(Ctx),[A|B])),!.
+load_aiml_structure(Ctx,[A|B]):-!,prolog_must(maplist_safe(load_aiml_structure(Ctx),[A|B])),!.
 
 load_aiml_structure(Ctx,X):- aiml_error(missing_load_aiml_structure(Ctx,X)).
 
@@ -362,7 +410,7 @@ load_dict_structure(Ctx,element(Tag,ALIST,LIST)):-
    replaceAttribute(Ctx,name,dictionary,ALIST,ATTRIBS),
    obtainDictionaryName(Ctx,Tag,ATTRIBS,Dict),  
    withAttributes(Ctx,[dictionary=Dict|ATTRIBS],
-    debugOnFailureAiml((
+    prolog_must((
      current_value(Ctx,dictionary,_Dict),
       maplist_safe(load_dict_structure(Ctx),LIST)))).
 
@@ -373,7 +421,7 @@ load_dict_structure(Ctx,element(Tag,ALIST,LIST)):-member(Tag,[predicate]),
      attributeValue(Ctx,ALIST,[default],Default,''),
      attributeValue(Ctx,ALIST,[value,default],Value,LIST),
      attributeValue(Ctx,ALIST,['set-return'],SetReturn,value),
-  debugOnFailureAiml((
+  prolog_must((
      load_dict_structure(Ctx,dict(Dict,Name,Value)),
      load_dict_structure(Ctx,dict(defaultValue(Dict),Name,Default)),
      load_dict_structure(Ctx,dict(setReturn(Dict),Name,SetReturn)))),!.
@@ -381,7 +429,7 @@ load_dict_structure(Ctx,element(Tag,ALIST,LIST)):-member(Tag,[predicate]),
 % user/bot dictionaries name/values
 load_dict_structure(Ctx,element(Tag,ALIST,LIST)):-member(Tag,[property,var,item,set]),
    current_value(Ctx,dictionary,Dict),
-   debugOnFailureAiml((
+   prolog_must((
      attributeValue(Ctx,ALIST,[name,var],Name,'$error'),
      attributeValue(Ctx,ALIST,[value,default],Value,LIST),
      load_dict_structure(Ctx,dict(Dict,Name,Value)))),!.
@@ -390,24 +438,24 @@ load_dict_structure(Ctx,element(Tag,ALIST,LIST)):-member(Tag,[property,var,item,
 
 % special substitution dictionaries
 load_dict_structure(Ctx,element(substitutions,ALIST,LIST)):-
-   debugOnFailureAiml((
+   prolog_must((
       replaceAttribute(Ctx,name,graph,[dictionary=substitutions(input)|ALIST],ATTRIBS),
      withAttributes(Ctx,ATTRIBS,
      maplist_safe(load_substs(Ctx),LIST)))).
 
 
 load_substs(Ctx,element(Tag,ALIST,LIST)):- substitutionDictsName(Tag,Dict),
-   debugOnFailureAiml((
+   prolog_must((
       replaceAttribute(Ctx,name,graph,[dictionary=substitutions(Dict)|ALIST],ATTRIBS),
      withAttributes(Ctx,ATTRIBS,
      maplist_safe(load_substs(Ctx),LIST)))).
 
 load_substs(Ctx,element(Tag,ATTRIBS,LIST)):-member(Tag,[substitution,substitute]),!,
-   debugOnFailureAiml((
+   prolog_must((
       peekNameValue(Ctx,_,dictionary,substitutions(Catalog),'$error'),
-      attributeOrTagValue(Ctx,element(substitute,ATTRIBS,LIST),[old,find,name,before],Find,'$error'),
-      attributeOrTagValue(Ctx,element(substitute,ATTRIBS,LIST),[new,replace,value,after],Replace,'$error'),
-      debugOnFailureAiml(load_dict_structure(Ctx,dict(substitutions(Catalog),Find,Replace))))),!.
+      attributeValue(Ctx,element(substitute,ATTRIBS,LIST),[old,find,name,before],Find,'$error'),
+      attributeValue(Ctx,element(substitute,ATTRIBS,LIST),[new,replace,value,after],Replace,'$error'),
+      prolog_must(load_dict_structure(Ctx,dict(substitutions(Catalog),Find,Replace))))),!.
 
 % substitutions
 load_dict_structure(Ctx,element(substitute,ATTRIBS,LIST)):- load_substs(Ctx,element(substitute,ATTRIBS,LIST)),!.
@@ -415,10 +463,10 @@ load_dict_structure(Ctx,element(substitution,ATTRIBS,LIST)):- load_substs(Ctx,el
 
 % detect substitutions
 load_dict_structure(Ctx,dict(substitutions(Dict),Find,Replace)):-!,
-   debugOnFailureAiml(load_dict_structure(Ctx,substitute(Dict,Find,Replace))),!.
+   prolog_must(load_dict_structure(Ctx,substitute(Dict,Find,Replace))),!.
 
 load_dict_structure(Ctx,substitute(SubstsNameI,Find,Replace)):-!,
-  debugOnFailureAiml((
+  prolog_must((
       convert_dictname(Ctx,SubstsNameI,SubstsName),
       convert_substs(Find,FindM),
       %%%convert_text
@@ -431,7 +479,12 @@ load_dict_structure(Ctx,dict(IDict,Name,Value)):-
       convert_dictname(Ctx,IDict,Dict),
       setAliceMem(Ctx,Dict,Name,Value),!.
 
-convert_dictname(Ctx,A,D):-!,unresultifyL(Ctx,A,D),!.
+
+convert_dictname(_Ctx,A,A):-var(A),!.
+convert_dictname(_Ctx,you,D):-!,literal_atom(bot,D),!.
+convert_dictname(_Ctx,A,D):-atom(A),!,literal_atom(A,D),!.
+convert_dictname(Ctx,[A],D):-convert_dictname(Ctx,A,D),!.
+convert_dictname(Ctx,A,D):-unresultifyL(Ctx,A,D),!.
 convert_dictname(Ctx,A,D):-convert_dictname0(Ctx,A,D),nop(traceIf((A\==D,A\==[D]))).
 
 convert_dictname0(_Ctx,A,A):-var(A),!.
@@ -473,7 +526,7 @@ classify2(Out,Out).
 
 classifySingle('_',var('_')).
 classifySingle(*,var('*')).
-classifySingle(Atom,in):-is_litteral(Atom).
+classifySingle(Atom,in):-is_literal(Atom).
 classifySingle(Atom,out):-atom(Atom).
 classifySingle(Atom,spec(File)):-compound(Atom),functor(Atom,File,_).
 classifySingle(_Atom,unknown).
@@ -509,19 +562,33 @@ each_category(Ctx,ATTRIBS,TAGS,element(TAG,ALIST,NOCATEGORIES)):- innerTagLikeTh
    each_category(Ctx,ATTRIBS,[element(That,WA,WP)|TAGS],element(TAG,ALIST,NOPATTERNS)),!.
 
 each_category(Ctx,ATTRIBS,NOPATTERNS,element(TAG,ALIST,PATTERN)):-
-  debugOnFailureAiml((
+  prolog_must((
    replaceAttribute(Ctx,name,TAG,ALIST,PATTRIBS),
    appendAttributes(Ctx,PATTRIBS,ATTRIBS,NEWATTRIBS),
    gatherEach(Ctx,[TAG=PATTERN|NEWATTRIBS],NOPATTERNS,Results),!,
    prolog_must(dumpListHere(Ctx,Results)))),!.
 
+load_aiml_cate_element(Ctx,ATTRIBS,element(Tag,ALIST,INNER_XML)):-loader_verb(Ctx,ATTRIBS,LoaderVerbs),
+    load_aiml_cate_element2(Ctx,LoaderVerbs,ATTRIBS,element(Tag,ALIST,INNER_XML)).
+
+%% delayed load of Cate
+load_aiml_cate_element2(Ctx,LoaderVerbs,ATTRIBS,element(Tag,ALIST,INNER_XML)):- fail, %%TODO: unfail this
+   immediateCall(Ctx,load_aiml_cate_element_now(LoaderVerbs,ATTRIBS,element(Tag,ALIST,INNER_XML))),!.
+
+%% immediate load of Cate
+load_aiml_cate_element2(Ctx,LoaderVerbs,ATTRIBS,element(Tag,ALIST,INNER_XML)):- 
+   prolog_must(pushCateElement(Ctx,[withCategory=LoaderVerbs|ATTRIBS],element(Tag,[withCategory=LoaderVerbs|ALIST],INNER_XML))),!.
+
+load_aiml_cate_element_now(LoaderVerbs,ATTRIBS,element(Tag,ALIST,INNER_XML)):-
+  currentContext(load_aiml_cate_element_now,Ctx),
+   prolog_must(pushCateElement(Ctx,[withCategory=LoaderVerbs|ATTRIBS],element(Tag,ALIST,INNER_XML))).
 
 %catagory
 pushCateElement(Ctx,ATTRIBS,element(catagory, A, B)):- !,pushCateElement(Ctx,ATTRIBS,element(category, A, B)),!.
 
 % <topic> has non<category>s
 pushCateElement(Ctx,INATTRIBS,element(Tag,ATTRIBS,INNER_XML)):- member(Tag,[topic,flag]),member(element(INNER,_,_),INNER_XML),INNER \= category,!,
- debugOnFailureAiml((
+ prolog_must((
    unify_partition(element(category,_,_),INNER_XML,ALLCATEGORIES,NONCATE),
    %findall(element(category,ALIST,LIST),member(element(category,ALIST,LIST),INNER_XML),ALLCATEGORIES),
    %takeout(element(category,_,_),INNER_XML,NONCATE),
@@ -530,7 +597,7 @@ pushCateElement(Ctx,INATTRIBS,element(Tag,ATTRIBS,INNER_XML)):- member(Tag,[topi
 
 % flag/topic
 pushCateElement(Ctx,INATTRIBS,element(Tag,ALIST,INNER_XML)):- member(Tag,[topic,flag]),!,
-  debugOnFailureAiml((
+  prolog_must((
   replaceAttribute(Ctx,name,Tag,ALIST,ATTRIBS),
   appendAttributes(Ctx,ATTRIBS,INATTRIBS,OUTATTRIBS),
   withAttributes(Ctx,OUTATTRIBS,
@@ -538,7 +605,7 @@ pushCateElement(Ctx,INATTRIBS,element(Tag,ALIST,INNER_XML)):- member(Tag,[topic,
 
 % remove <patterns>s from <category>s
 pushCateElement(Ctx,INATTRIBS,element(Tag,ATTRIBS,INNER_XML)):- member(Tag,[outerctx,category]),!,
- debugOnFailureAiml((
+ prolog_must((
    member(element(pattern,_,_),INNER_XML),
    unify_partition(element(pattern,_,_),INNER_XML,ALLPATTERNS,NOPATTERNS),
    %findall(element(pattern,ALIST,LIST),member(element(pattern,ALIST,LIST),INNER_XML),ALLPATTERNS),
@@ -547,18 +614,18 @@ pushCateElement(Ctx,INATTRIBS,element(Tag,ATTRIBS,INNER_XML)):- member(Tag,[oute
    maplist_safe(each_pattern(Ctx,OUTATTRIBS,NOPATTERNS),ALLPATTERNS))),!.
 
 % error
-pushCateElement(Ctx,ATTRIBS,M):-debugFmt('FAILURE'(pushCateElement(Ctx,ATTRIBS,M))),trace.
+pushCateElement(Ctx,ATTRIBS,M):-debugFmt('FAILURE'(pushCateElement(Ctx,ATTRIBS,M))),ctrace.
 
 unify_partition(Mask, List, Included, Excluded):- partition(\=(Mask), List, Excluded , Included),!.
 %%unify_partition(Mask, +List, ?Included, ?Excluded)
 
 each_pattern(Ctx,ATTRIBS,TAGS,element(TAG,ALIST,PATTERN)):- innerTagLikeThat(That), member(element(That,WA,WP), PATTERN),!,
-   debugOnFailureAiml((
+   prolog_must((
    takeout(element(That,WA,WP),PATTERN,NOPATTERNS),
    each_pattern(Ctx,ATTRIBS,[element(That,WA,WP)|TAGS],element(TAG,ALIST,NOPATTERNS)))),!.
 
 each_pattern(Ctx,ATTRIBS,NOPATTERNS,element(TAG,ALIST,PATTERNA)):-
-  debugOnFailureAiml((
+  prolog_must((
    convert_text(PATTERNA,PATTERN),
    replaceAttribute(Ctx,name,TAG,ALIST,PATTRIBS),
    appendAttributes(Ctx,PATTRIBS,ATTRIBS,NEWATTRIBS),
@@ -566,10 +633,17 @@ each_pattern(Ctx,ATTRIBS,NOPATTERNS,element(TAG,ALIST,PATTERNA)):-
    prolog_must(dumpListHere(Ctx,Results)))),!.
 
 dumpListHere(Ctx,DumpListHere):-
-   debugOnFailureAiml((
+   prolog_must((
     %%debugFmt(DumpListHere),
-    current_value(Ctx,withCategory,Verbs),
+    loader_verb(Ctx,DumpListHere,Verbs),
+    prolog_must(nonvar(Verbs)),
+    %%%current_value(Ctx,withCategory,Verbs),
     assertCate(Ctx,DumpListHere,Verbs))).
+
+loader_verb(Ctx,DumpListHere,Verbs):-debugOnError(peekNameValue(Ctx,DumpListHere,withCategory,Verbs,'$failure')),!.
+loader_verb(_Ctx,DumpListHere,Verbs):-lastMember(withCategory=Verbs,DumpListHere),nonvar(Verbs),!.
+loader_verb(Ctx,DumpListHere,Verbs):-prolog_must((peekNameValue(Ctx,DumpListHere,withCategory,Verbs,'$first'(['$current_value','$value'([assert_cate_in_load])])))),prolog_must(isValid(Verbs)).
+loader_verb(Ctx,DumpListHere,Verbs):-ctrace,prolog_must((peekNameValue(Ctx,DumpListHere,withCategory,Verbs,'$first'(['$current_value','$value'([assert_cate_in_load])])))),!.
 
 %%dumpListHere([]):-debugFmt(dumpListHere).
 %%dumpListHere([R|Results]):-debugFmt(R),dumpListHere(Results),!.
@@ -596,5 +670,7 @@ gatherEach0(Ctx,NEWATTRIBS,[element(TAG,ALIST,PATTERN_IN)|NOPATTERNS],[TAG=PATTE
       appendAttributes(Ctx,ALIST,ResultM,Result),!.
 
 
-each_template(Ctx,M):-debugFmt('FAILURE'(each_template(Ctx,M))),trace.
-each_that(Ctx,M):-debugFmt('FAILURE'(each_that(Ctx,M))),trace.
+each_template(Ctx,M):-debugFmt('FAILURE'(each_template(Ctx,M))),ctrace.
+each_that(Ctx,M):-debugFmt('FAILURE'(each_that(Ctx,M))),ctrace.
+
+
