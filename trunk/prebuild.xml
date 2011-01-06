@@ -941,9 +941,23 @@
       <ReferencePath>../bin</ReferencePath>
       
       <Reference name="MushDLR223"  localCopy="false"/>
-      <Files>        
-       <Match path="." pattern="*.pl" recurse="true" buildAction="EmbeddedResource" copyToOutput="Always"/>
-       <!--
+       <Files>
+        <Match path="cynd/programk" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="Always"/>
+        <Match path="cynd/cyc_pl" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="Always"/>
+        <Match path="cynd/dcgplus" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="Always"/>
+        <Match path="cynd/CHAT-80" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="Always"/>
+        <Match path="cynd/logicmoo_nl" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="Always"/>
+        <Match path="cynd/logicmoo" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="Always"/>
+        <Match path="cynd/TALK" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="Always"/>
+        <Match path="." pattern="*.cloj" recurse="true" buildAction="EmbeddedResource" copyToOutput="Always"/>
+        <Match path="." pattern="*.lisp" recurse="true" buildAction="EmbeddedResource" copyToOutput="Always"/>
+        <Match path="." pattern="*.config" recurse="true" buildAction="EmbeddedResource" copyToOutput="Always"/>
+        <Match path="." pattern="*.xml" recurse="false" buildAction="EmbeddedResource" copyToOutput="Always"/>
+        <!--
+        <Match path="cynd/notaiml" pattern="*.*" recurse="false" buildAction="EmbeddedResource" copyToOutput="Always"/>
+        <Match path="config" pattern="*.*" recurse="true" buildAction="EmbeddedResource" copyToOutput="Always"/>
+        <Match path="cynd" pattern="*.*" recurse="false" buildAction="EmbeddedResource" copyToOutput="Always"/>
+        <Match path="." pattern="*." recurse="true" buildAction="EmbeddedResource" copyToOutput="Always"/>
           <Match path="." pattern="*.*l" recurse="true" buildAction="Content" copyToOutput="Always"/>
        <Match path="." pattern="*.*p" recurse="true" buildAction="Content" copyToOutput="Always"/>
        <Match path="." pattern="*.*j" recurse="true" buildAction="Content" copyToOutput="Always"/>
@@ -1693,7 +1707,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin</ReferencePath>
+      <ReferencePath>../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Windows.Forms"/>
@@ -1724,7 +1738,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin</ReferencePath>
+      <ReferencePath>../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
@@ -1733,9 +1747,6 @@ app -->
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
-<!-- -
-      <Reference name="OpenMetaverse.Http.dll"/>
--->
       <Files>
         <Match pattern="*.cs" recurse="false"/>
       </Files>
@@ -1754,7 +1765,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin</ReferencePath>
+      <ReferencePath>../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Web"/>
@@ -1784,7 +1795,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin</ReferencePath>
+      <ReferencePath>../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Drawing"/>
       <Reference name="LookingGlass.Comm"/>
@@ -1811,7 +1822,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin</ReferencePath>
+      <ReferencePath>../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
@@ -1839,7 +1850,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin</ReferencePath>
+      <ReferencePath>../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.XML"/>
@@ -1866,7 +1877,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin</ReferencePath>
+      <ReferencePath>../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="LookingGlass.Comm"/>
@@ -1894,7 +1905,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin</ReferencePath>
+      <ReferencePath>../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
@@ -1923,7 +1934,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin</ReferencePath>
+      <ReferencePath>../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
@@ -1954,12 +1965,45 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin</ReferencePath>
+      <ReferencePath>../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Core"/>
       <Reference name="LookingGlass.Framework"/>
       <Reference name="LookingGlass.Renderer"/>
       <Reference name="LookingGlass.World"/>
+      <Reference name="OpenMetaverse.dll"/>
+      <Reference name="OpenMetaverse.StructuredData.dll"/>
+      <Reference name="OpenMetaverseTypes.dll"/>
+      <Files>
+        <Match pattern="*.cs" recurse="false"/>
+      </Files>
+    </Project>
+
+    <Project name="LookingGlass.Renderer.OGL" path="lib/LookingGlass-svn/src/LookingGlass.Renderer.OGL" type="Library" frameworkVersion="v3_5">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../../../bin/</ReferencePath>
+      <Reference name="System"/>
+      <Reference name="System.Core"/>
+      <Reference name="System.Data"/>
+      <Reference name="System.Drawing"/>
+      <Reference name="System.Windows.Forms"/>
+      <Reference name="LookingGlass.Framework"/>
+      <Reference name="LookingGlass.Renderer"/>
+      <Reference name="LookingGlass.World"/>
+      <Reference name="LookingGlass.World.LL"/>
+      <Reference name="OpenTK.dll"/>
+      <Reference name="OpenTK.Compatibility.dll"/>
+      <Reference name="OpenTK.GLControl.dll"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
@@ -1981,7 +2025,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin</ReferencePath>
+      <ReferencePath>../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
@@ -2015,7 +2059,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin</ReferencePath>
+      <ReferencePath>../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Xml"/>
       <Reference name="System.Data"/>
@@ -2047,7 +2091,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin</ReferencePath>
+      <ReferencePath>../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
@@ -2081,7 +2125,7 @@ app -->
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin</ReferencePath>
+      <ReferencePath>../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
@@ -2099,6 +2143,29 @@ app -->
       </Files>
     </Project>
 
+
+
+    <!--
+    <Project name="LookingGlassOgre" language="C++" path="lib/LookingGlass-svn/src/LookingGlassOgre" type="Library" frameworkVersion="v3_5">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../../../bin/</ReferencePath>
+      <Reference name="OgreMain.lib"/>
+      <Reference name="OIS.lib"/>
+      <Files>
+        <Match pattern="*.cpp" recurse="false"/>
+      </Files>
+    </Project>
+-->
 
     <Project name="Cogbot.LAIR" path="lib/LAIR.ResourceAPIs/Cogbot.LAIR" type="Exe" rootNamespace="Cogbot.LAIR" frameworkVersion="v3_5">
       <Configuration name="Debug">
