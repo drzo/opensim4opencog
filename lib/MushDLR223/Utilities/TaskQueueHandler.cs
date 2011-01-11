@@ -533,7 +533,10 @@ namespace MushDLR223.Utilities
 
         private bool WaitOneAlt()
         {
-            System.Windows.Forms.Application.DoEvents();
+            if (DLRConsole.HasWinforms)
+            {
+                System.Windows.Forms.Application.DoEvents();
+            }
             Thread.Sleep(100);
             return true;
         }

@@ -44,6 +44,7 @@ using log4net.Core;
 using TheConsole = MushDLR223.Utilities.DLRConsole;
 using SystemConsole = System.Console;
 using MushDLR223.ScriptEngines;
+using System.Runtime.InteropServices;
 
 namespace MushDLR223.Utilities
 {
@@ -383,12 +384,109 @@ namespace MushDLR223.Utilities
         }
     }
 
+    internal static class NativeMethodsKernel32
+    {
+        [DllImport("kernel32.dll")]
+        internal static extern Boolean AllocConsole();        
+    }
+
     public class DLRConsole
 #if USING_log4net
         : AnsiColorTerminalAppender
 #endif
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        public static bool AllocedConsole = false;
+        public static bool HasWinforms = false;
+        public static bool IsOnMonoUnix = false;
+        public static bool SafelyRun(MethodInvoker call)
+        {
+            return SafelyRun(call, Error);
+        }
+        public static bool SafelyRun(MethodInvoker call, TextWriter showException)
+        {
+            try
+            {
+                call();
+                return true;
+            }
+            catch (Exception e)
+            {
+                if (showException != null)
+                {
+                    SafelyRun(() =>
+                    {
+                        showException.WriteLine("SafelyRun: " + e);
+                        showException.Flush();
+
+                    }, null);
+                }
+                return false;
+            }
+        }
+
+        public static void DetectMainEnv(TextWriter Console)
+        {
+            var osv = Environment.OSVersion;
+            if (Console != null)
+            {                 
+                Console.WriteLine("Current Directory={0}", Environment.CurrentDirectory);      // Current working directory of the program
+                Console.WriteLine("CommandLine={0}", Environment.CommandLine);                 // Command line used to execute the program
+                Console.WriteLine("MachineName={0}", Environment.MachineName);                 // Name of the current machine
+                Console.WriteLine("NewLine={0}", Environment.NewLine);                         // Newline character used by OS, \n for Unix, \n\r for Windows
+                Console.WriteLine("Environment.OSVersion = " + osv);
+                Console.WriteLine("Environment.OSVersion.Platform = " + osv.Platform);
+                Console.WriteLine("Environment.OSVersion.VersionString = " + osv.VersionString);
+                Console.WriteLine("Environment.OSVersion.ServicePack = " + osv.ServicePack);
+                Console.WriteLine("ProcessorCount={0}", Environment.ProcessorCount);           // Number of CPU's in the machine
+                Console.WriteLine("StackTrace={0}", Environment.StackTrace);                   // Prints all functions called in order
+                Console.WriteLine("SystemDirectory={0}", Environment.SystemDirectory);         // Returns the "system" directory of the OS, not valid on Unix
+                Console.WriteLine("TickCount={0}", Environment.TickCount);                     // Number of milliseconds since the system started
+                Console.WriteLine("UserDomainName={0}", Environment.UserDomainName);           // Windows domain, Machine name on Unix
+                Console.WriteLine("UserInteractive={0}", Environment.UserInteractive);         //
+                Console.WriteLine("UserName={0}", Environment.UserName);                       // Current username
+                Console.WriteLine("Version={0}", Environment.Version);                         // C# engine version
+                Console.WriteLine("WorkingSet={0}", Environment.WorkingSet);                   // Memory allocated to the process
+
+                // ExpandEnviromentalVariables expands any named variable between %%
+                Console.WriteLine("ExpandEnvironentVariables={0}", Environment.ExpandEnvironmentVariables("This system has the following path: %PATH%"));
+
+                String[] arguments = Environment.GetCommandLineArgs();
+                Console.WriteLine("CommandLineArgs={0}", String.Join(", ", arguments));
+
+                String[] drives = Environment.GetLogicalDrives();
+                Console.WriteLine("GetLogicalDrives: {0}", String.Join(", ", drives));
+            }
+            IsOnMonoUnix = osv.Platform == PlatformID.Unix;
+            HasWinforms = osv.Platform != PlatformID.Unix;
+        }
+
+        public static bool AllocConsole()
+        {
+            DetectMainEnv(null);
+            if (!AllocedConsole)
+            {
+                var ConsoleError = Console.Error;
+
+                AllocedConsole = true;
+                try
+                {
+                    NativeMethodsKernel32.AllocConsole();
+                    //write nothing to rtest for error
+                    ConsoleError.WriteLine("");
+                    ConsoleError.Flush();
+                    Console.Out.WriteLine("");
+                    Console.Out.Flush();
+                }
+                catch (Exception e)
+                {
+                    AllocedConsole = false;
+                    ConsoleError.WriteLine("AllocedConsole: " + e);
+                    ConsoleError.Flush();
+                }
+            }
+            return AllocedConsole;
+        }
 
         public static TextFilter TheGlobalLogFilter = new TextFilter()
                                                           {
@@ -397,12 +495,19 @@ namespace MushDLR223.Utilities
                                                           };
 
         static private readonly object m_syncRoot = new object();
-
+        public static bool PrintToSystemConsole = true;
         static private int y = -1;
         private int cp = 0;
         private int h = 1;
         private string prompt = "# ";
         static private StringBuilder cmdline = new StringBuilder();
+        private static readonly TextWriter InitialConsoleOut = SystemConsole.Out;
+        private static readonly TextWriter InitialConsoleERR = SystemConsole.Error;
+        public static readonly OutputDelegate SYSTEM_ERR_WRITELINE_REAL = InitialConsoleERR.WriteLine;
+        public static readonly OutputDelegate SYSTEM_ERR_WRITELINE = CALL_SYSTEM_ERR_WRITELINE;
+        private static readonly TextWriter ConsoleOut = new OutputDelegateWriter(SystemWriteLine);
+        private static readonly TextWriter ConsoleError = new OutputDelegateWriter(SYSTEM_ERR_WRITELINE);
+
         public Commands Commands = new Commands();
         private bool echo = true;
         static private List<string> history = new List<string>();
@@ -419,12 +524,6 @@ namespace MushDLR223.Utilities
             get { return m_defaultPrompt; }
         }
         protected string m_defaultPrompt;
-
-        public static bool PrintToSystemConsole = true;
-        private static readonly TextWriter InitialConsoleOut = SystemConsole.Out;
-        private static readonly TextWriter InitialConsoleERR = SystemConsole.Error;
-        public static readonly OutputDelegate SYSTEM_ERR_WRITELINE = InitialConsoleERR.WriteLine;
-        private static readonly TextWriter ConsoleOut = new OutputDelegateWriter(SystemWriteLine);
 
         static DLRConsole()
         {
@@ -471,6 +570,14 @@ namespace MushDLR223.Utilities
                 return ret;
             }
         }
+        public static TextWriter Error
+        {
+            get
+            {
+                TextWriter ret = SystemConsole.Error ?? ConsoleError ?? InitialConsoleERR ?? InitialConsoleOut;
+                return ret;
+            }
+        }
 
         public static TextReader In
         {
@@ -488,6 +595,14 @@ namespace MushDLR223.Utilities
             //RemoveOutput(old);
             AddOutput(writer);
             SystemConsole.SetOut(ConsoleOut);
+        }
+
+        public static void SetError(TextWriter writer)
+        {
+            //var old = Console.Out;
+            //RemoveOutput(old);
+            //AddOutput(writer);
+            SystemConsole.SetError(ConsoleOut);
         }
 
         private static readonly object m_LogLock = new object();
@@ -694,7 +809,7 @@ namespace MushDLR223.Utilities
         /// </summary>
         /// <param name="format">The message to send</param>
         /// <param name="args">WriteLine-style message arguments</param>
-        public void Error(string format, params object[] args)
+        public void WError(string format, params object[] args)
         {
             WriteNewLine(ConsoleColor.Red, format, args);
         }
@@ -705,7 +820,7 @@ namespace MushDLR223.Utilities
         /// <param name="sender">The module that sent this message</param>
         /// <param name="format">The message to send</param>
         /// <param name="args">WriteLine-style message arguments</param>
-        public void Error(string sender, string format, params object[] args)
+        public void WError(string sender, string format, params object[] args)
         {
             WriteNewLine(DeriveColor(sender), sender, ConsoleColor.Red, format, args);
         }
@@ -793,15 +908,25 @@ namespace MushDLR223.Utilities
                     string[] safeFormatSplit = safeFormat.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
                     foreach (var argsFmt in safeFormatSplit)
                     {
-                        safeFormat = argsFmt;
-                        WritePrefixLine(senderColor, sender);
-                        omittedPrefix = sender.ToUpper() + ":";
-                        WriteConsoleLine(color, "{0}", safeFormat.Trim(trim));
-                        omittedPrefix = "";
+                        WriteEachLine(senderColor, sender, color, argsFmt.Trim(trim));
                         if (y != -1)
                             y = CursorTop;
                     }
                 }
+        }
+
+        static void WriteEachLine(ConsoleColor senderColor, string sender, ConsoleColor color, string trimmed)
+        {
+            if (y != -1)
+                y = CursorTop;
+            WritePrefixLine(senderColor, sender);
+            omittedPrefix = sender.ToUpper() + ":";
+            WriteConsoleLine(color, "{0}", trimmed);
+            omittedPrefix = "";
+            if (y != -1)
+                y = CursorTop;
+            //SystemConsole.WriteLine("\n(" + sender + "): " + trimmed);
+            SystemConsole.WriteLine(trimmed);
         }
 
         static public void WriteNewLine(ConsoleColor color, string format, params object[] args)
@@ -872,7 +997,7 @@ namespace MushDLR223.Utilities
                     SystemWrite0("[");
 
                     WriteColorText(color, sender);
-
+                    PauseIfTraced("WritePrefixLine: " + sender);
                     SystemWrite0("] \t");
                 }
             }
@@ -894,7 +1019,7 @@ namespace MushDLR223.Utilities
                 catch (ArgumentNullException)
                 {
                     // Some older systems dont support coloured text.
-                    SystemWrite0(text);
+                    SystemWrite0(" (ANE) " + text);
                 }
             }
         }
@@ -1246,8 +1371,8 @@ namespace MushDLR223.Utilities
         {
             string printStr = TheConsole.SafeFormat(format, args);
             if (!TheGlobalLogFilter.ShouldPrint(printStr))
-            {
-                SYSTEM_ERR_WRITELINE(printStr);
+            {               
+                CALL_SYSTEM_ERR_WRITELINE(printStr);
             }
             if (printStr == null) return;
             string sender;
@@ -1255,13 +1380,26 @@ namespace MushDLR223.Utilities
             WriteNewLine(DeriveColor(sender), sender, ConsoleColor.Gray, "{0}", printStr);
             return;
         }
+
+        private static void CALL_SYSTEM_ERR_WRITELINE(string format, params object[] args)
+        {
+            SystemFlush();
+            format = SafeFormat(format, args);
+            //%%%PauseIfTraced(format);
+
+            if (IsOnMonoUnix) WriteColorText(ConsoleColor.White, format);
+            SYSTEM_ERR_WRITELINE_REAL(format);
+            SystemFlush();
+        }
+
         private static void SystemWriteLine0(string format, params object[] args)
         {
-            if (true)
+            var Outputs = DLRConsole.Outputs;
+            if (Outputs.Count == 0)
             {
-                format = SafeFormat(format, args);
-                if (String.IsNullOrEmpty(format)) return;
-                SystemWriteLine00(format.Trim());
+                var sformat = SafeFormat(format, args);
+                if (String.IsNullOrEmpty(sformat)) return;
+                SystemWriteLine00(sformat.Trim());
                 return;
             }
 
@@ -1280,14 +1418,16 @@ namespace MushDLR223.Utilities
                 }
                 catch (Exception e)
                 {
-                    SYSTEM_ERR_WRITELINE("" + e);
+                    CALL_SYSTEM_ERR_WRITELINE("" + e);
                     o.WriteLine(SafeFormat(format, args));
                 }
             }
         }
         private static void SystemWriteLine00(string format)
         {
+            CALL_SYSTEM_ERR_WRITELINE("SystemWriteLine00: " + format);
             format = GetFormat(format).TrimEnd();
+            PauseIfTraced(format);
             foreach (TextWriter o in Outputs)
             {
                 try
@@ -1296,16 +1436,17 @@ namespace MushDLR223.Utilities
                 }
                 catch (Exception e)
                 {
-                    SYSTEM_ERR_WRITELINE("\n" + e + "\n while writeline-ing '" + format + "'");
+                    CALL_SYSTEM_ERR_WRITELINE("\n" + e + "\n while writeline-ing '" + format + "'");
                 }
             }
         }
+
         public static void SystemWriteLine(string format, params object[] args)
         {
             format = SafeFormat(format, args);
             if (!TheGlobalLogFilter.ShouldPrint(format))
             {
-                SYSTEM_ERR_WRITELINE(format);
+                CALL_SYSTEM_ERR_WRITELINE(format);
             }
             if (String.IsNullOrEmpty(format)) return;
             SystemWriteLine00(format);
@@ -1458,6 +1599,7 @@ namespace MushDLR223.Utilities
         internal static void SystemWrite00(string format)
         {
             format = GetFormat(format);
+            PauseIfTraced("SystemWrite00: " + format); // keep
             foreach (TextWriter o in Outputs)
             {
                 try
@@ -1466,11 +1608,36 @@ namespace MushDLR223.Utilities
                 }
                 catch (Exception e)
                 {
-                    SYSTEM_ERR_WRITELINE("\n" + e + "\n while writing '" + format + "'");
+                    CALL_SYSTEM_ERR_WRITELINE("\n" + e + "\n while writing '" + format + "'");
                 }
             }
         }
 
+        static bool lastWasTraced = false;
+        private static void PauseIfTraced(string format)
+        {
+            return;
+            bool wasTraced = format.ToUpper().Contains("VERIFYASSEMBLYLOADABLE");
+            if (wasTraced)
+            {
+                SystemConsole.Out.WriteLine();
+                SystemConsole.Out.Flush();
+                SystemConsole.Error.Write("--s--------" + format + "|: ");
+                SystemConsole.Error.Flush();
+                string s = null;
+                if (!lastWasTraced)
+                {
+                    s = SystemConsole.In.ReadLine();
+                    if (!string.IsNullOrEmpty(s))
+                    {
+                        var ex = new Exception(s);
+                        CALL_SYSTEM_ERR_WRITELINE(" " + s + " " + ex.StackTrace);
+                    }
+                }
+            }
+            SystemFlush();
+            lastWasTraced = wasTraced;
+        }
 
 
         private static string GetFormat(string format)
@@ -1509,7 +1676,7 @@ namespace MushDLR223.Utilities
                                                               {
                                                               };
 
-        protected static IEnumerable Outputs
+        protected static List<TextWriter> Outputs
         {
             get
             {
@@ -1518,7 +1685,8 @@ namespace MushDLR223.Utilities
                 {
                     if (_outputs.Count == 0)
                     {
-                        list.Add(InitialConsoleOut);
+                        var use = InitialConsoleOut;
+                        if (use != null) list.Add(use);
                     }
                     else
                     {
@@ -1555,7 +1723,7 @@ namespace MushDLR223.Utilities
                 }
                 catch (Exception e)
                 {
-                    SYSTEM_ERR_WRITELINE("" + e + " in " + o);
+                    CALL_SYSTEM_ERR_WRITELINE("" + e + " in " + o);
                 }
             }
         }
@@ -1586,6 +1754,7 @@ namespace MushDLR223.Utilities
 
         public static void SystemFlush()
         {
+            SystemConsole.Error.Flush();
             SystemConsole.Out.Flush();
         }
 
@@ -1608,7 +1777,7 @@ namespace MushDLR223.Utilities
                     str = ExplainFormatError(fmt, args, SYSTEM_ERR_WRITELINE, e);
                 }
             }
-            return str;
+            return str ?? "<!--NULL-->";
         }
         private static string ExplainFormatError(string fmt, object[] args, OutputDelegate del, Exception exception)
         {

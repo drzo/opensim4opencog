@@ -24,6 +24,22 @@ namespace MushDLR223.Utilities
 
     public class LineInfoElementImpl : XmlElement, XmlSourceLineInfo
     {
+        // Summary:
+        //     Gets an System.Xml.XmlAttributeCollection containing the list of attributes
+        //     for this node.
+        //
+        // Returns:
+        //     System.Xml.XmlAttributeCollection containing the list of attributes for this
+        //     node.
+        public override XmlAttributeCollection Attributes {
+            get
+            {
+                ReadOnly = false;
+                var atts = base.Attributes;
+                return atts;
+            }
+        }
+
         public override int GetHashCode()
         {
             return base.GetHashCode();
@@ -441,7 +457,7 @@ namespace MushDLR223.Utilities
                         }
                     }
                 }
-                foreach (object node in Attributes)
+                foreach (object node in base.Attributes)
                 {
                     if (node is XmlSourceInfo)
                     {

@@ -54,7 +54,7 @@ namespace MushDLR223.Utilities
                     if (!ReadOnly)
                     {
                         return false;
-                    }
+                    } 
                     if (CloneOf == null) return true;
                     return false;
                 }
