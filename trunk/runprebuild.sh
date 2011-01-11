@@ -59,6 +59,13 @@ cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.World.OS/LookingGlass.W
 cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.World.Services/LookingGlass.World.Services.dll.build
 cp NullBuild.txt ./lib/xglore/xglore.exe.build
 cp NullBuild.txt ./lib/Lucene/src/Lucene.Net/Lucene.Net.dll.build
+cp NullBuild.txt ./lib/LAIR.ResourceAPIs/PennBank/PennBank/LAIR.ResourceAPIs.PennBank.dll.build
+cp NullBuild.txt ./lib/LAIR.ResourceAPIs/NomBank/NomBank/LAIR.ResourceAPIs.NomBank.dll.build
+cp NullBuild.txt ./lib/LAIR.ResourceAPIs/PennBank/TreeBankGrapher/TreeBankGrapher.exe.build
+cp NullBuild.txt ./lib/LAIR.ResourceAPIs/Wikipedia/Wikipedia/LAIR.ResourceAPIs.Wikipedia.dll.build
+cp NullBuild.txt ./lib/LAIR.ResourceAPIs/Wikipedia/MirrorTables/MirrorTables.exe.build
+cp NullBuild.txt ./bin/CogbotLib.dll.build
+cp NullBuild.txt ./lib/LAIR.ResourceAPIs/Cogbot.LAIR/Cogbot.LAIR.exe.build
 
 echo DONE: Generating NANT build files
 rm -rf bin/LookingGlass*.*
