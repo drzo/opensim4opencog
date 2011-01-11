@@ -150,7 +150,13 @@ namespace LAIR.ResourceAPIs.PennBank.PropBank
         public int RoleSetId
         {
             get { return _roleSetID; }
-            set { _roleSetID = value; }
+            set
+            {
+                if (!_verbFrame.Contains(value))
+                    throw new Exception("Invalid role set for frame");
+
+                _roleSetID = value;
+            }
         }
 
         /// <summary>

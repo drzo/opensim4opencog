@@ -63,7 +63,7 @@ namespace TestApplication
         {
             InitializeComponent();
 
-            // init framenet
+            // init framenet (you'll need to adjust the first argument to point to the framenet data directory on your local machine)
             _frameNetEngine = new FrameNetEngine(Directory.GetDirectoryRoot(".") + @"NLP\Resources\FrameNet1.5", FrameNetEngine.Version.FrameNet_1_5);
 
             // add frames

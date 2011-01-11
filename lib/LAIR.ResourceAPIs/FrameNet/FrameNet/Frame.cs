@@ -180,8 +180,9 @@ namespace LAIR.ResourceAPIs.FrameNet
             _relationSuperFrames = new Dictionary<FrameRelation, FrameSet>();
             foreach (FrameRelation relation in Enum.GetValues(typeof(FrameRelation)))
             {
-                _relationSubFrames.Add(relation, new FrameSet(true));
-                _relationSuperFrames.Add(relation, new FrameSet(true));
+                // version 1.3 of framenet contains duplicate frame-frame relation mappings, so allow duplicate elements to be added to these sets
+                _relationSubFrames.Add(relation, new FrameSet(false));
+                _relationSuperFrames.Add(relation, new FrameSet(false));
             }
         }
 

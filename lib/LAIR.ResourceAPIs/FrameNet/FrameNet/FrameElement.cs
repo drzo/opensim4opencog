@@ -105,7 +105,7 @@ namespace LAIR.ResourceAPIs.FrameNet
             if (!(obj is FrameElement))
                 return false;
 
-            FrameElement fe = (FrameElement)obj;
+            FrameElement fe = obj as FrameElement;
 
             return _id == fe.ID;
         }

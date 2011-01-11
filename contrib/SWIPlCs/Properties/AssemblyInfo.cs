@@ -30,7 +30,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("SWI-Pl-cs2 - A .NET interface to SWI-Prolog ©")]
 [assembly: AssemblyDescription(".NET interface to SWI-Prolog ©")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("SBS-Softwaresysteme written by Uwe Lesta")]
+[assembly: AssemblyCompany("SBS-Softwaresysteme written by Uwe Lesta/Douglas Miles")]
 [assembly: AssemblyProduct("SWI-Pl-cs2")]
 [assembly: AssemblyCopyright("Copyright © 2010 under LGPL 2.1")]
 [assembly: AssemblyTrademark("")]
