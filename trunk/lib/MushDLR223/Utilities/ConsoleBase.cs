@@ -459,6 +459,29 @@ namespace MushDLR223.Utilities
             }
             IsOnMonoUnix = osv.Platform == PlatformID.Unix;
             HasWinforms = osv.Platform != PlatformID.Unix;
+            if (IsOnMonoUnix)
+            {
+                MakeWindowsOnly("Mono.Security.dll");
+            }
+
+        }
+
+        private static void MakeWindowsOnly(string p)
+        {
+
+            if (IsOnMonoUnix)
+            {
+                MoveIf(p, p + ".WindowsOnly");
+            }
+            else
+            {
+                MoveIf(p + ".WindowsOnly", p);
+            }
+        }
+
+        private static void MoveIf(string p, string p_2)
+        {
+            if (File.Exists(p)) SafelyRun(() => File.Move(p, p_2));
         }
 
         public static bool AllocConsole()
@@ -905,6 +928,7 @@ namespace MushDLR223.Utilities
                     // dont trim off spaces
                     char[] trim = "\n\r".ToCharArray();
                     string safeFormat = SafeFormat(format, args);
+                    safeFormat = OmitPrefix(sender, safeFormat);
                     string[] safeFormatSplit = safeFormat.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
                     foreach (var argsFmt in safeFormatSplit)
                     {
@@ -915,18 +939,36 @@ namespace MushDLR223.Utilities
                 }
         }
 
+        static public string OmitPrefix(string sender, string trimmed)
+        {
+            string tt = trimmed.Trim().ToUpper();
+            int spaced = trimmed.Length - tt.Length;
+
+            string omittedPrefix = sender.ToUpper() + ":";
+            if (tt.StartsWith(omittedPrefix))
+            {
+                trimmed = trimmed.Substring(0, spaced) + trimmed.Substring(spaced + omittedPrefix.Length).TrimStart();
+                return trimmed;
+            }
+            omittedPrefix = "[" + sender.ToUpper() + "]";
+            if (tt.StartsWith(omittedPrefix))
+            {
+                trimmed = trimmed.Substring(0, spaced) + trimmed.Substring(spaced + omittedPrefix.Length).TrimStart();
+                return trimmed;
+            }
+            return trimmed;
+        }
+
         static void WriteEachLine(ConsoleColor senderColor, string sender, ConsoleColor color, string trimmed)
         {
             if (y != -1)
                 y = CursorTop;
             WritePrefixLine(senderColor, sender);
-            omittedPrefix = sender.ToUpper() + ":";
-            WriteConsoleLine(color, "{0}", trimmed);
+            if (IsOnMonoUnix) SystemConsole.WriteLine(trimmed);
+            else WriteConsoleLine(color, "{0}", trimmed);
             omittedPrefix = "";
             if (y != -1)
                 y = CursorTop;
-            //SystemConsole.WriteLine("\n(" + sender + "): " + trimmed);
-            SystemConsole.WriteLine(trimmed);
         }
 
         static public void WriteNewLine(ConsoleColor color, string format, params object[] args)
@@ -964,7 +1006,7 @@ namespace MushDLR223.Utilities
                     {
                         if (color != ForegroundColor)  // ConsoleColor.White
                             ForegroundColor = color;
-                        else SystemWriteLine0(format);
+                        SystemWriteLine0(format);
                         ResetColor();
                     }
                     catch (ArgumentNullException)
@@ -1371,8 +1413,9 @@ namespace MushDLR223.Utilities
         {
             string printStr = TheConsole.SafeFormat(format, args);
             if (!TheGlobalLogFilter.ShouldPrint(printStr))
-            {               
-                CALL_SYSTEM_ERR_WRITELINE(printStr);
+            {
+                CALL_SYSTEM_ERR_WRITELINE("!shouldprint- " + printStr);
+                return;
             }
             if (printStr == null) return;
             string sender;
@@ -1387,8 +1430,8 @@ namespace MushDLR223.Utilities
             format = SafeFormat(format, args);
             //%%%PauseIfTraced(format);
 
-            if (IsOnMonoUnix) WriteColorText(ConsoleColor.White, format);
-            SYSTEM_ERR_WRITELINE_REAL(format);
+            if (IsOnMonoUnix) WriteColorText(ConsoleColor.White, "CALL_SYSTEM_ERR_WRITELINE-001 " + format);
+            SYSTEM_ERR_WRITELINE_REAL("CALL_SYSTEM_ERR_WRITELINE-002 " + format);
             SystemFlush();
         }
 
@@ -1425,7 +1468,7 @@ namespace MushDLR223.Utilities
         }
         private static void SystemWriteLine00(string format)
         {
-            CALL_SYSTEM_ERR_WRITELINE("SystemWriteLine00: " + format);
+            if (IsOnMonoUnix) CALL_SYSTEM_ERR_WRITELINE("SystemWriteLine00: " + format);
             format = GetFormat(format).TrimEnd();
             PauseIfTraced(format);
             foreach (TextWriter o in Outputs)
@@ -1599,7 +1642,7 @@ namespace MushDLR223.Utilities
         internal static void SystemWrite00(string format)
         {
             format = GetFormat(format);
-            PauseIfTraced("SystemWrite00: " + format); // keep
+            PauseIfTraced("SystemWrite00- " + format); // keep
             foreach (TextWriter o in Outputs)
             {
                 try
