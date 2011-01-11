@@ -429,7 +429,7 @@ namespace MushDLR223.Utilities
         {
             var osv = Environment.OSVersion;
             if (Console != null)
-            {                 
+            {
                 Console.WriteLine("Current Directory={0}", Environment.CurrentDirectory);      // Current working directory of the program
                 Console.WriteLine("CommandLine={0}", Environment.CommandLine);                 // Command line used to execute the program
                 Console.WriteLine("MachineName={0}", Environment.MachineName);                 // Name of the current machine
@@ -459,11 +459,9 @@ namespace MushDLR223.Utilities
             }
             IsOnMonoUnix = osv.Platform == PlatformID.Unix;
             HasWinforms = osv.Platform != PlatformID.Unix;
-            if (IsOnMonoUnix)
-            {
-                MakeWindowsOnly("Mono.Security.dll");
-            }
-
+            MakeWindowsOnly("Mono.Security.dll");
+            MakeWindowsOnly("XML.dll");
+            MakeWindowsOnly("GraphvizDot.dll");
         }
 
         private static void MakeWindowsOnly(string p)
