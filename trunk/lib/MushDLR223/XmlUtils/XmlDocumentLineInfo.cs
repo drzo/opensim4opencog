@@ -998,7 +998,7 @@ namespace MushDLR223.Utilities
             //return new XmlWhitespace(text, this);
             if (text != " ")
             {
-                writeToLog("WHITE='" + text + "'");
+                //writeToLog("WHITE='" + text + "'");
             }
             return base.CreateWhitespace(Intern(" "));
         }

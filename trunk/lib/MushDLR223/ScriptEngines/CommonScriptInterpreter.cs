@@ -42,24 +42,32 @@ namespace MushDLR223.ScriptEngines
             set { Intern("this", value); }
         }
 
-        public readonly object OriginalSelf;
-        protected CommonScriptInterpreter(object self)
+        public object OriginalSelf;
+        protected CommonScriptInterpreter()
         {
-            OriginalSelf = self;
-            // ReSharper disable DoNotCallOverridableMethodsInConstructor
-            Init();
-            Self = self ?? this;
-            // ReSharper restore DoNotCallOverridableMethodsInConstructor
-            ScriptManager.AddInterpreter(this);
+            InitSelf(this);
         }
-
-        private CommonScriptInterpreter()
+        protected CommonScriptInterpreter(object self)
+            : this()
         {
-// ReSharper disable DoNotCallOverridableMethodsInConstructor
-            Init();
-            Self = this;
-// ReSharper restore DoNotCallOverridableMethodsInConstructor
-            ScriptManager.AddInterpreter(this);
+            InitSelf(self);
+        }
+        private void InitSelf(object self)
+        {
+            try
+            {
+                OriginalSelf = self;
+                // ReSharper disable DoNotCallOverridableMethodsInConstructor
+                Init();
+                Self = self ?? this;
+                // ReSharper restore DoNotCallOverridableMethodsInConstructor
+                ScriptManager.AddInterpreter(this);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("SetSelf=" + e);
+                Console.ReadLine();
+            }
         }
 
         public abstract void Init();
