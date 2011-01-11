@@ -434,14 +434,20 @@ namespace RTParser
             {
                 return unull;
             }
+            int tlen = t.Length;
             if (unull)
             {
                return IsIncomplete(t);
             }
-            if (t == "")
+            string uutrim = u.Trim(new char[] { ' ' });
+            int uutrimLen = uutrim.Length;
+            if (uutrimLen < 2) return t == uutrim;
+            if (tlen == 0)
             {
+                return (uutrimLen == 0);
                 return IsEMPTY(u);
             }
+
             if (IsIncomplete(t))
             {
                 return IsIncomplete(u);
