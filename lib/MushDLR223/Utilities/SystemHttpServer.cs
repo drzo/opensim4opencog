@@ -218,7 +218,7 @@ namespace MushDLR223.Utilities
             LogInfo("Is authenticated: {0}", request.IsAuthenticated);
             LogInfo("Is secure: {0}", request.IsSecureConnection);
             LogInfo("ContentType: {0}", request.ContentType);
-            LogInfo("ServiceName: {0}", request.ServiceName);
+            //Mono is missing "ServiceName": LogInfo("ServiceName: {0}", request.ServiceName);
             LogInfo("RawUrl: {0}", request.RawUrl);
             LogInfo("Url: {0}", request.Url);
             LogInfo("QueryString: {0}", request.QueryString);

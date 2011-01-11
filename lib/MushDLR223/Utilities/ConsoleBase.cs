@@ -1496,9 +1496,6 @@ namespace MushDLR223.Utilities
         }
         public static string GetCallerFormat(string format, out string prefix)
         {
-            // ReSharper disable ConditionIsAlwaysTrueOrFalse
-            if (false) return format;
-            // ReSharper restore ConditionIsAlwaysTrueOrFalse
             if (!format.StartsWith("["))
             {
                 int fc = format.IndexOf(":");
