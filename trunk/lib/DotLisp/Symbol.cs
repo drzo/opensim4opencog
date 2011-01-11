@@ -102,9 +102,12 @@ internal class SymbolTable
 						{
 						if(lastcolon > 0)	  //explicitly qualified
 							{
-							String memberName = name.Substring(lastcolon+1,nameLength-(lastcolon+1));
-							Type type = findType(name.Substring(1,lastcolon-1));
-							table[name] = result = new CLSInstanceSymbol(name,memberName,type);
+
+                            String memberName = name.Substring(lastcolon + 1, nameLength - (lastcolon + 1));
+                            CLSMember innermember = CLSMember.FindMember(
+                                                             memberName, this,
+                                                             name.Substring(1, lastcolon - 1), false);
+                            table[name] = result = new CLSInstanceSymbol(name, innermember); 
 							}
 						else
 							{
@@ -115,8 +118,10 @@ internal class SymbolTable
 					else if(lastcolon > 0)	//static
 						{
 						String memberName = name.Substring(lastcolon+1,nameLength-(lastcolon+1));
-						Type type = findType(name.Substring(0,lastcolon));
-						table[name] = result = new CLSStaticSymbol(name,memberName,type);
+                        CLSMember innermember = CLSMember.FindMember(
+                                                         memberName,this,
+                                                         name.Substring(0, lastcolon), true);
+                        table[name] = result = new CLSStaticSymbol(name, innermember);
 						}
 					else if(lastdot==nameLength-1) //type
 						{
@@ -162,7 +167,46 @@ internal class SymbolTable
             }
 		}
 
-	internal Type findType(String name)
+
+    internal Type[] findTypes(String name)
+    {
+        if (name.IndexOf(".") > -1)	//namespace qualified
+        {
+            Type t = (Type)fullNamesToTypes[name];
+            if (t != null)
+                return NewTypes(t);
+            else
+            {
+                throw new Exception("Can't find " + name);
+            }
+        }
+        else	//short name
+        {
+            ArrayList tlist = (ArrayList)shortNamesToTypes[name];
+            if (tlist == null)
+            {
+                if (name.Contains(":"))
+                {
+                    name = name.Replace(":", ".");
+                    Type t = (Type)fullNamesToTypes[name];
+                    return NewTypes(t);
+                }
+                throw new Exception("Can't find Type: " + name);
+            }
+            else if (tlist.Count > 0)
+            {
+                return (Type[])tlist.ToArray(typeof(Type));
+            }
+        }
+        return new Type[0];
+    }
+
+    private Type[] NewTypes(Type t)
+    {
+        return new Type[] { t };
+    }
+
+    internal Type findType(String name)
 		{
 		if(name.IndexOf(".") > -1)	//namespace qualified
 			{
@@ -197,6 +241,7 @@ internal class SymbolTable
                     if (typeString == "System.IO.Path") return (Type)type;
                     if (typeString == "System.Collections.IEnumerable") return (Type)type;
                     if (typeString == "System.Collections.IEnumerator") return (Type)type;
+                    if (typeString == "System.Environment") return (Type)type;
                     if (typeString == "System.Windows.Forms.IDataObject") return (Type)type;
                 }
                 foreach (Type type in tlist)
