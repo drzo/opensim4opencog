@@ -35,16 +35,20 @@ internal class LocTextReader
 	}
 
 internal class Loc
-	{
-	internal Loc(String file,Int32 line)
-		{
-		this.file = file;
-		this.line = line;
-		}
+{
+    internal Loc(String file, Int32 line)
+    {
+        this.file = file;
+        this.line = line;
+    }
 
-	internal String file;
-	internal Int32 line;
-	}  
+    internal String file;
+    internal Int32 line;
+    public override String ToString()
+    {
+        return "" + file + ":" + line + ",0";
+    }
+}
 
 internal class CompositeSymbol
 	{

@@ -13,7 +13,11 @@ internal class CLSInstanceSymbol:Symbol
 													 memberName,
 													 type,false);
 		}
-
+    internal CLSInstanceSymbol(String name, CLSMember found)
+        : base(name)
+    {
+        globalValue = found;
+    }
 	override public Object getGlobalValue()
 		{
 		return globalValue;
@@ -29,12 +33,18 @@ internal class CLSStaticSymbol:Symbol
 	{
 	private CLSMember member;
 
-	internal CLSStaticSymbol(String name,String memberName,Type type):base(name)
+    internal CLSStaticSymbol(String name, String memberName, Type type)
+        : base(name)
 		{
 		globalValue = member = CLSMember.FindMember(
 																 memberName,
 																 type,true);
 		}
+    internal CLSStaticSymbol(String name, CLSMember found)
+        : base(name)
+    {
+        globalValue = member = found;
+    }
 
 	override public Object getGlobalValue()
 		{

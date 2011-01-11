@@ -40,6 +40,34 @@ namespace DotLisp
                                                      target, args);
         }
 
+        internal static CLSMember FindMember(String name, SymbolTable symtab, String typename, Boolean isStatic)
+        {
+            if (typename == null)
+            {
+                return new CLSLateBoundMember(name);
+            }
+            Type[] types = symtab.findTypes(typename);
+            Exception e = null;
+            foreach (Type type in types)
+            {
+                try
+                {
+                    return FindMember(name, type, isStatic);
+                }
+                catch (NotImplementedException nie)
+                {
+                    if (e == null) e = nie;
+                }
+                catch (NotSupportedException nie)
+                {
+                    e = nie;
+                }
+            }
+            throw e ?? new Exception("Can't find " +
+                                          (isStatic ? "static" : "instance") +
+                                          " member: " + name + " in non Type: " + typename);
+        }
+
         internal static CLSMember FindMember(String name, Type type, Boolean isStatic)
         {
             if (type == null)
@@ -53,9 +81,9 @@ namespace DotLisp
                                                              ); //all public members with matching isstatic
             if (members.Length == 0)
             {
-                throw new Exception("Can't find " +
+                throw new NotImplementedException("Can't find " +
                                           (isStatic ? "static" : "instance") +
-                                          " member: " + name + " in Type: " + type.Name);
+                                          " member: " + name + " in Type: " + type.FullName);
             }
 
             //CLS says all same-named members must be same type (field or param or method)
@@ -86,7 +114,7 @@ namespace DotLisp
             }
             else
             {
-                throw new Exception("Unsupported type of member: " + name + " in Type: "
+                throw new NotSupportedException("Unsupported type of member: " + name + " in Type: "
                                           + type.Name + " MemberType: " + members[0].MemberType);
             }
         }
