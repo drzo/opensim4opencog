@@ -77,6 +77,44 @@
         </Files>
       </Project>
       -->
+      <Project name="LAIR.CommonPort" path="lib/LAIR.ResourceAPIs/LAIR.CommonPort" type="Library" rootNamespace="LAIR.CommonPort" frameworkVersion="v3_5">
+        <Configuration name="Debug">
+          <Options>
+            <OutputPath>../../../bin/</OutputPath>
+            <PlatformTarget>x86</PlatformTarget>
+            <XmlDocFile>LAIR.CommonPort.XML</XmlDocFile>
+           </Options>
+        </Configuration>
+        <Configuration name="Release">
+          <Options>
+            <OutputPath>../../../bin/</OutputPath>
+            <PlatformTarget>x86</PlatformTarget>
+            <XmlDocFile>LAIR.CommonPort.XML</XmlDocFile>
+          </Options>
+        </Configuration>
+
+        <ReferencePath>../../../bin</ReferencePath>
+        <Reference name="System"/>
+        <Reference name="System.Core"/>
+        <Reference name="System.Xml" localCopy="false"/>
+        <Reference name="System.Data"/>
+        <Reference name="System.Drawing" localCopy="false"/>
+        <Reference name="System.Windows.Forms" localCopy="false"/>
+        <Reference name="System.Data.DataSetExtensions"/>
+        <Reference name="log4net.dll" localCopy="false"/>
+        <Reference name="MySql.Data.dll" localCopy="false"/>
+        <Reference name="LAIR.Collections" localCopy="false"/>
+        <Reference name="LAIR.Extensions" localCopy="false"/>
+        <Reference name="LAIR.GraphViz" localCopy="false"/>
+        <Reference name="LAIR.IO" localCopy="false"/>
+        <Reference name="LAIR.MachineLearning" localCopy="false"/>]
+        <Reference name="LAIR.XML" localCopy="false"/>
+
+        <Files>
+          <Match pattern="*.cs" recurse="true"/>
+        </Files>
+      </Project>
+
 
     <Project name="Lucene.Net" path="lib/Lucene/src/Lucene.Net" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
@@ -297,9 +335,9 @@
 
       <Files>
           <Match pattern="*.cs" recurse="true"/>
-          <!--<Match pattern="frm*.cs" subType="Form"/>-->
-          <Match pattern="*.resx" buildAction="EmbeddedResource" recurse="true"/>
-          <Match pattern="*.settings" recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+          <!--<Match pattern="frm*.cs" subType="Form"/>
+            <Match pattern="*.resx" buildAction="EmbeddedResource" recurse="true"/>
+            <Match pattern="*.settings" recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>-->
       </Files>
     </Project>
 
@@ -417,7 +455,7 @@
           <Match pattern="*.cs" recurse="true"/>
           <!--<Match pattern="frm*.cs" subType="Form"/>-->
           <Match pattern="*.resx" buildAction="EmbeddedResource" recurse="true"/>
-          <Match pattern="*.settings" recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+          <!--<Match pattern="*.settings" recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>-->
       </Files>
     </Project>
 
@@ -462,10 +500,10 @@
 
 
       <Files>
-          <Match pattern="*.cs" recurse="true"/>
-          <!--<Match pattern="frm*.cs" subType="Form"/>-->
-          <Match pattern="*.resx" buildAction="EmbeddedResource" recurse="true"/>
-          <Match pattern="*.settings" recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+            <Match pattern="*.cs" recurse="true" subType="Form" />
+            <Match pattern="*.resx" buildAction="EmbeddedResource" recurse="true"/>
+            <Match pattern="*.settings" recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+
       </Files>
     </Project>
 
@@ -498,10 +536,10 @@
         <Match path="." pattern="*.cs"  recurse="true"  subType="Form">
           <Exclude name="Plugins/"/>
         </Match>
-        <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource">
+        <!--<Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource">
           <Exclude name="Plugins/"/>
         </Match>
-        <Match path="." pattern="AssemblyInfo.cs"/>
+        <Match path="." pattern="Properties/AssemblyInfo.cs"/>-->
       </Files>
     </Project>
 
@@ -914,12 +952,14 @@
             <Match pattern="*.settings" recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
              <Match path="Properties" pattern="*.cs"  recurse="true"  subType="Form"/>            
           <!--<Match pattern="frm*.cs" subType="Form"/>-->
+          <!--
           <Match path="." pattern="*.config" recurse="true" buildAction="Content" copyToOutput="Always"/>
-            <Match path="." pattern="*.so" recurse="true" buildAction="Content" copyToOutput="Always"/>
+          <Match path="." pattern="*.so" recurse="true" buildAction="Content" copyToOutput="Always"/>
             <Match path="." pattern="*.dylib" recurse="true" buildAction="Content" copyToOutput="Always"/>
             <Match path="." pattern="fmodex.*" recurse="true" buildAction="Content" copyToOutput="Always"/>
             <Match path="." pattern="*.html" recurse="true" buildAction="Content" copyToOutput="Always"/>
-        </Files>
+            -->
+          </Files>
     </Project>
 
 
@@ -942,17 +982,20 @@
       
       <Reference name="MushDLR223"  localCopy="false"/>
        <Files>
-        <Match path="cynd/programk" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="Always"/>
-        <Match path="cynd/cyc_pl" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="Always"/>
-        <Match path="cynd/dcgplus" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="Always"/>
-        <Match path="cynd/CHAT-80" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="Always"/>
-        <Match path="cynd/logicmoo_nl" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="Always"/>
-        <Match path="cynd/logicmoo" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="Always"/>
-        <Match path="cynd/TALK" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="Always"/>
-        <Match path="." pattern="*.cloj" recurse="true" buildAction="EmbeddedResource" copyToOutput="Always"/>
-        <Match path="." pattern="*.lisp" recurse="true" buildAction="EmbeddedResource" copyToOutput="Always"/>
-        <Match path="." pattern="*.config" recurse="true" buildAction="EmbeddedResource" copyToOutput="Always"/>
-        <Match path="." pattern="*.xml" recurse="false" buildAction="EmbeddedResource" copyToOutput="Always"/>
+        <Match path="cynd/programk" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="PreserveNewest"/>
+        <Match path="cynd/cyc_pl" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="PreserveNewest"/>
+        <!--<Match path="cynd/dcgplus" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="PreserveNewest"/>-->
+        <Match path="cynd/CHAT-80" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="PreserveNewest"/>
+        <Match path="cynd/logicmoo_nl" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="PreserveNewest"/>
+        <Match path="cynd/logicmoo" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="PreserveNewest"/>
+        <Match path="cynd/TALK" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="PreserveNewest"/>
+
+        <Match path="." pattern="*.xml" recurse="false" buildAction="EmbeddedResource" copyToOutput="PreserveNewest"/>
+
+        <Match path="." pattern="*.cloj" recurse="true" buildAction="EmbeddedResource" copyToOutput="PreserveNewest"/>
+        <Match path="." pattern="*.lisp" recurse="true" buildAction="EmbeddedResource" copyToOutput="PreserveNewest"/>
+        <Match path="." pattern="*.config" recurse="true" buildAction="Content" copyToOutput="PreserveNewest"/>
+        <Match path="." pattern="*.json" recurse="true" buildAction="EmbeddedResource" copyToOutput="PreserveNewest"/>
         <!--
         <Match path="cynd/notaiml" pattern="*.*" recurse="false" buildAction="EmbeddedResource" copyToOutput="Always"/>
         <Match path="config" pattern="*.*" recurse="true" buildAction="EmbeddedResource" copyToOutput="Always"/>
@@ -963,7 +1006,6 @@
        <Match path="." pattern="*.*j" recurse="true" buildAction="Content" copyToOutput="Always"/>
        <Match path="." pattern="*.*g" recurse="true" buildAction="Content" copyToOutput="Always"/>
        <Match path="." pattern="*.*i" recurse="true" buildAction="Content" copyToOutput="Always"/>
-       <Match path="." pattern="*.json" recurse="true" buildAction="Content" copyToOutput="Always"/>
        <Match path="." pattern="*.*t" recurse="true" buildAction="Content" copyToOutput="Always"/>
        
        <unused>        <Match path="." pattern="*.*j" recurse="true" buildAction="Content" copyToOutput="Always"/>
@@ -1049,8 +1091,6 @@
            <Match path="Listeners" pattern="*World*.cs" recurse="true"/>
            <Match path="Properties" pattern="*.cs" recurse="true"/>
            <Match path="Tutorials" pattern="*.cs" recurse="true"/>
-           <Match path="Utilities" pattern="*.cs" recurse="true"/>
-           <Match path="GUI" pattern="*.cs" recurse="true"/>
            <Match path="ScriptEngines" pattern="*.cs" recurse="true"/>
            <Match path="TheOpenSims" pattern="*.cs" recurse="true"/>
        </Files>
@@ -1144,8 +1184,7 @@
      <Reference name="System.Xml" localCopy="false"/>
      <Reference name="System.Xml.Linq" localCopy="false"/>
      <Files>
-         <Match path="." pattern="*.cs"  recurse="true"  subType="Form"> </Match>
-         <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource">  <Exclude name="AssemblyInfo.cs"/><Exclude name="Plugins/"/></Match>
+         <Match path="." pattern="*.cs"  recurse="true"/>
      </Files>
 </Project>
     
@@ -1181,9 +1220,8 @@
       <Reference name="Radegast.exe" localCopy="false"/>
       
      <Files>
-         <Match path="." pattern="*.cs"  recurse="true"  subType="Form">  <Exclude name="AssemblyInfo.cs"/><Exclude name="Plugins/"/></Match>
-         <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource">  <Exclude name="AssemblyInfo.cs"/><Exclude name="Plugins/"/></Match>
-         <Match path="." pattern="AssemblyInfo.cs"/>
+         <Match path="." pattern="*.cs"  recurse="true"  subType="Form">  
+         <Exclude name="AssemblyInfo.cs"/><Exclude name="Plugins/"/></Match>
      </Files>
 </Project>
 
@@ -1217,9 +1255,7 @@
       <Reference name="IKVM.Runtime.JNI.dll" localCopy="false"/>
       
      <Files>
-         <Match path="." pattern="*.cs"  recurse="true"  subType="Form">  <Exclude name="AssemblyInfo.cs"/><Exclude name="Plugins/"/><Exclude name="PrologConsole.cs"/></Match>
-         <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource">  <Exclude name="AssemblyInfo.cs"/><Exclude name="Plugins/"/></Match>
-         <Match path="." pattern="AssemblyInfo.cs"/>
+         <Match path="." pattern="*.cs"  recurse="true"  subType="Form"> <Exclude name="Plugins/"/><Exclude name="PrologConsole.cs"/></Match>
      </Files>
 </Project>
 
@@ -1340,6 +1376,7 @@
      <Files>
          <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
          <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+
      </Files>
 </Project>
 
@@ -1373,7 +1410,6 @@
      <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
      <Files>
          <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
-         <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
      </Files>
 </Project>
 
@@ -1435,7 +1471,7 @@
       <Reference name="Meebey.SmartIrc4net" localCopy="false"/>
       <Files>
         <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
-        <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+
       </Files>
     </Project>
 
@@ -1603,7 +1639,7 @@
          <Reference name="System.Xml" />
          <Files>
              <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
-             <Match path="Assemblies" pattern="*.*" buildAction="Content" copyToOutput="Always"/>
+             <!--<Match path="Assemblies" pattern="*.*" buildAction="Content" copyToOutput="Always"/> -->
          </Files>
       </Project>
 
@@ -1747,6 +1783,9 @@ app -->
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
       <Reference name="OpenMetaverseTypes.dll"/>
+<!-- -
+      <Reference name="OpenMetaverse.Http.dll"/>
+-->
       <Files>
         <Match pattern="*.cs" recurse="false"/>
       </Files>
@@ -2209,51 +2248,14 @@ app -->
 
 
       <Files>
-          <Match pattern="*.cs" recurse="true"/>
+          <Match pattern="*.cs" recurse="true" subType="Form"/>
           <!--<Match pattern="frm*.cs" subType="Form"/>-->
           <Match pattern="*.resx" buildAction="EmbeddedResource" recurse="true"/>
           <Match pattern="*.settings" recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+
       </Files>
     </Project>
 
-
-    <Project name="LAIR.CommonPort" path="lib/LAIR.ResourceAPIs/LAIR.CommonPort" type="Library" rootNamespace="LAIR.CommonPort" frameworkVersion="v3_5">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-          <PlatformTarget>x86</PlatformTarget>
-          <XmlDocFile>LAIR.CommonPort.XML</XmlDocFile>
-         </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-          <PlatformTarget>x86</PlatformTarget>
-          <XmlDocFile>LAIR.CommonPort.XML</XmlDocFile>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../bin</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Core"/>
-      <Reference name="System.Xml" localCopy="false"/>
-      <Reference name="System.Data"/>
-      <Reference name="System.Drawing" localCopy="false"/>
-      <Reference name="System.Windows.Forms" localCopy="false"/>
-      <Reference name="System.Data.DataSetExtensions"/>
-      <Reference name="log4net.dll" localCopy="false"/>
-      <Reference name="MySql.Data.dll" localCopy="false"/>
-      <Reference name="LAIR.Collections" localCopy="false"/>
-      <Reference name="LAIR.Extensions" localCopy="false"/>
-      <Reference name="LAIR.GraphViz" localCopy="false"/>
-      <Reference name="LAIR.IO" localCopy="false"/>
-      <Reference name="LAIR.MachineLearning" localCopy="false"/>
-      <Reference name="LAIR.XML" localCopy="false"/>
-
-      <Files>
-        <Match pattern="*.cs" recurse="true"/>
-      </Files>
-    </Project>
 
 
 
@@ -2303,7 +2305,7 @@ app -->
           <Match pattern="*.cs" recurse="true"/>
           <!--<Match pattern="frm*.cs" subType="Form"/>-->
           <Match pattern="*.resx" buildAction="EmbeddedResource" recurse="true"/>
-          <Match pattern="*.settings" recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
+          <!--<Match pattern="*.settings" recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>-->
       </Files>
     </Project>
 
@@ -2325,6 +2327,7 @@ app -->
       <!--     <PlatformTarget>x86</PlatformTarget> -->
     </Options>
   </Configuration>
+  <ReferencePath>../../bin</ReferencePath>
       <!--<Reference name="Mono.Addins.dll" localCopy="false"/>-->
       <Reference name="AIMLbot" />
       <Reference name="AIMLBotModule" />
@@ -2394,10 +2397,8 @@ app -->
       <Reference name="LookingGlass.View"/>
       <Reference name="LookingGlass.Rest"/>   -->
     <Files>
-        <Match pattern="*.cs" recurse="true"/>
+        <Match pattern="*.cs" recurse="true" subType="Form"/>
         <!--<Match pattern="frm*.cs" subType="Form"/>-->
-        <Match pattern="*.resx" buildAction="EmbeddedResource" recurse="true"/>
-        <Match pattern="*.settings" recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
     </Files>
   </Project>
 
@@ -2422,7 +2423,6 @@ app -->
       <Files>
         <Match pattern="*.cs" recurse="true"/>
         <!--<Match pattern="frm*.cs" subType="Form"/>-->
-        <Match pattern="*.resx" buildAction="EmbeddedResource" recurse="true"/>
       </Files>
     </Project>
 
