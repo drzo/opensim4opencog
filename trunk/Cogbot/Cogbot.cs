@@ -11,7 +11,6 @@ using Radegast;
 using Settings=OpenMetaverse.Settings;
 using Console = MushDLR223.Utilities.DLRConsole;
 
-
 namespace cogbot
 {
     public class Program
@@ -22,17 +21,11 @@ namespace cogbot
                     "cogbot.exe --first firstname --last lastname --pass password [--loginuri=\"uri\"] [--startpos \"sim/x/y/z\"] [--master \"master name\"] [--masterkey \"master uuid\"] [--gettextures] [--scriptfile \"filename\"]");
         }
 
-        internal static class NativeMethods
-        {
-            [DllImport("kernel32.dll")]
-            internal static extern Boolean AllocConsole();
-        }
-
         public static DLRConsole consoleBase;
 
 
         [STAThread]
-        public static void Main(string[] args)
+        internal static void Main(string[] args)
         {
             ClientManager.UsingCogbotFromRadgast = false;
             ClientManager.UsingRadgastFromCogbot = true;
@@ -40,8 +33,7 @@ namespace cogbot
 
             if (!ClientManager.AllocedConsole)
             {
-                ClientManager.AllocedConsole = true;
-                NativeMethods.AllocConsole();
+                ClientManager.AllocedConsole = DLRConsole.AllocConsole();
             }
 
             if (ClientManager.MainThread == null)
@@ -49,9 +41,13 @@ namespace cogbot
                 ClientManager.MainThread = Thread.CurrentThread;
             }
             //  NativeMethods.AllocConsole();
-           // Application.EnableVisualStyles();
+            // Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            MainRun(args);
+        }
 
+        public static void MainRun(string[] args)
+        {
             ClientManager.arguments = new Parser(args);
             consoleBase = new DLRConsole("textform");
             ClientManager manager = new ClientManager();
@@ -90,7 +86,7 @@ namespace cogbot
 
         public static void WriteLine(string str, params object[] args)
         {
-            if (consoleBase==null)
+            if (consoleBase == null)
             {
                 DLRConsole.DebugWriteLine(str, args);
                 return;
@@ -105,7 +101,7 @@ namespace cogbot
             }
             else
             {
-               consoleBase.Notice(str, args);
+                consoleBase.Notice(str, args);
             }
         }
 

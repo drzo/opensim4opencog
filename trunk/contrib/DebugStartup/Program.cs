@@ -11,14 +11,11 @@ using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using Radegast;
 using SbsSW.SwiPlCs;
+using CommandLine.Text;
 
 namespace ABuildStartup
 {
-    internal static class NativeMethods
-    {
-        [DllImport("kernel32.dll")]
-        internal static extern Boolean AllocConsole();
-    }
+
     public class Program
     {
         /// <summary>
@@ -52,12 +49,18 @@ namespace ABuildStartup
         }
 
         static public Exception _appException = null;
-        private static void DoAndExit(MethodInvoker o)
+        private static void DoAndExit(ThreadStart o)
         {
             try
             {
                 ExitCode = 0;
                 o();
+                /*
+                Thread t = new Thread(o, 0);
+                t.SetApartmentState(ApartmentState.STA);
+                t.Start();
+                t.Join();
+                */
                 _appException = null;
             }
             catch (Exception e)
@@ -107,45 +110,128 @@ namespace ABuildStartup
             filter.writeDebugLine(del, str, args);
         }
 
+        public class ABuildStartupCommandLine: Radegast.CommandLine 
+        {
+#if false
+            [Option("u", "username", HelpText = "Username, use quotes to supply \"First Last\"")]
+            public string Username = string.Empty;
+
+            [Option("p", "password", HelpText = "Account password")]
+            public string Password = string.Empty;
+
+            [Option("a", "autologin", HelpText = "Automatially login with provided user credentials")]
+            public bool AutoLogin = false;
+
+            [Option("g", "grid", HelpText = "Grid ID to login into, try --list-grids to see IDs used for this parameter")]
+            public string Grid = string.Empty;
+
+            [Option("l", "location", HelpText = "Login location: last, home or regionname. Regioname can also be in format regionname/x/y/z")]
+            public string Location = string.Empty;
+
+            [Option(null, "list-grids", HelpText = "Lists grid IDs used for --grid option")]
+            public bool ListGrids = false;
+
+            [Option(null, "loginuri", HelpText = "Use this URI to login (don't use with --grid)")]
+            public string LoginUri = string.Empty;
+
+            [Option(null, "no-sound", HelpText = "Disable sound")]
+            public bool DisableSound = false;
+#endif
+            [Option(null, "aiml", HelpText = "Runs just the AIML interpretor")]
+            public bool AIMLOnly = false;
+
+            [Option(null, "swipl", HelpText = "Runs just the SWIPL interpretor", Required=false)]
+            public bool SWIPLOnly = false;
+
+            [Option(null, "httpd", HelpText = "Start bot HTTPD on Port")]
+            public string Port = null;
+
+            [Option(null, "nogui", HelpText = "Headless daemon operation")]
+            public string NoGUI = null;
+
+            [Option(null, "lcd", HelpText = "locally change the dirrectory")]
+            public string LocalChanfgeDir = "unset";
+
+            public HelpText GetHeader()
+            {
+                HelpText header = new HelpText(Assembly.GetExecutingAssembly().CodeBase);
+                header.AdditionalNewLineAfterOption = true;
+                header.Copyright = new CopyrightInfo("Radegast Development Team", 2009, 2010);
+                header.AddPreOptionsLine("http://radegastclient.org/");
+                return header;
+            }
+
+            [HelpOption("h", "help", HelpText = "Display this help screen.")]
+            public string GetUsage()
+            {
+                HelpText usage = GetHeader();
+                usage.AddOptions(this);
+                usage.AddPostOptionsLine("Example: automatically login user called Some Resident to his last location on the Second Life main grid (agni)");
+                usage.AddPostOptionsLine("program.exe -a -g agni -u \"Some Resident\" -p \"secret\"  -l last");
+                return usage.ToString();
+            }
+        }
+
+        public static ABuildStartupCommandLine ABuildStartCommandLine;
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
         public static void Main0(string[] args)
         {
+            var DLRConsoleError = DLRConsole.Error;
+            DLRConsole.DetectMainEnv(DLRConsoleError);
+            if (ABuildStartCommandLine == null)
+            {
+                ABuildStartCommandLine = new ABuildStartupCommandLine();
+            }
+            CommandLineParser parser = new CommandLineParser(new CommandLineParserSettings(DLRConsoleError));
+            if (!parser.ParseArguments(args, ABuildStartCommandLine, null))
+            {
+                DLRConsoleError.WriteLine("Usage: " + ABuildStartCommandLine.GetUsage());
+            }
+            else
+            {
+                DLRConsoleError.WriteLine("Used: " + ABuildStartCommandLine.GetUsage());
+            }
+
             args = args ?? new string[0];
-            //if (args.Length == 0) args = new string[] { "--httpd", "--aiml", "Nephrael", "Rae" };
+            //if (args.Length == 0) args = new string[] { /*"--httpd", "--aiml",*/ "Nephrael", "Rae" };
             //if (args.Length == 0) args = new string[] { "--httpd", "--aiml", "Zeno", "Aironaut" };
-            //if (args.Length == 0) args = new string[] { "--httpd", "--aiml", "BinaBot", "Daxeline" };
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-            Application.ThreadException += HandleThreadException;
-            Application.ApplicationExit += HandleAppExit;
-            Application.EnterThreadModal += HandleEnterThreadModal;
-            Application.LeaveThreadModal += HandleLeaveThreadModal;
-            Application.ThreadExit += HandleThreadExit;
-            AppDomain.CurrentDomain.UnhandledException += HandleUnhandledException;
-            AppDomain.CurrentDomain.ProcessExit += HandleProcessExit;
+            //if (args.Length == 0) args = new string[] { "--httpd", "--aiml", "test", "suite" }; 
+            //if (args.Length == 0) args = new string[] { "--httpd", "--aiml", "BinaBot", "Daxeline" };            
+            //if (args.Length == 0) args = new string[] { "--swipl" };                  
 
             if (ClientManager.MainThread == null)
             {
                 ClientManager.MainThread = Thread.CurrentThread;
             }
+
             ClientManager.arguments = new Parser(args);
             string[] oArgs;
+            // Change current working directory to Program install dir?
+            if (ClientManager.arguments.GetAfter("--lcd", out oArgs))
+            {
+                Directory.SetCurrentDirectory(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+            }
+            if (!ClientManager.arguments.GetAfter("--noexcpt", out oArgs))
+            {
+                SetExceptionHandlers(true);
+            }
             if (ClientManager.arguments.GetAfter("--aiml", out oArgs))
             {
                 string[] newArgs = oArgs;
                 AllocConsole();
                 DoAndExit(() => RTParser.RTPBot.Main(args));
+                return;
             }
             if (ClientManager.arguments.GetAfter("--swipl", out oArgs))
             {
                 string[] newArgs = oArgs;
-                if (newArgs.Length==0) newArgs = new string[]{"-f","cynd/cogbot.pl"};
+                if (newArgs.Length == 0) newArgs = new string[] {"-f", "cynd/cogbot.pl"};
                 AllocConsole();
                 DoAndExit(() => PrologClient.Main(newArgs));
+                return;
             }
             if (ClientManager.arguments.GetAfter("--main", out oArgs))
             {
@@ -166,6 +252,7 @@ namespace ABuildStartup
                                       throw new Exception(c);
                                   }
                               });
+                return;
             }
             if (ClientManager.arguments.GetWithout("--noconfig", out oArgs))
             {
@@ -181,23 +268,21 @@ namespace ABuildStartup
             {
                 ClientManager.noGUI = true;
             }
-
-            MainProgram.CommandLine = new Radegast.CommandLine();
-            ClientManager.arguments = new Parser(oArgs);
-
             if (ClientManager.dosBox) AllocConsole();
 
             DoAndExit(() =>
                           {
+                              MainProgram.CommandLine = new Radegast.CommandLine();
+                              ClientManager.arguments = new Parser(args);
                               if (ClientManager.noGUI)
                               {
                                   ClientManager.UsingRadgastFromCogbot = true;
-                                  cogbot.Program.Main(oArgs);
+                                  cogbot.Program.MainRun(args);
                               }
                               else
                               {
                                   ClientManager.UsingCogbotFromRadgast = true;
-                                  RadegastMain(oArgs);
+                                  RadegastMain(args);
                               }
                           });
 
@@ -207,8 +292,7 @@ namespace ABuildStartup
         {
             if (!ClientManager.AllocedConsole)
             {
-                ClientManager.AllocedConsole = true;
-                NativeMethods.AllocConsole();
+                ClientManager.AllocedConsole = DLRConsole.AllocConsole();
             }
         }
 
@@ -235,8 +319,11 @@ namespace ABuildStartup
             // Change current working directory to Radegast install dir
             Directory.SetCurrentDirectory(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
 
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
+            if (DLRConsole.HasWinforms)
+            {
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+            }
 
             // Create main Radegast instance
 
@@ -263,6 +350,36 @@ namespace ABuildStartup
             if (false) cogbot.ClientManager.SingleInstance.ProcessCommandArgs();
             Application.Run(mf);
             instance = null;
+        }
+
+        public static bool UsingExceptionHandlers = false;
+        public static void SetExceptionHandlers(bool use)
+        {
+            if (use == UsingExceptionHandlers) return;
+            UsingExceptionHandlers = use;
+            if (use)
+            {
+                Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+                Application.ThreadException += HandleThreadException;
+                Application.ApplicationExit += HandleAppExit;
+                Application.EnterThreadModal += HandleEnterThreadModal;
+                Application.LeaveThreadModal += HandleLeaveThreadModal;
+                Application.ThreadExit += HandleThreadExit;
+                AppDomain.CurrentDomain.UnhandledException += HandleUnhandledException;
+                AppDomain.CurrentDomain.ProcessExit += HandleProcessExit;
+            }
+            else
+            {
+                // or ThrowException?
+                Application.SetUnhandledExceptionMode(UnhandledExceptionMode.Automatic); 
+                Application.ThreadException -= HandleThreadException;
+                Application.ApplicationExit -= HandleAppExit;
+                Application.EnterThreadModal -= HandleEnterThreadModal;
+                Application.LeaveThreadModal -= HandleLeaveThreadModal;
+                Application.ThreadExit -= HandleThreadExit;
+                AppDomain.CurrentDomain.UnhandledException -= HandleUnhandledException;
+                AppDomain.CurrentDomain.ProcessExit -= HandleProcessExit;
+            }
         }
 
         private static void HandleProcessExit(object sender, EventArgs e)
