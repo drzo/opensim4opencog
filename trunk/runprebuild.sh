@@ -1,7 +1,11 @@
 #!/bin/sh
 
-mono ./bin/Prebuild.exe  prebuild.xml /target nant
-chmod 555 bin/*.so bin/*.config
+echo START: assemblies perms
+chmod 755 bin/*.so bin/*.exe bin/*.dll bin/*.config bin/*.xml
+echo END: assemblies perms
+
+echo START: copy assembies
+
 cp lib/Radegast/assemblies/*.dll bin/
 cp lib/Radegast/*.dll bin/
 cp lib/Radegast/*.pdb bin/
@@ -13,9 +17,10 @@ svn revert bin/LAIR*.dll
 cp lib/LAIR.ResourceAPIs/PennBank/TreeBankGrapher/bin/Release/*.dll bin/
 svn revert bin/LAIR.MachineLearning.dll
 svn revert bin/LAIR.Collect*.dll
+svn revert bin/*.dll bin/*.exe bin/*.so
 
-cp lib/Radegast/*.ico /tmp
-cp -a lib/Radegast/Resources/ /tmp/
+#cp lib/Radegast/*.ico /tmp
+#cp -a lib/Radegast/Resources/ /tmp/
 
 
 rm -f lib/LookingGlass-svn/bin/Prebuild.exe
@@ -27,6 +32,11 @@ rm -f lib/LookingGlass-svn/bin/libo*
 
 cp lib/LookingGlass-svn/bin/*.* bin/
 
+echo DONE: copy assembies
+mv ./bin/Mono.Security.dll ./bin/Mono.Security.dll.WindowsOnly
+
+echo START: Generating NANT build files
+mono ./bin/Prebuild.exe  prebuild.xml /target nant
 
 # Stomp on BuildFiles
 cp NullBuild.txt lib/Radegast.Plugin.Speech/RadSpeechWin/RadSpeechWin.dll.build
@@ -50,11 +60,11 @@ cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.World.Services/LookingG
 cp NullBuild.txt ./lib/xglore/xglore.exe.build
 cp NullBuild.txt ./lib/Lucene/src/Lucene.Net/Lucene.Net.dll.build
 
+echo DONE: Generating NANT build files
 rm -rf bin/LookingGlass*.*
 rm -rf bin/RadSpeechWin*.*
-
-echo copied assembies
 
 echo To just build CSProloge.exe
 echo "./runprebuild.sh ;  find -iname \"*.build\" -not -name Cogbot.build -not -name CSProlog.*.build -exec cp NullBuild.txt '{}' \; ; nant "
 
+echo otherwise type: nant

@@ -4,21 +4,32 @@ SET PREBUILDTARGET=%1
 REM IF NO COMAND LINE ARG IS SPECIFIED use Vsiaul Studio 2008
 IF "%1"=="" SET PREBUILDTARGET=vs2008
 
-bin\Prebuild.exe  prebuild.xml /target %PREBUILDTARGET%
-
-copy lib\Radegast\assemblies\*.* bin\
-copy lib\Radegast\*.dll bin\
-copy lib\Radegast\*.pdb bin\
-copy lib\Radegast\*.config bin\
-copy lib\Radegast\*.so bin\
-copy lib\Radegast\*.dylib bin\
+xcopy /f /y /c lib\Radegast\assemblies\*.* bin\
+xcopy /f /y /c lib\Radegast\*.dll bin\
+xcopy /f /y /c lib\Radegast\*.pdb bin\
+xcopy /f /y /c lib\Radegast\*.config bin\
+xcopy /f /y /c lib\Radegast\*.so bin\
+xcopy /f /y /c lib\Radegast\*.dylib bin\
 del lib\LookingGlass-svn\bin\Prebuild.exe
 del lib\LookingGlass-svn\bin\HttpServer.dll
 del lib\LookingGlass-svn\bin\PrimMesher.dll
 del lib\LookingGlass-svn\bin\Radegast.exe
 del lib\LookingGlass-svn\bin\OpenMetav*.*
-copy lib\LookingGlass-svn\bin\*.* bin\
-copy lib\LAIR.ResourceAPIs\PennBank.net\TreeBankGrapher\bin\Release\LAIR.Misc.dll bin\
+xcopy /f /y /c lib\LookingGlass-svn\bin\*.* bin\
+REM from cygwin
+svn revert bin/*.dll
+svn revert bin/*.exe
+svn revert bin/*.pdb
+svn revert bin/*.so
+
+move XML.dll XML.dll.XGLoreWindowsOnly
+move GraphvizDot.dll GraphvizDot.dll.XGLoreWindowsOnly
+
+xcopy /f /y /c lib\LAIR.ResourceAPIs\PennBank\TreeBankGrapher\bin\Release\LAIR.Misc.dll bin\
+
+
+bin\Prebuild.exe  prebuild.xml /target %PREBUILDTARGET%
+
 pause
 
 exit /b 0
@@ -30,10 +41,11 @@ del "c:\Program Files (x86)\pl\bin\SWIJPL.*"
 del "bin\SWIPlCs.*"
 del "bin\SWIJPL.*"
 
-xcopy /f /y lib\ikvm\bin-x86\*.* lib\ikvm\bin\
-xcopy /f /y lib\ikvm\bin\*.* bin\
-xcopy /f /y lib\ikvm\bin\*.* "C:\Program Files (x86)\pl\bin"
-xcopy /f /y lib\ikvm\bin\*.* lib\ABCL.Net\bin\
+
+xcopy /f /y /c lib\ikvm\bin-x86\*.* lib\ikvm\bin\
+xcopy /f /y /c lib\ikvm\bin\*.* bin\
+xcopy /f /y /c lib\ikvm\bin\*.* "C:\Program Files (x86)\pl\bin"
+xcopy /f /y /c lib\ikvm\bin\*.* lib\ABCL.Net\bin\
 
 dir /s IKVM.OpenJDK.ClassLibrary.dll
 
