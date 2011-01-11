@@ -118,15 +118,17 @@ namespace CogbotRadegastPluginModule
             if (tab2 != null) tab2.AllowDetach = true;
             //RadegastTab tab3 = RadegastInstance.TabConsole.GetTab("search");
             //tab3.Control = new METAbolt.SearchConsole(inst);
-            var sc = new METAbolt.SearchConsole(inst)
+            DLRConsole.SafelyRun(() =>
             {
-                Dock = DockStyle.Fill,
-                // Visible = false
-            };
-            tab = inst.TabConsole.AddTab("cogbotsearch", "CogbotSearch", sc);
-            tab.AllowClose = false;
-            tab.AllowDetach = true;
-
+                var sc = new METAbolt.SearchConsole(inst)
+                {
+                    Dock = DockStyle.Fill,
+                    // Visible = false
+                };
+                tab = inst.TabConsole.AddTab("cogbotsearch", "CogbotSearch", sc);
+                tab.AllowClose = false;
+                tab.AllowDetach = true;
+            });
             clientManager.ProcessCommandArgs();
             new Thread(() =>
                            {
