@@ -1664,6 +1664,7 @@ namespace cogbot
             if (n != null && !String.IsNullOrEmpty(n.Trim())) return n;
             if (String.IsNullOrEmpty(BotLoginParams.FirstName))
             {
+                return string.Format("Unnamed Robot: {0} {1}", BotLoginParams.FirstName, BotLoginParams.LastName);
                 throw new NullReferenceException("GEtName");
             }
             return string.Format("{0} {1}", BotLoginParams.FirstName, BotLoginParams.LastName);

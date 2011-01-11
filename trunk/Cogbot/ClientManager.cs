@@ -899,7 +899,7 @@ namespace cogbot
             EnsureAutoExec();
             if (!StarupLispCreatedBotClients)
             {
-                WriteLine("StarupLisp Created no BotClients");
+                WriteLine("StartupLisp Created no BotClients");
                 LoginDetails acct = null;
                 if (Accounts.Count == 0)
                 {
@@ -916,8 +916,11 @@ namespace cogbot
                         break;
                     }
                 }
-                LastBotClient = BotClientForAcct(acct);
-                if (false)
+                if (acct.FirstName != null)
+                {
+                    LastBotClient = BotClientForAcct(acct);
+                }
+                if (LastBotClient == null)
                 {
                     LastBotClient = new BotClient(this, RadegastInstance.GlobalInstance.Client, acct);
                     LastBotClient.TheRadegastInstance = RadegastInstance.GlobalInstance;
