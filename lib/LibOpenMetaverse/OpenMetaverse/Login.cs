@@ -970,6 +970,8 @@ namespace OpenMetaverse
             if (loginParams.Options == null)
                 loginParams.Options = new List<string>().ToArray();
 
+            if (loginParams.Password == null)
+                loginParams.Password = String.Empty;
             // Convert the password to MD5 if it isn't already
             if (loginParams.Password.Length != 35 && !loginParams.Password.StartsWith("$1$"))
                 loginParams.Password = Utils.MD5(loginParams.Password);
