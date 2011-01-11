@@ -1120,10 +1120,12 @@ namespace OpenMetaverse
         protected void RegionHandshakeHandler(object sender, PacketReceivedEventArgs e)
         {
             RegionHandshakePacket handshake = (RegionHandshakePacket)e.Packet;
-            Simulator simulator = e.Simulator;
+            Simulator simulatorInst = e.Simulator;
+            var simulator = simulatorInst.SharedData;
             e.Simulator.ID = handshake.RegionInfo.CacheID;
 
-            simulator.IsEstateManager = handshake.RegionInfo.IsEstateManager;
+            simulatorInst.IsEstateManager = handshake.RegionInfo.IsEstateManager;
+
             simulator.Name = Utils.BytesToString(handshake.RegionInfo.SimName);
             simulator.SimOwner = handshake.RegionInfo.SimOwner;
             simulator.TerrainBase0 = handshake.RegionInfo.TerrainBase0;
@@ -1143,9 +1145,10 @@ namespace OpenMetaverse
             simulator.TerrainStartHeight10 = handshake.RegionInfo.TerrainStartHeight10;
             simulator.TerrainStartHeight11 = handshake.RegionInfo.TerrainStartHeight11;
             simulator.WaterHeight = handshake.RegionInfo.WaterHeight;
-            simulator.Flags = (RegionFlags)handshake.RegionInfo.RegionFlags;
-            simulator.BillableFactor = handshake.RegionInfo.BillableFactor;
-            simulator.Access = (SimAccess)handshake.RegionInfo.SimAccess;
+
+            simulatorInst.Flags = (RegionFlags)handshake.RegionInfo.RegionFlags;
+            simulatorInst.BillableFactor = handshake.RegionInfo.BillableFactor;
+            simulatorInst.Access = (SimAccess)handshake.RegionInfo.SimAccess;
 
             simulator.RegionID = handshake.RegionInfo2.RegionID;
             simulator.ColoLocation = Utils.BytesToString(handshake.RegionInfo3.ColoName);
@@ -1159,12 +1162,12 @@ namespace OpenMetaverse
             reply.AgentData.AgentID = Client.Self.AgentID;
             reply.AgentData.SessionID = Client.Self.SessionID;
             reply.RegionInfo.Flags = 0;
-            SendPacket(reply, simulator);
+            SendPacket(reply, simulatorInst);
 
             // We're officially connected to this sim
-            simulator.connected = true;
-            simulator.handshakeComplete = true;
-            simulator.ConnectedEvent.Set();
+            simulatorInst.connected = true;
+            simulatorInst.handshakeComplete = true;
+            simulatorInst.ConnectedEvent.Set();
         }
 
         protected void EnableSimulatorHandler(string capsKey, IMessage message, Simulator simulator)
