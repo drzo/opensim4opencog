@@ -7,6 +7,7 @@ RADSRCDIR=/cygdrive/c/dev/lookingglass
 copyLookingGlassSrc=no
 copyLookingGlassBin=yes
 copyOgre=yes
+copyOpenGL=yes
 copyOpenMetaverse=no
 
 if [[ "$copyLookingGlassSrc" == "yes" ]] ; then
@@ -25,6 +26,7 @@ if [[ "$copyLookingGlassBin" == "yes" ]] ; then
     cp "$SRCDIR/LookingGlass.Radegast.dll"    "$DSTDIR"
     cp "$SRCDIR/LookingGlass.Renderer.dll"    "$DSTDIR"
     cp "$SRCDIR/LookingGlass.Renderer.Ogre.dll" "$DSTDIR"
+    cp "$SRCDIR/LookingGlass.Renderer.OGL.dll" "$DSTDIR"
     cp "$SRCDIR/LookingGlass.Rest.dll"        "$DSTDIR"
     cp "$SRCDIR/LookingGlass.View.dll"        "$DSTDIR"
     cp "$SRCDIR/LookingGlass.World.OS.dll"    "$DSTDIR"
@@ -61,6 +63,19 @@ if [[ "$copyOgre" == "yes" ]] ; then
     cp "$SRCDIR/Plugins.cfg"                  "$DSTDIR"
     cp "$SRCDIR/resources.cfg"                "$DSTDIR"
     cp "$SRCDIR/FreeImage.dll"                "$DSTDIR"
+fi
+
+if [[ "$copyOpenGL" == "yes" ]] ; then
+    echo "Copying OpenGL into Radegast bin"
+    echo "  $SRCDIR -> $DSTDIR"
+    cp "$SRCDIR/OpenTK.Compatibility.dll"   "$DSTDIR"
+    cp "$SRCDIR/OpenTK.Compatibility.dll.config" "$DSTDIR"
+    cp "$SRCDIR/OpenTK.Compatibility.xml"   "$DSTDIR"
+    cp "$SRCDIR/OpenTK.GLControl.dll"       "$DSTDIR"
+    cp "$SRCDIR/OpenTK.GLControl.xml"       "$DSTDIR"
+    cp "$SRCDIR/OpenTK.dll"                 "$DSTDIR"
+    cp "$SRCDIR/OpenTK.dll.config"          "$DSTDIR"
+    cp "$SRCDIR/OpenTK.xml"                 "$DSTDIR"
 fi
 
 if [[ "$copyOpenMetaverse" == "yes" ]] ; then
