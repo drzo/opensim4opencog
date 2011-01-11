@@ -115,5 +115,5 @@ guitracer:-debug.
 %%:-assertz(librar
 %file_search_path(X,Y).
 
-:-ensure_loaded(library('programk/logicmoo_module_aiml_main.pl')).
+:-ensure_loaded(library('programk/logicmoo_module_aiml_testing.pl')).
 
