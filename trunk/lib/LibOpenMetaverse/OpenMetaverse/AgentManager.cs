@@ -3427,8 +3427,8 @@ namespace OpenMetaverse
 
             relativePosition = movement.Data.Position;
             Movement.Camera.LookDirection(movement.Data.LookAt);
-            simulator.Handle = movement.Data.RegionHandle;
-            simulator.SimVersion = Utils.BytesToString(movement.SimData.ChannelVersion);
+            simulator.SharedData.Handle = movement.Data.RegionHandle;
+            simulator.SharedData.SimVersion = Utils.BytesToString(movement.SimData.ChannelVersion);
             lock (Client.Network.Simulators) 
                 if (Client.Network.CurrentSim == null || Client.Network.CurrentSim.Handle != simulator.Handle)
             {
