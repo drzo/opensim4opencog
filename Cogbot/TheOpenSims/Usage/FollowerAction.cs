@@ -67,11 +67,22 @@ namespace cogbot.TheOpenSims
                     if (!TheBot.Flying)
                     {
                         Vector3 botpos = TheBot.SimPosition;
-                        float theBotPathStoreGetGroundLevel = TheBot.PathStore.GetGroundLevel(botpos.X, botpos.Y);
-                        if (botpos.Z + 2 > theBotPathStoreGetGroundLevel)
+                        var pathStore = TheBot.PathStore;
+                        if (pathStore == null)
                         {
-                            // avoid faling from heights
-                            useSimpleFollow = 0;                            
+                            pathStore = TheBot.PathStore;
+                            DLRConsole.DebugWriteLine("" + TheBot + " No pathStore attached to self.. might fall!");
+                            if (useSimpleFollow < 1) useSimpleFollow = 2;
+                        }
+                        else
+                        {
+
+                            float theBotPathStoreGetGroundLevel = pathStore.GetGroundLevel(botpos.X, botpos.Y);
+                            if (botpos.Z + 2 > theBotPathStoreGetGroundLevel)
+                            {
+                                // avoid faling from heights
+                                useSimpleFollow = 0;
+                            }
                         }
                     }
                     if (!Target.IsRegionAttached) continue;
