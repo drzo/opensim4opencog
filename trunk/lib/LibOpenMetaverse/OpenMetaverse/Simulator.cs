@@ -645,6 +645,7 @@ namespace OpenMetaverse
                 if (!SimGlobalData.TryGetValue(handle, out simPooledData))
                 {
                     SimGlobalData[handle] = simPooledData = new SimPooledData(Client.Settings.STORE_LAND_PATCHES);
+                    simPooledData.Handle = handle;
                 }
                 return simPooledData;
             }
