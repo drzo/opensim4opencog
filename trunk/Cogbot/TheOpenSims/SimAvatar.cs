@@ -562,7 +562,12 @@ namespace cogbot.TheOpenSims
         public override Simulator GetSimulator()
         {
             // if (Client!=null && Client.Self.AgentID == Prim.ID) return Client.Network.CurrentSim;
-            return GetSimRegion().TheSimulator;
+            var R = GetSimRegion();
+            if (R == null)
+            {
+                return null;
+            }
+            return R.TheSimulator;
         }
 
 
@@ -1546,7 +1551,7 @@ namespace cogbot.TheOpenSims
                 currentDist = Vector3d.Distance(finalTarget, GlobalPosition);
                 if (Prim == null)
                 {
-                    Debug("Where is my body? ");
+                    Debug("Where is my body? " + ToString());
                     return false;
                 }
                 if (!IsKnownMoving)
