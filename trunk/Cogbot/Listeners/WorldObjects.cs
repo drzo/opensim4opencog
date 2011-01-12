@@ -1389,16 +1389,21 @@ namespace cogbot.Listeners
             }
             // Request all of the packets that make up an avatar profile
             // lock (GetSimObjectLock)
-            SimObject obj0 = GetSimObjectFromUUID(uuid);
-            if (obj0 != null) return (SimAvatarImpl) obj0;
+            SimAvatarImpl obj0 = GetSimObjectFromUUID(uuid) as SimAvatarImpl;
+            if (obj0 != null) return (SimAvatarImpl)obj0;
             lock (GetSimLock(simulator ?? client.Network.CurrentSim))
             {
                 lock (uuidTypeObject)
                     //lock (SimObjects)
                     //  lock (SimAvatars)
                 {
-                    obj0 = GetSimObjectFromUUID(uuid);
+                    SimObject simObj = GetSimObjectFromUUID(uuid);
+                    obj0 = simObj as SimAvatarImpl;
                     if (obj0 != null) return (SimAvatarImpl) obj0;
+                    if (simObj != null)
+                    {
+                        Debug("SimObj->SimAvatar!?! " + simObj);
+                    }
                     obj0 = new SimAvatarImpl(uuid, objects, simulator);
                     SimAvatars.Add((SimAvatar) obj0);
                     //client.Avatars.RequestAvatarPicks(uuid);
