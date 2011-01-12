@@ -121,6 +121,7 @@ namespace cogbot
         public bool ExpectConnected;
         public void Login()
         {
+            SetRadegastLoginOptions();
             if (IsLoggedInAndReady) return;
             if (ExpectConnected) return;
             if (Network.CurrentSim != null)
@@ -1867,8 +1868,22 @@ namespace cogbot
             to.FirstName = BotLoginParams.FirstName;
             to.LastName = BotLoginParams.LastName;
             to.Password = BotLoginParams.Password;
-            to.Grid = new Grid(BotLoginParams.URI, BotLoginParams.URI, BotLoginParams.URI);
-            to.GridCustomLoginUri = BotLoginParams.URI;
+            string loginURI = BotLoginParams.URI;
+
+            MainProgram.CommandLine.LoginUri = loginURI;
+            MainProgram.CommandLine.Location = BotLoginParams.Start;
+            int gidx; 
+            Grid G = GetGridIndex(loginURI, out gidx);
+            if (G == null)
+            {
+                G = new Grid(BotLoginParams.URI, BotLoginParams.URI, loginURI);
+                to.GridCustomLoginUri = loginURI;
+            }
+            else
+            {
+                BotLoginParams.URI = G.LoginURI;
+            }
+            to.Grid = G;
             to.StartLocation = StartLocationType.Custom;
             to.StartLocationCustom = BotLoginParams.Start;            
             to.Version = BotLoginParams.Version;
@@ -1876,6 +1891,11 @@ namespace cogbot
             RadegastTab tab;
             if (TheRadegastInstance.TabConsole.Tabs.TryGetValue("login", out tab))
             {
+                tab.AllowDetach = true;
+                tab.AllowClose = false;
+                tab.AllowMerge = false;
+                tab.AllowHide = false;
+  
                 LoginConsole form = (LoginConsole)tab.Control;
                 if (form.InvokeRequired)
                 {
@@ -1888,15 +1908,62 @@ namespace cogbot
             }
         }
 
+        public Grid GetGridIndex(String gridName, out int gridIx)
+        {
+            var instance = TheRadegastInstance;
+            gridIx = -1;
+            for (int i = 0; i < instance.GridManger.Count; i++)
+            {
+                Grid testGrid = instance.GridManger[i];
+                // cbxGrid.Items.Add(instance.GridManger[i]);
+                if (gridName == testGrid.ID || gridName == testGrid.LoginURI || gridName == testGrid.Name)
+                {
+                    gridIx = i;
+                    return testGrid;
+                }
+            }
+            return null;
+        }
         private void SetRadegastLoginForm(LoginConsole console, LoginOptions options)
         {
             console.txtFirstName.Text = options.FirstName;
             console.txtLastName.Text = options.LastName;
-            console.cbxLocation.Text = options.StartLocationCustom;
+
+            switch (options.StartLocation)
+            {
+                case StartLocationType.Last:
+                    //console.cbxLocation.Text = options.StartLocationCustom = "last";
+                    console.cbxLocation.SelectedIndex = 1;
+                    break;
+                case StartLocationType.Home:
+                    //console.cbxLocation.Text = options.StartLocationCustom = "home";
+                    console.cbxLocation.SelectedIndex = 0;
+                    break;
+                default:
+                    console.cbxLocation.SelectedIndex = -1;
+                    console.cbxLocation.Text = options.StartLocationCustom;
+                    break;
+            }
             console.cbTOS.Checked = true;
-            console.txtCustomLoginUri.Text = options.StartLocationCustom;
-            console.cbxLocation.Text = "Custom";
-            console.cbxGrid.Text = "Custom";
+            var G = options.Grid;
+            string gridName = options.GridCustomLoginUri;        
+            int gridIx = -1;
+            String LoginURI = null;
+            G = GetGridIndex(gridName, out gridIx) ?? G;
+            if (gridIx == -1)
+            {
+                if (G != null && !String.IsNullOrEmpty(G.ID))
+                {
+                    LoginURI = G.LoginURI;
+                    if (LoginURI != null) console.txtCustomLoginUri.Text = LoginURI;
+                    console.cbxGrid.Text = G.Name ?? G.ID;
+                }
+                else { console.cbxGrid.Text = "Custom"; }
+                if (LoginURI == null) console.txtCustomLoginUri.Text = options.GridCustomLoginUri;
+            } else {
+                console.txtCustomLoginUri.Text = G.LoginURI;
+                console.cbxGrid.SelectedIndex = gridIx;
+            }
         }
 
         public void GetLoginOptionsFromRadegast()
