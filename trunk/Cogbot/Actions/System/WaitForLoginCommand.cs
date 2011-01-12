@@ -29,9 +29,8 @@ namespace cogbot.Actions.System
             }
             foreach (var bot in ClientManager.SingleInstance.BotClients)
             {
-                var net = bot.gridClient.Network;
                 int retries = time;
-                while (net.CurrentSim == null)
+                while (!bot.IsLoggedInAndReady)
                 {
                     WriteLine("Pending logins: " + bot.GetName());
                      Thread.Sleep(1000);
@@ -44,7 +43,7 @@ namespace cogbot.Actions.System
                 var net = bot.gridClient.Network;
                 if (net.CurrentSim == null)
                 {
-                    Failure("Pending logins: " + bot.GetName());
+                    Failure("Still Pending logins: " + bot.GetName());
                 }
                 else
                 {

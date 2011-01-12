@@ -98,13 +98,30 @@ namespace cogbot
         // Client.Self.AnimationStart(animationLLUUID,false);
         // Client.Self.AnimationStop(animationLLUUID,false);
 
-
+        public bool IsLoggedInAndReady {
+            get
+            {
+                var gridClient = this.gridClient;
+                if (gridClient == null) return false;
+                var net = gridClient.Network;
+                if (net == null) return false;
+                if (net != Network) return false;
+                if (net.CurrentSim == null) return false;
+                if (!Network.Connected) return false;
+                if (gridClient.Self.AgentID == UUID.Zero) return false;
+                //something is oput of date!?
+                if (gridClient != this.gridClient) return false; 
+                return true;
+            }
+        }
+                
         // Reflect events into lisp
         //        
         int LoginRetries = 2; // for the times we are "already logged in"
         public bool ExpectConnected;
         public void Login()
         {
+            if (IsLoggedInAndReady) return;
             if (ExpectConnected) return;
             if (Network.CurrentSim != null)
             {
