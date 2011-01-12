@@ -258,8 +258,17 @@ namespace OpenMetaverse
                 }
             }
 #endif // POOLED_SIMDATA
+            public ulong _Handle;
             /// <summary></summary>
-            public ulong Handle;
+            public ulong Handle
+            {
+                get { return _Handle; }
+                set
+                {
+                    if (value == 0) throw new ArgumentException("Should not set Region handle to 0 on " + Name);
+                    _Handle = value;
+                }
+            }
             /// <summary>The current version of software this simulator is running</summary>
             public string SimVersion = String.Empty;
             /// <summary></summary>
@@ -402,7 +411,7 @@ namespace OpenMetaverse
         public ulong Handle
         {
             get { return SharedData.Handle; }
-            set { SharedData = GetSharedData(value); }
+            set { SharedData = GetSharedData(value, true); }
         }
         /// <summary>The current version of software this simulator is running</summary>
         public string SimVersion { get { return SharedData.SimVersion; } }
@@ -637,14 +646,16 @@ namespace OpenMetaverse
         }
 
 #if POOLED_SIMDATA
-        private SimPooledData GetSharedData(ulong handle)
+        static public SimPooledData GetSharedData(ulong handle, bool createIfMissing)
         {
+            if (handle == 0) throw new ArgumentException("Should not search for Region handle 0!");
             lock (SimGlobalData)
             {
-                SimPooledData simPooledData; 
+                SimPooledData simPooledData;
                 if (!SimGlobalData.TryGetValue(handle, out simPooledData))
                 {
-                    SimGlobalData[handle] = simPooledData = new SimPooledData(Client.Settings.STORE_LAND_PATCHES);
+                    if (!createIfMissing) return null;
+                    SimGlobalData[handle] = simPooledData = new SimPooledData(true /*Client.Settings.STORE_LAND_PATCHES*/);
                     simPooledData.Handle = handle;
                 }
                 return simPooledData;
