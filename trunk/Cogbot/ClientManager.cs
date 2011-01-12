@@ -739,8 +739,14 @@ namespace cogbot
 
             Thread t = new Thread(new ThreadStart(() =>
             {
-                Thread.CurrentThread.SetApartmentState(
-                    ApartmentState.STA);
+                Thread ct = Thread.CurrentThread;
+                try
+                {
+                    ct.SetApartmentState(ApartmentState.STA);
+                }
+                catch (Exception)
+                {
+                } 
                 try
                 {
                     invoker();
