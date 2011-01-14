@@ -277,7 +277,7 @@ namespace RTParser
                 }
                 else
                 {
-                    CurrentUser = FindUser(user);
+                    CurrentUser = FindUser0(user);
                     CurrentUser = CurrentUser ?? FindOrCreateUser(user) ?? this.LastUser;
                 }
             }

@@ -1913,8 +1913,8 @@ namespace RTParser.Variables
                     if (inner == dictionary)
                     {
                         writeToLog("WARN: alread contains inner " + inner);
-                        cols.Remove(deep);
-                        return true;
+                        //cols.Remove(deep);
+                        return false;
                     }
                     if (inner == this)
                     {

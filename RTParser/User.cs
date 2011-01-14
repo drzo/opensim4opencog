@@ -171,6 +171,7 @@ namespace RTParser
         MasterRequest CreateRequest(Unifiable message, User target, GraphMaster G, Request parentRequest);
 
         TaskQueueHandler GetTaskQueueHandler(string find);
+        void AddTodoItem(CrossAppDomainDelegate todo);
 
         string UserDirectory { get; }
         void LoadDirectory(string userdir);
@@ -279,7 +280,7 @@ namespace RTParser
         {
             TaskQueueHandler queueHandler = GetTaskQueueHandler(queuename);
             queueHandler.CreateTask(taskType, taskName, evt, true);
-            OnTaskAtATimeHandler.Enqueue(evt);
+            // why was this line was here!? (the above should have taken care of it) OnTaskAtATimeHandler.Enqueue(evt);
         }
 
         private readonly object SaveLock = new object();
@@ -1091,7 +1092,7 @@ namespace RTParser
                             return user0;
                         }
                     }
-                    User user = bot.FindUser(lname);
+                    User user = bot.FindUser0(lname);
                     if (user != null && user != this)
                     {
                         return user;
