@@ -3,11 +3,38 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
+using MushDLR223.ScriptEngines;
 
-namespace RTParser
+namespace MushDLR223.Utilities
 {
     public class LockInfo
     {
+
+        public static R WeaklyLock<R>(object lockObject, TimeSpan maxWaitTryEnter, Func<R> action, string operationType, OutputDelegate output)
+        {
+            Action needsExit = MonitorTryEnter(operationType, lockObject, maxWaitTryEnter);
+            try
+            {
+                return action();
+            }
+            finally
+            {
+                needsExit();
+            }
+        }
+        public static void WeaklyLock(object lockObject, TimeSpan maxWaitTryEnter, Action action, string operationType, OutputDelegate output)
+        {
+            Action needsExit = MonitorTryEnter(operationType, lockObject, maxWaitTryEnter);
+            try
+            {
+                action();
+            }
+            finally
+            {
+                needsExit();
+            }
+        }
+
         public static Action MonitorTryEnter(string lockType, object botUsers, TimeSpan maxWaitTryEnter)
         {
             //lock (LockInfos)
@@ -110,7 +137,7 @@ namespace RTParser
 
         internal static void writeDebugLine(string s)
         {
-            RTPBot.writeDebugLine(s);
+            DLRConsole.DebugWriteLine(s);
         }
 
         public static LockInfo ExitUserThread(string lockType, LockInfo lockInfo, object botUsers)
