@@ -272,10 +272,14 @@ namespace RTParser
             dictionary.addSetting(first, rest);
             AddHeardPreds0(rest, dictionary);
         }
-
         private GraphMaster SetupUserWithGraph(string newname, string newkey, User newuser)
         {
             GraphMaster graph = GetUserGraph(newkey);
+            newuser.AddTodoItem(() => SetupUserWithGraph0(graph, newname, newkey, newuser));
+            return graph;
+        }
+        private void SetupUserWithGraph0(GraphMaster graph, string newname, string newkey, User newuser)
+        {            
             graph.AddParallelMT(RTPBot.TheUserListernerGraph, newuser.WriteToUserTrace);
             newuser.ListeningGraph = graph;
             newuser.UserID = newkey;
@@ -288,7 +292,6 @@ namespace RTParser
             newuser.SyncDirectory(GetUserDir(newkey));
             if (graph.Size == 0) graph.UnTraced = true;
             newuser.Predicates.IsIdentityReadOnly = true;
-            return graph;
         }
     }
 }

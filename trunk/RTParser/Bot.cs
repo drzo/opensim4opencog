@@ -1837,7 +1837,7 @@ The AIMLbot program.
             next = next ?? "";
             old = Trim(ToLower(old));
             next = Trim(ToLower(next));
-            return FindUser(old) == FindUser(next);
+            return FindUser0(old) == FindUser0(next);
         }
 
         private ClojureInterpreter clojureInterpreter;

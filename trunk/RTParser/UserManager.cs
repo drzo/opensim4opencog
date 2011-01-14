@@ -213,17 +213,16 @@ namespace RTParser
 
         internal bool RemoveUser0(string name)
         {
-            lock (microBotUsersLock)
+            string keyname = KeyFromUsername(name);
+            User user = null;            
             {
-                string keyname = KeyFromUsername(name);
-                User user;
-                if (BotUsers.TryGetValue(name, out user))
+                if (TryGetValueLocked(microBotUsersLock, BotUsers, name, out user))
                 {
                     user.DisposeObject();
                     lock (microBotUsersLock) BotUsers.Remove(name);
                     writeToUserLog("REMOVED " + name);
                 }
-                else if (BotUsers.TryGetValue(keyname, out user))
+                if (TryGetValueLocked(microBotUsersLock, BotUsers, keyname, out user))
                 {
                     user.DisposeObject();
                     lock (microBotUsersLock) BotUsers.Remove(keyname);
@@ -238,9 +237,18 @@ namespace RTParser
             return true;
         }
 
+        private static bool TryGetValueLocked<K, V>(object lockerObject, IDictionary<K, V> idict, K key, out V value)
+        {
+            lock (lockerObject)
+            {
+                return idict.TryGetValue(key,out value);
+            }
+        }
+
         public User FindOrCreateUser(string fromname)
         {
-            return UserOper("FindOrCreateUser " + fromname, () => FindOrCreateUser0(fromname), QuietLogger);
+            bool newlyCreated = false;
+            return FindOrCreateUser(fromname, out newlyCreated);
         }
 
         private User FindOrCreateUser0(string fromname)
@@ -248,7 +256,7 @@ namespace RTParser
             //lock (BotUsers)
             {
                 bool b;
-                User user = FindOrCreateUser(fromname, out b);
+                User user = FindOrCreateUser0(fromname, out b);
                 //if (!IsLastKnownUser(fromname)) user.UserName = fromname;
                 return user;
             }
@@ -270,15 +278,16 @@ namespace RTParser
             }
             if (IsLastKnownUser(fromname)) return LastUser;
             string key = fromname.ToLower().Trim();
-            lock (microBotUsersLock)
+            //lock (microBotUsersLock)
             {
-                lock (microBotUsersLock) if (BotUsers.ContainsKey(key)) return BotUsers[key];
+                User found;
+                if (TryGetValueLocked(microBotUsersLock, BotUsers, key, out found)) return found;
                 key = KeyFromUsername(fromname);
-                lock (microBotUsersLock) if (BotUsers.ContainsKey(key)) return BotUsers[key];
+                if (TryGetValueLocked(microBotUsersLock, BotUsers, key, out found)) return found;
                 if (UnknowableName(fromname))
                 {
                     string unk = UNKNOWN_PARTNER.ToLower();
-                    lock (microBotUsersLock) if (BotUsers.ContainsKey(unk)) return BotUsers[unk];
+                    if (TryGetValueLocked(microBotUsersLock, BotUsers, unk, out found)) return found;
                 }
                 return null;
             }
@@ -286,6 +295,12 @@ namespace RTParser
 
         public User FindOrCreateUser(string fullname, out bool newlyCreated)
         {
+            User user = FindUser0(fullname);
+            if (user != null)
+            {
+                newlyCreated = false;
+                return user;
+            }
             var res = UserOper("FindOrCreateUser " + fullname,
                                () =>
                                    {
@@ -330,6 +345,14 @@ namespace RTParser
                 lock (microBotUsersLock) BotUsers[key] = myUser;
                 bool roleAcct = IsRoleAcctName(fullname);
                 myUser.IsRoleAcct = roleAcct;
+                myUser.AddTodoItem(()=>SetupUserData(myUser, fullname, key));
+                return myUser;
+            }
+        }
+
+        private void SetupUserData(User myUser, string fullname, string key)
+        {
+            {
                 SetupUserWithGraph(fullname, key, myUser);
                 GlobalSettings.AddChild("user." + key + ".", () => myUser.Predicates);
 
@@ -339,7 +362,6 @@ namespace RTParser
                 string userdir = GetUserDir(key);
                 myUser.SyncDirectory(userdir);
                 myUser.userTrace = null;
-                return myUser;
             }
         }
 
@@ -491,7 +513,7 @@ namespace RTParser
 
 
                 User newuser = FindUser(newkey);
-                User olduser = FindUser(oldname);
+                User olduser = FindUser0(oldname);
 
                 writeToUserLog("ChangeUser " + oldname + " -> " + newname);
 
@@ -609,7 +631,7 @@ namespace RTParser
 
 
                 User newuser = FindUser(newkey);
-                User olduser = FindUser(oldname);
+                User olduser = FindUser0(oldname);
                 if (olduser == null)
                 {
                     writeToUserLog("Neigther acct found so creating clean: " + newname);
