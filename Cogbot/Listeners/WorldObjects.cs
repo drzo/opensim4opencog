@@ -42,6 +42,7 @@ namespace cogbot.Listeners
         private static readonly Dictionary<ulong, List<uint>> primsSelectedOutbox = new Dictionary<ulong, List<uint>>();
 
         private static readonly TaskQueueHandler PropertyQueue = new TaskQueueHandler("NewObjectQueue", TimeSpan.FromMilliseconds(1));
+        public static readonly TaskQueueHandler UpdateObjectData = new TaskQueueHandler("UpdateObjectData", TimeSpan.FromMilliseconds(1));
         public static readonly TaskQueueHandler ParentGrabber = new TaskQueueHandler("ParentGrabber", TimeSpan.FromSeconds(1), false);
 
         private static readonly object SelectObjectsTimerLock = new object();

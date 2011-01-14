@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading;
 using cogbot.Listeners;
 using cogbot.ScriptEngines;
 using cogbot.Utilities;
@@ -417,14 +418,27 @@ namespace cogbot.TheOpenSims
         static public List<SimObjectType> GuessSimObjectTypes(Primitive.ObjectProperties props, SimObject obj)
         {
             List<SimObjectType> possibles = obj.ObjectType.SuperType;
-            lock (possibles) if (props != null)
-            {
-                string objName = " " + props.Name.ToLower() + " | " + props.Description.ToLower() + " ";
 
-                List<SimObjectType> objectTypes = new List<SimObjectType>();
-                lock (SimTypeSystem.objectTypes)
-                    objectTypes.AddRange(SimTypeSystem.objectTypes);
-                    foreach (SimObjectType otype in objectTypes)
+            if (props != null)
+
+                LockInfo.WeaklyLock(possibles, TimeSpan.FromSeconds(10),
+                                    () => DoGuessWork(props, obj, possibles),
+                                    "Guess Sim Object Types for " + obj, DLRConsole.DebugWriteLine);
+            return possibles;
+        }
+
+        static List<SimObjectType> DoGuessWork(Primitive.ObjectProperties props, SimObject obj, List<SimObjectType> possibles)
+        {
+            {
+                {
+                    string objName = " " + props.Name.ToLower() + " | " +
+                                     props.Description.ToLower() + " ";
+
+                    List<SimObjectType> objectTypesLocally =
+                        new List<SimObjectType>();
+                    lock (SimTypeSystem.objectTypes)
+                        objectTypesLocally.AddRange(SimTypeSystem.objectTypes);
+                    foreach (SimObjectType otype in objectTypesLocally)
                     {
                         foreach (Regex smatch in otype.NoMatch)
                         {
@@ -442,11 +456,12 @@ namespace cogbot.TheOpenSims
                                 if (!possibles.Contains(otype))
                                 {
                                     possibles.Add(otype);
-                                    goto nextOType; 
+                                    goto nextOType;
                                 }
-                            } else                                
+                            }
+                            else
                             {
-                                possibles.Remove(otype); 
+                                possibles.Remove(otype);
                             }
                         }
                         foreach (Regex smatch in otype.Match)
@@ -466,18 +481,32 @@ namespace cogbot.TheOpenSims
                         {
                         }
                     }
-                if (!String.IsNullOrEmpty(props.TouchName))
-                {
-                    string verb = props.TouchName;
-                    possibles.Add(SimTypeSystem.CreateObjectUse(verb, new object[] { "UseGrab", true, "TextName", verb }));
-                }
-                if (!String.IsNullOrEmpty(props.SitName))
-                {
-                    string verb = props.SitName;
-                    possibles.Add(SimTypeSystem.CreateObjectUse(verb, new object[] {"UseSit", true, "TextName", verb}));
+                    if (!String.IsNullOrEmpty(props.TouchName))
+                    {
+                        string verb = props.TouchName;
+                        possibles.Add(SimTypeSystem.CreateObjectUse(verb,
+                                                                    new object[]
+                                                                        {
+                                                                            "UseGrab", true
+                                                                            ,
+                                                                            "TextName",
+                                                                            verb
+                                                                        }));
+                    }
+                    if (!String.IsNullOrEmpty(props.SitName))
+                    {
+                        string verb = props.SitName;
+                        possibles.Add(SimTypeSystem.CreateObjectUse(verb,
+                                                                    new object[]
+                                                                        {
+                                                                            "UseSit", true,
+                                                                            "TextName",
+                                                                            verb
+                                                                        }));
+                    }
+                    return possibles;
                 }
             }
-            return possibles;
         }
 
         private static bool IsCodeMatch(SimObject obj, object smatch)
