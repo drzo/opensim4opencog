@@ -305,7 +305,27 @@ namespace cogbot.TheOpenSims
 
         public Avatar theAvatar
         {
-            get { return (Avatar)Prim; }
+            get
+            {
+                Primitive P = Prim;
+                if (P == null) return null;
+                if (P is Avatar) return (Avatar) P;
+                uint l = P.LocalID;
+                UUID id = P.ID;
+                var simulator = GetSimulator();
+                Avatar found = simulator.ObjectsAvatars.Find(prim0 =>
+                                                                 {
+                                                                     if ((prim0.ID == id || prim0.LocalID == l))
+                                                                         return true;
+                                                                     return false;
+                                                                 });
+                if (found != null)
+                {
+                    _Prim0 = found;
+                    return found;
+                }
+                return null;
+            }
         }
 
         //public SimAvatar InDialogWith { get; set; }

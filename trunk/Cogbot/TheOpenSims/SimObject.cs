@@ -1094,8 +1094,27 @@ namespace cogbot.TheOpenSims
             return list;
         }
 
+        // This field is supposed to be the most recent property udate 
+        private Primitive.ObjectProperties MostRecentPropertyUpdate;
+        static readonly object MostRecentPropertyUpdateLock = new object();
         private void UpdateProperties(Primitive.ObjectProperties objectProperties)
         {
+            lock (MostRecentPropertyUpdateLock)
+            {
+                MostRecentPropertyUpdate = objectProperties;
+                WorldObjects.UpdateObjectData.Enqueue(UpdateProperties0);
+            }
+        }
+
+        private void UpdateProperties0()
+        {
+            Primitive.ObjectProperties objectProperties = null;
+            lock (MostRecentPropertyUpdateLock)
+            {
+                if (MostRecentPropertyUpdate == null) return; // something allready did the work            
+                objectProperties = MostRecentPropertyUpdate;
+                MostRecentPropertyUpdate = null;
+            }
             try
             {
                 Primitive Prim = this.Prim;
