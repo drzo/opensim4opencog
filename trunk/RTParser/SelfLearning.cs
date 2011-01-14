@@ -275,7 +275,7 @@ namespace RTParser
         private GraphMaster SetupUserWithGraph(string newname, string newkey, User newuser)
         {
             GraphMaster graph = GetUserGraph(newkey);
-            newuser.AddTodoItem(() => SetupUserWithGraph0(graph, newname, newkey, newuser));
+            SetupUserWithGraph0(graph, newname, newkey, newuser);
             return graph;
         }
         private void SetupUserWithGraph0(GraphMaster graph, string newname, string newkey, User newuser)
@@ -289,8 +289,11 @@ namespace RTParser
             newuser.Predicates.addSetting("name", newname);
             newuser.Predicates.addSetting("id", newkey);
             newuser.Predicates.InsertFallback(() => AllUserPreds);
-            newuser.SyncDirectory(GetUserDir(newkey));
-            if (graph.Size == 0) graph.UnTraced = true;
+            newuser.AddTodoItem(() =>
+                                    {
+                                        newuser.SyncDirectory(GetUserDir(newkey));
+                                        if (graph.Size == 0) graph.UnTraced = true;
+                                    });
             newuser.Predicates.IsIdentityReadOnly = true;
         }
     }

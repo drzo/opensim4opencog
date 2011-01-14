@@ -1485,12 +1485,11 @@ namespace RTParser
         {
             lock (OnNeedAIML)
             {
-                if (needAiml)
-                {
-                    action();
-                    return;
-                }
                 OnNeedAIML.Add(action);
+            }
+            if (needAiml)
+            {
+                DoPendingTodoList();
             }
         }
 
@@ -1498,10 +1497,10 @@ namespace RTParser
         {
             lock (OnNeedAIML)
             {
-                if (needAiml) return;
+                if (!needAiml) return;
                 needAiml = true;
-                DoPendingUntilComplete(OnNeedAIML);
             }
+            DoPendingUntilComplete(OnNeedAIML);
         }
 
         internal static void DoPendingUntilComplete(ICollection<CrossAppDomainDelegate> todoList)

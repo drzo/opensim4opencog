@@ -275,8 +275,11 @@ namespace RTParser
             if (fromname != null && fromname.Contains("????"))
             {
                 writeToLog("BAd????");
+                throw new NullReferenceException("FindUser: " + fromname);
+                return null;
             }
             if (IsLastKnownUser(fromname)) return LastUser;
+            if (fromname == null) throw new NullReferenceException("FindUser: " + fromname);
             string key = fromname.ToLower().Trim();
             //lock (microBotUsersLock)
             {
@@ -342,7 +345,7 @@ namespace RTParser
                 myUser.userTrace = writeToUserLog;
                 myUser.UserName = fullname;
                 writeToUserLog("New User " + fullname + " -DEBUG9");
-                lock (microBotUsersLock) BotUsers[key] = myUser;
+                if (key != null) lock (microBotUsersLock) BotUsers[key] = myUser;
                 bool roleAcct = IsRoleAcctName(fullname);
                 myUser.IsRoleAcct = roleAcct;
                 myUser.AddTodoItem(()=>SetupUserData(myUser, fullname, key));
