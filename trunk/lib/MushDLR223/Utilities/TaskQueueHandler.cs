@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using MushDLR223.ScriptEngines;
 using TASK = System.Threading.ThreadStart;
+using ThreadState=System.Threading.ThreadState;
 
 namespace MushDLR223.Utilities
 {
@@ -34,7 +35,7 @@ namespace MushDLR223.Utilities
         
 
         private Thread PingerThread;
-        private Thread TaskThread;
+        private Thread TaskThreadCurrent;
         private Thread StackerThread;
 
         public readonly List<Thread> InteruptableThreads = new List<Thread>();
@@ -217,26 +218,25 @@ namespace MushDLR223.Utilities
                 IsDisposing = true;
                 lock (TaskQueueHandlers)
                     TaskQueueHandlers.Remove(this);
-                if (PingerThread != null && PingerThread.IsAlive)
-                {
-                    NoExceptions(PingerThread.Abort);
-                }
-                if (StackerThread != null && StackerThread.IsAlive)
-                {
-                    NoExceptions(StackerThread.Abort);
-                    StackerThread = null;
-                }
-                if (TaskThread != null && TaskThread.IsAlive)
-                {
-                    NoExceptions(TaskThread.Abort);
-                    TaskThread = null;
-                }
-
+                AbortThread(PingerThread);
+                PingerThread = null;
+                AbortThread(StackerThread);
+                StackerThread = null;
+                AbortThread(TaskThreadCurrent);
+                TaskThreadCurrent = null;
                 NoExceptions<bool>(WaitingOn.Set);
                 NoExceptions(WaitingOn.Close);
             }
             catch (ObjectDisposedException)
             {
+            }
+        }
+
+        private void AbortThread(Thread thread)
+        {
+            if (thread != null)
+            {
+                if (thread != Thread.CurrentThread && thread.IsAlive) NoExceptions(thread.Abort);
             }
         }
 
@@ -629,7 +629,8 @@ namespace MushDLR223.Utilities
                                       GetTimeString(t));
                             if (KillTasksOverTimeLimit)
                             {
-                                KillCurrentTask();
+                                AbortCurrentOperation();
+                                Start();
                             }
                             continue;
                         }
@@ -826,7 +827,29 @@ namespace MushDLR223.Utilities
             return true;
         }
 
+
         private void Tick(TASK evt)
+        {
+            Thread workerThread = new Thread(() => { Tick0(evt); });
+            try
+            {
+                lock (TaskThreadChangeLock)
+                {
+                    TaskThreadCurrent = workerThread;
+                }
+                workerThread.Start();
+            }
+            finally
+            {
+                workerThread.Join();
+                lock (TaskThreadChangeLock)
+                {
+                    TaskThreadCurrent = Thread.CurrentThread;
+                }
+            }
+        }
+
+        private void Tick0(TASK evt)
         {
             lock (OnFinnaly)
             {
@@ -859,7 +882,7 @@ namespace MushDLR223.Utilities
                     AbortRequested = false;
                     abortable = true;
                     NoExceptions<bool>(IsCurrentTaskStarted.Set);
-                    TaskThread = Thread.CurrentThread;
+                    TaskThreadCurrent = Thread.CurrentThread;
                 }
                 evt();
                 abortable = false;
@@ -931,7 +954,7 @@ namespace MushDLR223.Utilities
                 {
                     before = WaitingString;
                 }
-                DoInteruptably(ref this.TaskThread, NamedTask(name, evt), maxTime, control);
+                DoInteruptably(ref this.TaskThreadCurrent, NamedTask(name, evt), maxTime, control);
             }
             finally
             {
@@ -1068,6 +1091,10 @@ namespace MushDLR223.Utilities
 
         public void AbortCurrentOperation()
         {
+            AbortCurrentOperation(this.TaskThreadCurrent);
+        }
+        public void AbortCurrentOperation(Thread TaskThread)
+        {
             bool exitMonitor = true;
             if (!System.Threading.Monitor.TryEnter(TaskThreadChangeLock, TimeSpan.FromSeconds(10)))
             {
@@ -1084,16 +1111,21 @@ namespace MushDLR223.Utilities
                 if (!abortable)
                 {
                     WriteLine("AbortCurrentOperation: not abortable?! " + INFO);
-                    abortable = true;
                 }
-                KillCurrentTask();
+                KillCurrentTask(TaskThread);
             }
             finally
             {
                 if (exitMonitor) System.Threading.Monitor.Exit(TaskThreadChangeLock);
             }
         }
+
         public void KillCurrentTask()
+        {
+            KillCurrentTask(this.TaskThreadCurrent);
+        }
+
+        public void KillCurrentTask(Thread TaskThread)
         {
             if (Thread.CurrentThread == TaskThread)
             {
@@ -1103,6 +1135,7 @@ namespace MushDLR223.Utilities
             if (null == TaskThread)
             {
                 WriteLine("KillCurrentTask: No actual TaskThread! " + INFO);
+                Start();
                 return;
             }
             bool exitMonitor = true;
@@ -1151,11 +1184,50 @@ namespace MushDLR223.Utilities
             }
         }
 
-
-        public void RestartCurrentTask()
+        public void RestartCurrentTask(Thread TaskThread)
         {
-            NoExceptions(TaskThread.Resume);
-            NoExceptions(StackerThread.Resume);
+            NoExceptions(() => RestartCurrentTask0(TaskThread));            
+        }
+        public void RestartCurrentTask0(Thread TaskThread)
+        {
+            switch (TaskThread.ThreadState)
+            {
+                case ThreadState.Running:
+                    return;
+                    break;
+                case ThreadState.StopRequested:
+                    break;
+                case ThreadState.SuspendRequested:
+                    break;
+                case ThreadState.Background:
+                    return;
+                    break;
+                case ThreadState.Unstarted:
+                    TaskThread.Start();
+                    break;
+                case ThreadState.Stopped:
+                    break;
+                case ThreadState.WaitSleepJoin:
+                    break;
+                case ThreadState.Suspended:
+                    TaskThread.Resume();
+                    return;
+                    break;
+                case ThreadState.AbortRequested:
+                    break;
+                case ThreadState.Aborted:
+                    if (TaskThread==Thread.CurrentThread)
+                    {
+                        Thread.ResetAbort();
+                        return;
+                    }
+
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            DLRConsole.SYSTEM_ERR_WRITELINE("RestartCurrentTask: " + new Exception().StackTrace + "\n" + TaskThread);
+            StackerThread.Resume();
         }
 
         private bool inWriteline = false;
@@ -1457,6 +1529,8 @@ namespace MushDLR223.Utilities
             {
                 WriteLine("IsDisposing NonAbortedly?!");
             }
+            var TaskThread = this.TaskThreadCurrent;
+
             if (TaskThread != Thread.CurrentThread)
             {
                 func();
@@ -1467,7 +1541,7 @@ namespace MushDLR223.Utilities
             lock (TaskThreadChangeLock)
             {
                 wasAbortable = abortable;
-                TaskThread = null;
+                TaskThread = Thread.CurrentThread;
                 abortable = false;
             }
             try
@@ -1481,6 +1555,7 @@ namespace MushDLR223.Utilities
                     if (TaskThread == null) TaskThread = Thread.CurrentThread;
                     abortable = wasAbortable;
                 }
+                this.TaskThreadCurrent = TaskThread;
             }
         }
 
