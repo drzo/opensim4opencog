@@ -90,46 +90,53 @@ namespace CogbotRadegastPluginModule
             if (ClientManager.UsingRadgastFromCogbot) return;
             inst.Client.Settings.MULTIPLE_SIMS = true;
             clientManager.outputDelegate = WriteLine;
-            chatConsole = new CogbotTabWindow(inst, this)
-                              {
-                                  Dock = DockStyle.Fill,
-                                  Visible = false
-                              };
-            tab = inst.TabConsole.AddTab("cogbot", "Cogbot", chatConsole);
-            tab.AllowClose = false;
-            tab.AllowDetach = true;
-
-            _simObjectsConsole = new SimObjectsConsole(inst, this)
-                                     {
-                                         Dock = DockStyle.Fill,
-                                         // Visible = false
-                                     };
-            tab = inst.TabConsole.AddTab("simobjects", "SimObjects", _simObjectsConsole);
-            tab.AllowClose = false;
-            tab.AllowDetach = true;
-
-            RadegastTab tab1 = RadegastInstance.TabConsole.GetTab("chat");
-            tab1.AllowDetach = true;
-            ChatConsole rchatConsole = (ChatConsole)tab1.Control;
-            rchatConsole.cbxInput.Enabled = true;
-            rchatConsole.btnSay.Enabled = true;
-            //  rchatConsole.btnShout.Enabled = true;
-            RadegastTab tab2 = RadegastInstance.TabConsole.GetTab("login");
-            if (tab2 != null) tab2.AllowDetach = true;
-            //RadegastTab tab3 = RadegastInstance.TabConsole.GetTab("search");
-            //tab3.Control = new METAbolt.SearchConsole(inst);
             DLRConsole.SafelyRun(() =>
             {
-                var sc = new METAbolt.SearchConsole(inst)
-                {
-                    Dock = DockStyle.Fill,
-                    // Visible = false
-                };
-                tab = inst.TabConsole.AddTab("cogbotsearch", "CogbotSearch", sc);
+                chatConsole = new CogbotTabWindow(inst, this)
+                    {
+                        Dock = DockStyle.Fill,
+                        Visible = false
+                    };
+                tab = inst.TabConsole.AddTab("cogbot", "Cogbot", chatConsole);
                 tab.AllowClose = false;
                 tab.AllowDetach = true;
             });
-            clientManager.ProcessCommandArgs();
+            DLRConsole.SafelyRun(() =>
+            {
+                _simObjectsConsole = new SimObjectsConsole(inst, this)
+                                         {
+                                             Dock = DockStyle.Fill,
+                                             // Visible = false
+                                         };
+                tab = inst.TabConsole.AddTab("simobjects", "SimObjects", _simObjectsConsole);
+                tab.AllowClose = false;
+                tab.AllowDetach = true;
+            });
+            DLRConsole.SafelyRun(() =>
+            {
+                RadegastTab tab1 = RadegastInstance.TabConsole.GetTab("chat");
+                tab1.AllowDetach = true;
+                ChatConsole rchatConsole = (ChatConsole)tab1.Control;
+                rchatConsole.cbxInput.Enabled = true;
+                rchatConsole.btnSay.Enabled = true;
+                //  rchatConsole.btnShout.Enabled = true;
+                RadegastTab tab2 = RadegastInstance.TabConsole.GetTab("login");
+                if (tab2 != null) tab2.AllowDetach = true;
+                //RadegastTab tab3 = RadegastInstance.TabConsole.GetTab("search");
+                //tab3.Control = new METAbolt.SearchConsole(inst);
+                DLRConsole.SafelyRun(() =>
+                {
+                    var sc = new METAbolt.SearchConsole(inst)
+                    {
+                        Dock = DockStyle.Fill,
+                        // Visible = false
+                    };
+                    tab = inst.TabConsole.AddTab("cogbotsearch", "CogbotSearch", sc);
+                    tab.AllowClose = false;
+                    tab.AllowDetach = true;
+                });
+            });
+            DLRConsole.SafelyRun(() => clientManager.ProcessCommandArgs());
             new Thread(() =>
                            {
                                clientManager.StartUpLisp();
