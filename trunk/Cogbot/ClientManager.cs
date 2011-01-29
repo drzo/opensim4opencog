@@ -248,20 +248,15 @@ namespace cogbot
 
         public static BotClient GetBotByName(string CurrentBotClient)
         {
-            lock (OneAtATime)
+            var BotByName = ClientManager.BotByName;
+            lock (BotByName) BotByName = new Dictionary<string, BotClient>(BotByName);            
             {
-                if (BotByName.ContainsKey(CurrentBotClient))
-                    return BotByName[CurrentBotClient];
+                BotClient fallback = null;
+                if (BotByName.TryGetValue(CurrentBotClient, out fallback)) return fallback;
                 else
                 {
                     String lCurrentBotClient = CurrentBotClient.ToLower();
-                    foreach (string name in BotByName.Keys)
-                    {
-                        if (name.ToLower() == lCurrentBotClient)
-                        {
-                            return BotByName[name];
-                        }
-                    }
+                    if (BotByName.TryGetValue(CurrentBotClient, out fallback)) return fallback;
                     foreach (string name in BotByName.Keys)
                     {
                         if (name.ToLower().Contains(lCurrentBotClient))
@@ -302,7 +297,20 @@ namespace cogbot
                 text = text.Substring(1).TrimStart();
             }
             if (string.IsNullOrEmpty(text)) return null;
-            if (BotByName.Count == 0 && LastBotClient != null) return LastBotClient.ExecuteBotCommand(text, WriteLine);
+
+            bool lastBotExec = false;
+            lock (BotByName)
+            {
+                if (BotByName.Count == 0 && LastBotClient != null)
+                {
+                    lastBotExec = true;
+                }
+            }
+            if (lastBotExec)
+            {
+                return LastBotClient.ExecuteBotCommand(text, WriteLine);
+            }
+            
             if (OnlyOneCurrentBotClient != null)
             {
                 return OnlyOneCurrentBotClient.ExecuteBotCommand(text, WriteLine);
@@ -598,13 +606,7 @@ namespace cogbot
         static private readonly LoginDetails DefaultAccount = new LoginDetails(null);
 
         public BotClient LastBotClient = null;
-        static object OneAtATime
-        {
-           get
-           {
-               return BotByName;
-           }    
-        } //= new object();
+        private static readonly object OneAtATime = new object();
         private bool _wasFirstGridClient = true;
         private readonly object _wasFirstGridClientLock = new object();
         public void CreateBotClient(string first, string last, string passwd, string simurl, string location)
@@ -624,7 +626,7 @@ namespace cogbot
                 {
                     WriteLine(";; Reusing {0}", fullName);
                     AddTypesToBotClient(bc);
-                    BotByName[bc.NameKey()] = bc;
+                    lock (BotByName) BotByName[bc.NameKey()] = bc;
                     if (!string.IsNullOrEmpty(passwd))
                         bc.BotLoginParams.Password = passwd;
                     if (!string.IsNullOrEmpty(simurl))
@@ -1037,8 +1039,8 @@ namespace cogbot
 
                 if (client == null)
                 {
-                    client = new BotClient(this, gc, account);               
-                    BotByName[account.BotLName] = client;
+                    client = new BotClient(this, gc, account);
+                    lock (BotByName) BotByName[account.BotLName] = client;
                 }
                 account.Client = client;
                 if (inst != null)
@@ -1474,11 +1476,11 @@ namespace cogbot
         {
             if (client==null) return;
             string name = client.NameKey();
-            lock(OneAtATime)
+            BotClient bc0 = null;
+            lock (OneAtATime)
             {
                 lock (BotByName)
                 {
-                    BotClient bc0;
                     if (BotByName.TryGetValue(name, out bc0))
                     {
                         if (!Object.ReferenceEquals(bc0, client))
@@ -1486,9 +1488,9 @@ namespace cogbot
                             WriteLine("BotClient != " + bc0.GetName() + " and " + client.GetName());
                         }
                         BotByName.Remove(name);
-                        bc0.Dispose();
                     }
                 }
+                if (bc0 != null) bc0.Dispose();
                 lock (Accounts)
                 {
                     LoginDetails param;
