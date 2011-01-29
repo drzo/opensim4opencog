@@ -117,7 +117,8 @@ namespace cogbot
                 
         // Reflect events into lisp
         //        
-        int LoginRetries = 2; // for the times we are "already logged in"
+        int LoginRetriesFresh = 2; // for the times we are "already logged in"
+        int LoginRetries; // set to Fresh in constructor
         public bool ExpectConnected;
         public void Login()
         {
@@ -389,6 +390,7 @@ namespace cogbot
         /// </summary>
         public BotClient(ClientManager manager, GridClient g, LoginDetails lp)
         {
+            LoginRetries = LoginRetriesFresh;
             ClientManager = manager;
             gridClient = g;
             BotLoginParams = lp;
@@ -1368,11 +1370,12 @@ namespace cogbot
 
             if (login == LoginStatus.Failed)
             {
-                WriteLine("Not able to login");
                 ExpectConnected = false;
-                // SendNewEvent("on-login-fail",login,message);
                 SendNetworkEvent("On-Login-Fail", login, message);
-                if (LoginRetries-- >= 0) Login();
+                WriteLine("Login Failed " + message + " LoginRetries: " + LoginRetries);
+                if (LoginRetries <= 0) return;
+                LoginRetries--;               
+                Login();
             }
             else if (login == LoginStatus.Success)
             {
@@ -1380,7 +1383,7 @@ namespace cogbot
                 {
                     GetLoginOptionsFromRadegast();
                 }
-                LoginRetries = 0;
+                LoginRetries = 0; // maybe LoginRetriesFresh??
                 WriteLine("Logged in successfully");
                 ExpectConnected = true;
                 SendNetworkEvent("On-Login-Success", login, message);
@@ -1926,8 +1929,7 @@ namespace cogbot
         }
         private void SetRadegastLoginForm(LoginConsole console, LoginOptions options)
         {
-            console.txtFirstName.Text = options.FirstName;
-            console.txtLastName.Text = options.LastName;
+            console.txtUsername.Text = (string.Format("{0} {1}", options.FirstName, options.LastName)).Trim();
 
             switch (options.StartLocation)
             {
