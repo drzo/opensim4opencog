@@ -15,9 +15,9 @@ namespace MushDLR223.Utilities
         public static readonly OutputDelegate errOutput = DLRConsole.SYSTEM_ERR_WRITELINE;
         protected ThreadControl LocalThreadControl = new ThreadControl(new ManualResetEvent(false));
         readonly List<ThreadStart> OnFinnaly = new List<ThreadStart>();
-        // ping wiat time should be less than 4 seconds when going in
-        public static readonly TimeSpan MAX_PING_WAIT = TimeSpan.FromSeconds(4);
-        public static readonly TimeSpan PING_INTERVAL = TimeSpan.FromSeconds(10); // 30 seconds
+        // ping wait time should be less than 4 seconds when going in
+        public TimeSpan MAX_PING_WAIT = TimeSpan.FromSeconds(10);
+        public TimeSpan PING_INTERVAL = TimeSpan.FromSeconds(30); // 30 seconds
         // 10 minutes
         public static readonly TimeSpan TOO_LONG_INTERVAL = TimeSpan.FromMinutes(10);
         // 1ms
@@ -32,11 +32,13 @@ namespace MushDLR223.Utilities
         private readonly object PingWaitingLock = new object();
         private readonly object DebugStringLock = new object();
         private readonly object BusyTrackingLock = new object();
-        
 
+        private bool WasStartCalled;
         private Thread PingerThread;
         private Thread TaskThreadCurrent;
         private Thread StackerThread;
+        private TaskThreadHolder TaskHolder;
+        //private Dictionary<Thread,TaskThreadKit> TaskThreadAbortKit = new Dictionary<Thread, TaskThreadKit>();
 
         public readonly List<Thread> InteruptableThreads = new List<Thread>();
 
@@ -45,7 +47,7 @@ namespace MushDLR223.Utilities
         public string Name;
         private readonly TASK NOP;
         private readonly AutoResetEvent WaitingOn = new AutoResetEvent(false);
-        private readonly AutoResetEvent IsCurrentTaskStarted = new AutoResetEvent(false);
+        //private readonly AutoResetEvent IsCurrentTaskStarted = new AutoResetEvent(false);
         
 
         private bool _killTasksOverTimeLimit;
@@ -131,6 +133,10 @@ namespace MushDLR223.Utilities
                 // 1ms min - ten minutes max
                 OperationKillTimeout = TimeSpanBetween(maxPerOperation, TOO_SHORT_INTERVAL, TOO_LONG_INTERVAL);
 
+                MAX_PING_WAIT = TimeSpanBetween(MAX_PING_WAIT, maxPerOperation, OperationKillTimeout); 
+
+                PING_INTERVAL = TimeSpanBetween(PING_INTERVAL, msWaitBetween, OperationKillTimeout);
+
                 // zero secs - ten minutes max
                 PauseBetweenOperations = TimeSpanBetween(msWaitBetween, TimeSpan.Zero, TOO_LONG_INTERVAL);
 
@@ -163,6 +169,7 @@ namespace MushDLR223.Utilities
             get
             {
                 if (IsDisposing) return false;
+                if (!WasStartCalled) return false;
                 return StackerThread != null && StackerThread.IsAlive;
             }
         }
@@ -222,8 +229,11 @@ namespace MushDLR223.Utilities
                 PingerThread = null;
                 AbortThread(StackerThread);
                 StackerThread = null;
-                AbortThread(TaskThreadCurrent);
-                TaskThreadCurrent = null;
+                if (TaskHolder != null)
+                {
+                    AbortThread(TaskHolder.ThreadForTask);
+                }
+                TaskHolder = null;
                 NoExceptions<bool>(WaitingOn.Set);
                 NoExceptions(WaitingOn.Close);
             }
@@ -244,21 +254,51 @@ namespace MushDLR223.Utilities
 
         public void Start()
         {
+            TestLock(BusyTrackingLock);
             lock (BusyTrackingLock)
             {
                 Start0();
             }
         }
+
+        private void TestLock(object busyTrackingLock)
+        {
+            return;
+            if (Monitor.TryEnter(busyTrackingLock, TimeSpan.FromSeconds(10)))
+            {
+                Monitor.Exit(busyTrackingLock);
+                return;
+            }
+            VeryBad("Cant get into " + busyTrackingLock);
+        }
+
+        public static void TestLockHeld(object busyTrackingLock)
+        {
+            if (Monitor.TryEnter(busyTrackingLock, TimeSpan.FromSeconds(10)))
+            {
+                Monitor.Exit(busyTrackingLock);
+                return;
+            }
+            DLRConsole.DebugWriteLine("Cant get into " + busyTrackingLock);
+        }
+
         private void Start0()
         {
-            if (StackerThread == null) StackerThread = new Thread(LoopNoAbort(EventQueue_Handler, OneTaskAtATimeLock));
+            WasStartCalled = true;
+            if (StackerThread == null)
+            {
+                string tname = Name;
+                StackerThread = new Thread(LoopNoAbort(EventQueue_Handler, OneTaskAtATimeLock))
+                                    {
+                                        Name = tname + " worker task queue ",
+                                        Priority = ThreadPriority.BelowNormal,
+                                    };
+            }
             if (!StackerThread.IsAlive)
             {
-                StackerThread.Name = Name + " worker task queue";
-                StackerThread.Priority = ThreadPriority.BelowNormal;
-                StackerThread.Start();
+                RestartCurrentTask(StackerThread);//.Start();
             }
-            if (PingerThread != null && !PingerThread.IsAlive) PingerThread.Start();
+            if (PingerThread != null && !PingerThread.IsAlive) RestartCurrentTask(PingerThread);//.Start();
             debugOutput = debugOutput ?? errOutput;
         }
 
@@ -307,7 +347,7 @@ namespace MushDLR223.Utilities
                 }
             }
             string extraMesage =
-                Name
+                "\"" + Name + "\" "
                 + string.Format(" TODO = {0} ", ExpectedTodo)
                 +
                 string.Format(" TOTALS = {0}/{1}/{2} ", TotalComplete, TotalStarted,
@@ -323,7 +363,7 @@ namespace MushDLR223.Utilities
 
 
             if (IsDisposing) WaitingS += " IsDisposing";
-            if (!IsRunning) WaitingS += " NOT RUNNING";
+            if (!IsRunning) extraMesage = " NOT_RUNNING " + extraMesage;
             string tdm = DLRConsole.SafeFormat(
                 "{0} {1} {2} {3} {4}",
                 Busy ? "Busy" : "Idle",
@@ -410,7 +450,7 @@ namespace MushDLR223.Utilities
                 {
                     string str = "EventQueue_Handler is locked out!";
                     errOutput(str);
-                    WriteLine(str);
+                    VeryBad(str);
                     throw new InternalBufferOverflowException(str);
 
                 }
@@ -464,8 +504,12 @@ namespace MushDLR223.Utilities
 
                 if (evt != null && evt != NOP)
                 {
-                    DoNow(evt);
-                    if (PauseBetweenOperations > TimeSpan.Zero) Thread.Sleep(PauseBetweenOperations);
+                    NoExceptions(() => DoNow(evt));
+                    Busy = false;
+                    if (evtCount < 2 && !WaitingOnPing)
+                    {
+                        Sleep(PauseBetweenOperations);
+                    }
                     // avoid reset/set semantics ?
                     if (evtCount > 1) continue;
 
@@ -485,7 +529,8 @@ namespace MushDLR223.Utilities
                     //}
                     if (SimplyLoopNoWait)
                     {
-                        Thread.Sleep(TOO_SHORT_INTERVAL);
+                        Busy = false;
+                        Sleep(TOO_SHORT_INTERVAL);
                         continue;
                     }
                     if (evtCount > 1) continue;
@@ -495,7 +540,15 @@ namespace MushDLR223.Utilities
             }
         }
 
-        private bool WaitOneIsBroken = true;
+        private void Sleep(TimeSpan pauseBetweenOperations)
+        {
+            if (PauseBetweenOperations >= TOO_SHORT_INTERVAL) 
+            {
+                if (PauseBetweenOperations < TimeSpan.Zero) Thread.Sleep(pauseBetweenOperations);
+            }
+        }
+
+        private bool WaitOneIsBroken = false;
         private bool WaitOne()
         {
             if (WaitOneIsBroken)
@@ -507,10 +560,29 @@ namespace MushDLR223.Utilities
                                  bool r = false;
                                  while (!IsDisposing)
                                  {
+                                     lock (EventQueueLock)
+                                     {
+                                         ExpectedTodo = (ulong)EventQueue.Count;
+                                     }
+                                     if (ExpectedTodo > 0)
+                                     {
+                                         // no need to wait
+                                         return true;
+                                     }
                                      r = WaitingOn.WaitOne(ThisMaxOperationTimespan);
                                      if (r) return true;
+                                     lock (EventQueueLock)
+                                     {
+                                         ExpectedTodo = (ulong) EventQueue.Count;
+                                     }
+                                     if (ExpectedTodo == 0)
+                                     {
+                                         //wait longer
+                                         continue;
+                                     }
                                      errOutput(CreateMessage("WaitOne: TIMEOUT ERROR {0} was {1} ", INFO, GetTimeString(ThisMaxOperationTimespan)));
                                      problems = true;
+                                     TestLock(BusyTrackingLock);
                                      lock (BusyTrackingLock)
                                      {
                                          if (BusyEnd < BusyStart)
@@ -537,7 +609,7 @@ namespace MushDLR223.Utilities
             {
                 System.Windows.Forms.Application.DoEvents();
             }
-            Thread.Sleep(100);
+            Sleep(TOO_SHORT_INTERVAL + PauseBetweenOperations);
             return true;
         }
 
@@ -593,27 +665,90 @@ namespace MushDLR223.Utilities
             return (!IsDisposing) && NoExceptions<bool>(WaitingOn.Set);
         }
 
+        ulong startedBeforeWait;
+        ulong completeBeforeWait;
+        ulong todoBeforeWait;
+        ulong expectedTodoBeforeWait;
         private void EventQueue_Ping()
         {
             while (!(IsDisposing))
             {
-                ulong startedBeforeWait = TotalStarted;
-                ulong completeBeforeWait = TotalComplete;
-                Thread.Sleep(PING_INTERVAL);
+                startedBeforeWait = TotalStarted;
+                completeBeforeWait = TotalComplete;
+                TestLock(BusyTrackingLock);
+                lock (BusyTrackingLock)
+                {
+                    expectedTodoBeforeWait = ExpectedTodo;
+                    todoBeforeWait = (ulong) EventQueue.Count;
+                    ExpectedTodo = todoBeforeWait;
+                }
+                Sleep(PING_INTERVAL);
+                if (IsDisposing) break;
+                if (!WasStartCalled) continue;
+
+                bool wasBusy = false;
+                lock (BusyTrackingLock)
+                    wasBusy = Busy;
+
+                if (wasBusy && CheckCurrentTaskOverTimeBudget())
+                    WriteLine("OVER BUDGET");
+
+                LiveCheck();
+
+                //              if (_noQueue) continue;
+                bool wasWatingForPong = false;
+                lock (PingWaitingLock)
+                    wasWatingForPong = WaitingOnPing;
+
+                if (!wasWatingForPong)
+                    lock (PingWaitingLock)
+                    {
+                        PingStart = DateTime.Now;
+                        WaitingOnPing = true;
+
+                        Enqueue0(EventQueue_Pong);
+                        continue;
+                    }
+                CheckTimedProgress();
+                continue;
+                CheckPingerTime();
+            }
+            // ReSharper disable FunctionNeverReturns
+        }
+
+        private void LiveCheck()
+        {
+
+            {
                 if (StackerThread != null)
                     if (!StackerThread.IsAlive)
                     {
                         problems = true;
-                        WriteLine("ERROR EventQueueHandler DEAD! " + INFO);
-                        continue;
+                        if (WasStartCalled)
+                        {
+                            WriteLine("ERROR EventQueueHandler DEAD! " + INFO);
+                            RestartCurrentTask(StackerThread);
+                            if (!StackerThread.IsAlive)
+                            {
+                                WriteLine("ERROR VERY DEAD! " + INFO);
+                            }
+                            else
+                            {
+                                WriteLine("RESTARTED " + INFO);
+                            }
+                        }
+                        else
+                        {
+                            WriteLine("WARNING WARNING EventQueueHandler Not Started?! " + INFO);
+                        }
                     }
-                if (_noQueue) continue;
-                lock (PingWaitingLock)
+            }
+        }
+
+        private bool CheckCurrentTaskOverTimeBudget()
+        {
+            {
                 {
-                    lock (BusyTrackingLock)
-                    {
-                        ExpectedTodo = (ulong)EventQueue.Count;
-                    }
                     if (Busy)
                     {
                         TimeSpan t;
@@ -624,40 +759,71 @@ namespace MushDLR223.Utilities
                         if (t > OperationKillTimeout)
                         {
                             problems = true;
-                            WriteLine("BUSY LONGER THAN {0} time = {1} " + INFO,
-                                      GetTimeString(OperationKillTimeout),
-                                      GetTimeString(t));
+                            VeryBad(CreateMessage("BUSY LONGER THAN {0} time = {1} " + INFO,
+                                                  GetTimeString(OperationKillTimeout),
+                                                  GetTimeString(t)));
                             if (KillTasksOverTimeLimit)
                             {
                                 AbortCurrentOperation();
-                                Start();
+                                return true;
                             }
-                            continue;
                         }
                     }
-                    if (WaitingOnPing)
+                }
+            }
+            return false;
+        }
+
+        private void CheckTimedProgress()
+        {
+            ulong todoAfterWait;
+            lock (PingWaitingLock)
+            {
+                {
                     {
                         if (completeBeforeWait == TotalComplete)
                         {
                             if (startedBeforeWait == TotalStarted)
                             {
-                                if (ExpectedTodo > 0)
+                                lock (BusyTrackingLock)
                                 {
-                                    problems = true;
+                                    todoAfterWait = (ulong) EventQueue.Count;
+                                }
+                                if (ExpectedTodo > todoBeforeWait)
+                                {
                                     var fromNow = BusyEnd;
                                     if (BusyStart > BusyEnd) fromNow = BusyStart;
                                     TimeSpan t = DateTime.Now - fromNow;
-                                    if (t>TOO_LONG_INTERVAL)
+                                    if (t > TOO_LONG_INTERVAL)
                                     {
-                                        WriteLine("ERROR: NOTHING DONE IN time = {0} " + INFO, GetTimeString(t));
+                                        VeryBad(CreateMessage("ERROR: NOTHING DONE IN time = {0} " + INFO,
+                                                              GetTimeString(t)));
+                                        problems = true;
                                         if (ExpectedTodo > 1) DebugQueue = true;
                                         AbortCurrentOperation();
                                     }
-                                    WriteLine("WARN: NOTHING DONE IN time = {0} " + INFO, GetTimeString(t));
+                                    lock (BusyTrackingLock)
+                                    {
+                                        if (todoBeforeWait + 1 < (ulong) EventQueue.Count)
+                                        {
+                                            problems = true;
+                                            WriteLine("WARN: GROWING YET NOTHING DONE IN time = {0} " + INFO,
+                                                      GetTimeString(t));
+                                        }
+                                    }
                                 }
                             }
                         }
+                    }
+                }
+            }
+        }
 
+        private void CheckPingerTime()
+        {
+            {
+                {
+                    {
                         if (Busy /* && (StartedSinceLastPing == 0 && FinishedSinceLastPing == 0)*/)
                         {
                             // ReSharper disable ConditionIsAlwaysTrueOrFalse
@@ -671,16 +837,10 @@ namespace MushDLR223.Utilities
                             }
                             // ReSharper restore ConditionIsAlwaysTrueOrFalse
                         }
-                        continue;
                     }
-
-                    if (WaitingOnPing) continue;
-                    PingStart = DateTime.Now;
-                    WaitingOnPing = true;
-                    Enqueue0(EventQueue_Pong);
                 }
             }
-            // ReSharper disable FunctionNeverReturns
+
         }
 
         private void EventQueue_Pong()
@@ -696,7 +856,7 @@ namespace MushDLR223.Utilities
                 GoodPings++;
                 if (ExpectedTodo > 0)
                     if (DebugQueue)
-                        WriteLine("PONG: {0} {1}", GetTimeString(LastPingLagTime), INFO);
+                        WriteLine("GOOD PONG: {0} {1}", GetTimeString(LastPingLagTime), INFO);
                 LatePings = 0;
                 problems = false;
             }
@@ -759,12 +919,20 @@ namespace MushDLR223.Utilities
                     LastRestTime = BusyStart.Subtract(BusyEnd);
                 }
                 StartedSinceLastPing++;
+                lock (TaskThreadChangeLock)
                 {
-                    Tick(evt);
-                    lock (TaskThreadChangeLock)
+                    try
+                    {
+                        abortable = true;
+                        Tick(evt);
+                    }
+                    finally
+                    {
                         abortable = false;
-                    //() => RunWithTimeLimit(evt, "RunWithTimeLimit", OperationKillTimeout));
+                    }
                 }
+                //() => RunWithTimeLimit(evt, "RunWithTimeLimit", OperationKillTimeout));
+                
                 lock (BusyTrackingLock)
                 {
                     CompletedSinceLastPing++;
@@ -792,17 +960,33 @@ namespace MushDLR223.Utilities
                 lock (BusyTrackingLock)
                 {
                     BusyEnd = DateTime.Now;
+                    Busy = false;
                     LastOperationTimespan = BusyEnd.Subtract(BusyStart);
                     if (LastOperationTimespan > TimeSpan.Zero)
                     {
-                        var proposal = (LastOperationTimespan + LastOperationTimespan);
+                        TimeSpan proposal = LastOperationTimespan;
+                        if ((LastOperationTimespan.TotalMilliseconds * 2) < ThisMaxOperationTimespan.TotalMilliseconds)
+                        {
+                            proposal =
+                                TimeSpan.FromMilliseconds((LastOperationTimespan.TotalMilliseconds*2 +
+                                                           ThisMaxOperationTimespan.TotalMilliseconds)/2);
+                        } else
+                        {
+                            if (LastOperationTimespan.TotalMilliseconds>ThisMaxOperationTimespan.TotalMilliseconds)
+                            {
+                                proposal = TimeSpan.FromMilliseconds((LastOperationTimespan.TotalMilliseconds +
+                                                                      ThisMaxOperationTimespan.TotalMilliseconds)/2);
+                            }
+                        }
                         if (proposal.TotalMilliseconds > 500)
                         {
-                            ThisMaxOperationTimespan = proposal;
                             if (proposal.TotalMilliseconds > 1500)
                             {
                                 if (problems)
-                                    WriteLine00("changeing " + ThisMaxOperationTimespan + " to ");
+                                {
+                                   // WriteLine00("MaxOperationTimespan: " + LastOperationTimespan + " to " + proposal);
+                                }
+                                ThisMaxOperationTimespan = proposal;
                             }
                         }
                     }
@@ -830,26 +1014,43 @@ namespace MushDLR223.Utilities
 
         private void Tick(TASK evt)
         {
-            Thread workerThread = new Thread(() => { Tick0(evt); });
+            if (abortable)
+            {
+                // already wrapped
+                evt();
+                return; 
+            }
+            TaskThreadHolder taskThreadAbortHolder = new TaskThreadHolder();
+            Thread workerThread = new Thread(() => Tick0(evt, taskThreadAbortHolder)); ;
+            taskThreadAbortHolder.ThreadForTask = workerThread;
+                
             try
             {
                 lock (TaskThreadChangeLock)
                 {
+                    TaskHolder = taskThreadAbortHolder;
                     TaskThreadCurrent = workerThread;
+                    RestartCurrentTask(workerThread);//.Start();
                 }
-                workerThread.Start();
             }
             finally
             {
                 workerThread.Join();
                 lock (TaskThreadChangeLock)
                 {
-                    TaskThreadCurrent = Thread.CurrentThread;
+                    if (TaskThreadCurrent == workerThread)
+                    {
+                        TaskThreadCurrent = null;
+                    }
+                    if (TaskHolder == taskThreadAbortHolder)
+                    {
+                        TaskHolder = null;
+                    }
                 }
             }
         }
 
-        private void Tick0(TASK evt)
+        private void Tick0(TASK evt, TaskThreadHolder taskThreadAbortHolder)
         {
             lock (OnFinnaly)
             {
@@ -880,9 +1081,13 @@ namespace MushDLR223.Utilities
                                           });
 
                     AbortRequested = false;
+                    taskThreadAbortHolder.TaskAbortable = true;
                     abortable = true;
-                    NoExceptions<bool>(IsCurrentTaskStarted.Set);
-                    TaskThreadCurrent = Thread.CurrentThread;
+                    NoExceptions<bool>(taskThreadAbortHolder.TaskStart.Set);
+                    if (TaskThreadCurrent != Thread.CurrentThread)
+                    {
+                        WriteLine("ERROR: Not on CurrentThread!!!!");
+                    }
                 }
                 evt();
                 abortable = false;
@@ -991,7 +1196,7 @@ namespace MushDLR223.Utilities
                             threadVar = threadPlace;
                             threadPlace = threadVar;
                             // wait for started
-                            threadPlace.Start();
+                            RestartCurrentTask(threadPlace);//.Start();
                         }
 #if !NEW_INERUPT
 
@@ -1091,81 +1296,62 @@ namespace MushDLR223.Utilities
 
         public void AbortCurrentOperation()
         {
-            AbortCurrentOperation(this.TaskThreadCurrent);
-        }
-        public void AbortCurrentOperation(Thread TaskThread)
-        {
-            bool exitMonitor = true;
-            if (!System.Threading.Monitor.TryEnter(TaskThreadChangeLock, TimeSpan.FromSeconds(10)))
+            if (TaskThreadCurrent==null)
             {
-                exitMonitor = false;
-                WriteLine("AbortCurrentOperation: cannot getTaskThreadChangeLock! " + INFO);
-            }
-            try
-            {
-                if (Thread.CurrentThread == TaskThread)
+                if (TaskHolder==null)
                 {
-                    WriteLine("AbortCurrentOperation: NoSuicide! " + INFO);
+                    WriteLine("No Currents to Abort");
                     return;
                 }
-                if (!abortable)
-                {
-                    WriteLine("AbortCurrentOperation: not abortable?! " + INFO);
-                }
-                KillCurrentTask(TaskThread);
+                TaskThreadCurrent = TaskHolder.ThreadForTask;
             }
-            finally
-            {
-                if (exitMonitor) System.Threading.Monitor.Exit(TaskThreadChangeLock);
-            }
+            ToCurrentTaskThread("AbortCurrentOperation", TaskThreadChangeLock, TaskHolder, TaskThreadCurrent.Abort);
+            Start0();
         }
 
-        public void KillCurrentTask()
+        public void ToCurrentTaskThread(String named, object changeLock, TaskThreadHolder taskThreadHolder, ThreadStart taskThreadAbort)
         {
-            KillCurrentTask(this.TaskThreadCurrent);
-        }
-
-        public void KillCurrentTask(Thread TaskThread)
-        {
+            var TaskThread = taskThreadHolder.ThreadForTask;
             if (Thread.CurrentThread == TaskThread)
             {
-                WriteLine("KillCurrentTask: NoSuicide! " + INFO);
+                VeryBad(named + ": NoSuicide! " + INFO);
                 return;
             }
+            
             if (null == TaskThread)
             {
-                WriteLine("KillCurrentTask: No actual TaskThread! " + INFO);
-                Start();
+                VeryBad(named + ": No actual TaskThread! " + INFO);
                 return;
             }
+
             bool exitMonitor = true;
-            if (!System.Threading.Monitor.TryEnter(TaskThreadChangeLock, TimeSpan.FromSeconds(10)))
+            if (!System.Threading.Monitor.TryEnter(changeLock, TimeSpan.FromSeconds(5)))
             {
                 exitMonitor = false;
-                WriteLine("KillCurrentTask: cannot getTaskThreadChangeLock! " + INFO);
+                VeryBad(named + ": cannot getTaskThreadChangeLock! " + INFO);
             }
             try
             {
                 if (!TaskThread.IsAlive)
                 {
-                    WriteLine("KillCurrentTask: TaskThread Not Alive ! " + INFO);
+                    VeryBad(named + ": TaskThread Not Alive ! " + INFO);
                     return;
                 }
                 try
                 {
-                    if (!IsCurrentTaskStarted.WaitOne(TimeSpan.FromSeconds(5)))
+                    if (!taskThreadHolder.WaitUntilStarted())
                     {
-                        WriteLine("!IsCurrentTaskStarted");
+                        VeryBad("!IsCurrentTaskStarted");
                     }
-                    WriteLine("KillCurrentTask! " + INFO);
-                    lock (TaskThreadChangeLock)
+                    WriteLine(named + "! " + INFO);
+                    lock (changeLock)
                     {
-                        if (abortable)
+                        if (taskThreadHolder.TaskAbortable)
                         {
                             AbortRequested = true;
                             lock (OnFinnaly)
                             {
-                                TaskThread.Abort();
+                                taskThreadAbort();
                             }
                         }
                     }
@@ -1174,16 +1360,27 @@ namespace MushDLR223.Utilities
                 }
                 catch (Exception e)
                 {
-
-                    WriteLine("ERROR: " + e);
+                    VeryBad("ERROR: " + e);
                 }
             }
             finally
             {
-                if (exitMonitor) System.Threading.Monitor.Exit(TaskThreadChangeLock);
+                if (exitMonitor) System.Threading.Monitor.Exit(changeLock);
             }
         }
-
+        /*
+        private TaskThreadKit GetTaskThreadKit(Thread taskThread)
+        {
+            TaskThreadKit taskThreadKit;
+            if(!TaskThreadAbortKit.TryGetValue(taskThread,out taskThreadKit))
+            {
+                taskThreadKit = new TaskThreadKit();
+                taskThreadKit.ThreadForTask = taskThread;
+                taskThreadKit.TaskStart = new AutoResetEvent(false);
+            }
+            return taskThreadKit;
+        }
+        */
         public void RestartCurrentTask(Thread TaskThread)
         {
             NoExceptions(() => RestartCurrentTask0(TaskThread));            
@@ -1204,6 +1401,7 @@ namespace MushDLR223.Utilities
                     break;
                 case ThreadState.Unstarted:
                     TaskThread.Start();
+                    return;
                     break;
                 case ThreadState.Stopped:
                     break;
@@ -1226,8 +1424,8 @@ namespace MushDLR223.Utilities
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            DLRConsole.SYSTEM_ERR_WRITELINE("RestartCurrentTask: " + new Exception().StackTrace + "\n" + TaskThread);
-            StackerThread.Resume();
+            VeryBad("RestartCurrentTask: " + new Exception().StackTrace + "\n " + TaskThread);
+            TaskThread.Resume();
         }
 
         private bool inWriteline = false;
@@ -1253,6 +1451,12 @@ namespace MushDLR223.Utilities
             }
         }
 
+        private void VeryBad(String action)
+        {
+            action = CreateMessage(action);
+            WriteLine00(action);
+        }
+
         public void WriteLine00(string s, params object[] parms)
         {
             debugOutput = debugOutput ?? errOutput;
@@ -1272,7 +1476,9 @@ namespace MushDLR223.Utilities
 
         private string CreateMessage(string s, params object[] parms)
         {
-            s = DLRConsole.SafeFormat("..\n[TASK " + Name + "] " + s, parms);
+            if (!s.StartsWith("..\n[")) s = "..\n[TASK-" + Name.Replace(" ", "-") + "] " + s;
+            
+            s = DLRConsole.SafeFormat(s, parms);
             if (s.Contains(INFO))
             {
                 var str = ToDebugString(true);
@@ -1287,9 +1493,10 @@ namespace MushDLR223.Utilities
         }
         public void Enqueue0(TASK evt)
         {
+            if (IsDisposing) return;
+            TestLock(BusyTrackingLock);
             lock (BusyTrackingLock)
             {
-                if (IsDisposing) return;
                 ExpectedTodo++;
             }
             if (_noQueue)
@@ -1297,6 +1504,7 @@ namespace MushDLR223.Utilities
                 DoNow(evt);
                 return;
             }
+            TestLock(EventQueueLock);
             lock (EventQueueLock)
             {
                 EventQueue.AddLast(evt);
@@ -1529,7 +1737,7 @@ namespace MushDLR223.Utilities
             {
                 WriteLine("IsDisposing NonAbortedly?!");
             }
-            var TaskThread = this.TaskThreadCurrent;
+            Thread TaskThread = this.TaskThreadCurrent;
 
             if (TaskThread != Thread.CurrentThread)
             {
@@ -1614,6 +1822,25 @@ namespace MushDLR223.Utilities
                 }
             }
             return used;
+        }
+    }
+
+    public class TaskThreadHolder
+    {
+        public TaskThreadHolder()
+        {
+            TaskStart = new AutoResetEvent(false);
+        }
+        public EventWaitHandle TaskStart;
+        public bool TaskAbortable;
+        public Thread ThreadForTask;
+
+        public bool WaitUntilStarted()
+        {
+            if (TaskAbortable) return true;
+            bool b = TaskStart.WaitOne(TimeSpan.FromSeconds(5));
+            if (b) TaskAbortable = true;
+            return b;
         }
     }
 
