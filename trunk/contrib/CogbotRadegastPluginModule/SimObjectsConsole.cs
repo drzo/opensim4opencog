@@ -114,24 +114,24 @@ namespace CogbotRadegastPluginModule
 
         private void Network_OnConnected(object sender, EventArgs e1)
         {
-            ClientManager.SingleInstance.LastBotClient.WorldSystem.OnAddSimObject += Objects_OnAddSimObject;
-            ClientManager.SingleInstance.LastBotClient.WorldSystem.OnUpdateDataAspect += Objects_OnUpdateSimObject;
+            TheWorldSystem.OnAddSimObject += Objects_OnAddSimObject;
+            TheWorldSystem.OnUpdateDataAspect += Objects_OnUpdateSimObject;
             Plugin.TheBot.WorldSystem.AddObjectGroup("SelectedObjects", () => SelectedItems);
 
         }
 
         private void Network_OnDisconnected(object sender, DisconnectedEventArgs e)
         {
-            ClientManager.SingleInstance.LastBotClient.WorldSystem.OnAddSimObject -= Objects_OnAddSimObject;
-            ClientManager.SingleInstance.LastBotClient.WorldSystem.OnUpdateDataAspect -= Objects_OnUpdateSimObject;
+            TheWorldSystem.OnAddSimObject -= Objects_OnAddSimObject;
+            TheWorldSystem.OnUpdateDataAspect -= Objects_OnUpdateSimObject;
         }
 
         void frmObjects_Disposed(object sender, EventArgs e)
         {
             IsDisposing = true;
             addObjects.Dispose();
-            ClientManager.SingleInstance.LastBotClient.WorldSystem.OnAddSimObject -= Objects_OnAddSimObject;
-            ClientManager.SingleInstance.LastBotClient.WorldSystem.OnUpdateDataAspect -= Objects_OnUpdateSimObject;
+            TheWorldSystem.OnAddSimObject -= Objects_OnAddSimObject;
+            TheWorldSystem.OnUpdateDataAspect -= Objects_OnUpdateSimObject;
             //client.Network.OnDisconnected -= new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
             client.Objects.KillObject -= Objects_OnObjectKilled;
             //client.Objects.OnObjectProperties -= new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
@@ -453,6 +453,23 @@ namespace CogbotRadegastPluginModule
         private Dictionary<GenericSearchFilter, PropertyInfo> Boxs = new Dictionary<GenericSearchFilter, PropertyInfo>();
         Dictionary<PropertyInfo, Object> uBoxs = new Dictionary<PropertyInfo, Object>();
         public List<SimObject> SelectedItems = new List<SimObject>();
+        private WorldObjects TheWorldSystem
+        {
+            get
+            {
+                if (ClientManager.SingleInstance != null)
+                {
+                    try
+                    {
+                        return ClientManager.SingleInstance.LastBotClient.WorldSystem;
+                    } catch(Exception e)
+                    {
+                        DLRConsole.DebugWriteLine(e);
+                    }
+                }
+                return null;
+            }
+        }
 
         void AddChecks(string name)
         {
