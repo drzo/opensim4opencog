@@ -72,11 +72,7 @@ public class Interpreter
     {
         try
         {
-            Type[] types = a.GetTypes();
-            foreach (Type t in types)
-            {
-                symbolTable.internType(t);
-            }
+            symbolTable.internAssembly(a);
         } catch (Exception e) {
             Console.WriteLine("WARNING: SKIPPING ASSEMBLY " + a + "  BECAUSE OF " + e.Message + " (Only WARNING)");
         }
