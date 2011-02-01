@@ -2,6 +2,8 @@
 //licensed under the BSD license - see license.txt
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 
 namespace DotLisp
@@ -273,5 +275,20 @@ internal class SymbolTable
 	// String->ArrayList<Type>
 	private static Hashtable shortNamesToTypes = new Hashtable(500);
 
+    public static List<Assembly> LoadedAssemblies = new List<Assembly>();
+
+    public void internAssembly(Assembly a)
+    {
+        lock (LoadedAssemblies)
+        {
+            if (LoadedAssemblies.Contains(a)) return;
+            LoadedAssemblies.Add(a);
+        }
+        Type[] types = a.GetTypes();
+        foreach (Type t in types)
+        {
+            internType(t);
+        }
+    }
 	}
 }
