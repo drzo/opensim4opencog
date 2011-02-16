@@ -478,7 +478,7 @@ namespace MushDLR223.ScriptEngines
         {
             getInterpreter();
             Intern("*SELF*", self);
-            return this; //throw new Exception("The method or operation is not implemented.");
+            return (ScriptInterpreter)this; //throw new Exception("The method or operation is not implemented.");
         }
 
         public override string Str(object x)

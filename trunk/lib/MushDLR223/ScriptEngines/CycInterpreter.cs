@@ -6,7 +6,7 @@ using MushDLR223.Utilities;
 
 namespace MushDLR223.ScriptEngines
 {
-    class CycInterpreter : DotLispInterpreter
+    class CycInterpreter : DotLispInterpreterBase
     {
         public override bool LoadsFileType(string filename)
         {
@@ -123,7 +123,7 @@ namespace MushDLR223.ScriptEngines
         /// 
         /// </summary>
         /// <returns></returns>
-        public override ScriptInterpreter newInterpreter(object self)
+        public override DotLispInterpreterBase MakeInterp(object self)
         {
             var v = new CycInterpreter(self);
             v.Intern("*SELF*", self);

@@ -5,7 +5,7 @@ using MushDLR223.Utilities;
 
 namespace MushDLR223.ScriptEngines
 {
-    public class ClojureInterpreter : DotLispInterpreter
+    public class ClojureInterpreter : DotLispInterpreterBase
     {
 
         public override void Dispose()
@@ -130,9 +130,9 @@ namespace MushDLR223.ScriptEngines
         /// 
         /// </summary>
         /// <returns></returns>
-        public override ScriptInterpreter newInterpreter(object self)
+        public override DotLispInterpreterBase MakeInterp(object self)
         {
-            var v = new DotLispInterpreter(self);
+            var v = new ClojureInterpreter(self);
             v.Intern("*SELF*", self);
             return v;
         } // method: newInterpreter

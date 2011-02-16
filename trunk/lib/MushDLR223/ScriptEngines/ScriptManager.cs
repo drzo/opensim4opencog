@@ -7,11 +7,17 @@ using System.Runtime.InteropServices;
 using java.lang;
 using MushDLR223.Utilities;
 using Exception=System.Exception;
-
+using Thread = System.Threading.Thread;
+using DotLisp;
 namespace MushDLR223.ScriptEngines
 {
     public class ScriptManager
     {
+        static private System.Diagnostics.TraceListener tl;
+        static ScriptManager()
+        {
+          //  tl = new 
+        }
         static public List<ScriptInterpreter> Interpreters = new List<ScriptInterpreter>();
         static public HashSet<Type> LoadedTypes = new HashSet<Type>();
         static public HashSet<Type> ScannedTypes = new HashSet<Type>();
@@ -22,6 +28,7 @@ namespace MushDLR223.ScriptEngines
         static public HashSet<Type> VerifiedTypes = new HashSet<Type>();
         static public HashSet<object> VerifiedMembers = new HashSet<object>();
         static public object Lock = new object();
+        static public object TypeLock = new object();
         public static Dictionary<Assembly, HashSet<Type>> AssemblyTypes = new Dictionary<Assembly, HashSet<Type>>();
         public static bool NewTypes = false;
         public static bool NewInterpTypes = false;
@@ -29,7 +36,7 @@ namespace MushDLR223.ScriptEngines
 
         static public bool AddType(Type type)
         {
-            lock (Lock)
+            lock (TypeLock)
             {
                 if (!ScanInfo(type)) return true;
                 bool changed = false;
@@ -64,7 +71,7 @@ namespace MushDLR223.ScriptEngines
         private static bool ScanType(Type type)
         {
             if (ReferenceEquals(type, null)) return false;
-            lock (Lock)
+            lock (TypeLock)
             {
                 bool changed = false;
                 if (typeof (ScriptInterpreter).IsAssignableFrom(type))
@@ -350,16 +357,10 @@ namespace MushDLR223.ScriptEngines
             {
                 lock (Lock)
                 {
-                    int ScannedAssembliesCount = ScannedAssemblies.Count;
-                    ScriptInterpreter si = LoadScriptInterpreter0(type, self);
-                    if (ScanAppDomain())
-                    {
-                        WriteLine("Found new Assemblies: {0}", ScannedAssemblies.Count - ScannedAssembliesCount);
-                        foreach (var s in CopyOf(ScannedTypes))
-                        {
-                            AddType(s);
-                        }
-                    }
+                    ScriptInterpreter si = UsedCSharpScriptDefinedType(self, type);
+                    if (si != null) return si; 
+                    si = LoadScriptInterpreter0(type, self);
+                    StartScanningAppDomain();
                     return si;
                 }
             }
@@ -369,6 +370,38 @@ namespace MushDLR223.ScriptEngines
                 throw e;
             }
         }
+
+        static object ScanAppDomainLock = new object();
+        private static bool ScanAppDomainInProgress = false;
+        private static Thread ScanAppDomainThread;
+        public static void StartScanningAppDomain()
+        {
+            lock (ScanAppDomainLock)
+            {
+                if (ScanAppDomainInProgress) return;
+                ScanAppDomainInProgress = true;
+                ScanAppDomainThread = new Thread(DoScanningAppDomain);
+                ScanAppDomainThread.Start();
+            }
+
+        }
+        private static void DoScanningAppDomain()
+        {
+            int ScannedAssembliesCount = ScannedAssemblies.Count;
+            if (ScanAppDomain())
+            {
+                WriteLine("Found new Assemblies: {0}", ScannedAssemblies.Count - ScannedAssembliesCount);
+                foreach (var s in CopyOf(ScannedTypes))
+                {
+                    AddType(s);
+                }
+            }
+            lock (ScanAppDomainLock)
+            {
+                ScanAppDomainInProgress = false;
+            }
+        }
+
         public static bool SafelyDo(string msg, Action self)
         {
             try
@@ -395,6 +428,8 @@ namespace MushDLR223.ScriptEngines
             {
                 if (Interpreters.Count == 0)
                 {
+                    var ret = UsedCSharpScriptDefinedType(self, type);
+                    if (ret != null) return ret;
                     ScanPredfinedAssemblies();
                     InstanceNewInterpTypes(self);
                 }
@@ -414,25 +449,31 @@ namespace MushDLR223.ScriptEngines
                         return set;
                     }
                 }
-                if (type != null)
-                {
-                    type = type.ToLower();
-                    if (type.StartsWith("dotlisp"))
-                    {
-                        return new DotLispInterpreter(self);
-                    }
-                    if (type.StartsWith("cyc"))
-                    {
-                        return new CycInterpreter(self);
-                    }
-                    if (type.StartsWith("abcl"))
-                    {
-                        return new ABCLInterpreter(self);
-                    }
-                }
+                return UsedCSharpScriptDefinedType(self, type);
                 //default
                 return new DotLispInterpreter(self);
             } // method: LoadScriptInterpreter
+        }
+
+        private static ScriptInterpreter UsedCSharpScriptDefinedType(object self, string type)
+        {
+            if (type != null)
+            {
+                type = type.ToLower();
+                if (type.StartsWith("dotlisp"))
+                {
+                    return new DotLispInterpreter(self);
+                }
+                if (type.StartsWith("cyc"))
+                {
+                    return (ScriptInterpreter)new CycInterpreter(self);
+                }
+                if (type.StartsWith("abcl"))
+                {
+                    return (ScriptInterpreter)new ABCLInterpreter(self);
+                }
+            }
+            return null;
         }
 
 #if COGOBOT
@@ -522,7 +563,7 @@ namespace MushDLR223.ScriptEngines
 
         private static bool ScanInfo(Assembly a)
         {
-            lock (Lock)
+            lock (TypeLock)
             {
                 if (ScannedAssemblies.Add(a))
                 {
@@ -545,10 +586,12 @@ namespace MushDLR223.ScriptEngines
 
         private static bool IsInterpType(Type type)
         {
-            if (type == null) return false;
-            if (LoadedInterpTypes.Contains(type)) return true;
-            if (type.IsAbstract) return false;
+            if (type == null || type.IsAbstract) return false;
             if (typeof(ScriptInterpreter).IsAssignableFrom(type)) return true;
+            if (LoadedInterpTypes.Contains(type))
+            {
+                return true;
+            }
             return false;
         }
 
@@ -719,6 +762,11 @@ namespace MushDLR223.ScriptEngines
             if (si.Eof(so)) return new CmdResult("EOF " + so, true);
             object o = si.Eval(so);
             return o;
+        }
+        
+        public static Type[] GetTypeArray(object[] argarray)
+        {
+             return CLSMember.GetTypeArray(argarray);
         }
     }
 

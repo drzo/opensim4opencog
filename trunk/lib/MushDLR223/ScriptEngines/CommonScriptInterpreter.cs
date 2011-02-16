@@ -7,7 +7,7 @@ using MushDLR223.Utilities;
 
 namespace MushDLR223.ScriptEngines
 {
-    abstract public class CommonScriptInterpreter : ScriptInterpreter
+    abstract public class CommonScriptInterpreter
     {
 
         public void WriteText(string format, params object[] args)
@@ -61,7 +61,7 @@ namespace MushDLR223.ScriptEngines
                 Init();
                 Self = self ?? this;
                 // ReSharper restore DoNotCallOverridableMethodsInConstructor
-                ScriptManager.AddInterpreter(this);
+                ScriptManager.AddInterpreter(this as ScriptInterpreter);
             }
             catch (Exception e)
             {
