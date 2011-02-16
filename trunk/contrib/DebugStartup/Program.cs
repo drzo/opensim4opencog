@@ -9,6 +9,7 @@ using cogbot;
 using CommandLine;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
+using OpenMetaverse;
 using Radegast;
 using SbsSW.SwiPlCs;
 using CommandLine.Text;
@@ -327,12 +328,12 @@ namespace ABuildStartup
 
             // Create main Radegast instance
 
-            RadegastInstance instance = RadegastInstance.GlobalInstance;
             // See if we only wanted to display list of grids
             if (CommandLine.ListGrids)
             {
                 DLRConsole.SystemWriteLine(CommandLine.GetHeader());
                 DLRConsole.SystemWriteLine();
+                RadegastInstance instance = new RadegastInstance(new GridClient());
                 Radegast.GridManager grids = instance.GridManger;
                 DLRConsole.SystemWriteLine("Use Grid ID as the parameter for --grid");
                 DLRConsole.SystemWriteLine("{0,-25} - {1}", "Grid ID", "Grid Name");
@@ -346,8 +347,19 @@ namespace ABuildStartup
                 Environment.Exit(0);
             }
 
-            var mf = instance.MainForm;
             if (false) cogbot.ClientManager.SingleInstance.ProcessCommandArgs();
+            //ClientManager.InSTAThread(StartExtraRadegast, "StartExtraRadegast");
+            StartExtraRadegast();
+        }
+
+        private static void StartExtraRadegast()
+        {
+            // Create main Radegast instance
+
+            RadegastInstance instance = new RadegastInstance(new GridClient());
+            // See if we only wanted to display list of grids
+
+            var mf = instance.MainForm;
             Application.Run(mf);
             instance = null;
         }

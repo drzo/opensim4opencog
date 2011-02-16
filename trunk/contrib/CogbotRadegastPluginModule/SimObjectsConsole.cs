@@ -64,10 +64,10 @@ namespace CogbotRadegastPluginModule
 
         public SimObjectsConsole(RadegastInstance instance, CogbotRadegastPlugin plugin)
         {
+            this.instance = instance;
             InitializeComponent();
             Plugin = plugin;
             Disposed += new EventHandler(frmObjects_Disposed);
-            this.instance = instance;
 
             //propRequester = new PropertiesQueue(instance);
             //propRequester.OnTick += new PropertiesQueue.TickCallback(propRequester_OnTick);
@@ -86,6 +86,10 @@ namespace CogbotRadegastPluginModule
             // Callbacks
             client.Network.Disconnected += Network_OnDisconnected;
             instance.Netcom.ClientConnected += Network_OnConnected;
+            if (instance.Netcom.IsLoggedIn)
+            {
+                RegisterWorldSystemEvents();
+            }
             client.Objects.KillObject +=  Objects_OnObjectKilled;
             //client.Objects.OnObjectProperties += new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
             client.Network.SimChanged +=  Network_OnCurrentSimChanged;
@@ -114,24 +118,54 @@ namespace CogbotRadegastPluginModule
 
         private void Network_OnConnected(object sender, EventArgs e1)
         {
+            RegisterWorldSystemEvents();
+        }
+
+        private bool DidRegisterWorldSystemEvents = false;
+        static object RegisterWorldSystemEventsLock = new object();
+        private void RegisterWorldSystemEvents()
+        {
+            var TheWorldSystem = this.TheWorldSystem;
+            lock (RegisterWorldSystemEventsLock)
+            {
+                if (DidRegisterWorldSystemEvents) return;
+                if (TheWorldSystem == null)
+                {
+                    ClientManager.GlobalWriteLine("Cannot really RegisterWorldSystemEvents yet for " + instance.Client +
+                                                  " not BotClient ready");
+                    return;
+                }
+                ClientManager.GlobalWriteLine("DID Really RegisterWorldSystemEvents yet for " + instance.Client +
+                              " BECAUSE BotClient ready");
+                DidRegisterWorldSystemEvents = true;
+            }
             TheWorldSystem.OnAddSimObject += Objects_OnAddSimObject;
             TheWorldSystem.OnUpdateDataAspect += Objects_OnUpdateSimObject;
-            Plugin.TheBot.WorldSystem.AddObjectGroup("SelectedObjects", () => SelectedItems);
-
+            TheWorldSystem.AddObjectGroup("SelectedObjects", () => SelectedItems);
         }
 
         private void Network_OnDisconnected(object sender, DisconnectedEventArgs e)
         {
-            TheWorldSystem.OnAddSimObject -= Objects_OnAddSimObject;
-            TheWorldSystem.OnUpdateDataAspect -= Objects_OnUpdateSimObject;
+            var TheWorldSystem = this._TheWorldSystem;
+            if (TheWorldSystem == null) return;
+            lock (RegisterWorldSystemEventsLock)
+            {
+                TheWorldSystem.OnAddSimObject -= Objects_OnAddSimObject;
+                TheWorldSystem.OnUpdateDataAspect -= Objects_OnUpdateSimObject;
+                DidRegisterWorldSystemEvents = false;
+            }
         }
 
         void frmObjects_Disposed(object sender, EventArgs e)
         {
+            var TheWorldSystem = this._TheWorldSystem;
+            if (TheWorldSystem != null)
+            {
+                TheWorldSystem.OnAddSimObject -= Objects_OnAddSimObject;
+                TheWorldSystem.OnUpdateDataAspect -= Objects_OnUpdateSimObject;
+            }
             IsDisposing = true;
             addObjects.Dispose();
-            TheWorldSystem.OnAddSimObject -= Objects_OnAddSimObject;
-            TheWorldSystem.OnUpdateDataAspect -= Objects_OnUpdateSimObject;
             //client.Network.OnDisconnected -= new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
             client.Objects.KillObject -= Objects_OnObjectKilled;
             //client.Objects.OnObjectProperties -= new ObjectManager.ObjectPropertiesCallback(Objects_OnObjectProperties);
@@ -211,6 +245,7 @@ namespace CogbotRadegastPluginModule
 
         void Network_OnCurrentSimChanged(object sender, SimChangedEventArgs e)
         {
+            RegisterWorldSystemEvents();
             RefreshObjectList();
         }
 
@@ -237,6 +272,7 @@ namespace CogbotRadegastPluginModule
                 }
             }
             lstPrims.EndUpdate();
+            RegisterWorldSystemEvents();
         }
 
         private void Objects_OnUpdateSimObject(BotMentalAspect bma, string property, object value, object o)
@@ -453,21 +489,26 @@ namespace CogbotRadegastPluginModule
         private Dictionary<GenericSearchFilter, PropertyInfo> Boxs = new Dictionary<GenericSearchFilter, PropertyInfo>();
         Dictionary<PropertyInfo, Object> uBoxs = new Dictionary<PropertyInfo, Object>();
         public List<SimObject> SelectedItems = new List<SimObject>();
+        private WorldObjects _TheWorldSystem = null;
         private WorldObjects TheWorldSystem
         {
             get
             {
-                if (ClientManager.SingleInstance != null)
+                if (_TheWorldSystem != null) return _TheWorldSystem;
+                try
                 {
-                    try
-                    {
-                        return ClientManager.SingleInstance.LastBotClient.WorldSystem;
-                    } catch(Exception e)
-                    {
-                        DLRConsole.DebugWriteLine(e);
-                    }
+
+                    BotClient bc = Plugin.TheBot;
+                    if (bc == null) bc = ClientManager.GetBotByGridClient(client);
+                    if (bc == null) bc = ClientManager.SingleInstance.LastBotClient;
+                    if (bc == null) return null;
+                    _TheWorldSystem = bc.WorldSystem;
                 }
-                return null;
+                catch (Exception e)
+                {
+                    DLRConsole.DebugWriteLine(e);
+                }
+                return _TheWorldSystem;
             }
         }
 

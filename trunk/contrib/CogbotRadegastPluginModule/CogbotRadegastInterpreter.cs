@@ -6,29 +6,38 @@ namespace CogbotRadegastPluginModule
 {
     public class CogbotRadegastInterpreter: Radegast.Commands.ICommandInterpreter
     {
-        private ClientManager clientManager;
-        private BotClient botClient;
+        private ClientManager clientManager
+        {
+           get
+           {
+               return BotClient.ClientManager;
+           }
+        }
+       // private BotClient botClient;
         public BotClient BotClient
         {
             get
             {
-                return botClient;
+                return cogbotRadegastPlugin.TheBot;
             }
-            set
+          /*  set
             {
                 if (botClient == value)
                     return;
                 botClient = value;
-            }
+            }*/
         }
 
 
-        public CogbotRadegastInterpreter(ClientManager manager)
+        public CogbotRadegastInterpreter(CogbotRadegastPlugin manager)
         {
-            clientManager = manager;
-            botClient = manager.LastBotClient;
+            cogbotRadegastPlugin = manager;//
+            //clientManager = manager;
+            //botClient = manager.LastBotClient;
         }
         public RadegastInstance RadegastInstance;
+        private CogbotRadegastPlugin cogbotRadegastPlugin;
+
         public bool IsValidCommand(string cmdline)
         {
             if (cmdline.StartsWith("/")) return true;
@@ -43,6 +52,7 @@ namespace CogbotRadegastPluginModule
             }
             OutputDelegate newOutputDelegate = new OutputDelegate(WriteLine);
             CmdResult result;
+            var botClient = BotClient;
             if (botClient == null)
             {
                 result = clientManager.ExecuteCommand(cmdline,newOutputDelegate);

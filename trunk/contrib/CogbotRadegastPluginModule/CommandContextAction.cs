@@ -53,15 +53,20 @@ namespace CogbotRadegastPluginModule
                         if (AddCommand(c)) groupCommands++;
                     }
             }
-            if (ClientManager.SingleInstance.LastBotClient != null && ClientManager.SingleInstance.LastBotClient.Commands != null)
+            if (TheBotClient != null && TheBotClient.Commands != null)
             {
-                lock (ClientManager.SingleInstance.LastBotClient.Commands)
-                    foreach (var c in ClientManager.SingleInstance.LastBotClient.Commands.Values)
+                lock (TheBotClient.Commands)
+                    foreach (var c in TheBotClient.Commands.Values)
                     {
                         if (AddCommand(c)) botCommands++;
                     }
             }
             DebugLog(string.Format("Loaded groupCommands={0} botCommands={1}", groupCommands, botCommands));
+        }
+
+        protected BotClient TheBotClient
+        {
+            get { return Plugin.TheBot; }
         }
 
         private bool AddCommand(Command c)

@@ -128,6 +128,7 @@ namespace CogbotRadegastPluginModule
             //chatManager.PrintStartupMessage();
 
             this.instance.MainForm.Load += new EventHandler(MainForm_Load);
+            this.VisibleChanged += Form_VisibleChanged;
 
             simObjectSorterClass = new SimObjectSorterClass();
             lvwObjects.ListViewItemSorter = simObjectSorterClass;
@@ -149,6 +150,16 @@ namespace CogbotRadegastPluginModule
             //ClientManager.SingleInstance.Clients[]
             //BotClien.OnlyOneCurrentBotClient
             this.cbxInput.Enabled = true;
+        }
+
+        private void Form_VisibleChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        public void StartWriter()
+        {
+            if (!writeLock.IsRunning) writeLock.Start();
         }
 
         void ChatConsole_Disposed(object sender, EventArgs e)
@@ -256,9 +267,15 @@ namespace CogbotRadegastPluginModule
 
         private void MainForm_Load(object sender, EventArgs e)
         {
+            StartWriter();
             //tabConsole = instance.TabConsole;
         }
 
+        private void StartWriter(object sender, EventArgs e)
+        {
+            //StartWriter();
+            //tabConsole = instance.TabConsole;
+        }
         //private void Config_ConfigApplied(object sender, ConfigAppliedEventArgs e)
         //{
         //    ApplyConfig(e.AppliedConfig);
@@ -423,7 +440,7 @@ namespace CogbotRadegastPluginModule
         private void btnSay_Click(object sender, EventArgs e)
         {
             string s = cbxInput.Text;
-            BotClient bc = ClientManager.SingleInstance.LastBotClient;
+            BotClient bc = ClientManager.SingleInstance.BotClientFor(this.instance);
             if (bc != null)
             {
                 WriteLine("cogbot> " + s);
@@ -720,7 +737,7 @@ namespace CogbotRadegastPluginModule
         }
 
 
-        private readonly TaskQueueHandler writeLock = new TaskQueueHandler("FormWriter", TimeSpan.Zero);
+        private readonly TaskQueueHandler writeLock = new TaskQueueHandler("FormWriter", TimeSpan.Zero, false);        
         public void WriteLine(string str, params object[] args)
         {
 
@@ -769,6 +786,10 @@ namespace CogbotRadegastPluginModule
             if (args.Length > 0) str = String.Format(str, args);
             str = str.Trim();
             if (str == "") return;
+            if (!writeLock.IsRunning)
+            {
+                DLRConsole.SYSTEM_ERR_WRITELINE_REAL("early " + str);
+            }
             writeLock.Enqueue(() => rtbChat.Invoke(new MethodInvoker(() =>
                                                                          {
                                                                              try

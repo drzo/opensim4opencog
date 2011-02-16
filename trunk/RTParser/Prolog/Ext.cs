@@ -678,7 +678,7 @@ namespace RTParser.Prolog
             flags |= BindingFlags.Instance;
             object[] argarray = terms_to_objects(termArray/*ctx*/);
             if (argarray == null) argarray = this.EMPTY_VECTOR;
-            Type[] argtypes = Type.GetTypeArray(argarray);
+            Type[] argtypes =  Type.GetTypeArray(argarray);
 
             Exception lastException = null;
             ///*
