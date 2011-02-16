@@ -211,6 +211,18 @@ namespace MushDLR223.Utilities
             return s;
         }
 
+        public static bool TestLock(string named, object busyTrackingLock, TimeSpan timeSpan)
+        {
+            // return;
+            if (Monitor.TryEnter(busyTrackingLock, timeSpan))
+            {
+                Monitor.Exit(busyTrackingLock);
+                return true;
+            }
+            DLRConsole.DebugWriteLine("ERROR: Cant get into " + named + " " + busyTrackingLock);
+            return false;
+        }
+
         public string GetExtraInfo()
         {
             StringBuilder sb = new StringBuilder();

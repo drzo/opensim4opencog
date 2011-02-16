@@ -254,8 +254,9 @@ namespace MushDLR223.Utilities
 
         public void Start()
         {
-            TestLock(BusyTrackingLock);
-            lock (BusyTrackingLock)
+            
+            //TestLock(BusyTrackingLock);
+            //lock (BusyTrackingLock)
             {
                 Start0();
             }
@@ -269,6 +270,7 @@ namespace MushDLR223.Utilities
                 Monitor.Exit(busyTrackingLock);
                 return;
             }
+            DLRConsole.SYSTEM_ERR_WRITELINE_REAL("ERROR: RORROOR busyTrackingLock");
             VeryBad("Cant get into " + busyTrackingLock);
         }
 
@@ -280,6 +282,28 @@ namespace MushDLR223.Utilities
                 return;
             }
             DLRConsole.DebugWriteLine("Cant get into " + busyTrackingLock);
+        }
+
+        public static void WithLock(object busyTrackingLock, Action doit)
+        {
+            if (Monitor.TryEnter(busyTrackingLock, TimeSpan.FromSeconds(10)))
+            {
+                try
+                {
+                    doit();
+                }
+                catch (Exception e)
+                {
+                    throw e;
+                }
+                finally
+                {
+                    Monitor.Exit(busyTrackingLock);
+                }
+                return;
+            }
+            DLRConsole.DebugWriteLine("Cant get into " + busyTrackingLock);
+            doit();
         }
 
         private void Start0()
@@ -582,18 +606,18 @@ namespace MushDLR223.Utilities
                                      }
                                      errOutput(CreateMessage("WaitOne: TIMEOUT ERROR {0} was {1} ", INFO, GetTimeString(ThisMaxOperationTimespan)));
                                      problems = true;
-                                     TestLock(BusyTrackingLock);
-                                     lock (BusyTrackingLock)
+                                     //TestLock(BusyTrackingLock);
+                                     //lock (BusyTrackingLock)
                                      {
                                          if (BusyEnd < BusyStart)
                                          {
                                              LastRestTime = BusyStart.Subtract(BusyEnd);
                                          }
-                                         var len = DateTime.Now.Subtract(BusyStart);
-                                         errOutput(CreateMessage("Moving on with TIMEOUT {0} was {1} ", INFO, GetTimeString(ThisMaxOperationTimespan)));
-                                         if (ExpectedTodo > 0) return true;////r = true;
-                                         return false;
+                                         //var len = DateTime.Now.Subtract(BusyStart);
                                      }
+                                     errOutput(CreateMessage("Moving on with TIMEOUT {0} was {1} ", INFO, GetTimeString(ThisMaxOperationTimespan)));
+                                     if (ExpectedTodo > 0) return true;////r = true;
+                                     return false;
                                      if (SimplyLoopNoWait) return false;
                                      return r;
                                  }                                
@@ -676,7 +700,7 @@ namespace MushDLR223.Utilities
                 startedBeforeWait = TotalStarted;
                 completeBeforeWait = TotalComplete;
                 TestLock(BusyTrackingLock);
-                lock (BusyTrackingLock)
+                //lock (BusyTrackingLock)
                 {
                     expectedTodoBeforeWait = ExpectedTodo;
                     todoBeforeWait = (ulong) EventQueue.Count;
@@ -693,7 +717,7 @@ namespace MushDLR223.Utilities
                 if (wasBusy && CheckCurrentTaskOverTimeBudget())
                     WriteLine("OVER BUDGET");
 
-                LiveCheck();
+                if (problems) LiveCheck();
 
                 //              if (_noQueue) continue;
                 bool wasWatingForPong = false;
@@ -701,14 +725,15 @@ namespace MushDLR223.Utilities
                     wasWatingForPong = WaitingOnPing;
 
                 if (!wasWatingForPong)
+                {
                     lock (PingWaitingLock)
                     {
                         PingStart = DateTime.Now;
                         WaitingOnPing = true;
-
-                        Enqueue0(EventQueue_Pong);
-                        continue;
                     }
+                    Enqueue0(EventQueue_Pong);
+                    continue;
+                }
                 CheckTimedProgress();
                 continue;
                 CheckPingerTime();
@@ -776,20 +801,16 @@ namespace MushDLR223.Utilities
 
         private void CheckTimedProgress()
         {
+            ulong todoBeforeWait = 0;
+            ulong ExpectedTodo = 0;
             ulong todoAfterWait;
             lock (PingWaitingLock)
             {
-                {
-                    {
-                        if (completeBeforeWait == TotalComplete)
-                        {
-                            if (startedBeforeWait == TotalStarted)
-                            {
-                                lock (BusyTrackingLock)
-                                {
-                                    todoAfterWait = (ulong) EventQueue.Count;
-                                }
-                                if (ExpectedTodo > todoBeforeWait)
+                if (completeBeforeWait != TotalComplete || startedBeforeWait != TotalStarted) return;
+                todoBeforeWait = this.todoBeforeWait;
+                ExpectedTodo = this.ExpectedTodo;
+            }
+            if (ExpectedTodo > todoBeforeWait)
                                 {
                                     var fromNow = BusyEnd;
                                     if (BusyStart > BusyEnd) fromNow = BusyStart;
@@ -802,20 +823,22 @@ namespace MushDLR223.Utilities
                                         if (ExpectedTodo > 1) DebugQueue = true;
                                         AbortCurrentOperation();
                                     }
-                                    lock (BusyTrackingLock)
+                                    string print = null;
+                                    //lock (BusyTrackingLock)
                                     {
-                                        if (todoBeforeWait + 1 < (ulong) EventQueue.Count)
+                                        if (todoBeforeWait + 1 < (ulong) EventQueue.Count && t > MAX_PING_WAIT)
                                         {
                                             problems = true;
-                                            WriteLine("WARN: GROWING YET NOTHING DONE IN time = {0} " + INFO,
-                                                      GetTimeString(t));
+                                            print = CreateMessage(
+                                                "WARN: GROWING YET NOTHING DONE IN time = {0} " + INFO,
+                                                GetTimeString(t));
                                         }
                                     }
-                                }
-                            }
-                        }
-                    }
-                }
+                                    if (print != null)
+                                    {
+                                        WriteLine(print);
+                                    }
+     
             }
         }
 
@@ -845,11 +868,18 @@ namespace MushDLR223.Utilities
 
         private void EventQueue_Pong()
         {
+            if (!WaitingOnPing) return;
             lock (PingWaitingLock)
             {
                 // todo can this ever happen?
                 if (!WaitingOnPing) return;
+                WaitingOnPing = false;
+                EventQueue_Pong0();
             }
+        }
+
+        private void EventQueue_Pong0()
+        {
             LastPingLagTime = DateTime.Now - PingStart;
             if (LastPingLagTime <= MAX_PING_WAIT)
             {
@@ -1494,7 +1524,7 @@ namespace MushDLR223.Utilities
         public void Enqueue0(TASK evt)
         {
             if (IsDisposing) return;
-            TestLock(BusyTrackingLock);
+            //TestLock(BusyTrackingLock);
             lock (BusyTrackingLock)
             {
                 ExpectedTodo++;
