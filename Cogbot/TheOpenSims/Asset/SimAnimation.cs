@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using OpenMetaverse;
+using MushDLR223.Utilities;
 
 namespace cogbot.TheOpenSims
 {
@@ -363,7 +364,13 @@ namespace cogbot.TheOpenSims
             if (bs != null && bs.Length > 0)
             {
                 WriteLine("saving anim file " + tmpname);
-                File.WriteAllBytes(tmpname + ".anim", AssetData);
+                TaskQueueHandler.WithLock(SimAssetStore.SavingFileLock, () => {
+                    if (Directory.Exists("anim_cache"))
+                    {
+                        File.WriteAllBytes("anim_cache/" + tmpname + ".anim", AssetData);
+                    }
+                });
+                
             }
             //WorldObjects.Master.GetModuleName()
         }

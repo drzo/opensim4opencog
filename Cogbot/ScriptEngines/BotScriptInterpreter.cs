@@ -9,7 +9,7 @@ using MushDLR223.Utilities;
 
 namespace cogbot.ScriptEngines
 {
-    public class BotScriptInterpreter : CommonScriptInterpreter
+    public class BotScriptInterpreter : CommonScriptInterpreter, ScriptInterpreter
     {
         public  BotClient BotClient;
 
@@ -51,8 +51,8 @@ namespace cogbot.ScriptEngines
         public BotScriptInterpreter(object bc)
             : base(bc)
         {
-            if (bc is ClientManager) bc = ((ClientManager)bc).LastBotClient ?? bc;
-            BotClient = bc as BotClient;
+           // if (bc is ClientManager) bc = ((ClientManager)bc).LastBotClient ?? bc;
+            BotClient = (BotClient) bc;
         }
 
         public override object Self

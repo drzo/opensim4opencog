@@ -393,9 +393,9 @@ namespace cogbot
             LoginRetries = LoginRetriesFresh;
             ClientManager = manager;
             gridClient = g;
-            BotLoginParams = lp;
             lp.Client = this;
-            manager.LastBotClient = this;
+            BotLoginParams = lp;
+            //manager.LastRefBotClient = this;
             updateTimer = new System.Timers.Timer(500);
             updateTimer.Elapsed += new System.Timers.ElapsedEventHandler(updateTimer_Elapsed);
 
@@ -530,8 +530,11 @@ namespace cogbot
             {
                 thisTcpPort = ClientManager.nextTcpPort;
                 ClientManager.nextTcpPort += ClientManager.config.tcpPortOffset;
-                Utilities.BotTcpServer UtilitiesTcpServer = new Utilities.BotTcpServer(thisTcpPort, this);
-                UtilitiesTcpServer.startSocketListener();
+                ClientManager.PostExec.Enqueue(() =>
+                {
+                    Utilities.BotTcpServer UtilitiesTcpServer = new Utilities.BotTcpServer(thisTcpPort, this);
+                    UtilitiesTcpServer.startSocketListener();
+                });
             }
 
             Network.RegisterCallback(PacketType.AgentDataUpdate, AgentDataUpdateHandler);
@@ -558,7 +561,7 @@ namespace cogbot
             var callback = new EventHandler<CurrentGroupsEventArgs>(Groups_OnCurrentGroups);
             Groups.CurrentGroups += callback;
 
-            updateTimer.Start();
+            ClientManager.PostExec.Enqueue(() => { updateTimer.Start(); });
             searcher = new BotInventoryEval(this);
 
             lispEventProducer = new LispEventProducer(this, LispTaskInterperter);
@@ -575,8 +578,11 @@ namespace cogbot
                     LispTaskInterperter = ScriptManager.LoadScriptInterpreter(taskInterperterType, this);
                     LispTaskInterperter.LoadFile("cogbot.lisp", WriteLine);
                     LispTaskInterperter.Intern("clientManager", ClientManager);
-                    scriptEventListener = new ScriptEventListener(LispTaskInterperter, this);
-                    botPipeline.AddSubscriber(scriptEventListener);
+                    if (scriptEventListener == null)
+                    {
+                        scriptEventListener = new ScriptEventListener(LispTaskInterperter, this);
+                        botPipeline.AddSubscriber(scriptEventListener);
+                    }
 
                     //  WriteLine("Completed Loading TaskInterperter '" + TaskInterperterType + "'\n");
                     // load the initialization string
@@ -1886,6 +1892,7 @@ namespace cogbot
             {
                 BotLoginParams.URI = G.LoginURI;
             }
+            TheRadegastInstance.Netcom.Grid = G;
             to.Grid = G;
             to.StartLocation = StartLocationType.Custom;
             to.StartLocationCustom = BotLoginParams.Start;            
@@ -1959,6 +1966,7 @@ namespace cogbot
                     LoginURI = G.LoginURI;
                     if (LoginURI != null) console.txtCustomLoginUri.Text = LoginURI;
                     console.cbxGrid.Text = G.Name ?? G.ID;
+                    TheRadegastInstance.Netcom.Grid = G;
                 }
                 else { console.cbxGrid.Text = "Custom"; }
                 if (LoginURI == null) console.txtCustomLoginUri.Text = options.GridCustomLoginUri;
