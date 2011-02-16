@@ -161,7 +161,7 @@ namespace DotLisp
                 }
             }
             ///*
-            Type[] argtypes = Type.GetTypeArray(argarray);
+            Type[] argtypes = GetTypeArray(argarray);
             //todo cache result?
             //n.b. we are not specifying static/instance here - hmmm...
             mi = type.GetMethod(name, argtypes);
