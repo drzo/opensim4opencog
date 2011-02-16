@@ -6,7 +6,7 @@ using System.Reflection;
 namespace DotLisp
 {
 
-    internal abstract class CLSMember : IFunction
+    public abstract class CLSMember : IFunction
     {
         public abstract Object Invoke(params Object[] args);
         internal virtual Object getValue()
@@ -123,10 +123,31 @@ namespace DotLisp
         {
             int paramInfosLength = paramInfos.Length;
             int argarrayLength = argarray.Length;
+            bool misMatch = false;
             if (paramInfosLength == argarrayLength)
             {
-                parameters = argarray;
-                return true;
+                bool changed = false;
+                if (true)
+                {
+                    parameters = new object[paramInfosLength];
+                    for (int index = 0; index < paramInfosLength; index++)
+                    {
+                        var paramInfo = paramInfos[index];
+                        var param = argarray[index];
+                        bool changed0;
+                        if (!CoerceOne(param, argtypes[index], paramInfo, out param, out changed0))
+                        {
+                            misMatch = true;
+                        }
+                        if (changed0) changed = true;
+                        parameters[index] = param;
+                    }
+                }
+                if (misMatch || changed)
+                {
+                    parameters = argarray;
+                }
+                return !misMatch;
             }
             if (paramInfosLength > argarrayLength)
             {
@@ -168,6 +189,47 @@ namespace DotLisp
                 currentParam++;
             }
             return true;
+        }
+
+        private static bool CoerceOne(object param, Type type, ParameterInfo paramInfo, out object paramOut, out bool changed)
+        {
+            changed = false;
+            paramOut = param;                    
+            var parameterType = paramInfo.ParameterType;
+            // perfect
+            if (parameterType.IsInstanceOfType(param)) return true;
+            // can be true param is null
+            if (type != null && parameterType.IsAssignableFrom(type)) return true;
+            if (param == null)
+            {
+                return true;
+            }     
+      
+            return false;
+        }
+
+        public static Type[] GetTypeArray(object[] argarray)
+        {
+            try
+            {
+                return Type.GetTypeArray(argarray);
+            }
+            catch (NullReferenceException)
+            {
+                int argarrayLength = argarray.Length;
+                Type[] types = new Type[argarrayLength];
+                for (int index = 0; index < argarrayLength; index++)
+                {
+                    types[index] = GetType(argarray[index]);
+                }
+                return types;
+            }
+        }
+
+        private static Type GetType(object o)
+        {
+            if (o == null) return null;
+            return o.GetType();
         }
     }
 }

@@ -133,7 +133,7 @@ namespace DotLisp
             {
                 try
                 {
-                    Type[] argtypes = Type.GetTypeArray(argarray);
+                    Type[] argtypes =  GetTypeArray(argarray);
                     ParameterInfo[] paramInfos = m.GetParameters();
                     if (Coerce(argarray, argtypes, paramInfos, out parameters))
                         return m.Invoke(target, parameters);
@@ -155,7 +155,7 @@ namespace DotLisp
 
                         if (del != null)
                         {
-                            Type[] argtypes = Type.GetTypeArray(argarray);
+                            Type[] argtypes = GetTypeArray(argarray);
                             ParameterInfo[] paramInfos = del.Method.GetParameters();
                             if (Coerce(argarray, argtypes, paramInfos, out parameters))
                                 return del.DynamicInvoke(parameters);
