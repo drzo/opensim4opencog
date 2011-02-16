@@ -11,7 +11,7 @@ using SbsSW.SwiPlCs;
 
 namespace PrologScriptEngine
 {
-    public class PrologScriptInterpreter : CommonScriptInterpreter
+    public class PrologScriptInterpreter : CommonScriptInterpreter, ScriptInterpreter
     {
         public void Main(string[] args)
         {

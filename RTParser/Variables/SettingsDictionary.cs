@@ -261,7 +261,7 @@ namespace RTParser.Variables
                 XmlAttribute newAttr = result.CreateAttribute("name");
                 lock (orderedKeys)
                 {
-
+                    string dupeCheck = "";
                     newAttr.Value = NameSpace;
                     if (fromFile != null)
                     {
@@ -269,28 +269,53 @@ namespace RTParser.Variables
                         newAttr.Value = fromFile;
                     }
                     result.AppendChild(root);
-
+                    dupeCheck = "";
                     foreach (var normalizedName in Overides)
                     {
+                        string nameValue = normalizedName.NameSpace;
+                        if (dupeCheck == nameValue)
+                        {
+                            WriteErrorLine("Overides DUPES " + dupeCheck);
+                            break;
+                        }
+                        dupeCheck = nameValue;
                         XmlNode item = result.CreateNode(XmlNodeType.Element, "override", "");
                         XmlAttribute name = result.CreateAttribute("name");
-                        name.Value = normalizedName.NameSpace;
+                        name.Value = nameValue;
                         item.Attributes.Append(name);
                         root.AppendChild(item);
                     }
+                    dupeCheck = "";
                     foreach (var normalizedName in Fallbacks)
                     {
+                        string nameValue = normalizedName.NameSpace;
+                        if (dupeCheck == nameValue)
+                        {
+                            WriteErrorLine("Fallbacks DUPES " + dupeCheck);
+                            break;
+                        }
+                        dupeCheck = nameValue;
+
                         XmlNode item = result.CreateNode(XmlNodeType.Element, "fallback", "");
                         XmlAttribute name = result.CreateAttribute("name");
-                        name.Value = normalizedName.NameSpace;
+                        name.Value = nameValue;
                         item.Attributes.Append(name);
                         root.AppendChild(item);
                     }
+                    dupeCheck = "";
                     foreach (var normalizedName in Listeners)
                     {
+                        string nameValue = normalizedName.NameSpace;
+                        if (dupeCheck == nameValue)
+                        {
+                            WriteErrorLine("Listeners DUPES " + dupeCheck); 
+                            break;
+                        }
+                        dupeCheck = nameValue;
+
                         XmlNode item = result.CreateNode(XmlNodeType.Element, "synchon", "");
                         XmlAttribute name = result.CreateAttribute("name");
-                        name.Value = normalizedName.NameSpace;
+                        name.Value = nameValue;
                         item.Attributes.Append(name);
                         root.AppendChild(item);
                     }
@@ -307,9 +332,17 @@ namespace RTParser.Variables
                     }
                     foreach (var normalizedName in ProvidersFrom(this.MetaProviders))
                     {
+                        string nameValue = normalizedName.NameSpace;
+                        if (dupeCheck == nameValue)
+                        {
+                            WriteErrorLine("MetaProviders DUPES " + dupeCheck);
+                            break;
+                        }
+                        dupeCheck = nameValue;
+
                         XmlNode item = result.CreateNode(XmlNodeType.Element, "metaproviders", "");
                         XmlAttribute name = result.CreateAttribute("name");
-                        name.Value = normalizedName.NameSpace;
+                        name.Value = nameValue;
                         item.Attributes.Append(name);
                         root.AppendChild(item);
                     }
@@ -336,6 +369,11 @@ namespace RTParser.Variables
                 }
                 return result;
             }
+        }
+
+        private void WriteErrorLine(string p0)
+        {
+            DLRConsole.DebugWriteLine("ERROR: " + p0);
         }
 
         public List<ISettingsDictionary> Listeners

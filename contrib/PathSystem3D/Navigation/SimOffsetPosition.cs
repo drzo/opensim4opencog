@@ -18,7 +18,7 @@ namespace PathSystem3D.Navigation
             var reg = PathStore;
             if (reg == null && _late != null && !_late.IsRegionAttached)
             {
-                return "HEADING: " + _late;
+                return "HEADING: " + _late + "(offset " + _lateV3 + ")";
             }
             var pos = this.SimPosition;
             return (reg == null ? "?" : reg.RegionName) + "/" + pos.X + "/" + pos.Y + "/" + pos.Z + "@" +
@@ -98,7 +98,12 @@ namespace PathSystem3D.Navigation
 
         public Vector3d GlobalPosition
         {
-            get { return PathStore.LocalToGlobal(SimPosition); }
+            get
+            {
+                var R = PathStore;
+                if (R != null) return R.LocalToGlobal(SimPosition);
+                return _late.GlobalPosition + new Vector3d(GetOffset());
+            }
         }
 
         public SimPathStore PathStore
