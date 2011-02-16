@@ -5,7 +5,25 @@ using MushDLR223.Utilities;
 
 namespace MushDLR223.ScriptEngines
 {
-    public class DotLispInterpreter : LispInterpreter
+    sealed public class DotLispInterpreter : DotLispInterpreterBase, ScriptInterpreter
+    {
+        public DotLispInterpreter(object self) : base(self)
+        {
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override DotLispInterpreterBase MakeInterp(object self)
+        {
+            var v = this; // new DotLispInterpreter();
+            v.Intern("*SELF*", self);
+            return v;
+        } // method: newInterpreter
+    }
+    abstract public class DotLispInterpreterBase : LispInterpreter
     {
         public DotLisp.Interpreter dotLispInterpreter;
 
@@ -40,7 +58,7 @@ namespace MushDLR223.ScriptEngines
             ScriptManager.AddType(t);
         }
 
-        public DotLispInterpreter(object self):base(self)
+        public DotLispInterpreterBase(object self):base(self)
         {
         }
 
@@ -137,11 +155,12 @@ namespace MushDLR223.ScriptEngines
         /// 
         /// </summary>
         /// <returns></returns>
+        /// 
+        public abstract DotLispInterpreterBase MakeInterp(object self);
+
         public override ScriptInterpreter newInterpreter(object self)
         {
-            var v = this; // new DotLispInterpreter();
-            v.Intern("*SELF*", self);
-            return v;
+            return (ScriptInterpreter)MakeInterp(self);
         } // method: newInterpreter
     }
 }
