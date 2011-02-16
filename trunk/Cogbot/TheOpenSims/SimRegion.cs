@@ -1171,7 +1171,8 @@ namespace cogbot.TheOpenSims
 
         static bool ParcelAllowsEntry(Parcel P, UUID uUID)
         {
-
+            // assume all parcels do
+            if (P == null) return true;
             if ((P.Flags & ParcelFlags.UseAccessList) != 0)
             {
                 foreach (var af in P.AccessWhiteList)
@@ -1403,14 +1404,55 @@ namespace cogbot.TheOpenSims
 
         public Parcel GetParcel(float x, float y)
         {
+            ParcelManager pm = TheParcelManager;
             Simulator sim = TheSimulator;
-            int local =  sim.ParcelMap[(byte)x / 4, (byte)y / 4];
+            return RequestedParcel(sim, pm.GetParcelLocalID(sim, new Vector3(x, y, 0)));
+        }
+
+        protected ParcelManager TheParcelManager
+        {
+            get { return TheSimulator.Client.Parcels; }
+        }
+
+        private Parcel RequestedParcel(Simulator sim, int local)
+        {
             Parcel parcel;
             InternalDictionary<int, Parcel> PD = sim.Parcels;
             //if (local == 0) return parcel;
             if (PD.TryGetValue(local, out parcel))
                 return parcel;
-            return parcel;
+            RequestParcelOnce(sim, local);
+            if (PD.TryGetValue(local, out parcel))
+                return parcel;
+            return null;
+        }
+
+        readonly List<int > requestedOnce = new List<int>();
+        public void RequestParcelOnce(Simulator sim, int local)
+        {
+            lock (requestedOnce)
+            {
+                if (requestedOnce.Contains(local)) return;
+                requestedOnce.Add(local);
+            }
+            ParcelManager pm = TheParcelManager;
+            var pr = new AutoResetEvent(false);
+            var pmParcelProperties = new EventHandler<ParcelPropertiesEventArgs>((o,e) => {
+                if (e.Parcel.LocalID==local)
+                {
+                    try
+                    {
+                        pr.Set();
+                    } catch
+                    {
+                        
+                    }
+                }
+            });
+            pm.ParcelProperties += pmParcelProperties;   
+            pm.RequestParcelProperties(sim, local, 0);
+            pr.WaitOne(1000);
+            pm.ParcelProperties -= pmParcelProperties;  
         }
 
         //ISceneProvider SceneProvider = new SceneManager();

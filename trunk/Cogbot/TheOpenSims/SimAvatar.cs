@@ -1569,19 +1569,23 @@ namespace cogbot.TheOpenSims
             while (Environment.TickCount < endTick)
             {
                 currentDist = Vector3d.Distance(finalTarget, GlobalPosition);
+                var PrimVelocity = Vector3.Zero;
                 if (Prim == null)
                 {
                     Debug("Where is my body? " + ToString());
-                    return false;
+                    //return false;
+                } else
+                {
+                    PrimVelocity = Prim.Velocity;
                 }
                 if (!IsKnownMoving)
                 {
-                    if (Prim.Velocity != Vector3.Zero) IsKnownMoving = true;
+                    if (PrimVelocity != Vector3.Zero) IsKnownMoving = true;
                 }
                 else
                 {
                     if (currentDist < maxDistance) return true;
-                    if (Prim.Velocity == Vector3.Zero)
+                    if (Prim != null && PrimVelocity == Vector3.Zero)
                     {
                         Write("!");
                         if (IsBlocked)

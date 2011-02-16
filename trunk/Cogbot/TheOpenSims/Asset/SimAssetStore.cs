@@ -30,6 +30,7 @@ namespace cogbot.TheOpenSims
 
         static public readonly TaskQueueHandler taskQueue = new TaskQueueHandler("SimAssetStore (Slowly)", TimeSpan.FromSeconds(6), false);
         public static readonly TaskQueueHandler SlowConnectedQueue = taskQueue;
+        public static readonly object SavingFileLock = new object();
 
         public static void TaskQueueStart() 
         {

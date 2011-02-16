@@ -159,7 +159,7 @@ namespace cogbot.Listeners
                 }
                 else
                 {
-                    //only one rpc at a time
+                    //only one rpc at a time  (btw broken with OpenSim.. works with Linden)
                     client.Settings.USE_LLSD_LOGIN = true;
                 }
                 DoSimulatorsCatchUp = false;

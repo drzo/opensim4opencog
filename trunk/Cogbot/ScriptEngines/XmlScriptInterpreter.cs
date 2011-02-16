@@ -12,7 +12,7 @@ using MushDLR223.Utilities;
 
 namespace cogbot.ScriptEngines
 {
-    public class XmlScriptInterpreter : CommonScriptInterpreter
+    public class XmlScriptInterpreter : CommonScriptInterpreter, ScriptInterpreter
     {
         public BotClient BotClient;
 
