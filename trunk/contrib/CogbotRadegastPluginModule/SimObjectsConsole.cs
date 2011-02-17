@@ -51,7 +51,7 @@ namespace CogbotRadegastPluginModule
 {
     public partial class SimObjectsConsole : UserControl, IContextMenuProvider
     {
-        private TaskQueueHandler addObjects = new TaskQueueHandler("SimObjectsConsole", TimeSpan.Zero);
+        private TaskQueueHandler addObjects = new TaskQueueHandler("SimObjectsConsole", TimeSpan.Zero, false);
         private RadegastInstance instance;
         public readonly CogbotRadegastPlugin Plugin;
 
@@ -281,6 +281,7 @@ namespace CogbotRadegastPluginModule
             SimObject ea = bma as SimObject;
             if (ea==null) return;
             string id = ea.ID.ToString();
+            addObjects.Start();
             addObjects.Enqueue(new ThreadStart(() =>
             {
                 Invoke(
@@ -309,6 +310,7 @@ namespace CogbotRadegastPluginModule
         void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties props)
         {
             string id = props.ObjectID.ToString();
+            addObjects.Start();
             addObjects.Enqueue(new ThreadStart(() =>
             {
                 Invoke(
@@ -451,6 +453,7 @@ namespace CogbotRadegastPluginModule
         private void Objects_OnAddSimObject(SimObject prim)
         {
             if (IsDisposing || !IsHandleCreated) return;
+            addObjects.Start();
             addObjects.Enqueue(() => AddPrim(prim));
             if (currentPrim!=null && prim.ID == currentPrim.ID)
             {
