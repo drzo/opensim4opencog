@@ -20,25 +20,32 @@ namespace cogbot.Actions.System
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int time = 10;
-            if (args.Length>0)
+            if (args.Length > 0)
             {
                 if (!int.TryParse(args[0], out time))
                 {
-                    time = 10;  
+                    time = 10;
                 }
             }
-            foreach (var bot in ClientManager.SingleInstance.BotClients)
+            bool all = (args.Length > 1 && args[1].ToLower() == "all");
+
+            var LoginList = all ? ClientManager.SingleInstance.BotClients : new List<BotClient> {TheBotClient};            
+
+            int retries = time;
+            while (retries > 0)
             {
-                int retries = time;
-                while (!bot.IsLoggedInAndReady)
+                bool someoneNotLoggedIn = false;
+                foreach (var bot in LoginList)
                 {
-                    WriteLine("Pending logins: " + bot.GetName());
-                     Thread.Sleep(1000);
-                    retries--;
-                    if (retries < 1) break;
+                    if (bot.IsLoggedInAndReady) continue;
+                    WriteLine("Pending login: " + bot.GetName());
+                    someoneNotLoggedIn = true;
                 }
+                if (!someoneNotLoggedIn) break;               
+                Thread.Sleep(1000);
+                retries--;
             }
-            foreach (var bot in ClientManager.SingleInstance.BotClients)
+            foreach (var bot in LoginList)
             {
                 var net = bot.gridClient.Network;
                 if (net.CurrentSim == null)

@@ -27,7 +27,7 @@ namespace cogbot
     public class ClientManager : IDisposable,ScriptExecutorGetter
     {
         private static readonly TaskQueueHandler OneAtATimeQueue = new TaskQueueHandler("ClientManager OneAtATime", new TimeSpan(0, 0, 0, 0, 10), true);
-        public static readonly TaskQueueHandler PostExec = new TaskQueueHandler("PostExec", new TimeSpan(0, 0, 0, 0, 10), false);
+        public static readonly TaskQueueHandler PostAutoExec = new TaskQueueHandler("PostExec", new TimeSpan(0, 0, 0, 0, 10), false);
         public static object SingleInstanceLock = new object();
 
         private bool InvokeJoin(string s)
@@ -639,6 +639,15 @@ namespace cogbot
         private readonly object _wasFirstGridClientLock = new object();
         public BotClient CreateBotClient(string first, string last, string passwd, string simurl, string location)
         {
+            BotClient bc = CreateBotClient0(first, last, passwd, simurl, location);
+            EnsureBotClientHasRadegast(bc.BotLoginParams, bc);
+            bc.SetRadegastLoginOptions();
+            PostAutoExec.Enqueue(() => MakeRunning(bc));
+            return bc;            
+        }
+
+        public BotClient CreateBotClient0(string first, string last, string passwd, string simurl, string location)
+        {
             lock (OneAtATime)
             {
                 string fullName = string.Format("{0} {1}", first, last);
@@ -661,19 +670,14 @@ namespace cogbot
                         bc.BotLoginParams.URI = simurl;
                     if (!string.IsNullOrEmpty(location))
                         bc.BotLoginParams.Start = location;
-                    EnsureRadegast(bc.BotLoginParams, bc);
-                    PostExec.Enqueue(() => MakeRunning(bc));
                     return bc;
                 }
                 LoginDetails BotLoginParams = GetBotLoginParams(first, last, passwd, simurl, location);
                 bc = BotClientForAcct(BotLoginParams);
-                EnsureRadegast(bc.BotLoginParams, bc);
-                PostExec.Enqueue(() => MakeRunning(bc));
                 return bc;       
             }
         }
-
-        private void EnsureRadegast(LoginDetails details, BotClient bc)
+        private void EnsureBotClientHasRadegast(LoginDetails details, BotClient bc)
         {
             lock (OneAtATime)
             {
@@ -711,7 +715,7 @@ namespace cogbot
                     {
                         gridClient = bc.gridClient;
                         inst = bc.TheRadegastInstance;
-                    }
+                    } 
                     if (_wasFirstGridClient)
                     {
                         _wasFirstGridClient = false;
@@ -744,9 +748,9 @@ namespace cogbot
                                 }
                             }
                         }
-
                         inst = bc.TheRadegastInstance ?? inst?? new RadegastInstance(gridClient);
                         bc.TheRadegastInstance = inst;
+                        EnsureRadegastForm(bc,bc.TheRadegastInstance, "EnsureRadegastCreated: " + details);
                     }
                     else
                     {
@@ -757,30 +761,44 @@ namespace cogbot
                         }
                         gridClient = bc.gridClient ?? new GridClient();
                         bc.TheRadegastInstance = bc.TheRadegastInstance ?? new RadegastInstance(gridClient);
+                        EnsureRadegastForm(bc,bc.TheRadegastInstance, "EnsureMainForm: " + details);
                     }
                 }
                 bc.SetRadegastLoginOptions();
             }            
         }
-
+        object MakeRunningLock = new object();
+        object InvokedMakeRunningLock = new object();
         private void MakeRunning(BotClient bc)
         {
-            if (bc.IsEnsuredRunning) return;
-            bc.IsEnsuredRunning = true;
-            string fullName = bc.BotLoginParams.BotLName;
-            InSTAThread(new ThreadStart(() =>
-                                            {
-                                                bc.SetRadegastLoginOptions();
-                                                AddTypesToBotClient(bc);
-                                                InSTAThread(new ThreadStart(() =>
-                                                                                {
-                                                                                    EnsureMainForm(bc.TheRadegastInstance);
-                                                                                }), fullName);
-                                                InSTAThread(new ThreadStart(() =>
-                                                                                {
-                                                                                    EnsureStarting(bc);
-                                                                                }), "worker " + fullName);
-                                            }), "MakeRunning " + fullName);
+            lock (MakeRunningLock)
+            {
+                if (bc.IsEnsuredRunning) return;
+                bc.IsEnsuredRunning = true;
+            }
+            ThreadStart invoker0 = () =>
+                                       {
+                                           lock (InvokedMakeRunningLock)
+                                           {
+                                               if (bc.InvokedMakeRunning) return;
+                                               bc.InvokedMakeRunning = true;
+                                           }
+                                           AddTypesToBotClient(bc);
+                                           bc.StartupClientLisp();
+                                       };
+            PostAutoExec.Enqueue(() =>
+                                     {
+                                         bc.SetRadegastLoginOptions();
+                                         // in-case someoine hits the login button
+                                         bc.Network.LoginProgress += (s, e) =>
+                                                                         {
+                                                                             if (e.Status == LoginStatus.Success)
+                                                                             {
+                                                                                 PostAutoExec.Enqueue((() => InSTAThread(invoker0, "LoginProgress: " + bc.GetName())));
+                                                                             }
+                                                                         };
+                                         PostAutoExec.Enqueue((() => InSTAThread(invoker0, "StartupClientLisp: " + bc.GetName())));
+                                     });
         }
 
         public static void InSTAThread(ThreadStart invoker, string fullName) {
@@ -804,7 +822,7 @@ namespace cogbot
                     GlobalWriteLine(fullName + " " + e);
                 }
             }));
-            t.Name = "MainThread " + fullName;
+            t.Name = "InSTAThread " + fullName;
             try
             {
                 t.SetApartmentState(ApartmentState.STA);
@@ -872,27 +890,31 @@ namespace cogbot
             }
         }
 
-        private void EnsureStarting(BotClient client)
-        {
-
-            ClientManager.PostExec.Enqueue(() =>
-                                               {
-                                                   AddTypesToBotClient(client);
-                                                   client.StartupClientLisp();
-                                               });
-
-        }
-
         private void AddTypesToBotClient(BotClient bc)
         {
-            //lock (OneAtATime)
+            lock (InvokedMakeRunningLock)
             {
-                lock (registrationTypes)
-                    foreach (Type t in registrationTypes)
-                    {
-                        bc.RegisterType(t);
-                    }
+                if (bc.AddingTypesToBotClientNow) return;
+                bc.AddingTypesToBotClientNow = true;
             }
+            //lock (OneAtATime)
+            ThreadStart mi = () =>
+                                 {
+                                     List<Type> rt = new List<Type>();
+                                     lock (registrationTypes)
+                                     {
+                                         rt.AddRange(registrationTypes);
+                                     }
+                                     foreach (Type t in rt)
+                                     {
+                                         bc.RegisterType(t);
+                                     }
+                                     lock (InvokedMakeRunningLock)
+                                     {
+                                         bc.AddingTypesToBotClientNow = false;
+                                     }
+                                 };
+            InSTAThread(mi, "AddTypesToBotClient: " + bc);
         }
         
         public Utilities.BotTcpServer CreateHttpServer(int port, string botname)
@@ -958,8 +980,10 @@ namespace cogbot
                 if (StartedUpLisp) return;
                 StartedUpLisp = true;                
             }
+            StartingUpLisp = true;
             StartUpLisp0();
-            PostExec.Start();
+            StartingUpLisp = false;
+            PostAutoExec.Start();
         }
         public void StartUpLisp0()
         {
@@ -995,20 +1019,7 @@ namespace cogbot
                   //  UIBotClient.TheRadegastInstance = GlobalRadegastInstance;
                 }
                 // LastBotClient.SetRadegastLoginOptions();
-                AddTypesToBotClient(lastBotClient1);
-                lastBotClient1.Network.LoginProgress += (s, e) =>
-                                                           {
-                                                               if (e.Status == LoginStatus.Success)
-                                                               {
-                                                                   InSTAThread(() =>
-                                                                                   {
-                                                                                       EnsureStarting(lastBotClient1);
-                                                                                   }, lastBotClient1.GetName());
-                                                                   
 
-                                                                   
-                                                               }
-                                                           };
             }
             // Login the accounts and run the input loop
             lock (Accounts)
@@ -1017,21 +1028,18 @@ namespace cogbot
                     BotClient bc = BotClientForAcct(ld);
                 }
             lock (Accounts)
-                foreach (var bc in BotClients)
+                foreach (var bc0 in BotClients)
                 {
+                    var bc = bc0;
                     //LastRefBotClient = bc;
                     LoginDetails ld = bc.BotLoginParams;
-                    EnsureRadegast(ld, bc);
+                    EnsureBotClientHasRadegast(ld, bc);
                 }
             lock (Accounts)
                 foreach (var bc0 in BotClients)
                 {
                     var bc = bc0;
-                    PostExec.Enqueue(() =>
-                                         {
-                                             //LastRefBotClient = bc;
-                                             MakeRunning(bc);
-                                         });
+                    MakeRunning(bc);
                 }
         }
 
@@ -1155,15 +1163,15 @@ namespace cogbot
             if (inst==null) return;
             if (TheDebugConsoleRTB == null)
             {
-                SetDebugConsole(inst.TabConsole.GetTab("debug"));
+                SetDebugConsole0(inst.TabConsole.GetTab("debug"));
                 if (TheDebugConsoleRTB == null)
                 {
-                    SetDebugConsole(inst.TabConsole.GetTab("cogbot"));
-                    if (TheDebugConsoleRTB == null) SetDebugConsole(inst.TabConsole.GetTab("chat"));
+                    SetDebugConsole0(inst.TabConsole.GetTab("cogbot"));
+                    if (TheDebugConsoleRTB == null) SetDebugConsole0(inst.TabConsole.GetTab("chat"));
                 }
             }
         }
-        public void SetDebugConsole(RadegastTab tab)
+        public void SetDebugConsole0(RadegastTab tab)
         {
             if (tab == null) return;
             var dc = tab.Control as DebugConsole;
@@ -1180,24 +1188,38 @@ namespace cogbot
             }
         }
 
-        private void EnsureMainForm(RadegastInstance instance)
-        {
-            SetDebugConsole(instance);            
+        public void EnsureRadegastForm(BotClient bc, RadegastInstance instance, string name)
+        {          
             var mf = instance.MainForm;
+            lock (EnsuringRadegastLock)
+            {
+                if (bc.EnsuredRadegastRunning) return;
+                bc.EnsuredRadegastRunning = true;
+                EnsureForm0(mf, name);
+            }
+        }
+
+        protected object EnsuringRadegastLock = new object();
+
+        public void EnsureForm0(Form mf, string name)
+        {
             if (!mf.IsHandleCreated)
             {
-               // mf.Visible = false;
-              //  mf.Show();
+                // mf.Visible = false;
+                //  mf.Show();
                 //mf.Visible = false;
-
-                Application.Run(mf);
+                InSTAThread(new ThreadStart(() =>
+                {
+                    if (!mf.IsHandleCreated) Application.Run(mf);
+                }), "EnsureForm0 " + name);
             }
             else
             {
-              if(false)
-              {
-                  Application.Run(mf);
-              }  
+                //mf.BeginInvoke(new MethodInvoker(() => mf.Visible = true));
+                if(false)
+                {
+                    Application.Run(mf);
+                }  
             }
         }
 
@@ -1231,7 +1253,7 @@ namespace cogbot
 
             BotClient client = BotClientForAcct(account);
             account.Client = client;
-            PostExec.Enqueue(client.Login);
+            PostAutoExec.Enqueue(client.Login);
             return client;
         }
 
@@ -1318,6 +1340,7 @@ namespace cogbot
         public static RadegastInstance GlobalRadegastInstance;
         private static bool GlobalRadegastInstanceGCUsed;
         private bool StartedUpLisp;
+        private bool StartingUpLisp;
 
         public static Color DeriveColor(string input)
         {
@@ -1403,14 +1426,25 @@ namespace cogbot
             {
                 lastStr = check;
             }
+            string recheck = SafeForPrinting(check);
             try
             {
-                GlobalWriteLine0(check);
+                GlobalWriteLine0(recheck);
             }
             catch (Exception e)
             {
-                GlobalWriteLine0(check);                
+                string ncheck = check.Replace("{", "[").Replace("}", "]");
+                GlobalWriteLine0(ncheck);                
             }
+        }
+
+        private static string SafeForPrinting(string check)
+        {
+            if (!check.Contains("{") && !check.Contains("}"))
+            {
+                return check;
+            }
+            return check.Replace("{", "{{").Replace("}", "}}");
         }
 
         public static void GlobalWriteLine0(string check)
@@ -1591,13 +1625,19 @@ namespace cogbot
             // TODO: It would be really nice if we could figure out a way to abort the ReadLine here in so that Run() will exit.
         }
 
-
+        readonly List<Assembly> KnownAssembies = new List<Assembly>();
         internal void RegisterAssembly(Assembly assembly)
         {
+            lock (KnownAssembies)
+            {
+                if (KnownAssembies.Contains(assembly))
+                    return;
+                KnownAssembies.Add(assembly);
+            }
             WriteLine("RegisterAssembly: " + assembly);
+            bool newTypes = false;
             lock (registrationTypes)
             {
-                bool newTypes = false;
                 WriteLine("Bot RegisterAssembly: " + assembly);
 
                 foreach (Type t in assembly.GetTypes())
@@ -1610,12 +1650,12 @@ namespace cogbot
                     {
                         WriteLine(e.ToString());
                     }
-                }
-                if (newTypes)
-                {
-                    foreach (BotClient client in BotClients)
+                    if (newTypes)
                     {
-                        AddTypesToBotClient(client);
+                        foreach (BotClient client in BotClients)
+                        {
+                            AddTypesToBotClient(client);
+                        }
                     }
                 }
             }
