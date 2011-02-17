@@ -349,10 +349,10 @@ namespace ABuildStartup
 
             if (false) cogbot.ClientManager.SingleInstance.ProcessCommandArgs();
             //ClientManager.InSTAThread(StartExtraRadegast, "StartExtraRadegast");
-            StartExtraRadegast();
+            StartRadegast();
         }
 
-        private static void StartExtraRadegast()
+        public static void StartRadegast()
         {
             // Create main Radegast instance
 

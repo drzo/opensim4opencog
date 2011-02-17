@@ -100,8 +100,9 @@ namespace CogbotRadegastPluginModule
             //if (ClientManager.UsingRadgastFromCogbot) return;
             inst.Client.Settings.MULTIPLE_SIMS = true;
             clientManager.outputDelegate = System.Console.Out.WriteLine;
-            SetupRadegastGUI(inst);
+            inst.MainForm.Invoke(new MethodInvoker(() => SetupRadegastGUI(inst)));
             DLRConsole.SafelyRun(() => clientManager.ProcessCommandArgs());
+            chatConsole.StartWriter();  
             if (plugInitCalledEver)
             {
                 return;
@@ -120,10 +121,12 @@ namespace CogbotRadegastPluginModule
             }
             else
             {
-                StartUpLispThread = new Thread(mi);
+                StartUpLispThread = new Thread(mi)
+                                        {
+                                            Name = "StartUpLispThread"
+                                        };
                 StartUpLispThread.Start();
-            }
-            chatConsole.StartWriter();            
+            }          
         }
 
         private void SetupRadegastGUI(RadegastInstance inst)
