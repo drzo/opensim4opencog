@@ -143,7 +143,7 @@ namespace DotLisp
                         parameters[index] = param;
                     }
                 }
-                if (misMatch || changed)
+                if (!changed)
                 {
                     parameters = argarray;
                 }
@@ -203,8 +203,19 @@ namespace DotLisp
             if (param == null)
             {
                 return true;
-            }     
-      
+            }
+            Closure c = param as Closure;
+            if (c!=null)
+            {                    
+                paramOut = c.Invoke();
+                if (paramOut!=null)
+                {
+                    type = paramOut.GetType();
+                }
+                changed = CoerceOne(paramOut, type, paramInfo, out paramOut, out changed);
+                
+            }
+          
             return false;
         }
 
