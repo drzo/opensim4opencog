@@ -156,6 +156,7 @@ namespace cogbot.Listeners
                     {
                         CatchUpQueue.AddFirst(DoCatchup);
                     }
+                    client.Settings.USE_LLSD_LOGIN = true;
                 }
                 else
                 {
@@ -262,12 +263,19 @@ namespace cogbot.Listeners
                             impl.AspectName = client.GetName();
                         }
                     }
-                    TheSimAvatar.SetClient(client);
+                    if (m_TheSimAvatar == null)
+                    {
+                        return null;
+                    } else
+                    {
+                        m_TheSimAvatar.SetClient(client);                        
+                    }
                 }
                 return m_TheSimAvatar;
             }
             set
             {
+                if (value == null) return;
                 if (value == m_TheSimAvatar) return;                
             	m_TheSimAvatar = value;
             }
@@ -778,6 +786,7 @@ namespace cogbot.Listeners
 
         public Avatar GetAvatar(UUID avatarID, Simulator simulator)
         {
+            if (UUID.Zero == avatarID) throw new NullReferenceException("GetAvatar");
             Primitive prim = GetPrimitive(avatarID, simulator);
             if (prim is Avatar) return (Avatar)prim;
             // in case we request later
