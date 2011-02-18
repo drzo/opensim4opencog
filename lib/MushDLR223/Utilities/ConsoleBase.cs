@@ -1557,6 +1557,7 @@ namespace MushDLR223.Utilities
 
         public static string FindCallerInStack(HashSet<MemberInfo> transparentCallers, HashSet<MemberInfo> opacheCallers, bool useMethodName)
         {
+            //if (true) return "FindCallerInStack";
             var st = new System.Diagnostics.StackTrace(true).GetFrames();
             if (st == null) return "NULL";
             {
