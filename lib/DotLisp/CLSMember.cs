@@ -194,7 +194,7 @@ namespace DotLisp
         private static bool CoerceOne(object param, Type type, ParameterInfo paramInfo, out object paramOut, out bool changed)
         {
             changed = false;
-            paramOut = param;                    
+            paramOut = param;
             var parameterType = paramInfo.ParameterType;
             // perfect
             if (parameterType.IsInstanceOfType(param)) return true;
@@ -205,17 +205,22 @@ namespace DotLisp
                 return true;
             }
             Closure c = param as Closure;
-            if (c!=null)
-            {                    
-                paramOut = c.Invoke();
-                if (paramOut!=null)
+            if (c != null)
+            {
+                paramOut = c.eval(c.env);
+                if (paramOut != null)
                 {
                     type = paramOut.GetType();
                 }
-                changed = CoerceOne(paramOut, type, paramInfo, out paramOut, out changed);
-                
+                if (paramOut != c)
+                {
+                    object paramOutO;
+                    changed = CoerceOne(paramOut, type, paramInfo, out paramOutO, out changed);
+                    paramOut = paramOutO;
+                    return changed;
+                }
             }
-          
+
             return false;
         }
 
