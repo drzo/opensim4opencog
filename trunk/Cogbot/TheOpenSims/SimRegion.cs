@@ -64,6 +64,7 @@ namespace cogbot.TheOpenSims
         private int GetGroundLevelTried = 0;
         private bool GridInfoKnown = false;
         private bool RequestMapRegionTerrainOnce = false;
+        private object RequestMapRegionTerrainLock = new object();
         private bool RequestMapRegionOjectsOnce = false;
         private SimPathStore PathStore
         {
@@ -134,12 +135,7 @@ namespace cogbot.TheOpenSims
                     if (sim != null) _RegionID = sim.RegionID;
                     if (_RegionID == UUID.Zero)
                     {
-                        if (!RequestMapRegionTerrainOnce && IsLegalSimName(RegionName))
-                        {
-                            RequestMapRegionTerrainOnce = true;
-                            Debug("Requesting Terrain " + RegionName);
-                            Client.Grid.RequestMapRegion(RegionName, GridLayerType.Terrain);
-                        }
+                        RequestMapRegionTerrain();
                     }
                 }
                 return _RegionID;
@@ -1130,12 +1126,7 @@ namespace cogbot.TheOpenSims
                     GetGroundLevelTried++;
                     if (GetGroundLevelTried == 1)
                     {
-                        if (!RequestMapRegionTerrainOnce && IsLegalSimName(RegionName))
-                        {
-                            RequestMapRegionTerrainOnce = true;
-                            Debug("Requesting Terrain " + RegionName);
-                            Client.Grid.RequestMapRegion(RegionName, GridLayerType.Terrain);
-                        }
+                        RequestMapRegionTerrain();
                     }
                     if (GetGroundLevelTried > 20)
                     {
@@ -1155,6 +1146,20 @@ namespace cogbot.TheOpenSims
                 //Client.Grid.RequestMapRegion(
             }
             return AverageHieght;
+        }
+
+        private void RequestMapRegionTerrain()
+        {
+            lock (RequestMapRegionTerrainLock)
+            {
+                if (!RequestMapRegionTerrainOnce && IsLegalSimName(RegionName))
+                {
+                    RequestMapRegionTerrainOnce = true;
+                    Debug("Requesting Terrain " + RegionName);
+                    Client.Parcels.RequestAllSimParcels(TheSimulator);
+                    Client.Grid.RequestMapRegion(RegionName, GridLayerType.Terrain);
+                }
+            }
         }
 
         static bool IsLegalSimName(string name)
