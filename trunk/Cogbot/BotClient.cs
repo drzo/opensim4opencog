@@ -443,7 +443,7 @@ namespace cogbot
 
             botPipeline = new SimEventMulticastPipeline(GetName());
             OneAtATimeQueue = new TaskQueueHandler("BotStartupQueue " + GetName(), new TimeSpan(0, 0, 0, 0, 10), false);
-            ClientManager.PostAutoExec.Enqueue(() =>
+            ClientManager.PostAutoExecEnqueue(() =>
             {
                 OneAtATimeQueue.Start();
             });
@@ -533,17 +533,15 @@ namespace cogbot
 
             XmlInterp = new XmlScriptInterpreter(this);
             XmlInterp.BotClient = this;
-            ClientManager.PostAutoExec.Enqueue(() =>
-            {
-                LoadTaskInterpreter();
-            });
+            if (false)
+                ClientManager.PostAutoExecEnqueue(LoadTaskInterpreter);
 
             // Start the server
             lock (ClientManager.config)
             {
                 thisTcpPort = ClientManager.nextTcpPort;
                 ClientManager.nextTcpPort += ClientManager.config.tcpPortOffset;
-                ClientManager.PostAutoExec.Enqueue(() =>
+                ClientManager.PostAutoExecEnqueue(() =>
                 {
                     Utilities.BotTcpServer UtilitiesTcpServer = new Utilities.BotTcpServer(thisTcpPort, this);
                     UtilitiesTcpServer.startSocketListener();
@@ -574,14 +572,19 @@ namespace cogbot
             var callback = new EventHandler<CurrentGroupsEventArgs>(Groups_OnCurrentGroups);
             Groups.CurrentGroups += callback;
 
-            ClientManager.PostAutoExec.Enqueue(() => { updateTimer.Start(); });
+            ClientManager.PostAutoExecEnqueue(() => { updateTimer.Start(); });
             searcher = new BotInventoryEval(this);
-            ClientManager.PostAutoExec.Enqueue(() =>
+            ClientManager.PostAutoExecEnqueue(() =>
             {
-                lispEventProducer = new LispEventProducer(this, LispTaskInterperter);
+                if (useLispEventProducer)
+                {
+                    lispEventProducer = new LispEventProducer(this, LispTaskInterperter);
+                }
             });
 
         }
+
+        private MethodInvoker CatchUpInterns = () => { };
 
         private void LoadTaskInterpreter()
         {
@@ -592,7 +595,8 @@ namespace cogbot
                     //WriteLine("Start Loading TaskInterperter ... '" + TaskInterperterType + "' \n");
                     _LispTaskInterperter = ScriptManager.LoadScriptInterpreter(taskInterperterType, this);
                     _LispTaskInterperter.LoadFile("cogbot.lisp", WriteLine);
-                    _LispTaskInterperter.Intern("clientManager", ClientManager);
+                    Intern("clientManager", ClientManager);
+                    Intern("client", this);
                     if (scriptEventListener == null)
                     {
                         scriptEventListener = new ScriptEventListener(_LispTaskInterperter, this);
@@ -601,6 +605,7 @@ namespace cogbot
 
                     //  WriteLine("Completed Loading TaskInterperter '" + TaskInterperterType + "'\n");
                     // load the initialization string
+                    CatchUpInterns();
                 }
                 catch (Exception e)
                 {
@@ -608,6 +613,7 @@ namespace cogbot
                 }
         }
 
+        private bool useLispEventProducer = false;
         private LispEventProducer lispEventProducer;
         public bool RunStartupClientLisp = true;
         public object RunStartupClientLisplock = new object();
@@ -622,6 +628,7 @@ namespace cogbot
                 {
                     try
                     {
+                        LoadTaskInterpreter();
                         evalLispString("(progn " + ClientManager.config.startupClientLisp + ")");
                     }
                     catch (Exception ex)
@@ -949,7 +956,7 @@ namespace cogbot
 
                 }
                 //gridClient = new GridClient();
-                Settings.USE_LLSD_LOGIN = true;
+                //Settings.USE_LLSD_LOGIN = true;
                 new Thread(() =>
                 {
                     Thread.Sleep(10000);
@@ -1546,13 +1553,13 @@ namespace cogbot
                 updateTimer.Enabled = false;
                 updateTimer.Close();
                 //botPipeline.Shut
-                botPipeline.Dispose();
-                lispEventProducer.Dispose();
+                if (botPipeline != null) botPipeline.Dispose();
+                if (lispEventProducer != null) lispEventProducer.Dispose();
                 WorldSystem.Dispose();
                 //thrJobQueue.Abort();
                 //lock (lBotMsgSubscribers)
                 //{   
-                LispTaskInterperter.Dispose();
+                if (_LispTaskInterperter != null) _LispTaskInterperter.Dispose();
                 foreach (var ms in listeners.Values)
                 {
                     ms.Dispose();
@@ -1780,7 +1787,16 @@ namespace cogbot
 
         public void Intern(string n, object v)
         {
-            LispTaskInterperter.Intern(n, v);
+            if (_LispTaskInterperter != null)
+            {
+                _LispTaskInterperter.Intern(n, v);
+            }
+            var PrevCode = CatchUpInterns;
+            CatchUpInterns = () =>
+                                 {
+                                     PrevCode();
+                                     _LispTaskInterperter.Intern(n, v);
+                                 };
         }
 
 
@@ -1921,9 +1937,7 @@ namespace cogbot
 
         public void SetRadegastLoginOptions()
         {
-
-            ClientManager.EnsureRadegastForm(this,TheRadegastInstance, "EnsureRadegastForm1 " + GetName());
-
+            ClientManager.EnsureRadegastForm(this, TheRadegastInstance, "EnsureRadegastForm1 " + GetName());
             var to = TheRadegastInstance.Netcom.LoginOptions;
             to.FirstName = BotLoginParams.FirstName;
             to.LastName = BotLoginParams.LastName;
@@ -1945,8 +1959,17 @@ namespace cogbot
             }
             TheRadegastInstance.Netcom.Grid = G;
             to.Grid = G;
+            string botStartAt = BotLoginParams.Start;
             to.StartLocation = StartLocationType.Custom;
-            to.StartLocationCustom = BotLoginParams.Start;            
+            to.StartLocationCustom = botStartAt;
+            if (botStartAt == "home")
+            {
+                to.StartLocation = StartLocationType.Home;
+            }
+            else if (botStartAt == "last")
+            {
+                to.StartLocation = StartLocationType.Last;                
+            }
             to.Version = BotLoginParams.Version;
             to.Channel = BotLoginParams.Channel;
             RadegastTab tab;
@@ -1955,17 +1978,9 @@ namespace cogbot
                 tab.AllowDetach = true;
                 tab.AllowClose = false;
                 tab.AllowMerge = false;
-                tab.AllowHide = false;
-  
+                tab.AllowHide = false;  
                 LoginConsole form = (LoginConsole)tab.Control;
-                if (form.InvokeRequired)
-                {
-                    form.BeginInvoke(new MethodInvoker(() => SetRadegastLoginForm(form, to)));
-                }
-                else
-                {
-                    SetRadegastLoginForm(form, to);
-                }
+                RadegastForm.InvokeControl(form, () => SetRadegastLoginForm(form, to));
             }
         }
 
