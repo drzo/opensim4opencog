@@ -355,7 +355,7 @@ namespace MushDLR223.ScriptEngines
 
             try
             {
-                lock (Lock)
+                //lock (Lock)
                 {
                     ScriptInterpreter si = UsedCSharpScriptDefinedType(self, type);
                     if (si != null) return si; 

@@ -254,7 +254,7 @@ namespace MushDLR223.Utilities
 
         public void Start()
         {
-            
+            if (WasStartCalled) return;
             //TestLock(BusyTrackingLock);
             //lock (BusyTrackingLock)
             {
@@ -699,8 +699,10 @@ namespace MushDLR223.Utilities
             {
                 startedBeforeWait = TotalStarted;
                 completeBeforeWait = TotalComplete;
+#if TRACKING_LOCK
                 TestLock(BusyTrackingLock);
-                //lock (BusyTrackingLock)
+                lock (BusyTrackingLock)
+#endif
                 {
                     expectedTodoBeforeWait = ExpectedTodo;
                     todoBeforeWait = (ulong) EventQueue.Count;
@@ -711,7 +713,10 @@ namespace MushDLR223.Utilities
                 if (!WasStartCalled) continue;
 
                 bool wasBusy = false;
+#if TRACKING_LOCK
+                TestLock(BusyTrackingLock);
                 lock (BusyTrackingLock)
+#endif
                     wasBusy = Busy;
 
                 if (wasBusy && CheckCurrentTaskOverTimeBudget())
@@ -777,7 +782,9 @@ namespace MushDLR223.Utilities
                     if (Busy)
                     {
                         TimeSpan t;
+#if TRACKING_LOCK
                         lock (BusyTrackingLock)
+#endif
                         {
                             t = DateTime.Now - BusyStart;
                         }
@@ -941,7 +948,10 @@ namespace MushDLR223.Utilities
             //var IsCurrentTaskComplete = new ManualResetEvent(false);
             try
             {
+#if TRACKING_LOCK
                 lock (BusyTrackingLock)
+#endif
+
                 {
                     Busy = true;
                     TotalStarted++; ExpectedTodo--;
@@ -962,8 +972,9 @@ namespace MushDLR223.Utilities
                     }
                 }
                 //() => RunWithTimeLimit(evt, "RunWithTimeLimit", OperationKillTimeout));
-                
+#if TRACKING_LOCK
                 lock (BusyTrackingLock)
+#endif
                 {
                     CompletedSinceLastPing++;
                     TotalComplete++;
@@ -979,7 +990,9 @@ namespace MushDLR223.Utilities
             }
             catch (Exception e)
             {
+#if TRACKING_LOCK
                 lock (BusyTrackingLock)
+#endif
                 {
                     TotalFailures++;
                 }
@@ -987,7 +1000,9 @@ namespace MushDLR223.Utilities
             }
             finally
             {
+#if TRACKING_LOCK
                 lock (BusyTrackingLock)
+#endif
                 {
                     BusyEnd = DateTime.Now;
                     Busy = false;
@@ -1160,7 +1175,9 @@ namespace MushDLR223.Utilities
             OperationKillTimeout = maxTime;
             control = control ?? new ThreadControl();
             var ctrl = control != null;
+#if TRACKING_LOCK
             lock (BusyTrackingLock)
+#endif
             {
                 BusyStart = DateTime.Now;
             }
@@ -1525,7 +1542,9 @@ namespace MushDLR223.Utilities
         {
             if (IsDisposing) return;
             //TestLock(BusyTrackingLock);
+#if TRACKING_LOCK
             lock (BusyTrackingLock)
+#endif
             {
                 ExpectedTodo++;
             }
@@ -1559,7 +1578,9 @@ namespace MushDLR223.Utilities
         public void AddFirst0(TASK evt)
         {
             if (IsDisposing) return;
+#if TRACKING_LOCK
             lock(BusyTrackingLock)
+#endif
             {
                 ExpectedTodo++;
             }
