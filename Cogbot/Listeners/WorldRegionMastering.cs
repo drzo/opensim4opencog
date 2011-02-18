@@ -751,6 +751,7 @@ namespace cogbot.Listeners
             else
             {
                 if (string.IsNullOrEmpty(fromName)) return null;
+                if (IsSystemName(fromName)) return null;
                 int au;
                 List<SimObject> ps = GetPrimitives(new string[] { fromName }, out au);
                 if (ps.Count==1) p = ps[0];
@@ -768,6 +769,13 @@ namespace cogbot.Listeners
                 }
             }
             return GetSource(client.Network.CurrentSim, id, null, ref o, isAvatar);
+        }
+
+        private static bool IsSystemName(string fromName)
+        {
+            if (string.IsNullOrEmpty(fromName)) return false;
+            fromName = fromName.ToLower();
+            return fromName == "second life" || fromName == "system" || fromName == "opensim";
         }
 
         private SimObject GetSource(Simulator sim, UUID sourceID, SimObject source, ref object s, PCode isAvatar)
