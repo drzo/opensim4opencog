@@ -14,6 +14,7 @@ using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
 using org.opencyc.api;
+using PrologScriptEngine;
 using RTParser.AIMLTagHandlers;
 using RTParser.Database;
 using RTParser.Prolog;
@@ -607,6 +608,18 @@ namespace RTParser
             clojureInterpreter.Intern("MyBot", this);
             clojureInterpreter.Intern("Users", BotUsers);
             AddExcuteHandler("cloj", ClojExecHandler);
+
+            try
+            {
+                swiInterpreter = new PrologScriptInterpreter(this); //ScriptManager.LoadScriptInterpreter("PrologScriptInterpreter", this);
+                swiInterpreter.Intern("MyBot", this);
+                swiInterpreter.Intern("Users", BotUsers);
+                AddExcuteHandler("swi", SWIExecHandler);
+            }
+            catch (Exception e)
+            {
+                writeToLog(e);
+            }
 
 #if !(NOT_FAKE_LISTENERS)
 
@@ -1261,6 +1274,37 @@ The AIMLbot program.
             }
         }
 
+        private object SWIExecHandler(string cmd, Request user)
+        {
+            ScriptInterpreter swi = swiInterpreter;
+            lock (swi)
+            {
+                bool hasUser = swi.IsSubscriberOf("MyUser");
+
+                if (hasUser)
+                {
+                    object o = swi.GetSymbol("MyUser");
+                    object r = swi.Eval(o);
+                    if (user.Requester != null && r != user.Requester)
+                    {
+                        swi.Intern("MyUser", user.Requester);
+                    }
+                }
+                else
+                {
+                    if (user.Requester != null)
+                    {
+                        swi.Intern("MyUser", user.Requester);
+                    }
+                }
+
+                StringReader stringCodeReader = new StringReader(cmd);
+                object lispCode = swi.Read("SWIExecHandler", stringCodeReader, writeToLog);
+                if (swi.Eof(lispCode))
+                    return "EOF on " + lispCode ?? "NULL";
+                return swi.Eval(lispCode);
+            }
+        }
         internal Unifiable SystemExecute(Unifiable cmd, Unifiable langu, Request user)
         {
             if (IsNullOrEmpty(langu))
@@ -1841,6 +1885,7 @@ The AIMLbot program.
         }
 
         private ClojureInterpreter clojureInterpreter;
+        private ScriptInterpreter swiInterpreter;
         private List<string> _RuntimeDirectories;
 
         #region Overrides of QuerySettings
