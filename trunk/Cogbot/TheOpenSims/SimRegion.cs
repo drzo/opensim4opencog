@@ -485,7 +485,9 @@ namespace cogbot.TheOpenSims
             {
                 uint regionX = 0, regionY = 0;
                 Utils.LongToUInts(RegionHandle, out regionX, out regionY);
+// ReSharper disable PossibleLossOfFraction
                 _GridLoc = new Vector2((float) (regionX/256), (float) (regionY/256));
+// ReSharper restore PossibleLossOfFraction
             }
             return _GridLoc;
         }
@@ -1174,7 +1176,7 @@ namespace cogbot.TheOpenSims
             return true;
         }
 
-        static bool ParcelAllowsEntry(Parcel P, UUID uUID)
+        bool ParcelAllowsEntry(Parcel P, UUID uUID)
         {
             // assume all parcels do
             if (P == null) return true;
@@ -1191,7 +1193,10 @@ namespace cogbot.TheOpenSims
             }
             if ((P.Flags & ParcelFlags.UseAccessGroup) != 0)
             {
-                if (P.GroupID == uUID) return true;
+                UUID G = P.GroupID;
+                if (G == UUID.Zero) return true;
+                GroupPowers gp =  TheWorldSystem.GetGroupPowers(uUID, G);
+                Client.Groups.RequestCurrentGroups();
                 return false;
             }
             if ((P.Flags & ParcelFlags.UseBanList) != 0)
@@ -1411,7 +1416,20 @@ namespace cogbot.TheOpenSims
         {
             ParcelManager pm = TheParcelManager;
             Simulator sim = TheSimulator;
-            return RequestedParcel(sim, pm.GetParcelLocalID(sim, new Vector3(x, y, 0)));
+            return RequestedParcel(sim, GetParcelLocalID(sim, x, y));
+        }
+        static protected int GetParcelLocalID(Simulator simulator, float X, float Y)
+        {
+            var r = simulator.ParcelMap[(byte) Y/4, (byte) X/4];
+            if (r > 0)
+            {
+                return r;
+            }
+            else
+            {                
+                //Logger.Log(String.Format("ParcelMap returned an default/invalid value for location {0}/{1} Did you use RequestAllSimParcels() to populate the dictionaries?", (byte)position.Y / 4, (byte)position.X / 4), Helpers.LogLevel.Warning);
+                return 0;
+            }
         }
 
         protected ParcelManager TheParcelManager
@@ -1423,7 +1441,11 @@ namespace cogbot.TheOpenSims
         {
             Parcel parcel;
             InternalDictionary<int, Parcel> PD = sim.Parcels;
-            //if (local == 0) return parcel;
+            if (local == 0 && PD.Count == 0)
+            {
+                if (!RequestMapRegionTerrainOnce) RequestMapRegionTerrain();
+                return null;
+            }
             if (PD.TryGetValue(local, out parcel))
                 return parcel;
             RequestParcelOnce(sim, local);
@@ -1433,6 +1455,9 @@ namespace cogbot.TheOpenSims
         }
 
         readonly List<int > requestedOnce = new List<int>();
+        public BotClient RegionMaster;
+        public WorldObjects TheWorldSystem;
+
         public void RequestParcelOnce(Simulator sim, int local)
         {
             lock (requestedOnce)

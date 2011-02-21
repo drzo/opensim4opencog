@@ -105,7 +105,10 @@ namespace cogbot.Listeners
         internal SimRegion GetRegion(ulong RegionHandle)
         {
             if (RegionHandle == 0) return null;
-            return SimRegion.GetRegion(RegionHandle, client);
+            var R =  SimRegion.GetRegion(RegionHandle, client);
+            R.RegionMaster = client;
+            R.TheWorldSystem = this;
+            return R;
         }
 
         public SimRegion GetRegion(UUID uuid)

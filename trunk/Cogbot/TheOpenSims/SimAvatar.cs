@@ -502,7 +502,7 @@ namespace cogbot.TheOpenSims
         {
             _knownTypeUsages = new ListAsSet<SimTypeUsage>();
             WorldObjects.SimAvatars.Add(this);
-            ObjectType.SuperType.Add(SimTypeSystem.GetObjectType("Avatar"));
+            ObjectType.SuperType.Add(SimTypeSystem.GetObjectType("Avatar"));            
             //try
             //{
             //    AspectName = slAvatar.Name;
@@ -840,6 +840,25 @@ namespace cogbot.TheOpenSims
             ///     throw new Exception("This avatar " + theAvatar + " has no GridClient");
             /// }
             return Client;
+        }
+
+        public void AddGoupRoles(List<AvatarGroup> groups)
+        {
+            GroupRoles = GroupRoles ?? new Dictionary<UUID, AvatarGroup>();
+            lock (GroupRoles)
+                foreach (var avatarGroup in groups)
+                {
+                    var id = avatarGroup.GroupID;
+                    AvatarGroup prev;
+                    if (GroupRoles.TryGetValue(id,out prev))
+                    {
+                        if (prev.GroupPowers != avatarGroup.GroupPowers)
+                        {
+                            Debug("GroupPowers changed = " + prev + " -> " + avatarGroup);
+                        }
+                    }
+                    GroupRoles[avatarGroup.GroupID] = avatarGroup;
+                }
         }
 
         public void TalkTo(SimAvatar avatar, String talkAbout)
@@ -2460,6 +2479,7 @@ namespace cogbot.TheOpenSims
         private SimObjectEvent LastPostureEvent;
         readonly private object postureLock = new object();
         public static bool UseTeleportFallback;
+        public Dictionary<UUID, AvatarGroup> GroupRoles { get; set; }
 
 
         private void SetPosture(SimObjectEvent evt)
@@ -2637,11 +2657,13 @@ namespace cogbot.TheOpenSims
         Avatar.AvatarProperties ProfileProperties { get; set; }
         Avatar.Interests AvatarInterests { get; set; }
         bool IsFlying { get; }
+        Dictionary<UUID, AvatarGroup> GroupRoles { get; set; }
         void OnAvatarAnimations(List<Animation> anims);
 
         ICollection<UUID> GetCurrentAnims();
         Dictionary<UUID, int> GetCurrentAnimDict();
 
         BotClient GetGridClient();
+        void AddGoupRoles(List<AvatarGroup> groups);
     }
 }

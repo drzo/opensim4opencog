@@ -120,24 +120,24 @@ namespace cogbot.Listeners
         private static void GetUUIDType(MemberInfo info, UUID o)
         {
             if (o == UUID.Zero) return;
-            Action<UUID> act = GetUUIDType(info.Name);
-            act(o);
+            Action<UUID, Simulator> act = GetUUIDType(info.Name);
+            act(o, null);
         }
 
-        private static Dictionary<string, Action<UUID>> UUID2Type = new Dictionary<string, Action<UUID>>();
-        static Action<UUID> GetUUIDType(string p)
+        private static Dictionary<string, Action<UUID, Simulator>> UUID2Type = new Dictionary<string, Action<UUID, Simulator>>();
+        static Action<UUID,Simulator> GetUUIDType(string p)
         {
 
             lock (UUID2Type)
                 if (UUID2Type.Count == 0)
                 {
-                    Action<UUID> texture = ((UUID obj) => { SimAssetStore.FindOrCreateAsset(obj, AssetType.Texture); });
-                    Action<UUID> avatar = ((UUID obj) => { GridMaster.CreateSimAvatar(obj, GridMaster, null); });
-                    Action<UUID> nothing = ((UUID obj) => { });
-                    Action<UUID> role = ((UUID obj) => DeclareGeneric("GroupRole", obj));
+                    Action<UUID, Simulator> texture = ((obj, sim) => { SimAssetStore.FindOrCreateAsset(obj, AssetType.Texture); });
+                    Action<UUID, Simulator> avatar = ((obj, sim) => { GridMaster.DeclareAvatar(obj); });
+                    Action<UUID, Simulator> nothing = ((obj, sim) => { });
+                    Action<UUID, Simulator> role = ((obj, sim) => DeclareGeneric("GroupRole", obj));
                     UUID2Type[""] = nothing;
                     UUID2Type["ID"] = nothing;
-                    UUID2Type["Sound"] = ((UUID obj) => { SimAssetStore.FindOrCreateAsset(obj, AssetType.Sound); });
+                    UUID2Type["Sound"] = ((obj, sim) => { SimAssetStore.FindOrCreateAsset(obj, AssetType.Sound); });
                     UUID2Type["Image"]
                         = UUID2Type["SculptTexture"]
                           = UUID2Type["Photo"]
@@ -147,8 +147,8 @@ namespace cogbot.Listeners
                                   = UUID2Type["Sculpt"]
                                     = UUID2Type["ProfileImage"] = texture;
                     UUID2Type["Partner"] = UUID2Type["Creator"] = UUID2Type["Founder"] = avatar;
-                    UUID2Type["Group"] = ((UUID obj) => { GridMaster.DeclareGroup(obj); });
-                    UUID2Type["Object"] = ((UUID obj) => { GridMaster.CreateSimObject(obj, GridMaster, null); });
+                    UUID2Type["Group"] = ((obj, sim) => { GridMaster.DeclareGroup(obj); });
+                    UUID2Type["Object"] = ((obj, sim) => { GridMaster.CreateSimObject(obj, GridMaster, sim); });
                     // todo inventory item 
                     UUID2Type["OwnerRole"] = role;
                     UUID2Type["ItemID"] = nothing;
@@ -158,7 +158,7 @@ namespace cogbot.Listeners
                     UUID2Type["Target"] = nothing;
                     UUID2Type["Asset"] = nothing;
                 }
-            Action<UUID> o;
+            Action<UUID, Simulator> o;
             lock (UUID2Type)
             {
                 if (UUID2Type.TryGetValue(p, out o)) return o;
@@ -192,7 +192,7 @@ namespace cogbot.Listeners
             }
         }
 
-        private static void SkipUUID(UUID obj)
+        private static void SkipUUID(UUID obj, Simulator sim)
         {           
         }
 

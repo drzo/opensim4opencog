@@ -154,6 +154,7 @@ namespace cogbot.Listeners
                     if (client.Network.CurrentSim != null) DoSimulatorsCatchUp = true;
                     if (DoSimulatorsCatchUp)
                     {
+                        DoSimulatorsCatchUp = false;
                         CatchUpQueue.AddFirst(DoCatchup);
                     }
                     client.Settings.USE_LLSD_LOGIN = true;
@@ -1419,15 +1420,7 @@ namespace cogbot.Listeners
                     //client.Avatars.RequestAvatarPicks(uuid);
                     SimObjects.AddTo(obj0);
                     RegisterUUID(uuid, obj0);
-                    OnConnectedQueue.Enqueue(() =>
-                    {
-                        client.Avatars.RequestAvatarName(uuid);
-                        if (MaintainAvatarMetaData)
-                        {
-                            client.Avatars.RequestAvatarProperties(uuid);
-                            //   client.Avatars.RequestAvatarClassified(uuid);
-                        }
-                    });
+                    RequestAvatarMetadata(uuid);
                     return (SimAvatarImpl) obj0;
                 }
             }
