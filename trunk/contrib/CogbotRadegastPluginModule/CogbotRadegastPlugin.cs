@@ -76,8 +76,8 @@ namespace CogbotRadegastPluginModule
             {
                 // just unregister events for now
                 inst.Netcom.Dispose();
-                clientManager = ClientManager.SingleInstance;
-               // _theBot = clientManager.LastBotClient;
+                clientManager = ClientManager.SingleInstance ?? new ClientManager();
+                // _theBot = clientManager.LastBotClient;
             }
             else
             {
@@ -88,6 +88,8 @@ namespace CogbotRadegastPluginModule
                 ClientManager.UsingCogbotFromRadgast = true;
                 clientManager = ClientManager.SingleInstance ?? new ClientManager();
             }
+            BotClient bc = clientManager.EnsureBotByGridClient(inst.Client);
+            bc.TheRadegastInstance = inst;
             cogbotRadegastInterpreter = new CogbotRadegastInterpreter(this);
             RadegastInstance.CommandsManager.LoadInterpreter(cogbotRadegastInterpreter);
             _commandContextAction = new CommandContextAction(inst, this);
@@ -102,16 +104,16 @@ namespace CogbotRadegastPluginModule
             clientManager.outputDelegate = System.Console.Out.WriteLine;
             inst.MainForm.Invoke(new MethodInvoker(() => SetupRadegastGUI(inst)));
             DLRConsole.SafelyRun(() => clientManager.ProcessCommandArgs());
-            chatConsole.StartWriter();  
+            chatConsole.StartWriter();
             if (plugInitCalledEver)
             {
                 return;
             }
             plugInitCalledEver = true;
             ThreadStart mi = () =>
-                                              {
-                                                  DLRConsole.SafelyRun(clientManager.StartUpLisp);
-                                              };
+                                 {
+                                     DLRConsole.SafelyRun(clientManager.StartUpLisp);
+                                 };
             StartUpLispThread = Thread.CurrentThread;
             clientManager.outputDelegate = WriteLine;
             DLRConsole.DebugWriteLine("Current Thread = " + Thread.CurrentThread.Name);
@@ -126,7 +128,7 @@ namespace CogbotRadegastPluginModule
                                             Name = "StartUpLispThread"
                                         };
                 StartUpLispThread.Start();
-            }          
+            }
         }
 
         private void SetupRadegastGUI(RadegastInstance inst)
