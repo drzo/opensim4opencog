@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using DotLisp;
 using MushDLR223.Utilities;
 
 namespace MushDLR223.ScriptEngines
@@ -25,7 +26,13 @@ namespace MushDLR223.ScriptEngines
     }
     abstract public class DotLispInterpreterBase : LispInterpreter
     {
-        public DotLisp.Interpreter dotLispInterpreter;
+        private Interpreter _dotLispInterpreter;
+        static private int _dotLispInterpreterCount = 0;
+
+        public DotLisp.Interpreter dotLispInterpreter
+        {
+            get { return _dotLispInterpreter; }
+        }
 
         public override void Dispose()
         {
@@ -69,10 +76,12 @@ namespace MushDLR223.ScriptEngines
 
         sealed public override void Init()
         {
-            dotLispInterpreter = new DotLisp.Interpreter();
-            dotLispInterpreter.LoadFile("boot.lisp");
-            dotLispInterpreter.LoadFile("extra.lisp");
+            _dotLispInterpreterCount++;
+            _dotLispInterpreter = new DotLisp.Interpreter();
+            _dotLispInterpreter.LoadFile("boot.lisp");
+            _dotLispInterpreter.LoadFile("extra.lisp");
         }
+
         /// <summary>
         /// 
         /// 

@@ -5,7 +5,7 @@ using MushDLR223.Utilities;
 
 namespace MushDLR223.ScriptEngines
 {
-    public class ClojureInterpreter : DotLispInterpreterBase
+    public class ClojureInterpreter : DotLispInterpreterBase, ScriptInterpreter
     {
 
         public override void Dispose()
