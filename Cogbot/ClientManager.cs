@@ -86,7 +86,7 @@ namespace cogbot
             get
             {
                 // Make an immutable copy of the Clients list to safely iterate over
-                lock (BotByName) return new List<BotClient>(BotByName.Values);
+                lock (KnownBotClients) return new List<BotClient>(KnownBotClients);
             }
         }
 
@@ -96,26 +96,6 @@ namespace cogbot
         public static int debugLevel = 2;
 
         public BotClient OnlyOneCurrentBotClient;
-
-        //public bool GetTextures = false;
-
-        //public UUID GroupID = UUID.Zero;
-        //public Dictionary<UUID, GroupMember> GroupMembers = null;// new Dictionary<UUID, GroupMember>();
-        //public Dictionary<UUID, AvatarAppearancePacket> Appearances = null;// new Dictionary<UUID, AvatarAppearancePacket>();
-        // public Dictionary<string, cogbot.Actions.Action> Commands = null;//new Dictionary<string, cogbot.Actions.Action>();
-        //public bool Running = true;
-        //public bool GroupCommands = false;
-        //public string MasterName = String.Empty;
-        //public UUID MasterKey = UUID.Zero;
-        //public bool AllowObjectMaster = false;
-        //  public cogbot.ClientManager ClientManager;
-        //  public VoiceManager VoiceManager;
-        // Shell-like inventory commands need to be aware of the 'current' inventory folder.
-        //public InventoryFolder CurrentDirectory = null;
-
-        //public BotClient CurrentClient;
-        //public OutputDelegate outputDelegate;
-        ///public Dictionary<string, DescribeDelegate> describers;
 
         public List<Type> registrationTypes;
         public List<Type> registeredSystemApplicationCommandTypes = new List<Type>();
@@ -131,9 +111,6 @@ namespace cogbot
         public int RunningMode = (int)Modes.normal;
         public UUID AnimationFolder = UUID.Zero;
 
-        //InventoryEval searcher =null; // new InventoryEval(this);
-        //public Inventory Inventory;
-        //public InventoryManager Manager;
         public Configuration config;
         //Utilities.BotTcpServer UtilitiesTcpServer;
         public String taskInterperterType = "DotLispInterpreter";// DotLispInterpreter,CycInterpreter or ABCLInterpreter
@@ -171,61 +148,11 @@ namespace cogbot
             {
                 clientManagerHttpServer = MushDLR223.Utilities.HttpServerUtil.CreateHttpServer(this, 5580, "first_robot");
             }
-            //LoginDetails details = GetDetailsFromConfig(config);
-            //  CurrentClient = new BotClient(this);// Login(details);
-            //  CurrentClient.TextFormClient(this);
-            //GroupMembers = new Dictionary<UUID, GroupMember>();
-            //Appearances = new Dictionary<UUID, AvatarAppearancePacket>();
-
-            // CurrentClient.Settings.ALWAYS_DECODE_OBJECTS = true;
-            // CurrentClient.Settings.ALWAYS_REQUEST_OBJECTS = true;
-            //  CurrentClient.Settings.OBJECT_TRACKING = true;
-
-            //Manager = CurrentClient.Inventory;
-            //Inventory = Manager.Store;
             groupActions = new Dictionary<string, cogbot.Actions.Command>();
-            //groupActions["login"] = new Login(null);
-
-
-            //   CurrentClient.Settings.LOGIN_SERVER = config.simURL;
-            // extraSettings();
-
-
-            // CurrentClient.Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
-            // CurrentClient.Network.OnDisconnected += new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
-            // CurrentClient.Network.OnLogin += new NetworkManager.LoginCallback(Network_OnLogin);
-
-            //outputDelegate = new OutputDelegate(WriteLine);
-
             registrationTypes = new List<Type>();
-            //registrationTypes["chat"] = new Listeners.Chat(this);
-            //registrationTypes["avatars"] = new Listeners.Avatars(this);
-            //registrationTypes["teleport"] = new Listeners.Teleport(this);
-            //registrationTypes["whisper"] = new Listeners.Whisper(this);
-            //ObjectSystem = new Listeners.Objects(this);
-            //registrationTypes["bump"] = new Listeners.Bump(this);
-            //registrationTypes["sound"] = new Listeners.Sound(this);
-
 
             tutorials = new Dictionary<string, cogbot.Tutorials.Tutorial>();
-            //  tutorials["tutorial1"] = new Tutorials.Tutorial1(this);
-
             describeNext = true;
-
-            //   RegisterAllCommands(Assembly.GetExecutingAssembly());
-
-            //   UtilitiesTcpServer = new cogbot.Utilities.BotTcpServer(this);
-            // Start the server
-            ///UtilitiesTcpServer.startSocketListener();
-
-            //Client.Network.RegisterCallback(PacketType.AgentDataUpdate, new NetworkManager.PacketCallback(AgentDataUpdateHandler));
-            //  CurrentClient.Network.OnLogin += new NetworkManager.LoginCallback(LoginHandler);
-            //Client.Self.OnInstantMessage += new AgentManager.InstantMessageCallback(Self_OnInstantMessage);
-            //Client.Groups.OnGroupMembers += new GroupManager.GroupMembersCallback(GroupMembersHandler);
-            //Client.Inventory.OnObjectOffered += new InventoryManager.ObjectOfferedCallback(Inventory_OnInventoryObjectReceived);
-
-            //Client.Network.RegisterCallback(PacketType.AvatarAppearance, new NetworkManager.PacketCallback(AvatarAppearanceHandler));
-            //Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(AlertMessageHandler));
             RegisterAssembly(Assembly.GetExecutingAssembly());
         }
 
@@ -262,6 +189,10 @@ namespace cogbot
                             return BotByName[name];
                         }
                     }
+                    foreach (var botClient in KnownBotClients)
+                    {
+                        if (botClient.GetName().ToLower() == lCurrentBotClient) return botClient;
+                    }
                     fallback = null;// SingleInstance.LastBotClient ?? SingleInstance.UIBotClient;
                     if (fallback != null)
                     {
@@ -281,7 +212,12 @@ namespace cogbot
             {
                 if (botClient.gridClient == gridClient) return botClient;
             }
-            return GetBotByName(gridClient.Self.Name);
+            foreach (var botClient in KnownBotClients)
+            {
+                if (botClient.gridClient == gridClient) return botClient;
+            }
+            string named = gridClient.Self.Name;
+            return GetBotByName(named);
         }
 
         public CmdResult ExecuteCommand(string text, OutputDelegate WriteLine)
@@ -470,6 +406,10 @@ namespace cogbot
         {
             WriteLine(str, args);   
         }
+        public void DebugWriteLine(Helpers.LogLevel level, string str, params object[] args)
+        {
+            WriteLine(str, args);
+        }
         static  string lastStr = "";
 
         public static TextFilter TheUILogFilter = new TextFilter()
@@ -617,6 +557,7 @@ namespace cogbot
 
         static public readonly Dictionary<string, LoginDetails> Accounts = new Dictionary<string, LoginDetails>();
         static public readonly Dictionary<string, BotClient> BotByName = new Dictionary<string, BotClient>();
+        static public readonly List<BotClient> KnownBotClients = new List<BotClient>();
         public string LoginURI;
         static private readonly LoginDetails DefaultAccount = new LoginDetails(null);
 
@@ -659,7 +600,6 @@ namespace cogbot
                 if (bc != null)
                 {
                     WriteLine(";; Reusing {0}", fullName);
-                    AddTypesToBotClient(bc);
                     lock (BotByName) BotByName[bc.NameKey()] = bc;
                     if (!string.IsNullOrEmpty(passwd))
                         bc.BotLoginParams.Password = passwd;
@@ -1008,6 +948,18 @@ namespace cogbot
                     {
                         gc = GlobalRadegastInstance.Client;
                         GlobalRadegastInstanceGCUsed = true;
+                        foreach (BotClient c in BotClients)
+                        {
+                            if (c.gridClient == gc)
+                            {
+                                //if(c.BotLoginParams == null) 
+                                c.SetLoginAcct(account);
+                                account.Client = client = c;
+                                lock (BotByName) BotByName[account.BotLName] = client;
+                                break;
+                            }
+                            
+                        }
                     }
                     //UsingCogbotFromRadgast = false; // not any more
                     //UsingRadgastFromCogbot = true; // now true
@@ -1021,6 +973,8 @@ namespace cogbot
                 gc.Throttle.Land = 1000000;
                 gc.Throttle.Task = 1000000;
                 gc.Settings.LOGIN_SERVER = account.URI;
+
+#if use_login_params
                 LoginParams loginParams = gc.Network.DefaultLoginParams(account.FirstName, account.LastName,
                                                                         account.Password, "BotClient", version);
                 account.UseNetworkDefaults(loginParams);
@@ -1030,10 +984,11 @@ namespace cogbot
 
                 if (!string.IsNullOrEmpty(account.URI))
                     loginParams.URI = account.URI;
-
+#endif
                 if (client == null)
                 {
-                    client = new BotClient(this, gc, account);
+                    client = new BotClient(this, gc);
+                    client.SetLoginAcct(account);
                     lock (BotByName) BotByName[account.BotLName] = client;
                 }
                 account.Client = client;
@@ -1772,7 +1727,7 @@ namespace cogbot
             }
         }
 
-        static LoginDetails FindOrCreateAccount(string first, string last)
+        public static LoginDetails FindOrCreateAccount(string first, string last)
         {
             lock (Accounts)
             {
@@ -1790,6 +1745,34 @@ namespace cogbot
         public BotClient BotClientFor(RadegastInstance instance)
         {
             return GetBotByGridClient(instance.Client);
+        }
+
+        public void AddBotClient(BotClient client)
+        {
+            lock (KnownBotClients)
+            {
+                if (!KnownBotClients.Contains(client)) KnownBotClients.Add(client);
+            }
+        }
+        public void OnBotClientUpdatedName(String name, BotClient client)
+        {
+            lock (BotByName) BotByName[name.ToLower().Trim()] = client;
+        }
+        public BotClient EnsureBotByGridClient(GridClient client)
+        {
+            BotClient bc = GetBotByGridClient(client);
+            if (bc!=null) return bc;
+            // make one maybe
+            lock (KnownBotClients)
+            {
+                if (KnownBotClients.Count==0)
+                {
+                    bc = new BotClient(this, client);
+                    return bc;
+                }
+            }
+            DebugWriteLine(Helpers.LogLevel.Error, "Radegast has to make a BotClient!");
+            return null;
         }
     }
 

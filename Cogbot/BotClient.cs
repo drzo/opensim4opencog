@@ -166,7 +166,15 @@ namespace cogbot
         }
 
         readonly int thisTcpPort;
-        public LoginDetails BotLoginParams;// = null;
+        public LoginDetails BotLoginParams
+        {
+            get
+            {
+                return _BotLoginParams;
+            }
+        }
+
+        private LoginDetails _BotLoginParams = null;
         private readonly SimEventPublisher botPipeline;
         public IList<Thread> GetBotCommandThreads()
         {
@@ -394,13 +402,12 @@ namespace cogbot
         /// <summary>
         /// 
         /// </summary>
-        public BotClient(ClientManager manager, GridClient g, LoginDetails lp)
+        public BotClient(ClientManager manager, GridClient g)
         {
             LoginRetries = LoginRetriesFresh;
             ClientManager = manager;
             gridClient = g;
-            lp.Client = this;
-            BotLoginParams = lp;
+            manager.AddBotClient(this);
             //manager.LastRefBotClient = this;
             updateTimer = new System.Timers.Timer(500);
             updateTimer.Elapsed += new System.Timers.ElapsedEventHandler(updateTimer_Elapsed);
@@ -582,6 +589,25 @@ namespace cogbot
                 }
             });
 
+        }
+        void SetLoginName(string firstName, string lastName)
+        {
+            if (!string.IsNullOrEmpty(firstName) || !string.IsNullOrEmpty(lastName))
+            {
+                var details = ClientManager.FindOrCreateAccount(firstName, lastName);
+                SetLoginAcct(details);
+            }
+            else
+            {
+                DebugWriteLine("nameless still");
+            }
+        }
+
+        public void SetLoginAcct(LoginDetails details)
+        {
+            details.Client = this;
+            _BotLoginParams = details;
+            ClientManager.OnBotClientUpdatedName(GetName(), this);
         }
 
         private MethodInvoker CatchUpInterns = () => { };
@@ -1408,6 +1434,10 @@ namespace cogbot
         {
             var message = e.Message;
             var login = e.Status;
+            if (_BotLoginParams==null)
+            {
+                SetLoginName(gridClient.Self.FirstName, gridClient.Self.LastName);
+            }
             if (login == LoginStatus.Success)
             {
                 // Start in the inventory root folder.
@@ -1744,6 +1774,10 @@ namespace cogbot
         {
             string n = Self.Name;
             if (n != null && !String.IsNullOrEmpty(n.Trim())) return n;
+            if (_BotLoginParams == null)
+            {
+                return "Noname" + GetHashCode();
+            }
             if (String.IsNullOrEmpty(BotLoginParams.FirstName))
             {
                 return string.Format("Unnamed Robot: {0} {1}", BotLoginParams.FirstName, BotLoginParams.LastName);
@@ -2068,6 +2102,7 @@ namespace cogbot
             }
             BotLoginParams.Version = from.Version;
             BotLoginParams.Channel = from.Channel;
+            SetRadegastLoginOptions();
         }
 
         public void ShowTab(string name)
