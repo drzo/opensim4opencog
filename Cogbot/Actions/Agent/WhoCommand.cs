@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using cogbot.Listeners;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
@@ -21,7 +22,13 @@ namespace cogbot.Actions.Agent
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
 			StringBuilder result = new StringBuilder();
-
+            if (args.Length > 0)
+            {
+                foreach(var A in  WorldObjects.SimAvatars)
+                {
+                    result.AppendLine(A.ToString());
+                }
+            }
             lock (Client.Network.Simulators)
             {
                 for (int i = 0; i < Client.Network.Simulators.Count; i++)

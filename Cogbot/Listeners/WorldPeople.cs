@@ -230,13 +230,13 @@ namespace cogbot.Listeners
 
         public override void Avatars_OnAvatarProperties(object sender, AvatarPropertiesReplyEventArgs e)
         {
-            SimAvatar A = CreateSimAvatar(e.AvatarID, this, null);
+            SimAvatar A = DeclareAvatar(e.AvatarID);
             if (!MaintainAvatarMetaData) return;
             A.ProfileProperties = e.Properties;
             UUID propertiesPartner = e.Properties.Partner;
             if (propertiesPartner != UUID.Zero)
             {
-                SimAvatarImpl AA = CreateSimAvatar(propertiesPartner, this, null);
+                SimAvatarImpl AA = DeclareAvatar(propertiesPartner);
                 //if (AA.GetName() == null)
                 //{
                 //    String s = GetUserName(propertiesPartner);
@@ -286,10 +286,14 @@ namespace cogbot.Listeners
             //OnEvent("On-Coarse-Location-Update", paramNamesOnCoarseLocationUpdate, paramTypesOnCoarseLocationUpdate, sim, newEntries , removedEntries);
         }
 
+        private SimAvatarImpl DeclareAvatar(UUID uuid)
+        {
+            return CreateSimAvatar(uuid, this, null);
+        }
 
         public override void Avatars_OnAvatarInterests(object sender, AvatarInterestsReplyEventArgs e)
         {
-            SimAvatar A = CreateSimAvatar(e.AvatarID, this, null);
+            SimAvatar A = DeclareAvatar(e.AvatarID);
             if (!MaintainAvatarMetaData) return;
             A.AvatarInterests = e.Interests;
         }
@@ -308,7 +312,8 @@ namespace cogbot.Listeners
 
         public override void Avatars_OnAvatarGroups(object sender, AvatarGroupsReplyEventArgs e)
         {
-            SimAvatar A = CreateSimAvatar(e.AvatarID, this, null);
+            SimAvatar A = DeclareAvatar(e.AvatarID);
+            A.AddGoupRoles(e.Groups);
             foreach (AvatarGroup grp in e.Groups)
             {
                 AddGroup2Key(grp.GroupName,grp.GroupID);
@@ -324,7 +329,7 @@ namespace cogbot.Listeners
             MetaDataQueue.Enqueue(() =>
                                       {
                                           foreach (var list in e.Roles)
-                                          {
+                                          {                                              
                                               GroupRole value = list.Value;
                                               SimGeneric declareGeneric = DeclareGroupRole(groupID, list.Key);
                                               declareGeneric.Value = value;
@@ -363,8 +368,7 @@ namespace cogbot.Listeners
                                                   SimGeneric declareGeneric = DeclareGroupRole(groupID, list.Key);
                                                   if (list.Value != UUID.Zero)
                                                   {
-                                                      SimAvatarImpl a = CreateSimAvatar(list.Value, this,
-                                                                                        null);
+                                                      SimAvatarImpl a = DeclareAvatar(list.Value);
 
                                                       a.AddInfoMap(new NamedParam("simMemberRole",
                                                                                   declareGeneric));
@@ -388,7 +392,7 @@ namespace cogbot.Listeners
                                               {
                                                   var v = member.Value;
                                                   if (member.Key == UUID.Zero) continue;
-                                                  SimAvatarImpl A = CreateSimAvatar(member.Key, this, null);
+                                                  SimAvatarImpl A = DeclareAvatar(member.Key);
                                                   //A.AddInfoMap(new NamedParam("GroupMember",groupID));               
                                               }
                                               if (g != null) SendOnUpdateDataAspect(g, "Members", null, null);
@@ -515,16 +519,43 @@ namespace cogbot.Listeners
         }
 
         static HashSet<UUID> GroupsRequested = new HashSet<UUID>();
-        static HashSet<UUID> GroupsRequested2 = new HashSet<UUID>();
+        static HashSet<UUID> MetadataRequested = new HashSet<UUID>();
         private void RequestGroupInfo(UUID uuid)
         {
             lock (GroupsRequested) if (!GroupsRequested.Add(uuid)) return;
             GridMaster.client.Groups.RequestGroupProfile(uuid);
             if (!RequestGroupMetaData) return;
-            // WriteLine("Requesting groupInfo " + uuid);
-            GridMaster.client.Groups.RequestGroupRoles(uuid);
-            GridMaster.client.Groups.RequestGroupMembers(uuid);
-            GridMaster.client.Groups.RequestGroupRolesMembers(uuid);
+            RequestGroupMetadata(uuid);
+        }
+
+
+        private void RequestAvatarMetadata(UUID uuid)
+        {
+            lock (MetadataRequested) if (!MetadataRequested.Add(uuid)) return;
+            OnConnectedQueue.Enqueue(() =>
+            {
+                client.Avatars.RequestAvatarName(uuid);
+                if (MaintainAvatarMetaData)
+                {
+                    client.Avatars.RequestAvatarProperties(uuid);
+                    //client.Avatars.RequestAvatarClassified(uuid);
+                    //client.Avatars.RequestAvatarPicks(uuid);
+                }
+            });
+        }
+
+        private void RequestGroupMetadata(UUID uuid)
+        {
+            lock (MetadataRequested) if (!MetadataRequested.Add(uuid)) return;
+            OnConnectedQueue.Enqueue(() =>
+                                         {
+                                             // should not loop
+                                             RequestGroupInfo(uuid);
+                                             // WriteLine("Requesting groupInfo " + uuid);
+                                             GridMaster.client.Groups.RequestGroupRoles(uuid);
+                                             GridMaster.client.Groups.RequestGroupMembers(uuid);
+                                             GridMaster.client.Groups.RequestGroupRolesMembers(uuid);
+                                         });
         }
 
         // like avatar picks or role names
@@ -569,7 +600,7 @@ namespace cogbot.Listeners
                 Debug("AddName2Key: " + value + " " + id);
                 return;
             }
-            SimAvatarImpl A = CreateSimAvatar(id, this, null);
+            SimAvatarImpl A = DeclareAvatar(id);
             A.AspectName = value;
             SendOnUpdateDataAspect(A, "simProperties-Name", null, value);
             
@@ -737,7 +768,7 @@ namespace cogbot.Listeners
                     if (s.Trim() != "") return s;
                 }
             }
-            SimAvatarImpl AA = CreateSimAvatar(found, this, null);
+            SimAvatarImpl AA = DeclareAvatar(found);
             // case insensitive
             lock (Name2Key)
                 foreach (KeyValuePair<string, UUID> kvp in Name2Key)
@@ -864,6 +895,41 @@ namespace cogbot.Listeners
         private void AgentGroupDataUpdatePT(object sender, PacketReceivedEventArgs e)
         {
             //throw new NotImplementedException();
+        }
+
+        public GroupPowers GetGroupPowers(UUID uuid, UUID groupid)
+        {
+            DeclareGroup(groupid);
+            RequestGroupInfo(groupid);
+            RequestGroupMetadata(groupid);
+            var A = DeclareAvatar(uuid);
+            var R = A.GroupRoles;
+            if (R==null)
+            {
+                RequestAvatarMetadata(uuid);
+                // not known yet
+                return GroupPowers.None;
+            }
+            lock (R)
+            {
+                AvatarGroup agr;
+                if (R.TryGetValue(groupid, out agr)) return agr.GroupPowers;
+                // not in group
+                return GroupPowers.None;
+
+            }
+            if (uuid == client.Self.AgentID)
+            {
+                Group g;
+                if (GridMaster.client.GroupsCache.TryGetValue(groupid, out g))
+                {
+                    return g.Powers;
+                }
+                // not in group
+                return GroupPowers.None;
+            }
+            // not known yet
+            return GroupPowers.None;
         }
     }
 }

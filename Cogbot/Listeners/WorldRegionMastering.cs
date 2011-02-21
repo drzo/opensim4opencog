@@ -160,6 +160,7 @@ namespace cogbot.Listeners
                     SimMaster[simulator.Handle] = this;
                     //client.Grid.RequestMapRegion(simulator.Name, GridLayerType.Objects);
                     client.Grid.RequestMapRegion(simulator.Name, GridLayerType.Terrain);
+                    client.Estate.RequestInfo();
                     //client.Grid.RequestMapRegion(simulator.Name, GridLayerType.LandForSale);
                     //client.Grid.RequestMapItems(simulator.Handle,OpenMetaverse.GridItemType.Classified,GridLayerType.Terrain);
                     MasteringRegions.Add(simulator.Handle);
@@ -400,7 +401,12 @@ namespace cogbot.Listeners
             var region = e.Region;
             SimRegion R = SimRegion.GetRegion(region.RegionHandle, client);
             if (R != null)
+            {
                 R.GridInfo = region;
+                R.TheWorldSystem = this;
+                R.RegionMaster = client;
+            }
+
             // base.Grid_OnGridRegion(region);
         }
 
@@ -798,22 +804,14 @@ namespace cogbot.Listeners
             }
             else
             {
-                if (sim!=null && !RequestParcelObjects)
+                if (sim != null && !RequestParcelObjects)
                 {
                     RequestParcelObjects = true;
                     client.Parcels.RequestAllSimParcels(sim, false, 250);
                     client.Grid.RequestMapItems(sim.Handle, GridItemType.AgentLocations, GridLayerType.Objects);
                 }
-                client.Avatars.RequestAvatarName(sourceID);
-                client.Friends.MapFriend(sourceID);
-                UUID trans = UUID.Random();
-                client.Self.LookAtEffect(client.Self.AgentID, sourceID, Vector3d.Zero, LookAtType.Select, trans);
-                client.Self.PointAtEffect(client.Self.AgentID, sourceID, Vector3d.Zero, PointAtType.Select, trans);
-                client.Self.BeamEffect(client.Self.AgentID, sourceID, Vector3d.Zero, new Color4(255, 0, 0, 255), 1f, trans);
-                client.Self.PointAtEffect(client.Self.AgentID, sourceID, Vector3d.Zero, PointAtType.None, trans);
-                client.Self.LookAtEffect(client.Self.AgentID, sourceID, Vector3d.Zero, LookAtType.None, trans);
-                client.Self.BeamEffect(UUID.Zero, UUID.Zero, Vector3d.Zero, new Color4(255, 255, 255, 255), 0, trans); 
-               // client.Self.RequestSit(sourceID,Vector3.Zero);
+                SourceDetect(sourceID);
+                // client.Self.RequestSit(sourceID,Vector3.Zero);
                 //  client.Directory.
             }
 
@@ -879,6 +877,21 @@ namespace cogbot.Listeners
                 s = sourceID;
             }
             return source;
+        }
+
+        private void SourceDetect(UUID sourceID)
+        {
+            client.Avatars.RequestAvatarName(sourceID);
+            client.Friends.MapFriend(sourceID);
+           /*
+            UUID trans = UUID.Random();
+            client.Self.LookAtEffect(client.Self.AgentID, sourceID, Vector3d.Zero, LookAtType.Select, trans);
+            client.Self.PointAtEffect(client.Self.AgentID, sourceID, Vector3d.Zero, PointAtType.Select, trans);
+            client.Self.BeamEffect(client.Self.AgentID, sourceID, Vector3d.Zero, new Color4(255, 0, 0, 255), 1f, trans);
+            client.Self.PointAtEffect(client.Self.AgentID, sourceID, Vector3d.Zero, PointAtType.None, trans);
+            client.Self.LookAtEffect(client.Self.AgentID, sourceID, Vector3d.Zero, LookAtType.None, trans);
+            client.Self.BeamEffect(UUID.Zero, UUID.Zero, Vector3d.Zero, new Color4(255, 255, 255, 255), 0, trans);
+            */
         }
 
         public static WorldObjects MasterFor(ulong handle)
