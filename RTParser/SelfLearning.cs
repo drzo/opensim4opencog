@@ -83,11 +83,13 @@ namespace RTParser
             
         public Result HeardSelfSay1Sentence(User theFactSpeaker, User toWhom, string message, Result result, ThreadControl control)
         {
-            string whatListenerLastSaid = toWhom.JustSaid;
+            bool toWhomNonNull = toWhom != null;
+            string whatListenerLastSaid = null;
+            if (toWhomNonNull) whatListenerLastSaid = toWhom.JustSaid;
             Result res = HeardSelfSay11Sentence(theFactSpeaker, toWhom, message, result, control);
-            toWhom.ResponderJustSaid = message;
+            if (toWhomNonNull) toWhom.ResponderJustSaid = message;
             theFactSpeaker.JustSaid = message;
-            toWhom.JustSaid = whatListenerLastSaid;
+            if (toWhomNonNull) toWhom.JustSaid = whatListenerLastSaid;
             return res;
         }
 
@@ -99,7 +101,8 @@ namespace RTParser
             bool lts = ListeningToSelf;
             bool prochp = ProcessHeardPreds;
             if (!lts && !prochp) return LR;
-
+            bool toWhomNonNull = toWhom != null;
+            string debug = "HeardSelfSay11Sentence: \"" + theFactSpeaker ?? "theFactSpeaker" + ": " + toWhom ?? "toWhom" + ", " + message + "\"";
             message = ToHeard(message);
             if (string.IsNullOrEmpty(message)) return LR;
             //message = swapPerson(message);
@@ -136,10 +139,11 @@ namespace RTParser
             }
             bool wasQuestion = NatLangDb.WasQuestion(message);
             string desc = string.Format("ROBOT {1} USER: {0}", message, wasQuestion ? "ASKS" : "TELLS");
-            string realLast = toWhom.JustSaid;
+            string realLast =null;
+            if (toWhomNonNull)  realLast = toWhom.JustSaid;
             var res = RememberSpoken(theFactSpeaker, toWhom, desc, message, result, control);
             theFactSpeaker.JustSaid = message;
-            toWhom.JustSaid = realLast;
+            if (toWhomNonNull) toWhom.JustSaid = realLast;
             return res;
         }
 
