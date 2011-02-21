@@ -44,7 +44,13 @@ namespace MushDLR223.ScriptEngines
                 {
                     NewTypes = false;
                     changed = !ScannedTypes.Remove(type);
-                    foreach (var set in Interpreters)
+                    List<ScriptInterpreter> scriptInterpreters = new List<ScriptInterpreter>();
+                    
+                    lock (Lock)
+                    {
+                        scriptInterpreters.AddRange(ScriptManager.Interpreters);
+                    }
+                    foreach (var set in scriptInterpreters)
                     {
                         set.InternType(type);
                     }
