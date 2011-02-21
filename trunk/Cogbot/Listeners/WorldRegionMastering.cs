@@ -918,5 +918,15 @@ namespace cogbot.Listeners
         {
             lock (MaintainSimCollisionsList) return MaintainSimCollisionsList.Contains(handle);
         }
+
+        public bool IsWorthMeshing(SimObjectImpl impl)
+        {
+            double d = Vector3d.Distance(impl.GlobalPosition, client.Self.GlobalPosition);
+            if (d < 50)
+            {
+                return true;
+            }
+            return false;
+        }
     }
 }

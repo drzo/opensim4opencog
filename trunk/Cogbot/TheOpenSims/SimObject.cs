@@ -1192,7 +1192,13 @@ namespace cogbot.TheOpenSims
             {
                 UpdateProperties(_propertiesCache);
             }
-            UpdateOccupied();
+            if (IsRegionAttached)
+            {
+                if (WorldSystem.IsWorthMeshing(this))
+                {
+                    UpdateOccupied();
+                }
+            }
             toStringNeedsUpdate = true;
         }
 
@@ -1224,8 +1230,53 @@ namespace cogbot.TheOpenSims
                     return false;
                 }
             }
-            if (IsMeshing) return false;
-            IsMeshing = true;
+            try
+            {
+                if (!IsMeshing)
+                {
+                    IsMeshing = true;
+                    WorldSystem.SimPaths.MeshingQueue.Enqueue(UpdateOccupied1);
+                }
+                return wasMeshUpdated;
+               
+            } finally
+            {
+                wasMeshUpdated = false;
+            }
+        }
+
+        public void UpdateOccupied1()
+        {
+            try
+            {
+                UpdateOccupied2();
+            }
+            catch (Exception e)
+            {
+                Debug("While updating " + e);
+            }
+            finally
+            {
+                IsMeshing = false;
+                IsMeshed = true;
+            }
+        }
+
+        public void UpdateOccupied2()
+        {
+            if (!IsRegionAttached)
+            {
+                return;
+            }
+            if (!IsRoot)
+            {
+                // dont mesh armor
+                if (Parent is SimAvatar)
+                {
+                    return;
+                }
+            }
+
             bool updated = GetSimRegion().AddCollisions(Mesh);
             // update parent + siblings
             if (!IsRoot)
@@ -1243,9 +1294,7 @@ namespace cogbot.TheOpenSims
                     updated = true;
                 }
             }
-            IsMeshing = false;
-            IsMeshed = true;
-            return updated;
+            wasMeshUpdated = updated;
         }
 
         public void AddSuperTypes(IList<SimObjectType> listAsSet)
@@ -2337,6 +2386,7 @@ namespace cogbot.TheOpenSims
 
         readonly Dictionary<string, object> dict = new Dictionary<string, object>();
         protected bool toStringNeedsUpdate = true;
+        private bool wasMeshUpdated;
 
         public bool IsMeshed { get; set; }
 
