@@ -131,7 +131,6 @@ namespace cogbot.TheOpenSims
                     {
                         Prim.Properties = value;
                     }
-                AddInfoMap(value, "ObjectProperties");
             }
         }
 
@@ -867,8 +866,8 @@ namespace cogbot.TheOpenSims
             if (_Mesh != null)
             {
                 _Mesh.RemoveCollisions();
-            }
-            _Mesh = null;
+                _Mesh = null;
+            }      
         }
 
         public SimObjectType IsTypeOf(SimObjectType superType)
@@ -1096,14 +1095,14 @@ namespace cogbot.TheOpenSims
 
         // This field is supposed to be the most recent property udate 
         private Primitive.ObjectProperties MostRecentPropertyUpdate;
-        static readonly object MostRecentPropertyUpdateLock = new object();
+        readonly object MostRecentPropertyUpdateLock = new object();
         private void UpdateProperties(Primitive.ObjectProperties objectProperties)
         {
             lock (MostRecentPropertyUpdateLock)
             {
                 MostRecentPropertyUpdate = objectProperties;
-                WorldObjects.UpdateObjectData.Enqueue(UpdateProperties0);
             }
+            WorldObjects.UpdateObjectData.Enqueue(UpdateProperties0);
         }
 
         private void UpdateProperties0()
@@ -1151,6 +1150,7 @@ namespace cogbot.TheOpenSims
                         }
                     }
                     _propertiesCache = objectProperties;
+                    AddInfoMap(objectProperties, "ObjectProperties");
                 }
             }
             catch (Exception e)

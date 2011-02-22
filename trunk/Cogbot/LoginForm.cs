@@ -6,6 +6,8 @@ using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
+using System.Xml.Serialization;
+using MushDLR223.Utilities;
 using OpenMetaverse; //using libsecondlife;
 using System.Threading;
 
@@ -148,10 +150,12 @@ namespace cogbot
         string _SimURL;
         string _startupLisp;
         string _startupClientLisp;
+        string _onLogin;
+        string _onLogout;
 
         public Configuration()
         {
-            _Version = 1;
+            _Version = 2;
             _FirstName = "";
             _LastName = "";
             _Password = "";
@@ -177,16 +181,37 @@ namespace cogbot
             System.Xml.Serialization.XmlSerializer xs
                = new System.Xml.Serialization.XmlSerializer(
                   typeof(Configuration));
+            xs.UnknownElement += new XmlElementEventHandler(On_Unknown);
             StreamReader reader = File.OpenText(file);
             Configuration c = (Configuration)xs.Deserialize(reader);
             reader.Close();
             return c;
         }
+
+        private static void On_Unknown(object sender, XmlElementEventArgs e)
+        {
+            DLRConsole.DebugWriteLine("UNKOWN XML ELEMENT: " + e.Element + " " + e.ExpectedElements + " @ line " +
+                                      e.LineNumber);
+        }
+
         public void loadConfig()
         {
             try
             {
-                Configuration c2 = Configuration.Deserialize("botconfig.xml");
+                loadConfig("botconfig.xml");
+
+            }
+            catch (Exception e)
+            {
+                DLRConsole.DebugWriteLine(e);
+            }
+
+        }
+        public void loadConfig(string fileName)
+        {
+            try
+            {
+                Configuration c2 = Configuration.Deserialize(fileName);
                 this.Version = c2.Version;
                 this.firstName = c2.firstName;
                 this.lastName = c2.lastName;
@@ -196,14 +221,16 @@ namespace cogbot
                 this.tcpIPAddress = c2.tcpIPAddress;
                 this.startupLisp = c2.startupLisp;
                 this.startupClientLisp = c2.startupClientLisp;
+                this.onLogin = c2.onLogin;
 
             }
             catch (Exception e)
             {
+                DLRConsole.DebugWriteLine(e);
+                throw e;
             }
 
         }
-
         public void saveConfig()
         {
             try
@@ -212,10 +239,12 @@ namespace cogbot
             }
             catch (Exception e)
             {
+                DLRConsole.DebugWriteLine(e);
             }
 
         }
 
+        // XMLElements
         public int Version
         {
             get { return _Version; }
@@ -265,6 +294,11 @@ namespace cogbot
         {
             get { return _startupClientLisp; }
             set { _startupClientLisp = value; }
+        }
+        public string onLogin
+        {
+            get { return _onLogin;; }
+            set { _onLogin = value; }
         }
 
     }

@@ -1805,7 +1805,7 @@ namespace cogbot
             return Equals((LoginDetails) obj);
         }
 
-
+        readonly internal AutoResetEvent LoginEvent = new AutoResetEvent(false);
         readonly internal LoginParams loginParams = new LoginParams();
         public bool GroupCommands;
         public string MasterName;
@@ -1828,8 +1828,10 @@ namespace cogbot
         */
         public override string ToString()
         {
-            return BotLName;
+            return BotLName + " (" + Status + ")";
         }
+        
+        public LoginStatus Status { get; set;}
 
         /// <summary>The number of milliseconds to wait before a login is considered
         /// failed due to timeout</summary>
@@ -1980,6 +1982,7 @@ namespace cogbot
 
             AgreeToTos = defaults.AgreeToTos;
             Timeout = defaults.Timeout;
+            Status = LoginStatus.None;
         }
 
         public void LoadFromConfig(Configuration config)

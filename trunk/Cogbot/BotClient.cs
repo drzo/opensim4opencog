@@ -122,6 +122,11 @@ namespace cogbot
         public bool ExpectConnected;
         public void Login()
         {
+            Login(false);
+        }
+
+        public void Login(bool blocking)
+        {
             SetRadegastLoginOptions();
             if (IsLoggedInAndReady) return;
             if (ExpectConnected) return;
@@ -138,10 +143,28 @@ namespace cogbot
             try
             {
                 Settings.LOGIN_SERVER = BotLoginParams.URI;
+                if (TheRadegastInstance != null)
+                {
+                    var LoginEvent = BotLoginParams.LoginEvent; 
+                    LoginEvent.Reset();
+                    // non blocking
+                    InvokeGUI(TheRadegastInstance.MainForm, TheRadegastInstance.Netcom.Login);
+                    
+                    if (blocking)
+                    {
+                        bool madeIt = LoginEvent.WaitOne(BotLoginParams.loginParams.Timeout, false);
+
+                    }
+                    return;
+                }
                 //SetLoginOptionsFromRadegast();
-                Network.Login(BotLoginParams.FirstName, BotLoginParams.LastName,
-                              BotLoginParams.Password, BotLoginParams.UserAgent, BotLoginParams.Start,
-                              BotLoginParams.Version);
+                if (!blocking)
+                {
+                    Network.BeginLogin(BotLoginParams.loginParams);
+                } else
+                {
+                    Network.Login(BotLoginParams.loginParams);
+                }
             }
             catch (Exception ex)
             {
@@ -408,6 +431,7 @@ namespace cogbot
             ClientManager = manager;
             gridClient = g;
             manager.AddBotClient(this);
+            NeedRunOnLogin = true;
             //manager.LastRefBotClient = this;
             updateTimer = new System.Timers.Timer(500);
             updateTimer.Elapsed += new System.Timers.ElapsedEventHandler(updateTimer_Elapsed);
@@ -645,16 +669,18 @@ namespace cogbot
         public object RunStartupClientLisplock = new object();
         public void StartupClientLisp()
         {
-            if (!RunStartupClientLisp) return;
             lock (RunStartupClientLisplock)
             {
                 if (!RunStartupClientLisp) return;
+                DebugWriteLine("Running StartupClientLisp");
                 RunStartupClientLisp = false;
-                if (ClientManager.config.startupClientLisp.Length > 1)
+                string startupClientLisp = ClientManager.config.startupClientLisp;
+                if (startupClientLisp.Length > 1)
                 {
                     try
                     {
                         LoadTaskInterpreter();
+                        //InvokeJoin("Waiting on StartupClientLisp");
                         evalLispString("(progn " + ClientManager.config.startupClientLisp + ")");
                     }
                     catch (Exception ex)
@@ -662,9 +688,31 @@ namespace cogbot
                         LogException("StartupClientLisp", ex);
                     }
                 }
+                DebugWriteLine("Ran StartupClientLisp");
             }
         }
-
+        public void RunOnLogin()
+        {
+            lock (RunStartupClientLisplock)
+            {
+                StartupClientLisp();
+                InvokeJoin("Waiting on RunOnLogin");
+                if (!NeedRunOnLogin) return;
+                NeedRunOnLogin = false;
+                string onLogin = ClientManager.config.onLogin;
+                if (onLogin.Length > 1)
+                {
+                    try
+                    {
+                        evalLispString("(progn " + onLogin + ")");
+                    }
+                    catch (Exception ex)
+                    {
+                        LogException("RunOnLogin: " + onLogin, ex);
+                    }
+                }
+            }
+        }
         //breaks up large responses to deal with the max IM size
         private void SendResponseIM(GridClient client, UUID fromAgentID, OutputDelegate WriteLine, string data)
         {
@@ -986,7 +1034,7 @@ namespace cogbot
                 new Thread(() =>
                 {
                     Thread.Sleep(10000);
-                    Login();
+                    Login(true);
                 }).Start();
             }
         }
@@ -1434,9 +1482,12 @@ namespace cogbot
         {
             var message = e.Message;
             var login = e.Status;
-            if (_BotLoginParams==null)
+            if (_BotLoginParams == null)
             {
                 SetLoginName(gridClient.Self.FirstName, gridClient.Self.LastName);
+            } else
+            {
+                _BotLoginParams.Status = login;
             }
             if (login == LoginStatus.Success)
             {
@@ -1448,6 +1499,11 @@ namespace cogbot
                     Logger.Log("Cannot get Inventory.Store.RootFolder", OpenMetaverse.Helpers.LogLevel.Error);
                     CurrentDirectory = null;
                 }
+                OneAtATimeQueue.Enqueue(RunOnLogin);
+            } // anyhitng other than success NeedRunOnLogin
+            else
+            {
+                NeedRunOnLogin = true;
             }
             //            WriteLine("ClientManager Network_OnLogin : [" + login.ToString() + "] " + message);
             //SendNewEvent("On-Login", login, message);
@@ -1457,9 +1513,16 @@ namespace cogbot
                 ExpectConnected = false;
                 SendNetworkEvent("On-Login-Fail", login, message);
                 WriteLine("Login Failed " + message + " LoginRetries: " + LoginRetries);
-                if (LoginRetries <= 0) return;
-                LoginRetries--;               
-                Login();
+                if (LoginRetries <= 0)
+                {
+                    if (_BotLoginParams != null)
+                    {
+                        _BotLoginParams.LoginEvent.Set();
+                    }
+                    return;
+                }
+                LoginRetries--;
+                Login(false);
             }
             else if (login == LoginStatus.Success)
             {
@@ -1472,6 +1535,10 @@ namespace cogbot
                 ExpectConnected = true;
                 SendNetworkEvent("On-Login-Success", login, message);
                 //                SendNewEvent("on-login-success",login,message);
+                if (_BotLoginParams != null)
+                {
+                    _BotLoginParams.LoginEvent.Set();
+                }
             }
             else
             {
@@ -1653,7 +1720,7 @@ namespace cogbot
 
         public CmdResult ExecuteCommand(string text)
         {
-            InvokeJoin("ExecuteCommand " + text);
+            // done inside the callee InvokeJoin("ExecuteCommand " + text);
             return ExecuteCommand(text, WriteLine); 
         }
 
@@ -1665,8 +1732,12 @@ namespace cogbot
         {
             return OneAtATimeQueue.InvokeJoin(s, millisecondsTimeout);
         }
+        internal bool InvokeJoin(string s, int millisecondsTimeout, ThreadStart task1, ThreadStart task2)
+        {
+            return OneAtATimeQueue.InvokeJoin(s, millisecondsTimeout, task1, task2);
+        }
 
-        private void InvokeNext(string s, ThreadStart e)
+        public void InvokeNext(string s, ThreadStart e)
         {
             OneAtATimeQueue.Enqueue(() =>
                                         {
@@ -1694,7 +1765,6 @@ namespace cogbot
 
         public CmdResult ExecuteBotCommand(string text, OutputDelegate WriteLine)
         {
-            InvokeJoin("ExecuteBotCommand " + text);
             if (text == null)
             {
                 return null;
@@ -1707,6 +1777,7 @@ namespace cogbot
             }
             try
             {
+                InvokeJoin("ExecuteBotCommand " + text);
                 if (text.StartsWith("("))
                 {
                     return new CmdResult(evalLispString(text).ToString(), true);
@@ -1766,7 +1837,7 @@ namespace cogbot
 
         private CmdResult DoCmdAct(Command command, string verb, string args, OutputDelegate del)
         {
-            InvokeJoin("ExecuteBotCommand " + verb + " " + args);
+            InvokeJoin("ExecuteActBotCommand " + verb + " " + args);
             return command.acceptInputWrapper(verb, args, del);
         }
 
@@ -1971,7 +2042,7 @@ namespace cogbot
 
         public void SetRadegastLoginOptions()
         {
-            ClientManager.EnsureRadegastForm(this, TheRadegastInstance, "EnsureRadegastForm1 " + GetName());
+            ClientManager.EnsureRadegastForm(this, TheRadegastInstance, "EnsureRadegastForm from SetRadegastLoginOptions " + GetName());
             var to = TheRadegastInstance.Netcom.LoginOptions;
             to.FirstName = BotLoginParams.FirstName;
             to.LastName = BotLoginParams.LastName;
@@ -1993,9 +2064,8 @@ namespace cogbot
             }
             TheRadegastInstance.Netcom.Grid = G;
             to.Grid = G;
-            string botStartAt = BotLoginParams.Start;
-            to.StartLocation = StartLocationType.Custom;
-            to.StartLocationCustom = botStartAt;
+            string botStartAt = BotLoginParams.Start;            
+
             if (botStartAt == "home")
             {
                 to.StartLocation = StartLocationType.Home;
@@ -2003,7 +2073,11 @@ namespace cogbot
             else if (botStartAt == "last")
             {
                 to.StartLocation = StartLocationType.Last;                
-            }
+            } else
+            {
+                to.StartLocation = StartLocationType.Custom;
+                to.StartLocationCustom = botStartAt;
+            }            
             to.Version = BotLoginParams.Version;
             to.Channel = BotLoginParams.Channel;
             RadegastTab tab;
@@ -2169,7 +2243,7 @@ namespace cogbot
         {
             try
             {
-                if (mf.IsHandleCreated)
+                if (false && mf.IsHandleCreated)
                 {
                 }
                 if (mf.InvokeRequired)
@@ -2350,6 +2424,7 @@ namespace cogbot
         public bool EnsuredRadegastRunning;
         public bool InvokedMakeRunning;
         public bool AddingTypesToBotClientNow;
+        private bool NeedRunOnLogin = true;
 
         public void Talk(string text)
         {
