@@ -17,6 +17,7 @@ namespace cogbot.Listeners
         public static bool DoSimulatorsCatchUp = false; //GridMaster will turn this on/off only if it needed
         public static bool MaintainAnims = true;
         public static bool MaintainAssetsInFolders = true;
+        public static bool GleanAssetsFromInventory = true;
         public static bool MaintainAnimsInFolders = true;
         public static bool GleanAssetsFromFolders = true;
         public static bool MaintainAttachments = true;
@@ -34,6 +35,7 @@ namespace cogbot.Listeners
         public static bool UseNewEventSystem = true;
         public static bool SimplifyBoxes = true; // true takes longer startup but speeds up runtime path finding
         public static bool SendAllEvents = MaintainObjectUpdates;
+
 
 
         private static readonly Dictionary<ulong, object> GetSimObjectLock = new Dictionary<ulong, object>();
@@ -137,6 +139,8 @@ namespace cogbot.Listeners
         public WorldObjects(BotClient client)
             : base(client)
         {
+            RegisterAll();
+            DLRConsole.TransparentCallers.Add(typeof (WorldObjects));
             if (Utils.GetRunningRuntime() == Utils.Runtime.Mono)
             {
                 // client.Settings.USE_LLSD_LOGIN = true;
@@ -314,7 +318,7 @@ namespace cogbot.Listeners
         {
             if (Settings.LOG_LEVEL != Helpers.LogLevel.None)
             {
-                // DLRConsole.WriteLine(p);                
+                DLRConsole.DebugWriteLine(p);                
             }
         }
 

@@ -124,6 +124,7 @@ namespace cogbot.TheOpenSims
         public static bool downloadedAssetFoldersComplete = false;
         private void Ensure_Downloaded(object sender, SimConnectedEventArgs e)
         {
+            if (!WorldObjects.GleanAssetsFromInventory) return;
             if (downloadedAssetFolders) return;
             downloadedAssetFolders = true;
             Inventory = Manager.Store;
@@ -135,7 +136,7 @@ namespace cogbot.TheOpenSims
         }
 
          void DownloadAssetFolders()
-        {
+        {        
             bool prev = downloadedAssetFoldersComplete;
             downloadedAssetFoldersComplete = false;
             Client.AnimationFolder = Client.Inventory.FindFolderForType(AssetType.Animation);
