@@ -20,7 +20,7 @@ namespace AIMLBotModule
         public AimlCommand(BotClient testClient)
         {
             Name = "aiml";
-            Description = "Usage: aiml [[on|off|reload|learn]|text|setuser]";
+            Description = "Usage: aiml [@[[on|off|reload|learn]|text|setuser]] [operands]";
             Category = CommandCategory.Communication;
         }
 
