@@ -1512,5 +1512,20 @@ namespace RTParser.Utils
         }
 
         public ParentChild ParentObject { get; set; }
+
+        public static GraphMaster FindOrCreate(string dgn)
+        {
+            var gbn = RTPBot.GraphsByName;
+            lock (gbn)
+            {
+                GraphMaster v;
+                if (!gbn.TryGetValue(dgn, out v))
+                {
+                    v = gbn[dgn] = new GraphMaster(dgn);
+                }
+                return v;
+            }
+            //throw new NotImplementedException();
+        }
     }
 }

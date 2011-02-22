@@ -110,7 +110,7 @@ namespace RTParser
             var botAsUser1 = BotAsUser;
             s = Trim(s);
             if (!s.StartsWith("<")) s = "<!-- " + s.Replace("<!--", "<#").Replace("-->", "#>") + " -->";
-            var r = new AIMLbot.MasterRequest(s, botAsUser1, "Missing that for robot request", botAsUser1, this, null,
+            var r = new AIMLbot.MasterRequest(s, botAsUser1,"Nothing", botAsUser1, this, null,
                                               GraphMaster);
             //r.ChatOutput.RawText = s;
             r.writeToLog = writeToLog;
@@ -1407,7 +1407,7 @@ The AIMLbot program.
                 }
                 if (!GraphsByName.TryGetValue(graphPath, out g))
                 {
-                    g = GraphsByName[graphPath] = new GraphMaster(graphPath);
+                    g = GraphsByName[graphPath] = GraphMaster.FindOrCreate(graphPath);
                 }
             }
             return g;
@@ -1444,7 +1444,7 @@ The AIMLbot program.
                 }
                 if (!GraphsByName.TryGetValue(graphPath, out g))
                 {
-                    g = GraphsByName[graphPath] = new GraphMaster(graphPath);
+                    g = GraphsByName[graphPath] = GraphMaster.FindOrCreate(graphPath);
                 }
             }
             return g;
@@ -1721,13 +1721,14 @@ The AIMLbot program.
                 }
                 if (_g == null)
                 {
-                    _g = new GraphMaster(dgn);
-                    _h = TheUserListernerGraph;// = new GraphMaster(hgn);
+                    _g = GraphMaster.FindOrCreate(dgn);
+                    _h //= TheUserListernerGraph 
+                        = new GraphMaster(hgn);
                     _g.AddGenlMT(GraphsByName["default"], writeToLog);
                     _h.AddGenlMT(GraphsByName["heardselfsay"], writeToLog);
                     _h.AddGenlMT(GraphsByName["listener"], writeToLog);
-                    GraphsByName.Add(dgn, _g);
-                    GraphsByName.Add(hgn, _h);
+                    GraphsByName[dgn] = _g;
+                    GraphsByName[hgn] = _h;
                 }
             }
             GraphMaster vv = HeardSelfSayGraph;
@@ -1776,9 +1777,9 @@ The AIMLbot program.
 
                 if (StaticInitStarted) return;
                 StaticInitStarted = true;
-                GraphsByName["listener"] = TheUserListernerGraph = new GraphMaster("listener");
+                GraphsByName["listener"] = TheUserListernerGraph = GraphMaster.FindOrCreate("listener");
                 TheUserListernerGraph.SilentTagsInPutParallel = false;
-                var defaultGraph = GraphsByName["default"] = new GraphMaster("default");
+                var defaultGraph = GraphsByName["default"] = GraphMaster.FindOrCreate("default");
                 defaultGraph.RemovePreviousTemplatesFromNodes = false;
                 GraphsByName["heardselfsay"] = TheUserListernerGraph;////new GraphMaster("heardselfsay");
                 AddSettingsAliases("lastuserid", "you");

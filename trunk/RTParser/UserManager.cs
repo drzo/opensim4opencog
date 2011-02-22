@@ -272,7 +272,7 @@ namespace RTParser
         readonly object microBotUsersLock = new object();
         internal User FindUser0(string fromname)
         {
-            if (fromname != null && fromname.Contains("????"))
+            if (fromname != null && !IsLegalUserName(fromname))
             {
                 writeToLog("BAd????");
                 throw new NullReferenceException("FindUser: " + fromname);
@@ -294,6 +294,23 @@ namespace RTParser
                 }
                 return null;
             }
+        }
+
+        public bool IsLegalUserName(string fromname)
+        {
+            var b = IsLegalUserName0(fromname);
+            if (b) return true;
+            return false;
+        }
+        private static bool IsLegalUserName0(string fromname)
+        {
+            if (fromname == null) return false;
+            if (fromname.Contains("????")) return false;
+            if (fromname.Contains(",")) return false;
+            if (fromname.Contains("}")) return false;
+            if (fromname.Contains("{")) return false;
+            if (fromname.Contains("-")) return false;
+            return true;
         }
 
         public User FindOrCreateUser(string fullname, out bool newlyCreated)

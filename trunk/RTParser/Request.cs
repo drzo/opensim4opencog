@@ -1240,7 +1240,14 @@ namespace RTParser
             }
             set
             {
-                if (IsNullOrEmpty(value)) throw new NullReferenceException("set_That: " + this);
+                if (IsNullOrEmpty(value))
+                {
+                    {
+                        throw new NullReferenceException("set_That: " + this);
+
+                    }
+                }
+
                 ithat = value;
                 if (UserImpl.ThatIsStoredBetweenUsers)
                 {

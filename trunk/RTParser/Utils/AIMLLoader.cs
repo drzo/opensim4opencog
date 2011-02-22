@@ -1515,6 +1515,7 @@ namespace RTParser.Utils
             }
             if (normalizedPattern != normalizedPattern1)
             {
+                normalizedPattern = normalizedPattern.Replace("  ", " ");
                 writeDebugLine("LastRepair '{0}' -> '{1}' ", normalizedPattern1, normalizedPattern);
                 return normalizedPattern;
             }
