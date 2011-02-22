@@ -59,7 +59,7 @@ namespace cogbot.Actions.System
                     ///                    Client.Network.Login(Client.BotLoginParams.FirstName, Client.BotLoginParams.LastName, Client.BotLoginParams.Password, "OnRez", "UNR");
                     WriteLine("$bot beginning login");
                     Client.Login();
-                    WriteLine("$bot completed login");
+                    WriteLine("$bot started login");
                 }
                 else
                     return Success("$bot is already logged in.");
