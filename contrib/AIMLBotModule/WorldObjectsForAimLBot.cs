@@ -205,8 +205,9 @@ namespace AIMLBotModule
             StringChat(str);
         }
 
-        public RTPBot MyBot;
-        public User MyUser;
+        public RTPBot _MyBot;
+        private User _MyUser;
+
         readonly TaskQueueHandler AimlBotReadSimData = new TaskQueueHandler("AIMLBot ReadSim", 1);
         readonly TaskQueueHandler AimlBotRespond = new TaskQueueHandler("AIMLBot ChatRespond", 1);
 
@@ -395,12 +396,16 @@ namespace AIMLBotModule
 
         private User GetMyUser(string fromname)
         {
+            bool newlyCreated;
+            if (MyBotNullWarning()) return MyUser;
             if (String.IsNullOrEmpty(fromname))
             {
                 fromname = "UNKNOWN_PARTNER";
             }
-            bool newlyCreated;
-            if (MyBotNullWarning()) return MyUser;
+            if (!MyBot.IsLegalUserName(fromname))
+            {
+                return MyUser;
+            }
             User user = MyBot.FindOrCreateUser(fromname, out newlyCreated);
             if (newlyCreated)
             {
@@ -1204,6 +1209,39 @@ namespace AIMLBotModule
             get { return "botmod"; }
         }
 
+        public User MyUser
+        {
+            get
+            {
+                if (_MyUser == null)
+                {
+                    if (MyBotNullWarning())
+                    {
+                        return null;
+                    }
+                    _MyUser = MyBot.LastUser;
+                }
+                return _MyUser;
+            }
+            set { _MyUser = value; }
+        }
+
+        public RTPBot MyBot
+        {
+            get
+            {
+                if (_MyBot == null)
+                {
+                    if (MyBotNullWarning())
+                    {
+                        return null;
+                    }
+                }
+                return _MyBot;
+            }
+            set { _MyBot = value; }
+        }
+
         public void SetDefaultUser(string user)
         {
             MyUser = GetMyUser(user);
@@ -1228,6 +1266,10 @@ namespace AIMLBotModule
         internal bool DoBotDirective(string[] args, UUID fromAgentID, OutputDelegate writeLine)
         {
             string s = args[0];
+            if (s == "@wait" )
+            {
+                return true;
+            }
             if (s == "on" || s == "@on")
             {
                  RespondToChatByDefaultAllUsers = true;
@@ -1253,7 +1295,7 @@ namespace AIMLBotModule
 
         private bool MyBotNullWarning()
         {
-            if (MyBot != null) return false;
+            if (_MyBot != null) return false;
             DLRConsole.DebugWriteLine("WARNING! MyBOt NULL");
             client.WriteLine("WARNING! MyBOt NULL");
             return true;
