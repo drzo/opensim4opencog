@@ -227,13 +227,17 @@ namespace MushDLR223.Utilities
                     TaskQueueHandlers.Remove(this);
                 AbortThread(PingerThread);
                 PingerThread = null;
-                AbortThread(StackerThread);
-                StackerThread = null;
-                if (TaskHolder != null)
+                if (!IsTaskThread)
                 {
-                    AbortThread(TaskHolder.ThreadForTask);
+                    AbortThread(StackerThread);
+
+                    StackerThread = null;
+                    if (TaskHolder != null)
+                    {
+                        AbortThread(TaskHolder.ThreadForTask);
+                    }
+                    TaskHolder = null;
                 }
-                TaskHolder = null;
                 NoExceptions<bool>(WaitingOn.Set);
                 NoExceptions(WaitingOn.Close);
             }
@@ -1599,7 +1603,7 @@ namespace MushDLR223.Utilities
 
         private void TrySetThreadName(string s)
         {
-            if (s==null)
+            if (s == null)
             {
                 return;
             }
@@ -1619,48 +1623,121 @@ namespace MushDLR223.Utilities
 
         public bool InvokeJoin(string s, int millisecondsTimeout)
         {
+            if (IsTaskThread)
+            {
+                return true;
+            }
+            return InvokeJoin(s, millisecondsTimeout, null, null);
+        }
+        public bool InvokeJoin(string s, int millisecondsTimeout, ThreadStart pretask, ThreadStart postask)
+        {
+            if (IsTaskThread)
+            {
+                CallNow(pretask, "pre" , s);
+                CallNow(postask, "post" , s);
+                return true;
+            }
+            bool success = false;
+            WriteLine("InvokeJoin Cross-Thread: " + s);
             TrySetThreadName(s);
-            ManualResetEvent are = new ManualResetEvent(false);
-            Enqueue(() =>
-                        {
-                            try
-                            {
-                                lock (DebugStringLock)
-                                {
-                                    if (WaitingString.Contains("\n" + s))
-                                    {
-                                        WaitingString = WaitingString.Replace("\n" + s, "");
-                                    }
-                                }
-                                lock (DebugStringLock)
-                                {
-                                    NoExceptions<bool>(are.Set);                                    
-                                }
-                            }
-                            catch
-                            {
-                            }
-                        });
-            if (millisecondsTimeout == -1)
+            AutoResetEvent are = new AutoResetEvent(false);
+            ThreadStart TJ = (
+                                 () =>
+                                     {
+                                         CallNow(pretask, "pre ", s);
+                                         CallNow(() => NoExceptions<bool>(are.Set), "setter ", s);
+                                     });
+            if (!WasStartCalled)
             {
-                // three minutes
-                millisecondsTimeout = 180000;
+                VeryBad("ERROR in InvokeJoin " + s + " !WasStartCalled ");
+                Start();
             }
-            bool success = are.WaitOne(millisecondsTimeout);
-            if (!success)
+            if (IsTaskThread)
             {
-                WriteLine("ERROR! TIMOUT " + s + " for " + ToString() + " in " + Thread.CurrentThread);
+                TJ();
             }
+            else
             {
-                lock (DebugStringLock)
+                Enqueue(TJ);
+            }
+            if (millisecondsTimeout <= 0)
+            {
+                TimeSpan ticktock = TimeSpan.FromMinutes(1);
+                while (!success)
                 {
-                    if (WaitingString.Contains("\n" + s))
+                    if (IsDisposing) return true;
+                    try
                     {
-                        WaitingString = WaitingString.Replace("\n" + s, "");
+                        success = are.WaitOne(ticktock);
+                    }
+                    catch (Exception e)
+                    {
+                        VeryBad("ERROR in InvokeJoin/While " + s + " " + e);
+                    }
+                    if (!success)
+                    {
+                        WriteLine("# ticktock " + GetTimeString(ticktock) + ": " + s + " for " + ToString() + " in " +
+                                  Thread.CurrentThread);
                     }
                 }
             }
+            else
+            {
+                try
+                {
+                    success = are.WaitOne(millisecondsTimeout);
+                }
+                catch (Exception e)
+                {
+                    VeryBad("ERROR in InvokeJoin/WaitOne " + s + " " + e);
+                }
+            }
+            if (!success)
+            {
+                 WriteLine("ERROR! TIMOUT " + GetTimeString(TimeSpan.FromMilliseconds(millisecondsTimeout)) + ": " + s + " for " + ToString() + " in " + Thread.CurrentThread);
+            }
+            CallNow(postask, "post", s);
+            PopDebugString(s);
             return success;
+        }
+
+        protected bool IsTaskThread
+        {
+            get
+            {
+                Thread currentThread = Thread.CurrentThread;
+                return currentThread == this.StackerThread || currentThread == TaskThreadCurrent;
+            }
+        }
+
+        private void PopDebugString(string s)
+        {
+            lock (DebugStringLock)
+            {
+                if (WaitingString.Contains("\n" + s))
+                {
+                    WaitingString = WaitingString.Replace("\n" + s, "");
+                }
+            }
+        }
+
+        private void CallNow(ThreadStart task1, string n, string s)
+        {
+            if (task1 == null) return;
+            var ss = n + " " + s;
+          //  TrySetThreadName(ss);
+            try
+            {
+                task1();
+            }
+            catch (Exception e)
+            {
+                VeryBad("ERROR in CallNow/" + ss + " " + e);
+            }
+            finally
+            {
+        //        PopDebugString(ss);
+            }
         }
 
         public void RunTaskSyncronously(TASK action, string name, TimeSpan maxTime)
@@ -1831,8 +1908,25 @@ namespace MushDLR223.Utilities
             }
             catch (Exception e)
             {
-                WriteLine("" + e);
+                VeryBad("" + e);
                 return default(T);
+            }
+        }
+
+        private void NoException(ThreadStart func)
+        {
+            if (func == null) return;
+            try
+            {
+                if (IsDisposing)
+                {
+                    WriteLine("IsDisposing");
+                }
+                func.Invoke();
+            }
+            catch (Exception e)
+            {
+                VeryBad("" + e);
             }
         }
 
