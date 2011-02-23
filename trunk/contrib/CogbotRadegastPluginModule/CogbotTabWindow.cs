@@ -783,14 +783,14 @@ namespace CogbotRadegastPluginModule
                 args = new object[] { str };
                 str = "{0}";
             }
-            if (args.Length > 0) str = String.Format(str, args);
+            if (args.Length > 0) str = DLRConsole.SafeFormat(str, args);
             str = str.Trim();
             if (str == "") return;
             if (!writeLock.IsRunning)
             {
                 DLRConsole.SYSTEM_ERR_WRITELINE_REAL("early " + str);
             }
-            writeLock.Enqueue(() => rtbChat.Invoke(new MethodInvoker(() =>
+            writeLock.Enqueue(() => RadegastForm.InvokeControl(rtbChat,new MethodInvoker(() =>
                                                                          {
                                                                              try
                                                                              {
@@ -805,7 +805,7 @@ namespace CogbotRadegastPluginModule
                                                                              }
                                                                              catch (Exception e)
                                                                              {
-                                                                                 DLRConsole.DebugWriteLine("" + e);
+                                                                                 DLRConsole.SYSTEM_ERR_WRITELINE_REAL("" + e);
                                                                                  // probably dead anyway ...
                                                                              }
                                                                          })));
