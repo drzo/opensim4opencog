@@ -54,7 +54,7 @@ namespace DotLisp
                 {
                     return FindMember(name, type, isStatic);
                 }
-                catch (NotImplementedException nie)
+                catch (MissingMethodException nie)
                 {
                     if (e == null) e = nie;
                 }
@@ -81,7 +81,7 @@ namespace DotLisp
                                                              ); //all public members with matching isstatic
             if (members.Length == 0)
             {
-                throw new NotImplementedException("Can't find " +
+                throw new MissingMethodException("Can't find " +
                                           (isStatic ? "static" : "instance") +
                                           " member: " + name + " in Type: " + type.FullName);
             }
