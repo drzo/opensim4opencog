@@ -284,7 +284,7 @@ namespace RTParser
         }
         private void SetupUserWithGraph0(GraphMaster graph, string newname, string newkey, User newuser)
         {            
-            graph.AddParallelMT(RTPBot.TheUserListernerGraph, newuser.WriteToUserTrace);
+            graph.AddParallelMT(RTPBot.TheUserListenerGraph, newuser.WriteToUserTrace);
             newuser.ListeningGraph = graph;
             newuser.UserID = newkey;
             newuser.UserName = newname;
@@ -299,6 +299,16 @@ namespace RTParser
                                         if (graph.Size == 0) graph.UnTraced = true;
                                     });
             newuser.Predicates.IsIdentityReadOnly = true;
+        }
+
+        public static string NoSpaceLowerCaseName(string path)
+        {
+            path = ToLower(Trim(ConsolidSpaces(path)));
+            return OlderReference(
+                path,
+                path
+                    .Replace(" ", "_").Replace(".", "_")
+                    .Replace("-", "_").Replace("__", "_"));
         }
     }
 }

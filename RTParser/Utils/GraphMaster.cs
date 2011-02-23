@@ -843,7 +843,7 @@ namespace RTParser.Utils
             {
                 if (fallback == this)
                 {
-                    writeToLog("Trying to genlMt reversed to " + this);
+                    writeToLog("Trying to RemoveGenlMT self: " + this);
                     FallBacksGraphs.Remove(fallback);
                     return;
                 }
@@ -864,7 +864,7 @@ namespace RTParser.Utils
             {
                 if (fallback == this)
                 {
-                    writeToLog("Trying to genlMt reversed to " + this);
+                    writeToLog("Trying to AddGenlMT self: " + this);
                     return;
                 }
                 lock (FallBacksGraphs)

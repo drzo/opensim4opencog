@@ -612,9 +612,10 @@ namespace RTParser
             try
             {
                 swiInterpreter = new PrologScriptInterpreter(this); //ScriptManager.LoadScriptInterpreter("PrologScriptInterpreter", this);
+                swiInterpreter.Init();
+                AddExcuteHandler("swi", SWIExecHandler); 
                 swiInterpreter.Intern("MyBot", this);
                 swiInterpreter.Intern("Users", BotUsers);
-                AddExcuteHandler("swi", SWIExecHandler);
             }
             catch (Exception e)
             {
@@ -1397,7 +1398,10 @@ The AIMLbot program.
 
         public GraphMaster GetUserGraph(string graphPath)
         {
-            graphPath = ToLower(Trim(graphPath));
+            if (!graphPath.Contains("_to_"))
+            {
+                graphPath = ToLower(ConsolidSpaces(Trim(graphPath + "_to_" + this.NamePath)));
+            }
             GraphMaster g;
             lock (GraphsByName)
             {
@@ -1405,10 +1409,10 @@ The AIMLbot program.
                 {
                     return g;
                 }
-                if (!GraphsByName.TryGetValue(graphPath, out g))
-                {
-                    g = GraphsByName[graphPath] = GraphMaster.FindOrCreate(graphPath);
-                }
+                g = GraphsByName[graphPath] = GraphMaster.FindOrCreate(graphPath);
+                GraphMaster dtob = Utils.GraphMaster.FindOrCreate("default_to_" + this.NamePath);
+                g.AddGenlMT(dtob, writeToLog);
+                dtob.AddGenlMT(Utils.GraphMaster.FindOrCreate("default"), writeToLog);
             }
             return g;
         }
@@ -1516,13 +1520,7 @@ The AIMLbot program.
                     sk += s;
             }
             path = OlderReference(path, sk);
-            path = ToLower(Trim(path));
-            return OlderReference(
-                path,
-                path
-                    .Replace(" ", "_").Replace(".", "_")
-                    .Replace("-", "_").Replace("__", "_"));
-
+            return NoSpaceLowerCaseName(path);
         }
 
         public static int DivideString(string args, string sep, out string left, out string right)
@@ -1711,8 +1709,8 @@ The AIMLbot program.
             //OnTaskAtATimeHandler.Name = "TaskQueue For " + myName;
 
             thisBotAsUser.SaveDirectory(thisBotAsUser.UserDirectory);
-            string dgn = NamePath + "_default";
-            string hgn = NamePath + "_heardselfsay";
+            string dgn = "default_to_" + NamePath;
+            string hgn = "heardselfsay_to_" + NamePath;
             lock (GraphsByName)
             {
                 if (String.IsNullOrEmpty(NamePath))
@@ -1777,11 +1775,11 @@ The AIMLbot program.
 
                 if (StaticInitStarted) return;
                 StaticInitStarted = true;
-                GraphsByName["listener"] = TheUserListernerGraph = GraphMaster.FindOrCreate("listener");
-                TheUserListernerGraph.SilentTagsInPutParallel = false;
+                GraphsByName["listener"] = TheUserListenerGraph = GraphMaster.FindOrCreate("listener");
+                TheUserListenerGraph.SilentTagsInPutParallel = false;
                 var defaultGraph = GraphsByName["default"] = GraphMaster.FindOrCreate("default");
                 defaultGraph.RemovePreviousTemplatesFromNodes = false;
-                GraphsByName["heardselfsay"] = TheUserListernerGraph;////new GraphMaster("heardselfsay");
+                GraphsByName["heardselfsay"] = TheUserListenerGraph;////new GraphMaster("heardselfsay");
                 AddSettingsAliases("lastuserid", "you");
                 AddSettingsAliases("lastusername", "you");
                 AddSettingsAliases("you", "lastusername");
@@ -1886,7 +1884,7 @@ The AIMLbot program.
         }
 
         private ClojureInterpreter clojureInterpreter;
-        private ScriptInterpreter swiInterpreter;
+        private PrologScriptInterpreter swiInterpreter;
         private List<string> _RuntimeDirectories;
 
         #region Overrides of QuerySettings

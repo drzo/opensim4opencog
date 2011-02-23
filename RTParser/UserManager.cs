@@ -274,7 +274,7 @@ namespace RTParser
         {
             if (fromname != null && !IsLegalUserName(fromname))
             {
-                writeToLog("BAd????");
+                writeToLog("ERROR: BAd???? FindUser: " + fromname);
                 throw new NullReferenceException("FindUser: " + fromname);
                 return null;
             }
@@ -305,6 +305,9 @@ namespace RTParser
         private static bool IsLegalUserName0(string fromname)
         {
             if (fromname == null) return false;
+            fromname = NoSpaceLowerCaseName(fromname);
+            if (fromname == "") return false;
+            if (fromname == "to_to") return false;
             if (fromname.Contains("????")) return false;
             if (fromname.Contains(",")) return false;
             if (fromname.Contains("}")) return false;
