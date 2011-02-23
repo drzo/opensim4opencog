@@ -1223,7 +1223,7 @@ namespace AIMLBotModule
                 }
                 return _MyUser;
             }
-            set { _MyUser = value; }
+            set { _MyUser = value ?? MyUser; }
         }
 
         public RTPBot MyBot
