@@ -786,6 +786,16 @@ namespace SbsSW.SwiPlCs
             PlTermV args = new PlTermV(arg1);
             return PlTerm.PlCompound(functor, args);
         }
+
+        public static PlTerm PlAtom(string name)
+        {
+            uint termRef = libpl.PL_new_term_ref();
+            PlTerm term = new PlTerm();
+            term._termRef = termRef;
+            libpl.PL_put_atom(termRef, libpl.PL_new_atom(name));
+            return term;
+        }
+
 #pragma warning disable 1573
         ///<inheritdoc cref="PlCompound(string, PlTerm)" />
         /// <param name="arg2">The second Argument as a <see cref="PlTerm"/></param>
