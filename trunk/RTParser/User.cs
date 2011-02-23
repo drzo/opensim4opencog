@@ -190,6 +190,7 @@ namespace RTParser
     {
         void DisposeObject();
         bool IsValid { get; set; }
+        GraphMaster SpeakingToRobot { get; set; }
     }
 
     /// <summary>
@@ -317,7 +318,7 @@ namespace RTParser
         /// The grahmaster this user is using
         /// // this stil is not "listener"
         /// </summary>
-        public GraphMaster ListeningGraph
+        public GraphMaster SpeakingToRobot
         {
             get
             {
@@ -1172,7 +1173,7 @@ namespace RTParser
                 {
                     var cis = UsedTemplates;
                     console("-----------------------------------------------------------------");
-                    console("LS: count=" + cis.Count + " local=" + ListeningGraph);
+                    console("LS: count=" + cis.Count + " local=" + SpeakingToRobot);
                     GraphMaster.PrintToWriter(cis, PrintOptions.SAVE_TO_FILE, new OutputDelegateWriter(console), null);
                     console("-----------------------------------------------------------------");
                 }
@@ -1382,6 +1383,12 @@ namespace RTParser
             Predicates.SaveTo(userdir, "user.predicates", "UserPredicates.xml");
             GraphMaster gm = bot.GetGraph(UserID, ListeningGraph);
             gm.WriteToFile(UserID, HostSystem.Combine(userdir, UserID) + ".saved", PrintOptions.SAVE_TO_FILE, logger);
+        }
+
+        public GraphMaster ListeningGraph
+        {
+            get { return bot.GetUserGraph(NameSpace); }
+            set { SpeakingToRobot = value; }
         }
 
         public void LoadDirectory(string userdir)
@@ -1611,9 +1618,9 @@ namespace RTParser
 
         public GraphMaster GetResponseGraph(User target)
         {
-            GraphMaster G = ListeningGraph;
-            if (G == null) if (target != null) return target.ListeningGraph;
-            return ListeningGraph;
+            GraphMaster G = SpeakingToRobot;
+            if (G == null) if (target != null) return target.SpeakingToRobot;
+            return this.ListeningGraph;// GetResponseGraph(this);
         }
 
         public MasterRequest CreateRequest(Unifiable message, User target)

@@ -151,7 +151,7 @@ namespace RTParser
 
         private GraphMaster _g;
         private GraphMaster _h;
-        private static GraphMaster TheUserListernerGraph;
+        private static GraphMaster TheUserListenerGraph;
 
         /// <summary>
         /// The "brain" of the Proccessor
