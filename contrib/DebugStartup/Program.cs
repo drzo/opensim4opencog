@@ -229,9 +229,10 @@ namespace ABuildStartup
             if (ClientManager.arguments.GetAfter("--swipl", out oArgs))
             {
                 string[] newArgs = oArgs;
-                if (newArgs.Length == 0) newArgs = new string[] {"-f", "cynd/cogbot.pl"};
+                if (newArgs.Length == 0) newArgs = new string[] { "-f", "cynd/cogbot.pl" };
+                newArgs = new string[] { };
                 AllocConsole();
-                DoAndExit(() => PrologClient.Main(newArgs));
+                DoAndExit(() => PrologScriptEngine.PrologScriptInterpreter.Main(newArgs));
                 return;
             }
             if (ClientManager.arguments.GetAfter("--main", out oArgs))
