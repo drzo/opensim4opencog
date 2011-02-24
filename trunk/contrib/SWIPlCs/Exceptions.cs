@@ -136,14 +136,16 @@ namespace SbsSW.SwiPlCs.Exceptions
 			: base(message)
 		{
             _messagePl = message;
-			_exTerm = new PlTerm(message);
+            _exTerm = PlTerm.PlAtom(message);
+            //_exTerm = new PlTerm(message);
 		}
         /// <inheritdoc />
         public PlException(string message, Exception innerException)
 			: base(message, innerException)
 		{
-            _messagePl = message + "; innerExeption:"+innerException.Message;
-            _exTerm = new PlTerm(message);
+            _messagePl = message + "; innerExeption:" + innerException.Message;
+            _exTerm = PlTerm.PlAtom(message);
+            //_exTerm = new PlTerm(message);
 		}
 
 		#region implementation of ISerializable
