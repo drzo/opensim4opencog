@@ -830,13 +830,23 @@ namespace SbsSW.SwiPlCs
 
             }
 
+            foreach (var s1 in new Type[] { 1.GetType(), true.GetType(), "".GetType(), typeof(void), 'a'.GetType(), typeof(Type[]), typeof(IComparable<Type>)})
+            {
+                c = ikvm.runtime.Util.getFriendlyClassFromType(s1);
+                if (c != null)
+                {
+                    Console.WriteLine("class: " + c + " from type " + s1.FullName);
+                    continue;
+                }
+                Console.WriteLine("cant get " + s1.FullName);
+            }            
 
             foreach (var s1 in new jpl.JPL().GetType().Assembly.GetTypes())
             {
                 c = ikvm.runtime.Util.getFriendlyClassFromType(s1);
                 if (c != null)
                 {
-                    Console.WriteLine("" + c);
+                    //Console.WriteLine("" + c);
                     continue;
                 }
                 Console.WriteLine("cant get " + s1.FullName);
@@ -975,6 +985,7 @@ namespace SbsSW.SwiPlCs
             PlForeignSwitches Nondeterministic = PlForeignSwitches.Nondeterministic;
             Fn015.Register();
             PlEngine.RegisterForeign(null, "foo2", 2, new DelegateParameterBacktrack2(FooTwo), Nondeterministic);
+            PlEngine.RegisterForeign(null, "cliFindClass", 2, new DelegateParameter2(cliFindClass), PlForeignSwitches.None);
             PlEngine.RegisterForeign(null, "foo3", 3, new DelegateParameterBacktrackVarArgs(FooThree), Nondeterministic | PlForeignSwitches.VarArgs);
 
             InternMethod(null, "cwl2", typeof(PrologClient).GetMethod("FooMethod"));
@@ -985,6 +996,126 @@ namespace SbsSW.SwiPlCs
             PLTRUE = PlTerm.PlCompound("@", PlTerm.PlAtom("true"));
             PLFALSE = PlTerm.PlCompound("@", PlTerm.PlAtom("false"));
         }
+
+        private static bool cliFindClass2(PlTerm term1, PlTerm term2)
+        {
+            if (term1.IsAtom)
+            {
+                string className = term1.Name;
+                Type s1 = ResolveType(className);
+                if (s1 != null)
+                {
+                    var c = ikvm.runtime.Util.getFriendlyClassFromType(s1);
+                    if (c != null)
+                    {
+                        Console.WriteLine("name:" + className + " type:" + s1.FullName + " class:" + c);
+                        string tag = jpl.fli.Prolog.object_to_tag(c);
+                        var t1 = term2[1];
+                        //var t2 = new PlTerm(t1.TermRef + 1);
+                        //libpl.PL_put_atom_chars(t1.TermRef + 1, tag);
+                        bool ret = t1.Unify(tag); // = t1;
+                        return ret;
+                    }
+                    Console.WriteLine("cant getFriendlyClassFromType " + s1.FullName);
+                    return false;
+                }
+                Console.WriteLine("cant ResolveType " + className);
+                return false;
+            }
+            Console.WriteLine("cant IsAtom " + term1);
+            return false;
+        }
+
+        private static bool cliFindClass(PlTerm term1, PlTerm term2)
+        {
+            if (term1.IsAtom)
+            {
+                string className = term1.Name;
+                Class c = ResolveClass(className);
+                if (c != null)
+                {
+                    Console.WriteLine("cliFindClass:" + className + " class:" + c);
+                    string tag = jpl.fli.Prolog.object_to_tag(c);
+                    var t1 = term2;
+                    if (t1.IsCompound)
+                    {
+                        t1 = t1[1];   
+                    };
+                    //var t2 = new PlTerm(t1.TermRef + 1);
+                    //libpl.PL_put_atom_chars(t1.TermRef + 1, tag);
+                    bool ret = t1.Unify(tag); // = t1;
+                    return ret;
+                }
+                Console.WriteLine("cant ResolveClass " + className);
+                return false;
+            }
+            Console.WriteLine("cant IsAtom " + term1);
+            return false;
+        }
+
+        private static Class ResolveClass(string name)
+        {
+            var s1 = ResolveType0(name);
+            if (s1 != null) return s1;
+            var name2 = name.Replace("/", ".");
+            if (name2 != name)
+            {
+                s1 = ResolveType0(name2);
+                if (s1 != null) return s1;
+            }
+            name2 = name.Replace("cli.", "");
+            if (name2 != name)
+            {
+                s1 = ResolveType0(name2);
+                if (s1 != null) return s1;
+            }
+            return null;
+        }
+
+        private static Type ResolveType(string name)
+        {
+            var s1 = ResolveType0(name);
+            if (s1 != null) return s1;
+            var name2 = name.Replace("/", ".");
+            if (name2 != name)
+            {
+                s1 = ResolveType0(name2);
+                if (s1 != null) return s1;
+            }
+            name2 = name.Replace("cli.", "");
+            if (name2 != name)
+            {
+                s1 = ResolveType0(name2);
+                if (s1 != null) return s1;
+            }
+            return null;
+        }
+
+        public static Type ResolveType0(string typeName)
+        {
+            Type type = Type.GetType(typeName);
+            if (type == null)
+            {
+                Class obj = null;
+                try
+                {
+                    obj = Class.forName(typeName);
+                }
+                catch (Exception e)
+                {
+                }
+                if (obj != null)
+                {
+                    type = ikvm.runtime.Util.getInstanceTypeFromClass((Class)obj);
+                }
+                if (type == null)
+                {
+                    type = Type.GetTypeFromProgID(typeName);
+                }
+            }
+            return type;
+        }
+
 
         private static void RegisterJPLForeigns()
         {

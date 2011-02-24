@@ -27,6 +27,9 @@
 	by the GNU General Public License. This exception does not however
 	invalidate any other reasons why the executable file might be covered by
 	the GNU General Public License.
+	
+	
+	IKVM Version 666
 */
 
 :- module(jpl,
@@ -1861,6 +1864,7 @@ jCallVoidMethod(Obj, MethodID, Types, Params) :-
 
 % jFindClass(+ClassName, -Class) :-
 
+jFindClass(ClassName, Class) :- cliFindClass(ClassName, Class),!.
 jFindClass(ClassName, Class) :-
 	jni_func(6, ClassName, Class).
 
@@ -4600,20 +4604,20 @@ java_home_win_key(jdk, 'HKEY_LOCAL_MACHINE/Software/JavaSoft/Java Development Ki
 java_home(Home) :-
 	getenv('JAVA_HOME', Home),
 	exists_directory(Home), !.
-
+:- if(current_prolog_flag(windows, true)).
 java_home(Home) :-
-	current_prolog_flag(windows, true), !,
 	java_home_win_key(_, Key0),	% currently user can't specify whether jre or jdk is preferable
 	catch(win_registry_get_value(Key0, 'CurrentVersion', Version), _, fail),
 	concat_atom([Key0, Version], /, Key),
 	win_registry_get_value(Key, 'JavaHome', Home),
 	exists_directory(Home), !.
+:- else.
 java_home(Home) :-
-	current_prolog_flag(unix, true),
 	member(Home, [ '/usr/lib/java',
 		       '/usr/local/lib/java'
 		     ]),
 	exists_directory(Home), !.
+:- endif.
 
 :- dynamic
 	jvm_ready/0.
@@ -4630,6 +4634,7 @@ post_load_swipl:-set_prolog_flag(debug,true).
 
 setup_jvm :-
 	jvm_ready, !.
+%%logicmoo
 setup_jvm :- catch((load_swiplcs,assert(jvm_ready)),E,report_java_setup_problem(E)),!.
 setup_jvm :-
 	add_jpl_to_classpath,
@@ -4644,3 +4649,7 @@ report_java_setup_problem(E) :-
 	check_java_environment.
 
 :- initialization(setup_jvm, now).
+
+
+%%	IKVM Version 666
+
