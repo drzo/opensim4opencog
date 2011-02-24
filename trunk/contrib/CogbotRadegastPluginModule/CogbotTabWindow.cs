@@ -790,7 +790,7 @@ namespace CogbotRadegastPluginModule
             {
                 DLRConsole.SYSTEM_ERR_WRITELINE_REAL("early " + str);
             }
-            writeLock.Enqueue(() => RadegastForm.InvokeControl(rtbChat,new MethodInvoker(() =>
+            writeLock.Enqueue(() => DLRConsole.InvokeControl(rtbChat, new MethodInvoker(() =>
                                                                          {
                                                                              try
                                                                              {

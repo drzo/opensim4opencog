@@ -32,6 +32,8 @@ namespace cogbot.Listeners
         static public bool MaintainGroupMetaData = true;
         static public bool RequestGroupMetaData = false;
         public static bool MaintainSimObjectInfoMap = true;
+		public static bool SendSimObjectInfoMap = true;
+		
         public static bool UseNewEventSystem = true;
         public static bool SimplifyBoxes = true; // true takes longer startup but speeds up runtime path finding
         public static bool SendAllEvents = MaintainObjectUpdates;

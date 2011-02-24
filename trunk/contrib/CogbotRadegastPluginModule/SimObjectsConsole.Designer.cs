@@ -87,8 +87,8 @@ namespace CogbotRadegastPluginModule
             this.cbOwnerCopy = new System.Windows.Forms.CheckBox();
             this.cbOwnerModify = new System.Windows.Forms.CheckBox();
             this.txtPrims = new System.Windows.Forms.TextBox();
-            this.txtCreator = new Radegast.AgentNameTextBox(instance);
-            this.txtOwner = new Radegast.AgentNameTextBox(instance);
+            this.txtCreator = new Radegast.AgentNameTextBox();
+            this.txtOwner = new Radegast.AgentNameTextBox();
             this.txtHover = new System.Windows.Forms.TextBox();
             this.txtDescription = new System.Windows.Forms.TextBox();
             this.txtObjectName = new System.Windows.Forms.TextBox();
