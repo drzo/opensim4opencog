@@ -7,26 +7,51 @@
   <firstName>Firstname</firstName>
   <lastName>Lastname</lastName>
   <password>myBotPassword</password>
-  <simURL>http://osgrid.org:8002/</simURL>
+  <simURL>http://nourl.osgrid.org/</simURL>
   <startupLisp>
     ;(setj WorldObjects:MaintainCollisions true)
     (setj WorldObjects:MaintainCollisions false)
     (setj WorldObjects:MaintainEffects true)
     (setj WorldObjects:MaintainActions true)
-    (setj WorldObjects:MaintainAnims true)
+    (setj WorldObjects:MaintainAnims true) 
     (setj WorldObjects:MaintainSounds false) ;; for testing in a noisey world
 
+ ;; just testing connections
+    (setj WorldObjects:MaintainEffects false)
+    (setj WorldObjects:MaintainActions false)
+    (setj WorldObjects:MaintainAnims false) 
+    (setj WorldObjects:GleanAssetsFromFolders false) 
+    (setj WorldObjects:MaintainGroupMetaData false) 
+    (setj WorldObjects:MaintainObjectUpdates false) 
+    (setj WorldObjects:MaintainSimObjectInfoMap false) 
+    (setj WorldObjects:SendSimObjectInfoMap false) 
+    (setj WorldObjects:SendOnDataAspectUpdate false) 
+    
+   
     (setj GridAddress "https://login.agni.lindenlab.com/cgi-bin/login.cgi")
-    (setj GridAddress "http://osgrid.org:8002/")
+    (setj GridAddress "http://login.osgrid.org/")
+    (setj GridAddress "OSGrid") ;; .. depends on grid.xml
+    (setj GridAddress "agni") ;; .. depends on grid.xml
+    
     (setj GlobalPasswd "abc123")
 
-    (setj StartLoc "uri:Fairyverse&amp;115&amp;125&amp;21")
+    
     (setj StartLoc "uri:last&amp;173&amp;51&amp;38")
-    '(setj StartLoc "uri:MilSpecMoo&amp;128&amp;128&amp;38")
-    '(setj StartLoc "uri:MilSpecMoo&amp;72&amp;135&amp;38")
-    '(setj StartLoc "uri:LBSA Plaza&amp;128&amp;128&amp;38")
+    (setj StartLoc "uri:Isabel&amp;44&amp;107&amp;58")
+    (setj StartLoc "uri:Fairyverse&amp;115&amp;125&amp;21")
+    (setj StartLoc "uri:MASA Group&amp;115&amp;125&amp;21")
+    (setj StartLoc "uri:Boardroom&amp;128&amp;125&amp;29")
+    (setj StartLoc "uri:MilSpecMoo&amp;128&amp;128&amp;32")
+    
+    '(setj StartLoc "uri:MilSpecMoo&amp;72&amp;135&amp;38")    
     '(setj StartLoc "uri:Diva Texture test&amp;128&amp;128&amp;38")
-    '(setj StartLoc "uri:Wright Plaza&amp;128&amp;128&amp;38")
+     (setj StartLoc "uri:Wright Plaza&amp;128&amp;128&amp;38")
+    (setj StartLoc "uri:LBSA Plaza&amp;128&amp;128&amp;38")
+    (setj StartLoc "last")
+    (setj StartLoc "Halca/128/128/38")
+    (setj StartLoc "Penn State Isle 2/49/127/25")
+    (setj StartLoc "Belphegor/152/41/63")
+    
 
 
     '(create-botclient "Nephrael" "Rae"  GlobalPasswd  "https://login.agni.lindenlab.com/cgi-bin/login.cgi" "uri:Fairyverse&amp;115&amp;125&amp;21")
@@ -34,26 +59,42 @@
     '(create-botclient "Nephrael" "Rae" GlobalPasswd GridAddress StartLoc )
     '(create-botclient "Lisa" "Wooley" GlobalPasswd GridAddress StartLoc )
     '(create-botclient "Cat" "Bot" GlobalPasswd GridAddress StartLoc )
-    '(create-botclient "Nephrael" "Rajesh" GlobalPasswd GridAddress)
+    '(create-botclient "Nephrael" "Rajesh" GlobalPasswd GridAddress StartLoc)
+    (create-botclient  "BinaBot" "Daxeline" "BinaPass" GridAddress StartLoc)
     '(create-botclient "Jon" "Doe" GlobalPasswd GridAddress StartLoc)
 
   </startupLisp>
   <startupClientLisp>
-   ;;(thisClient.ExecuteCommand "debug Debug")
+    (thisClient.ExecuteCommand "debug Debug")
     (thisClient.ExecuteCommand "load CogbotRadegastPluginModule")
-    (thisClient.ExecuteCommand "load AIMLBotModule.dll")
-    ;;;(thisClient.ExecuteCommand "load CycWorldModule")
+    ;;(thisClient.ExecuteCommand "load CycWorldModule")
     (thisClient.ExecuteCommand "load TheSimiansModule")
-    ;; (thisClient.ExecuteCommand "load IrcRegionModule")
-    (thisClient.ExecuteCommand "waitforlogin 60") ;; wait for the login
-    ;;(thisClient.ExecuteCommand "login") ;; does the login if the user didnt press the button
-    ;;(thisClient.ExecuteCommand "goto last/128/128/32") ;; TP home
+   (thisClient.ExecuteCommand "load AIMLBotModule.dll")
+    (thisClient.ExecuteCommand "aiml @off")  ;; makes the AIMLBotModule complete loading before moving on
+    ;;(thisClient.ExecuteCommand "load IrcRegionModule")
+    ;;(thisClient.ExecuteCommand "waitforlogin 120") ;; give user/system a chance to login before the script starts it
 
-    ;;(thisClient.ExecuteCommand "thread setmaster Nephrael Rajesh") ;; change this to your name
-    (thisClient.ExecuteCommand "thread setmaster Douglas Miles") ;; change this to your name
-   ;; (thisClient.ExecuteCommand "thread irc #logicmoo cogbotIRCModule irc.freenode.net")  ;; to connect to IRC
-    (thisClient.ExecuteCommand "aiml off") ;; turns on/off aiml for all users
-    (setj WorldObjectsForAimLBot:DefaultMaxRespondToChatPerMinute 20) ;; once every three seconds
-   ;;(thisClient.ExecuteCommand "simbot start") ;; turns on/off Simian module thinker
+    (thisClient.ExecuteCommand "login") ;; does the login if the user didnt press the button
+    (thisClient.ExecuteCommand "waitforlogin 300") ;; wait for the auto-login (5 minutes)
+
   </startupClientLisp>
+  <onLogin>
+      (thisClient.ExecuteCommand "waitforlogin 300") ;; makes sure we are really ready!
+    ;; (thisClient.ExecuteCommand "teleport MilSpecMoo/128/128/31") ;; TP home
+     (thisClient.ExecuteCommand (@"teleport {0}" StartLoc)) ;; TP To StartLocation
+   
+    (thisClient.ExecuteCommand "thread setmaster Nephrael Rajesh") ;; change this to your name
+    ;;(thisClient.ExecuteCommand "thread setmaster Douglas Miles") ;; change this to your name
+    ;; (thisClient.ExecuteCommand "thread irc #logicmoo cogbotIRCModule irc.freenode.net")  ;; to connect to IRC
+    (thisClient.ExecuteCommand "aiml @on") ;; turns on/off aiml for all users
+    ;;(thisClient.ExecuteCommand "appearance nobake")
+    ;;(setj WorldObjectsForAimLBot:DefaultMaxRespondToChatPerMinute 20) ;; once every three seconds
+    ;;(thisClient.ExecuteCommand "simbot start") ;; turns on/off Simian module thinker
+    (thisClient.ExecuteCommand "appearance bake")
+    (thisClient.ExecuteCommand "say I am logged in now!")
+    ;;(thisClient.ExecuteCommand "Follow* Douglas Miles")
+    ;;(thisClient.ExecuteCommand "Follow* $master")
+
+    (thisClient.ExecuteCommand "debug Info")
+  </onLogin>
 </Configuration>

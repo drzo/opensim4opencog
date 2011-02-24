@@ -261,7 +261,7 @@ checkElseValue(ElseVar):-prolog_must((functor(ElseVar,F,_),!,atom_concat('$',_,F
 
 
 %%% arity 5 version
-locateNameValue(Ctx,Scope,NameS,ValueO,ElseVar):-makeParamFallback(Ctx,Scope,NameS,ValueO,ElseVar),prolog_must(valuePresentOrStar(ValueO)).
+locateNameValue(Ctx,Scope,NameS,ValueO,ElseVar):-makeParamFallback(Ctx,Scope,NameS,ValueO,ElseVar),!. %%,prolog_must(valuePresentOrStar(ValueO)).
 
 makeParamFallback(Ctx,Scope,NameS,Value,ElseVar):-checkElseValue(ElseVar),var(ElseVar),!,throw_safe(makeParamFallback(Ctx,Scope,NameS,Value,ElseVar)).
 makeParamFallback(_Ctx,_Scope,_NameS,_Value,'$aiml_error'(E)):-!,aiml_error(E),throw_safe(E).
