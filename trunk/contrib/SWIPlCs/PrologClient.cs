@@ -8,6 +8,8 @@ using System.Threading;
 using IKVM.Internal;
 using ikvm.runtime;
 using java.net;
+using java.util;
+//using jpl;
 using jpl;
 using SbsSW.SwiPlCs.Callback;
 using SbsSW.SwiPlCs.Exceptions;
@@ -17,11 +19,19 @@ using Hashtable=java.util.Hashtable;
 using ClassLoader = java.lang.ClassLoader;
 using Class = java.lang.Class;
 using sun.reflect.misc;
+using Util=ikvm.runtime.Util;
 
 namespace SbsSW.SwiPlCs
 {
     public class PrologClient
     {
+        public PrologClient()
+        {
+            ClientModule = null;
+            ClientPrefix = "cli_";
+            SetupProlog();
+        }
+
         public delegate object AnyMethod(params object[] any);
 
         internal static bool Is64BitRuntime()
@@ -40,6 +50,7 @@ namespace SbsSW.SwiPlCs
 
         public static void InternMethod(string module, string pn, AnyMethod d)
         {
+            if (!PlEngine.PinDelegate(module, pn.ToString(), -1, d)) return;
             InternMethod(module, pn, d.Method);
         }
         public static void InternMethod(string module, string pn, MethodInfo list)
@@ -80,14 +91,149 @@ namespace SbsSW.SwiPlCs
                                                            throw new PlException(e.Message, e);
                                                        }
                                                    });
-            libpl.PL_register_foreign_in_module(module, pn, arity + (nonvoid ? 1 : 0), del,
-                                                (int)PlForeignSwitches.VarArgs);
+
+            PlEngine.RegisterForeign(module, pn, arity + (nonvoid ? 1 : 0), del, PlForeignSwitches.VarArgs);
 
         }
 
+        public static Dictionary<Int64, PlRef> termToObjectPins = new Dictionary<Int64, PlRef>();
+        public static Dictionary<object, PlRef> objectToPlRef = new Dictionary<object, PlRef>();
+        public static Dictionary<string, PlRef> atomToPlRef = new Dictionary<string, PlRef>();
+        public static PlTerm PLVOID = new PlTerm();
+        public static PlTerm PLNULL = new PlTerm();
+        public static PlTerm PLTRUE = new PlTerm();
+        public static PlTerm PLFALSE = new PlTerm();
+        public static Object ToFromConvertLock = new object();
         private static PlTerm ToProlog(object o)
+        {            
+            if (o is PlTerm) return (PlTerm) o;
+            if (o is string) return PlTerm.PlString((string) o);
+            if (o is Term) return ToPLCS((Term) o);
+            if (o == null) return PLNULL;
+            if (o is bool)
+            {
+                if (true.Equals(o)) return PLTRUE;
+                if (false.Equals(o)) return PLFALSE;
+            }
+            lock (ToFromConvertLock)
+            {
+                PlRef oref;
+                if (!objectToPlRef.TryGetValue(o, out oref))
+                {
+                    objectToPlRef[o] = oref = new PlRef();
+                    oref.Value = o;
+                    oref.CSType = o.GetType();
+                    var tag = jpl.fli.Prolog.object_to_tag(o);
+                    oref.Tag = tag;
+                    lock (atomToPlRef)
+                    {
+                        PlRef oldValue;
+                        if (atomToPlRef.TryGetValue(tag, out oldValue))
+                        {
+                            throw new NullReferenceException("already a value for tag=" + oldValue);
+                        }
+                        atomToPlRef[tag] = oref;
+                    }
+#if PLVARBIRTH
+                    Term jplTerm = JPL.newJRef(o);
+                    oref.JPLRef = jplTerm;
+
+                    Int64 ohandle = TopOHandle++;
+                    oref.OHandle = ohandle;
+                    // how do we track the birthtime?
+                    var plvar = oref.Variable = PlTerm.PlVar();
+                    lock (termToObjectPins)
+                    {
+                        PlRef oldValue;
+                        if (termToObjectPins.TryGetValue(ohandle, out oldValue))
+                        {
+                            throw new NullReferenceException("already a value for ohandle=" + oldValue);
+                        }
+                        termToObjectPins[ohandle] = oref;
+                    }
+                    //PL_put_integer
+                    oref.Term = PlTerm.PlCompound("$cli_object", new PlTerm((long) ohandle), plvar);
+#else
+                    oref.Term = PlTerm.PlCompound("@", PlTerm.PlAtom(tag));
+#endif
+                    return oref.Term;                
+                } else
+                {
+                    return oref.Term;
+                }
+                
+            }
+        }
+        /*
+         
+  jpl_is_ref(@(Y)) :-
+	atom(Y),        % presumably a (garbage-collectable) tag
+	Y \== void,     % not a ref
+	Y \== false,    % not a ref
+	Y \== true.     % not a ref
+         
+         */
+        private static object ToVMLookup(string name, int arity, PlTerm arg1, PlTerm orig)
         {
-            return new PlTerm("" + o);
+            //{T}
+            //@(_Tag)
+            if (name == "@" && arity == 1 && arg1.IsAtom)
+            {
+                name = arg1.Name;
+                switch (name)
+                {
+                    case "true":
+                        {
+                            return true;
+                        }
+                    case "false":
+                        {
+                            return false;
+                        }
+                    case "null":
+                        {
+                            return null;
+                        }
+                    case "void":
+                        {
+                            return JPL.JVOID;
+                        }
+                    default:
+                        {
+                            lock (ToFromConvertLock)
+                            {
+                                object o = jpl.fli.Prolog.tag_to_object(name);
+                                lock (atomToPlRef)
+                                {
+                                    PlRef oldValue;
+                                    if (!atomToPlRef.TryGetValue(name, out oldValue))
+                                    {
+                                        //throw new NullReferenceException("no value for tag=" + name);
+                                        return o;
+                                    }
+                                    return oldValue.Value;
+                                }
+                            }
+                        }
+                }
+            }
+            if (name == "$cli_object")
+            {
+                lock (ToFromConvertLock)
+                {
+                    lock (termToObjectPins)
+                    {
+                        PlRef oldValue;
+                        Int64 ohandle = (long) arg1;
+                        if (!termToObjectPins.TryGetValue(ohandle, out oldValue))
+                        {
+                            throw new NullReferenceException("no value for ohandle=" + ohandle);
+                        }
+                        return oldValue.Value;
+                    }
+                }
+            }
+            return (string) orig;
         }
 
         private static Object ToVM(PlTerm o, Type pt)
@@ -131,7 +277,10 @@ namespace SbsSW.SwiPlCs
                     break;
                 case PlType.PlTerm:
                     {
-                        return (string)o;
+                        lock (ToFromConvertLock)
+                        {
+                            return ToVMLookup(o.Name, o.Arity, o[0], o);
+                        }
                     }
                     break;
                 default:
@@ -139,7 +288,154 @@ namespace SbsSW.SwiPlCs
             }
             return o.ToString();
         }
+        internal static Term[] ToJPL(PlTermV args)
+        {
+            int UPPER = args.Size;
+            Term[] target = new Term[UPPER];
+            for (int i = 0; i < UPPER; i++)
+            {
+                target[i] = ToJPL(args[i]);
+            }
+            return target;
+        }
 
+        internal static jpl.fli.term_t ToFLI(PlTermV args)
+        {
+            return ToFLI(args.A0);
+        }
+
+        internal static jpl.fli.term_t ToFLI(PlTerm args)
+        {
+            return ToFLI(args.TermRef);
+        }
+
+
+        internal static PlTerm ToPLCS(Term args)
+        {
+            if (args is Atom) return new PlTerm(args.name());
+            if (args is jpl.Variable) return new PlTerm((uint)GetField(args, "term_"));
+            if (args is jpl.Float) return new PlTerm(args.floatValue());
+            if (args is jpl.Integer) return new PlTerm(args.doubleValue());
+            if (args is jpl.Compound) return PlTerm.PlCompound(args.name(), ToPLCSV(args.args()));
+            if (args is jpl.JRef)
+            {
+                var jref = (jpl.JRef)args;// return new PlTerm(args.doubleValue());
+                return ToProlog(jref.@ref());
+            }
+            throw new ArgumentOutOfRangeException();
+        }
+
+        private static PlTermV ToPLCSV(Term[] terms)
+        {
+            int size = terms.Length;
+            PlTermV target = new PlTermV(size);
+            for (int i = 0; i < size; i++)
+            {
+                target[i] = ToPLCS(terms[i]);
+            }
+            return target;
+        }
+
+        private static PlTermV ToPLCSV(PlTerm[] terms)
+        {
+            int size = terms.Length;
+            PlTermV target = new PlTermV(size);
+            for (int i = 0; i < size; i++)
+            {
+                target[i] = terms[i];
+            }
+            return target;
+        }
+
+        private static PlTermV ToPLCSV1(PlTerm a0, PlTerm[] terms)
+        {
+            int size = terms.Length;
+            PlTermV target = new PlTermV(size + 1);
+            int to = 1;
+            target[0] = a0;
+            for (int i = 0; i < size; i++)
+            {
+                target[to++] = terms[i];
+            }
+            return target;
+        }
+
+        private static object GetField(object term, string s)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static jpl.fli.term_t ToFLI(uint hndle)
+        {
+            jpl.fli.term_t t = new jpl.fli.term_t();
+            t.value = hndle;
+            return t;
+        }
+
+        internal static Term ToJPL(PlTerm o)
+        {
+            switch (o.PlType)
+            {
+                case PlType.PlAtom:
+                    {
+                        return new Atom((string)o);
+                    }
+                    break;
+                case PlType.PlInteger:
+                    {
+                        return new jpl.Integer((long)o);
+                    }
+                    break;
+                case PlType.PlFloat:
+                    {
+                        return new jpl.Float((double)o);
+                    }
+                    break;
+                case PlType.PlString:
+                    {
+                        return new jpl.Atom((string)o);
+                    }
+                    break;
+                case PlType.PlTerm:
+                    {
+                        var a = o.Arity;
+                        var c = new jpl.Compound(o.Name, a);
+                        for (int i = 1; i <= a; i++)
+                        {
+                            c.setArg(i, ToJPL(o[i]));
+                        }
+                        return c;
+                    }
+                    break;
+                case PlType.PlVariable:
+                    {
+                        var v = new jpl.Variable();
+                        SetField(v, "term_", o.TermRef);
+                        return v;
+                    }
+                    break;
+                case PlType.PlUnknown:
+                    {
+                        return jpl.Util.textToTerm((string)o);
+                    }
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        public static void SetField(object target, string name, object value)
+        {
+            FieldInfo field = target.GetType().GetField(name);
+            //if (!field.IsPublic) field..IsPublic = true;
+            field.SetValue(field.IsStatic ? null : target, value);
+        }
+
+        public static jpl.Term InModule(string s, jpl.Term o)
+        {
+            if (s == null || s == "" || s == "user") return o;
+            return new jpl.Compound(":", new Term[] { new jpl.Atom(s), o });
+        }
 
         ///<summary>
         ///</summary>
@@ -149,37 +445,80 @@ namespace SbsSW.SwiPlCs
 
         }
 
+        protected string ClientPrefix { get; set; }
+        private string _clientModule = null;
+        protected string ClientModule
+        {
+            get { return _clientModule; }
+            set { if (value != "user") _clientModule = value; }
+        }
+        protected PlTerm ThisClientTerm
+        {
+            get { return ToProlog(this); }
+        }
+
+        private bool ModuleCall0(string s, PlTermV termV)
+        {
+            return PlQuery.PlCall(ClientModule, ClientPrefix + s, termV);
+        }
+
+        private bool ModuleCall(string s, params PlTerm[] terms)
+        {
+            return PlQuery.PlCall(ClientModule, ClientPrefix + s, ToPLCSV1(ThisClientTerm, terms));
+        }
+        public static PlTerm PlNamed(string name)
+        {
+            return PlTerm.PlAtom(name);
+        }
+
         public object Eval(object obj)
         {
-            throw new NotImplementedException();
+            PlTerm termout = PlTerm.PlVar();
+            if (!ModuleCall("Eval", ToProlog(obj), termout)) return null;
+            return ToVM(termout, typeof(System.Object));
         }
 
         public void Intern(string varname, object value)
         {
-         //   throw new NotImplementedException();
+            ModuleCall("Intern", PlNamed(varname), ToProlog(value));
         }
+
 
         public bool IsDefined(string name)
         {
-            throw new NotImplementedException();
+            return ModuleCall("IsDefined", PlNamed(name));
         }
 
         public object GetSymbol(string name)
         {
-            throw new NotImplementedException();
+            PlTerm termout = PlTerm.PlVar();
+            if (!ModuleCall("GetSymbol", PlNamed(name), termout)) return null;
+            return ToVM(termout, typeof(System.Object));
         }
 
         public object Read(string line, TextWriter @delegate)
         {
-            throw new NotImplementedException();
+            return PlTerm.PlCompound(line);
         }
 
         static public void load_swiplcs()
         {
-            
+
         }
 
-        private static void SetupProlog()
+        private static readonly object PrologIsSetupLock = new object();
+        private static bool PrologIsSetup;
+        public static void SetupProlog()
+        {
+            lock (PrologIsSetupLock)
+            {
+                if (PrologIsSetup) return;
+                PrologIsSetup = true;
+                SetupProlog0();
+                RegisterPLCSForeigns();
+            }
+        }
+        public static void SetupProlog0()
         {
             SetupIKVM();
 
@@ -231,7 +570,7 @@ namespace SbsSW.SwiPlCs
             }
             string jplcp = clasPathOf(new jpl.JPL());
 
-            if (!JplDisabled) 
+            if (!JplDisabled)
                 CLASSPATH = IKVMHome + "\\SWIJPL.dll" + ";" + IKVMHome + "\\SWIJPL.jar;" + CLASSPATH0;
 
             Environment.SetEnvironmentVariable("CLASSPATH", CLASSPATH);
@@ -243,7 +582,8 @@ namespace SbsSW.SwiPlCs
                 try
                 {
                     JPL.loadNativeLibrary();
-                } catch(Exception e)
+                }
+                catch (Exception e)
                 {
                     WriteException(e);
                     JplDisabled = true;
@@ -269,8 +609,8 @@ namespace SbsSW.SwiPlCs
                     WriteException(e);
                     PlCsDisabled = true;
                 }
-//                PlAssert("jpl:jvm_ready");
-//                PlAssert("module_transparent(jvm_ready)");
+                //                PlAssert("jpl:jvm_ready");
+                //                PlAssert("module_transparent(jvm_ready)");
             }
             catch (Exception exception)
             {
@@ -288,7 +628,7 @@ namespace SbsSW.SwiPlCs
                               string searchPattern)
         {
             FileInfo[] files = source.GetFiles(searchPattern);
-      
+
             foreach (FileInfo file in files)
             {
                 string destName = destination.FullName + "\\" + file.Name;
@@ -367,12 +707,13 @@ namespace SbsSW.SwiPlCs
                             {
                                 MethodUtils.Add((MethodUtil)cl);
                                 added = true;
-                            } else
-                            if (cl is URLClassLoader)
-                            {
-                                URLClassLoaders.Add((URLClassLoader)cl);
-                                added = true;
                             }
+                            else
+                                if (cl is URLClassLoader)
+                                {
+                                    URLClassLoaders.Add((URLClassLoader)cl);
+                                    added = true;
+                                }
                         }
                         AddLoader(cl.getParent());
                     }
@@ -404,9 +745,19 @@ namespace SbsSW.SwiPlCs
             //using java.lang;
             //IKVM.Internal.BootstrapClassLoader()
             ScriptingClassLoader cl = new ScriptingClassLoader(ClassLoader.getSystemClassLoader());
-        
+
             string s = "jpl.fli.term_t";
-            var c = cl.loadClass(s);
+            Class c;
+            try
+            {
+                c = cl.loadClass(s);
+            }
+            catch (Exception e)
+            {
+
+            }
+
+
             foreach (var s1 in new jpl.JPL().GetType().Assembly.GetTypes())
             {
                 c = ikvm.runtime.Util.getFriendlyClassFromType(s1);
@@ -420,7 +771,7 @@ namespace SbsSW.SwiPlCs
             return;
         }
 
-        private static string clasPathOf(JPL jpl1)
+        private static string clasPathOf(jpl.JPL jpl1)
         {
             string s = null;
             var cl = jpl1.getClass().getClassLoader();
@@ -508,10 +859,10 @@ namespace SbsSW.SwiPlCs
                     i++;
                 }
             }
-            if (!JplDisabled)
+            if (false && !JplDisabled)
             {
                 var run = new jpl.Atom("prolog");
-                while (!IsHalted) SafelyRun(() => DoQuery(new Query(run)));
+                while (!IsHalted) SafelyRun(() => DoQuery(new jpl.Query(run)));
 
             }
             else
@@ -526,7 +877,7 @@ namespace SbsSW.SwiPlCs
             Console.WriteLine("press enter to exit");
             Console.ReadLine();
             SafelyRun((() => PlEngine.PlCleanup()));
-            
+
             Console.WriteLine("finshed!");
 
 
@@ -548,14 +899,18 @@ namespace SbsSW.SwiPlCs
 
         private static void RegisterPLCSForeigns()
         {
-            PlForeignSwitches Nondeterministic = PlForeignSwitches.Nondeterministic;           
+            PlForeignSwitches Nondeterministic = PlForeignSwitches.Nondeterministic;
             Fn015.Register();
             PlEngine.RegisterForeign(null, "foo2", 2, new DelegateParameterBacktrack2(FooTwo), Nondeterministic | PlForeignSwitches.VarArgs);
             PlEngine.RegisterForeign(null, "foo3", 3, new DelegateParameterBacktrackVarArgs(FooThree), Nondeterministic | PlForeignSwitches.VarArgs);
-            
+
             InternMethod(null, "cwl2", typeof(PrologClient).GetMethod("FooMethod"));
             InternMethod(null, "cwl", typeof(Console).GetMethod("WriteLine", new Type[] { typeof(string) }));
             RegisterJPLForeigns();
+            PLNULL = PlTerm.PlCompound("@", PlTerm.PlAtom("null"));
+            PLVOID = PlTerm.PlCompound("@", PlTerm.PlAtom("void"));
+            PLTRUE = PlTerm.PlCompound("@", PlTerm.PlAtom("true"));
+            PLFALSE = PlTerm.PlCompound("@", PlTerm.PlAtom("false"));
         }
 
         private static void RegisterJPLForeigns()
@@ -575,7 +930,7 @@ namespace SbsSW.SwiPlCs
                                       File.Copy(IKVMHome + "\\jpl_for_ikvm.phps", SwiHomeDir + "\\library\\jpl.pl", true);
                                   }
                               });
-            
+
             PlEngine.RegisterForeign("jpl", "link_swiplcs", 1, new DelegateParameter1(link_swiplcs), PlForeignSwitches.None);
             //DoQuery(new Query("ensure_loaded(library(jpl))."));
             /*
@@ -618,10 +973,32 @@ jpl_jlist_demo :-
                 }
                 if (PlCsDisabled)
                 {
-                    WriteDebug("Disabled PlCall " + s); 
+                    WriteDebug("Disabled PlCall " + s);
                     return false;
                 }
                 return PlQuery.PlCall(s);
+            }
+            catch (Exception e)
+            {
+                WriteException(e);
+                throw e;
+            }
+        }
+
+        public static bool PlCall(string m, string f, PlTermV args)
+        {
+            try
+            {
+                if (!JplDisabled)
+                {
+                    return DoQuery(m, f, args);
+                }
+                if (PlCsDisabled)
+                {
+                    WriteDebug("Disabled PlCall " + f);
+                    return false;
+                }
+                return PlQuery.PlCall(m, f, args);
             }
             catch (Exception e)
             {
@@ -663,6 +1040,22 @@ jpl_jlist_demo :-
             try
             {
                 q = new Query(query);
+            }
+            catch (Exception e)
+            {
+                WriteException(e);
+                return false;
+            }
+            return DoQuery(q);
+        }
+
+        public static bool DoQuery(string m, string f, PlTermV args)
+        {
+            if (JplDisabled) return PlCall(m, f, args);
+            Query q;
+            try
+            {
+                q = new Query(InModule(m,new Compound(f, ToJPL(args))));
             }
             catch (Exception e)
             {
@@ -819,7 +1212,7 @@ typedef struct // define a context structure  { ... } context;
          foreign_t my_function(term_t a0, term_t a1, foreign_t handle) { struct context * ctxt; switch( PL_foreign_control(handle) ) { case PL_FIRST_CALL: ctxt = malloc(sizeof(struct context)); ... PL_retry_address(ctxt); case PL_REDO: ctxt = PL_foreign_context_address(handle); ... PL_retry_address(ctxt); case PL_CUTTED: free(ctxt); PL_succeed; } } 
          
          */
-        static public  AbstractNondetMethod Fn015 = new ForNext(0,15);
+        static public AbstractNondetMethod Fn015 = new ForNext(0, 15);
 
         // test with (foo2(X,Y)->writeln(p(X,Y));writeln(p(X,Y))),!.
         // test with (foo2(X,Y) *->writeln(p(X,Y));writeln(p(X,Y)),!).
@@ -1052,6 +1445,8 @@ typedef struct // define a context structure  { ... } context;
         public static bool JplSafeNativeMethodsDisabled = false;
         public static bool JplSafeNativeMethodsCalled = false;
         public static bool IsHalted = false;
+        private static Int64 TopOHandle = 6660000;
+        private static readonly Dictionary<string, object> SavedDelegates = new Dictionary<string, object>();
 
         // foo(X,Y),writeq(f(X,Y)),nl,X=5.
         public static int Foo(PlTerm t0, PlTerm term2, IntPtr control)
@@ -1180,9 +1575,30 @@ typedef struct // define a context structure  { ... } context;
             }
         }
 
+        /* static public void WriteLine(string s, params object[] args)
+         {
+             Console.DebugWriteLine(s, args);
+         }
+         */
+
+        public bool Consult(string filename)
+        {
+            // atomic quote the filename
+            string replace = "'" + filename.Replace("\\", "\\\\").Replace("'", "\\'") + "'";
+            return PlCall("[" + replace + "]");
+        }
     }
 
-
+    public class PlRef
+    {
+        public object Value;
+        public PlTerm Term;
+        public Int64 OHandle;
+        public PlTerm Variable;
+        public Type CSType;
+        public Term JPLRef;
+        public string Tag;
+    }
 
 
     [System.Security.SuppressUnmanagedCodeSecurityAttribute]

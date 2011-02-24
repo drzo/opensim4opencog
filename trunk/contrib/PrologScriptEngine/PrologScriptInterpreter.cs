@@ -13,9 +13,12 @@ namespace PrologScriptEngine
 {
     public class PrologScriptInterpreter : CommonScriptInterpreter, ScriptInterpreter
     {
-        public void Main(string[] args)
+        static public void Main(string[] args)
         {
-            _reachAllTypes = true;
+            _reachAllTypes = 2;
+            PrologScriptInterpreter pscript = new PrologScriptInterpreter(null);
+            pscript.Init();
+            pscript.Intern("pscript", pscript);
             PrologClient.Main(args);
         }
         ///<summary>
@@ -28,19 +31,24 @@ namespace PrologScriptEngine
                    base.LoadsFileType0(filename);
         }
         static HashSet<Type> _types = new HashSet<Type>();
-        private static bool _reachAllTypes = false;
+        private static int _reachAllTypes = 1;
+        static private readonly object GroupInitLock = new object();
+        public static bool IsInited = false;
+
         ///<summary>
         ///</summary>
         ///<param name="type"></param>
         ///<exception cref="NotImplementedException"></exception>
         public override void InternType(Type type)
         {
-            if (!_reachAllTypes) return;
-            InternTypeS(type);
+            InternTypeS(type, _reachAllTypes);
         }
 
-        static void InternTypeS(Type type)
+        static void InternTypeS(Type type, int depth)
         {
+            if (depth == 0) return;
+            depth--;
+            bool deeper = (depth == 0);
             lock (_types)
             {
                 if (!_types.Add(type))
@@ -49,6 +57,14 @@ namespace PrologScriptEngine
                     foreach (var list in type.GetMethods(BindingFlags.Static | BindingFlags.NonPublic))
                     {
                         PrologClient.InternMethod(module, null, list);
+                        if (deeper)
+                        {
+                            foreach (var s in list.GetParameters())
+                            {
+                                InternTypeS(s.ParameterType, depth);
+                            }
+                            InternTypeS(list.ReturnType, depth);
+                        }
                     }
                 }
             }
@@ -68,13 +84,24 @@ namespace PrologScriptEngine
             return prologClient.IsDefined(eventName);
         }
 
-        public PrologScriptInterpreter(object self):base(self)
+        public PrologScriptInterpreter(object self)
+            : base(self)
         {
-
+            Init();
         }
-        public override void Init()
+
+        public override sealed void Init()
         {
-            prologClient = new PrologClient();
+            
+            lock (GroupInitLock)
+            {
+                prologClient = prologClient ?? new PrologClient();
+                if (!IsInited)
+                {
+                    IsInited = true;
+                    LoadFile("cli_swi.pl", WriteLine);
+                }
+            }
         }
         /// <summary>
         /// 
@@ -84,11 +111,20 @@ namespace PrologScriptEngine
         /// <returns></returns>
         public override bool LoadFile(string filename, OutputDelegate WriteLine)
         {
+            try
+            {
+                return prologClient.Consult(filename);
+            }
+            catch (Exception e)
+            {
+                WriteLine("CSERROR: " + e);
+                return false;
+            }
             if (!File.Exists(filename)) return false;
             System.IO.FileStream f = System.IO.File.OpenRead(filename);
             StreamReader r = new StreamReader(f);
             r.BaseStream.Seek(0, SeekOrigin.Begin);
-            return Read(filename, new StringReader(r.ReadToEnd()),WriteLine) != null;
+            return Read(filename, new StringReader(r.ReadToEnd()), WriteLine) != null;
         }
 
         /// <summary>
@@ -131,6 +167,10 @@ namespace PrologScriptEngine
         /// <param name="textForm"></param>
         public override void Intern(string varname, object value)
         {
+            if (value != null)
+            {
+                InternTypeS(value.GetType(),1);
+            }
             prologClient.Intern(varname, value);
         } // method: Intern
 
@@ -167,7 +207,7 @@ namespace PrologScriptEngine
             if (prologClient == null || prologClient == thiz) si = this;
             else
                 si = new PrologScriptInterpreter(thiz);
-            si.prologClient = thiz as PrologClient;
+            //si.prologClient = thiz as PrologClient;
             return si;
         } // method: newInterpreter
     }
