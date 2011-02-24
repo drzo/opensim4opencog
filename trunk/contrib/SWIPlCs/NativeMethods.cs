@@ -111,22 +111,39 @@ namespace SbsSW.SwiPlCs
 	{
 		//private const string DllFileName = @"D:\Lesta\swi-pl\pl\bin\LibPl.dll";
         //"libpl.dll" for 5.7.8; 
-        public const string DllFileName = @"C:\Program Files (x86)\pl\bin\swipl.dll";
+        //public const string DllFileName = @"swiprolog\bin\swipl.dll";
+        public const string DllFileName = @"swipl.dll";
         //public const string DllFileName = @"C:\Program Files\pl\bin\swipl.dll";
+        static SafeNativeMethods()
+        {
+            if (!File.Exists(DllFileName))
+            {
+                Console.WriteLine("No such file: " + DllFileName);
+            }
+            if (!File.Exists(DllFileName1))
+            {
+                Console.WriteLine("No such file: " + DllFileName);
+            }
+        }
+
+        public static string PlLib
+        {
+            get { return @"swipl.dll"; }
+        }
 
 	    //public const string DllFileName = @"swipl.dll";
 		public static string DllFileName1
 		{
 			get
 			{
-                if (File.Exists(DllFileName)) return DllFileName;
-			    return DllFileName;
+			    var fileName = DllFileName;
+                if (File.Exists(fileName)) return fileName;
+			    fileName = Path.Combine(Path.Combine(PrologClient.SwiHomeDir, "bin"), PlLib);
+                if (File.Exists(fileName)) return fileName;
+                return DllFileName;
 			}
-		} 
-
-
-		
-		/////////////////////////////
+		}
+	    /////////////////////////////
 		/// libpl
 		///
         // das funktioniert NICHT wenn umlaute e.g. ü im pfad sind.
