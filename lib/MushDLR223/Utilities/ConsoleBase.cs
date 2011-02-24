@@ -29,6 +29,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -1869,6 +1870,74 @@ namespace MushDLR223.Utilities
                 return true;
             }
             return false;
+        }
+
+        public static void InvokeControl(Component rtb, MethodInvoker invoke)
+        {
+            invoke();
+        }
+        public static void InvokeControl(Control rtb, MethodInvoker invoke)
+        {
+
+            bool isReady = true;
+            lock (rtb) isReady = rtb.IsHandleCreated;
+            if (isReady)
+            {
+                InvokeControlAfterCreated(rtb, invoke);
+                return;
+            }
+            // on uunix try this workarraund
+            if (InvokeWithNoErrors(() => InvokeControlAfterCreated(rtb, invoke))) return;
+            Console.WriteLine("WARN: InvokeControl on " + rtb + " before IsHandleCreated from " + invoke.Method.ReflectedType + ":" + invoke.Method);
+            // make the handler object
+            var once = new OnEventOnce(() => InvokeControlAfterCreated(rtb, invoke));
+            // add the post invoke call
+            once.AfterInvoke = () => { lock (rtb) rtb.HandleCreated -= once.OnEvent; };
+            // add the OnHandleCreated
+            lock (rtb) rtb.HandleCreated += once.OnEvent;
+        }
+
+        public class OnEventOnce
+        {
+            MethodInvoker invoker;
+            public MethodInvoker AfterInvoke;
+            public OnEventOnce(MethodInvoker invoke)
+            {
+                invoker = invoke;
+            }
+            public void OnEvent(object sender, EventArgs e)
+            {
+                invoker();
+            }
+
+        }
+        public static bool InvokeControlAfterCreated(Control rtb, MethodInvoker invoke)
+        {
+
+            if (rtb.InvokeRequired)
+            {
+                rtb.Invoke(invoke);
+                return true;
+            }
+            else
+            {
+                invoke();
+                return false;
+            }
+        }
+        public static bool InvokeWithNoErrors(MethodInvoker invoke)
+        {
+            try
+            {
+                invoke();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(ex);
+               /// Logger.Log("Failure in event handler: " + ex.Message, Helpers.LogLevel.Warning, ex);
+                return false;
+            }
         }
     }
 }
