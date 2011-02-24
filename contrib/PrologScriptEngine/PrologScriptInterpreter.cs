@@ -48,7 +48,7 @@ namespace PrologScriptEngine
         {
             if (depth == 0) return;
             depth--;
-            bool deeper = (depth == 0);
+            bool deeper = depth != 0;
             lock (_types)
             {
                 if (!_types.Add(type))
