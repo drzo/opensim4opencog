@@ -318,7 +318,7 @@ namespace MushDLR223.Utilities
                 string tname = Name;
                 StackerThread = new Thread(LoopNoAbort(EventQueue_Handler, OneTaskAtATimeLock))
                                     {
-                                        Name = tname + " worker task queue ",
+                                        Name = tname + " queueworker",
                                         Priority = ThreadPriority.BelowNormal,
                                     };
             }
