@@ -27,7 +27,7 @@ namespace MushDLR223.ScriptEngines
         static public HashSet<Type> MissingTypes = new HashSet<Type>();
         static public HashSet<Type> VerifiedTypes = new HashSet<Type>();
         static public HashSet<object> VerifiedMembers = new HashSet<object>();
-        static public object Lock = new object();
+        static public object InterpLock = new object();
         static public object TypeLock = new object();
         public static Dictionary<Assembly, HashSet<Type>> AssemblyTypes = new Dictionary<Assembly, HashSet<Type>>();
         public static bool NewTypes = false;
@@ -35,18 +35,17 @@ namespace MushDLR223.ScriptEngines
         public static bool FullSearch = false;
 
         static public bool AddType(Type type)
-        {
-            lock (TypeLock)
+        {            
             {
                 if (!ScanInfo(type)) return true;
                 bool changed = false;
-                if (LoadedTypes.Add(type))
+                lock (TypeLock) if (!LoadedTypes.Add(type)) return false;
                 {
                     NewTypes = false;
                     changed = !ScannedTypes.Remove(type);
                     List<ScriptInterpreter> scriptInterpreters = new List<ScriptInterpreter>();
-                    
-                    lock (Lock)
+
+                    lock (InterpLock)
                     {
                         scriptInterpreters.AddRange(ScriptManager.Interpreters);
                     }
@@ -56,7 +55,7 @@ namespace MushDLR223.ScriptEngines
                     }
                     try
                     {
-                        lock (VerifyLock)
+                        //lock (VerifyLock)
                         {
                             if (!ScanInfo(type))
                             {
@@ -66,7 +65,7 @@ namespace MushDLR223.ScriptEngines
                     }
                     catch (Exception e)
                     {
-                        WriteLine("-------"+e+"------Verified BAD " + type);
+                        WriteLine("-------" + e + "------Verified BAD " + type);
                     }
                 }
                 return changed;
@@ -677,7 +676,7 @@ namespace MushDLR223.ScriptEngines
 
         public static bool AddInterpreter(ScriptInterpreter interpreter)
         {
-            lock (Lock)
+            lock (InterpLock)
             {
                 bool changed = false;
                 if (!Interpreters.Contains(interpreter))
@@ -718,7 +717,7 @@ namespace MushDLR223.ScriptEngines
 
         public static bool RemoveInterpreter(ScriptInterpreter interpreter)
         {
-            lock (Lock)
+            lock (InterpLock)
             {
                 if (!Interpreters.Contains(interpreter))
                 {

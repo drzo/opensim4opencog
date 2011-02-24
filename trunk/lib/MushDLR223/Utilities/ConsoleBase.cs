@@ -1430,7 +1430,7 @@ namespace MushDLR223.Utilities
             //%%%PauseIfTraced(format);
 
             if (IsOnMonoUnix) WriteColorText(ConsoleColor.White, "CALL_SYSTEM_ERR_WRITELINE-001 " + format);
-            SYSTEM_ERR_WRITELINE_REAL("CALL_SYSTEM_ERR_WRITELINE-002 " + format);
+            SYSTEM_ERR_WRITELINE_REAL(format);
             SystemFlush();
         }
 
