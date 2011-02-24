@@ -3,13 +3,13 @@
 
 ; Naming the main thread allows easier debugging when working with threads.
 (unless Thread:CurrentThread.Name
- (Thread:CurrentThread.Name "LispMainThread")
+ (Thread:CurrentThread.Name "LispMainThread From extra.lisp")
 )
 
 ; The Xml assembly is already loaded -- inform DotLisp.
 ; Let's not: it defines 3 types named "Type"! So further references to Type
 ; need to be fully qualified.
-(load-assembly "System.Xml")
+'(load-assembly "System.Xml")
 
 ; lists as sets:
 
@@ -1605,9 +1605,9 @@
 
 ;NB System.Drawing and Accessibility are loaded by loading
 ; System.Windows.Forms, so informing DotLisp makes sense.
-(load-assembly "System.Windows.Forms")
-(load-assembly "System.Drawing")
-(load-assembly "Accessibility")
+'(load-assembly "System.Windows.Forms")
+'(load-assembly "System.Drawing")
+'(load-assembly "Accessibility")
 
 ; Window clipboard:
 (def (clip-text)
