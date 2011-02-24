@@ -89,7 +89,7 @@ namespace cogbot.TheOpenSims
             List<NamedParam> from = WorldObjects.GetMemberValues("", properties);
             foreach (var o in from)
             {
-                AddInfoMap(o);
+                AddInfoMapItem(o);
             }
 			if (!WorldObjects.SendSimObjectInfoMap) return;
 
@@ -453,23 +453,23 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        readonly List<NamedParam> _infoMap = new List<NamedParam>();
+        readonly Dictionary<object,NamedParam> _infoMap = new Dictionary<object, NamedParam>(); 
         public ICollection<NamedParam> GetInfoMap()
         {
-            return _infoMap;
+            lock (_infoMap) return new List<NamedParam>(_infoMap.Values);
         }
 
         public void SetInfoMap(string key, MemberInfo type, object value)
         {
             if (!WorldObjects.MaintainSimObjectInfoMap) return;
             if (value == null) value = new NullType(this, type);
-            AddInfoMap(new NamedParam(type, key, GetType(), value));
+            AddInfoMapItem(new NamedParam(type, key, GetType(), value));
         }
 
-        public void AddInfoMap(NamedParam ad)
+        public void AddInfoMapItem(NamedParam ad)
         {
             lock (_infoMap)
-                _infoMap.Add(ad);
+                _infoMap[ad.Key] = ad;
         }
 
 

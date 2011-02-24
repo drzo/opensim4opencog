@@ -370,7 +370,7 @@ namespace cogbot.Listeners
                                                   {
                                                       SimAvatarImpl a = DeclareAvatar(list.Value);
 
-                                                      a.AddInfoMap(new NamedParam("simMemberRole",
+                                                      a.AddInfoMapItem(new NamedParam("simMemberRole",
                                                                                   declareGeneric));
                                                       SendOnUpdateDataAspect(a, "MemberRole", null, null);
                                                   }
