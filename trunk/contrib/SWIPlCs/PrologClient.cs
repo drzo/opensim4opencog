@@ -859,7 +859,7 @@ namespace SbsSW.SwiPlCs
                     i++;
                 }
             }
-            if (false && !JplDisabled)
+            if (!JplDisabled)
             {
                 var run = new jpl.Atom("prolog");
                 while (!IsHalted) SafelyRun(() => DoQuery(new jpl.Query(run)));
