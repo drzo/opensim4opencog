@@ -265,7 +265,7 @@ namespace CogbotRadegastPluginModule
 
         public void SetLoginButton(String text, bool enabled)
         {
-            RadegastForm.InvokeControl(RadegastInstance.MainForm, () => SetLoginButton0(text, enabled));
+            DLRConsole.InvokeControl(RadegastInstance.MainForm, () => SetLoginButton0(text, enabled));
         }
         internal void SetLoginButton0(String text, bool enabled)
         {

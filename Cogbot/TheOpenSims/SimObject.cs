@@ -91,6 +91,8 @@ namespace cogbot.TheOpenSims
             {
                 AddInfoMap(o);
             }
+			if (!WorldObjects.SendSimObjectInfoMap) return;
+
             WorldSystem.SendOnUpdateDataAspect(this, name, null, properties);
             WorldSystem.SendNewRegionEvent(SimEventType.DATA_UPDATE, "On" + name + "Update", this);
         }
