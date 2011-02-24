@@ -1366,7 +1366,21 @@ namespace SbsSW.SwiPlCs
         }
         #endregion Arity and Name
 
-        
+        public long longValue()
+        {
+            return (long)this;
+        }
+
+        public int intValue()
+        {
+            return (int)this;
+        }
+
+        public double doubleValue()
+        {
+            return (double)this;
+        }
+
         #region cast oprators
         /// <summary>
         /// Converts the Prolog argument into a string which implies Prolog atoms and strings
@@ -1387,16 +1401,21 @@ namespace SbsSW.SwiPlCs
         public static explicit operator string(PlTerm term)
         {
             Check.Require(term.TermRefIntern != 0);
+            return CastToString(term.TermRef);
+        }
+
+        public static string CastToString(uint TermRef)
+        {
             String s = "";
-            if (0 != libpl.PL_get_chars(term.TermRef, ref s, libpl.CVT_ALL | libpl.CVT_WRITE | libpl.BUF_RING))
+            if (0 != libpl.PL_get_chars(TermRef, ref s, libpl.CVT_ALL | libpl.CVT_WRITE | libpl.BUF_RING))
                 return s;
-            else if (0 != libpl.PL_get_chars(term.TermRef, ref s, libpl.CVT_ALL | libpl.CVT_WRITE | libpl.BUF_RING | libpl.REP_UTF8)) // libpl.REP_MB -> convertiert nach BestFitMapping
+            else if (0 != libpl.PL_get_chars(TermRef, ref s, libpl.CVT_ALL | libpl.CVT_WRITE | libpl.BUF_RING | libpl.REP_UTF8)) // libpl.REP_MB -> convertiert nach BestFitMapping
             {
                 return s;
             }
-            if (0 != libpl.PL_get_chars(term.TermRef, ref s, libpl.CVT_ALL | libpl.CVT_WRITE | libpl.REP_UTF8 | libpl.BUF_RING | libpl.CVT_VARIABLE))
+            if (0 != libpl.PL_get_chars(TermRef, ref s, libpl.CVT_ALL | libpl.CVT_WRITE | libpl.REP_UTF8 | libpl.BUF_RING | libpl.CVT_VARIABLE))
                 return s;
-            throw new PlTypeException("text", term);
+            throw new PlTypeException("text", new PlTerm(TermRef));
         }
 
         /// <summary>
@@ -1637,6 +1656,31 @@ namespace SbsSW.SwiPlCs
         private uint _a0; // term_t
         private int _size;
 
+        public override string ToString()
+        {
+            try
+            {
+                string ts = "<r=" + _a0 + ",a=" + _size + ": ";
+                uint tr = _a0;
+                uint until = _a0 + (uint) _size;
+                bool needComma = false;
+                for (int i = 0; i < _size; i++)
+                {
+                    string s = PlTerm.CastToString(_a0 + (uint) i);
+                    if(needComma)
+                    {
+                        ts += ",";
+                    }
+                    ts += s;
+                    needComma = true;
+                }
+                return ts + ">";
+            }
+            catch (Exception)
+            {
+                return base.ToString();
+            }
+        }
 
         #region constructors
 
