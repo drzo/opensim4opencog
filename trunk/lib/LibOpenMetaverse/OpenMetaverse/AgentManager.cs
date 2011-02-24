@@ -701,6 +701,7 @@ namespace OpenMetaverse
         /// data returned from the data server</param>
         protected virtual void OnChat(ChatEventArgs e)
         {
+            NetworkManager.EventRaised(m_ChatLock, "ChatFromSimulator");
             EventHandler<ChatEventArgs> handler = m_Chat;
             if (handler != null)
                 handler(this, e);
@@ -712,7 +713,11 @@ namespace OpenMetaverse
         /// <summary>Raised when a scripted object or agent within range sends a public message</summary>
         public event EventHandler<ChatEventArgs> ChatFromSimulator
         {
-            add { lock (m_ChatLock) { m_Chat += value; } }
+            add
+            {
+                NetworkManager.EventAdded(m_ChatLock, "ChatFromSimulator");
+                lock (m_ChatLock) { m_Chat += value; }
+            }
             remove { lock (m_ChatLock) { m_Chat -= value; } }
         }
 

@@ -170,9 +170,40 @@ namespace OpenMetaverse
         /// the data sent from the simulator</param>
         protected virtual void OnSimConnecting(SimConnectingEventArgs e)
         {
+            EventRaised(m_SimConnectingLock, "SimConnecting");
             EventHandler<SimConnectingEventArgs> handler = m_SimConnecting;
             if (handler != null)
                 handler(this, e);
+        }
+
+        /// <summary>If events were raised .. helps know handler adders misssed some</summary>
+        static private Dictionary<object, int> m_EventsRaised = new Dictionary<object, int>();
+        public static void EventRaised(object o, string name)
+        {
+            lock (m_EventsRaised)
+           {
+               int number;
+               if (!m_EventsRaised.TryGetValue(o,out number))
+               {
+                   m_EventsRaised[o] = 1;
+               } else
+               {
+                   m_EventsRaised[o] = number + 1;
+               }
+           }
+        }
+
+        public static void EventAdded(object o, string name)
+        {
+            int number;
+            lock (m_EventsRaised)
+            {
+                if (!m_EventsRaised.TryGetValue(o, out number))
+                {
+                    return;
+                }
+            }
+            Logger.Log(name + " Event being registered late: " + number, Helpers.LogLevel.Error);
         }
 
         /// <summary>Thread sync lock object</summary>
@@ -182,7 +213,8 @@ namespace OpenMetaverse
         /// ...</summary>
         public event EventHandler<SimConnectingEventArgs> SimConnecting
         {
-            add { lock (m_SimConnectingLock) { m_SimConnecting += value; } }
+            add { EventAdded(m_SimConnectingLock, "SimConnecting"); 
+                lock (m_SimConnectingLock) { m_SimConnecting += value; } }
             remove { lock (m_SimConnectingLock) { m_SimConnecting -= value; } }
         }
 
@@ -194,6 +226,7 @@ namespace OpenMetaverse
         /// the data sent from the simulator</param>
         protected virtual void OnSimConnected(SimConnectedEventArgs e)
         {
+            EventRaised(m_SimConnectedLock, "SimConnected");
             EventHandler<SimConnectedEventArgs> handler = m_SimConnected;
             if (handler != null)
                 handler(this, e);
@@ -206,7 +239,20 @@ namespace OpenMetaverse
         /// ...</summary>
         public event EventHandler<SimConnectedEventArgs> SimConnected
         {
-            add { lock (m_SimConnectedLock) { m_SimConnected += value; } }
+            add
+            {
+                EventAdded(m_SimConnectedLock, "SimConnected");
+                if (Connected)
+                {
+                    Logger.Log("SimConnected while Connected!!??", Helpers.LogLevel.Error, Client);
+                }
+                lock (m_SimConnectedLock)
+                {
+                    {
+                        m_SimConnected += value;
+                    }
+                }
+            }
             remove { lock (m_SimConnectedLock) { m_SimConnected -= value; } }
         }
 
@@ -290,6 +336,7 @@ namespace OpenMetaverse
         /// the data sent from the simulator</param>
         protected virtual void OnEventQueueRunning(EventQueueRunningEventArgs e)
         {
+            EventRaised(m_SimConnectingLock, "EventQueueRunning");
             EventHandler<EventQueueRunningEventArgs> handler = m_EventQueueRunning;
             if (handler != null)
                 handler(this, e);
@@ -302,7 +349,14 @@ namespace OpenMetaverse
         /// ...</summary>
         public event EventHandler<EventQueueRunningEventArgs> EventQueueRunning
         {
-            add { lock (m_EventQueueRunningLock) { m_EventQueueRunning += value; } }
+            add
+            {
+                EventAdded(m_SimConnectingLock, "EventQueueRunning");
+                lock (m_EventQueueRunningLock)
+                {
+                    m_EventQueueRunning += value;
+                }
+            }
             remove { lock (m_EventQueueRunningLock) { m_EventQueueRunning -= value; } }
         }
 
@@ -882,7 +936,7 @@ namespace OpenMetaverse
                     if (packet != null)
                     {
                         // Skip blacklisted packets
-                        if (UDPBlacklist.Contains(packet.Type.ToString()))
+                        lock (UDPBlacklist) if (UDPBlacklist.Contains(packet.Type.ToString()))
                         {
                             Logger.Log(String.Format("Discarding Blacklisted packet {0} from {1}",
                                 packet.Type, simulator.IPEndPoint), Helpers.LogLevel.Warning);
