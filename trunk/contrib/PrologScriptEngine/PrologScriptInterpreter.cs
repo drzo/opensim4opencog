@@ -13,6 +13,7 @@ namespace PrologScriptEngine
 {
     public class PrologScriptInterpreter : CommonScriptInterpreter, ScriptInterpreter
     {
+        public static bool AutoInternMethods = false;
         static public void Main(string[] args)
         {
             _reachAllTypes = 2;
@@ -32,8 +33,6 @@ namespace PrologScriptEngine
         }
         static HashSet<Type> _types = new HashSet<Type>();
         private static int _reachAllTypes = 1;
-        static private readonly object GroupInitLock = new object();
-        public static bool IsInited = false;
 
         ///<summary>
         ///</summary>
@@ -49,14 +48,15 @@ namespace PrologScriptEngine
             if (depth == 0) return;
             depth--;
             bool deeper = depth != 0;
-            lock (_types)
             {
-                if (!_types.Add(type))
+                lock (_types) if (!_types.Add(type)) return;                          
+                string module = type.Namespace;
+                foreach (var list0 in type.GetMethods(BindingFlags.Static | BindingFlags.NonPublic))
                 {
-                    string module = type.Namespace;
-                    foreach (var list in type.GetMethods(BindingFlags.Static | BindingFlags.NonPublic))
+                    var list = list0;
+                    DLRConsole.SafelyRun(() =>
                     {
-                        PrologClient.InternMethod(module, null, list);
+                        if (AutoInternMethods) PrologClient.InternMethod(module, null, list);
                         if (deeper)
                         {
                             foreach (var s in list.GetParameters())
@@ -65,10 +65,11 @@ namespace PrologScriptEngine
                             }
                             InternTypeS(list.ReturnType, depth);
                         }
-                    }
+                    });
                 }
             }
         }
+
         public override void Dispose()
         {
             prologClient.Dispose();
@@ -90,16 +91,18 @@ namespace PrologScriptEngine
             Init();
         }
 
+        static private readonly object GroupInitLock = new object();
+        public static bool IsInited = false;
+
         public override sealed void Init()
         {
-            
             lock (GroupInitLock)
             {
                 prologClient = prologClient ?? new PrologClient();
                 if (!IsInited)
                 {
                     IsInited = true;
-                    LoadFile("cli_swi.pl", WriteLine);
+                    prologClient.InitFromUser();
                 }
             }
         }
