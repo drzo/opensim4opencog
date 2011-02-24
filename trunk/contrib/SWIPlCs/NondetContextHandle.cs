@@ -195,7 +195,11 @@ namespace SbsSW.SwiPlCs
 
         private bool MissingImpl()
         {
-            if (ManagedObject == null) throw new PlException("not impl");
+            if (ManagedObject == null)
+            {
+                if (PrologClient.FailOnMissingInsteadOfError) return true;
+                throw new PlException("not impl");
+            }
             return ManagedObject == null;
         }
 
