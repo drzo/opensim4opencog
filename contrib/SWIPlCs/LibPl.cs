@@ -93,7 +93,7 @@ namespace SbsSW.SwiPlCs
             get { return m_hLibrary != null && !m_hLibrary.IsInvalid; }
         }
 
-        private static void LoadUnmanagedLibrary(string fileName)
+        public static void LoadUnmanagedLibrary(string fileName)
         {
             if (m_hLibrary == null)
             {

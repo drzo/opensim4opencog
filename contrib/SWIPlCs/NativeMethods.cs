@@ -35,6 +35,7 @@ http://www.codeproject.com/csharp/legacyplugins.asp
 
 using System;
 using System.ComponentModel;
+using System.IO;
 using System.Runtime.InteropServices;
 
 using System.Security.Permissions;
@@ -109,11 +110,18 @@ namespace SbsSW.SwiPlCs
 	public static class SafeNativeMethods
 	{
 		//private const string DllFileName = @"D:\Lesta\swi-pl\pl\bin\LibPl.dll";
-	    private const string DllFileName = @"swipl.dll";//"libpl.dll" for 5.7.8; //was 
+        //"libpl.dll" for 5.7.8; 
+        public const string DllFileName = @"C:\Program Files (x86)\pl\bin\swipl.dll";
+        //public const string DllFileName = @"C:\Program Files\pl\bin\swipl.dll";
 
+	    //public const string DllFileName = @"swipl.dll";
 		public static string DllFileName1
 		{
-			get { return DllFileName; }
+			get
+			{
+                if (File.Exists(DllFileName)) return DllFileName;
+			    return DllFileName;
+			}
 		} 
 
 
@@ -122,7 +130,7 @@ namespace SbsSW.SwiPlCs
 		/// libpl
 		///
         // das funktioniert NICHT wenn umlaute e.g. ü im pfad sind.
-        [DllImport(DllFileName, CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true)]
+        [DllImport(DllFileName,CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true)]
         internal static extern int PL_initialise(int argc, String[] argv);
 		[DllImport(DllFileName)]
 			// PL_EXPORT(int)		PL_is_initialised(int *argc, char ***argv);

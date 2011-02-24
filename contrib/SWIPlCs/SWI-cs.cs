@@ -1966,7 +1966,29 @@ namespace SbsSW.SwiPlCs
     {
 
         #region RegisterForeign
-        
+
+        /// <summary>
+        /// Dictionary to pin foriegn method delegates so that are not GC'd
+        /// </summary>
+        private static readonly Dictionary<string, Delegate> SavedRegisterForeign = new Dictionary<string, Delegate>();
+
+        public static bool PinDelegate(string module, string name, int arity, Delegate method)
+        {
+            Delegate prev;
+            string key = (module ?? "user") + ":" + (name ?? "_NONAME_") + "/" + arity;
+            lock (SavedRegisterForeign)
+            {
+                if (!SavedRegisterForeign.TryGetValue(key, out prev))
+                {
+                    SavedRegisterForeign[key] = method;
+                    return true;
+                }
+            }
+            Console.Error.WriteLine("PinDelegate: " + key + " <- " + method.Method + " from " + prev.Method +
+                                    " as " + method.GetType().Name);
+            return false;
+        }
+
         /// <overloads>
         /// <summary>
         /// <para>Register a C-function to implement a Prolog predicate.</para>
@@ -2041,6 +2063,7 @@ namespace SbsSW.SwiPlCs
         /// <returns></returns>
         public static bool RegisterForeign(string module, string name, int arity, Delegate method, Callback.PlForeignSwitches plForeign)
         {
+            if (!PinDelegate(module, name, arity, method)) return false;
             return Convert.ToBoolean(libpl.PL_register_foreign_in_module(module, name, arity, method, (int)plForeign));
         }
 
