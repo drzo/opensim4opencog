@@ -216,14 +216,21 @@ namespace AIMLBotModule
             AimlBotReadSimData.Enqueue(StartupListener0);
             AimlBotReadSimData.Enqueue(() => AimlBotRespond.Start());
             AimlBotReadSimData.Start();
-        } 
+        }
 
-        static readonly object SILStartupListener00 = new object ();
+        readonly object SILStartupListener00 = new object();
+        private bool SILStartupListenerDone;
         public void StartupListener0()
         {
-            lock (SILStartupListener00) StartupListener00();            
+            lock (SILStartupListener00)
+            {
+                if (SILStartupListenerDone) return;
+                SILStartupListenerDone = true;
+                StartupListener00();
+            }
         }
-        public void StartupListener00()
+
+        private void EnsureRegisteredTalkCommand()
         {
             lock (RegisterTalkToCmdLock)
             {
@@ -238,6 +245,10 @@ namespace AIMLBotModule
                     u.LispScript = "(AIMLBotModule:WorldObjectsForAimLBot:TalkToObject TheBot TheTarget)";
                 }
             }
+        }
+        public void StartupListener00()
+        {
+            EnsureRegisteredTalkCommand();
             try
             {
                 var MyBot = new RTPBot();
