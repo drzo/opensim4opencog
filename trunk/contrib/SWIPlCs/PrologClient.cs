@@ -522,8 +522,15 @@ namespace SbsSW.SwiPlCs
         {
             SetupIKVM();
 
-            if (String.IsNullOrEmpty(SwiHomeDir)) SwiHomeDir = Environment.GetEnvironmentVariable("SWI_HOME_DIR");
-            if (string.IsNullOrEmpty(SwiHomeDir))
+            if (!IsUseableSwiProlog(SwiHomeDir))
+            {
+                SwiHomeDir = Environment.GetEnvironmentVariable("SWI_HOME_DIR");
+                if (!IsUseableSwiProlog(SwiHomeDir))
+                {
+                    SwiHomeDir = null;
+                }
+            }
+            if (!IsUseableSwiProlog(SwiHomeDir))
             {
 
                 SwiHomeDir = "c:\\Program Files\\pl";
@@ -532,11 +539,30 @@ namespace SbsSW.SwiPlCs
                 {
                     SwiHomeDir = "c:\\Program Files (x86)\\pl";
                 }
+            }
+            AltSwiHomeDir = AltSwiHomeDir ?? ".";
+            bool copyPlatFormVersions = false;
+            if (!IsUseableSwiProlog(SwiHomeDir))
+            {
+                SwiHomeDir = AltSwiHomeDir;
+                copyPlatFormVersions = true;
+            }
+            SwiHomeDir = SwiHomeDir ?? AltSwiHomeDir;
+            if (IsUseableSwiProlog(SwiHomeDir))
+            {
                 Environment.SetEnvironmentVariable("SWI_HOME_DIR", SwiHomeDir);
             }
-            if (!File.Exists(SwiHomeDir + "\\boot32.prc") && !File.Exists(SwiHomeDir + "\\boot.prc") && !File.Exists(SwiHomeDir + "\\boot64.prc"))
+            string platformSuffix = Is64BitRuntime() ? "-x64" : "-x86";
+            if (copyPlatFormVersions)
             {
-                Console.WriteLine("RC file missing!");
+                string destination = Path.Combine(SwiHomeDir, "bin");
+                CopyFiles(destination + platformSuffix, destination, true, "*.*", true);
+                destination = Path.Combine(SwiHomeDir, "lib");
+                CopyFiles(destination + platformSuffix, destination, true, "*.*", true);
+            }
+            if (IsUseableSwiProlog(SwiHomeDir))
+            {
+                Environment.SetEnvironmentVariable("SWI_HOME_DIR", SwiHomeDir);
             }
             String path = Environment.GetEnvironmentVariable("PATH");
             if (path != null)
@@ -619,19 +645,50 @@ namespace SbsSW.SwiPlCs
             }
         }
 
+        private static bool IsUseableSwiProlog(string swiHomeDir)
+        {
+            if (string.IsNullOrEmpty(swiHomeDir)) return false;
+            if (!Directory.Exists(swiHomeDir)) return false;
+            if (File.Exists(swiHomeDir + "\\bin\\libpl.dll"))
+            {
+                Console.WriteLine("SWI too old: " + swiHomeDir + "\\bin\\libpl.dll");
+                return false;
+            }
+            if (File.Exists(swiHomeDir + "\\bin\\swipl.dll")) return true;
+            if (!File.Exists(swiHomeDir + "\\boot32.prc") &&
+                !File.Exists(swiHomeDir + "\\boot.prc") &&
+                !File.Exists(swiHomeDir + "\\boot64.prc"))
+            {
+                Console.WriteLine("RC file missing from " + swiHomeDir);
+                return false;
+            }
+            return true;
+        }
+
         //FileInfo & DirectoryInfo are in System.IO
         //This is something you should be able to tweak to your specific needs.
+        static void CopyFiles(string source,
+                      string destination,
+                      bool overwrite,
+                      string searchPattern, bool recurse)
+        {
+            if (Directory.Exists(source))
+                CopyFiles(new DirectoryInfo(source), new DirectoryInfo(destination), overwrite, searchPattern, recurse);
+        }
 
         static void CopyFiles(DirectoryInfo source,
                               DirectoryInfo destination,
                               bool overwrite,
-                              string searchPattern)
+                              string searchPattern, bool recurse)
         {
             FileInfo[] files = source.GetFiles(searchPattern);
-
+            if (!destination.Exists)
+            {
+                destination.Create();
+            }
             foreach (FileInfo file in files)
             {
-                string destName = destination.FullName + "\\" + file.Name;
+                string destName = Path.Combine(destination.FullName, file.Name);
                 try
                 {
                     file.CopyTo(destName, overwrite);
@@ -639,6 +696,22 @@ namespace SbsSW.SwiPlCs
                 catch (Exception e)
                 {
                     System.Console.Error.WriteLine("file: " + file + " copy to " + destName + " " + e);
+                }
+            }
+            if (recurse)
+            {
+                foreach (var info in source.GetDirectories())
+                {
+                    string destName = Path.Combine(destination.FullName, info.Name);
+                    try
+                    {
+                        if (!Directory.Exists(destName)) Directory.CreateDirectory(destName);
+                        CopyFiles(info, new DirectoryInfo(destName), overwrite, searchPattern, recurse);
+                    }
+                    catch (Exception e)
+                    {
+                        System.Console.Error.WriteLine("file: " + info + " copy to " + destName + " " + e);
+                    }
                 }
             }
         }
@@ -659,7 +732,7 @@ namespace SbsSW.SwiPlCs
             {
                 source = new DirectoryInfo(IKVMHome + "\\bin-x86\\");
             }
-            if (source.Exists) CopyFiles(source, destination, true, "*.*");
+            if (source.Exists) CopyFiles(source, destination, true, "*.*", false);
         }
 
         public class ScriptingClassLoader : URLClassLoader
@@ -901,7 +974,7 @@ namespace SbsSW.SwiPlCs
         {
             PlForeignSwitches Nondeterministic = PlForeignSwitches.Nondeterministic;
             Fn015.Register();
-            PlEngine.RegisterForeign(null, "foo2", 2, new DelegateParameterBacktrack2(FooTwo), Nondeterministic | PlForeignSwitches.VarArgs);
+            PlEngine.RegisterForeign(null, "foo2", 2, new DelegateParameterBacktrack2(FooTwo), Nondeterministic);
             PlEngine.RegisterForeign(null, "foo3", 3, new DelegateParameterBacktrackVarArgs(FooThree), Nondeterministic | PlForeignSwitches.VarArgs);
 
             InternMethod(null, "cwl2", typeof(PrologClient).GetMethod("FooMethod"));
@@ -1225,7 +1298,7 @@ typedef struct // define a context structure  { ... } context;
             {
                 case FRG.PL_FIRST_CALL:
                     {
-                        var v = NondetContextHandle.ObtainHandle(control, new ForNext(1, 3));
+                        var v = NondetContextHandle.ObtainHandle(control, new ForNext(1, a0.intValue()));
                         bool res = v.Setup(new PlTermV(a0, a1));
                         bool more = v.HasMore();
                         if (more)
@@ -1273,7 +1346,8 @@ typedef struct // define a context structure  { ... } context;
                 case FRG.PL_FIRST_CALL:
                     {
                         var v = NondetContextHandle.ObtainHandle(control);
-                        bool res = v.Setup(new PlTermV(a0, arity));
+                        var tv = new PlTermV(a0, arity);
+                        bool res = v.Setup(tv);
                         bool more = v.HasMore();
                         if (more)
                         {
@@ -1440,13 +1514,40 @@ typedef struct // define a context structure  { ... } context;
         static private PinnedObject<NonDetTest> ndtp;
         public static bool JplDisabled = false;
         public static bool PlCsDisabled = false;
-        public static string IKVMHome;
-        public static string SwiHomeDir;
+        private static string _ikvmHome;
+        public static string IKVMHome
+        {
+            get { return _ikvmHome; }
+            set { _ikvmHome = RemoveTrailingPathSeps(value); }
+        }
+
+        private static string _swiHomeDir;
+        public static string SwiHomeDir
+        {
+            get { return _swiHomeDir; }
+            set
+            {
+                _swiHomeDir = RemoveTrailingPathSeps(value); ;
+            }
+        }
+
+        private static string RemoveTrailingPathSeps(string value)
+        {
+            if (value != null)
+            {
+                value = value.TrimEnd("/\\".ToCharArray());
+            }
+            return value;
+        }
+
+
+        public static string AltSwiHomeDir = Path.Combine(".", "swiprolog");
         public static bool JplSafeNativeMethodsDisabled = false;
         public static bool JplSafeNativeMethodsCalled = false;
         public static bool IsHalted = false;
         private static Int64 TopOHandle = 6660000;
         private static readonly Dictionary<string, object> SavedDelegates = new Dictionary<string, object>();
+        public static bool FailOnMissingInsteadOfError = true;
 
         // foo(X,Y),writeq(f(X,Y)),nl,X=5.
         public static int Foo(PlTerm t0, PlTerm term2, IntPtr control)
@@ -1587,6 +1688,17 @@ typedef struct // define a context structure  { ... } context;
             string replace = "'" + filename.Replace("\\", "\\\\").Replace("'", "\\'") + "'";
             return PlCall("[" + replace + "]");
         }
+
+        public void InitFromUser()
+        {
+            ConsultIfExists("cli_swi.pl");
+        }
+
+        public void ConsultIfExists(string file)
+        {
+            if (File.Exists(file)) Consult(file);
+        }
+
     }
 
     public class PlRef
