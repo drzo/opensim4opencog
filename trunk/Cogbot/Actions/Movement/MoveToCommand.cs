@@ -23,6 +23,10 @@ namespace cogbot.Actions.Movement
             if (args.Length < 1)
                 return ShowUsage();// " moveto x y z";
             SimPosition position = WorldSystem.GetVector(args, out argsUsed);
+            if (position==null)
+            {
+                return Failure("Coulnd not resolve location: " + string.Join(" ", args));
+            }
             Vector3d g = position.GlobalPosition;
             Client.Self.AutoPilot(g.X, g.Y, g.Z);
 

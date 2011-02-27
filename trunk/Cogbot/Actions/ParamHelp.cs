@@ -7,16 +7,16 @@ using MushDLR223.ScriptEngines;
 
 namespace cogbot.Actions.System
 {
-    class Help : Command, SystemApplicationCommand
+    class ParamHelp : Command, SystemApplicationCommand
     {
-        public Help(BotClient Client)
+        public ParamHelp(BotClient Client)
             : base(Client)
         {
-            Description = "Print this help message.";
+            Description = "Scans the documentation for cogbot commands using the 'Parameters' field.";
             Usage = Description;
             Parameters = new[] { new NamedParam(typeof(GridClient), null) };
             Category = CommandCategory.BotClient;
-            Name = "help";
+            Name = "paramhelp";
         }
 
         public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
