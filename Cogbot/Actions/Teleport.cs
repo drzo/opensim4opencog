@@ -23,7 +23,7 @@ namespace cogbot.Actions.Agent
         {
             TheBotClient = testClient;
             Category = CommandCategory.Movement;
-            Parameters = new[] { new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
+            Parameters = new[] {new NamedParam("location", typeof (SimPosition), typeof (SimPosition))};
             Description = "Teleport to a location.";
             Usage = "To teleport to a location, type \"teleport to <location name>\"";
         }

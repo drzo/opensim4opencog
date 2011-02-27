@@ -17,6 +17,15 @@ namespace cogbot
             info = null;
             checkKey(k);
         }
+        public NamedParam(string k, Type v)
+        {
+            Key = k;
+            Value = v;
+            _Type = null;
+            Choices = null;
+            info = null;
+            checkKey(k);
+        }
         public NamedParam(object k, Type type, object v)
         {
             Key = k;
