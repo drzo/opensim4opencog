@@ -620,6 +620,9 @@ namespace OpenMetaverse
         #endregion Internal/Private Members
 
         static Dictionary<ulong, SimPooledData> SimGlobalData = new Dictionary<ulong, SimPooledData>();
+        readonly public object HandshakeLock = new object();
+        readonly public object ConnectingLock = new object();
+
         /// <summary>
         /// 
         /// </summary>
@@ -699,6 +702,16 @@ namespace OpenMetaverse
         /// unknown, false if there was a failure</returns>
         public bool Connect(bool moveToSim)
         {
+            bool c = false;
+            lock (ConnectingLock)
+            {
+                c = Connect0(moveToSim);
+            }
+            return c;
+        }
+        public bool Connect0(bool moveToSim)
+        {
+            bool washandshakeComplete = handshakeComplete;
             handshakeComplete = false;
 
             if (connected)
@@ -742,10 +755,19 @@ namespace OpenMetaverse
                 // Move our agent in to the sim to complete the connection
                 if (moveToSim) Client.Self.CompleteAgentMovement(this);
 
-                if (!ConnectedEvent.WaitOne(Client.Settings.SIMULATOR_TIMEOUT, false))
+                bool skipWaitOne = false;
+
+                lock (HandshakeLock)
+                {
+                    if (handshakeComplete || washandshakeComplete)
+                    {
+                        skipWaitOne = true;
+                    }
+                }
+                if (!skipWaitOne && !ConnectedEvent.WaitOne(Client.Settings.SIMULATOR_HANDSHAKE_TIMEOUT, false))
                 {
                     Logger.Log("Giving up on waiting for RegionHandshake for " + this.ToString(),
-                        Helpers.LogLevel.Warning, Client);
+                               Helpers.LogLevel.Warning, Client);
                 }
 
                 if (Client.Settings.SEND_AGENT_THROTTLE)

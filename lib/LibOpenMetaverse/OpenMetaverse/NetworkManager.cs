@@ -390,6 +390,7 @@ namespace OpenMetaverse
 
         /// <summary>All of the simulators we are currently connected to</summary>
         public List<Simulator> Simulators = new List<Simulator>();
+        public object SimulatorsLock = new object();
 
         /// <summary>Handlers for incoming capability events</summary>
         internal CapsEventDictionary CapsEvents;
@@ -578,16 +579,21 @@ namespace OpenMetaverse
         /// <returns>A Simulator object on success, otherwise null</returns>
         public Simulator Connect(IPEndPoint endPoint, ulong handle, bool setDefault, string seedcaps)
         {
-            Simulator simulator = FindSimulator(endPoint);
+            Simulator simulator = null;
 
-            if (simulator == null)
+            lock (SimulatorsLock)
             {
-                // We're not tracking this sim, create a new Simulator object
-                simulator = new Simulator(Client, endPoint, handle);
+                simulator = FindSimulator(endPoint);
 
-                // Immediately add this simulator to the list of current sims. It will be removed if the
-                // connection fails
-                lock (Simulators) Simulators.Add(simulator);
+                if (simulator == null)
+                {
+                    // We're not tracking this sim, create a new Simulator object
+                    simulator = new Simulator(Client, endPoint, handle);
+
+                    // Immediately add this simulator to the list of current sims. It will be removed if the
+                    // connection fails
+                    lock (Simulators) Simulators.Add(simulator);
+                }
             }
 
             if (!simulator.Connected)
@@ -857,7 +863,7 @@ namespace OpenMetaverse
         /// <returns>A Simulator reference on success, otherwise null</returns>
         public Simulator FindSimulator(IPEndPoint endPoint)
         {
-            lock (Simulators)
+            lock (Simulators) lock (SimulatorsLock)
             {
                 for (int i = 0; i < Simulators.Count; i++)
                 {
@@ -1219,8 +1225,11 @@ namespace OpenMetaverse
             SendPacket(reply, simulatorInst);
 
             // We're officially connected to this sim
-            simulatorInst.connected = true;
-            simulatorInst.handshakeComplete = true;
+            lock (simulatorInst.HandshakeLock)
+            {
+                simulatorInst.connected = true;
+                simulatorInst.handshakeComplete = true;
+            }
             simulatorInst.ConnectedEvent.Set();
         }
 
@@ -1237,8 +1246,9 @@ namespace OpenMetaverse
                 ulong handle = msg.Simulators[i].RegionHandle;
 
                 IPEndPoint endPoint = new IPEndPoint(ip, port);
-
-                if (FindSimulator(endPoint) != null) return;
+                
+                Simulator sim = FindSimulator(endPoint);
+                if (sim != null) return;
 
                 if (Connect(ip, port, handle, false, null) == null)
                 {
