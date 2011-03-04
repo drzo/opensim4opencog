@@ -95,8 +95,8 @@ namespace CogbotRadegastPluginModule
             int i = 0;
             while (i < c.Parameters.Length)
             {
-                Type from = (Type)c.Parameters[i].Key;
-                Type use = (Type)c.Parameters[i].Value;
+                Type from = (Type)c.Parameters[i].SourceType;
+                Type use = (Type)c.Parameters[i].DestinationType;
                 AddCommand(c, from, use);
                 i++;
             }
