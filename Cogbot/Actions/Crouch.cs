@@ -17,10 +17,14 @@ namespace cogbot.Actions
             : base(Client)
         {
             Description = "crouch [on|off] 'no argumennt=for 500ms' ";
-            Usage = "crouch [on|off]";
+            Usage = "crouch [on|off] time-ms";
             Name = "Crouch";
             Category = CommandCategory.Movement;
-            Parameters = new[] {new NamedParam(typeof (GridClient),typeof(string), null, "on", "off", typeof (int))};
+            Parameters = new[]
+                             {
+                                 new NamedParam("on-off", typeof (string), "on", "on", "off"),
+                                 new NamedParam("time-ms", typeof (TimeSpan), 500)
+                             };
         }
 
         public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)

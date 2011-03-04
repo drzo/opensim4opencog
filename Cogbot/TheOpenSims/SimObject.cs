@@ -844,8 +844,9 @@ namespace cogbot.TheOpenSims
             // get { return WasKilled; }
             set
             {
-                if (WasKilled!=value) //already
+                if (WasKilled != value) //already
                 {
+                    IsDebugging = true;
                     WasKilled = value;
                     var AttachedChildren0 = Children;
                     lock (AttachedChildren0)
@@ -853,7 +854,7 @@ namespace cogbot.TheOpenSims
                         {
                             C.IsKilled = value;
                         }
-                    if (WasKilled) RemoveCollisions();                  
+                    if (WasKilled) RemoveCollisions();
                 }
             }
             get
@@ -961,6 +962,8 @@ namespace cogbot.TheOpenSims
                         Primitive prim = WorldSystem.GetPrimitive(parentID, simu);
                         if (prim == null)
                         {
+                            // missing prim?!
+                            IsDebugging = true;
                             // try to request for next time
                             EnsureParentRequested(simu);
                             return _Parent;
@@ -1733,6 +1736,8 @@ namespace cogbot.TheOpenSims
             {
                 if (ParentGrabber.NoQueue) return;
                 ParentGrabber.Enqueue(() => TaskGetParent(theLPrimParentID, simu));
+                // missing parent still?!
+                IsDebugging = true;
             }
         }
 
@@ -2296,7 +2301,7 @@ namespace cogbot.TheOpenSims
                 if (gain < SoundGainThreshold)
                 {
                     CurrentSounds.Clear();
-                    Debug("Clearing all sounds");
+                    if (IsDebugging) Debug("Clearing all sounds");
                 }
                 else
                 {
@@ -2389,6 +2394,7 @@ namespace cogbot.TheOpenSims
         readonly Dictionary<string, object> dict = new Dictionary<string, object>();
         protected bool toStringNeedsUpdate = true;
         private bool wasMeshUpdated;
+        public bool IsDebugging { get; set; }
 
         public bool IsMeshed { get; set; }
 
@@ -2513,6 +2519,7 @@ namespace cogbot.TheOpenSims
         bool HasPrim { get; }
         uint LocalID { get; }
         uint ParentID { get;}
+        bool IsDebugging { get; set; }
         bool KilledPrim(Primitive primitive, Simulator simulator);
 
         ICollection<NamedParam> GetInfoMap();

@@ -93,7 +93,7 @@ namespace cogbot.Listeners
         public IEnumerable<string> GroupNames
         {
             get { return _defaultProvider.GroupNames; }
-        } 
+        }
 
         public override void Parcels_OnSimParcelsDownloaded(object sender,
                                                             SimParcelsDownloadedEventArgs e)
@@ -109,8 +109,8 @@ namespace cogbot.Listeners
             if (sender != client.gridClient)
             {
                 Logger.DebugLog("wrong client " + sender);
-               // client =(BotClient)(GridClient)sender;
-              // throw new ArgumentException("wrong client " + sender);
+                // client =(BotClient)(GridClient)sender;
+                // throw new ArgumentException("wrong client " + sender);
             }
             //            RequestGridInfos();
         }
@@ -141,7 +141,7 @@ namespace cogbot.Listeners
         }
 
         public void Network_OnSimConnectedHook(object sender, SimConnectedEventArgs e)
-        {            
+        {
             Simulator simulator = e.Simulator;
             ///base.Network_OnSimConnected(simulator);
             lock (WorldObjectsMasterLock)
@@ -199,7 +199,7 @@ namespace cogbot.Listeners
         {
             if (!IsConnected)
             {
-                Network_OnSimConnectedHook(this,new SimConnectedEventArgs(simulator));
+                Network_OnSimConnectedHook(this, new SimConnectedEventArgs(simulator));
             }
         }
 
@@ -209,16 +209,16 @@ namespace cogbot.Listeners
             //LeaveSimulator(simulator);
             e.Cancel = false;// base.Network_OnSimConnecting(simulator);
         }
-                                          
+
         public override void Network_OnEventQueueRunning(object sender, EventQueueRunningEventArgs e)
         {
             var simulator = e.Simulator;
             //if (simulator == client.Network.CurrentSim) { new Thread(() => client.Appearance.WearOutfit(new string[] { "Clothing", "Default" })).Start(); }
             if (string.IsNullOrEmpty(simulator.Name))
             {
-           //    simulator.Client.Grid.RequestMapItems(simulator.Handle,GridItemType.AgentLocations,GridLayerType.Terrain); 
+                //    simulator.Client.Grid.RequestMapItems(simulator.Handle,GridItemType.AgentLocations,GridLayerType.Terrain); 
             }
-           // base.Network_OnEventQueueRunning(simulator);
+            // base.Network_OnEventQueueRunning(simulator);
             if (simulator == client.Network.CurrentSim)
             {
                 StartupPostLoginQueues();
@@ -229,7 +229,7 @@ namespace cogbot.Listeners
 
         static bool DidStartupPostLoginQueues = false;
         static readonly object DidStartupPostLoginQueuesLock = new object();
-        
+
         private void StartupPostLoginQueues()
         {
             lock (DidStartupPostLoginQueuesLock)
@@ -296,7 +296,7 @@ namespace cogbot.Listeners
                 }
                 foreach (var simulator in _AllSimulators)
                 {
-                 //   if (simulator.Client == client.gridClient) continue;
+                    //   if (simulator.Client == client.gridClient) continue;
                     if (simulator.Handle != handle) continue;
                     GridClient cl = simulator.Client;
                     BotClient bc = BotClientFor(cl);
@@ -323,7 +323,7 @@ namespace cogbot.Listeners
             Simulator oldSim = e.OldSimulator;
             Simulator newSim = e.NewSimulator;
             On_ChangeSims(oldSim, newSim);
-            base.Self_OnRegionCrossed(sender,e);
+            base.Self_OnRegionCrossed(sender, e);
         }
 
         private void On_ChangeSims(Simulator PreviousSimulator, Simulator newSim)
@@ -348,9 +348,9 @@ namespace cogbot.Listeners
             var reason = e.Reason;
             base.Network_OnSimDisconnected(sender, e);
             RemoveSim(simulator);
-            SimRegion.GetRegion(simulator).RemoveSim(simulator);            
+            SimRegion.GetRegion(simulator).RemoveSim(simulator);
             LeaveSimulator(simulator);
-            
+
             if (simulator == client.Network.CurrentSim)
                 PropertyQueue.AddFirst(() =>
                                            {
@@ -374,13 +374,13 @@ namespace cogbot.Listeners
         }
 
         public override void Network_OnDisconnected(object sender, DisconnectedEventArgs e)
-        {            
+        {
             {
                 foreach (var simulator in AllSimulators)
                 {
-                    if (simulator.Client!=client.gridClient)
+                    if (simulator.Client != client.gridClient)
                     {
-                        if (GridMaster==this && simulator.Connected)
+                        if (GridMaster == this && simulator.Connected)
                         {
                             GridMaster = BotClientFor(simulator.Client).WorldSystem;
                             Debug("Changed GridMaster to " + GridMaster);
@@ -415,7 +415,7 @@ namespace cogbot.Listeners
         {
             var regionHandle = e.RegionHandle;
             var regionID = e.RegionID;
-            if (regionHandle==0) return;
+            if (regionHandle == 0) return;
             RegisterUUID(regionID, GetRegion(regionHandle));
             base.Grid_OnRegionHandleReply(sender, e);
         }
@@ -470,7 +470,7 @@ namespace cogbot.Listeners
                     client.Network.RegisterCallback(PacketType.AvatarAnimation, new EventHandler<PacketReceivedEventArgs>(AvatarAnimationHandler));
                     client.Avatars.AvatarAnimation -= Avatars_OnAvatarAnimation;
 
-                    
+
                     // raises these events already
                     client.Assets.UploadProgress -= Assets_OnUploadProgress; // On-Upload-Progress
                     client.Self.CameraConstraint -= Self_OnCameraConstraint;
@@ -532,7 +532,7 @@ namespace cogbot.Listeners
 
             client.Self.ChatFromSimulator += Self_OnChat;
             //throw new NotImplementedException();
-            
+
             client.Self.ScriptDialog += Self_OnScriptDialog;
             client.Self.ScriptQuestion += Self_OnScriptQuestion;
             client.Self.LoadURL += Self_OnLoadURL;
@@ -562,7 +562,7 @@ namespace cogbot.Listeners
             client.Friends.FriendshipOffered += Friends_OnFriendshipOffered;
             client.Friends.FriendshipResponse += Friends_OnFriendshipResponse;
             client.Friends.FriendshipTerminated += Friends_OnFriendshipTerminated;
-        
+
             client.Inventory.ItemReceived += Inventory_OnItemReceived;
             client.Inventory.FolderUpdated += Inventory_OnFolderUpdated;
             client.Inventory.InventoryObjectOffered += Inventory_OnObjectOffered;
@@ -618,8 +618,8 @@ namespace cogbot.Listeners
         }
         public void EnsureSimulator(Simulator simulator)
         {
-            if (simulator == null || simulator.Handle==0) return;
-            if (!Monitor.TryEnter(_AllSimulators,10000))
+            if (simulator == null || simulator.Handle == 0) return;
+            if (!Monitor.TryEnter(_AllSimulators, 10000))
             {
                 WriteLine("Cant lock _AllSimulators");
                 return;
@@ -685,7 +685,7 @@ namespace cogbot.Listeners
         }
 
 
-        public override void Terrain_OnLandPatch(object sender, LandPatchReceivedEventArgs e) 
+        public override void Terrain_OnLandPatch(object sender, LandPatchReceivedEventArgs e)
         {
             //client.Terrain.LandPatchReceived -= Terrain_OnLandPatch;
             //Simulator simulator, int x, int y, int width, float[] data
@@ -727,7 +727,7 @@ namespace cogbot.Listeners
 
             SimRegion r = SimRegion.GetRegion(simulator);
             r.Parcels_OnParcelSelectedObjects(simulator, objectIDs, resetList);
-            base.Parcels_OnParcelSelectedObjects(sender,e);
+            base.Parcels_OnParcelSelectedObjects(sender, e);
         }
 
         static readonly List<UUID> parcelInfoRequests = new List<UUID>();
@@ -760,18 +760,19 @@ namespace cogbot.Listeners
                 if (IsSystemName(fromName)) return null;
                 int au;
                 List<SimObject> ps = GetPrimitives(new string[] { fromName }, out au);
-                if (ps.Count==1) p = ps[0];
+                if (ps.Count == 1) p = ps[0];
             }
             if (p != null) return p;
             Object o = null;
-            if (isAvatar==PCode.None && !string.IsNullOrEmpty(fromName))
+            if (isAvatar == PCode.None && !string.IsNullOrEmpty(fromName))
             {
                 if (!fromName.Contains(" "))
                 {
                     isAvatar = PCode.Prim;
-                }  else
+                }
+                else
                 {
-                    isAvatar = PCode.Avatar;  
+                    isAvatar = PCode.Avatar;
                 }
             }
             return GetSource(client.Network.CurrentSim, id, null, ref o, isAvatar);
@@ -826,14 +827,16 @@ namespace cogbot.Listeners
                     {
                         Debug("found it!");
                     }
-                    else {lock (Name2Key)
+                    else
+                    {
+                        lock (Name2Key)
                         {
                             foreach (KeyValuePair<string, UUID> key in Name2Key)
                             {
                                 string name = key.Key;
                                 if (name.StartsWith("("))
                                 {
-                                    
+
                                 }
                                 if (key.Value == sourceID)
                                 {
@@ -862,9 +865,10 @@ namespace cogbot.Listeners
                                     return source;
                                 }
                             }
-                        }}
+                        }
+                    }
             }
-            if (isAvatar==PCode.Prim)
+            if (isAvatar == PCode.Prim)
             {
 
                 SimObject impl = CreateSimObject(sourceID, this, sim);
@@ -872,7 +876,7 @@ namespace cogbot.Listeners
                 return source;
 
             }
-            if (s==null)
+            if (s == null)
             {
                 s = sourceID;
             }
@@ -883,15 +887,15 @@ namespace cogbot.Listeners
         {
             client.Avatars.RequestAvatarName(sourceID);
             client.Friends.MapFriend(sourceID);
-           /*
-            UUID trans = UUID.Random();
-            client.Self.LookAtEffect(client.Self.AgentID, sourceID, Vector3d.Zero, LookAtType.Select, trans);
-            client.Self.PointAtEffect(client.Self.AgentID, sourceID, Vector3d.Zero, PointAtType.Select, trans);
-            client.Self.BeamEffect(client.Self.AgentID, sourceID, Vector3d.Zero, new Color4(255, 0, 0, 255), 1f, trans);
-            client.Self.PointAtEffect(client.Self.AgentID, sourceID, Vector3d.Zero, PointAtType.None, trans);
-            client.Self.LookAtEffect(client.Self.AgentID, sourceID, Vector3d.Zero, LookAtType.None, trans);
-            client.Self.BeamEffect(UUID.Zero, UUID.Zero, Vector3d.Zero, new Color4(255, 255, 255, 255), 0, trans);
-            */
+            /*
+             UUID trans = UUID.Random();
+             client.Self.LookAtEffect(client.Self.AgentID, sourceID, Vector3d.Zero, LookAtType.Select, trans);
+             client.Self.PointAtEffect(client.Self.AgentID, sourceID, Vector3d.Zero, PointAtType.Select, trans);
+             client.Self.BeamEffect(client.Self.AgentID, sourceID, Vector3d.Zero, new Color4(255, 0, 0, 255), 1f, trans);
+             client.Self.PointAtEffect(client.Self.AgentID, sourceID, Vector3d.Zero, PointAtType.None, trans);
+             client.Self.LookAtEffect(client.Self.AgentID, sourceID, Vector3d.Zero, LookAtType.None, trans);
+             client.Self.BeamEffect(UUID.Zero, UUID.Zero, Vector3d.Zero, new Color4(255, 255, 255, 255), 0, trans);
+             */
         }
 
         public static WorldObjects MasterFor(ulong handle)

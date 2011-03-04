@@ -159,7 +159,7 @@ namespace cogbot.Listeners
 
                         bool tf = asset.Decode();
                         decodeFailed = !tf;
-                        Debug("Asset decoded " + tf + " as " + asset.AssetType);
+                        if (decodeFailed) Debug("Asset decoded " + tf + " as " + asset.AssetType);
                     }
                     catch (Exception ex)
                     {
@@ -193,8 +193,9 @@ namespace cogbot.Listeners
                 {
                     AssetType assetRequestType = AssetRequestType[transfer.AssetID];
                     if (assetRequestType == asset.AssetType)
-                        Debug("Transfer succeeded for " + assetRequestType +
-                              " " + transfer.AssetID + " ");
+                    {
+                       if (false) Debug("Transfer succeeded for " + assetRequestType + " " + transfer.AssetID + " ");
+                    }
                     else
                         Debug("Transfer succeeded weirdly as " + asset.AssetType + " for " + assetRequestType +
                               " " + transfer.AssetID + " ");

@@ -60,6 +60,12 @@ namespace cogbot.TheOpenSims
 
         public Object Inst;
         public MemberInfo Type;// { get; set; }
+
+        public NullType(Type type)
+        {
+            Inst = null;
+            Type = type;
+        }
     }
 
     public class SimObjectEvent : BotMentalAspect
