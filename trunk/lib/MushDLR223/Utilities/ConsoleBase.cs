@@ -474,13 +474,26 @@ namespace MushDLR223.Utilities
             }
             else
             {
-                MoveIf(p + ".WindowsOnly", p);
+                string wo = p + ".WindowsOnly";
+                if (File.Exists(p))
+                {
+                    if (File.Exists(wo))
+                    {
+                        File.Delete(wo);
+                        File.Copy(p, wo);
+                    }
+                }
+                MoveIf(wo, p);
             }
         }
 
-        private static void MoveIf(string p, string p_2)
+        private static void MoveIf(string src, string dest)
         {
-            if (File.Exists(p)) SafelyRun(() => File.Move(p, p_2));
+            if (File.Exists(src) && !File.Exists(dest))
+                SafelyRun(() =>
+                              {
+                                  File.Move(src, dest);
+                              });
         }
 
         public static bool AllocConsole()
