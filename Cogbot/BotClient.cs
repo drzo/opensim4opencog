@@ -2062,7 +2062,7 @@ namespace cogbot
             {
                 BotLoginParams.URI = G.LoginURI;
             }
-            TheRadegastInstance.Netcom.Grid = G;
+            TheRadegastInstance.Netcom.LoginOptions.Grid = G;
             to.Grid = G;
             string botStartAt = BotLoginParams.Start;            
 
@@ -2140,7 +2140,7 @@ namespace cogbot
                     LoginURI = G.LoginURI;
                     if (LoginURI != null) console.txtCustomLoginUri.Text = LoginURI;
                     console.cbxGrid.Text = G.Name ?? G.ID;
-                    TheRadegastInstance.Netcom.Grid = G;
+                    TheRadegastInstance.Netcom.LoginOptions.Grid = G;
                 }
                 else { console.cbxGrid.Text = "Custom"; }
                 if (LoginURI == null) console.txtCustomLoginUri.Text = options.GridCustomLoginUri;
