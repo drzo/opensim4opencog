@@ -34,9 +34,20 @@ namespace CycWorldModule.DotCYC
         public static bool ClearGridDataBetweenSessions = false;
         public static bool ClearRegionDataBetweenSessions = false;
         public static bool ClearHistoryBetweenSessions = true;
-        static public CycAccess cycAccess;
+        static public CycAccess cycAccess
+        {
+            get
+            {
+                _cycAccess = _cycAccess ?? cycConnection.getCycAccess();
+                return _cycAccess;
+            }
+        }
+        private static CycAccess _cycAccess;
+
         static public CycFort vocabMt;
         static public CycFort assertMt;
+        static public CycFort queryMt;
+        static public CycFort staticStateMt;
         static public int KBTick = 0;
         static public bool ProcessEvents = true;
         private bool IsDisposing;
@@ -68,13 +79,17 @@ namespace CycWorldModule.DotCYC
         // ReSharper restore InconsistentNaming
         public void OnEvent(SimObjectEvent evt)
         {
-            if (IsCycDead) return;
             if (cycAccess == null)
             {
                 //Console.WriteLine("No Cyc connection");
-                IsCycDead = true;
+               // IsCycDead = true;
                 return;
             }
+            else
+            {
+                IsCycDead = false;
+            }
+            if (IsCycDead) return; 
             if (evt.EventType == SimEventType.UNKNOWN) return;
             if (evt.EventType == SimEventType.NETWORK) return;
             if (evt.EventClass == SimEventClass.PERSONAL) return;
@@ -128,7 +143,7 @@ namespace CycWorldModule.DotCYC
                 if (v is SimObject)
                 {
                     SimObject o = (SimObject) v;
-                    if (WorldObjects.GridMaster != null && WorldObjects.GridMaster.TheSimAvatar.Distance(o) < 30)
+                    if (WorldObjects.GridMaster != null && WorldObjects.GridMaster.TheSimAvatar.Distance(o) < Dist100)
                     {
                         SaveInfoMap(constant as CycFort, o);
                     }
@@ -191,22 +206,29 @@ namespace CycWorldModule.DotCYC
         private void AssertKE()
         {
             cycAccessQueueHandler.NoQueue = true;
-            cycAccess = cycConnection.getCycAccess();
+            CycAccess cycAccess = _cycAccess ?? cycConnection.getCycAccess();
             if (cycAccess == null)
             {
                 DLRConsole.DebugWriteLine("No Cyc connection");
                 return;
             }
+            _cycAccess = cycAccess;
             genlPreds = C("genlPreds");
             cycIsa = C("isa");
-            cycAccess.createIndividual("SimCurrentStateMt", "#$DataMicrotheory for the simulator", "UniversalVocabularyMt",
+            queryMt = cycAccess.createIndividual("SimCurrentStateMt", "#$DataMicrotheory for the simulator", "UniversalVocabularyMt",
                                         "DataMicrotheory");
             vocabMt = cycAccess.createIndividual("SimVocabularyMt", "#$VocabularyMicrotheory for the simulator",
                                        "UniversalVocabularyMt",
                                        "VocabularyMicrotheory");
-            cycAccess.createIndividual("SimStaticStateMt", "#$Microtheory static entities for the simulator",
+            assertMt = cycAccess.createIndividual("SimInitialStateMt", "#$DataMicrotheory for T0 of the simulator", "UniversalVocabularyMt",
+                           "DataMicrotheory");
+            cycAccess.assertGaf(CycAccess.baseKB, C("genlMt-Vocabulary"), assertMt, vocabMt);
+            staticStateMt = cycAccess.createIndividual("SimStaticStateMt", "#$Microtheory static entities for the simulator",
                            "UniversalVocabularyMt",
                            "Microtheory");
+            cycAccess.assertGaf(CycAccess.baseKB, C("genlMt"), queryMt, assertMt);
+            cycAccess.assertGaf(CycAccess.baseKB, C("genlMt-Vocabulary"), staticStateMt, vocabMt);
+            cycAccess.assertGaf(CycAccess.baseKB, C("genlMt"), assertMt, staticStateMt);
 
             if (ClearHistoryBetweenSessions)
             {
@@ -249,7 +271,7 @@ namespace CycWorldModule.DotCYC
             //"TODO maybe not all objects are Artifacts?"
             //assertGafNow(C("resultIsa"),C("SimObjectFn"),C("SimArtifact"));
             assertIsa(simFort["SimObject"], C("SpatiallyDisjointObjectType"));
-            assertGenls(simFort["SimObject"], C("SimItem"));
+            assertGenls(simFort["SimObject"], assertCollection(C("SimItem")));
 
             // FunctionToCollection("SimAnimationFn", "SimAnimation", "An animation in the simulator");
 
@@ -330,13 +352,13 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
 
 
              */
-            conceptuallyRelated(C("BodyMovementEvent"), C("SimAnimation"));
-            conceptuallyRelated(C("EmittisgSound"), C("SimSound"));
+            conceptuallyRelated(C("BodyMovementEvent"), assertCollection(C("SimAnimation")));
+            conceptuallyRelated(C("EmittingSound"), assertCollection(C("SimSound")));
             conceptuallyRelated(C("Sound"), C("SimSound"));
-            conceptuallyRelated(C("AnimalBodyRegion"), C("SimBodypart"));
-            conceptuallyRelated(C("SomethingToWear"), C("SimWearable"));
-            conceptuallyRelated(C("Landmark"), C("SimLandmark"));
-            conceptuallyRelated(C("VisualImage"), C("SimTexture"));
+            conceptuallyRelated(C("AnimalBodyRegion"), assertCollection(C("SimBodypart")));
+            conceptuallyRelated(C("SomethingToWear"), assertCollection(C("SimWearable")));
+            conceptuallyRelated(C("Landmark"), assertCollection(C("SimLandmark")));
+            conceptuallyRelated(C("VisualImage"), assertCollection(C("SimTexture")));
 
 
 
@@ -516,7 +538,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
                 assertIsa(fortFn, C("CollectionDenotingFunction"));
                 assertIsa(fortFn, C("ReifiableFunction"));
                 CycFort fortCol = simFort[col] = createCollection(col, comment, "SimVocabularyMt", "Collection", null);
-                assertGenls(fortCol, C("PartiallyTangibleTypeByPhysicalFeature")); //or isa?
+                assertGenls(assertCollection(fortCol), C("PartiallyTangibleTypeByPhysicalFeature")); //or isa?
                 //not true assertIsa(simFort[fn], C("SubcollectionDenotingFunction"));
                 //not true assertIsa(simFort[fn], C("TotalFunction"));
                 assertGafNow(C("resultIsa"), fortFn, C("PartiallyTangibleTypeByPhysicalFeature"));
@@ -543,9 +565,19 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
             CycFort fcol = C(col);
             assertIsa(fcol, CycAccess.collection);
             assertIsa(fcol, C(isa));
-            if (genls != null) assertGenls(fcol, C(genls));
+            if (genls != null)
+            {
+                var Cgenls = C(genls);
+                assertGenls(fcol, assertCollection(Cgenls));
+            }
             assertGaf(CycAccess.comment, fcol, comment);            
             return fcol;
+        }
+
+        private CycFort assertCollection(CycFort Cgenls)
+        {
+            assertIsa(Cgenls, CycAccess.collection);
+            return Cgenls;
         }
 
         public void FunctionToIndividual(string fn, string col, string comment)
@@ -1658,7 +1690,8 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
             if (newlyCreated)
             {
                 assertGafNow(cycIsa, fn, C("ReifiableFunction"));
-                assertGafNow(C("resultGenl"), fn, C(simobjecttype));
+                assertGafNow(cycIsa, fn, C("CollectionDenotingFunction"));                
+                assertGafNow(C("resultGenl"), fn, assertCollection(C(simobjecttype)));
             }
             CycFort indv;
             bool b = typename.StartsWith("SimEvent");
@@ -2349,6 +2382,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
         static Dictionary<Assembly, XElement> AssmblyXDoics = new Dictionary<Assembly, XElement>();
         public TaskQueueHandler DocQueue = new TaskQueueHandler("Cyc Doc Queue", 0);
         readonly public SimEventSubscriber eventFilter;
+        public static double Dist100 = 100;        
 
         public static XElement GetXmlDocMembers(Assembly typeAssembly)
         {
