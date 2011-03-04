@@ -187,7 +187,7 @@ namespace cogbot.Listeners
         {
             Simulator sim = e.Simulator;
             var packet = e.Packet;
-            if (sim != client.Network.CurrentSim) { Debug("AvatarAppearance: from a differnt sim than current " + sim); }
+            //if (sim != client.Network.CurrentSim) { Debug("AvatarAppearance: from a differnt sim than current " + sim); }
             AvatarAppearancePacket appearance = (AvatarAppearancePacket)packet;
             Avatar found = sim.ObjectsAvatars.Find(delegate(Avatar av)
             {

@@ -85,37 +85,71 @@ namespace cogbot.Listeners
 
         #endregion
 
-        private void Objects_OnObjectDataBlockUpdate(object sender, ObjectDataBlockUpdateEventArgs e)
+        private void PrimtiveBlockUpdate(Simulator simulator, ObjectMovementUpdate objectupdate0, 
+            Primitive prim,ObjectUpdatePacket.ObjectDataBlock block, Primitive.ConstructionData data)
         {
-            Simulator simulator = e.Simulator;
-            Primitive prim = e.Prim;
-            var data = e.ConstructionData;
-            var block = e.Block;
-            var objectupdate0 = e.Update;
-            if (!IsMaster(simulator)) return;
-            // return;            
-            if (!objectupdate0.Avatar)
+            bool isNewPrim = prim.Scale == Vector3.Zero && prim.Position == Vector3.Zero && prim.NameValues == null;
+            if (prim.ID == UUID.Zero)
             {
-
+                if (!simulator.Client.Settings.OBJECT_TRACKING)
+                {
+                    throw new ArgumentException("Need to enable object tracking!!");
+                }
+                SimObject O = GetSimObjectFromUUID(block.FullID);
+                if (O == null)
+                {
+                    Debug("PrimData ZERO for " + prim);
+                    if (block.ID > 0)
+                    {
+                        uint localID = block.ID;
+                        prim.LocalID = localID;
+                        prim.ID = block.FullID;
+                        var p = simulator.Client.Objects.GetPrimitive(simulator, block.ID, block.FullID);
+                       // simulator.GetPrimitive(
+                    }
+                }
+                else
+                {
+                    Debug("SimData ZERO for " + prim);
+                    uint localID = block.ID;
+                    prim.LocalID = localID;
+                    prim.ID = block.FullID;
+                    O.IsDebugging = true;
+                }
+            }
+           // else
+            {
                 if (prim.RegionHandle == simulator.Handle && prim.ID != UUID.Zero)
                 {
                     if (!prim.PrimData.Equals(data)
                         /* || prim.Scale != block.Scale
-                        || prim.Position != objectupdate.Position
-                        || prim.Rotation != objectupdate.Rotation
-                        || prim.ParentID != block.ParentID*/
+                            || prim.Position != objectupdate.Position
+                            || prim.Rotation != objectupdate.Rotation
+                            || prim.ParentID != block.ParentID*/
                         )
                     {
                         SimObject O = GetSimObjectFromUUID(prim.ID);
                         if (O != null)
                         {
-                            Debug("PrimData changed for " + prim);
-                            O.RemoveCollisions();
+                            if (!isNewPrim)
+                            {
+                                Debug("PrimData changed for " + prim);
+                                O.RemoveCollisions();
+                            }
                             // the old OnNewPrim code will force the reindexing
+                        }
+                        else
+                        {
+                            //Debug("PrimData new for " + prim);
+                            O = GetSimObject(prim, simulator);
+                            return;
                         }
 
                     }
-                    SendNewRegionEvent(SimEventType.DATA_UPDATE, "on-data-updated", prim);
+                    if (!isNewPrim)
+                    {
+                        SendNewRegionEvent(SimEventType.DATA_UPDATE, "on-data-updated", prim);
+                    }
                     //Objects_OnPrimitiveUpdate(simulator, prim, objectupdate0, simulator.Handle, 0);
                 }
                 else
@@ -125,13 +159,28 @@ namespace cogbot.Listeners
                     if (prim.ID != UUID.Zero)
                     {
                         SimObject O = GetSimObjectFromUUID(prim.ID);
-                        if (O != null && prim.Properties!=null && prim.RegionHandle == simulator.Handle)
+                        if (O != null && prim.Properties != null && prim.RegionHandle == simulator.Handle)
                         {
                             Objects_OnPrimitiveUpdateReal(simulator, prim, objectupdate0, simulator.Handle, 0);
                             //O = GetSimObject(prim, simulator);
                         }
                     }
                 }
+            }
+        }
+
+        private void Objects_OnObjectDataBlockUpdate(object sender, ObjectDataBlockUpdateEventArgs e)
+        {
+            Simulator simulator = e.Simulator;
+            Primitive prim = e.Prim;
+            var data = e.ConstructionData;
+            ObjectUpdatePacket.ObjectDataBlock block = e.Block;
+            var objectupdate0 = e.Update;
+            if (!IsMaster(simulator)) return;
+            // return;            
+            if (!objectupdate0.Avatar)
+            {
+                PrimtiveBlockUpdate(simulator, objectupdate0, prim, block, data);
             }
             else // this code only is usefull for avatars
             {

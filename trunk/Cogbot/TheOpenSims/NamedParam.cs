@@ -3,15 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using cogbot.TheOpenSims;
-
+using KeyType = System.String;
 namespace cogbot
 {
     public struct NamedParam
     {
-        public NamedParam(object k, object v)
+        public NamedParam(KeyType k, object v)
         {
-            Key = k;
-            Value = v;
+            _key = k;
+            _value = v;
             _Type = null;
             Choices = null;
             info = null;
@@ -19,17 +19,17 @@ namespace cogbot
         }
         public NamedParam(string k, Type v)
         {
-            Key = k;
-            Value = v;
+            _key = k;
+            _value = v;
             _Type = null;
             Choices = null;
             info = null;
             checkKey(k);
         }
-        public NamedParam(object k, Type type, object v)
+        public NamedParam(KeyType k, Type type, object v)
         {
-            Key = k;
-            Value = v;
+            _key = k;
+            _value = v;
             _Type = type;
             Choices = null;
             info = null;
@@ -45,45 +45,91 @@ namespace cogbot
             }
         }
 
-        public NamedParam(MemberInfo inf, object k, Type type, object v)
+        public NamedParam(MemberInfo inf, KeyType k, Type type, object v)
         {
             info = inf;
-            Key = k;
-            Value = v;
+            _key = k;
+            _value = v;
             _Type = type;
             Choices = null;
             checkKey(k);
         }
-        public NamedParam(object k, Type type, object v, params object[] choices)
+        public NamedParam(KeyType k, Type type, object v, params object[] choices)
         {
-            Key = k;
-            Value = v;
+            _key = k;
+            _value = v;
             _Type = type;
             Choices = choices;
             info = null;
             checkKey(k);
         }
 
-        readonly public object Key;
-        readonly public object Value;
+        private readonly KeyType _key;
+        private readonly object _value;
         readonly public object[] Choices;
-        public MemberInfo info;
-        public Type _Type;
+        public readonly MemberInfo info;
+        private readonly Type _Type;
+
+        public NamedParam(NamedParam param, object o)
+        {
+            _Type = param._Type;
+            _value = o;
+            _key = param._key;
+            Choices = param.Choices;
+            info = param.info;
+        }
+
+        public NamedParam(Type type, Type DataType)
+        {
+            _Type = type;
+            _value = new NullType(DataType);
+            _key = _Type.Name;
+            Choices = null;
+            info = null;
+        }
 
         public Type Type
         {
             get
             {
                 if (_Type != null) return _Type;
-                if (Value is NullType) return ((NullType) Value).Type.DeclaringType;
-                return Value.GetType();
+                if (_value is NullType) return ((NullType) _value).Type.DeclaringType;
+                if (_value != null) return _value.GetType();
+                return info.DeclaringType;
             }
+        }
+
+        public Type SourceType
+        {
+            get
+            {
+                if (info != null) return info.DeclaringType; 
+                return Type;
+            }
+        }
+
+        public Type DestinationType
+        {
+            get
+            {                
+                return Type;
+            }
+        }
+
+        public object Value
+        {
+            get { return _value; }
+        }
+
+        public string Key
+        {
+            get { return _key; }
         }
 
         public override string ToString()
         {
-            if (Key == null) return string.Format("{0}", (Value ?? "NULL"));
-            return Key + "=" + Value;
+            if (_key == null) return string.Format("{0}", (_value ?? "NULL"));
+            return _key + "=" + _value;
         }
 
         public static bool operator ==(NamedParam p1,NamedParam p2)
@@ -108,9 +154,9 @@ namespace cogbot
 
             if (obj == null || GetType() != obj.GetType())
             {
-                return Equals(Value,obj);
+                return Equals(_value,obj);
             }
-            return Equals(Value,((NamedParam) obj).Value);
+            return Equals(_value,((NamedParam) obj)._value);
 
         }
 
