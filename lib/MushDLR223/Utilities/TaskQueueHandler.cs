@@ -615,7 +615,7 @@ namespace MushDLR223.Utilities
             {
                 PerTask.Busy = false;
 
-                TASK evt;
+                TASK evt = NOP;
                 int evtCount;
                 lock (EventQueueLock)
                 {
@@ -625,47 +625,41 @@ namespace MushDLR223.Utilities
                         evt = EventQueue.First.Value;
                         EventQueue.RemoveFirst();
                     }
-                    else
-                    {
-                        evt = NOP;
-                    }
                 }
 
-                if (evt != null && evt != NOP)
+                if (evtCount > 0 && evt != null && evt != NOP)
                 {
                     NoExceptions(() => DoNow(evt));
                     PerTask.Busy = false;
-                    if (evtCount < 2 && !WaitingForPong)
+                    lock (EventQueueLock)
+                    {
+                        evtCount = EventQueue.Count;
+                    }
+                    if (evtCount > 0 && !WaitingForPong)
                     {
                         Sleep(PauseBetweenOperations);
                     }
                     // avoid reset/set semantics ?
-                    if (evtCount > 1) continue;
-
+                    continue;
                 }
                 else
                 {
                     // avoid reset/set semantics ?
-                    lock (EventQueueLock)
-                        if (EventQueue.Count > 0)
-                        {
-                            PerTask.Busy = false;
-                            continue;
-                        }
+                    if (evtCount > 0)
+                    {
+                        continue;
+                    }
                     //lock (EventQueueLock)
                     //{
                     // Reset();
                     //}
                     if (SimplyLoopNoWait)
                     {
-                        PerTask.Busy = false;
                         Sleep(TOO_SHORT_INTERVAL);
                         continue;
                     }
-                    if (evtCount > 1) continue;
                     WaitOne();
                 }
-                PerTask.Busy = false;
             }
         }
 
@@ -673,55 +667,79 @@ namespace MushDLR223.Utilities
         {
             if (PauseBetweenOperations >= TOO_SHORT_INTERVAL) 
             {
-                if (PauseBetweenOperations < TimeSpan.Zero) Thread.Sleep(pauseBetweenOperations);
+                if (PauseBetweenOperations > TimeSpan.Zero) Thread.Sleep(pauseBetweenOperations);
             }
         }
 
         private bool WaitOneIsBroken = false;
         private bool WaitOne()
         {
+            {
+                lock (EventQueueLock)
+                {
+                    if (EventQueue.Count > 0) return true;
+                }
+                TimeSpan wait = TOO_SHORT_INTERVAL + PauseBetweenOperations;
+                wait = TimeSpan.FromSeconds(0.25);
+                Sleep(wait);
+                return true;
+            }
             if (WaitOneIsBroken)
             {
                 return WaitOneAlt();
             }
             return NoExceptions(() =>
-                             {
-                                 bool r = false;
-                                 while (!IsDisposing)
-                                 {
-                                     if (Total.Todo > 0)
-                                     {
-                                         // no need to wait
-                                         return true;
-                                     }
-                                     r = WaitingOn.WaitOne(ThisMaxOperationTimespan);
-                                     if (r) return true;
-                                     if (Total.Todo == 0)
-                                     {
-                                         //wait longer
-                                         continue;
-                                     }
-                                     errOutput(CreateMessage("WaitOne: TIMEOUT ERROR {0} was {1} ", INFO, GetTimeString(ThisMaxOperationTimespan)));
-                                     problems = true;
-                                     //TestLock(BusyTrackingLock);
-                                     //lock (BusyTrackingLock)
-                                     {
-                                         if (PerTask.End < PerTask.Start)
-                                         {
-                                             LastRestTime = PerTask.Start.Subtract(PerTask.End);
-                                         }
-                                         //var len = DateTime.Now.Subtract(BusyStart);
-                                     }
-                                     errOutput(CreateMessage("Moving on with TIMEOUT {0} was {1} ", INFO, GetTimeString(ThisMaxOperationTimespan)));
-                                     if (this.RealTodo > 0) return true;////r = true;
-                                     return false;
-                                     if (SimplyLoopNoWait) return false;
-                                     return r;
-                                 }                                
-                                 // ReSharper disable ConditionIsAlwaysTrueOrFalse
-                                 return r;
-                                 // ReSharper restore ConditionIsAlwaysTrueOrFalse
-                             });
+                                    {
+                                        bool r = WaitOnWait();
+                                        return r;
+                                    });
+
+        }
+
+        private bool WaitOnWait()
+        {
+            bool r = false;
+            while (!IsDisposing)
+            {
+                if (Total.Todo > 0)
+                {
+                    // no need to wait
+                    return true;
+                }
+                r = WaitingOn.WaitOne(ThisMaxOperationTimespan);
+                if (r) return true;
+                else
+                {
+                    return true;
+                }
+                if (Total.Todo == 0)
+                {
+                    //wait longer
+                    continue;
+                }
+                errOutput(CreateMessage("WaitOne: TIMEOUT ERROR {0} was {1} ", INFO,
+                                        GetTimeString(ThisMaxOperationTimespan)));
+                problems = true;
+                //TestLock(BusyTrackingLock);
+                //lock (BusyTrackingLock)
+                {
+                    if (PerTask.End < PerTask.Start)
+                    {
+                        LastRestTime = PerTask.Start.Subtract(PerTask.End);
+                    }
+                    //var len = DateTime.Now.Subtract(BusyStart);
+                }
+                errOutput(CreateMessage("Moving on with TIMEOUT {0} was {1} ", INFO,
+                                        GetTimeString(ThisMaxOperationTimespan)));
+                if (this.RealTodo > 0) return true; ////r = true;
+                return false;
+                if (SimplyLoopNoWait) return false;
+                return r;
+            }
+            // ReSharper disable ConditionIsAlwaysTrueOrFalse
+            return r;
+            // ReSharper restore ConditionIsAlwaysTrueOrFalse
+
         }
 
         private bool WaitOneAlt()
