@@ -13,7 +13,7 @@ namespace CycWorldModule.DotCYC
     using System.Reflection;
     public partial class CycConnectionForm : Form
     {
-    //  WinformREPL.REPLForm replForm = null;
+        //  WinformREPL.REPLForm replForm = null;
         static private CycAccess m_cycAccess = null;
         public CycAccess cycAccess
         {
@@ -30,12 +30,12 @@ namespace CycWorldModule.DotCYC
             // add this line to the form's constructor after InitializeComponent() 
           hMenu = GetSystemMenu(this.Handle, false);
 #endif
-          // replForm = new WinformREPL.REPLForm();
-          // replForm.Show(); 
+            // replForm = new WinformREPL.REPLForm();
+            // replForm.Show(); 
         }
 
         private void btnConnect_Click(object sender, EventArgs e)
-        {          
+        {
             try { btnConnect.Enabled = false; }
             catch (Exception) { }
             if (!IsConnected())
@@ -81,9 +81,9 @@ namespace CycWorldModule.DotCYC
                 m_cycAccess = new CycAccess(cycServerAddress.Text, Int16.Parse(cycBasePort.Text));
                 m_cycAccess.getCycConnection().traceOn();
                 m_cycAccess.find("isa");
-             //   m_cycAccess.getCycConnection().converse("()");
+                //   m_cycAccess.getCycConnection().converse("()");
                 m_cycAccess.getCycConnection().traceOff();
-              //  CycAccess.genls.ToString();
+                //  CycAccess.genls.ToString();
             }
             catch (Exception ee)
             {
@@ -143,12 +143,13 @@ namespace CycWorldModule.DotCYC
 
         }
 
-        private String objToStrimg(object o) {
-            Type t =  o.GetType();
+        private String objToStrimg(object o)
+        {
+            Type t = o.GetType();
             if (t.IsEnum)
             {
-               //System.Reflection.MemberInfo[] mi = t.GetMembers();
-               return Enum.GetName(t, o);
+                //System.Reflection.MemberInfo[] mi = t.GetMembers();
+                return Enum.GetName(t, o);
             }
             if (t.IsValueType)
             {
