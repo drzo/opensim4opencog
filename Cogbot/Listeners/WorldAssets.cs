@@ -54,9 +54,14 @@ namespace cogbot.Listeners
             return null;
         }
 
+        public void DeclareTexture(UUID tid)
+        {
+            SimAssetStore.FindOrCreateAsset(tid, AssetType.Texture);
+        }
 
         public byte[] TextureBytesForUUID(UUID uUID)
         {
+            //imlicitly DeclareTexture(uUID);
             SimAsset assettt = SimAssetStore.FindOrCreateAsset(uUID, AssetType.Texture);
             var AssetData = assettt.AssetData;
             if (AssetData != null)

@@ -352,7 +352,7 @@ namespace cogbot.Listeners
                 }
                 key = new UUID(i, 0);
             }
-            return DeclareGeneric("GroupRole", key);
+            return DeclareGeneric("GroupRole", key, "DeclareGroupRole" );
         }
 
         public override void Groups_OnGroupRolesMembers(object sender, GroupRolesMembersReplyEventArgs e)
@@ -456,10 +456,11 @@ namespace cogbot.Listeners
             }
         }
 
-        public static SimGeneric DeclareGeneric(string genericName, UUID uuid)
+        public static SimGeneric DeclareGeneric(string genericName, UUID uuid, string moreInfo)
         {
             if (uuid == UUID.Zero) return null;
             object g;
+            SimGeneric sg = null;
             if (uuidTypeObject.TryGetValue(uuid, out g))
                 if (g is SimGeneric) return g as SimGeneric;
 
@@ -469,14 +470,21 @@ namespace cogbot.Listeners
                 {
                     if (g is SimGeneric) return g as SimGeneric;
 
-                    if (g is BotMentalAspect)
+                    if (g != null)
                     {
-                        throw new AbandonedMutexException("" + genericName + " for " + g);
-                        return null;
+                        string issue = moreInfo + " " + genericName + " " + uuid + " is really a  " + g.GetType().Name + ": " + g;
+                        //throw new AbandonedMutexException(issue);
+                        if (!(g is Type))
+                        {
+                            Debug(issue);
+                            return null;
+                        }
+                        sg = (SimGeneric)(uuidTypeObject[uuid] = new SimGeneric(genericName, uuid) { Value = g });
+                        return sg;
                     }
-                    return (SimGeneric) (uuidTypeObject[uuid] = new SimGeneric(genericName, uuid) {Value = g});
                 }
-                return (SimGeneric) (uuidTypeObject[uuid] = new SimGeneric(genericName, uuid));
+                sg = (SimGeneric) (uuidTypeObject[uuid] = new SimGeneric(genericName, uuid));
+                return sg;
             }
         }
 
