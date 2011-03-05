@@ -134,7 +134,7 @@ namespace cogbot.Listeners
                     Action<UUID, Simulator> texture = ((obj, sim) => { SimAssetStore.FindOrCreateAsset(obj, AssetType.Texture); });
                     Action<UUID, Simulator> avatar = ((obj, sim) => { GridMaster.DeclareAvatar(obj); });
                     Action<UUID, Simulator> nothing = ((obj, sim) => { });
-                    Action<UUID, Simulator> role = ((obj, sim) => DeclareGeneric("GroupRole", obj));
+                    Action<UUID, Simulator> role = ((obj, sim) => DeclareGeneric("GroupRole", obj, " +p")); 
                     UUID2Type[""] = nothing;
                     UUID2Type["ID"] = nothing;
                     UUID2Type["Sound"] = ((obj, sim) => { SimAssetStore.FindOrCreateAsset(obj, AssetType.Sound); });

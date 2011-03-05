@@ -932,5 +932,56 @@ namespace cogbot.Listeners
             }
             return false;
         }
+
+        private void DeclareProperties(Primitive prim0, Primitive.ObjectProperties props)
+        {
+            if (props == null) return;
+            if (prim0 != null)
+            {
+                bool go = PrimFlags.ObjectGroupOwned == (prim0.Flags & PrimFlags.ObjectGroupOwned);
+                if (go && UUID.Zero != props.OwnerID)
+                {
+                    DeclareAvatar(props.OwnerID);
+                }
+            }
+            string debugInfo = "" + prim0;
+            DeclareGroup(props.GroupID);
+
+            if (UUID.Zero != props.OwnerID)
+            {
+                DeclareAvatar(props.OwnerID);
+            }
+            if (UUID.Zero != props.LastOwnerID)
+            {
+                DeclareAvatar(props.LastOwnerID);
+            }
+            if (UUID.Zero != props.FolderID)
+            {
+                props.FolderID = UUID.Zero;
+                object o = DeclareGeneric("Folder", props.FolderID, debugInfo);
+            }
+
+
+            if (UUID.Zero != props.ItemID)
+            {
+                props.ItemID = UUID.Zero;
+                DeclareGeneric("Item", props.ItemID, debugInfo);
+            }
+
+
+            if (UUID.Zero != props.FromTaskID && client.Self.AgentID != props.FromTaskID)
+            {
+                DeclareGeneric("Task", props.FromTaskID, debugInfo);
+            }
+
+            var tids = props.TextureIDs;
+            if (tids != null)
+            {
+                foreach (UUID tid in tids)
+                {
+                    DeclareTexture(tid);
+                }
+            }
+        }
     }
 }

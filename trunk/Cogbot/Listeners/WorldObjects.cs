@@ -619,6 +619,7 @@ namespace cogbot.Listeners
                     {
                         if (before == type) return;
                         //todo Master.SendNewEvent("uuid-change",""+id, before, type);
+                        Debug("uuid change" + id + " " + before + " -> " + type);
                     }
                     uuidTypeObject[id] = type;
                 }
