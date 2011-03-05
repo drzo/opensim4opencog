@@ -46,10 +46,10 @@ namespace CycWorldModule.DotCYC
             simCyclifier.assertIsa(cycFort, C("Collection"));
             simCyclifier.assertIsa(cycFort, C("SimEnumCollection"));
             String ele = SimCyclifier.GetDocString(docMembers, CType);
-            simCyclifier.assertGaf(CycAccess.comment, cycFort, "The sim enum for " + CType);
+            simCyclifier.assertVocabGaf(CycAccess.comment, cycFort, "The sim enum for " + CType);
             if (!String.IsNullOrEmpty(ele))
             {
-                simCyclifier.assertGaf(CycAccess.comment, cycFort, ele);
+                simCyclifier.assertVocabGaf(CycAccess.comment, cycFort, ele);
             }
             if (CType.IsEnum)
             {
@@ -65,15 +65,15 @@ namespace CycWorldModule.DotCYC
                     string v = string.Format("{0}-{1}", CType.Name, fort.Name);
                     CycFort cv = C(v);
                     simCyclifier.assertIsa(cv, C("Collection"));
-                    simCyclifier.assertGafNow(C("genls"), cv, cycFort);
-                    simCyclifier.assertGaf(CycAccess.comment, cv, "The sim enum value for: " + fort);
+                    simCyclifier.assertVocabGafNow(C("genls"), cv, cycFort);
+                    simCyclifier.assertVocabGaf(CycAccess.comment, cv, "The sim enum value for: " + fort);
                     MemberInfo mi = fort;
                     simCyclifier.DocQueue.Enqueue(() =>
                                                       {
                                                           ele = SimCyclifier.GetDocString(docMembers, mi);
                                                           if (!String.IsNullOrEmpty(ele))
                                                           {
-                                                              simCyclifier.assertGaf(CycAccess.comment, cv, ele);
+                                                              simCyclifier.assertVocabGaf(CycAccess.comment, cv, ele);
                                                           }
                                                       });
                 }
@@ -101,10 +101,10 @@ namespace CycWorldModule.DotCYC
             simCyclifier.assertIsa(cycFort, C("Collection"));
             //simCyclifier.assertIsa(cycFort, C("Sim" + s + "Collection"));
             String ele = SimCyclifier.GetDocString(docMembers, CType);
-            simCyclifier.assertGaf(CycAccess.comment, cycFort, "The sim " + s + " for " + CType);
+            simCyclifier.assertVocabGaf(CycAccess.comment, cycFort, "The sim " + s + " for " + CType);
             if (!String.IsNullOrEmpty(ele))
             {
-                simCyclifier.assertGaf(CycAccess.comment, cycFort, ele);
+                simCyclifier.assertVocabGaf(CycAccess.comment, cycFort, ele);
             }
         }
 
