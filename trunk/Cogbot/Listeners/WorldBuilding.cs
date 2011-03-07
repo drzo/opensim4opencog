@@ -116,25 +116,29 @@ namespace cogbot.Listeners
             return dict;
         }
 
-        private static Dictionary<string, Action<UUID>> UUID2Memeber = new Dictionary<string, Action<UUID>>();
+        delegate void UUIDGleaner(UUID uuid, Simulator sim);
+
+        //private static Dictionary<string, Action<UUID>> UUID2Memeber = new Dictionary<string, Action<UUID>>();
         private static void GetUUIDType(MemberInfo info, UUID o)
         {
             if (o == UUID.Zero) return;
-            Action<UUID, Simulator> act = GetUUIDType(info.Name);
+            UUIDGleaner act = GetUUIDType(info.Name);
             act(o, null);
         }
+                
 
-        private static Dictionary<string, Action<UUID, Simulator>> UUID2Type = new Dictionary<string, Action<UUID, Simulator>>();
-        static Action<UUID,Simulator> GetUUIDType(string p)
+        private static readonly Dictionary<string, UUIDGleaner> UUID2Type = new Dictionary<string, UUIDGleaner>();
+        static UUIDGleaner GetUUIDType(string p)
         {
 
             lock (UUID2Type)
                 if (UUID2Type.Count == 0)
                 {
-                    Action<UUID, Simulator> texture = ((obj, sim) => { SimAssetStore.FindOrCreateAsset(obj, AssetType.Texture); });
-                    Action<UUID, Simulator> avatar = ((obj, sim) => { GridMaster.DeclareAvatar(obj); });
-                    Action<UUID, Simulator> nothing = ((obj, sim) => { });
-                    Action<UUID, Simulator> role = ((obj, sim) => DeclareGeneric("GroupRole", obj, " +p")); 
+                    UUIDGleaner texture = ((obj, sim) => { SimAssetStore.FindOrCreateAsset(obj, AssetType.Texture); });
+                    UUIDGleaner avatar = ((obj, sim) => { GridMaster.DeclareAvatar(obj); });
+                    UUIDGleaner task = ((obj, sim) => { GridMaster.DeclareTask(obj, sim); });
+                    UUIDGleaner nothing = ((obj, sim) => { });
+                    UUIDGleaner role = ((obj, sim) => DeclareGeneric("GroupRole", obj, " +p")); 
                     UUID2Type[""] = nothing;
                     UUID2Type["ID"] = nothing;
                     UUID2Type["Sound"] = ((obj, sim) => { SimAssetStore.FindOrCreateAsset(obj, AssetType.Sound); });
@@ -151,14 +155,16 @@ namespace cogbot.Listeners
                     UUID2Type["Object"] = ((obj, sim) => { GridMaster.CreateSimObject(obj, GridMaster, sim); });
                     // todo inventory item 
                     UUID2Type["OwnerRole"] = role;
+                    UUID2Type["FromTask"] = task;
+                    UUID2Type["FolderID"] = nothing;
                     UUID2Type["ItemID"] = nothing;
-                    UUID2Type["OwnerID"] = nothing;
-                    UUID2Type["Owner"] = nothing;
+                    UUID2Type["OwnerID"] = avatar;
+                    UUID2Type["Owner"] = avatar;
                     // ussualyl objects but need to confirm: The Key of the specified target object or avatar particles will follow" 
                     UUID2Type["Target"] = nothing;
                     UUID2Type["Asset"] = nothing;
                 }
-            Action<UUID, Simulator> o;
+            UUIDGleaner o;
             lock (UUID2Type)
             {
                 if (UUID2Type.TryGetValue(p, out o)) return o;

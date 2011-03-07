@@ -291,6 +291,31 @@ namespace cogbot.Listeners
             return CreateSimAvatar(uuid, this, null);
         }
 
+        private SimObject DeclareTask(UUID uuid, Simulator simulator)
+        {
+            lock (uuidTypeObject)
+            {
+                object g;
+                if (!uuidTypeObject.TryGetValue(uuid, out g))
+                {
+                    var o = CreateSimObject(uuid, this, simulator);
+                    // SimGeneric o = DeclareGeneric("Task", uuid, "DeclareTask");
+                    if (o != null)
+                    {
+                       // client.Objects.RequestObjectPropertiesFamily(simulator, uuid);
+                      ///  client.Objects.RequestObjectMedia(uuid, simulator, OnMediaCallback);
+                        Debug("Made Task: " + o);
+                    }
+                }
+            }
+            return null;
+        }
+
+        private void OnMediaCallback(bool success, string version, MediaEntry[] facemedia)
+        {
+            
+        }
+
         public override void Avatars_OnAvatarInterests(object sender, AvatarInterestsReplyEventArgs e)
         {
             SimAvatar A = DeclareAvatar(e.AvatarID);

@@ -60,7 +60,7 @@ namespace cogbot.Listeners
             {
                 prim = GetPrimitive(props.ObjectID, simulator);
             }
-            DeclareProperties(prim, props);
+            DeclareProperties(prim, props, simulator);
             if (prim != null)
             {
                 prim.RegionHandle = simulator.Handle;
@@ -149,7 +149,7 @@ namespace cogbot.Listeners
                     }
                     if (!isNewPrim)
                     {
-                        DeclareProperties(prim, prim.Properties);
+                        DeclareProperties(prim, prim.Properties, simulator);
                         SendNewRegionEvent(SimEventType.DATA_UPDATE, "on-data-updated", prim);
                     }
                     //Objects_OnPrimitiveUpdate(simulator, prim, objectupdate0, simulator.Handle, 0);
@@ -358,7 +358,7 @@ namespace cogbot.Listeners
                     if (objectUpdated.Properties != null)
                     {
                         //CalcStats(objectUpdated); 
-                        DeclareProperties(objectUpdated, objectUpdated.Properties);
+                        DeclareProperties(objectUpdated, objectUpdated.Properties, simulator);
                         describePrimToAI(objectUpdated, simulator);
                     }
                     else
