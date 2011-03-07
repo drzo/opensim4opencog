@@ -933,7 +933,7 @@ namespace cogbot.Listeners
             return false;
         }
 
-        private void DeclareProperties(Primitive prim0, Primitive.ObjectProperties props)
+        private void DeclareProperties(Primitive prim0, Primitive.ObjectProperties props, Simulator simulator)
         {
             if (props == null) return;
             if (prim0 != null)
@@ -957,21 +957,20 @@ namespace cogbot.Listeners
             }
             if (UUID.Zero != props.FolderID)
             {
-                props.FolderID = UUID.Zero;
-                object o = DeclareGeneric("Folder", props.FolderID, debugInfo);
+                if (ZeroOutUselessUUIDs) props.FolderID = UUID.Zero;
+                DeclareGeneric("Folder", props.FolderID, debugInfo);
             }
-
 
             if (UUID.Zero != props.ItemID)
             {
-                props.ItemID = UUID.Zero;
+                if (ZeroOutUselessUUIDs) props.ItemID = UUID.Zero;
                 DeclareGeneric("Item", props.ItemID, debugInfo);
             }
 
 
             if (UUID.Zero != props.FromTaskID && client.Self.AgentID != props.FromTaskID)
             {
-                DeclareGeneric("Task", props.FromTaskID, debugInfo);
+                DeclareTask(props.FromTaskID, simulator);
             }
 
             var tids = props.TextureIDs;
