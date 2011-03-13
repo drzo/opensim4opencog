@@ -498,7 +498,7 @@ namespace SbsSW.SwiPlCs
 
         public object Read(string line, TextWriter @delegate)
         {
-            return PlTerm.PlCompound(line);
+            return new Nullable<PlTerm>(PlTerm.PlCompound(line));
         }
 
         static public void load_swiplcs()
@@ -693,9 +693,28 @@ namespace SbsSW.SwiPlCs
                 {
                     file.CopyTo(destName, overwrite);
                 }
-                catch (Exception e)
+                catch (Exception e0)
                 {
-                    System.Console.Error.WriteLine("file: " + file + " copy to " + destName + " " + e);
+                    if (!overwrite)
+                    {
+                        System.Console.Error.WriteLine("file: " + file + " copy to " + destName + " " + e0);
+                    }
+                    else
+                    {
+                        try
+                        {
+                            if (File.Exists(destName))
+                            {
+                                if (File.Exists(destName + ".dead")) File.Delete(destName + ".dead");
+                                File.Move(destName, destName + ".dead");
+                                file.CopyTo(destName, false);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            System.Console.Error.WriteLine("file: " + file + " copy to " + destName + " " + e);
+                        }
+                    }
                 }
             }
             if (recurse)
@@ -982,6 +1001,7 @@ namespace SbsSW.SwiPlCs
 
         private static void RegisterPLCSForeigns()
         {
+            CreatorThread = Thread.CurrentThread;
             PlForeignSwitches Nondeterministic = PlForeignSwitches.Nondeterministic;
             Fn015.Register();
             PlEngine.RegisterForeign(null, "foo2", 2, new DelegateParameterBacktrack2(FooTwo), Nondeterministic);
@@ -1679,6 +1699,7 @@ typedef struct // define a context structure  { ... } context;
         private static Int64 TopOHandle = 6660000;
         private static readonly Dictionary<string, object> SavedDelegates = new Dictionary<string, object>();
         public static bool FailOnMissingInsteadOfError = true;
+        public static Thread CreatorThread;
 
         // foo(X,Y),writeq(f(X,Y)),nl,X=5.
         public static int Foo(PlTerm t0, PlTerm term2, IntPtr control)

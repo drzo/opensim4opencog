@@ -35,6 +35,10 @@ namespace cogbot.Listeners
 		public static bool SendSimObjectInfoMap = true;
         public static bool SendOnDataAspectUpdate = true;
         public static bool ZeroOutUselessUUIDs = true;
+        /// <summary>
+        /// False since currently broken this is where FromTaskIDs are guessed as to being object or Avatars
+        /// </summary>
+        public static bool DiscoverTaskUUIDs = false; 
 		
         public static bool UseNewEventSystem = true;
         public static bool SimplifyBoxes = true; // true takes longer startup but speeds up runtime path finding

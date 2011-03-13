@@ -970,7 +970,10 @@ namespace cogbot.Listeners
 
             if (UUID.Zero != props.FromTaskID && client.Self.AgentID != props.FromTaskID)
             {
-                DeclareTask(props.FromTaskID, simulator);
+                if (DeclareTask(props.FromTaskID, simulator) == null)
+                {
+                    props.FromTaskID = UUID.Zero;
+                }
             }
 
             var tids = props.TextureIDs;
