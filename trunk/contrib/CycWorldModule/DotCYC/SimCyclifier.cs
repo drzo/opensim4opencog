@@ -918,6 +918,14 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
         private string TypeToString(MemberInfo info)
         {
             string regionTypeName = info.Name;
+            Type t = info as Type;
+            if (t != null)
+            {
+                if (t.IsArray)
+                {
+                    return TypeToString(t.GetElementType()) + "Array";
+                }
+            }
             if (regionTypeName.Contains(".") || regionTypeName.Contains("<"))
             {
                 Trace();
@@ -1513,6 +1521,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
         private bool IsNeverAsserted(Type t)
         {
             if (t == typeof(SimAssetStore)) return true;
+            if (t == typeof(byte[])) return true;
             //if (t == typeof(Wor)) return true;
             return false;
         }

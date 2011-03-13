@@ -293,19 +293,24 @@ namespace cogbot.Listeners
 
         private SimObject DeclareTask(UUID uuid, Simulator simulator)
         {
-            lock (uuidTypeObject)
+            if (DiscoverTaskUUIDs)
             {
-                object g;
-                if (!uuidTypeObject.TryGetValue(uuid, out g))
+                lock (uuidTypeObject)
                 {
-                    var o = CreateSimObject(uuid, this, simulator);
-                    // SimGeneric o = DeclareGeneric("Task", uuid, "DeclareTask");
-                    if (o != null)
+                    object g;
+                    if (!uuidTypeObject.TryGetValue(uuid, out g))
                     {
-                       // client.Objects.RequestObjectPropertiesFamily(simulator, uuid);
-                      ///  client.Objects.RequestObjectMedia(uuid, simulator, OnMediaCallback);
-                        Debug("Made Task: " + o);
+                        var o = CreateSimObject(uuid, this, simulator);
+                        // SimGeneric o = DeclareGeneric("Task", uuid, "DeclareTask");
+                        if (o != null)
+                        {
+                            // client.Objects.RequestObjectPropertiesFamily(simulator, uuid);
+                            ///  client.Objects.RequestObjectMedia(uuid, simulator, OnMediaCallback);
+                            Debug("Made Task: " + o);
+                        }
+                        return o;
                     }
+                    return g as SimObject;
                 }
             }
             return null;

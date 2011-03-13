@@ -1808,6 +1808,7 @@ namespace cogbot.TheOpenSims
         /// <returns>1-255</returns>
         public virtual float GetSizeDistance()
         {
+            if (IsAvatar) return 2f;
             if (cachedSize > 0) return cachedSize;
             double size = Math.Sqrt(BottemArea()) / 2;
 
