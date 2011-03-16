@@ -628,8 +628,8 @@ namespace cogbot.Listeners
                     }
                     return;
                 }
-                CreateSimObject(id, this, null);
-                Debug("AddName2Key: " + value + " " + id);
+                var Obj = CreateSimObject(id, this, null);
+                Debug("AddName2Key: " + value + " " + id + " " + Obj);
                 return;
             }
             string n = value.Trim();
