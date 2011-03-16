@@ -246,7 +246,7 @@ namespace RTParser
                                       saveResultsOnJustHeard);
         }
 
-        private Result GlobalChatWithUser(string input, string user, string otherName, OutputDelegate traceConsole, bool saveResults, bool saveResultsOnJustHeard)
+        internal Result GlobalChatWithUser(string input, string user, string otherName, OutputDelegate traceConsole, bool saveResults, bool saveResultsOnJustHeard)
         {
             User targetUser = BotAsUser;
             string youser = input;
@@ -767,15 +767,27 @@ namespace RTParser
         internal void PopulateUserWithResult(User user, Request request, Result result)
         {
             User popu = user ?? request.Requester ?? result.Requester;
+            // toplevel result
+            var info = result.ProofTemplate();
             // only the toplevle query popuklates the user object
             if (result.ParentResult == null)
             {
-                // toplevel result
+                if (info != null)
+                {
+                    user.ProofTemplates.Add(info);
+                }               
                 popu.addResult(result);
                 if (RotateUsedTemplate)
                 {
                     result.RotateUsedTemplates();
                 }
+            }
+            else
+            {
+                if (info != null)
+                {
+                    user.UsedChildTemplates.Add(info);
+                }           
             }
         }
 

@@ -529,6 +529,7 @@ namespace RTParser
         public RTPBot()
             : base()
         {
+            rtpbotcommands = new RTPBotCommands(this);
             qsbase = QuerySettings.CogbotDefaults;
             _RuntimeDirectories = new List<string>();
             PushSearchPath(HostSystem.GetAbsolutePath(AppDomain.CurrentDomain.RelativeSearchPath));
@@ -604,7 +605,7 @@ namespace RTParser
 
 
             clojureInterpreter = new ClojureInterpreter(this);
-            clojureInterpreter.Init();
+            clojureInterpreter.Init(this);
             clojureInterpreter.Intern("MyBot", this);
             clojureInterpreter.Intern("Users", BotUsers);
             AddExcuteHandler("cloj", ClojExecHandler);
@@ -612,10 +613,10 @@ namespace RTParser
             try
             {
                 swiInterpreter = new PrologScriptInterpreter(this); //ScriptManager.LoadScriptInterpreter("PrologScriptInterpreter", this);
-                swiInterpreter.Init();
+                swiInterpreter.Init(this);
                 AddExcuteHandler("swi", SWIExecHandler); 
-                swiInterpreter.Intern("MyBot", this);
-                swiInterpreter.Intern("Users", BotUsers);
+                //swiInterpreter.Intern("MyBot", this);
+                //swiInterpreter.Intern("Users", BotUsers);
             }
             catch (Exception e)
             {
@@ -1278,6 +1279,7 @@ The AIMLbot program.
         private object SWIExecHandler(string cmd, Request user)
         {
             ScriptInterpreter swi = swiInterpreter;
+            if (swi == null) return null;
             lock (swi)
             {
                 bool hasUser = swi.IsSubscriberOf("MyUser");
@@ -1352,7 +1354,7 @@ The AIMLbot program.
         }
 
 
-        private readonly Dictionary<string, SystemExecHandler> ExecuteHandlers =
+        internal readonly Dictionary<string, SystemExecHandler> ExecuteHandlers =
             new Dictionary<string, SystemExecHandler>();
 
         public void AddExcuteHandler(string lang, SystemExecHandler handler)

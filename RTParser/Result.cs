@@ -851,6 +851,25 @@ namespace RTParser
             }
         }
 
+        public TemplateInfo ProofTemplate()
+        {
+            if (TemplateOfRating != null)
+            {
+                return TemplateOfRating;
+            }
+            var temps = ResultTemplates;
+            if (temps == null) return null;
+            var tempsLock = temps;
+            if (temps.Count == 0)
+            {
+                return null;
+            }
+            lock (tempsLock)
+            {
+                return ResultTemplates[0];
+            }
+        }
+
         public void ResetAnswers(bool b)
         {
             lock (OutputSentences) OutputSentences.Clear();

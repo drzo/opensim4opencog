@@ -119,8 +119,10 @@ namespace RTParser
         //void SetOutputSentences(string args, User responder);
         bool CanUseTemplate(TemplateInfo info, Result request);
 
-        ListAsSet<TemplateInfo> UsedTemplates { get; set; }
+        ListAsSet<TemplateInfo> VisitedTemplates { get; set; }
+        ListAsSet<TemplateInfo> UsedChildTemplates { get; set; }
         ListAsSet<TemplateInfo> DisabledTemplates { get; set; }
+        ListAsSet<TemplateInfo> ProofTemplates { get; set; }
         ICollection<GraphMaster> DisallowedGraphs { get; set; }
 #if DEBUG_ALLQUERIES
         ListAsSet<GraphQuery> AllQueries { get; set; }
@@ -237,7 +239,9 @@ namespace RTParser
             return log;
         }
 
-        public ListAsSet<TemplateInfo> UsedTemplates { get; set; }
+        public ListAsSet<TemplateInfo> VisitedTemplates { get; set; }
+        public ListAsSet<TemplateInfo> ProofTemplates { get; set; }
+        public ListAsSet<TemplateInfo> UsedChildTemplates { get; set; }
         public ListAsSet<TemplateInfo> DisabledTemplates { get; set; }
         public ICollection<GraphMaster> DisallowedGraphs { get; set; }
         public ListAsSet<GraphQuery> AllQueries { get; set; }
@@ -629,7 +633,9 @@ namespace RTParser
             RespondToChat = true;
             LastResponseGivenTime = DateTime.Now;
             NameUsedOrGivenTime = DateTime.Now;
-            UsedTemplates = new ListAsSet<TemplateInfo>();
+            VisitedTemplates = new ListAsSet<TemplateInfo>();
+            UsedChildTemplates = new ListAsSet<TemplateInfo>();
+            ProofTemplates = new ListAsSet<TemplateInfo>();
             DisabledTemplates = new ListAsSet<TemplateInfo>();
             DisallowedGraphs = new HashSet<GraphMaster>();
             qsbase = new QuerySettingsImpl(bot.GetQuerySettings());
@@ -1171,7 +1177,7 @@ namespace RTParser
                 cmd = cmd.Substring(1).Trim();
                 if (cmd == "proof")
                 {
-                    var cis = UsedTemplates;
+                    var cis = VisitedTemplates;
                     console("-----------------------------------------------------------------");
                     console("LS: count=" + cis.Count + " local=" + SpeakingToRobot);
                     GraphMaster.PrintToWriter(cis, PrintOptions.SAVE_TO_FILE, new OutputDelegateWriter(console), null);
@@ -1214,16 +1220,27 @@ namespace RTParser
 
         public void addResultTemplates(Result result)
         {
-            lock (UsedTemplates)
+            lock (VisitedTemplates)
             {
                 lock (result.ResultTemplates)
-                    UsedTemplates.AddRange(result.ResultTemplates);
+                    VisitedTemplates.AddRange(result.ResultTemplates);
+
+                var proof = result.ProofTemplate();
+                if (proof==null) return;
+                if (result.request.ParentRequest != null)
+                {
+                    UsedChildTemplates.Add(proof);
+                }
+                else
+                {
+                    ProofTemplates.Add(proof);
+                }
             }
         }
 
         public void addRequestTemplates(Request request)
         {
-            lock (UsedTemplates)
+            lock (VisitedTemplates)
             {
                 lock (request.UsedResults)
                 {
@@ -1288,9 +1305,9 @@ namespace RTParser
 #if !(EXTREME_DEBUGGING)
             return true;
 #endif
-            lock (UsedTemplates)
+            lock (VisitedTemplates)
             {
-                if (UsedTemplates.Contains(info))
+                if (VisitedTemplates.Contains(info))
                 {
                     if (info.CategoryInfo != null && info.CategoryInfo.Pattern != null &&
                         info.CategoryInfo.Pattern.FullPath != null)
