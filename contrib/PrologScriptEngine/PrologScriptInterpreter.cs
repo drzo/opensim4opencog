@@ -18,7 +18,7 @@ namespace PrologScriptEngine
         {
             _reachAllTypes = 2;
             PrologScriptInterpreter pscript = new PrologScriptInterpreter(null);
-            pscript.Init();
+            pscript.Init(pscript);
             pscript.Intern("pscript", pscript);
             PrologClient.Main(args);
         }
@@ -88,13 +88,13 @@ namespace PrologScriptEngine
         public PrologScriptInterpreter(object self)
             : base(self)
         {
-            Init();
+            Init(self);
         }
 
         static private readonly object GroupInitLock = new object();
         public static bool IsInited = false;
 
-        public override sealed void Init()
+        public override sealed void Init(object self)
         {
             lock (GroupInitLock)
             {
@@ -103,6 +103,7 @@ namespace PrologScriptEngine
                 {
                     IsInited = true;
                     prologClient.InitFromUser();
+                    PrologClient.PlNamed("MyBot");
                 }
             }
         }

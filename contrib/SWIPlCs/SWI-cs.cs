@@ -789,7 +789,7 @@ namespace SbsSW.SwiPlCs
 
         public static PlTerm PlAtom(string name)
         {
-            uint termRef = libpl.PL_new_term_ref();
+            uint termRef = libpl.PL_new_term_refs(1);
             PlTerm term = new PlTerm();
             term._termRef = termRef;
             libpl.PL_put_atom(termRef, libpl.PL_new_atom(name));
