@@ -1449,6 +1449,7 @@ namespace cogbot.Listeners
             //  lock (GetSimObjectLock)
             SimObject obj0 = GetSimObjectFromUUID(uuid);
             if (obj0 != null) return obj0;
+            simulator = simulator ?? client.Network.CurrentSim;
             lock (GetSimLock(simulator ?? client.Network.CurrentSim))
                 lock (uuidTypeObject)
                    // lock (SimObjects)
