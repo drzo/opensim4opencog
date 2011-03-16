@@ -13,12 +13,26 @@ namespace IrcRegionModule
 
     {
         private string _ircNick = "cogbotIrcBridge";
-
+        private object IrcNickLock = new object();
         public string IrcNick
         {
             get
             {
-                return _ircNick;
+                lock (IrcNickLock)
+                {
+                    if (string.IsNullOrEmpty(_ircNick))
+                    {
+                        _ircNick = ircClient.Nickname;
+                        return _ircNick;
+                    }
+
+                    if (_ircNick.EndsWith("_"))
+                    {
+                        _ircNick = _ircNick.Substring(0, _ircNick.Length - 1);
+                        _ircNick += (new Random().Next(0, 255));
+                    }
+                    return _ircNick;
+                }
             }
             set
             {
@@ -77,9 +91,12 @@ namespace IrcRegionModule
             string nick = data.Nick + " " + data.Channel.Substring(1);
             Client.Self.Chat(string.Format("{0}: {1}", nick, data.Message), 0, ChatType.Normal);
             UUID id;
-            if (!IrcUUIDs.TryGetValue(nick,out id))
+            lock (IrcUUIDs)
             {
-                id = IrcUUIDs[nick] = UUID.Random();
+                if (!IrcUUIDs.TryGetValue(nick, out id))
+                {
+                    id = IrcUUIDs[nick] = UUID.Random();
+                }
             }
             try
             {
