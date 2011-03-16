@@ -38,29 +38,27 @@ namespace MushDLR223.ScriptEngines
 
         public virtual object Self
         {
-            get { return GetSymbol("this"); }
+            get { return GetSymbol("this") ?? OriginalSelf; }
             set { Intern("this", value); }
         }
 
+        
         public object OriginalSelf;
+
         protected CommonScriptInterpreter()
         {
             InitSelf(this);
         }
         protected CommonScriptInterpreter(object self)
-            : this()
         {
             InitSelf(self);
         }
+
         private void InitSelf(object self)
         {
             try
             {
                 OriginalSelf = self;
-                // ReSharper disable DoNotCallOverridableMethodsInConstructor
-                Init();
-                Self = self ?? this;
-                // ReSharper restore DoNotCallOverridableMethodsInConstructor
                 ScriptManager.AddInterpreter(this as ScriptInterpreter);
             }
             catch (Exception e)
@@ -70,7 +68,7 @@ namespace MushDLR223.ScriptEngines
             }
         }
 
-        public abstract void Init();
+        public abstract void Init(object self);
 
         public object ConvertArgToLisp(object code)
         {

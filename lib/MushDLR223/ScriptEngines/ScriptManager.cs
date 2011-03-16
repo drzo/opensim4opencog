@@ -19,6 +19,7 @@ namespace MushDLR223.ScriptEngines
           //  tl = new 
         }
         static public List<ScriptInterpreter> Interpreters = new List<ScriptInterpreter>();
+        static public Dictionary<ScriptInterpreter,int> InterpreterTypeCount = new Dictionary<ScriptInterpreter, int>();
         static public HashSet<Type> LoadedTypes = new HashSet<Type>();
         static public HashSet<Type> ScannedTypes = new HashSet<Type>();
         static public HashSet<Type> ScannedInterpTypes = new HashSet<Type>();
@@ -687,26 +688,28 @@ namespace MushDLR223.ScriptEngines
                     Type interpreterGetType = interpreter.GetType();
                     LoadedInterpTypes.Add(interpreterGetType);
                     ScannedInterpTypes.Remove(interpreterGetType);
-                    foreach (var set in CopyOf(LoadedTypes))
+                    var types = CopyOf(LoadedTypes);
+                    foreach (var type in types)
                     {
                         try
                         {
-                            interpreter.InternType(set);
+                            interpreter.InternType(type);
                         }
                         catch (Exception e)
                         {
-                            WriteLine("ai: {0} {1} ", set, e);
+                            WriteLine("LoadedTypes InternType: {0} {1} {2} ", interpreter.GetType().Name, type, e);
                         }
                     }
-                    foreach (var set in CopyOf(ScannedTypes))
+                    var types2 = CopyOf(ScannedTypes);
+                    foreach (var type in types2)
                     {
                         try
                         {
-                            interpreter.InternType(set);
+                            interpreter.InternType(type);
                         }
                         catch (Exception e)
                         {
-                            WriteLine("ai: {0} {1} ", set, e);
+                            WriteLine("ScannedTypes InternType: {0} {1} {2} ", interpreter.GetType().Name, type, e);
                         }
                     }
                     NewInterpTypes = false;

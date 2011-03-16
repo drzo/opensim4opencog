@@ -178,7 +178,7 @@ namespace MushDLR223.ScriptEngines
         {
         }
 
-        public override void Init()
+        public override void Init(object self)
         {
             buffer = new TextReaderStringBuffer(this);
             COMMON_ABCLInterpreter = this;

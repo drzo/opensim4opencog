@@ -26,8 +26,9 @@ namespace MushDLR223.ScriptEngines
     }
     abstract public class DotLispInterpreterBase : LispInterpreter
     {
-        private Interpreter _dotLispInterpreter;
+        static private Interpreter _dotLispInterpreter;
         static private int _dotLispInterpreterCount = 0;
+        static private object _dotLispInterpreterInitLock = new object();
 
         public DotLisp.Interpreter dotLispInterpreter
         {
@@ -61,12 +62,14 @@ namespace MushDLR223.ScriptEngines
 
         public override void InternType(Type t)
         {
+            EnsureInit();
             dotLispInterpreter.InternType(t);
             ScriptManager.AddType(t);
         }
 
         public DotLispInterpreterBase(object self):base(self)
         {
+            Init(self);
         }
 
         public void WriteLine(string s, params object[] args)
@@ -74,12 +77,24 @@ namespace MushDLR223.ScriptEngines
             DLRConsole.DebugWriteLine(s, args);
         }
 
-        sealed public override void Init()
+        public void EnsureInit()
         {
-            _dotLispInterpreterCount++;
-            _dotLispInterpreter = new DotLisp.Interpreter();
-            _dotLispInterpreter.LoadFile("boot.lisp");
-            _dotLispInterpreter.LoadFile("extra.lisp");
+            lock (_dotLispInterpreterInitLock)
+            {
+                if (_dotLispInterpreter == null)
+                {
+                    _dotLispInterpreterCount++;
+                    _dotLispInterpreter = new DotLisp.Interpreter();
+                    _dotLispInterpreter.LoadFile("boot.lisp");
+                    _dotLispInterpreter.LoadFile("extra.lisp");
+                }
+            }
+        }
+
+        sealed public override void Init(object self)
+        {
+            EnsureInit();
+            Intern("*SELF*", self);
         }
 
         /// <summary>

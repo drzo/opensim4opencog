@@ -15,6 +15,7 @@ namespace MushDLR223.ScriptEngines
 
         public override void InternType(Type t)
         {
+            EnsureInit();
             dotLispInterpreter.InternType(t);
         }
 
