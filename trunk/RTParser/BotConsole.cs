@@ -32,7 +32,7 @@ namespace RTParser
     /// </summary>
     public partial class RTPBot
     {
-        private readonly Dictionary<string, SystemExecHandler> ConsoleCommands = new Dictionary<string, SystemExecHandler>();
+        internal readonly Dictionary<string, SystemExecHandler> ConsoleCommands = new Dictionary<string, SystemExecHandler>();
         int UseHttpd = -1;
         private static Bot ConsoleRobot;
         public static string AIMLDEBUGSETTINGS =
@@ -121,6 +121,7 @@ namespace RTParser
         public static int NextHttp = 5580;
         public static int NextHttpIncrement = 100;
         private TimeSpan MaxWaitTryEnter = TimeSpan.FromSeconds(10);
+        internal RTPBotCommands rtpbotcommands;
 
 
         public void writeToFileLog(string message)
@@ -448,299 +449,11 @@ namespace RTParser
                 console("@quit -- exits the aiml subsystem");
             }
 
-
-            if (showHelp)
-                console(
-                    "@withuser <user> - <text>  -- (aka. simply @)  runs text/command intentionally setting LastUser");
-            if (cmd == "withuser" || cmd == "@")
-            {
-                string said;
-                string user;
-                if (!SplitOff(args, "-", out user, out said))
-                {
-                    user = myUser.UserName;
-                    said = args;
-                }
-                User wasUser = FindUser(user);
-                Result res = GlobalChatWithUser(said, user, null, writeDebugLine, true, false);
-                // detect a user "rename"
-                DetectUserChange(myUser, wasUser, user);
-                OutputResult(res, console, false);
-                return true;
-            }
-
-            if (showHelp)
-                console(
-                    "@locally <user> - <text>  -- runs text/command not intentionally not setting LastUser");
-            if (cmd == "locally" || cmd == "@")
-            {
-                string said;
-                string user;
-                if (!SplitOff(args, "-", out user, out said))
-                {
-                    user = myUser.UserName;
-                    said = args;
-                }
-                User wasUser = FindUser(user);
-                Result res = GlobalChatWithUser(said, user, null, writeDebugLine, true, true);
-                request = res.request;
-                request.ResponderSelfListens = false;
-                // detect a user "rename"
-                bool userChanged = DetectUserChange(myUser, wasUser, user);
-                User theResponder = res.Responder ?? res.request.Responder;
-                if (userChanged)
-                {
-                    //myUser = FindUser(user);
-                    request.SetSpeakerAndResponder(myUser, theResponder);
-                }
-                var justsaid = OutputResult(res, console, false);
-                if (theResponder == null)
-                {
-                    theResponder = (myUser == targetBotUser) ? request.Requester : targetBotUser;
-                    writeToLog("Making the responder " + theResponder);
-                }
-                if (theResponder == null)
-                {
+            if (RTPBotCommands.ExecAnyAtAll(request, input, myUser, cmd, console, showHelp, args, targetBotUser, control)) return true;
+            if (cmd == "query" || showHelp) if (rtpbotcommands.ExecQuery(request, cmd, console, showHelp, args, myUser))
                     return true;
-                }
-                myUser.LastResponder = theResponder;
-                theResponder.JustSaid = justsaid;
-                // ReSharper disable ConditionIsAlwaysTrueOrFalse
-                if (ProcessHeardPreds && request.ResponderSelfListens)
-                    // ReSharper restore ConditionIsAlwaysTrueOrFalse
-                    HeardSelfSayResponse(theResponder, myUser, justsaid, res, control);
-
-                return true;
-            }
-            if (showHelp)
-                console(
-                    "@aimladd [graphname] <aiml/> -- inserts aiml content into graph (default LastUser.ListeningGraph )");
-            if (cmd == "aimladd" || cmd == "+")
-            {
-                int indexof = args.IndexOf("<");
-                if (indexof < 0)
-                {
-                    console(
-                        "@aimladd [graphname] <aiml/> -- inserts aiml content into graph (default LastUser.ListeningGraph )");
-                    return true;
-                }
-                string gn = args.Substring(0, indexof);
-                GraphMaster g = GetGraph(gn, myUser.ListeningGraph);
-                String aiml = Trim(args.Substring(indexof));
-                AddAiml(g, aiml, request);
-                console("Done with " + args);
-                return true;
-            }
-
-            if (showHelp) console("@prolog <load.pl>");
-            if (cmd == "prolog")
-            {
-                CSPrologMain.Main(args.Split(" \r\n\t".ToCharArray(), StringSplitOptions.RemoveEmptyEntries));
-                return true;
-            }
-
-            if (showHelp) console("@pl text to say");
-            if (cmd == "pl")
-            {
-                string callme = "alicebot2(['" + string.Join("','", args.ToUpper()
-                                                                        .Split(" \r\n\t".ToCharArray(),
-                                                                               StringSplitOptions.RemoveEmptyEntries)) +
-                                "'],Out),writeq('----------------------------------------------'),writeq(Out),nl,halt.";
-                CSPrologMain.Main(new[] { callme });
-                return true;
-            }
-
-            if (showHelp) console("@reload -- reloads any changed files ");
-            if (cmd == "reload")
-            {
-                ReloadAll();
-                return true;
-                //                return;//Success("WorldSystemModule.MyBot.ReloadAll();");
-            }
-
-            if (cmd == "echo")
-            {
-                console(args);
-                return true;
-            }
-            if (showHelp) console("@load <graph> - <uri>");
-            if (cmd == "load")
-            {
-                string graphname;
-                string files;
-                if (!SplitOff(args, "-", out graphname, out files))
-                {
-                    graphname = "current";
-                    files = args;
-                }
-                GraphMaster G = GetGraph(graphname, request.Graph);
-                AIMLLoader loader = GetLoader(request);
-                LoaderOptions reqLoadOptionsValue = request.LoadOptions.Value;
-                var prev = request.Graph;
-                try
-                {
-                    request.Graph = G;
-                    loader.loadAIMLURI(files, reqLoadOptionsValue);
-                    // maybe request.TargetBot.ReloadHooks.Add(() => request.Loader.loadAIMLURI(args, reqLoadOptionsValue));
-                    console("Done with " + files);
-                }
-                finally
-                {
-                    request.Graph = prev;
-                }
-                return true;
-            }
-            if (showHelp) console("@say [who -] <text> -- fakes that the 'who' (default bot) just said it");
-            if (cmd == "say")
-            {
-                console("say> " + args);
-                string who, said;
-                if (!SplitOff(args, "-", out who, out said))
-                {
-                    who = targetBotUser.UserID;
-                    said = args;
-                }
-                User factSpeaker = FindOrCreateUser(who);
-                HeardSelfSayVerbal(factSpeaker, factSpeaker.LastResponder, args, LastResult, control);
-                return true;
-            }
-
-            if (showHelp) console("@say1 [who -] <sentence> -- fakes that 'who' (default bot) just said it");
-            if (cmd == "say1")
-            {
-                console("say1> " + args);
-                string who, said;
-                if (!SplitOff(args, "-", out who, out said))
-                {
-                    who = targetBotUser.UserID;
-                    said = args;
-                }
-                User factSpeaker = FindOrCreateUser(who);
-                HeardSelfSay1Sentence(factSpeaker, factSpeaker.LastResponder, said, LastResult, control);
-                return true;
-            }
-
-            if (showHelp)
-                console(
-                    "@set [type] [name [value]] -- emulates get/set tag in AIML.  'type' defaults to =\"user\" therefore same as @user");
-            if (cmd == "set")
-            {
-                console(DefaultPredicates.ToDebugString());
-                return myUser.DoUserCommand(args, console);
-                return true;
-            }
-            if (showHelp)
-                console(
-                    "@setvar dictname.name [value] -- get/sets a variable using a global namespace context");
-            if (cmd == "setvar")
-            {
-                myUser.DoUserCommand(args, console);
-                GlobalSettings.DoSettingsCommand(input, console); ;
-                return targetBotUser.DoUserCommand(args, console);
-            }
-            if (showHelp) console("@bot [var [value]] -- lists or changes the bot GlobalPredicates.\n  example: @bot ProcessHeardPreds True or @bot ProcessHeardPreds False");
-            if (cmd == "bot")
-            {
-                console(HeardPredicates.ToDebugString());
-                console(RelationMetaProps.ToDebugString());
-                return targetBotUser.DoUserCommand(args, console);
-            }
 
             PrintOptions printOptions = request.WriterOptions ?? PrintOptions.CONSOLE_LISTING;
-            printOptions.ClearHistory();
-
-            if (showHelp)
-                console("@proof [[clear]|[save [filename.aiml]]] - clears or prints a content buffer being used");
-            if (cmd == "proof")
-            {
-                console("-----------------------------------------------------------------");
-                Request ur = MakeRequestToBot(args, myUser);
-                int i;
-                Result r = myUser.LastResult;
-                if (args.StartsWith("save"))
-                {
-                    args = Trim(args.Substring(4));
-                    string hide = GetTemplateSource(myUser.UsedTemplates, printOptions);
-                    console(hide);
-                    if (args.Length > 0) HostSystem.AppendAllText(args, hide + "\n");
-                    return true;
-                }
-                if (int.TryParse(args, out i))
-                {
-                    r = myUser.GetResult(i);
-                    console("-----------------------------------------------------------------");
-                    if (r != null)
-                        PrintResult(r, console, printOptions);
-                }
-                else
-                {
-                    var CId = myUser.DisabledTemplates;
-                    var CI = myUser.UsedTemplates;
-                    if (args == "disable")
-                    {
-                        foreach (TemplateInfo C in CI)
-                        {
-                            C.IsDisabled = true;
-                            myUser.DisabledTemplates.Add(C);
-                        }
-                        CI.Clear();
-                    }
-                    if (args == "enable" || args == "reset")
-                    {
-                        foreach (TemplateInfo C in CId)
-                        {
-                            C.IsDisabled = false;
-                            myUser.UsedTemplates.Add(C);
-                        }
-                        CId.Clear();
-                    }
-                    console("-----------------------------------------------------------------");
-                    console("-------DISABLED--------------------------------------");
-                    PrintTemplates(CId, console, printOptions);
-                    console("-----------------------------------------------------------------");
-                    console("-------ENABLED--------------------------------------");
-                    PrintTemplates(CI, console, printOptions);
-                    console("-----------------------------------------------------------------");
-                    if (args == "clear" || args == "reset") CI.Clear();
-                }
-
-                return true;
-            }
-
-
-            if (showHelp) console("@query <text> - conducts a findall using all tags");
-            if (cmd == "query")
-            {
-                console("-----------------------------------------------------------------");
-                if (args == "")
-                {
-                    QuerySettings ur0 = myUser.GetQuerySettings();
-                    if (ur0.MinOutputs != QuerySettings.UNLIMITED)
-                    {
-                        console("- query mode on -");
-                        QuerySettings.ApplySettings(QuerySettings.FindAll, ur0);
-                    }
-                    else
-                    {
-                        console("- query mode off -");
-                        QuerySettings.ApplySettings(QuerySettings.CogbotDefaults, ur0);
-                    }
-                    return true;
-                }
-
-                Request ur = MakeRequestToBot(args, myUser);
-
-                // Adds findall to request
-                QuerySettings.ApplySettings(QuerySettings.FindAll, ur);
-
-                ur.IsTraced = myUser.IsTraced;
-                console("-----------------------------------------------------------------");
-                var result = ChatWithToplevelResults(ur, request.CurrentResult);//, myUser, targetBotUser, myUser.ListeningGraph);
-                console("-----------------------------------------------------------------");
-                PrintResult(result, console, printOptions);
-                console("-----------------------------------------------------------------");
-                return true;
-            }
 
             if (showHelp) console("@user [var [value]] -- lists or changes the current users get/set vars.");
             if (cmd == "user")
@@ -750,120 +463,11 @@ namespace RTParser
 
             if (request.Graph.DoGraphCommand(cmd, console, showHelp, args, request)) return true;
 
-            if (showHelp) console("@chgraph <graph> - changes the users graph");
-            if (cmd == "graph" || cmd == "chgraph" || cmd == "cd")
-            {
-                GraphMaster current = myUser.ListeningGraph;
-                GraphMaster graph = FindGraph(args, current);
-                if (args != "" && graph != null && graph != current)
-                {
-                    console("Changing to graph " + graph);
-                    myUser.ListeningGraph = graph;
-                    console("-----------------------------------------------------------------");
-                    return true;
-                }
-                if (args == "~")
-                {
-                    graph = FindGraph(myUser.UserID, null);
-                    console("Changing to user graph " + graph);
-                    myUser.ListeningGraph = graph;
-                    console("-----------------------------------------------------------------");
-                    return true;
-                }
-                if (args == "")
-                {
-                    console("-----------------------------------------------------------------");
-                    foreach (KeyValuePair<string, GraphMaster> ggg in GraphMaster.CopyOf(LocalGraphsByName))
-                    {
-                        console("-----------------------------------------------------------------");
-                        string n = ggg.Key;
-                        GraphMaster gm = ggg.Value;
-                        console("local=" + gm + " key='" + n + "'");
-                        gm.WriteMetaHeaders(console, printOptions);
-                        console("-----------------------------------------------------------------");
-                    }
-                    console("-----------------------------------------------------------------");
-                    foreach (KeyValuePair<string, GraphMaster> ggg in GraphMaster.CopyOf(GraphsByName))
-                    {
-                        console("-----------------------------------------------------------------");
-                        string n = ggg.Key;
-                        GraphMaster gm = ggg.Value;
-                        console("value=" + gm + " key='" + n + "'");
-                        gm.WriteMetaHeaders(console, printOptions);
-                        console("-----------------------------------------------------------------");
-                    }
-                }
-                console("-----------------------------------------------------------------");
-                console("ListeningGraph=" + current);
-                console("-----------------------------------------------------------------");
-                return true;
-            }
+            if (RTPBotCommands.ChGraphCmd(request, showHelp, console, cmd, myUser, args)) return true;
 
-            if (showHelp) console("@log " + AIMLDEBUGSETTINGS);
-            if (cmd.StartsWith("log"))
-            {
-                LoggedWords.UpateLogging(args, console);
-                return true;
-            }
-            if (cmd == "on" || cmd == "off")
-            {
-                return true;
-            }
+            if (DoLogCmd(console, showHelp, cmd, args)) return true;
 
-            if (showHelp)
-                console("@eval <source>  --- runs source based on users language setting interp='" +
-                        myUser.Predicates.grabSetting("interp") + "'");
-            if (cmd == "eval")
-            {
-                cmd = "call";
-                args = "@" + myUser.Predicates.grabSettingOrDefault("interp", "cloj") + " " + args;
-            }
-
-            SystemExecHandler seh;
-            if (ConsoleCommands.TryGetValue(cmd.ToLower(), out seh))
-            {
-                writeToLog("@" + cmd + " = " + seh(args, myUser.CurrentRequest));
-            }
-
-            if (showHelp) console("@call <lang> <source>  --- runs script source");
-            if (cmd == "call")
-            {
-                string source; // myUser ?? LastUser.ShortName ?? "";
-                string slang;
-                if (args.StartsWith("@"))
-                {
-                    args = args.Substring(1);
-                    int lastIndex = args.IndexOf(" ");
-                    if (lastIndex > 0)
-                    {
-                        source = Trim(args.Substring(lastIndex + 1));
-                        slang = Trim(args.Substring(0, lastIndex));
-                    }
-                    else
-                    {
-                        source = args;
-                        slang = null;
-                    }
-                }
-                else
-                {
-                    source = args;
-                    slang = null;
-                }
-                Request ur = MakeRequestToBot(args, myUser);
-                if (source != null)
-                {
-                    try
-                    {
-                        console(SystemExecute(source, slang, ur));
-                    }
-                    catch (Exception e)
-                    {
-                        console("SystemExecute " + source + " " + slang + " caused " + e);
-                    }
-                }
-                return true;
-            }
+            if (RTPBotCommands.CallOrExecCmd(request, showHelp, console, cmd, myUser, args)) return true;
 
             bool uc = BotUserDirective(myUser, input, console);
             if (uc)
@@ -891,10 +495,505 @@ namespace RTParser
                 return true;
             }
 
+            if (RTPBotCommands.TaskCommand(request, console, cmd, args)) return true;
+            console("unknown: @" + input);
+            return false;
+        }
+
+    }
+
+    public partial class RTPBotCommands //: RTPBot
+    {
+        private static bool SplitOff(string args, string s, out string user, out string said)
+        {
+            return TextPatternUtils.SplitOff(args, s, out user, out said);
+        }
+
+        public static RTPBot robotIn;
+
+        public RTPBotCommands(RTPBot bot)
+        {
+            robotIn = bot;
+        }
+
+        internal static bool ExecAnyAtAll(Request request, string input, User myUser, string cmd, OutputDelegate console, bool showHelp, string args, User targetBotUser, ThreadControl control)
+        {
+            RTPBot robot = request.TargetBot;
+            if (showHelp)
+                console(
+                    "@withuser <user> - <text>  -- (aka. simply @)  runs text/command intentionally setting LastUser");
+            if (cmd == "withuser" || cmd == "@")
+            {
+                string said;
+                string user;
+                if (!SplitOff(args, "-", out user, out said))
+                {
+                    user = myUser.UserName;
+                    said = args;
+                }
+                User wasUser = robot.FindUser(user);
+                Result res = robot.GlobalChatWithUser(said, user, null, RTPBot.writeDebugLine, true, false);
+                // detect a user "rename"
+                robot.DetectUserChange(myUser, wasUser, user);
+                robot.OutputResult(res, console, false);
+                return true;
+            }
+
+            if (showHelp)
+                console(
+                    "@locally <user> - <text>  -- runs text/command not intentionally not setting LastUser");
+            if (cmd == "locally" || cmd == "@")
+            {
+                string said;
+                string user;
+                if (!SplitOff(args, "-", out user, out said))
+                {
+                    user = myUser.UserName;
+                    said = args;
+                }
+                User wasUser = robot.FindUser(user);
+                Result res = robot.GlobalChatWithUser(said, user, null, RTPBot.writeDebugLine, true, true);
+                request = res.request;
+                request.ResponderSelfListens = false;
+                // detect a user "rename"
+                bool userChanged = robot.DetectUserChange(myUser, wasUser, user);
+                User theResponder = res.Responder ?? res.request.Responder;
+                if (userChanged)
+                {
+                    //myUser = FindUser(user);
+                    request.SetSpeakerAndResponder(myUser, theResponder);
+                }
+                var justsaid = robot.OutputResult(res, console, false);
+                if (theResponder == null)
+                {
+                    theResponder = (myUser == targetBotUser) ? request.Requester : targetBotUser;
+                    robot.writeToLog("Making the responder " + theResponder);
+                }
+                if (theResponder == null)
+                {
+                    return true;
+                }
+                myUser.LastResponder = theResponder;
+                theResponder.JustSaid = justsaid;
+                // ReSharper disable ConditionIsAlwaysTrueOrFalse
+                if (robot.ProcessHeardPreds && request.ResponderSelfListens)
+                    // ReSharper restore ConditionIsAlwaysTrueOrFalse
+                    robot.HeardSelfSayResponse(theResponder, myUser, justsaid, res, control);
+
+                return true;
+            }
+            if (showHelp)
+                console(
+                    "@aimladd [graphname] <aiml/> -- inserts aiml content into graph (default LastUser.ListeningGraph )");
+            if (cmd == "aimladd" || cmd == "+")
+            {
+                int indexof = args.IndexOf("<");
+                if (indexof < 0)
+                {
+                    console(
+                        "@aimladd [graphname] <aiml/> -- inserts aiml content into graph (default LastUser.ListeningGraph )");
+                    return true;
+                }
+                string gn = args.Substring(0, indexof);
+                GraphMaster g = robot.GetGraph(gn, myUser.ListeningGraph);
+                String aiml = RTPBot.Trim(args.Substring(indexof));
+                robot.AddAiml(g, aiml, request);
+                console("Done with " + args);
+                return true;
+            }
+
+            if (showHelp) console("@prolog <load.pl>");
+            if (cmd == "prolog")
+            {
+                CSPrologMain.Main(args.Split(" \r\n\t".ToCharArray(), StringSplitOptions.RemoveEmptyEntries));
+                return true;
+            }
+
+            if (showHelp) console("@pl text to say");
+            if (cmd == "pl")
+            {
+                string callme = "alicebot2(['" + string.Join("','", args.ToUpper()
+                                                                        .Split(" \r\n\t".ToCharArray(),
+                                                                               StringSplitOptions.RemoveEmptyEntries)) +
+                                "'],Out),writeq('----------------------------------------------'),writeq(Out),nl,halt.";
+                CSPrologMain.Main(new[] { callme });
+                return true;
+            }
+
+            if (showHelp) console("@reload -- reloads any changed files ");
+            if (cmd == "reload")
+            {
+                robot.ReloadAll();
+                return true;
+                //                return;//Success("WorldSystemModule.MyBot.ReloadAll();");
+            }
+
+            if (cmd == "echo")
+            {
+                console(args);
+                return true;
+            }
+            if (showHelp) console("@load <graph> - <uri>");
+            if (cmd == "load")
+            {
+                string graphname;
+                string files;
+                if (!SplitOff(args, "-", out graphname, out files))
+                {
+                    graphname = "current";
+                    files = args;
+                }
+                GraphMaster G = robot.GetGraph(graphname, request.Graph);
+                AIMLLoader loader = robot.GetLoader(request);
+                LoaderOptions reqLoadOptionsValue = request.LoadOptions.Value;
+                var prev = request.Graph;
+                try
+                {
+                    request.Graph = G;
+                    loader.loadAIMLURI(files, reqLoadOptionsValue);
+                    // maybe request.TargetBot.ReloadHooks.Add(() => request.Loader.loadAIMLURI(args, reqLoadOptionsValue));
+                    console("Done with " + files);
+                }
+                finally
+                {
+                    request.Graph = prev;
+                }
+                return true;
+            }
+            if (showHelp) console("@say [who -] <text> -- fakes that the 'who' (default bot) just said it");
+            if (cmd == "say")
+            {
+                console("say> " + args);
+                string who, said;
+                if (!SplitOff(args, "-", out who, out said))
+                {
+                    who = targetBotUser.UserID;
+                    said = args;
+                }
+                User factSpeaker = robot.FindOrCreateUser(who);
+                robot.HeardSelfSayVerbal(factSpeaker, factSpeaker.LastResponder, args, robot.LastResult, control);
+                return true;
+            }
+
+            if (showHelp) console("@say1 [who -] <sentence> -- fakes that 'who' (default bot) just said it");
+            if (cmd == "say1")
+            {
+                console("say1> " + args);
+                string who, said;
+                if (!SplitOff(args, "-", out who, out said))
+                {
+                    who = targetBotUser.UserID;
+                    said = args;
+                }
+                User factSpeaker = robot.FindOrCreateUser(who);
+                robot.HeardSelfSay1Sentence(factSpeaker, factSpeaker.LastResponder, said, robot.LastResult, control);
+                return true;
+            }
+
+            if (showHelp)
+                console(
+                    "@set [type] [name [value]] -- emulates get/set tag in AIML.  'type' defaults to =\"user\" therefore same as @user");
+            if (cmd == "set")
+            {
+                console(robot.DefaultPredicates.ToDebugString());
+                return myUser.DoUserCommand(args, console);
+                return true;
+            }
+
+            if (ExecCmdSetVar(request, showHelp, input, console, cmd, args, targetBotUser)) return true;
+            if (ExecCmdBot(request, showHelp, console, cmd, args, targetBotUser)) return true;
+
+            PrintOptions printOptions = request.WriterOptions ?? PrintOptions.CONSOLE_LISTING;
+            printOptions = request.WriterOptions ?? PrintOptions.CONSOLE_LISTING;
+            printOptions.ClearHistory();
+
+            if (showHelp || cmd == "proof") if (RTPBotCommands.ExecProof(request, cmd, console, showHelp, args, myUser))
+                    return true;
+            return false;
+        }
+
+        [HelpText("@setvar dictname.name [value] -- get/sets a variable using a global namespace context")]
+        [CommandText("setvar")]
+        private static bool ExecCmdSetVar(Request request, bool showHelp, string input, OutputDelegate console, string cmd, string args, User myUser)
+        {
+            RTPBot robot = request.TargetBot;
+            if (showHelp)
+                console(
+                    "@setvar dictname.name [value] -- get/sets a variable using a global namespace context");
+            if (cmd == "setvar")
+            {
+                myUser.DoUserCommand(args, console);
+                robot.GlobalSettings.DoSettingsCommand(input, console); ;
+                return myUser.DoUserCommand(args, console);
+            }
+            return false;
+        }
+
+        [HelpText("@bot [var [value]] -- lists or changes the bot GlobalPredicates.\n  example: @bot ProcessHeardPreds True or @bot ProcessHeardPreds False")]
+        [CommandText("bot")]
+        private static bool ExecCmdBot(Request request, bool showHelp, OutputDelegate console, string cmd, string args, User targetBotUser)
+        {
+            RTPBot robot = request.TargetBot;
+            if (showHelp) console("@bot [var [value]] -- lists or changes the bot GlobalPredicates.\n  example: @bot ProcessHeardPreds True or @bot ProcessHeardPreds False");
+            if (cmd == "bot")
+            {
+                console(robot.HeardPredicates.ToDebugString());
+                console(robot.RelationMetaProps.ToDebugString());
+                return targetBotUser.DoUserCommand(args, console);
+            }
+            return false;
+        }
+
+
+        [HelpText("@proof [[clear]|[save [filename.aiml]]] - clears or prints a content buffer being used")]
+        [CommandText("proof", "prf")]
+        static internal bool ExecProof(Request request, string cmd, OutputDelegate console, bool showHelp, string args, User myUser)
+        {
+            RTPBot robot = request.TargetBot;
+            PrintOptions printOptions = request.WriterOptions ?? PrintOptions.CONSOLE_LISTING;
+
+            if (showHelp)
+                console("@proof [[clear]|[save [filename.aiml]]] - clears or prints a content buffer being used");
+            if (cmd == "proof")
+            {
+                console("-----------------------------------------------------------------");
+                Request ur = robot.MakeRequestToBot(args, myUser);
+                int i;
+                Result r = myUser.LastResult;
+                if (args.StartsWith("save"))
+                {
+                    args = StaticXMLUtils.Trim(args.Substring(4));
+                    string hide = StaticAIMLUtils.GetTemplateSource(myUser.VisitedTemplates, printOptions);
+                    console(hide);
+                    if (args.Length > 0) HostSystem.AppendAllText(args, hide + "\n");
+                    return true;
+                }
+                if (int.TryParse(args, out i))
+                {
+                    r = myUser.GetResult(i);
+                    console("-----------------------------------------------------------------");
+                    if (r != null)
+                        RTPBot.PrintResult(r, console, printOptions);
+                }
+                else
+                {
+                    var CId = myUser.DisabledTemplates;
+                    var CI = myUser.ProofTemplates;
+                    if (args == "disable")
+                    {
+                        foreach (TemplateInfo C in CI)
+                        {
+                            C.IsDisabled = true;
+                            myUser.DisabledTemplates.Add(C);
+                        }
+                        CI.Clear();
+                    }
+                    if (args == "enable" || args == "reset")
+                    {
+                        foreach (TemplateInfo C in CId)
+                        {
+                            C.IsDisabled = false;
+                            myUser.VisitedTemplates.Add(C);
+                        }
+                        CId.Clear();
+                    }
+                    console("-----------------------------------------------------------------");
+                    console("-------DISABLED--------------------------------------");
+                    RTPBot.PrintTemplates(myUser.DisabledTemplates, console, printOptions);
+                    console("-----------------------------------------------------------------");
+                    console("-------PROOF--------------------------------------");
+                    RTPBot.PrintTemplates(myUser.ProofTemplates, console, printOptions);
+                    console("-----------------------------------------------------------------");
+                    console("-------CHILD--------------------------------------");
+                    RTPBot.PrintTemplates(myUser.UsedChildTemplates, console, printOptions);
+                    console("-----------------------------------------------------------------");
+                    console("-------USED--------------------------------------");
+                    RTPBot.PrintTemplates(myUser.VisitedTemplates, console, printOptions);
+                    console("-----------------------------------------------------------------");
+
+                    if (args == "clear" || args == "reset")
+                    {
+                        myUser.DisabledTemplates.Clear();
+                        myUser.ProofTemplates.Clear();
+                        myUser.UsedChildTemplates.Clear();
+                        myUser.VisitedTemplates.Clear();
+                        console("--------------------ALL CLEARED------------------------------------------");
+                    }
+                }
+
+                return true;
+            }
+            return false;
+        }
+
+        internal bool ExecQuery(Request request, string cmd, OutputDelegate console, bool showHelp, string args, User myUser)
+        {
+            RTPBot robot = request.TargetBot;
+            PrintOptions printOptions = request.WriterOptions ?? PrintOptions.CONSOLE_LISTING;
+
+            if (showHelp) console("@query <text> - conducts a findall using all tags");
+            if (cmd == "query")
+            {
+                console("-----------------------------------------------------------------");
+                if (args == "")
+                {
+                    QuerySettings ur0 = myUser.GetQuerySettings();
+                    if (ur0.MinOutputs != QuerySettings.UNLIMITED)
+                    {
+                        console("- query mode on -");
+                        QuerySettings.ApplySettings(QuerySettings.FindAll, ur0);
+                    }
+                    else
+                    {
+                        console("- query mode off -");
+                        QuerySettings.ApplySettings(QuerySettings.CogbotDefaults, ur0);
+                    }
+                    return true;
+                }
+
+                Request ur = robot.MakeRequestToBot(args, myUser);
+
+                // Adds findall to request
+                QuerySettings.ApplySettings(QuerySettings.FindAll, ur);
+
+                ur.IsTraced = myUser.IsTraced;
+                console("-----------------------------------------------------------------");
+                var result = robot.ChatWithToplevelResults(ur, request.CurrentResult);//, myUser, targetBotUser, myUser.ListeningGraph);
+                console("-----------------------------------------------------------------");
+                RTPBot.PrintResult(result, console, printOptions);
+                console("-----------------------------------------------------------------");
+                return true;
+            }
+            return false;
+        }
+
+        internal static bool ChGraphCmd(Request request, bool showHelp, OutputDelegate console, string cmd, User myUser, string args)
+        {
+            RTPBot robot = request.TargetBot;
+            PrintOptions printOptions = request.WriterOptions ?? PrintOptions.CONSOLE_LISTING; 
+            
+            if (showHelp) console("@chgraph <graph> - changes the users graph");
+            if (cmd == "graph" || cmd == "chgraph" || cmd == "cd")
+            {
+                GraphMaster current = myUser.ListeningGraph;
+                GraphMaster graph = robot.FindGraph(args, current);
+                if (args != "" && graph != null && graph != current)
+                {
+                    console("Changing to graph " + graph);
+                    myUser.ListeningGraph = graph;
+                    console("-----------------------------------------------------------------");
+                    return true;
+                }
+                if (args == "~")
+                {
+                    graph = robot.FindGraph(myUser.UserID, null);
+                    console("Changing to user graph " + graph);
+                    myUser.ListeningGraph = graph;
+                    console("-----------------------------------------------------------------");
+                    return true;
+                }
+                if (args == "")
+                {
+                    console("-----------------------------------------------------------------");
+                    foreach (KeyValuePair<string, GraphMaster> ggg in GraphMaster.CopyOf(robot.LocalGraphsByName))
+                    {
+                        console("-----------------------------------------------------------------");
+                        string n = ggg.Key;
+                        GraphMaster gm = ggg.Value;
+                        console("local=" + gm + " key='" + n + "'");
+                        gm.WriteMetaHeaders(console, printOptions);
+                        console("-----------------------------------------------------------------");
+                    }
+                    console("-----------------------------------------------------------------");
+                    foreach (KeyValuePair<string, GraphMaster> ggg in GraphMaster.CopyOf(RTPBot.GraphsByName))
+                    {
+                        console("-----------------------------------------------------------------");
+                        string n = ggg.Key;
+                        GraphMaster gm = ggg.Value;
+                        console("value=" + gm + " key='" + n + "'");
+                        gm.WriteMetaHeaders(console, printOptions);
+                        console("-----------------------------------------------------------------");
+                    }
+                }
+                console("-----------------------------------------------------------------");
+                console("ListeningGraph=" + current);
+                console("-----------------------------------------------------------------");
+                return true;
+            }
+            return false;
+        }
+
+        internal static bool CallOrExecCmd(Request request, bool showHelp, OutputDelegate console, string cmd, User myUser, string args)
+        {
+            if (showHelp)
+                console("@eval <source>  --- runs source based on users language setting interp='" +
+                        myUser.Predicates.grabSetting("interp") + "'");
+            if (cmd == "eval")
+            {
+                cmd = "call";
+                args = "@" + myUser.Predicates.grabSettingOrDefault("interp", "cloj") + " " + args;
+            }
+
+            RTPBot robot = request.TargetBot;
+            PrintOptions printOptions = request.WriterOptions ?? PrintOptions.CONSOLE_LISTING;
+
+            SystemExecHandler seh;
+            if (robot.ConsoleCommands.TryGetValue(cmd.ToLower(), out seh))
+            {
+                robot.writeToLog("@" + cmd + " = " + seh(args, myUser.CurrentRequest));
+            }
+
+            if (showHelp) console("@call <lang> <source>  --- runs script source");
+            if (cmd == "call")
+            {
+                string source; // myUser ?? LastUser.ShortName ?? "";
+                string slang;
+                if (args.StartsWith("@"))
+                {
+                    args = args.Substring(1);
+                    int lastIndex = args.IndexOf(" ");
+                    if (lastIndex > 0)
+                    {
+                        source = RTPBot.Trim(args.Substring(lastIndex + 1));
+                        slang = RTPBot.Trim(args.Substring(0, lastIndex));
+                    }
+                    else
+                    {
+                        source = args;
+                        slang = null;
+                    }
+                }
+                else
+                {
+                    source = args;
+                    slang = null;
+                }
+                Request ur = robot.MakeRequestToBot(args, myUser);
+                if (source != null)
+                {
+                    try
+                    {
+                        console(robot.SystemExecute(source, slang, ur));
+                    }
+                    catch (Exception e)
+                    {
+                        console("SystemExecute " + source + " " + slang + " caused " + e);
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
+
+        [HelpText("@tasks/threads/kill - control tasks")]
+        [CommandText("tasks", "thread", "threads", "kill")]
+        internal static bool TaskCommand(Request request, OutputDelegate console, string cmd, string args)
+        {
+            RTPBot robot = request.TargetBot;
             if (cmd == "tasks")
             {
                 int n = 0;
-                IList<Thread> botCommandThreads = ThreadList;
+                IList<Thread> botCommandThreads = robot.ThreadList;
                 List<string> list = new List<string>();
                 if (false) lock (botCommandThreads)
                     {
@@ -942,7 +1041,7 @@ namespace RTParser
                 if (args == "list" || args == "")
                 {
                     int n = 0;
-                    var botCommandThreads = ThreadList;
+                    var botCommandThreads = robot.ThreadList;
                     List<string> list = new List<string>();
                     lock (botCommandThreads)
                     {
@@ -974,40 +1073,40 @@ namespace RTParser
                 {
                     cmd = args;
                     ThreadStart thread = () =>
-                    {
-                        try
-                        {
-                            try
-                            {
+                                             {
+                                                 try
+                                                 {
+                                                     try
+                                                     {
 
-                                BotDirective(request, args, console);
-                            }
-                            catch (Exception e)
-                            {
-                                console("Problem with " + args + " " + e);
-                            }
-                        }
-                        finally
-                        {
-                            try
-                            {
-                                HeardSelfSayQueue.RemoveThread(Thread.CurrentThread);
-                            }
-                            catch (OutOfMemoryException) { }
-                            catch (StackOverflowException) { }
-                            catch (Exception) { }
-                            console("done with " + cmd);
-                        }
-                    };
+                                                         robot.BotDirective(request, args, console);
+                                                     }
+                                                     catch (Exception e)
+                                                     {
+                                                         console("Problem with " + args + " " + e);
+                                                     }
+                                                 }
+                                                 finally
+                                                 {
+                                                     try
+                                                     {
+                                                         robot.HeardSelfSayQueue.RemoveThread(Thread.CurrentThread);
+                                                     }
+                                                     catch (OutOfMemoryException) { }
+                                                     catch (StackOverflowException) { }
+                                                     catch (Exception) { }
+                                                     console("done with " + cmd);
+                                                 }
+                                             };
                     String threadName = "ThreadCommnand for " + cmd;
-                    HeardSelfSayQueue.MakeSyncronousTask(thread, threadName, TimeSpan.FromSeconds(20));
+                    robot.HeardSelfSayQueue.MakeSyncronousTask(thread, threadName, TimeSpan.FromSeconds(20));
                     console(threadName);
                     return true;
                 }
                 if (args.StartsWith("kill"))
                 {
                     int n = 0;
-                    var botCommandThreads = ThreadList;
+                    var botCommandThreads = robot.ThreadList;
                     lock (botCommandThreads)
                     {
                         int num = botCommandThreads.Count;
@@ -1035,15 +1134,36 @@ namespace RTParser
                                 }
                                 catch (Exception) { }
                             }
-                            HeardSelfSayQueue.RemoveThread(t);
+                            robot.HeardSelfSayQueue.RemoveThread(t);
                         }
                     }
                 }
+                return true;
             }
-            console("unknown: @" + input);
             return false;
         }
+    }
 
+    internal class CommandTextAttribute : Attribute
+    {
+        public string[] Value;
+        public CommandTextAttribute(params string[] cmdnames)
+        {
+            Value = cmdnames;
+        }
+    }
+
+    internal class HelpTextAttribute : Attribute
+    {
+        public string Value;
+        public HelpTextAttribute(string text)
+        {
+            Value = text;
+        }
+    }
+
+    public partial class RTPBot
+    {
 
         private void AddBotCommand(string s, Action action)
         {

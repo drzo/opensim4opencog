@@ -310,5 +310,20 @@ namespace RTParser
                     .Replace(" ", "_").Replace(".", "_")
                     .Replace("-", "_").Replace("__", "_"));
         }
+
+        private bool DoLogCmd(OutputDelegate console, bool showHelp, string cmd1, string args1)
+        {
+            if (showHelp) console("@log " + RTPBot.AIMLDEBUGSETTINGS);
+            if (cmd1.StartsWith("log"))
+            {
+                RTPBot.LoggedWords.UpateLogging(args1, console);
+                return true;
+            }
+            if (cmd1 == "on" || cmd1 == "off")
+            {
+                return true;
+            }
+            return false;
+        }
     }
 }
