@@ -254,7 +254,7 @@ namespace MushDLR223.Virtualization
             string toexitingpath = ResolveToExistingPath(pathname);
             if (!IsNullOrEmpty(toexitingpath)) pathname = toexitingpath;
             if (IsNullOrEmpty(pathname)) return false;
-            return Directory.Exists(pathname);
+            return !IsWildPath(pathname) && Directory.Exists(pathname);
         }
 
         public static bool BackupFile(string pathname)
@@ -343,7 +343,7 @@ namespace MushDLR223.Virtualization
         {
             if (IsNullOrEmpty(pathname)) return false;
             string toexitingpath = ResolveToExistingPath(pathname);
-            if (toexitingpath == null) return false;
+            if (toexitingpath == null || IsWildPath(pathname)) return false;
             lock (ExistenceLock) return File.Exists(toexitingpath);
         }
 
@@ -552,8 +552,9 @@ namespace MushDLR223.Virtualization
         private static string ResolveToExistingPath(string path, bool mustExist)
         {
             if (path == null) return null;
-            if (File.Exists(path)) return path;
-            if (Directory.Exists(path)) return path;
+            var ipn = IsWildPath(path);
+            if (!ipn && File.Exists(path)) return path;
+            if (!ipn && Directory.Exists(path)) return path;
             if (Uri.IsWellFormedUriString(path, UriKind.Absolute))
             {
                 try
@@ -802,11 +803,12 @@ namespace MushDLR223.Virtualization
             if (pathname == null) return pathname;
             string exists = ResolveToExistingPath(pathname);
             if (exists == null) exists = pathname;
-            if (Directory.Exists(exists))
+            var iwp = IsWildPath(pathname);
+            if (!iwp && Directory.Exists(exists))
             {
                 return (new DirectoryInfo(exists)).FullName;
             }
-            if (File.Exists(exists))
+            if (!iwp && File.Exists(exists))
             {
                 var fi = new FileInfo(exists);
                 return fi.FullName ?? pathname;

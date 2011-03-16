@@ -591,10 +591,11 @@ namespace MushDLR223.Utilities
                         try
                         {
                             if (XmlDocumentLineInfo.SkipXmlns && a.Name == "xmlns") continue;
-                            XmlAttribute a2 = (XmlAttribute)a.CloneNode(deep);
+                            XmlAttribute a2 = (XmlAttribute) newnode.docLineInfo.CreateAttribute(a.Name);// a.CloneNode(deep);
                             bool a2ro = a2.IsReadOnly;
                             XmlSourceInfo a22 = a2 as XmlSourceInfo;
                             if (a22 != null) a22.ReadOnly = false;
+                            a2.Value = a.Value;
                             newnode.Attributes.Append(a2);
                             if (a22 != null) a22.ReadOnly = a2ro;
                         }
