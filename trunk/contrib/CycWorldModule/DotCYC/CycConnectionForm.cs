@@ -91,8 +91,11 @@ namespace CycWorldModule.DotCYC
                 SimCyclifier.Trace();
                 txtCycOutput.Text = ee.ToString();
             }
-            ClientManager.addSetting("cycHostName", m_cycAccess.getHostName());
-            ClientManager.addSetting("cycBasePort", "" + m_cycAccess.getBasePort());
+            if (m_cycAccess != null)
+            {
+                ClientManager.addSetting("cycHostName", m_cycAccess.getHostName());
+                ClientManager.addSetting("cycBasePort", "" + m_cycAccess.getBasePort());
+            }
             wasConnected = IsConnected();
         }
         private void disconnect()
