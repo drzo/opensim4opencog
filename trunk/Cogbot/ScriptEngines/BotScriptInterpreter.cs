@@ -61,8 +61,9 @@ namespace cogbot.ScriptEngines
             set { if (value is BotClient) BotClient = value as BotClient; }
         }
 
-        public override void Init()
+        public override void Init(object self)
         {
+            Self = self;
         }        
         
         /// <summary>

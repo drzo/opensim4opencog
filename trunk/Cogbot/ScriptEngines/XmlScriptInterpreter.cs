@@ -64,7 +64,7 @@ namespace cogbot.ScriptEngines
             BotClient = bc as BotClient;
         }
 
-        public override void Init()
+        public override void Init(object self)
         {
         }
         /// <summary>

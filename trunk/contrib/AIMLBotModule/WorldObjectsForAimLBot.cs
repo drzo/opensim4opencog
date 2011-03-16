@@ -858,7 +858,7 @@ namespace AIMLBotModule
                 args = new object[] { s };
                 s = "{0}";
             }
-            if (Monitor.TryEnter(writeLock, 1000))
+            if (Monitor.TryEnter(writeLock, 2000))
             {
                 writeLock.Enqueue(() => {
                     if (logAimlToClient && client != null) client.DebugWriteLine(s, args);
