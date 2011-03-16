@@ -1972,8 +1972,7 @@ namespace cogbot
 
             Type type = target.GetType();
             EventInfo eventInfo = type.GetEvent(infoName);
-            MethodInfo m = eventInfo.GetRaiseMethod();
-
+            MethodInfo m = eventInfo.GetRaiseMethod(true);
             Exception lastException = null;
             if (m != null)
             {
@@ -2007,7 +2006,13 @@ namespace cogbot
                     }
                 }
             }
+            var ms = eventInfo.GetOtherMethods(true);
+            foreach (MethodInfo info in ms)
+            {
+            }
+
             if (lastException != null) throw lastException;
+            //MethodInfo m = eventInfo.GetOtherMethods(true);
             throw new NotSupportedException();
         }
 
