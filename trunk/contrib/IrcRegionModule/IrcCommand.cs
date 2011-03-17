@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using cogbot;
 using cogbot.Actions;
+using cogbot.Listeners;
 using Meebey.SmartIrc4net;
 using MushDLR223.ScriptEngines;
 using OpenMetaverse;
@@ -82,22 +83,23 @@ namespace IrcRegionModule
             }   
         }
 
-        Dictionary<String,UUID> IrcUUIDs = new Dictionary<string, UUID>();
+        readonly Dictionary<String,UUID> IrcUUIDs = new Dictionary<string, UUID>();
         protected internal void IRC_OnChannelMessage(object sender, IrcEventArgs e)
         {
             IrcMessageData data = e.Data;
             if (ircClient.IsMe(data.Nick)) return;
             if (data.Message.Contains("[off]")) return;
             string nick = data.Nick + " " + data.Channel.Substring(1);
-            Client.Self.Chat(string.Format("{0}: {1}", nick, data.Message), 0, ChatType.Normal);
             UUID id;
             lock (IrcUUIDs)
             {
                 if (!IrcUUIDs.TryGetValue(nick, out id))
                 {
                     id = IrcUUIDs[nick] = UUID.Random();
+                    WorldObjects.DeclareGeneric(nick, id, "IrcUser");                    
                 }
             }
+            Client.Self.Chat(string.Format("{0}: {1}", nick, data.Message), 0, ChatType.Normal);
             try
             {
                 Client.FakeEvent(Client.Self, "ChatFromSimulator", this,
@@ -105,9 +107,25 @@ namespace IrcRegionModule
                                                    ChatType.Normal,
                                                    ChatSourceType.Agent, nick,
                                                    id, id, Vector3.Zero));
-            } catch(Exception exception)
+            }
+            catch (NotSupportedException exception)
+            { }
+            catch (Exception exception)
             {
                 Console.WriteLine("ChatFromSimulator: " + exception);
+            }
+        }
+
+        public bool IsFromIRC(string nick)
+        {
+            UUID id;
+            lock (IrcUUIDs)
+            {
+                if (!IrcUUIDs.TryGetValue(nick, out id))
+                {
+                    return false;
+                }
+                return true;
             }
         }
 
@@ -134,10 +152,12 @@ namespace IrcRegionModule
 
         private static Meebey.SmartIrc4net.IrcClient ircClient = new IrcClient();
         private Thread ListenerThreaThread;
+        private BotClient TheBC = null;
 
         public IrcCommand(BotClient bc) 
         {
             Name = "irc";
+            TheBC = bc;
             Description = "connects to IRC. Usage: irc channel nick server";
             Category = CommandCategory.Other;
             IrcRegionModule.IrcBotModule.IrcCommand = this;
@@ -170,7 +190,7 @@ namespace IrcRegionModule
         public void IrcSend(string msg)
         {
             if (ircClient.IsConnected)
-            ircClient.SendMessage(SendType.Message, RegionChannel, msg);
+                ircClient.SendMessage(SendType.Message, RegionChannel, msg);
         }
 
         public bool IsChannelAgent(string fromname)

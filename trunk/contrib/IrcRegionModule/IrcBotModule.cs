@@ -35,11 +35,24 @@ namespace IrcRegionModule
             if (!client.IsRegionMaster) return;
             if (IrcCommand == null) return;
             if (type == ChatType.StartTyping || type == ChatType.StopTyping) return;
-            if (client.Self.AgentID == id)
+            if (client.Self.AgentID == id || e.FromName == client.Self.Name)
             {
                 int hash = message.IndexOf(" ");
                 int colon = message.IndexOf(":");
-                if (hash>0 && colon>hash) return;
+                if (hash > 0 && colon > hash)
+                {
+                    fromname = message.Substring(0, colon);
+                    message = message.Substring(colon + 1);
+                    if (!IrcCommand.IsFromIRC(fromname)) return;
+                    client.Self.OnChat(new ChatEventArgs(e.Simulator, message, e.AudibleLevel, e.Type, e.SourceType,
+                                                         fromname,
+                                                         id, e.OwnerID, e.Position));
+                    return;
+                } else
+                {
+                    // need to hear ourselves talk to others!!
+                   // so no "return;"
+                }
             }
             if (IrcCommand.IsChannelAgent(fromname)) return;
             if ((type == ChatType.Normal))

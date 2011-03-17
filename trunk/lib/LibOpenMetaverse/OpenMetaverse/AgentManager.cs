@@ -699,7 +699,7 @@ namespace OpenMetaverse
         /// <summary>Raises the ChatFromSimulator event</summary>
         /// <param name="e">A ChatEventArgs object containing the
         /// data returned from the data server</param>
-        protected virtual void OnChat(ChatEventArgs e)
+        public virtual void OnChat(ChatEventArgs e)
         {
             NetworkManager.EventRaised(m_ChatLock, "ChatFromSimulator");
             EventHandler<ChatEventArgs> handler = m_Chat;
