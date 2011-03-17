@@ -66,6 +66,7 @@ namespace cogbot.Listeners
         {
             lock (MasteringRegions)
             {
+                if (simulator == null) return client.Network.CurrentSim == null || MasteringRegions.Count == 0;
                 if (MasteringRegions.Contains(simulator.Handle)) return true;
                 lock (SimMaster)
                 {
