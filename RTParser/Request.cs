@@ -84,10 +84,10 @@ namespace RTParser
         bool IsTimedOutOrOverBudget { get; }
         string WhyComplete { get; set; }
 
-        bool addSetting(string name, Unifiable unifiable);
+        //bool addSetting(string name, Unifiable unifiable);
         void AddSubResult(Result result);
         //int GetCurrentDepth();
-        Unifiable grabSetting(string name);
+        //Unifiable grabSetting(string name);
         QuerySettingsSettable GetQuerySettings();
         AIMLbot.MasterResult CreateResult(Request res);
         bool IsToplevelRequest { get; set; }
@@ -123,7 +123,7 @@ namespace RTParser
         ISettingsDictionary GetDictionary(string named);
         ISettingsDictionary GetDictionary(string named, ISettingsDictionary dictionary);
 
-        void AddUndo(Action action);
+        void AddUndo(string named, Action action);
         void CommitSideEffects(bool clearAfter);
         void UndoAll();
         void AddSideEffect(string effect, ThreadStart start);
@@ -154,7 +154,7 @@ namespace RTParser
 #if interfaces   
     public class RequestImpl : QuerySettings, Request
 #else
-    public class Request : QuerySettings, RequestImpl, QuerySettingsSettable, QuerySettingsReadOnly, RequestOrQuery
+    public class Request : QuerySettings, RequestImpl, QuerySettingsSettable, QuerySettingsReadOnly, RequestOrQuery, UndoStackHolder
 #endif
     {
         #region Attributes
@@ -477,10 +477,16 @@ namespace RTParser
             }
             return DLRConsole.SafeFormat(
                 "{0}[{1}]: {2}, \"{3}\"",
-                RequestDepth + " " + Requester == null ? "NULL" : (string)Requester.UserID,
+                RequestDepth + " " + UserNameOf(Requester, "Requester"),
                 GraphName,
-                Responder == null ? "Anyone" : (string)Responder.UserID,
+                UserNameOf(Responder, "Anyone"),
                 unifiableToVMString);
+        }
+
+        private static string UserNameOf(UserStaticModel requester, string defaultName)
+        {
+            if (requester == null) return defaultName;
+            return requester.UserID ?? defaultName;
         }
 
         public Request OriginalSalientRequest { get; set; }
@@ -488,7 +494,7 @@ namespace RTParser
 #if interface
         protected RequestImpl(QuerySettingsReadOnly defaults)        
 #else
-        protected Request(QuerySettingsReadOnly defaults)
+        protected Request(QuerySettingsReadOnly defaults, bool unused)
 #endif // interface
             : base(defaults)
         {
@@ -507,7 +513,7 @@ namespace RTParser
  Request
 #endif // interface
 (Unifiable rawInput, User user, Unifiable thatSaid, User targetUser, RTPBot bot, Request parent, GraphMaster graphMaster)
-            : this(bot.GetQuerySettings()) // Get query settings intially from user
+            : this(bot.GetQuerySettings(),false) // Get query settings intially from user
         {
             ExitQueue = new CommitQueue();
             SideEffects = new CommitQueue();
@@ -599,6 +605,7 @@ namespace RTParser
             {
                 TargetSettings = parent.TargetSettings;
             }
+            UndoStackValue = new UndoStack(this);
         }
 
 
@@ -941,6 +948,7 @@ namespace RTParser
             return here / 6;
         }
 #endif
+#if false
         public Unifiable grabSetting(string name)
         {
             return TargetSettings.grabSetting(name);
@@ -950,7 +958,7 @@ namespace RTParser
         {
             return TargetSettings.addSetting(name, value);
         }
-
+#endif
         readonly private IList<TemplateInfo> RequestTemplates1 = new List<TemplateInfo>();
         public IList<TemplateInfo> RequestTemplates
         {
@@ -1344,11 +1352,11 @@ namespace RTParser
             return GetDictionary(named, CurrentQuery);
         }
 
-        public void AddUndo(Action undo)
+        public void AddUndo(string named, Action undo)
         {
             lock (this)
             {
-                UndoStack.GetStackFor(this).AddUndo(() => undo());
+                UndoStack.GetStackFor(this).AddUndo(named, () => undo());
             }
         }
 
@@ -1669,7 +1677,7 @@ namespace RTParser
             }
             string infoName = "" + templateInfo;
             //writeToLog("disabling0 " + infoName);
-            rr.AddUndo(() =>
+            rr.AddUndo("un-disabling0 " + infoName, () =>
             {
                 //writeToLog("un-disabling0 " + infoName);
                 templateInfo.IsDisabledOutput = false;
@@ -1754,22 +1762,31 @@ namespace RTParser
                 return scope;   
             }
         }
+
+        #region UndoStackHolder Members
+
+        public UndoStack UndoStackValue
+        {
+            get; set;
+        }
+
+        #endregion
     }
 
     public class CommitQueue
     {
 
         private bool IgnoreTasks;
-        private readonly List<KeyValuePair<string, ThreadStart>> commitHooks = new List<KeyValuePair<string, ThreadStart>>();
-        public static List<KeyValuePair<string, ThreadStart>> DoAll(List<KeyValuePair<string, ThreadStart>> todo)
+        private readonly List<NamedAction> commitHooks = new List<NamedAction>();
+        public static List<NamedAction> DoAll(List<NamedAction> todo)
         {
-            var newList = new List<KeyValuePair<string, ThreadStart>>();
+            var newList = new List<NamedAction>();
             lock (todo)
             {
                 newList.AddRange(todo);
                 todo.Clear();
             }
-            foreach (KeyValuePair<string, ThreadStart> start in newList)
+            foreach (NamedAction start in newList)
             {
                 DoTask(start);
             }
@@ -1777,16 +1794,16 @@ namespace RTParser
             return newList;
         }
 
-        private static void DoTask(KeyValuePair<string, ThreadStart> start)
+        private static void DoTask(NamedAction start)
         {
             try
             {
               //  writeToLog("DOING NOW " + start.Key);
-                start.Value();
+                start.Invoke("Commit ");
             }
             catch (Exception exception)
             {
-                RTPBot.writeDebugLine("ERROR in " + start.Key + " " + exception);
+                RTPBot.writeDebugLine("ERROR in " + start.Name + " " + exception);
             }
         }
 
@@ -1818,7 +1835,7 @@ namespace RTParser
                             }
                         }
                         Immediate = false;
-                        List<KeyValuePair<string, ThreadStart>> prev = DoAll(commitHooks);
+                        List<NamedAction> prev = DoAll(commitHooks);
                         if (!clearAfter)
                         {
                             lock (commitHooks)
@@ -1841,7 +1858,7 @@ namespace RTParser
         public bool Immediate = false;
         public void Add(string name, ThreadStart action)
         {
-            var newKeyValuePair = new KeyValuePair<string, ThreadStart>(name, action);
+            var newKeyValuePair = new NamedAction(name, action);
             lock (SyncLock)
             {
                 if (Immediate)
@@ -1858,7 +1875,7 @@ namespace RTParser
             }
         }
 
-        public List<KeyValuePair<string, ThreadStart>> Items
+        public List<NamedAction> Items
         {
             get { return commitHooks; }
         }

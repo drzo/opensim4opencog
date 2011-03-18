@@ -399,7 +399,7 @@ namespace RTParser
             try
             {
                 User requester = (user ?? LastUser ?? BotAsUser);
-                Request request = requester.CreateRequest(input, null);
+                Request request = requester.CreateRequest(input, BotAsUser);
                 return BotDirective(request, input, console);
             }
             catch (Exception e)
@@ -557,7 +557,7 @@ namespace RTParser
                 request.ResponderSelfListens = false;
                 // detect a user "rename"
                 bool userChanged = robot.DetectUserChange(myUser, wasUser, user);
-                User theResponder = res.Responder ?? res.request.Responder;
+                User theResponder = (res.Responder ?? res.request.Responder).Value;
                 if (userChanged)
                 {
                     //myUser = FindUser(user);
@@ -671,7 +671,7 @@ namespace RTParser
                     said = args;
                 }
                 User factSpeaker = robot.FindOrCreateUser(who);
-                robot.HeardSelfSayVerbal(factSpeaker, factSpeaker.LastResponder, args, robot.LastResult, control);
+                robot.HeardSelfSayVerbal(factSpeaker, factSpeaker.LastResponder.Value, args, robot.LastResult, control);
                 return true;
             }
 
@@ -686,7 +686,7 @@ namespace RTParser
                     said = args;
                 }
                 User factSpeaker = robot.FindOrCreateUser(who);
-                robot.HeardSelfSay1Sentence(factSpeaker, factSpeaker.LastResponder, said, robot.LastResult, control);
+                robot.HeardSelfSay1Sentence(factSpeaker, factSpeaker.LastResponder.Value, said, robot.LastResult, control);
                 return true;
             }
 

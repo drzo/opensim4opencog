@@ -1314,6 +1314,10 @@ namespace RTParser.Variables
                         if (name.Length > k.Length) name = name.Substring(k.Length);
                     }
                 }
+            if (name == "uname")
+            {
+
+            }
             return name;
             //return MakeCaseInsensitive.TransformInput(name);
         }
@@ -2282,6 +2286,7 @@ namespace RTParser.Variables
         {
 
             bool locally = dict.containsLocalCalled(name);
+            string debugStr = String.Format("REMOVE {0} {1}", dict, name);
             if (UseUndoPush)
             {
                 UndoStack.GetStackFor(query).pushValues(dict, name, null);
@@ -2291,17 +2296,18 @@ namespace RTParser.Variables
                 Unifiable prevSetting = dict.grabSetting(name);
                 if (dict.removeSetting(name))
                 {
-                    if (locally) query.AddUndo(() => dict.addSetting(name, prevSetting));
-                    else query.AddUndo(() => dict.updateSetting(name, prevSetting));
+                    if (locally) query.AddUndo("undoing " + debugStr, () => dict.addSetting(name, prevSetting));
+                    else query.AddUndo("undoing " + debugStr, () => dict.updateSetting(name, prevSetting));
                 }
             }
-            query.AddSideEffect(String.Format("REMOVE {0} {1}", dict, name), () => dict.removeSetting(name));
+            query.AddSideEffect(debugStr, () => dict.removeSetting(name));
             return locally;
         }
 
         public static bool addSettingWithUndoCommit(SubQuery query, ISettingsDictionary dict, Func<string, Unifiable, bool> SideEffect, string name, Unifiable newValue)
         {
             bool locally = dict.containsLocalCalled(name);
+            string debugStr = String.Format("ADD SETTING {0} {1} {2}", dict, name, newValue);
             if (UseUndoPush)
             {
                 UndoStack.GetStackFor(query).pushValues(dict, name, null);
@@ -2310,7 +2316,7 @@ namespace RTParser.Variables
             {
                 Unifiable prevSetting = dict.grabSetting(name);
                 bool res = SideEffect(name, newValue);
-                query.AddUndo(() =>
+                query.AddUndo("undo " + debugStr, () =>
                                   {
                                       var now = dict.grabSetting(name);
                                       if (now == newValue && now != prevSetting)
@@ -2334,7 +2340,7 @@ namespace RTParser.Variables
             {
                 
             }
-            query.AddSideEffect(String.Format("ADD SETTING {0} {1} {2}", dict, name, newValue), () => SideEffect(name, newValue));
+            query.AddSideEffect("SIDE EFFECT " + debugStr, () => SideEffect(name, newValue));
             return !locally;
         }
 
@@ -2342,8 +2348,9 @@ namespace RTParser.Variables
         {
             bool locally = dict.containsLocalCalled(name);
             Unifiable prevSetting = dict.grabSetting(name);
+            string debugStr = String.Format("ADD SETTING {0} {1} {2}", dict, name, newValue);
             T res = SideEffect();
-            query.AddUndo(() =>
+            query.AddUndo("undo " + debugStr,() =>
                               {
                                   var now = dict.grabSetting(name);
                                   if (now == newValue && now != prevSetting)
@@ -2362,7 +2369,7 @@ namespace RTParser.Variables
                                       }
                                   }
                               });
-            query.AddSideEffect(String.Format("ADD SETTING {0} {1} {2}", dict, name, newValue), () => SideEffect());
+            query.AddSideEffect(debugStr, () => SideEffect());
             return res;
         }
 

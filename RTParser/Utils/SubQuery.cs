@@ -53,6 +53,7 @@ namespace RTParser.Utils
             Graph = request.Graph;
             TargetSettings = request.TargetSettings;
             this.FullPath = fullPath;
+            UndoStackValue = new UndoStack(this);
         }
 
         public ISettingsDictionary TargetSettings
@@ -147,7 +148,12 @@ namespace RTParser.Utils
         private int _hasSuceeded = 0;
         public int HasSuceeded
         {
-            get { return _hasSuceeded + (useParentSF ? ParentResult.HasSuceeded : 0); }
+            get
+            {
+                int ret = _hasSuceeded + (useParentSF ? ParentResult.HasSuceeded : 0);
+                if (ret < 0) throw new InvalidOperationException();
+                return ret;
+            }
             set
             {
                 if (_hasSuceeded < 1)
@@ -496,7 +502,7 @@ namespace RTParser.Utils
                     result = result ?? subquery.Result;
                     request = request ?? subquery.Request ?? result.request;
                     result = result ?? request.CurrentResult;
-                    user = user ?? result.Requester;
+                    user = (user ?? result.Requester).Value;
                     bot = request.TargetBot;
                 }
                 handler = bot.TagHandling.GetTagHandler(user, subquery, request, result, node, null);
@@ -510,19 +516,19 @@ namespace RTParser.Utils
             UndoStack.FindUndoAll(this, true);
         }
 
-        public void AddLocalUndo(ThreadStart undo)
+        public void AddLocalUndo(string named, ThreadStart undo)
         {
             lock (this)
             {
-                UndoStack.GetStackFor(this).AddUndo(undo);
+                UndoStack.GetStackFor(this).AddUndo(named, undo);
             }
         }
 
-        public void AddUndo(Action undo)
+        public void AddUndo(string named, Action undo)
         {
             lock (this)
             {
-                Request.AddUndo(undo);
+                Request.AddUndo(named, undo);
             }
         }
 
@@ -566,17 +572,30 @@ namespace RTParser.Utils
             Request.AddSideEffect(effectName, () => DoSideEffect(effectName, action));
         }
 
+
         private void DoSideEffect(string effectName, ThreadStart action)
         {
-            if (this.HasSuceeded > 0)
+            if (ShouldCommit)
             {
                 writeDebugLine("Commiting Sidefffect " + effectName);
-                //if (HasFailed == 0) 
                 action();
             }
             else
             {
-                //writeDebugLine("Skipping Sidefffect " + effectName);
+                writeDebugLine("Skipping Sidefffect " + effectName);
+            }
+        }
+
+        protected bool ShouldCommit
+        {
+            get
+            {
+                if (HasSuceeded > 0) return true;
+                if (HasFailed == 0)
+                {
+                    return true;
+                }
+                return false;
             }
         }
 
@@ -584,7 +603,7 @@ namespace RTParser.Utils
         public void LocalSideEffect(string effectName, ThreadStart enter, ThreadStart exit)
         {
             enter();
-            AddLocalUndo(exit);
+            AddLocalUndo("LocalSideEffect exit: " + effectName, exit);
         }
 
 
@@ -766,11 +785,11 @@ namespace RTParser.Utils
         /// <summary>
         /// The user that made this request
         /// </summary>
-        User Requester { get; }
+        UserDuringProcessing Requester { get; }
         /// <summary>
         /// The user respoinding to the request
         /// </summary>
-        User Responder { get; }
+        UserDuringProcessing Responder { get; }
         /// <summary>
         /// The last meaning unit extracted from what the responder said
         /// </summary>
