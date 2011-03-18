@@ -746,6 +746,30 @@ namespace RTParser
         {
             get
             {
+                GraphMaster GM = Graph0;
+                ListenerTest(GM);
+                return GM;
+            }
+            set
+            {
+                ListenerTest(value);
+                Graph0 = value;
+            }
+        }
+
+        private void ListenerTest(GraphMaster master)
+        {
+            if (master==null) return;
+            if (master.ScriptingName == "listener")
+            {
+
+            }
+        }
+
+        public GraphMaster Graph0
+        {
+            get
+            {
                 if (sGraph != null)
                     return sGraph;
                 if (ParentRequest != null)

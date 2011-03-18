@@ -886,7 +886,7 @@ namespace RTParser
                 }
                 if (args == "~")
                 {
-                    graph = robot.FindGraph(myUser.UserID, null);
+                    graph = robot.GetUserGraph(myUser.UserID);
                     console("Changing to user graph " + graph);
                     myUser.ListeningGraph = graph;
                     console("-----------------------------------------------------------------");
