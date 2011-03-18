@@ -212,7 +212,7 @@ namespace RTParser.Utils
                 throw new NotImplementedException("EnterTag: " + templateNode.NodeType);
             }
             bool needsUnwind = false;
-            object thiz = (object) query ?? request;
+            UndoStackHolder thiz = (UndoStackHolder)query ?? request;
             ISettingsDictionary dict = query ?? request.TargetSettings;
             XmlAttributeCollection collection = templateNode.Attributes;
             EnterContext(request, query);

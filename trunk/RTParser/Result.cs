@@ -21,7 +21,7 @@ namespace RTParser
         /// </summary>
         //     RTPBot TargetBot { get; set; }
         /// The user that is providing the <that/> answer
-        //        User Responder { get; set; }
+        //        UserDuringProcessing Responder { get; set; }
         //        string WhyComplete { get; set; }
         bool IsTraced { get; set; }
 
@@ -56,7 +56,7 @@ namespace RTParser
         /// <summary>
         /// The user for whom this is a result
         /// </summary>
-        ///User Requester { get; set; }
+        ///UserDuringProcessing Requester { get; set; }
         // OutputDelegate writeToLog { get; set; }
         int TemplatesSucceeded { get; set; }
 
@@ -104,7 +104,7 @@ namespace RTParser
         string WhyResultComplete { get; set; }
         IList<TemplateInfo> ResultTemplates { get; }
         RTPBot TargetBot { get; }
-     //   User Requester { get; set; }
+     //   UserDuringProcessing Requester { get; set; }
         GraphMaster Graph { get; }
         void AddSubqueries(GraphQuery queries);
         void AddOutputSentences(TemplateInfo ti, string unifiable);
@@ -116,7 +116,7 @@ namespace RTParser
         bool CanResultUseTemplate(TemplateInfo info);
         OutputDelegate writeToLog { get; set; }
         ChatLabel CatchLabel { get; set; }
-    //    User Responder { get; }
+    //    UserDuringProcessing Responder { get; }
         SubQuery CurrentQuery { get; set; }
         int MaxCanEvalResult { get; set; }
         bool IsComplete { get; set; }
@@ -164,7 +164,7 @@ namespace RTParser
         /// </summary>
         //   public RTPBot TargetBot { get; set; }
         /// The user that is providing the <that/> answer
-        //  public User Responder { get; set; }
+        //  public UserDuringProcessing Responder { get; set; }
         public void CollectRequest()
         {
             Request req = request;
@@ -246,7 +246,7 @@ namespace RTParser
         /// <summary>
         /// The user for whom this is a result
         /// </summary>
-        // public User Requester { get; set; }
+        // public UserDuringProcessing Requester { get; set; }
         //  public OutputDelegate writeToLog { get; set; } // = RTPBot.writeDebugLine;
         public int TemplatesSucceeded { get; set; }
 
@@ -266,7 +266,7 @@ namespace RTParser
             Result
 #endif // interface
             
-            (string rawInput, User user, RTPBot bot, Request parent, User targetUser)
+            (string rawInput, UserDuringProcessing user, RTPBot bot, Request parent, UserDuringProcessing targetUser)
             : base(parent)
         {
             this.request = parent;
@@ -428,7 +428,7 @@ namespace RTParser
             set { CurrentQuery.TargetSettings = value; }
         }
         
-        public User Responder
+        public UserDuringProcessing Responder
         {
             get { return request.Responder; }
           //  set { request.Responder = value; }
@@ -525,7 +525,12 @@ namespace RTParser
         private int _hasSuceeded = -1;
         public int HasSuceeded
         {
-            get { return _hasSuceeded + (useParentSF ? ParentRequest.HasSuceeded : 0); }
+            get
+            {
+                int ret = _hasSuceeded + (useParentSF ? ParentRequest.HasSuceeded : 0);
+                if (ret < 0) throw new InvalidOperationException();
+                return ret;
+            }
             set
             {
                 if (_hasSuceeded < 1)
@@ -565,7 +570,7 @@ namespace RTParser
             get { return request.TargetBot; }
         }
 
-        public User Requester
+        public UserDuringProcessing Requester
         {
             get { return request.Requester; }
            // set { request.Requester = value; }

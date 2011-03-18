@@ -12,13 +12,13 @@ using RTParser.Variables;
 
 namespace RTParser
 {
-    public interface UserConversationScope : IUser
+    public interface UserConversationScope : UserStaticModel, IUser
     {
         /// <summary>
         /// Returns the sematantic meaning to use for the next <that/> part of a subsequent path
         /// </summary>
         /// <returns>the Unifiable to use for that</returns>
-        Unifiable LastSaidByReponder(User responder);
+        Unifiable LastSaidByReponder(UserConversationScope responder);
 
         /// <summary>
         /// Returns the first sentence of the last output from the bot
@@ -93,13 +93,13 @@ namespace RTParser
 
         Result GetResult(int i);
         Result GetResult(int i, bool mustBeSalient);
-        Result GetResult(int i, bool mustBeSalient, User responder);
+        Result GetResult(int i, bool mustBeSalient, UserConversationScope responder);
 
         Result LastResult { get; }
         int SailentResultCount { get; }
         Unifiable That { get; set; }
         Unifiable ResponderJustSaid { get; set; }
-        User LastResponder { get; set; }
+        UserDuringProcessing LastResponder { get; set; }
         Unifiable JustSaid { get; set; }
         /// <summary>
         /// the value of the "topic" predicate
@@ -112,7 +112,7 @@ namespace RTParser
         IEnumerable<Unifiable> BotOutputs { get; }
     }
 
-    public interface UserDuringProcessing: ISettingsDictionary, IUser
+    public interface UserDuringProcessing : ISettingsDictionary, IUser, UserConversationScope
     {
         actMSM botActionMSM { get; }
 
@@ -143,6 +143,13 @@ namespace RTParser
         void InsertProvider(ParentProvider pp);
         Request CurrentRequest { get; set; }
         bool SuspendAddResultToUser { get; set; }
+        //string UserID { get; set; }
+      //  UserDuringProcessing LastResponder { get; }
+      //  Unifiable ResponderJustSaid { get; set; }
+      //  Unifiable JustSaid { get; set; }
+        bool IsValid { get; set; }
+        //  string UserName { get; set; }
+        bool IsNamed(string lname);
     }
 
     public interface IUser
@@ -738,7 +745,7 @@ namespace RTParser
         /// Returns the Unifiable to use for the next that part of a subsequent path
         /// </summary>
         /// <returns>the Unifiable to use for that</returns>
-        public Unifiable LastSaidByReponder(User responder)
+        public Unifiable LastSaidByReponder(UserConversationScope responder)
         {
             if (this.SailentResultCount > 0)
             {
@@ -1076,7 +1083,12 @@ namespace RTParser
             }
         }
 
-        private User LastReponderFromDictionary()
+        public bool IsNamed(string lname)
+        {
+            return UserName == lname || UserID == lname;
+        }
+
+        private UserDuringProcessing LastReponderFromDictionary()
         {
             foreach (var name in NamesStrings("you,lastusername,lastuserid"))
             {
@@ -1093,8 +1105,8 @@ namespace RTParser
                 {
                     if (LastResult != null)
                     {
-                        User user0 = LastResultOtherParticipant();
-                        if (user0.UserName == lname || user0.UserID == lname)
+                        UserDuringProcessing user0 = LastResultOtherParticipant();
+                        if (user0.IsNamed(lname))
                         {
                             return user0;
                         }
@@ -1108,8 +1120,8 @@ namespace RTParser
             }
             return null;
         }
-        private User _LastResponderCahced = null;
-        public User LastResponder
+        private UserDuringProcessing _LastResponderCahced = null;
+        public UserDuringProcessing LastResponder
         {
             get
             {
@@ -1127,19 +1139,21 @@ namespace RTParser
             {
                 if (value == null || value == this) return;
                 _LastResponderCahced = value;
-                Predicates["lastuserid"] = value.UserID;
-                Predicates["lastusername"] = value.UserName;
-                Predicates["you"] = value.UserName;
-                Predicates["yourself"] = value.UserName;
-                Predicates["your"] = NatLangDb.MakePossesive(value.UserName);
+                UserStaticModel sm = value.StaticModel;
+                Predicates["lastuserid"] = sm.UserID;
+                string userName = sm.UserName;
+                Predicates["lastusername"] = userName;
+                Predicates["you"] = userName;
+                Predicates["yourself"] = userName;
+                Predicates["your"] = NatLangDb.MakePossesive(userName);
             }
         }
 
-        private User LastResultOtherParticipant()
+        private UserDuringProcessing LastResultOtherParticipant()
         {
             if (LastResult != null)
             {
-                User lastResultResponder = LastResult.Responder;
+                UserDuringProcessing lastResultResponder = LastResult.Responder;
                 if (lastResultResponder != this && lastResultResponder != null) return lastResultResponder;
                 lastResultResponder = LastResult.Requester;
                 if (lastResultResponder != this && lastResultResponder != null) return lastResultResponder;
@@ -1257,7 +1271,7 @@ namespace RTParser
             return GetResult(i, mustBeSalient, null);
         }
 
-        public Result GetResult(int i, bool mustBeSalient, User responder)
+        public Result GetResult(int i, bool mustBeSalient, UserConversationScope responder)
         {
             bool mustBeResponder = responder != null;
             if (i == -1) return CurrentRequest.CurrentResult;
@@ -1652,7 +1666,7 @@ namespace RTParser
             //depth = 0;
             MasterRequest request;
 
-            target = target ?? LastResponder;
+            target = target ?? LastResponder.Value;
             Unifiable targetJustSaid = ResponderJustSaid;
             if (target != null) targetJustSaid = target.JustSaid;
             if (parentRequest == null)

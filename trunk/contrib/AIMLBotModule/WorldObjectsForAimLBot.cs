@@ -145,7 +145,7 @@ namespace AIMLBotModule
             User prev = MyUser;
             try
             {
-                MyUser = request.Requester;
+                MyUser = request.Requester.Value;
                 StringWriter sw = new StringWriter();
                 {
                     CmdResult s;

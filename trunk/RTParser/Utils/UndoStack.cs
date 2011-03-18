@@ -2,25 +2,74 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using java.lang;
 using RTParser.Variables;
+using Exception=System.Exception;
+using String=System.String;
 
 namespace RTParser.Utils
 {
+    public class NamedAction
+    {
+        public string Name;
+        public ThreadStart Value;
+
+        public NamedAction(string named, ThreadStart start)
+        {
+            Name = named;
+            Value = start;
+        }
+
+        public override string ToString()
+        {
+            return "NamedThreadStart: " + Name ?? "NONAME" + " " + Value ?? "NULLVALUE";
+        }
+
+        internal void Invoke(string prefix)
+        {
+            try
+            {
+                if (prefix != null) RTPBot.writeDebugLine(prefix + "INVOKING: " + Name);
+                Value();
+            }
+            catch (Exception e)
+            {
+
+                RTPBot.writeDebugLine(this + " error " + e);
+                
+                
+            }
+        }
+    }
     public class UndoStack
     {
         private static readonly Dictionary<object, UndoStack> ObjectUndoStacks = new Dictionary<object, UndoStack>();
-        private object objext;
-        private Stack<ThreadStart> todo;
-        private Stack<ThreadStart> commits;
+        private readonly object objext;
+        private Stack<NamedAction> todo;
 
-        private UndoStack(object o)
+        public override string ToString()
         {
+            return "UndoStack " + Size + " for " + objext;
+        }
+
+        protected int Size
+        {
+            get
+            {
+                if (todo == null) return -1;
+                return todo.Count;
+            }
+        }
+
+        public UndoStack(object o)
+        {
+            objext = o;
             UndoStackHolder holder = o as UndoStackHolder;
+            holder.UndoStackValue = this;           
             if (holder != null)
             {
                 holder.UndoStackValue = this;
             }
-            objext = o;
         }
 
         public bool pushValues(ISettingsDictionary settings, string n, Unifiable v)
@@ -33,10 +82,11 @@ namespace RTParser.Utils
             {
                 return false;
             }
+            string debugStr = String.Format("pushValues {0} {1} {2}", settings, n, v);
             if (!local)
             {
                 settings.addSetting(n, v);
-                AddUndo(() =>
+                AddUndo(debugStr,() =>
                             {
                                 Unifiable newValue = settings.grabSetting(n);
                                 if (newValue != v)
@@ -50,7 +100,7 @@ namespace RTParser.Utils
             else
             {
                 settings.updateSetting(n, v);
-                AddUndo(() =>
+                AddUndo(debugStr,() =>
                             {
                                 Unifiable newValue = settings.grabSetting(n);
                                 if (newValue != v)
@@ -69,24 +119,24 @@ namespace RTParser.Utils
             RTPBot.writeDebugLine(message, args);
         }
 
-        public void AddUndo(ThreadStart start)
+        public void AddUndo(string named, ThreadStart start)
         {
             lock (this)
             {
-                if (todo == null) todo = new Stack<ThreadStart>();
-                this.todo.Push(start);
+                if (todo == null) todo = new Stack<NamedAction>();
+                this.todo.Push(new NamedAction(named, start));
             }
         }
 
-        public void AddCommit(ThreadStart start)
+        /*public void AddCommit(NamedAction start)
         {
             lock (this)
             {
-                if (commits == null) commits = new Stack<ThreadStart>();
+                if (commits == null) commits = new Stack<NamedAction>();
                 this.commits.Push(start);
             }
         }
-
+        */
         public void UndoAll()
         {
             lock (this)
@@ -95,18 +145,18 @@ namespace RTParser.Utils
                 DoAll(todo);
             }
         }
-        public static void DoAll(Stack<ThreadStart> todo)
+        public static void DoAll(Stack<NamedAction> todo)
         {
             lock (todo)
             {
                 while (todo.Count > 0)
                 {
-                    ThreadStart undo = todo.Pop();
+                    NamedAction undo = todo.Pop();
                     if (undo != null)
                     {
                         try
                         {
-                            undo();
+                            undo.Invoke("UNSTACK ");
                         }
                         catch (Exception exception)
                         {
@@ -117,18 +167,10 @@ namespace RTParser.Utils
             }
         }
 
-        public void CommitAll()
-        {
-            lock (this)
-            {
-                if (commits == null) return;
-                DoAll(commits);
-            }
-        }
-
-        public static UndoStack GetStackFor(object o)
+        public static UndoStack GetStackFor(UndoStackHolder o)
         {
             UndoStackHolder holder = o as UndoStackHolder;
+            holder.ToString();
             UndoStack u;
             if (holder != null)
             {                
@@ -146,27 +188,30 @@ namespace RTParser.Utils
             }
         }
 
+        [Deprecated]
         public static UndoStack FindStackFor(object o, bool remove)
         {
             if (o == null) return null;
-            UndoStackHolder holder = o as UndoStackHolder;
             UndoStack u;
-            if (holder != null)
-            {
-                u = holder.UndoStackValue;
-                if (u != null) return u;
-            }
+            UndoStackHolder holder = o as UndoStackHolder;
+            holder.ToString();
             if (remove)
             {
                 lock (ObjectUndoStacks)
                 {
                     if (ObjectUndoStacks.TryGetValue(o, out u))
-                    {                       
+                    {
                         ObjectUndoStacks.Remove(o);
                         return u;
                     }
                 }
             }
+            if (holder != null)
+            {
+                u = holder.UndoStackValue;
+                if (u != null) return u;
+            }
+
             return null;
         }
 
@@ -187,7 +232,7 @@ namespace RTParser.Utils
             {
                 if (ObjectUndoStacks.TryGetValue(o, out u))
                 {
-                    ObjectUndoStacks.Remove(o);
+                    if (remove) ObjectUndoStacks.Remove(o);
                     u.UndoAll();
                 }
             }

@@ -10,12 +10,12 @@ namespace RTParser
         /// <summary>
         /// The user that made this request
         /// </summary>
-        public User Requester { get; private set; }
+        public UserDuringProcessing Requester { get; private set; }
 
         /// <summary>
         /// The user respoinding to the request
         /// </summary>
-        public User Responder { get; private set; }
+        public UserDuringProcessing Responder { get; private set; }
 
         /// <summary>
         /// 

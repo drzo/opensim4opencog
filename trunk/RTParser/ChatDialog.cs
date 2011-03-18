@@ -66,10 +66,10 @@ namespace RTParser
                 if (BotAsUser != null)
                 {
                     var LR = BotAsUser.LastResponder;
-                    if (LR != null) return LR;
+                    if (LR != null) return LR.Value;
                 }
                 if (IsInteractiveUser(_lastUser)) return _lastUser;
-                User LU = _lastResult != null ? _lastResult.Requester : null;
+                User LU = _lastResult != null ? _lastResult.Requester.Value : null;
                 if (IsInteractiveUser(LU)) return LU;
                 return null;
             }
@@ -113,13 +113,13 @@ namespace RTParser
                 {
                     _lastResult = value;
                 }
-                LastUser = value.Requester;
+                LastUser = value.Requester.Value;
 
                 if (LR != null && LR.Requester != BotAsUser)
                 {
                     if (value.Requester != LR.Requester)
                     {
-                        _lastUser = value.Requester ?? _lastUser;
+                        _lastUser = (value.Requester ?? _lastUser).Value;
                     }
                 }
             }
@@ -319,7 +319,7 @@ namespace RTParser
             if (!res.IsEmpty)
             {
                 useOut = res.Output;
-                CurrentUser = res.Requester;
+                CurrentUser = res.Requester.Value;
                 string oTest = ToEnglish(useOut);
                 if (oTest != null && oTest.Length > 2)
                 {
@@ -460,7 +460,7 @@ namespace RTParser
                     request.UndoAll();
                     request.CommitSideEffects(true);
                     request.Exit();
-                    request.SetSpeakerAndResponder(user, parentResultIn.Responder);
+                    request.SetSpeakerAndResponder(user, parentResultIn.Responder.Value);
                 }
             }
         }
@@ -543,7 +543,7 @@ namespace RTParser
                 if (isTraced) this.writeToLog("ERROR {0} getting back {1}", request, nai);
                 request.AddOutputSentences(null, nai, parentResult);
             }
-            User popu = originalRequestor ?? request.Requester ?? parentResult.Requester;
+            User popu = (originalRequestor ?? request.Requester ?? parentResult.Requester).Value;
             parentResult.IsComplete = true;
             childResult = childResult ?? parentResult;
             parentResult.SetOutput = childResult.RawOutput;
@@ -766,7 +766,7 @@ namespace RTParser
         }
         internal void PopulateUserWithResult(User user, Request request, Result result)
         {
-            User popu = user ?? request.Requester ?? result.Requester;
+            User popu = (user ?? request.Requester ?? result.Requester).Value;
             // toplevel result
             var info = result.ProofTemplate();
             // only the toplevle query popuklates the user object

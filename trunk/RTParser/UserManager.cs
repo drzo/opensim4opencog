@@ -926,7 +926,7 @@ namespace RTParser
 
         public string OutputResult(Result res, OutputDelegate console, bool includeWeigth)
         {
-            User CurrentUser = res.Requester;
+            User CurrentUser = res.Requester.Value;
             string user = CurrentUser.UserName;
             string useOut = res.EnglishOutput;
             double vscored;
@@ -995,7 +995,7 @@ namespace RTParser
             return said;
         }
 
-        public bool IsInteractiveUser(User value)
+        public bool IsInteractiveUser(IUser value)
         {
             return value != null && value != BotAsUser && value != ExemplarUser;
         }
