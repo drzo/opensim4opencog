@@ -12,151 +12,11 @@ using RTParser.Variables;
 
 namespace RTParser
 {
-    public interface UserConversationScope : UserStaticModel, IUser
-    {
-        /// <summary>
-        /// Returns the sematantic meaning to use for the next <that/> part of a subsequent path
-        /// </summary>
-        /// <returns>the Unifiable to use for that</returns>
-        Unifiable LastSaidByReponder(UserConversationScope responder);
-
-        /// <summary>
-        /// Returns the first sentence of the last output from the bot
-        /// </summary>
-        /// <returns>the first sentence of the last output from the bot</returns>
-        Unifiable getThat(User responder);
-
-        /// <summary>
-        /// Returns the first sentence of the output "n" steps ago from the bot
-        /// </summary>
-        /// <param name="n">the number of steps back to go</param>
-        /// <returns>the first sentence of the output "n" steps ago from the bot</returns>
-        Unifiable getThat(int n, User responder);
-
-        /// <summary>
-        /// Returns the sentence numbered by "sentence" of the output "n" steps ago from the bot
-        /// </summary>
-        /// <param name="n">the number of steps back to go</param>
-        /// <param name="sentence">the sentence number to get</param>
-        /// <returns>the sentence numbered by "sentence" of the output "n" steps ago from the bot</returns>
-        Unifiable getThat(int n, int sentence, User responder);
-
-        /// <summary>
-        /// Returns the first sentence of the last output from the bot
-        /// </summary>
-        /// <returns>the first sentence of the last output from the bot</returns>
-        Unifiable getInputSentence(User responder);
-
-        /// <summary>
-        /// Returns the first sentence from the output from the bot "n" steps ago
-        /// </summary>
-        /// <param name="n">the number of steps back to go</param>
-        /// <returns>the first sentence from the output from the bot "n" steps ago</returns>
-        Unifiable getInputSentence(int n, User responder);
-
-        /// <summary>
-        /// Returns the identified sentence number from the input from the bot "n" steps ago
-        /// </summary>
-        /// <param name="n">the number of steps back to go</param>
-        /// <param name="sentence">the sentence number to return</param>
-        /// <returns>the identified sentence number from the input from the bot "n" steps ago</returns>
-        Unifiable getInputSentence(int n, int sentence, User responder);
-
-        /// <summary>
-        /// Returns the identified sentence number from the input from the bot "n" steps ago
-        /// </summary>
-        /// <param name="n">the number of steps back to go</param>
-        /// <param name="sentence">the sentence number to return</param>
-        /// <returns>the identified sentence number from the input from the bot "n" steps ago</returns>
-        Unifiable getRequestSentence(int n, int sentence, User responder);
-
-        /// <summary>
-        /// Returns the first sentence of the last output from the bot
-        /// </summary>
-        /// <returns>the first sentence of the last output from the bot</returns>
-        Unifiable getResultSentence(User responder);
-
-        /// <summary>
-        /// Returns the first sentence from the output from the bot "n" steps ago
-        /// </summary>
-        /// <param name="n">the number of steps back to go</param>
-        /// <returns>the first sentence from the output from the bot "n" steps ago</returns>
-        Unifiable getResultSentence(int n, User responder);
-
-        /// <summary>
-        /// Returns the identified sentence number from the output from the bot "n" steps ago
-        /// </summary>
-        /// <param name="n">the number of steps back to go</param>
-        /// <param name="sentence">the sentence number to return</param>
-        /// <returns>the identified sentence number from the output from the bot "n" steps ago</returns>
-        Unifiable getResultSentence(int n, int sentence, User responder);
-
-        Result GetResult(int i);
-        Result GetResult(int i, bool mustBeSalient);
-        Result GetResult(int i, bool mustBeSalient, UserConversationScope responder);
-
-        Result LastResult { get; }
-        int SailentResultCount { get; }
-        Unifiable That { get; set; }
-        Unifiable ResponderJustSaid { get; set; }
-        UserDuringProcessing LastResponder { get; set; }
-        Unifiable JustSaid { get; set; }
-        /// <summary>
-        /// the value of the "topic" predicate
-        /// </summary>
-
-        Unifiable Topic { get; }
-        Unifiable TopicSetting { get; set; }
-        IList<Unifiable> Topics { get; }
-
-        IEnumerable<Unifiable> BotOutputs { get; }
-    }
-
-    public interface UserDuringProcessing : ISettingsDictionary, IUser, UserConversationScope
-    {
-        actMSM botActionMSM { get; }
-
-        //void SetOutputSentences(string args, User responder);
-        bool CanUseTemplate(TemplateInfo info, Result request);
-
-        ListAsSet<TemplateInfo> VisitedTemplates { get; set; }
-        ListAsSet<TemplateInfo> UsedChildTemplates { get; set; }
-        ListAsSet<TemplateInfo> DisabledTemplates { get; set; }
-        ListAsSet<TemplateInfo> ProofTemplates { get; set; }
-        ICollection<GraphMaster> DisallowedGraphs { get; set; }
-#if DEBUG_ALLQUERIES
-        ListAsSet<GraphQuery> AllQueries { get; set; }
-#endif
-        //int depth { get; set; }
-
-        Unifiable grabSettingNoDebug(string arg);
-        void Enter(ConversationScopeHolder srai);
-        void Exit(ConversationScopeHolder srai);
-
-        GraphMaster ListeningGraph { get; set; }
-        void addResultTemplates(Result result);
-        void addRequestTemplates(Request request);
-        void addResult(Result result);
-
-        string GraphName { get; set; }
-        SettingsDictionary Predicates { get; set; }
-        void InsertProvider(ParentProvider pp);
-        Request CurrentRequest { get; set; }
-        bool SuspendAddResultToUser { get; set; }
-        //string UserID { get; set; }
-      //  UserDuringProcessing LastResponder { get; }
-      //  Unifiable ResponderJustSaid { get; set; }
-      //  Unifiable JustSaid { get; set; }
-        bool IsValid { get; set; }
-        //  string UserName { get; set; }
-        bool IsNamed(string lname);
-    }
-
     public interface IUser
     {
         UserStaticModel StaticModel { get; }
         UserConversationScope ConversationScope { get; }
-        UserDuringProcessing DuringProcessing { get; }
+        UserConversationScope DuringProcessing { get; }
         User Value { get; }
     }
 
@@ -193,6 +53,7 @@ namespace RTParser
         QuerySettings GetQuerySettings();
         QuerySettings GetQuerySettingsSRAI();
         ConversationLog GetConversationLog(string userName, bool createIfMissing);
+        bool IsNamed(string lname);
     }
 
     public interface User : IUser, UserStaticModel, UserConversationScope, UserDuringProcessing
@@ -1015,7 +876,7 @@ namespace RTParser
                     var llr = LastResponder.LastResponder;
                     if (llr == this)
                     {
-                        vv = LastResponder.Predicates.grabSetting("lastheard");
+                        vv = LastResponder.Value.Predicates.grabSetting("lastheard");
                         if (IsSomething(vv, out something)) return something;
                     }
                     // infinate loop here -> return LastReponder.ResponderJustSaid;
@@ -1088,7 +949,7 @@ namespace RTParser
             return UserName == lname || UserID == lname;
         }
 
-        private UserDuringProcessing LastReponderFromDictionary()
+        private UserConversationScope LastReponderFromDictionary()
         {
             foreach (var name in NamesStrings("you,lastusername,lastuserid"))
             {
@@ -1105,7 +966,7 @@ namespace RTParser
                 {
                     if (LastResult != null)
                     {
-                        UserDuringProcessing user0 = LastResultOtherParticipant();
+                        UserConversationScope user0 = LastResultOtherParticipant();
                         if (user0.IsNamed(lname))
                         {
                             return user0;
@@ -1120,19 +981,19 @@ namespace RTParser
             }
             return null;
         }
-        private UserDuringProcessing _LastResponderCahced = null;
-        public UserDuringProcessing LastResponder
+        private UserConversationScope _LastResponderCahced = null;
+        public UserConversationScope LastResponder
         {
             get
             {
                 if (_LastResponderCahced != null)
                 {
 
-                    if (_LastResponderCahced.IsValid) return _LastResponderCahced;                     
+                    if (_LastResponderCahced.Value.IsValid) return _LastResponderCahced;                     
                     _LastResponderCahced = null;
                 }
                 _LastResponderCahced = LastReponderFromDictionary();
-                if (_LastResponderCahced != null && _LastResponderCahced.IsValid) return _LastResponderCahced;
+                if (_LastResponderCahced != null && _LastResponderCahced.Value.IsValid) return _LastResponderCahced;
                 return LastResultOtherParticipant();
             }
             set
@@ -1149,11 +1010,11 @@ namespace RTParser
             }
         }
 
-        private UserDuringProcessing LastResultOtherParticipant()
+        private UserConversationScope LastResultOtherParticipant()
         {
             if (LastResult != null)
             {
-                UserDuringProcessing lastResultResponder = LastResult.Responder;
+                UserConversationScope lastResultResponder = LastResult.Responder;
                 if (lastResultResponder != this && lastResultResponder != null) return lastResultResponder;
                 lastResultResponder = LastResult.Requester;
                 if (lastResultResponder != this && lastResultResponder != null) return lastResultResponder;
@@ -1768,7 +1629,7 @@ namespace RTParser
             get { return this; }
         }
 
-        public UserDuringProcessing DuringProcessing
+        public UserConversationScope DuringProcessing
         {
             get { return this; }
         }
@@ -1780,68 +1641,8 @@ namespace RTParser
         }
     }
 
-    public class ConversationLog
-    {
-        static public readonly Dictionary<string, ConversationLog> ConversationLogs = new Dictionary<string, ConversationLog>();
-
-        private string Key;
-        private User User1;
-        private User User2;
-        private ConversationLog(string find, User user1, User user2)
-        {
-
-            Key = find;
-            User1 = user1;
-            User2 = user2;
-        }
-
-        public static ConversationLog GetConversationLog(RTPBot robot, string userName1In, string userName2In, bool createIfMissing)
-        {
-            User user1 = robot.FindOrCreateUser(userName1In);
-            User user2 = robot.FindOrCreateUser(userName2In);
-            return GetConversationLog(user1, user2, createIfMissing);
-        }
-
-        public static ConversationLog GetConversationLog(User user1, User user2, bool createIfMissing)
-        {
-
-            // have to order the user names
-            if (user1.UserID.CompareTo(user2.UserID) > 0)
-            {
-                User userMid = user2;
-                user2 = user1;
-                user1 = userMid;
-            }
-
-            string find = user1.UserID + "<->" + user2.UserID;
-            lock (ConversationLogs)
-            {
-                ConversationLog tqh;
-                if (!ConversationLogs.TryGetValue(find, out tqh))
-                {
-                    if (!createIfMissing)
-                    {
-                        return null;
-                    }
-                    tqh = new ConversationLog(find, user1, user2);
-                    ConversationLogs[find] = tqh;
-                    return tqh;
-                }
-                return tqh;
-            }
-        }
-    }
-
     public interface ConversationScopeHolder
     {
         SituationInConversation ContextScope { get; }
-    }
-
-    public interface SituationInConversation
-    {
-        UserConversationScope Requester { get; }
-        Utterance TheUtterence { get; }
-        IEnumerable<UserConversationScope> Receivers { get; }
-        SubQuery CurrentQuery { get; set; }
     }
 }
