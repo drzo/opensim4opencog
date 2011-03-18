@@ -233,6 +233,7 @@ namespace RTParser.Utils
         {
             expectedAnswer = CleanPunct(CleanWhitepaces(expectedAnswer));
             expectedAnswer = expectedAnswer.Replace("<html:", "<");
+            expectedAnswer = expectedAnswer.Replace(" />", "/>");
             string was = expectedAnswer;
             expectedAnswer = expectedAnswer.Replace("<br xmlns:html=\"http://www.w3.org/1999/xhtml\"/>", " ");
             expectedAnswer = expectedAnswer.Replace("<br/>", " ");

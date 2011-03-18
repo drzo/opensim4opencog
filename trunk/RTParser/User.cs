@@ -194,20 +194,21 @@ namespace RTParser
         {
             get
             {
+                GraphMaster _uGraph = bot.GetUserGraph(NameSpace);
                 if (Predicates.containsSettingCalled("graphname"))
                 {
-                    GraphMaster _Graph = null;
+
                     Predicates.IsTraced = false;
                     var v = Predicates.grabSettingNoDebug("graphname");
-                    _Graph = bot.GetUserGraph(v);
+                    GraphMaster _Graph = bot.GetGraph(v, _uGraph);
                     if (_Graph != null)
                     {
                         return _Graph;
                     }
                     bot.writeToLog("ERROR CANT FIND graphname");
-                    return bot.GraphMaster;
+                    return _uGraph;
                 }
-                return bot.GraphMaster;
+                return _uGraph;
             }
             set
             {
@@ -1279,7 +1280,7 @@ namespace RTParser
 
         public GraphMaster ListeningGraph
         {
-            get { return bot.GetUserGraph(NameSpace); }
+            get { return SpeakingToRobot; }
             set { SpeakingToRobot = value; }
         }
 
