@@ -12,6 +12,7 @@ namespace RTParser.AIMLTagHandlers
     /// </summary>
     public class random : RTParser.Utils.AIMLTagHandler
     {
+        static Random r = new Random();
         /// <summary>
         /// Ctor
         /// </summary>
@@ -61,8 +62,7 @@ namespace RTParser.AIMLTagHandlers
                     List<XmlNode> useNodes = new List<XmlNode>();
                     while (maxConditions-- > 0 && listNodes.Count > 0)
                     {
-                        Random r = new Random();
-                        XmlNode chosenNode = listNodes[r.Next(listNodes.Count)];
+                        XmlNode chosenNode = listNodes[r.Next(0, listNodes.Count - 1)];
                         listNodes.Remove(chosenNode);
                         var childResult = ProcessChildNode(chosenNode);
                         if (childResult != null)
