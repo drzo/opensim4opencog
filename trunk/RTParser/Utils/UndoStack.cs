@@ -29,13 +29,13 @@ namespace RTParser.Utils
         {
             try
             {
-                if (prefix != null) RTPBot.writeDebugLine(prefix + "INVOKING: " + Name);
-                Value();
+               // if (prefix != null) RTPBot.writeDebugLine(prefix + "INVOKING: " + Name);
+                Value.Invoke();
             }
             catch (Exception e)
             {
 
-                RTPBot.writeDebugLine(this + " error " + e);
+                RTPBot.writeDebugLine("ERROR " + prefix + " in " + this + "\n -reason: " + e);
                 
                 
             }

@@ -266,7 +266,7 @@ namespace RTParser
             Result
 #endif // interface
             
-            (string rawInput, UserDuringProcessing user, RTPBot bot, Request parent, UserDuringProcessing targetUser)
+            (string rawInput, UserDuringProcessing user, RTPBot bot, Request parent, UserConversationScope targetUser)
             : base(parent)
         {
             this.request = parent;
@@ -277,7 +277,7 @@ namespace RTParser
             request = parent;
             ChatInput = parent.ChatInput;
             //this.Requester = user;
-            //this.Responder = targetUser;
+            altResponder = targetUser;
             request.TargetBot = bot;
             ChatOutput = new ParsedSentences(bot.EnsureEnglish, MaxPrintResults);
             OutputSentences = ChatOutput.SemanticSentences;
@@ -427,10 +427,18 @@ namespace RTParser
             get { return CurrentQuery.TargetSettings; }
             set { CurrentQuery.TargetSettings = value; }
         }
-        
-        public UserDuringProcessing Responder
+
+        public UserConversationScope altResponder = null;
+        public UserConversationScope Responder
         {
-            get { return request.Responder; }
+            get
+            {
+                if (altResponder != request.Responder)
+                {
+                    if (altResponder != null) return altResponder;
+                }
+                return request.Responder;
+            }
           //  set { request.Responder = value; }
         }
 
@@ -570,7 +578,7 @@ namespace RTParser
             get { return request.TargetBot; }
         }
 
-        public UserDuringProcessing Requester
+        public UserConversationScope Requester
         {
             get { return request.Requester; }
            // set { request.Requester = value; }

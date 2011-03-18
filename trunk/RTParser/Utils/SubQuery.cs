@@ -780,27 +780,6 @@ namespace RTParser.Utils
         ISettingsDictionary TargetSettings { get; set; }
     }
 
-    public interface Utterance
-    {
-        /// <summary>
-        /// The user that made this request
-        /// </summary>
-        UserDuringProcessing Requester { get; }
-        /// <summary>
-        /// The user respoinding to the request
-        /// </summary>
-        UserDuringProcessing Responder { get; }
-        /// <summary>
-        /// The last meaning unit extracted from what the responder said
-        /// </summary>
-        Unifiable That { get; }
-        /// <summary>
-        /// The raw input from the user
-        /// (also the last thing the requester said)
-        /// </summary>
-        Unifiable RawInput { get; }
-    }
-
 #if _FALSE_
     public class UList : IEnumerable<TemplateInfo>
     {
