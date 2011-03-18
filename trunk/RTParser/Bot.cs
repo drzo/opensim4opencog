@@ -1400,6 +1400,7 @@ The AIMLbot program.
 
         public GraphMaster GetUserGraph(string graphPath)
         {
+            //graphPath = "default";
             if (!graphPath.Contains("_to_"))
             {
                 graphPath = ToLower(ConsolidSpaces(Trim(graphPath + "_to_" + this.NamePath)));
@@ -1721,10 +1722,13 @@ The AIMLbot program.
                 }
                 if (_g == null)
                 {
+                    GraphMaster od;
+                    GraphsByName.TryGetValue("default", out od);
                     _g = GraphMaster.FindOrCreate(dgn);
+                    if (od == null) GraphsByName["default"] = _g;
+                    else _g.AddGenlMT(od, writeToLog);                        
                     _h //= TheUserListernerGraph 
                         = new GraphMaster(hgn);
-                    _g.AddGenlMT(GraphsByName["default"], writeToLog);
                     _h.AddGenlMT(GraphsByName["heardselfsay"], writeToLog);
                     _h.AddGenlMT(GraphsByName["listener"], writeToLog);
                     GraphsByName[dgn] = _g;
@@ -1779,8 +1783,8 @@ The AIMLbot program.
                 StaticInitStarted = true;
                 GraphsByName["listener"] = TheUserListenerGraph = GraphMaster.FindOrCreate("listener");
                 TheUserListenerGraph.SilentTagsInPutParallel = false;
-                var defaultGraph = GraphsByName["default"] = GraphMaster.FindOrCreate("default");
-                defaultGraph.RemovePreviousTemplatesFromNodes = false;
+               // var defaultGraph = GraphsByName["default"] = GraphMaster.FindOrCreate("default");
+               // defaultGraph.RemovePreviousTemplatesFromNodes = false;
                 GraphsByName["heardselfsay"] = TheUserListenerGraph;////new GraphMaster("heardselfsay");
                 AddSettingsAliases("lastuserid", "you");
                 AddSettingsAliases("lastusername", "you");
