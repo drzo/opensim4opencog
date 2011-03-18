@@ -221,8 +221,8 @@ namespace RTParser.Utils
                 baseFile = HostSystem.ToCanonicalDirectory(".");
             }
             if (baseFile.EndsWith("/") || baseFile.EndsWith("\\")) return HostSystem.ToCanonicalDirectory(baseFile);
-            if (File.Exists(baseFile)) return HostSystem.ToCanonicalDirectory(new FileInfo(baseFile).DirectoryName);
-            if (Directory.Exists(baseFile)) return HostSystem.ToCanonicalDirectory(baseFile);
+            if (HostSystem.FileExists(baseFile)) return HostSystem.ToCanonicalDirectory(new FileInfo(baseFile).DirectoryName);
+            if (HostSystem.DirExists(baseFile)) return HostSystem.ToCanonicalDirectory(baseFile);
             string bd = HostSystem.ToCanonicalDirectory(HostSystem.GetBaseDir(baseFile));
             return bd;
         }
@@ -1351,7 +1351,7 @@ namespace RTParser.Utils
         public void writeToLog(string message, params object[] args)
         {
             string prefix = ToString();
-            prefix = SafeFormat("LOADERTRACE: " + message + " while " + prefix, args);
+            prefix = SafeFormat("LOADERTRACE: " + message + " while " + DLRConsole.NoFormatDirectives(prefix), args);
 
             try
             {

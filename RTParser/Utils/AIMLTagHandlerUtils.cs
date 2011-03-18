@@ -1,5 +1,6 @@
 using System;
 using System.Xml;
+using MushDLR223.Utilities;
 using RTParser.Variables;
 using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
 
@@ -113,7 +114,7 @@ namespace RTParser.Utils
                 writeToLogWarn("BAD " + unifiable, objs);
                 return;
             }
-            this.Proc.writeToLog("AIMLTRACE: " + unifiable + " in " + GetType().Name + "  " + LineNumberTextInfo(), objs);
+            this.Proc.writeToLog("AIMLTRACE: " + unifiable + DLRConsole.NoFormatDirectives(" in " + GetType().Name + "  " + LineNumberTextInfo()), objs);
         }
 
         #region Implementation of IXmlLineInfo

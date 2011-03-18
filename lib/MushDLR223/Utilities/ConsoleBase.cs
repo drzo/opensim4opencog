@@ -1952,5 +1952,11 @@ namespace MushDLR223.Utilities
                 return false;
             }
         }
+
+        public static string NoFormatDirectives(string prefix)
+        {
+            return prefix.Replace("{", "(").Replace("}", ")");
+
+        }
     }
 }
