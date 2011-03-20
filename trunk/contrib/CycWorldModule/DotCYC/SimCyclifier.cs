@@ -62,9 +62,9 @@ namespace CycWorldModule.DotCYC
         }// new Dictionary<string, CycFort>();
         static CycConnectionForm cycConnection;
         static readonly DateTime baseTime = new DateTime(1970, 1, 1, 0, 0, 0);
-        private static readonly TaskQueueHandler cycAccessQueueHandler = new TaskQueueHandler("CycAssertions", TimeSpan.Zero);
-        public static readonly TaskQueueHandler cycInfoMapSaver = new TaskQueueHandler("CycInfoMapSaver", TimeSpan.Zero);
-        private static TaskQueueHandler taskQueueHandler = null;// new TaskQueueHandler("SimCyclifier", 0);
+        private static readonly TaskQueueHandler cycAccessQueueHandler = new TaskQueueHandler("CycAssertions");
+        public static readonly TaskQueueHandler cycInfoMapSaver = new TaskQueueHandler("CycInfoMapSaver");
+        private static TaskQueueHandler SharedTaskQueueHandler = null;// new TaskQueueHandler("SimCyclifier", 0);
 
         readonly static public Dictionary<object, CycFort> cycTerms = new Dictionary<object, CycFort>(CompareKeys);
         readonly static public Dictionary<Object, int> hashChanges = new Dictionary<Object, int>(CompareKeys);
@@ -79,6 +79,7 @@ namespace CycWorldModule.DotCYC
         // ReSharper restore InconsistentNaming
         public void OnEvent(SimObjectEvent evt)
         {
+            return;
             if (cycAccess == null)
             {
                 //Console.WriteLine("No Cyc connection");
@@ -99,7 +100,7 @@ namespace CycWorldModule.DotCYC
                 OnEvent0(evt);
                 return;
             }
-            taskQueueHandler.Enqueue(() => OnEvent0(evt));
+            SharedTaskQueueHandler.Enqueue(() => OnEvent0(evt));
         }
 
         static public void OnEvent0(SimObjectEvent evt)
@@ -161,7 +162,7 @@ namespace CycWorldModule.DotCYC
         {
             IsDisposing = true;
             ProcessEvents = false;
-            taskQueueHandler.Dispose();
+            SharedTaskQueueHandler.Dispose();
             cycAccessQueueHandler.Dispose();
             cycInfoMapSaver.Dispose();
             DocQueue.Dispose();
@@ -194,10 +195,10 @@ namespace CycWorldModule.DotCYC
                 {
                     cycConnection = tf.CycConnectionForm;
                 }
-                if (taskQueueHandler == null)
+                if (SharedTaskQueueHandler == null)
                 {
-                    taskQueueHandler = new TaskQueueHandler("SimCyclifier", 0);
-                    taskQueueHandler.AddFirst(AssertKE);
+                    SharedTaskQueueHandler = new TaskQueueHandler("SimCyclifier");
+                    SharedTaskQueueHandler.AddFirst(AssertKE);
                 }
 
             }
@@ -905,7 +906,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
         public object FindOrCreateCycFort(TaskQueueHandler simObj)
         {
             //Trace();
-            return FindOrCreateCycFort(simObj.GetType(), simObj.Name);
+            return FindOrCreateCycFort(simObj.GetType(), simObj.Name.ToString());
         }
 
         public object FindOrCreateCycFort(Type type, string named)
@@ -2453,7 +2454,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
         }
 
         static Dictionary<Assembly, XElement> AssmblyXDoics = new Dictionary<Assembly, XElement>();
-        public TaskQueueHandler DocQueue = new TaskQueueHandler("Cyc Doc Queue", 0);
+        public TaskQueueHandler DocQueue = new TaskQueueHandler("Cyc Doc Queue", TimeSpan.FromSeconds(1), true);
         readonly public SimEventSubscriber eventFilter;
         public static double Dist100 = 100;
 

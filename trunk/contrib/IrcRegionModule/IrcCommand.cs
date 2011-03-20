@@ -171,7 +171,7 @@ namespace IrcRegionModule
                 {
                     string putsrv = String.Join(" ", args);
                     ircClient.WriteLine(putsrv);
-                    return Success("IRC SERVER: " + putsrv);
+                    return Success("IRC SERVER putsrv: " + putsrv);
 
                 }
                 RegionChannel = args[0];

@@ -3,7 +3,7 @@ using OpenMetaverse;
 
 namespace cogbot.Listeners
 {
-    abstract public class WorldObjectsModule :Listener
+    abstract public class WorldObjectsModule : AListener
     {
         public WorldObjects WorldSystem
         {
@@ -13,9 +13,10 @@ namespace cogbot.Listeners
             }
         }
 
-        public WorldObjectsModule(BotClient _parent) : base(_parent)
+        public WorldObjectsModule(BotClient _parent)
+            : base(_parent)
         {
-           // _parent.RegisterModule(this);
+            // _parent.RegisterModule(this);
         }
 
         public SimObject GetSimObject(Primitive prim)

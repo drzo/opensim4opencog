@@ -89,7 +89,7 @@ namespace RTParser
                 TaskQueueHandler tqh;
                 if (!TaskQueueHandlers.TryGetValue(find, out tqh))
                 {
-                    tqh = new TaskQueueHandler(UserName + " tq " + find, 1);
+                    tqh = new TaskQueueHandler(UserName + " tq " + find);
                     TaskQueueHandlers[find] = tqh;
                     tqh.Start();
                     return tqh;

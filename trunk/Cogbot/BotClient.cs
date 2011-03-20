@@ -473,7 +473,13 @@ namespace cogbot
             //manager.AddBotClientToTextForm(this);
 
             botPipeline = new SimEventMulticastPipeline(GetName());
-            OneAtATimeQueue = new TaskQueueHandler("BotStartupQueue " + GetName(), new TimeSpan(0, 0, 0, 0, 10), false);
+            OneAtATimeQueue = new TaskQueueHandler(this, new TimeSpan(0, 0, 0, 0, 10), true, true);
+
+            var OneAtATimeQueue1 = new TaskQueueHandler("See if takes up all cpu and then delete! " + GetName(), new TimeSpan(0, 0, 0, 0, 1), true, true);
+            OneAtATimeQueue1.Start();
+            var OneAtATimeQueue2 = new TaskQueueHandler("See if takes up all cpu and then delete! " + GetName(), new TimeSpan(0, 0, 0, 0, 1), true, true);
+            OneAtATimeQueue2.Start();
+
             ClientManager.PostAutoExecEnqueue(() =>
             {
                 OneAtATimeQueue.Start();
@@ -1547,18 +1553,73 @@ namespace cogbot
 
         }
 
-        readonly List<Assembly> KnownAssembies = new List<Assembly>();
-
-        public void LoadAssembly(Assembly assembly)
+        readonly Dictionary<Assembly, List<Listener>> KnownAssembies = new Dictionary<Assembly, List<Listener>>();
+        public void InvokeAssembly(Assembly assembly, string args, OutputDelegate output)
         {
+            LoadAssembly(assembly);
+            List<Listener> items = null;
             lock (KnownAssembies)
             {
-                if (KnownAssembies.Contains(assembly))
-                    return;
-                KnownAssembies.Add(assembly);
+                if (!KnownAssembies.TryGetValue(assembly, out items))
+                {
+                    items = new List<Listener>();
+                    KnownAssembies.Add(assembly, items);
+                }
             }
-            ClientManager.RegisterAssembly(assembly);
+            lock (items)
+            {
+                foreach (Listener item in items)
+                {
+                    item.InvokeCommand(args, output);
+                }
+            }
+        }
+
+        private bool ConstructType(Assembly assembly, Type type, string name, Predicate<Type> when, Action<Type> action)
+        {
             bool found = false;
+            foreach (Type t in assembly.GetTypes())
+            {
+                try
+                {
+                    if (t.IsSubclassOf(type) && when(t))
+                    {
+                        try
+                        {
+                            found = true;
+                            Type type1 = t;
+                            InvokeNext(name + " " + t, () => action(type1));
+                        }
+                        catch (Exception e)
+                        {
+                            LogException("ERROR!  " + name + " " + t + " " + e + "\n In " + t.Name, e);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    WriteLine(e.ToString());
+                }
+            }
+            return found;
+        }
+
+        public Dictionary<Assembly, List<Listener>> AssemblyListeners = new Dictionary<Assembly, List<Listener>>();
+
+        public List<Listener> LoadAssembly(Assembly assembly)
+        {
+            ClientManager.RegisterAssembly(assembly);
+            List<Listener> items = null;
+            lock (KnownAssembies)
+            {
+                if (KnownAssembies.TryGetValue(assembly, out items))
+                {
+                    return items;
+                }
+                items = new List<Listener>();
+                KnownAssembies.Add(assembly, items);
+            }
+            bool found = false;               
 
             foreach (Type t in assembly.GetTypes())
             {
@@ -1574,6 +1635,7 @@ namespace cogbot
                                        {
                                            Listener command = (Listener)info.Invoke(new object[] { this });
                                            RegisterListener(command);
+                                           items.Add(command);
                                        });
 
                         }
@@ -1592,6 +1654,7 @@ namespace cogbot
             {
                 // throw new Exception("missing entry point " + assembly);
             }
+            return items;
         }
 
         /// <summary>

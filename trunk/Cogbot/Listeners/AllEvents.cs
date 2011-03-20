@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using System.Reflection;
@@ -16,7 +17,7 @@ using OpenMetaverse.Assets;
 namespace cogbot.Listeners
 {
 #pragma warning disable 0168
-    public abstract class AllEvents : Listener
+    public abstract class AllEvents : AListener
     {
         public AllEvents(BotClient bot)
             : base(bot)
