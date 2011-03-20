@@ -32,7 +32,10 @@ namespace IrcRegionModule
             var id = e.SourceID;
             var fromname = e.FromName;
             //string message, ChatAudibleLevel audible, ChatType type, ChatSourceType sourcetype, string fromname, UUID id, UUID ownerid, Vector3 position
-            if (!client.IsRegionMaster) return;
+            if (!client.IsRegionMaster)
+            {
+                return;
+            }
             if (IrcCommand == null) return;
             if (type == ChatType.StartTyping || type == ChatType.StopTyping) return;
             if (client.Self.AgentID == id || e.FromName == client.Self.Name)
@@ -43,7 +46,14 @@ namespace IrcRegionModule
                 {
                     fromname = message.Substring(0, colon);
                     message = message.Substring(colon + 1);
-                    if (!IrcCommand.IsFromIRC(fromname)) return;
+                    if (!IrcCommand.IsFromIRC(fromname))
+                    {
+                        return;
+                    }
+                    if (fromname == client.Self.Name)
+                    {
+                        return;
+                    }
                     client.Self.OnChat(new ChatEventArgs(e.Simulator, message, e.AudibleLevel, e.Type, e.SourceType,
                                                          fromname,
                                                          id, e.OwnerID, e.Position));

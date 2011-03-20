@@ -28,6 +28,12 @@ namespace AIMLBotModule
 {
     public class WorldObjectsForAimLBot : WorldObjectsModule, ICollectionProvider, ISettingsDictionary
     {
+
+        public override void InvokeCommand(string cmd, OutputDelegate output)
+        {
+            output("NotImplemented: " + this + " " + cmd);
+        }
+
         public bool IsTraced { get; set; }
         public IEnumerable<string> SettingNames(int depth)
         {
@@ -208,11 +214,16 @@ namespace AIMLBotModule
         public RTPBot _MyBot;
         private User _MyUser;
 
-        readonly TaskQueueHandler AimlBotReadSimData = new TaskQueueHandler("AIMLBot ReadSim", 1);
-        readonly TaskQueueHandler AimlBotRespond = new TaskQueueHandler("AIMLBot ChatRespond", 1);
+        readonly TaskQueueHandler AimlBotReadSimData = new TaskQueueHandler("AIMLBot ReadSim");
+        readonly TaskQueueHandler AimlBotRespond = new TaskQueueHandler("AIMLBot ChatRespond");
+		public static bool StartupBlocking = true;
 
         public override void StartupListener()
         {
+			if (StartupBlocking) {
+				StartupListener0();
+				return;
+			}
             AimlBotReadSimData.Enqueue(StartupListener0);
             AimlBotReadSimData.Enqueue(() => AimlBotRespond.Start());
             AimlBotReadSimData.Start();
@@ -850,7 +861,7 @@ namespace AIMLBotModule
             }
         }
 
-        static readonly TaskQueueHandler writeLock = new TaskQueueHandler("AIMLBot Console Writer", 0);
+        static readonly TaskQueueHandler writeLock = new TaskQueueHandler("AIMLBot Console Writer");
         public void WriteLine(string s, params object[] args)
         {
             if (args == null || args.Length == 0)

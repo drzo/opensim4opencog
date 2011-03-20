@@ -1280,11 +1280,20 @@ namespace RTParser
                     }
                 }
 
-                ithat = value;
+                var svalue = value;
+                if (svalue == "*" || svalue == "_" || svalue == "?")
+                {
+                    writeToLog("ERROR set_That: " + svalue + " from " + ithat);
+                    ithat = "Nothing";
+                }
+                else
+                {
+                    ithat = value;
+                }
                 if (UserImpl.ThatIsStoredBetweenUsers)
                 {
                     var responder = Responder;
-                    if (responder != null) responder.JustSaid = value;
+                    if (responder != null) responder.JustSaid = ithat;
                     //   throw new InvalidOperationException("must User.set_That()");
                 }
             }

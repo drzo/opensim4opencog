@@ -249,6 +249,42 @@ namespace MushDLR223.Utilities
                 }
                 else
                 {
+                    try
+                    {
+                        InvokeAsMene(request, response, _botClient, pathd, wrresp);
+                    }
+                    catch (Exception exception)
+                    {
+                        LogInfo("InvokeAsMene exception: " + exception);
+                    }
+                }
+                if (useHtml)
+                {
+                    AddToBody(response, "</pre>");
+                    AddToBody(response, "</body>");
+                    AddToBody(response, "</html>");
+                }
+            }
+            finally
+            {
+                wrresp.response = null;
+                response.Status = HttpStatusCode.OK;
+                try
+                {
+                    response.Send();
+                }
+                catch (Exception e)
+                {
+                    LogInfo("Exception sening respose: " + e);
+                }
+            }
+        }
+
+        private void InvokeAsMene(IHttpRequest request, IHttpResponse response, ScriptExecutor _botClient, string pathd, WriteLineToResponse wrresp)
+        {
+            {
+                {
+                    CmdResult res;
                     AddToBody(response, "<xml>");
                     AddToBody(response, "\n<!-- Begin Response !-->");
                     // this is our MeNe handler
@@ -259,8 +295,8 @@ namespace MushDLR223.Utilities
                     {
                         // example fragment
                         // <sapi> <silence msec="100" /> <bookmark mark="anim:hello.csv"/> Hi there </sapi>
-                        text = text.Replace("<sapi>", "");
-                        text = text.Replace("</sapi>", "");
+                        text = text.Replace("<sapi>", " ");
+                        text = text.Replace("</sapi>", " ").Trim();
                         while (text.Contains("<"))
                         {
                             int p1 = text.IndexOf("<");
@@ -286,25 +322,6 @@ namespace MushDLR223.Utilities
                     AddToBody(response, "");
                     AddToBody(response, "\n<!-- End Response !-->");
                     AddToBody(response, "</xml>");
-                }
-                if (useHtml)
-                {
-                    AddToBody(response, "</pre>");
-                    AddToBody(response, "</body>");
-                    AddToBody(response, "</html>");
-                }
-            }
-            finally
-            {
-                wrresp.response = null;
-                response.Status = HttpStatusCode.OK;
-                try
-                {
-                    response.Send();
-                }
-                catch (Exception e)
-                {
-                    LogInfo("Exception sening respose: " + e);
                 }
             }
         }

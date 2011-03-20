@@ -74,6 +74,7 @@ namespace cogbot.Actions.System
                         return Success("radegast " + arg0);
                     }
                 case "maximize":
+                case "maximized":
                     {
                         if (!PanelGUI.IsHandleCreated) return Success("No handle to " + arg0);
                         BeginInvoke(new MethodInvoker(() =>
@@ -94,6 +95,7 @@ namespace cogbot.Actions.System
                         return Success("radegast " + arg0);
                     }
                 case "minimize":
+                case "minimized":
                     {
                         if (!PanelGUI.IsHandleCreated) return Success("No handle to " + arg0);
                         TheBotClient.TheRadegastInstance.GlobalSettings["minimize_to_tray"] = new OSDBoolean(false);

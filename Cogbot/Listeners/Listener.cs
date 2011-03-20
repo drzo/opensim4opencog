@@ -1,16 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using MushDLR223.ScriptEngines;
 using OpenMetaverse; //using libsecondlife;
 
 namespace cogbot.Listeners
 {
-    abstract public class Listener:IDisposable
+    abstract public class AListener : Listener, IDisposable
     {
-     //   protected ClientManager botclient;
+        //   protected ClientManager botclient;
         public BotClient client;
 
-        public Listener(BotClient _parent)
+        public AListener(BotClient _parent)
         {
             //botclient = _parent;
             client = _parent;//.CurrentClient;
@@ -24,6 +25,19 @@ namespace cogbot.Listeners
         public abstract string GetModuleName();
 
         public abstract void StartupListener();
-        public abstract void Dispose();    
+
+        public virtual void InvokeCommand(string cmd, OutputDelegate output)
+        {
+            output("NotImplemented: " + this + " " + cmd);
+        }
+
+        public abstract void Dispose();
+    }
+
+    public interface Listener : IDisposable
+    {
+        string GetModuleName();
+        void StartupListener();
+        void InvokeCommand(string cmd, OutputDelegate output);
     }
 }
