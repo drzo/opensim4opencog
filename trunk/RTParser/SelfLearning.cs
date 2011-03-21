@@ -101,6 +101,9 @@ namespace RTParser
             bool lts = ListeningToSelf;
             bool prochp = ProcessHeardPreds;
             if (!lts && !prochp) return LR;
+            
+            message = GetUserMessage(message, ref theFactSpeaker, ref toWhom);
+
             bool toWhomNonNull = toWhom != null;
             string debug = "HeardSelfSay11Sentence: \"" + theFactSpeaker ?? "theFactSpeaker" + ": " + toWhom ?? "toWhom" + ", " + message + "\"";
             message = ToHeard(message);
@@ -145,6 +148,36 @@ namespace RTParser
             theFactSpeaker.JustSaid = message;
             if (toWhomNonNull) toWhom.JustSaid = realLast;
             return res;
+        }
+
+        private string GetUserMessage(string message, ref User theFactSpeaker, ref User toWhom)
+        {
+            string newMessage;
+            string newToWhom;
+            string newFromWhom;
+            if (theFactSpeaker == BotAsUser &&
+                TextPatternUtils.MessagePrefixName(":", message, out newToWhom, out newFromWhom, out newMessage))
+            {
+                message = newMessage;
+                theFactSpeaker = FindOrCreateUser(newFromWhom);
+                toWhom = FindOrCreateUser(newToWhom);
+            }
+            return message;
+        }
+
+        public string GetUserMessage(string message, ref string theFactSpeaker, ref string toWhom)
+        {
+            string newMessage;
+            string newToWhom;
+            string newFromWhom;
+            if (BotAsUser.IsNamed(theFactSpeaker) &&
+                TextPatternUtils.MessagePrefixName(":", message, out newToWhom, out newFromWhom, out newMessage))
+            {
+                message = newMessage;
+                theFactSpeaker = newFromWhom;
+                toWhom = newToWhom;
+            }
+            return message;
         }
 
         private Result RememberSpoken(User theFactSpeaker, User toWhom, string desc, string message, Result result, ThreadControl control)

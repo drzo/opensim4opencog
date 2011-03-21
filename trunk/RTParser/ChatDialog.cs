@@ -774,7 +774,7 @@ namespace RTParser
             {
                 if (info != null)
                 {
-                    user.ProofTemplates.Add(info);
+                    lock (user.TemplatesLock) user.ProofTemplates.Add(info);
                 }               
                 popu.addResult(result);
                 if (RotateUsedTemplate)

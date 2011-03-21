@@ -360,6 +360,11 @@ namespace RTParser
             {
                 string username = fullname;
                 fullname = CleanupFromname(fullname);
+                int spaces = TextPatternUtils.CountOf(fullname, " ");
+                if (spaces > 1)
+                {
+                    throw new InvalidCastException("fullname=" + fullname);
+                }
                 key = key.ToLower();
                 User myUser = new MasterUser(key, this);
                 myUser.userTrace = writeToUserLog;

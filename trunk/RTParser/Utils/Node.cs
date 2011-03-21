@@ -51,7 +51,7 @@ namespace RTParser.Utils
         /// <summary>
         /// The word that identifies this node to it's ParentResult node
         /// </summary>
-        private Unifiable word = Unifiable.Empty;
+        readonly Unifiable word = null;//Unifiable.Empty;
 
         //private GraphMaster _graph;
 
@@ -69,9 +69,14 @@ namespace RTParser.Utils
             }
         }
 
-        public Node(ParentChild P)
+        public Node(ParentChild P, Unifiable W)
         {
             _parentObject = P;
+            if (W != null && W.IsEmpty)
+            {
+                throw new InvalidCastException("Empty Node!");
+            }
+            word = W;
             //SyncObject = this;// P ?? this;
         }
 
@@ -771,8 +776,8 @@ namespace RTParser.Utils
 
                 if (!found)
                 {
-                    childNode = new Node(this);
-                    childNode.word = firstWord;
+                    childNode = new Node(this, firstWord);
+                    //childNode.word = firstWord;
                     initial = childNode.addPathNodeChilds(from + 1, path, categoryInfo);
                     AddChildNode(fs, childNode, (CategoryInfo)categoryInfo);
                 }

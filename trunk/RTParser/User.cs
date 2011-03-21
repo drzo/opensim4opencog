@@ -61,6 +61,7 @@ namespace RTParser
         void DisposeObject();
         bool IsValid { get; set; }
         GraphMaster SpeakingToRobot { get; set; }
+        object TemplatesLock { get; }
     }
 
     /// <summary>
@@ -221,6 +222,11 @@ namespace RTParser
                     bot.writeToLog("ERROR CANT FIND " + value.ScriptingName + " from " + lg);
                 }
             }
+        }
+
+        public object TemplatesLock
+        {
+            get { return VisitedTemplates; }
         }
 
         public string GraphName
@@ -1096,7 +1102,7 @@ namespace RTParser
 
         public void addResultTemplates(Result result)
         {
-            lock (VisitedTemplates)
+            lock (TemplatesLock)
             {
                 lock (result.ResultTemplates)
                     VisitedTemplates.AddRange(result.ResultTemplates);
@@ -1116,7 +1122,7 @@ namespace RTParser
 
         public void addRequestTemplates(Request request)
         {
-            lock (VisitedTemplates)
+            lock (TemplatesLock)
             {
                 lock (request.UsedResults)
                 {
@@ -1178,10 +1184,14 @@ namespace RTParser
 
         public bool CanUseTemplate(TemplateInfo info, Result request)
         {
+            lock (TemplatesLock)
+            {
+                if (DisabledTemplates.Contains(info)) return false;
+            }
 #if !(EXTREME_DEBUGGING)
             return true;
 #endif
-            lock (VisitedTemplates)
+            lock (TemplatesLock)
             {
                 if (VisitedTemplates.Contains(info))
                 {
@@ -1518,7 +1528,16 @@ namespace RTParser
 
         public MasterRequest CreateRequest(Unifiable message, User target)
         {            
-            return CreateRequest(message, target, GetResponseGraph(target), null);
+            var mr = CreateRequest(message, target, GetResponseGraph(target), null);
+            var roles = this.Predicates.grabSetting("roles");
+            if (!IsMissing(roles) && !IsNullOrEmpty(roles))
+            {
+                foreach (var role in roles.ToArray())
+                {
+                    mr.AddGraph(bot.GetUserGraph(role));
+                }
+            }
+            return mr;
         }
 
         public MasterRequest CreateRequest(Unifiable message, User target, GraphMaster G, Request parentRequest)

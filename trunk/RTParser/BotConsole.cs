@@ -616,7 +616,7 @@ namespace RTParser
                                                                         .Split(" \r\n\t".ToCharArray(),
                                                                                StringSplitOptions.RemoveEmptyEntries)) +
                                 "'],Out),writeq('----------------------------------------------'),writeq(Out),nl,halt.";
-                CSPrologMain.Main(new[] { callme });
+                CSPrologMain.Main(new[] {callme});
                 return true;
             }
 
@@ -686,7 +686,8 @@ namespace RTParser
                     said = args;
                 }
                 User factSpeaker = robot.FindOrCreateUser(who);
-                robot.HeardSelfSay1Sentence(factSpeaker, factSpeaker.LastResponder.Value, said, robot.LastResult, control);
+                robot.HeardSelfSay1Sentence(factSpeaker, factSpeaker.LastResponder.Value, said, robot.LastResult,
+                                            control);
                 return true;
             }
 
@@ -707,8 +708,13 @@ namespace RTParser
             printOptions = request.WriterOptions ?? PrintOptions.CONSOLE_LISTING;
             printOptions.ClearHistory();
 
-            if (showHelp || cmd == "proof") if (RTPBotCommands.ExecProof(request, cmd, console, showHelp, args, myUser))
+            if (showHelp || cmd == "proof")
+            {
+                lock (myUser.TemplatesLock)
+                {
+                if (RTPBotCommands.ExecProof(request, cmd, console, showHelp, args, myUser))
                     return true;
+            }}
             return false;
         }
 
@@ -777,25 +783,23 @@ namespace RTParser
                 }
                 else
                 {
-                    var CId = myUser.DisabledTemplates;
-                    var CI = myUser.ProofTemplates;
                     if (args == "disable")
                     {
-                        foreach (TemplateInfo C in CI)
+                        foreach (TemplateInfo C in myUser.ProofTemplates)
                         {
                             C.IsDisabled = true;
                             myUser.DisabledTemplates.Add(C);
                         }
-                        CI.Clear();
+                        myUser.ProofTemplates.Clear();
                     }
                     if (args == "enable" || args == "reset")
                     {
-                        foreach (TemplateInfo C in CId)
+                        foreach (TemplateInfo C in myUser.DisabledTemplates)
                         {
                             C.IsDisabled = false;
                             myUser.VisitedTemplates.Add(C);
                         }
-                        CId.Clear();
+                        myUser.DisabledTemplates.Clear();
                     }
                     console("-----------------------------------------------------------------");
                     console("-------DISABLED--------------------------------------");
