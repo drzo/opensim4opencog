@@ -536,5 +536,37 @@ namespace RTParser.Utils
             return param1.ToUpper();
         }*/
 
+        protected static bool MessagePrefixName(string sep, string message, out string toWhom, out string fromWhom, out string newMessage)
+        {
+            if (!SplitOff(message, sep, out fromWhom, out newMessage))
+            {
+                toWhom = null;
+                return false;
+            }
+            string newNewMessage;
+            if (SplitOff(newMessage, ",", out toWhom, out newNewMessage))
+            {
+                newMessage = newNewMessage;
+                return true;
+            } else
+            {
+                toWhom = null;
+            }
+            return true;
+        }
+
+        protected static int CountOf(string source, string findStr)
+        {
+            int found = 0;
+            int from = 0;
+            int at = source.IndexOf(findStr, from);
+            while (at > -1)
+            {
+                found++;
+                from = at + 1;
+                at = source.IndexOf(findStr, from);
+            }
+            return found;
+        }
     }
 }

@@ -760,10 +760,15 @@ namespace RTParser
         private void ListenerTest(GraphMaster master)
         {
             if (master==null) return;
-            if (master.ScriptingName == "listener")
+            if (master.AlsoKnownAs("listener"))
             {
-
+                throw new NotImplementedException();
             }
+        }
+
+        public void AddGraph(GraphMaster master)
+        {
+           /// throw new NotImplementedException();
         }
 
         public GraphMaster Graph0

@@ -1713,6 +1713,7 @@ The AIMLbot program.
 
             thisBotAsUser.SaveDirectory(thisBotAsUser.UserDirectory);
             string dgn = "default_to_" + NamePath;
+            string n2n = NamePath + "_to_" + NamePath;
             string hgn = "heardselfsay_to_" + NamePath;
             lock (GraphsByName)
             {
@@ -1729,11 +1730,14 @@ The AIMLbot program.
                     else _g.AddGenlMT(od, writeToLog);                        
                     _h //= TheUserListernerGraph 
                         = new GraphMaster(hgn);
+                    GraphsByName[n2n] = _h;
                     _h.AddGenlMT(GraphsByName["heardselfsay"], writeToLog);
                     _h.AddGenlMT(GraphsByName["listener"], writeToLog);
                     GraphsByName[dgn] = _g;
                     GraphsByName[hgn] = _h;
                 }
+
+                GraphsByName[n2n].RemoveGenlMT(GraphsByName[dgn], writeToLog);
             }
             GraphMaster vv = HeardSelfSayGraph;
             if (vv != null) BotAsUser.ListeningGraph = vv;

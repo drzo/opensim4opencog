@@ -38,6 +38,24 @@ namespace RTParser.Utils
         [UserScopedSettingAttribute]
         public bool TrackTemplates { get { return StaticAIMLUtils.TrackTemplates; } }
 
+        public List<string> GraphNames
+        {
+            get
+            {
+                var names = new List<string>();
+                lock (RTPBot.GraphsByName)
+                {
+                    foreach (KeyValuePair<string, GraphMaster> pair in RTPBot.GraphsByName)
+                    {
+                        if (pair.Value == this)
+                        {
+                            names.Add(pair.Key);
+                        }
+                    }
+                }
+                return names;
+            }
+        }
         public static bool NoIndexing = false;
         private readonly List<GraphMaster> FallBacksGraphs = new List<GraphMaster>();
         private readonly String graphName;
@@ -149,8 +167,8 @@ namespace RTParser.Utils
 
             // most graphs try to recuse on themselves until otehrwise stated (like in make-parallel)
             Srai = gn;
-            RootNode = new Node(this);
-            PostParallelRootNode = new Node(this);
+            RootNode = new Node(this, null);
+            PostParallelRootNode = new Node(this, null);
             if (!TrackTemplates)
             {
                 UnusedTemplates = null;
@@ -1526,6 +1544,11 @@ namespace RTParser.Utils
                 return v;
             }
             //throw new NotImplementedException();
+        }
+
+        internal bool AlsoKnownAs(string p)
+        {
+            return GraphNames.Contains(p);
         }
     }
 }
