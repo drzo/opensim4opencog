@@ -258,7 +258,14 @@ namespace cogbot.TheOpenSims
             AssetType = type;
             //lock (SimAssetStore.SimAssets) 
             SimAssetStore.SimAssets.Add(this);
+            if (!SimAssetStore.EnableDownloadAssetDefault)
+            {
+                AssetComplete = true;
+                PullServerAsset = false;
+                NeedsRequest = false;
+            }
         }
+    
 
         public bool Matches(String s)
         {
@@ -273,8 +280,8 @@ namespace cogbot.TheOpenSims
         sealed public override string ToString()
         {
             string s = String.Empty;
-            lock (_Name)
-                foreach (string n in _Name)
+            lock (_NamesList)
+                foreach (string n in _NamesList)
                 {
                     s += " " + n;
                 }
@@ -299,12 +306,19 @@ namespace cogbot.TheOpenSims
 
         public List<UUID> AssetIDs = new List<UUID>();
 
-        public List<string> _Name = new List<string>();
+        public List<string> _NamesList = new List<string>();
+        public List<string> Names
+        {
+            get
+            {
+                return _NamesList;
+            }
+        }
         public string Name
         {
             get
             {
-                if (_Name.Count == 0)
+                if (_NamesList.Count == 0)
                 {
                     // InventoryFolder AF = (InventoryFolder) Client.Inventory.Store[Client.AnimationFolder];
 
@@ -318,7 +332,7 @@ namespace cogbot.TheOpenSims
                     String ExpressionName = GuessAssetName();
                     if (!string.IsNullOrEmpty(ExpressionName))
                     {
-                        _Name.Add(ExpressionName);
+                        _NamesList.Add(ExpressionName);
                         return ExpressionName;
                     }
                     string tmpname = "" + AssetID;
@@ -328,15 +342,15 @@ namespace cogbot.TheOpenSims
                     }
                     return tmpname;
                 }
-                return _Name[0];
+                return _NamesList[0];
             }
             set
             {
-                if (value == null) return;
-                if (!_Name.Contains(value))
+                if (string.IsNullOrEmpty(value)) return;
+                if (!_NamesList.Contains(value))
                 {
-                    _Name.Add(value);
-                    if (SimAssetStore.downloadedAssetFoldersComplete)
+                    _NamesList.Add(value);
+                    if (SimAssetStore.downloadedAssetFoldersComplete || _NamesList.Count > 3)
                     {
                         WriteLine("SetAssetName: {0} {1}", AssetType, value);
                     }
@@ -350,7 +364,7 @@ namespace cogbot.TheOpenSims
         {
             if (!string.IsNullOrEmpty(n))
             {
-                if (!_Name.Contains(n)) _Name.Add(n);
+                if (!_NamesList.Contains(n)) _NamesList.Add(n);
             }
         }
 
@@ -403,7 +417,7 @@ namespace cogbot.TheOpenSims
 
         internal bool IsIncomplete()
         {
-            return !HasData() || AssetIDs.Count == 0 || _Name.Count == 0;
+            return !HasData() || AssetIDs.Count == 0 || _NamesList.Count == 0;
         }
 
         internal void AddType(string anims)

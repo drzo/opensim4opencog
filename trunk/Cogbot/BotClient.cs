@@ -475,11 +475,6 @@ namespace cogbot
             botPipeline = new SimEventMulticastPipeline(GetName());
             OneAtATimeQueue = new TaskQueueHandler(this, new TimeSpan(0, 0, 0, 0, 10), true, true);
 
-            var OneAtATimeQueue1 = new TaskQueueHandler("See if takes up all cpu and then delete! " + GetName(), new TimeSpan(0, 0, 0, 0, 1), true, true);
-            OneAtATimeQueue1.Start();
-            var OneAtATimeQueue2 = new TaskQueueHandler("See if takes up all cpu and then delete! " + GetName(), new TimeSpan(0, 0, 0, 0, 1), true, true);
-            OneAtATimeQueue2.Start();
-
             ClientManager.PostAutoExecEnqueue(() =>
             {
                 OneAtATimeQueue.Start();
