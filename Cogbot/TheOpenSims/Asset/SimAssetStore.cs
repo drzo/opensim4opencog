@@ -222,6 +222,8 @@ namespace cogbot.TheOpenSims
             {
                 if (FilledInAssets) return; 
                 FilledInAssets = true;
+                var wasDownloadAssetDefault = EnableDownloadAssetDefault;
+                SimAssetStore.EnableDownloadAssetDefault = false;
                 AddTexture("alpha_gradient", "e97cf410-8e61-7005-ec06-629eba4cd1fb","Used for generating the texture for the ground dynamically. Also used for creating the *invisiprim* that hides avatars, prims with alpha values less than 1.0 and particle effects");
                 AddTexture("alpha_gradient_2d", "38b86f85-2575-52a9-a531-23108d8da837",
                            "Used for generating the texture for the ground dynamically. Also used for creating the *invisiprim* that hides avatars, prims with alpha values less than 1.0 and particle effects ");
@@ -990,38 +992,38 @@ namespace cogbot.TheOpenSims
                 //common extras i've noticed
                 AnimUUID("drinking_or_snowcone", "758547a2-7212-d533-43e3-1666eda1705e");
 
-                AddAssetAlias("aim_bazooka_r", "avatar_aim_R_bazooka");
-                AddAssetAlias("aim_bow_l", "avatar_aim_L_bow");
-                AddAssetAlias("aim_handgun_r", "avatar_aim_R_handgun");
-                AddAssetAlias("aim_rifle_r", "avatar_aim_R_rifle");
-                AddAssetAlias("medium_land", "avatar_soft_land");
-                AddAssetAlias("muscle_beach", "avatar_musclebeach");
-                AddAssetAlias("no", "avatar_no_head");
-                AddAssetAlias("nyah_nyah", "avatar_nyanya");
-                AddAssetAlias("onetwo_punch", "avatar_punch_onetwo");
-                AddAssetAlias("pre_jump", "avatar_prejump");
-                AddAssetAlias("punch_left", "avatar_punch_L");
-                AddAssetAlias("punch_right", "avatar_punch_R");
-                AddAssetAlias("roundhouse_kick", "avatar_kick_roundhouse_R");
-                AddAssetAlias("shoot_bow_l", "avatar_shoot_L_bow");
-                AddAssetAlias("sit_ground_staticrained", "avatar_sit_ground_constrained");
-                AddAssetAlias("sword_strike", "avatar_sword_strike_R");
-                AddAssetAlias("tantrum", "avatar_angry_tantrum");
-                AddAssetAlias("yes", "avatar_yes_head");
-                AddAssetAlias("blow_kiss", "avatar_blowkiss");
-                AddAssetAlias("busy", "avatar_away");
-                AddAssetAlias("finger_wag", "avatar_angry_fingerwag");
-                AddAssetAlias("hold_bazooka_r", "avatar_hold_R_bazooka");
-                AddAssetAlias("hold_bow_l", "avatar_hold_L_bow");
-                AddAssetAlias("hold_handgun_r", "avatar_hold_R_handgun");
-                AddAssetAlias("hold_rifle_r", "avatar_hold_R_rifle");
-                AddAssetAlias("jump_for_joy", "avatar_jumpforjoy");
-                AddAssetAlias("kiss_my_butt", "avatar_kissmybutt");
+                AddAnimAssetAlias("aim_bazooka_r", "avatar_aim_R_bazooka");
+                AddAnimAssetAlias("aim_bow_l", "avatar_aim_L_bow");
+                AddAnimAssetAlias("aim_handgun_r", "avatar_aim_R_handgun");
+                AddAnimAssetAlias("aim_rifle_r", "avatar_aim_R_rifle");
+                AddAnimAssetAlias("medium_land", "avatar_soft_land");
+                AddAnimAssetAlias("muscle_beach", "avatar_musclebeach");
+                AddAnimAssetAlias("no", "avatar_no_head");
+                AddAnimAssetAlias("nyah_nyah", "avatar_nyanya");
+                AddAnimAssetAlias("onetwo_punch", "avatar_punch_onetwo");
+                AddAnimAssetAlias("pre_jump", "avatar_prejump");
+                AddAnimAssetAlias("punch_left", "avatar_punch_L");
+                AddAnimAssetAlias("punch_right", "avatar_punch_R");
+                AddAnimAssetAlias("roundhouse_kick", "avatar_kick_roundhouse_R");
+                AddAnimAssetAlias("shoot_bow_l", "avatar_shoot_L_bow");
+                AddAnimAssetAlias("sit_ground_staticrained", "avatar_sit_ground_constrained");
+                AddAnimAssetAlias("sword_strike", "avatar_sword_strike_R");
+                AddAnimAssetAlias("tantrum", "avatar_angry_tantrum");
+                AddAnimAssetAlias("yes", "avatar_yes_head");
+                AddAnimAssetAlias("blow_kiss", "avatar_blowkiss");
+                AddAnimAssetAlias("busy", "avatar_away");
+                AddAnimAssetAlias("finger_wag", "avatar_angry_fingerwag");
+                AddAnimAssetAlias("hold_bazooka_r", "avatar_hold_R_bazooka");
+                AddAnimAssetAlias("hold_bow_l", "avatar_hold_L_bow");
+                AddAnimAssetAlias("hold_handgun_r", "avatar_hold_R_handgun");
+                AddAnimAssetAlias("hold_rifle_r", "avatar_hold_R_rifle");
+                AddAnimAssetAlias("jump_for_joy", "avatar_jumpforjoy");
+                AddAnimAssetAlias("kiss_my_butt", "avatar_kissmybutt");
                 // TODO: these animations need corrected likely
-                AddAssetAlias("express_embarrassed", "avatar_express_embarrased");
-                AddAssetAlias("embarrassed", "avatar_express_embarrased");
-                AddAssetAlias("belly_laugh", "avatar_express_laugh");
-                AddAssetAlias("angry", "avatar_angry_tantrum");
+                AddAnimAssetAlias("express_embarrassed", "avatar_express_embarrased");
+                AddAnimAssetAlias("embarrassed", "avatar_express_embarrased");
+                AddAnimAssetAlias("belly_laugh", "avatar_express_laugh");
+                AddAnimAssetAlias("angry", "avatar_angry_tantrum");
 
                 foreach (FieldInfo fi in typeof(Animations).GetFields())
                 {
@@ -1040,7 +1042,7 @@ namespace cogbot.TheOpenSims
                         byte[] bs = File.ReadAllBytes(files);
                         string name = Path.GetFileNameWithoutExtension(Path.GetFileName(files)).ToLower();               
                         if (nameAsset.ContainsKey(name)) continue;
-                        UUID uuid = TheStore.GetAssetUUID(name, AssetType.Animation);
+                        UUID uuid = TheStore.GetAssetUUID(name, AssetType.Animation, false);
                         SimAsset anim;
                         if (uuid==UUID.Zero)
                         {
@@ -1063,7 +1065,17 @@ namespace cogbot.TheOpenSims
                 {
                     LoadAssetFile("AssetMapping.xml");
                 }
+                if (File.Exists("AssetMapping2.xml"))
+                {
+                    LoadAssetFile("AssetMapping2.xml");        
+                }
+                else
+                {
+                    SaveAssetFile("AssetMapping2.xml", true);
+                }
+                EnableDownloadAssetDefault = wasDownloadAssetDefault;
                 SimAnimation.ClassifyAnims();
+                SaveAssetFile("AssetMapping3.xml", false);
 #if SPAMMY_DEBUG
                 //lock (SimAssets) 
                     foreach (SimAsset A in SimAssets)
@@ -1089,39 +1101,47 @@ namespace cogbot.TheOpenSims
                         string type = GetAttribValue(node, "type", String.Empty);
                         string to = GetAttribValue(node, "to", String.Empty);
                         string from = GetAttribValue(node, "from", String.Empty);
-                        AssetType atype = AssetType.Unknown;
-                        try
-                        {
-                            try
-                            {
-                                atype = (AssetType)Enum.Parse(typeof(AssetType), type.Substring(0, 1).ToUpper() + type.Substring(1).ToLower());
-                            }
-                            catch (Exception)
-                            {
-                                atype = (AssetType)Enum.Parse(typeof(AssetType), type);
-                            }
-                        }
-                        catch (Exception)
-                        {
-                            try
-                            {
-                                atype = (AssetType)Enum.Parse(typeof(AssetType), type.ToUpper());
-                            }
-                            catch (Exception)
-                            {
-                            }
-                        }
+                        AssetType atype = GetAssetType(type);
                         if (!String.IsNullOrEmpty(from))
                         {
-                            AddAssetAlias(from, to, atype);
+                            string file = from;
+                            // only add Hanson .csv files 
+                            if (!file.EndsWith(".csv"))
+                            {
+                                continue;
+                            }
+                            AddAssetAlias(file, to, atype);
                         }
                         else
                         {
                            foreach (XmlNode fnode in node.ChildNodes)
                            {
-                               AddAssetAlias(fnode.InnerText, to, atype);                               
+                               string file = fnode.InnerText;
+                               // only add Hanson .csv files 
+                               if (!file.EndsWith(".csv"))
+                               {
+                                   continue;                                   
+                               }
+                               AddAssetAlias(file, to, atype);                               
                            } 
                         }
+                        continue;
+                    }
+                    if (nodename == "asset")
+                    {
+                        string type = GetAttribValue(node, "type", String.Empty);
+                        string to = GetAttribValue(node, "name", String.Empty);
+                        string from = GetAttribValue(node, "uuid", String.Empty);
+                        AssetType atype = GetAssetType(type);
+                        SimAsset A = FindOrCreateAsset(UUID.Parse(from), atype);
+                        A.Name = to;
+                        foreach (XmlNode fnode in node.ChildNodes)
+                        {
+                            if (fnode.Name == "name") A.Name = fnode.InnerText;
+                            if (fnode.Name == "meaning") A.AddType(fnode.InnerText);
+                        }
+
+                        continue;
                     }
                 }
             }
@@ -1130,6 +1150,78 @@ namespace cogbot.TheOpenSims
                 DLRConsole.DebugWriteLine("ERROR {0}", exception);
             }
 
+        }
+
+        private static AssetType GetAssetType(string type)
+        {
+            AssetType atype = AssetType.Unknown;
+            try
+            {
+                try
+                {
+                    atype = (AssetType)Enum.Parse(typeof(AssetType), type.Substring(0, 1).ToUpper() + type.Substring(1).ToLower());
+                }
+                catch (Exception)
+                {
+                    atype = (AssetType)Enum.Parse(typeof(AssetType), type);
+                }
+            }
+            catch (Exception)
+            {
+                try
+                {
+                    atype = (AssetType)Enum.Parse(typeof(AssetType), type.ToUpper());
+                }
+                catch (Exception)
+                {
+                }
+            }
+            return atype;
+        }
+
+        static void SaveAssetFile(string fname, bool useCSVs)
+        {
+            var doc = new XmlDocument();
+            var docRoot = doc.CreateElement("assets");// as LineInfoElementImpl;
+            //docRoot.ReadOnly = false;
+            foreach (SimAsset asset in SimAssets)
+            {
+                var node = doc.CreateElement("asset");// as LineInfoElementImpl;
+                XmlAttribute atrtrib = doc.CreateAttribute("type");
+                atrtrib.Value = asset.AssetType.ToString();
+                node.Attributes.Append(atrtrib);
+                atrtrib = doc.CreateAttribute("uuid");
+                atrtrib.Value = asset.AssetID.ToString();
+                node.Attributes.Append(atrtrib);
+                var names = asset.Names;
+                if (names.Count == 1)
+                {
+                    atrtrib = doc.CreateAttribute("name");
+                    atrtrib.Value = asset.Name;
+                    node.Attributes.Append(atrtrib);
+                } else
+                {
+                    foreach (string name in names)
+                    {
+                        if (!useCSVs) if (name.EndsWith(".csv")) continue;
+                        var nameE = doc.CreateElement("name");// as LineInfoElementImpl;
+                        //nameE.ReadOnly = false;
+                        nameE.InnerText = name;                        
+                        node.AppendChild(nameE);
+                    }
+                }
+                foreach (string meaning in asset.Meanings)
+                {
+                    var nameE = doc.CreateElement("meaning");// as LineInfoElementImpl;
+                    //nameE.ReadOnly = false;
+                    nameE.InnerText = meaning;
+                    node.AppendChild(nameE);
+                }
+                docRoot.AppendChild(node);
+            }
+            //doc.ReadOnly = false;
+            doc.AppendChild(docRoot);
+            doc.Save(fname);
         }
 
         static string GetAttribValue(XmlNode templateNode, string attribName, string defaultIfEmpty)
@@ -1267,29 +1359,30 @@ namespace cogbot.TheOpenSims
             return false;
         }
 
-        static void AddAssetAlias(string from, string to)
+        static void AddAnimAssetAlias(string alias, string onto)
         {
-            AddAssetAlias(from, to, AssetType.Unknown);
+            AddAssetAlias(alias, onto, AssetType.Animation);
         }
 
-        static void AddAssetAlias(string name, string file, AssetType type)
+        static void AddAssetAlias(string alias, string onto, AssetType type)
         {
-            UUID prev = TheStore.GetAssetUUID(name, type);
+            UUID prev = TheStore.GetAssetUUID(onto, type, false);
             if (prev != UUID.Zero)
             {
                 SimAsset A = FindAsset(prev);
-                if (A != null) A.Name = file;
+                if (A != null) A.Name = alias;
+                nameNameMap[alias.ToLower()] = onto.ToLower();
             }
             else
             {
-                prev = TheStore.GetAssetUUID(file, AssetType.Unknown);
+                prev = TheStore.GetAssetUUID(alias, AssetType.Unknown, false);
                 if (prev != UUID.Zero)
                 {
                     SimAsset A = FindAsset(prev);
-                    if (A != null) A.Name = name;
+                    if (A != null) A.Name = onto;
+                    nameNameMap[onto.ToLower()] = alias.ToLower();
                 }
             }
-            nameNameMap[name.ToLower()] = file.ToLower();
         }
 
         public ICollection<string> GetAssetNames(AssetType types)
@@ -1322,6 +1415,11 @@ namespace cogbot.TheOpenSims
 
         public UUID GetAssetUUID(string a, AssetType type)
         {
+            return GetAssetUUID(a, type, false);
+        }
+
+        public UUID GetAssetUUID(string a, AssetType type, bool partialMatching)
+        {
             a = a.ToLower();
             FillAssetNames();
             UUID partial;// = default(UUID);
@@ -1338,7 +1436,7 @@ namespace cogbot.TheOpenSims
                     partial = aset.AssetID;
                     if (type == aset.AssetType) return partial;
                 }
-                if (sname.Contains(a))
+                if (partialMatching && sname.Contains(a))
                 {
                     if (partial==UUID.Zero) partial = aset.AssetID;
                 }
@@ -1510,6 +1608,7 @@ namespace cogbot.TheOpenSims
         internal readonly static ListAsSet<SimAsset> SimAssets = new ListAsSet<SimAsset>();
         internal readonly static Dictionary<string, string> nameNameMap = new Dictionary<string, string>();
         static private bool FilledInAssets;
+        public static bool EnableDownloadAssetDefault = true;
 
         public static ICollection<SimAsset> GetAssets(AssetType assetType)
         {
@@ -1531,7 +1630,7 @@ namespace cogbot.TheOpenSims
         {
             if (animate.StartsWith("anim:")) animate = animate.Substring(5);
             UUID uuid = GetAssetUUID(animate, AssetType.Animation);
-            if (uuid == UUID.Zero) uuid =  GetAssetUUID(animate+".csv", AssetType.Animation);
+            if (uuid == UUID.Zero) uuid = GetAssetUUID(animate + ".csv", AssetType.Animation, false);
             if (uuid != UUID.Zero) return FindAsset(uuid);
             uuid = GetAssetUUID(animate, AssetType.Gesture);
             if (uuid != UUID.Zero) return FindAsset(uuid);

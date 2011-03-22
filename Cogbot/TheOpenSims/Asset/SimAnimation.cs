@@ -114,9 +114,8 @@ namespace cogbot.TheOpenSims
         }
 
         public SimAnimation(UUID uuid, string name)
-            : base(uuid, name)
+            : base(uuid, name, AssetType.Animation)
         {
-            AssetType = OpenMetaverse.AssetType.Animation;
         }
 
         public bool SameAnims(BinBVHAnimationReader bvh1, BinBVHAnimationReader bvh2)
@@ -148,7 +147,7 @@ namespace cogbot.TheOpenSims
             if (bvh != null && !string.IsNullOrEmpty(bvh.ExpressionName))
             {
                 string n = bvh.ExpressionName;
-                _Name.Add(n);
+                _NamesList.Add(n);
                 return n;
             }
             return UnknownName;
@@ -222,7 +221,7 @@ namespace cogbot.TheOpenSims
                     if (SameAsset(animation))
                     {
                         WriteLine("Found dup " + animation);
-                        foreach (string name in animation._Name)
+                        foreach (string name in animation._NamesList)
                         {
                             AddName(name + "_" + AssetID);
                         }

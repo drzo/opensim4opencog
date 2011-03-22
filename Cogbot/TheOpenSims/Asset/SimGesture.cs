@@ -12,9 +12,10 @@ namespace cogbot.TheOpenSims
         static readonly Dictionary<UUID,SimGesture> AnimationGestures = new Dictionary<UUID, SimGesture>();
 
         public SimGesture(UUID uuid, string name)
-            : base(uuid, name)
+            : base(uuid, name, AssetType.Gesture)
         {
         }
+
         public AssetGesture GetGesture()
         {
             return (AssetGesture)ServerAsset;
