@@ -293,7 +293,7 @@ namespace cogbot.TheOpenSims
             if (noteable)
             //if (theAvatar.Name.Contains("rael"))
             {
-                DLRConsole.DebugWriteLine(SE);
+                //DLRConsole.DebugWriteLine(SE);
             }
             return noteable;
         }

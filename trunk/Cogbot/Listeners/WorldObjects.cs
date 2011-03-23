@@ -23,6 +23,8 @@ namespace cogbot.Listeners
         public static bool MaintainAttachments = true;
         public static bool MaintainCollisions = false; // keep false so the bot only meshes what it needs
         public static bool MaintainEffects = true;
+        public static bool MaintainOnlyMasterEffects = false;
+        public static float MaintainEffectsDistance = 80;
         public static bool MaintainActions = true;
         public static bool MaintainPropertiesFromQueue = true;
         public static bool MaintainObjectUpdates = true;

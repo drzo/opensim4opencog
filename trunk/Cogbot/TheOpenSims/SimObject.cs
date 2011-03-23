@@ -2167,8 +2167,11 @@ namespace cogbot.TheOpenSims
                 lastEvent = SE;
                 if (saveevent)
                 {
-                    ActionEventQueue.Enqueue(WorldSystem.SendPipelineEvent(SE));
-
+                    ActionEventQueue.Enqueue(SE);
+                }
+                if (WorldSystem.UseEventSource(this))
+                {
+                    WorldSystem.SendPipelineEvent(SE);
                 }
                 LastEventByName[SE.EventName] = SE;
             }

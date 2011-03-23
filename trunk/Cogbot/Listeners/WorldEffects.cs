@@ -321,7 +321,7 @@ namespace cogbot.Listeners
         public override void Avatars_OnPointAt(object sender, ViewerEffectPointAtEventArgs e)
         {
             // we have our own packet handler
-            // client.Avatars.OnPointAt -= Avatars_OnPointAt;
+            client.Avatars.ViewerEffectPointAt -= Avatars_OnPointAt;
             var sourceID = e.SourceID;
             var targetID = e.TargetID;
             var targetPos = e.TargetPosition;
@@ -335,7 +335,7 @@ namespace cogbot.Listeners
         public override void Avatars_OnLookAt(object sender, ViewerEffectLookAtEventArgs e)
         {
             // we have our own packet handler
-            // client.Avatars.OnLookAt -= Avatars_OnLookAt;
+            client.Avatars.ViewerEffectLookAt -= Avatars_OnLookAt;
             var sourceID = e.SourceID;
             var targetID = e.TargetID;
             var targetPos = e.TargetPosition;
@@ -348,17 +348,21 @@ namespace cogbot.Listeners
 
         public bool UseEventSource(Object so)
         {
-            if (so is SimAvatar)
+            if (so is SimObject)
             {
-                SimAvatar A = (SimAvatar)so;
+                SimObject A = (SimObject)so;
                 if (!A.IsRegionAttached) return false;
                 if (A == m_TheSimAvatar) return false;
-                if (A.Distance(TheSimAvatar) < 30) return true;
+                if (A.ID == client.MasterKey) return true;
+                if (A.Distance(TheSimAvatar) > MaintainEffectsDistance)
+                {
+                    return false;
+                }
                 if (A.IsRegionAttached && A.GetName().Contains("Rajesh"))
                     return true;
             }
             //return true;
-            return false;
+            return MaintainEffects;
         }
 
         public void SendEffect(Simulator sim, UUID sourceID, UUID targetID, Vector3d targetPos, string effectType, float duration,
@@ -367,8 +371,10 @@ namespace cogbot.Listeners
             if (!MaintainEffects) return;
             if (sourceID == client.Self.AgentID) return; //not sending our own effects
             if (!IsMaster(sim)) return;
-            if (client.MasterKey == UUID.Zero) return;
-            if (!(client.MasterKey == targetID || sourceID == client.MasterKey)) return;
+            if (MaintainOnlyMasterEffects && client.MasterKey != UUID.Zero)
+            {
+                if (!(client.MasterKey == targetID || sourceID == client.MasterKey)) return;
+            }
             if (id != UUID.Zero)
             {
                 // if (EffectsSent.Contains(id)) return;
@@ -468,6 +474,8 @@ namespace cogbot.Listeners
 
                 EventQueue.Enqueue(() =>
                                         {
+                                            source = SecondChanceUUID(ref s, source);
+                                            target = SecondChanceUUID(ref t, target);
                                             //if (source != null) source;
                                             // WriteLine("ClientManager Avatars_OnLookAt: " + sourceID.ToString() + " to " + targetID.ToString() + " at " + targetID.ToString() + " with type " + lookType.ToString() + " duration " + duration.ToString());
                                             if (targetID == client.Self.AgentID)
@@ -483,12 +491,6 @@ namespace cogbot.Listeners
                                                                          ToParameter("effectType", effectType));
                                                 // ()/*GetObject*/(sourceID), effectType);
                                             }
-                                            if (s is UUID)
-                                            {
-
-                                            }
-
-
                                             if (source != null)
                                             {
                                                 source.OnEffect(effectType, t, p, duration, id);
@@ -511,13 +513,29 @@ namespace cogbot.Listeners
                                                 }
                                                 RegisterUUID(id, effectType);
                                                 //TODO 
-                                                if (UseEventSource(s))
+                                                if (UseEventSource(s) || UseEventSource(t))
                                                     SendPipelineEvent(evt);
                                                 //SendNewEvent("on-effect", effectType, s, t, p, duration, AsEffectID(id));
                                             }
                                         });
         }
 
+        static private SimObject SecondChanceUUID(ref object t, SimObject target)
+        {
+            if (t is UUID && target == null)
+            {
+                UUID suid = (UUID)t;
+                if (suid != UUID.Zero)
+                {
+                    target = GetSimObjectFromUUID(suid);
+                    if (target != null)
+                    {
+                        t = target;
+                    }
+                }
+            }
+            return target;
+        }
         /*
             On-Effect
             type: "Sphere"
