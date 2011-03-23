@@ -549,6 +549,8 @@ namespace cogbot.TheOpenSims
         }
 
         private bool needPush = true;
+        private string _fileName;
+
         public void InternOnRegion(WorldObjects world)
         {
             if (!needPush) return;
@@ -603,6 +605,29 @@ namespace cogbot.TheOpenSims
 
         #region ITraceable Members
         public bool IsTraced { get; set; }
+
+        public string FileName
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(_fileName))
+                    return _fileName;
+                string gname = Name;
+                UUID uuid = AssetID;
+                if (uuid == UUID.Zero) return null;
+
+                string named = uuid + "." + AssetType.ToString().ToLower();
+                if (!string.IsNullOrEmpty(gname))
+                {
+                    named = gname + "_" + named;
+                }
+                return named;
+            }
+            set {
+                _fileName = value;
+            }
+        }
+
         #endregion
     }
 }

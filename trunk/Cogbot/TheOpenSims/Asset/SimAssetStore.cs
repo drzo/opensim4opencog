@@ -1059,6 +1059,10 @@ namespace cogbot.TheOpenSims
                         {
                             WriteLine("NULL Anim w/o UUID " + name);  
                         }
+                        if (anim != null)
+                        {
+                            anim.FileName = files;
+                        }
                     }
                 }
                 if (File.Exists("AssetMapping.xml"))
@@ -1106,9 +1110,14 @@ namespace cogbot.TheOpenSims
                         {
                             string file = from;
                             // only add Hanson .csv files 
+                            file = file.Replace("&gt;", "");
                             if (!file.EndsWith(".csv"))
                             {
                                 continue;
+                            }
+                            if (file.Contains("&"))
+                            {
+                                DLRConsole.DebugWriteLine("ERROR ASSETNAME {0}", file);
                             }
                             AddAssetAlias(file, to, atype);
                         }
@@ -1117,10 +1126,15 @@ namespace cogbot.TheOpenSims
                            foreach (XmlNode fnode in node.ChildNodes)
                            {
                                string file = fnode.InnerText;
+                               file = file.Replace("&gt;", "");
                                // only add Hanson .csv files 
                                if (!file.EndsWith(".csv"))
                                {
                                    continue;                                   
+                               }
+                               if (file.Contains("&"))
+                               {
+                                   DLRConsole.DebugWriteLine("ERROR ASSETNAME {0}", file);
                                }
                                AddAssetAlias(file, to, atype);                               
                            } 
