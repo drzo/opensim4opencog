@@ -8,6 +8,7 @@ using OpenMetaverse;
 using OpenMetaverse.Interfaces;
 using OpenMetaverse.Packets;
 using PathSystem3D.Navigation;
+using System.Diagnostics;
 
 namespace cogbot.Listeners
 {
@@ -570,6 +571,7 @@ namespace cogbot.Listeners
         private void RequestAvatarMetadata(UUID uuid)
         {
             lock (MetadataRequested) if (!MetadataRequested.Add(uuid)) return;
+            NeedRequestAvatarName(uuid);
             OnConnectedQueue.Enqueue(() =>
             {
                 client.Avatars.RequestAvatarName(uuid);
@@ -607,14 +609,14 @@ namespace cogbot.Listeners
 
         private void AddName2Key(string value, UUID id)
         {
-            if (value == null)
+            if (string.IsNullOrEmpty(value))
             {
-                Debug("AddName2Key: NULL " + id);
+                Debug("AddName2Key: ERROR name='" + value + "' " + id);
                 return;
             }
             if (id == UUID.Zero)
             {
-                Debug("AddName2Key: UUID.Zero " + value);
+                Debug("AddName2Key: ERROR UUID.Zero " + value);
                 return;
             }
             if (value.Contains("?"))
@@ -624,18 +626,38 @@ namespace cogbot.Listeners
                 {
                     if (O is SimAvatar)
                     {
-                        Debug("AVATAR?!?!? " + O);
+                        Debug("ERROR AVATAR?!?!? " + value + " " + O);
                     }
                     return;
                 }
-                var Obj = CreateSimObject(id, this, null);
-                Debug("AddName2Key: " + value + " " + id + " " + Obj);
-                return;
+                object obj = GetObject(id);
+                if (obj is UUID || obj is string)
+                {
+                    lock (RequestedAvatarNames)
+                    {
+                        StackTrace stackTrace;
+                        if (RequestedAvatarNames.TryGetValue(id, out stackTrace))
+                        {
+                            Debug("AddName2Key: ERROR requested Name for ID=" + id + " " + stackTrace.ToString());
+                        }
+                        else
+                        {
+                            Debug("AddName2Key: ERROR NOT requested Name for ID=" + id);
+                        }
+                    }
+                    var Obj = CreateSimObject(id, this, null);
+                    Debug("AddName2Key: INFO Discovered new SimObject from UUID? " + value + " " + id + " " + Obj);
+                    return;
+                }
+                else
+                {
+                    Debug("AddName2Key: ERROR UUID? " + value + " " + id + " " + obj);
+                }
             }
             string n = value.Trim();
             if (n.Length < 3)
             {
-                Debug("AddName2Key: " + value + " " + id);
+                Debug("AddName2Key: INFO " + value + " " + id);
                 return;
             }
             SimAvatarImpl A = DeclareAvatar(id);
@@ -660,11 +682,14 @@ namespace cogbot.Listeners
         public override void Friends_OnFriendOnline(object sender, FriendInfoEventArgs e)
         {
             var friend = e.Friend;
+            UUID id = friend.UUID;
             if (friend.IsOnline && !string.IsNullOrEmpty(friend.Name) && friend.Name == client.MasterName)
             {
-                client.Self.InstantMessage(friend.UUID, "Hello Master");
+                client.Self.InstantMessage(id, "Hello Master");
             }
-            AddName2Key(friend.Name, friend.UUID);
+            if (!string.IsNullOrEmpty(friend.Name))
+                AddName2Key(friend.Name, id);
+            DeclareAvatar(id);
             //base.Friends_OnFriendOnline(friend);
         }
 
@@ -837,7 +862,7 @@ namespace cogbot.Listeners
                 {
                     client.Avatars.UUIDNameReply += callback;
                     // Send the Query
-                    client.Avatars.RequestAvatarName(found);
+                    RequestAvatarName(found);
                     NameSearchEvent.WaitOne(10000, false);
                 }
                 finally
@@ -860,6 +885,24 @@ namespace cogbot.Listeners
             return AA.GetName();
         }
 
+        private Dictionary<UUID, StackTrace> RequestedAvatarNames = new Dictionary<UUID, StackTrace>();
+        private void RequestAvatarName(UUID uuid)
+        {
+            if (NeedRequestAvatarName(uuid)) client.Avatars.RequestAvatarName(uuid);
+        }
+
+        private bool NeedRequestAvatarName(UUID uuid)
+        {
+            lock (RequestedAvatarNames)
+            {
+                if (!RequestedAvatarNames.ContainsKey(uuid))
+                {
+                    RequestedAvatarNames.Add(uuid, new StackTrace(true));
+                    return true;
+                }
+            }
+            return false;
+        }
         void InformMaster(string masterName)
         {
             UUID resolvedMasterKey = UUID.Zero;
