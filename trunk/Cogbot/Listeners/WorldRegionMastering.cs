@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
@@ -657,16 +658,16 @@ namespace cogbot.Listeners
             {
                 return client.Network.CurrentSim;
             }
-            lock (client.Network.Simulators)
+            //  lock (AllSimulators)
             {
-                foreach (Simulator sim in client.Network.Simulators)
+                foreach (Simulator sim in AllSimulators)
                 {
                     if (sim.Handle == handle && sim.Connected) return sim;
                 }
             }
-            //  lock (AllSimulators)
+            lock (client.Network.Simulators)
             {
-                foreach (Simulator sim in AllSimulators)
+                foreach (Simulator sim in client.Network.Simulators)
                 {
                     if (sim.Handle == handle && sim.Connected) return sim;
                 }
@@ -765,15 +766,15 @@ namespace cogbot.Listeners
             }
             if (p != null) return p;
             Object o = null;
-            if (isAvatar == PCode.None && !string.IsNullOrEmpty(fromName))
+            if (false && isAvatar == PCode.Avatar && !string.IsNullOrEmpty(fromName))
             {
                 if (!fromName.Contains(" "))
                 {
                     isAvatar = PCode.Prim;
                 }
                 else
-                {
-                    isAvatar = PCode.Avatar;
+                {                  
+                    //isAvatar = PCode.UN;
                 }
             }
             return GetSource(client.Network.CurrentSim, id, null, ref o, isAvatar);
@@ -812,7 +813,24 @@ namespace cogbot.Listeners
                     client.Parcels.RequestAllSimParcels(sim, false, 250);
                     client.Grid.RequestMapItems(sim.Handle, GridItemType.AgentLocations, GridLayerType.Objects);
                 }
-                SourceDetect(sourceID);
+                switch (isAvatar)
+                {
+                    case PCode.Tree:
+                    case PCode.Grass:
+                    case PCode.NewTree:
+                    case PCode.Prim:
+                        source = CreateSimObject(sourceID, this, null);
+                        break;
+                    case PCode.Avatar:
+                        DeclareAvatar(sourceID);
+                        break;
+                    case PCode.None:
+                    case PCode.ParticleSystem:
+                        SourceDetect(sourceID);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException("isAvatar");
+                }
                 // client.Self.RequestSit(sourceID,Vector3.Zero);
                 //  client.Directory.
             }
@@ -886,7 +904,7 @@ namespace cogbot.Listeners
 
         private void SourceDetect(UUID sourceID)
         {
-            client.Avatars.RequestAvatarName(sourceID);
+            RequestAvatarName(sourceID);
             client.Friends.MapFriend(sourceID);
             /*
              UUID trans = UUID.Random();
