@@ -271,6 +271,10 @@ namespace cogbot.TheOpenSims
 
         public override string ToString()
         {
+            if (EventType == SimEventType.EFFECT)
+            {
+                ToEventString();
+            }
             return string.Format("{0}: {1} {2}",
                                  EventID,
                                  ScriptEngines.ScriptEventListener.argsListString(Parameters),
