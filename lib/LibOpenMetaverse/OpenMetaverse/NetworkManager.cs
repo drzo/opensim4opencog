@@ -390,6 +390,7 @@ namespace OpenMetaverse
 
         /// <summary>All of the simulators we are currently connected to</summary>
         public List<Simulator> Simulators = new List<Simulator>();
+        public Dictionary<IPEndPoint, Simulator> Endpoint2Simulators = new Dictionary<IPEndPoint, Simulator>();
         public object SimulatorsLock = new object();
 
         /// <summary>Handlers for incoming capability events</summary>
@@ -589,7 +590,7 @@ namespace OpenMetaverse
                 {
                     // We're not tracking this sim, create a new Simulator object
                     simulator = new Simulator(Client, endPoint, handle);
-
+                    Endpoint2Simulators.Add(endPoint, simulator);
                     // Immediately add this simulator to the list of current sims. It will be removed if the
                     // connection fails
                     lock (Simulators) Simulators.Add(simulator);
@@ -632,6 +633,10 @@ namespace OpenMetaverse
                         lock (Simulators)
                         {
                             Simulators.Remove(simulator);
+                            lock(SimulatorsLock)
+                            {
+                                Endpoint2Simulators.Remove(endPoint);
+                            }
                         }
                         return null;
                     }
@@ -672,8 +677,11 @@ namespace OpenMetaverse
                     lock (Simulators)
                     {
                         Simulators.Remove(simulator);
-                    }                    
-
+                    }
+                    lock (SimulatorsLock)
+                    {
+                        Endpoint2Simulators.Remove(endPoint);
+                    }
                     return null;
                 }
             }
@@ -775,6 +783,10 @@ namespace OpenMetaverse
                 }
 
                 lock (Simulators) Simulators.Remove(simulator);
+                lock (SimulatorsLock)
+                {
+                    Endpoint2Simulators.Remove(simulator.IPEndPoint);
+                }
 
                 if (Simulators.Count == 0) Shutdown(DisconnectType.SimShutdown);
             }
@@ -829,6 +841,10 @@ namespace OpenMetaverse
 
                 Simulators.Clear();
             }
+            lock (SimulatorsLock)
+            {
+                Endpoint2Simulators.Clear();
+            }
 
             if (CurrentSim != null)
             {
@@ -863,15 +879,14 @@ namespace OpenMetaverse
         /// <returns>A Simulator reference on success, otherwise null</returns>
         public Simulator FindSimulator(IPEndPoint endPoint)
         {
-            lock (Simulators) lock (SimulatorsLock)
+            lock (SimulatorsLock)
             {
-                for (int i = 0; i < Simulators.Count; i++)
+                Simulator sim;
+                if (Endpoint2Simulators.TryGetValue(endPoint, out sim))
                 {
-                    if (Simulators[i].IPEndPoint.Equals(endPoint))
-                        return Simulators[i];
+                    return sim;
                 }
             }
-
             return null;
         }
 
