@@ -329,7 +329,7 @@ namespace cogbot.Listeners
             var duration = e.Duration;
             var id = e.EffectID;
             if (!MaintainEffects) return;
-            SendEffect(client.Network.CurrentSim, sourceID, targetID, targetPos, "PointAtType-" + lookType.ToString(), duration, id);
+            SendEffect(client.Network.CurrentSim, sourceID, targetID, targetPos, "PointAtType-" + lookType.ToString(), duration, id, PCode.Avatar);
         }
 
         public override void Avatars_OnLookAt(object sender, ViewerEffectLookAtEventArgs e)
@@ -343,7 +343,7 @@ namespace cogbot.Listeners
             var duration = e.Duration;
             var id = e.EffectID;
             if (!MaintainEffects) return;
-            SendEffect(client.Network.CurrentSim, sourceID, targetID, targetPos, "LookAtType-" + lookType.ToString(), duration, id);
+            SendEffect(client.Network.CurrentSim, sourceID, targetID, targetPos, "LookAtType-" + lookType.ToString(), duration, id, PCode.Avatar);
         }
 
         public bool UseEventSource(Object so)
@@ -366,7 +366,7 @@ namespace cogbot.Listeners
         }
 
         public void SendEffect(Simulator sim, UUID sourceID, UUID targetID, Vector3d targetPos, string effectType, float duration,
-                               UUID id)
+                               UUID id, PCode sourceType)
         {
             if (!MaintainEffects) return;
             if (sourceID == client.Self.AgentID) return; //not sending our own effects
@@ -390,7 +390,7 @@ namespace cogbot.Listeners
             {
                 if (sourceID != UUID.Zero)
                 {
-                    source = GetSource(sim, sourceID, source, ref s, PCode.Avatar);
+                    source = GetSource(sim, sourceID, source, ref s, sourceType);
                     if (source == null) return;
                 }
                 //  RequestAsset(sourceID, AssetType.Object, true);
@@ -590,7 +590,8 @@ namespace cogbot.Listeners
             var type = e.Type;
             var duration = e.Duration;
             var id = e.EffectID;
-            SendEffect(client.Network.CurrentSim, sourceID, targetID, targetPos, "EffectType-" + type.ToString(), duration, id);
+            SendEffect(client.Network.CurrentSim, sourceID, targetID, targetPos, "EffectType-" + type.ToString(),
+                       duration, id, PCode.None);
             //SimRegion.TaintArea(targetPos);
         }
 
@@ -608,12 +609,12 @@ namespace cogbot.Listeners
                 //Debug("ViewerEffectHandler: from a differnt sim than current " + simulator);
             }
             if (!MaintainEffects) return;
-            ViewerEffectPacket effect = (ViewerEffectPacket)packet;
+            ViewerEffectPacket effect = (ViewerEffectPacket) packet;
             GridClient Client = client;
 
             foreach (ViewerEffectPacket.EffectBlock block in effect.Effect)
             {
-                EffectType type = (EffectType)block.Type;
+                EffectType type = (EffectType) block.Type;
 
                 // most effect types have at least these properties
                 UUID sourceAvatar = new UUID(block.TypeData, 0);
@@ -630,6 +631,10 @@ namespace cogbot.Listeners
                 //        " bytes", Helpers.LogLevel.Warning);
                 //    color = Color4.Black;
                 //}
+                if (sourceAvatar==UUID.Zero)
+                {
+                    Debug("Received a " + type.ToString() + " ViewerEffect sourceAvatar==NULL " + targetObject, Helpers.LogLevel.Warning, Client); 
+                }
 
                 // Each ViewerEffect type uses it's own custom binary format for additional BVHData. Fun eh?
                 switch (type)
@@ -644,9 +649,15 @@ namespace cogbot.Listeners
                         {
                             if (block.TypeData.Length == 56)
                             {
+                                PCode sourceType = PCode.Avatar;
+                                if (type == EffectType.Edit || type == EffectType.Point || type == EffectType.Beam)
+                                {
+                                    sourceType = PCode.Avatar;
+                                }
                                 try
                                 {
-                                    SendEffect(simulator, sourceAvatar, targetObject, targetPos, "EffectType-" + type.ToString(), block.Duration, block.ID);
+                                    SendEffect(simulator, sourceAvatar, targetObject, targetPos,
+                                               "EffectType-" + type.ToString(), block.Duration, block.ID, sourceType);
                                 }
                                 catch (Exception ex)
                                 {
@@ -655,7 +666,7 @@ namespace cogbot.Listeners
                             }
                             else
                             {
-                                Debug("Received a " + type.ToString() +
+                                Debug("ERROR: Received a " + type.ToString() +
                                       " ViewerEffect with an incorrect TypeData size of " +
                                       block.TypeData.Length + " bytes", Helpers.LogLevel.Warning, Client);
                             }
@@ -667,11 +678,12 @@ namespace cogbot.Listeners
                         {
                             if (block.TypeData.Length == 57)
                             {
-                                LookAtType lookAt = (LookAtType)block.TypeData[56];
+                                LookAtType lookAt = (LookAtType) block.TypeData[56];
 
                                 try
                                 {
-                                    SendEffect(simulator, sourceAvatar, targetObject, targetPos, "LookAtType-" + lookAt.ToString(), block.Duration, block.ID);
+                                    SendEffect(simulator, sourceAvatar, targetObject, targetPos,
+                                               "LookAtType-" + lookAt.ToString(), block.Duration, block.ID, PCode.Avatar);
                                 }
                                 catch (Exception ex)
                                 {
@@ -691,11 +703,13 @@ namespace cogbot.Listeners
                         {
                             if (block.TypeData.Length == 57)
                             {
-                                PointAtType pointAt = (PointAtType)block.TypeData[56];
+                                PointAtType pointAt = (PointAtType) block.TypeData[56];
 
                                 try
                                 {
-                                    SendEffect(simulator, sourceAvatar, targetObject, targetPos, "PointAtType-" + pointAt.ToString(), block.Duration, block.ID);
+                                    SendEffect(simulator, sourceAvatar, targetObject, targetPos,
+                                               "PointAtType-" + pointAt.ToString(), block.Duration, block.ID,
+                                               PCode.Avatar);
                                 }
                                 catch (Exception ex)
                                 {
@@ -719,10 +733,12 @@ namespace cogbot.Listeners
                     case EffectType.Cloth:
                     case EffectType.Glow:
                     default:
-                        SendNewRegionEvent(SimEventType.EFFECT, "OnViewerEffect", type, sourceAvatar, targetObject, targetPos);
+                        SendNewRegionEvent(SimEventType.EFFECT, "OnViewerEffect", type, sourceAvatar, targetObject,
+                                           targetPos);
                         break;
                 }
-                SendEffect(simulator, sourceAvatar, targetObject, targetPos, "EffectType." + type, 0.1f, block.ID);
+                SendEffect(simulator, sourceAvatar, targetObject, targetPos, "EffectType." + type, 0.1f, block.ID,
+                           PCode.None);
             }
         }
 

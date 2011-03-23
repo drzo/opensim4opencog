@@ -327,9 +327,14 @@ namespace cogbot.Listeners
 
         private static void Debug(string p)
         {
+            if (p.Contains("ERROR"))
+            {
+                DLRConsole.DebugWriteLine(p);
+                return;
+            }
             if (Settings.LOG_LEVEL != Helpers.LogLevel.None)
             {
-                DLRConsole.DebugWriteLine(p);                
+                DLRConsole.DebugWriteLine(p);
             }
         }
 
@@ -809,7 +814,7 @@ namespace cogbot.Listeners
             // in case we request later
             if (!uuidTypeObject.ContainsKey(avatarID))
             {
-                if (client.Network.Connected) client.Avatars.RequestAvatarName(avatarID);
+                if (client.Network.Connected) RequestAvatarName(avatarID);
             }
             //   prim = GetPrimitive(avatarID, simulator);
             return null;
