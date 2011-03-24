@@ -2379,7 +2379,12 @@ namespace cogbot.TheOpenSims
                             {
                                 if (RemovedThisEventUnsent.ContainsKey(uuid.Key))
                                 {
-                                    LogEvent(AnimEvent(uuid.Key, SimEventStatus.Stop, seq));
+                                    var evt = AnimEvent(uuid.Key, SimEventStatus.Stop, seq);
+                                    bool sent = LogEvent(evt);
+                                    if (!sent && ShouldEventSource)
+                                    {
+                                        WorldSystem.SendPipelineEvent(evt);
+                                    }
                                     shownRemoved.Add(uuid.Key);
                                 }
                             }
@@ -2393,7 +2398,12 @@ namespace cogbot.TheOpenSims
                             {
                                 if (AddedThisEventUnsent.ContainsKey(uuid.Key))
                                 {
-                                    LogEvent(AnimEvent(uuid.Key, SimEventStatus.Start, seq));
+                                    var evt = AnimEvent(uuid.Key, SimEventStatus.Start, seq);
+                                    bool sent = LogEvent(evt);
+                                    if (!sent && ShouldEventSource)
+                                    {
+                                        WorldSystem.SendPipelineEvent(evt);
+                                    }
                                     showAdded.Add(uuid.Key);
                                 }
                             }
@@ -2439,9 +2449,8 @@ namespace cogbot.TheOpenSims
 
             /// CurrentAmin = mostCurrentAnim; 
             /// SendNewEvent("On-Avatar-Animation", avatar, names); 
-        } 
-  
- 
+        }
+
         private SimObjectEvent AnimEvent(UUID uuid, SimEventStatus status, int serial)
         {
             SimAsset a = SimAssetStore.FindOrCreateAsset(uuid, AssetType.Animation);

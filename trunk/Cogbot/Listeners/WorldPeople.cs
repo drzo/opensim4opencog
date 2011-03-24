@@ -638,7 +638,8 @@ namespace cogbot.Listeners
                         StackTrace stackTrace;
                         if (RequestedAvatarNames.TryGetValue(id, out stackTrace))
                         {
-                            Debug("AddName2Key: ERROR requested Name for ID=" + id + " " + stackTrace.ToString());
+                           // Debug("AddName2Key: ERROR requested Name for ID=" + id + " " + stackTrace.ToString());
+                            RequestedAvatarNames.Remove(id);
                         }
                         else
                         {
@@ -646,6 +647,7 @@ namespace cogbot.Listeners
                         }
                     }
                     var Obj = CreateSimObject(id, this, null);
+                    Obj.ConfirmedObject = false;
                     Debug("AddName2Key: INFO Discovered new SimObject from UUID? " + value + " " + id + " " + Obj);
                     return;
                 }

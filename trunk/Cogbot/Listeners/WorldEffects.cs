@@ -111,6 +111,7 @@ namespace cogbot.Listeners
             var avatar = e.Avatar;
             var sittingOn = e.SittingOn;
             var oldSeat = e.OldSeat;
+            if (avatar != null) DeclareAvatar(avatar.ID);
             if (!MaintainActions) return;
             EventQueue.Enqueue("Objects_OnAvatarSitChanged", () =>
                 {
@@ -181,16 +182,17 @@ namespace cogbot.Listeners
             if (!MaintainSounds) return;
             SimObject o = SimObjectFn(objectID);
             if (o == null) return;
+            o.ConfirmedObject = true;
             if (soundID == UUID.Zero)
             {
                 o.OnSound(UUID.Zero, gain);
-                SendNewRegionEvent(SimEventType.EFFECT, "On-Attach-Sound-Gain-Change", o, gain);
+                if (o.ShouldEventSource) SendNewRegionEvent(SimEventType.EFFECT, "On-Attach-Sound-Gain-Change", o, gain);
             }
             else
             {
                 SimAsset sound = EnqueueRequestAsset(soundID, AssetType.Sound, true);
                 o.OnSound(soundID, gain);
-                SendNewRegionEvent(SimEventType.EFFECT, "On-Single-Sound-Gain-Change", o, sound, gain);
+                if (o.ShouldEventSource) SendNewRegionEvent(SimEventType.EFFECT, "On-Single-Sound-Gain-Change", o, sound, gain);
             }
             // RegionMasterTexturePipeline.RequestAsset(soundID, AssetType.SoundWAV, true);
         }
@@ -256,11 +258,12 @@ namespace cogbot.Listeners
         private SimObject SimObjectFn(UUID objectID)
         {
             SimObject O = GetSimObjectFromUUID(objectID);
-            if (O==null)
+            if (O == null)
             {
                 //GetSource()
-                return null;
-                O = CreateSimObject(objectID,this, null);                
+                //return null;
+                O = CreateSimObject(objectID, this, null);
+                O.ConfirmedObject = true;
             }
             return O;
         }
@@ -354,12 +357,14 @@ namespace cogbot.Listeners
                 if (!A.IsRegionAttached) return false;
                 if (A == m_TheSimAvatar) return false;
                 if (A.ID == client.MasterKey) return true;
+                if (A.IsRegionAttached && A.GetName().Contains("ael"))
+                {
+                    return true;
+                }
                 if (A.Distance(TheSimAvatar) > MaintainEffectsDistance)
                 {
                     return false;
                 }
-                if (A.IsRegionAttached && A.GetName().Contains("Rajesh"))
-                    return true;
             }
             //return true;
             return MaintainEffects;
