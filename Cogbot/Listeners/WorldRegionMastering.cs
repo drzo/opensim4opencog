@@ -829,7 +829,7 @@ namespace cogbot.Listeners
                         SourceDetect(sourceID);
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException("isAvatar");
+                        throw new ArgumentOutOfRangeException("isAvatar hint = " + isAvatar);
                 }
                 // client.Self.RequestSit(sourceID,Vector3.Zero);
                 //  client.Directory.

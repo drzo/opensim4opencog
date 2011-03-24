@@ -16,6 +16,13 @@ namespace cogbot.TheOpenSims
     //TheSims-like object
     public class SimObjectImpl : SimPosition, BotMentalAspect, SimMover, SimObject, MeshableObject
     {
+        private bool _confirmedObject;
+        public bool ConfirmedObject
+        {
+            get { return _confirmedObject || _propertiesCache != null; }
+            set { _confirmedObject = value; }
+        }
+
         public SimPosition UsePosition
         {
             get
@@ -1027,6 +1034,7 @@ namespace cogbot.TheOpenSims
             get
             {
                 if (WasKilled) return false;
+                var Prim = this.Prim;
                 if (Prim == null || Prim.ParentID == 0) return true;
                 EnsureParentAccruate(Prim);
                 // _Parent = Parent;
@@ -1037,7 +1045,8 @@ namespace cogbot.TheOpenSims
         public virtual string DebugInfo()
         {
             string str = ToString();
-            if (!HasPrim) return str;
+            var Prim = this.Prim;
+            if (Prim == null || !HasPrim) return str;
             if (Prim.ParentID != 0)
                 return Prim.ParentID + " " + str;
             return str;
@@ -1103,6 +1112,11 @@ namespace cogbot.TheOpenSims
         readonly object MostRecentPropertyUpdateLock = new object();
         private void UpdateProperties(Primitive.ObjectProperties objectProperties)
         {
+            if (!_confirmedObject)
+            {
+                _confirmedObject = true;
+                Debug("Now confirmed!!");
+            }
             lock (MostRecentPropertyUpdateLock)
             {
                 MostRecentPropertyUpdate = objectProperties;
@@ -2132,6 +2146,17 @@ namespace cogbot.TheOpenSims
 
         public readonly Dictionary<string, SimObjectEvent> LastEventByName = new Dictionary<string, SimObjectEvent>();
 
+
+        public bool ShouldEventSource
+        {
+            get { return WorldSystem.UseEventSource(this); }
+        }
+
+        /// <summary>
+        /// Returns false if the event has gone unsent
+        /// </summary>
+        /// <param name="SE"></param>
+        /// <returns></returns>
         public virtual bool LogEvent(SimObjectEvent SE)
         {
             // string eventName = SE.Verb;
@@ -2169,9 +2194,13 @@ namespace cogbot.TheOpenSims
                 {
                     ActionEventQueue.Enqueue(SE);
                 }
-                if (WorldSystem.UseEventSource(this))
-                {
+                if (ShouldEventSource)
+                {                    
                     WorldSystem.SendPipelineEvent(SE);
+                    saveevent = true;
+                } else
+                {
+                    saveevent = false;
                 }
                 LastEventByName[SE.EventName] = SE;
             }
@@ -2335,6 +2364,13 @@ namespace cogbot.TheOpenSims
                                                                     WorldObjects.ToParameter("simDuration", duration),
                                                                     WorldObjects.AsEffectID(id));
             bool noteable = LogEvent(newSimObjectEvent);
+            if (!noteable)
+            {
+                if (WorldSystem.UseEventSource(t) || ShouldEventSource)
+                {
+                    WorldSystem.SendPipelineEvent(newSimObjectEvent);
+                }
+            }
             //todo
             // LogEvent will send noteables already if (noteable) WorldSystem.SendPipelineEvent(newSimObjectEvent);
             return noteable;
@@ -2524,6 +2560,8 @@ namespace cogbot.TheOpenSims
         uint LocalID { get; }
         uint ParentID { get;}
         bool IsDebugging { get; set; }
+        bool ConfirmedObject { get; set; }
+        bool ShouldEventSource { get; }
         bool KilledPrim(Primitive primitive, Simulator simulator);
 
         ICollection<NamedParam> GetInfoMap();

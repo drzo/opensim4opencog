@@ -445,6 +445,7 @@ namespace cogbot.Listeners
                         return null;
                     }
                     obj0 = CreateSimObject(prim.ID, this, simulator);
+                    obj0.ConfirmedObject = true;
                 }
             }
             if (prim.RegionHandle == 0)
@@ -702,6 +703,7 @@ namespace cogbot.Listeners
         private void InternPrim(Simulator simulator, Primitive prim)
         {
             SimObject O = GetSimObject(prim, simulator);
+            DeclareProperties(prim, prim.Properties, simulator);
             O.ResetPrim(prim, client, simulator);
             DeclareRequested(simulator, prim.LocalID);
             if (MaintainObjectUpdates)
