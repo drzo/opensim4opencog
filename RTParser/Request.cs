@@ -762,7 +762,7 @@ namespace RTParser
             if (master==null) return;
             if (master.AlsoKnownAs("listener"))
             {
-                throw new NotImplementedException();
+              ///  throw new NotImplementedException();
             }
         }
 
