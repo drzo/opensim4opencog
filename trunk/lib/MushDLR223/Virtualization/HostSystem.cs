@@ -415,6 +415,10 @@ namespace MushDLR223.Virtualization
                 filemask = "*";
                 dirname = ToCanonicalDirectory(pathname);
                 string[] files = Directory.GetFiles(dirname, filemask);
+                if (files.Length==0)
+                {
+                    return files;
+                }
                 return files;
             }
             filemask = "";
@@ -669,6 +673,15 @@ namespace MushDLR223.Virtualization
         {
             pathIn = pathIn.Trim();
             return FirstExisting(pathIn, combine, out p);
+        }
+
+        public static string ResolveToURI(string pathIn, string[] combine)
+        {
+            pathIn = pathIn.Trim();
+            string prefix;
+            string existing = FirstExisting(pathIn, combine, out prefix);
+            if (existing != null) return existing;
+            return pathIn;
         }
 
         public static string ResolveToURI(string pathIn, IEnumerable<String> combine, out string prefix)

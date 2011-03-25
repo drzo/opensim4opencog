@@ -6,6 +6,13 @@ namespace MushDLR223.Utilities
 {
     public class ListAsSet<T> : IList<T>, IList
     {
+        public ListAsSet()
+        {
+        }
+        public ListAsSet(IEnumerable<T> list)
+        {
+            AddRange(list);
+        }
         public event Action<T> OnAdd;
         public event Action<T> OnRemove;
         public event Action OnModified;
