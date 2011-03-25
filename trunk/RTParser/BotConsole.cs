@@ -899,23 +899,19 @@ namespace RTParser
                 if (args == "")
                 {
                     console("-----------------------------------------------------------------");
-                    foreach (KeyValuePair<string, GraphMaster> ggg in GraphMaster.CopyOf(robot.LocalGraphsByName))
+                    foreach (var ggg in new ListAsSet<GraphMaster>(GraphMaster.CopyOf(robot.LocalGraphsByName).Values))
                     {
                         console("-----------------------------------------------------------------");
-                        string n = ggg.Key;
-                        GraphMaster gm = ggg.Value;
-                        console("local=" + gm + " key='" + n + "'");
-                        gm.WriteMetaHeaders(console, printOptions);
+                        console("local=" + ggg + " keys='" + AsString(ggg.GraphNames) + "'");
+                        ggg.WriteMetaHeaders(console, printOptions);
                         console("-----------------------------------------------------------------");
                     }
                     console("-----------------------------------------------------------------");
-                    foreach (KeyValuePair<string, GraphMaster> ggg in GraphMaster.CopyOf(RTPBot.GraphsByName))
+                    foreach (var ggg in new ListAsSet<GraphMaster>(GraphMaster.CopyOf(RTPBot.GraphsByName).Values))
                     {
                         console("-----------------------------------------------------------------");
-                        string n = ggg.Key;
-                        GraphMaster gm = ggg.Value;
-                        console("value=" + gm + " key='" + n + "'");
-                        gm.WriteMetaHeaders(console, printOptions);
+                        console("global=" + ggg + " keys='" + AsString(ggg.GraphNames) + "'");
+                        ggg.WriteMetaHeaders(console, printOptions);
                         console("-----------------------------------------------------------------");
                     }
                 }
@@ -925,6 +921,25 @@ namespace RTParser
                 return true;
             }
             return false;
+        }
+
+        private static string AsString(IEnumerable names)
+        {
+            string s = "";
+            bool comma = false;
+            foreach (var name in names)
+            {
+                if (comma)
+                {
+                    s += ",";
+                }
+                else
+                {
+                    comma = true;
+                }
+                s += name;
+            }
+            return s;
         }
 
         internal static bool CallOrExecCmd(Request request, bool showHelp, OutputDelegate console, string cmd, User myUser, string args)
@@ -1192,7 +1207,7 @@ namespace RTParser
 
         public void TraceTest(String s, Action action)
         {
-            return;
+           // return;
             writeChatTrace(s);
             action();
         }
