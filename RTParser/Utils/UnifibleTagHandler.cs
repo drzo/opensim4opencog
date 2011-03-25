@@ -125,11 +125,11 @@ namespace RTParser.Utils
             {
                 case '*':
                     matchVars.Add("*");
-                    return left + "\b([A-Za-z 0-9]+)\b" + RegExFrom(target.Substring(fi + 1), matchVars);
+                    return left + @"\b([A-Za-z 0-9]+)\b" + RegExFrom(target.Substring(fi + 1), matchVars);
                 case '_':
 
                     matchVars.Add("_");
-                    return left + "\b([A-Za-z0-9]+)\b" + RegExFrom(target.Substring(fi + 1), matchVars);
+                    return left + @"\b([A-Za-z0-9]+)\b" + RegExFrom(target.Substring(fi + 1), matchVars);
                 case '<':
                     string targetSubstring = target.Substring(fi - 1);
                     XmlNode node = getNode("<node>" + targetSubstring + "</node>");
