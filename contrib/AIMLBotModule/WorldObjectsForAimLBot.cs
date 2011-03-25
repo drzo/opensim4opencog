@@ -311,27 +311,27 @@ namespace AIMLBotModule
         {
             if (e.SourceID == client.Self.AgentID) return;
             if (e.Type == EffectType.LookAt) return;
-            SetInterest(e.SourceID, e.TargetID, false);
+            SetInterest(e.SourceID, e.TargetID, false, PCode.None);
         }
 
         private void AIML_OnLookAt(object sender, ViewerEffectLookAtEventArgs e)
         {
             if (e.SourceID == client.Self.AgentID) return;
-            //if (targetid==client.Self.AgentID) SetInterest(sourceid, targetid, false);
+            //if (targetid==client.Self.AgentID) SetInterest(sourceid, targetid, false, PCode.Avatar);
         }
 
         private void AIML_OnPointAt(object sender, ViewerEffectPointAtEventArgs e)
         {
             if (PointAtType.None == e.PointType) return;
             if (e.SourceID == client.Self.AgentID) return;
-            SetInterest(e.SourceID, e.TargetID, true);
+            SetInterest(e.SourceID, e.TargetID, true, PCode.Avatar);
         }
         // handler.Enqueue(() => 
-        private void SetInterest(UUID sourceid, UUID targetid, bool forced)
+        private void SetInterest(UUID sourceid, UUID targetid, bool forced, PCode hint)
         {
-            SetInterest0(sourceid, targetid, forced);
+            SetInterest0(sourceid, targetid, forced, hint);
         }
-        private void SetInterest0(UUID sourceid, UUID targetid, bool forced)
+        private void SetInterest0(UUID sourceid, UUID targetid, bool forced, PCode hint)
         {
             if (MyBotNullWarning()) return;
             if (targetid == client.Self.AgentID) AttendTo(null, sourceid, PCode.Avatar);
