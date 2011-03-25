@@ -536,9 +536,9 @@ namespace OpenMetaverse
             transfer.Callback = callback;
 
             // Check asset cache first
-            if (callback != null && Cache.HasAsset(assetID))
+            if (callback != null && Cache.HasAsset(assetID, type))
             {
-                byte[] data = Cache.GetCachedAssetBytes(assetID);
+                byte[] data = Cache.GetCachedAssetBytes(assetID, type);
                 transfer.AssetData = data;
                 transfer.Success = true;
                 transfer.Status = StatusCode.OK;
@@ -640,9 +640,9 @@ namespace OpenMetaverse
             transfer.Callback = callback;
 
             // Check asset cache first
-            if (callback != null && Cache.HasAsset(assetID))
+            if (callback != null && Cache.HasAsset(assetID, type))
             {
-                byte[] data = Cache.GetCachedAssetBytes(assetID);
+                byte[] data = Cache.GetCachedAssetBytes(assetID, type);
                 transfer.AssetData = data;
                 transfer.Success = true;
                 transfer.Status = StatusCode.OK;
@@ -1086,10 +1086,12 @@ namespace OpenMetaverse
             if (Client.Network.CurrentSim.Caps != null &&
                 Client.Network.CurrentSim.Caps.CapabilityURI("GetMesh") != null)
             {
+                const AssetType type = AssetType.Mesh;
                 // Do we have this mesh asset in the cache?
-                if (Client.Assets.Cache.HasAsset(meshID))
+                if (Client.Assets.Cache.HasAsset(meshID, type))
                 {
-                    callback(true, new AssetMesh(meshID, Client.Assets.Cache.GetCachedAssetBytes(meshID)));
+                    callback(true,
+                             new AssetMesh(meshID, Client.Assets.Cache.GetCachedAssetBytes(meshID, type)));
                     return;
                 }
 
@@ -1105,7 +1107,7 @@ namespace OpenMetaverse
                         if (error == null && responseData != null) // success
                         {
                             callback(true, new AssetMesh(meshID, responseData));
-                            Client.Assets.Cache.SaveAssetToCache(meshID, responseData);
+                            Client.Assets.Cache.SaveAssetToCache(meshID, responseData, type);
                         }
                         else // download failed
                         {
@@ -1151,11 +1153,11 @@ namespace OpenMetaverse
                 return;
 
             // Do we have this image in the cache?
-            if (Client.Assets.Cache.HasAsset(textureID))
+            if (Client.Assets.Cache.HasAsset(textureID, AssetType.Texture))
             {
                 ImageDownload image = new ImageDownload();
                 image.ID = textureID;
-                image.AssetData = Client.Assets.Cache.GetCachedAssetBytes(textureID);
+                image.AssetData = Client.Assets.Cache.GetCachedAssetBytes(textureID, AssetType.Texture);
                 image.Size = image.AssetData.Length;
                 image.Transferred = image.AssetData.Length;
                 image.ImageType = imageType;
@@ -1200,7 +1202,7 @@ namespace OpenMetaverse
                         callback(TextureRequestState.Finished, new AssetTexture(image.ID, image.AssetData));
                         FireImageProgressEvent(image.ID, image.Transferred, image.Size);
 
-                        Client.Assets.Cache.SaveAssetToCache(textureID, responseData);
+                        Client.Assets.Cache.SaveAssetToCache(textureID, responseData, AssetType.Texture);
                     }
                     else // download failed
                     {
@@ -1531,7 +1533,7 @@ namespace OpenMetaverse
                     lock (Transfers) Transfers.Remove(download.ID);
 
                     // Cache successful asset download
-                    Cache.SaveAssetToCache(download.AssetID, download.AssetData);
+                    Cache.SaveAssetToCache(download.AssetID, download.AssetData, download.AssetType);
 
                     if (download.Callback != null)
                     {
