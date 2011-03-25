@@ -28,7 +28,7 @@ namespace cogbot.TheOpenSims
 
         internal readonly BotClient Client;
 
-        static public readonly TaskQueueHandler taskQueue = new TaskQueueHandler("SimAssetStore (Slowly)", TimeSpan.FromSeconds(6), false);
+        static public readonly TaskQueueHandler taskQueue = new TaskQueueHandler("SimAssetStore (Slowly)", TimeSpan.FromMilliseconds(60), false);
         public static readonly TaskQueueHandler SlowConnectedQueue = taskQueue;
         public static readonly object SavingFileLock = new object();
 
@@ -92,7 +92,11 @@ namespace cogbot.TheOpenSims
 
         private void LoadFolderId(UUID folderid)
         {
-            if (!WorldObjects.GleanAssetsFromFolders) return;
+            if (!WorldObjects.GleanAssetsFromFolders)
+            {
+                taskQueue.PauseBetweenOperations = TimeSpan.FromSeconds(6);
+                return;
+            }
             if (folderid == UUID.Zero) return;
             lock (BusyUpdating) if (BusyUpdating.Contains(folderid)) return;
             lock (BusyUpdating) BusyUpdating.Add(folderid);
@@ -108,8 +112,7 @@ namespace cogbot.TheOpenSims
                                       if (contents != null) contents.ForEach(LoadItemOrFolder);
                                       downloadedAssetFoldersComplete = prev;
 
-
-
+                                      taskQueue.PauseBetweenOperations = TimeSpan.FromSeconds(6);
                                   //    lock (BusyUpdating) BusyUpdating.Remove(folderid);
                                   });
 
@@ -132,6 +135,7 @@ namespace cogbot.TheOpenSims
             Inventory.InventoryObjectUpdated += Store_OnInventoryObjectUpdated;
             Inventory.InventoryObjectRemoved += Store_OnInventoryObjectRemoved;
             Enqueue((DownloadAssetFolders));
+            taskQueue.Start();
 
         }
 
@@ -813,12 +817,13 @@ namespace cogbot.TheOpenSims
                 {
                     foreach (string files in Directory.GetFiles("sound_files/"))
                     {
-                        if (!files.EndsWith("sound")) continue;
+                        if (!files.EndsWith(".ogg")) continue;
                         byte[] bs = File.ReadAllBytes(files);
                         string name = Path.GetFileNameWithoutExtension(Path.GetFileName(files)).ToLower();
                         if (nameAsset.ContainsKey(name)) continue;
                         WriteLine("Sound w/o UUID " + name);
                         SimSound sound = new SimSound(UUID.Zero, name, AssetType.Sound);
+                        sound.FileName = files;
                         nameAsset[name] = sound;
                     }
                 }
@@ -1193,13 +1198,18 @@ namespace cogbot.TheOpenSims
             return atype;
         }
 
-        static void SaveAssetFile(string fname, bool useCSVs)
+        public static int SaveAssetFile(string fname, bool useCSVs)
         {
             var doc = new XmlDocument();
             var docRoot = doc.CreateElement("assets");// as LineInfoElementImpl;
             //docRoot.ReadOnly = false;
             foreach (SimAsset asset in SimAssets)
             {
+                if (asset.AssetID == UUID.Zero)
+                {
+                    docRoot.AppendChild(doc.CreateComment(asset.ToString()));
+                    continue;
+                }                
                 var node = doc.CreateElement("asset");// as LineInfoElementImpl;
                 XmlAttribute atrtrib = doc.CreateAttribute("type");
                 atrtrib.Value = asset.AssetType.ToString();
@@ -1236,6 +1246,7 @@ namespace cogbot.TheOpenSims
             //doc.ReadOnly = false;
             doc.AppendChild(docRoot);
             doc.Save(fname);
+            return SimAssets.Count;
         }
 
         static string GetAttribValue(XmlNode templateNode, string attribName, string defaultIfEmpty)
@@ -1555,9 +1566,10 @@ namespace cogbot.TheOpenSims
 
         public static SimAsset FindOrCreateAsset(UUID uUID, AssetType type)
         {
-            SimAsset anim = FindAsset(uUID);              
-            if (anim!=null)
+            SimAsset anim = FindAsset(uUID);
+            if (anim != null)
             {
+                anim.ProbeCache();
                 return anim;
             }
             lock (uuidAsset)
@@ -1612,6 +1624,7 @@ namespace cogbot.TheOpenSims
                     uuidAsset[uUID] = anim;
                 }
                 anim.AssetType = type;
+                anim.ProbeCache();
             }
             {
                 InternAsset(anim);

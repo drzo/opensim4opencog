@@ -150,6 +150,7 @@ namespace cogbot.Listeners
         public WorldObjects(BotClient client)
             : base(client)
         {
+            client.WorldSystem = this;
             RegisterAll();
             DLRConsole.TransparentCallers.Add(typeof (WorldObjects));
             if (Utils.GetRunningRuntime() == Utils.Runtime.Mono)
@@ -207,7 +208,6 @@ namespace cogbot.Listeners
 
                 client.Network.SimConnected += Network_OnSimConnectedHook;
                 client.Inventory.ScriptRunningReply += Inventory_OnScriptRunning;
-                _simAssetSystem = new SimAssetStore(client);
 
 
                 burstStartTime = DateTime.Now;
@@ -226,7 +226,8 @@ namespace cogbot.Listeners
                 {
                     //client.Settings.USE_TEXTURE_CACHE = false;
                 }
-
+                // must be after the pipeline is made
+                _simAssetSystem = new SimAssetStore(client);
                 if (GridMaster == this)
                 {
 
