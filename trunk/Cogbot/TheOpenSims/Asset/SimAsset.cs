@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using cogbot.Listeners;
 using MushDLR223.Utilities;
@@ -448,6 +449,7 @@ namespace cogbot.TheOpenSims
         {
             get
             {
+                ProbeCache();
                 if (_TypeData != null) return _TypeData;
                 if (_ServerAsset == null) return null;
                 return _ServerAsset.AssetData;
@@ -612,15 +614,21 @@ namespace cogbot.TheOpenSims
             {
                 if (!string.IsNullOrEmpty(_fileName))
                     return _fileName;
-                string gname = Name;
                 UUID uuid = AssetID;
                 if (uuid == UUID.Zero) return null;
-
-                string named = uuid + "." + AssetType.ToString().ToLower();
+                var cache = Store.Client.WorldSystem.RegionMasterTexturePipeline.Cache;
+                string named = cache.FileName(uuid, AssetType);
+                if (!string.IsNullOrEmpty(named) && File.Exists(named))
+                {
+                    return named;
+                }
+                /*
+                named = uuid + "." + cache.AssetTypeExtension(AssetType);
+                string gname = Name;
                 if (!string.IsNullOrEmpty(gname))
                 {
                     named = gname + "_" + named;
-                }
+                }*/
                 return named;
             }
             set {
@@ -629,5 +637,31 @@ namespace cogbot.TheOpenSims
         }
 
         #endregion
+
+        public void ProbeCache()
+        {
+            if (_TypeData != null) return;
+            var fileName = _fileName;
+            if (!string.IsNullOrEmpty(fileName) && File.Exists(fileName))
+            {
+                AssetData = File.ReadAllBytes(fileName);
+                if (_TypeData != null && _TypeData.Length > 0) return;
+            }
+            if (false && _NamesList.Count > 0)
+            {
+                fileName = FileName;
+                if (!string.IsNullOrEmpty(fileName) && File.Exists(fileName))
+                {
+                    AssetData = File.ReadAllBytes(fileName);
+                    if (_TypeData != null && _TypeData.Length > 0)
+                    {
+                        _fileName = fileName;
+                        return;
+                    }
+                }
+            }
+            var cache = Store.Client.WorldSystem.RegionMasterTexturePipeline.Cache;
+            AssetData = cache.GetCachedAssetBytes(AssetID, AssetType);
+        }
     }
 }

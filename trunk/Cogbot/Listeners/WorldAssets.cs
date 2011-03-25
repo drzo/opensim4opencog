@@ -18,7 +18,7 @@ namespace cogbot.Listeners
 {
     public partial class WorldObjects
     {
-        private readonly AssetManager RegionMasterTexturePipeline;
+        internal readonly AssetManager RegionMasterTexturePipeline;
         private static readonly List<UUID> TexturesSkipped = new List<UUID>();
 
         /// <summary>
@@ -194,6 +194,7 @@ namespace cogbot.Listeners
             }
             lock (AssetRequestType)
             {
+                EnsureCached(asset, asset.AssetID);
                 if (AssetRequestType.ContainsKey(asset.AssetID))
                 {
                     AssetType assetRequestType = AssetRequestType[transfer.AssetID];
@@ -290,10 +291,11 @@ namespace cogbot.Listeners
 
         public ImageDownload StartTextureDownload(UUID id)
         {
-            SimAsset simAsset = SimAssetStore.FindOrCreateAsset(id, AssetType.Texture);
+            AssetType type = AssetType.Texture;
+            SimAsset simAsset = SimAssetStore.FindOrCreateAsset(id, type);
             AssetCache Cache = 
                 (RegionMasterTexturePipeline == null ? null : RegionMasterTexturePipeline.Cache);
-            if (Cache != null && Cache.HasAsset(id))
+            if (Cache != null && Cache.HasAsset(id, type))
             {
                 ImageDownload dl = Cache.GetCachedImage(id);
                 if (dl != null)
@@ -345,8 +347,22 @@ namespace cogbot.Listeners
         }
 
 
+        private bool EnsureCached(Asset asset, UUID id)
+        {
+            if (!RegionMasterTexturePipeline.Cache.HasAsset(id, asset.AssetType))
+            {
+                var image = asset.AssetData;
+                // force into cache
+                if (image == null || image.Length == 0) return false;
+                if (!RegionMasterTexturePipeline.Cache.SaveAssetToCache(id, image, asset.AssetType)) return false;
+                return RegionMasterTexturePipeline.Cache.HasAsset(id, asset.AssetType);
+            }
+            return true;
+        }
+
         internal void OnAssetDownloaded(UUID uUID, Asset asset)
         {
+            EnsureCached(asset, uUID);
             WorldObjects.RegisterUUIDMaybe(uUID, asset);
             SimAsset A = SimAssetStore.FindOrCreateAsset(uUID, asset.AssetType);
             A.SetAsset(asset);
