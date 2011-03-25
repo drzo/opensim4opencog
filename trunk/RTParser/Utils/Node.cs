@@ -794,7 +794,7 @@ namespace RTParser.Utils
                 this.IsSpecial = true;
                 if (!fs.ToUpper().Contains("<BOT"))
                 {
-                    writeDebugLine("IsSpecial: '{0}' {1}", fs, categoryInfo);
+                    //writeDebugLine("IsSpecial: '{0}' {1}", fs, categoryInfo);
                 }
             }
             children = children ?? new Dictionary<string, Node>();

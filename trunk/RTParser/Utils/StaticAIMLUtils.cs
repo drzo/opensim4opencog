@@ -822,6 +822,7 @@ namespace RTParser.Utils
 
         public static string PadStars(string pattern)
         {
+            if (!AIMLLoader.SeekOutAndRepair) return pattern;
             pattern = Trim(pattern);
             int pl = pattern.Length;
             if (pl == 0) return "~*";
