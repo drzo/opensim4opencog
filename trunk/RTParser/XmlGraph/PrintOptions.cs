@@ -31,6 +31,7 @@ namespace RTParser.Utils
             return currentWriter;
         }
 
+        public bool IncludeRuleComments = false;
         public bool IncludeLinenoPerNode = true;
         public bool IncludeFileNamePerNode = true;
 

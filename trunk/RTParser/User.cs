@@ -446,6 +446,7 @@ namespace RTParser
             get { return GetResult(0, true); }
         }
 
+        public PrintOptions PrintOptions { get; set; }
 
         public IEnumerable<Unifiable> BotOutputs
         {
@@ -514,6 +515,7 @@ namespace RTParser
             DisabledTemplates = new ListAsSet<TemplateInfo>();
             DisallowedGraphs = new HashSet<GraphMaster>();
             qsbase = new QuerySettingsImpl(bot.GetQuerySettings());
+            PrintOptions = new PrintOptions();
             if (userID.Length > 0)
             {
                 WriterOptions = new PrintOptions();

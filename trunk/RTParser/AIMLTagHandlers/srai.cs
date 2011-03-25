@@ -288,7 +288,7 @@ namespace RTParser.AIMLTagHandlers
                 {
                     if (CurrentTemplate.IsHighlyUsefull)
                     {
-                        writeToLog("IsHighlyUsefull: " + CurrentTemplate);
+                        writeToLog("IsHighlyUsefull: " + CurrentTemplate.ToFileString(request.Requester.PrintOptions));
                         request.SuspendSearchLimits = true;
                         request.depth = 0;
                     }

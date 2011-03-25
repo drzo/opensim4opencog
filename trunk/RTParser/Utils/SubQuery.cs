@@ -370,7 +370,7 @@ namespace RTParser.Utils
             if (Templates != null)
                 foreach (TemplateInfo path in Templates)
                 {
-                    s += "\r\n t: " + path.ToString();
+                    s += "\r\n t: " + path.ToFileString(Requester.PrintOptions);
                 }
             s += " \r\n";
             Result r = Result;
