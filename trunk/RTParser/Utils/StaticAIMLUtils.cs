@@ -78,6 +78,7 @@ namespace RTParser.Utils
                                 "src",
                                 "think",
                                 "that",
+                                 "genlMt",
                                 //    "debug",
                                           };
 
@@ -892,10 +893,13 @@ namespace RTParser.Utils
                     if (node.Attributes.Count == 0)
                         return true;
             }
-            if (IsEmptyText(node)) return true;
+            if (IsEmptyText(node))
+            {
+                return true;
+            }
             if (TemplateSideRendering.flatten.Contains(node.Name))
             {
-                if (IsSilentTag(node.ChildNodes)) return false;
+                if (!IsSilentTag(node.ChildNodes)) return false;
                 return true;
             }
             return false;
