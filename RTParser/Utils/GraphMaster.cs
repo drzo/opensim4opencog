@@ -167,8 +167,8 @@ namespace RTParser.Utils
 
             // most graphs try to recuse on themselves until otehrwise stated (like in make-parallel)
             Srai = gn;
-            RootNode = new Node(this, null);
-            PostParallelRootNode = new Node(this, null);
+            RootNode = new Node(this, Unifiable.Empty);
+            PostParallelRootNode = new Node(this, Unifiable.Empty);
             if (!TrackTemplates)
             {
                 UnusedTemplates = null;
@@ -936,6 +936,20 @@ namespace RTParser.Utils
             lock (list)
             {
                 copy.AddRange(list);
+            }
+            return copy;
+        }
+
+        public static IDictionary<K, V> CopyOf<K, V>(IDictionary<K, V> list)
+        {
+            var copy = new Dictionary<K, V>();
+            if (list == null) return copy;
+            lock (list)
+            {
+                foreach (var kv in list)
+                {
+                    copy.Add(kv.Key, kv.Value);
+                }
             }
             return copy;
         }
