@@ -74,7 +74,7 @@ namespace RTParser.Utils
             _parentObject = P;
             if (W != null && W.IsEmpty)
             {
-                throw new InvalidCastException("Empty Node!");
+               // throw new InvalidCastException("Empty Node!");
             }
             word = W;
             //SyncObject = this;// P ?? this;
