@@ -79,18 +79,19 @@ namespace RTParser.Database
                     realName = null;
                     return sresultGet + " " + name;
                 }
-                else if (Unifiable.IsEMPTY(sresultGet))
+                else if (Unifiable.IsEMPTY(resultGet))
                 {
                     succeed = true;
                     realName = name;
-                    return sresultGet;
+                    return resultGet;
                 }
-                else if (Unifiable.IsUnknown(sresultGet))
+                else if (Unifiable.IsUnknown(resultGet))
                 {
-                    succeed = true;
+                    succeed = false;
                     realName = name;
-                    return sresultGet;
+                    return resultGet;
                 }
+
             }
             if (!String.IsNullOrEmpty(sresultGet))
             {

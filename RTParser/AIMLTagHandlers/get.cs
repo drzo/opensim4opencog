@@ -129,12 +129,17 @@ namespace RTParser.AIMLTagHandlers
                 {
                     if (!succeed)
                     {
-                        QueryHasFailed = true;
-                        return FAIL;
+                        Unifiable defaultVal = GetAttribValue("default", null);
+                        if (defaultVal == null)
+                        {
+                            QueryHasFailed = true;
+                            return v;
+                        }
+                        return defaultVal;
                     }
                     // trace the next line to see why
                     Proc.TraceTest("NULL from success?!", () => GetActualValue(name, typeof (bot) == GetType() ? "bot" : "get", out succeed));
-                    return Unifiable.Empty;
+                    return v;
                 }
                 if (succeed)
                 {
