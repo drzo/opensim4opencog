@@ -28,6 +28,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using OpenMetaverse.Assets;
 
 namespace OpenMetaverse
 {
@@ -46,6 +47,7 @@ namespace OpenMetaverse
         private System.Timers.Timer cleanerTimer;
         private double pruneInterval = 1000 * 60 * 5;
         private bool autoPruneEnabled = true;
+        private object CacheLock = new object();
 
         /// <summary>
         /// Allows setting weather to periodicale prune the cache if it grows too big
@@ -135,7 +137,11 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="assetID">UUID of the asset we want to get</param>
         /// <returns>Raw bytes of the asset, or null on failure</returns>
-        public byte[] GetCachedAssetBytes(UUID assetID)
+        public byte[] GetCachedAssetBytes(UUID assetID, AssetType assetType)
+        {
+            lock (CacheLock) return GetCachedAssetBytes0(assetID, assetType);
+        }
+        private byte[] GetCachedAssetBytes0(UUID assetID, AssetType assetType)
         {
             if (!Operational())
             {
@@ -143,7 +149,7 @@ namespace OpenMetaverse
             }
             try
             {
-                string fileName = FileName(assetID);
+                string fileName = FileName(assetID, assetType);
                 bool exists = File.Exists(fileName);
                 if (!exists)
                 {
@@ -172,7 +178,7 @@ namespace OpenMetaverse
             if (!Operational())
                 return null;
 
-            byte[] imageData = GetCachedAssetBytes(imageID);
+            byte[] imageData = GetCachedAssetBytes(imageID, AssetType.Texture);
             if (imageData == null)
                 return null;
             ImageDownload transfer = new ImageDownload();
@@ -191,12 +197,79 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="assetID">UUID of the asset</param>
         /// <returns>String with the file name of the cahced asset</returns>
-        private string FileName(UUID assetID)
+        public string FileName(UUID assetID, AssetType assetType)
         {
             if (ComputeAssetCacheFilename != null) {
-                return ComputeAssetCacheFilename(Client.Settings.ASSET_CACHE_DIR, assetID);
+                return ComputeAssetCacheFilename(Client.Settings.ASSET_CACHE_DIR, assetID) +
+                   AssetTypeExtension(assetType);
             }
-            return Client.Settings.ASSET_CACHE_DIR + Path.DirectorySeparatorChar + assetID.ToString();
+            return Client.Settings.ASSET_CACHE_DIR + Path.DirectorySeparatorChar + assetID.ToString() +
+                   AssetTypeExtension(assetType);
+        }
+
+        public string AssetTypeExtension(AssetType assetType)
+        {
+            switch (assetType)
+            {
+                case AssetType.Unknown:
+                    break;
+                case AssetType.ImageTGA:
+                case AssetType.ImageJPEG:
+                case AssetType.Texture:
+                case AssetType.TextureTGA:
+                    return ".jp2";
+                case AssetType.Mesh:
+                    break;
+                case AssetType.Sound:
+                case AssetType.SoundWAV:
+                    return ".ogg";
+                case AssetType.CallingCard:
+                    break;
+                case AssetType.Landmark:
+                    break;
+                case AssetType.Clothing:
+                    break;
+                case AssetType.Object:
+                    break;
+                case AssetType.Notecard:
+                    break;
+                case AssetType.LSLText:
+                    break;
+                case AssetType.LSLBytecode:
+                    break;
+                case AssetType.Bodypart:
+                    break;
+                case AssetType.Animation:
+                    break;
+                case AssetType.Gesture:
+                    break;
+                case AssetType.Simstate:
+                    break;
+                case AssetType.Link:
+                    break;
+                case AssetType.EnsembleStart:
+                    break;
+                case AssetType.EnsembleEnd:
+                    break;
+                case AssetType.TrashFolder:
+                case AssetType.SnapshotFolder:
+                case AssetType.LostAndFoundFolder:
+                case AssetType.FavoriteFolder:
+                case AssetType.LinkFolder:
+                case AssetType.CurrentOutfitFolder:
+                case AssetType.OutfitFolder:
+                case AssetType.MyOutfitsFolder:
+                case AssetType.RootFolder:
+                case AssetType.Folder:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException("AssetType." + assetType);
+            }
+            if (ArchiveConstants.ASSET_TYPE_TO_EXTENSION.ContainsKey(assetType))
+            {
+                return ArchiveConstants.ASSET_TYPE_TO_EXTENSION[assetType];
+            }
+            return "." + assetType;
         }
 
         /// <summary>
@@ -205,7 +278,11 @@ namespace OpenMetaverse
         /// <param name="assetID">UUID of the asset</param>
         /// <param name="assetData">Raw bytes the asset consists of</param>
         /// <returns>Weather the operation was successfull</returns>
-        public bool SaveAssetToCache(UUID assetID, byte[] assetData)
+        public bool SaveAssetToCache(UUID assetID, byte[] assetData, AssetType assetType)
+        {
+            lock (CacheLock) return SaveAssetToCache0(assetID, assetData, assetType);
+        }
+        private bool SaveAssetToCache0(UUID assetID, byte[] assetData, AssetType assetType)
         {
             if (!Operational())
             {
@@ -214,14 +291,14 @@ namespace OpenMetaverse
 
             try
             {
-                Logger.DebugLog("Saving " + FileName(assetID) + " to asset cache.", Client);
+                Logger.DebugLog("Saving " + FileName(assetID,assetType) + " to asset cache.", Client);
 
                 if (!Directory.Exists(Client.Settings.ASSET_CACHE_DIR))
                 {
                     Directory.CreateDirectory(Client.Settings.ASSET_CACHE_DIR);
                 }
 
-                File.WriteAllBytes(FileName(assetID), assetData);
+                File.WriteAllBytes(FileName(assetID,assetType), assetData);
             }
             catch (Exception ex)
             {
@@ -237,16 +314,16 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="assetID">UUID of the asset</param>
         /// <returns>Null if we don't have that UUID cached on disk, file name if found in the cache folder</returns>
-        public string AssetFileName(UUID assetID)
+        public string AssetFileName(UUID assetID, AssetType assetType)
         {
             if (!Operational())
             {
                 return null;
             }
 
-            string fileName = FileName(assetID);
+            string fileName = FileName(assetID, assetType);
 
-            if (File.Exists(fileName))
+            if (Exists(fileName))
                 return fileName;
             else
                 return null;
@@ -257,18 +334,27 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="assetID">UUID of the asset</param>
         /// <returns>True is the asset is stored in the cache, otherwise false</returns>
-        public bool HasAsset(UUID assetID)
+        public bool HasAsset(UUID assetID, AssetType assetType)
         {
             if (!Operational())
                 return false;
             else
-                return File.Exists(FileName(assetID));
+                return Exists(FileName(assetID, assetType));
+        }
+
+        private bool Exists(string name)
+        {
+            lock (CacheLock) return File.Exists(name);
         }
 
         /// <summary>
         /// Wipes out entire cache
         /// </summary>
         public void Clear()
+        {
+            lock (CacheLock) Clear0();
+        }
+        public void Clear0()
         {
             string cacheDir = Client.Settings.ASSET_CACHE_DIR;
             if (!Directory.Exists(cacheDir))
@@ -278,7 +364,7 @@ namespace OpenMetaverse
 
             DirectoryInfo di = new DirectoryInfo(cacheDir);
             // We save file with UUID as file name, only delete those
-            FileInfo[] files = di.GetFiles("????????-????-????-????-????????????", SearchOption.TopDirectoryOnly);
+            FileInfo[] files = di.GetFiles("????????-????-????-????-????????????.*", SearchOption.TopDirectoryOnly);
 
             int num = 0;
             foreach (FileInfo file in files)
@@ -295,6 +381,10 @@ namespace OpenMetaverse
         /// </summary>
         public void Prune()
         {
+            lock (CacheLock) Prune0();
+        }
+        private void Prune0()
+        {
             string cacheDir = Client.Settings.ASSET_CACHE_DIR;
             if (!Directory.Exists(cacheDir))
             {
@@ -302,7 +392,7 @@ namespace OpenMetaverse
             }
             DirectoryInfo di = new DirectoryInfo(cacheDir);
             // We save file with UUID as file name, only count those
-            FileInfo[] files = di.GetFiles("????????-????-????-????-????????????", SearchOption.TopDirectoryOnly);
+            FileInfo[] files = di.GetFiles("????????-????-????-????-????????????.*", SearchOption.TopDirectoryOnly);
 
             long size = GetFileSize(files);
 
