@@ -904,7 +904,9 @@ namespace RTParser
             {
                 return tagHandler.FAIL;
             }
-            if (!Unifiable.IsNullOrEmpty(cp) || IsSilentTag(node))
+            var st = IsSilentTag(node);
+            var ine = Unifiable.IsNullOrEmpty(cp);
+            if (!ine || st)
             {
                 return cp;
             }
