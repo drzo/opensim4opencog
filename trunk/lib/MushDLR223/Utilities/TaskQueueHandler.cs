@@ -394,7 +394,7 @@ namespace MushDLR223.Utilities
 
         private void TestLock(object busyTrackingLock)
         {
-            if (NeverStart) return;
+            return;
             if (Monitor.TryEnter(busyTrackingLock, TimeSpan.FromSeconds(10)))
             {
                 Monitor.Exit(busyTrackingLock);
