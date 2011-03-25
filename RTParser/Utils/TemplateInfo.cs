@@ -233,7 +233,7 @@ namespace RTParser.Utils
         }
 
         internal override XmlNode srcNode { get; set; }
-
+        
         public override string ToString()
         {
             var tryit = TemplateXml;
@@ -504,6 +504,7 @@ namespace RTParser.Utils
     }
     public interface TemplateInfo : CategoryInfo, TemplateResult
     {
+        string ToString();
         XmlNode TemplateXml { get; }
         bool IsSilent { get; }
         XmlNode ClonedOutput { get; }

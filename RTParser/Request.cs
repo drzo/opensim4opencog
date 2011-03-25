@@ -1713,7 +1713,7 @@ namespace RTParser
             {
                 // writeToLog("Diableding temporily " + templateInfo);
             }
-            string infoName = "" + templateInfo;
+            string infoName = "" + templateInfo.ToFileString(Requester.PrintOptions);
             //writeToLog("disabling0 " + infoName);
             rr.AddUndo("un-disabling0 " + infoName, () =>
             {

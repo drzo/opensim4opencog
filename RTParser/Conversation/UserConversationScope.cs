@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using RTParser.Utils;
 
 namespace RTParser
 {
@@ -100,5 +101,7 @@ namespace RTParser
         IList<Unifiable> Topics { get; }
 
         IEnumerable<Unifiable> BotOutputs { get; }
+
+        PrintOptions PrintOptions { get; set; }
     }
 }

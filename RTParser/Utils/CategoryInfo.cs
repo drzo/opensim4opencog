@@ -189,7 +189,7 @@ namespace RTParser.Utils
             }
 
             s += printOptions.FormatXML(CategoryXml);
-            s += GetRuleStrings;
+            if (printOptions.IncludeRuleComments) s += GetRuleStrings;
 
             if (hasTopic) s += "</topic>";
             printOptions.InsideTopic = insideTopic;
