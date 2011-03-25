@@ -20,6 +20,8 @@ namespace RTParser.Utils
         public bool recurse;
         public RTPBot RProcessor;
         public bool NeedsLoaderLock;
+        private bool _searchForGuard = false;
+
         public bool RemovePreviousTemplatesFromNodes
         {
             get { return CtxGraph.RemovePreviousTemplatesFromNodes; }
@@ -101,6 +103,16 @@ namespace RTParser.Utils
         public ICollection<CrossAppDomainDelegate> ReloadHooks
         {
             get { return RProcessor.ReloadHooks; }
+        }
+
+        public bool SearchForGuard
+        {
+            get {
+                return _searchForGuard;
+            }
+            set {
+                _searchForGuard = value;
+            }
         }
 
 

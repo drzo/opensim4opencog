@@ -1119,7 +1119,7 @@ namespace RTParser
             get { return ToArray().Length > 1; }
         }
         public static bool UpcaseXMLSource = true;
-        public static bool NOCateIndex = false;        
+        public static bool NOCateIndex = true;        
         public static int MaxCategories = 10000;
         public static int PrintCategories = 1000;
         protected static readonly Dictionary<string, IndexTargetList> categoryInfosDictionary = new Dictionary<string, IndexTargetList>();

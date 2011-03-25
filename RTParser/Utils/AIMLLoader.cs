@@ -30,6 +30,7 @@ namespace RTParser.Utils
     {
         #region Attributes
 
+        public static bool SeekOutAndRepair = true;
         public Request LoaderRequest00;
 
         /// <summary>
@@ -1086,7 +1087,7 @@ namespace RTParser.Utils
             XmlNode guardnode = FindNode("guard", cateNode, null);
             if (guardnode == null && outerNode != null && outerNode.Name != "aiml")
             {
-                guardnode = FindNode("guard", outerNode, null);
+                if (loaderOpts.SearchForGuard) guardnode = FindNode("guard", outerNode, null);
             }
             GuardInfo guard = guardnode == null ? null : loaderOpts.CtxGraph.GetGuardInfo(guardnode);
             string errors = "";
@@ -1378,16 +1379,12 @@ namespace RTParser.Utils
         private static XmlNode extractPrecondNode(XmlNode patternNode, String tagname, XmlNode cateNode,
                                            out string patternText, out XmlNode newPattern)
         {
-            string thatString = null;
             // get the nodes that we need
             List<XmlNode> foundInPattern = FindNodes(tagname, patternNode);
 
             XmlNode foundHigherThanPattern = FindHigher(tagname, patternNode, null);
             XmlNode foundAnywhere = foundHigherThanPattern ?? FindNode(tagname, cateNode, null, 2);
-            if (foundAnywhere != null)
-            {
-                thatString = foundAnywhere.OuterXml;
-            }
+
             //Unifiable thatText = Unifiable.STAR;
 
             if (ReferenceEquals(null, patternNode))
@@ -1413,6 +1410,11 @@ namespace RTParser.Utils
                     patternText = InnerXmlText(patternNode);
                     newPattern = patternNode;
                     return null;
+                }
+                string thatString = null;
+                if (foundAnywhere != null)
+                {
+                    thatString = foundAnywhere.OuterXml;
                 }
                 if (thatString != null)
                 {
@@ -1479,6 +1481,7 @@ namespace RTParser.Utils
 
         private static string LastRepair(string normalizedPattern, bool isUserInput, bool UseRawUserInput)
         {
+            if (!AIMLLoader.SeekOutAndRepair) return normalizedPattern;
             bool hasStars = normalizedPattern.Contains("*") || normalizedPattern.Contains("_");
             if (!hasStars) return normalizedPattern;
             bool hasBrackets = normalizedPattern.Contains("<") || normalizedPattern.Contains(">");
