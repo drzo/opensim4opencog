@@ -228,6 +228,10 @@ namespace MushDLR223.Utilities
                 if (wasSetter)
                 {
                     outValueReplaced = ir;
+                    //base.InnerXml = ir;
+                } else
+                {
+                    writeToLog("WARNING: InnerXml Is not being changed to \"" + value + "\"");
                 }
                 return true;
             }

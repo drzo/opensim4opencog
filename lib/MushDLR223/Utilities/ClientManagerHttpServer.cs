@@ -57,7 +57,7 @@ namespace MushDLR223.Utilities
         }
     }
 
-    internal class ClientManagerHttpServer : JobGiver, IDisposable
+    public class ClientManagerHttpServer : JobGiver, IDisposable
     {
         private ScriptExecutorGetter getter;
         HttpServer.HttpListener _listener;
@@ -65,7 +65,7 @@ namespace MushDLR223.Utilities
         private ScriptExecutorGetter clientManager;
         private string defaultUser = "null";
 
-        internal ClientManagerHttpServer(ScriptExecutorGetter bc, int port)
+        public ClientManagerHttpServer(ScriptExecutorGetter bc, int port)
         {
             clientManager = bc;
             _port = port;
@@ -390,7 +390,7 @@ namespace MushDLR223.Utilities
         }
     }
      #endif
-    internal class HttpJob
+    public class HttpJob
     {
         private static long serialNum = 0;
         internal long Serial = ++serialNum;
