@@ -158,6 +158,7 @@ namespace RTParser.Utils
         public GraphMaster(string gn, GraphMaster child, bool isParallel)
         //: base(bot)
         {
+            RTPBot.GraphsByName[gn] = this;
             IsParallel = isParallel;
             SilentTagsInPutParallel = DefaultSilentTagsInPutParallel;
             SilentTagsInPutParallel = false;
@@ -639,18 +640,45 @@ namespace RTParser.Utils
         private void evaluateQL(Unifiable path, Request request, MatchState matchState, GraphQuery ql, bool locallyDoFallbacks)
         {
             bool trace = request.IsTraced && !UnTraced;
+            int templatesStart = ql.TemplateCount;
             while (getQueries(RootNode, path, request, matchState, 0, Unifiable.CreateAppendable(), ql))
             {
                 if (ql.IsMaxedOut)
                 {
                     break;
                 }
-                if (!((QuerySettingsReadOnly)request).ProcessMultiplePatterns)
+                if (!((QuerySettingsReadOnly) request).ProcessMultiplePatterns)
                 {
                     break;
                 }
             }
-            if (locallyDoFallbacks && FallBacksGraphs != null && !ql.IsMaxedOut)
+            int newtemplates0 = ql.TemplateCount - templatesStart;
+            if (ql.IsMaxedOut)
+            {
+                if (trace)
+                    writeToLog("Maxed out " + ql);
+                return;
+            }
+            while (getQueries(PostParallelRootNode, path, request, matchState, 0, Unifiable.CreateAppendable(),
+                              ql))
+            {
+                if (ql.IsMaxedOutOrOverBudget)
+                {
+                    break;
+                }
+                if (!((QuerySettingsReadOnly) request).ProcessMultiplePatterns)
+                {
+                    break;
+                }
+            }
+            int newtemplates1 = ql.TemplateCount - templatesStart;
+            if (ql.IsMaxedOut)
+            {
+                if (trace)
+                    writeToLog("Maxed out " + ql);
+                return;
+            }
+            if (locallyDoFallbacks && FallBacksGraphs != null && FallBacksGraphs.Count > 0)
             {
                 foreach (GraphMaster graphMaster in CopyOf(FallBacksGraphs))
                 {
@@ -658,26 +686,12 @@ namespace RTParser.Utils
                     if (ql.IsMaxedOutOrOverBudget)
                     {
                         if (trace)
-                            writeToLog("using parallel templates from " + ql);
+                            writeToLog("only using parallel templates from " + ql);
                         return;
                     }
                 }
             }
-            if (!ql.IsMaxedOut)
-            {
-                while (getQueries(PostParallelRootNode, path, request, matchState, 0, Unifiable.CreateAppendable(),
-                                  ql))
-                {
-                    if (ql.IsMaxedOutOrOverBudget)
-                    {
-                        break;
-                    }
-                    if (!((QuerySettingsReadOnly)request).ProcessMultiplePatterns)
-                    {
-                        break;
-                    }
-                }
-            }
+
             return;
         }
 
