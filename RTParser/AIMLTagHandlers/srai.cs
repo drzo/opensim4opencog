@@ -272,16 +272,17 @@ namespace RTParser.AIMLTagHandlers
                 if (!salientRequest.EnterSalientSRAI(templateNodeInnerValue, out prevResult))
                 {
                     writeToLog("ERROR EnterSailentSRAI: " + prevResult);
-                    if (false)
+                    if (true)
                     {
                         var disable = CurrentTemplate;
-                        if (disable != null)
+                        if (disable != null && disable.IsDisabled)
                         {
                             request.CurrentResult.ResultTemplates.Add(disable);
                             disable.IsDisabled = true;
+                            request.AddUndo("undisable loop " + disable.ToFileString(request.Requester.PrintOptions), () => { disable.IsDisabled = false; });
                         }
                     }
-                    return null;
+                    //return null;
                 }
                 int depth = request.SraiDepth.Current;
                 if (CurrentTemplate != null)
