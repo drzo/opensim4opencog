@@ -57,8 +57,8 @@ namespace RTParser.AIMLTagHandlers
                 if (name == null)
                 {
                     //recursive form like <set>name value Unifiable</set>
-                    name = templateNodeInnerText.First();
-                    var strV = templateNodeInnerText.Rest();
+                    name = templateNodeInnerText.First;
+                    var strV = templateNodeInnerText.Rest;
                     if (!IsNull(strV))
                     {
                         if (IsNull(value))

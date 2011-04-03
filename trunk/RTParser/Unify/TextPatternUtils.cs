@@ -478,6 +478,7 @@ namespace RTParser.Utils
 
         public static string CleanPunct(string normalizedPattern)
         {
+            if (normalizedPattern == null) return null;
             if (normalizedPattern.EndsWith("?") || normalizedPattern.EndsWith(".") || normalizedPattern.EndsWith("!"))
             {
                 normalizedPattern = normalizedPattern.Substring(0, normalizedPattern.Length - 1).Trim();

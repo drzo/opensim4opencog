@@ -90,8 +90,8 @@ namespace RTParser.AIMLTagHandlers
                 while (!IsNullOrEmpty(rest))
                 {
                     // Unifiable[] words = templateNodeInnerText.AsString().Split(new char[]{''});
-                    Unifiable word = templateNodeInnerText.First();
-                    rest = rest.Rest();
+                    Unifiable word = templateNodeInnerText.First;
+                    rest = rest.Rest;
                     {
                         Unifiable newWord = word;
                         result.Append(newWord + " ");

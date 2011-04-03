@@ -393,7 +393,12 @@ namespace RTParser
         public Result ChatWithRequest(Request request)
         {
             Result requestCurrentResult = request.FindOrCreateCurrentResult();
-            return ChatWithRequest(request, requestCurrentResult);
+            Result result = ChatWithRequest(request, requestCurrentResult);
+            if (!result.Started)
+            {
+                return result;
+            }
+            return result;
         }
 
         public Result ChatWithRequest(Request request, Result parentResultIn)
@@ -560,7 +565,7 @@ namespace RTParser
 
             streamDepth++;
 
-            string rawInputString = request.rawInput.AsString();
+            string rawInputString = request.ChatInput.OrignalRawText;// rawInput.AsString();
 
             if (rawInputString.StartsWith("@"))
             {
@@ -593,7 +598,9 @@ namespace RTParser
             {
                 try
                 {
-                    result = ImmediateAiml(StaticAIMLUtils.getTemplateNode(rawInputString), request, Loader, null);
+                    var tn = StaticAIMLUtils.getTemplateNode(rawInputString);
+                    //tn = getDocNode( rawInputString , false, false, StringOnlyDoc);
+                    result = ImmediateAiml(tn, request, Loader, null);
                     //request.rawInput = result.Output;
                     return result;
                 }
@@ -1119,7 +1126,7 @@ namespace RTParser
             try
             {
                 request0.GraphsAcceptingUserInput = true;
-                var mr = ImmediateAIML0(request0, templateNode, handler, fastCall);
+                var mr = ImmediateAIMLNode(request0, templateNode, handler, fastCall);
                 return mr;
             }
             catch (ChatSignal ex)
@@ -1138,15 +1145,9 @@ namespace RTParser
             }
         }
 
-        private Result ImmediateAIML0(Request parentRequest, XmlNode templateNode, AIMLTagHandler handler, bool isFastAIML)
+        private Result ImmediateAIMLNode(Request parentRequest, XmlNode templateNode, AIMLTagHandler handler, bool isFastAIML)
         {
-            if (isFastAIML)
-            {
-
-            }
-
             string requestName = ToTemplateXML(templateNode);
-
             RTPBot request0Proccessor = this;
             GuardInfo sGuard = null;
             Request request = null;

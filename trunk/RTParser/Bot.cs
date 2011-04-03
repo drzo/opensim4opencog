@@ -41,6 +41,23 @@ namespace RTParser
     /// </summary>
     public partial class RTPBot : StaticAIMLUtils, IChatterBot
     {
+        public static Dictionary<string, RTPBot> Robots = new Dictionary<string, RTPBot>();
+
+        public static RTPBot FindOrCreateRobot(string text)
+        {
+            RTPBot robot;
+            lock (Robots)
+            {
+                if (TryGetValueLocked(Robots, Robots, text, out robot))
+                {
+                    return robot;
+                }
+                Robots[text] = robot = new RTPBot();
+            }
+            robot.SetName(text);
+            return robot;
+        }
+
         private readonly List<XmlNodeEvaluator> XmlNodeEvaluators = new List<XmlNodeEvaluator>();
         private TestCaseRunner testCaseRunner;
 
@@ -110,7 +127,7 @@ namespace RTParser
             var botAsUser1 = BotAsUser;
             s = Trim(s);
             if (!s.StartsWith("<")) s = "<!-- " + s.Replace("<!--", "<#").Replace("-->", "#>") + " -->";
-            var r = new AIMLbot.MasterRequest(s, botAsUser1,"Nothing", botAsUser1, this, null,
+            var r = new AIMLbot.MasterRequest(s, botAsUser1, "Nothing", botAsUser1, this, null,
                                               GraphMaster);
             //r.ChatOutput.RawText = s;
             r.writeToLog = writeToLog;
@@ -128,7 +145,23 @@ namespace RTParser
             return r;
         }
 
-        public AIMLLoader Loader;
+        private AIMLLoader _loader;
+        private AIMLLoader _loaderOnceLeast;
+        public AIMLLoader Loader
+        {
+            set
+            {
+                _loader = value;
+                if (value == null)
+                {
+                    _loaderOnceLeast = value;
+                }
+            }
+            get
+            {
+                return _loader ?? _loaderOnceLeast;
+            }
+        }
 
         #region Attributes
 
@@ -614,7 +647,7 @@ namespace RTParser
             {
                 swiInterpreter = new PrologScriptInterpreter(this); //ScriptManager.LoadScriptInterpreter("PrologScriptInterpreter", this);
                 swiInterpreter.Init(this);
-                AddExcuteHandler("swi", SWIExecHandler); 
+                AddExcuteHandler("swi", SWIExecHandler);
                 //swiInterpreter.Intern("MyBot", this);
                 //swiInterpreter.Intern("Users", BotUsers);
             }
@@ -1071,6 +1104,19 @@ namespace RTParser
             }
         }
 
+        public ICollection<User> SetOfUsers
+        {
+            get
+            {
+                List<User> list = new List<User>();
+                lock (BotUsers) foreach (var user in BotUsers.Values)
+                    {
+                        if (list.Contains(user)) continue;
+                        list.Add(user);
+                    }
+                return list;
+            }
+        }
 
         public void AddAiml(string aimlText)
         {
@@ -1434,7 +1480,7 @@ The AIMLbot program.
 
             string lower = graphPath.ToLower();
             int graphPathLength = graphPath.IndexOf(".");
-            if (graphPathLength>0)
+            if (graphPathLength > 0)
             {
                 string sv = graphPath.Substring(0, graphPathLength);
                 string left = graphPath.Substring(graphPathLength + 1);
@@ -1684,7 +1730,7 @@ The AIMLbot program.
         private string SetName0(string myName)
         {
             //char s1 = myName[1];
-
+            Robots[myName] = this;
             NameAsSet = myName;
             //new AIMLbot.User("heardselfsay", this)
             var thisBotAsUser = FindOrCreateUser(myName);
@@ -1727,7 +1773,7 @@ The AIMLbot program.
                     GraphsByName.TryGetValue("default", out od);
                     _g = GraphMaster.FindOrCreate(dgn);
                     if (od == null) GraphsByName["default"] = _g;
-                    else _g.AddGenlMT(od, writeToLog);                        
+                    else _g.AddGenlMT(od, writeToLog);
                     _h //= TheUserListernerGraph 
                         = new GraphMaster(hgn);
                     GraphsByName[n2n] = _h;
@@ -1739,8 +1785,8 @@ The AIMLbot program.
 
                 GraphsByName[n2n].RemoveGenlMT(GraphsByName[dgn], writeToLog);
             }
-            GraphMaster vv = HeardSelfSayGraph;
-            if (vv != null) BotAsUser.ListeningGraph = vv;
+            GraphMaster listeningGraph = HeardSelfSayGraph;
+            if (listeningGraph != null) BotAsUser.HeardSelfSayGraph = listeningGraph;
             lock (OnBotCreatedHooks)
             {
                 foreach (Action list in OnBotCreatedHooks)
@@ -1748,7 +1794,8 @@ The AIMLbot program.
                     try
                     {
                         list();
-                    } catch(Exception e)
+                    }
+                    catch (Exception e)
                     {
                         writeDebugLine("OnBotCreatedHooks ERROR: " + list);
                     }
@@ -1757,7 +1804,7 @@ The AIMLbot program.
             }
             loadAIMLFromDefaults0();
             EnsureDefaultUsers();
-            string official = LoadPersonalDirectories(myName);                
+            string official = LoadPersonalDirectories(myName);
             thisBotAsUser.SaveDirectory(thisBotAsUser.UserDirectory);
             AddExcuteHandler(NamePath, ChatWithThisBot);
             return official ?? thisBotAsUser.UserDirectory;
@@ -1773,12 +1820,12 @@ The AIMLbot program.
                 var tc = DLRConsole.TransparentCallers;
                 lock (tc)
                 {
-                    tc.Add(typeof (RTPBot));
-                    tc.Add(typeof (AIMLbot.MasterRequest));
+                    tc.Add(typeof(RTPBot));
+                    tc.Add(typeof(AIMLbot.MasterRequest));
                     // ReSharper disable AssignNullToNotNullAttribute
-                    tc.Add(typeof (MasterResult).BaseType);
+                    tc.Add(typeof(MasterResult).BaseType);
                     // ReSharper restore AssignNullToNotNullAttribute
-                    tc.Add(typeof (Request));
+                    tc.Add(typeof(Request));
                 }
 
                 TagHandlerProcessor.InitTagHandlers();
@@ -1787,8 +1834,8 @@ The AIMLbot program.
                 StaticInitStarted = true;
                 GraphsByName["listener"] = TheUserListenerGraph = GraphMaster.FindOrCreate("listener");
                 TheUserListenerGraph.SilentTagsInPutParallel = false;
-               // var defaultGraph = GraphsByName["default"] = GraphMaster.FindOrCreate("default");
-               // defaultGraph.RemovePreviousTemplatesFromNodes = false;
+                // var defaultGraph = GraphsByName["default"] = GraphMaster.FindOrCreate("default");
+                // defaultGraph.RemovePreviousTemplatesFromNodes = false;
                 GraphsByName["heardselfsay"] = TheUserListenerGraph;////new GraphMaster("heardselfsay");
                 AddSettingsAliases("lastuserid", "you");
                 AddSettingsAliases("lastusername", "you");
@@ -2110,7 +2157,7 @@ The AIMLbot program.
             Action needsExit = LockInfo.MonitorTryEnter("RegisterDictionary " + key, AllDictionaries, MaxWaitTryEnter);
             try
             {
-                var path = key.Split(new[] {'.'});
+                var path = key.Split(new[] { '.' });
                 if (always || !AllDictionaries.ContainsKey(key)) AllDictionaries[key] = dict;
                 if (path.Length > 1)
                 {
@@ -2171,7 +2218,7 @@ The AIMLbot program.
             User theUser = FindOrCreateUser(userName);
             return (txt, req) =>
                        {
-                           req.SetSpeakerAndResponder(theUser,BotAsUser);
+                           req.SetSpeakerAndResponder(theUser, BotAsUser);
                            var ret = ChatWithThisBot(txt, req);
                            return ret;
                        };

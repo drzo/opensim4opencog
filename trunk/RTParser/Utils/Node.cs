@@ -226,8 +226,8 @@ namespace RTParser.Utils
                 Unifiable thispath1 = thispath[i];
                 int diff = thispath1.CompareTo(thatpath1);
                 if (diff != 0) return diff;
-                a1 -= thatpath1.Strictness();
-                b1 -= thispath1.Strictness();
+                a1 -= thatpath1.Strictness;
+                b1 -= thispath1.Strictness;
             }
             if (a1 == b1)
             {
@@ -253,7 +253,7 @@ namespace RTParser.Utils
 #endif
             _ToPath = null;
             if (_ToPath != null) return _ToPath;
-            _variance = word.Strictness();
+            _variance = word.Strictness;
 
             var p = Parent;
             if (p == null)
@@ -263,13 +263,13 @@ namespace RTParser.Utils
             var sb = new List<Unifiable> { word };
             var pword = p.word;
             sb.Add(pword);
-            _variance += pword.Strictness();
+            _variance += pword.Strictness;
             p = p.Parent;
             while (p != null)
             {
                 pword = p.word;
                 sb.Add(pword);
-                _variance += pword.Strictness();
+                _variance += pword.Strictness;
                 p = p.Parent;
             }
             return (_ToPath = sb.ToArray());

@@ -202,8 +202,9 @@ namespace RTParser
                     + "' UserName='" + user.UserName
                     + "' name='" + uname
                     + "' roleacct='" + user.IsRoleAcct
-                    + "' ListeningGraph=" + user.ListeningGraph
-                    + "");
+                    + "' ListeningGraph='" + user.HeardSelfSayGraph
+                    + "' StartGraph='" + user.StartGraph
+                    + "'");
         }
 
         public bool RemoveUser(string name)

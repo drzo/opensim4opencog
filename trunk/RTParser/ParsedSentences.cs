@@ -17,8 +17,9 @@ namespace RTParser
         private Func<string, string> EnglishToNormalized;
         private readonly int maxResults;
 
-        public ParsedSentences(Func<string, string> generatePhrase, int maxSentences)
+        public ParsedSentences(Func<string, string> generatePhrase, Unifiable rawText, int maxSentences)
         {
+            OrignalRawText = rawText;
             OutputSentencesToEnglish = generatePhrase;
             maxResults = maxSentences;
         }
@@ -66,6 +67,10 @@ namespace RTParser
                 {
                     return English;
                 }
+                if (OrignalRawText != null)
+                {
+                    return OrignalRawText;
+                }
                 if (EnglishSentences.Count == 0)
                 {
                     Convert(SemanticSentences, EnglishSentences, OutputSentencesToEnglish);
@@ -94,17 +99,22 @@ namespace RTParser
         public readonly List<Unifiable> SemanticSentences = new List<Unifiable>();
 
         public Action OnGetParsed;
+
+        /// <summary>
+        /// TheMainSentence is the last question (if it contains one)
+        ///  else the last sentence in collection
+        /// </summary>
         public string TheMainSentence
         {
             get
             {
-                if (false) foreach (var output in SemanticSentences)
+                if (true) foreach (var output in SemanticSentences)
                     {
                         String sentenceIn = output;
                         String sentence = OutputSentencesToEnglish(sentenceIn);
                         sentence = MainSentence(RawText);
                         sentence = sentence.Trim(new char[] { '.', ' ', '!', '?' });
-                        if (sentence.Length == 0) return null;
+                        if (sentence.Length == 0) continue;
                         return sentence;
 
                     }
@@ -293,11 +303,12 @@ namespace RTParser
         static public ParsedSentences GetParsedUserInputSentences(Request request, Unifiable fromUInput)
         {
 
+            
             Func<string, string> GenEnglish = (str) => request.TargetBot.EnsureEnglish(str);
             string fromInput = EnsureEnglishPassThru(fromUInput);
             // Normalize the input
             var rawSentences = SplitIntoSentences.Split(fromInput);
-            var parsedSentences = new ParsedSentences(GenEnglish, -1);
+            var parsedSentences = new ParsedSentences(GenEnglish, fromUInput, -1);
             var userInputSentences = parsedSentences.EnglishSentences;
             userInputSentences.AddRange(rawSentences);
             Func<string, string> englishToNormaizedInput = arg => EngishToNormalizedInput(request, arg);
@@ -328,6 +339,8 @@ namespace RTParser
         }
 
         private static char[] toCharArray = "@#$%^&*()_+<>,/{}[]\\\";'~~".ToCharArray();
+        public Unifiable OrignalRawText;
+
         static public string EnsureEnglishPassThru(string arg)
         {
             return arg;

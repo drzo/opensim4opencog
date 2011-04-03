@@ -25,6 +25,7 @@ namespace RTParser
         private bool AllreadyUnderstandingSentences = false;
         readonly private object AllreadyUnderstandingSentencesLock = new object();
         public static bool UnderstandSentenceOutsideQueue = true;
+
         public void HeardSelfSayVerbal(User theFactSpeaker, User toWhom, string message, Result result, ThreadControl control)
         {
             message = ToHeard(message);
@@ -302,9 +303,9 @@ namespace RTParser
         private void AddHeardPreds0(Unifiable unifiable, SettingsDictionary dictionary)
         {
             if (IsNullOrEmpty(unifiable)) return;
-            Unifiable first = unifiable.First();
+            Unifiable first = unifiable.First;
             if (IsNullOrEmpty(first)) return;
-            Unifiable rest = unifiable.Rest();
+            Unifiable rest = unifiable.Rest;
             if (IsNullOrEmpty(rest)) return;
             dictionary.addSetting(first, rest);
             AddHeardPreds0(rest, dictionary);
@@ -318,7 +319,7 @@ namespace RTParser
         private void SetupUserWithGraph0(GraphMaster graph, string newname, string newkey, User newuser)
         {            
             graph.AddParallelMT(RTPBot.TheUserListenerGraph, newuser.WriteToUserTrace);
-            newuser.ListeningGraph = graph;
+            newuser.StartGraph = graph;
             newuser.UserID = newkey;
             newuser.UserName = newname;
             OnBotCreated(() => graph.AddGenlMT(GraphMaster, newuser.WriteToUserTrace));

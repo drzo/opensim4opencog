@@ -41,7 +41,8 @@ namespace RTParser.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "category")
             {
-                Proc.Loader.processCategory(templateNode,
+                var loader = request.Loader ?? Proc.Loader;
+                loader.processCategory(templateNode,
                                             templateNode.ParentNode ?? templateNode, 
                                             loaderOptions,
                                             loaderOptions.AdditionalPreconditions);

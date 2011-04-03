@@ -57,7 +57,7 @@ namespace RTParser
         /// <summary>
         /// The Graph to start the query on
         /// </summary>
-        sealed public override string GraphName { get; set; }
+        public override string StartGraphName { get; set; }
 
         #endregion
 
@@ -114,7 +114,7 @@ namespace RTParser
             UseDictForSetMaxDepth = 3,
             UseLuceneForGetMaxDepth = 2,
             UseLuceneForSetMaxDepth = 2,
-            GraphName = "default",
+            StartGraphName = "default",
             IsTraced = false,
             _sraiDepth = new SettingMinMaxCurrent<int>()
             {
@@ -187,7 +187,7 @@ namespace RTParser
             MinTemplates = 1,
             MaxTemplates = 1,
              */
-            GraphName = null,
+            StartGraphName = null,
             IsTraced = false,
             /***
              * undecided!
@@ -245,7 +245,7 @@ namespace RTParser
         /// <summary>
         /// The Graph to start the query on
         /// </summary>
-        public abstract string GraphName { get; set; }
+        public abstract string StartGraphName { get; set; }
 
         /// <summary>
         /// The Graph to start the query on
@@ -323,7 +323,7 @@ namespace RTParser
         /// <summary>
         /// The Graph to start the query on
         /// </summary>
-        string GraphName { get; }
+        string StartGraphName { get; }
 
         /// <summary>
         /// If the query is being traced
@@ -402,7 +402,7 @@ namespace RTParser
         /// <summary>
         /// The Graph to start the query on
         /// </summary>
-        string GraphName { set; }
+        string StartGraphName { set; }
 
         /// <summary>
         /// If the query is being traced
