@@ -1563,6 +1563,8 @@ The AIMLbot program.
         public static string ToScriptableName(string path)
         {
             string sk = "";
+            if (path.StartsWith("is_")) path = path.Substring(3);
+            if (path.StartsWith("was_")) path = path.Substring(4);
             foreach (char s in path)
             {
                 if (IsOkForNameChar(s))

@@ -19,6 +19,7 @@ using MushDLR223.Virtualization;
 using org.opencyc.api;
 using RTParser.AIMLTagHandlers;
 using RTParser.Database;
+using RTParser.GUI;
 using RTParser.Prolog;
 using RTParser.Utils;
 using RTParser.Variables;
@@ -123,6 +124,7 @@ namespace RTParser
         public static int NextHttpIncrement = 100;
         private TimeSpan MaxWaitTryEnter = TimeSpan.FromSeconds(10);
         internal RTPBotCommands rtpbotcommands;
+        private static AIMLPadEditor GUIForm;
 
 
         public void writeToFileLog(string message)
@@ -180,7 +182,13 @@ namespace RTParser
         {
             RTPBot myBot = null;
             TaskQueueHandler.TimeProcess("ROBOTCONSOLE: STARTUP", () => { myBot = Startup(args); });
-            TaskQueueHandler.TimeProcess("ROBOTCONSOLE: RUN", () => RunGUI(args, myBot, MainConsoleWriteLn));
+            if (new List<string>(args).Contains("--gui"))
+            {
+                TaskQueueHandler.TimeProcess("ROBOTCONSOLE: RUN", () => RunGUI(args, myBot, MainConsoleWriteLn));
+            } else
+            {
+                TaskQueueHandler.TimeProcess("ROBOTCONSOLE: RUN", () => Run(args, myBot, MainConsoleWriteLn));
+            }
         }
 
         private static RTPBot Startup(string[] args)
@@ -296,8 +304,8 @@ namespace RTParser
         }
         public static void RunGUI(string[] args, RTPBot myBot, OutputDelegate writeLine)
         {
-            var GUIThread = new GUI.AIMLPadEditor(myBot.NameAsSet, myBot);
-            Application.Run(GUIThread);
+            GUIForm = new GUI.AIMLPadEditor(myBot.NameAsSet, myBot);
+            Application.Run(GUIForm);
         }
 
         public static void Run(string[] args, RTPBot myBot, OutputDelegate writeLine)
@@ -337,6 +345,11 @@ namespace RTParser
                 if (input.ToLower() == "@exit")
                 {
                     Environment.Exit(Environment.ExitCode);
+                }
+                if (input.ToLower() == "@gui")
+                {
+                    GUIForm = GUIForm ?? new GUI.AIMLPadEditor(myBot.NameAsSet, myBot);
+                    Application.Run(GUIForm);
                 }
                 myBot.AcceptInput(writeLine, input, myUser);
             }

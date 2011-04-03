@@ -387,5 +387,10 @@ namespace RTParser.GUI
         {
             PoputateVariablesList();
         }
+
+        private void consoleText_TextChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }
