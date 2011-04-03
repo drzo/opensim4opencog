@@ -6,6 +6,10 @@ namespace MushDLR223.Utilities
 {
     public class ListAsSet<T> : IList<T>, IList
     {
+        protected object SyncLock
+        {
+            get { return this; }
+        }
         public ListAsSet()
         {
         }
@@ -13,6 +17,12 @@ namespace MushDLR223.Utilities
         {
             AddRange(list);
         }
+
+        public T[] ToArray()
+        {
+            lock (SyncLock) return RealListT.ToArray();
+        }
+
         public event Action<T> OnAdd;
         public event Action<T> OnRemove;
         public event Action OnModified;
@@ -34,7 +44,7 @@ namespace MushDLR223.Utilities
         ///                 </exception><filterpriority>2</filterpriority>
         public int Add(object value)
         {
-            lock (this)
+            lock (SyncLock)
             {
                 int indexOf = realList.IndexOf(value);
                 if (indexOf >= 0) return indexOf;
@@ -52,7 +62,7 @@ namespace MushDLR223.Utilities
         ///                 </param><filterpriority>2</filterpriority>
         public bool Contains(object value)
         {
-            lock (this)
+            lock (SyncLock)
             {
                 return realList.Contains(value);
             }
@@ -65,7 +75,7 @@ namespace MushDLR223.Utilities
         ///                 </exception><filterpriority>2</filterpriority>
         public void Clear()
         {
-            lock (this)
+            lock (SyncLock)
             {
                 realList.Clear();
             }
@@ -81,7 +91,7 @@ namespace MushDLR223.Utilities
         ///                 </param><filterpriority>2</filterpriority>
         public int IndexOf(object value)
         {
-            lock (this) return realList.IndexOf(value);
+            lock (SyncLock) return realList.IndexOf(value);
         }
 
         /// <summary>
@@ -97,7 +107,11 @@ namespace MushDLR223.Utilities
         ///                 </exception><filterpriority>2</filterpriority>
         public void Insert(int index, object value)
         {
-            lock (this) realList.Insert(index, value);
+            lock (SyncLock)
+            {
+                realList.Remove(value);
+                realList.Insert(index, value);
+            }
         }
 
         /// <summary>
@@ -115,7 +129,7 @@ namespace MushDLR223.Utilities
 
         public void RemoveImpl(object value)
         {
-            lock (this) realList.Remove(value);
+            lock (SyncLock) realList.Remove(value);
         }
         /// <summary>
         /// Removes the <see cref="T:System.Collections.IList"/> item at the specified index.
@@ -128,7 +142,7 @@ namespace MushDLR223.Utilities
         ///                 </exception><filterpriority>2</filterpriority>
         public void RemoveAt(int index)
         {
-            lock (this) realList.RemoveAt(index);
+            lock (SyncLock) realList.RemoveAt(index);
         }
 
         /// <summary>
@@ -141,10 +155,16 @@ namespace MushDLR223.Utilities
         ///                 </param><exception cref="T:System.ArgumentOutOfRangeException"><paramref name="index"/> is not a valid index in the <see cref="T:System.Collections.IList"/>. 
         ///                 </exception><exception cref="T:System.NotSupportedException">The property is set and the <see cref="T:System.Collections.IList"/> is read-only. 
         ///                 </exception><filterpriority>2</filterpriority>
-        public object this[int index]
+        T IList<T>.this[int index]
         {
-            get { lock (this) return realList[index]; }
-            set { lock (this) realList[index] = value; }
+            get { lock (SyncLock) return RealListT[index]; }
+            set { lock (SyncLock) realList[index] = value; }
+        }
+
+        object IList.this[int index]
+        {
+            get { lock (SyncLock) return RealListT[index]; }
+            set { lock (SyncLock) realList[index] = value; }
         }
 
         /// <summary>
@@ -177,7 +197,7 @@ namespace MushDLR223.Utilities
         }
         void ClearImpl()
         {
-            lock (this)
+            lock (SyncLock)
             {
                 if (Count == 0) return;
                 foreach (var set in realList)
@@ -191,7 +211,7 @@ namespace MushDLR223.Utilities
 
         protected int CountImpl
         {
-            get { lock (this) lock (realList) return realList.Count; }
+            get { lock (SyncLock) lock (realList) return realList.Count; }
         }
         /// <summary>
         /// Copies the elements of the <see cref="T:System.Collections.ICollection"/> to an <see cref="T:System.Array"/>, starting at a particular <see cref="T:System.Array"/> index.
@@ -209,7 +229,7 @@ namespace MushDLR223.Utilities
         ///                 </exception><filterpriority>2</filterpriority>
         public void CopyTo(Array array, int index)
         {
-            lock (this)
+            lock (SyncLock)
             {
                 realList.CopyTo(array, index);
             }
@@ -246,7 +266,7 @@ namespace MushDLR223.Utilities
 
         void IList<T>.RemoveAt(int index)
         {
-            lock (this)
+            lock (SyncLock)
             {
                 T t = ((IList<T>)this)[index];
                 if (OnRemove != null) OnRemove(t);
@@ -261,7 +281,7 @@ namespace MushDLR223.Utilities
             int rindex = index;
             while (rcount-- > 0)
             {
-                lock (this)
+                lock (SyncLock)
                 {
                     T t = ((IList<T>)this)[rindex++];
                     if (OnRemove != null) OnRemove(t);
@@ -308,7 +328,7 @@ namespace MushDLR223.Utilities
         // synchronization
         public bool /*ICollection<T>.*/Remove(T item)
         {
-            lock (this)
+            lock (SyncLock)
             {
                 if (OnRemove != null) OnRemove(item);
                 return RealListT.Remove(item);
@@ -336,7 +356,7 @@ namespace MushDLR223.Utilities
 
         //public bool AddFirst(T item)
         //{
-        //    lock (this)
+        //    lock(Locker)
         //    {
         //        bool found = Remove(item);
         //        Insert(0,item);
@@ -357,7 +377,7 @@ namespace MushDLR223.Utilities
 
         public bool AddToNoNotify(T item)
         {
-            lock (this)
+            lock (SyncLock)
             {
                 if (false)
                 {
@@ -422,7 +442,7 @@ namespace MushDLR223.Utilities
         public List<T> CopyOf()
         {
             List<T> list = new List<T>();
-            lock (this)
+            lock (SyncLock)
             {
                 IEnumerator enumer = realList.GetEnumerator();
                 while (enumer.MoveNext())
@@ -469,7 +489,7 @@ namespace MushDLR223.Utilities
         ///                 </param>
         int IList<T>.IndexOf(T item)
         {
-            lock (this) return realList.IndexOf(item);
+            lock (SyncLock) return realList.IndexOf(item);
         }
 
         /// <summary>
@@ -482,7 +502,7 @@ namespace MushDLR223.Utilities
         ///                 </exception>
         void IList<T>.Insert(int index, T item)
         {
-            lock (this) realList.Insert(index, item);
+            lock (SyncLock) realList.Insert(index, item);
         }
 
         /// <summary>
@@ -495,15 +515,15 @@ namespace MushDLR223.Utilities
         ///                 </param><exception cref="T:System.ArgumentOutOfRangeException"><paramref name="index"/> is not a valid index in the <see cref="T:System.Collections.Generic.IList`1"/>.
         ///                 </exception><exception cref="T:System.NotSupportedException">The property is set and the <see cref="T:System.Collections.Generic.IList`1"/> is read-only.
         ///                 </exception>
-        T IList<T>.this[int index]
+        public T this[int index]
         {
             get
             {
-                lock (this) return RealListT[index];
+                lock (SyncLock) return RealListT[index];
             }
             set
             {
-                lock (this) RealListT[index] = value;
+                lock (SyncLock) RealListT[index] = value;
             }
         }
 
@@ -521,7 +541,7 @@ namespace MushDLR223.Utilities
         ///                 </param>
         public bool Contains(T item)
         {
-            lock (this) return realList.Contains(item);
+            lock (SyncLock) return realList.Contains(item);
         }
 
         /// <summary>
@@ -541,7 +561,7 @@ namespace MushDLR223.Utilities
         ///                 </exception>
         void ICollection<T>.CopyTo(T[] array, int arrayIndex)
         {
-            lock (this) realList.CopyTo(array, arrayIndex);
+            lock (SyncLock) realList.CopyTo(array, arrayIndex);
         }
 
         /// <summary>
@@ -593,11 +613,11 @@ namespace MushDLR223.Utilities
 
         public void Sort(IComparer<T> comparer)
         {
-            lock (this) RealListT.Sort(comparer);
+            lock (SyncLock) RealListT.Sort(comparer);
         }
         public void Sort(Comparison<T> comparer)
         {
-            lock (this) RealListT.Sort(comparer);
+            lock (SyncLock) RealListT.Sort(comparer);
         }
 
         public static void AddIfMissing<TT>(ICollection<TT> col, TT val)
