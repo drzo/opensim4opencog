@@ -1126,6 +1126,7 @@ namespace RTParser.Variables
                         return true;
                     }
                     SettingsLog("ADD LOCAL '" + name + "'=" + str(value) + " ");
+                    value = MakeLocalValue(name, value);
                     found = this.removeSettingReal(name);
                     if (value != null)
                     {
@@ -1142,12 +1143,57 @@ namespace RTParser.Variables
             return !found;
         }
 
+        private Unifiable MakeLocalValue(string name, Unifiable value)
+        {
+            Unifiable oldSetting = grabSettingNoDebug(name);
+            bool isCollection = IsCollection(name);            
+            if (isCollection)
+            {
+                string commaVersion = "<li>" + value.AsString() + "</li>";
+                string svalue = "";
+                if (IsMissing(oldSetting))
+                {
+                    svalue = "<xor>" + commaVersion + "</xor>";
+                }
+                else
+                {
+                    if (oldSetting is BestUnifiable)
+                    {
+                        oldSetting = (oldSetting as BestUnifiable).AddItem(value);
+                    }
+                    else
+                    {
+                        var nl = new List<Unifiable>();
+                        nl.Add(oldSetting);
+                        nl.Add(value);
+                        oldSetting = new BestUnifiable(nl);
+                    }
+                    string soldSetting = oldSetting.AsString();
+                    svalue = soldSetting;// "<or>" + commaVersion + soldSetting.Substring(4);
+                }
+                value = svalue;
+                return value;
+            }
+            return value;
+        }
+
+        private bool IsCollection(string name)
+        {
+            return false;// name == "topic";
+        }
+
         protected bool AllowedNameValue(string name, Unifiable value)
         {
+            if (name == "topic")
+            {
+                if (value == "general" || value.AsString().StartsWith("reduc") || value == "Nothing" || value == "that" ||
+                    value == "ok")
+                    return false;
+            }
             string s = (string)value;
             if ((s == null) || s.Contains(">"))
             {
-                writeToLog(String.Format("! NameValueCheck {0} = {1}", name, value));
+                writeToLog(String.Format("! NameValueCheck {0} = {1}", name, value.AsString()));
                 return !SuspendUpdates;
             }
             if (IsIdentityReadOnly && (name.ToLower() == "name" || name.ToLower() == "id"))
@@ -1188,7 +1234,7 @@ namespace RTParser.Variables
         }
         public Unifiable TransformValueOut(Unifiable value)
         {
-            string s = TransformValue0(value);
+            Unifiable s = TransformValue0(value);
             if (s == null) return Unifiable.NULL;
             if (s == "OM")
             {
@@ -1232,6 +1278,10 @@ namespace RTParser.Variables
                 //   writeToLog("ERROR " + value + " NULL");
                 if (NoSettingsAliaes) return null;
                 return Unifiable.INCOMPLETE.AsString();
+            }
+            if (Unifiable.IsMulti(value))
+            {
+                return value;
             }
             var v = StaticXMLUtils.ValueText(value);
             if (false)if (v.Contains("<") || v.Contains("&"))
@@ -1385,6 +1435,7 @@ namespace RTParser.Variables
                         updateListeners(name, value, true, false);
                         if (AllowedNameValue(name, value))
                         {
+                            value = MakeLocalValue(name, value);
                             this.removeFromHash(name);
                             SettingsLog("UPDATE Setting Local '" + name + "'=" + str(value));
                             this.settingsHash.Add(normalizedName, value);

@@ -96,10 +96,10 @@ namespace RTParser.Utils
 
         #region Overrides of RequestSettingsImpl
 
-        public override string GraphName
+        public override string StartGraphName
         {
-            get { return ((QuerySettingsReadOnly)TheRequest).GraphName; }
-            set { TheRequest.GraphName = value; }
+            get { return ((QuerySettingsReadOnly)TheRequest).StartGraphName; }
+            set { TheRequest.StartGraphName = value; }
         }
 
         #endregion

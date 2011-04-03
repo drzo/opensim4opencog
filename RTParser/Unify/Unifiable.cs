@@ -1,11 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
-using MushDLR223.Utilities;
 using RTParser.Database;
 using RTParser.Utils;
 using UPath = RTParser.Unifiable;
@@ -15,19 +12,266 @@ using IndexTargetListImpl = System.Collections.Generic.HashSet<RTParser.IndexTar
 
 namespace RTParser
 {
-    abstract public class Unifiable : BaseUnifiable, IConvertible, IComparable<Unifiable>, Indexable, IndexTarget
+    public abstract class Unifiable : BaseUnifiable, IConvertible, IComparable<Unifiable>, Indexable, IndexTarget
     {
+        #region UFlags enum
+
+        [Flags]
+        public enum UFlags : uint
+        {
+            NO_FLAGS = 0,
+            IS_TRUE = 1,
+            IS_FALSE = 2,
+            IS_NULL = 4,
+            IS_EMPTY = 8,
+            IS_EXACT = 16,
+
+            BINDS_STARS = 32,
+            LONG_WILDCARD = 64,
+            SHORT_WILDCARD = 128,
+            LAZY_XML = 256,
+            REG_CLASS = 512,
+            ONLY_ONE = 1024,
+            ONE_OR_TWO = 2048,
+            MORE_THAN_ONE = 4096,
+            IS_TAG = 8192,
+            IS_PUNCT = 16384,
+            APPENDABLE = 32768,
+            NO_BINDS_STARS = 65536,
+            ZERO_OR_MORE = 131072,
+        }
+
+        #endregion
+
+        public const float UNIFY_FALSE = 1;
+        public const float UNIFY_TRUE = 0;
+
+        public static readonly char[] BRKCHARS = " \r\n\t".ToCharArray();
+
+        protected static readonly Dictionary<string, IndexTargetList> categoryInfosDictionary =
+            new Dictionary<string, IndexTargetList>();
+
+        private static readonly Dictionary<string, Unifiable> internedUnifiables =
+            new Dictionary<string, Unifiable>(20000);
+
+        private static readonly Dictionary<string, Unifiable> specialUnifiables = new Dictionary<string, Unifiable>(20);
+
+        public static readonly Unifiable[] DontStore = new Unifiable[0];
+        public static readonly string[] DontStoreString = new string[0];
+        public static readonly SpecialStringUnifiable Empty = CreateSpecial("$EMPTY", "");
+        public static readonly Unifiable FAIL_NIL = CreateSpecial("$FAIL_NIL", "NIL");
+        public static readonly Unifiable TRUE_T = CreateSpecial("$TRUE_T", "T");
+        public static readonly Unifiable INCOMPLETE = CreateSpecial("$INCOMPLETE", null);
+        public static readonly int MaxCategories = 10000;
+        public static readonly Unifiable MISSING = CreateSpecial("$MISSING", /*"OM"*/null);
+        public static readonly bool MustBeFast = true;
+        public static readonly bool NOCateIndex = true;
+        public static readonly Unifiable NULL = CreateSpecial("$NULL", null);
+        public static readonly int PrintCategories = 1000;
+
+        public static readonly bool ReturnNullForUnknownNonUnifiables = true;
+        public static readonly bool ReturnNullForUnknownUnifiables;
+        public static readonly SpecialStringUnifiable SPACE = CreateSpecial("$SPACE", " ");
+        public static readonly Unifiable TagInput = CreateSpecial("TAG-INPUT");
+        public static readonly Unifiable TagFlag = CreateSpecial("TAG-FLAG");
+        public static readonly Unifiable TagEndText = CreateSpecial("TAG-END");
+        public static readonly Unifiable TagStartText = CreateSpecial("TAG-START");
+        public static readonly Unifiable TagThat = CreateSpecial("TAG-THAT");
+        public static readonly Unifiable TagTopic = CreateSpecial("TAG-TOPIC");
+        public static readonly bool UpcaseXMLSource = true;
+
+        public UFlags Flags = UFlags.NO_FLAGS;
+        public string KeyCache;
+        public string SpecialCache;
+
         static Unifiable()
         {
-            StaticXMLUtils.FormatProviderConvertor = FormatProviderConvertor0;
+            FormatProviderConvertor = FormatProviderConvertor0;
         }
+
+        public bool IsEmpty
+        {
+            get { return IsEMPTY(this); }
+        }
+
+        public static Unifiable STAR
+        {
+            get { return MakeStringUnifiable("*"); }
+        }
+
+        public abstract object Raw { get; }
+
+        public Unifiable LegacyPath
+        {
+            get { return this; }
+        }
+
+        public abstract bool IsAnyText { get; }
+
+        public bool CanMatchZero
+        {
+            get { return Raw != null && ToUpper().Length == 0; }
+        }
+
+        public virtual bool IsWildCard
+        {
+            get { return true; }
+        }
+
+        public virtual bool IsCatchAll
+        {
+            get { return AsString() == "*"; }
+        }
+
+        public virtual Unifiable[] Possibles
+        {
+            get
+            {
+                List<Unifiable> possibles = new List<Unifiable>();
+                var ar = ToArray();
+                bool expanded = false;
+                for (int i = 0; i < ar.Length; i++)
+                {
+                    Unifiable item = ar[i];
+                    if (IsMulti(item))
+                    {
+                        foreach (var e in item.Possibles)
+                        {
+                            expanded = true;
+                            ar[i] = e;
+                            var uni = Join(" ", ar, 0, -1);
+                            possibles.Add(uni);
+                        }
+                        // reset
+                        ar[i] = item;
+                    }
+                }
+                if (!expanded) return new [] { this };
+                return possibles.ToArray();
+            }
+        }
+       
+        public abstract bool IsLazy { get; }
+        public abstract bool IsLitteral { get; }
+        public abstract bool IsLitteralText { get; }
+        public abstract bool IsHighPriority { get; }
+
+        public bool IsExactKey
+        {
+            get { return OverlyMatchableString == AsString(); }
+        }
+
+        public bool IsStarContent
+        {
+            get { return OverlyMatchableString == "*"; }
+        }
+
+        public bool IsMixedContent
+        {
+            get { return ToArray().Length > 1; }
+        }
+
+        public virtual IndexTargetList CategoryInfos
+        {
+            get
+            {
+                string strU = OverlyMatchableString;
+                StringUnifiable su = this as StringUnifiable;
+                IndexTargetList categoryInfos1 = su == null ? null : su.valueCache as IndexTargetList;
+                if (categoryInfos1 != null) return categoryInfos1;
+                lock (categoryInfosDictionary)
+                {
+                    if (!categoryInfosDictionary.TryGetValue(strU, out categoryInfos1))
+                    {
+                        return null;
+                    }
+                }
+                return categoryInfos1;
+            }
+            set
+            {
+                string strU = OverlyMatchableString;
+                lock (categoryInfosDictionary) categoryInfosDictionary[strU] = value;
+                if (this is StringUnifiable)
+                {
+                    StringUnifiable su = ((StringUnifiable) this);
+                    if (ReferenceEquals(su.valueCache, null))
+                    {
+                        su.valueCache = ((object) value ?? SpecialCache);
+                    }
+                }
+            }
+        }
+
+        public virtual XmlNode PatternNode
+        {
+            get { return AsNodeXML as XmlNode; }
+            set { throw new NotImplementedException(); }
+        }
+
+        public virtual Unifiable FullPath
+        {
+            get { return this; }
+        }
+
+        protected abstract string GenerateSpecialName { get; }
+
+        #region IComparable<Unifiable> Members
+
+        public abstract int CompareTo(Unifiable other);
+
+        #endregion
+
+        #region Indexable Members
+
+        public override sealed string SpecialName
+        {
+            get
+            {
+                if (SpecialCache == null)
+                {
+                    SpecialCache = GenerateSpecialName;
+                }
+                return SpecialCache;
+            }
+        }
+
+        public override string OverlyMatchableString
+        {
+            get
+            {
+                if (KeyCache == null)
+                {
+                    string local = Trim(SpecialName);
+                    KeyCache = SPLITMATCHABLE(SpecialName);
+                }
+                return KeyCache;
+            }
+        }
+
+        public virtual bool AddCategory(IndexTarget template)
+        {
+            if (NOCateIndex) return false;
+            throw new NotImplementedException();
+        }
+
+        public virtual bool RemoveCategory(IndexTarget template)
+        {
+            if (NOCateIndex) return false;
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+        public abstract string ToDebugString();
+
         public static long LowMemExpireUnifiableCaches()
         {
             long total = 0;
             lock (internedUnifiables)
-                foreach (var internedUnifiable in internedUnifiables.Values)
+                foreach (Unifiable internedUnifiable in internedUnifiables.Values)
                 {
-                    var u = internedUnifiable; //.Value;
+                    Unifiable u = internedUnifiable; //.Value;
                     if (u != null)
                     {
                         total += u.RunLowMemHooks();
@@ -36,24 +280,12 @@ namespace RTParser
             return total;
         }
 
-        public bool IsEmpty
-        {
-            get
-            {
-                return IsEMPTY(this);
-            }
-        }
-        public readonly static char[] BRKCHARS = " \r\n\t".ToCharArray();
-        public static Unifiable[] DontStore = new Unifiable[0];
-        public static string[] DontStoreString = new string[0];
-
         public abstract int RunLowMemHooks();
-        public static bool ReturnNullForUnknownNonUnifiables = true;
-        public static bool ReturnNullForUnknownUnifiables = false;
+
         public static IConvertible FormatProviderConvertor0(IConvertible arg, Type solid)
         {
             IConvertible output = arg;
-            if (Object.ReferenceEquals(arg, null))
+            if (ReferenceEquals(arg, null))
             {
                 return output;
             }
@@ -81,7 +313,7 @@ namespace RTParser
                 {
                     if (wasIncomplete)
                     {
-                        if (ReturnNullForUnknownUnifiables) return Unifiable.INCOMPLETE;
+                        if (ReturnNullForUnknownUnifiables) return INCOMPLETE;
                     }
                     return u;
                 }
@@ -89,9 +321,9 @@ namespace RTParser
                 {
                     if (wasIncomplete)
                     {
-                        u = "0.0";                       
-                        if (ReturnNullForUnknownNonUnifiables) return Unifiable.INCOMPLETE;                       
-                    }                    
+                        u = "0.0";
+                        if (ReturnNullForUnknownNonUnifiables) return INCOMPLETE;
+                    }
                     return Double.Parse(u);
                 }
                 if (solid == typeof (Int32))
@@ -99,17 +331,17 @@ namespace RTParser
                     if (wasIncomplete)
                     {
                         u = "0";
-                        if (ReturnNullForUnknownNonUnifiables) return Unifiable.INCOMPLETE;
-                    }         
+                        if (ReturnNullForUnknownNonUnifiables) return INCOMPLETE;
+                    }
                     return Int32.Parse(u);
                 }
-                if (solid.IsSubclassOf(typeof(Unifiable)) || typeof(Unifiable).IsSubclassOf(solid))
+                if (solid.IsSubclassOf(typeof (Unifiable)) || typeof (Unifiable).IsSubclassOf(solid))
                 {
                     if (wasIncomplete)
                     {
-                        if (ReturnNullForUnknownUnifiables) return Unifiable.INCOMPLETE;
+                        if (ReturnNullForUnknownUnifiables) return INCOMPLETE;
                     }
-                    return Unifiable.Create(u);
+                    return Create(u);
                 }
             }
             catch (Exception exception)
@@ -117,47 +349,15 @@ namespace RTParser
                 writeToLog("ERROR FormatProviderConvertor " + arg + " to " + solid);
             }
             //if (FormatProvider == null) FormatProvider = ;//.;//new IFormatProvider();
-            var format = FormatProvider.GetFormat(solid);
+            object format = FormatProvider.GetFormat(solid);
             object oo = arg.ToType(solid, FormatProvider);
             return (IConvertible) oo;
         }
 
-
-        public string SpecialCache;
-        public string KeyCache;
-        public UFlags Flags = UFlags.NO_FLAGS;
         public bool IsFlag(UFlags f)
         {
             return (f & Flags) != 0;
         }
-
-        [Flags]
-        public enum UFlags : uint
-        {
-            NO_FLAGS = 0,
-            IS_TRUE = 1,
-            IS_FALSE = 2,
-            IS_NULL = 4,
-            IS_EMPTY = 8,
-            IS_EXACT = 16,
-
-            BINDS_STARS = 32,
-            LONG_WILDCARD = 64,
-            SHORT_WILDCARD = 128,
-            LAZY_XML = 256,
-            REG_CLASS = 512,
-            ONLY_ONE = 1024,
-            ONE_OR_TWO = 2048,
-            MORE_THAN_ONE = 4096,
-            IS_TAG = 8192,
-            IS_PUNCT = 16384,
-            APPENDABLE = 32768,
-            NO_BINDS_STARS = 65536,
-            ZERO_OR_MORE = 131072,
-        }
-
-        public const float UNIFY_TRUE = 0;
-        public const float UNIFY_FALSE = 1;
 
 
         /// <summary>
@@ -182,8 +382,6 @@ namespace RTParser
             return value.AsString();
         }
 
-        static readonly Dictionary<string, Unifiable> specialUnifiables = new Dictionary<string, Unifiable>(20);
-        static readonly Dictionary<string, Unifiable> internedUnifiables = new Dictionary<string, Unifiable>(20000);
         public static implicit operator Unifiable(string value)
         {
             if (value == null) return null;
@@ -201,6 +399,7 @@ namespace RTParser
             Unifiable unif = CreateFromXml(value);
             return unif;
         }
+
         /*
         public static implicit operator Unifiable(XmlNodeList childNodes)
         {
@@ -221,15 +420,15 @@ namespace RTParser
             }
         }
         */
-        private static StringUnifiable MakeStringUnifiable(string value)
+
+        private static Unifiable MakeStringUnifiable(string value)
         {
-            StringUnifiable su = MakeStringUnifiable(value, true);
+            var su = MakeStringUnifiable(value, true);
             return su;
         }
 
-        public static StringUnifiable MakeStringUnifiable(string value, bool useTrimmingRules)
+        public static Unifiable MakeStringUnifiable(string value, bool useTrimmingRules)
         {
-
             if (value == null) return null;
             if (value == "") return Empty;
             Unifiable u;
@@ -238,7 +437,7 @@ namespace RTParser
                 {
                     if (internedUnifiables.TryGetValue(value, out u))
                     {
-                        return (StringUnifiable) u;
+                        return u;
                     }
                 }
             if (useTrimmingRules)
@@ -257,7 +456,8 @@ namespace RTParser
                 {
                     if (!internedUnifiables.TryGetValue(key, out u))
                     {
-                        u = internedUnifiables[key] = new StringUnifiable(value, true);
+                        u = MakeUnifiable0(value);
+                        internedUnifiables[key] = u;
                         // ReSharper disable ConditionIsAlwaysTrueOrFalse
                         if (false && (internedUnifiables.Count%10000) == 0)
                             // ReSharper restore ConditionIsAlwaysTrueOrFalse
@@ -265,24 +465,34 @@ namespace RTParser
                             writeToLog("DEBUG9 internedUnifiables.Count=" + internedUnifiables.Count);
                         }
                     }
-                    return (StringUnifiable) u;
+                    return u;
                 }
-            u = new StringUnifiable(value);
-            return (StringUnifiable) u;
+            u = MakeUnifiable0(value);
+            return u;
+        }
+
+        private static Unifiable MakeUnifiable0(string value)
+        {
+            Unifiable u;
+            if (value.StartsWith("<xor>"))
+            {
+                u = MakeBestUnifiable(value);
+            } else
+            {
+                u  = new StringUnifiable(value, true);                            
+            }
+            return u;
+        }
+
+        private static Unifiable MakeBestUnifiable(string value)
+        {
+            var b = new BestUnifiable(value, false);
+            return b;
         }
 
         public static string Intern(string cleanWhitepaces)
         {
             return string.Intern(cleanWhitepaces);
-        }
-
-
-        public static Unifiable STAR
-        {
-            get
-            {
-                return MakeStringUnifiable("*");
-            }
         }
 
 
@@ -303,7 +513,7 @@ namespace RTParser
         {
             if (count == 0 || values.Length == 0)
             {
-                return Unifiable.Empty;
+                return Empty;
             }
             if (count == 1)
             {
@@ -317,9 +527,9 @@ namespace RTParser
             if (strs.Count == 0) return DontStore;
             Unifiable[] it = new Unifiable[strs.Count];
             int i = 0;
-            foreach (var str in strs)
+            foreach (object str in strs)
             {
-                it[i] = Unifiable.Create(str);
+                it[i] = Create(str);
                 i++;
             }
             return it;
@@ -327,11 +537,11 @@ namespace RTParser
 
         public static Unifiable[] arrayOf(IEnumerable strs)
         {
-            var it = new List<Unifiable>();
+            List<Unifiable> it = new List<Unifiable>();
             int i = 0;
-            foreach (var str in strs)
+            foreach (object str in strs)
             {
-               it.Add(Create(str));
+                it.Add(Create(str));
             }
             if (it.Count == 0) return DontStore;
             return it.ToArray();
@@ -348,7 +558,7 @@ namespace RTParser
             return it;
         }
 
-        static public bool operator ==(Unifiable t, string s)
+        public static bool operator ==(Unifiable t, string s)
         {
             return EQ(s, t);
         }
@@ -358,23 +568,26 @@ namespace RTParser
             return !(t == s);
         }
 
-        public bool SameMeaning(Unifiable t)
+        virtual public bool SameMeaning(Unifiable t)
         {
+            if (t is BestUnifiable) return t.SameMeaning(this);
             return SAME_MEANING(this, t);
         }
-        static public bool SAME_MEANING(Unifiable t, Unifiable s)
+
+        public static bool SAME_MEANING(Unifiable t, Unifiable s)
         {
             return SAME_KEY(t, s, false);
         }
 
-        static public bool SAME_KEY(Unifiable t, Unifiable s, bool caseSensitive)
+        public static bool SAME_KEY(Unifiable t, Unifiable s, bool caseSensitive)
         {
             if (!ReferenceEquals(t, null)) return t.SameMeaningCS(s, caseSensitive);
             return ReferenceEquals(s, null);
         }
-
-        protected virtual bool SameMeaningCS(Unifiable s, bool caseSensitive)
+        
+        public virtual bool SameMeaningCS(Unifiable s, bool caseSensitive)
         {
+            if (s is BestUnifiable) return s.SameMeaningCS(this, caseSensitive);
             if (ReferenceEquals(this, s)) return true;
             bool null2 = ReferenceEquals(s, null);
             if (null2) return false;
@@ -397,12 +610,12 @@ namespace RTParser
             return false;
         }
 
-        static public bool operator ==(Unifiable t, object s)
+        public static bool operator ==(Unifiable t, object s)
         {
             if (s is Unifiable) return SAME_KEY(t, (Unifiable) s, true);
             if (s is string)
             {
-                string ss = (string)s;
+                string ss = (string) s;
                 if (t == ss)
                 {
                     return true;
@@ -413,23 +626,25 @@ namespace RTParser
             if (s == null) return IsNull(t);
             return EQ(CreateEQ(s), t);
         }
+
         public static bool operator !=(Unifiable t, object s)
         {
             return !(t == s);
-        }      
+        }
 
         private static string CreateEQ(object o)
         {
             if (o == null) return null;
             if (IsNull(o)) return null;
             if (IsEMPTY(o)) return "";
-            if (IsIncomplete(o)) return "OM";             
+            if (IsIncomplete(o)) return "OM";
             return Create(o);
         }
-        static public bool EQ(string t, string u)
+
+        public static bool EQ(string t, string u)
         {
             if (t == u) return true;
-            var unull = IsNull(u);
+            bool unull = IsNull(u);
             if (t == null || t == "$NULL")
             {
                 return unull;
@@ -437,9 +652,9 @@ namespace RTParser
             int tlen = t.Length;
             if (unull)
             {
-               return IsIncomplete(t);
+                return IsIncomplete(t);
             }
-            string uutrim = u.Trim(new char[] { ' ' });
+            string uutrim = u.Trim(new[] {' '});
             int uutrimLen = uutrim.Length;
             if (uutrimLen < 2) return t == uutrim;
             if (tlen == 0)
@@ -477,7 +692,7 @@ namespace RTParser
             if (more == null)
             {
                 writeToLog("ERROR: appending NULL");
-                return u +" -NULL-";
+                return u + " -NULL-";
             }
             string moreAsString = more.AsString();
             if (moreAsString.Length == 0)
@@ -486,14 +701,16 @@ namespace RTParser
             }
             return MakeStringUnifiable(u + more.AsString());
         }
+
         public static Unifiable operator +(Unifiable u, string more)
         {
             if (more == null)
             {
-                return u;//.AsString();
+                return u; //.AsString();
             }
             return MakeStringUnifiable("" + u.AsString() + more);
         }
+
         public static Unifiable operator +(Unifiable u, Unifiable more)
         {
             if (IsNullOrEmpty(more))
@@ -512,9 +729,10 @@ namespace RTParser
         {
             return CreateSpecial(key, key);
         }
+
         public static SpecialStringUnifiable CreateSpecial(string key, string value)
         {
-            var dict = specialUnifiables;
+            Dictionary<string, Unifiable> dict = specialUnifiables;
             lock (dict)
             {
                 Unifiable u;
@@ -537,12 +755,12 @@ namespace RTParser
         {
             if (p is string)
             {
-                return MakeStringUnifiable((string)p);
+                return MakeStringUnifiable((string) p);
             }
-            if (p is Unifiable) return (Unifiable)p;
+            if (p is Unifiable) return (Unifiable) p;
             if (p is XmlNode)
             {
-                var n = (XmlNode)p;
+                XmlNode n = (XmlNode) p;
                 return CreateFromXml(n);
             }
             // TODO
@@ -550,21 +768,24 @@ namespace RTParser
             {
                 return null;
             }
+            if (true.Equals(p)) return TRUE_T;
+            if (false.Equals(p)) return FAIL_NIL;
+            throw new NotImplementedException();
             return MakeStringUnifiable(p.ToString());
         }
 
-        public static StringUnifiable CreateFromXml(XmlNode n)
+        public static Unifiable CreateFromXml(XmlNode n)
         {
             string inner = ToXmlValue(n);
-            StringUnifiable stringUnifiable = MakeStringUnifiable(inner);
+            var stringUnifiable = MakeStringUnifiable(inner) as StringUnifiable;
             stringUnifiable.OfferNode(n, inner);
             return stringUnifiable;
         }
 
         public override string ToString()
         {
-            writeToLog("ToSTring");
-            return GetType().Name + "={" + Raw + "}";//Raw.ToString();}
+            //writeToLog("ToSTring");
+            return GetType().Name + "={" + Raw + "}"; //Raw.ToString();}
         }
 
         internal static StringAppendableUnifiableImpl CreateAppendable()
@@ -573,55 +794,12 @@ namespace RTParser
             //   return new StringBuilder(10);
         }
 
-        public static Unifiable ThatTag = CreateSpecial("TAG-THAT");
-        public static Unifiable TopicTag = CreateSpecial("TAG-TOPIC");
-        public static Unifiable FlagTag = CreateSpecial("TAG-FLAG");
-        public static Unifiable InputTag = CreateSpecial("TAG-INPUT");
-        public static Unifiable TagStartText = CreateSpecial("TAG-START");
-        public static Unifiable TagEndText = CreateSpecial("TAG-END");
-        public static Unifiable NULL = CreateSpecial("$NULL", null);
-        public static Unifiable INCOMPLETE = CreateSpecial("$INCOMPLETE",null);
-        public static SpecialStringUnifiable Empty = CreateSpecial("$EMPTY", "");
-        public static SpecialStringUnifiable SPACE = CreateSpecial("$SPACE", " ");
-        public static Unifiable FAIL_NIL = CreateSpecial("$FAIL_NIL","NIL");
-        public static Unifiable MISSING = CreateSpecial("$MISSING",/*"OM"*/null);
-
-        public abstract object Raw { get; }
-
-        public Unifiable LegacyPath
-        {
-            get { return this; }
-        }
-
-        public abstract bool IsAnyText { get; }
-
-        public bool CanMatchZero
-        {
-            get { return Raw != null && ToUpper().Length == 0; }
-        }
-
         public virtual bool IsFalse()
         {
             return IsNullOrEmpty(this);
         }
+
         public abstract bool IsTag(string s);
-
-        public virtual bool IsWildCard
-        {
-            get { return true; }
-        }
-
-        public virtual bool IsCatchAll
-        {
-            get
-            {
-                return AsString() == "*";
-            }
-        }
-
-        public abstract bool IsLazy { get; }
-        public abstract bool IsLitteral { get; }
-        public abstract bool IsLitteralText { get; }
 
         public static void writeToLog(string message, params object[] args)
         {
@@ -665,7 +843,7 @@ namespace RTParser
             return IsMatch2(s, u);
         }
 
-        static public bool IsMatch2(string st, string actualValue)
+        public static bool IsMatch2(string st, string actualValue)
         {
             if (ReferenceEquals(st, actualValue)) return true;
             string that = " " + actualValue + " ";
@@ -697,7 +875,7 @@ namespace RTParser
             if (st.StartsWith("~"))
             {
                 string type = st.Substring(1);
-                var b = NatLangDb.IsWordClass(actualValue, type);
+                bool b = NatLangDb.IsWordClass(actualValue, type);
                 if (b)
                 {
                     return true;
@@ -708,7 +886,7 @@ namespace RTParser
         }
 
 
-        static bool TwoSemMatch(string that, string thiz)
+        private static bool TwoSemMatch(string that, string thiz)
         {
             return false;
             if (NatLangDb.IsWordClassCont(that, " determ") && NatLangDb.IsWordClassCont(thiz, " determ"))
@@ -718,8 +896,7 @@ namespace RTParser
             return false;
         }
 
-        public static bool MustBeFast = true;
-        static bool TwoMatch0(string s1, string s2)
+        private static bool TwoMatch0(string s1, string s2)
         {
             if (s1 == s2) return true;
             if (MustBeFast) return false;
@@ -736,16 +913,20 @@ namespace RTParser
         {
             return this;
         }
+
         public virtual Unifiable Frozen(SubQuery subquery)
         {
             return ToValue(subquery);
         }
+
         public abstract string ToValue(SubQuery subquery);
         public abstract string AsString();
+
         public virtual Unifiable ToPropper()
         {
             return this;
         }
+
         public virtual Unifiable Trim()
         {
             return this;
@@ -765,13 +946,11 @@ namespace RTParser
         public abstract void Append(string part);
         public abstract void Clear();
 
-        public abstract Unifiable First();
+        public abstract Unifiable First { get; }
 
-        public abstract Unifiable Rest();
+        public abstract Unifiable Rest { get; }
 
-        public abstract bool IsHighPriority { get; }
-
-        public abstract object AsNodeXML();
+        public abstract object AsNodeXML { get; }
 
         public static Unifiable MakePath(Unifiable unifiable)
         {
@@ -780,7 +959,7 @@ namespace RTParser
 
         public abstract Unifiable[] ToArray();
 
-        virtual public bool StoreWildCard()
+        public virtual bool StoreWildCard()
         {
             return true;
         }
@@ -793,11 +972,11 @@ namespace RTParser
             }
             if (unifiable is string)
             {
-                return ToLower(((string)unifiable));
+                return ToLower(((string) unifiable));
             }
             if (unifiable is Unifiable)
             {
-                return ToStringLValue(((Unifiable)unifiable).Raw);
+                return ToStringLValue(((Unifiable) unifiable).Raw);
             }
             return ToStringLValue("" + unifiable);
         }
@@ -816,6 +995,118 @@ namespace RTParser
         }
 
         public abstract string ToUpper();
+
+        public static string GuessWildCardIndex(char c0, char cN, string specialIndex)
+        {
+            if (c0 == '*' && '*' == cN) return NoteSpecialIndexer(specialIndex, "*");
+            if (c0 == '_' && '_' == cN) return NoteSpecialIndexer(specialIndex, "_");
+
+            return null;
+
+            if (c0 == '<' && cN == '>') return NoteSpecialIndexer(specialIndex, "<>");
+            if (c0 == '~' || cN == '~') return NoteSpecialIndexer(specialIndex, "<>");
+            if (c0 == '#') return NoteSpecialIndexer(specialIndex, "<>");
+
+            if (c0 == '*' || cN == '*') return NoteSpecialIndexer(specialIndex, "*");
+            if (c0 == '_' || cN == '_') return NoteSpecialIndexer(specialIndex, "_");
+
+            return null;
+        }
+
+        private static string NoteSpecialIndexer(string index, string idx)
+        {
+            //DLRConsole.DebugWriteLine("NoteSpecialIndexer " + index);
+            return idx;
+        }
+
+        public abstract double Strictness { get; }
+
+        public static string DescribeUnifiable(Object value)
+        {
+            if (value == null) return "-UOBJECT-";
+            string s = value.GetType().Name;
+            if (ReferenceEquals(value, NULL)) s += "-EQ-NULL-";
+            if (IsNull(value)) s += "-IsNull-";
+            if (IsIncomplete(value)) s += "-IsIncomplete-";
+            if (IsMissing(value)) s += "-IsMissing-";
+            if (IsEMPTY(value)) s += "-IsEMPTY-";
+            if (value is Unifiable)
+            {
+                s += string.Format("='{0}'", DescribeUnifiable(((Unifiable) value).Raw));
+            }
+            else if (value is string)
+            {
+                s += string.Format("=\"{0}\"", value);
+            }
+            else
+            {
+                s += string.Format("=[{0}]", value);
+            }
+            return s;
+        }
+
+
+        internal bool LoopsFrom(string innerXml)
+        {
+            string p = MakeAimlMatchable(FullPath.AsString().Replace("_", "*"));
+            p = "<srai>" + p + "</srai>";
+
+            string t = MakeAimlMatchable(innerXml);
+
+            if (t.Contains(p))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        internal bool DivergesFrom(TemplateInfo newTemplateInfo, out Unifiable from, out Unifiable to)
+        {
+            if (true)
+            {
+                from = "";
+                to = "";
+                return false;
+            }
+            string p = MakeAimlMatchable(FullPath.AsString().Replace("_", "*"));
+            p = "<srai>" + p + "</srai>";
+            string t = MakeAimlMatchable(newTemplateInfo.TemplateXml.InnerXml);
+
+            int firstTP = FirstMismatch(t, p);
+            int lastTP = LastMismatch(t, p);
+            int firstPT = FirstMismatch(p, t);
+            int lastPT = LastMismatch(p, t);
+            from = "";
+            to = "";
+            return false;
+        }
+
+        private static int FirstMismatch(string s1, string s2)
+        {
+            int i = 0;
+            for (; i < s1.Length; i++)
+            {
+                if (s1[i] == s2[i]) continue;
+                return i - 1;
+            }
+            return i - 1;
+        }
+
+        private static int LastMismatch(string s1, string s2)
+        {
+            int i = s1.Length - 1;
+            for (; i >= 0; i--)
+            {
+                if (s1[i] == s2[i]) continue;
+                return i - 1;
+            }
+            return i - 1;
+        }
+
+        public static bool IsMulti(Unifiable value)
+        {
+            return value is BestUnifiable;
+        }
 
         #region Implementation of IConvertible
 
@@ -1041,213 +1332,6 @@ namespace RTParser
         }
 
         #endregion
-
-        public static string GuessWildCardIndex(char c0, char cN, string specialIndex)
-        {
-            if (c0 == '*' && '*' == cN) return NoteSpecialIndexer(specialIndex, "*");
-            if (c0 == '_' && '_' == cN) return NoteSpecialIndexer(specialIndex, "_");
-
-            return null;
-
-            if (c0 == '<' && cN == '>') return NoteSpecialIndexer(specialIndex, "<>");
-            if (c0 == '~' || cN == '~') return NoteSpecialIndexer(specialIndex, "<>");
-            if (c0 == '#') return NoteSpecialIndexer(specialIndex, "<>");
-
-            if (c0 == '*' || cN == '*') return NoteSpecialIndexer(specialIndex, "*");
-            if (c0 == '_' || cN == '_') return NoteSpecialIndexer(specialIndex, "_");
-
-            return null;
-        }
-
-        private static string NoteSpecialIndexer(string index, string idx)
-        {
-            //DLRConsole.DebugWriteLine("NoteSpecialIndexer " + index);
-            return idx;
-        }
-
-        public abstract double Strictness();
-        public abstract int CompareTo(Unifiable other);
-
-        public static string DescribeUnifiable(Object value)
-        {
-            if (value == null) return "-UOBJECT-";
-            string s = value.GetType().Name;
-            if (ReferenceEquals(value, Unifiable.NULL)) s += "-EQ-NULL-";
-            if (IsNull(value)) s += "-IsNull-";
-            if (IsIncomplete(value)) s += "-IsIncomplete-";
-            if (IsMissing(value)) s += "-IsMissing-";
-            if (IsEMPTY(value)) s += "-IsEMPTY-";
-            if (value is Unifiable)
-            {
-                s += string.Format("='{0}'", DescribeUnifiable(((Unifiable)value).Raw));
-            }
-            else if (value is string)
-            {
-                s += string.Format("=\"{0}\"", value);
-            }
-            else
-            {
-                s += string.Format("=[{0}]", value);
-            }
-            return s;
-
-        }
-
-
-        public sealed override string SpecialName
-        {
-            get
-            {
-                if (SpecialCache == null)
-                {
-                    SpecialCache = GenerateSpecialName;
-                }
-                return SpecialCache;
-            }
-        }
-
-        public bool IsExactKey
-        {
-            get { return OverlyMatchableString == AsString(); }
-        }
-        public bool IsStarContent
-        {
-            get { return OverlyMatchableString == "*"; }
-        }
-        public bool IsMixedContent
-        {
-            get { return ToArray().Length > 1; }
-        }
-        public static bool UpcaseXMLSource = true;
-        public static bool NOCateIndex = true;        
-        public static int MaxCategories = 10000;
-        public static int PrintCategories = 1000;
-        protected static readonly Dictionary<string, IndexTargetList> categoryInfosDictionary = new Dictionary<string, IndexTargetList>();
-        virtual public IndexTargetList CategoryInfos
-        {
-            get
-            {
-                string strU = OverlyMatchableString;
-                var su = this as StringUnifiable;
-                IndexTargetList categoryInfos1 = su == null ? null : su.valueCache as IndexTargetList;
-                if (categoryInfos1 != null) return categoryInfos1;
-                lock (categoryInfosDictionary)
-                {
-                    if (!categoryInfosDictionary.TryGetValue(strU, out categoryInfos1))
-                    {
-                        return null;
-                    }
-                }
-                return categoryInfos1;
-            }
-            set
-            {
-                string strU = OverlyMatchableString;
-                lock (categoryInfosDictionary) categoryInfosDictionary[strU] = value;
-                if (this is StringUnifiable)
-                {
-                    var su = ((StringUnifiable) this);
-                    if (ReferenceEquals(su.valueCache, null))
-                    {
-                        su.valueCache = ((object) value ?? SpecialCache);
-                    }
-                }
-            }
-        }
-
-        public override string OverlyMatchableString
-        {
-            get
-            {
-                if (KeyCache == null)
-                {
-                    var local = Trim(SpecialName);
-                    KeyCache = SPLITMATCHABLE(SpecialName);
-                }
-                return KeyCache;
-            }
-        }
-
-        public virtual bool AddCategory(IndexTarget template)
-        {
-            if (NOCateIndex) return false;
-            throw new NotImplementedException();
-        }
-
-        public virtual bool RemoveCategory(IndexTarget template)
-        {
-            if (NOCateIndex) return false;
-            throw new NotImplementedException();
-        }
-
-        public virtual XmlNode PatternNode
-        {
-            get { return AsNodeXML() as XmlNode; }
-            set { throw new NotImplementedException(); }
-        }
-
-        public virtual Unifiable FullPath
-        {
-            get { return this; }
-        }
-
-        protected abstract string GenerateSpecialName { get; }
-
-        internal bool LoopsFrom(string innerXml)
-        {
-            string p = StaticAIMLUtils.MakeAimlMatchable(FullPath.AsString().Replace("_", "*"));
-            p = "<srai>" + p + "</srai>";
-
-            string t = StaticAIMLUtils.MakeAimlMatchable(innerXml);
-
-            if (t.Contains(p))
-            {
-                return true;
-            }
-            return false;
-        }
-
-        internal bool DivergesFrom(TemplateInfo newTemplateInfo, out Unifiable from, out Unifiable to)
-        {
-            if (true)
-            {
-                from = "";
-                to = "";
-                return false;
-            }
-            string p = StaticAIMLUtils.MakeAimlMatchable(FullPath.AsString().Replace("_", "*"));
-            p = "<srai>" + p + "</srai>";
-            string t = StaticAIMLUtils.MakeAimlMatchable(newTemplateInfo.TemplateXml.InnerXml);
-
-            int firstTP = FirstMismatch(t, p);
-            int lastTP = LastMismatch(t, p);
-            int firstPT = FirstMismatch(p, t);
-            int lastPT = LastMismatch(p, t);
-            from = "";
-            to = "";
-            return false;
-        }
-        private static int FirstMismatch(string s1, string s2)
-        {
-            int i = 0;
-            for (; i < s1.Length; i++)
-            {
-                if (s1[i] == s2[i]) continue;
-                return i - 1;
-            }
-            return i - 1;
-        }
-
-        private static int LastMismatch(string s1, string s2)
-        {
-            int i = s1.Length - 1;
-            for (; i >= 0; i--)
-            {
-                if (s1[i] == s2[i]) continue;
-                return i - 1;
-            }
-            return i - 1;
-        }
     }
 
     public abstract class BaseUnifiable : StaticAIMLUtils
@@ -1258,7 +1342,6 @@ namespace RTParser
 
     public interface IndexTarget
     {
-       
     }
 
     public interface Indexable
@@ -1271,8 +1354,26 @@ namespace RTParser
 
     public class SpecialStringUnifiable : StringUnifiable
     {
-        protected override bool SameMeaningCS(Unifiable s, bool caseSensitive)
+        public SpecialStringUnifiable(string value, string debugName)
+            : base(value)
         {
+            SpecialCache = debugName;
+            upperCache = value;
+        }
+
+        public override object Raw
+        {
+            get { return str; }
+        }
+
+        protected override string GenerateSpecialName
+        {
+            get { return SpecialCache; }
+        }
+
+        public override bool SameMeaningCS(Unifiable s, bool caseSensitive)
+        {
+            if (s is BestUnifiable) return s.SameMeaningCS(this, caseSensitive);
             if (ReferenceEquals(this, s)) return true;
             bool null2 = ReferenceEquals(s, null);
             if (null2) return false;
@@ -1308,7 +1409,7 @@ namespace RTParser
             throw new NotImplementedException();
         }
 
-       // private readonly string DebugName1;
+        // private readonly string DebugName1;
 
         public override string ToUpper()
         {
@@ -1319,36 +1420,25 @@ namespace RTParser
         {
             return 0;
         }
+
         public override string AsString()
         {
             return str;
         }
+
         public override string ToString()
         {
-            return SpecialCache + "-" + Unifiable.DescribeUnifiable(this);
+            return SpecialCache + "-" + DescribeUnifiable(this);
         }
-        public SpecialStringUnifiable(string value, string debugName)
-            : base(value)
-        {
-            SpecialCache = debugName;
-            upperCache = value;
-        }
+
         public override int SpoilCache()
         {
             return 0;
         }
-        public override object Raw
-        {
-            get { return str; }
-        }
-        protected override string GenerateSpecialName
-        {
-            get { return SpecialCache; }
-        }
+
         public override void Append(Unifiable p)
         {
             throw new InvalidCastException("Empty Unifiable");
         }
     }
 }
-

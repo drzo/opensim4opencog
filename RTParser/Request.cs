@@ -277,7 +277,7 @@ namespace RTParser
             get
             {
                 if (ChatInput == null) return "@echo -no ChatInput yet-";
-                return ChatInput.RawText;
+                return ChatInput.OrignalRawText;
             }
         }
 
@@ -478,7 +478,7 @@ namespace RTParser
             return DLRConsole.SafeFormat(
                 "{0}[{1}]: {2}, \"{3}\"",
                 RequestDepth + " " + UserNameOf(Requester, "Requester"),
-                GraphName,
+                StartGraphName,
                 UserNameOf(Responder, "Anyone"),
                 unifiableToVMString);
         }
@@ -787,7 +787,7 @@ namespace RTParser
                     if (ovGraph == null) return null;
                     return TargetBot.GetGraph(ovGraph, null);
                 }
-                GraphMaster probably = Requester.ListeningGraph;
+                GraphMaster probably = Requester.StartGraph;
                 if (ovGraph != null)
                 {
                     if (probably != null)
@@ -836,7 +836,7 @@ namespace RTParser
         /// <summary>
         /// The Graph to start the query on
         /// </summary>
-        public override string GraphName
+        public override string StartGraphName
         {
             get
             {
@@ -844,10 +844,10 @@ namespace RTParser
                     return ovGraph;
                 if (ParentRequest != null)
                 {
-                    var pg = ((QuerySettingsReadOnly)ParentRequest).GraphName;
+                    var pg = ((QuerySettingsReadOnly)ParentRequest).StartGraphName;
                     if (pg != null) return pg;
                 }
-                string ugn = Requester.GraphName;
+                string ugn = Requester.StartGraphName;
                 if (ugn != null) return ugn;
                 GraphMaster gm = Graph;
                 if (gm != null) ugn = gm.ScriptingName;

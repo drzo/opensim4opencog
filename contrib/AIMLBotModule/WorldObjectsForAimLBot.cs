@@ -1187,21 +1187,20 @@ namespace AIMLBotModule
         {
             if (name == "botmod") return "botmody";
             int argsUsed;
-            var v = WorldSystem.ResolveCollection(name.ToLower(), out argsUsed, this);
+            ICollection v = WorldSystem.ResolveCollection(name.ToLower(), out argsUsed, this);
             if (v == null) return String.Empty;
             if (v.Count == 0) return SUnifiable.Empty;
-            BestUnifiable us = new BestUnifiable();
             SUnifiable uu = null;
             int c = 0;
+            List<Unifiable> List = new List<Unifiable>();
             foreach (var u in v)
             {
                 c++;
                 uu = ObjectUnifiable(u);
-                us.List.Add(uu);
+                List.Add(uu);
             }
-            if (c == 1) return uu;
-            return name;
-            //return us;
+            if (c == 1) return List[0];
+            return new BestUnifiable(List);
         }
 
         private SUnifiable ObjectUnifiable(object o)

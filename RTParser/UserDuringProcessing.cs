@@ -27,12 +27,12 @@ namespace RTParser
         void Enter(ConversationScopeHolder srai);
         void Exit(ConversationScopeHolder srai);
 
-        GraphMaster ListeningGraph { get; set; }
+        GraphMaster HeardSelfSayGraph { get; set; }
         void addResultTemplates(Result result);
         void addRequestTemplates(Request request);
         void addResult(Result result);
 
-        string GraphName { get; set; }
+        string StartGraphName { get; set; }
         SettingsDictionary Predicates { get; set; }
         void InsertProvider(ParentProvider pp);
         Request CurrentRequest { get; set; }

@@ -9,6 +9,7 @@ using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web;
+using System.Windows.Forms;
 using System.Xml;
 using AIMLbot;
 using LAIR.ResourceAPIs.WordNet;
@@ -172,13 +173,14 @@ namespace RTParser
 
         public static void Main(string[] args)
         {
+            //Application.Run(new RTParser.GUI.AIMLPadEditor("layout check",new RTPBot()));
             Run(args);
         }
         public static void Run(string[] args)
         {
             RTPBot myBot = null;
             TaskQueueHandler.TimeProcess("ROBOTCONSOLE: STARTUP", () => { myBot = Startup(args); });
-            TaskQueueHandler.TimeProcess("ROBOTCONSOLE: RUN", () => Run(args, myBot, MainConsoleWriteLn));
+            TaskQueueHandler.TimeProcess("ROBOTCONSOLE: RUN", () => RunGUI(args, myBot, MainConsoleWriteLn));
         }
 
         private static RTPBot Startup(string[] args)
@@ -292,6 +294,12 @@ namespace RTParser
             myBot.SetName(myName);
             myBot.isAcceptingUserInput = true;
         }
+        public static void RunGUI(string[] args, RTPBot myBot, OutputDelegate writeLine)
+        {
+            var GUIThread = new GUI.AIMLPadEditor(myBot.NameAsSet, myBot);
+            Application.Run(GUIThread);
+        }
+
         public static void Run(string[] args, RTPBot myBot, OutputDelegate writeLine)
         {
             string evidenceCode = "<topic name=\"collectevidencepatterns\"> " +
@@ -314,11 +322,9 @@ namespace RTParser
             myBot.LastUser = myUser;
             while (true)
             {
-                User BotAsAUser = myBot.BotAsUser;
                 myUser = myBot.LastUser;
-                string myName = BotAsAUser.UserName;
                 writeLine("-----------------------------------------------------------------");
-                string input = TextFilter.ReadLineFromInput(DLRConsole.SystemWrite, myUser.UserName + "> ");
+                string input = TextFilter.ReadLineFromInput(writeLine, myUser.UserName + "> ");
                 if (input == null)
                 {
                     Environment.Exit(0);
@@ -332,11 +338,22 @@ namespace RTParser
                 {
                     Environment.Exit(Environment.ExitCode);
                 }
+                myBot.AcceptInput(writeLine, input, myUser);
+            }
+        }
+
+        public void AcceptInput(OutputDelegate writeLine, string input, User myUser)
+        {
+            RTPBot myBot = this;
+            User BotAsAUser = myBot.BotAsUser;
+            myUser = myUser ?? myBot.LastUser;
+            string myName = BotAsAUser.UserName;
+            {
                 writeLine("-----------------------------------------------------------------");
                 if (String.IsNullOrEmpty(input))
                 {
                     writeLine(myName + "> " + BotAsAUser.JustSaid);
-                    continue;
+                    return;
                 }
                 try
                 {
@@ -361,9 +378,9 @@ namespace RTParser
                     TaskQueueHandler.TimeProcess(
                         "ROBOTCONSOLE: " + input,
                         () =>
-                        {
-                            myBotBotDirective = myBot.BotDirective(user, input, writeLine);
-                        });
+                            {
+                                myBotBotDirective = myBot.BotDirective(user, input, writeLine);
+                            });
                     //if (!myBotBotDirective) continue;
                     writeLine("-----------------------------------------------------------------");
                     writeLine("{0}: {1}", myUser.UserName, myUser.JustSaid);
@@ -388,7 +405,12 @@ namespace RTParser
                                                             sw.WriteLine(s, args);
                                                             writeDebugLine(s, args);
                                                         });
-            bool b = BotDirective(request, input, all);
+            var ss = input.Split(new string[] {"@"},StringSplitOptions.RemoveEmptyEntries);
+            bool b = false;
+            foreach (string s in ss)
+            {
+                if (BotDirective(request, "@" + s, all)) b = true;
+            }
             string sws = sw.ToString();
             if (!b) return Unifiable.FAIL_NIL;
             return sws;
@@ -595,7 +617,7 @@ namespace RTParser
                     return true;
                 }
                 string gn = args.Substring(0, indexof);
-                GraphMaster g = robot.GetGraph(gn, myUser.ListeningGraph);
+                GraphMaster g = robot.GetGraph(gn, myUser.StartGraph);
                 String aiml = RTPBot.Trim(args.Substring(indexof));
                 robot.AddAiml(g, aiml, request);
                 console("Done with " + args);
@@ -879,12 +901,12 @@ namespace RTParser
             if (showHelp) console("@chgraph <graph> - changes the users graph");
             if (cmd == "graph" || cmd == "chgraph" || cmd == "cd")
             {
-                GraphMaster current = myUser.ListeningGraph;
+                GraphMaster current = myUser.StartGraph;
                 GraphMaster graph = robot.FindGraph(args, current);
                 if (args != "" && graph != null && graph != current)
                 {
                     console("Changing to graph " + graph);
-                    myUser.ListeningGraph = graph;
+                    myUser.StartGraph = graph;
                     console("-----------------------------------------------------------------");
                     return true;
                 }
@@ -892,7 +914,7 @@ namespace RTParser
                 {
                     graph = robot.GetUserGraph(myUser.UserID);
                     console("Changing to user graph " + graph);
-                    myUser.ListeningGraph = graph;
+                    myUser.StartGraph = graph;
                     console("-----------------------------------------------------------------");
                     return true;
                 }
@@ -916,7 +938,9 @@ namespace RTParser
                     }
                 }
                 console("-----------------------------------------------------------------");
-                console("ListeningGraph=" + current);
+                console("StartGraph=" + current);
+                console("HearSelfSayGraph=" + myUser.HeardSelfSayGraph);
+                console("HeardYouSayGraph=" + myUser.HeardYouSayGraph);
                 console("-----------------------------------------------------------------");
                 return true;
             }

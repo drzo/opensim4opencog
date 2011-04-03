@@ -141,7 +141,7 @@ namespace RTParser
         /// </summary>
         public List<SubQuery> SubQueries { get; set; }
 
-        public static int MaxPrintResults = 1;
+        public static int MaxPrintResults = 10;
         private string AlreadyUsed = "xtxtxtxtxtxtxtxtxxt";
         private int RotatedTemplate;
 
@@ -153,9 +153,9 @@ namespace RTParser
         }
 
 
-        public override string GraphName
+        public override string StartGraphName
         {
-            get { return ParentRequest.GraphName; }
+            get { return ParentRequest.StartGraphName; }
             set { throw new NotImplementedException(); }
         }
 
@@ -279,7 +279,7 @@ namespace RTParser
             //this.Requester = user;
             altResponder = targetUser;
             request.TargetBot = bot;
-            ChatOutput = new ParsedSentences(bot.EnsureEnglish, MaxPrintResults);
+            ChatOutput = new ParsedSentences(bot.EnsureEnglish, null, MaxPrintResults);
             OutputSentences = ChatOutput.SemanticSentences;
             writeToLog = writeToLog ?? user.WriteToUserTrace;
             writeToLog = writeToLog ?? request.WriteLine;
@@ -323,8 +323,7 @@ namespace RTParser
                 lock (OutputSentences)
                 {
                     AlreadyUsed = value;
-                    OutputSentences.Clear();
-                    OutputSentences.Add(value);
+                    AddOutputSentences1(value);
                     IsComplete = true;
                 }
             }
@@ -598,6 +597,9 @@ namespace RTParser
             get { return (MasterRequest)request; }
         }
 
+        /// <summary>
+        /// @see ChatOutput.TheMainSentence
+        /// </summary>
         public string NormalizedOutput
         {
             get
@@ -703,30 +705,39 @@ namespace RTParser
                     ti.TextSaved = unifiable;
                 }
             }
-            unifiable = unifiable + " ";
-            if (false && unifiable.Length > 2 && (unifiable.Contains("<br/>") || unifiable.Contains("&p;")))
+            AddOutputSentences1(unifiable);
+            //AddOutputSentences2(ti,unifiable);
+        }
+        public void AddOutputSentences1( string unifiable)
+        {
+            unifiable = Trim(unifiable).Replace("\n", " ").Replace("\r", " ");
+            string[] sentNow = unifiable.Split(new[] {"<br/>", "&p;", "<p/>"}, StringSplitOptions.RemoveEmptyEntries);
+            if (sentNow.Length == 1)
             {
-                string[] sents = unifiable.Split(new[] {"<br/>", "&p;"}, StringSplitOptions.RemoveEmptyEntries);
-                foreach (var s in sents)
+                unifiable = sentNow[0];
+            } else
+            {
+                foreach (var s in sentNow)
                 {
-                    AddOutputSentences0(ti, s);
+                    AddOutputSentences1(s);
                 }
-                return;
+                return;                
             }
-            if (false && unifiable.Length > 2 && (unifiable.Contains(". ") || unifiable.Contains("? ")))
+            sentNow = GetSents(new[] { ". ", "? " }, unifiable).ToArray();
+            if (sentNow.Length == 1)
             {
-                string[] sents = unifiable.Split(new[] {". ", "? "}, StringSplitOptions.RemoveEmptyEntries);
-                foreach (var s in sents)
+                unifiable = sentNow[0];
+            }
+            else
+            {
+                foreach (var s in sentNow)
                 {
-                    AddOutputSentences0(ti, s);
+                    AddOutputSentences1(s);
                 }
                 return;
             }
             if (AlreadyUsed.Contains(unifiable)) return;
-            if (!IsTemplateNew(ti, unifiable))
-            {
-                //return;
-            }
+
             if (IsNullOrEmpty(unifiable))
             {
                 return;
@@ -763,6 +774,11 @@ namespace RTParser
                 EndedOn = RTPBot.Now;
                 OutputSentences.Add(unifiable);
                 return;
+            }
+        }
+        public void AddOutputSentences2(TemplateInfo ti, string unifiable)
+        {
+            {
                 bool isComplete = OutputSentences.Count >=
                                   ((QuerySettingsReadOnly) request.GetQuerySettings()).MinOutputs ||
                                   request.IsComplete(this);
@@ -786,7 +802,39 @@ namespace RTParser
                     }
                     throw rd;
                 }
+
             }
+        }
+
+        private List<string> GetSents(string[] splitters, string unifiable)
+        {
+            List<string> strings = new List<string>();
+            if (Trim(unifiable).Length == 0) return strings;
+            int firstindex = unifiable.Length;
+            string fsplitter = null;
+            foreach (var splitter in splitters)
+            {
+                int index = unifiable.IndexOf(splitter);
+                if (index == -1)
+                {
+                    continue;
+                }
+                if (index < firstindex)
+                {
+                    fsplitter = splitter;
+                    firstindex = index;
+                }
+            }
+            if (fsplitter == null || firstindex == -1)
+            {
+                strings.Add(unifiable);
+                return strings;
+            }
+            string sub = unifiable.Substring(0, firstindex + fsplitter.Length - 1);
+            strings.Add(Trim(sub));
+            unifiable = unifiable.Substring(sub.Length);
+            strings.AddRange(GetSents(splitters, unifiable));
+            return strings;
         }
 
         public void AddResultFormat(string format, params object[] args)
@@ -842,6 +890,7 @@ namespace RTParser
         public Unifiable GetOutputSentence(int sentence)
         {
             if (sentence == -1) return NormalizedOutput;
+            sentence = OutputSentences.Count - sentence - 1;            
             lock (OutputSentences) return OutputSentences[sentence];
         }
 

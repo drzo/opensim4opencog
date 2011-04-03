@@ -7,6 +7,13 @@ namespace RTParser
 {
     public class StringAppendableUnifiableImpl : StringUnifiable, UnifiableList
     {
+        public override Unifiable[] Possibles
+        {
+            get
+            {
+                return base.Possibles;
+            }
+        }
         public override bool AddCategory(IndexTarget template)
         {
             if (NOCateIndex) return false;
@@ -20,8 +27,9 @@ namespace RTParser
             return unify.RemoveCategory(template);
         }
 
-        protected override bool SameMeaningCS(Unifiable s, bool caseSensitive)
+        public override bool SameMeaningCS(Unifiable s, bool caseSensitive)
         {
+            if (s is BestUnifiable) return s.SameMeaningCS(this, caseSensitive);
             if (ReferenceEquals(this, s)) return true;
             bool null2 = ReferenceEquals(s, null);
             if (null2) return false;

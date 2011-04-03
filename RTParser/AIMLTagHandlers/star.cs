@@ -93,8 +93,8 @@ namespace RTParser.AIMLTagHandlers
                     foreach (XmlNode childNode in templateNode.ChildNodes)
                     {
 
-                        with = rest.First();
-                        rest = rest.Rest();
+                        with = rest.First;
+                        rest = rest.Rest;
                         try
                         {
                             if (childNode.NodeType == XmlNodeType.Text)

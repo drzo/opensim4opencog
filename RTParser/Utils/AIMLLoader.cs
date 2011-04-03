@@ -11,6 +11,7 @@ using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
 using RTParser.AIMLTagHandlers;
 using RTParser.Normalize;
+using RTParser.Variables;
 using UPath = RTParser.Unifiable;
 using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
 //using CategoryInfo = RTParser.Utils.TemplateInfo;
@@ -781,6 +782,7 @@ namespace RTParser.Utils
                                                  () =>
                                                  loadAIMLNodes(currentNode.ChildNodes, loadOpts, request,
                                                                additionalRules));
+                    return total;
                 }
                 else if (currentNodeName == "topic")
                 {
@@ -793,11 +795,13 @@ namespace RTParser.Utils
                     var vv = this.processTopic(currentNode, currentNode.ParentNode, loadOpts, additionalRules);
                     additionalRules.Remove(newConversationCondition);
                     total += vv.Count;
+                    return total;
                 }
                 else if (currentNodeName == "category")
                 {
                     var vv = this.processCategory(currentNode, currentNode.ParentNode, loadOpts, additionalRules);
                     total += vv.Count;
+                    return total;
                 }
                 else if (currentNodeName == "that")
                 {
@@ -814,10 +818,19 @@ namespace RTParser.Utils
                                                 request,
                                                 additionalRules));
                     additionalRules.Remove(thatRule);
+                    return total;
                 }
                 else if (currentNodeName == "meta" || currentNodeName == "#comment")
                 {
                     // skip fo now
+                    return 0;
+                }
+                ISettingsDictionary dict = IsSettingsTag(currentNodeName, request);
+                if (dict != null)
+                {
+                    SettingsDictionary.loadSettingNode(request.TargetBot.InputSubstitutions, currentNode, true, false,
+                                                       request);
+                    return 1;
                 }
                 else
                 {
@@ -840,6 +853,23 @@ namespace RTParser.Utils
                 RProcessor.Loader = prev;
             }
             return total;
+        }
+        ISettingsDictionary IsSettingsTag(string tag, Request request)
+        {
+            switch (tag)
+            {
+                case "vars":
+                case "root":
+                case "predicates": //CML
+                    return request.TargetSettings;
+                case "properties":
+                case "bots":
+                    return request.TargetBot.GlobalSettings;
+                case "substitutions":
+                    return request.TargetBot.InputSubstitutions;
+                default:
+                    return null;
+            }
         }
 
         private List<ConversationCondition> PushAddtionalRuleContext(List<ConversationCondition> nodes)
@@ -1229,8 +1259,8 @@ namespace RTParser.Utils
                     {
                         var skip = templateNode.ParentNode ?? templateNode;
                         string skiping = "skipping: " + skip.OuterXml;
-                        //writeDebugLine("DEBUG9: PROPRIETARY " + skiping);
-                        return true;
+                        writeDebugLine("DEBUG9: PROPRIETARY " + skiping);
+                        return false;
                     }
                 }
             }
@@ -1651,23 +1681,23 @@ namespace RTParser.Utils
                 normalizedTopic = LastRepair(normalizedTopic, isUserInput, UseRawUserInput);
 
                 // o.k. build the path
-                normalizedPath.Append(Unifiable.InputTag);
+                normalizedPath.Append(Unifiable.TagInput);
                 if (addTagStart != null) normalizedPath.Append(addTagStart);
                 normalizedPath.Append(Unifiable.Create(normalizedPattern));
                 if (addTagEnd != null) normalizedPath.Append(addTagEnd);
                 if (RProcessor.UseInlineThat)
                 {
-                    normalizedPath.Append(Unifiable.ThatTag);
+                    normalizedPath.Append(Unifiable.TagThat);
                     if (addTagStart != null) normalizedPath.Append(addTagStart);
                     normalizedPath.Append(normalizedThat);
                     if (addTagEnd != null) normalizedPath.Append(addTagEnd);
                 }
-                normalizedPath.Append(Unifiable.TopicTag);
+                normalizedPath.Append(Unifiable.TagTopic);
                 if (addTagStart != null) normalizedPath.Append(addTagStart);
                 normalizedPath.Append(normalizedTopic);
                 if (addTagEnd != null) normalizedPath.Append(addTagEnd);
 
-                normalizedPath.Append(Unifiable.FlagTag);
+                normalizedPath.Append(Unifiable.TagFlag);
                 normalizedPath.Append(flag);
 
                 return normalizedPath; //.Frozen();

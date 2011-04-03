@@ -36,6 +36,12 @@ namespace RTParser
         PrintOptions WriterOptions { get; }
         bool RespondToChat { get; set; }
         int MaxRespondToChatPerMinute { get; set; }
+        /// <summary>
+        /// If user says something to robot we.. do a user.CreateRequest("Hi robot",BotAsUser);
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="targetUser"></param>
+        /// <returns></returns>
         MasterRequest CreateRequest(Unifiable input, User targetUser);
         MasterRequest CreateRequest(Unifiable message, User target, GraphMaster G, Request parentRequest);
 
@@ -60,8 +66,9 @@ namespace RTParser
     {
         void DisposeObject();
         bool IsValid { get; set; }
-        GraphMaster SpeakingToRobot { get; set; }
+        GraphMaster StartGraph { get; set; }
         object TemplatesLock { get; }
+        GraphMaster HeardYouSayGraph { get; set; }
     }
 
     /// <summary>
@@ -187,36 +194,69 @@ namespace RTParser
             }
         }
 
+
+        public GraphMaster HeardYouSayGraph
+        {
+            get { return FindGraphLocally("heardyousaygraph") ?? bot.GraphMaster; }
+            set
+            {
+                if (!Predicates.containsLocalCalled("heardyousaygraph"))
+                    Predicates.addSetting("heardyousaygraph", value.ScriptingName);
+                else Predicates.updateSetting("heardyousaygraph", value.ScriptingName);
+                GraphMaster lg = HeardYouSayGraph;
+                if (lg != value)
+                {
+                    bot.writeToLog("ERROR CANT FIND " + value.ScriptingName + " from " + lg);
+                }
+            }
+        }
+
+        private GraphMaster FindGraphLocally(string varname)
+        {
+            GraphMaster _uGraph = bot.GetUserGraph(NameSpace);
+            Predicates.IsTraced = false;
+            var v = Predicates.grabSettingNoDebug(varname);
+            GraphMaster _Graph = bot.GetGraph(v, _uGraph);
+            if (_Graph != null)
+            {
+                return _Graph;
+            }
+            bot.writeToLog("ERROR CANT FIND " + varname);
+            return _Graph;
+        }
+
+        public GraphMaster HeardSelfSayGraph
+        {
+            get { return FindGraphLocally("heardselfsay") ?? bot.HeardSelfSayGraph; }
+            set
+            {
+                if (!Predicates.containsLocalCalled("heardselfsay"))
+                    Predicates.addSetting("heardselfsay", value.ScriptingName);
+                else Predicates.updateSetting("heardselfsay", value.ScriptingName);
+                GraphMaster lg = HeardSelfSayGraph;
+                if (lg != value)
+                {
+                    bot.writeToLog("ERROR CANT FIND " + value.ScriptingName + " from " + lg);
+                }
+            }
+        }
+
         /// <summary>
         /// The grahmaster this user is using
         /// // this stil is not "listener"
         /// </summary>
-        public GraphMaster SpeakingToRobot
+        public GraphMaster StartGraph
         {
             get
             {
-                GraphMaster _uGraph = bot.GetUserGraph(NameSpace);
-                if (Predicates.containsSettingCalled("graphname"))
-                {
-
-                    Predicates.IsTraced = false;
-                    var v = Predicates.grabSettingNoDebug("graphname");
-                    GraphMaster _Graph = bot.GetGraph(v, _uGraph);
-                    if (_Graph != null)
-                    {
-                        return _Graph;
-                    }
-                    bot.writeToLog("ERROR CANT FIND graphname");
-                    return _uGraph;
-                }
-                return _uGraph;
+                return FindGraphLocally("startgraph") ?? bot.GraphMaster;
             }
             set
             {
-                if (!Predicates.containsLocalCalled("graphname"))
-                    Predicates.addSetting("graphname", value.ScriptingName);
-                else Predicates.updateSetting("graphname", value.ScriptingName);
-                GraphMaster lg = ListeningGraph;
+                if (!Predicates.containsLocalCalled("startgraph"))
+                    Predicates.addSetting("startgraph", value.ScriptingName);
+                else Predicates.updateSetting("startgraph", value.ScriptingName);
+                GraphMaster lg = StartGraph;
                 if (lg != value)
                 {
                     bot.writeToLog("ERROR CANT FIND " + value.ScriptingName + " from " + lg);
@@ -229,21 +269,21 @@ namespace RTParser
             get { return VisitedTemplates; }
         }
 
-        public string GraphName
+        public string StartGraphName
         {
             get
             {
-                string qsbaseGraphName = qsbase.GraphName;
+                string qsbaseGraphName = qsbase.StartGraphName;
                 if (qsbaseGraphName != null)
                 {
                     return qsbaseGraphName;
                 }
-                return ListeningGraph.ScriptingName;
+                return StartGraph.ScriptingName;
             }
             set
             {
-                ListeningGraph = bot.GetGraph(value, ListeningGraph);
-                qsbase.GraphName = value;
+                StartGraph = bot.GetGraph(value, StartGraph);
+                qsbase.StartGraphName = value;
             }
         }
 
@@ -885,7 +925,7 @@ namespace RTParser
                     var llr = LastResponder.LastResponder;
                     if (llr == this)
                     {
-                        vv = LastResponder.Value.Predicates.grabSetting("lastheard");
+                        vv = LastResponder.Value.Predicates.grabSetting("lastsaid");
                         if (IsSomething(vv, out something)) return something;
                     }
                     // infinate loop here -> return LastReponder.ResponderJustSaid;
@@ -896,12 +936,12 @@ namespace RTParser
             {
                 if (IsNullOrEmpty(value))
                 {
-                    bot.RaiseError(new InvalidOperationException("set_That: " + this));
+                    bot.RaiseError(new InvalidOperationException("set_JustSaid: " + this));
                     return;
                 }
                 if (!IsValue(value))
                 {
-                    bot.RaiseError(new InvalidOperationException("set_That: TAG: " + value + " for " + this));
+                    bot.RaiseError(new InvalidOperationException("set_JustSaid: TAG: " + value + " for " + this));
                     return;
                 }
 
@@ -924,7 +964,7 @@ namespace RTParser
             get
             {
                 {
-                    var vv = Predicates.grabSetting("lastheard");
+                    var vv = Predicates.grabSetting("that");
                     if (!IsIncomplete(vv)) return vv;
                     if (LastResponder != null) return LastResponder.JustSaid;
                     return That;
@@ -948,7 +988,7 @@ namespace RTParser
                 {
                     LastResponder.JustSaid = value;
                 }
-                Predicates["lastheard"] = value;
+                Predicates["that"] = value;
                 That = value;
             }
         }
@@ -1063,7 +1103,7 @@ namespace RTParser
                 {
                     var cis = VisitedTemplates;
                     console("-----------------------------------------------------------------");
-                    console("LS: count=" + cis.Count + " local=" + SpeakingToRobot);
+                    console("LS: count=" + cis.Count + " local=" + StartGraph);
                     GraphMaster.PrintToWriter(cis, PrintOptions.SAVE_TO_FILE, new OutputDelegateWriter(console), null);
                     console("-----------------------------------------------------------------");
                 }
@@ -1286,14 +1326,8 @@ namespace RTParser
             OutputDelegate logger = DEVNULL;
             logger("DEBUG9 Saving User Directory {0}", userdir);
             Predicates.SaveTo(userdir, "user.predicates", "UserPredicates.xml");
-            GraphMaster gm = bot.GetGraph(UserID, ListeningGraph);
+            GraphMaster gm = bot.GetGraph(UserID, StartGraph);
             gm.WriteToFile(UserID, HostSystem.Combine(userdir, UserID) + ".saved", PrintOptions.SAVE_TO_FILE, logger);
-        }
-
-        public GraphMaster ListeningGraph
-        {
-            get { return SpeakingToRobot; }
-            set { SpeakingToRobot = value; }
         }
 
         public void LoadDirectory(string userdir)
@@ -1373,9 +1407,9 @@ namespace RTParser
             string[] hostSystemGetFiles = HostSystem.GetFiles(userdir, "*.aiml");
             if (hostSystemGetFiles == null || hostSystemGetFiles.Length <= 0) return;
             var request = new MasterRequest("@echo load user aiml ", this, "Nothing", bot.BotAsUser, bot,
-                                            null, ListeningGraph);
+                                            null, StartGraph);
             request.TimesOutAt = DateTime.Now + new TimeSpan(0, 15, 0);
-            request.Graph = ListeningGraph;
+            request.Graph = StartGraph;
             request.LoadingFrom = userdir;
             var options = request.LoadOptions; //LoaderOptions.GetDefault(request);
             var gs = bot.GlobalSettings;
@@ -1523,22 +1557,16 @@ namespace RTParser
 
         public GraphMaster GetResponseGraph(User target)
         {
-            GraphMaster G = SpeakingToRobot;
-            if (G == null) if (target != null) return target.SpeakingToRobot;
-            return this.ListeningGraph;// GetResponseGraph(this);
+            GraphMaster G = StartGraph;
+            if (G != null) return G;
+            G = HeardSelfSayGraph;
+            if (G != null) return G;
+            return this.HeardSelfSayGraph;// GetResponseGraph(this);
         }
 
         public MasterRequest CreateRequest(Unifiable message, User target)
         {            
             var mr = CreateRequest(message, target, GetResponseGraph(target), null);
-            var roles = this.Predicates.grabSetting("roles");
-            if (!IsMissing(roles) && !IsNullOrEmpty(roles))
-            {
-                foreach (var role in roles.ToArray())
-                {
-                    mr.AddGraph(bot.GetUserGraph(role));
-                }
-            }
             return mr;
         }
 
@@ -1558,7 +1586,7 @@ namespace RTParser
             }
             else
             {
-                request = parentRequest.CreateSubRequest(message, this, target.JustSaid, target, bot, parentRequest, G);
+                request = parentRequest.CreateSubRequest(message, this, targetJustSaid, target, bot, parentRequest, G);
             }
             if (parentRequest != null)
             {
@@ -1587,6 +1615,15 @@ namespace RTParser
                 request.ResetValues(true);
                 Result res = request.FindOrCreateCurrentResult();
                 request.ExitQueue.Add("LastResponder = target;", () => { LastResponder = target; });
+
+                var roles = this.Predicates.grabSetting("roles");
+                if (!IsMissing(roles) && !IsNullOrEmpty(roles))
+                {
+                    foreach (var role in roles.ToArray())
+                    {
+                        request.AddGraph(bot.GetUserGraph(role));
+                    }
+                }
             }
             return request;
         }

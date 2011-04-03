@@ -70,6 +70,18 @@ namespace RTParser.Normalize
                 tokens = bot();
             }
             string inputStringString = this.inputString.AsString();
+            string nonSplitTags = TextPatternUtils.ReplaceMap(inputStringString,
+                                                              new string[][]
+                                                                  {
+                                                                      new[] {"<br>", " "},
+                                                                      new[] {"<p>", " "},
+                                                                      new[] {"<br/>", " "},
+                                                                      new[] {"<p/>", " "}
+                                                                  });
+            if (nonSplitTags.Contains("<"))
+            {
+                return new [] { inputString };
+            }
             inputStringString = StaticAIMLUtils.ForInputTemplate(inputStringString);
             Unifiable[] nodes = this.inputString.ToArray();
             int currentTokenbNum = 0;
@@ -77,7 +89,7 @@ namespace RTParser.Normalize
             if (tokens == null)
             {
                 List<Unifiable> tidyString = new List<Unifiable>();
-                tokens = new[] {"! ", "? ", ". ", ", ", "<br>", "<p>", "<br/>", "<p/>"};
+                tokens = new[] { "! ", "? ", ". ", ", ", "br>", "<p>", "<br/>", "<p/>" };
                 foreach (string token in tokens)
                 {
                     inputStringString = inputStringString.Replace(token, token + " <split/> ");
@@ -87,7 +99,7 @@ namespace RTParser.Normalize
                 foreach (string rawSentence in sss)
                 {
                     string tidySentence =
-                        TextPatternUtils.ReTrimAndspace(rawSentence.Replace("<p />", " ").Replace("<br />", " ").Replace("<br>", " ").Replace("<p>", " "));
+                        TextPatternUtils.ReTrimAndspace(rawSentence.Replace("<p/>", " ").Replace("<br/>", " ").Replace("<br>", " ").Replace("<p>", " "));
 
                     tidySentence = StaticAIMLUtils.ForInputTemplate(tidySentence);
                     if (tidySentence.Length > 0)
