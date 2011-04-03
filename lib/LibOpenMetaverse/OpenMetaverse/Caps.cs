@@ -141,6 +141,10 @@ namespace OpenMetaverse
             req.Add("ObjectMediaNavigate");
             req.Add("FetchLib");
             req.Add("FetchLibDescendents");
+            req.Add("FetchLib2");
+            req.Add("FetchLibDescendents2");
+            req.Add("FetchInventory2");
+            req.Add("FetchInventoryDescendents2");
             req.Add("GetDisplayNames");
             req.Add("GetTexture");
             req.Add("GetMesh");
@@ -179,6 +183,7 @@ namespace OpenMetaverse
             req.Add("UpdateNotecardTaskInventory");
             req.Add("UpdateScriptTask");
             req.Add("UploadBakedTexture");
+            req.Add("ViewerMetrics");
             req.Add("ViewerStartAuction");
             req.Add("ViewerStats");
             req.Add("WebFetchInventoryDescendents");
