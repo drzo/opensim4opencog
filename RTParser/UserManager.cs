@@ -276,11 +276,25 @@ namespace RTParser
             if (fromname != null && !IsLegalUserName(fromname))
             {
                 writeToLog("ERROR: BAd???? FindUser: " + fromname);
-                throw new NullReferenceException("FindUser: " + fromname);
+                if (!NoRuntimeErrors)
+                {
+                    throw new NullReferenceException("FindUser: " + fromname);
+                }
                 return null;
             }
             if (IsLastKnownUser(fromname)) return LastUser;
-            if (fromname == null) throw new NullReferenceException("FindUser: " + fromname);
+            if (fromname == null)
+            {
+                if (!NoRuntimeErrors)
+                {
+                    throw new NullReferenceException("FindUser: " + fromname);
+                }
+                else
+                {
+                    return LastUser;
+                }
+            }
+
             string key = fromname.ToLower().Trim();
             //lock (microBotUsersLock)
             {

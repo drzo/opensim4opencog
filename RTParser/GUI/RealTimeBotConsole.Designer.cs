@@ -316,6 +316,7 @@ namespace RTParser.GUI
             this.consoleText.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.consoleText.Size = new System.Drawing.Size(597, 522);
             this.consoleText.TabIndex = 13;
+            this.consoleText.TextChanged += new System.EventHandler(this.consoleText_TextChanged);
             // 
             // consoleInputText
             // 
