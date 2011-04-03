@@ -1144,13 +1144,20 @@ namespace MushDLR223.Utilities
             return OlderReference(param1, outp);
         }
 
-        public static string OlderReference(string param1, string outp)
+        /// <summary>
+        /// Helps keep new strings garbage collectable by using the previous
+        /// version if they are the same string
+        /// </summary>
+        /// <param name="before"></param>
+        /// <param name="after"></param>
+        /// <returns></returns>
+        public static string OlderReference(string before, string after)
         {
-            if (outp == param1)
+            if (after == before)
             {
-                return param1;
+                return before;
             }
-            return outp;
+            return after;
         }
 
         public static string SafeFormat(string fmt, params object[] args)
