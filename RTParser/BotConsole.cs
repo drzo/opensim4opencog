@@ -475,7 +475,7 @@ namespace RTParser
                     GUIFormThread.TrySetApartmentState(ApartmentState.STA);
                     GUIFormThread.Start();
                 }
-                GUIForm.Show();
+                if (GUIForm != null) GUIForm.Show();               
                 return true;
             }
             User myUser = user ?? LastUser ?? FindOrCreateUser(UNKNOWN_PARTNER);
@@ -495,8 +495,7 @@ namespace RTParser
 
 
             if (RTPBotCommands.ExecAnyAtAll(this, input, myUser, cmd, console, showHelp, args, targetBotUser, control)) return true;
-            Request request = this.LastRequest;
-            if (cmd == "query" || showHelp) if (rtpbotcommands.ExecQuery(request, cmd, console, showHelp, args, myUser))
+            if (cmd == "query" || showHelp) if (rtpbotcommands.ExecQuery(this.LastRequest, cmd, console, showHelp, args, myUser))
                     return true;
 
             if (showHelp) console("@user [var [value]] -- lists or changes the current users get/set vars.");
@@ -504,8 +503,14 @@ namespace RTParser
             {
                 return myUser.DoUserCommand(args, console);
             }
-
-            if (request.Graph.DoGraphCommand(cmd, console, showHelp, args, request)) return true;
+            GraphMaster G = GraphMaster;
+            Request request = this.LastRequest;
+            if (request!=null)
+            {
+                var GG = request.Graph;
+                if (GG!=null) G = GG;
+            }
+            if (G.DoGraphCommand(cmd, console, showHelp, args, request)) return true;
 
             if (RTPBotCommands.ChGraphCmd(request, showHelp, console, cmd, myUser, args)) return true;
 
