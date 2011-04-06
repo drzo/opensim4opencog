@@ -1122,6 +1122,7 @@ namespace RTParser.Utils
             GuardInfo guard = guardnode == null ? null : loaderOpts.CtxGraph.GetGuardInfo(guardnode);
             string errors = "";
             XmlNode TemplateOverwrite = StaticAIMLUtils.TheTemplateOverwrite;
+            bool degradeScoreUnusable = false;
             if (ReferenceEquals(null, templateNode))
             {
                 if (TemplateOverwrite != null)
@@ -1136,7 +1137,10 @@ namespace RTParser.Utils
             }
             else
             {
-                if (UnusableCategory(templateNode)) return null;
+                if (UnusableCategory(templateNode))
+                {
+                    degradeScoreUnusable = true;
+                }
             }
             if (ReferenceEquals(null, patternNode))
             {
@@ -1209,11 +1213,20 @@ namespace RTParser.Utils
                         }*/
                         bool wouldBeRemoval;
 
-                        return pathCtxGraph.addCategoryTag(categoryPath, patternInfo,
+                        var added = pathCtxGraph.addCategoryTag(categoryPath, patternInfo,
                                                            cateNode, templateNode, guard, topicInfo, thatInfo,
                                                            additionalRules,
                                                            out wouldBeRemoval, loaderOpts);
-
+                        if (degradeScoreUnusable)
+                        {
+                            foreach (var cate in added)
+                            {
+                                // half the rating
+                                cate.Template.Rating /= 2;
+                            }
+                        }
+                        return added;
+                    
 
                     }
                     catch (ChatSignal e)
@@ -1260,7 +1273,7 @@ namespace RTParser.Utils
                         var skip = templateNode.ParentNode ?? templateNode;
                         string skiping = "skipping: " + skip.OuterXml;
                         writeDebugLine("DEBUG9: PROPRIETARY " + skiping);
-                        return false;
+                        return true;
                     }
                 }
             }
