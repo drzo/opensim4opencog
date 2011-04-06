@@ -357,17 +357,6 @@ namespace RTParser
             RTPBot myBot = this;
             User BotAsAUser = myBot.BotAsUser;
             myUser = myUser ?? myBot.LastUser;
-            if (input.ToLower() == "@gui")
-            {
-                GUIForm = GUIForm ?? new GUI.AIMLPadEditor(myBot.NameAsSet, myBot);
-                if (GUIFormThread == null)
-                {
-                    GUIFormThread = new Thread(() => Application.Run(GUIForm));
-                    GUIFormThread.TrySetApartmentState(ApartmentState.STA);
-                    GUIFormThread.Start();
-                }
-                GUIForm.Show();
-            }
             string myName = BotAsAUser.UserName;
             {
                 writeLine("-----------------------------------------------------------------");
@@ -474,6 +463,18 @@ namespace RTParser
             if (input.StartsWith("@"))
             {
                 input = input.TrimStart(new[] { ' ', '@' });
+            }
+            if (input == "gui")
+            {
+                GUIForm = GUIForm ?? new GUI.AIMLPadEditor(NameAsSet, this);
+                if (GUIFormThread == null)
+                {
+                    GUIFormThread = new Thread(() => Application.Run(GUIForm));
+                    GUIFormThread.TrySetApartmentState(ApartmentState.STA);
+                    GUIFormThread.Start();
+                }
+                GUIForm.Show();
+                return true;
             }
             User myUser = user ?? LastUser ?? FindOrCreateUser(UNKNOWN_PARTNER);
             int firstWhite = input.IndexOf(' ');
