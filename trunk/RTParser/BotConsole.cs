@@ -319,10 +319,11 @@ namespace RTParser
             // myBot.AddAiml(evidenceCode);
             User myUser = myBot.LastUser;
             Request request = myUser.CreateRequest("current user toplevel", myBot.BotAsUser);
-            myBot.BotDirective(request, "@help", writeLine);
+            myBot.LastRequest = request;
+            myBot.BotDirective(myUser, request, "@help", writeLine);
             writeLine("-----------------------------------------------------------------");
             AIMLDEBUGSETTINGS = "clear +*";
-            myBot.BotDirective(request, "@log " + AIMLDEBUGSETTINGS, writeLine);
+            myBot.BotDirective(myUser, request, "@log " + AIMLDEBUGSETTINGS, writeLine);
             writeLine("-----------------------------------------------------------------");
             DLRConsole.SystemFlush();
 
@@ -422,7 +423,7 @@ namespace RTParser
             bool b = false;
             foreach (string s in ss)
             {
-                if (BotDirective(request, "@" + s, all)) b = true;
+                if (BotDirective(request.Requester, request, "@" + s, all)) b = true;
             }
             string sws = sw.ToString();
             if (!b) return Unifiable.FAIL_NIL;
@@ -434,8 +435,8 @@ namespace RTParser
             try
             {
                 User requester = (user ?? LastUser ?? BotAsUser);
-                Request request = requester.CreateRequest(input, BotAsUser);
-                return BotDirective(request, input, console);
+                //Request request = requester.CreateRequest(input, BotAsUser);
+                return BotDirective(requester, (Request) null, input, console);
             }
             catch (Exception e)
             {
@@ -444,11 +445,12 @@ namespace RTParser
             }
         }
 
-        public bool BotDirective(Request request, string input, OutputDelegate console)
+        public bool BotDirective(User user, Request request, string input, OutputDelegate console)
         {
             try
             {
-                return BotDirective(request, input, console, null);
+                _lastRequest = request;
+                return BotDirective(user, input, console, null);
             }
             catch (Exception e)
             {
@@ -456,13 +458,9 @@ namespace RTParser
                 return false;
             }
         }
-        public bool BotDirective(Request request, string input, OutputDelegate console, ThreadControl control)
+        public bool BotDirective(User user, string input, OutputDelegate console, ThreadControl control)
         {
             User targetBotUser = this.BotAsUser;
-            if (request != null && request.CurrentResult != null)
-            {
-                writeChatTrace("CurrentResult: " + request.CurrentResult);
-            }
             if (input == null) return false;
             input = Trim(input);
             if (input == "") return false;
@@ -470,7 +468,7 @@ namespace RTParser
             {
                 input = input.TrimStart(new[] { ' ', '@' });
             }
-            User myUser = request.Requester ?? LastUser ?? FindOrCreateUser(UNKNOWN_PARTNER);
+            User myUser = user ?? LastUser ?? FindOrCreateUser(UNKNOWN_PARTNER);
             int firstWhite = input.IndexOf(' ');
             if (firstWhite == -1) firstWhite = input.Length - 1;
             string cmd = Trim(ToLower(input.Substring(0, firstWhite + 1)));
@@ -484,11 +482,12 @@ namespace RTParser
                 console("@quit -- exits the aiml subsystem");
             }
 
-            if (RTPBotCommands.ExecAnyAtAll(request, input, myUser, cmd, console, showHelp, args, targetBotUser, control)) return true;
+
+
+            if (RTPBotCommands.ExecAnyAtAll(this, input, myUser, cmd, console, showHelp, args, targetBotUser, control)) return true;
+            Request request = this.LastRequest;
             if (cmd == "query" || showHelp) if (rtpbotcommands.ExecQuery(request, cmd, console, showHelp, args, myUser))
                     return true;
-
-            PrintOptions printOptions = request.WriterOptions ?? PrintOptions.CONSOLE_LISTING;
 
             if (showHelp) console("@user [var [value]] -- lists or changes the current users get/set vars.");
             if (cmd == "user")
@@ -551,9 +550,9 @@ namespace RTParser
             robotIn = bot;
         }
 
-        internal static bool ExecAnyAtAll(Request request, string input, User myUser, string cmd, OutputDelegate console, bool showHelp, string args, User targetBotUser, ThreadControl control)
+        internal static bool ExecAnyAtAll(RTPBot robot, string input, User myUser, string cmd, OutputDelegate console, bool showHelp, string args, User targetBotUser, ThreadControl control)
         {
-            RTPBot robot = request.TargetBot;
+            
             if (showHelp)
                 console(
                     "@withuser <user> - <text>  -- (aka. simply @)  runs text/command intentionally setting LastUser");
@@ -588,7 +587,7 @@ namespace RTParser
                 }
                 User wasUser = robot.FindUser(user);
                 Result res = robot.GlobalChatWithUser(said, user, null, RTPBot.writeDebugLine, true, true);
-                request = res.request;
+                Request request = res.request;
                 request.ResponderSelfListens = false;
                 // detect a user "rename"
                 bool userChanged = robot.DetectUserChange(myUser, wasUser, user);
@@ -632,7 +631,7 @@ namespace RTParser
                 string gn = args.Substring(0, indexof);
                 GraphMaster g = robot.GetGraph(gn, myUser.StartGraph);
                 String aiml = RTPBot.Trim(args.Substring(indexof));
-                robot.AddAiml(g, aiml, request);
+                robot.AddAiml(g, aiml, robot.LastRequest);
                 console("Done with " + args);
                 return true;
             }
@@ -671,6 +670,7 @@ namespace RTParser
             if (showHelp) console("@load <graph> - <uri>");
             if (cmd == "load")
             {
+                Request request = robot.LastRequest;
                 string graphname;
                 string files;
                 if (!SplitOff(args, "-", out graphname, out files))
@@ -735,19 +735,15 @@ namespace RTParser
                 return myUser.DoUserCommand(args, console);
                 return true;
             }
-
-            if (ExecCmdSetVar(request, showHelp, input, console, cmd, args, targetBotUser)) return true;
-            if (ExecCmdBot(request, showHelp, console, cmd, args, targetBotUser)) return true;
-
-            PrintOptions printOptions = request.WriterOptions ?? PrintOptions.CONSOLE_LISTING;
-            printOptions = request.WriterOptions ?? PrintOptions.CONSOLE_LISTING;
-            printOptions.ClearHistory();
+            //Request request = robot.LastRequest;
+            if (ExecCmdSetVar(robot, showHelp, input, console, cmd, args, targetBotUser)) return true;
+            if (ExecCmdBot(robot, showHelp, console, cmd, args, targetBotUser)) return true;
 
             if (showHelp || cmd == "proof")
             {
                 lock (myUser.TemplatesLock)
                 {
-                if (RTPBotCommands.ExecProof(request, cmd, console, showHelp, args, myUser))
+                if (RTPBotCommands.ExecProof(robot, cmd, console, showHelp, args, myUser))
                     return true;
             }}
             return false;
@@ -755,9 +751,9 @@ namespace RTParser
 
         [HelpText("@setvar dictname.name [value] -- get/sets a variable using a global namespace context")]
         [CommandText("setvar")]
-        private static bool ExecCmdSetVar(Request request, bool showHelp, string input, OutputDelegate console, string cmd, string args, User myUser)
+        private static bool ExecCmdSetVar(RTPBot robot, bool showHelp, string input, OutputDelegate console, string cmd, string args, User myUser)
         {
-            RTPBot robot = request.TargetBot;
+         //   RTPBot robot = request.TargetBot;
             if (showHelp)
                 console(
                     "@setvar dictname.name [value] -- get/sets a variable using a global namespace context");
@@ -772,9 +768,8 @@ namespace RTParser
 
         [HelpText("@bot [var [value]] -- lists or changes the bot GlobalPredicates.\n  example: @bot ProcessHeardPreds True or @bot ProcessHeardPreds False")]
         [CommandText("bot")]
-        private static bool ExecCmdBot(Request request, bool showHelp, OutputDelegate console, string cmd, string args, User targetBotUser)
+        private static bool ExecCmdBot(RTPBot robot, bool showHelp, OutputDelegate console, string cmd, string args, User targetBotUser)
         {
-            RTPBot robot = request.TargetBot;
             if (showHelp) console("@bot [var [value]] -- lists or changes the bot GlobalPredicates.\n  example: @bot ProcessHeardPreds True or @bot ProcessHeardPreds False");
             if (cmd == "bot")
             {
@@ -788,15 +783,14 @@ namespace RTParser
 
         [HelpText("@proof [[clear]|[save [filename.aiml]]] - clears or prints a content buffer being used")]
         [CommandText("proof", "prf")]
-        static internal bool ExecProof(Request request, string cmd, OutputDelegate console, bool showHelp, string args, User myUser)
+        static internal bool ExecProof(RTPBot robot, string cmd, OutputDelegate console, bool showHelp, string args, User myUser)
         {
-            RTPBot robot = request.TargetBot;
-            PrintOptions printOptions = request.WriterOptions ?? PrintOptions.CONSOLE_LISTING;
 
             if (showHelp)
                 console("@proof [[clear]|[save [filename.aiml]]] - clears or prints a content buffer being used");
             if (cmd == "proof")
             {
+                PrintOptions printOptions = robot.LastRequest.WriterOptions ?? PrintOptions.CONSOLE_LISTING;
                 console("-----------------------------------------------------------------");
                 Request ur = robot.MakeRequestToBot(args, myUser);
                 int i;
@@ -867,12 +861,11 @@ namespace RTParser
 
         internal bool ExecQuery(Request request, string cmd, OutputDelegate console, bool showHelp, string args, User myUser)
         {
-            RTPBot robot = request.TargetBot;
-            PrintOptions printOptions = request.WriterOptions ?? PrintOptions.CONSOLE_LISTING;
-
             if (showHelp) console("@query <text> - conducts a findall using all tags");
             if (cmd == "query")
             {
+                RTPBot robot = request.TargetBot;
+                PrintOptions printOptions = request.WriterOptions ?? PrintOptions.CONSOLE_LISTING;
                 console("-----------------------------------------------------------------");
                 if (args == "")
                 {
@@ -908,12 +901,12 @@ namespace RTParser
 
         internal static bool ChGraphCmd(Request request, bool showHelp, OutputDelegate console, string cmd, User myUser, string args)
         {
-            RTPBot robot = request.TargetBot;
-            PrintOptions printOptions = request.WriterOptions ?? PrintOptions.CONSOLE_LISTING; 
             
             if (showHelp) console("@chgraph <graph> - changes the users graph");
             if (cmd == "graph" || cmd == "chgraph" || cmd == "cd")
             {
+                RTPBot robot = request.TargetBot;
+                PrintOptions printOptions = request.WriterOptions ?? PrintOptions.CONSOLE_LISTING;
                 GraphMaster current = myUser.StartGraph;
                 GraphMaster graph = robot.FindGraph(args, current);
                 if (args != "" && graph != null && graph != current)
@@ -1135,7 +1128,7 @@ namespace RTParser
                                                      try
                                                      {
 
-                                                         robot.BotDirective(request, args, console);
+                                                         robot.BotDirective(request.Requester, request, args, console);
                                                      }
                                                      catch (Exception e)
                                                      {

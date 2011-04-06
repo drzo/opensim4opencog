@@ -88,7 +88,25 @@ namespace RTParser
             }
         }
 
-        // last result from the last talking to bot besides itself
+        private Request _lastRequest;
+        public Request LastRequest
+        {
+            get
+            {
+                if (_lastRequest != null) return _lastRequest;
+                var lr = LastResult;
+                // Todo: should someonme have set the result to some default?
+                if (lr == null)
+                {
+                    return null;
+                }
+                return lr.request;
+            }
+            set
+            {
+                _lastRequest = value;
+            }
+        }
         private Result _lastResult;
         public Result LastResult
         {
@@ -573,7 +591,7 @@ namespace RTParser
                 if (chatTrace) result.IsTraced = isTraced;
                 StringWriter sw = new StringWriter();
 
-                bool myBotBotDirective = BotDirective(request, rawInputString, sw.WriteLine);
+                bool myBotBotDirective = BotDirective(request.Requester, request, rawInputString, sw.WriteLine);
                 string swToString = sw.ToString();
                 if (writeToLog != null) writeToLog("ChatWithNonGraphmaster: " + swToString);
                 else

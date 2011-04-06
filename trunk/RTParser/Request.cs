@@ -1098,7 +1098,8 @@ namespace RTParser
         public MasterRequest CreateSubRequest(Unifiable templateNodeInnerValue, User requester, Unifiable thatSaid, User requestee,
             RTPBot rTPBot, Request parent, GraphMaster graphMaster)
         {
-            var subRequest = new MasterRequest(templateNodeInnerValue, requester ?? Requester, thatSaid ?? That,
+            Unifiable thatToUse = thatSaid ?? That;
+            var subRequest = new MasterRequest(templateNodeInnerValue, requester ?? Requester, thatToUse,
                                                requestee ?? Responder,
                                                rTPBot ?? TargetBot, parent, graphMaster ?? Graph);
             CopyToRequest(this, subRequest);

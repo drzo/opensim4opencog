@@ -869,7 +869,10 @@ namespace RTParser
                 string something;
                 var lastResponder = this.LastResponder;
                 Result r = GetResult(0, true) ?? GetResult(0, false, lastResponder);
-                if (r != null && IsSomething(r.NormalizedOutput, out something)) return something;
+                if (r != null && IsSomething(r.NormalizedOutput, out something))
+                {
+                    return something;
+                }
                 if (lastResponder != null && IsSomething(lastResponder.JustSaid, out something)) return something;
                 if (ThatIsStoredBetweenUsers)
                 {
@@ -965,6 +968,7 @@ namespace RTParser
             {
                 {
                     var vv = Predicates.grabSetting("that");
+                    if (Unifiable.IsMulti(vv)) vv = vv.Possibles[0];
                     if (!IsIncomplete(vv)) return vv;
                     if (LastResponder != null) return LastResponder.JustSaid;
                     return That;

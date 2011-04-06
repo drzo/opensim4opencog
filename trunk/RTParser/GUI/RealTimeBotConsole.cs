@@ -247,10 +247,15 @@ namespace RTParser.GUI
         {
             if (e.KeyValue == 13)
             {
-                if (box.Items.Count > 0 && box.Text != box.Items[0].ToString())
-                {
-                    box.Items.Insert(0, box.Text);
-                }
+                SaveHistory(box);
+            }
+        }
+
+        private void SaveHistory(ComboBox box)
+        {
+            if (box.Items.Count == 0 || box.Text != box.Items[0].ToString())
+            {
+                box.Items.Insert(0, box.Text);
             }
         }
 
@@ -283,12 +288,30 @@ namespace RTParser.GUI
 
         private void PoputateVariablesList()
         {
-            var dict = SelectedDictionrary();
-            if (dict == null) return;
-            variablesOutput.Text = dict.ToDebugString().Replace("\n", "\r\n");
+            var idict = SelectedDictionrary();
+            if (idict == null) return;
+            var dict = idict as SettingsDictionary;
+            if (dict!=null) variablesOutput.Text = dict.ToDebugString().Replace("\n", "\r\n");
+            else
+            {
+                variablesOutput.Text = "";
+                var dictnames = idict.SettingNames(1);
+                foreach (string s in dictnames)
+                {
+                    Unifiable value = idict.grabSetting(s);
+                    if (object.ReferenceEquals(null, value))
+                    {
+                        variablesOutput.AppendText(s + "= -MISSING-");
+                    } else
+                    {
+                        variablesOutput.AppendText(s + "=" + value);                        
+                    }
+                    variablesOutput.AppendText("\r\n");
+                }
+            }
         }
 
-        private SettingsDictionary SelectedDictionrary()
+        private ISettingsDictionary SelectedDictionrary()
         {
             switch(dictionaryNameBox.Text)
             {
@@ -296,11 +319,15 @@ namespace RTParser.GUI
                     return robot.BotAsUser.Predicates;
                 case "@global":
                     return robot.GlobalSettings;
-                case "@user":
-                    return robot.LastUser.Predicates;
                 case "@get":
                 case "@set":
+                case "@user":
+                    return robot.LastUser.Predicates;
                 default:
+                    {
+                        var dict = robot.GetDictionary(dictionaryNameBox.Text);
+                        if (dict != null) return dict;
+                    }
                     break;
             }
             if (user != null) return user.Predicates;
@@ -328,6 +355,10 @@ namespace RTParser.GUI
             {
                 InsertNewItem(graphNameBox, g);
             }
+            foreach (var g in robot.AllDictionaries)
+            {
+                InsertNewItem(dictionaryNameBox, g.Key);
+            }
             user = robot.LastUser;
         }
 
@@ -343,6 +374,7 @@ namespace RTParser.GUI
 
         private void GetVariable(string name, ComboBox box)
         {
+            SaveHistory(box);
             if (user != null)
             {
                 var value = user.Predicates.grabSetting(name);

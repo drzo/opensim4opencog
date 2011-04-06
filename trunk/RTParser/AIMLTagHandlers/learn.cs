@@ -148,7 +148,7 @@ namespace RTParser.AIMLTagHandlers
                         {
                             more = " - " + innerXML;
                         }
-                        TargetBot.BotDirective(request, "@" + command + " " + request.Graph.ScriptingName + more,
+                        TargetBot.BotDirective(request.Requester, request, "@" + command + " " + request.Graph.ScriptingName + more,
                                                writeToLog);
                         //QueryHasSuceededN++;
                     }
