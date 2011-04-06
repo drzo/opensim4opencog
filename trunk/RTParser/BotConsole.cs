@@ -466,10 +466,12 @@ namespace RTParser
             }
             if (input == "gui")
             {
-                GUIForm = GUIForm ?? new GUI.AIMLPadEditor(NameAsSet, this);
                 if (GUIFormThread == null)
                 {
-                    GUIFormThread = new Thread(() => Application.Run(GUIForm));
+                    GUIFormThread = new Thread(() => {
+                        GUIForm = GUIForm ?? new GUI.AIMLPadEditor(NameAsSet, this);
+                        Application.Run(GUIForm);
+                    });
                     GUIFormThread.TrySetApartmentState(ApartmentState.STA);
                     GUIFormThread.Start();
                 }
