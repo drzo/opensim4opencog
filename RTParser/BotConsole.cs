@@ -125,6 +125,7 @@ namespace RTParser
         private TimeSpan MaxWaitTryEnter = TimeSpan.FromSeconds(10);
         internal RTPBotCommands rtpbotcommands;
         private static AIMLPadEditor GUIForm;
+        private static Thread GUIFormThread;
 
 
         public void writeToFileLog(string message)
@@ -347,11 +348,6 @@ namespace RTParser
                 {
                     Environment.Exit(Environment.ExitCode);
                 }
-                if (input.ToLower() == "@gui")
-                {
-                    GUIForm = GUIForm ?? new GUI.AIMLPadEditor(myBot.NameAsSet, myBot);
-                    Application.Run(GUIForm);
-                }
                 myBot.AcceptInput(writeLine, input, myUser);
             }
         }
@@ -361,6 +357,17 @@ namespace RTParser
             RTPBot myBot = this;
             User BotAsAUser = myBot.BotAsUser;
             myUser = myUser ?? myBot.LastUser;
+            if (input.ToLower() == "@gui")
+            {
+                GUIForm = GUIForm ?? new GUI.AIMLPadEditor(myBot.NameAsSet, myBot);
+                if (GUIFormThread == null)
+                {
+                    GUIFormThread = new Thread(() => Application.Run(GUIForm));
+                    GUIFormThread.TrySetApartmentState(ApartmentState.STA);
+                    GUIFormThread.Start();
+                }
+                GUIForm.Show();
+            }
             string myName = BotAsAUser.UserName;
             {
                 writeLine("-----------------------------------------------------------------");
