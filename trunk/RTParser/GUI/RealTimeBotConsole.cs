@@ -411,8 +411,11 @@ namespace RTParser.GUI
         private void graphNameBox_KeyUp(object sender, KeyEventArgs e)
         {
             KeyUpBox(graphNameBox, e);
+            string txt = graphNameBox.Text.Trim();
+            if (txt == null) return;
+            ExecuteCommand("@mkgraph " + txt);
             SetVariable("startgraph", graphNameBox);
-            if (user != null) user.StartGraphName = graphNameBox.Text;
+            if (user != null) user.StartGraphName = txt;
         }
 
         private void dictionaryNameBox_SelectedIndexChanged(object sender, EventArgs e)
