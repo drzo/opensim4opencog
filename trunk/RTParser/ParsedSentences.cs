@@ -1,21 +1,36 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using AIMLbot.Utils;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using RTParser.Database;
 using RTParser.Normalize;
 using RTParser.Utils;
-using AIMLLoader=RTParser.Utils.AIMLLoader;
 
 namespace RTParser
 {
     public class ParsedSentences
     {
-        private readonly Func<string, string> OutputSentencesToEnglish;
-        private Func<string, string> EnglishToNormalized;
+        private static char[] toCharArray = "@#$%^&*()_+<>,/{}[]\\\";'~~".ToCharArray();
+
+        /// <summary>
+        /// The individual sentences that constitute the raw input from the user
+        /// </summary>
+        public readonly List<Unifiable> EnglishSentences = new List<Unifiable>();
+
         private readonly int maxResults;
+
+        private readonly Func<string, string> OutputSentencesToEnglish;
+        public readonly List<Unifiable> SemanticSentences = new List<Unifiable>();
+
+        /// <summary>
+        /// The raw input from the user
+        /// </summary>
+        private Unifiable English;
+
+        //private Func<string, string> EnglishToNormalized;
+        public Action OnGetParsed;
+        public Unifiable OrignalRawText;
 
         public ParsedSentences(Func<string, string> generatePhrase, Unifiable rawText, int maxSentences)
         {
@@ -24,16 +39,6 @@ namespace RTParser
             maxResults = maxSentences;
         }
 
-
-        /// <summary>
-        /// The raw input from the user
-        /// </summary>
-        private Unifiable English;
-
-        /// <summary>
-        /// The individual sentences that constitute the raw input from the user
-        /// </summary>
-        readonly public List<Unifiable> EnglishSentences = new List<Unifiable>();
 
         /// <summary>
         /// The normalized sentence(s) (paths) fed into the graphmaster
@@ -56,6 +61,7 @@ namespace RTParser
                 }
             }
         }
+
         /// <summary>
         /// Returns the raw sentences without any logging 
         /// </summary>
@@ -77,7 +83,7 @@ namespace RTParser
                 }
                 var result = new StringBuilder();
                 int gather = maxResults;
-                foreach (var list in EnglishSentences)
+                foreach (Unifiable list in EnglishSentences)
                 {
                     if (gather == 0) break;
                     string list0 = StaticXMLUtils.Trim(list);
@@ -90,15 +96,8 @@ namespace RTParser
                 string resultS = result.ToString();
                 return resultS.TrimEnd();
             }
-            set
-            {
-                English = value;
-            }
+            set { English = value; }
         }
-
-        public readonly List<Unifiable> SemanticSentences = new List<Unifiable>();
-
-        public Action OnGetParsed;
 
         /// <summary>
         /// TheMainSentence is the last question (if it contains one)
@@ -108,32 +107,33 @@ namespace RTParser
         {
             get
             {
-                if (true) foreach (var output in SemanticSentences)
+                if (true)
+                    foreach (Unifiable output in SemanticSentences)
                     {
                         String sentenceIn = output;
                         String sentence = OutputSentencesToEnglish(sentenceIn);
                         sentence = MainSentence(RawText);
-                        sentence = sentence.Trim(new char[] { '.', ' ', '!', '?' });
+                        sentence = sentence.Trim(new[] {'.', ' ', '!', '?'});
                         if (sentence.Length == 0) continue;
                         return sentence;
-
                     }
                 return MainSentence(RawText);
             }
         }
 
-        private int Count
+        public override string ToString()
         {
-            get { return EnglishSentences.Count; }
+            return "M: " + TheMainSentence + " S: <" + TextPatternUtils.CollectionString(SemanticSentences) + "> E: <" +
+                   TextPatternUtils.CollectionString(EnglishSentences) + ">";
         }
 
-        static public string MainSentence(string sentence)
+        public static string MainSentence(string sentence)
         {
             string prev = "";
             while (sentence != prev)
             {
                 prev = sentence;
-                sentence = TextPatternUtils.Trim(sentence);
+                sentence = StaticXMLUtils.Trim(sentence);
                 int sl = sentence.Length - 1;
 
                 if (sl < 0) return sentence;
@@ -145,7 +145,7 @@ namespace RTParser
                 }
                 sentence = sentence.TrimEnd();
             }
-            int sf = sentence.LastIndexOfAny(new[] { '?' });
+            int sf = sentence.LastIndexOfAny(new[] {'?'});
 
             if (sf > 0)
             {
@@ -153,11 +153,11 @@ namespace RTParser
                 // RTPBot.writeDebugLine("AIMLTRACE !REWRITE THAT QUESTION " + sentence + " => " + newClip);
                 if (newClip.Length > 4) sentence = newClip;
             }
-            sentence = sentence.Trim(new char[] { '.', ' ', '!', '?' });
-            sf = sentence.LastIndexOfAny(new[] { '.', '!' });
+            sentence = sentence.Trim(new[] {'.', ' ', '!', '?'});
+            sf = sentence.LastIndexOfAny(new[] {'.', '!'});
             if (sf > 0)
             {
-                String newClip = TextPatternUtils.Trim(sentence.Substring(sf));
+                String newClip = StaticXMLUtils.Trim(sentence.Substring(sf));
                 while (Char.IsPunctuation(newClip[0]))
                 {
                     newClip = newClip.Substring(1).TrimStart();
@@ -168,7 +168,8 @@ namespace RTParser
             return sentence;
         }
 
-        internal static void Convert(IEnumerable<Unifiable> fromList, ICollection<Unifiable> toList, Func<string, string> OutputSentencesToEnglish)
+        internal static void Convert(IEnumerable<Unifiable> fromList, ICollection<Unifiable> toList,
+                                     Func<string, string> OutputSentencesToEnglish)
         {
             lock (fromList)
                 foreach (string sentence in fromList)
@@ -179,7 +180,8 @@ namespace RTParser
                 }
         }
 
-        public static void NormalizedInputPaths(Request request, IEnumerable<Unifiable> rawSentences, ICollection<Unifiable> result, Func<string, string> ToInputSubsts)
+        public static void NormalizedInputPaths(Request request, IEnumerable<Unifiable> rawSentences,
+                                                ICollection<Unifiable> result, Func<string, string> ToInputSubsts)
         {
             if (request.Stage > SideEffectStage.PARSING_INPUT) return;
 
@@ -300,36 +302,34 @@ namespace RTParser
             return parsedSentences;
         }
 
-        static public ParsedSentences GetParsedUserInputSentences(Request request, Unifiable fromUInput)
+        public static ParsedSentences GetParsedUserInputSentences(Request request, Unifiable fromUInput)
         {
-
-            
             Func<string, string> GenEnglish = (str) => request.TargetBot.EnsureEnglish(str);
             string fromInput = EnsureEnglishPassThru(fromUInput);
             // Normalize the input
-            var rawSentences = SplitIntoSentences.Split(fromInput);
+            IEnumerable<Unifiable> rawSentences = SplitIntoSentences.Split(fromInput);
             var parsedSentences = new ParsedSentences(GenEnglish, fromUInput, -1);
-            var userInputSentences = parsedSentences.EnglishSentences;
+            List<Unifiable> userInputSentences = parsedSentences.EnglishSentences;
             userInputSentences.AddRange(rawSentences);
             Func<string, string> englishToNormaizedInput = arg => EngishToNormalizedInput(request, arg);
             // parsedSentences.EnglishToNormalized = englishToNormaizedInput;
             parsedSentences.OnGetParsed = () =>
-            {
-                if (request.Stage < SideEffectStage.PARSING_INPUT)
-                    request.Stage = SideEffectStage.PARSING_INPUT;
-                ParsedSentences.Convert(
-                    parsedSentences.EnglishSentences,
-                    parsedSentences.SemanticSentences, englishToNormaizedInput);
-            };
+                                              {
+                                                  if (request.Stage < SideEffectStage.PARSING_INPUT)
+                                                      request.Stage = SideEffectStage.PARSING_INPUT;
+                                                  Convert(
+                                                      parsedSentences.EnglishSentences,
+                                                      parsedSentences.SemanticSentences, englishToNormaizedInput);
+                                              };
             return parsedSentences;
         }
 
-        static private string EngishToNormalizedInput(Request request, string startout)
+        private static string EngishToNormalizedInput(Request request, string startout)
         {
             var Normalized = new List<Unifiable>();
             Func<string, string> ToInputSubsts = request.TargetBot.ToInputSubsts;
-                       
-            NormalizedInputPaths(request, new Unifiable[] { startout }, Normalized, ToInputSubsts);
+
+            NormalizedInputPaths(request, new Unifiable[] {startout}, Normalized, ToInputSubsts);
             if (Normalized.Count == 0)
             {
                 return null;
@@ -338,10 +338,7 @@ namespace RTParser
             return Normalized[0];
         }
 
-        private static char[] toCharArray = "@#$%^&*()_+<>,/{}[]\\\";'~~".ToCharArray();
-        public Unifiable OrignalRawText;
-
-        static public string EnsureEnglishPassThru(string arg)
+        public static string EnsureEnglishPassThru(string arg)
         {
             return arg;
         }

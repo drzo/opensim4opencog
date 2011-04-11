@@ -1705,6 +1705,8 @@ namespace RTParser
         public void DisableTemplateUntilFinished(TemplateInfo templateInfo)
         {
             if (templateInfo == null) return;
+            // @TODO @HACK @BUG do we need this return?
+            return;
             Request request = this;
             templateInfo.IsDisabledOutput = true;
             Request rr1 = request.OriginalSalientRequest;

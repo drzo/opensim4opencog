@@ -188,7 +188,7 @@ namespace RTParser.Utils
         {
             if (RecurseResultValid)
             {
-             //   return RecurseResult;
+                return RecurseResult;
             }
             return null;
             return templateNodeInnerText;
@@ -262,6 +262,10 @@ namespace RTParser.Utils
                     return;
                 }
                 if (QueryHasFailed == value) return;
+                if (value)
+                {
+                    writeToLogWarn("!InUnify QueryHasFailed=" + value);
+                }
                 query.HasFailed += (value ? 1 : 0);
             }
         }
@@ -482,7 +486,10 @@ namespace RTParser.Utils
         public override Unifiable ProcessAimlChange()
         {
             if (finalResult.IsValid) return finalResult.Value;
-            if (QueryHasFailed) return null;
+            if (QueryHasFailed)
+            {
+                return null;
+            }
             ThreadStart OnExit = EnterTag(request, templateNode, query);
             try
             {
@@ -1026,7 +1033,7 @@ namespace RTParser.Utils
 
         protected Unifiable ProcessChildNode(XmlNode childNode, bool protectChildren, bool saveOnInnerXML, out bool success, AIMLTagHandler tagHandlerChild)
         {
-            AIMLTagHandler outerParent = tagHandlerChild;
+            AIMLTagHandler outerParent = this;
             var passFails = outerParent.QueryResultsCurrent();
             Unifiable vv = null;
             try
@@ -1044,6 +1051,10 @@ namespace RTParser.Utils
             }
             if (!success)
             {
+
+                vv = ProcessTagHandlerNode(childNode, protectChildren, saveOnInnerXML, out success,
+                                        tagHandlerChild);
+                success = true;
                 return vv;
             }
             var vv1 = vv;
@@ -1132,7 +1143,7 @@ namespace RTParser.Utils
             OutputDelegate writeToLogWarn = tagHandlerChild.writeToLogWarn;
             OutputDelegate writeToLog = tagHandlerChild.writeToLog;
 
-            AIMLTagHandler parent =  tagHandlerChild.Parent;
+            AIMLTagHandler parentHandler =  tagHandlerChild.Parent;
 
             if (saveOnInnerXML && throwOnSave)
             {
@@ -1155,7 +1166,7 @@ namespace RTParser.Utils
                     var query = tagHandlerChild.query;
 
                     bool suspendingLimits = request.IsToplevelRequest || request.SuspendSearchLimits
-                                            || tagHandlerChild.SuspendLimits || (parent != null && parent.SuspendLimits);
+                                            || tagHandlerChild.SuspendLimits || (parentHandler != null && parentHandler.SuspendLimits);
                     
                     
 
@@ -1164,13 +1175,13 @@ namespace RTParser.Utils
 
                     var Proc = tagHandlerChild.Proc.TagHandling;
                     //if (tagHandlerChild == null) tagHandlerChild = Proc.GetTagHandler(user, query, request, result, childNode, parent);
-                    
+
                     string value = Proc.processNode(childNode, query,
                                                     request, result, user,
-                                                    parent, copyChild, copyParent,
-                                                    tagHandlerChild, suspendingLimits);
+                                                    parentHandler, copyChild, copyParent,
+                                                    tagHandlerChild, suspendingLimits, out success);
                     var vv2 = value;
-                    success = !IsIncomplete(value);
+                    //success = !IsIncomplete(value);
                     if (tagHandlerChild.QueryHasFailed) success = false;
                     if (tagHandlerChild.QueryHasSuceeded) success = true;
 
@@ -1182,7 +1193,7 @@ namespace RTParser.Utils
                     success = true;                   
                     if (IsNull(value))
                     {
-                        value = tagHandlerChild.TryProcessingNodeAgain(parent, childNode, tagHandlerChild, Proc, copyChild, copyParent, ref suspendingLimits, ref value, writeToLogWarn, ref success);
+                        value = tagHandlerChild.TryProcessingNodeAgain(parentHandler, childNode, tagHandlerChild, Proc, copyChild, copyParent, ref suspendingLimits, ref value, writeToLogWarn, ref success);
                     }
                     if (IsEMPTY(value))
                     {
@@ -1190,11 +1201,11 @@ namespace RTParser.Utils
                         {
                             if (saveOnInnerXML)
                             {
-                                if (parent != null) parent.SaveResultOnChild(childNode, "+++ ");
+                                if (parentHandler != null) parentHandler.SaveResultOnChild(childNode, "+++ ");
                             }
                             return value;
                         }
-                        value = tagHandlerChild.TryProcessingNodeAgain(parent, childNode, tagHandlerChild, Proc, copyChild, copyParent, ref suspendingLimits, ref value, writeToLogWarn, ref success);
+                        value = tagHandlerChild.TryProcessingNodeAgain(parentHandler, childNode, tagHandlerChild, Proc, copyChild, copyParent, ref suspendingLimits, ref value, writeToLogWarn, ref success);
                     }
                     if (vv2 != value)
                     {
@@ -1210,7 +1221,7 @@ namespace RTParser.Utils
                     if (saveOnInnerXML)
                     {
                         if (!success) return null;
-                        if (parent != null) parent.SaveResultOnChild(childNode, value);
+                        if (parentHandler != null) parentHandler.SaveResultOnChild(childNode, value);
                     }
                     return value;
                 }
@@ -1270,12 +1281,13 @@ namespace RTParser.Utils
                 success = false;
                 return value;
             }
+            bool childSuccess;
             value = Proc.processNode(childNode, query,
                                      request, result, user,
                                      parent, copyChild, copyParent,
-                                     tagHandlerChild, suspendingLimits);
+                                     tagHandlerChild, suspendingLimits, out childSuccess);
 
-            success = !IsNull(value);
+            success = !IsNull(value) || childSuccess;
             if (success)
             {
                 if (tagHandlerChild.QueryHasFailed) success = false;
@@ -1363,7 +1375,10 @@ namespace RTParser.Utils
                             }
                             else
                             {
-                                success = false;
+                                if (IsNull(found))
+                                {
+                                    success = false;
+                                }
                             }
                         }
                     }
@@ -1380,6 +1395,10 @@ namespace RTParser.Utils
 
                     if (IsNullOrEmpty(found) && !StaticAIMLUtils.IsSilentTag(childNode))
                     {
+                        if (!IsNull(found) && !QueryHasFailed)
+                        {
+                            success = true;
+                        }
                         if (success)
                         {
                             return "";
@@ -1511,6 +1530,10 @@ namespace RTParser.Utils
             }
             // RecurseResult = vv;
             if (!Unifiable.IsNullOrEmpty(vv1))
+            {
+                return vv1;
+            }
+            if (!Unifiable.IsNull(vv1))
             {
                 return vv1;
             }

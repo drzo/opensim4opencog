@@ -53,7 +53,7 @@ namespace RTParser.AIMLTagHandlers
                 string gName = GetAttribValue("global_name", null);
                 ISettingsDictionary dict;
                 string dictName = GetNameOfDict(query, "set", templateNode, out dict);
-
+                Succeed();
                 if (name == null)
                 {
                     //recursive form like <set>name value Unifiable</set>

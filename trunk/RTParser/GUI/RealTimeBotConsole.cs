@@ -180,7 +180,7 @@ namespace RTParser.GUI
                 str = str.TrimEnd();
                 if (str == "") return;
 
-                str = str.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", "\r\n");
+                str = RNLF(str);
                 //if (str.ToLower().Contains("look")) return;
                 if (IsDisposed) return; // for (un)clean exits
                 InvokeIfNeeded(this, () => { doOutput(str); });
@@ -189,6 +189,11 @@ namespace RTParser.GUI
             {
                 DLRConsole.DebugWriteLine("" + e);
             }
+        }
+
+        static internal string RNLF(string str)
+        {
+            return str.Replace("/>", "/>\n").Replace("\r", "\n").Replace("\r", "\n").Replace("\n\n", "\n").Replace("\n", "\r\n");
         }
 
         public void doOutput(string str, params object[] args)
@@ -291,7 +296,7 @@ namespace RTParser.GUI
             var idict = SelectedDictionrary();
             if (idict == null) return;
             var dict = idict as SettingsDictionary;
-            if (dict!=null) variablesOutput.Text = dict.ToDebugString().Replace("\n", "\r\n");
+            if (dict != null) variablesOutput.Text = RNLF(dict.ToDebugString());
             else
             {
                 variablesOutput.Text = "";
@@ -302,9 +307,10 @@ namespace RTParser.GUI
                     if (object.ReferenceEquals(null, value))
                     {
                         variablesOutput.AppendText(s + "= -MISSING-");
-                    } else
+                    }
+                    else
                     {
-                        variablesOutput.AppendText(s + "=" + value);                        
+                        variablesOutput.AppendText(s + "=" + value);
                     }
                     variablesOutput.AppendText("\r\n");
                 }

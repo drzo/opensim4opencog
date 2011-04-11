@@ -40,14 +40,19 @@ namespace RTParser.AIMLTagHandlers
         {
             CheckNode("think");
             writeToLog("THOUGHT: '" + Unifiable.DescribeUnifiable(templateNodeInnerText) + "'");
-            if (IsNullOrEmpty(templateNodeInnerText))
+            if (IsNull(templateNodeInnerText))
             {
                 return FAIL;
             }
             var vv = GetAttribValue<Unifiable>(templateNode, "retval", null);
             if (vv != null) return vv;
-            if (true) return Unifiable.Empty;
+            if (true) return THINKYTAG;
             return Succeed(" THOUGHT: '" + templateNodeInnerText + "'");
+        }
+
+        static public Unifiable THINKYTAG
+        {
+            get { return "THINKYTAG"; }
         }
 
         protected override Unifiable templateNodeInnerText

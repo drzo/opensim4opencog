@@ -141,6 +141,7 @@ namespace RTParser.Utils
                         }
                     }
                 }
+                if (_hasFailed == value) return;
                 _hasFailed = value;
             }
         }

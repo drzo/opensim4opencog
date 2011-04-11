@@ -98,7 +98,7 @@ namespace RTParser
                 // Todo: should someonme have set the result to some default?
                 if (lr == null)
                 {
-                    return null;
+                    return GetBotRequest("<!-- NULL LAST REQUEST -->");
                 }
                 return lr.request;
             }
@@ -439,9 +439,10 @@ namespace RTParser
             //lock (user.QueryLock)
             {
                 ChatLabel label = request.PushScope;
+                Result allResults = null;
                 try
                 {
-                    Result allResults = ChatWithToplevelResults(request, parentResultIn);
+                    allResults = ChatWithToplevelResults(request, parentResultIn);
                     /*
                     // ReSharper disable ConditionIsAlwaysTrueOrFalse
                     if (res.OutputSentenceCount == 0 && false)
@@ -618,7 +619,7 @@ namespace RTParser
                 {
                     var tn = StaticAIMLUtils.getTemplateNode(rawInputString);
                     //tn = getDocNode( rawInputString , false, false, StringOnlyDoc);
-                    result = ImmediateAiml(tn, request, Loader, null);
+                    result = ImmediateAiml(tn, request, Loader);
                     //request.rawInput = result.Output;
                     return result;
                 }
@@ -1136,15 +1137,14 @@ namespace RTParser
         }
 
         public Result ImmediateAiml(XmlNode templateNode, Request request0,
-                                            AIMLLoader loader, AIMLTagHandler handler)
+                                            AIMLLoader loader)
         {
-            bool fastCall = handler == null;
             Result masterResult = request0.CreateResult(request0);
             bool prev = request0.GraphsAcceptingUserInput;
             try
             {
                 request0.GraphsAcceptingUserInput = true;
-                var mr = ImmediateAIMLNode(request0, templateNode, handler, fastCall);
+                var mr = ImmediateAIMLNode(request0, templateNode);
                 return mr;
             }
             catch (ChatSignal ex)
@@ -1163,7 +1163,7 @@ namespace RTParser
             }
         }
 
-        private Result ImmediateAIMLNode(Request parentRequest, XmlNode templateNode, AIMLTagHandler handler, bool isFastAIML)
+        private Result ImmediateAIMLNode(Request parentRequest, XmlNode templateNode)
         {
             string requestName = ToTemplateXML(templateNode);
             RTPBot request0Proccessor = this;
@@ -1222,7 +1222,7 @@ namespace RTParser
                 copyChild = false;
             }
             var lastHandler = TagHandling.proccessResponse(query, request, result, templateNode, sGuard, out createdOutput, out templateSucceeded,
-                             handler, templateInfo, copyChild, false); //not sure if should copy parent
+                             (AIMLTagHandler)null, templateInfo, copyChild, false); //not sure if should copy parent
             if (doUndos) query.UndoAll();
             request.LastHandler = lastHandler;
             return result;

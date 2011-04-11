@@ -838,12 +838,12 @@ namespace RTParser.Utils
                     {
                         Request res = request.CreateSubRequest(StaticAIMLUtils.ToTemplateXML(currentNode), null);
                         res.IsToplevelRequest = true;
-                        loadOpts.RProcessor.ImmediateAiml(currentNode, res, this, null);
+                        loadOpts.RProcessor.ImmediateAiml(currentNode, res, this);
                         total += 1;
                     }
                     else
                     {
-                        loadOpts.RProcessor.ImmediateAiml(currentNode, request, this, null);
+                        loadOpts.RProcessor.ImmediateAiml(currentNode, request, this);
                         total += 1;
                     }
                 }

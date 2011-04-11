@@ -22,7 +22,7 @@ namespace RTParser
     {
 
         internal AIMLTagHandler GetTagHandler(User user, SubQuery query, Request request, Result result, XmlNode node,
-                                              AIMLTagHandler handler)
+                                              AIMLTagHandler parentTagHandler)
         {
             AIMLTagHandler tag = GetTagHandler00(user, query, request, result, node, true);
             if (query != null) query.CurrentTagHandler = tag;
@@ -33,16 +33,16 @@ namespace RTParser
             }
             if (tag != null)
             {
-                tag.SetParent(handler);
-                if (query != null) query.LastTagHandler = handler ?? tag;
+                tag.SetParent(parentTagHandler);
+                if (query != null) query.LastTagHandler = parentTagHandler ?? tag;
                 TemplateInfo ti = tag.templateInfo;
                 if (ti == null && query != null)
                 {
                     ti = query.CurrentTemplate;
                 }
-                if (ti == null && handler != null)
+                if (ti == null && parentTagHandler != null)
                 {
-                    ti = handler.GetTemplateInfo();
+                    ti = parentTagHandler.GetTemplateInfo();
                 }
                 if (ti != null)
                 {
@@ -368,6 +368,7 @@ namespace RTParser
                         break;
                 }
             }
+            if (tagHandler != null) return tagHandler;
             if (IsHtmlTag(node.Name))
             {
                 return new recursiveVerbatum(node, targetBot, user, query, request, result, node, true);
@@ -424,12 +425,26 @@ namespace RTParser
         }
 
 
-
+        /// <summary>
+        /// Should return the child tagHandler
+        /// </summary>
+        /// <param name="query"></param>
+        /// <param name="request"></param>
+        /// <param name="result"></param>
+        /// <param name="templateNode"></param>
+        /// <param name="sGuard"></param>
+        /// <param name="createdOutput"></param>
+        /// <param name="templateSucceeded"></param>
+        /// <param name="parentHandler"></param>
+        /// <param name="templateInfo"></param>
+        /// <param name="copyChild"></param>
+        /// <param name="copyParent"></param>
+        /// <returns></returns>
         public AIMLTagHandler proccessResponse(SubQuery query,
                                      Request request, Result result,
                                      XmlNode templateNode, GuardInfo sGuard,
                                      out bool createdOutput, out bool templateSucceeded,
-                                     AIMLTagHandler handler, TemplateInfo templateInfo,
+                                     AIMLTagHandler parentHandler, TemplateInfo templateInfo,
                                      bool copyChild, bool copyParent)
         {
             //request.CurrentResult = result;
@@ -455,9 +470,10 @@ namespace RTParser
             UndoStack undoStack = UndoStack.GetStackFor(query);
             try
             {
-                return proccessTemplate(query, request, result, templateNode, sGuard,
+                var childTagHandler = proccessTemplate(query, request, result, templateNode, sGuard,
                                            out createdOutput, out templateSucceeded,
-                                           handler, templateInfo, copyChild, copyParent);
+                                           parentHandler, templateInfo, copyChild, copyParent);
+                return childTagHandler;
             }
             finally
             {
@@ -468,7 +484,7 @@ namespace RTParser
         private AIMLTagHandler proccessTemplate(SubQuery query, Request request, Result result,
                                                 XmlNode templateNode, GuardInfo sGuard,
                                                 out bool createdOutput, out bool templateSucceeded,
-                                                AIMLTagHandler handler, TemplateInfo templateInfo,
+                                                AIMLTagHandler parentHandler, TemplateInfo templateInfo,
                                                 bool copyChild, bool copyParent)
         {
             ChatLabel label = request.PushScope;
@@ -485,7 +501,7 @@ namespace RTParser
 
                 var th = proccessResponse000(query, request, result, templateNode, sGuard,
                                            out createdOutput, out templateSucceeded,
-                                           handler, templateInfo, copyChild, copyParent);
+                                           parentHandler, templateInfo, copyChild, copyParent);
 
                 if (superTrace)
                 {
@@ -527,12 +543,12 @@ namespace RTParser
         public AIMLTagHandler proccessResponse000(SubQuery query, Request request, Result result,
                                                 XmlNode sOutput, GuardInfo sGuard,
                                                 out bool createdOutput, out bool templateSucceeded,
-                                                AIMLTagHandler handler, TemplateInfo templateInfo,
+                                                AIMLTagHandler parentHandler, TemplateInfo templateInfo,
                                                 bool copyChild, bool copyParent)
         {
             RTPBot Proc = query.TargetBot;
 
-            query.LastTagHandler = handler;
+            //query.LastTagHandler = handler;
             bool isTraced = request.IsTraced || result.IsTraced || !request.GraphsAcceptingUserInput ||
                             (templateInfo != null && templateInfo.IsTraced);
             //XmlNode guardNode = AIMLTagHandler.getNode(s.Guard.InnerXml);
@@ -554,10 +570,10 @@ namespace RTParser
             bool protectChild = copyChild || childOriginal;
             bool suspendingLimits = request.IsToplevelRequest || request.SuspendSearchLimits;
             AIMLTagHandler tagHandler = GetTagHandler(request.Requester, query, request, result,
-                                                                  templateNode, handler);
+                                                                  templateNode, parentHandler);
             string outputSentenceOut = processNode(templateNode, query,
-                                                               request, result, request.Requester, handler,
-                                                               protectChild, copyParent, tagHandler, suspendingLimits);
+                                                               request, result, request.Requester, parentHandler,
+                                                               protectChild, copyParent, tagHandler, suspendingLimits, out templateSucceeded);
 
             templateSucceeded = !IsFalse(outputSentenceOut);
 
@@ -617,7 +633,8 @@ namespace RTParser
                 {
                     createdOutput = false;
                 }
-                if (!createdOutput && isTraced && request.GraphsAcceptingUserInput)
+                // @TODO @HACK @BUG isTraced is a HORRID flag here!               
+                if (false &&!createdOutput && isTraced && request.GraphsAcceptingUserInput)
                 {
                     if (templateInfo != null)
                     {
@@ -722,21 +739,28 @@ namespace RTParser
         /// <returns>the output Unifiable</returns>
         public string processNode(XmlNode node, SubQuery query,
                                   Request request, Result result, User user,
-                                  AIMLTagHandler parent, bool protectChild, bool copyParent,
-                                  AIMLTagHandler tagHandler, bool suspendLimits)
+                                  AIMLTagHandler parentHandler, bool protectChild, bool copyParent,
+                                  AIMLTagHandler nodeHandler, bool suspendLimits, out bool templateSucceeded)
         {
             Request originalSalientRequest = MasterRequest.GetOriginalSalientRequest(request);
             var wasSuspendRestrati = request.SuspendSearchLimits;
+            templateSucceeded = true;
             request.SuspendSearchLimits = suspendLimits;
             var sraiMark = originalSalientRequest.CreateSRAIMark();
             try
             {
+                bool childSuccess;
                 string outputSentence = processNodeVV(node, query,
-                                                      request, result, user, parent,
-                                                      protectChild, copyParent, tagHandler);
+                                                      request, result, user, parentHandler,
+                                                      protectChild, copyParent, nodeHandler, out childSuccess);
+                if (!childSuccess)
+                {
+                    templateSucceeded = false;
+                }
                 if (Unifiable.IsNull(outputSentence))
                 {
                     //outputSentence = tagHandler.GetTemplateNodeInnerText();
+                    templateSucceeded = false;
                     return outputSentence;
                 }
                 if (!Unifiable.IsNullOrEmpty(outputSentence))
@@ -747,7 +771,7 @@ namespace RTParser
                 {
                     return "";
                 }
-                if (tagHandler.RecurseResultValid) return tagHandler.RecurseResult;
+                if (nodeHandler.RecurseResultValid) return nodeHandler.RecurseResult;
                 return outputSentence;
             }
             finally
@@ -768,10 +792,11 @@ namespace RTParser
         /// <returns>the output Unifiable</returns>
         public string processNodeVV(XmlNode node, SubQuery query,
                                   Request request, Result result, User user,
-                                  AIMLTagHandler parent0, bool protectChild, bool copyParent,
-                                  AIMLTagHandler tagHandler)
+                                  AIMLTagHandler parentHandler, bool protectChild, bool copyParent,
+                                  AIMLTagHandler tagHandler, out bool childSuccess)
         {
             RTPBot TargetBot = request.TargetBot;
+            childSuccess = true;
             if (node == null)
             {
                 string whyError = "ERROR null NODE " + tagHandler;
@@ -780,6 +805,7 @@ namespace RTParser
             }
             if (node.NodeType == XmlNodeType.Text)
             {
+                childSuccess = true;
                 if (tagHandler != null)
                 {
                     tagHandler.QueryHasSuceeded = true;
@@ -794,6 +820,7 @@ namespace RTParser
             if (tagHandler == null)
             {
                 string whyError = "ERROR null THND " + node;
+                childSuccess = false;
                 writeToLog(whyError);
             }
             bool isTraced = request.IsTraced || result.IsTraced || !request.GraphsAcceptingUserInput ||
@@ -823,6 +850,7 @@ namespace RTParser
             // process the node
             if (ReferenceEquals(null, tagHandler))
             {
+                childSuccess = true;
                 if (node.NodeType == XmlNodeType.Comment)
                 {
                     return Unifiable.Empty;
@@ -843,6 +871,7 @@ namespace RTParser
                 {
                     return Unifiable.Empty;
                 }
+                string nodeInner = node.InnerXml;
                 TargetBot.EvalAiml(node, request, del ?? DEVNULL);
                 return node.InnerXml;
             }
@@ -862,10 +891,11 @@ namespace RTParser
             {
                 tagHandler.Dispose();
                 tagHandler = null;
+                childSuccess = true;
                 return Unifiable.Empty;
             }
 
-            tagHandler.SetParent(parent0);
+            tagHandler.SetParent(parentHandler);
             //if (parent!=null) parent.AddChild(tagHandler);
 
             Unifiable cp = tagHandler.CompleteAimlProcess();
@@ -883,9 +913,10 @@ namespace RTParser
                         cp = tagHandler.CompleteAimlProcess();
                         if (Unifiable.IsNull(cp))
                         {
+                            childSuccess = false;
                             return tagHandler.GetTemplateNodeInnerText();
                         }
-                        if (Unifiable.IsNullOrEmpty(cp))
+                        if (false && Unifiable.IsNullOrEmpty(cp))
                         {
                             // trace the next line to see why
                             AIMLTagHandler handler = tagHandler;
@@ -902,12 +933,19 @@ namespace RTParser
             }
             if (tagHandler.QueryHasFailed)
             {
+                childSuccess = false;
                 return tagHandler.FAIL;
+            }
+            childSuccess = !tagHandler.QueryHasFailed;
+            if (!childSuccess)
+            {
+
             }
             var st = IsSilentTag(node);
             var ine = Unifiable.IsNullOrEmpty(cp);
             if (!ine || st)
             {
+                childSuccess = true;
                 return cp;
             }
             if (Unifiable.IsNull(cp))
@@ -915,6 +953,7 @@ namespace RTParser
                 cp = tagHandler.GetTemplateNodeInnerText();
                 if (tagHandler.QueryHasSuceeded)
                 {
+                    childSuccess = true;
                     return cp;
                 }
                 return cp;
