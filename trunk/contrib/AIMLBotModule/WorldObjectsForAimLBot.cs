@@ -970,6 +970,11 @@ namespace AIMLBotModule
             try
             {
                 SUnifiable result = AIMLInterp0(input, myUser);
+                if (result == null)
+                {
+                    AIMLInterp0(input, myUser);
+                    return "-no-response- for -" + input + "-";
+                }
                 String append = AddedToNextResponse.ToString().Trim();
                 if (append.Length > 0)
                 {
