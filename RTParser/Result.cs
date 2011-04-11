@@ -322,7 +322,7 @@ namespace RTParser
             {
                 lock (OutputSentences)
                 {
-                    AddOutputSentences1(value);
+                    AddOutputResultSentences(value);
                     AlreadyUsed = value;
                     IsComplete = true;
                 }
@@ -590,6 +590,7 @@ namespace RTParser
         private readonly ParsedSentences ChatInput;
         private SubQuery _CurrentQuery;
         private string matchable;
+        private int OutputPings;
 
         //public ChatLabel CatchLabel { get; set; }
 
@@ -679,7 +680,7 @@ namespace RTParser
             return true;
         }
 
-        public void AddOutputSentences0(TemplateInfo ti, string unifiable)
+        private void AddOutputSentences0(TemplateInfo ti, string unifiable)
         {
             if (null == unifiable)
             {
@@ -708,10 +709,20 @@ namespace RTParser
                     ti.TextSaved = unifiable;
                 }
             }
-            AddOutputSentences1(unifiable);
+            AddOutputResultSentences(unifiable);
             //AddOutputSentences2(ti,unifiable);
         }
-        public void AddOutputSentences1( string unifiable)
+        private void AddOutputResultSentences( string unifiable)
+        {
+            OutputPings++;
+            if (this.OutputPings > 1)
+            {
+                return;
+            }
+            ChatOutput.ClearOutput();
+            AddOutputSentences11(unifiable);
+        }
+        private void AddOutputSentences11( string unifiable)
         {
             unifiable = Trim(unifiable).Replace("\n", " ").Replace("\r", " ");
             string[] sentNow = unifiable.Split(new[] {"<br/>", "&p;", "<p/>"}, StringSplitOptions.RemoveEmptyEntries);
@@ -722,7 +733,7 @@ namespace RTParser
             {
                 foreach (var s in sentNow)
                 {
-                    AddOutputSentences1(s);
+                    AddOutputSentences11(s);
                 }
                 return;                
             }
@@ -735,11 +746,14 @@ namespace RTParser
             {
                 foreach (var s in sentNow)
                 {
-                    AddOutputSentences1(s);
+                    AddOutputSentences11(s);
                 }
                 return;
             }
-            if (AlreadyUsed.Contains(unifiable)) return;
+            if (AlreadyUsed.Contains(unifiable))
+            {
+                return;
+            }
 
             if (IsNullOrEmpty(unifiable))
             {
@@ -893,7 +907,7 @@ namespace RTParser
         public Unifiable GetOutputSentence(int sentence)
         {
             if (sentence == -1) return NormalizedOutput;
-            sentence = OutputSentences.Count - sentence - 1;            
+            sentence = OutputSentenceCount - sentence - 1;            
             lock (OutputSentences) return OutputSentences[sentence];
         }
 
