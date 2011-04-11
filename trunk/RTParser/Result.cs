@@ -141,7 +141,7 @@ namespace RTParser
         /// </summary>
         public List<SubQuery> SubQueries { get; set; }
 
-        public static int MaxPrintResults = 10;
+        public static int MaxPrintResults = 1;
         private string AlreadyUsed = "xtxtxtxtxtxtxtxtxxt";
         private int RotatedTemplate;
 
@@ -322,8 +322,8 @@ namespace RTParser
             {
                 lock (OutputSentences)
                 {
-                    AlreadyUsed = value;
                     AddOutputSentences1(value);
+                    AlreadyUsed = value;
                     IsComplete = true;
                 }
             }

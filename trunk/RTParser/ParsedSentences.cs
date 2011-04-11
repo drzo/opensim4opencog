@@ -90,6 +90,9 @@ namespace RTParser
                     if (list0.Length > 0)
                     {
                         result.AppendLine(list);
+                    }
+                    if (list0.Length > 5)
+                    {
                         gather--;
                     }
                 }
