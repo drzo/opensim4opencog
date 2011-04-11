@@ -743,7 +743,7 @@ namespace RTParser
             if ((n >= 0) & (n < this.SailentResultCount))
             {
                 Result historicInput = GetResult(n, false, responder);
-                if ((sentence >= 0) & (sentence < historicInput.InputSentences.Count))
+                if (historicInput != null && (sentence >= 0) & (sentence < historicInput.InputSentences.Count))
                 {
                     return historicInput.InputSentences[sentence];
                 }

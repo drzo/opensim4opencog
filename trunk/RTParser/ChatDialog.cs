@@ -868,9 +868,9 @@ namespace RTParser
             }
             if (TheCyc != null)
             {
-                text = TheCyc.CleanupCyc(text);
+                text = TheCyc.CycCleanupCyc(text);
             }
-            return Trim(CleanNops(text.Replace("#$", " ").Replace("  ", " ")));
+            return Trim(CleanNops(text.Replace("#$", " ").Replace(think.THINKYTAG," ").Replace("  ", " ")));
         }
 
 
@@ -1331,7 +1331,11 @@ namespace RTParser
             if (DifferentBesidesCase(sentenceIn, sentence))
             {
                 writeToLog("CleanupCyc: " + sentenceIn + " -> " + sentence);
-                sentenceIn = sentence;
+                if (sentence != "") sentenceIn = sentence;
+                if (sentenceIn == "")
+                {
+                    return "";
+                }
             }
 
             sentence = ApplySubstitutions.Substitute(OutputSubstitutions, sentenceIn);

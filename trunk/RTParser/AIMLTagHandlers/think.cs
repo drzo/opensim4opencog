@@ -52,7 +52,7 @@ namespace RTParser.AIMLTagHandlers
 
         static public Unifiable THINKYTAG
         {
-            get { return "THINKYTAG"; }
+            get { return "TAG-THINK"; }
         }
 
         protected override Unifiable templateNodeInnerText

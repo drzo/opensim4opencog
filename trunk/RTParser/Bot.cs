@@ -804,6 +804,8 @@ namespace RTParser
                 PersonSubstitutions = new SettingsDictionary("nl.substitutions.person", this, null);
                 RegisterSubstitutions("person", PersonSubstitutions);
                 InputSubstitutions = new SettingsDictionary("nl.substitutions.input", this, null);
+                InputSubstitutions.IsSubsts = true;
+                InputSubstitutions.IsTraced = true;
                 RegisterSubstitutions("input", InputSubstitutions);
                 OutputSubstitutions = new SettingsDictionary("nl.substitutions.output", this, null);
                 RegisterSubstitutions("output", OutputSubstitutions);
@@ -953,7 +955,7 @@ namespace RTParser
             thiz.InputSubstitutions.loadSettings(
                 HostSystemCombine(pathToSettings, GlobalSettings.grabSetting("substitutions")), request);
             thiz.InputSubstitutions.loadSettings(HostSystemCombine(pathToSettings, "substitutions.xml"), request);
-
+            thiz.InputSubstitutions.IsTraced = true;
 
             // Grab the splitters for this Proccessor
             thiz.loadSplitters(HostSystemCombine(pathToSettings, GlobalSettings.grabSetting("splittersfile")));
@@ -1222,6 +1224,10 @@ namespace RTParser
         /// <param name="request">the request object that encapsulates all sorts of useful information</param>
         public void phoneHome(Unifiable errorMessage, Request request)
         {
+            if (AdminEmail == "")
+            {
+                return;
+            }
             MailMessage msg = new MailMessage("donotreply@aimlbot.com", AdminEmail);
             msg.Subject = "WARNING! AIMLBot has encountered a problem...";
             string message =

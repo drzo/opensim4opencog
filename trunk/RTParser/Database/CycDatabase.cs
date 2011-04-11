@@ -476,7 +476,7 @@ namespace RTParser.Database
             return true;
         }
 
-        public Unifiable CleanupCyc(string text)
+        public Unifiable CycCleanupCyc(string text)
         {
             text = TextPatternUtils.ReTrimAndspace(text);
             string s = CleanupCyc0(text);
