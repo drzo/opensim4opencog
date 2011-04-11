@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.IO;
 using System.Xml;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
@@ -568,6 +570,22 @@ namespace RTParser.Utils
                 at = source.IndexOf(findStr, from);
             }
             return found;
+        }
+
+        internal static string CollectionString(ICollection list)
+        {
+            if (list == null) return "=NULLCOL=";
+            bool needComma = false;
+            var writer = new StringWriter().GetStringBuilder();
+            foreach (object o in list)
+            {
+                if (needComma) writer.Append(",");
+                writer.Append("\"");
+                writer.Append(o);
+                writer.Append("\"");
+                needComma = true;
+            }
+            return writer.ToString();
         }
     }
 }

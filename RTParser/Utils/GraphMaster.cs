@@ -1425,7 +1425,8 @@ namespace RTParser.Utils
 
         public bool DoGraphCommand(string cmd, OutputDelegate console, bool showHelp, string args, Request request)
         {
-            PrintOptions printOptions = request.WriterOptions ?? PrintOptions.CONSOLE_LISTING;
+            PrintOptions printOptions = PrintOptions.CONSOLE_LISTING;
+            if (request != null && request.WriterOptions != null) printOptions = request.WriterOptions;
             printOptions.ClearHistory();
 
             string match;

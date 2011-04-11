@@ -227,7 +227,7 @@ namespace RTParser
         /// <summary>
         /// The individual sentences produced by the bot that form the complete response
         /// </summary>
-        public List<Unifiable> OutputSentences { get; private set; }
+        public List<Unifiable> OutputSentences { get { return ChatOutput.EnglishSentences; }/* ; private set;*/ }
 
         //public Result ParentResult;
 
@@ -280,7 +280,7 @@ namespace RTParser
             altResponder = targetUser;
             request.TargetBot = bot;
             ChatOutput = new ParsedSentences(bot.EnsureEnglish, null, MaxPrintResults);
-            OutputSentences = ChatOutput.SemanticSentences;
+            //OutputSentences = ChatOutput.SemanticSentences;
             writeToLog = writeToLog ?? user.WriteToUserTrace;
             writeToLog = writeToLog ?? request.WriteLine;
             //this.request.TheCurrentResult = this;
@@ -535,7 +535,10 @@ namespace RTParser
             get
             {
                 int ret = _hasSuceeded + (useParentSF ? ParentRequest.HasSuceeded : 0);
-                if (ret < 0) throw new InvalidOperationException();
+                if (ret < 0)
+                {
+                    throw new InvalidOperationException();
+                }
                 return ret;
             }
             set

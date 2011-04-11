@@ -45,7 +45,7 @@ namespace RTParser.AIMLTagHandlers
         }
 
         public override Unifiable CompleteProcess()
-        {            
+        {
             if (RecurseResultValid) return RecurseResult;
             TemplateInfo queryTemplate = query.CurrentTemplate;
             if (queryTemplate != null)
@@ -58,7 +58,29 @@ namespace RTParser.AIMLTagHandlers
                 request.MarkTemplate(queryTemplate);
             }
             Unifiable templateResult = RecurseReal(templateNode, false);
-            return templateResult;
+            Unifiable test = templateResult;
+            if (Unifiable.IsEMPTY(test))
+            {
+                if (QueryHasFailed)
+                {
+                    return FAIL;
+                }
+                if (IsSilentTag(this.templateNode))
+                {
+                    return templateResult;
+                }
+                ResetValues(true);
+                templateResult = RecurseReal(templateNode, false);
+            }
+            string tr = templateResult;
+            string tr2 = RTPBot.ReplaceAll(tr.Replace("THINKYTAG.", " "), "THINKYTAG", " ").Replace("  ", " ").Trim();
+            if (tr != tr2)
+            {
+                if (tr2 == "") return "THINKYTAG";
+                return tr2;
+            }
+            return tr2;
+            //return templateResult;
         }
     }
 }

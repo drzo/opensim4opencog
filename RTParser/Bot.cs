@@ -1285,7 +1285,7 @@ The AIMLbot program.
             {
                 Loader = new AIMLLoader(this, GetBotRequest("EvalAIMLHandler " + cmd));
             }
-            var res = ImmediateAiml(node, user, Loader, null);
+            var res = ImmediateAiml(node, user, Loader);
             return res;
         }
 

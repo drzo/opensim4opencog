@@ -436,7 +436,7 @@ namespace RTParser.AIMLTagHandlers
                             {
                                 if (subRequestrawInput.Contains("STDCATCHALL STDCATCHALL"))
                                 {
-
+                                    // @TODO @debug this
                                 }
                                 writeToLog("{0} SUCCESS RETURN {1}  {2} '{3}'", prefix, subRequestrawInput,
                                            subResult.Score, subResultOutputTrace);
@@ -476,6 +476,7 @@ namespace RTParser.AIMLTagHandlers
                         {
                             salientRequest.ExitSalientSRAI(templateNodeInnerValue, subResultOutput);
                         }
+                        // @TODO @HACK @BUG stops loops?
                         request.DisableTemplateUntilFinished(CurrentTemplate);
                     }
                 }
