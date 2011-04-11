@@ -18,7 +18,7 @@ namespace RTParser
         /// </summary>
         public readonly List<Unifiable> EnglishSentences = new List<Unifiable>();
 
-        private readonly int maxResults;
+        public int maxResults;
 
         private readonly Func<string, string> OutputSentencesToEnglish;
         public readonly List<Unifiable> SemanticSentences = new List<Unifiable>();
@@ -36,7 +36,7 @@ namespace RTParser
         {
             OrignalRawText = rawText;
             OutputSentencesToEnglish = generatePhrase;
-            maxResults = maxSentences;
+            maxResults = maxSentences + 10;
         }
 
 
@@ -344,6 +344,19 @@ namespace RTParser
         public static string EnsureEnglishPassThru(string arg)
         {
             return arg;
+        }
+
+        internal void ClearOutput()
+        {
+            EnglishSentences.Clear();
+            if (NormalizedPaths.Count > 0)
+            {
+                NormalizedPaths.Clear();
+            }
+            if (SemanticSentences.Count > 0)
+            {
+                SemanticSentences.Clear();
+            }
         }
     }
 }
