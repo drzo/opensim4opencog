@@ -828,7 +828,7 @@ namespace RTParser.Utils
                 ISettingsDictionary dict = IsSettingsTag(currentNodeName, request);
                 if (dict != null)
                 {
-                    SettingsDictionary.loadSettingNode(request.TargetBot.InputSubstitutions, currentNode, true, false,
+                    SettingsDictionary.loadSettingNode(dict, currentNode, true, false,
                                                        request);
                     return 1;
                 }
