@@ -664,8 +664,18 @@ namespace RTParser
                 request.MaxTemplates = UNLIMITED;
 
                 // Gathers the Pattern SubQueries!
+                int sentNum = -1;
                 foreach (Unifiable userSentence in parsedSentences.NormalizedPaths)
                 {
+                    sentNum++;
+                    if (request.IsToplevelRequest)
+                    {
+                        string english = parsedSentences.EnglishSentences[sentNum];
+                        if (NatLangDb.WasQuestion(english))
+                        {
+                            request.Requester.Predicates.updateSetting("question", english);
+                        }
+                    }
                     AllQueries.Add(G.gatherQueriesFromGraph(userSentence, request, MatchState.UserInput));
                 }
                 try
