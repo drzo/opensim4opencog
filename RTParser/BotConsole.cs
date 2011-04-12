@@ -1254,6 +1254,7 @@ namespace RTParser
         {
            // return;
             writeChatTrace(s);
+            return;
             action();
         }
 
