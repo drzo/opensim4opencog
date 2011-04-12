@@ -124,7 +124,7 @@ namespace RTParser.AIMLTagHandlers
             {
                 string name = GetAttribValue(templateNode, "name,var", () => templateNodeInnerText, ReduceStarAttribute);
                 bool succeed;
-                Unifiable v = GetActualValue(name, typeof(bot) == GetType() ? "bot" : "get", out succeed);
+                Unifiable v = GetActualValue(name, typeof (bot) == GetType() ? "bot" : "get", out succeed);
                 if (!IsValue(v))
                 {
                     if (!succeed)
@@ -138,7 +138,8 @@ namespace RTParser.AIMLTagHandlers
                         return defaultVal;
                     }
                     // trace the next line to see why
-                    Proc.TraceTest("NULL from success?!", () => GetActualValue(name, typeof (bot) == GetType() ? "bot" : "get", out succeed));
+                    Proc.TraceTest("!IsValue(" + Unifiable.DescribeUnifiable(v) + ") from success?!",
+                                   () => GetActualValue(name, typeof (bot) == GetType() ? "bot" : "get", out succeed));
                     return v;
                 }
                 if (succeed)
@@ -146,8 +147,9 @@ namespace RTParser.AIMLTagHandlers
                     Succeed();
                     return v;
                 }
-                if (request.IsToplevelRequest) return v;
-                return FAIL;
+                //if (request.IsToplevelRequest)
+                return v;
+                //return FAIL;
             }
             return Unifiable.Empty;
         }

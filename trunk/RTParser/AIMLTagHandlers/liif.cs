@@ -133,7 +133,14 @@ namespace RTParser.AIMLTagHandlers
             Unifiable before = InnerSource();
             string s = RecurseReal(templateNode, true);
             //var recurseResult1 = RecurseProcess();
-            if (s == null) return Failure("NULL in FIIF ");
+            if (s == null)
+            {
+                Proc.TraceTest("NULL in FIIF " + ToString(), () =>
+                                                                 {
+                                                                     s = RecurseReal(templateNode, true);
+                                                                 });
+                return Failure("FIIF NULL");
+            }
             Succeed();
             if (RecurseResultValid) return RecurseResult;
             return s;
