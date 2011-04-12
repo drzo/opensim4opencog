@@ -1271,8 +1271,8 @@ namespace RTParser.Utils
                     if (tempStringS.Contains(" " + word + " "))
                     {
                         var skip = templateNode.ParentNode ?? templateNode;
-                        string skiping = "skipping: " + skip.OuterXml;
-                        writeDebugLine("DEBUG9: PROPRIETARY " + skiping);
+                        //string skiping = "skipping: " + skip.OuterXml;
+                        //writeDebugLine("DEBUG9: PROPRIETARY " + skiping);
                         return true;
                     }
                 }

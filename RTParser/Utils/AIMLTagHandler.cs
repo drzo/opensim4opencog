@@ -190,7 +190,7 @@ namespace RTParser.Utils
             {
                 return RecurseResult;
             }
-            return null;
+            //return null;
             return templateNodeInnerText;
         }
 
@@ -632,7 +632,7 @@ namespace RTParser.Utils
                         return FAIL;
                     }
                     test = GetTemplateNodeInnerText();
-                    writeToLogWarn("NULL response in " + query);
+                    if (test == null) writeToLogWarn("NULL response in " + templateNode.OuterXml + " for " + query);
                     string value2;
                     if (CompleteEvaluatution(test, this, out value2))
                     {
@@ -645,6 +645,10 @@ namespace RTParser.Utils
                     {
                         return test;
                     }
+                }
+                if (test == null)
+                {
+                    writeToLogWarn("STILL NULL response in " + templateNode.OuterXml + " for " + query);
                 }
                 return test;
             }
@@ -1036,9 +1040,10 @@ namespace RTParser.Utils
             AIMLTagHandler outerParent = this;
             var passFails = outerParent.QueryResultsCurrent();
             Unifiable vv = null;
+            bool childSuccess;
             try
             {
-                vv = ProcessTagHandlerNode(childNode, protectChildren, saveOnInnerXML, out success,
+                vv = ProcessTagHandlerNode(childNode, protectChildren, saveOnInnerXML, out childSuccess,
                                         tagHandlerChild);
                 if (!tagHandlerChild.IsDeterministic && IsDeterministic)
                 {
@@ -1049,11 +1054,13 @@ namespace RTParser.Utils
             {
                 outerParent.QueryResultsRestore(passFails);
             }
-            if (!success)
+            if (!childSuccess)
             {
-
-                vv = ProcessTagHandlerNode(childNode, protectChildren, saveOnInnerXML, out success,
-                                        tagHandlerChild);
+                Proc.TraceTest("!childSuccess in " + tagHandlerChild, () =>
+                {
+                    vv = ProcessTagHandlerNode(childNode, protectChildren, saveOnInnerXML, out childSuccess,
+                                            tagHandlerChild);
+                });
                 success = true;
                 return vv;
             }
@@ -1061,10 +1068,11 @@ namespace RTParser.Utils
             if (IsNull(vv))
             {
                 success = false;
-                return null;
+                return vv;
             }
             if (IsUnevaluated(vv))
             {
+                success = childSuccess;
                 Unifiable output;
                 if (CompleteEvaluatution(vv, tagHandlerChild, out output))
                 {
@@ -1084,8 +1092,15 @@ namespace RTParser.Utils
             }
             if (!IsNullOrEmpty(vv) || IsSilentTag(childNode))
             {
+                success = true;
                 return vv;
             }
+            if (IsValue(vv))
+            {
+                success = true;
+                return vv;
+            }
+            success = childSuccess;
             return vv;
         }
 
