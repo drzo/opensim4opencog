@@ -1277,7 +1277,7 @@ namespace RTParser.Variables
         {
             if (name == "topic")
             {
-                if (UnsettableTopic.Contains(value.ToLower())) return true;
+                if (UnsettableTopic.Contains(value.ToLower())) return false;
             }
             string s = (string)value;
             if ((s == null) || s.Contains(">"))
