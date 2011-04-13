@@ -10,12 +10,13 @@
     request.GetGraph("default").ForcedSettings.MinSetVars=1;
   </javascript>
 
+  <!--
+
+
+-->
 
   <load filename="aiml/programsharp/*.aiml" />
   <load filename="aiml/stdset/*.aiml" />
-<!--
--->
-
   <load filename="aiml/chomskyAIML/*.aiml" />
 
 

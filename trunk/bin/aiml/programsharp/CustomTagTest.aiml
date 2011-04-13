@@ -63,6 +63,28 @@
   </category>
 
 
+  <category>
+     <pattern>INITSLT</pattern>
+     <template>
+       <think>
+         <set name="uname">hacker</set>
+         <set name="urelation">programmer</set>
+         <set name="botrelation">droid</set>
+       </think>
+     </template>
+   </category>
+   <category>
+   <pattern>TEST1</pattern>
+   <template>
+    <random>
+     <li> A1 <get name="uname"/> </li>
+     <li> A2 <get name="uname"/> </li>
+     <li> A3 <get name="uname"/> </li>
+     <li> A4 </li>
+    </random>
+   </template>
+   </category>
+
  <!-- star vs dash at end
   
 textform> <bot name="~genotype"/> test lineending 1
