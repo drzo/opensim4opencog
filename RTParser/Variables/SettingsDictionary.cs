@@ -1182,13 +1182,102 @@ namespace RTParser.Variables
             return false;// name == "topic";
         }
 
+        public static string[] unsettableTs =
+            {
+                "adverbs",
+                "atomic",
+                "atomic0",
+                "atomic1",
+                "atomic2",
+                "atomic3",
+                "biography",
+                "biography1",
+                "biography2",
+                "biography3",
+                "bot",
+                "bot1",
+                "bot2",
+                "bot3",
+                "botmaster",
+                "client",
+                "client1",
+                "continuations",
+                "default",
+                "default",
+                "default1",
+                "default2",
+                "default3",
+                "default4",
+                "default5",
+                "default6",
+                "general",
+                "general1",
+                "general2",
+                "general3",
+                "general4",
+                "general5",
+                "general6",
+                "general7",
+                "general8",
+                "general9",
+                "general10",
+                "general11",
+                "general12",
+                "general13",
+                "inquiry",
+                "interjection",
+                "iu",
+                "knowledge",
+                "knowledge1",
+                "knowledge2",
+                "knowledge3",
+                "knowledge4",
+                "knowledge5",
+                "knowledge6",
+                "knowledge7",
+                "knowledge8",
+                "knowledge9",
+                "knowledge10",
+                "knowledge11",
+                "knowledge12",
+                "maths",
+                "parts",
+                "pickup",
+                "pickup1",
+                "pickup2",
+                "predicates",
+                "questions",
+                "quotes",
+                "quotes1",
+                "reduce",
+                "reducer",
+                "reducer1",
+                "reductions",
+                "salutations",
+                "stack",
+                "stories",
+                "that",
+                "that1",
+                "that2",
+                "that3",
+                "that4",
+                "that5",
+                "that6",
+                "topics",
+                "words",
+                "xfind",
+                "ok",
+                "that",
+                "nothing"
+            };
+
+        public static HashSet<string> UnsettableTopic = new HashSet<string>(unsettableTs);
+        
         protected bool AllowedNameValue(string name, Unifiable value)
         {
             if (name == "topic")
             {
-                if (value == "general" || value.AsString().StartsWith("reduc") || value == "Nothing" || value == "that" ||
-                    value == "ok")
-                    return false;
+                if (UnsettableTopic.Contains(value.ToLower())) return true;
             }
             string s = (string)value;
             if ((s == null) || s.Contains(">"))
