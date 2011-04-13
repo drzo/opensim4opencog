@@ -754,7 +754,7 @@ namespace RTParser
             if (ExecCmdSetVar(robot, showHelp, input, console, cmd, args, targetBotUser)) return true;
             if (ExecCmdBot(robot, showHelp, console, cmd, args, targetBotUser)) return true;
 
-            if (showHelp || cmd == "proof")
+            if (showHelp || cmd == "proof" || cmd == "botproof")
             {
                 lock (myUser.TemplatesLock)
                 {
@@ -796,13 +796,18 @@ namespace RTParser
         }
 
 
-        [HelpText("@proof [clear|enable|reset|disable|[save [filename.aiml]]] - clears or prints a content buffer being used")]
-        [CommandText("proof", "prf")]
+        [HelpText("@[bot]proof [clear|enable|reset|disable|[save [filename.aiml]]] - clears or prints a content buffer being used")]
+        [CommandText("proof", "prf", "botproof")]
         static internal bool ExecProof(RTPBot robot, string cmd, OutputDelegate console, bool showHelp, string args, User myUser)
         {
 
             if (showHelp)
-                console("@proof [clear|enable|reset|disable|[save [filename.aiml]]] - clears or prints a content buffer being used");
+                console("@[bot]proof [clear|enable|reset|disable|[save [filename.aiml]]] - clears or prints a content buffer being used");
+            if (cmd == "botproof")
+            {
+                myUser = robot.BotAsUser;
+                cmd = "proof";
+            }
             if (cmd == "proof")
             {
                 PrintOptions printOptions = robot.LastRequest.WriterOptions ?? PrintOptions.CONSOLE_LISTING;
@@ -861,7 +866,7 @@ namespace RTParser
 
                     if (args == "clear" || args == "reset")
                     {
-                        myUser.DisabledTemplates.Clear();
+                        // dont revive disabled templates on "clear" // myUser.DisabledTemplates.Clear();
                         myUser.ProofTemplates.Clear();
                         myUser.UsedChildTemplates.Clear();
                         myUser.VisitedTemplates.Clear();
