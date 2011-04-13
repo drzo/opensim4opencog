@@ -964,8 +964,76 @@
           </Files>
     </Project>
 
+    <Project name="CogbotLib" path="bin" type="Library" frameworkVersion="v3_5">
+      <!--
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../bin/</OutputPath>
+          <XmlDocFile>CogbotLib.XML</XmlDocFile>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
 
-    <Project name="Cogbot" path="Cogbot" type="exe" frameworkVersion="v3_5">
+          <OutputPath>../bin/</OutputPath>
+          <XmlDocFile>CogbotLib.XML</XmlDocFile>
+        </Options>
+      </Configuration>
+     -->
+      <ReferencePath>../bin</ReferencePath>
+      
+      <Reference name="MushDLR223"  localCopy="false"/>
+       <Files>
+        <Match path="cynd/programk" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="PreserveNewest"/>
+        <Match path="cynd/cyc_pl" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="PreserveNewest"/>
+        <!--<Match path="cynd/dcgplus" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="PreserveNewest"/>-->
+        <Match path="cynd/CHAT-80" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="PreserveNewest"/>
+        <Match path="cynd/logicmoo_nl" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="PreserveNewest"/>
+        <Match path="cynd/logicmoo" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="PreserveNewest"/>
+        <Match path="cynd/TALK" pattern="*.pl" recurse="false" buildAction="EmbeddedResource" copyToOutput="PreserveNewest"/>
+
+        <Match path="." pattern="*.xml" recurse="false" buildAction="EmbeddedResource" copyToOutput="PreserveNewest"/>
+
+        <Match path="." pattern="*.cloj" recurse="true" buildAction="EmbeddedResource" copyToOutput="PreserveNewest"/>
+        <Match path="." pattern="*.lisp" recurse="true" buildAction="EmbeddedResource" copyToOutput="PreserveNewest"/>
+        <Match path="." pattern="*.config" recurse="true" buildAction="Content" copyToOutput="PreserveNewest"/>
+        <Match path="." pattern="*.json" recurse="true" buildAction="EmbeddedResource" copyToOutput="PreserveNewest"/>
+        <!--
+        <Match path="cynd/notaiml" pattern="*.*" recurse="false" buildAction="EmbeddedResource" copyToOutput="Always"/>
+        <Match path="config" pattern="*.*" recurse="true" buildAction="EmbeddedResource" copyToOutput="Always"/>
+        <Match path="cynd" pattern="*.*" recurse="false" buildAction="EmbeddedResource" copyToOutput="Always"/>
+        <Match path="." pattern="*." recurse="true" buildAction="EmbeddedResource" copyToOutput="Always"/>
+          <Match path="." pattern="*.*l" recurse="true" buildAction="Content" copyToOutput="Always"/>
+       <Match path="." pattern="*.*p" recurse="true" buildAction="Content" copyToOutput="Always"/>
+       <Match path="." pattern="*.*j" recurse="true" buildAction="Content" copyToOutput="Always"/>
+       <Match path="." pattern="*.*g" recurse="true" buildAction="Content" copyToOutput="Always"/>
+       <Match path="." pattern="*.*i" recurse="true" buildAction="Content" copyToOutput="Always"/>
+       <Match path="." pattern="*.*t" recurse="true" buildAction="Content" copyToOutput="Always"/>
+       
+       <unused>        <Match path="." pattern="*.*j" recurse="true" buildAction="Content" copyToOutput="Always"/>
+       <Match path="nldata" pattern="*.xml" recurse="true" buildAction="Content" copyToOutput="Always"/>
+       <Match path="." pattern="*.*" recurse="true" buildAction="Content" copyToOutput="Always"> 
+                <Exclude name=".svn"/>
+                <Exclude name="*svn*"/>
+                <Exclude name="*bak"/>
+                <Exclude name="nldata"/>
+                <Exclude name="*bak"/>
+                <Exclude name="_ReSharper.ABuildStartup32.vshost"/>
+                <Exclude name="obj"/>
+                <Exclude name="*.dll"/>
+                <Exclude name="*.exe"/>
+                <Exclude name="*.pdb"/>
+                <Exclude name="*.so"/>
+                <Exclude name="*.back"/>
+        </Match>
+       </unused> 
+        -->
+
+        </Files>
+ </Project>
+            
+
+     <Project name="Cogbot" path="Cogbot" type="exe" frameworkVersion="v3_5">
        <Configuration name="Debug">
          <Options>
            <OutputPath>../bin/</OutputPath>
