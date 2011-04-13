@@ -390,6 +390,7 @@ namespace RTParser
                 Predicates.IsIdentityReadOnly = false;
                 Predicates["name"] = value;
                 Predicates["me"] = value;
+                Predicates["id"] = UserID;
                 Predicates["myself"] = value;
                 Predicates["i"] = value;
                 Predicates["my"] = NatLangDb.MakePossesive(value);
