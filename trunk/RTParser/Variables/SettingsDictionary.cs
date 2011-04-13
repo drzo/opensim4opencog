@@ -83,7 +83,7 @@ namespace RTParser.Variables
         private List<ParentProvider> _listeners = new List<ParentProvider>();
         // fallbacks (therefore inherits)
         private readonly PrefixProvider prefixProvider;
-        internal bool IsIdentityReadOnly = true;
+        internal bool IsIdentityReadOnly = false;
         internal bool SuspendUpdates = false;
 
         /// <summary>
