@@ -1152,6 +1152,12 @@ namespace cogbot.TheOpenSims
 
         private void RequestMapRegionTerrain()
         {
+            var TheSimulator = this.TheSimulator;
+            if (TheSimulator == null)
+            {
+                Debug("Not ready for Requesting Terrain " + RegionName);
+                return;
+            }
             lock (RequestMapRegionTerrainLock)
             {
                 if (!RequestMapRegionTerrainOnce && IsLegalSimName(RegionName))
