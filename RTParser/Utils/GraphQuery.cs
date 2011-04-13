@@ -78,9 +78,11 @@ namespace RTParser.Utils
             get { return TheRequest.CurrentResult; }
         }
 
-        public ICollection<GraphMaster> DisallowedGraphs
+
+        public bool IsAllowedGraph(GraphMaster graph)
         {
-            get { return TheRequest.ParentMostRequest.DisallowedGraphs; }
+            if (!TheRequest.IsAllowedGraph(graph)) return false;
+            return true;
         }
 
 

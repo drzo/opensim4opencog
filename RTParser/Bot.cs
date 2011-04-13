@@ -1533,16 +1533,16 @@ The AIMLbot program.
                 return current;
             }
 
-            if (false)
+            if (true)
             {
                 if (_g != null && graphPath == "default")
                 {
-                    return _g;
+                    return GraphMaster;
                 }
 
                 if (_h != null && graphPath == "heardselfsay")
                 {
-                    return _h;
+                    return HeardSelfSayGraph;
                 }
             }
             if (graphPath == "parent" || graphPath == "parallel")

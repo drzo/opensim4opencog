@@ -506,7 +506,7 @@ namespace RTParser
             try
             {
                 GraphMaster G = request.Graph;
-                if (request.ParentMostRequest.DisallowedGraphs.Contains(G))
+                if (!request.IsAllowedGraph(G))
                 {
                     writeToLog("ChatWithRequest4: DisallowedGraphs " + G);
                     return (Result) request.CurrentResult;

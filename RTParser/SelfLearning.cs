@@ -25,9 +25,11 @@ namespace RTParser
         private bool AllreadyUnderstandingSentences = false;
         readonly private object AllreadyUnderstandingSentencesLock = new object();
         public static bool UnderstandSentenceOutsideQueue = true;
+        private bool TurnOffSelfListening = true;
 
         public void HeardSelfSayVerbal(User theFactSpeaker, User toWhom, string message, Result result, ThreadControl control)
         {
+            if (this.TurnOffSelfListening) return;
             message = ToHeard(message);
             if (string.IsNullOrEmpty(message)) return;
             currentEar.AddMore(message);
@@ -49,6 +51,7 @@ namespace RTParser
 
         public Result HeardSelfSayResponse(User theFactSpeaker, User toWhom, string message, Result resultOfToWhomSpeakingToFactSpeaker, ThreadControl control)
         {
+            if (this.TurnOffSelfListening) return resultOfToWhomSpeakingToFactSpeaker;
             var result = resultOfToWhomSpeakingToFactSpeaker;
             Result LR = null;
             if (message == null) return result;
@@ -84,6 +87,7 @@ namespace RTParser
             
         public Result HeardSelfSay1Sentence(User theFactSpeaker, User toWhom, string message, Result result, ThreadControl control)
         {
+            if (this.TurnOffSelfListening) return result;
             bool toWhomNonNull = toWhom != null;
             string whatListenerLastSaid = null;
             if (toWhomNonNull) whatListenerLastSaid = toWhom.JustSaid;
@@ -96,6 +100,7 @@ namespace RTParser
 
         public Result HeardSelfSay11Sentence(User theFactSpeaker, User toWhom, string message, Result result, ThreadControl control)
         {
+            if (this.TurnOffSelfListening) return result;
             Result LR = result;
             if (message == null) return LR;
 
@@ -183,6 +188,7 @@ namespace RTParser
 
         private Result RememberSpoken(User theFactSpeaker, User toWhom, string desc, string message, Result result, ThreadControl control)
         {
+            if (this.TurnOffSelfListening) return result;
             message = ToHeard(message);
             if (string.IsNullOrEmpty(message)) return result;
             writeChatTrace(desc);
@@ -203,6 +209,7 @@ namespace RTParser
 
         private Result UnderstandSentence(User theFactSpeaker, User toWhom, string desc, string message, Result res, ThreadControl control)
         {
+            if (this.TurnOffSelfListening) return res;
             string whatListenerLastSaid = toWhom == null ? null : toWhom.JustSaid;
             theFactSpeaker.JustSaid = message;
             Result LR = res;
@@ -219,31 +226,23 @@ namespace RTParser
             }
             if (AllreadyUnderstandingSentences)
             {
-                writeDebugLine("HEARDSELF: TOOOO FAST - " + message);
+                writeDebugLineBannered("HEARDSELF: TOOOO FAST - " + message);
                 return res;
             }
             lock (AllreadyUnderstandingSentencesLock)
             {
                 if (AllreadyUnderstandingSentences)
                 {
-                    writeDebugLine("HEARDSELF: TWOOOO FAST - " + message);
+                    writeDebugLineBannered("HEARDSELF: TWOOOO FAST - " + message);
                     return res;
                 }
                 AllreadyUnderstandingSentences = true;
             }
-            writeDebugLine("-----------------------------------------------------------------");
-            writeDebugLine("HEARDSELF: " + message);
-            writeDebugLine("-----------------------------------------------------------------");
+            writeDebugLineBannered("HEARDSELF: " + message);
             //return LR;
             try
             {
                 if (message == null || message.Length < 4) return null;
-                Request resrequest = null;
-                if (res != null)
-                {
-                    resrequest = res.request;
-                    resrequest.ParentMostRequest.DisallowedGraphs.Clear();
-                }
                 Request r = theFactSpeaker.CreateRequest(message, toWhom, HeardSelfSayGraph, null);
                 // irregardless we only mentally played what the responder responded with
                 r.ResponderSelfListens = false;
@@ -253,23 +252,24 @@ namespace RTParser
                 {
                     r.WhyComplete = "THREADABORTED";
                 };
-                var G = HeardSelfSayGraph ?? GraphMaster;
+                var G = HeardSelfSayGraph;
+                if (G == null)
+                {
+                    writeDebugLineBannered("HeardSelfSayGraph == null: " + message + " res = " + res);
+                    return res;
+                }
                 r.Graph = G;
                 r.IsTraced = true;
                 r.IsToplevelRequest = true;
                 try
                 {
                     Result res2 = ChatWithRequest(r);
-                    writeDebugLine("-----------------------------------------------------------------");
-                    writeDebugLine("COMPLETED HEARDSELF: " + message + " res = " + res2);
-                    writeDebugLine("-----------------------------------------------------------------");
+                    writeDebugLineBannered("COMPLETED HEARDSELF: " + message + " res = " + res2);
                     return res2;
                 }
                 catch (ChatSignal e)                
                 {
-                    writeDebugLine("-----------------------------------------------------------------");
-                    writeDebugLine("INCOMPLETE HEARDSELF: " + message + " req = " + r + " " + e);
-                    writeDebugLine("-----------------------------------------------------------------");
+                    writeDebugLineBannered("INCOMPLETE HEARDSELF: " + message + " req = " + r + " " + e);
                     throw;
                 }
                 catch (Exception e)
@@ -286,6 +286,13 @@ namespace RTParser
                 if (toWhom != null) toWhom.JustSaid = whatListenerLastSaid;
                 theFactSpeaker.JustSaid = message;
             }
+        }
+
+        internal static void writeDebugLineBannered(string message)
+        {
+            writeDebugLine("-----------------------------------------------------------------");
+            writeDebugLine(message);
+            writeDebugLine("-----------------------------------------------------------------");
         }
 
         private void AddHeardPreds(string message, SettingsDictionary dictionary)

@@ -727,7 +727,7 @@ namespace RTParser.Utils
         private bool getQueries(Node rootNode, Unifiable upath, Request request, MatchState matchstate, int index,
                                 StringAppendableUnifiableImpl wildcard, GraphQuery toplevel)
         {
-            if (toplevel.DisallowedGraphs.Contains(this))
+            if (!toplevel.IsAllowedGraph(this))
             {
                 return false;
             }
@@ -975,7 +975,7 @@ namespace RTParser.Utils
             foreach (GraphMaster p in CopyOf(totry))
             {
                 if (request.IsTimedOutOrOverBudget) return pl;
-                if (request.TopLevelQuery.DisallowedGraphs.Contains(p)) continue;
+                if (!request.IsAllowedGraph(p)) continue;
                 if (p != null)
                 {
                     GraphMaster g = request.Graph;
