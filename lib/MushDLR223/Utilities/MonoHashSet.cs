@@ -23,14 +23,74 @@ namespace MushDLR223.Utilities
             lock (SyncLock) return RealListT.ToArray();
         }
 
-        public event Action<T> OnAdd;
-        public event Action<T> OnRemove;
-        public event Action OnModified;
+        public event Action<T> ItemAdded;
+        public event Action<T> ItemRemoved;
+        public event Action ListModified;
+
+        protected void OnItemAdded(object item)
+        {
+            if (ItemAdded != null) ItemAdded((T)item);
+        }
+        protected void OnItemRemoved(object item)
+        {
+            if (ItemRemoved != null) ItemRemoved((T) item);
+        }
+        protected void OnListModified()
+        {
+            if (ListModified != null) ListModified();
+        }
         private readonly IList realList = new List<T>();
         public List<T> RealListT
         {
             get { return (List<T>)realList; }
         }
+
+        public void Set(int index, object value)
+        {
+            lock (SyncLock)
+            {
+                T old = RealListT[index];
+                if (object.Equals(old, value)) return;
+                OnItemRemoved(old);
+                OnItemAdded(value);
+                realList[index] = value;
+                ListModified();
+            }
+        }
+        void RemoveAtImpl(int index)
+        {
+            lock (SyncLock)
+            {
+                T t = ((IList<T>)this)[index];
+                OnItemRemoved(t);
+                realList.RemoveAt(index);
+                OnListModified();
+            }
+        }
+        private void InsertImpl(int index, object value)
+        {
+            lock (SyncLock)
+            {
+                bool removed = false;
+                if (realList.Count != 0)
+                {
+                    if (realList[0] == value)
+                    {
+                        return;
+                    }
+                    if (Contains(value))
+                    {
+                        realList.Remove(value);
+                        removed = true;
+                    }
+                }
+                if (!removed) OnItemAdded((T)value);
+                realList.Insert(index, value);
+                OnListModified();
+            }
+        }
+
+
         /// <summary>
         /// Adds an item to the <see cref="T:System.Collections.IList"/>.
         /// </summary>
@@ -75,10 +135,7 @@ namespace MushDLR223.Utilities
         ///                 </exception><filterpriority>2</filterpriority>
         public void Clear()
         {
-            lock (SyncLock)
-            {
-                realList.Clear();
-            }
+            ClearImpl();
         }
 
         /// <summary>
@@ -107,11 +164,7 @@ namespace MushDLR223.Utilities
         ///                 </exception><filterpriority>2</filterpriority>
         public void Insert(int index, object value)
         {
-            lock (SyncLock)
-            {
-                realList.Remove(value);
-                realList.Insert(index, value);
-            }
+            InsertImpl(index, value);
         }
 
         /// <summary>
@@ -124,13 +177,9 @@ namespace MushDLR223.Utilities
         ///                 </exception><filterpriority>2</filterpriority>
         public void Remove(object value)
         {
-            RemoveImpl(value);
+            Remove((T)value);
         }
 
-        public void RemoveImpl(object value)
-        {
-            lock (SyncLock) realList.Remove(value);
-        }
         /// <summary>
         /// Removes the <see cref="T:System.Collections.IList"/> item at the specified index.
         /// </summary>
@@ -142,7 +191,7 @@ namespace MushDLR223.Utilities
         ///                 </exception><filterpriority>2</filterpriority>
         public void RemoveAt(int index)
         {
-            lock (SyncLock) realList.RemoveAt(index);
+            RemoveAtImpl(index);
         }
 
         /// <summary>
@@ -158,13 +207,13 @@ namespace MushDLR223.Utilities
         T IList<T>.this[int index]
         {
             get { lock (SyncLock) return RealListT[index]; }
-            set { lock (SyncLock) realList[index] = value; }
+            set { Set(index, value); }
         }
 
         object IList.this[int index]
         {
             get { lock (SyncLock) return RealListT[index]; }
-            set { lock (SyncLock) realList[index] = value; }
+            set { Set(index, (T)value); }
         }
 
         /// <summary>
@@ -200,13 +249,13 @@ namespace MushDLR223.Utilities
             lock (SyncLock)
             {
                 if (Count == 0) return;
-                foreach (var set in realList)
+                foreach (var set in CopyOf())
                 {
                     Remove(set);
                 }
                 //  realList.Clear();
             }
-            if (OnModified != null) OnModified();
+            OnListModified();
         }
 
         protected int CountImpl
@@ -266,13 +315,7 @@ namespace MushDLR223.Utilities
 
         void IList<T>.RemoveAt(int index)
         {
-            lock (SyncLock)
-            {
-                T t = ((IList<T>)this)[index];
-                if (OnRemove != null) OnRemove(t);
-                realList.RemoveAt(index);
-                if (OnModified != null) OnModified();
-            }
+            RemoveAtImpl(index);
         }
 
         public void RemoveRange(int index, int count)
@@ -284,11 +327,11 @@ namespace MushDLR223.Utilities
                 lock (SyncLock)
                 {
                     T t = ((IList<T>)this)[rindex++];
-                    if (OnRemove != null) OnRemove(t);
+                    OnItemRemoved(t);
                 }
             }
             RealListT.RemoveRange(index, count);
-            if (OnModified != null) OnModified();
+            OnListModified();
         }
 
         public void AddRange(System.Collections.Generic.IEnumerable<T> collection)
@@ -300,12 +343,12 @@ namespace MushDLR223.Utilities
                 if (AddToNoNotify(e))
                 {
                     b = true;
-                    if (OnAdd != null) OnAdd(e);
+                    OnItemAdded(e);
                 }
             }
             if (b)
             {
-                if (OnModified != null) OnModified();
+                OnListModified();
             }
         }
 
@@ -330,7 +373,7 @@ namespace MushDLR223.Utilities
         {
             lock (SyncLock)
             {
-                if (OnRemove != null) OnRemove(item);
+                OnItemRemoved(item);
                 return RealListT.Remove(item);
             }
         }
@@ -369,8 +412,8 @@ namespace MushDLR223.Utilities
             bool b = AddToNoNotify(item);
             if (b)
             {
-                if (OnAdd != null) OnAdd(item);
-                if (OnModified != null) OnModified();
+                OnItemAdded(item);
+                OnListModified();
             }
             return b;
         }
@@ -502,7 +545,7 @@ namespace MushDLR223.Utilities
         ///                 </exception>
         void IList<T>.Insert(int index, T item)
         {
-            lock (SyncLock) realList.Insert(index, item);
+            InsertImpl(index, item);
         }
 
         /// <summary>
@@ -523,7 +566,7 @@ namespace MushDLR223.Utilities
             }
             set
             {
-                lock (SyncLock) RealListT[index] = value;
+                Set(index, value);
             }
         }
 
