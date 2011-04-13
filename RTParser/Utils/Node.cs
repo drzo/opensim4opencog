@@ -822,13 +822,13 @@ namespace RTParser.Utils
         public static bool DontDoKeyIndexingHacks = true;
         private static string ToKey(Unifiable fs0W)
         {
-            if (DontDoKeyIndexingHacks) return fs0W;
             bool doEs = !DontDoKeyIndexingHacks;
             bool doSEs = !DontDoKeyIndexingHacks;
             string fs0 = fs0W.ToUpper();
+            
             if (false && NatLangDb.BeAUX.Contains(" " + fs0 + " ")) return "BeAux";
 
-            if (fs0.StartsWith("FAV")) return "FAV";
+            if (!DontDoKeyIndexingHacks) if (fs0.StartsWith("FAV")) return "FAV";
 
             string fs00 = fs0;
             string fs = fs0;
@@ -837,6 +837,8 @@ namespace RTParser.Utils
             {
                 return "";
             }
+            if (DontDoKeyIndexingHacks) return fs0;
+
             char c0 = fs0[fl - 1];
             char c = c0;
             if (fl > 4)
