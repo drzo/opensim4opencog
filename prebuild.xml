@@ -940,8 +940,9 @@
 
         <!-- found in assemblies// -->
         <Reference name="fmodex-dotnet.dll" localCopy="false"/>
-        <Reference name="Tao.OpenGl.dll" localCopy="false"/>
-        <Reference name="Tao.Platform.Windows.dll" localCopy="false" />
+        <Reference name="OpenTK.dll" localCopy="false"/>
+        <Reference name="OpenTK.Compatibility.dll" localCopy="false"/>
+        <Reference name="OpenTK.GLControl.dll" localCopy="false"/>
         <Reference name="Tools.dll" localCopy="false" />
         <Reference name="log4net.dll" localCopy="false" />
         <Reference name="CommandLine.dll"  localCopy="false" />
