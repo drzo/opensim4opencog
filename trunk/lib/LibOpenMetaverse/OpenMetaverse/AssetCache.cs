@@ -376,7 +376,7 @@ namespace OpenMetaverse
         {
             lock (CacheLock)
             {
-                if (name.IndexOf("*?") != -1)
+                if (name.IndexOfAny("*?".ToCharArray()) != -1)
                 {
                     DirectoryInfo di = new DirectoryInfo(Path.GetDirectoryName(name));
                     FileInfo[] files = di.GetFiles(Path.GetFileName(name), SearchOption.TopDirectoryOnly);
