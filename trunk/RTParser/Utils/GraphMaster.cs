@@ -1191,8 +1191,14 @@ namespace RTParser.Utils
         {
             //string hide = "";
             if (items == null) return;
-            foreach (IAIMLInfo ci in items)
+            foreach (var cio in items)
             {
+                IAIMLInfo ci = cio as IAIMLInfo;
+                if (ci == null)
+                {
+                    fs.WriteLine("" + cio);
+                    continue;
+                }
                 string graphName = ci.Graph.graphName;
                 if (printOptions.DontPrint(ci)) continue;
                 string c = ci.ToFileString(printOptions);
@@ -1201,8 +1207,8 @@ namespace RTParser.Utils
 
                 if (printOptions.RemoveDuplicates)
                 {
-                    printOptions.Writting(ci);
-                    printOptions.Writting(cws);
+                    printOptions.Writting(c);
+                    if (cws != c) printOptions.Writting(cws);
                 }
                 if (written != null) written.Add(ci);
                 string ss = c.TrimEnd();
