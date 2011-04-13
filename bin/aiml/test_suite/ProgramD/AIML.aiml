@@ -11,16 +11,14 @@
     This file contains test cases to verify the correct operations of Program D.
     Each test case is documented with what is expected to be the correct response.
     -->
-    <category>
-        <pattern>CONNECT</pattern>
-        <template>Connected to test case AIML set.</template>
-    </category>
+    <category><pattern>CONNECT</pattern><template>Connected to test case AIML set.</template></category>
     <category>
         <pattern>TESTATOMIC</pattern>
         <template>Test case #01.<html:br/>
             Test passed.
         </template>
     </category>
+    <category><pattern>CONNECT</pattern><template>Connected to test case AIML set.</template></category>
     <category>
         <pattern>TESTDISPLAYSET</pattern>
         <template>Test case #02.<html:br/>
@@ -81,13 +79,35 @@
         </template>
     </category>
     <category>
-        <pattern>TESTSIMPLECONDITIONA</pattern>
-        <template>Test case #07a.<html:br/>
-            <srai>blindsetmatch</srai>
-            <condition name="test" value="MATCH">Test passed.</condition>
-            <think><set name="test"/></think>
-        </template>
+      <pattern>TESTSIMPLECONDITIONA</pattern>
+      <template>
+        Test case #07a.<html:br/>
+        <srai>blindsetmatch</srai>
+        <condition name="test" value="MATCH">Test passed.</condition>
+        <think>
+          <set name="test"/>
+        </think>
+      </template>
     </category>
+  <category>
+    <pattern>TESTSIMPLECONDITIONB</pattern>
+    <template>
+      Test case #07b.<html:br/>
+      <srai>blindsetmatch</srai>
+      <get name="test"></get>
+      <condition name="test" value="MATCH">Test passed.</condition>
+    </template>
+  </category>
+  <category>
+    <pattern>TESTSIMPLECONDITIONC</pattern>
+    <template>
+      Test case #07c.<html:br/>
+      <condition name="test" value="MATCH">Test passed.</condition>
+      <think>
+        <set name="test"/>
+      </think>
+    </template>
+  </category>
     <category>
         <pattern>BLINDSETMATCH</pattern>
         <template>
