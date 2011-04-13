@@ -1,8 +1,31 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<aiml graph="default">
+<aiml>
 
 
-   
+  <category>
+    <pattern>QT</pattern>
+    <template>
+      <system>
+        @chgraph programd
+        @load aiml/test_suite/ProgramD/AIML.aiml
+        @load aiml/test_suite/ProgramD/predicates.xml
+        @load aiml/test_suite/ProgramD/properties.xml
+        @load aiml/test_suite/ProgramD/substitutions.xml        
+      </system>
+    </template>
+  </category>
+
+  <category>
+    <pattern>QT0</pattern>
+    <template>
+      <system>@chgraph programd</system>
+      <learn graph="ProgramD" filename="aiml/test_suite/ProgramD/AIML.aiml" />
+      <learn graph="ProgramD" filename="aiml/test_suite/ProgramD/predicates.xml" />
+      <learn graph="ProgramD" filename="aiml/test_suite/ProgramD/properties.xml" />
+      <learn graph="ProgramD" filename="aiml/test_suite/ProgramD/substitutions.xml" />
+      <pre> now @load aiml/test_suite/ProgramD/AIML.xml </pre>
+    </template>
+  </category>
   <!--
 
  <learn graph="chomskyAIML" path="aiml/chomskyAIML/" />
@@ -26,17 +49,15 @@
     </template>
   </category>
 
+  <!-- 
   <category>
     <pattern>QT</pattern>
     <template>
-      <learn graph="ProgramD" filename="aiml\test_suite\ProgramD\AIML.aiml" />
-      <learn graph="ProgramD" filename="aiml\test_suite\ProgramD\predicates.xml" />
-      <learn graph="ProgramD" filename="aiml\test_suite\ProgramD\properties.xml" />
-      <learn graph="ProgramD" filename="aiml\test_suite\ProgramD\substitutions.xml" />
-      <system>@chgraph programd</system>
-      <pre> now @load aiml\test_suite\ProgramD\AIML.xml </pre>
+      <learn graph="ProgramD" filename="aiml\\test_suite\\ProgramD\\AIML.aiml" />
     </template>
   </category>
+-->
+
   <aiml graph="ProgramD">
     <category>
       <pattern>QT1</pattern>
@@ -50,11 +71,13 @@
   <category>
     <pattern>QT2</pattern>
     <template>
+      <srai>
       <learn graph="ProgramQ" filename="aiml\test_suite\ProgramQ\TestSuite.aiml" />
       <learn graph="ProgramQ" filename="aiml\test_suite\ProgramQ\bot.xml" />
       <learn graph="ProgramQ" filename="aiml\test_suite\ProgramQ\vars.xml" />
       <learn graph="ProgramQ" filename="aiml\test_suite\ProgramQ\substitutions.xml" />
       <system>@chgraph programq</system>
+      </srai>
     </template>
   </category>
   <aiml graph="ProgramQ">
@@ -75,10 +98,10 @@
 
   <category>
     <pattern>PROGRAMD</pattern>
-    <template>
+    <template graph="ProgramD">
       <learn graph="ProgramD" dir="ProgramD/"/>
       <srai>@chgraph programd</srai>
-      <srai>@load <bot name="~genotype"/>\test_suite\ProgramD\<bot name="~genokind"/>.xml</srai>
+      <srai>@load aiml\test_suite\ProgramD\AIML.xml</srai>
     </template>
   </category>
 

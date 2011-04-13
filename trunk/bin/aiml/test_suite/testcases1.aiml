@@ -65,6 +65,13 @@ BOT: That is "That is an error:"
  -->
 
 <category>
+<pattern>THAT</pattern>
+<template>
+That is "<that/>"
+</template>
+</category>
+
+<category>
 <pattern>TESTCASE THAT</pattern>
 <template>
 More than one. 
