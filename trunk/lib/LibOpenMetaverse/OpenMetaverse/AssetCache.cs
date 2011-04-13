@@ -137,6 +137,10 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="assetID">UUID of the asset we want to get</param>
         /// <returns>Raw bytes of the asset, or null on failure</returns>
+        public byte[] GetCachedAssetBytes(UUID assetID)
+        {
+            lock (CacheLock) return GetCachedAssetBytes0(assetID, AssetType.Unknown);
+        }
         public byte[] GetCachedAssetBytes(UUID assetID, AssetType assetType)
         {
             lock (CacheLock) return GetCachedAssetBytes0(assetID, assetType);
@@ -199,6 +203,15 @@ namespace OpenMetaverse
         /// <returns>String with the file name of the cahced asset</returns>
         public string FileName(UUID assetID, AssetType assetType)
         {
+            string filename = FileNameWild(assetID, AssetType.Unknown);
+            if (filename.Contains("*"))
+            {
+                filename = FindableName(filename);
+            }
+            return filename;
+        }
+        public string FileNameWild(UUID assetID, AssetType assetType)
+        {
             if (ComputeAssetCacheFilename != null) {
                 return ComputeAssetCacheFilename(Client.Settings.ASSET_CACHE_DIR, assetID) +
                    AssetTypeExtension(assetType);
@@ -212,7 +225,7 @@ namespace OpenMetaverse
             switch (assetType)
             {
                 case AssetType.Unknown:
-                    break;
+                    return ".*";
                 case AssetType.ImageTGA:
                 case AssetType.ImageJPEG:
                 case AssetType.Texture:
@@ -278,6 +291,11 @@ namespace OpenMetaverse
         /// <param name="assetID">UUID of the asset</param>
         /// <param name="assetData">Raw bytes the asset consists of</param>
         /// <returns>Weather the operation was successfull</returns>
+        public bool SaveAssetToCache(UUID assetID, byte[] assetData)
+        {
+            lock (CacheLock) return SaveAssetToCache0(assetID, assetData, AssetType.Unknown);
+        }
+
         public bool SaveAssetToCache(UUID assetID, byte[] assetData, AssetType assetType)
         {
             lock (CacheLock) return SaveAssetToCache0(assetID, assetData, assetType);
@@ -334,6 +352,10 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="assetID">UUID of the asset</param>
         /// <returns>True is the asset is stored in the cache, otherwise false</returns>
+        public bool HasAsset(UUID assetID)
+        {
+            return HasAsset(assetID, AssetType.Unknown);
+        }
         public bool HasAsset(UUID assetID, AssetType assetType)
         {
             if (!Operational())
@@ -344,7 +366,32 @@ namespace OpenMetaverse
 
         private bool Exists(string name)
         {
-            lock (CacheLock) return File.Exists(name);
+            lock (CacheLock)
+            {
+                return File.Exists(FindableName(name));
+            }
+        }
+
+        private string FindableName(string name)
+        {
+            lock (CacheLock)
+            {
+                if (name.IndexOf("*?") != -1)
+                {
+                    DirectoryInfo di = new DirectoryInfo(Path.GetDirectoryName(name));
+                    FileInfo[] files = di.GetFiles(Path.GetFileName(name), SearchOption.TopDirectoryOnly);
+                    if (files.Length == 0)
+                    {
+                        if (name.EndsWith(".*"))
+                        {
+                            name = name.Substring(0, name.Length - 1) + "jp2";
+                        }
+                        return name;
+                    }
+                    return files[0].FullName;
+                }
+            }
+            return name;
         }
 
         /// <summary>
