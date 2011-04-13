@@ -641,6 +641,7 @@
         <Reference name="OpenMetaverseTypes"/>
         <Reference name="OpenMetaverse.StructuredData"/>
         <!-- <Reference name="OpenMetaverse.Http"/> -->
+        <Reference name="zlib.net.dll" localCopy="false"/>
         <Reference name="PrimMesher.dll" localCopy="false"/>
         <Reference name="XMLRPC" localCopy="false"/>
         <Files>
@@ -964,6 +965,7 @@
     </Project>
 
     <Project name="CogbotLib" path="bin" type="Library" frameworkVersion="v3_5">
+      <!--
       <Configuration name="Debug">
         <Options>
           <OutputPath>../bin/</OutputPath>
@@ -977,7 +979,7 @@
           <XmlDocFile>CogbotLib.XML</XmlDocFile>
         </Options>
       </Configuration>
-
+     -->
       <ReferencePath>../bin</ReferencePath>
       
       <Reference name="MushDLR223"  localCopy="false"/>
