@@ -810,7 +810,10 @@ namespace RTParser
             }
             if (cmd == "proof")
             {
-                PrintOptions printOptions = robot.LastRequest.WriterOptions ?? PrintOptions.CONSOLE_LISTING;
+                PrintOptions printOptions = PrintOptions.CONSOLE_LISTING;
+                Request request = robot.LastRequest;
+                if (request != null) printOptions = request.WriterOptions;
+                printOptions.ClearHistory();
                 console("-----------------------------------------------------------------");
                 Request ur = robot.MakeRequestToBot(args, myUser);
                 int i;
@@ -832,14 +835,17 @@ namespace RTParser
                 }
                 else
                 {
-                    if (args == "disable")
+                    if (args.StartsWith("disable"))
                     {
-                        foreach (TemplateInfo C in myUser.ProofTemplates)
+                        lock (myUser.TemplatesLock)
                         {
-                            C.IsDisabled = true;
-                            myUser.DisabledTemplates.Add(C);
+                            DisableTemplates(myUser, myUser.ProofTemplates);
+                            if (args.EndsWith("all"))
+                            {
+                                DisableTemplates(myUser, myUser.VisitedTemplates);
+                                DisableTemplates(myUser, myUser.UsedChildTemplates);
+                            }
                         }
-                        myUser.ProofTemplates.Clear();
                     }
                     if (args == "enable" || args == "reset")
                     {
@@ -879,6 +885,16 @@ namespace RTParser
                 return true;
             }
             return false;
+        }
+
+        private static void DisableTemplates(User myUser, ICollection<TemplateInfo> templateInfos)
+        {
+            foreach (TemplateInfo C in GraphMaster.CopyOf(templateInfos))
+            {
+                C.IsDisabled = true;
+                myUser.DisabledTemplates.Add(C);
+            }
+            templateInfos.Clear();
         }
 
         internal bool ExecQuery(Request request, string cmd, OutputDelegate console, bool showHelp, string args, User myUser)
