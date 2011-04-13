@@ -893,7 +893,7 @@
 	</template>
 </category>
 
-<srai>USE OPENCYC</srai>
-<!-- </topic> OPENCYC-->
+  <!--<srai>USE OPENCYC</srai>-->
+  <!-- </topic> OPENCYC-->
 </aiml>
 

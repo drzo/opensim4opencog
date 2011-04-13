@@ -10,7 +10,7 @@
   </category>
 
   <category>
-    <pattern>RELOAD <bot name="~genotype"/></pattern>
+    <pattern>RELOAD AIML</pattern>
     <template>
       <think>
         <srai>
@@ -22,7 +22,7 @@
   </category>
 
   <category>
-    <pattern>ACTIVATE <bot name="~genotype"/></pattern>
+    <pattern>ACTIVATE AIML</pattern>
     <template>
       <think>
         <srai>
@@ -34,7 +34,7 @@
   </category>
 
   <category>
-    <pattern>DEACTIVATE <bot name="~genotype"/></pattern>
+    <pattern>DEACTIVATE AIML</pattern>
     <template>
       <think>
         <srai>
