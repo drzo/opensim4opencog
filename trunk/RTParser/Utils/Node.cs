@@ -819,10 +819,12 @@ namespace RTParser.Utils
             return children.TryGetValue(fs, out childNode);
         }
 
+        public static bool DontDoKeyIndexingHacks = true;
         private static string ToKey(Unifiable fs0W)
         {
-            const bool doEs = true;
-            const bool doSEs = true;
+            if (DontDoKeyIndexingHacks) return fs0W;
+            bool doEs = !DontDoKeyIndexingHacks;
+            bool doSEs = !DontDoKeyIndexingHacks;
             string fs0 = fs0W.ToUpper();
             if (false && NatLangDb.BeAUX.Contains(" " + fs0 + " ")) return "BeAux";
 

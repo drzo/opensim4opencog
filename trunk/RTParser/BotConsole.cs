@@ -736,7 +736,7 @@ namespace RTParser
                     said = args;
                 }
                 User factSpeaker = robot.FindOrCreateUser(who);
-                robot.HeardSelfSay1Sentence(factSpeaker, factSpeaker.LastResponder.Value, said, robot.LastResult,
+                robot.HeardSomeoneSay1Sentence(factSpeaker, factSpeaker.LastResponder.Value, said, robot.LastResult,
                                             control);
                 return true;
             }

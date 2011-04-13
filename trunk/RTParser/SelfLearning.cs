@@ -25,7 +25,7 @@ namespace RTParser
         private bool AllreadyUnderstandingSentences = false;
         readonly private object AllreadyUnderstandingSentencesLock = new object();
         public static bool UnderstandSentenceOutsideQueue = true;
-        private bool TurnOffSelfListening = true;
+        public bool TurnOffSelfListening = true;
 
         public void HeardSelfSayVerbal(User theFactSpeaker, User toWhom, string message, Result result, ThreadControl control)
         {
@@ -46,7 +46,7 @@ namespace RTParser
                 ManualResetEvent newManualResetEvent = new ManualResetEvent(false);
                 control = new ThreadControl(newManualResetEvent);
             }
-            HeardSelfSay1Sentence(theFactSpeaker, toWhom, message, result, control);
+            HeardSomeoneSay1Sentence(theFactSpeaker, toWhom, message, result, control);
         }
 
         public Result HeardSelfSayResponse(User theFactSpeaker, User toWhom, string message, Result resultOfToWhomSpeakingToFactSpeaker, ThreadControl control)
@@ -74,7 +74,7 @@ namespace RTParser
                     Unifiable unifiableJoin = Unifiable.Join(" <br> ", sentences, i, sentences.Length - 1);
                     return AbortedResult(unifiableJoin, result, control);
                 }
-                result = HeardSelfSay1Sentence(theFactSpeaker, toWhom, sentence, result, control);
+                result = HeardSomeoneSay1Sentence(theFactSpeaker, toWhom, sentence, result, control);
             }
             return result;
         }
@@ -85,20 +85,19 @@ namespace RTParser
             return result;
         }
             
-        public Result HeardSelfSay1Sentence(User theFactSpeaker, User toWhom, string message, Result result, ThreadControl control)
+        public Result HeardSomeoneSay1Sentence(User theFactSpeaker, User toWhom, string message, Result result, ThreadControl control)
         {
-            if (this.TurnOffSelfListening) return result;
             bool toWhomNonNull = toWhom != null;
             string whatListenerLastSaid = null;
             if (toWhomNonNull) whatListenerLastSaid = toWhom.JustSaid;
-            Result res = HeardSelfSay11Sentence(theFactSpeaker, toWhom, message, result, control);
+            Result res = HeardSome1Say11Sentence(theFactSpeaker, toWhom, message, result, control);
             if (toWhomNonNull) toWhom.ResponderJustSaid = message;
             theFactSpeaker.JustSaid = message;
             if (toWhomNonNull) toWhom.JustSaid = whatListenerLastSaid;
             return res;
         }
 
-        public Result HeardSelfSay11Sentence(User theFactSpeaker, User toWhom, string message, Result result, ThreadControl control)
+        public Result HeardSome1Say11Sentence(User theFactSpeaker, User toWhom, string message, Result result, ThreadControl control)
         {
             if (this.TurnOffSelfListening) return result;
             Result LR = result;
