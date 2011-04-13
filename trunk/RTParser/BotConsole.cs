@@ -796,13 +796,13 @@ namespace RTParser
         }
 
 
-        [HelpText("@proof [[clear]|[save [filename.aiml]]] - clears or prints a content buffer being used")]
+        [HelpText("@proof [clear|enable|reset|disable|[save [filename.aiml]]] - clears or prints a content buffer being used")]
         [CommandText("proof", "prf")]
         static internal bool ExecProof(RTPBot robot, string cmd, OutputDelegate console, bool showHelp, string args, User myUser)
         {
 
             if (showHelp)
-                console("@proof [[clear]|[save [filename.aiml]]] - clears or prints a content buffer being used");
+                console("@proof [clear|enable|reset|disable|[save [filename.aiml]]] - clears or prints a content buffer being used");
             if (cmd == "proof")
             {
                 PrintOptions printOptions = robot.LastRequest.WriterOptions ?? PrintOptions.CONSOLE_LISTING;
@@ -867,6 +867,8 @@ namespace RTParser
                         myUser.VisitedTemplates.Clear();
                         console("--------------------ALL CLEARED------------------------------------------");
                     }
+                    // clear history so next call to @proof shows something
+                    printOptions.ClearHistory();
                 }
 
                 return true;
