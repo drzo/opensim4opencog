@@ -700,7 +700,7 @@ namespace AIMLBotModule
         {
             if (MyBotNullWarning()) return;
             Enqueue("HeardMyselfSay: " + message,
-                    () => MyBot.HeardSelfSay1Sentence(MyBot.BotAsUser, MyUser, message, null, null));
+                    () => MyBot.HeardSomeoneSay1Sentence(MyBot.BotAsUser, MyUser, message, null, null));
         }
 
         private void Enqueue(String name, ThreadStart action)
