@@ -19445,7 +19445,7 @@ Politics comes into everything.</template>
 </category>
 
  
-
+<topic name="spelling"> 
 <category>
 <pattern>_ LOVLEY</pattern>
 
@@ -19467,7 +19467,7 @@ Politics comes into everything.</template>
 
 <template>Is that a spelling mistake? <think><set name="topic">general</set></think> <think><set name="emotion">confused</set></think></template>
 </category>
-
+</topic>
  
 
 <category>

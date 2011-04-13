@@ -10170,14 +10170,14 @@ I don't remember that.</template>
 </category>
 
  
-
+<topic name="spelling"> 
 <category>
 <pattern>PORBABLY</pattern>
 
 <template><think><set name="emotion">OK</set></think>Is that a spelling mistake?
 </template>
 </category>
-
+</topic>
  
 
 <category>

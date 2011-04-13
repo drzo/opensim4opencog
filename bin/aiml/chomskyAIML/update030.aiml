@@ -8583,13 +8583,13 @@ In yours too?</template>
 </category>
 
  
-
+<topic name="spelling"> 
 <category>
 <pattern>_ PUSSIE *</pattern>
 
 <template><think><set name="emotion">OK</set></think>Is that a spelling mistake?</template>
 </category>
-
+</topic>
  
 
 <category>

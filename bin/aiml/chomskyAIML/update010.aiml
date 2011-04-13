@@ -9588,7 +9588,7 @@ Do you have another question?
 </category>
 
  
-
+<topic name="spelling"> 
 <category>
 <pattern>_ PEACEUL *</pattern>
 
@@ -9602,7 +9602,7 @@ Do you have another question?
 
 <template>Is that a spelling mistake?</template>
 </category>
-
+</topic>
  
 
 <category>
