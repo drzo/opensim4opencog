@@ -1061,6 +1061,11 @@ namespace RTParser.Utils
                     vv = ProcessTagHandlerNode(childNode, protectChildren, saveOnInnerXML, out childSuccess,
                                             tagHandlerChild);
                 });
+                if (IsNull(vv))
+                {
+                    success = false;
+                    return vv;
+                }
                 success = true;
                 return vv;
             }
