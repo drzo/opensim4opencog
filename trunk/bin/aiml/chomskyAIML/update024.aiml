@@ -328,7 +328,7 @@ I am glamourous.</template>
 </category>
 
  
-
+<topic name="spelling">
 <category>
 <pattern>_ FAVORTITE *</pattern>
 
@@ -336,7 +336,7 @@ I am glamourous.</template>
 <think><set name="emotion">OK</set></think> 
 Is that a spelling mistake?</template>
 </category>
-
+</topic>
  
 
 <category>
