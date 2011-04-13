@@ -214,6 +214,7 @@ namespace RTParser.AIMLTagHandlers
                             return Unifiable.INCOMPLETE;
                         }
                     }
+                    templateNodeInnerValue = Proc.CleanupCyc(templateNodeInnerValue);
                     var vv = ProcessChangeSrai(request, query, templateNodeInnerValue, templateNode, initialString, writeToLog);
                     if (!Unifiable.IsNullOrEmpty(vv))
                     {
