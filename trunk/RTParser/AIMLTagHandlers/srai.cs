@@ -346,7 +346,7 @@ namespace RTParser.AIMLTagHandlers
                         Request subRequest = request.CreateSubRequest(templateNodeInnerValue, null);
 
 
-                        string requestGraphSrai = request.Graph.Srai;
+                        string requestGraphSrai = request.SraiGraph;
                         subRequest.Graph = request.GetGraph(requestGraphSrai);
 
                         var ti = query.CurrentTemplate;

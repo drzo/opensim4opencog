@@ -870,9 +870,12 @@ namespace RTParser
         {
             ExcludeGraph(GetGraph(srai));
         }
+
+        private readonly HashSet<GraphMaster> LocallyDisallowedGraphs = new HashSet<GraphMaster>();
         public void ExcludeGraph(GraphMaster getGraph)
         {
-            ICollection<GraphMaster> disallowedGraphs = DisallowedGraphs;
+            LocallyDisallowedGraphs.Add(getGraph);
+            ICollection<GraphMaster> disallowedGraphs = Requester.DisallowedGraphs;
             lock (disallowedGraphs)
             {
                 if (disallowedGraphs.Contains(getGraph)) return;
@@ -882,10 +885,21 @@ namespace RTParser
                             () => { lock (disallowedGraphs) disallowedGraphs.Remove(getGraph); });
         }
 
-        public ICollection<GraphMaster> DisallowedGraphs
-        {
-            get { return Requester.DisallowedGraphs; }
-        }
+       /// <summary>
+       /// TopLevelQuery calls this
+       /// </summary>
+       /// <param name="graph"></param>
+       /// <returns></returns>
+        public bool IsAllowedGraph(GraphMaster graph)
+       {
+           if (LocallyDisallowedGraphs.Contains(graph)) return false;
+           if (IsToplevelRequest)
+           {
+               if (Requester.DisallowedGraphs.Contains(graph)) return false;
+               return true;
+           }
+           return ParentMostRequest.IsAllowedGraph(graph);
+       }
 
         public void AddOutputSentences(TemplateInfo ti, string nai, Result result)
         {
@@ -1742,6 +1756,12 @@ namespace RTParser
 
         public CommitQueue ExitQueue { get; set; }
         private bool HasExited;
+
+        public string SraiGraph
+        {
+            get { return Graph.Srai; }
+        }
+
         public void Exit()
         {
             lock (ExitQueue)
