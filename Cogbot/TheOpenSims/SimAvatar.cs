@@ -812,7 +812,7 @@ namespace cogbot.TheOpenSims
         {
             bool changed = (regionHandle != RegionHandle);
             base.ResetRegion(regionHandle);
-            if (changed)
+            if (changed && IsRegionAttached)
             {
                 //lock (KnownSimObjects) 
                 KnownSimObjects.Clear();
@@ -1977,7 +1977,10 @@ namespace cogbot.TheOpenSims
                 }
                 if (parent == null) Debug("cant get parrent ");
                 else
+                {
                     parentRot = parent.Rotation;
+                    RequestedParent = true;
+                }
             }
 
             {

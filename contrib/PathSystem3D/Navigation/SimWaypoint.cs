@@ -121,6 +121,17 @@ namespace PathSystem3D.Navigation
             return this;
         }
 
+        public bool TryGetSimPosition(out Vector3 pos)
+        {
+            if (!IsRegionAttached)
+            {
+                pos = default(Vector3);
+                return false;
+            }
+            pos = SimPosition;
+            return true;
+        }
+
         public bool IsRegionAttached
         {
             get { return PathStore != null; }

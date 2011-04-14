@@ -944,10 +944,14 @@ namespace cogbot.Listeners
 
         public bool IsWorthMeshing(SimObjectImpl impl)
         {
-            double d = Vector3d.Distance(impl.GlobalPosition, client.Self.GlobalPosition);
-            if (d < 50)
+            Vector3d GlobalPosition;
+            if (impl.TryGetGlobalPosition(out GlobalPosition))
             {
-                return true;
+                double d = Vector3d.Distance(GlobalPosition, client.Self.GlobalPosition);
+                if (d < 50)
+                {
+                    return true;
+                }
             }
             return false;
         }

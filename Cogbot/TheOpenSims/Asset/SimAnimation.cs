@@ -355,18 +355,20 @@ namespace cogbot.TheOpenSims
         public byte[] _TypeData;
         protected override void SaveFile(string tmpname)
         {
-            if (Item==null)
+            if (Item == null)
             {
                 Item = SimGesture.SaveGesture(this);
             }
             byte[] bs = AssetData;
             if (bs != null && bs.Length > 0)
             {
-                WriteLine("saving anim file " + tmpname);
+                NeedsSave = false;
+                FileName = "anim_cache/" + tmpname + ".anim";
+                WriteLine("saving anim file " + FileName);
                 TaskQueueHandler.WithLock(SimAssetStore.SavingFileLock, () => {
                     if (Directory.Exists("anim_cache"))
                     {
-                        File.WriteAllBytes("anim_cache/" + tmpname + ".anim", AssetData);
+                        File.WriteAllBytes(FileName, AssetData);
                     }
                 });
                 

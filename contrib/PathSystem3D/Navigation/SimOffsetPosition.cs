@@ -88,6 +88,17 @@ namespace PathSystem3D.Navigation
             }
         }
 
+        public bool TryGetSimPosition(out Vector3 pos)
+        {
+            if (!IsRegionAttached)
+            {
+                pos = default(Vector3);
+                return false;
+            }
+            pos = SimPosition;
+            return true;
+        }
+
         public Quaternion SimRotation
         {
             get

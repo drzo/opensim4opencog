@@ -822,7 +822,10 @@ namespace AIMLBotModule
                 WriteLine("!IsRegionAttached " + talker);
                 return;
             }
-            if (Math.Abs(a.SimPosition.Z - talker.SimPosition.Z) > MaxZDistance)
+            Vector3 aSimPos, tSimPos;
+            if (!a.TryGetSimPosition(out aSimPos) || !talker.TryGetSimPosition(out tSimPos)) return ;
+
+            if (Math.Abs(aSimPos.Z - aSimPos.Z) > MaxZDistance)
             {
                 WriteLine("Z Too far " + talker);
                 return;

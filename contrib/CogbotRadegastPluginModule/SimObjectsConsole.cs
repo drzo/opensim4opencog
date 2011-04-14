@@ -532,7 +532,8 @@ namespace CogbotRadegastPluginModule
 
         private bool IsSkipped(Vector3d location, SimObject prim)
         {
-            int distance = (int) Vector3d.Distance(location, WorldPosition(prim));
+            Vector3d wp;
+            int distance = !prim.TryGetGlobalPosition(out wp) ? 1200 : (int) Vector3d.Distance(location, wp);
             if (!((distance < searchRadius)
                   && (txtSearch.Text.Length == 0 ||
                       (prim.ToString().ToLower().Contains(txtSearch.Text.ToLower()))))) return true;

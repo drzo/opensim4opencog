@@ -260,12 +260,10 @@ namespace cogbot.Listeners
 
             foreach (UUID uuid in newEntries)
             {
-                SimAvatarImpl A = CreateSimAvatar(uuid,this,sim);
-                A.RegionHandle = sim.Handle;
+                SimObject A = CreateSimAvatar(uuid, this, sim);
                 Vector3 pos;
                 if (sim.AvatarPositions.TryGetValue(uuid, out pos))
-                    A.SimPosition = pos;
-
+                    A.UpdatePosition(sim.Handle, pos);
             }
             //for (int i = 0; i < coarse.Location.Length; i++)
             //{
@@ -571,6 +569,7 @@ namespace cogbot.Listeners
         private void RequestAvatarMetadata(UUID uuid)
         {
             lock (MetadataRequested) if (!MetadataRequested.Add(uuid)) return;
+            DeclareAvatar(uuid);
             NeedRequestAvatarName(uuid);
             OnConnectedQueue.Enqueue(() =>
             {

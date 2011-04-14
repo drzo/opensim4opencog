@@ -10,6 +10,7 @@ using OpenMetaverse;
 using PathSystem3D.Mesher;
 using PathSystem3D.Navigation;
 using System.Reflection;
+using MushDLR223.ScriptEngines;
 
 namespace cogbot.TheOpenSims
 {
@@ -746,7 +747,7 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                return this is SimAvatar;
+                return this is SimAvatar || _Prim0 is Avatar;
             }
         }
         //Vector3d lastPos;
@@ -790,12 +791,16 @@ namespace cogbot.TheOpenSims
         {
             if (prim == null || !prim.IsRegionAttached) return 1300;
             if (!IsRegionAttached) return 1300;
-            Vector3d use = prim.UsePosition.GlobalPosition;
             Vector3d primGlobalPosition = prim.GlobalPosition;
-            Vector3d GlobalPosition = this.GlobalPosition;
-            double d = Vector3d.Distance(GlobalPosition, primGlobalPosition);
-            double d1 = Vector3d.Distance(use, GlobalPosition);
-            return Math.Min(d, d1);
+            Vector3d GlobalPosition;
+            if (TryGetGlobalPosition(out GlobalPosition))
+            {
+                double d = Vector3d.Distance(GlobalPosition, primGlobalPosition);
+                Vector3d use = prim.UsePosition.GlobalPosition;
+                double d1 = Vector3d.Distance(use, GlobalPosition);
+                return Math.Min(d, d1);
+            }
+            return 1200;
         }
 
         // the prim in Secondlife
@@ -999,6 +1004,7 @@ namespace cogbot.TheOpenSims
                     }
                 }
                 _Parent = value;
+                if (_Parent !=null && _Parent.Prim != null) RequestedParent = true;
             }
         }
 
@@ -1009,14 +1015,14 @@ namespace cogbot.TheOpenSims
             simObject._Parent = this;
             simObject.needUpdate = true;
             bool b = Children.AddTo(simObject);
-            if (b)
-            {
-                if (!IsTyped)
+            if (false) if (b)
                 {
-                    // borrow from child?
-                    // UpdateProperties(simObject.theProperties);
+                    if (!IsTyped)
+                    {
+                        // borrow from child?
+                        // UpdateProperties(simObject.theProperties);
+                    }
                 }
-            }
             return b;
         }
 
@@ -1036,7 +1042,7 @@ namespace cogbot.TheOpenSims
                 if (WasKilled) return false;
                 var Prim = this.Prim;
                 if (Prim == null || Prim.ParentID == 0) return true;
-                EnsureParentAccruate(Prim);
+                IsParentAccruate(Prim);
                 // _Parent = Parent;
                 return false;
             }
@@ -1136,7 +1142,7 @@ namespace cogbot.TheOpenSims
             try
             {
                 Primitive Prim = this.Prim;
-                EnsureParentAccruate(Prim);
+                IsParentAccruate(Prim);
                 toStringNeedsUpdate = true;
                 if (objectProperties != null)
                 {
@@ -1178,21 +1184,24 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        protected void EnsureParentAccruate(Primitive primitive)
+        protected bool IsParentAccruate(Primitive child)
         {
-            return;
-            if (primitive == null) return;
-            if (primitive.ParentID == 0)
+            return true;
+            //return _Parent != null;
+            if (child == null) return false;
+            if (child.ParentID == 0)
             {
                 _Parent = this;
-                return;
+                return true;
             }
             if (_Parent != null)
             {
-                if (_Parent.Prim == null || _Parent.Prim.LocalID == primitive.ParentID) return;
+                if (_Parent.Prim == null || _Parent.Prim.LocalID == child.ParentID) return true;
                 _Parent = null;
                 Debug("Nulling parent");
+                return false;
             }
+            return true;
             //throw new NotImplementedException();
         }
 
@@ -1519,7 +1528,7 @@ namespace cogbot.TheOpenSims
         }
 
 
-        bool RequestedParent = false;
+        protected bool RequestedParent = false;
 
         public bool IsRegionAttached
         {
@@ -1538,7 +1547,10 @@ namespace cogbot.TheOpenSims
                         return false;
                     }
                 }
-                if (IsRoot) return true;
+                if (IsRoot)
+                {
+                    return Prim != null && Prim.Position != Vector3.Zero;
+                }
                 if (_Parent == null)
                 {
                     if (Prim.ParentID == 0)
@@ -1558,6 +1570,7 @@ namespace cogbot.TheOpenSims
                     {
                         if (pUse.ID != UUID.Zero)
                             Parent = WorldSystem.GetSimObject(pUse);
+                        return false;
                     }
                 }
                 lock (HasPrimLock)
@@ -1603,7 +1616,7 @@ namespace cogbot.TheOpenSims
                 }
                 if (thisPrim.ParentID != 0)
                 {
-                    Primitive outerPrim = GetParentPrim(thisPrim);
+                    Primitive outerPrim = GetParentPrim(thisPrim, Debug);
                     if (outerPrim == null)
                     {
                         //TODO no biggy here ?
@@ -1619,43 +1632,129 @@ namespace cogbot.TheOpenSims
         }
 
         public Vector3 LastKnownSimPos;
+        public virtual bool TryGetGlobalPosition(out Vector3d pos)
+        {
+            return TryGetGlobalPosition(out pos, null);
+        }
+
+        public void UpdatePosition(ulong handle, Vector3 pos)
+        {
+            RegionHandle = handle;
+            SimPosition = pos;
+        }
+
+        public virtual bool TryGetGlobalPosition(out Vector3d pos, OutputDelegate Debug)
+        {
+            Vector3 local;
+            if (TryGetSimPosition(out local, Debug))
+            {
+                if (RegionHandle != 0)
+                {
+                    pos = ToGlobal(RegionHandle, local);
+                    return true;
+                }
+                pos = default(Vector3d);
+                return false;
+            }
+            pos = default(Vector3d);
+            return false;
+        }
+
+        public virtual bool TryGetSimPosition(out Vector3 pos)
+        {
+            return TryGetSimPosition(out pos, null);
+        }
+
+        public virtual bool TryGetSimPosition(out Vector3 pos, OutputDelegate Debug)
+        {
+            lock (HasPrimLock)
+            {
+                {
+                    pos = this.LastKnownSimPos;
+                    Primitive thisPrim = this.Prim;
+                    if (!HasPrim || thisPrim == null)
+                    {
+                        return (default(Vector3) != pos);
+                    }
+                    if (thisPrim.ParentID == 0)
+                    {
+                        pos = thisPrim.Position;
+                        return true;
+                    }
+                    if (RequestedParent && _Parent != null)
+                    {
+                        var _ParentPrim = _Parent.Prim;
+                        if (_ParentPrim != null && _ParentPrim != thisPrim)
+                        {
+                            pos = LastKnownSimPos = GetPosAfterParent(_ParentPrim, thisPrim.Position);
+                        }
+                        return true;
+                    }
+
+                    Vector3 thisPos = thisPrim.Position;
+                    while (thisPrim.ParentID != 0)
+                    {
+                        Primitive outerPrim = GetParentPrim(thisPrim, Debug);
+
+                        if (outerPrim == null)
+                        {
+                            if (pos != default(Vector3)) return true;
+                            if (Debug != null) Debug("Unknown parent");
+                            return false;
+                        }
+                        if (outerPrim == thisPrim || outerPrim == this._Prim0 || RequestedParent)
+                        {
+                            return false;
+                        }
+
+                        if (outerPrim.Position == default(Vector3))
+                        {
+                            if (Debug != null) Debug("parent pos==Zero");
+                            return false;
+                        }
+                        thisPos = GetPosAfterParent(outerPrim, thisPos);
+                        thisPrim = outerPrim;
+                    }
+                    if (false && BadLocation(thisPos))
+                    {
+                        if (Debug != null) Debug("-------------------------" + this + " shouldnt be at " + thisPos);
+                        //   WorldSystem.DeletePrim(thePrim);
+                    }
+                    LastKnownSimPos = thisPos;
+                    return true;
+                }
+            }
+        }
+
+        public static Vector3 GetPosAfterParent(Primitive parentPrim, Vector3 thisPos)
+        {
+            thisPos = parentPrim.Position +
+                      Vector3.Transform(thisPos, Matrix4.CreateFromQuaternion(parentPrim.Rotation));
+            return thisPos;
+        }
 
         public virtual Vector3 SimPosition
         {
             get
             {
-                lock (HasPrimLock)
+                Vector3 pos;
+                if (TryGetSimPosition(out pos, Debug))
                 {
-                    Primitive thisPrim = this.Prim;
-                    if (!HasPrim || thisPrim == null) return LastKnownSimPos;
-                    if (thisPrim.ParentID == 0) return thisPrim.Position;
-                    Vector3 thisPos = thisPrim.Position;
-                    while (thisPrim.ParentID != 0)
-                    {
-                        Primitive outerPrim = GetParentPrim(thisPrim);
-
-                        if (outerPrim == null)
-                        {
-                            if (LastKnownSimPos != default(Vector3)) return LastKnownSimPos;
-                            Debug("Unknown parent");
-                            throw Error("GetSimPosition !IsRegionAttached: " + this);
-                            return thisPrim.Position;
-                        }
-                        if (outerPrim == thisPrim || outerPrim == this._Prim0)
-                        {
-                            throw Error("GetSimPosition Loop: " + this);
-                        }
-                        thisPos = outerPrim.Position +
-                                  Vector3.Transform(thisPos, Matrix4.CreateFromQuaternion(outerPrim.Rotation));
-                        thisPrim = outerPrim;
-                    }
-                    if (false && BadLocation(thisPos))
-                    {
-                        Debug("-------------------------" + this + " shouldnt be at " + thisPos);
-                        //   WorldSystem.DeletePrim(thePrim);
-                    }
-                    return LastKnownSimPos = thisPos;
+                    return pos;
                 }
+                if (LastKnownSimPos != default(Vector3)) return LastKnownSimPos;
+                if (RequestedParent && _Parent != null)
+                {
+                    var thisPrim = this._Prim0;
+                    var _ParentPrim = _Parent.Prim;
+                    if (_ParentPrim != null && _ParentPrim != thisPrim)
+                    {
+                        LastKnownSimPos = GetPosAfterParent(_ParentPrim, thisPrim.Position);
+                    }
+                    return LastKnownSimPos;
+                }
+                if (IsRegionAttached) throw Error("GetSimPosition !IsRegionAttached: " + this);
+                return LastKnownSimPos;
             }
             set
             {
@@ -1671,15 +1770,19 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        protected Primitive GetParentPrim(Primitive thisPrim)
+        protected Primitive GetParentPrim(Primitive thisPrim, OutputDelegate Debug)
         {
+            if (RequestedParent && thisPrim == _Prim0 && _Parent != null)
+            {
+                return _Parent.Prim;
+            }
             if (IsKilled) return null;
-            Primitive outerPrim = null;
             if (thisPrim.ParentID == 0)
             {
                 return WorldSystem.GetSimObject(thisPrim).Prim;
             }
             int requests = 10;
+            Primitive outerPrim = null;
             while (outerPrim == null && requests-- > 0)
             {
                 if (thisPrim == Prim && _Parent != null)
@@ -1689,19 +1792,22 @@ namespace cogbot.TheOpenSims
                 uint theLPrimParentID = thisPrim.ParentID;
                 if (theLPrimParentID == 0 || requests-- < 1)
                 {
-                    Debug("Why are not we getting a parent prim?");
+                    if (!RequestedParent) if (Debug != null) Debug("Why are not we getting a parent prim?");
                     return null;
                 }
                 Simulator simu = GetSimulator();
                 outerPrim = WorldSystem.GetPrimitive(theLPrimParentID, simu);
                 if (outerPrim == null)
                 {
-                    if (IsKilled) return null;
-                    Thread.Sleep(500);
-                    Debug("Probing for parent");
+                    if (IsKilled) return null;                    
                     if (!RequestedParent)
                     {
                         EnsureParentRequested(simu);
+                        if (Debug != null)
+                        {
+                            Debug("Probing for parent");
+                            Thread.Sleep(500);
+                        }
                     }
                 }
                 requests--;
@@ -1852,7 +1958,8 @@ namespace cogbot.TheOpenSims
             if (!IsRegionAttached)
             {
                 List<SimObject> objs = new List<SimObject>();
-                if (_Parent != null && Parent != this)
+                var Parent = this.Parent;
+                if (Parent != null && Parent != this)
                 {
                     objs.Add(Parent);
                 }
@@ -1865,13 +1972,17 @@ namespace cogbot.TheOpenSims
 
         public virtual Vector3d GlobalPosition
         {
-            get
-            {
-                Vector3 objectLoc = SimPosition;
-                uint regionX = 0, regionY = 0;
-                Utils.LongToUInts(RegionHandle, out regionX, out regionY);
-                return new Vector3d(regionX + objectLoc.X, regionY + objectLoc.Y, objectLoc.Z);
+            get {
+                return ToGlobal(RegionHandle, SimPosition);
             }
+        }
+
+        protected Vector3d ToGlobal(ulong regionHandle, Vector3 objectLoc)
+        {
+            if (regionHandle==0) Error("regionHandle = NULL");
+            uint regionX = 0, regionY = 0;
+            Utils.LongToUInts(regionHandle, out regionX, out regionY);
+            return new Vector3d(regionX + objectLoc.X, regionY + objectLoc.Y, objectLoc.Z);
         }
 
         //static ListAsSet<ISimObject> CopyObjects(List<ISimObject> objects)
@@ -1942,6 +2053,7 @@ namespace cogbot.TheOpenSims
                 return String.Format("unknown relative {0}/{1:0.00}/{2:0.00}/{3:0.00}",
                                      R != null ? R.RegionName : "NULL", loc.X, loc.Y, loc.Z);
             }
+            if (!IsRegionAttached) return obj.DistanceVectorString(this);
             return DistanceVectorString(obj.GlobalPosition);
         }
 
@@ -2569,5 +2681,7 @@ namespace cogbot.TheOpenSims
         bool CanShoot(SimPosition position);
         //void SetInfoMap(string key,Type type, Object value);
         SimHeading GetHeading();
+        bool TryGetGlobalPosition(out Vector3d pos);
+        void UpdatePosition(ulong handle, Vector3 pos);
     }
 }
