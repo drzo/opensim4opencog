@@ -14,21 +14,31 @@ namespace cogbot.Listeners
     {
         private SimEventSubscriber Next;
         public bool DefaultUse = true;
+        // If a fast shutoff
+        public bool hideAllEvents = false;
         // Events to always send
-        public List<String> Always = new List<string>();
+        public ListAsSet<String> Always = new ListAsSet<string>();
         // Events to never send
-        public List<String> Never = new List<string>();
-        public List<String> KnownSet = new List<string>();
+        public ListAsSet<String> Never = new ListAsSet<string>();
+        public ListAsSet<String> KnownSet = new ListAsSet<string>();
 
         public SimEventFilterSubscriber(SimEventSubscriber next)
         {
             Next = next;
+            EventsEnabled = true;
         }
+
+        public SimEventFilterSubscriber(SimEventSubscriber next, bool enabled)
+        {
+            Next = next;
+            EventsEnabled = enabled;
+        }
+
         #region Implementation of SimEventSubscriber
 
         public void OnEvent(SimObjectEvent evt)
         {
-            if (Skipped(evt)) return;
+            if (!EventsEnabled || Skipped(evt)) return;
             Next.OnEvent(evt);
         }
 
@@ -47,9 +57,12 @@ namespace cogbot.Listeners
 
         public void Dispose()
         {
+            EventsEnabled = false;
             Next.Dispose();
             Next = null;
         }
+
+        public bool EventsEnabled { get; set; }
 
         #endregion
     }
@@ -62,12 +75,14 @@ namespace cogbot.Listeners
         {
             From = from;
             textForm = _text;
+            EventsEnabled = true;
         }
 
         #region SimEventSubscriber Members
 
         void SimEventSubscriber.OnEvent(SimObjectEvent evt)
         {
+            if (!EventsEnabled) return;
             if (evt.EventType == SimEventType.DATA_UPDATE) return;
 
             if (evt.EventType == SimEventType.EFFECT)
@@ -100,8 +115,11 @@ namespace cogbot.Listeners
 
         void SimEventSubscriber.Dispose()
         {
+            EventsEnabled = false;
             textForm("SimEventTextSubscriber shutdown for " + From);
         }
+
+        public bool EventsEnabled { get; set; }
 
         #endregion
     }
@@ -110,6 +128,7 @@ namespace cogbot.Listeners
         // fired when SendEvent is invoke and this subscriber is downstream in the pipeline
         void OnEvent(SimObjectEvent evt);
         void Dispose();
+        bool EventsEnabled { get; set; }
     }
 
     public interface SimEventPublisher
@@ -127,11 +146,12 @@ namespace cogbot.Listeners
     {
         #region SimEventMulticastPipeline Members
 
-        List<SimEventSubscriber> subscribers = new List<SimEventSubscriber>();
+        readonly List<SimEventSubscriber> subscribers = new List<SimEventSubscriber>();
         readonly TaskQueueHandler taskQueue;
         public SimEventMulticastPipeline(string name)
         {
             taskQueue = new TaskQueueHandler("SimEventMulticastPipeline " + name);
+            EventsEnabled = true;
         }
 
         #endregion
@@ -140,6 +160,7 @@ namespace cogbot.Listeners
 
         public void Dispose()
         {
+            EventsEnabled = false;
             taskQueue.Dispose();
             foreach (SimEventSubscriber subscriber in GetSubscribers())
             {
@@ -165,44 +186,44 @@ namespace cogbot.Listeners
         }
 
         public static bool UseQueue = false;
-        public static bool ExecSynchronous = false;
+        public static bool ExecSynchronous = true;
         SimObjectEvent LastEvent = null;
+        public bool EventsEnabled { get; set; }
+
         // this pipelike will fire OnEvent to the subscriber list 
         public void SendEvent(SimObjectEvent simObjectEvent)
         {
+            if (!EventsEnabled) return;
             if (LastEvent != null && simObjectEvent.SameAs(LastEvent))
             {
                 return;
             }
             LastEvent = simObjectEvent;
-            foreach (SimEventSubscriber subscriber in GetSubscribers())
+            ThreadStart start = () =>
+                                    {
+                                        foreach (SimEventSubscriber subscriber in GetSubscribers())
+                                        {
+                                            SimEventSubscriber sub = subscriber;
+                                            try
+                                            {
+                                                simObjectEvent.SendTo(sub);
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                DLRConsole.DebugWriteLine(e);
+                                            }
+                                        }
+                                    };
+            if (ExecSynchronous)
             {
-                SimEventSubscriber sub = subscriber;
-                ThreadStart start =()=>
-                               {
-                                   try
-                                   {
-                                       simObjectEvent.SendTo(sub);
-                                   }
-                                   catch (Exception e)
-                                   {
-                                       DLRConsole.DebugWriteLine(e);
-                                   }
-                               };
-                if (ExecSynchronous)
-                {
-                    start();
-                    return;
-                }
-                if (UseQueue)
-                {
-                    new Thread(start).Start();
-                }
-                else taskQueue.Enqueue(start);                    
-                
-                
-                
+                start();
+                return;
             }
+            if (!UseQueue)
+            {
+                new Thread(start).Start();
+            }
+            else taskQueue.Enqueue(start);
         }
 
         #endregion
@@ -211,6 +232,7 @@ namespace cogbot.Listeners
 
         public void OnEvent(SimObjectEvent simObjectEvent)
         {
+            if (!EventsEnabled) return;
             foreach (SimEventSubscriber subscriber in GetSubscribers())
             {
                 simObjectEvent.SendTo(subscriber);

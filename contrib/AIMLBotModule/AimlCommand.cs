@@ -394,6 +394,12 @@ namespace AIMLBotModule
             //throw new NotImplementedException();
         }
 
+        public bool EventsEnabled
+        {
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
+        }
+
         #endregion
     }
 }
