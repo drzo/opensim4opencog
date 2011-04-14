@@ -561,12 +561,13 @@ namespace cogbot
         public string LoginURI;
         static private readonly LoginDetails DefaultAccount = new LoginDetails(null);
 
-       // public BotClient LastRefBotClient;
+        public BotClient LastRefBotClient;
         public BotClient LastBotClient
         {
-            get {
+            get
+            {
+                if (LastRefBotClient != null) return LastRefBotClient;
                 return null;
-                //;// LastRefBotClient ?? UIBotClient;
             }
         }
        // public BotClient UIBotClient = null;
@@ -616,6 +617,7 @@ namespace cogbot
         }
         private void EnsureBotClientHasRadegast(BotClient bc)
         {
+            LastRefBotClient = bc;
             GridClient gridClient = bc.gridClient;
             RadegastInstance inst = bc.TheRadegastInstance;
             lock (_wasFirstGridClientLock)

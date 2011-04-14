@@ -576,7 +576,9 @@ namespace cogbot
                 ClientManager.PostAutoExecEnqueue(() =>
                 {
                     Utilities.BotTcpServer UtilitiesTcpServer = new Utilities.BotTcpServer(thisTcpPort, this);
+                    UtilitiesTcpServer.ServerPortIncr = ClientManager.config.tcpPortOffset;
                     UtilitiesTcpServer.startSocketListener();
+                    ClientManager.nextTcpPort = UtilitiesTcpServer.ServerPort + UtilitiesTcpServer.ServerPortIncr;
                 });
             }
 
