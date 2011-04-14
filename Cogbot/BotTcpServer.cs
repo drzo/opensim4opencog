@@ -43,6 +43,10 @@ namespace cogbot.Utilities
         readonly private SimEventFilterSubscriber filter;
         readonly protected BotClient botclient;        
         bool quitRequested = false;
+        readonly object ShutDownLock = new object();
+        public TcpClient tcp_client { get; set; }
+        public bool ShutdownImplStarted = false;
+        private NetworkStream networkStream;
 
         public override string ToString()
         {
@@ -53,113 +57,157 @@ namespace cogbot.Utilities
         {
             tcp_client = this_client;
             Server = server;
-            filter = new SimEventFilterSubscriber(this, true);
+            filter = new SimEventFilterSubscriber(this, false);
             // never recieve data updates
             filter.Never.Add(SimEventType.DATA_UPDATE.ToString());
             filter.Never.Add("On-Log-Message");
-            
             botclient = server.parent;
+            WriteLine("making SingleBotTcpClient " + this_client);
         }
+
 
         public void DoLoop()
         {
             try
             {
-                AbortThread = Thread.CurrentThread;
-
-
-                NetworkStream ns = tcp_client.GetStream();
-                tcpStreamWriter = new StreamWriter(ns);
-                tcpStreamWriter.WriteLine("<!-- Welcome to Cogbot "+botclient.GetName()+" !-->");
-                Server.parent.AddBotMessageSubscriber(filter);
-                tcpStreamWriter.Flush();
+                WriteLine("TCPDEBUG: Entering Do Loop");
                 // Start loop and handle commands:
+                AbortThread = Thread.CurrentThread;
+                Server.parent.AddBotMessageSubscriber(filter);
+                // NETWORK STREAM MUST BE OBTAINED FROM THIS THREAD
+                networkStream = tcp_client.GetStream();
+                tcpStreamWriter = new StreamWriter(networkStream);
+                EventsEnabled = true;
                 try
                 {
-                    while (!quitRequested && tcpStreamWriter!=null)
+                    tcpStreamWriter.WriteLine("<!-- Welcome to Cogbot " + botclient.GetName() + " !-->");
+                    tcpStreamWriter.Flush();
+                }
+                catch (Exception e)
+                {
+                    WriteError(e);
+                    return;
+                }
+                // rE sHARPER is wrong!
+                // ReSharper disable ConditionIsAlwaysTrueOrFalse
+                while (!quitRequested && tcpStreamWriter != null)
+                // ReSharper restore ConditionIsAlwaysTrueOrFalse
+                {
+                    try
                     {
                         lock (readerSwitchLock)
                         {
-                            tcpStreamReader = new StreamReader(ns);
-                        }
-                        try
-                        {
-                            try
-                            {
-                                tcpStreamWriter.Flush();
-                            }
-                            catch (Exception)
-                            {
-
-                                Shutdown();
-                            }
-                            try
-                            {
-                                lock (readerSwitchLock)
-                                    ProcessOneCommand();                                
-                            } catch(Exception e)
-                            {
-                                botclient.WriteLine(this+": "+e);
-                            }
-
-                            try
-                            {
-                                tcpStreamWriter.Flush();
-                            }
-                            catch (Exception)
-                            {
-
-                                Shutdown();
-                            }
-                        }
-                        catch (Exception)
-                        {
-                            Shutdown();
+                            tcpStreamReader = new StreamReader(networkStream);
                         }
                     }
+                    catch (Exception e)
+                    {
+                        WriteError(e);
+                        return;
+                    }
+                    try
+                    {
+                        tcpStreamWriter.Flush();
+                    }
+                    catch (Exception e)
+                    {
+                        WriteError(e);
+                        return;
+                    }
+                    try
+                    {
+                        WriteLine("TCPDEBUG: ProcessOneCommand");
+                        lock (readerSwitchLock)
+                            ProcessOneCommand();
+                    }
+                    catch (Exception e)
+                    {
+                        WriteError(e);
+                    }
+                    try
+                    {
+                        tcpStreamWriter.Flush();
+                    }
+                    catch (Exception e)
+                    {
+                        WriteError(e);
+                        return;
+                    }
+                    continue;
                 }
-                finally
-                {
-                    Server.parent.RemoveBotMessageSubscriber(filter);
-                }
-
-                //data = new byte[1024];
-                //receivedDataLength = ns.Read(data, 0, data.Length);
-                //WriteLine(Encoding.ASCII.GetString(data, 0, receivedDataLength));
-                //ns.Write(data, 0, receivedDataLength);\
-                try
-                {
-                    ns.Close();
-                }
-                catch (Exception) { }
-                try
-                {
-                    Shutdown();
-                    tcp_client.Close();
-                }
-                catch (Exception) { }
+            }
+            finally
+            {
                 Shutdown();
             }
-            catch (Exception e)
-            {
-                DLRConsole.DebugWriteLine("ERROR {0}", e);
-            }
+        }
 
+        private void WriteError(Exception e)
+        {
+            WriteLine("error occured: " + e.Message);
+            WriteLine("        Stack: " + e.StackTrace.ToString());
         }
 
         private void Shutdown()
         {
-            filter.EventsEnabled = false;
-            tcpStreamWriter = null;
-            quitRequested = true;
+            lock (readerSwitchLock) lock (ShutDownLock) ShutdownImpl();
         }
 
-        public TcpClient tcp_client { get; set; }
+        private void ShutdownImpl()
+        {
+            if (ShutdownImplStarted) return;
+            ShutdownImplStarted = true;
+            quitRequested = true;
+            try
+            {
+                EventsEnabled = false;
+            }
+            catch (Exception) { }
+            try
+            {
+                Server.parent.RemoveBotMessageSubscriber(filter);
+            }
+            catch (Exception) { }
+            if (tcpStreamWriter != null)
+            {
+                try
+                {
+                    tcpStreamWriter.Flush();
+                }
+                catch (Exception) { }
+                try
+                {
+                    tcpStreamWriter.Close();
+                }
+                catch (Exception) { }
+                tcpStreamWriter = null;
+            }
+            try
+            {
+                if (tcpStreamReader != null)
+                {
+                    tcpStreamReader.Close();
+                    tcpStreamReader = null;
+                }
+            }
+            catch (Exception) { }
+            try
+            {
+                networkStream.Close();
+            }
+            catch (Exception) { }
+            try
+            {
+                tcp_client.Close();
+            }
+            catch (Exception) { }
+        }
 
         #region SimEventSubscriber Members
 
         public void OnEvent(SimObjectEvent evt)
         {
+            if (!EventsEnabled) return; 
             try
             {
                 if (tcpStreamWriter != null)
@@ -168,16 +216,16 @@ namespace cogbot.Utilities
                     tcpStreamWriter.Flush();
                 }
             }
-            catch (IOException)
+            catch (IOException e)
             {
-                quitRequested = true;
-                tcpStreamWriter = null;
+                WriteLine("OnEvent: " + e);
+                Shutdown();
             }
         }
 
         public void Dispose()
         {
-            tcpStreamWriter = null;
+            Shutdown();
             tcpStreamReader = null;
         }
 
@@ -190,13 +238,14 @@ namespace cogbot.Utilities
         private SourceLanguage GetSyntaxType()
         {
             SourceLanguage syntaxType = SourceLanguage.Unknown;
-            while (syntaxType == SourceLanguage.Unknown && tcpStreamReader!=null)
+            lock (tcpStreamReader) while (syntaxType == SourceLanguage.Unknown && tcpStreamReader != null)
             {
                 int peeked = tcpStreamReader.Peek();
                 if (peeked == -1)
                 {
+                    // probe peekchar
                     System.Windows.Forms.Application.DoEvents();
-                    Thread.Sleep(100);
+                    Thread.Sleep(200);
                     // PushbackReader r;
                     continue;
                 }
@@ -228,7 +277,7 @@ namespace cogbot.Utilities
             SourceLanguage syntaxType = GetSyntaxType();
             if (syntaxType == SourceLanguage.Unknown) return;
 
-            Server.parent.WriteLine("SockClient: {0}", syntaxType);
+            WriteLine("TCPDEBUG: SockClient type=" + syntaxType);
             if (syntaxType == SourceLanguage.Lisp)
             {
                 try
@@ -256,7 +305,9 @@ namespace cogbot.Utilities
                 }
                 return;
             }
+            WriteLine("TCPDEBUG: SockClient do read text");
             string clientMessage = tcpStreamReader.ReadLine().Trim();
+            WriteLine("TCPDEBUG: SockClient read text " + clientMessage);
             try
             {
                 if (clientMessage.Contains("xml") || clientMessage.Contains("http:"))
@@ -285,6 +336,11 @@ namespace cogbot.Utilities
 
         private void WriteLine(string p)
         {
+            if (!p.StartsWith("TCP"))
+            {
+                p = "TCPDEBUG: " + p;
+            }
+            DLRConsole.SYSTEM_ERR_WRITELINE_REAL(p);
             botclient.WriteLine(p);
         }
 
@@ -418,7 +474,7 @@ namespace cogbot.Utilities
         {
             parent = botclient;
             client = botclient.gridClient;
-            serverPort = port;
+            ServerPort = port;
             botclient.AddBotMessageSubscriber(this);
 
             //            config = parent.config;
@@ -426,17 +482,34 @@ namespace cogbot.Utilities
 
 
 
-        int serverPort = -1;
+        public int ServerPort = -1;
+        public int ServerPortIncr = 1;
         ///Configuration config;
 
         public void startSocketListener()
         {
             // The thread that accepts the Client and awaits messages
 
+            int maxRebinds = 10;
+            this.Bound = TryBind(ServerPort);
+            while (maxRebinds > 0 && !this.Bound)
+            {
+                ServerPort = ServerPort + ServerPortIncr;
+                this.Bound = TryBind(ServerPort);
+                maxRebinds--;
+            }
+            if (!Bound)
+            {
+                WriteLine("Gave up on TCPServer");
+                return;
+            }
+            else
+            {
+                WriteLine("Realy bound " + ServerPort + "!");
+            }
             thrSvr = new Thread(tcpSrv);
             thrSvr.Name = ToString();
-            // The thread calls the tcpSvr() method
-
+            // The thread calls the tcpSvr() method=
             thrSvr.Start();
 
 
@@ -453,23 +526,13 @@ namespace cogbot.Utilities
         //------------------------------------
         TcpListener tcp_socket = null;
         private bool IsDisposing;
+        private bool Bound;
         //    TcpClient tcp_client = null;
         private void tcpSrv()
         {
 
             try
             {
-
-                //int receivedDataLength;
-                byte[] data = new byte[1024];
-
-                int PortNumber = serverPort; // 5555;
-                // ReSharper disable AssignNullToNotNullAttribute
-                tcp_socket = new TcpListener(IPAddress.Parse("0.0.0.0"), PortNumber);
-                // ReSharper restore AssignNullToNotNullAttribute
-                parent.WriteLine("About to initialize port.");
-                tcp_socket.Start();
-                parent.WriteLine("Listening for a connection... port=" + PortNumber);
                 while (!IsDisposing)
                 {
                     try
@@ -500,8 +563,30 @@ namespace cogbot.Utilities
             }
         }
 
+        private bool TryBind(int PortNumber)
+        {
+            // ReSharper disable AssignNullToNotNullAttribute
+            tcp_socket = new TcpListener(IPAddress.Parse("0.0.0.0"), PortNumber);
+            // ReSharper restore AssignNullToNotNullAttribute
+            WriteLine("About to initialize port " + PortNumber);
+            try
+            {
+                tcp_socket.Start();
+                ServerPort = PortNumber;
+                WriteLine("Listening for a connection... port=" + tcp_socket.LocalEndpoint);
+                return true;
+            }
+            catch (Exception e)
+            {
+                WriteLine("Failed binding to " + PortNumber);
+                return true;
+            }
+        }
+
         private void WriteLine(string s)
         {
+            s = "TCPDEBUG: " + s;
+            DLRConsole.SYSTEM_ERR_WRITELINE_REAL(s);
             parent.WriteLine(s);
         }
 
@@ -535,6 +620,7 @@ namespace cogbot.Utilities
 
         void SimEventSubscriber.OnEvent(SimObjectEvent evt)
         {
+            if (!EventsEnabled) return;
             if (DisableEventStore) return;
             whileClientIsAway.Enqueue(EventToString(evt, parent));
         }
@@ -552,7 +638,7 @@ namespace cogbot.Utilities
 
         public bool EventsEnabled
         {
-            get { throw new NotImplementedException(); }
+            get { return !IsDisposing; }
             set { throw new NotImplementedException(); }
         }
 
