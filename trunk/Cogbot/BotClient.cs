@@ -2560,6 +2560,23 @@ namespace cogbot
         {
             return BotLoginParams.BotLName;
         }
+
+        #region SimEventSubscriber Members
+
+
+        public bool EventsEnabled
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        #endregion
     }
 
     public delegate void InstantMessageSentArgs(object sender, IMessageSentEventArgs args);

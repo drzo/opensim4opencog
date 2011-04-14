@@ -444,6 +444,12 @@ namespace cogbot.ScriptEngines
             ((ScriptEventListener) this).Dispose();
         }
 
+        public bool EventsEnabled
+        {
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
+        }
+
         #endregion
 
         public void Dispose()

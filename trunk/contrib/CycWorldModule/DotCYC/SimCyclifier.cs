@@ -184,9 +184,15 @@ namespace CycWorldModule.DotCYC
             }
         }
 
+        public bool EventsEnabled
+        {
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
+        }
+
         public SimCyclifier(CycWorldModule tf)
         {
-            eventFilter = new SimEventFilterSubscriber(this);
+            eventFilter = new SimEventFilterSubscriber(this, false);
             lock (SimCyclifierLock)
             {
                 if (Master == null) Master = this;
@@ -200,7 +206,7 @@ namespace CycWorldModule.DotCYC
                     SharedTaskQueueHandler = new TaskQueueHandler("SimCyclifier");
                     SharedTaskQueueHandler.AddFirst(AssertKE);
                 }
-
+                eventFilter.EventsEnabled = true;
             }
         }
 

@@ -53,7 +53,7 @@ namespace cogbot.Utilities
         {
             tcp_client = this_client;
             Server = server;
-            filter = new SimEventFilterSubscriber(this);
+            filter = new SimEventFilterSubscriber(this, true);
             // never recieve data updates
             filter.Never.Add(SimEventType.DATA_UPDATE.ToString());
             filter.Never.Add("On-Log-Message");
@@ -91,8 +91,7 @@ namespace cogbot.Utilities
                             catch (Exception)
                             {
 
-                                tcpStreamWriter = null;
-                                quitRequested = true;
+                                Shutdown();
                             }
                             try
                             {
@@ -110,14 +109,12 @@ namespace cogbot.Utilities
                             catch (Exception)
                             {
 
-                                tcpStreamWriter = null;
-                                quitRequested = true;
+                                Shutdown();
                             }
                         }
                         catch (Exception)
                         {
-                            tcpStreamWriter = null;
-                            quitRequested = true;
+                            Shutdown();
                         }
                     }
                 }
@@ -137,16 +134,24 @@ namespace cogbot.Utilities
                 catch (Exception) { }
                 try
                 {
+                    Shutdown();
                     tcp_client.Close();
                 }
                 catch (Exception) { }
-                tcpStreamWriter = null;
+                Shutdown();
             }
             catch (Exception e)
             {
                 DLRConsole.DebugWriteLine("ERROR {0}", e);
             }
 
+        }
+
+        private void Shutdown()
+        {
+            filter.EventsEnabled = false;
+            tcpStreamWriter = null;
+            quitRequested = true;
         }
 
         public TcpClient tcp_client { get; set; }
@@ -176,6 +181,11 @@ namespace cogbot.Utilities
             tcpStreamReader = null;
         }
 
+        public bool EventsEnabled
+        {
+            get { return filter.EventsEnabled; }
+            set { filter.EventsEnabled = value; }
+        }
 
         private SourceLanguage GetSyntaxType()
         {
@@ -216,7 +226,7 @@ namespace cogbot.Utilities
         {
 
             SourceLanguage syntaxType = GetSyntaxType();
-            if (syntaxType==SourceLanguage.Unknown) return;
+            if (syntaxType == SourceLanguage.Unknown) return;
 
             Server.parent.WriteLine("SockClient: {0}", syntaxType);
             if (syntaxType == SourceLanguage.Lisp)
@@ -281,7 +291,7 @@ namespace cogbot.Utilities
 
         public string EvaluateCommand(string cmd)
         {
-            String lowerCmd = cmd.ToLower();
+            String lowerCmd = cmd.ToLower().Trim();
             if (lowerCmd == "bye")
             {
                 quitRequested = true;
@@ -291,6 +301,58 @@ namespace cogbot.Utilities
             {
                 Server.GetWhileAwayAndClear(tcpStreamWriter);
                 return "";
+            }
+            if (lowerCmd == "hideon")
+            {
+                EventsEnabled = false;
+            }
+            if (lowerCmd == "hideoff")
+            {
+                EventsEnabled = true;
+            }
+            if (lowerCmd == "filters")
+            {
+                foreach (var c in filter.Never)
+                {
+                    tcpStreamWriter.WriteLine("never +" + c);
+                }
+                foreach (var c in filter.Always)
+                {
+                    tcpStreamWriter.WriteLine("always +" + c);
+                }            
+                return "use: [always|never] [+|-]Verb";
+            }
+            if (lowerCmd.StartsWith("always"))
+            {
+                lowerCmd = lowerCmd.Substring(6).TrimStart();
+                if (lowerCmd.StartsWith("+"))
+                {
+                    lowerCmd = lowerCmd.Substring(1).TrimStart();
+                    filter.Always.Add(lowerCmd);
+                    return "added to always: " + lowerCmd;
+                }
+                if (lowerCmd.StartsWith("-"))
+                {
+                    lowerCmd = lowerCmd.Substring(1).TrimStart();
+                    filter.Always.Remove(lowerCmd);
+                    return "removed from always: " + lowerCmd;
+                }
+            }
+            if (lowerCmd.StartsWith("never"))
+            {
+                lowerCmd = lowerCmd.Substring(6).TrimStart();
+                if (lowerCmd.StartsWith("+"))
+                {
+                    lowerCmd = lowerCmd.Substring(1).TrimStart();
+                    filter.Never.Add(lowerCmd);
+                    return "added to never: " + lowerCmd;
+                }
+                if (lowerCmd.StartsWith("-"))
+                {
+                    lowerCmd = lowerCmd.Substring(1).TrimStart();
+                    filter.Never.Remove(lowerCmd);
+                    return "removed from never: " + lowerCmd;
+                }
             }
             using (StringWriter wl = new StringWriter())
             {
@@ -486,6 +548,12 @@ namespace cogbot.Utilities
         {
             IsDisposing = true;
             ((BotTcpServer)this).closeTcpListener();
+        }
+
+        public bool EventsEnabled
+        {
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
         }
 
         #endregion
