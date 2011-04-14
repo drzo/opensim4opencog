@@ -51,6 +51,7 @@ namespace cogbot.TheOpenSims
         public bool Priority = true;
         private int Requests = 0;
         private DateTime when;
+        public bool NeedsSave = true;
         protected static DateTime waitUntil = DateTime.Now;
         protected static object timerLock = new object();
 
@@ -337,7 +338,7 @@ namespace cogbot.TheOpenSims
                         return ExpressionName;
                     }
                     string tmpname = "" + AssetID;
-                    if (AssetIDs.Count == 1)
+                    if (AssetIDs.Count == 1 && NeedsSave)
                     {
                         SaveFile(tmpname);
                     }

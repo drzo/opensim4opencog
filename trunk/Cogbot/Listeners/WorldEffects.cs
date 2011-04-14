@@ -435,8 +435,9 @@ namespace cogbot.Listeners
                 {
                     if (ST != null)
                     {
-                        if (ST.IsRegionAttached)
-                            p = (ST.GlobalPosition + targetPos);
+                        Vector3d STGlobalPosition;
+                        if (ST.TryGetGlobalPosition(out STGlobalPosition))
+                            p = (STGlobalPosition + targetPos);
                         else
                         {
                             p = AsRLocation(sim, targetPos, ST);

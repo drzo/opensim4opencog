@@ -28,9 +28,9 @@ namespace cogbot.Listeners
             if (here == Vector3d.Zero) return retObj;
             foreach (SimObject obj in GetAllSimObjects())
             {
-                if (obj.IsRegionAttached)
+                Vector3d at;
+                if (obj.TryGetGlobalPosition(out at))
                 {
-                    Vector3d at = obj.GlobalPosition;
                     if (at == here)
                     {
                         dist = 0;
@@ -331,6 +331,12 @@ namespace cogbot.Listeners
             }
 
             int maxArgs = 0;
+            string first = tokens[0];
+            if (first == "last")
+            {
+                argsUsed = 1;
+                return offset;
+            }
             bool relative = false;
             for (int st = start; st < tokens.Length; st++)
             {
@@ -349,7 +355,7 @@ namespace cogbot.Listeners
             Vector3 rel = offset.SimPosition;
             Vector3 target;
 
-            string first = tokens[start];
+            first = tokens[start];
             // Polar coords 
             if (first.Contains("*")) return GetPolarRelative(offset, first, out argsUsed);
 
@@ -480,9 +486,14 @@ namespace cogbot.Listeners
                     if (rootOnly && !obj.IsRoot) continue;
                     try
                     {
-                        if (obj.IsRegionAttached && Vector3d.Distance(obj.GlobalPosition, here) <= maxDistance)
-                            nearby.Add(obj);
-                    } catch(Exception) {}
+                        Vector3d pos;
+                        if (obj.TryGetGlobalPosition(out pos))
+                        {
+                            if (obj.IsRegionAttached && Vector3d.Distance(pos, here) <= maxDistance)
+                                nearby.Add(obj);                            
+                        }
+                    }
+                    catch(Exception) {}
                 }
             }
             ;
