@@ -159,6 +159,19 @@ namespace RTParser
     {
         #region Attributes
 
+        public double thisScore = 1.0;
+        public double TopLevelScore
+        {
+            get
+            {
+                return ParentMostRequest.thisScore;                
+            }
+            set
+            {
+                thisScore = value;
+                if (!IsToplevelRequest) ParentRequest.TopLevelScore = value;
+            }
+        }
         public int RequestDepth { get; set; }
         private int _MaxCanEvalResult = -1;
         public int MaxCanEvalResult
@@ -1356,7 +1369,7 @@ namespace RTParser
             get
             {
                 if (IsToplevelRequest) return thisRequest;
-                if (ParentRequest == null) return thisRequest;
+                if (ParentRequest == null || ParentRequest == this) return thisRequest;
                 return ParentRequest.ParentMostRequest;
             }
         }

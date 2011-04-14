@@ -22,7 +22,16 @@ namespace RTParser.Utils
         public override GuardInfo Guard { get; set; }
         public override ResponseInfo Response { get; set; }
         public SubQuery Query { get; set; }
-        public double Rating { get; set; }
+        private double _rating;
+        public double Rating
+        {
+            get { return _rating; }
+        }
+        public double TemplateRating
+        {
+            get { return _rating; }
+            set { _rating = value; }
+        }
         public Unifiable TextSaved { get; set; }
         public bool NeckCut = false;        
 
@@ -95,7 +104,7 @@ namespace RTParser.Utils
                 throw new UnauthorizedAccessException();
             }
             srcNode = templateNode;
-            Rating = 1.0;
+            TemplateRating = 1.0;
             Guard = guard;
             if ((thatInfo != null && !thatInfo.IsCatchAll) || (guard != null && !guard.IsCatchAll)
                 || (topicInfo != null && !topicInfo.IsCatchAll))
@@ -122,7 +131,7 @@ namespace RTParser.Utils
                 }
                 string scoreString = StaticXMLUtils.GetAttribValue(TemplateXml, "score", null);
                 scoreString = scoreString ?? StaticXMLUtils.GetAttribValue(cateNode, "score", null);
-                Rating = double.Parse(scoreString ?? "1.0");
+                TemplateRating = double.Parse(scoreString ?? "1.0");
             }
             catch
             {
@@ -500,7 +509,8 @@ namespace RTParser.Utils
     public interface TemplateResult
     {
         Unifiable TextSaved { get; set; }
-        double Rating { get; set; }
+        double Rating { get; }
+        double TemplateRating { get; set;  }
     }
     public interface TemplateInfo : CategoryInfo, TemplateResult
     {

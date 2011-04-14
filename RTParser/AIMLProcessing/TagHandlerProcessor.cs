@@ -261,6 +261,9 @@ namespace RTParser
                     case "cycrandom":
                         tagHandler = new cycrandom(targetBot, user, query, request, result, node);
                         break;
+                    case "tscore":
+                        tagHandler = new tscore(targetBot, user, query, request, result, node);
+                        break;
                     case "space":
                         tagHandler = new space(targetBot, user, query, request, result, node);
                         break;

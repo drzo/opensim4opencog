@@ -1222,7 +1222,7 @@ namespace RTParser.Utils
                             foreach (var cate in added)
                             {
                                 // half the rating
-                                cate.Template.Rating /= 2;
+                                cate.Template.TemplateRating /= 2.0;
                             }
                         }
                         return added;

@@ -184,7 +184,7 @@ namespace RTParser
                 lock (this)
                 {
                     string s = null, t = null;
-                    var graphQuery = this.TopLevel;
+                    var graphQuery = this.TopLevelQuery;
                     if (graphQuery != null)
                     {
                         s = graphQuery.WhyToplevelComplete;
@@ -293,7 +293,7 @@ namespace RTParser
         }
         */
 
-        public GraphQuery TopLevel
+        public GraphQuery TopLevelQuery
         {
             get
             {
@@ -301,9 +301,9 @@ namespace RTParser
                 if (request1 != null && !ReferenceEquals(request1, this)) return request1.TopLevelQuery;
                 SubQuery cc = CurrentQuery;
                 if (cc != null) return cc.TopLevel;
-                return TopLevel;
+                return TopLevelQuery;
             }
-            set { TopLevel = value; }
+            set { TopLevelQuery = value; }
         }
 
 

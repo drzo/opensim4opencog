@@ -449,7 +449,7 @@ namespace RTParser.AIMLTagHandlers
                                     {
                                         writeToLog("SCORE {0}*{1}->{2} ",
                                                    subResult.Score, query.CurrentTemplate.Rating,
-                                                   query.CurrentTemplate.Rating *= subResult.Score);
+                                                   query.Request.TopLevelScore *= subResult.Score);
 
                                     }
                                 }

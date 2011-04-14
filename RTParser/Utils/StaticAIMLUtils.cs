@@ -842,7 +842,7 @@ namespace RTParser.Utils
             {
                 console("input: \"" + s + "\"");
             }
-            PrintTemplates(result.ResultTemplates, console, printOptions);
+            PrintTemplates(result.ResultTemplates, console, printOptions, TimeSpan.Zero);
             foreach (SubQuery s in result.SubQueries)
             {
                 console("\n" + s);
@@ -863,13 +863,13 @@ namespace RTParser.Utils
         {
             if (CI == null) return "";
             StringWriter fs = new StringWriter();
-            GraphMaster.PrintToWriter(CI, printOptions, fs, null);
+            GraphMaster.PrintToWriter(CI, printOptions, fs, null, TimeSpan.Zero);
             return fs.ToString();
         }
 
-        public static void PrintTemplates(IEnumerable CI, OutputDelegate console, PrintOptions printOptions)
+        public static void PrintTemplates(IEnumerable CI, OutputDelegate console, PrintOptions printOptions, TimeSpan sleepBetween)
         {
-            GraphMaster.PrintToWriter(CI, printOptions, new OutputDelegateWriter(console), null);
+            GraphMaster.PrintToWriter(CI, printOptions, new OutputDelegateWriter(console), null, sleepBetween);
         }
 
         public static bool IsEmptyPattern(XmlNode node)
