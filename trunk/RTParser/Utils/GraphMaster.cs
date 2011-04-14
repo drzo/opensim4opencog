@@ -5,6 +5,7 @@ using System.Configuration;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
 using System.Xml;
 using AIMLbot;
 using MushDLR223.ScriptEngines;
@@ -17,6 +18,7 @@ using ThatInfo = RTParser.Unifiable;
 using TopicInfo = RTParser.Unifiable;
 using GuardInfo = RTParser.Unifiable;
 using ResponseInfo = RTParser.Unifiable;
+using System.Threading;
 
 //using StringAppendableUnifiable = System.Text.StringBuilder;
 
@@ -1166,7 +1168,7 @@ namespace RTParser.Utils
                 var written = new List<CategoryInfo>(10000);
                 try
                 {
-                    PrintToWriter(CopyOf(CategoryInfos), printOptions, fs, written);
+                    PrintToWriter(CopyOf(CategoryInfos), printOptions, fs, written, TimeSpan.Zero);
                 }
                 catch (Exception e)
                 {
@@ -1187,12 +1189,13 @@ namespace RTParser.Utils
             }
         }
 
-        public static void PrintToWriter(IEnumerable items, PrintOptions printOptions, TextWriter fs, IList written)
+        public static void PrintToWriter(IEnumerable items, PrintOptions printOptions, TextWriter fs, IList written, TimeSpan sleepBetween)
         {
             //string hide = "";
             if (items == null) return;
             foreach (var cio in items)
             {
+                if (sleepBetween > TimeSpan.Zero) Thread.Sleep(sleepBetween);
                 IAIMLInfo ci = cio as IAIMLInfo;
                 if (ci == null)
                 {
@@ -1235,6 +1238,7 @@ namespace RTParser.Utils
                     }
                     fs.WriteLine("-->");
                 }
+                Application.DoEvents();
             }
         }
 
@@ -1395,7 +1399,7 @@ namespace RTParser.Utils
                 GraphMaster G = this;
                 var Cats = G.GetCategoriesMatching(match);
                 console("-----------------------------------------------------------------");
-                PrintToWriter(Cats, printOptions, new OutputDelegateWriter(console), null);
+                PrintToWriter(Cats, printOptions, new OutputDelegateWriter(console), null, printOptions.SleepBetween);
                 console("-----------------------------------------------------------------");
                 console("Shown " + Cats.Count + " from " + G);
                 OutputDelegate When = (s, a) => { console(s, a); };

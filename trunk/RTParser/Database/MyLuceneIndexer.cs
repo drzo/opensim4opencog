@@ -794,18 +794,12 @@ namespace RTParser.Database
         /// <param name="threshold"> &lt;dbquery&gt; uses 0.0f by default</param>
         /// <param name="expandOnNoHits"></param>
         /// <returns></returns>
-
-        public string callDbQuery(string searchTerm1, OutputDelegate dbgLog, Func<string, Unifiable> OnFalure,
+        private string callDbQuery(string searchTerm1, OutputDelegate dbgLog, Func<string, Unifiable> OnFalure,
             XmlNode templateNode, float threshold, bool expandOnNoHits, out float reliablity)
         {
             // if synonyms is overriden?? the defualt is true
             bool expandWithWordNet = true;
 
-            bool tf;
-            if (StaticXMLUtils.TryParseBool(templateNode, "wordnet,synonyms", out tf))
-            {
-                expandWithWordNet = tf;
-            }
             return AskQuery(searchTerm1, dbgLog, OnFalure, templateNode, threshold, expandWithWordNet, expandOnNoHits, out reliablity);
         }
 
@@ -820,6 +814,11 @@ namespace RTParser.Database
         public string callDbQuery0(string searchTerm1, OutputDelegate dbgLog, Func<string, Unifiable> OnFalure, XmlNode templateNode, float threshold, bool expandWithWordNet, bool expandOnNoHits, out float reliablity)
         {
             checkDbLock();
+            bool tf;
+            if (StaticXMLUtils.TryParseBool(templateNode, "wordnet,synonyms", out tf))
+            {
+                expandWithWordNet = tf;
+            }
             WordExpander wordNetExpander = expandWithWordNet ? (WordExpander)WordNetExpand : NoWordNetExpander;
             string userFilter = "";
             // Do we only want responses with the current user name in it ?

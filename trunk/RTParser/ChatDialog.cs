@@ -1051,7 +1051,7 @@ namespace RTParser
         private AIMLTagHandler ProcessQueryTemplate(Request request, SubQuery query, TemplateInfo s, Result result, AIMLTagHandler lastHandler, ref int solutions, out bool hasMoreSolutions)
         {
             AIMLTagHandler childHandler = null;
-            s.Rating = 1.0;
+            request.TopLevelScore = 1.0;
             hasMoreSolutions = false;
             try
             {

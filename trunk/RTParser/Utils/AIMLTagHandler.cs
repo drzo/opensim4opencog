@@ -729,16 +729,14 @@ namespace RTParser.Utils
             {
                 string type = GetType().Name;
                 double defualtReward = query.GetSucceedReward(type);
-                double score = GetAttribValue<double>(templateNode, "score", () => defualtReward,
+                double templateScore = GetAttribValue<double>(templateNode, "score", () => defualtReward,
                                                       ReduceStarAttribute<double>);
-                double beforerating = query.CurrentTemplate.Rating;
-                double newrating = beforerating*score;
-                query.CurrentTemplate.Rating = newrating;
+                double beforerating = request.TopLevelScore;
+                double newrating = beforerating*templateScore;
+                request.TopLevelScore = newrating;
                 if (false)
                 {
-                    string str = SafeFormat("TSCORE {3} {0}*{1}->{2} ",
-                                                       score, query.CurrentTemplate.Rating,
-                                                       query.CurrentTemplate.Rating *= score, score);
+                    string str = SafeFormat("TSCORE {1}<-{2}*{3}", newrating, beforerating, templateScore);
                     writeToLog(str);
                 }
             }

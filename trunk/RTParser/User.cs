@@ -1109,7 +1109,8 @@ namespace RTParser
                     var cis = VisitedTemplates;
                     console("-----------------------------------------------------------------");
                     console("LS: count=" + cis.Count + " local=" + StartGraph);
-                    GraphMaster.PrintToWriter(cis, PrintOptions.SAVE_TO_FILE, new OutputDelegateWriter(console), null);
+                    GraphMaster.PrintToWriter(cis, PrintOptions.SAVE_TO_FILE, new OutputDelegateWriter(console), null,
+                                              TimeSpan.Zero);
                     console("-----------------------------------------------------------------");
                 }
             }

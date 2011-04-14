@@ -852,18 +852,19 @@ namespace RTParser
                         }
                         myUser.DisabledTemplates.Clear();
                     }
+                    TimeSpan sleepBetween = TimeSpan.FromMilliseconds(500);
                     console("-----------------------------------------------------------------");
                     console("-------DISABLED--------------------------------------");
-                    RTPBot.PrintTemplates(myUser.DisabledTemplates, console, printOptions);
+                    RTPBot.PrintTemplates(myUser.DisabledTemplates, console, printOptions, sleepBetween);
                     console("-----------------------------------------------------------------");
                     console("-------PROOF--------------------------------------");
-                    RTPBot.PrintTemplates(myUser.ProofTemplates, console, printOptions);
+                    RTPBot.PrintTemplates(myUser.ProofTemplates, console, printOptions, sleepBetween);
                     console("-----------------------------------------------------------------");
                     console("-------CHILD--------------------------------------");
-                    RTPBot.PrintTemplates(myUser.UsedChildTemplates, console, printOptions);
+                    RTPBot.PrintTemplates(myUser.UsedChildTemplates, console, printOptions, sleepBetween);
                     console("-----------------------------------------------------------------");
                     console("-------USED--------------------------------------");
-                    RTPBot.PrintTemplates(myUser.VisitedTemplates, console, printOptions);
+                    RTPBot.PrintTemplates(myUser.VisitedTemplates, console, printOptions, sleepBetween);
                     console("-----------------------------------------------------------------");
 
                     if (args == "clear" || args == "reset")

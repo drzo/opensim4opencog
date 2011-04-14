@@ -96,6 +96,8 @@ namespace RTParser.Utils
         }
 
         private string hide = "";
+        public TimeSpan SleepBetween = TimeSpan.FromMilliseconds(0);
+
         public bool DontPrint(object cws)
         {
             if (hide.Contains("" + cws)) return true;
