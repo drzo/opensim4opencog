@@ -33,7 +33,7 @@ namespace OpenMetaverse
     /// Life networking protocol
     /// </summary>
     [Serializable]
-    public class UUID : IComparable<UUID>, IEquatable<UUID>
+    public struct UUID : IComparable<UUID>, IEquatable<UUID>
     {
         /// <summary>The System.Guid object this struct wraps around</summary>
         public Guid Guid;
@@ -310,6 +310,11 @@ namespace OpenMetaverse
         /// <returns>True if the object is a UUID and both UUIDs are equal</returns>
         public override bool Equals(object o)
         {
+
+#if NULLABLE_STRUCT
+            if (o == null) o = Zero;
+            else
+#endif
             if (!(o is UUID)) return false;
 
             UUID uuid = (UUID)o;
@@ -323,6 +328,9 @@ namespace OpenMetaverse
         /// <returns>True if the UUIDs are equal, otherwise false</returns>
         public bool Equals(UUID uuid)
         {
+#if NULLABLE_STRUCT
+            uuid = uuid ?? Zero;
+#endif
             return Guid == uuid.Guid;
         }
 
@@ -352,6 +360,10 @@ namespace OpenMetaverse
         /// <returns>True if the UUIDs are byte for byte equal, otherwise false</returns>
         public static bool operator ==(UUID lhs, UUID rhs)
         {
+#if NULLABLE_STRUCT
+            lhs = lhs ?? Zero;
+            rhs = rhs ?? Zero;
+#endif
             return lhs.Guid == rhs.Guid;
         }
 
@@ -374,6 +386,10 @@ namespace OpenMetaverse
         /// <returns>A UUID that is a XOR combination of the two input UUIDs</returns>
         public static UUID operator ^(UUID lhs, UUID rhs)
         {
+#if NULLABLE_STRUCT
+            lhs = lhs ?? Zero;
+            rhs = rhs ?? Zero;
+#endif
             byte[] lhsbytes = lhs.GetBytes();
             byte[] rhsbytes = rhs.GetBytes();
             byte[] output = new byte[16];
