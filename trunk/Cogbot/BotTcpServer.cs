@@ -578,8 +578,8 @@ namespace cogbot.Utilities
             }
             catch (Exception e)
             {
-                WriteLine("Failed binding to " + PortNumber);
-                return true;
+                WriteLine("Failed binding to " + PortNumber + " " + e);
+                return false;
             }
         }
 
