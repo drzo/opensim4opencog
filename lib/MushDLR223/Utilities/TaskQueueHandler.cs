@@ -39,7 +39,7 @@ namespace MushDLR223.Utilities
         private readonly object EventQueueTimeLock = new object();
 
         private bool WasStartCalled;
-        public bool UsePinger = false;
+        public bool UsePinger = true;
         private Thread PingerThread;
         private Thread TaskThreadCurrent;
         private Thread StackerThread;
@@ -68,11 +68,11 @@ namespace MushDLR223.Utilities
         // since begining
         public TaskStatistics Total = new TaskStatistics("Total");
         // per task
-        public TaskStatistics SinceLastTaskStarted = new TaskStatistics("SinceLastTaskStarted");
+        public TaskStatistics SinceLastTaskStarted = new TaskStatistics("PerTask");
         // since last ping
-        public TaskStatistics SinceLastPong = new TaskStatistics("SinceLastPong");
+        public TaskStatistics SinceLastPong = new TaskStatistics("Pong");
         // before 30 second wait
-        public TaskStatistics Every30Secs = new TaskStatistics("Every30Secs");
+        public TaskStatistics Every30Secs = new TaskStatistics("30Secs");
 
         public List<TaskStatistics> Trackers;
 
@@ -89,7 +89,7 @@ namespace MushDLR223.Utilities
     
         public class TaskStatistics
         {
-            public void ResetTime()
+            public void Init()
             {
                 AverageTime = LagTime;
                 LagTime = DateTime.Now - Start;
@@ -114,9 +114,9 @@ namespace MushDLR223.Utilities
                 ResetCounts();
                 AverageTime = LagTime;
                 //LagTime = Now - End;
+                IntervalBetween = Now - End;
                 End = Start;// Now.Subtract(TOO_SHORT_INTERVAL);
                 Start = Now;
-                IntervalBetween = Now - End;
             }
 
             public void Exit()
@@ -152,6 +152,7 @@ namespace MushDLR223.Utilities
             public TaskStatistics(string named)
             {
                 Name = named;
+                Init();
             }
         }
 
@@ -213,7 +214,7 @@ namespace MushDLR223.Utilities
         public TaskQueueHandler(object named)
             : this(named, TimeSpan.FromMilliseconds(10), TimeSpan.MaxValue, true, true)
         {
-            VeryBad("CREATE TaskQueueHandler1");
+            VeryBad("CREATE TaskQueueHandler1 " + named);
         }
 
         /*
@@ -242,7 +243,7 @@ namespace MushDLR223.Utilities
 
             if (msWaitBetween < TimeSpan.FromMilliseconds(10))
             {
-                msWaitBetween = TimeSpan.FromMilliseconds(10);
+                //msWaitBetween = TimeSpan.FromMilliseconds(10);
             }
             Trackers = new List<TaskStatistics> {Total, SinceLastPong, Every30Secs, SinceLastTaskStarted};
             KillTasksOverTimeLimit = false;
@@ -266,6 +267,8 @@ namespace MushDLR223.Utilities
                 PingerThread = new Thread(LoopNoAbort(EventQueue_Ping, PingNeverAbortLock))
                                    {Name = str + " pinger", Priority = ThreadPriority.Lowest};
             }
+            ResetTimedProgress(Total);
+            if (!PingerThread.IsAlive) RestartCurrentTask(PingerThread);//.Start();
             if (autoStart) Start();
         }
 
@@ -504,12 +507,11 @@ namespace MushDLR223.Utilities
             string extraMesage =
                 "\"" + Name + "\" "
                 + string.Format(" TODO = {0} ", RealTodo) +
-                string.Format(" TOTALS = {0}/{1}/{2} ", Total.Complete, Total.Started,
-                              GetTimeString(LastOperationTimespan)) +
-                string.Format(" 30Sec = {0}/{1}/{2} ", Every30Secs.Complete, Every30Secs.Started,
-                              GetTimeString(Every30Secs.LagTime)) +
-                string.Format(" PINGED = {0}/{1}/{2} ", SinceLastPong.Complete, SinceLastPong.Started,
-                              GetTimeString(SinceLastPong.LagTime));
+                string.Format(" OPTIME = {0} ", GetTimeString(LastOperationTimespan)) +
+                StatusFormat(Total) +
+                StatusFormat(SinceLastTaskStarted) +
+                StatusFormat(Every30Secs) +
+                StatusFormat(SinceLastPong);
 
             if (detailed)
             {
@@ -527,6 +529,19 @@ namespace MushDLR223.Utilities
                 _noQueue ? "NoQueue" : "",
                 WaitingS ?? " BEFORE ");
             return tdm;
+        }
+
+        private string StatusFormat(TaskStatistics stats)
+        {
+            ulong complete = stats.Complete;
+            ulong started = stats.Started;
+            string name = stats.Name.ToUpper();
+            ulong todo = stats.Todo;
+            if (started==complete)
+                return string.Format(" {0} = {1}/{2}/{3} ", name, todo, complete,
+                                     GetTimeString(stats.LagTime));
+            return string.Format(" {0} = {1}/{2}-({3})/{4} ", name, todo, complete, started,
+                                 GetTimeString(stats.LagTime));
         }
 
         private string ToThreadInfos()
@@ -657,8 +672,13 @@ namespace MushDLR223.Utilities
                 {
                     NoExceptions(() => DoNow(evt));
                     SinceLastTaskStarted.Busy = false;
-                    if (evtCount > 1 && !WaitingForPong)
+                    if (evtCount > 1)
                     {
+                        //if (WaitingForPong) 
+
+                        // dont bother sleeping
+                        if (evtCount > 1000 && PauseBetweenOperations < TimeSpan.FromMilliseconds(500)) continue;
+
                         Sleep(PauseBetweenOperations);
                         // avoid reset/set semantics ?
                         continue;
@@ -708,7 +728,12 @@ namespace MushDLR223.Utilities
             bool r = false;
             while (!IsDisposing)
             {
-                r = WaitingOn.WaitOne(ThisMaxOperationTimespan);
+                TimeSpan waitOne = ThisMaxOperationTimespan;
+                if (problems)
+                {
+                    waitOne = TimeSpan.FromSeconds(1);
+                }
+                r = WaitingOn.WaitOne(TimeSpan.FromSeconds(1));
                 if (r) return true;
                 if (RealTodo == 0)
                 {
@@ -760,30 +785,29 @@ namespace MushDLR223.Utilities
         {
             while (!(IsDisposing))
             {
+                ResetTimedProgress(Every30Secs); 
                 Thread.Sleep(PING_INTERVAL);
 
                 if (IsDisposing) break;
-                if (!UsePinger) continue;
-                ResetTimedProgress(Every30Secs);
-                if (!WasStartCalled) continue;
+                //if (!UsePinger) continue;
+
+                //if (!WasStartCalled) continue;
 
                 // Add a new ping?
-                if (SinceLastPong.Busy)
-                {
-                    continue;
-                }
                 if (!WaitingForPong)
                 {
-                    SinceLastPong.Start = DateTime.Now;
                     WaitingForPong = true;
-                    Enqueue0(EventQueue_Pong);
-                    continue;
+                    EnqueueLast(EventQueue_Pong);
                 }
                 if (problems)
                 {
                     LiveCheck();
                 }
                 CheckTimedProgress(Every30Secs);
+                if (RealTodo > 1 || problems || !WasStartCalled)
+                {
+                    VeryBad("REALTODO = " + RealTodo + " " + INFO);
+                }
                 continue;
                 CheckPingerTime(SinceLastPong);
             }
@@ -920,8 +944,12 @@ namespace MushDLR223.Utilities
             }
 
         }
-
         private void EventQueue_Pong()
+        {
+            NonAbortedly(() => NoExceptions(EventQueue_Pong0));
+        }
+
+        private void EventQueue_Pong0()
         {
             try
             {
@@ -929,12 +957,14 @@ namespace MushDLR223.Utilities
                 if (SinceLastPong.Busy) return;
                 SinceLastPong.Busy = true;
                 SinceLastPong.Exit();
+                problems = false;
                 ReportPongInfo(SinceLastPong);
             }
             finally 
             {
                 SinceLastPong.Busy = false;
                 WaitingForPong = false;
+                ResetTimedProgress(SinceLastPong);
             }
         }
         private void ReportPongInfo(TaskStatistics thePing)
@@ -966,9 +996,31 @@ namespace MushDLR223.Utilities
         internal static string GetTimeString(TimeSpan lag)
         {
             string lagString;
+            if (lag < TimeSpan.Zero)
+            {
+                return string.Format("???");
+            }
             if (lag.TotalSeconds < 2)
             {
-                lagString = string.Format("{0:0}ms", lag.Milliseconds);
+                var ms = lag.TotalMilliseconds;
+                if (ms >= 10)
+                {
+                    return string.Format("{0:0}ms", ms);
+                }
+                if (ms >= 1)
+                {
+                    return string.Format("{0:#.##}ms", ms);
+                }
+                if (ms > 0)
+                {
+                    return string.Format("{0:0.##}ms", ms);
+                }
+                if (ms == 0)
+                {
+                    return string.Format("0ms");
+                }
+                // why do we ever get here?!
+                return string.Format("{0}ms", ms);
             }
             else if (lag.TotalMinutes < 2)
             {
@@ -990,17 +1042,18 @@ namespace MushDLR223.Utilities
         {
             if (IsDisposing) return;
             lock (TaskThreadChangeLock)
-                abortable = false;
-            if (InternalEvent(evt))
             {
-                NonAbortedly(() => NoExceptions(evt));
-                return;
+                abortable = false;
+                if (InternalEvent(evt))
+                {
+                    evt.Invoke();                    
+                    return;
+                }
             }
             //var IsCurrentTaskComplete = new ManualResetEvent(false);
             try
             {
-                SinceLastTaskStarted.Busy = true;
-                SinceLastTaskStarted.Enter();
+                ResetTimedProgress(SinceLastTaskStarted);
                 Add1Started();
                 LastRestTime = SinceLastTaskStarted.Start.Subtract(SinceLastTaskStarted.End);
                 lock (TaskThreadChangeLock)
@@ -1580,12 +1633,17 @@ namespace MushDLR223.Utilities
         public void Enqueue0(TASK evt)
         {
             if (IsDisposing) return;
-            Add1Todo();
             if (_noQueue)
             {
                 DoNow(evt);
                 return;
             }
+            EnqueueLast(evt);
+        }
+
+        private void EnqueueLast(TASK evt)
+        {
+            Add1Todo();
             TestLock(EventQueueLock);
             lock (EventQueueLock)
             {
