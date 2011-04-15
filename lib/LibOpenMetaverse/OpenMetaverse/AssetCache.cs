@@ -139,11 +139,11 @@ namespace OpenMetaverse
         /// <returns>Raw bytes of the asset, or null on failure</returns>
         public byte[] GetCachedAssetBytes(UUID assetID)
         {
-            lock (CacheLock) return GetCachedAssetBytes0(assetID, AssetType.Unknown);
+            return GetCachedAssetBytes0(assetID, AssetType.Unknown);
         }
         public byte[] GetCachedAssetBytes(UUID assetID, AssetType assetType)
         {
-            lock (CacheLock) return GetCachedAssetBytes0(assetID, assetType);
+            return GetCachedAssetBytes0(assetID, assetType);
         }
         private byte[] GetCachedAssetBytes0(UUID assetID, AssetType assetType)
         {
@@ -293,12 +293,12 @@ namespace OpenMetaverse
         /// <returns>Weather the operation was successfull</returns>
         public bool SaveAssetToCache(UUID assetID, byte[] assetData)
         {
-            lock (CacheLock) return SaveAssetToCache0(assetID, assetData, AssetType.Unknown);
+            return SaveAssetToCache0(assetID, assetData, AssetType.Unknown);
         }
 
         public bool SaveAssetToCache(UUID assetID, byte[] assetData, AssetType assetType)
         {
-            lock (CacheLock) return SaveAssetToCache0(assetID, assetData, assetType);
+            return SaveAssetToCache0(assetID, assetData, assetType);
         }
         private bool SaveAssetToCache0(UUID assetID, byte[] assetData, AssetType assetType)
         {
@@ -311,12 +311,14 @@ namespace OpenMetaverse
             {
                 Logger.DebugLog("Saving " + FileName(assetID,assetType) + " to asset cache.", Client);
 
-                if (!Directory.Exists(Client.Settings.ASSET_CACHE_DIR))
+                lock (CacheLock)
                 {
-                    Directory.CreateDirectory(Client.Settings.ASSET_CACHE_DIR);
+                    if (!Directory.Exists(Client.Settings.ASSET_CACHE_DIR))
+                    {
+                        Directory.CreateDirectory(Client.Settings.ASSET_CACHE_DIR);
+                    }
+                    File.WriteAllBytes(FileName(assetID, assetType), assetData);
                 }
-
-                File.WriteAllBytes(FileName(assetID,assetType), assetData);
             }
             catch (Exception ex)
             {
@@ -366,17 +368,18 @@ namespace OpenMetaverse
 
         private bool Exists(string name)
         {
+            name = FindableName(name);
             lock (CacheLock)
             {
-                return File.Exists(FindableName(name));
+                return File.Exists(name);
             }
         }
 
         private string FindableName(string name)
         {
-            lock (CacheLock)
-            {
-                if (name.IndexOfAny("*?".ToCharArray()) != -1)
+
+            if (name.IndexOfAny("*?".ToCharArray()) != -1)
+                lock (CacheLock)
                 {
                     DirectoryInfo di = new DirectoryInfo(Path.GetDirectoryName(name));
                     FileInfo[] files = di.GetFiles(Path.GetFileName(name), SearchOption.TopDirectoryOnly);
@@ -390,7 +393,7 @@ namespace OpenMetaverse
                     }
                     return files[0].FullName;
                 }
-            }
+
             return name;
         }
 
