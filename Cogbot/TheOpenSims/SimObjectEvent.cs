@@ -47,6 +47,11 @@ namespace cogbot.TheOpenSims
             return Type.GetHashCode() ^ Inst.GetHashCode();
         }
 
+        public static NullType GetNullType(Type dataType)
+        {
+            return new NullType(dataType);
+        }
+
         public override string ToString()
         {
             return "(" + Type.Name + ")null";
@@ -58,7 +63,7 @@ namespace cogbot.TheOpenSims
             Type = type;
         }
 
-        public Object Inst;
+        readonly public Object Inst;
         public MemberInfo Type;// { get; set; }
 
         public NullType(Type type)

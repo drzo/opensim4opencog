@@ -423,7 +423,7 @@ namespace cogbot.TheOpenSims
 
                 LockInfo.WeaklyLock(possibles, TimeSpan.FromSeconds(10),
                                     () => DoGuessWork(props, obj, possibles),
-                                    "Guess Sim Object Types for " + obj, DLRConsole.DebugWriteLine);
+                                    () => "Guess Sim Object Types for " + obj, DLRConsole.DebugWriteLine);
             return possibles;
         }
 

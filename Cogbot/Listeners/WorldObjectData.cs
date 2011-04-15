@@ -65,7 +65,10 @@ namespace cogbot.Listeners
             {
                 prim.RegionHandle = simulator.Handle;
                 SimObject updateMe = GetSimObject(prim, simulator);
-                if (updateMe == null) return;
+                if (updateMe == null)
+                {
+                    return;
+                }
                 if (prim.ParentID == 0 && !SimRegion.OutOfRegion(prim.Position))
                 {
                     updateMe.ResetPrim(prim, client, simulator);

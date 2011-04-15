@@ -893,9 +893,9 @@ namespace cogbot.TheOpenSims
 
         public override void Debug(string p, params object[] args)
         {
+            string str = DLRConsole.SafeFormat(p, args) + " -'" + GetName() + "'-";
             if (Client != null)
             {
-                string str = String.Format(p, args);
                 Client.WorldSystem.WriteLine(str);
                 if (Client.TheRadegastInstance != null)
                 {
@@ -904,7 +904,7 @@ namespace cogbot.TheOpenSims
             }
             else
             {
-                WorldSystem.WriteLine(String.Format(p, args));
+                WorldSystem.WriteLine(str);
             }
         }
 
@@ -2491,6 +2491,7 @@ namespace cogbot.TheOpenSims
         private SimObjectEvent LastPostureEvent;
         readonly private object postureLock = new object();
         public static bool UseTeleportFallback;
+        public bool IsProfile;
         public Dictionary<UUID, AvatarGroup> GroupRoles { get; set; }
 
 

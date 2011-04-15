@@ -76,7 +76,7 @@ namespace cogbot.Listeners
             if (!MaintainAnims) return;
                 EventQueue.Enqueue(() =>
                 {
-                    SimAvatar avatar = (SimAvatar)GetSimObjectFromUUID(e.AvatarID);
+                    SimAvatar avatar = (SimAvatar) CreateSimAvatar(e.AvatarID, this, null);
                     if (avatar == null)
                     {
                         return;

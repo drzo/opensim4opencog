@@ -135,7 +135,7 @@ namespace cogbot.Listeners
                 if (UUID2Type.Count == 0)
                 {
                     UUIDGleaner texture = ((obj, sim) => { SimAssetStore.FindOrCreateAsset(obj, AssetType.Texture); });
-                    UUIDGleaner avatar = ((obj, sim) => { GridMaster.DeclareAvatar(obj); });
+                    UUIDGleaner avatar = ((obj, sim) => { GridMaster.DeclareAvatarProfile(obj); });
                     UUIDGleaner task = ((obj, sim) => { GridMaster.DeclareTask(obj, sim); });
                     UUIDGleaner nothing = ((obj, sim) => { });
                     UUIDGleaner role = ((obj, sim) => DeclareGeneric("GroupRole", obj, " +p")); 

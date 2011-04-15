@@ -24,6 +24,7 @@ namespace cogbot.TheOpenSims
             set { _confirmedObject = value; }
         }
 
+        public ObjectMovementUpdate ObjectMovementUpdateValue;
         public SimPosition UsePosition
         {
             get
@@ -492,7 +493,9 @@ namespace cogbot.TheOpenSims
                     return;
                 }
 
-            if (prim.Properties != null) _propertiesCache = prim.Properties;
+            Primitive.ObjectProperties properties = prim.Properties;
+            bool updateCarriesProperties = properties != null;
+            if (updateCarriesProperties) _propertiesCache = properties;
             if (prim.RegionHandle != _Prim0.RegionHandle || !Object.ReferenceEquals(prim, _Prim0))
             {
                 lock (_primRefs)
@@ -518,7 +521,7 @@ namespace cogbot.TheOpenSims
                 lock (HasPrimLock) _Prim0 = prim;
                 if (needUpdate)
                 {
-                    UpdateProperties(prim.Properties);
+                    if (updateCarriesProperties) UpdateProperties(properties);
                 }
                 ResetRegion(prim.RegionHandle);
             }
@@ -1118,6 +1121,11 @@ namespace cogbot.TheOpenSims
         readonly object MostRecentPropertyUpdateLock = new object();
         private void UpdateProperties(Primitive.ObjectProperties objectProperties)
         {
+            if (objectProperties==null)
+            {
+                Debug("NULL PROPS!!?!");
+                return;
+            }
             if (!_confirmedObject)
             {
                 _confirmedObject = true;
@@ -1742,16 +1750,19 @@ namespace cogbot.TheOpenSims
                 {
                     return pos;
                 }
-                if (LastKnownSimPos != default(Vector3)) return LastKnownSimPos;
-                if (RequestedParent && _Parent != null)
+                lock (HasPrimLock)
                 {
-                    var thisPrim = this._Prim0;
-                    var _ParentPrim = _Parent.Prim;
-                    if (_ParentPrim != null && _ParentPrim != thisPrim)
+                    if (LastKnownSimPos != default(Vector3)) return LastKnownSimPos;
+                    if (RequestedParent && _Parent != null)
                     {
-                        LastKnownSimPos = GetPosAfterParent(_ParentPrim, thisPrim.Position);
+                        var thisPrim = this._Prim0;
+                        var _ParentPrim = _Parent.Prim;
+                        if (_ParentPrim != null && _ParentPrim != thisPrim)
+                        {
+                            LastKnownSimPos = GetPosAfterParent(_ParentPrim, thisPrim.Position);
+                        }
+                        return LastKnownSimPos;
                     }
-                    return LastKnownSimPos;
                 }
                 if (IsRegionAttached) throw Error("GetSimPosition !IsRegionAttached: " + this);
                 return LastKnownSimPos;
@@ -1769,8 +1780,11 @@ namespace cogbot.TheOpenSims
                 LastKnownSimPos = value;
             }
         }
-
         protected Primitive GetParentPrim(Primitive thisPrim, OutputDelegate Debug)
+        {
+            lock (HasPrimLock) return GetParentPrim0(thisPrim, Debug);
+        }
+        protected Primitive GetParentPrim0(Primitive thisPrim, OutputDelegate Debug)
         {
             if (RequestedParent && thisPrim == _Prim0 && _Parent != null)
             {
@@ -2011,7 +2025,8 @@ namespace cogbot.TheOpenSims
 
         public virtual void Debug(string p, params object[] args)
         {
-            WorldSystem.WriteLine(String.Format(this + ": " + p, args));
+            string str = DLRConsole.SafeFormat(p, args) + " -'" + GetName() + "'-";
+            WorldSystem.WriteLine(str);
         }
 
         public Exception Error(string p, params object[] args)

@@ -26,7 +26,7 @@ namespace cogbot.Actions.Movement
                 return ShowUsage();// " goto_landmark [UUID]";
             }
 
-            UUID landmark = new UUID();
+            UUID landmark = UUID.Zero;
             int argsUsed;
             if (!UUIDTryParse(args, 0, out landmark, out argsUsed))
             {

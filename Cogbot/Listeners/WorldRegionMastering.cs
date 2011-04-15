@@ -964,7 +964,7 @@ namespace cogbot.Listeners
                 bool go = PrimFlags.ObjectGroupOwned == (prim0.Flags & PrimFlags.ObjectGroupOwned);
                 if (go && UUID.Zero != props.OwnerID)
                 {
-                    DeclareAvatar(props.OwnerID);
+                    DeclareAvatarProfile(props.OwnerID);
                 }
             }
             string debugInfo = "" + prim0;
@@ -972,11 +972,11 @@ namespace cogbot.Listeners
 
             if (UUID.Zero != props.OwnerID)
             {
-                DeclareAvatar(props.OwnerID);
+                DeclareAvatarProfile(props.OwnerID);
             }
             if (UUID.Zero != props.LastOwnerID)
             {
-                DeclareAvatar(props.LastOwnerID);
+                DeclareAvatarProfile(props.LastOwnerID);
             }
             if (UUID.Zero != props.FolderID)
             {
