@@ -33,7 +33,7 @@ namespace OpenMetaverse
     /// Life networking protocol
     /// </summary>
     [Serializable]
-    public struct UUID : IComparable<UUID>, IEquatable<UUID>
+    public class UUID : IComparable<UUID>, IEquatable<UUID>
     {
         /// <summary>The System.Guid object this struct wraps around</summary>
         public Guid Guid;
@@ -204,7 +204,7 @@ namespace OpenMetaverse
         /// <example>UUID.Parse("11f8aa9c-b071-4242-836b-13b7abe0d489")</example>
         public static UUID Parse(string val)
         {
-            return new UUID(val);
+            return UUID.GetUUID(val);
         }
 
         /// <summary>
@@ -399,10 +399,17 @@ namespace OpenMetaverse
 
         #endregion Operators
 
-        /// <summary>An UUID with a value of all zeroes</summary>
-        public static readonly UUID Zero = new UUID();
 
         /// <summary>A cache of UUID.Zero as a string to optimize a common path</summary>
         private static readonly string ZeroString = Guid.Empty.ToString();
+
+
+        /// <summary>An UUID with a value of all zeroes</summary>
+        public static readonly UUID Zero = new UUID(ZeroString);
+
+        public static UUID GetUUID(string s)
+        {
+            return new UUID(s);
+        }
     }
 }
