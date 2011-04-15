@@ -1626,7 +1626,7 @@ namespace MushDLR223.Utilities
                 }
                 if (!string.IsNullOrEmpty(str)) return str.ToUpper() + suffix;
             }
-            var mo = frame.GetFileName() + "_" + frame.GetFileLineNumber() + suffix;
+            //var mo = frame.GetFileName() + "_" + frame.GetFileLineNumber() + suffix;
             return str + suffix;
         }
 
@@ -1821,6 +1821,10 @@ namespace MushDLR223.Utilities
             string str = fmt;
             if (args != null && args.Length > 0)
             {
+                if (args[0] is object[])
+                {
+                    args = (object[]) args[0];
+                }
                 try
                 {
                     str = string.Format(fmt, args);

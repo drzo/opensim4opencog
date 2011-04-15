@@ -9,10 +9,14 @@ namespace MushDLR223.Utilities
 {
     public class LockInfo
     {
-
-        public static R WeaklyLock<R>(object lockObject, TimeSpan maxWaitTryEnter, Func<R> action, string operationType, OutputDelegate output)
+        public static bool DontRealyLock = true;
+        public static R WeaklyLock<R>(object lockObject, TimeSpan maxWaitTryEnter, Func<R> action, Func<string> operationType, OutputDelegate output)
         {
-            Action needsExit = MonitorTryEnter(operationType, lockObject, maxWaitTryEnter);
+            if (DontRealyLock)
+            {
+                return action();
+            }
+            Action needsExit = MonitorTryEnter(operationType(), lockObject, maxWaitTryEnter);
             try
             {
                 return action();
@@ -22,9 +26,14 @@ namespace MushDLR223.Utilities
                 needsExit();
             }
         }
-        public static void WeaklyLock(object lockObject, TimeSpan maxWaitTryEnter, Action action, string operationType, OutputDelegate output)
+        public static void WeaklyLock(object lockObject, TimeSpan maxWaitTryEnter, Action action, Func<string> operationType, OutputDelegate output)
         {
-            Action needsExit = MonitorTryEnter(operationType, lockObject, maxWaitTryEnter);
+            if (DontRealyLock)
+            {
+                action(); ;
+                return;
+            }
+            Action needsExit = MonitorTryEnter(operationType(), lockObject, maxWaitTryEnter);
             try
             {
                 action();
@@ -213,6 +222,7 @@ namespace MushDLR223.Utilities
 
         public static bool TestLock(string named, object busyTrackingLock, TimeSpan timeSpan)
         {
+            if (DontRealyLock) return true;
             // return;
             if (Monitor.TryEnter(busyTrackingLock, timeSpan))
             {
