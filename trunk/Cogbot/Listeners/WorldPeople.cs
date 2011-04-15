@@ -225,19 +225,19 @@ namespace cogbot.Listeners
             });
             if (found != null) return;
             UUID id = appearance.Sender.ID;
-            if (GetSimObjectFromUUID(id) == null)
-                CreateSimAvatar(id, this, sim);
+            //if (GetSimObjectFromUUID(id) == null)
+            CreateSimAvatar(id, this, sim);
         }
 
         public override void Avatars_OnAvatarProperties(object sender, AvatarPropertiesReplyEventArgs e)
         {
-            SimAvatar A = DeclareAvatar(e.AvatarID);
+            SimAvatar A = DeclareAvatarProfile(e.AvatarID);
             if (!MaintainAvatarMetaData) return;
             A.ProfileProperties = e.Properties;
             UUID propertiesPartner = e.Properties.Partner;
             if (propertiesPartner != UUID.Zero)
             {
-                SimAvatarImpl AA = DeclareAvatar(propertiesPartner);
+                SimAvatarImpl AA = DeclareAvatarProfile(propertiesPartner);
                 //if (AA.GetName() == null)
                 //{
                 //    String s = GetUserName(propertiesPartner);
@@ -290,6 +290,13 @@ namespace cogbot.Listeners
             return CreateSimAvatar(uuid, this, null);
         }
 
+        private SimAvatarImpl DeclareAvatarProfile(UUID uuid)
+        {
+            SimAvatarImpl A = CreateSimAvatar(uuid, this, null);
+            A.IsProfile = true;
+            return A;
+        }
+
         private SimObject DeclareTask(UUID uuid, Simulator simulator)
         {
             if (DiscoverTaskUUIDs)
@@ -322,7 +329,7 @@ namespace cogbot.Listeners
 
         public override void Avatars_OnAvatarInterests(object sender, AvatarInterestsReplyEventArgs e)
         {
-            SimAvatar A = DeclareAvatar(e.AvatarID);
+            SimAvatar A = DeclareAvatarProfile(e.AvatarID);
             if (!MaintainAvatarMetaData) return;
             A.AvatarInterests = e.Interests;
         }
@@ -341,7 +348,7 @@ namespace cogbot.Listeners
 
         public override void Avatars_OnAvatarGroups(object sender, AvatarGroupsReplyEventArgs e)
         {
-            SimAvatar A = DeclareAvatar(e.AvatarID);
+            SimAvatar A = DeclareAvatarProfile(e.AvatarID);
             A.AddGoupRoles(e.Groups);
             foreach (AvatarGroup grp in e.Groups)
             {
@@ -397,7 +404,7 @@ namespace cogbot.Listeners
                                                   SimGeneric declareGeneric = DeclareGroupRole(groupID, list.Key);
                                                   if (list.Value != UUID.Zero)
                                                   {
-                                                      SimAvatarImpl a = DeclareAvatar(list.Value);
+                                                      SimAvatarImpl a = DeclareAvatarProfile(list.Value);
 
                                                       a.AddInfoMapItem(new NamedParam("simMemberRole",
                                                                                   declareGeneric));
@@ -421,7 +428,7 @@ namespace cogbot.Listeners
                                               {
                                                   var v = member.Value;
                                                   if (member.Key == UUID.Zero) continue;
-                                                  SimAvatarImpl A = DeclareAvatar(member.Key);
+                                                  SimAvatarImpl A = DeclareAvatarProfile(member.Key);
                                                   //A.AddInfoMap(new NamedParam("GroupMember",groupID));               
                                               }
                                               if (g != null) SendOnUpdateDataAspect(g, "Members", null, null);
@@ -569,7 +576,7 @@ namespace cogbot.Listeners
         private void RequestAvatarMetadata(UUID uuid)
         {
             lock (MetadataRequested) if (!MetadataRequested.Add(uuid)) return;
-            DeclareAvatar(uuid);
+            DeclareAvatarProfile(uuid);
             NeedRequestAvatarName(uuid);
             OnConnectedQueue.Enqueue(() =>
             {
@@ -661,7 +668,7 @@ namespace cogbot.Listeners
                 Debug("AddName2Key: INFO " + value + " " + id);
                 return;
             }
-            SimAvatarImpl A = DeclareAvatar(id);
+            SimAvatarImpl A = DeclareAvatarProfile(id);
             A.AspectName = value;
             SendOnUpdateDataAspect(A, "simProperties-Name", null, value);
             
@@ -690,7 +697,7 @@ namespace cogbot.Listeners
             }
             if (!string.IsNullOrEmpty(friend.Name))
                 AddName2Key(friend.Name, id);
-            DeclareAvatar(id);
+            DeclareAvatarProfile(id);
             //base.Friends_OnFriendOnline(friend);
         }
 
@@ -832,7 +839,7 @@ namespace cogbot.Listeners
                     if (s.Trim() != "") return s;
                 }
             }
-            SimAvatarImpl AA = DeclareAvatar(found);
+            SimAvatarImpl AA = DeclareAvatarProfile(found);
             // case insensitive
             lock (Name2Key)
                 foreach (KeyValuePair<string, UUID> kvp in Name2Key)
@@ -984,7 +991,7 @@ namespace cogbot.Listeners
             DeclareGroup(groupid);
             RequestGroupInfo(groupid);
             RequestGroupMetadata(groupid);
-            var A = DeclareAvatar(uuid);
+            var A = DeclareAvatarProfile(uuid);
             var R = A.GroupRoles;
             if (R==null)
             {

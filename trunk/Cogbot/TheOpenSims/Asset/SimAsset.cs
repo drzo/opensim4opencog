@@ -641,7 +641,10 @@ namespace cogbot.TheOpenSims
 
         public void ProbeCache()
         {
-            if (_TypeData != null) return;
+            if (_TypeData != null)
+            {
+                return;
+            }
             var fileName = _fileName;
             if (!string.IsNullOrEmpty(fileName) && File.Exists(fileName))
             {

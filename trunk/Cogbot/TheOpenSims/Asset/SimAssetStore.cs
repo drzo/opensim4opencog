@@ -29,6 +29,7 @@ namespace cogbot.TheOpenSims
         internal readonly BotClient Client;
 
         static public readonly TaskQueueHandler taskQueue = new TaskQueueHandler("SimAssetStore (Slowly)", TimeSpan.FromMilliseconds(60), false);
+        static public readonly TaskQueueHandler taskQueueQuick = new TaskQueueHandler("SimAssetStore (Quickly)", TimeSpan.Zero, true);
         public static readonly TaskQueueHandler SlowConnectedQueue = taskQueue;
         public static readonly object SavingFileLock = new object();
 
@@ -37,6 +38,7 @@ namespace cogbot.TheOpenSims
             lock (taskQueue)
             {
                 if (!taskQueue.IsRunning) taskQueue.Start();
+                if (!taskQueueQuick.IsRunning) taskQueueQuick.Start();
             }
         }
         private InventoryManager Manager;
@@ -1569,7 +1571,7 @@ namespace cogbot.TheOpenSims
             SimAsset anim = FindAsset(uUID);
             if (anim != null)
             {
-                anim.ProbeCache();
+                taskQueueQuick.Enqueue(anim.ProbeCache);
                 return anim;
             }
             lock (uuidAsset)

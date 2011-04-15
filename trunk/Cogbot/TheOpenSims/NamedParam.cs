@@ -10,7 +10,7 @@ namespace cogbot
     {
         public NamedParam(KeyType k, object v)
         {
-            _key = k;
+            _key = ToKey(k);
             _value = v;
             _Type = null;
             Choices = null;
@@ -19,7 +19,7 @@ namespace cogbot
         }
         public NamedParam(string k, Type v)
         {
-            _key = k;
+            _key = ToKey(k);
             _value = v;
             _Type = null;
             Choices = null;
@@ -28,7 +28,7 @@ namespace cogbot
         }
         public NamedParam(KeyType k, Type type, object v)
         {
-            _key = k;
+            _key = ToKey(k);
             _value = v;
             _Type = type;
             Choices = null;
@@ -48,7 +48,7 @@ namespace cogbot
         public NamedParam(MemberInfo inf, KeyType k, Type type, object v)
         {
             info = inf;
-            _key = k;
+            _key = ToKey(k);
             _value = v;
             _Type = type;
             Choices = null;
@@ -56,12 +56,17 @@ namespace cogbot
         }
         public NamedParam(KeyType k, Type type, object v, params object[] choices)
         {
-            _key = k;
+            _key = ToKey(k);
             _value = v;
             _Type = type;
             Choices = choices;
             info = null;
             checkKey(k);
+        }
+
+        private static string ToKey(string s)
+        {
+            return string.Intern(s);
         }
 
         private readonly KeyType _key;
@@ -82,7 +87,7 @@ namespace cogbot
         public NamedParam(Type type, Type DataType)
         {
             _Type = type;
-            _value = new NullType(DataType);
+            _value = NullType.GetNullType(DataType);
             _key = _Type.Name;
             Choices = null;
             info = null;

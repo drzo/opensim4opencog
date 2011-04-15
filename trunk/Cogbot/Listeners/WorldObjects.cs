@@ -54,7 +54,7 @@ namespace cogbot.Listeners
         private static readonly Dictionary<ulong, HashSet<uint>> primsSelected = new Dictionary<ulong, HashSet<uint>>();
         private static readonly Dictionary<ulong, List<uint>> primsSelectedOutbox = new Dictionary<ulong, List<uint>>();
 
-        private static readonly TaskQueueHandler PropertyQueue = new TaskQueueHandler("NewObjectQueue");
+        private static readonly TaskQueueHandler PropertyQueue = new TaskQueueHandler("NewObjectQueue", TimeSpan.Zero, true);
         public static readonly TaskQueueHandler UpdateObjectData = new TaskQueueHandler("UpdateObjectData");
         public static readonly TaskQueueHandler ParentGrabber = new TaskQueueHandler("ParentGrabber", TimeSpan.FromSeconds(1), false);
 
@@ -62,7 +62,7 @@ namespace cogbot.Listeners
         private static readonly List<ThreadStart> ShutdownHooks = new List<ThreadStart>();
         private static readonly TaskQueueHandler EventQueue = new TaskQueueHandler("World EventQueue");
         private static readonly TaskQueueHandler CatchUpQueue = new TaskQueueHandler("Simulator catchup", TimeSpan.FromSeconds(60), false);
-        private static readonly TaskQueueHandler MetaDataQueue = new TaskQueueHandler("MetaData Getter", TimeSpan.FromSeconds(10), false);
+        private static readonly TaskQueueHandler MetaDataQueue = PropertyQueue;//new TaskQueueHandler("MetaData Getter", TimeSpan.FromSeconds(0), false);
         public static readonly TaskQueueHandler OnConnectedQueue = new TaskQueueHandler("OnConnectedQueue", TimeSpan.FromMilliseconds(20), false);
         public static readonly TaskQueueHandler SlowConnectedQueue = SimAssetStore.SlowConnectedQueue;
         internal static readonly Dictionary<UUID, object> uuidTypeObject = new Dictionary<UUID, object>();
@@ -377,6 +377,24 @@ namespace cogbot.Listeners
 
         static int waiters = 0;
 
+        private void OfferPrimToSimObject(Primitive prim, SimObject obj0, Simulator simulator)
+        {
+            if (simulator != null && prim.Properties == null)
+            {
+                EnsureSelected(prim.LocalID, simulator);
+            }
+            // Ensure at least one prim
+            if (obj0.Prim == null)
+            {
+                obj0.SetFirstPrim(prim);
+                obj0.ConfirmedObject = true;
+            }
+            if (!obj0.IsRegionAttached)
+            {
+                obj0.ResetPrim(prim, client, simulator);
+            }
+        }
+
         public SimObject GetSimObject(Primitive prim, Simulator simulator)
         {
             if (prim == null)
@@ -387,20 +405,7 @@ namespace cogbot.Listeners
             SimObject obj0 = GetSimObjectFromUUID(prim.ID);
             if (obj0 != null)
             {
-                if (simulator != null && prim.Properties == null)
-                {
-                    EnsureSelected(prim.LocalID, simulator);
-                }
-                // Ensure at least one prim
-                if (obj0.Prim == null)
-                {
-                    obj0.SetFirstPrim(prim);
-                    return obj0;
-                } 
-                if (!obj0.IsRegionAttached)
-                {
-                    obj0.ResetPrim(prim, client, simulator);
-                }
+                OfferPrimToSimObject(prim, obj0, simulator);
                 return obj0;
             }
 
@@ -424,7 +429,11 @@ namespace cogbot.Listeners
             lock (olock)
             {
                 obj0 = GetSimObjectFromUUID(prim.ID);
-                if (obj0 != null) return obj0;
+                if (obj0 != null)
+                {
+                    OfferPrimToSimObject(prim, obj0, simulator);
+                    return obj0;
+                }
                 // not found
                 if (prim is Avatar)
                 {
@@ -501,7 +510,7 @@ namespace cogbot.Listeners
 
         public virtual void Debug(string p, params object[] args)
         {
-            Debug(String.Format(p, args));
+            Debug(DLRConsole.SafeFormat(p, args));
         }
 
         public void WriteLine(string p, params object[] args)
