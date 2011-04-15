@@ -167,6 +167,8 @@ namespace OpenMetaverse
 	        "ATTACH_HUD_BOTTOM_RIGHT"
         };
 
+        public const bool InternStrings = true;
+
         #endregion String Arrays
 
         #region BytesTo
@@ -596,17 +598,24 @@ namespace OpenMetaverse
         public static string BytesToString(byte[] bytes)
         {
             if (bytes.Length > 0 && bytes[bytes.Length - 1] == 0x00)
-                return UTF8Encoding.UTF8.GetString(bytes, 0, bytes.Length - 1);
+                return GetString(bytes, 0, bytes.Length - 1);
             else
-                return UTF8Encoding.UTF8.GetString(bytes, 0, bytes.Length);
+                return GetString(bytes, 0, bytes.Length);
         }
 
         public static string BytesToString(byte[] bytes, int index, int count)
         {
             if (bytes.Length > index + count && bytes[index + count - 1] == 0x00)
-                return UTF8Encoding.UTF8.GetString(bytes, index, count - 1);
+                return GetString(bytes, index, count - 1);
             else
-                return UTF8Encoding.UTF8.GetString(bytes, index, count);
+                return GetString(bytes, index, count);
+        }
+
+        private static string GetString(byte[] bytes, int index, int count)
+        {
+            string cnv = UTF8Encoding.UTF8.GetString(bytes, index, count);
+            if (!(Utils.InternStrings)) return cnv;
+            return string.Intern(UTF8Encoding.UTF8.GetString(bytes, index, count));
         }
 
         /// <summary>
