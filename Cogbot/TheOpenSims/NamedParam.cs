@@ -66,6 +66,7 @@ namespace cogbot
 
         private static string ToKey(string s)
         {
+            if (s == null) return null;
             return string.Intern(s);
         }
 
