@@ -25,28 +25,106 @@
  */
 
 using System;
-
+using UUIDCantBeNull = OpenMetaverse.UUID;
 namespace OpenMetaverse
 {
+#if (INTERNABLE_UUIDS)
+
+
+        public interface UUID
+        {
+            // Any class that implements IMyInterface must define a method
+            // that matches the following signature.
+            //void MethodB();
+            Guid Guid { get; set; }
+        }
+
+
+
+    // Define extension methods for IMyInterface.
+    namespace Extensions
+    {
+        using System;
+        using UUIDCantBeNull;
+        using UUID;
+
+        // The following extension methods can be accessed by instances of any 
+        // class that implements IMyInterface.
+        public static class Extension
+        {
+            public static void MethodA(this UUID myInterface, int i)
+            {
+                Console.WriteLine
+                    ("Extension.MethodA(this OkAsNullUUID myInterface, int i)");
+            }
+
+            public static void MethodA(this UUID myInterface, string s)
+            {
+                Console.WriteLine
+                    ("Extension.MethodA(this IMyInterface myInterface, string s)");
+            }
+
+            // This method is never called in ExtensionMethodsDemo1, because each 
+            // of the three classes A, B, and C implements a method named MethodB
+            // that has a matching signature.
+            public static void MethodB(this UUID myInterface)
+            {
+                Console.WriteLine
+                    ("Extension.MethodB(this IMyInterface myInterface)");
+            }
+        }
+    }
+#endif
     /// <summary>
     /// A 128-bit Universally Unique Identifier, used throughout the Second
     /// Life networking protocol
     /// </summary>
     [Serializable]
+#if INTERNABLE_UUIDS
+    public class UUIDCantBeNull : IComparable<UUID>, IEquatable<UUID>, UUID
+#else
     public struct UUID : IComparable<UUID>, IEquatable<UUID>
+#endif
     {
         /// <summary>The System.Guid object this struct wraps around</summary>
+#if INTERNABLE_UUIDS
+        public Guid Guid { get; set;}
+#else
         public Guid Guid;
-
+#endif
         #region Constructors
 
+        public static UUIDCantBeNull GetUUID(byte[] data, int pos)
+        {
+            return new UUIDCantBeNull(data, pos);
+        }
+        public static UUID GetUUID(string s)
+        {
+            return new UUIDCantBeNull(s);
+        }
+        public static UUID GetUUID(UUID s)
+        {
+            return new UUIDCantBeNull(s);
+        }
+        public static UUID GetUUID(Guid s)
+        {
+            return new UUIDCantBeNull(s);
+        }
+        public static UUID GetUUID(ulong s)
+        {
+            return new UUIDCantBeNull(s);
+        }
         /// <summary>
         /// Constructor that takes a string UUID representation
         /// </summary>
         /// <param name="val">A string representation of a UUID, case 
         /// insensitive and can either be hyphenated or non-hyphenated</param>
         /// <example>UUID("11f8aa9c-b071-4242-836b-13b7abe0d489")</example>
+#if INTERNABLE_UUIDS
+        private UUIDCantBeNull(string val)
+#else
         public UUID(string val)
+#endif
         {
             if (String.IsNullOrEmpty(val))
                 Guid = new Guid();
@@ -59,7 +137,11 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="val">A Guid object that contains the unique identifier
         /// to be represented by this UUID</param>
-        public UUID(Guid val)
+#if INTERNABLE_UUIDS
+        private UUIDCantBeNull(UUID val)
+#else
+        private UUID(Guid val)
+#endif
         {
             Guid = val;
         }
@@ -69,9 +151,13 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="source">Byte array containing a 16 byte UUID</param>
         /// <param name="pos">Beginning offset in the array</param>
-        public UUID(byte[] source, int pos)
+#if INTERNABLE_UUIDS
+        private UUIDCantBeNull(byte[] source, int pos)
+#else
+        private UUID(byte[] source, int pos)
+#endif
         {
-            Guid = UUID.Zero.Guid;
+            Guid = UUIDCantBeNull.Zero.Guid;
             FromBytes(source, pos);
         }
 
@@ -80,7 +166,11 @@ namespace OpenMetaverse
         /// convert to a UUID
         /// </summary>
         /// <param name="val">64-bit unsigned integer to convert to a UUID</param>
-        public UUID(ulong val)
+#if INTERNABLE_UUIDS
+        private UUIDCantBeNull(ulong val)
+#else
+        private UUID(ulong val)
+#endif
         {
             byte[] end = BitConverter.GetBytes(val);
             if (!BitConverter.IsLittleEndian)
@@ -93,7 +183,11 @@ namespace OpenMetaverse
         /// Copy constructor
         /// </summary>
         /// <param name="val">UUID to copy</param>
-        public UUID(UUID val)
+#if INTERNABLE_UUIDS
+    private UUIDCantBeNull(UUID val)
+#else
+        private UUID(UUID val)
+#endif
         {
             Guid = val.Guid;
         }
@@ -251,7 +345,7 @@ namespace OpenMetaverse
             }
             int fd = val.IndexOfAny(" ._@".ToCharArray());
             if (fd != -1) return false;
-           
+
             fd = val.IndexOf('-');
             if (valLength == 32 && fd == -1)
             {
@@ -278,7 +372,7 @@ namespace OpenMetaverse
             Buffer.BlockCopy(first.GetBytes(), 0, input, 0, 16);
             Buffer.BlockCopy(second.GetBytes(), 0, input, 16, 16);
 
-            return new UUID(Utils.MD5(input), 0);
+            return UUID.GetUUID(Utils.MD5(input), 0);
         }
 
         /// <summary>
@@ -287,7 +381,7 @@ namespace OpenMetaverse
         /// <returns></returns>
         public static UUID Random()
         {
-            return new UUID(Guid.NewGuid());
+            return UUID.GetUUID(Guid.NewGuid());
         }
 
         #endregion Static Methods
@@ -311,7 +405,7 @@ namespace OpenMetaverse
         public override bool Equals(object o)
         {
 
-#if NULLABLE_STRUCT
+#if INTERNABLE_UUIDS
             if (o == null) o = Zero;
             else
 #endif
@@ -328,7 +422,7 @@ namespace OpenMetaverse
         /// <returns>True if the UUIDs are equal, otherwise false</returns>
         public bool Equals(UUID uuid)
         {
-#if NULLABLE_STRUCT
+#if INTERNABLE_UUIDS
             uuid = uuid ?? Zero;
 #endif
             return Guid == uuid.Guid;
@@ -360,7 +454,7 @@ namespace OpenMetaverse
         /// <returns>True if the UUIDs are byte for byte equal, otherwise false</returns>
         public static bool operator ==(UUID lhs, UUID rhs)
         {
-#if NULLABLE_STRUCT
+#if INTERNABLE_UUIDS
             lhs = lhs ?? Zero;
             rhs = rhs ?? Zero;
 #endif
@@ -386,7 +480,7 @@ namespace OpenMetaverse
         /// <returns>A UUID that is a XOR combination of the two input UUIDs</returns>
         public static UUID operator ^(UUID lhs, UUID rhs)
         {
-#if NULLABLE_STRUCT
+#if INTERNABLE_UUIDS
             lhs = lhs ?? Zero;
             rhs = rhs ?? Zero;
 #endif
@@ -399,7 +493,7 @@ namespace OpenMetaverse
                 output[i] = (byte)(lhsbytes[i] ^ rhsbytes[i]);
             }
 
-            return new UUID(output, 0);
+            return UUID.GetUUID(output, 0);
         }
 
         /// <summary>
@@ -410,22 +504,25 @@ namespace OpenMetaverse
         /// <returns>A UUID built from the string representation</returns>
         public static explicit operator UUID(string val)
         {
-            return new UUID(val);
+            return UUID.GetUUID(val);
         }
 
-        #endregion Operators
-
+#if PERFECT_WORLD
+        public static implicit operator UUID(object val)
+        {
+            if (val == null) return UUID.Zero;
+            return (UUID) val;
+        }
+#warning OMG a perfect world!
+#endif
+        #endregion Operator
 
         /// <summary>A cache of UUID.Zero as a string to optimize a common path</summary>
         private static readonly string ZeroString = Guid.Empty.ToString();
 
 
         /// <summary>An UUID with a value of all zeroes</summary>
-        public static readonly UUID Zero = new UUID(ZeroString);
+        public static readonly UUID Zero = UUID.GetUUID(ZeroString);
 
-        public static UUID GetUUID(string s)
-        {
-            return new UUID(s);
-        }
     }
 }

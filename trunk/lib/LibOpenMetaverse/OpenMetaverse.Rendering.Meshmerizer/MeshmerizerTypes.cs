@@ -1973,7 +1973,7 @@ namespace OpenMetaverse.Rendering
                 SculptTextureUUID = new byte[16];
                 SculptTypel = data[16 + pos];
                 Array.Copy(data, pos, SculptTextureUUID, 0, 16);
-                SculptUUID = new UUID(SculptTextureUUID, 0);
+                SculptUUID = UUID.GetUUID(SculptTextureUUID, 0);
             }
             else
             {

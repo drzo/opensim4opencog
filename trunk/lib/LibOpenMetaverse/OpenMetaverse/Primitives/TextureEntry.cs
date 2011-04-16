@@ -593,7 +593,7 @@ namespace OpenMetaverse
         public class TextureEntry
         {
             public const int MAX_FACES = 32;
-            public static readonly UUID WHITE_TEXTURE = new UUID("5748decc-f629-461c-9a36-a35a221fe21f");
+            public static readonly UUID WHITE_TEXTURE = UUID.GetUUID("5748decc-f629-461c-9a36-a35a221fe21f");
 
             /// <summary></summary>
             public TextureEntryFace DefaultTexture;
@@ -749,12 +749,12 @@ namespace OpenMetaverse
                 int i = pos;
 
                 #region Texture
-                DefaultTexture.TextureID = new UUID(data, i);
+                DefaultTexture.TextureID = UUID.GetUUID(data, i);
                 i += 16;
 
                 while (ReadFaceBitfield(data, ref i, ref faceBits, ref bitfieldSize))
                 {
-                    UUID tmpUUID = new UUID(data, i);
+                    UUID tmpUUID = UUID.GetUUID(data, i);
                     i += 16;
 
                     for (uint face = 0, bit = 1; face < bitfieldSize; face++, bit <<= 1)
