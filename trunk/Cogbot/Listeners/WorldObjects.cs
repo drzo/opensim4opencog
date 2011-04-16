@@ -33,7 +33,7 @@ namespace cogbot.Listeners
         static public bool MaintainAvatarMetaData = true;
         static public bool MaintainGroupMetaData = true;
         static public bool RequestGroupMetaData = false;
-        public static bool MaintainSimObjectInfoMap = true;
+        public static bool MaintainSimObjectInfoMap = false;
 		public static bool SendSimObjectInfoMap = true;
         public static bool SendOnDataAspectUpdate = true;
         public static bool ZeroOutUselessUUIDs = true;

@@ -95,12 +95,15 @@ namespace cogbot.TheOpenSims
 
         public void AddInfoMap(object properties, string name)
         {
-            List<NamedParam> from = WorldObjects.GetMemberValues("", properties);
-            foreach (var o in from)
+            if (WorldObjects.MaintainSimObjectInfoMap)
             {
-                AddInfoMapItem(o);
+                List<NamedParam> from = WorldObjects.GetMemberValues("", properties);
+                foreach (var o in from)
+                {
+                    AddInfoMapItem(o);
+                }
             }
-			if (!WorldObjects.SendSimObjectInfoMap) return;
+            if (!WorldObjects.SendSimObjectInfoMap) return;
 
             WorldSystem.SendOnUpdateDataAspect(this, name, null, properties);
             WorldSystem.SendNewRegionEvent(SimEventType.DATA_UPDATE, "On" + name + "Update", this);
