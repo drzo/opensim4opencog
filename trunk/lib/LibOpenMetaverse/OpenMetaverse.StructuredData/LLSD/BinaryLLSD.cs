@@ -257,7 +257,7 @@ namespace OpenMetaverse.StructuredData
                     osd = OSD.FromReal(dbl);
                     break;
                 case uuidBinaryMarker:
-                    osd = OSD.FromUUID(UUID.GetUUID(ConsumeBytes(stream, 16), 0));
+                    osd = OSD.FromUUID(UUIDFactory.GetUUID(ConsumeBytes(stream, 16), 0));
                     break;
                 case binaryBinaryMarker:
                     int binaryLength = NetworkToHostInt(ConsumeBytes(stream, int32Length));

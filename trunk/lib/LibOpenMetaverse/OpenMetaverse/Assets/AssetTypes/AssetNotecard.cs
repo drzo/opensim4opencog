@@ -256,19 +256,19 @@ namespace OpenMetaverse.Assets
                                     break;
                                 else if (pkey == "creator_id")
                                 {
-                                    creatorID = UUID.GetUUID(pval);
+                                    creatorID = UUIDFactory.GetUUID(pval);
                                 }
                                 else if (pkey == "owner_id")
                                 {
-                                    ownerID = UUID.GetUUID(pval);
+                                    ownerID = UUIDFactory.GetUUID(pval);
                                 }
                                 else if (pkey == "last_owner_id")
                                 {
-                                    lastOwnerID = UUID.GetUUID(pval);
+                                    lastOwnerID = UUIDFactory.GetUUID(pval);
                                 }
                                 else if (pkey == "group_id")
                                 {
-                                    groupID = UUID.GetUUID(pval);
+                                    groupID = UUIDFactory.GetUUID(pval);
                                 }
                                 else if (pkey == "base_mask")
                                 {
@@ -318,15 +318,15 @@ namespace OpenMetaverse.Assets
                         }
                         else if (key == "item_id")
                         {
-                            uuid = UUID.GetUUID(val);
+                            uuid = UUIDFactory.GetUUID(val);
                         }
                         else if (key == "parent_id")
                         {
-                            parentUUID = UUID.GetUUID(val);
+                            parentUUID = UUIDFactory.GetUUID(val);
                         }
                         else if (key == "asset_id")
                         {
-                            assetUUID = UUID.GetUUID(val);
+                            assetUUID = UUIDFactory.GetUUID(val);
                         }
                         else if (key == "type")
                         {

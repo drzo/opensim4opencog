@@ -593,7 +593,7 @@ namespace OpenMetaverse
 
             XferDownload transfer = new XferDownload();
             transfer.XferID = id;
-            transfer.ID = UUID.GetUUID(id); // Our dictionary tracks transfers with UUIDs, so convert the ulong back
+            transfer.ID = UUIDFactory.GetUUID(id); // Our dictionary tracks transfers with UUIDs, so convert the ulong back
             transfer.Filename = filename;
             transfer.VFileID = vFileID;
             transfer.AssetType = vFileType;
@@ -1399,7 +1399,7 @@ namespace OpenMetaverse
 
                     if (download.Source == SourceType.Asset && info.TransferInfo.Params.Length == 20)
                     {
-                        download.AssetID = UUID.GetUUID(info.TransferInfo.Params, 0);
+                        download.AssetID = UUIDFactory.GetUUID(info.TransferInfo.Params, 0);
                         download.AssetType = (AssetType)(sbyte)info.TransferInfo.Params[16];
 
                         //Client.DebugLog(String.Format("TransferInfo packet received. AssetID: {0} Type: {1}",
@@ -1408,12 +1408,12 @@ namespace OpenMetaverse
                     else if (download.Source == SourceType.SimInventoryItem && info.TransferInfo.Params.Length == 100)
                     {
                         // TODO: Can we use these?
-                        //UUID agentID = UUID.GetUUID(info.TransferInfo.Params, 0);
-                        //UUID sessionID = UUID.GetUUID(info.TransferInfo.Params, 16);
-                        //UUID ownerID = UUID.GetUUID(info.TransferInfo.Params, 32);
-                        //UUID taskID = UUID.GetUUID(info.TransferInfo.Params, 48);
-                        //UUID itemID = UUID.GetUUID(info.TransferInfo.Params, 64);
-                        download.AssetID = UUID.GetUUID(info.TransferInfo.Params, 80);
+                        //UUID agentID = UUIDFactory.GetUUID(info.TransferInfo.Params, 0);
+                        //UUID sessionID = UUIDFactory.GetUUID(info.TransferInfo.Params, 16);
+                        //UUID ownerID = UUIDFactory.GetUUID(info.TransferInfo.Params, 32);
+                        //UUID taskID = UUIDFactory.GetUUID(info.TransferInfo.Params, 48);
+                        //UUID itemID = UUIDFactory.GetUUID(info.TransferInfo.Params, 64);
+                        download.AssetID = UUIDFactory.GetUUID(info.TransferInfo.Params, 80);
                         download.AssetType = (AssetType)(sbyte)info.TransferInfo.Params[96];
 
                         //Client.DebugLog(String.Format("TransferInfo packet received. AgentID: {0} SessionID: {1} " + 
@@ -1579,7 +1579,7 @@ namespace OpenMetaverse
                 upload.XferID = request.XferID.ID;
                 upload.Type = (AssetType)request.XferID.VFileType;
 
-                UUID transferID = UUID.GetUUID(upload.XferID);
+                UUID transferID = UUIDFactory.GetUUID(upload.XferID);
                 Transfers[transferID] = upload;
 
                 // Send the first packet containing actual asset data
@@ -1596,7 +1596,7 @@ namespace OpenMetaverse
 
             // Building a UUID.GetUUID every time an ACK is received for an upload is a horrible
             // thing, but this whole Xfer system is horrible
-            UUID transferID = UUID.GetUUID(confirm.XferID.ID);
+            UUID transferID = UUIDFactory.GetUUID(confirm.XferID.ID);
             Transfer transfer;
             AssetUpload upload = null;
 
@@ -1677,7 +1677,7 @@ namespace OpenMetaverse
             SendXferPacketPacket xfer = (SendXferPacketPacket)e.Packet;
 
             // Lame ulong to UUID conversion, please go away Xfer system
-            UUID transferID = UUID.GetUUID(xfer.XferID.ID);
+            UUID transferID = UUIDFactory.GetUUID(xfer.XferID.ID);
             Transfer transfer;
             XferDownload download = null;
 
@@ -1758,7 +1758,7 @@ namespace OpenMetaverse
             XferDownload download = null;
 
             // Lame ulong to UUID conversion, please go away Xfer system
-            UUID transferID = UUID.GetUUID(abort.XferID.ID);
+            UUID transferID = UUIDFactory.GetUUID(abort.XferID.ID);
 
             lock (Transfers)
             {

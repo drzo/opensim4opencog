@@ -1151,8 +1151,8 @@ namespace OpenMetaverse
                         {
                             if (block.TypeData.Length == 56)
                             {
-                                UUID sourceAvatar = UUID.GetUUID(block.TypeData, 0);
-                                UUID targetObject = UUID.GetUUID(block.TypeData, 16);
+                                UUID sourceAvatar = UUIDFactory.GetUUID(block.TypeData, 0);
+                                UUID targetObject = UUIDFactory.GetUUID(block.TypeData, 16);
                                 Vector3d targetPos = new Vector3d(block.TypeData, 32);
                                 OnViewerEffect(new ViewerEffectEventArgs(type, sourceAvatar, targetObject, targetPos, block.Duration, block.ID));
                             }
@@ -1169,8 +1169,8 @@ namespace OpenMetaverse
                         {
                             if (block.TypeData.Length == 57)
                             {
-                                UUID sourceAvatar = UUID.GetUUID(block.TypeData, 0);
-                                UUID targetObject = UUID.GetUUID(block.TypeData, 16);
+                                UUID sourceAvatar = UUIDFactory.GetUUID(block.TypeData, 0);
+                                UUID targetObject = UUIDFactory.GetUUID(block.TypeData, 16);
                                 Vector3d targetPos = new Vector3d(block.TypeData, 32);
                                 LookAtType lookAt = (LookAtType)block.TypeData[56];
 
@@ -1189,8 +1189,8 @@ namespace OpenMetaverse
                         {
                             if (block.TypeData.Length == 57)
                             {
-                                UUID sourceAvatar = UUID.GetUUID(block.TypeData, 0);
-                                UUID targetObject = UUID.GetUUID(block.TypeData, 16);
+                                UUID sourceAvatar = UUIDFactory.GetUUID(block.TypeData, 0);
+                                UUID targetObject = UUIDFactory.GetUUID(block.TypeData, 16);
                                 Vector3d targetPos = new Vector3d(block.TypeData, 32);
                                 PointAtType pointAt = (PointAtType)block.TypeData[56];
 

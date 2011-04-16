@@ -450,7 +450,7 @@ namespace OpenMetaverse
             {
                 if (data.Length >= 17)
                 {
-                    SculptTexture = UUID.GetUUID(data, pos);
+                    SculptTexture = UUIDFactory.GetUUID(data, pos);
                     type = data[pos + 16];
                 }
                 else

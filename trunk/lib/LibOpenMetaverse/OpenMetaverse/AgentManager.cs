@@ -4341,7 +4341,7 @@ namespace OpenMetaverse
                                     {
                                         MuteEntry me = new MuteEntry();
                                         me.Type = (MuteType)int.Parse(m.Groups["MyteType"].Value);
-                                        me.ID = UUID.GetUUID(m.Groups["Key"].Value);
+                                        me.ID = UUIDFactory.GetUUID(m.Groups["Key"].Value);
                                         me.Name = m.Groups["Name"].Value;
                                         int flags = 0;
                                         int.TryParse(m.Groups["Flags"].Value, out flags);

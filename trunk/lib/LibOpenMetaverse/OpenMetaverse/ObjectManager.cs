@@ -2291,7 +2291,7 @@ namespace OpenMetaverse
                 try
                 {
                     // UUID
-                    UUID FullID = UUID.GetUUID(block.Data, 0);
+                    UUID FullID = UUIDFactory.GetUUID(block.Data, 0);
                     i += 16;
                     // Local ID
                     uint LocalID = (uint)(block.Data[i++] + (block.Data[i++] << 8) +
@@ -2350,7 +2350,7 @@ namespace OpenMetaverse
                     CompressedFlags flags = (CompressedFlags)Utils.BytesToUInt(block.Data, i);
                     i += 4;
 
-                    prim.OwnerID = UUID.GetUUID(block.Data, i);
+                    prim.OwnerID = UUIDFactory.GetUUID(block.Data, i);
                     i += 16;
 
                     // Angular velocity
@@ -2439,7 +2439,7 @@ namespace OpenMetaverse
                     //Sound data
                     if ((flags & CompressedFlags.HasSound) != 0)
                     {
-                        prim.Sound = UUID.GetUUID(block.Data, i);
+                        prim.Sound = UUIDFactory.GetUUID(block.Data, i);
                         i += 16;
 
                         prim.SoundGain = Utils.BytesToFloat(block.Data, i);
@@ -2692,7 +2692,7 @@ namespace OpenMetaverse
                 int numTextures = objectData.TextureID.Length / 16;
                 props.TextureIDs = new UUID[numTextures];
                 for (int j = 0; j < numTextures; ++j)
-                    props.TextureIDs[j] = UUID.GetUUID(objectData.TextureID, j * 16);
+                    props.TextureIDs[j] = UUIDFactory.GetUUID(objectData.TextureID, j * 16);
 
                 if (Client.Settings.OBJECT_TRACKING)
                 {
