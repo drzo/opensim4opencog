@@ -8,8 +8,8 @@ namespace cogbot.TheOpenSims
 {
     internal class SimAnimation : SimAsset
     {
-        readonly static UUID WALK_ADJUST = UUID.GetUUID("829bc85b-02fc-ec41-be2e-74cc6dd7215d");
-        readonly static UUID FLY_ADJUST = UUID.GetUUID("db95561f-f1b0-9f9a-7224-b12f71af126e");
+        readonly static UUID WALK_ADJUST = UUIDFactory.GetUUID("829bc85b-02fc-ec41-be2e-74cc6dd7215d");
+        readonly static UUID FLY_ADJUST = UUIDFactory.GetUUID("db95561f-f1b0-9f9a-7224-b12f71af126e");
         internal static void ClassifyAnims()
         {
             string type = "SittingDown";

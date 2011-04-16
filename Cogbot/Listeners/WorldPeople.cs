@@ -386,7 +386,7 @@ namespace cogbot.Listeners
                 {
                     i[index] ^= 0xff;
                 }
-                key = new UUID(i, 0);
+                key = UUIDFactory.GetUUID(i, 0);
             }
             return DeclareGeneric("GroupRole", key, "DeclareGroupRole" );
         }

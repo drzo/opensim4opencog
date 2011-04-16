@@ -623,8 +623,8 @@ namespace cogbot.Listeners
                 EffectType type = (EffectType) block.Type;
 
                 // most effect types have at least these properties
-                UUID sourceAvatar = new UUID(block.TypeData, 0);
-                UUID targetObject = new UUID(block.TypeData, 16);
+                UUID sourceAvatar = UUIDFactory.GetUUID(block.TypeData, 0);
+                UUID targetObject = UUIDFactory.GetUUID(block.TypeData, 16);
                 Vector3d targetPos = new Vector3d(block.TypeData, 32);
                 //Color4 color;
                 //if (block.Color.Length == 4)

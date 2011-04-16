@@ -1576,48 +1576,49 @@ namespace cogbot.TheOpenSims
             }
             lock (uuidAsset)
             {
+                string noname = null;
                 anim = FindAsset(uUID);
                 if (anim == null)
                 {
                     switch (type)
                     {
                         case AssetType.Animation:
-                            anim = new SimAnimation(uUID, null);
+                            anim = new SimAnimation(uUID, noname);
                             break;
                         case AssetType.Sound:
                         case AssetType.SoundWAV:
-                            anim = new SimSound(uUID, null, type);
+                            anim = new SimSound(uUID, noname, type);
                             break;
                         case AssetType.Texture:
                         case AssetType.ImageJPEG:
                         case AssetType.ImageTGA:
                         case AssetType.TextureTGA:
-                            anim = new SimTexture(uUID, null, type);
+                            anim = new SimTexture(uUID, noname, type);
                             break;
                         case AssetType.Gesture:
-                            anim = new SimGesture(uUID, null);
+                            anim = new SimGesture(uUID, noname);
                             break;
                         case AssetType.LSLText:
                         case AssetType.LSLBytecode:
-                            anim = new SimScript(uUID, null, type);
+                            anim = new SimScript(uUID, noname, type);
                             break;
                         case AssetType.Notecard:
-                            anim = new SimNotecard(uUID, null);
+                            anim = new SimNotecard(uUID, noname);
                             break;
                         case AssetType.CallingCard:
-                            anim = new SimCallingCard(uUID, null);
+                            anim = new SimCallingCard(uUID, noname);
                             break;
                         case AssetType.Clothing:
-                            anim = new SimClothing(uUID, null);
+                            anim = new SimClothing(uUID, noname);
                             break;
                         case AssetType.Bodypart:
-                            anim = new SimBodypart(uUID, null);
+                            anim = new SimBodypart(uUID, noname);
                             break;
                         case AssetType.Landmark:
-                            anim = new SimLandmark(uUID, null);
+                            anim = new SimLandmark(uUID, noname);
                             break;
                         case AssetType.Link:
-                            anim = new SimLandmark(uUID, null);
+                            anim = new SimLandmark(uUID, noname);
                             break;
                         default:
                             throw new NotImplementedException("FindOrCreateAsset " + type);
