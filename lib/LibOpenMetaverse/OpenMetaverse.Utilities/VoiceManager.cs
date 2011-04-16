@@ -232,7 +232,7 @@ namespace OpenMetaverse.Utilities
                 byte[] idBytes = Convert.FromBase64String(accountName);
 
                 if (idBytes.Length == 16)
-                    return UUID.GetUUID(idBytes, 0);
+                    return UUIDFactory.GetUUID(idBytes, 0);
                 else
                     return UUID.Zero;
             }

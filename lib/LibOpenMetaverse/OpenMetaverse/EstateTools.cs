@@ -775,7 +775,7 @@ namespace OpenMetaverse
             if (method == "estateupdateinfo")
             {
                 string estateName = Utils.BytesToString(message.ParamList[0].Parameter);
-                UUID estateOwner = UUID.GetUUID(Utils.BytesToString(message.ParamList[1].Parameter));
+                UUID estateOwner = UUIDFactory.GetUUID(Utils.BytesToString(message.ParamList[1].Parameter));
                 estateID = Utils.BytesToUInt(message.ParamList[2].Parameter);
                 /*
                 foreach (EstateOwnerMessagePacket.ParamListBlock param in message.ParamList)
@@ -815,7 +815,7 @@ namespace OpenMetaverse
                                     {
                                         try
                                         {
-                                            UUID managerID = UUID.GetUUID(message.ParamList[i].Parameter, 0);
+                                            UUID managerID = UUIDFactory.GetUUID(message.ParamList[i].Parameter, 0);
                                             managers.Add(managerID);
                                         }
                                         catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, Client, ex); }
@@ -836,7 +836,7 @@ namespace OpenMetaverse
                                     {
                                         try
                                         {
-                                            UUID bannedID = UUID.GetUUID(message.ParamList[i].Parameter, 0);
+                                            UUID bannedID = UUIDFactory.GetUUID(message.ParamList[i].Parameter, 0);
                                             bannedUsers.Add(bannedID);
                                         }
                                         catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, Client, ex); }
@@ -857,7 +857,7 @@ namespace OpenMetaverse
                                     {
                                         try
                                         {
-                                            UUID allowedID = UUID.GetUUID(message.ParamList[i].Parameter, 0);
+                                            UUID allowedID = UUIDFactory.GetUUID(message.ParamList[i].Parameter, 0);
                                             allowedUsers.Add(allowedID);
                                         }
                                         catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, Client, ex); }
@@ -878,7 +878,7 @@ namespace OpenMetaverse
                                     {
                                         try
                                         {
-                                            UUID groupID = UUID.GetUUID(message.ParamList[i].Parameter, 0);
+                                            UUID groupID = UUIDFactory.GetUUID(message.ParamList[i].Parameter, 0);
                                             allowedGroups.Add(groupID);
                                         }
                                         catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, Client, ex); }
