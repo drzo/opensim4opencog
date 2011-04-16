@@ -249,14 +249,14 @@ namespace cogbot.TheOpenSims
         public SimAsset(UUID anim, String name)
         {
             AssetID = anim;
-            Name = string.Intern(name);
+            if (name != null) Name = string.Intern(name);
             //lock (SimAssetStore.SimAssets)
             SimAssetStore.SimAssets.Add(this);
         }
         public SimAsset(UUID anim, String name, AssetType type)
         {
             AssetID = anim;
-            Name = string.Intern(name);
+            if (name != null) Name = string.Intern(name);
             AssetType = type;
             //lock (SimAssetStore.SimAssets) 
             SimAssetStore.SimAssets.Add(this);
