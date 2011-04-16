@@ -249,14 +249,14 @@ namespace cogbot.TheOpenSims
         public SimAsset(UUID anim, String name)
         {
             AssetID = anim;
-            Name = name;
+            Name = string.Intern(name);
             //lock (SimAssetStore.SimAssets)
             SimAssetStore.SimAssets.Add(this);
         }
         public SimAsset(UUID anim, String name, AssetType type)
         {
             AssetID = anim;
-            Name = name;
+            Name = string.Intern(name);
             AssetType = type;
             //lock (SimAssetStore.SimAssets) 
             SimAssetStore.SimAssets.Add(this);
@@ -349,16 +349,17 @@ namespace cogbot.TheOpenSims
             set
             {
                 if (string.IsNullOrEmpty(value)) return;
+                string intern = string.Intern(value);
                 if (!_NamesList.Contains(value))
                 {
-                    _NamesList.Add(value);
+                    _NamesList.Add(intern);
                     if (SimAssetStore.downloadedAssetFoldersComplete || _NamesList.Count > 3)
                     {
-                        WriteLine("SetAssetName: {0} {1}", AssetType, value);
+                        WriteLine("SetAssetName: {0} {1}", AssetType, intern);
                     }
                 }
-                if (!SimAssetStore.nameAsset.ContainsKey(value))
-                    SimAssetStore.nameAsset[value] = this;
+                if (!SimAssetStore.nameAsset.ContainsKey(intern))
+                    SimAssetStore.nameAsset[intern] = this;
             }
         }
 
@@ -366,6 +367,7 @@ namespace cogbot.TheOpenSims
         {
             if (!string.IsNullOrEmpty(n))
             {
+                n = string.Intern(n);
                 if (!_NamesList.Contains(n)) _NamesList.Add(n);
             }
         }
@@ -428,6 +430,7 @@ namespace cogbot.TheOpenSims
             {
                 if (!Meanings.Contains(anims))
                 {
+                    anims = string.Intern(anims);
                     Meanings.Add(anims);
                     List<UUID> AMeanings = SimAssetStore.MeaningUUIDs(anims);
                     if (!AMeanings.Contains(AssetID))
