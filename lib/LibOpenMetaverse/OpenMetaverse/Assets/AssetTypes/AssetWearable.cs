@@ -150,7 +150,7 @@ namespace OpenMetaverse.Assets
                                     fields = line.Split(' ');
 
                                     AvatarTextureIndex id = (AvatarTextureIndex)Int32.Parse(fields[0]);
-                                    UUID texture = new UUID(fields[1]);
+                                    UUID texture = UUID.GetUUID(fields[1]);
 
                                     Textures[id] = texture;
                                 }
@@ -185,16 +185,16 @@ namespace OpenMetaverse.Assets
                                     Permissions.NextOwnerMask = (PermissionMask)UInt32.Parse(fields[1], System.Globalization.NumberStyles.HexNumber);
                                     break;
                                 case "creator_id":
-                                    Creator = new UUID(fields[1]);
+                                    Creator = UUID.GetUUID(fields[1]);
                                     break;
                                 case "owner_id":
-                                    Owner = new UUID(fields[1]);
+                                    Owner = UUID.GetUUID(fields[1]);
                                     break;
                                 case "last_owner_id":
-                                    LastOwner = new UUID(fields[1]);
+                                    LastOwner = UUID.GetUUID(fields[1]);
                                     break;
                                 case "group_id":
-                                    Group = new UUID(fields[1]);
+                                    Group = UUID.GetUUID(fields[1]);
                                     break;
                                 case "group_owned":
                                     GroupOwned = (Int32.Parse(fields[1]) != 0);

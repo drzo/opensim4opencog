@@ -299,7 +299,7 @@ namespace OpenMetaverse.Messages.CableBeach
 
         public static UUID IdentityToUUID(Uri identity)
         {
-            return new UUID((OpenMetaverse.Utils.MD5(Encoding.UTF8.GetBytes(identity.ToString()))), 0);
+            return UUID.GetUUID((OpenMetaverse.Utils.MD5(Encoding.UTF8.GetBytes(identity.ToString()))), 0);
         }
     }
 }

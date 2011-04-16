@@ -256,19 +256,19 @@ namespace OpenMetaverse.Assets
                                     break;
                                 else if (pkey == "creator_id")
                                 {
-                                    creatorID = new UUID(pval);
+                                    creatorID = UUID.GetUUID(pval);
                                 }
                                 else if (pkey == "owner_id")
                                 {
-                                    ownerID = new UUID(pval);
+                                    ownerID = UUID.GetUUID(pval);
                                 }
                                 else if (pkey == "last_owner_id")
                                 {
-                                    lastOwnerID = new UUID(pval);
+                                    lastOwnerID = UUID.GetUUID(pval);
                                 }
                                 else if (pkey == "group_id")
                                 {
-                                    groupID = new UUID(pval);
+                                    groupID = UUID.GetUUID(pval);
                                 }
                                 else if (pkey == "base_mask")
                                 {
@@ -318,15 +318,15 @@ namespace OpenMetaverse.Assets
                         }
                         else if (key == "item_id")
                         {
-                            uuid = new UUID(val);
+                            uuid = UUID.GetUUID(val);
                         }
                         else if (key == "parent_id")
                         {
-                            parentUUID = new UUID(val);
+                            parentUUID = UUID.GetUUID(val);
                         }
                         else if (key == "asset_id")
                         {
-                            assetUUID = new UUID(val);
+                            assetUUID = UUID.GetUUID(val);
                         }
                         else if (key == "type")
                         {

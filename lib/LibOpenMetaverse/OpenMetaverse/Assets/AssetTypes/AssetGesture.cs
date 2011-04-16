@@ -400,7 +400,7 @@ namespace OpenMetaverse.Assets
                             {
                                 GestureStepAnimation step = new GestureStepAnimation();
                                 step.Name = lines[i++];
-                                step.ID = new UUID(lines[i++]);
+                                step.ID = UUID.GetUUID(lines[i++]);
                                 int flags = int.Parse(lines[i++]);
 
                                 if (flags == 0)
@@ -420,7 +420,7 @@ namespace OpenMetaverse.Assets
                             {
                                 GestureStepSound step = new GestureStepSound();
                                 step.Name = lines[i++].Replace("\r", "");
-                                step.ID = new UUID(lines[i++]);
+                                step.ID = UUID.GetUUID(lines[i++]);
                                 int flags = int.Parse(lines[i++]);
 
                                 Sequence.Add(step);

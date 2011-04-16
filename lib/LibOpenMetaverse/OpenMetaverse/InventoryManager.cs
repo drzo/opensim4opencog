@@ -862,7 +862,7 @@ namespace OpenMetaverse
     public class InventoryManager
     {
         /// <summary>Used for converting shadow_id to asset_id</summary>
-        public static readonly UUID MAGIC_ID = new UUID("3c115e51-04f4-523c-9fa6-98aff1034730");
+        public static readonly UUID MAGIC_ID = UUID.GetUUID("3c115e51-04f4-523c-9fa6-98aff1034730");
 
         protected struct InventorySearch
         {
@@ -3696,7 +3696,7 @@ namespace OpenMetaverse
                     if (e.IM.BinaryBucket.Length == 17)
                     {
                         type = (AssetType)e.IM.BinaryBucket[0];
-                        objectID = new UUID(e.IM.BinaryBucket, 1);
+                        objectID = UUID.GetUUID(e.IM.BinaryBucket, 1);
                         fromTask = false;
                     }
                     else
