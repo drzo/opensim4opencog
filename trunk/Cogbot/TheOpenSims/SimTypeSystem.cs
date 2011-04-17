@@ -431,8 +431,6 @@ namespace cogbot.TheOpenSims
         {
             {
                 {
-                    string objName = " " + props.Name.ToLower() + " | " +
-                                     props.Description.ToLower() + " ";
 
                     List<SimObjectType> objectTypesLocally =
                         new List<SimObjectType>();
@@ -443,7 +441,7 @@ namespace cogbot.TheOpenSims
                         foreach (Regex smatch in otype.NoMatch)
                         {
                             // NoMatch
-                            if (smatch.IsMatch(objName))
+                            if (smatch.IsMatch(props.Name.ToLower()) && smatch.IsMatch(props.Description.ToLower()))
                             {
                                 goto nextOType;
                             }
@@ -467,7 +465,7 @@ namespace cogbot.TheOpenSims
                         foreach (Regex smatch in otype.Match)
                         {
                             // Match
-                            if (smatch.IsMatch(objName))
+                            if (smatch.IsMatch(props.Name.ToLower()) && smatch.IsMatch(props.Description.ToLower()))
                             {
                                 if (!possibles.Contains(otype))
                                 {

@@ -1527,7 +1527,10 @@ namespace cogbot.TheOpenSims
                 if (WasKilled) _TOSRTING += "(IsKilled)";
                 _TOSRTING = _TOSRTING.Replace("  ", " ").Replace(") (", ")(");
             }
-            return _TOSRTING;
+            string _TOSRTINGR = _TOSRTING;
+            toStringNeedsUpdate = false;
+            _TOSRTING = null;
+            return _TOSRTINGR;
         }
 
         public string SuperTypeString()
