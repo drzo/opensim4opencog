@@ -528,7 +528,7 @@ namespace OpenMetaverse.StructuredData
         {
             // Refuse to hold null pointers
             if (value != null)
-                this.value = value;
+                this.value = string.Intern(value);
             else
                 this.value = String.Empty;
         }
@@ -589,7 +589,7 @@ namespace OpenMetaverse.StructuredData
                 return 0d;
         }
 
-        public override string AsString() { return value; }
+        public override string  AsString() { return value; }
         public override byte[] AsBinary() { return Encoding.UTF8.GetBytes(value); }
         public override UUID AsUUID()
         {
@@ -877,7 +877,7 @@ namespace OpenMetaverse.StructuredData
                 else
                     return new OSD();
             }
-            set { this.value[key] = value; }
+            set { this.value[string.Intern(key)] = value; }
         }
 
         public bool ContainsKey(string key)
@@ -887,12 +887,12 @@ namespace OpenMetaverse.StructuredData
 
         public void Add(string key, OSD llsd)
         {
-            value.Add(key, llsd);
+            value.Add(string.Intern(key), llsd);
         }
 
         public void Add(KeyValuePair<string, OSD> kvp)
         {
-            value.Add(kvp.Key, kvp.Value);
+            value.Add(string.Intern(kvp.Key), kvp.Value);
         }
 
         public bool Remove(string key)
@@ -1176,7 +1176,7 @@ namespace OpenMetaverse.StructuredData
 
         public static OSD Deserialize(byte[] data)
         {
-            string header = Encoding.ASCII.GetString(data, 0, data.Length >= 17 ? 17 : data.Length);
+            string header =string.Intern( Encoding.ASCII.GetString(data, 0, data.Length >= 17 ? 17 : data.Length));
 
             if (header.StartsWith(LLSD_BINARY_HEADER, StringComparison.InvariantCultureIgnoreCase))
             {
