@@ -975,8 +975,8 @@ namespace AIMLBotModule
                 SUnifiable result = AIMLInterp0(input, myUser);
                 if (result == null)
                 {
-                    AIMLInterp0(input, myUser);
-                    return "-no-response- for -" + input + "-";
+                    DLRConsole.DebugWriteLine("-no-response- for -" + input + "-");
+                    return null;
                 }
                 String append = AddedToNextResponse.ToString().Trim();
                 if (append.Length > 0)
