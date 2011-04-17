@@ -1397,8 +1397,9 @@ namespace cogbot.TheOpenSims
             if (prev != UUID.Zero)
             {
                 SimAsset A = FindAsset(prev);
+                string key = string.Intern(alias.ToLower());
                 if (A != null) A.Name = alias;
-                nameNameMap[alias.ToLower()] = onto.ToLower();
+                nameNameMap[key] = string.Intern(onto.ToLower());
             }
             else
             {
@@ -1407,7 +1408,8 @@ namespace cogbot.TheOpenSims
                 {
                     SimAsset A = FindAsset(prev);
                     if (A != null) A.Name = onto;
-                    nameNameMap[onto.ToLower()] = alias.ToLower();
+                    string key = string.Intern(alias.ToLower());
+                    nameNameMap[string.Intern(onto.ToLower())] = key;
                 }
             }
         }

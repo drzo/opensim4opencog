@@ -203,32 +203,35 @@ namespace cogbot.TheOpenSims
 
         public SimObjectEvent(SimEventStatus status, string eventName, SimEventType type, SimEventClass clazz, IEnumerable<NamedParam> args)
         {
+            eventName = string.Intern(eventName);
             Verb = eventName;
             Parameters = new List<NamedParam>(args);
             EventType = type;
             EventStatus = status;
             EventClass = clazz;
-            ParameterNames();
+           // ParameterNames();
         }
 
         public SimObjectEvent(SimEventStatus status, string eventName, SimEventType type, SimEventClass clazz, params NamedParam[] args)
         {
+            eventName = string.Intern(eventName);
             Verb = eventName;
             Parameters = new List<NamedParam>(args);
             EventType = type;
             EventStatus = status;
             EventClass = clazz;
-            ParameterNames();
+           // ParameterNames();
         }
 
         public SimObjectEvent(SimEventType type, SimEventClass clazz, string name, IEnumerable paramz)
         {
+            name = string.Intern(name);
             EventType = type;
             EventStatus = SimEventStatus.Once;
             Verb = name;
             EventClass = clazz;
             Parameters = NamedParam.ObjectsToParams(paramz);
-            ParameterNames();
+           // ParameterNames();
         }
 
         public string EventName
@@ -402,12 +405,12 @@ namespace cogbot.TheOpenSims
                 // we already nave a good name
                 if (key is String)
                 {
-                    names[i] = key.ToString();
+                    names[i] = (String)key;//.ToString();
                 }
                 else
                 {
                     // otherwise we make one up
-                    string s = GetType(o).Name + "" + i;
+                    string s = string.Intern(GetType(o).Name + "" + i);
 
                     if (s.ToLower().StartsWith("sim"))
                     {
@@ -416,11 +419,11 @@ namespace cogbot.TheOpenSims
                             s = s.Substring(3);
                         }
                     }
-                    names[i] = string.Format("sim{0}", s);
+                    names[i] = string.Intern(string.Format("sim{0}", s));
                 }
 
             }
-            ToEventString();
+            //ToEventString();
             return names;
         }
 
