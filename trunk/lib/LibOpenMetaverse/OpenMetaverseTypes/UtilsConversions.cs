@@ -614,8 +614,7 @@ namespace OpenMetaverse
         private static string GetString(byte[] bytes, int index, int count)
         {
             string cnv = UTF8Encoding.UTF8.GetString(bytes, index, count);
-            if (!(Utils.InternStrings)) return cnv;
-            return string.Intern(UTF8Encoding.UTF8.GetString(bytes, index, count));
+            return Utils.InternStrings ? string.Intern(cnv) : cnv;
         }
 
         /// <summary>
@@ -628,7 +627,8 @@ namespace OpenMetaverse
         /// lines. Each line is prepended with the field name</returns>
         public static string BytesToHexString(byte[] bytes, string fieldName)
         {
-            return BytesToHexString(bytes, bytes.Length, fieldName);
+            string cnv = (BytesToHexString(bytes, bytes.Length, fieldName));
+            return Utils.InternStrings ? string.Intern(cnv) : cnv;
         }
 
         /// <summary>
