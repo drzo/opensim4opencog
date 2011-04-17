@@ -172,7 +172,7 @@ namespace THIRDPARTY.OpenSim.Framework
         static PrimitiveBaseShape()
         {
             m_defaultTexture =
-                new Primitive.TextureEntry(new UUID("89556747-24cb-43ed-920b-47caed15465f"));
+                new Primitive.TextureEntry(UUIDFactory.GetUUID("89556747-24cb-43ed-920b-47caed15465f"));
         }
 
         public PrimitiveBaseShape()
@@ -935,7 +935,7 @@ namespace THIRDPARTY.OpenSim.Framework
                 SculptTextureUUID = new byte[16];
                 SculptTypel = data[16 + pos];
                 Array.Copy(data, pos, SculptTextureUUID,0, 16);
-                SculptUUID = new UUID(SculptTextureUUID, 0);
+                SculptUUID = UUIDFactory.GetUUID(SculptTextureUUID, 0);
             }
             else
             {
