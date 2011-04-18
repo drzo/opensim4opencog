@@ -911,6 +911,8 @@ namespace RTParser
                if (Requester.DisallowedGraphs.Contains(graph)) return false;
                return true;
            }
+           var nextCheck = ParentMostRequest;
+           if ((nextCheck == null || nextCheck != this)) return true;
            return ParentMostRequest.IsAllowedGraph(graph);
        }
 
@@ -1369,7 +1371,10 @@ namespace RTParser
             get
             {
                 if (IsToplevelRequest) return thisRequest;
-                if (ParentRequest == null || ParentRequest == this) return thisRequest;
+                if (ParentRequest == null || ParentRequest == this)
+                {
+                    return thisRequest;
+                }
                 return ParentRequest.ParentMostRequest;
             }
         }

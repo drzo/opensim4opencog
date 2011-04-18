@@ -689,13 +689,14 @@ namespace RTParser
                     graphname = "current";
                     files = args;
                 }
-                GraphMaster G = robot.GetGraph(graphname, request.Graph);
+                GraphMaster G = robot.GetGraph(graphname, myUser.StartGraph);
                 AIMLLoader loader = robot.GetLoader(request);
                 LoaderOptions reqLoadOptionsValue = request.LoadOptions.Value;
                 var prev = request.Graph;
                 try
                 {
                     request.Graph = G;
+                    reqLoadOptionsValue.CtxGraph = G;
                     loader.loadAIMLURI(files, reqLoadOptionsValue);
                     // maybe request.TargetBot.ReloadHooks.Add(() => request.Loader.loadAIMLURI(args, reqLoadOptionsValue));
                     console("Done with " + files);
