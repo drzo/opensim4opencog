@@ -169,7 +169,16 @@ namespace RTParser
             set
             {
                 thisScore = value;
-                if (!IsToplevelRequest) ParentRequest.TopLevelScore = value;
+                if (!IsToplevelRequest)
+                {
+                    var pr = ParentRequest;
+                    if (pr != null)
+                        pr.TopLevelScore = value;
+                    else
+                    {
+                        
+                    }
+                }
             }
         }
         public int RequestDepth { get; set; }
