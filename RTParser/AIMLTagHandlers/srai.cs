@@ -432,26 +432,28 @@ namespace RTParser.AIMLTagHandlers
                                        subResult.Score, subResultOutputTrace);
                         }
                         {
-                            string sss = thisresult.ToString();
-                            if (showDebug)
+                            if (subRequestrawInput.Contains("STDCATCHALL STDCATCHALL"))
                             {
-                                if (subRequestrawInput.Contains("STDCATCHALL STDCATCHALL"))
+                                // @TODO @debug this
+                                throw new InvalidCastException("loop STDCATCHALL STDCATCHALL");
+                            }
+                            // ReSharper disable ConditionIsAlwaysTrueOrFalse
+                            if (query != null)
+                            // ReSharper restore ConditionIsAlwaysTrueOrFalse
+                            {
+                                double before = query.Request.TopLevelScore;
+                                if (query.CurrentTemplate != null)
                                 {
-                                    // @TODO @debug this
-                                }
-                                writeToLog("{0} SUCCESS RETURN {1}  {2} '{3}'", prefix, subRequestrawInput,
-                                           subResult.Score, subResultOutputTrace);
-                                // ReSharper disable ConditionIsAlwaysTrueOrFalse
-                                if (query != null)
-                                // ReSharper restore ConditionIsAlwaysTrueOrFalse
-                                {
-                                    if (query.CurrentTemplate != null)
+                                    query.Request.TopLevelScore *= (subResult.Score*query.CurrentTemplate.TemplateRating);
+                                    if (showDebug)
                                     {
-                                        writeToLog("SCORE {0}*{1}->{2} ",
-                                                   subResult.Score, query.CurrentTemplate.Rating,
-                                                   query.Request.TopLevelScore *= subResult.Score);
-
+                                        writeToLog("SCORE {0}*{1}*{2}->{3} ",
+                                                   before, subResult.Score, query.CurrentTemplate.TemplateRating,
+                                                   query.Request.TopLevelScore);
+                                        writeToLog("{0} SUCCESS RETURN {1}  {2} '{3}'", prefix, subRequestrawInput,
+                                                   subResult.Score, subResultOutputTrace);
                                     }
+
                                 }
                             }
                             thisrequest.AddSubResult(thisresult);

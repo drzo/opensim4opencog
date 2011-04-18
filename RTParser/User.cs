@@ -896,7 +896,6 @@ namespace RTParser
                 Result r = GetResult(0, true);
                 if (r != null)
                 {
-                    r.OutputSentences.Clear();
                     r.SetOutput = (value);
                 }
 

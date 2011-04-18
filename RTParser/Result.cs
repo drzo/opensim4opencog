@@ -16,6 +16,7 @@ namespace RTParser
     public interface ResultImpl : InteractionResult, RequestOrQuery
 #endif
     {
+#if false
         /// <summary>
         /// The bot that is providing the answer
         /// </summary>
@@ -107,7 +108,7 @@ namespace RTParser
      //   UserDuringProcessing Requester { get; set; }
         GraphMaster Graph { get; }
         void AddSubqueries(GraphQuery queries);
-        void AddOutputSentences(TemplateInfo ti, string unifiable);
+        void AddOutputSentences(TemplateInfo ti, string unifiable, double score);
         void AddResultFormat(string format, params object[] args);
         string ToString();
         Unifiable GetOutputSentence(int sentence);
@@ -123,6 +124,7 @@ namespace RTParser
         int HasFailed { get; set; }
         int HasSuceeded { get; set; }
         void Exit();
+#endif
     }
 
     /// <summary>
@@ -131,7 +133,7 @@ namespace RTParser
 #if interfaces   
     public abstract class ResultImpl : QuerySettings, Result, InteractionResult, RequestOrQuery
 #else
-    public abstract class Result : QuerySettings, ResultImpl, InteractionResult, RequestOrQuery
+    public abstract class Result : QuerySettings, /*ResultImpl, */ InteractionResult, RequestOrQuery
 #endif
    
     {
@@ -309,7 +311,7 @@ namespace RTParser
 
         public double Score
         {
-            get { return TemplateRating; }
+            get { return request.TopLevelScore; }
         }
 
         /// <summary>
@@ -322,7 +324,9 @@ namespace RTParser
             {
                 lock (OutputSentences)
                 {
-                    AddOutputResultSentences(value);
+                    OutputPings = 0;
+                    // OutputSentences.Clear();
+                    AddOutputResultSentences(value, true);
                     AlreadyUsed = value;
                     IsComplete = true;
                 }
@@ -638,11 +642,11 @@ namespace RTParser
             Started = true;
         }
 
-        public void AddOutputSentences(TemplateInfo ti, string unifiable)
+        public void AddOutputSentences(TemplateInfo ti, string unifiable, double score)
         {
-            AddOutputSentences0(ti, unifiable);
+            AddOutputSentences0(ti, unifiable, score);
         }
-
+/*
         public bool IsTemplateNew(TemplateInfo ti, Unifiable tempOut)
         {
             if (ti == null) return false;
@@ -655,7 +659,7 @@ namespace RTParser
             string output = ti.TextSaved;
             lock (usedTemplates)
             {
-                double ThisRating = ti.Rating;
+                double ThisRating = ti.TemplateRating;
                 if (TemplateOfRating == null || TemplateRating < ThisRating)
                 {
                     TemplateOfRating = ti;
@@ -679,8 +683,8 @@ namespace RTParser
             }
             return true;
         }
-
-        private void AddOutputSentences0(TemplateInfo ti, string unifiable)
+*/
+        private void AddOutputSentences0(TemplateInfo ti, string unifiable, double score)
         {
             if (null == unifiable)
             {
@@ -709,20 +713,33 @@ namespace RTParser
                     ti.TextSaved = unifiable;
                 }
             }
-            AddOutputResultSentences(unifiable);
+
+            bool addToFront = false;
+            if (score > TemplateRating)
+            {
+                if (ti != null) TemplateOfRating = ti;
+                TemplateRating = score;
+                addToFront = true;
+                OutputSentences.Clear();
+            }
+            else
+            {
+                return;
+            }
+            AddOutputResultSentences(unifiable, addToFront);
             //AddOutputSentences2(ti,unifiable);
         }
-        private void AddOutputResultSentences( string unifiable)
+        private void AddOutputResultSentences(string unifiable, bool addToFront)
         {
             OutputPings++;
             if (this.OutputPings > 1)
             {
-                return;
+             //   return;
             }
-            ChatOutput.ClearOutput();
-            AddOutputSentences11(unifiable);
+            //ChatOutput.ClearOutput();
+            AddOutputSentences11(unifiable, addToFront);
         }
-        private void AddOutputSentences11( string unifiable)
+        private void AddOutputSentences11( string unifiable, bool addToFront)
         {
             unifiable = Trim(unifiable).Replace("\n", " ").Replace("\r", " ");
             string[] sentNow = unifiable.Split(new[] {"<br/>", "&p;", "<p/>"}, StringSplitOptions.RemoveEmptyEntries);
@@ -731,11 +748,8 @@ namespace RTParser
                 unifiable = sentNow[0];
             } else
             {
-                foreach (var s in sentNow)
-                {
-                    AddOutputSentences11(s);
-                }
-                return;                
+                AddOutputs(sentNow, addToFront);
+                return;
             }
             sentNow = GetSents(new[] { ". ", "? " }, unifiable).ToArray();
             if (sentNow.Length == 1)
@@ -744,10 +758,7 @@ namespace RTParser
             }
             else
             {
-                foreach (var s in sentNow)
-                {
-                    AddOutputSentences11(s);
-                }
+                AddOutputs(sentNow, addToFront);
                 return;
             }
             if (AlreadyUsed.Contains(unifiable))
@@ -789,10 +800,29 @@ namespace RTParser
                     writeToLog("ERROR:  AddRssult: " + Requester.UserID + " " + unifiable);
                 }
                 EndedOn = RTPBot.Now;
-                OutputSentences.Add(unifiable);
+                if (addToFront)
+                {
+                    OutputSentences.Insert(0, unifiable);
+                }
+                else
+                {
+                    OutputSentences.Add(unifiable);
+                }
                 return;
             }
         }
+
+        private void AddOutputs(IEnumerable<string> sentNow, bool addToFront)
+        {
+            var OutputSentencesBefore = new List<Unifiable>(OutputSentences);
+            if (addToFront) OutputSentences.Clear();
+            foreach (var s in sentNow)
+            {
+                AddOutputSentences11(s, false);
+            }
+            if (addToFront) OutputSentences.AddRange(OutputSentencesBefore);
+        }
+
         public void AddOutputSentences2(TemplateInfo ti, string unifiable)
         {
             {

@@ -565,7 +565,7 @@ namespace RTParser
                 childResult = request.CreateResult(request);
                 string nai = NotAcceptingUserInputMessage;
                 if (isTraced) this.writeToLog("ERROR {0} getting back {1}", request, nai);
-                request.AddOutputSentences(null, nai, parentResult);
+                request.AddOutputSentences(null, nai, parentResult, 1.0);
             }
             User popu = (originalRequestor ?? request.Requester ?? parentResult.Requester).Value;
             parentResult.IsComplete = true;

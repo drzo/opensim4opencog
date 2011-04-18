@@ -219,7 +219,7 @@ namespace RTParser
                     LR = toWhom.GetResult(0, true, theFactSpeaker);
                     if (LR != null)
                     {
-                        LR.request.AddOutputSentences(null, message, res);
+                        LR.request.AddOutputSentences(null, message, res, res.request.TopLevelScore);
                     }
                 }
             }

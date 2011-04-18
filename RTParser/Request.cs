@@ -119,7 +119,7 @@ namespace RTParser
         ISettingsDictionary GetSubstitutions(string name, bool b);
         GraphMaster GetGraph(string srai);
         void ExcludeGraph(string srai);
-        void AddOutputSentences(TemplateInfo ti, string nai, Result result);
+        void AddOutputSentences(TemplateInfo ti, string nai, Result result, double score);
         ISettingsDictionary GetDictionary(string named);
         ISettingsDictionary GetDictionary(string named, ISettingsDictionary dictionary);
 
@@ -916,10 +916,10 @@ namespace RTParser
            return ParentMostRequest.IsAllowedGraph(graph);
        }
 
-        public void AddOutputSentences(TemplateInfo ti, string nai, Result result)
+        public void AddOutputSentences(TemplateInfo ti, string nai, Result result, double score)
         {
             result = result ?? CurrentResult;
-            result.AddOutputSentences(ti, nai);
+            result.AddOutputSentences(ti, nai, score);
         }
 
         private Unifiable _topic;
