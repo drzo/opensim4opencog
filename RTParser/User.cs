@@ -893,6 +893,13 @@ namespace RTParser
             set
             {
                 if (IsNullOrEmpty(value)) throw new NullReferenceException("set_That: " + this);
+                Result r = GetResult(0, true);
+                if (r != null)
+                {
+                    r.OutputSentences.Clear();
+                    r.SetOutput = (value);
+                }
+
                 if (CurrentRequest != null)
                 {
                     CurrentRequest.ithat = value;
