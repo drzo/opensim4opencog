@@ -35,7 +35,7 @@ namespace cogbot.Actions
             TheBotClient.InvokeGUI(() =>
                                     {
                                         frmPrimWorkshop pw = new frmPrimWorkshop(TheBotClient.TheRadegastInstance);
-                                        pw.loadPrims(PS);
+                                        pw.LoadPrims(PS);
                                         pw.Show();
                                     });
             return Success(Name + " on " + PS.Count);
