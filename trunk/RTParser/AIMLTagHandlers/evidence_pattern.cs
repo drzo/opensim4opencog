@@ -52,7 +52,7 @@ namespace RTParser.AIMLTagHandlers
                                          @" /></think>ep "+evidence+"</template></category></topic>";
                                          //@"</aiml>";
                     //this.user.bot.AddAiml(evidenceCode);
-                    GraphMaster myGraph = Proc.GetGraph("msm", request.Graph);
+                    GraphMaster myGraph = request.GetGraph("msm");
                     AddSideEffect("ADD AIML " + evidenceCode, () => this.user.bot.AddAiml(myGraph, evidenceCode));
 
                     RTPBot.writeDebugLine("MSM: evidence_pattern evidenceCode = {0}", evidenceCode);

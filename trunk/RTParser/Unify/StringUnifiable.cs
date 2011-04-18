@@ -240,7 +240,6 @@ namespace RTParser
 
         public override string ToUpper()
         {
-            if (upperCache != null) return upperCache;
             try
             {
                 if (upperCache != null) return upperCache;
@@ -295,12 +294,12 @@ namespace RTParser
 
         public StringUnifiable(string value)
         {
-            _str = value;
+            _str = value == null ? null : string.Intern(value);
         }
 
         public StringUnifiable(string v, bool tf)
         {
-            str = v;
+            str = v == null ? null : string.Intern(v);
             if (tf)
             {
 #if ACTUALLY_USING_ClassifyFlagTypes
@@ -610,6 +609,7 @@ namespace RTParser
 
         public static string astr(object param1)
         {
+            if (param1 is String) return (String) param1;
             return "" + param1;
         }
 
@@ -638,7 +638,7 @@ namespace RTParser
 
         public override Unifiable ToCaseInsensitive()
         {
-            return Create(str.ToUpper());
+            return Create(ToUpper(str));
         }
 
         public virtual char[] ToCharArray()
@@ -691,7 +691,7 @@ namespace RTParser
                 }
                 return false;
             }
-            if (ToUpper() == s.ToUpper())
+            if (ToUpper() == ToUpper(s))
             {
                 return true;
             }
@@ -780,9 +780,17 @@ namespace RTParser
                                                  new[] {"&amp;", "<amp />"},
                                              });
                 XmlNode firstChild = getDocNode("<li>" + strTrim + "</li>", false, false, StringOnlyDoc);
+                if (firstChild.ChildNodes.Count == 1)
+                {
+                    return new Unifiable[] {this};
+                }
                 List<Unifiable> u = new List<Unifiable>();
                 CreateUnifableForList(firstChild.ChildNodes, null, u);
                 if (u.Count == 0) return DontStore;
+                if (u.Count == 1)
+                {
+                    return new Unifiable[] {u[0]}; //DontStore;}
+                }
                 return u.ToArray();
             }
             catch (Exception e)
@@ -796,7 +804,7 @@ namespace RTParser
             }
         }
 
-        private IEnumerable SplitSimpleString(string strTrim)
+        static IEnumerable SplitSimpleString(string strTrim)
         {
             return strTrim.Split(BRKCHARS, StringSplitOptions.RemoveEmptyEntries);
         }
@@ -910,14 +918,14 @@ namespace RTParser
                     return Empty;
                 }
                 if (restCache == null)
-                    return Join(" ", splittedCache, 1, splittedCache.Length - 1);
+                    return restCache = Join(" ", splittedCache, 1, splittedCache.Length - 1);
                 return restCache;
 
                 if (String.IsNullOrEmpty(str)) return Empty;
                 int i = str.IndexOfAny(BRKCHARS);
                 if (i == -1) return Empty;
                 restCache = str.Substring(i + 1);
-                return Create(restCache.Trim());
+                return Create(Trim(restCache));
             }
         }
 
@@ -1400,13 +1408,19 @@ namespace RTParser
         {
             if (nodeOuter == null || splittedCache == null)
             {
-                List<Unifiable> u = new List<Unifiable>();
                 str = inner ?? str;
                 nodeOuter = nodeOuter ?? xmlNode;
-                StringAppendableUnifiableImpl stringAppendable = null; // CreateAppendable();
-                CreateUnifableForList(xmlNode.ChildNodes, stringAppendable, u);
-                splittedCache = splittedCache ?? u.ToArray();
+                if (false)
+                {
+                    List<Unifiable> u = new List<Unifiable>(); 
+                    StringAppendableUnifiableImpl stringAppendable = null; // CreateAppendable();}
+                    CreateUnifableForList(xmlNode.ChildNodes, stringAppendable, u);
+                    splittedCache = splittedCache ?? u.ToArray();
+                }
                 //valueCache = stringAppendable.AsString();
+            } else
+            {
+                
             }
         }
     }

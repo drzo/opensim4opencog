@@ -139,7 +139,7 @@ namespace RTParser.AIMLTagHandlers
             MasterRequest subRequest = request.CreateSubRequest(line, null);
             //String gn = GetAttribValue("graph", null);
             string gn = "msm";
-            if (gn != null) subRequest.Graph = Proc.GetGraph(gn, request.Graph);
+            if (gn != null) subRequest.Graph = request.GetGraph(gn);
             //subRequest.depth = request.depth + 1;
 
             subRequest.Topic = tempTopic;

@@ -78,7 +78,7 @@ namespace RTParser
         public static readonly Unifiable TagStartText = CreateSpecial("TAG-START");
         public static readonly Unifiable TagThat = CreateSpecial("TAG-THAT");
         public static readonly Unifiable TagTopic = CreateSpecial("TAG-TOPIC");
-        public static readonly bool UpcaseXMLSource = true;
+        public static readonly bool UpcaseXMLSource = false;
 
         public UFlags Flags = UFlags.NO_FLAGS;
         public string KeyCache;
@@ -741,10 +741,10 @@ namespace RTParser
                     key = Intern(key);
                     u = dict[key] = new SpecialStringUnifiable(value, key);
                     u.Flags |= UFlags.IS_TAG;
-                    internedUnifiables[key] = u;
-                    if (value != null)
+                    if (value != key && value != null)
                     {
-                        internedUnifiables[value] = u;
+                        value = Intern(value);
+                        dict[value] = u;
                     }
                 }
                 return (SpecialStringUnifiable) u;
@@ -763,10 +763,10 @@ namespace RTParser
                 XmlNode n = (XmlNode) p;
                 return CreateFromXml(n);
             }
-            // TODO
-            if (p == null)
+            // @TODO change this?
+            if (ReferenceEquals(p, null))
             {
-                return null;
+                return NULL;
             }
             if (true.Equals(p)) return TRUE_T;
             if (false.Equals(p)) return FAIL_NIL;

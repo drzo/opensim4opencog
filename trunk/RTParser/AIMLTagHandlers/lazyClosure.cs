@@ -79,8 +79,8 @@ namespace RTParser.AIMLTagHandlers
                     deleteLink = true;
                     name = removeTo;
                 }
-                GraphMaster FROM = request.TargetBot.GetGraph(from, request.Graph);
-                GraphMaster TO = request.TargetBot.GetGraph(name, request.Graph);
+                GraphMaster FROM = request.GetGraph(from);
+                GraphMaster TO = request.GetGraph(name);
                 if (FROM != null && TO != null)
                 {
                     if (deleteLink)
@@ -102,8 +102,8 @@ namespace RTParser.AIMLTagHandlers
                 {
                     name = Trim(templateNode.InnerText);
                 }
-                GraphMaster FROM = request.TargetBot.GetGraph(from, request.Graph);
-                GraphMaster TO = request.TargetBot.GetGraph(name, request.Graph);
+                GraphMaster FROM = request.GetGraph(from);
+                GraphMaster TO = request.GetGraph(name);
                 if (FROM != null && TO != null)
                 {
                     FROM.Srai = name;

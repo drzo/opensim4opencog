@@ -2526,7 +2526,7 @@ namespace RTParser.Variables
             string value = input.Substring(firstWhite + 1).Trim();
             if (value == "")
             {
-                console(var + " = " + grabSettingNoDebug(var));
+                console(var + " = " + (grabSettingNoDebug(var) ?? " <NULL> "));
                 return true;
             }
             console("addSetting: " + addSetting(var, value));
