@@ -23,10 +23,6 @@ namespace RTParser.Utils
         public override ResponseInfo Response { get; set; }
         public SubQuery Query { get; set; }
         private double _rating;
-        public double Rating
-        {
-            get { return _rating; }
-        }
         public double TemplateRating
         {
             get { return _rating; }
@@ -136,9 +132,9 @@ namespace RTParser.Utils
             catch
             {
             }
-            if (Rating != 1.0)
+            if (TemplateRating != 1.0)
             {
-                RTPBot.writeDebugLine("!! SCORE =" + Rating + " for " + OuterXml + " in " + CategoryInfo);
+                RTPBot.writeDebugLine("!! SCORE =" + TemplateRating + " for " + OuterXml + " in " + CategoryInfo);
             }
         }
 
@@ -509,7 +505,6 @@ namespace RTParser.Utils
     public interface TemplateResult
     {
         Unifiable TextSaved { get; set; }
-        double Rating { get; }
         double TemplateRating { get; set;  }
     }
     public interface TemplateInfo : CategoryInfo, TemplateResult

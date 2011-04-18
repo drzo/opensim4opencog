@@ -523,7 +523,7 @@ namespace RTParser
                     // if (ex.SubQuery != query) throw;
                     if (ex.NeedsAdding)
                     {
-                        request.AddOutputSentences(templateInfo, ex.TemplateOutput, result);
+                        request.AddOutputSentences(templateInfo, ex.TemplateOutput, result, request.TopLevelScore);
                     }
                     templateSucceeded = ex.TemplateSucceeded;
                     createdOutput = ex.CreatedOutput;
@@ -630,7 +630,7 @@ namespace RTParser
                         writeToLog("AIMLTRACE '{0}' IsOutputSentence={1}", o, aIMLLoaderParentTextAndSourceInfo);
                     }
                     createdOutput = true;
-                    request.AddOutputSentences(templateInfo, o, result);
+                    request.AddOutputSentences(templateInfo, o, result, request.TopLevelScore);
                 }
                 else
                 {
@@ -705,7 +705,7 @@ namespace RTParser
                                    ParentTextAndSourceInfo(templateNode));
                     templateSucceeded = true;
                     createdOutput = true;
-                    request.AddOutputSentences(templateInfo, o, result);
+                    request.AddOutputSentences(templateInfo, o, result, request.TopLevelScore);
                     return tagHandler;
                 }
                 else

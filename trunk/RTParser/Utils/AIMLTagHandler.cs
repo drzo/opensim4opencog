@@ -731,6 +731,7 @@ namespace RTParser.Utils
                 double defualtReward = query.GetSucceedReward(type);
                 double templateScore = GetAttribValue<double>(templateNode, "score", () => defualtReward,
                                                       ReduceStarAttribute<double>);
+                templateScore *= CurrentQuery.CurrentTemplate.TemplateRating;
                 double beforerating = request.TopLevelScore;
                 double newrating = beforerating*templateScore;
                 request.TopLevelScore = newrating;
