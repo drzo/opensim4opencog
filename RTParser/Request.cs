@@ -1615,6 +1615,7 @@ namespace RTParser
 
         public bool CanProcess(string starContent)
         {
+            return true;
             matchable = matchable ?? MakeMatchable(rawInput);
             if (matchable == starContent)
             {
