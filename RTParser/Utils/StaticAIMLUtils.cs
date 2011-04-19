@@ -244,15 +244,17 @@ namespace RTParser.Utils
                                 if (graphName != null)
                                 {
                                     GraphMaster innerGraph = request.TargetBot.GetGraph(graphName, oldGraph);
-                                    needsUnwind = true;
+
                                     if (innerGraph != null)
                                     {
                                         if (innerGraph != oldGraph)
                                         {
                                             request.Graph = innerGraph;
+                                            request.LoadOptions.CtxGraph = innerGraph;
                                             newGraph = innerGraph;
                                             request.writeToLog("ENTERING: {0} as {1} from {2}",
                                                                graphName, innerGraph, oldGraph);
+                                            needsUnwind = true;
                                         }
                                         else
                                         {

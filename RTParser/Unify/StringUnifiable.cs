@@ -1263,6 +1263,10 @@ namespace RTParser
                     writeToLog("UnifyLazy: SUCCEED" + ov + " in " + query);
                     return true;
                 }
+                else
+                {
+                    return false;
+                }
                 Unifiable outputSentence = tagHandler.CompleteAimlProcess();
                 if (ov.CanUnify(outputSentence, query))
                 {
