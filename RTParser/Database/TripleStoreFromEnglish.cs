@@ -403,9 +403,9 @@ namespace RTParser.Database
             var pns = new[]
                           {
                               "him", "he", "she", "her", "them", "they", "it", "this",
-                              "i ", "you", "me", "my", "your", "our", "their",
+                              "i", "you", "me", "my", "your", "our", "their",
                           };
-            string english = englishIn;
+            string english = " " + englishIn.Trim() + " ";
             string englishToLower = english.ToLower();
             {
                 foreach (var pronoun in pns)

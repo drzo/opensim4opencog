@@ -491,20 +491,21 @@ namespace RTParser.AIMLTagHandlers
             }
         }
 
-        static MasterResult GetSubResult(String prefix, Request request, User user, RTPBot mybot, MasterRequest subRequest, bool showDebug, out Unifiable subResultOutput, out  string subQueryRawOutput1, OutputDelegate writeToLog)
+        static MasterResult GetSubResult(String prefix, Request prevRequest, User user, RTPBot mybot, MasterRequest subRequest, bool showDebug, out Unifiable subResultOutput, out  string subQueryRawOutput1, OutputDelegate writeToLog)
         {
             var prev = subRequest.GraphsAcceptingUserInput;
             var prevSO = user.SuspendAddResultToUser;
             MasterResult subResult = subRequest.CreateResult(subRequest);
             try
             {
-                var originalSalientRequest = MasterRequest.GetOriginalSalientRequest(request);
+                var originalSalientRequest = MasterRequest.GetOriginalSalientRequest(prevRequest);
                 var sraiMark = originalSalientRequest.CreateSRAIMark();
                 subRequest.GraphsAcceptingUserInput = true;
                 //var newresult = new AIMLbot.Result(request.user, Proc, request);
                 //subRequest.result = newresult;
                 user.SuspendAddResultToUser = true;
-                if (request.IsTraced) subRequest.IsTraced = !showDebug;
+                if (prevRequest.IsTraced) subRequest.IsTraced = !showDebug;
+                subRequest.IsTraced = true;
                 subResult = (MasterResult) mybot.ChatWithToplevelResults(subRequest,subResult);
                 subResultOutput = subResult.RawOutput;
                 int resultCount = subResult.OutputSentences.Count;

@@ -435,6 +435,10 @@ namespace RTParser
             if (target != null && target.UserName != null)
             {
                 undoStack.pushValues(userPredicates, "you", target.UserName);
+                SettingsDictionary targetPredicates = target.Predicates;
+                undoStack.pushValues(targetPredicates, "you", user.UserName);
+                undoStack.pushValues(targetPredicates, "i", target.UserName);
+
             }
             //lock (user.QueryLock)
             {

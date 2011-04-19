@@ -262,7 +262,7 @@ namespace RTParser.Database
 
         public int InsertFactiod(string myText, XmlNode templateNode, WordExpander expandWithWordNet)
         {
-            return EnsureLockedDatabase(() => Insert0(FixPronouns(myText, templateNode), expandWithWordNet));
+            return EnsureLockedDatabase(() => Insert0(myText, expandWithWordNet));
         }
 
         private int Insert0(string myText, WordExpander expandWithWordNet)
@@ -724,7 +724,7 @@ namespace RTParser.Database
 
         public string MayPush(string text, XmlNode templateNode)
         {
-            string[] textToLowerSplit = text.ToLower().Split(' ');
+            string[] textToLowerSplit = text.ToLower().Split(new []{' '},StringSplitOptions.RemoveEmptyEntries);
             if (textToLowerSplit.Length < 3)
             {
                 writeToLog("ExcludedShort! '{0}' Len='{1}' ", text, textToLowerSplit.Length);
