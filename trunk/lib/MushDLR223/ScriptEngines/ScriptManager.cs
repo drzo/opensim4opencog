@@ -660,7 +660,7 @@ namespace MushDLR223.ScriptEngines
             if (types == null) return null;
             lock (types)
             {
-                List<T> copy = new List<T>(types.Count);
+                List<T> copy = new List<T>(/*types.Count*/);
                 copy.AddRange(types);
                 return copy;                
             }
