@@ -86,6 +86,7 @@ namespace MushDLR223.Utilities
                 MustFormat.Add("that");
                 MustNotFormat.Add("category");
                 MustNotFormat.Add("template");
+                MustNotFormat.Add("regex");
             }
         }
 
