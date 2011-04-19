@@ -1669,8 +1669,13 @@ namespace RTParser
 
         public bool EnterSalientSRAI(Unifiable templateNodeInnerValue, out Unifiable prevResults)
         {
+
             //prevResults = null;
-            //return true;
+            if (!srai.UseSraiLimiters)
+            {
+                prevResults = templateNodeInnerValue;
+                return true;
+            }
             Dictionary<Unifiable, Unifiable> dict = _SRAIResults;
             var dictLock = dict;
             lock (dictLock)

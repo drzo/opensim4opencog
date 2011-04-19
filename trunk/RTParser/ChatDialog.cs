@@ -662,7 +662,7 @@ namespace RTParser
 
                 bool topleveRequest = request.IsToplevelRequest;
 
-                int UNLIMITED = 10000;
+                int UNLIMITED = 1000000;
                 request.MaxOutputs = UNLIMITED;
                 request.MaxPatterns = UNLIMITED;
                 request.MaxTemplates = UNLIMITED;

@@ -199,7 +199,7 @@ namespace RTParser.AIMLTagHandlers
                         KnowsCanProcess = true;
                         string toUpper = MakeMatchable(templateNodeInnerValue);
                         var rp = request.ParentRequest;
-                        if (rp != null && !rp.CanProcess(toUpper)) return null;
+                        if (false && rp != null && !rp.CanProcess(toUpper)) return null;
                     }
                     if (false &&  IsNull(templateNodeInnerValue))
                     {
@@ -291,6 +291,7 @@ namespace RTParser.AIMLTagHandlers
                     //return null;
                 }
                 int depth = request.SraiDepth.Current;
+                if (!UseSraiLimiters) depth = 0;
                 if (CurrentTemplate != null)
                 {
                     if (CurrentTemplate.IsHighlyUsefull)
