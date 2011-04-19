@@ -775,6 +775,7 @@ namespace RTParser
             set
             {
                 ListenerTest(value);
+                LoadOptions.CtxGraph = value;
                 Graph0 = value;
             }
         }

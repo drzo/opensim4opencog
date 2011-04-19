@@ -249,7 +249,8 @@ namespace RTParser
         {
             get
             {
-                return FindGraphLocally("startgraph") ?? bot.GraphMaster;
+                var v = FindGraphLocally("startgraph") ?? bot.GraphMaster;
+                return v;
             }
             set
             {
@@ -273,17 +274,11 @@ namespace RTParser
         {
             get
             {
-                string qsbaseGraphName = qsbase.StartGraphName;
-                if (qsbaseGraphName != null)
-                {
-                    return qsbaseGraphName;
-                }
                 return StartGraph.ScriptingName;
             }
             set
             {
                 StartGraph = bot.GetGraph(value, StartGraph);
-                qsbase.StartGraphName = value;
             }
         }
 
@@ -1279,7 +1274,7 @@ namespace RTParser
         private bool insideSave;
         private bool noLoad = true;
         public bool NeverSave = NeverSaveUsers;
-        private bool needAiml;
+        private bool NeedAiml = false;
         private readonly List<CrossAppDomainDelegate> ShutdownHooks = new List<CrossAppDomainDelegate>();
         private readonly List<CrossAppDomainDelegate> OnNeedAIML = new List<CrossAppDomainDelegate>();
         //public int depth { get; set; }
@@ -1445,7 +1440,7 @@ namespace RTParser
             {
                 OnNeedAIML.Add(action);
             }
-            if (needAiml)
+            if (NeedAiml)
             {
                 DoPendingTodoList();
             }
@@ -1455,8 +1450,8 @@ namespace RTParser
         {
             lock (OnNeedAIML)
             {
-                if (!needAiml) return;
-                needAiml = true;
+                //    if (!needAiml) return;
+                NeedAiml = true;
             }
             DoPendingUntilComplete(OnNeedAIML);
         }

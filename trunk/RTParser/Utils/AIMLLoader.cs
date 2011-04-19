@@ -1043,8 +1043,8 @@ namespace RTParser.Utils
                     try
                     {
                         var v = addCatNode(cateNode, pattern, that0, loadOpts, template, topicName,
-                                                    outerNode,
-                                                    additionalRules);
+                                           outerNode,
+                                           additionalRules, 1.0);
                         if (v == null && !string.IsNullOrEmpty(errors))
                         {
                             AddErrorCategory(errors, cateNode);
@@ -1108,7 +1108,7 @@ namespace RTParser.Utils
 
         private List<CategoryInfo> addCatNode(XmlNode cateNode, XmlNode patternNode, XmlNode thatNodeOrNull, LoaderOptions loaderOpts,
                                         XmlNode templateNode,
-                                        Unifiable topicName, XmlNode outerNode, List<ConversationCondition> additionalRules)
+                                        Unifiable topicName, XmlNode outerNode, List<ConversationCondition> additionalRules, double score)
         {
             additionalRules = additionalRules ?? PushAddtionalRuleContext(loaderOpts.AdditionalPreconditions);
             // additionalRules = new List<XmlNode>();
@@ -1122,7 +1122,6 @@ namespace RTParser.Utils
             GuardInfo guard = guardnode == null ? null : loaderOpts.CtxGraph.GetGuardInfo(guardnode);
             string errors = "";
             XmlNode TemplateOverwrite = StaticAIMLUtils.TheTemplateOverwrite;
-            bool degradeScoreUnusable = false;
             if (ReferenceEquals(null, templateNode))
             {
                 if (TemplateOverwrite != null)
@@ -1139,7 +1138,7 @@ namespace RTParser.Utils
             {
                 if (UnusableCategory(templateNode))
                 {
-                    degradeScoreUnusable = true;
+                    score /= 2;                   
                 }
             }
             if (ReferenceEquals(null, patternNode))
@@ -1152,7 +1151,10 @@ namespace RTParser.Utils
             patternNode = GetPatternNode("that", cateNode, patternNode, ref thatNodeOrNull);
 
             string that = GeneratePatternNodeRules(additionalRules, thatNodeOrNull);
-
+            if (that != "*")
+            {
+                score *= 1.5;
+            }
             XmlNode flagXML = null;
             patternNode = GetPatternNode("flag", cateNode, patternNode, ref flagXML);
             Unifiable cond = VisibleChildsRenderingOrStar(flagXML);
@@ -1217,13 +1219,21 @@ namespace RTParser.Utils
                                                            cateNode, templateNode, guard, topicInfo, thatInfo,
                                                            additionalRules,
                                                            out wouldBeRemoval, loaderOpts);
-                        if (degradeScoreUnusable)
+                        if (added != null)
                         {
+                            if (added.Count != 1)
+                            {
+
+                            }
                             foreach (var cate in added)
                             {
                                 // half the rating
-                                cate.Template.TemplateRating /= 2.0;
+                                cate.Template.TemplateRating = score;
                             }
+                        }
+                        else
+                        {
+
                         }
                         return added;
                     

@@ -404,6 +404,13 @@ namespace RTParser
 
                 string userdir = GetUserDir(key);
                 myUser.SyncDirectory(userdir);
+                myUser.AddTodoItem(() =>
+                                       {
+                                           var R = myUser.CreateRequest("ONUSERENTER " + key, BotAsUser);
+                                           ChatWithRequest(R);
+                                           Utils.GraphMaster G = myUser.StartGraph;
+                                           var sn = G.ScriptingName;
+                                       });
                 myUser.userTrace = null;
             }
         }
