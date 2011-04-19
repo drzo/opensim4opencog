@@ -749,7 +749,11 @@ namespace RTParser
             var wasSuspendRestrati = request.SuspendSearchLimits;
             templateSucceeded = true;
             request.SuspendSearchLimits = suspendLimits;
-            var sraiMark = originalSalientRequest.CreateSRAIMark();
+            Dictionary<Unifiable, Unifiable> sraiMark = null;
+            if (srai.UseSraiLimiters)
+            {
+                sraiMark = originalSalientRequest.CreateSRAIMark();
+            }
             try
             {
                 bool childSuccess;
@@ -779,7 +783,7 @@ namespace RTParser
             }
             finally
             {
-                originalSalientRequest.ResetSRAIResults(sraiMark);
+                if (srai.UseSraiLimiters) originalSalientRequest.ResetSRAIResults(sraiMark);
                 request.SuspendSearchLimits = wasSuspendRestrati;
             }
         }
