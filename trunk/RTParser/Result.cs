@@ -322,13 +322,17 @@ namespace RTParser
         {
             set
             {
+                IsComplete = true;
+                AlreadyUsed = value;
+                if (string.IsNullOrEmpty(value))
+                {
+                    return;
+                }
                 lock (OutputSentences)
                 {
                     OutputPings = 0;
                     // OutputSentences.Clear();
                     AddOutputResultSentences(value, true);
-                    AlreadyUsed = value;
-                    IsComplete = true;
                 }
             }
         }

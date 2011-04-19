@@ -21,6 +21,7 @@ namespace RTParser.AIMLTagHandlers
     /// </summary>
     public class srai : RTParser.Utils.AIMLTagHandler
     {
+        public static bool UseSraiLimiters = false;
         RTParser.RTPBot mybot;
         /// <summary>
         /// Ctor
@@ -101,8 +102,12 @@ namespace RTParser.AIMLTagHandlers
                     if (request.SraiDepth.IsOverMax)
                     {
                         query.prefix = string.Format("{0}: SRAIDEPTH({1})", request.Graph, sraiDepth);
-                        writeToLog("WARNING Depth pretty deep " + templateNode + " returning empty");
-                        if (!request.SuspendSearchLimits) return RecurseResult;
+                        writeToLog("WARNING Depth pretty deep " + templateNode);
+                        if (UseSraiLimiters)
+                        {
+                            writeToLog(" returning " + RecurseResult);
+                            return RecurseResult;
+                        }
                     }
                     var vv = /*UseOriginalProcess  ? (Unifiable)OriginalProcessChange() : */ ProcessChange0();
                     if (!IsNullOrEmpty(vv))
@@ -320,7 +325,7 @@ namespace RTParser.AIMLTagHandlers
                         query.prefix =
                         SafeFormat("ProcessChangeSrai: {0}: \"{1}\"\n", request.Graph, Unifiable.DescribeUnifiable(templateNodeInnerValue));
 
-                    if (request.SraiDepth.IsOverMax)
+                    if (request.SraiDepth.IsOverMax && UseSraiLimiters)
                     {
                         string sss = prefix + " request.SraiDepth.IsOverMax '" + request.SraiDepth.Current + "'";
                         writeToLog(sss);
@@ -331,7 +336,7 @@ namespace RTParser.AIMLTagHandlers
                         }
                     }
                     string why = request.WhyComplete;
-                    if (why != null)
+                    if (why != null && UseSraiLimiters)
                     {
                         string sss = prefix + " " + why;
                         writeToLog(sss);
@@ -377,7 +382,7 @@ namespace RTParser.AIMLTagHandlers
                             //mybot.bot.writeChatTrace("\"S{0}\" -> \"SIN:{1}\" ;\n", depth, subRequestrawInput);
                             //mybot.bot.writeChatTrace("\"SIN:{0}\" -> \"LN:{1}\" ;\n", subRequestrawInput, CatTextInfo());
                         }
-                        if (depth > 200)
+                        if (depth > 200 && UseSraiLimiters)
                         {
                             writeToLog(prefix + " FAILING TOOOO DEEEEP '" + subRequestrawInput + "'");
                             return Unifiable.INCOMPLETE;
@@ -498,8 +503,12 @@ namespace RTParser.AIMLTagHandlers
             MasterResult subResult = subRequest.CreateResult(subRequest);
             try
             {
+                Dictionary<Unifiable, Unifiable> sraiMark = null;
                 var originalSalientRequest = MasterRequest.GetOriginalSalientRequest(prevRequest);
-                var sraiMark = originalSalientRequest.CreateSRAIMark();
+                if (UseSraiLimiters)
+                {
+                    sraiMark = originalSalientRequest.CreateSRAIMark();
+                }
                 subRequest.GraphsAcceptingUserInput = true;
                 //var newresult = new AIMLbot.Result(request.user, Proc, request);
                 //subRequest.result = newresult;
@@ -512,7 +521,7 @@ namespace RTParser.AIMLTagHandlers
                 if (RTPBot.BE_COMPLETE_NOT_FAST && resultCount == 0)
                 {
                     subRequest.ResetValues(false);
-                    originalSalientRequest.ResetSRAIResults(sraiMark);
+                    if (UseSraiLimiters) originalSalientRequest.ResetSRAIResults(sraiMark);
                     if (Unifiable.IsNullOrEmpty(subResultOutput))
                     {
                         subResult = (MasterResult)mybot.ChatFor1Result(subRequest, subResult); 
