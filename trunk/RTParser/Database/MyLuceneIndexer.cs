@@ -724,7 +724,7 @@ namespace RTParser.Database
 
         public string MayPush(string text, XmlNode templateNode)
         {
-            string[] textToLowerSplit = text.ToLower().Split(new []{' '},StringSplitOptions.RemoveEmptyEntries);
+            string[] textToLowerSplit = text.ToLower().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             if (textToLowerSplit.Length < 3)
             {
                 writeToLog("ExcludedShort! '{0}' Len='{1}' ", text, textToLowerSplit.Length);
@@ -747,7 +747,7 @@ namespace RTParser.Database
 
         public string MayAsk(string text, XmlNode templateNode)
         {
-            string[] textToLowerSplit = text.ToLower().Split(' ');
+            string[] textToLowerSplit = text.ToLower().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             if (textToLowerSplit.Length < 2)
             {
                 writeToLog("ExcludedShort! '{0}' Len='{1}' ", text, textToLowerSplit.Length);
