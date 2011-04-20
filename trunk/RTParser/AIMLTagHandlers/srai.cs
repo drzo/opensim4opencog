@@ -199,7 +199,7 @@ namespace RTParser.AIMLTagHandlers
                         KnowsCanProcess = true;
                         string toUpper = MakeMatchable(templateNodeInnerValue);
                         var rp = request.ParentRequest;
-                        if (false && rp != null && !rp.CanProcess(toUpper)) return null;
+                        if (rp != null && !rp.CanProcess(toUpper)) return null;
                     }
                     if (false &&  IsNull(templateNodeInnerValue))
                     {

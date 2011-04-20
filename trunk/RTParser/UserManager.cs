@@ -406,10 +406,7 @@ namespace RTParser
                 myUser.SyncDirectory(userdir);
                 myUser.AddTodoItem(() =>
                                        {
-                                           var R = myUser.CreateRequest("ONUSERENTER " + key, BotAsUser);
-                                           ChatWithRequest(R);
-                                           Utils.GraphMaster G = myUser.StartGraph;
-                                           var sn = G.ScriptingName;
+                                           myUser.RaiseEvent("LOADED", this);
                                        });
                 myUser.userTrace = null;
             }
