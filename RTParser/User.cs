@@ -69,6 +69,8 @@ namespace RTParser
         GraphMaster StartGraph { get; set; }
         object TemplatesLock { get; }
         GraphMaster HeardYouSayGraph { get; set; }
+
+        void RaiseEvent(string p, RTPBot robot);
     }
 
     /// <summary>
@@ -78,6 +80,19 @@ namespace RTParser
                                      UserDuringProcessing, 
                                      User
     {
+
+        public void RaiseEvent(string name, RTPBot robot)
+        {
+            try
+            {
+                var R = CreateRequest("ONUSER" + name + " " + UserID, bot.BotAsUser);
+                robot.ChatWithRequest(R);
+            }
+            catch (Exception e)
+            {
+                writeDebugLine("ONUSER" + name + " " + e);
+            }
+        }
         public static bool ThatIsStoredBetweenUsers = true;
         public readonly object QueryLock = new object();
         public bool IsValid { get; set; }
