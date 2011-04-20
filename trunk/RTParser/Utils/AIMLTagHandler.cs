@@ -264,7 +264,7 @@ namespace RTParser.Utils
                 if (QueryHasFailed == value) return;
                 if (value)
                 {
-                    writeToLogWarn("!InUnify QueryHasFailed=" + value);
+                    writeToLogWarn("!InUnify AND QueryHasFailed=" + value);
                 }
                 query.HasFailed += (value ? 1 : 0);
             }
@@ -276,7 +276,7 @@ namespace RTParser.Utils
             {
                 if (InUnify)
                 {
-                    writeToLog("InUnify QueryHasFailed=" + value);
+                    writeToLog("InUnify QueryHasSuceeded=" + value);
                     return;
                 }
                 query.HasSuceeded += (value ? 1 : 0);
