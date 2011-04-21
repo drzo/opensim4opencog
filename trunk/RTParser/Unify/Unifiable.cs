@@ -474,7 +474,7 @@ namespace RTParser
         private static Unifiable MakeUnifiable0(string value)
         {
             Unifiable u;
-            if (value.StartsWith("<xor>"))
+            if (value.StartsWith("<xor>") || IsORSyntax(value))
             {
                 u = MakeBestUnifiable(value);
             } else
@@ -482,6 +482,11 @@ namespace RTParser
                 u  = new StringUnifiable(value, true);                            
             }
             return u;
+        }
+
+        public static bool IsORSyntax(string value)
+        {
+            return value.StartsWith("(") && value.EndsWith(")") && value.Contains("|");
         }
 
         private static Unifiable MakeBestUnifiable(string value)
