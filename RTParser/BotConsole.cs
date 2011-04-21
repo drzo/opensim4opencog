@@ -92,10 +92,16 @@ namespace RTParser
         /// </summary>
         /// <param name="message">The message to log</param>
         //public OutputDelegate writeToLog;
+        private static string lastMessage = null;
         public void writeToLog(string message, params object[] args)
         {
             message = SafeFormat(message, args);
             if (String.IsNullOrEmpty(message)) return;
+            if (lastMessage == message)
+            {
+                return;
+            }
+            lastMessage = message;
             bool writeToConsole = true; // outputDelegate == null;
 
             //message = message.Trim() + Environment.NewLine;
