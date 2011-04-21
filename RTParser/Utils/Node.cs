@@ -1279,8 +1279,9 @@ namespace RTParser.Utils
                     Unifiable childNodeWord = childNode.word; //.Key;
                     if ( childNodeWord.IsHighPriority) continue;
                     if (!(childNodeWord is BestUnifiable) && !childNodeWord.IsCatchAll) continue;
-                    if (!childNodeWord.WillMatch(firstWord))
+                    if (!childNodeWord.WillMatch(firstWord) && childNodeWord.IsTag("INPUT"))
                     {
+                        writeToLog("!WillMatch " + firstWord + " with " + childNodeWord);
                         continue;
                     }
                     // o.k. look for the path in the child node denoted by "*"
