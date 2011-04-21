@@ -108,8 +108,14 @@ namespace RTParser
 
         public override bool WillMatch(string word)
         {
-            if (IsAnyText) return true;
-            return ToKey() == word.ToUpper();
+           // if (IsAnyText) return true;
+            if (ToKey() == word.ToUpper()) return true;
+            if (IsCatchAll) return true;
+            if (IsWildCard)
+            {
+                return true;
+            }
+            return false;
         }
 
         public double Looseness
