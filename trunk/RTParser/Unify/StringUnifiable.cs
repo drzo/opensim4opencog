@@ -106,6 +106,12 @@ namespace RTParser
             }
         }
 
+        public override bool WillMatch(string word)
+        {
+            if (IsAnyText) return true;
+            return ToKey() == word.ToUpper();
+        }
+
         public double Looseness
         {
             get

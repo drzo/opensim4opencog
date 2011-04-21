@@ -565,6 +565,7 @@ namespace RTParser
 
         public static bool operator ==(Unifiable t, string s)
         {
+            if (s == null) return IsNull(t);
             return EQ(s, t);
         }
 
@@ -617,7 +618,8 @@ namespace RTParser
 
         public static bool operator ==(Unifiable t, object s)
         {
-            if (s is Unifiable) return SAME_KEY(t, (Unifiable) s, true);
+            if (s == null) return IsNull(t);
+            if (s is Unifiable) return SAME_KEY(t, (Unifiable)s, true);
             if (s is string)
             {
                 string ss = (string) s;
@@ -628,7 +630,6 @@ namespace RTParser
                 return false;
             }
             if (t == null) return IsNull(s);
-            if (s == null) return IsNull(t);
             return EQ(CreateEQ(s), t);
         }
 
@@ -1337,6 +1338,14 @@ namespace RTParser
         }
 
         #endregion
+
+        virtual public string ToKey()
+        {
+            return ToUpper();
+        }
+
+        public abstract bool WillMatch(string word);
+
     }
 
     public abstract class BaseUnifiable : StaticAIMLUtils

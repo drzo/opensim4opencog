@@ -110,9 +110,9 @@ namespace RTParser
         public override object Raw
         {
             get
-            {
-                if (best != null) return best.Raw;
+            {              
                 if (rawCache != null) return rawCache;
+                if (best != null) return best.Raw;
                 throw noBest();
             }
         }
@@ -141,11 +141,11 @@ namespace RTParser
                 {
                     if (u.IsHighPriority)
                     {
-                        best = u;
+                        // best = u;
                         return true;
                     }
                 }
-                return true;
+                return false;
             }
         }
 
@@ -286,6 +286,26 @@ namespace RTParser
             }
         }
 
+        public override string ToKey()
+        {
+            return "*";
+            return Raw.ToString().ToUpper();
+        }
+
+        public override bool WillMatch(string word)
+        {
+            if (IsAnyText) return true;
+            word = word.ToUpper();
+            foreach (Unifiable u in List)
+            {
+                if (u.WillMatch(word))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public override int CompareTo(Unifiable other)
         {
             double strictness = Strictness;
@@ -395,6 +415,26 @@ namespace RTParser
             throw noBest();
         }
 
+        public override bool IsWildCard
+        {
+            get { return true; }
+        }
+
+        public override bool IsCatchAll
+        {
+            get
+            {
+                foreach (Unifiable u in List)
+                {
+                    if (u.IsCatchAll)
+                    {
+                        // best = u;
+                       // return true;
+                    }
+                }
+                return false; 
+            }
+        }
 
         private Exception noBest()
         {
