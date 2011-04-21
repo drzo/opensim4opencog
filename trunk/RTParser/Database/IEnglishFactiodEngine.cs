@@ -7,8 +7,9 @@ namespace RTParser.Database
 {
     public interface IEnglishFactiodEngine
     {
-        string AskQuery(string searchTerm1, OutputDelegate dbgLog, Func<string, Unifiable> OnFalure,
-                                  XmlNode templateNode, float threshold, bool expandWithWordNet, bool expandOnNoHits, out float reliablity);
+        string AskQuery(string searchTerm1, OutputDelegate dbgLog, Func<Unifiable> OnFalure,
+                        XmlNode templateNode, float threshold, bool expandWithWordNet, bool expandOnNoHits,
+                        out float reliablity);
 
         int InsertFactiod(string myText, XmlNode templateNode, WordExpander WordNetExpand);
         /// <summary>

@@ -70,7 +70,7 @@ namespace RTParser.Database
             return named;
         }
 
-        public string AskQuery(string searchTerm1, OutputDelegate dbgLog, Func<string, Unifiable> OnFalure, XmlNode templateNode, float threshold, bool expandWithWordNet, bool expandOnNoHits, out float reliablity)
+        public string AskQuery(string searchTerm1, OutputDelegate dbgLog, Func<Unifiable> OnFalure, XmlNode templateNode, float threshold, bool expandWithWordNet, bool expandOnNoHits, out float reliablity)
         {
             reliablity = 1.0f;
             return GetTextResult(searchTerm1);

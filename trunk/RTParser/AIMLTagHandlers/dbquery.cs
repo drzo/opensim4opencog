@@ -46,8 +46,8 @@ namespace RTParser.AIMLTagHandlers
                 const bool expandOnNoHits = true; // actually WordNet
                 const float threshold = 0.0f;
                 Unifiable templateNodeInnerValue = Recurse();
-                string searchTerm1 = (string)templateNodeInnerValue;
-                searchTerm1 = TargetBot.LuceneIndexer.FixPronouns(searchTerm1, request.Requester.grabSettingNoDebug);
+                string searchTermOrig = (string)templateNodeInnerValue;
+                string searchTerm1 = TargetBot.LuceneIndexer.FixPronouns(searchTermOrig, request.Requester.grabSettingNoDebug);
                 if (TargetBot.LuceneIndexer.MayAsk(searchTerm1, templateNode) == null)
                 {
                     writeToLogWarn("WARNING: NO DBASK " + searchTerm1);
@@ -55,7 +55,15 @@ namespace RTParser.AIMLTagHandlers
                     return FAIL;
                 }
                 float reliability;
-                Unifiable converseMemo = TargetBot.LuceneIndexer.AskQuery(searchTerm1, this.writeToLog, this.OnFalure,
+                string failPrefix = RTPBot.GetAttribValue(templateNode, "failprefix", "").ToLower();
+                Unifiable converseMemo = TargetBot.LuceneIndexer.AskQuery(searchTerm1, this.writeToLog,
+                                                                          () =>
+                                                                              {
+                                                                                  //on <dbquery> failure, use a <srai> fallback
+                                                                                  string sariCallStr = failPrefix + " " + (string)searchTermOrig;
+                                                                                  return callSRAI(sariCallStr);
+
+                                                                              },
                                                                              this.templateNode, 
                                                                              threshold, 
                                                                              true, // use Wordnet
@@ -74,14 +82,6 @@ namespace RTParser.AIMLTagHandlers
         }
 
 
-
-        //on <dbquery> failure, use a <srai> fallback
-        private Unifiable OnFalure(string failPrefix)
-        {
-            Unifiable starContent = Recurse();
-            string sariCallStr = failPrefix + " " + (string) starContent;
-            return callSRAI(sariCallStr);
-        }
 
         public override void writeToLog(string s, params object[] p)
         {

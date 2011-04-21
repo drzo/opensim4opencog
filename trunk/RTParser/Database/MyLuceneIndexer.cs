@@ -794,7 +794,7 @@ namespace RTParser.Database
         /// <param name="threshold"> &lt;dbquery&gt; uses 0.0f by default</param>
         /// <param name="expandOnNoHits"></param>
         /// <returns></returns>
-        private string callDbQuery(string searchTerm1, OutputDelegate dbgLog, Func<string, Unifiable> OnFalure,
+        private string callDbQuery(string searchTerm1, OutputDelegate dbgLog, Func<Unifiable> OnFalure,
             XmlNode templateNode, float threshold, bool expandOnNoHits, out float reliablity)
         {
             // if synonyms is overriden?? the defualt is true
@@ -803,7 +803,7 @@ namespace RTParser.Database
             return AskQuery(searchTerm1, dbgLog, OnFalure, templateNode, threshold, expandWithWordNet, expandOnNoHits, out reliablity);
         }
 
-        public string AskQuery(string searchTerm1, OutputDelegate dbgLog, Func<string, Unifiable> OnFalure, XmlNode templateNode, float threshold, bool expandWithWordNet, bool expandOnNoHits, out float reliablity)
+        public string AskQuery(string searchTerm1, OutputDelegate dbgLog, Func<Unifiable> OnFalure, XmlNode templateNode, float threshold, bool expandWithWordNet, bool expandOnNoHits, out float reliablity)
         {
             lock (dbLock)
                 return callDbQuery0(searchTerm1, dbgLog, OnFalure, templateNode, threshold, expandWithWordNet,
@@ -811,7 +811,7 @@ namespace RTParser.Database
 
         }
 
-        public string callDbQuery0(string searchTerm1, OutputDelegate dbgLog, Func<string, Unifiable> OnFalure, XmlNode templateNode, float threshold, bool expandWithWordNet, bool expandOnNoHits, out float reliablity)
+        public string callDbQuery0(string searchTerm1, OutputDelegate dbgLog, Func<Unifiable> OnFalure, XmlNode templateNode, float threshold, bool expandWithWordNet, bool expandOnNoHits, out float reliablity)
         {
             checkDbLock();
             bool tf;
@@ -830,8 +830,7 @@ namespace RTParser.Database
             }
             string res = callDbQueryStatic(SearchSources, searchTerm1, dbgLog, templateNode, threshold, out reliablity,
                                            userFilter, wordNetExpander);
-            string failPrefix = RTPBot.GetAttribValue(templateNode, "failprefix", "").ToLower();
-            if (OnFalure != null && string.IsNullOrEmpty(res)) return OnFalure(failPrefix);
+            if (OnFalure != null && string.IsNullOrEmpty(res)) return OnFalure();
             return res;
         }
 
