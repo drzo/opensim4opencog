@@ -824,7 +824,7 @@ namespace RTParser.Utils
         {
             bool doEs = !DontDoKeyIndexingHacks;
             bool doSEs = !DontDoKeyIndexingHacks;
-            string fs0 = fs0W.ToUpper();
+            string fs0 = fs0W.ToKey();
             
             if (false && NatLangDb.BeAUX.Contains(" " + fs0 + " ")) return "BeAux";
 
@@ -1037,7 +1037,7 @@ namespace RTParser.Utils
 
             // check if this is the end of a branch in the GraphMaster 
             // return the cCategory for this node
-            if (children == null || children.Count == 0)
+            if (NoChildren())
             {
                 if (pathLength > 0 && UseWildcard(EmptyStringAppendable))
                 {
@@ -1146,7 +1146,10 @@ namespace RTParser.Utils
                 Node childNode = childNodeKV.Value;
                 Unifiable childNodeWord = childNode.word;
                 if (!childNodeWord.IsHighPriority) continue;
-
+                if (!childNodeWord.WillMatch(firstWord))
+                {
+                    continue;
+                }
                 // add the next word to the wildcard match 
                 StringAppendableUnifiableImpl newWildcard = Unifiable.CreateAppendable();
                 storeWildCard(firstWord, newWildcard);
@@ -1274,8 +1277,11 @@ namespace RTParser.Utils
                 {
                     Node childNode = childNodeKV.Value;
                     Unifiable childNodeWord = childNode.word; //.Key;
-                    if (!childNodeWord.IsCatchAll || childNodeWord.IsHighPriority) continue;
-
+                    if (/*!childNodeWord.IsCatchAll ||*/ childNodeWord.IsHighPriority) continue;
+                    if (!childNodeWord.WillMatch(firstWord))
+                    {
+                        continue;
+                    }
                     // o.k. look for the path in the child node denoted by "*"
                     //Node childNode = childNodeKV.Value;
 
@@ -1329,6 +1335,11 @@ namespace RTParser.Utils
             //wildcard = new StringBuilder();
             wildcard.Length = 0;
             return null; /// string.Empty;
+        }
+
+        private bool NoChildren()
+        {
+            return children == null || children.Count == 0;
         }
 
         private IEnumerable<KeyValuePair<string, Node>> ChildrenMatchingKey(string match, Dictionary<string, Node> dictionary, bool canDoSingle)
