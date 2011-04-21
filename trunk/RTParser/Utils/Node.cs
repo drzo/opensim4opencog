@@ -1277,7 +1277,8 @@ namespace RTParser.Utils
                 {
                     Node childNode = childNodeKV.Value;
                     Unifiable childNodeWord = childNode.word; //.Key;
-                    if (/*!childNodeWord.IsCatchAll ||*/ childNodeWord.IsHighPriority) continue;
+                    if ( childNodeWord.IsHighPriority) continue;
+                    if (!(childNodeWord is BestUnifiable) && !childNodeWord.IsCatchAll) continue;
                     if (!childNodeWord.WillMatch(firstWord))
                     {
                         continue;
