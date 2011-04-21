@@ -138,7 +138,7 @@ namespace RTParser
                             {
 
                                 Min = 0,
-                                Max = 7,
+                                Max = 17,
                             },
 
         };
