@@ -41,6 +41,62 @@ namespace RTParser.AIMLTagHandlers
         protected override Unifiable ProcessChange()
         {
             if (CheckNode("dbquery"))
+            {
+                if (templateNode.ChildNodes.Count > 0 && templateNode.FirstChild.Name != "li")
+                    return ProcessChangeLegacy();
+                foreach (var node in templateNode)
+                {
+                    // otherwise take the tag content as a srai (to trip say a random reply)
+                    const bool expandOnNoHits = true; // actually WordNet
+                    const float threshold = 0.0f;
+                    Unifiable templateNodeInnerValue = ProcessChildNode(((XmlNode)node));
+                    string failPrefix = RTPBot.GetAttribValue(((XmlNode)node), "failprefix", "").ToLower();
+                    if (failPrefix != null)
+                    {
+                        //on <dbquery> failure, use a <srai> fallback
+                        string sariCallStr = failPrefix + " " + (string)templateNodeInnerValue;
+                        return callSRAI(sariCallStr);
+                    }
+                    if (IsNullOrEmpty(templateNodeInnerValue)) continue;
+                    string searchTerm1 = TargetBot.LuceneIndexer.FixPronouns(templateNodeInnerValue,
+                                                                             request.Requester.grabSettingNoDebug);
+                    if (TargetBot.LuceneIndexer.MayAsk(searchTerm1, ((XmlNode)node)) == null)
+                    {
+                        writeToLogWarn("WARNING: NO DBASK " + searchTerm1);
+                        continue;
+                    }
+                    float reliability;
+                    Unifiable converseMemo = TargetBot.LuceneIndexer.AskQuery(
+                        searchTerm1,
+                        this.writeToLog,
+                        () =>
+                        {
+                            if (string.IsNullOrEmpty(failPrefix)) return null;
+                            //on <dbquery> failure, use a <srai> fallback
+                            string sariCallStr = failPrefix + " " + (string)templateNodeInnerValue;
+                            return callSRAI(sariCallStr);
+                        },
+                        this.templateNode,
+                        threshold,
+                        true, // use Wordnet
+                        expandOnNoHits, out reliability);
+                    if (!IsNullOrEmpty(converseMemo))
+                    {
+                        QueryHasSuceeded = true;
+                        return converseMemo;
+                        //Unifiable converseMemo = this.user.bot.conversationStack.Pop();
+                    }
+                }
+                // if there is a high enough scoring record in Lucene, use up to max number of them?
+                // otherwise there is a conversation memo then pop it??
+            }
+            return Unifiable.Empty;
+
+        }
+
+        protected Unifiable ProcessChangeLegacy()
+        {
+            if (CheckNode("dbquery"))
             {               
                 // otherwise take the tag content as a srai (to trip say a random reply)
                 const bool expandOnNoHits = true; // actually WordNet
