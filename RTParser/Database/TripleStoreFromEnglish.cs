@@ -125,7 +125,7 @@ namespace RTParser.Database
                 expandWithWordNet = tf;
             }
             float reliability;
-            string result = EnglishFactiodStore.AskQuery(factoidSR, writeToLog, (any) => null, templateNode, threshold,
+            string result = EnglishFactiodStore.AskQuery(factoidSR, writeToLog, () => null, templateNode, threshold,
                                                          expandWithWordNet, expandOnNoHits, out reliability);
             if (!string.IsNullOrEmpty(result) && result.ToLower().StartsWith(factoidSR.ToLower()) &&
                 reliability > threshold)
