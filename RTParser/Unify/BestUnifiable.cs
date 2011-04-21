@@ -17,13 +17,28 @@ namespace RTParser
         public BestUnifiable(string inlist, bool splitOnSpaces)
         {
             rawCache = inlist;
+            bool orSyntax = IsORSyntax(inlist);
             if (!inlist.StartsWith("<xor>"))
             {
-               throw new NotImplementedException();
+                if (!orSyntax) throw new NotImplementedException();
             }
+            SetFromString(inlist);
+        }
+
+        public void SetFromString(string inlist)
+        {
+            string[] strings = null;
             if (inlist == "<xor></xor>") return;
-            string[] strings = inlist.Split(new[] { "<xor><li>", "</li><li>", "</li></xor>" },
-                                            StringSplitOptions.RemoveEmptyEntries);
+            if (IsORSyntax(inlist))
+            {
+                inlist = inlist.Substring(1, inlist.Length - 2);
+                strings = inlist.Split(new[] {"|"}, StringSplitOptions.None);
+            }
+            else
+            {
+                strings = inlist.Split(new[] { "<xor><li>", "</li><li>", "</li></xor>" },
+                                                StringSplitOptions.RemoveEmptyEntries);
+            }
             if (strings.Length == 0)
             {
                 return;
