@@ -951,10 +951,6 @@ namespace RTParser
                 //hasMoreSolutions = false;
                 result.TemplatesSucceeded = 0;
                 result.OutputsCreated = 0;
-                if (isTraced)
-                {
-                    writeToLog("NO TEMPLATES FOR " + request);
-                }
                 //return;
             }
             return AllQueries;
@@ -1017,6 +1013,7 @@ namespace RTParser
 
         private int GetSolutions(Request request, Result result, List<SubQuery> sortMe, int solutions, out bool hasMoreSolutions)
         {
+            request.Requester.addSetting("inputreq", request.rawInput);
             foreach (SubQuery query in sortMe)
             {
                 if (result.IsComplete)
