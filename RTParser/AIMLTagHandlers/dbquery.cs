@@ -51,10 +51,11 @@ namespace RTParser.AIMLTagHandlers
                     const float threshold = 0.0f;
                     Unifiable templateNodeInnerValue = ProcessChildNode(((XmlNode)node));
                     string failPrefix = RTPBot.GetAttribValue(((XmlNode)node), "failprefix", "").ToLower();
-                    if (failPrefix != null)
+                    string passPrefix = RTPBot.GetAttribValue(((XmlNode)node), "passprefix", "").ToLower();
+                    if (!string.IsNullOrEmpty(failPrefix))
                     {
                         //on <dbquery> failure, use a <srai> fallback
-                        string sariCallStr = failPrefix + " " + (string)templateNodeInnerValue;
+                        string sariCallStr = failPrefix + " " + (string) templateNodeInnerValue;
                         return callSRAI(sariCallStr);
                     }
                     if (IsNullOrEmpty(templateNodeInnerValue)) continue;
@@ -83,6 +84,12 @@ namespace RTParser.AIMLTagHandlers
                     if (!IsNullOrEmpty(converseMemo))
                     {
                         QueryHasSuceeded = true;
+                        if (!string.IsNullOrEmpty(passPrefix))
+                        {
+                            //on <dbquery> failure, use a <srai> fallback
+                            string sariCallStr = passPrefix + " " + (string)converseMemo;
+                            return callSRAI(sariCallStr);
+                        }
                         return converseMemo;
                         //Unifiable converseMemo = this.user.bot.conversationStack.Pop();
                     }
