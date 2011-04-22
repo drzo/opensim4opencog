@@ -4,12 +4,20 @@ using System.Text;
 
 namespace RTParser.AIMLTagHandlers
 {
-    /// <summary>
-    /// The date element tells the AIML interpreter that it should substitute the system local 
-    /// date and time. No formatting constraints on the output are specified.
-    /// 
-    /// The date element does not have any content. 
-    /// </summary>
+   /// <summary>
+   ///  Returns to original text that <pattern> key'd from
+   ///  <!--
+   ///    INPUTREQ TESTS  
+   ///  -->
+   ///  <category>
+   ///      <pattern>INPUTREQTEST1</pattern>
+   ///      <template>This should say INPUTREQTEST1 for <inputreq/></template>
+   ///  </category>
+   ///  <category>
+   ///      <pattern>INPUTREQTEST2</pattern>
+   ///      <template><srai>INPUTREQTEST1<srai/></template>
+   ///  </category>
+   /// </summary>
     public class inputreq : RTParser.Utils.AIMLTagHandler
     {
         /// <summary>
