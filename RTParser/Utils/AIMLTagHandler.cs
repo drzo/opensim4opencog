@@ -256,12 +256,12 @@ namespace RTParser.Utils
             get { return query.HasFailed > 0; }
             set
             {
+                if (QueryHasFailed == value) return;
                 if (InUnify)
                 {
-                    writeToLog("InUnify QueryHasFailed=" + value);
+                    //writeToLog("InUnify QueryHasFailed=" + value);
                     return;
                 }
-                if (QueryHasFailed == value) return;
                 if (value)
                 {
                     writeToLogWarn("!InUnify AND QueryHasFailed=" + value);
