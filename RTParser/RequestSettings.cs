@@ -111,7 +111,7 @@ namespace RTParser
             MaxPatterns = 1,
             MinTemplates = 1,
             MaxTemplates = 1,
-            UseDictForSetMaxDepth = 3,
+            UseDictForSetMaxDepth = UNLIMITED,
             UseLuceneForGetMaxDepth = 2,
             UseLuceneForSetMaxDepth = 2,
             StartGraphName = "default",
