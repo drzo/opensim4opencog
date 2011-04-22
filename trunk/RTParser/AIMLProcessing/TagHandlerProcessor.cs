@@ -149,6 +149,9 @@ namespace RTParser
                     case "id":
                         tagHandler = new id(targetBot, user, query, request, result, node);
                         break;
+                    case "inputreq":
+                        tagHandler = new inputreq(targetBot, user, query, request, result, node);
+                        break;
                     case "request":
                         tagHandler = new input(targetBot, user, query, request, result, node, 1);
                         break;
