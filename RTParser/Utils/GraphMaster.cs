@@ -1439,12 +1439,19 @@ namespace RTParser.Utils
             if (request != null && request.WriterOptions != null) printOptions = request.WriterOptions;
             printOptions.ClearHistory();
 
-            string match;
+            string match0;
             string graphname;
-            if (!TextPatternUtils.SplitOff(args, "-", out graphname, out match))
+            if (!TextPatternUtils.SplitOff(args, "-", out graphname, out match0))
             {
                 graphname = "current";
-                match = ".*";
+                match0 = ".*";
+            }
+            string match;
+            string filename;
+            if (!TextPatternUtils.SplitOff(match0, "-", out match, out filename))
+            {
+                filename = null;
+                match = match0;
             }
 
             if (showHelp)
@@ -1468,7 +1475,15 @@ namespace RTParser.Utils
                     foundResults += cis.Count;
                     console("-----------------------------------------------------------------");
                     console("LISTING: count=" + cis.Count + " local=" + G + " key='" + n + "'");
-                    G.Listing(console, match, printOptions);
+                    var console1 = console;
+                    TextWriter tw = null;
+                    if (filename != null)
+                    {
+                        tw = new StreamWriter(filename);
+                        console1 = tw.WriteLine;
+                    }
+                    G.Listing(console1, match, printOptions);
+                    if (tw != null) tw.Close();
                     console("-----------------------------------------------------------------");
                 }
                 console(cmd + ": foundResults=" + foundResults);
