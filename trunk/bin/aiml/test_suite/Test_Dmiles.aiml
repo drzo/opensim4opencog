@@ -105,6 +105,15 @@
     </template>
   </category>
 
+<!--
+
+@say1 Can you be more specific?
+yes
+@say1 Can you be more specific?
+no
+
+-->
+
   <category>
     <pattern>YES</pattern>
     <that>CAN YOU BE *</that>
@@ -130,7 +139,7 @@
     <pattern>*</pattern>
     <that>CAN YOU BE *</that>
     <template>
-      So that means yes that you'll be <set name="will">
+      So that meant maybe yes that you'll be <set name="will">
         <thatstar/>
       </set>
     </template>
@@ -151,6 +160,11 @@
       why not <get name="will"/>?
     </template>
   </category>
+
+<!-- 
+
+ test regex1 please
+-->
 
 
   <category>
