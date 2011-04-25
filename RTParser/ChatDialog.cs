@@ -33,7 +33,7 @@ namespace RTParser
     public partial class RTPBot
     {
         public static bool BE_COMPLETE_NOT_FAST = false;
-        public static int SraiDepthMax = 10;
+        public static int SraiDepthMax = 50;
         public bool AlwaysUseImmediateAimlInImput = true;
         public static bool RotateUsedTemplate = true;
         public bool DontUseSplitters = true;
@@ -69,8 +69,8 @@ namespace RTParser
                     if (LR != null) return LR.Value;
                 }
                 if (IsInteractiveUser(_lastUser)) return _lastUser;
-                User LU = _lastResult != null ? _lastResult.Requester.Value : null;
-                if (IsInteractiveUser(LU)) return LU;
+                //User LU = _lastResult != null ? _lastResult.Requester.Value : null;
+                //if (IsInteractiveUser(LU)) return LU;
                 return null;
             }
             set
@@ -80,19 +80,19 @@ namespace RTParser
                     if (value == BotAsUser) return;
                     BotAsUser.LastResponder = value;
                 }
-                User LU = LastUser;
-                if (!IsInteractiveUser(LU) || IsInteractiveUser(value))
+                //User LU = LastUser;
+                if (!IsInteractiveUser(_lastUser) || IsInteractiveUser(value))
                 {
                     _lastUser = value;
                 }
             }
         }
 
-        private Request _lastRequest;
         public Request LastRequest
         {
             get
             {
+                Request _lastRequest = LastUser.LastRequest;
                 if (_lastRequest != null) return _lastRequest;
                 var lr = LastResult;
                 // Todo: should someonme have set the result to some default?
@@ -104,14 +104,15 @@ namespace RTParser
             }
             set
             {
-                _lastRequest = value;
+                LastUser.LastRequest = value;
             }
         }
-        private Result _lastResult;
+        //private Result _lastResult;
         public Result LastResult
         {
             get
             {
+                var _lastResult = LastUser.GetResult(0, false);
                 if (_lastResult != null)
                 {
                     if (IsInteractiveUser(_lastResult.Requester)) return _lastResult;
@@ -129,7 +130,7 @@ namespace RTParser
                 if (value == null) return;
                 if (LR == null)
                 {
-                    _lastResult = value;
+                    LastUser.LastRequest.UsedResults.Add(value);
                 }
                 LastUser = value.Requester.Value;
 
@@ -164,7 +165,7 @@ namespace RTParser
         /// </summary>
         public int Size
         {
-            get { return GraphMaster.Size + HeardSelfSayGraph.Size; }
+            get { return DefaultStartGraph.Size + DefaultHeardSelfSayGraph.Size; }
         }
 
         private GraphMaster _g;
@@ -174,7 +175,7 @@ namespace RTParser
         /// <summary>
         /// The "brain" of the Proccessor
         /// </summary>
-        public GraphMaster GraphMaster
+        public GraphMaster DefaultStartGraph
         {
             get
             {
@@ -187,8 +188,14 @@ namespace RTParser
                 return GetGraph(NamePath, _g);
             }
         }
-
-        public GraphMaster HeardSelfSayGraph
+        public GraphMaster DefaultEventGraph
+        {
+            get
+            {
+                return DefaultStartGraph;
+            }
+        }
+        public GraphMaster DefaultHeardSelfSayGraph
         {
             get
             {
@@ -651,7 +658,7 @@ namespace RTParser
                 ParsedSentences parsedSentences = ParsedSentences.GetParsedSentences(request, isTraced, writeToLog);
 
                 bool printedSQs = false;
-                G = G ?? GraphMaster;
+                G = G ?? DefaultStartGraph;
 
                 // grab the templates for the various sentences from the graphmaster
                 request.IsTraced = isTraced;
@@ -908,7 +915,7 @@ namespace RTParser
             {
                 if (isTraced)
                 {
-                    writeToLog("NO QUERIES FOR RESULTS " + request);
+                 //   writeToLog("NO QUERIES FOR RESULTS " + request);
                 }
                 return;
             }

@@ -326,7 +326,7 @@ namespace RTParser
             // myBot.AddAiml(evidenceCode);
             User myUser = myBot.LastUser;
             Request request = myUser.CreateRequest("current user toplevel", myBot.BotAsUser);
-            myBot.LastRequest = request;
+            myUser.LastRequest = request;
             myBot.BotDirective(myUser, request, "@help", writeLine);
             writeLine("-----------------------------------------------------------------");
             AIMLDEBUGSETTINGS = "clear +*";
@@ -451,7 +451,7 @@ namespace RTParser
         {
             try
             {
-                _lastRequest = request;
+                //_lastRequest = request;
                 return BotDirective(user, input, console, null);
             }
             catch (Exception e)
@@ -501,7 +501,7 @@ namespace RTParser
 
 
             if (RTPBotCommands.ExecAnyAtAll(this, input, myUser, cmd, console, showHelp, args, targetBotUser, control)) return true;
-            if (cmd == "query" || showHelp) if (rtpbotcommands.ExecQuery(this.LastRequest, cmd, console, showHelp, args, myUser))
+            if (cmd == "query" || showHelp) if (rtpbotcommands.ExecQuery(myUser.LastRequest, cmd, console, showHelp, args, myUser))
                     return true;
 
             if (showHelp) console("@user [var [value]] -- lists or changes the current users get/set vars.");
@@ -510,7 +510,7 @@ namespace RTParser
                 return myUser.DoUserCommand(args, console);
             }
             GraphMaster G = myUser.StartGraph;
-            Request request = this.LastRequest;
+            Request request = myUser.LastRequest;
 
             if (G.DoGraphCommand(cmd, console, showHelp, args, request)) return true;
 

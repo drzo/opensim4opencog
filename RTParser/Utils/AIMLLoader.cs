@@ -1518,6 +1518,19 @@ namespace RTParser.Utils
                 
             }
 
+            if (that.AsString().Contains("TAG-"))
+            {
+                throw new NullReferenceException("bad that: " + that);
+            }
+            if (pattern.AsString().Contains("TAG-"))
+            {
+                throw new NullReferenceException("bad pattern: " + that);
+            }
+            if (topicName.AsString().Contains("TAG-"))
+            {
+                throw new NullReferenceException("bad pattern: " + that);
+            }
+
             Unifiable res = Unifiable.MakePath(generateCPath(pattern, that, flag, topicName, isUserInput, innerFormater));
             if (isUserInput)
             {
@@ -1571,6 +1584,10 @@ namespace RTParser.Utils
             }
             if (normalizedPattern != normalizedPattern1)
             {
+                if (normalizedPattern1.Contains("<"))
+                {
+                    return normalizedPattern1;
+                }
                 normalizedPattern = normalizedPattern.Replace("  ", " ");
                 writeDebugLine("LastRepair '{0}' -> '{1}' ", normalizedPattern1, normalizedPattern);
                 return normalizedPattern;

@@ -41,14 +41,12 @@ namespace RTParser.AIMLTagHandlers
                     double beforerating = request.TopLevelScore;
                     double newrating = beforerating * templateScore;
                     request.TopLevelScore = newrating;
-                    if (false)
-                    {
-                        string str = SafeFormat("TSCORE {1}<-{2}*{3}", newrating, beforerating, templateScore);
-                        writeToLog(str);
-                    }
+                    string str = SafeFormat("TSCORE {0}<-{1}*{2}", newrating, beforerating, templateScore);
+                    return Succeed(str);
                 }
-                catch
+                catch (Exception e)
                 {
+                    writeToLogWarn("" + e);
                 }
 
             }

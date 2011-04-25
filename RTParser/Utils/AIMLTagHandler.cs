@@ -720,6 +720,7 @@ namespace RTParser.Utils
         public Unifiable Succeed(string p)
         {
             Succeed();
+            if (true) return think.THINKYTAG;
             return "<!-- SUCCEED: " + p.Replace("<!--", "<#-").Replace("-->", "-#>") + "-->";
         }
 

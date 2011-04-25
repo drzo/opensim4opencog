@@ -10,122 +10,6 @@ using UPath = RTParser.Unifiable;
 
 namespace RTParser
 {
-#if interfaces   
-    public interface Result : InteractionResult, RequestOrQuery
-#else
-    public interface ResultImpl : InteractionResult, RequestOrQuery
-#endif
-    {
-#if false
-        /// <summary>
-        /// The bot that is providing the answer
-        /// </summary>
-        //     RTPBot TargetBot { get; set; }
-        /// The user that is providing the <that/> answer
-        //        UserDuringProcessing Responder { get; set; }
-        //        string WhyComplete { get; set; }
-        bool IsTraced { get; set; }
-
-        /// <summary>
-        /// The individual sentences that constitute the raw input from the user
-        /// </summary>
-        List<Unifiable> InputSentences { get; }
-
-        /// <summary>
-        /// The normalized sentence(s) (paths) fed into the graphmaster
-        /// </summary>
-        List<Unifiable> NormalizedPaths { get; }
-
-        /// <summary>
-        /// The individual sentences produced by the bot that form the complete response
-        /// </summary>
-        List<Unifiable> OutputSentences { get; }
-
-        /// <summary>
-        /// The request from the user
-        /// </summary>
-        Request request { get; }
-
-        /// <summary>
-        /// The subQueries processed by the bot's graphmaster that contain the templates that 
-        /// are to be converted into the collection of Sentences
-        /// </summary>
-        List<SubQuery> SubQueries { get; }
-
-        ParsedSentences ChatOutput { get; }
-
-        /// <summary>
-        /// The user for whom this is a result
-        /// </summary>
-        ///UserDuringProcessing Requester { get; set; }
-        // OutputDelegate writeToLog { get; set; }
-        int TemplatesSucceeded { get; set; }
-
-        int OutputsCreated { get; set; }
-        //   GraphQuery TopLevel { get; set; }
-        double Score { get; }
-
-        /// <summary>
-        /// If the query is being traced
-        /// </summary>
-        //    bool IsTraced { get; set; }
-        string SetOutput { set; }
-
-        /// <summary>
-        /// The raw input from the user
-        /// </summary>
-        //Unifiable rawInput { get; }
-
-        /// <summary>
-        /// The result from the bot with logging and checking
-        /// </summary>
-        Unifiable Output { get; }
-
-        string EnglishOutput { get; }
-
-        /// <summary>
-        /// Returns the raw sentences without any logging 
-        /// </summary>
-        Unifiable RawOutput { get; }
-
-        bool IsEmpty { get; }
-        int OutputSentenceCount { get; }
-        ISettingsDictionary RequesterPredicates { get; }
-        // SubQuery CurrentQuery { get; set; }
-        // bool IsComplete { get; set; }
-        bool IsSalient { get; }
-        //    IList<TemplateInfo> UsedTemplates { get; }
-        //   ChatLabel CatchLabel { get; set; }
-        Result ParentResult { get; }
-        string NormalizedOutput { get; }
-        double TemplateRating { get; set; }
-        bool Started { get; set; }
-        TimeSpan Durration { get; }
-        void CollectRequest();
-        string WhyResultComplete { get; set; }
-        IList<TemplateInfo> ResultTemplates { get; }
-        RTPBot TargetBot { get; }
-     //   UserDuringProcessing Requester { get; set; }
-        GraphMaster Graph { get; }
-        void AddSubqueries(GraphQuery queries);
-        void AddOutputSentences(TemplateInfo ti, string unifiable, double score);
-        void AddResultFormat(string format, params object[] args);
-        string ToString();
-        Unifiable GetOutputSentence(int sentence);
-        void RotateUsedTemplates();
-        void ResetAnswers(bool b);
-        bool CanResultUseTemplate(TemplateInfo info);
-        OutputDelegate writeToLog { get; set; }
-        ChatLabel CatchLabel { get; set; }
-    //    UserDuringProcessing Responder { get; }
-        SubQuery CurrentQuery { get; set; }
-        int MaxCanEvalResult { get; set; }
-        bool IsComplete { get; set; }
-        int HasFailed { get; set; }
-        int HasSuceeded { get; set; }
-        void Exit();
-#endif
-    }
 
     /// <summary>
     /// Encapsulates information about the result of a request to the bot
@@ -135,7 +19,7 @@ namespace RTParser
 #else
     public abstract class Result : QuerySettings, /*ResultImpl, */ InteractionResult, RequestOrQuery
 #endif
-   
+
     {
         /// <summary>
         /// The subQueries processed by the bot's graphmaster that contain the templates that 
@@ -167,7 +51,7 @@ namespace RTParser
         //   public RTPBot TargetBot { get; set; }
         /// The user that is providing the <that/> answer
         //  public UserDuringProcessing Responder { get; set; }
-        public void CollectRequest()
+        public void FreeRequest()
         {
             Request req = request;
             if (request == null || ReferenceEquals(request, this)) return;
@@ -176,7 +60,7 @@ namespace RTParser
             //request = null;
         }
 
-        public abstract void CollectResult();
+        public abstract void FreeResult();
 
         private string userSetResultComplete;
         public string WhyResultComplete
@@ -198,7 +82,7 @@ namespace RTParser
                     t = (userSetResultComplete == null) ? t : (s + " " + userSetResultComplete);
                     return t;
                 }
-            } 
+            }
             set { userSetResultComplete = value; }
         }
 
@@ -260,15 +144,15 @@ namespace RTParser
         /// <param name="user">The user for whom this is a result</param>
         /// <param name="bot">The bot providing the result</param>
         /// <param name="request">The request that originated this result</param>
-        public 
-            
+        public
+
 #if interface
             ResultImpl
 #else
-            Result
+ Result
 #endif // interface
-            
-            (string rawInput, UserDuringProcessing user, RTPBot bot, Request parent, UserConversationScope targetUser)
+
+(string rawInput, UserDuringProcessing user, RTPBot bot, Request parent, UserConversationScope targetUser)
             : base(parent)
         {
             this.request = parent;
@@ -446,7 +330,7 @@ namespace RTParser
                 }
                 return request.Responder;
             }
-          //  set { request.Responder = value; }
+            //  set { request.Responder = value; }
         }
 
         public SubQuery CurrentQuery
@@ -591,7 +475,7 @@ namespace RTParser
         public UserConversationScope Requester
         {
             get { return request.Requester; }
-           // set { request.Requester = value; }
+            // set { request.Requester = value; }
         }
 
         public string _normalizedOutput;
@@ -612,13 +496,13 @@ namespace RTParser
         /// <summary>
         /// @see ChatOutput.TheMainSentence
         /// </summary>
-        public string NormalizedOutput
+        public Unifiable NormalizedOutput
         {
             get
             {
-                string something;
+                Unifiable something;
                 if (IsSomething(ChatOutput.TheMainSentence, out something)) return something;
-                return "Nothing";
+                return Unifiable.MISSING;
             }
         }
 
@@ -650,44 +534,44 @@ namespace RTParser
         {
             AddOutputSentences0(ti, unifiable, score);
         }
-/*
-        public bool IsTemplateNew(TemplateInfo ti, Unifiable tempOut)
-        {
-            if (ti == null) return false;
-            var usedTemplates = ResultTemplates;
-            if (usedTemplates.Contains(ti))
-            {
-                return false;
-            }
-            usedTemplates.Add(ti);
-            string output = ti.TextSaved;
-            lock (usedTemplates)
-            {
-                double ThisRating = ti.TemplateRating;
-                if (TemplateOfRating == null || TemplateRating < ThisRating)
+        /*
+                public bool IsTemplateNew(TemplateInfo ti, Unifiable tempOut)
                 {
-                    TemplateOfRating = ti;
-                    TemplateRating = ThisRating;
-                    writeToLog("AIMLTRACE: OUTPUT RATING={0} {2} TI: {1} \n U: {3}", ThisRating, ti, ti.Graph, output);
-                }
-                if (!IsNullOrEmpty(output))
-                {
-                    ti.TextSaved = output;
-                }
-                else
-                {
-                    ti.TextSaved = Unifiable.Empty;
-                    return false;
-                }
+                    if (ti == null) return false;
+                    var usedTemplates = ResultTemplates;
+                    if (usedTemplates.Contains(ti))
+                    {
+                        return false;
+                    }
+                    usedTemplates.Add(ti);
+                    string output = ti.TextSaved;
+                    lock (usedTemplates)
+                    {
+                        double ThisRating = ti.TemplateRating;
+                        if (TemplateOfRating == null || TemplateRating < ThisRating)
+                        {
+                            TemplateOfRating = ti;
+                            TemplateRating = ThisRating;
+                            writeToLog("AIMLTRACE: OUTPUT RATING={0} {2} TI: {1} \n U: {3}", ThisRating, ti, ti.Graph, output);
+                        }
+                        if (!IsNullOrEmpty(output))
+                        {
+                            ti.TextSaved = output;
+                        }
+                        else
+                        {
+                            ti.TextSaved = Unifiable.Empty;
+                            return false;
+                        }
 
-                if (IsNullOrEmpty(output))
-                {
-                    throw new Exception("EmptyUnmif for " + ti);
+                        if (IsNullOrEmpty(output))
+                        {
+                            throw new Exception("EmptyUnmif for " + ti);
+                        }
+                    }
+                    return true;
                 }
-            }
-            return true;
-        }
-*/
+        */
         private void AddOutputSentences0(TemplateInfo ti, string unifiable, double score)
         {
             if (null == unifiable)
@@ -738,19 +622,20 @@ namespace RTParser
             OutputPings++;
             if (this.OutputPings > 1)
             {
-             //   return;
+                //   return;
             }
             //ChatOutput.ClearOutput();
             AddOutputSentences11(unifiable, addToFront);
         }
-        private void AddOutputSentences11( string unifiable, bool addToFront)
+        private void AddOutputSentences11(string unifiable, bool addToFront)
         {
             unifiable = Trim(unifiable).Replace("\n", " ").Replace("\r", " ");
-            string[] sentNow = unifiable.Split(new[] {"<br/>", "&p;", "<p/>"}, StringSplitOptions.RemoveEmptyEntries);
+            string[] sentNow = unifiable.Split(new[] { "<br/>", "&p;", "<p/>" }, StringSplitOptions.RemoveEmptyEntries);
             if (sentNow.Length == 1)
             {
                 unifiable = sentNow[0];
-            } else
+            }
+            else
             {
                 AddOutputs(sentNow, addToFront);
                 return;
@@ -831,7 +716,7 @@ namespace RTParser
         {
             {
                 bool isComplete = OutputSentences.Count >=
-                                  ((QuerySettingsReadOnly) request.GetQuerySettings()).MinOutputs ||
+                                  ((QuerySettingsReadOnly)request.GetQuerySettings()).MinOutputs ||
                                   request.IsComplete(this);
 
                 if (!isComplete) return;
@@ -849,7 +734,7 @@ namespace RTParser
                         rd.request = request;
                         // rd.KeepThrowing = true;
                         rd.TagHandler = ti.Query.LastTagHandler;
-                        rd.result = (MasterResult) this;
+                        rd.result = (MasterResult)this;
                     }
                     throw rd;
                 }
@@ -919,7 +804,7 @@ namespace RTParser
 
         protected string WhyRequestComplete
         {
-            get { return  request.WhyRequestComplete; }
+            get { return request.WhyRequestComplete; }
         }
 
         public string ToResultString()
@@ -941,7 +826,7 @@ namespace RTParser
         public Unifiable GetOutputSentence(int sentence)
         {
             if (sentence == -1) return NormalizedOutput;
-            sentence = OutputSentenceCount - sentence - 1;            
+            sentence = OutputSentenceCount - sentence - 1;
             lock (OutputSentences) return OutputSentences[sentence];
         }
 
@@ -983,12 +868,12 @@ namespace RTParser
             }
         }
 
-        public void ResetAnswers(bool b)
+        public void ResetAnswers(bool clearSubQueries)
         {
             lock (OutputSentences) OutputSentences.Clear();
             AlreadyUsed = "xtxtxtxtxtxtxtxtxxt";
             var temps = ResultTemplates1;
-            if (b)
+            if (clearSubQueries)
             {
                 lock (SubQueries) if (SubQueries.Count > 0) SubQueries = new List<SubQuery>();
                 if (temps != null) lock (temps) temps.Clear();
@@ -997,6 +882,7 @@ namespace RTParser
 
         public bool CanResultUseTemplate(TemplateInfo info)
         {
+            return true;
             return FoundInParents(info, ParentResult);
         }
 
@@ -1010,6 +896,7 @@ namespace RTParser
 
         private bool FoundInParents(TemplateInfo info, Result requestOrResult)
         {
+            return false;
             if (requestOrResult == null) return true;
             while (requestOrResult != null)
             {
@@ -1057,8 +944,124 @@ namespace RTParser
                     if (scope != null) return scope;
                 }
 
-                return scope;    
+                return scope;
             }
         }
+    }
+#if interfaces   
+    public interface Result : InteractionResult, RequestOrQuery
+#else
+    public interface ResultImpl : InteractionResult, RequestOrQuery
+#endif
+    {
+#if false
+        /// <summary>
+        /// The bot that is providing the answer
+        /// </summary>
+        //     RTPBot TargetBot { get; set; }
+        /// The user that is providing the <that/> answer
+        //        UserDuringProcessing Responder { get; set; }
+        //        string WhyComplete { get; set; }
+        bool IsTraced { get; set; }
+
+        /// <summary>
+        /// The individual sentences that constitute the raw input from the user
+        /// </summary>
+        List<Unifiable> InputSentences { get; }
+
+        /// <summary>
+        /// The normalized sentence(s) (paths) fed into the graphmaster
+        /// </summary>
+        List<Unifiable> NormalizedPaths { get; }
+
+        /// <summary>
+        /// The individual sentences produced by the bot that form the complete response
+        /// </summary>
+        List<Unifiable> OutputSentences { get; }
+
+        /// <summary>
+        /// The request from the user
+        /// </summary>
+        Request request { get; }
+
+        /// <summary>
+        /// The subQueries processed by the bot's graphmaster that contain the templates that 
+        /// are to be converted into the collection of Sentences
+        /// </summary>
+        List<SubQuery> SubQueries { get; }
+
+        ParsedSentences ChatOutput { get; }
+
+        /// <summary>
+        /// The user for whom this is a result
+        /// </summary>
+        ///UserDuringProcessing Requester { get; set; }
+        // OutputDelegate writeToLog { get; set; }
+        int TemplatesSucceeded { get; set; }
+
+        int OutputsCreated { get; set; }
+        //   GraphQuery TopLevel { get; set; }
+        double Score { get; }
+
+        /// <summary>
+        /// If the query is being traced
+        /// </summary>
+        //    bool IsTraced { get; set; }
+        string SetOutput { set; }
+
+        /// <summary>
+        /// The raw input from the user
+        /// </summary>
+        //Unifiable rawInput { get; }
+
+        /// <summary>
+        /// The result from the bot with logging and checking
+        /// </summary>
+        Unifiable Output { get; }
+
+        string EnglishOutput { get; }
+
+        /// <summary>
+        /// Returns the raw sentences without any logging 
+        /// </summary>
+        Unifiable RawOutput { get; }
+
+        bool IsEmpty { get; }
+        int OutputSentenceCount { get; }
+        ISettingsDictionary RequesterPredicates { get; }
+        // SubQuery CurrentQuery { get; set; }
+        // bool IsComplete { get; set; }
+        bool IsSalient { get; }
+        //    IList<TemplateInfo> UsedTemplates { get; }
+        //   ChatLabel CatchLabel { get; set; }
+        Result ParentResult { get; }
+        string NormalizedOutput { get; }
+        double TemplateRating { get; set; }
+        bool Started { get; set; }
+        TimeSpan Durration { get; }
+        void CollectRequest();
+        string WhyResultComplete { get; set; }
+        IList<TemplateInfo> ResultTemplates { get; }
+        RTPBot TargetBot { get; }
+     //   UserDuringProcessing Requester { get; set; }
+        GraphMaster Graph { get; }
+        void AddSubqueries(GraphQuery queries);
+        void AddOutputSentences(TemplateInfo ti, string unifiable, double score);
+        void AddResultFormat(string format, params object[] args);
+        string ToString();
+        Unifiable GetOutputSentence(int sentence);
+        void RotateUsedTemplates();
+        void ResetAnswers(bool b);
+        bool CanResultUseTemplate(TemplateInfo info);
+        OutputDelegate writeToLog { get; set; }
+        ChatLabel CatchLabel { get; set; }
+    //    UserDuringProcessing Responder { get; }
+        SubQuery CurrentQuery { get; set; }
+        int MaxCanEvalResult { get; set; }
+        bool IsComplete { get; set; }
+        int HasFailed { get; set; }
+        int HasSuceeded { get; set; }
+        void Exit();
+#endif
     }
 }

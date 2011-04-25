@@ -242,7 +242,7 @@ namespace RTParser
             try
             {
                 if (message == null || message.Length < 4) return null;
-                Request r = theFactSpeaker.CreateRequest(message, toWhom, HeardSelfSayGraph, null);
+                Request r = theFactSpeaker.CreateRequest(message, toWhom, DefaultHeardSelfSayGraph, null);
                 // irregardless we only mentally played what the responder responded with
                 r.ResponderSelfListens = false;
                 // because the  listener cant hear this inner dialog
@@ -251,7 +251,7 @@ namespace RTParser
                 {
                     r.WhyComplete = "THREADABORTED";
                 };
-                var G = HeardSelfSayGraph;
+                var G = DefaultHeardSelfSayGraph;
                 if (G == null)
                 {
                     writeDebugLineBannered("HeardSelfSayGraph == null: " + message + " res = " + res);
@@ -324,11 +324,11 @@ namespace RTParser
         }
         private void SetupUserWithGraph0(GraphMaster graph, string newname, string newkey, User newuser)
         {            
-            graph.AddParallelMT(RTPBot.TheUserListenerGraph, newuser.WriteToUserTrace);
+            //graph.AddParallelMT(RTPBot.TheUserListenerGraph, newuser.WriteToUserTrace);
             newuser.StartGraph = graph;
             newuser.UserID = newkey;
             newuser.UserName = newname;
-            OnBotCreated(() => graph.AddGenlMT(GraphMaster, newuser.WriteToUserTrace));
+            OnBotCreated(() => graph.AddGenlMT(DefaultStartGraph, newuser.WriteToUserTrace));
             newuser.Predicates.IsIdentityReadOnly = false;
             newuser.Predicates.addSetting("name", newname);
             newuser.Predicates.addSetting("id", newkey);

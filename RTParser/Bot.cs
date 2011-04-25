@@ -127,8 +127,8 @@ namespace RTParser
             var botAsUser1 = BotAsUser;
             s = Trim(s);
             if (!s.StartsWith("<")) s = "<!-- " + s.Replace("<!--", "<#").Replace("-->", "#>") + " -->";
-            var r = new AIMLbot.MasterRequest(s, botAsUser1, "Nothing", botAsUser1, this, null,
-                                              GraphMaster);
+            var r = new AIMLbot.MasterRequest(s, botAsUser1, Unifiable.EnglishNothing, botAsUser1, this, null,
+                                              DefaultStartGraph);
             //r.ChatOutput.RawText = s;
             r.writeToLog = writeToLog;
             //Result res = new AIMLbot.MasterRequest(s, botAsUser1, this, r, null, null);            
@@ -992,7 +992,7 @@ namespace RTParser
 
         private void SetSaneGlobals(ISettingsDictionary settings)
         {
-            SaneLocalSettings(settings, "notopic", "Nothing");
+            SaneLocalSettings(settings, "notopic", Unifiable.EnglishNothing);
             SaneLocalSettings(settings, "version", Environment.Version.ToString());
             SaneLocalSettings(settings, "name", "Unknown");
             SaneLocalSettings(settings, "botmaster", "Unknown");
@@ -1122,7 +1122,7 @@ namespace RTParser
 
         public void AddAiml(string aimlText)
         {
-            AddAiml(GraphMaster, aimlText);
+            AddAiml(DefaultStartGraph, aimlText);
         }
 
         public void AddAiml(GraphMaster graph, string aimlText)
@@ -1199,7 +1199,7 @@ namespace RTParser
         /// <param name="path">the path to the file for saving</param>
         public void saveToBinaryFile(Unifiable path)
         {
-            GraphMaster.saveToBinaryFile(path);
+            DefaultStartGraph.saveToBinaryFile(path);
         }
 
         /// <summary>
@@ -1208,7 +1208,7 @@ namespace RTParser
         /// <param name="path">the path to the dump file</param>
         public void loadFromBinaryFile(Unifiable path)
         {
-            GraphMaster.loadFromBinaryFile(path);
+            DefaultStartGraph.loadFromBinaryFile(path);
         }
 
         #endregion
@@ -1430,7 +1430,7 @@ The AIMLbot program.
         {
             get
             {
-                if (!GlobalSettings.containsSettingCalled("notopic")) return "Nothing";
+                if (!GlobalSettings.containsSettingCalled("notopic")) return Unifiable.EnglishNothing;
                 return GlobalSettings.grabSettingNoDebug("notopic");
             }
         }
@@ -1467,8 +1467,8 @@ The AIMLbot program.
                 g = GraphsByName[graphPath] = GraphMaster.FindOrCreate(graphPath);
                 GraphMaster dtob = Utils.GraphMaster.FindOrCreate("default_to_" + this.NamePath);
                 g.AddGenlMT(dtob, writeToLog);
-                dtob.AddGenlMT(Utils.GraphMaster.FindOrCreate("default"), writeToLog);
-            }
+                //ㄴdtob.AddGenlMT(Utils.GraphMaster.FindOrCreate("default"), writeToLog);
+            } 
             return g;
         }
 
@@ -1537,12 +1537,12 @@ The AIMLbot program.
             {
                 if (_g != null && graphPath == "default")
                 {
-                    return GraphMaster;
+                    return DefaultStartGraph;
                 }
 
                 if (_h != null && graphPath == "heardselfsay")
                 {
-                    return HeardSelfSayGraph;
+                    return DefaultHeardSelfSayGraph;
                 }
             }
             if (graphPath == "parent" || graphPath == "parallel")
@@ -1626,7 +1626,7 @@ The AIMLbot program.
             lock (BotUsers) ///lock (OnBotCreatedHooks)
             {
                 TheCyc.WriteConfig();
-                GraphMaster.WriteConfig();
+                DefaultStartGraph.WriteConfig();
                 writeDebugLine("Bot loaded");
             }
         }
@@ -1793,7 +1793,7 @@ The AIMLbot program.
 
                 GraphsByName[n2n].RemoveGenlMT(GraphsByName[dgn], writeToLog);
             }
-            GraphMaster listeningGraph = HeardSelfSayGraph;
+            GraphMaster listeningGraph = DefaultHeardSelfSayGraph;
             if (listeningGraph != null) BotAsUser.HeardSelfSayGraph = listeningGraph;
             lock (OnBotCreatedHooks)
             {
@@ -1998,10 +1998,12 @@ The AIMLbot program.
 
         public ISettingsDictionary GetDictionary(string name)
         {
+            var idict = GetDictionary0(name);
+            if (idict!=null) return idict;
             var rtpbotobjCol = ScriptManager.ResolveToObject(this, name);
             if (rtpbotobjCol == null || rtpbotobjCol.Count == 0)
             {
-                lock (AllDictionaries) return GetDictionary0(name);
+                return null;
             }
             //if (tr)
             foreach (object o in rtpbotobjCol)
@@ -2098,8 +2100,8 @@ The AIMLbot program.
                     if (createIfMissing)
                     {
                         dict = AllDictionaries[key] = AllDictionaries[named] = new SettingsDictionary(named, this, null);
-                        User user = LastUser ?? ExemplarUser ?? BotAsUser;
-                        Request r = user.CurrentRequest ??
+                        User user = ExemplarUser ?? BotAsUser;
+                        Request r = //user.CurrentRequest ??
                                     user.CreateRequest(
                                         "@echo <!-- loadDictionary '" + named + "' from '" + type + "' -->", BotAsUser);
                         loadDictionary(dict, named, type, r);
@@ -2111,9 +2113,10 @@ The AIMLbot program.
 
         private void loadDictionary(ISettingsDictionary dictionary, string path, string type, Request r0)
         {
-            User user = LastUser ?? ExemplarUser ?? BotAsUser;
+            User user = //LastUser ?? 
+                ExemplarUser ?? BotAsUser;
             Request r = r0 ??
-                        user.CurrentRequest ??
+                        //user.CurrentRequest ??
                                     user.CreateRequest(
                                         "@echo <!-- loadDictionary '" + dictionary + "' from '" + type + "' -->", BotAsUser);
             int loaded = 0;

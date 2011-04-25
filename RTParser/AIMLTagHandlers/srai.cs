@@ -385,7 +385,7 @@ namespace RTParser.AIMLTagHandlers
                         }
                         if (depth > 200 && UseSraiLimiters)
                         {
-                            writeToLog(prefix + " FAILING TOOOO DEEEEP '" + subRequestrawInput + "'");
+                            writeToLog(prefix + " FAILING TOOOO DEEEEP '" + request + "'");
                             return Unifiable.INCOMPLETE;
                         }
 
@@ -397,7 +397,7 @@ namespace RTParser.AIMLTagHandlers
 
 
                         string whyComplete = thisrequest.WhyComplete = subRequest.WhyComplete;
-
+                        string subResultOutputTrace = Unifiable.DescribeUnifiable(subResultOutput);
                         if (Unifiable.IsNull(subResultOutput))
                         {
                             if (showDebug)
@@ -406,6 +406,7 @@ namespace RTParser.AIMLTagHandlers
                             }
                             subResult = (MasterResult)mybot.ChatFor1Result(subRequest, subResult);
                             subResultOutput = subResult.Output;
+                            subResultOutputTrace = Unifiable.DescribeUnifiable(subResultOutput);
                             //subQueryRawOutput = subResult.RawOutput.Trim();
                             if (!IsNullOrEmpty(subResultOutput))
                             {
@@ -417,27 +418,25 @@ namespace RTParser.AIMLTagHandlers
                             {
                                 if (mybot.chatTrace)
                                 {
-                                    mybot.writeChatTrace("\"L{0}\" -> \"S{1}\" ;\n", depth, depth);
-                                    mybot.writeChatTrace("\"S{0}\" -> \"SIN:{1}\" ;\n", depth, subRequestrawInput);
-                                    //mybot.writeChatTrace("\"SIN:{0}\" -> \"LN:{1}\" ;\n", subRequestrawInput, CatTextInfo());
-                                    mybot.writeChatTrace("\"SIN:{0}\" -> \"PATH:{1}\" [label=\"{2}\"] ;\n",
-                                                         subRequestrawInput, depth, subResult.NormalizedPaths);
-                                    mybot.writeChatTrace("\"PATH:{0}\" -> \"LN:{1}\" [label=\"{2}\"] ;\n", depth, depth,
-                                                         AIMLLoader.TextAndSourceInfo(templateNode));
-
-                                    mybot.writeChatTrace("\"LN:{0}\" -> \"RPY:MISSING({1})\" ;\n", depth, depth);
+                                    ShowChatTrace(subRequestrawInput, mybot, depth, subResult, templateNode);
                                 }
+                                request.IsTraced = true;
+                                why = subRequest.WhyComplete ?? "ERRORY";
+                                writeToLog("{0} NULL?! RETURN {1} {2} '{3}'", why + ": " + prefix, subRequestrawInput,
+                                           subResult.Score, subResultOutputTrace);
                                 return subResultOutput;
                             }
                         }
-                        string subResultOutputTrace = Unifiable.DescribeUnifiable(subResultOutput);
                         if (Unifiable.IsEMPTY(subResultOutput))
                         {
-                            why = subRequest.WhyComplete ?? "ERROR";
-                            writeToLog("{0} EMPTY?! RETURN {1}  {2} '{3}'", why + ": " + prefix, subRequestrawInput,
+                            request.IsTraced = true;                   
+                            why = subRequest.WhyComplete ?? "ERRORY";
+                            writeToLog("{0} EMPTY?! RETURN {1} {2} '{3}'", why + ": " + prefix, subRequestrawInput,
                                        subResult.Score, subResultOutputTrace);
+                            return subResultOutput;
                         }
                         {
+
                             if (subRequestrawInput.Contains("STDCATCHALL STDCATCHALL"))
                             {
                                 // @TODO @debug this
@@ -468,13 +467,7 @@ namespace RTParser.AIMLTagHandlers
 
                         if (mybot.chatTrace)
                         {
-                            mybot.writeChatTrace("\"L{0}\" -> \"S{1}\" ;\n", depth, depth);
-                            mybot.writeChatTrace("\"S{0}\" -> \"SIN:{1}\" ;\n", depth, subRequestrawInput);
-                            mybot.writeChatTrace("\"SIN:{0}\" -> \"PATH:{1}\" [label=\"{2}\"] ;\n", subRequestrawInput,
-                                                 depth, subResult.NormalizedPaths);
-                            mybot.writeChatTrace("\"PATH:{0}\" -> \"LN:{1}\" [label=\"{2}\"] ;\n", depth, depth,
-                                                 AIMLLoader.TextAndSourceInfo(templateNode));
-                            mybot.writeChatTrace("\"LN:{0}\" -> \"RPY:{1}\" ;\n", depth, subResultOutputTrace);
+                            ShowChatTrace(subRequestrawInput, mybot, depth, subResult, templateNode);
                         }
                         //salientRequest.ExitSalientSRAI(templateNodeInnerValue, subResultOutput);
                         return subResultOutput;
@@ -495,6 +488,19 @@ namespace RTParser.AIMLTagHandlers
             {
                 //depth--;
             }
+        }
+
+        private static void ShowChatTrace(string subRequestrawInput, RTPBot mybot, int depth, MasterResult subResult, XmlNode templateNode)
+        {
+            mybot.writeChatTrace("\"L{0}\" -> \"S{1}\" ;\n", depth, depth);
+            mybot.writeChatTrace("\"S{0}\" -> \"SIN:{1}\" ;\n", depth, subRequestrawInput);
+            //mybot.writeChatTrace("\"SIN:{0}\" -> \"LN:{1}\" ;\n", subRequestrawInput, CatTextInfo());
+            mybot.writeChatTrace("\"SIN:{0}\" -> \"PATH:{1}\" [label=\"{2}\"] ;\n",
+                                 subRequestrawInput, depth, subResult.NormalizedPaths);
+            mybot.writeChatTrace("\"PATH:{0}\" -> \"LN:{1}\" [label=\"{2}\"] ;\n", depth, depth,
+                                 AIMLLoader.TextAndSourceInfo(templateNode));
+
+            mybot.writeChatTrace("\"LN:{0}\" -> \"RPY:MISSING({1})\" ;\n", depth, depth);
         }
 
         static MasterResult GetSubResult(String prefix, Request prevRequest, User user, RTPBot mybot, MasterRequest subRequest, bool showDebug, out Unifiable subResultOutput, out  string subQueryRawOutput1, OutputDelegate writeToLog)

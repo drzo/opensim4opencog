@@ -69,6 +69,7 @@ namespace RTParser
         GraphMaster StartGraph { get; set; }
         object TemplatesLock { get; }
         GraphMaster HeardYouSayGraph { get; set; }
+        Request LastRequest { get; set; }
 
         void RaiseEvent(string p, RTPBot robot);
     }
@@ -86,11 +87,26 @@ namespace RTParser
             try
             {
                 var R = CreateRequest("ONUSER" + name + " " + UserID, bot.BotAsUser);
+                R.Graph = robot.DefaultEventGraph;
+                R.AddGraph(robot.DefaultEventGraph);
+                R.AddGraph(StartGraph);
                 robot.ChatWithRequest(R);
             }
             catch (Exception e)
             {
                 writeDebugLine("ONUSER" + name + " " + e);
+            }
+        }
+
+        public Request LastRequest
+        {
+            get
+            {
+                return _lastRequest;
+            }
+            set
+            {
+                _lastRequest = value;
             }
         }
         public static bool ThatIsStoredBetweenUsers = true;
@@ -212,7 +228,7 @@ namespace RTParser
 
         public GraphMaster HeardYouSayGraph
         {
-            get { return FindGraphLocally("heardyousaygraph") ?? bot.GraphMaster; }
+            get { return FindGraphLocally("heardyousaygraph") ?? bot.DefaultStartGraph; }
             set
             {
                 if (!Predicates.containsLocalCalled("heardyousaygraph"))
@@ -242,7 +258,7 @@ namespace RTParser
 
         public GraphMaster HeardSelfSayGraph
         {
-            get { return FindGraphLocally("heardselfsay") ?? bot.HeardSelfSayGraph; }
+            get { return FindGraphLocally("heardselfsay") ?? bot.DefaultHeardSelfSayGraph; }
             set
             {
                 if (!Predicates.containsLocalCalled("heardselfsay"))
@@ -264,7 +280,7 @@ namespace RTParser
         {
             get
             {
-                var v = FindGraphLocally("startgraph") ?? bot.GraphMaster;
+                var v = FindGraphLocally("startgraph") ?? bot.DefaultStartGraph;
                 return v;
             }
             set
@@ -861,7 +877,7 @@ namespace RTParser
                     return;
                 }
                 this.Results.Insert(0, latestResult);
-                latestResult.CollectRequest();
+                latestResult.FreeRequest();
                 int rc = this.SailentResultCount;
                 if (rc > MaxResultsSaved)
                 {
@@ -877,17 +893,18 @@ namespace RTParser
         {
             get
             {
-                string something;
+                Unifiable something;
                 var lastResponder = this.LastResponder;
                 Result r = GetResult(0, true) ?? GetResult(0, false, lastResponder);
                 if (r != null && IsSomething(r.NormalizedOutput, out something))
                 {
+
                     return something;
                 }
                 if (lastResponder != null && IsSomething(lastResponder.JustSaid, out something)) return something;
                 if (ThatIsStoredBetweenUsers)
                 {
-                    return "Nothing";
+                    return Unifiable.EnglishNothing;
                 }
                 var fr = CurrentRequest;
                 while
@@ -898,7 +915,7 @@ namespace RTParser
                     fr = fr.ParentRequest;
                 }
                 if (IsSomething(getLastBotOutputForThat(), out something)) return something;
-                return "Nothing";
+                return Unifiable.EnglishNothing;
             }
             set
             {
@@ -921,13 +938,13 @@ namespace RTParser
             }
         }
 
-        private string getLastBotOutputForThat()
+        private Unifiable getLastBotOutputForThat()
         {
-            string something;
+            Unifiable something;
             Result r = GetResult(0, true) ?? GetResult(0, false, LastResponder);
             if (r != null && IsSomething(r.NormalizedOutput, out something)) return something;
             if (LastResponder != null && IsSomething(LastResponder.JustSaid, out something)) return something;
-            return "Nothing";
+            return Unifiable.EnglishNothing;
         }
 
         private Unifiable _JustSaid;
@@ -936,7 +953,7 @@ namespace RTParser
         {
             get
             {
-                string something;
+                Unifiable something;
                 if (IsSomething(_JustSaid, out something)) return something;
                 if (LastResponder != null)
                 {
@@ -950,7 +967,7 @@ namespace RTParser
                     }
                     // infinate loop here -> return LastReponder.ResponderJustSaid;
                 }
-                return "Nothing";
+                return Unifiable.EnglishNothing;
             }
             set
             {
@@ -968,12 +985,16 @@ namespace RTParser
                 // the (_JustSaid != value) holds back the infinate looping
                 if (_JustSaid != value)
                 {
-                    _JustSaid = value;
-                    Predicates.addSetting("lastsaid", value);
-                    Predicates.addSetting("thatstar", value);
-                    if (LastResponder != null)
+                    Unifiable something;
+                    if (IsSomething(value, out something))
                     {
-                        LastResponder.ResponderJustSaid = value;
+                        _JustSaid = value;
+                        Predicates.addSetting("lastsaid", value);
+                        Predicates.addSetting("thatstar", value);
+                        if (LastResponder != null)
+                        {
+                            LastResponder.ResponderJustSaid = value;
+                        }
                     }
                 }
             }
@@ -985,8 +1006,16 @@ namespace RTParser
             {
                 {
                     var vv = Predicates.grabSetting("that");
-                    if (Unifiable.IsMulti(vv)) vv = vv.Possibles[0];
-                    if (!IsIncomplete(vv)) return vv;
+                    if (Unifiable.IsMulti(vv))
+                    {
+                        RTPBot.writeDebugLine("WARNING ONLY USING ONE Result: " + Unifiable.DescribeUnifiable(vv));
+                        vv = vv.Possibles[0];
+                    }
+                    Unifiable output;
+                    if (IsSomething(vv, out output))
+                    {
+                        return output;
+                    }
                     if (LastResponder != null) return LastResponder.JustSaid;
                     return That;
                 }
@@ -1292,6 +1321,7 @@ namespace RTParser
         private bool NeedAiml = false;
         private readonly List<CrossAppDomainDelegate> ShutdownHooks = new List<CrossAppDomainDelegate>();
         private readonly List<CrossAppDomainDelegate> OnNeedAIML = new List<CrossAppDomainDelegate>();
+        private Request _lastRequest;
         //public int depth { get; set; }
 
 
@@ -1428,7 +1458,7 @@ namespace RTParser
         {
             string[] hostSystemGetFiles = HostSystem.GetFiles(userdir, "*.aiml");
             if (hostSystemGetFiles == null || hostSystemGetFiles.Length <= 0) return;
-            var request = new MasterRequest("@echo load user aiml ", this, "Nothing", bot.BotAsUser, bot,
+            var request = new MasterRequest("@echo load user aiml ", this, Unifiable.EnglishNothing, bot.BotAsUser, bot,
                                             null, StartGraph);
             request.TimesOutAt = DateTime.Now + new TimeSpan(0, 15, 0);
             request.Graph = StartGraph;

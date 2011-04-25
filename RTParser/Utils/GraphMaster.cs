@@ -121,7 +121,7 @@ namespace RTParser.Utils
         public bool CannotHaveParallel = false;
 
         private int parallel0;
-        private Node PostParallelRootNode;
+        //private Node PostParallelRootNode;
         private Node RootNode;
         [UserScopedSetting]
         public bool SilentTagsInPutParallel { get; set; }
@@ -171,7 +171,7 @@ namespace RTParser.Utils
             // most graphs try to recuse on themselves until otehrwise stated (like in make-parallel)
             Srai = gn;
             RootNode = new Node(this, Unifiable.Empty);
-            PostParallelRootNode = new Node(this, Unifiable.Empty);
+            //PostParallelRootNode = new Node(this, Unifiable.Empty);
             if (!TrackTemplates)
             {
                 UnusedTemplates = null;
@@ -196,7 +196,7 @@ namespace RTParser.Utils
                 // CanMaxOutStage1 = false;
                 if (gn.Contains("parallel") || gn.Contains("parent"))
                 {
-                    throw new Exception("Parallel should use other constructor! " + gn);
+                    throw new NotImplementedException("Parallel should use other constructor! " + gn);
                 }
             }
         }
@@ -495,7 +495,7 @@ namespace RTParser.Utils
             FileStream saveFile = HostSystem.Create(path);
             BinaryFormatter bf = new BinaryFormatter();
             bf.Serialize(saveFile, this.RootNode);
-            bf.Serialize(saveFile, this.PostParallelRootNode);
+            //bf.Serialize(saveFile, this.PostParallelRootNode);
             saveFile.Close();
         }
 
@@ -508,7 +508,7 @@ namespace RTParser.Utils
             Stream loadFile = HostSystem.OpenRead(path);
             BinaryFormatter bf = new BinaryFormatter();
             this.RootNode = (Node)bf.Deserialize(loadFile);
-            this.PostParallelRootNode = (Node)bf.Deserialize(loadFile);
+            //this.PostParallelRootNode = (Node)bf.Deserialize(loadFile);
             loadFile.Close();
         }
 
@@ -541,11 +541,11 @@ namespace RTParser.Utils
             Node rootNode = this.RootNode;
             if (IsStarStarStar(generatedPath))
             {
-                rootNode = this.PostParallelRootNode;
+              //  rootNode = this.PostParallelRootNode;
             }
             else if (generatedPath.AsString().Contains("TAG-THAT * TAG-TOPIC * TAG-FLAG"))
             {
-                rootNode = this.PostParallelRootNode;
+              //  rootNode = this.PostParallelRootNode;
             }
             else if (IsAnyStar(generatedPath) >= 2)
             {
@@ -562,7 +562,7 @@ namespace RTParser.Utils
                                                  additionalRules, out wouldBeRemoval);
             if (wouldBeRemoval)
             {
-                Node other = rootNode == this.RootNode ? this.PostParallelRootNode : this.RootNode;
+                Node other = rootNode;// == this.RootNode ? this.PostParallelRootNode : this.RootNode;
                 Node thatz = other.addPathNodeChilds(generatedPath, nodeAdder);
                 //writeToLog("Doing other removal: " + generatedPath);
                 info0 = thatz.addTerminal(templateNode, cateNode, guard, topicInfo, thatInfo, loaderOptions, patternInfo,
@@ -610,7 +610,7 @@ namespace RTParser.Utils
             }
             GraphQuery ql = new GraphQuery(path, request, this, state);
             ql.matchState = state;
-            QuerySettings.ApplySettings(request, ql);
+            //QuerySettings.ApplySettings(request, ql);
             request.TopLevelQuery = ql;
 #if DEBUG_ALLQUERIES
 
@@ -661,7 +661,7 @@ namespace RTParser.Utils
                     writeToLog("Maxed out " + ql);
                 return;
             }
-            while (getQueries(PostParallelRootNode, path, request, matchState, 0, Unifiable.CreateAppendable(),
+            /*while (getQueries(PostParallelRootNode, path, request, matchState, 0, Unifiable.CreateAppendable(),
                               ql))
             {
                 if (ql.IsMaxedOutOrOverBudget)
@@ -672,7 +672,7 @@ namespace RTParser.Utils
                 {
                     break;
                 }
-            }
+            }*/
             int newtemplates1 = ql.TemplateCount - templatesStart;
             if (ql.IsMaxedOut)
             {
@@ -752,6 +752,12 @@ namespace RTParser.Utils
             int patternCountChanged = 0;
             int tried = 0;
             bool doIt = !toplevel.IsComplete(request);
+            request.TimeOutFromNow = TimeSpan.FromSeconds(3);
+            request.Requester.ProofTemplates.Clear();
+            writeToLog("GETQUERIES: " + request);
+            //clearDiabled(rootNode);
+            //request.ResetValues(false);
+            //request.ParentMostRequest.ResetValues(false);
             if (!doIt)
             {
                 writeToLog("AIMLTRACE DOIT: " + tried + " pc=" + patternCountChanged + ": " + false + "  " + request);
@@ -760,108 +766,127 @@ namespace RTParser.Utils
             var Prf = request.Proof = request.Proof ?? new Proof();
 
             Node toplevelBubble;
-            while (!toplevel.NoMoreResults)
+            try
             {
-                int patternCount = toplevel.PatternCount;
-                toplevelBubble = null;
-                SubQuery query = new SubQuery(upath, request.CurrentResult, request);
-                query.TopLevel = toplevel;
-                Node pattern = rootNode.evaluate(Unifiable.ToVMString(upath), query, request, matchstate, wildcard);
-                if (pattern != null && pattern.IsSatisfied(query))
+                while (!toplevel.NoMoreResults)
                 {
-                    if (toplevel.ContainsPattern(pattern))
+                    int patternCount = toplevel.PatternCount;
+                    toplevelBubble = null;
+                    SubQuery query = new SubQuery(upath, request.CurrentResult, request);
+                    query.TopLevel = toplevel;
+                    Node pattern = rootNode.evaluate(Unifiable.ToVMString(upath), query, request, matchstate, wildcard);
+                    if (pattern != null && pattern.IsSatisfied(query))
                     {
-                        toplevelBubble = pattern;
-                        writeToLog("p=" + pattern);
-                        toplevel.NoMoreResults = true;
-                    }
-                    else if (!pattern.disabled)
-                    {
-                        if (IsStarStarStar(ToString()))
+                        if (!toplevel.ContainsPattern(pattern))
                         {
+                            var tmplateInfos = pattern.TemplateInfoCopy;
                             toplevelBubble = pattern;
-                            writeToLog("p=" + pattern);
-                            toplevel.NoMoreResults = true;
-                            //pattern.disabled = true;
-                            break;
-                        }
-                        var tmplateInfos = pattern.TemplateInfoCopy;
-                        toplevelBubble = pattern;
-                        pattern.disabled = true;
-                        if (tmplateInfos != null && tmplateInfos.Count != 0)
-                        {
-                            toplevel.AddPattern(pattern);
-                            query.Pattern = pattern;
-                            toplevel.AddBindingSet(query);
-                            foreach (TemplateInfo sol in tmplateInfos)
+                            pattern.disabled = true;
+                            if (tmplateInfos != null && tmplateInfos.Count != 0)
                             {
-                                if (!sol.IsSatisfied(query))
+                                toplevel.AddPattern(pattern);
+                                query.Pattern = pattern;
+                                toplevel.AddBindingSet(query);
+                                foreach (TemplateInfo sol in tmplateInfos)
                                 {
-                                    continue;
+                                    if (!sol.IsSatisfied(query))
+                                    {
+                                        continue;
+                                    }
+                                    if (!request.CanUseRequestTemplate(sol))
+                                    {
+                                        continue;
+                                    }
+                                    sol.Query = query;
+                                    query.CurrentTemplate = sol;
+                                    query.Templates.Add(sol);
+                                    toplevel.AddTemplate(sol);
                                 }
-                                if (!request.CanUseRequestTemplate(sol))
+                                if (query.Templates.Count == 0)
                                 {
-                                    continue;
-                                }
-                                sol.Query = query;
-                                query.CurrentTemplate = sol;
-                                query.Templates.Add(sol);
-                                toplevel.AddTemplate(sol);
-                            }
-                            if (query.Templates.Count == 0)
-                            {
 
+                                }
                             }
                         }
+                        else
+                        {
+                            pattern.disabled = true;
+                        }
+                    }
+
+                    if (toplevelBubble != null)
+                    {
+                        toplevelBubble.disabled = true;
+                        Prf.Add(toplevelBubble);
+                    }
+                    if (toplevel.PatternCount != patternCount)
+                    {
+                        patternCountChanged++;
                     }
                     else
                     {
-                        pattern.disabled = true;
+                        tried++;
+                    }
+                    if (tried > 10)
+                    {
+                        break;
+                    }
+                    bool toplevelIsComplete = toplevel.IsComplete(request);
+                    if (toplevelIsComplete)
+                    {
+                        break;
+                    }
+                    if (toplevelBubble != null && IsStarStarStar(toplevelBubble.ToString()))
+                    {
+                       // toplevel.NoMoreResults = true;
+                       // break;
                     }
                 }
 
-                if (toplevelBubble != null)
-                {
-                    toplevelBubble.disabled = true;
-                    Prf.Add(toplevelBubble);
-                }
-                if (toplevel.PatternCount != patternCount)
-                {
-                    patternCountChanged++;
-                }
-                else
-                {
-                    tried++;
-                }
-                if (tried > 100)
-                {
-                    break;
-                }
-                bool toplevelIsComplete = toplevel.IsComplete(request);
-                if (toplevelIsComplete)
-                {
-                    break;
-                }
-                if (toplevelBubble != null && IsStarStarStar(toplevelBubble.ToString()))
-                {
-                    toplevel.NoMoreResults = true;
-                    break;
-                }
-            }
-            {
                 bool f = toplevel.TemplateCount > resin;
                 bool sc = patternCountChanged > 0;
                 if (f != sc)
                 {
                     writeToLog("AIMLNODE: " + tried + " pc=" + patternCountChanged + ": " + f + "  " + request);
                 }
+                return f;
+            } catch(Exception e)
+            {
+                writeToLog("GATHER " + e);
+                throw e;
+            }
+
+            finally
+            {
                 var PU = toplevel.PatternsUsed;
                 if (PU != null)
                     foreach (Node list in PU)
                     {
                         list.disabled = false;
                     }
-                return f;
+               /* foreach (Node list in disabledPatterns)
+                {
+                    list.disabled = false;
+                }
+                */
+            }
+        }
+
+        private void clearDiabled(Node rootNode)
+        {
+            foreach (Node list in rootNode.AllDecendants)
+            {
+                if (list.disabled)
+                {
+                    list.disabled = false;
+                }
+            }
+            foreach (var list in rootNode.AllDecendantTemplates)
+            {
+                if (list.IsDisabled)
+                {
+                    list.IsDisabled = false;
+                }
             }
         }
 
@@ -905,6 +930,8 @@ namespace RTParser.Utils
                 {
                     if (!FallBacksGraphs.Contains(fallback))
                     {
+                        writeToLog("GENLMT NOT ADDING " + fallback + " TO " + this);
+                        return;
                         FallBacksGraphs.Add(fallback);
                         writeToLog("GENLMT ADDING " + fallback + " TO " + this);
                     }
@@ -927,6 +954,8 @@ namespace RTParser.Utils
                 {
                     if (!parallels.Contains(doall))
                     {
+                        writeToLog("PARALLEL NOT ADDING " + doall + " TO " + this);
+                        return;
                         parallels.Add(doall);
                         writeToLog("PARALLEL ADDING " + doall + " TO " + this);
                     }

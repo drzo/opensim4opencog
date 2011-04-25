@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Xml;
 using MushDLR223.Utilities;
 using RTParser.Utils;
 
@@ -13,10 +14,11 @@ namespace RTParser
         private bool insideSearch;
         public string rawCache = null;
         public ListAsSet<Unifiable> List = new ListAsSet<Unifiable>();
+        public XmlNode nodeOuter;
 
         public BestUnifiable(string inlist, bool splitOnSpaces)
         {
-            rawCache = inlist;
+            rawCache = null;// inlist;
             bool orSyntax = IsORSyntax(inlist);
             if (!inlist.StartsWith("<xor>"))
             {
@@ -112,6 +114,7 @@ namespace RTParser
             get
             {              
                 if (rawCache != null) return rawCache;
+                return AsString();
                 if (best != null) return best.Raw;
                 throw noBest();
             }
@@ -125,7 +128,6 @@ namespace RTParser
                 {
                     if (u.IsAnyText)
                     {
-                        best = u;
                         return true;
                     }
                 }
@@ -141,7 +143,6 @@ namespace RTParser
                 {
                     if (u.IsHighPriority)
                     {
-                        // best = u;
                         return true;
                     }
                 }
@@ -153,11 +154,12 @@ namespace RTParser
         {
             get
             {
+                return true;
                 foreach (Unifiable list in List)
                 {
                     if (list.IsLazy)
                     {
-                        best = list;
+                        //best = list;
                         return true;
                     }
                 }
@@ -231,6 +233,12 @@ namespace RTParser
             }
             return false;
         }
+
+        public override void OfferNode(XmlNode node, string inner)
+        {
+            nodeOuter = node;
+        }
+
         public override bool IsTag(string s)
         {
             foreach (Unifiable u in List)
@@ -261,11 +269,7 @@ namespace RTParser
 
         public override string ToUpper()
         {
-            if (List.Count != 1)
-            {
-                //throw new NotImplementedException();
-            }
-            return List[0].ToUpper();
+            return Raw.ToString().ToUpper();
         }
 
         public override double Strictness
@@ -288,17 +292,31 @@ namespace RTParser
 
         public override string ToKey()
         {
-            return "*";
-            return Raw.ToString().ToUpper();
+           // return "*";
+            return ToUpper();
+        }
+        public override string OverlyMatchableString
+        {
+            get
+            {
+                return "*";
+            }
+        }
+        public override bool IsExactKey
+        {
+            get { return false; }
         }
 
         public override bool WillMatch(string word)
         {
-            if (IsAnyText) return true;
-            word = word.ToUpper();
+            return WillMatch0(word.ToUpper());
+        }
+
+        public override bool WillMatch0(string word)
+        {
             foreach (Unifiable u in List)
             {
-                if (u.WillMatch(word))
+                if (u.WillMatch0(word))
                 {
                     return true;
                 }
@@ -443,7 +461,7 @@ namespace RTParser
 
         public override string AsString()
         {
-            if (List.Count == 1) return List[0].AsString();
+            //if (List.Count == 1) return List[0].AsString();
             if (rawCache != null) return rawCache;
             //if (best != null) return best.AsString();
             string results = "<xor>";

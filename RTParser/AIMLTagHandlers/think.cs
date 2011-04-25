@@ -46,7 +46,7 @@ namespace RTParser.AIMLTagHandlers
             }
             var vv = GetAttribValue<Unifiable>(templateNode, "retval", null);
             if (vv != null) return vv;
-            if (true) return THINKYTAG;
+            //if (true) return THINKYTAG;
             return Succeed(" THOUGHT: '" + templateNodeInnerText + "'");
         }
 

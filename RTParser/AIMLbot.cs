@@ -97,7 +97,7 @@ namespace AIMLbot
             throw new NotImplementedException();
         }
 
-        public override void CollectResult()
+        public override void FreeResult()
         {
             throw new NotImplementedException();
         }

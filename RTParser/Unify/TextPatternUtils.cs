@@ -525,14 +525,19 @@ namespace RTParser.Utils
             return clean;
         }
 
-        public static bool IsSomething(string s, out string something)
+        public static bool IsSomething(Unifiable s, out Unifiable something)
         {
             something = s;
-            if (String.IsNullOrEmpty(s) || IsIncomplete(s))
+            if (IsNullOrEmpty(s) || IsIncomplete(s))
             {
                 return false;
             }
-            return (s.ToLower() != "nothing");
+            string ss = s.ToUpper();
+            if (ss.Contains("TAG-"))
+            {
+                return false;
+            }
+            return (ss != "NOTHING");
         }
       /*  public static string ToUpper(Unifiable param1)
         {

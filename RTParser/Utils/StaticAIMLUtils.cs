@@ -273,7 +273,7 @@ namespace RTParser.Utils
                                 newTopic = ReduceStar<Unifiable>(node.Value, query, dict, out found);
                                 if (newTopic != null)
                                 {
-                                    if (IsNullOrEmpty(newTopic)) newTopic = "Nothing";
+                                    if (IsNullOrEmpty(newTopic)) newTopic = Unifiable.EnglishNothing;
                                     needsUnwind = true;
                                     request.Topic = newTopic;
                                 }
@@ -284,7 +284,7 @@ namespace RTParser.Utils
                                 newThat = ReduceStar<Unifiable>(node.Value, query, dict, out found);
                                 if (newThat != null)
                                 {
-                                    if (IsNullOrEmpty(newThat)) newThat = "Nothing";
+                                    if (IsNullOrEmpty(newThat)) newThat = Unifiable.EnglishNothing;
                                     needsUnwind = true;
                                     request.That = newThat;
                                 }
