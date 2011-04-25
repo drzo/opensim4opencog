@@ -775,13 +775,13 @@ namespace RTParser.Utils
                     SubQuery query = new SubQuery(upath, request.CurrentResult, request);
                     query.TopLevel = toplevel;
                     Node pattern = rootNode.evaluate(Unifiable.ToVMString(upath), query, request, matchstate, wildcard);
-                    if (pattern != null && pattern.IsSatisfied(query))
+                    if (pattern != null)
                     {
-                        if (!toplevel.ContainsPattern(pattern))
+                        pattern.disabled = true;
+                        if (pattern.IsSatisfied(query) && !toplevel.ContainsPattern(pattern))
                         {
                             var tmplateInfos = pattern.TemplateInfoCopy;
                             toplevelBubble = pattern;
-                            pattern.disabled = true;
                             if (tmplateInfos != null && tmplateInfos.Count != 0)
                             {
                                 toplevel.AddPattern(pattern);
@@ -802,17 +802,10 @@ namespace RTParser.Utils
                                     query.Templates.Add(sol);
                                     toplevel.AddTemplate(sol);
                                 }
-                                if (query.Templates.Count == 0)
-                                {
-
-                                }
                             }
                         }
-                        else
-                        {
-                            pattern.disabled = true;
-                        }
                     }
+
 
                     if (toplevelBubble != null)
                     {
