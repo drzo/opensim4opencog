@@ -35,7 +35,7 @@ namespace RTParser.Utils
         /// </summary>
         private Dictionary<string, Node> children0;
 
-        private Dictionary<string, Node> specialChildren;
+        private SortedDictionary<string, Node> specialChildren;
         /// <summary>
         /// The template (if any) associated with this node
         /// </summary>
@@ -775,12 +775,12 @@ namespace RTParser.Utils
                 throw new NullReferenceException("no child node: " + this + "CategoryInfo: " + categoryInfo);
             return initial;
         }
-
+        static IComparer<string> KeySorter = new KeySorterImpl();
         private void AddChildNode(string fs, Node childNode, CategoryInfo categoryInfo)
         {
             if (IsLazy(fs, categoryInfo))
             {
-                specialChildren = specialChildren ?? new Dictionary<string, Node>();
+                specialChildren = specialChildren ?? new SortedDictionary<string, Node>(KeySorter);
                 specialChildren.Add(fs, childNode);
                 return;
             }
@@ -1193,8 +1193,8 @@ namespace RTParser.Utils
                     }
                     // o.k. look for the path in the child node denoted by "*"
                     //Node childNode = childNodeKV.Value;
-                    specialChildren.Remove(childNodeKV.Key);
-                    specialChildren.Add(childNodeKV.Key, childNode);
+                    //specialChildren.Remove(childNodeKV.Key);
+                    //specialChildren.Add(childNodeKV.Key, childNode);
 
                     // add the next word to the wildcard match 
                     StringAppendableUnifiableImpl newWildcard = Unifiable.CreateAppendable();
@@ -1255,25 +1255,22 @@ namespace RTParser.Utils
             return true;
         }
 
-        private IEnumerable<KeyValuePair<string, Node>> ChildrenMatchingKey(string match, Dictionary<string, Node> dictionary, bool canDoSingle)
-        {
-            if (dictionary == null) return OneKV.EMPTY;
-            Node v;
+        private IEnumerable<KeyValuePair<string, Node>> ChildrenMatchingKey(string match, IDictionary<string, Node> dictionary, bool canDoSingle)
+        {            
+            if (dictionary == null || dictionary.Count == 0) return OneKV.EMPTY;
             if (!canDoSingle)
             {
-                List<KeyValuePair<string, Node>> dict = new List<KeyValuePair<string, Node>>(0);
-                foreach (KeyValuePair<string, Node> keyValuePair in dictionary)
-                {
-                    dict.Add(keyValuePair);
-                }
-                return dict;
+                return dictionary;
             }
-            if (dictionary.TryGetValue(match, out v))
+            lock (dictionary)
             {
-                return new OneKV(match, v);
+                Node v;
+                if (dictionary.TryGetValue(match, out v))
+                {
+                    return new OneKV(match, v);
+                }
             }
-            // return dictionary;
-                return OneKV.EMPTY;
+            return OneKV.EMPTY;
         }
 
         private bool NoEnabledTemplates
@@ -1451,6 +1448,37 @@ namespace RTParser.Utils
                 }
             }
         }
+    }
+
+    internal class KeySorterImpl : IComparer<string>
+    {
+        #region Implementation of IComparer<string>
+
+        /// <summary>
+        /// Compares two objects and returns a value indicating whether one is less than, equal to, or greater than the other.
+        /// </summary>
+        /// <returns>
+        /// Value 
+        ///                     Condition 
+        ///                     Less than zero
+        ///                 <paramref name="x"/> is less than <paramref name="y"/>.
+        ///                     Zero
+        ///                 <paramref name="x"/> equals <paramref name="y"/>.
+        ///                     Greater than zero
+        ///                 <paramref name="x"/> is greater than <paramref name="y"/>.
+        /// </returns>
+        /// <param name="x">The first object to compare.
+        ///                 </param><param name="y">The second object to compare.
+        ///                 </param>
+        public int Compare(string x, string y)
+        {
+            if (x == y) return 0;
+            if (x == "*") return 1;
+            if (y == "*") return -1;
+            return string.Compare(x, y);
+        }
+
+        #endregion
     }
 
     public interface ParentChild
