@@ -1524,11 +1524,11 @@ namespace RTParser.Utils
             }
             if (pattern.AsString().Contains("TAG-"))
             {
-                throw new NullReferenceException("bad pattern: " + that);
+                throw new NullReferenceException("bad pattern: " + pattern);
             }
             if (topicName.AsString().Contains("TAG-"))
             {
-                throw new NullReferenceException("bad pattern: " + that);
+                throw new NullReferenceException("bad topicName: " + topicName);
             }
 
             Unifiable res = Unifiable.MakePath(generateCPath(pattern, that, flag, topicName, isUserInput, innerFormater));
