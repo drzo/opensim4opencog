@@ -307,16 +307,16 @@ namespace RTParser
             get { return false; }
         }
 
-        public override bool WillMatch(string word)
+        public override bool WillMatch(string word, SubQuery query)
         {
-            return WillMatch0(word.ToUpper());
+            return WillMatch0(word.ToUpper(), query);
         }
 
-        public override bool WillMatch0(string word)
+        public override bool WillMatch0(string word, SubQuery query)
         {
             foreach (Unifiable u in List)
             {
-                if (u.WillMatch0(word))
+                if (u.WillMatch0(word, query))
                 {
                     return true;
                 }

@@ -1352,9 +1352,9 @@ namespace RTParser
             return ToUpper();
         }
 
-        public abstract bool WillMatch(string word);
+        public abstract bool WillMatch(string word, SubQuery query);
 
-        public abstract bool WillMatch0(string word);
+        public abstract bool WillMatch0(string word, SubQuery query);
     }
 
     public abstract class BaseUnifiable : StaticAIMLUtils
