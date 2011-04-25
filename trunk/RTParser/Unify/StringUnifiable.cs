@@ -105,15 +105,22 @@ namespace RTParser
                 return _strictness;
             }
         }
-
         public override bool WillMatch(string word)
         {
+            return WillMatch0(word.ToUpper());
+        }
+        public override bool WillMatch0(string word)
+        {
            // if (IsAnyText) return true;
-            if (ToKey() == word.ToUpper()) return true;
-            if (IsCatchAll) return true;
-            if (IsWildCard)
+            //if (ToKey() == word.ToUpper()) return true;
+            if (IsLitteralText && !IsLazy && !IsCatchAll)
             {
-                return true;
+                return word == ToUpper();
+            }
+            if (IsCatchAll) return true;
+            if (IsLazy)
+            {
+                return false;
             }
             return false;
         }
@@ -880,7 +887,8 @@ namespace RTParser
             }
             catch (Exception e)
             {
-                RTPBot.writeDebugLine("" + e.Message + ": " + " " + e.StackTrace + "\n" + stringAppendable);
+                RTPBot.writeDebugLine("" + e.Message + ": " + " " + e.StackTrace + "\n" +
+                                      DescribeUnifiable(stringAppendable));
                 throw;
             }
         }
@@ -1420,7 +1428,7 @@ namespace RTParser
             return AsString();
         }
 
-        public void OfferNode(XmlNode xmlNode, string inner)
+        public override void OfferNode(XmlNode xmlNode, string inner)
         {
             if (nodeOuter == null || splittedCache == null)
             {

@@ -33,8 +33,9 @@ namespace RTParser.Utils
         /// <summary>
         /// Contains the child nodes of this node
         /// </summary>
-        private Dictionary<string, Node> children;
+        private Dictionary<string, Node> children0;
 
+        private Dictionary<string, Node> specialChildren;
         /// <summary>
         /// The template (if any) associated with this node
         /// </summary>
@@ -106,18 +107,6 @@ namespace RTParser.Utils
                     if (TemplateInfos == null) return 0;
                     if (TemplateInfos.Count == 0) return 0;
                     return TemplateInfos.Count;
-                }
-            }
-        }
-
-        public object ChildCount
-        {
-            get
-            {
-                lock (SyncObject)
-                {
-                    if (children == null) return -1;
-                    return children.Count;
                 }
             }
         }
@@ -739,7 +728,7 @@ namespace RTParser.Utils
             Node childNode;
             lock (SyncObject)
             {
-                if (children != null && TryGetValueChild(fs, out childNode))
+                if (TryGetValueChild(fs, out childNode))
                 {
                     initial = childNode.addPathNodeChilds(from + 1, path, categoryInfo);
                     found = true;
@@ -750,7 +739,7 @@ namespace RTParser.Utils
                 if (needsKeySanityCheck) // see if we need ot check new indexing system!
                     // ReSharper restore ConditionIsAlwaysTrueOrFalse
                     if (!found)
-                        foreach (var c in children)
+                        foreach (var c in children0)
                         {
                             string ks = ToUpper(c.Key);
                             if (ks == fs)
@@ -789,34 +778,38 @@ namespace RTParser.Utils
 
         private void AddChildNode(string fs, Node childNode, CategoryInfo categoryInfo)
         {
-            if (IsNonSimple(fs, categoryInfo))
+            if (IsLazy(fs, categoryInfo))
             {
-                this.IsSpecial = true;
-                if (!fs.ToUpper().Contains("<BOT"))
-                {
-                    //writeDebugLine("IsSpecial: '{0}' {1}", fs, categoryInfo);
-                }
+                specialChildren = specialChildren ?? new Dictionary<string, Node>();
+                specialChildren.Add(fs, childNode);
+                return;
             }
-            children = children ?? new Dictionary<string, Node>();
-            children.Add(fs, childNode);
+            children0 = children0 ?? new Dictionary<string, Node>();
+            children0.Add(fs, childNode);
         }
 
-        static private bool IsNonSimple(string fs, CategoryInfo categoryInfo)
+        static private bool IsLazy(string fs, CategoryInfo categoryInfo)
         {
-            if (fs == "*" || fs == "_" || fs.StartsWith("TAG-")) return false;
-            foreach (var fs1 in fs)
+            //if (fs == "*" || fs == "_" || fs.StartsWith("TAG-")) return false;
+            //foreach (var fs1 in fs)
             {
+                var fs1 = fs[0];
                 if (fs1 == '<') return true;
-                if (fs1 == '{') return true;
+                if (fs1 == '*') return true;
+                if (fs1 == '|') return true;
+                if (fs1 == '(') return true;
                 if (fs1 == '#') return true;
-                if (char.IsLetterOrDigit(fs1)) continue; // return true;
+                //if (char.IsLetterOrDigit(fs1)) continue; // return true;
             }
             return false;
         }
 
         private bool TryGetValueChild(string fs, out Node childNode)
         {
-            return children.TryGetValue(fs, out childNode);
+            if (children0 != null && children0.TryGetValue(fs, out childNode)) return true;
+            if (specialChildren != null && specialChildren.TryGetValue(fs, out childNode)) return true;
+            childNode = null;
+            return false;
         }
 
         public static bool DontDoKeyIndexingHacks = true;
@@ -942,30 +935,8 @@ namespace RTParser.Utils
 
         #region Evaluate Node
 
-        private Node GetNextNode()
-        {
-            var Parent = _parentObject as Node;
-            if (Parent == null) return null;
-            bool useNext = false;
-            lock (SyncObject)
-                foreach (var v in Parent.children)
-                {
-                    if (useNext) return v.Value;
-                    if (v.Value == this)
-                    {
-                        useNext = true;
-                    }
-                }
-            if (useNext)
-            {
-                //     writeToLog(String.Format("Last key {0}", ToString()));
-                return Parent.GetNextNode();
-            }
-            return null;
-        }
 
         private static char[] OtherwiseSplitInputInto = " \r\n\t".ToCharArray();
-        private bool IsSpecial = false;
 
         /// <summary>
         /// Navigates this node (and recusively into child nodes) for a match to the path passed as an argument
@@ -1009,7 +980,7 @@ namespace RTParser.Utils
             }
 
             Node vv = evaluateFirst(at, splitPath, query, request, matchstate, wildcard);
-            if (Unifiable.ToVMString(wildcard.Frozen(query)).Trim().Length > 0)
+            if (false && Unifiable.ToVMString(wildcard.Frozen(query)).Trim().Length > 0)
             {
                 if (vv == null || vv.disabled || vv.NoEnabledTemplates) return null;
             }
@@ -1023,11 +994,13 @@ namespace RTParser.Utils
             // check for timeout           
             if (request.IsTimedOutOrOverBudget)
             {
+                request.TimeOutFromNow = TimeSpan.FromSeconds(3);
                 string mesg = "FINISHED " + request.WhyComplete + " User: " +
                                                    request.Requester.UserID + " raw input: \"" +
                                                    request.rawInput + "\" in " + this;
                 request.writeToLog(mesg);
-                throw new ChatSignalOverBudget(request, mesg) { request = request };
+                if (false)throw new ChatSignalOverBudget(request, mesg) { request = request };
+                request.SuspendSearchLimits = true;
             }
 
             int pathLength = splitPath.Length - at;
@@ -1067,81 +1040,11 @@ namespace RTParser.Utils
             string firstWordU = ToUpper(firstWord);
             // and concatenate the rest of the input into a new path for child nodes
             //string newPath = path.Substring(firstWord.Length, path.Length - firstWord.Length);
-
-            const bool firstFirst = false;
-            // first first option is to see if this node has a child denoted by the "<" 
-            // wildcard. "_" comes first in precedence in the AIML alphabet
-            // ReSharper disable ConditionIsAlwaysTrueOrFalse
-            if (firstFirst)
-                // lock (SyncObject)
-                // ReSharper restore ConditionIsAlwaysTrueOrFalse
-                foreach (var childNodeKV in children)
-                {
-                    string key = childNodeKV.Key;
-                    if (!key.StartsWith("<")) continue;
-
-                    Node childNode = childNodeKV.Value;
-                    Unifiable childNodeWord = childNode.word;
-                    string wval = childNodeWord.ToValue(query);
-                    if (wval == null) continue;
-                    wval = wval.ToUpper() + " ";
-                    if (!wval.StartsWith(firstWordU + " "))
-                    {
-                        continue;
-                    }
-                    string firstWord2 = firstWord;
-                    int useUp = 1;
-                    int wvalContains = wval.IndexOf(" ");
-                    if (wvalContains > 1)
-                    {
-                        useUp = 2;
-                        string splitPath2 = splitPath[at + 1];
-                        if (!Unifiable.IsStringMatch(wval.Substring(wvalContains + 1), splitPath2))
-                        {
-                            if (splitPath2.StartsWith("TAG-")) continue;
-                            continue;
-                        }
-                        firstWord2 = firstWord + " " + splitPath2;
-                    }
-
-                    // add the next word to the wildcard match 
-                    StringAppendableUnifiableImpl newWildcard = Unifiable.CreateAppendable();
-                    storeWildCard(firstWord2, newWildcard);
-
-                    // move down into the identified branch of the GraphMaster structure
-                    Node result = childNode.evaluateNext(at + useUp, splitPath, query, request, matchstate,
-                                                         newWildcard);
-
-                    // and if we get a result from the branch process the wildcard matches and return 
-                    // the result
-                    if (result != null)
-                    {
-                        if (UseWildcard(newWildcard))
-                        {
-                            // capture and push the star content appropriate to the current matchstate
-                            switch (matchstate)
-                            {
-                                case MatchState.UserInput:
-                                    if (childNodeWord.StoreWildCard())
-                                        Insert(query.InputStar, newWildcard.Frozen(query));
-                                    // added due to this match being the end of the line
-                                    newWildcard.Length = 0; // Remove(0, newWildcard.Length);
-                                    break;
-                                default:
-                                    List<Unifiable> stars = query.GetMatchList(matchstate);
-                                    if (childNodeWord.StoreWildCard()) Insert(stars, newWildcard.Frozen(query));
-                                    newWildcard.Length = 0;
-                                    break;
-                            }
-                        }
-                        return result;
-                    }
-                }
-
+    
             // second first option is to see if this node has a child denoted by the "_" 
             // wildcard. "_" comes first in precedence in the AIML alphabet
             //lock (SyncObject)
-            foreach (var childNodeKV in ChildrenMatchingKey("_", children, true))
+            foreach (var childNodeKV in ChildrenMatchingKey("_", children0, true))
             {
                 Node childNode = childNodeKV.Value;
                 Unifiable childNodeWord = childNode.word;
@@ -1273,15 +1176,19 @@ namespace RTParser.Utils
             bool wisTag = firstWord.StartsWith("TAG-");
             if (!wisTag)
                 //   lock (SyncObject)
-                foreach (var childNodeKV in ChildrenMatchingKey("*", children, !IsSpecial))
+                foreach (var childNodeKV in ChildrenMatchingKey("*", specialChildren, false))
                 {
                     Node childNode = childNodeKV.Value;
                     Unifiable childNodeWord = childNode.word; //.Key;
-                    if ( childNodeWord.IsHighPriority) continue;
-                    if (!(childNodeWord is BestUnifiable) && !childNodeWord.IsCatchAll) continue;
-                    if (!childNodeWord.WillMatch(firstWord) && !word.IsTag("INPUT"))
+                    if ( childNodeWord.IsHighPriority)
                     {
-                        writeToLog("!WillMatch " + firstWord + " with " + childNodeWord);
+                        continue;
+                    }
+                    //if (!(childNodeWord is BestUnifiable) && !childNodeWord.IsCatchAll) continue;
+                    if (!childNodeWord.WillMatch(firstWord))
+                    {
+                        if (childNodeWord.IsExactKey) continue;                       
+                        //writeToLog("!WillMatch " + firstWord + " with " + childNodeWord);
                         continue;
                     }
                     // o.k. look for the path in the child node denoted by "*"
@@ -1341,21 +1248,25 @@ namespace RTParser.Utils
 
         private bool NoChildren()
         {
-            return children == null || children.Count == 0;
+            if (children0 != null && children0.Count > 0) return false;
+            if (specialChildren != null && specialChildren.Count > 0) return false;
+            return true;
         }
 
         private IEnumerable<KeyValuePair<string, Node>> ChildrenMatchingKey(string match, Dictionary<string, Node> dictionary, bool canDoSingle)
         {
+            if (dictionary == null) return OneKV.EMPTY;
+            Node v;
             if (!canDoSingle)
             {
                 return dictionary;
             }
-            Node v;
             if (dictionary.TryGetValue(match, out v))
             {
                 return new OneKV(match, v);
             }
-            return OneKV.EMPTY;
+            // return dictionary;
+                return OneKV.EMPTY;
         }
 
         private bool NoEnabledTemplates
@@ -1403,7 +1314,7 @@ namespace RTParser.Utils
                     return childNode;
                 }
             }
-            foreach (var childNodeKV in ChildrenMatchingKey(fs, children, !IsSpecial))
+            foreach (var childNodeKV in ChildrenMatchingKey(fs, children0, true))
             {
                 Unifiable childNodeWord = childNodeKV.Value.word;
                 // if (childNodeWord.IsHighPriorityWildCard) continue;
@@ -1469,6 +1380,38 @@ namespace RTParser.Utils
             get { return _parentObject; }
         }
 
+        public Node[] AllDecendants
+        {
+            get
+            {
+                List<Node> TIs = new List<Node>();
+                var lts = this.TemplateInfos;
+                if (lts != null && lts.Count > 0) TIs.Add(this);
+                if (children0 != null)
+                    foreach (Node cn in children0.Values)
+                    {
+                        TIs.AddRange(cn.AllDecendants);
+                    }
+                if (specialChildren != null)
+                    foreach (Node cn in specialChildren.Values)
+                    {
+                        TIs.AddRange(cn.AllDecendants);
+                    }
+                return TIs.ToArray();
+            }
+        }
+        public TemplateInfo[] AllDecendantTemplates
+        {
+            get
+            {
+                List<TemplateInfo> TIs = new List<TemplateInfo>();
+                foreach (var node in AllDecendants)
+                {
+                    TIs.AddRange(node.TemplateInfos);
+                }
+                return TIs.ToArray();
+            }
+        }
         internal void SetDisabled(TemplateInfo templateInfo, bool value)
         {
             lock (SyncObject)

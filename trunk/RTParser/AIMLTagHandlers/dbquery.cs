@@ -24,6 +24,10 @@ using MushDLR223.Virtualization;
 
 namespace RTParser.AIMLTagHandlers
 {
+
+    /// <summary>
+    /// 
+    /// </summary>
     public class dbquery : RTParser.Utils.AIMLTagHandler
     {
 
@@ -44,6 +48,8 @@ namespace RTParser.AIMLTagHandlers
             {
                 if (templateNode.ChildNodes.Count > 0 && templateNode.FirstChild.Name != "li")
                     return ProcessChangeLegacy();
+                bool hasPassed = false;
+                string majorPassed = null;
                 foreach (var node in templateNode)
                 {
                     // otherwise take the tag content as a srai (to trip say a random reply)
@@ -52,11 +58,17 @@ namespace RTParser.AIMLTagHandlers
                     Unifiable templateNodeInnerValue = ProcessChildNode(((XmlNode)node));
                     string failPrefix = RTPBot.GetAttribValue(((XmlNode)node), "failprefix", "").ToLower();
                     string passPrefix = RTPBot.GetAttribValue(((XmlNode)node), "passprefix", "").ToLower();
+                    string resultPrefix = RTPBot.GetAttribValue(((XmlNode)node), "resultprefix", "").ToLower();
                     if (!string.IsNullOrEmpty(failPrefix))
                     {
                         //on <dbquery> failure, use a <srai> fallback
                         string sariCallStr = failPrefix + " " + (string) templateNodeInnerValue;
                         return callSRAI(sariCallStr);
+                    }
+                    if (!string.IsNullOrEmpty(passPrefix))
+                    {
+                        //on <dbquery> failure, use a <srai> fallback
+                        majorPassed = passPrefix + " " + (string)templateNodeInnerValue;
                     }
                     if (IsNullOrEmpty(templateNodeInnerValue)) continue;
                     string searchTerm1 = TargetBot.LuceneIndexer.FixPronouns(templateNodeInnerValue,
@@ -83,16 +95,27 @@ namespace RTParser.AIMLTagHandlers
                         expandOnNoHits, out reliability);
                     if (!IsNullOrEmpty(converseMemo))
                     {
+                        hasPassed = true;
                         QueryHasSuceeded = true;
+
                         if (!string.IsNullOrEmpty(passPrefix))
                         {
+                            //on <dbquery> pass, use a <srai> for success
+                            break;
+                        }
+                        if (!string.IsNullOrEmpty(resultPrefix))
+                        {
                             //on <dbquery> failure, use a <srai> fallback
-                            string sariCallStr = passPrefix + " " + (string)converseMemo;
+                            string sariCallStr = resultPrefix + " " + (string)converseMemo;
                             return callSRAI(sariCallStr);
                         }
                         return converseMemo;
                         //Unifiable converseMemo = this.user.bot.conversationStack.Pop();
                     }
+                }
+                if (hasPassed)
+                {
+                    return callSRAI(majorPassed);
                 }
                 // if there is a high enough scoring record in Lucene, use up to max number of them?
                 // otherwise there is a conversation memo then pop it??
@@ -123,7 +146,7 @@ namespace RTParser.AIMLTagHandlers
                                                                           () =>
                                                                               {
                                                                                   //on <dbquery> failure, use a <srai> fallback
-                                                                                  string sariCallStr = failPrefix + " " + (string)searchTermOrig;
+                                                                                  string sariCallStr = failPrefix + " " + request.rawInput;
                                                                                   return callSRAI(sariCallStr);
 
                                                                               },

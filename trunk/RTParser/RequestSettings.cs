@@ -78,6 +78,7 @@ namespace RTParser
         }
         public static void IncreaseLimits(QuerySettingsSettable request, int mins, int maxs)
         {
+            return;
             //request.MinOutputs = ((QuerySettingsReadOnly)request).MinOutputs + mins;
             request.MinTemplates = ((QuerySettingsReadOnly)request).MinTemplates + mins;
             request.MinPatterns = ((QuerySettingsReadOnly)request).MinPatterns + mins;
@@ -105,15 +106,15 @@ namespace RTParser
             MaxGetVars = UNLIMITED,
             MinSetVars = 0,
             MaxSetVars = UNLIMITED,
-            MinOutputs = 1,
-            MaxOutputs = 1,
-            MinPatterns = 1,
-            MaxPatterns = 1,
-            MinTemplates = 1,
-            MaxTemplates = 1,
+            MinOutputs = 11,
+            MaxOutputs = 11,
+            MinPatterns = 11,
+            MaxPatterns = 11,
+            MinTemplates =11,
+            MaxTemplates = 11,
             UseDictForSetMaxDepth = UNLIMITED,
-            UseLuceneForGetMaxDepth = 2,
-            UseLuceneForSetMaxDepth = 2,
+            UseLuceneForGetMaxDepth = 112,
+            UseLuceneForSetMaxDepth = 112,
             StartGraphName = "default",
             IsTraced = false,
             _sraiDepth = new SettingMinMaxCurrent<int>()
@@ -128,37 +129,18 @@ namespace RTParser
         {
             ProcessMultipleTemplates = true, // needed to find verbal outputs
             ProcessMultiplePatterns = true, // needed to find verbal outputs
-            MinOutputs = 4,
-            MaxOutputs = 1,
-            MinPatterns = 4,
-            MaxPatterns = 2,
-            MinTemplates = 4,
-            MaxTemplates = 4,
+            MinOutputs = 14,
+            MaxOutputs = 111,
+            MinPatterns = 14,
+            MaxPatterns = 112,
+            MinTemplates = 114,
+            MaxTemplates = 114,
             _sraiDepth = new SettingMinMaxCurrent<int>()
                             {
 
                                 Min = 0,
-                                Max = 17,
+                                Max = RTPBot.SraiDepthMax
                             },
-
-        };
-
-        public static QuerySettings CogbotDefaultsOld = new QuerySettingsImpl(AIMLDefaults)
-        {
-            ProcessMultipleTemplates = true, // needed to find verbal outputs
-            ProcessMultiplePatterns = true, // needed to find verbal outputs
-            MinOutputs = 20,
-            MaxOutputs = UNLIMITED,
-            MinPatterns = 8,
-            MaxPatterns = 12,
-            MinTemplates = 8,
-            MaxTemplates = UNLIMITED,
-            _sraiDepth = new SettingMinMaxCurrent<int>()
-            {
-
-                Min = 0,
-                Max = RTPBot.SraiDepthMax
-            },
 
         };
 

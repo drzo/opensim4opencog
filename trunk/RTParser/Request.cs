@@ -199,7 +199,7 @@ namespace RTParser
         }
         public TimeSpan _Durration = TimeSpan.Zero;
 
-        public void ResetValues(bool b)
+        public void ResetValues(bool clearSubQueries)
         {
             var TheDurration = Durration;
             if (TheDurration.TotalMilliseconds <= 1d)
@@ -207,7 +207,7 @@ namespace RTParser
                 TheDurration = TimeSpan.FromMilliseconds(TargetBot.TimeOut);
             }
             Result currentResult = CurrentResult;
-            if (currentResult != null) currentResult.ResetAnswers(b);
+            if (currentResult != null) currentResult.ResetAnswers(clearSubQueries);
             StartedOn = RTPBot.Now;
             TimeOut = TheDurration;
             _Durration = TimeSpan.Zero;
@@ -335,7 +335,7 @@ namespace RTParser
             set
             {
                 _responderUser = value;
-                if (value != null) ithat = value.JustSaid;
+                if (value != null) That = value.JustSaid;
             }
         }
 
@@ -498,11 +498,11 @@ namespace RTParser
                 }
             }
             return DLRConsole.SafeFormat(
-                "{0}[{1}]: {2}, \"{3}\"",
+                "{0}[{1},{4}]: {2}, \"{3}\"",
                 RequestDepth + " " + UserNameOf(Requester, "Requester"),
                 StartGraphName,
                 UserNameOf(Responder, "Anyone"),
-                unifiableToVMString);
+                unifiableToVMString, Topic);
         }
 
         private static string UserNameOf(UserStaticModel requester, string defaultName)
@@ -574,8 +574,8 @@ namespace RTParser
             if (targetUser != null) Responder = targetUser;
             _responderUser = targetUser;
             That = thatSaid;
-            UsedResults = new List<Result>();
-            Flags = "Nothing";
+            UsedResults = new ListAsSet<Result>();
+            Flags = Unifiable.EnglishNothing;
             QuerySettingsSettable querySettings = GetQuerySettings();
 
             ApplySettings(qsbase, querySettings);
@@ -628,6 +628,14 @@ namespace RTParser
                 TargetSettings = parent.TargetSettings;
             }
             UndoStackValue = new UndoStack(this);
+            if (thatSaid.AsString().Contains("TAG-"))
+            {
+                throw new NullReferenceException("invalid ThatSaid " + this);
+            }
+            if (That.AsString().Contains("TAG-"))
+            {
+                throw new NullReferenceException("invalid That " + this);
+            }
         }
 
 
@@ -677,6 +685,7 @@ namespace RTParser
 
         public void ReduceMinMaxesForSubRequest(QuerySettingsReadOnly parent)
         {
+            return;
             var thisQuerySettings = GetQuerySettings();
             const int m = 2;
             const int M = 3;
@@ -833,7 +842,7 @@ namespace RTParser
                     }
                     else
                     {
-                        probably = TargetBot.GetGraph(ovGraph, TargetBot.GraphMaster);
+                        probably = TargetBot.GetGraph(ovGraph, TargetBot.DefaultStartGraph);
                         {
                             Requester.WriteToUserTrace("Changing request graph " + probably + " -> " + null + " for " + this);
                         }
@@ -1158,12 +1167,14 @@ namespace RTParser
 
         public bool CanUseRequestTemplate(TemplateInfo info)
         {
+            return true;
             if (!CanUseRequestTemplate0(info)) return false;
             return true;
         }
 
         public bool CanUseRequestTemplate0(TemplateInfo info)
         {
+            return true;
             if (info == null) return false;
             if (FoundInParents(info, thisRequest))
             {
@@ -1188,11 +1199,13 @@ namespace RTParser
         }
         public bool CanUseResultTemplate(TemplateInfo info, Result result)
         {
+            return true;
             if (CanUseResultTemplate0(info, result)) return true;
             return false;
         }
         public bool CanUseResultTemplate0(TemplateInfo info, Result result)
         {
+            return true;
             if (info == null) return true;
             if (info.IsDisabled) return false;
             if (!Requester.CanUseTemplate(info, result)) return false;
@@ -1205,6 +1218,7 @@ namespace RTParser
 
         private bool FoundInParents(TemplateInfo info, Request requestOrResult)
         {
+            return false;
             if (requestOrResult == null) return true;
             while (requestOrResult != null)
             {
@@ -1270,17 +1284,17 @@ namespace RTParser
         {
             get
             {
-                string something;
+                Unifiable something;
                 if (UserImpl.ThatIsStoredBetweenUsers)
                 {
                     if (Requester != null && IsSomething(Requester.That, out something)) return something;
-                    if (Responder != null && IsSomething(Responder.JustSaid, out something)) return something;
-                    return "Nothing";
+                    if (Responder != null && IsSomething(Responder.JustSaid, out something)) return something;                    
+                    return Unifiable.EnglishNothing;
                 }
                 if (IsSomething(ithat, out something)) return something;
                 string u1 = null;
                 string u2 = null;
-                string r1 = RequestThat();
+                Unifiable r1 = RequestThat();
 
                 if (Requester != null)
                 {
@@ -1313,23 +1327,26 @@ namespace RTParser
                         writeToLog("ERROR That Requester !" + r1);
                     }
                 }
-                return u ?? "Nothing";
+                return u ?? Unifiable.EnglishNothing;
             }
             set
             {
-                if (IsNullOrEmpty(value))
+                if (IsNullOrEmpty(value) || value == "TAG-THINK.")
                 {
                     {
-                        throw new NullReferenceException("set_That: " + this);
+                        string ex = "set_That: " + this;
+                        writeToLog0(ex);
+                        return;
+                        throw new NullReferenceException(ex);
 
                     }
                 }
 
                 var svalue = value;
-                if (svalue == "*" || svalue == "_" || svalue == "?")
+                if (svalue == "*" || svalue == "_" || svalue == "?" || svalue.AsString().Contains("TAG-"))
                 {
                     writeToLog("ERROR set_That: " + svalue + " from " + ithat);
-                    ithat = "Nothing";
+                    ithat = Unifiable.EnglishNothing;
                 }
                 else
                 {
@@ -1344,13 +1361,13 @@ namespace RTParser
             }
         }
 
-        public string RequestThat()
+        public Unifiable RequestThat()
         {
             if (UserImpl.ThatIsStoredBetweenUsers) throw new InvalidOperationException("must User.get_That()");
             var req = this;
             while (req != null)
             {
-                string something;
+                Unifiable something;
                 if (IsSomething(req.ithat, out something))
 
                     return something;
@@ -1541,6 +1558,10 @@ namespace RTParser
             if (named == "query") return CheckedValue(named, CurrentQuery);
             if (named == "request") return CheckedValue(named, TargetSettings);
             if (named == "bot.globalsettings") return CheckedValue(named, TargetBot.GlobalSettings);
+            if (false && named == "unknown_user")
+            {
+            //    return TargetBot.ExemplarUser;
+            }
             if (named == "bot")
             {
                 if (ResponderPredicates != null) return ResponderPredicates;
@@ -1553,10 +1574,10 @@ namespace RTParser
             string[] path = named.Split(new[] { '.' });
             if (path.Length > 1)
             {
-                var v = GetDictionary(path[0]);
+                var v = GetDictionary(path[0], dictionary);
                 if (v != null)
                 {
-                    var vp = GetDictionary(String.Join(".", path, 0, path.Length - 1), v);
+                    var vp = GetDictionary0(String.Join(".", path, 0, path.Length - 1), v);
                     if (vp != null) return vp;
                 }
             }
@@ -1566,7 +1587,11 @@ namespace RTParser
             }
             else
             {
-                var v = ParentRequest.GetDictionary(named);
+                if (ParentRequest == this)
+                {
+                    return null;
+                }
+                var v = ParentRequest.GetDictionary0(named, dictionary);
                 if (v != null) return v;
             }
             return null;
@@ -1670,7 +1695,8 @@ namespace RTParser
 
         public bool EnterSalientSRAI(Unifiable templateNodeInnerValue, out Unifiable prevResults)
         {
-
+            prevResults = templateNodeInnerValue;
+            return true;
             //prevResults = null;
             if (!srai.UseSraiLimiters)
             {

@@ -1350,6 +1350,7 @@ namespace RTParser.Variables
                 return null;
                 //return Unifiable.NULL;
             }
+
             if (Unifiable.IsEMPTY(value))
             {
                 // writeToLog("ERROR " + value + " NULL");
@@ -1361,6 +1362,11 @@ namespace RTParser.Variables
                 //   writeToLog("ERROR " + value + " NULL");
                 if (NoSettingsAliaes) return null;
                 return "OM";
+            }
+            string ss = value.ToUpper();
+            if (ss.Contains("TAG-"))
+            {
+                return Unifiable.EnglishNothing;
             }
             if (Unifiable.IsIncomplete(value))
             {
@@ -1440,7 +1446,9 @@ namespace RTParser.Variables
         public string TransformKey(string name)
         {
             if (TrimKeys) name = name.Trim();
-
+            if (name == "inloop")
+            {
+            }
             name = name.ToLower();
             name = name.Replace("favorite", "fav");
             name = name.Replace("fav_", "fav");

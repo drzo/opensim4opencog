@@ -384,9 +384,19 @@ namespace RTParser.Database
         public static bool WasQuestion(string message)
         {
             if (message.Contains("?")) return true;
-            if (message.ToLower().StartsWith("w")) return true;
+            string lower = message.ToLower();
             ArrayList tokenize = NatLangDb.Tokenize(message);
+            if (tokenize == null || tokenize.Count == 0) return false;
             var brillPOS = NatLangDb.POSTag(tokenize);
+            if (brillPOS[0].ToString() == "VBP")
+            {
+                return true;
+            }
+            if (lower.StartsWith("wh")) return true;
+            if (lower.StartsWith("ar")) return true;
+            if (lower.StartsWith("wa")) return true;
+            if (lower.StartsWith("wi")) return true;
+
             return false;
         }
 

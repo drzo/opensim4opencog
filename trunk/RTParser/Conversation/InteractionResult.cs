@@ -79,7 +79,7 @@ namespace RTParser
         bool IsSalient { get; }
         InteractionResult PreviousInteraction { get; }
         InteractionResult NextInteraction { get; }
-        string NormalizedOutput { get; }
+        Unifiable NormalizedOutput { get; }
         double TemplateRating { get; set; }
         bool Started { get; set; }
         TimeSpan Durration { get; }
@@ -89,7 +89,7 @@ namespace RTParser
         string ToString();
         Unifiable GetInputSentence(int sentence);
         Unifiable GetOutputSentence(int sentence);
-        void CollectRequest();
-        void CollectResult();
+        void FreeRequest();
+        void FreeResult();
     }
 }

@@ -106,7 +106,7 @@ namespace RTParser
         /// TheMainSentence is the last question (if it contains one)
         ///  else the last sentence in collection
         /// </summary>
-        public string TheMainSentence
+        public Unifiable TheMainSentence
         {
             get
             {

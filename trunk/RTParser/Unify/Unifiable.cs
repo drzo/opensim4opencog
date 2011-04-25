@@ -83,6 +83,7 @@ namespace RTParser
         public UFlags Flags = UFlags.NO_FLAGS;
         public string KeyCache;
         public string SpecialCache;
+        public static Unifiable EnglishNothing = Create("Nothing");
 
         static Unifiable()
         {
@@ -156,9 +157,9 @@ namespace RTParser
         public abstract bool IsLitteralText { get; }
         public abstract bool IsHighPriority { get; }
 
-        public bool IsExactKey
+        public virtual bool IsExactKey
         {
-            get { return OverlyMatchableString == AsString(); }
+            get { return ToKey() == AsString(); }
         }
 
         public bool IsStarContent
@@ -783,10 +784,12 @@ namespace RTParser
         public static Unifiable CreateFromXml(XmlNode n)
         {
             string inner = ToXmlValue(n);
-            var stringUnifiable = MakeStringUnifiable(inner) as StringUnifiable;
+            var stringUnifiable = MakeStringUnifiable(inner);
             stringUnifiable.OfferNode(n, inner);
             return stringUnifiable;
         }
+
+        public abstract void OfferNode(XmlNode node, string inner);
 
         public override string ToString()
         {
@@ -927,6 +930,11 @@ namespace RTParser
 
         public abstract string ToValue(SubQuery subquery);
         public abstract string AsString();
+
+        public string AUnifyString
+        {
+            get { return AsString(); }
+        }
 
         public virtual Unifiable ToPropper()
         {
@@ -1346,6 +1354,7 @@ namespace RTParser
 
         public abstract bool WillMatch(string word);
 
+        public abstract bool WillMatch0(string word);
     }
 
     public abstract class BaseUnifiable : StaticAIMLUtils

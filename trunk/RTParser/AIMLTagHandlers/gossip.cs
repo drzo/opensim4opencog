@@ -49,7 +49,7 @@ namespace RTParser.AIMLTagHandlers
                     writeToLog(SafeFormat("GOSSIP from user: {0}, '{1}'", this.user.UserID, Unifiable.DescribeUnifiable(templateNodeInnerText)));
                 }
             }
-            return Unifiable.Empty;
+            return Succeed(templateNodeInnerText);
         }
     }
 }
