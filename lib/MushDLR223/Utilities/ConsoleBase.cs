@@ -1879,7 +1879,7 @@ namespace MushDLR223.Utilities
             {
                 if (newStackTraceGetFramesLength > 500)
                 {
-                    DebugWriteLine("Stack overflow comming! " + st);
+                    DebugWriteLine("Stack overflow comming!? " + st);
                     return true;
                 }
                 DebugWriteLine("DepthCheck");

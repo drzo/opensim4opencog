@@ -333,7 +333,7 @@ namespace MushDLR223.Utilities
         {
             get
             {
-                CheckOutVlaueReplaced();
+                //CheckOutVlaueReplaced();
                 return base.Name;
             }
         }
@@ -739,7 +739,7 @@ namespace MushDLR223.Utilities
 
         internal void writeToLog(string s)
         {
-            XmlDocumentLineInfo.DebugWriteLine(s + " on XML node: '" + this + "'");
+          //  XmlDocumentLineInfo.DebugWriteLine(s + " on XML node: '" + this + "'");
         }
 
         public static void unsetReadonly(LineInfoElementImpl node)
