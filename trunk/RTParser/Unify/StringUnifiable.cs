@@ -120,7 +120,7 @@ namespace RTParser
             if (str == "*" || str == "_") return true;
             if (IsLazy)
             {
-                var toString = ToValue0(query);
+                var toString = ToValue(query);
                 if (toString == null)
                 {
                     return false;
@@ -1403,8 +1403,8 @@ namespace RTParser
         public override sealed string ToValue(SubQuery query)
         {
             if (valueCache is string) return (String) valueCache;
-            if (valueCache == null) valueCache = ToValue0(query);
-            return "" + valueCache;
+            return ToValue0(query);
+            //return "" + valueCache;
         }
 
         protected string ToValue0(SubQuery query)
@@ -1423,7 +1423,11 @@ namespace RTParser
                 try
                 {
                     Unifiable outputSentence = tagHandler.CompleteAimlProcess();
-                    if (!IsNullOrEmpty(outputSentence)) return outputSentence.AsString();
+                    if (!IsNullOrEmpty(outputSentence))
+                    {
+                        valueCache = outputSentence.AsString();
+                        return (string) valueCache;
+                    }
                     writeToLog("Failed Eval " + str);
                 }
                 finally
