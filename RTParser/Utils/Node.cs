@@ -1049,7 +1049,7 @@ namespace RTParser.Utils
                 Node childNode = childNodeKV.Value;
                 Unifiable childNodeWord = childNode.word;
                 if (!childNodeWord.IsHighPriority) continue;
-                if (!childNodeWord.WillMatch(firstWord))
+                if (!childNodeWord.WillMatch(firstWord, query))
                 {
                     continue;
                 }
@@ -1185,9 +1185,9 @@ namespace RTParser.Utils
                         continue;
                     }
                     //if (!(childNodeWord is BestUnifiable) && !childNodeWord.IsCatchAll) continue;
-                    if (!childNodeWord.WillMatch(firstWord))
+                    if (!childNodeWord.WillMatch(firstWord, query))
                     {
-                        if (childNodeWord.IsExactKey) continue;                       
+                        if (childNodeWord.IsExactKey) continue;
                         //writeToLog("!WillMatch " + firstWord + " with " + childNodeWord);
                         continue;
                     }

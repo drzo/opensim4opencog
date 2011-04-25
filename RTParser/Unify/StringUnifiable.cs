@@ -105,11 +105,11 @@ namespace RTParser
                 return _strictness;
             }
         }
-        public override bool WillMatch(string word)
+        public override bool WillMatch(string word, SubQuery query)
         {
-            return WillMatch0(word.ToUpper());
+            return WillMatch0(word.ToUpper(), query);
         }
-        public override bool WillMatch0(string word)
+        public override bool WillMatch0(string word, SubQuery query)
         {
            // if (IsAnyText) return true;
             //if (ToKey() == word.ToUpper()) return true;
@@ -117,9 +117,19 @@ namespace RTParser
             {
                 return word == ToUpper();
             }
-            if (IsCatchAll) return true;
+            if (str == "*" || str == "_") return true;
             if (IsLazy)
             {
+                var toString = ToValue0(query);
+                if (toString == null)
+                {
+                    return false;
+                }
+                toString = toString.ToUpper();
+                if (toString == word)
+                {
+                    return true;
+                }
                 return false;
             }
             return false;
@@ -237,7 +247,7 @@ namespace RTParser
 
         public override bool IsCatchAll
         {
-            get { return str == "*"; }
+            get { return str == "*" || str == "_"; }
         }
 
         private string _str
@@ -973,7 +983,7 @@ namespace RTParser
             {
                 if (str == "_") return true;
                 if (str.EndsWith("_")) return true;
-                if (IsLazy) return true;
+                //if (IsLazy) return true;
                 return false;
             }
         }
@@ -992,6 +1002,7 @@ namespace RTParser
                 }
                 if (fc == '<')
                 {
+                    return true;
                     if (str.Contains("star") || str.Contains("match="))
                     {
                         return true;
