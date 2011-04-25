@@ -1193,6 +1193,8 @@ namespace RTParser.Utils
                     }
                     // o.k. look for the path in the child node denoted by "*"
                     //Node childNode = childNodeKV.Value;
+                    specialChildren.Remove(childNodeKV.Key);
+                    specialChildren.Add(childNodeKV.Key, childNode);
 
                     // add the next word to the wildcard match 
                     StringAppendableUnifiableImpl newWildcard = Unifiable.CreateAppendable();
@@ -1259,7 +1261,12 @@ namespace RTParser.Utils
             Node v;
             if (!canDoSingle)
             {
-                return dictionary;
+                List<KeyValuePair<string, Node>> dict = new List<KeyValuePair<string, Node>>(0);
+                foreach (KeyValuePair<string, Node> keyValuePair in dictionary)
+                {
+                    dict.Add(keyValuePair);
+                }
+                return dict;
             }
             if (dictionary.TryGetValue(match, out v))
             {
