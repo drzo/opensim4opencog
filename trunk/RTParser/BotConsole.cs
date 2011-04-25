@@ -678,7 +678,12 @@ namespace RTParser
                 return true;
                 //                return;//Success("WorldSystemModule.MyBot.ReloadAll();");
             }
-
+            if (cmd == "topic" || cmd == "that")
+            {
+                console("that = " + myUser.That);
+                console("topic = " + myUser.Topic);
+                return true;
+            }
             if (cmd == "echo")
             {
                 console(args);
