@@ -218,7 +218,7 @@ namespace RTParser
             OutputDelegate writeLine = MainConsoleWriteLn;
             for (int index = 0; index < args.Length; index++)
             {
-                string s = args[index];
+                string s = args[index].ToLower();
                 if (s == "--httpd")
                 {
                     UseBreakpointOnError = false;
@@ -451,7 +451,7 @@ namespace RTParser
         {
             try
             {
-                //_lastRequest = request;
+                user.LastRequest = request;
                 return BotDirective(user, input, console, null);
             }
             catch (Exception e)
@@ -648,7 +648,7 @@ namespace RTParser
                 string gn = args.Substring(0, indexof);
                 GraphMaster g = robot.GetGraph(gn, myUser.StartGraph);
                 String aiml = RTPBot.Trim(args.Substring(indexof));
-                robot.AddAiml(g, aiml, robot.LastRequest);
+                robot.AddAiml(g, aiml, myUser.LastRequest);
                 console("Done with " + args);
                 return true;
             }
@@ -692,7 +692,7 @@ namespace RTParser
             if (showHelp) console("@load <graph> - <uri>");
             if (cmd == "load")
             {
-                Request request = robot.LastRequest;
+                Request request = myUser.LastRequest;
                 string graphname;
                 string files;
                 if (!SplitOff(args, "-", out graphname, out files))
@@ -729,7 +729,7 @@ namespace RTParser
                     said = args;
                 }
                 User factSpeaker = robot.FindOrCreateUser(who);
-                robot.HeardSelfSayVerbal(factSpeaker, factSpeaker.LastResponder.Value, args, robot.LastResult, control);
+                robot.HeardSelfSayVerbal(factSpeaker, factSpeaker.LastResponder.Value, args, factSpeaker.LastResult, control);
                 return true;
             }
 
@@ -819,7 +819,7 @@ namespace RTParser
             if (cmd == "proof")
             {
                 PrintOptions printOptions = PrintOptions.CONSOLE_LISTING;
-                Request request = robot.LastRequest;
+                Request request = myUser.LastRequest;
                 if (request != null) printOptions = request.WriterOptions;
                 printOptions.ClearHistory();
                 console("-----------------------------------------------------------------");

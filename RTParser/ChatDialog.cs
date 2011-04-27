@@ -88,25 +88,6 @@ namespace RTParser
             }
         }
 
-        public Request LastRequest
-        {
-            get
-            {
-                Request _lastRequest = LastUser.LastRequest;
-                if (_lastRequest != null) return _lastRequest;
-                var lr = LastResult;
-                // Todo: should someonme have set the result to some default?
-                if (lr == null)
-                {
-                    return GetBotRequest("<!-- NULL LAST REQUEST -->");
-                }
-                return lr.request;
-            }
-            set
-            {
-                LastUser.LastRequest = value;
-            }
-        }
         //private Result _lastResult;
         public Result LastResult
         {
