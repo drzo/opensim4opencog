@@ -532,8 +532,12 @@ namespace RTParser.Utils
             {
                 return false;
             }
-            string ss = s.ToUpper();
+            string ss = s.ToUpper().Trim();
             if (ss.Contains("TAG-"))
+            {
+                return false;
+            }
+            if (ss == ".")
             {
                 return false;
             }

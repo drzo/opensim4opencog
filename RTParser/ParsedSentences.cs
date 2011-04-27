@@ -115,13 +115,33 @@ namespace RTParser
                     {
                         String sentenceIn = output;
                         String sentence = OutputSentencesToEnglish(sentenceIn);
-                        sentence = MainSentence(RawText);
+                        sentence = MainSentence(sentence);
                         sentence = sentence.Trim(new[] {'.', ' ', '!', '?'});
                         if (sentence.Length == 0) continue;
                         return sentence;
                     }
                 return MainSentence(RawText);
             }
+        }
+
+        public Unifiable GetSentence(int sentenceNum, bool mustBeSailent)
+        {
+            if (sentenceNum == 0)
+            {
+                return RawText;
+            }
+            String sentenceIn = RawText;
+            foreach (Unifiable output in SemanticSentences)
+            {
+                sentenceIn = output;
+                String sentence = OutputSentencesToEnglish(sentenceIn);
+                sentence = MainSentence(sentence);
+                sentence = sentence.Trim(new[] {'.', ' ', '!', '?'});
+                if (sentence.Length == 0) continue;
+                sentenceNum--;
+                if (sentenceNum == 0) return sentence;
+            }
+            return sentenceIn;
         }
 
         public override string ToString()
