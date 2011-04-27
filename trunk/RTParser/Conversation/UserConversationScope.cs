@@ -65,14 +65,14 @@ namespace RTParser
         /// Returns the first sentence of the last output from the bot
         /// </summary>
         /// <returns>the first sentence of the last output from the bot</returns>
-        Unifiable getResultSentence(User responder);
+        Unifiable getResponseSentence(User responder);
 
         /// <summary>
         /// Returns the first sentence from the output from the bot "n" steps ago
         /// </summary>
         /// <param name="n">the number of steps back to go</param>
         /// <returns>the first sentence from the output from the bot "n" steps ago</returns>
-        Unifiable getResultSentence(int n, User responder);
+        Unifiable getResponseSentence(int n, User responder);
 
         /// <summary>
         /// Returns the identified sentence number from the output from the bot "n" steps ago
@@ -80,7 +80,7 @@ namespace RTParser
         /// <param name="n">the number of steps back to go</param>
         /// <param name="sentence">the sentence number to return</param>
         /// <returns>the identified sentence number from the output from the bot "n" steps ago</returns>
-        Unifiable getResultSentence(int n, int sentence, User responder);
+        Unifiable getResponseSentence(int n, int sentence, User responder);
 
         Result GetResult(int i);
         Result GetResult(int i, bool mustBeSalient);

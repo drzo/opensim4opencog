@@ -436,7 +436,7 @@ namespace RTParser.Utils
                 case "that":
                     return CurrentUser.getThat;
                 case "response":
-                    return CurrentUser.getResultSentence;
+                    return CurrentUser.getResponseSentence;
                     break;
                 case "topic":
                     return (a, b, c) => CurrentUser.Topic;

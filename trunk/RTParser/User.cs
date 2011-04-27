@@ -158,7 +158,7 @@ namespace RTParser
         public int MaxRespondToChatPerMinute { get; set; }
         public DateTime NameUsedOrGivenTime { get; set; }
 
-        public static int DefaultMaxResultsSaved = 5;
+        public static int DefaultMaxResultsSaved = 15;
         public static bool NeverSaveUsers;
         public int MaxResultsSaved = DefaultMaxResultsSaved;
         public bool IsRoleAcct { get; set; }
@@ -543,6 +543,24 @@ namespace RTParser
             }
         }
 
+        public void ShowConversationLog(OutputDelegate console, int maxHistory)
+        {
+            console("--------------------------------------------------------------------");
+            for (int i = 0; i < maxHistory; i++)
+            {
+                ShowConversationLogResult(i, console);
+            }
+            console("--------------------------------------------------------------------");
+        }
+        public void ShowConversationLogResult(int stepsBack, OutputDelegate console)
+        {
+            int count = Results.Count - stepsBack - 1;
+            if (count < 0) return;
+            Result result = Results[count];
+            console("Requester:  " + result.Requester.UserName + ", \"" + result.ChatInput.RawText + "\"");
+            console("Responder:  " + result.Responder.UserName + ", \"" + result.ChatOutput.RawText + "\"");
+        }
+
         #endregion
 
         #region Methods
@@ -764,7 +782,7 @@ namespace RTParser
         {
             if (n == 0)
             {
-                return CurrentRequest.rawInput;
+                return CurrentRequest.ChatInput.GetSentence(sentence, true);
             }
             n = n - 1;
             if ((n >= 0) & (n < this.SailentResultCount))
@@ -788,7 +806,7 @@ namespace RTParser
         {
             if (n == 0)
             {
-                return CurrentRequest.rawInput;
+                return CurrentRequest.ChatInput.GetSentence(sentence, true);
             }
             n = n - 1;
             if ((n >= 0) & (n < this.SailentResultCount))
@@ -806,9 +824,9 @@ namespace RTParser
         /// Returns the first sentence of the last output from the bot
         /// </summary>
         /// <returns>the first sentence of the last output from the bot</returns>
-        public Unifiable getResultSentence(User responder)
+        public Unifiable getResponseSentence(User responder)
         {
-            return this.getResultSentence(0, 0, responder);
+            return this.getResponseSentence(0, 0, responder);
         }
 
         /// <summary>
@@ -816,9 +834,9 @@ namespace RTParser
         /// </summary>
         /// <param name="n">the number of steps back to go</param>
         /// <returns>the first sentence from the output from the bot "n" steps ago</returns>
-        public Unifiable getResultSentence(int n, User responder)
+        public Unifiable getResponseSentence(int n, User responder)
         {
-            return this.getResultSentence(n, 0, responder);
+            return this.getResponseSentence(n, 0, responder);
         }
 
         /// <summary>
@@ -827,7 +845,7 @@ namespace RTParser
         /// <param name="n">the number of steps back to go</param>
         /// <param name="sentence">the sentence number to return</param>
         /// <returns>the identified sentence number from the output from the bot "n" steps ago</returns>
-        public Unifiable getResultSentence(int n, int sentence, User responder)
+        public Unifiable getResponseSentence(int n, int sentence, User responder)
         {
             if ((n >= 0) & (n < this.SailentResultCount))
             {
@@ -836,6 +854,7 @@ namespace RTParser
                 {
                     return historicResult.InputSentences[sentence];
                 }
+                return historicResult.ChatOutput.GetSentence(sentence, true);
             }
             return Unifiable.Empty;
         }
@@ -1146,10 +1165,8 @@ namespace RTParser
                 cmd = "";
                 output = input;
             }
-            if (cmd.StartsWith("@"))
             {
-                cmd = cmd.Substring(1).Trim();
-                if (cmd == "proof")
+                if (input == "proof")
                 {
                     var cis = VisitedTemplates;
                     console("-----------------------------------------------------------------");
@@ -1157,7 +1174,13 @@ namespace RTParser
                     GraphMaster.PrintToWriter(cis, PrintOptions.SAVE_TO_FILE, new OutputDelegateWriter(console), null,
                                               TimeSpan.Zero);
                     console("-----------------------------------------------------------------");
+                    return true;
                 }
+            }
+            if (input == "log")
+            {
+                ShowConversationLog(console, 1000);
+                return true;
             }
             //if (input == "") return false;
             if (input == "")

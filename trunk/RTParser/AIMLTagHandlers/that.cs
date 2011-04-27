@@ -122,7 +122,11 @@ namespace RTParser.Utils
                                 {
                                     return getThat(offetFrom - 1, 0, responder);
                                 }
-                                else if (at1 == "1")
+                                if (at1.EndsWith(",*"))
+                                {
+                                    at1 = at1.Substring(0, at1.Length - 2);
+                                }
+                                if (at1 == "1")
                                 {
 
                                     return getThat(0, 0, responder);

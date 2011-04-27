@@ -479,7 +479,7 @@ namespace RTParser
         }
 
         public string _normalizedOutput;
-        private readonly ParsedSentences ChatInput;
+        public readonly ParsedSentences ChatInput;
         private SubQuery _CurrentQuery;
         private string matchable;
         private int OutputPings;

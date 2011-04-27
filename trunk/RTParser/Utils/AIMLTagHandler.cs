@@ -1151,6 +1151,11 @@ namespace RTParser.Utils
                     success = false;
                     return childNode.OuterXml;
                 }
+                else if (childNode.NodeType == XmlNodeType.Whitespace)
+                {
+                    success = true;
+                    return childNode.OuterXml;
+                }
                 else
                 {
                     throw new Exception("NonElement Child?!" + childNode.NodeType + " : " + ToXmlValue(childNode));
