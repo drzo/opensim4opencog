@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 namespace MushDLR223.Utilities
 {
+    [Serializable]
     public class ListAsSet<T> : IList<T>, IList
     {
         protected object SyncLock
