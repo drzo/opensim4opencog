@@ -959,13 +959,14 @@ namespace MushDLR223.Utilities
             string omittedPrefix = sender.ToUpper() + ":";
             if (tt.StartsWith(omittedPrefix))
             {
-                trimmed = trimmed.Substring(0, spaced) + trimmed.Substring(spaced + omittedPrefix.Length).TrimStart();
+                trimmed = trimmed.Substring(spaced + omittedPrefix.Length);//.TrimStart();
                 return trimmed;
             }
             omittedPrefix = "[" + sender.ToUpper() + "]";
             if (tt.StartsWith(omittedPrefix))
             {
-                trimmed = trimmed.Substring(0, spaced) + trimmed.Substring(spaced + omittedPrefix.Length).TrimStart();
+                trimmed = trimmed.Substring(0, spaced) +
+                          trimmed.Substring(spaced + omittedPrefix.Length + 1).TrimStart();
                 return trimmed;
             }
             return trimmed;
