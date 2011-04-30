@@ -7,13 +7,16 @@ using RTParser.Utils;
 
 namespace RTParser
 {
+    [Serializable]
     public class BestUnifiable : Unifiable
 
     {
         private Unifiable best;
         private bool insideSearch;
+        [NonSerialized]
         public string rawCache = null;
         public ListAsSet<Unifiable> List = new ListAsSet<Unifiable>();
+        [NonSerialized]
         public XmlNode nodeOuter;
 
         public BestUnifiable(string inlist, bool splitOnSpaces)
@@ -24,10 +27,12 @@ namespace RTParser
             {
                 if (!orSyntax) throw new NotImplementedException();
             }
+// ReSharper disable DoNotCallOverridableMethodsInConstructor
             SetFromString(inlist);
+// ReSharper restore DoNotCallOverridableMethodsInConstructor
         }
 
-        public void SetFromString(string inlist)
+        public override void SetFromString(string inlist)
         {
             string[] strings = null;
             if (inlist == "<xor></xor>") return;
@@ -51,7 +56,7 @@ namespace RTParser
                 List.Add(u);
                 Flags = u.Flags;
             }
-            best = strings[0];
+            //best = strings[0];
         }
 
         public BestUnifiable(IEnumerable unifiable)
@@ -179,13 +184,23 @@ namespace RTParser
 
         public override int RunLowMemHooks()
         {
-            int total = 0;
             lock (this)
             {
+                int total = 0;
                 if (insideSearch) return 0;
                 try
                 {
                     insideSearch = true;
+                    if (rawCache != null)
+                    {
+                        rawCache = null;
+                        total++;
+                    }
+                    if (nodeOuter != null)
+                    {
+                        nodeOuter = null;
+                        total++;
+                    }
                     foreach (Unifiable u in List)
                     {
                         if (u != null && ReferenceEquals(u, this))
@@ -193,12 +208,12 @@ namespace RTParser
                             total += u.RunLowMemHooks();
                         }
                     }
-                    return total;
                 }
                 finally
                 {
                     insideSearch = false;
                 }
+                return total;
             }
         }
 

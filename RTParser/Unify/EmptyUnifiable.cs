@@ -2,7 +2,9 @@ using System;
 
 namespace RTParser
 {
-    internal class EmptyUnifiable : StringUnifiable
+#if false
+    [Serializable]
+    public class EmptyUnifiable : StringUnifiable
     {
         public EmptyUnifiable()
             : base("")
@@ -18,4 +20,5 @@ namespace RTParser
             throw new InvalidCastException("Empty Unifiable");
         }
     }
+#endif
 }

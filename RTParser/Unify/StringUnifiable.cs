@@ -11,6 +11,7 @@ using IndexTargetListImpl = System.Collections.Generic.HashSet<RTParser.IndexTar
 
 namespace RTParser
 {
+    [Serializable]
     public class StringUnifiable : Unifiable
     {
         public virtual int SpoilCache()
@@ -87,11 +88,16 @@ namespace RTParser
 
         internal string str;
 
+        [NonSerialized]
         public Unifiable[] splittedCache;
+        [NonSerialized]
         protected Unifiable restCache;
+        [NonSerialized]
         protected string upperCache;
+        [NonSerialized]
         public object valueCache;
-        public XmlNode nodeOuter;
+        [NonSerialized]
+        public object nodeOuter;
         private double _strictness = -11;
 
         public override double Strictness
@@ -250,6 +256,35 @@ namespace RTParser
             get { return str == "*" || str == "_"; }
         }
 
+        public override Unifiable[] Possibles
+        {
+            get
+            {
+                var ar = ToArray();
+                if (splittedCache != null && splittedCache.Length == 1) return splittedCache;
+                List<Unifiable> possibles = new List<Unifiable>();
+                bool expanded = false;
+                for (int i = 0; i < ar.Length; i++)
+                {
+                    Unifiable item = ar[i];
+                    if (IsMulti(item))
+                    {
+                        foreach (var e in item.Possibles)
+                        {
+                            expanded = true;
+                            ar[i] = e;
+                            var uni = Join(" ", ar, 0, -1);
+                            possibles.Add(uni);
+                        }
+                        // reset
+                        ar[i] = item;
+                    }
+                }
+                if (!expanded) return new[] { this };
+                return possibles.ToArray();
+            }
+        }
+
         private string _str
         {
             set
@@ -285,7 +320,7 @@ namespace RTParser
             string upperCache = null;
             {
                 string schached = str;
-                if (ContainsXml(schached))
+                if (StaticAIMLUtils.ContainsXml(schached))
                 {
                     Unifiable[] vv = ToArray();
                     if (vv.Length == 0)
@@ -316,30 +351,45 @@ namespace RTParser
             return upperCache;
         }
 
+
+        public override void SetFromString(string value)
+        {
+            SpoilCache();
+            SetAllFromString(value);
+            SetFlagsFromString();
+        }
+
         protected StringUnifiable()
         {
             str = "";
         }
 
-        public StringUnifiable(string value)
+        private void SetAllFromString(string value)
         {
             _str = value == null ? null : string.Intern(value);
         }
 
+        public StringUnifiable(string value)
+        {
+            SetAllFromString(value);
+        }
+
         public StringUnifiable(string v, bool tf)
         {
-            str = v == null ? null : string.Intern(v);
+            SetAllFromString(v);
             if (tf)
+            {
+                SetFlagsFromString();
+            }
+        }
+
+        private void SetFlagsFromString()
+        {
             {
 #if ACTUALLY_USING_ClassifyFlagTypes
                 int vLength = v.Length;
                 ClassifyFlagTypes(v, vLength);
-#else
-                Flags = FlagsForString(str);
 #endif
-            }
-            else
-            {
                 Flags = FlagsForString(str);
             }
         }
@@ -649,7 +699,7 @@ namespace RTParser
                 if (DebugNulls) writeToLog("ERROR NULL.Tirm()!!");
                 return NULL;
             }
-            string str2 = CleanWhitepaces(str);
+            string str2 = StaticAIMLUtils.CleanWhitepaces(str);
             if (str2 == str) return this;
             return Trim(str);
         }
@@ -800,7 +850,7 @@ namespace RTParser
             try
             {
                 if (false)
-                    strTrim = ReplaceMap(strTrim,
+                    strTrim = StaticAIMLUtils.ReplaceMap(strTrim,
                                          new[]
                                              {
                                                  new[] {"&gt;", "<gt />"},
@@ -808,7 +858,7 @@ namespace RTParser
                                                  new[] {"&qt;", "<qt />"},
                                                  new[] {"&amp;", "<amp />"},
                                              });
-                XmlNode firstChild = getDocNode("<li>" + strTrim + "</li>", false, false, StringOnlyDoc);
+                XmlNode firstChild = StaticAIMLUtils.getDocNode("<li>" + strTrim + "</li>", false, false, StaticAIMLUtils.StringOnlyDoc);
                 if (firstChild.ChildNodes.Count == 1)
                 {
                     return new Unifiable[] {this};
@@ -825,7 +875,7 @@ namespace RTParser
             catch (Exception e)
             {
                 RTPBot.writeDebugLine("" + e.Message + ": " + " '" + str0 + "'");
-                StringUnifiable su = MakeStringUnifiable(str0, false) as StringUnifiable;
+                StringUnifiable su = MakeUnifiableFromString(str0, false) as StringUnifiable;
                 Unifiable[] suu = new Unifiable[] {su};
                 su.splittedCache = suu;
                 return suu;
@@ -863,7 +913,7 @@ namespace RTParser
                     }
                     else if (node.NodeType == XmlNodeType.Text)
                     {
-                        string splitMe = Trim(TextNodeValue(node, true));
+                        string splitMe = Trim(StaticAIMLUtils.TextNodeValue(node, true));
                         if (splitMe == str)
                         {
                             writeToLog("ERROR: this inside of itself '" + str + "'");
@@ -1346,44 +1396,46 @@ namespace RTParser
 
         public virtual XmlNode GetNode()
         {
-            if (nodeOuter != null) return nodeOuter;
-            if (valueCache is XmlNode) return (XmlNode) valueCache;
+            if (nodeOuter != null) return nodeOuter as XmlNode;
+            if (valueCache is XmlNode) return (XmlNode)valueCache;
             try
             {
                 if (str.Contains("><"))
                 {
                     return GetNode2();
                 }
-                nodeOuter = getDocNode("<li>" + str + "</li>", false, false, null);
-                if (nodeOuter.ChildNodes.Count == 1)
+                XmlNode nodeOuter0 = StaticAIMLUtils.getDocNode("<li>" + str + "</li>", false, false, null);
+                if (nodeOuter0.ChildNodes.Count == 1)
                 {
-                    nodeOuter = nodeOuter.FirstChild;
-                    LineInfoElement.chopParent(nodeOuter);
+                    nodeOuter0 = nodeOuter0.FirstChild;
+                    LineInfoElement.chopParent(nodeOuter0);
                     splittedCache = new Unifiable[] {this};
-                    return nodeOuter;
+                    this.nodeOuter = nodeOuter0;
+                    return nodeOuter0;
                 }
-                splittedCache = arrayOf(nodeOuter.ChildNodes);
-                XmlDocument OwnerDocument = nodeOuter.OwnerDocument;
+                splittedCache = arrayOf(nodeOuter0.ChildNodes);
+                XmlDocument OwnerDocument = nodeOuter0.OwnerDocument;
                 //LineInfoElementImpl.unsetReadonly(nodeOuter);
                 if (OwnerDocument != null)
                 {
-                    nodeOuter = OwnerDocument.CreateTextNode(str);
+                    nodeOuter0 = OwnerDocument.CreateTextNode(str);
                 }
-                return nodeOuter;
+                this.nodeOuter = nodeOuter0;
+                return nodeOuter0;
             }
             catch (Exception e)
             {
-                return getTemplateNode(str);
+                return StaticAIMLUtils.getTemplateNode(str);
             }
         }
 
         private XmlNode GetNode2()
         {
-            if (nodeOuter != null) return nodeOuter;
-            if (valueCache is XmlNode) return (XmlNode) valueCache;
+            if (nodeOuter != null) return nodeOuter as XmlNode;
+            if (valueCache is XmlNode) return (XmlNode)valueCache;
             try
             {
-                XmlNode node = getTemplateNode(str);
+                XmlNode node = StaticAIMLUtils.getTemplateNode(str);
                 LineInfoElement.unsetReadonly(node);
                 return node;
             }

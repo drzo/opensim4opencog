@@ -5,6 +5,7 @@ using RTParser.Utils;
 
 namespace RTParser
 {
+    [Serializable]
     public class StringAppendableUnifiableImpl : StringUnifiable, UnifiableList
     {
         public override Unifiable[] Possibles
