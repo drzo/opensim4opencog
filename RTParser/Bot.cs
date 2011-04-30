@@ -42,6 +42,7 @@ namespace RTParser
     /// </summary>
     public partial class RTPBot : StaticAIMLUtils, IChatterBot
     {
+        public static bool IncludeMeNeValue;
         public static Dictionary<string, RTPBot> Robots = new Dictionary<string, RTPBot>();
 
         public static RTPBot FindOrCreateRobot(string text)

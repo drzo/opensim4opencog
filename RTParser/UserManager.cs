@@ -1003,7 +1003,16 @@ namespace RTParser
                                  : stringPlit[2].Split(new char[] { ' ', '\n' }, StringSplitOptions.RemoveEmptyEntries)[0];
             if (vstring == null || double.TryParse(vstring, out vscored))
             {
-                useOut = string.Format("{0} (menevalue= {1:1} )", said, res.Score * 1.4);
+                if (!RTPBot.IncludeMeNeValue)
+                {
+                    useOut = string.Format("{0}", said);
+
+                }
+                else
+                {
+                    useOut = string.Format("{0} (menevalue= {1:1} )", said, res.Score*1.4);
+                }
+
             }
             user = user.Replace("_", " ").Replace("  ", " ");
             useOut = useOut.Replace("_", " ").Replace("  ", " ");
