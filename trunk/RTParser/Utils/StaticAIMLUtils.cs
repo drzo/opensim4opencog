@@ -14,6 +14,7 @@ using RTParser.Variables;
 
 namespace RTParser.Utils
 {
+    [Serializable]
     public class StaticAIMLUtils : TextPatternUtils
     {
         public static readonly Func<string> NullStringFunct = (() => null);

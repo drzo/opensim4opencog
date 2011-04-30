@@ -161,7 +161,7 @@ namespace RTParser.Normalize
                 prev = result;
                 result = Substitute(dictionary, target);
             }
-            return Unifiable.MakeStringUnifiable(result, false);
+            return Unifiable.MakeUnifiableFromString(result, false);
         }
 
         /// <summary>

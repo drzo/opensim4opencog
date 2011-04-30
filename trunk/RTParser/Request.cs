@@ -1557,6 +1557,7 @@ namespace RTParser
             if (named == "get") return CheckedValue(Requester.UserID, Requester);
             if (named == "query") return CheckedValue(named, CurrentQuery);
             if (named == "request") return CheckedValue(named, TargetSettings);
+            if (named == "predicates" && dictionary != null) return dictionary;
             if (named == "bot.globalsettings") return CheckedValue(named, TargetBot.GlobalSettings);
             if (false && named == "unknown_user")
             {
@@ -1577,7 +1578,8 @@ namespace RTParser
                 var v = GetDictionary(path[0], dictionary);
                 if (v != null)
                 {
-                    var vp = GetDictionary0(String.Join(".", path, 0, path.Length - 1), v);
+                    string rest = String.Join(".", path, 1, path.Length - 1);
+                    var vp = GetDictionary0(rest, v);
                     if (vp != null) return vp;
                 }
             }

@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Net.Mail;
 using System.Reflection;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text.RegularExpressions;
 using System.Web;
 using System.Xml;
@@ -1193,22 +1194,83 @@ namespace RTParser
         #region Serialization
 
         /// <summary>
+        /// Loads a dump of all graphmaster into memory so avoiding processing the AIML files again
+        /// </summary>
+        /// <param name="path">the path to the dump file</param>
+        public void ScanAndLoadGraphs()
+        {
+            loadFromBinaryFile(GraphsSaveDir);
+        }
+        /// <summary>
         /// Saves the graphmaster node (and children) to a binary file to avoid processing the AIML each time the 
         /// Proccessor starts
         /// </summary>
         /// <param name="path">the path to the file for saving</param>
-        public void saveToBinaryFile(Unifiable path)
+        public void SaveLoadedGraphs()
         {
-            DefaultStartGraph.saveToBinaryFile(path);
+            saveToBinaryFile(GraphsSaveDir);
+        }
+
+        private static string GraphsSaveDir
+        {
+            get { return "graphbins"; }
+        }
+        /// <summary>
+        /// Saves the graphmaster node (and children) to a binary file to avoid processing the AIML each time the 
+        /// Proccessor starts
+        /// </summary>
+        /// <param name="path">the path to the file for saving</param>
+        public void saveToBinaryFile(string path)
+        {
+            BinaryFormatter bf = Unifiable.GetBinaryFormatter();
+            string binext = ".gfxbin";
+            string localdir = Path.Combine(path, NamePath);
+            Unifiable.SaveUnifiables(Path.Combine(path, "unifiables"), bf);
+            foreach (var name in SetOfGraphs)
+            {
+                bf = Unifiable.GetBinaryFormatter();
+                name.saveToBinaryFile(Path.Combine(path, name.ScriptingName + binext), bf);
+            }
+            if (!Directory.Exists(localdir)) Directory.CreateDirectory(localdir);
+            foreach (var name in SetOfLocalGraphs)
+            {
+                name.saveToBinaryFile(Path.Combine(localdir, name.ScriptingName + binext), bf);
+            }
         }
 
         /// <summary>
         /// Loads a dump of the graphmaster into memory so avoiding processing the AIML files again
         /// </summary>
         /// <param name="path">the path to the dump file</param>
-        public void loadFromBinaryFile(Unifiable path)
+        public void loadFromBinaryFile(string path)
         {
-            DefaultStartGraph.loadFromBinaryFile(path);
+            BinaryFormatter bf = Unifiable.GetBinaryFormatter();
+            string binext = ".gfxbin";
+            string localdir = Path.Combine(path, NamePath);
+            Unifiable.LoadUnifiables(Path.Combine(path, "unifiables"), bf);
+            foreach (string s in Directory.GetFiles(path, "*" + binext))
+            {
+                var graphname = Path.GetFileNameWithoutExtension(s).ToLower();
+                var G = GetGraph(graphname, null);
+                G.loadFromBinaryFile(s, bf);
+                foreach (string gn in G.GraphNames)
+                {
+                    GraphsByName[gn] = G;
+                }
+            }
+            if (Directory.Exists(localdir))
+            {
+                foreach (string s in Directory.GetFiles(localdir, "*" + binext))
+                {
+                    var graphname = Path.GetFileNameWithoutExtension(s).ToLower();
+                    var G = GetGraph(graphname, null);
+                    G.loadFromBinaryFile(s, bf);
+                    foreach (string gn in G.GraphNames)
+                    {
+                        LocalGraphsByName[gn] = G;
+                    }
+                }
+            }
         }
 
         #endregion
@@ -1436,6 +1498,23 @@ The AIMLbot program.
         }
 
 
+        static public IEnumerable<GraphMaster> SetOfGraphs
+        {
+            get
+            {
+                lock (RTPBot.GraphsByName) return new ListAsSet<GraphMaster>(GraphMaster.CopyOf(RTPBot.GraphsByName).Values);
+            }
+        }
+
+        public IEnumerable<GraphMaster> SetOfLocalGraphs
+        {
+            get
+            {
+                lock (LocalGraphsByName) return new ListAsSet<GraphMaster>(GraphMaster.CopyOf(LocalGraphsByName).Values);
+            }
+        }
+
+
         public static Dictionary<string, GraphMaster> GraphsByName = new Dictionary<string, GraphMaster>();
         public Dictionary<string, GraphMaster> LocalGraphsByName = new Dictionary<string, GraphMaster>();
         public CycDatabase TheCyc;
@@ -1469,6 +1548,13 @@ The AIMLbot program.
                 g.AddGenlMT(dtob, writeToLog);
                 //ㄴdtob.AddGenlMT(Utils.GraphMaster.FindOrCreate("default"), writeToLog);
             } 
+            return g;
+        }
+
+        static public GraphMaster FindGraph(string graphPath)
+        {
+            GraphMaster g;
+            lock (GraphsByName) GraphsByName.TryGetValue(graphPath, out g);
             return g;
         }
 
@@ -2235,5 +2321,15 @@ The AIMLbot program.
                        };
         }
         #endregion
+
+        public long RunLowMemHooks()
+        {
+            long total = Unifiable.LowMemExpireUnifiableCaches();
+            foreach (GraphMaster graph in SetOfGraphs)
+            {
+                total += graph.RunLowMemHooks();
+            }
+            return total;
+        }
     }
 }
