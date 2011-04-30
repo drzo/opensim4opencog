@@ -472,6 +472,11 @@ namespace MushDLR223.Utilities
                         return child;
                     }
                 }
+                if (node.Name == name) return node;
+                if (NameMatches(node, name))
+                {
+                    return node;
+                }
             }
             return FindHigher(name, node.ParentNode, ifMissing);
         }
@@ -555,7 +560,12 @@ namespace MushDLR223.Utilities
 
         public static string LocationEscapedInfo(XmlNode templateNode)
         {
-            return "<!-- " + LocationInfo(templateNode) + " -->";
+            return CommentEscapedInfo(LocationInfo(templateNode));
+        }
+
+        public static string CommentEscapedInfo(string templateNode)
+        {
+            return "<!-- " + templateNode + " -->";
         }
 
         public static readonly IXmlLineInfo NoLineNumberInfoZeroZero = new LineNumberInfoZeroZero();
@@ -599,6 +609,12 @@ namespace MushDLR223.Utilities
             return FileNameOfXmlNode(templateNode) + ":" + GetLineNumberOfXmlNode(templateNode);
         }
 
+        public static string GetLineNumberOfXmlNode(IXmlLineInfo impl1)
+        {
+            if (impl1 == null) return "(-1,-1)";
+            return string.Format("({0},{1})", impl1.LineNumber, impl1.LinePosition);
+        }
+
         public static string GetLineNumberOfXmlNode(XmlNode templateNode)
         {
             return NodeInfo<string>(templateNode, LineNoInfo) ?? "(-1,-1)";
@@ -613,6 +629,8 @@ namespace MushDLR223.Utilities
                                           if (node == null) return null;
                                           XmlDocument od = node.OwnerDocument;
                                           if (od == null) return null;
+                                          var doc2 = od as XmlDocumentLineInfo;
+                                          if (doc2 != null) return doc2.InfoString;
                                           string st = od.ToString().Trim();
                                           if (st.Length == 0) return null;
                                           return st;
@@ -999,7 +1017,7 @@ namespace MushDLR223.Utilities
 
 
         public static bool UseOneStringOnlyDoc = false;
-        protected static XmlDocumentLineInfo StringOnlyDoc
+        public static XmlDocumentLineInfo StringOnlyDoc
         {
             get
             {
