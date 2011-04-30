@@ -5,7 +5,7 @@ using MushDLR223.Utilities;
 namespace RTParser.Utils
 {
     [Serializable]
-    public abstract class GraphLinkInfo: IXmlLineInfo
+    public abstract class GraphLinkInfo : IXmlLineInfo, IHasFilename
     {
         public static bool NoInfo;
         public static bool HoldXMLNode = false;
@@ -81,7 +81,12 @@ namespace RTParser.Utils
 
         #endregion
 
-        public Unifiable Filename { get; set; }
+        private Unifiable _filename;
+        public string Filename
+        {
+            get { return _filename; }
+            set { _filename = value; }
+        }
 
         internal XmlNode srcNode
         {
@@ -96,6 +101,7 @@ namespace RTParser.Utils
                 if (_srcNodeString != null)
                 {
                     value0 = StaticAIMLUtils.getNode(_srcNodeString);
+                    StaticXMLUtils.SetLineInfo(value0, this, Filename);
                     if (HoldXMLNode) _srcNode = value0;
                     return value0;
                 }

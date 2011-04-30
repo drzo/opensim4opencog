@@ -102,6 +102,7 @@ namespace RTParser
         {
             get
             {
+                if (_lastRequest == null) return CreateRequest("PING", bot.BotAsUser);
                 return _lastRequest;
             }
             set
@@ -600,10 +601,10 @@ namespace RTParser
             DisabledTemplates = new ListAsSet<TemplateInfo>();
             DisallowedGraphs = new HashSet<GraphMaster>();
             qsbase = new QuerySettingsImpl(bot.GetQuerySettings());
-            PrintOptions = new PrintOptions();
+            PrintOptions = new PrintOptions("PO_" + userID);
             if (userID.Length > 0)
             {
-                WriterOptions = new PrintOptions();
+                WriterOptions = new PrintOptions("PW_" + userID);
                 this.id = userID;
                 this.bot = bot;
                 qsbase.IsTraced = IsTraced = bot.IsTraced;

@@ -33,7 +33,7 @@ namespace RTParser
     public partial class RTPBot
     {
         public static bool BE_COMPLETE_NOT_FAST = false;
-        public static int SraiDepthMax = 50;
+        public static int SraiDepthMax = 17;
         public bool AlwaysUseImmediateAimlInImput = true;
         public static bool RotateUsedTemplate = true;
         public bool DontUseSplitters = true;

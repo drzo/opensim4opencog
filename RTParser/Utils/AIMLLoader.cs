@@ -1589,8 +1589,8 @@ namespace RTParser.Utils
                     return normalizedPattern1;
                 }
                 normalizedPattern = normalizedPattern.Replace("  ", " ");
-                writeDebugLine("LastRepair '{0}' -> '{1}' ", normalizedPattern1, normalizedPattern);
-                return normalizedPattern;
+                writeDebugLine("WARN SHOULD REPAIR? '{0}' -> '{1}' ", normalizedPattern1, normalizedPattern);
+                return normalizedPattern1;
             }
             return normalizedPattern;
         }

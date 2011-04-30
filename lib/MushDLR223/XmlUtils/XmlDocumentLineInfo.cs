@@ -10,7 +10,7 @@ using MushDLR223.ScriptEngines;
 
 namespace MushDLR223.Utilities
 {
-    public class XmlDocumentLineInfo : XmlDocument, XmlSourceInfo, IDisposable
+    public class XmlDocumentLineInfo : XmlDocument, XmlSourceInfo, IDisposable, IHasFilename
     {
         private static readonly ICollection<string> MustFormat = new HashSet<string>();
         private static readonly ICollection<string> MustNotFormat = new HashSet<string>();
@@ -855,6 +855,16 @@ namespace MushDLR223.Utilities
             set { SetNodesReadOnly = value; }
         }
 
+        public string Filename
+        {
+            get { return (InfoString ?? base.ToString()); }
+            set
+            {
+                InfoString = value;
+                throw new NotImplementedException();
+            }
+        }
+
         public void SetOwnerDocument(XmlDocumentLineInfo elseway)
         {
             throw new NotImplementedException();
@@ -862,7 +872,7 @@ namespace MushDLR223.Utilities
 
         public override string ToString()
         {
-            return (InfoString ?? base.ToString()) + " (DocNum_" + docNum + ")";
+            return Filename + " (DocNum_" + docNum + ")";
         }
 
         public void Dispose()
@@ -950,7 +960,7 @@ namespace MushDLR223.Utilities
             {
                 XmlSourceLineInfo nodeL = node as XmlSourceLineInfo;
                 if (!SuspendLineInfo && nodeL != null && LineTracker != null)
-                    nodeL.SetLineInfo(LineTracker.LineNumber, LineTracker.LinePosition);
+                    nodeL.SetLineInfo(LineTracker.LineNumber, LineTracker.LinePosition, Filename);
             }
             if (node is XmlSourceInfo) (node as XmlSourceInfo).ReadOnly = true;
         }
@@ -961,7 +971,7 @@ namespace MushDLR223.Utilities
             int atline = lie.LineNumber;
             if (atline > target.LineNumber)
             {
-                target.SetLineInfo(lie.LineNumber, lie.LinePosition);
+                target.SetLineInfo(lie.LineNumber, lie.LinePosition, null);
             }
         }
 

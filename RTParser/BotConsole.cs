@@ -755,7 +755,13 @@ namespace RTParser
                     said = args;
                 }
                 User factSpeaker = robot.FindOrCreateUser(who);
-                robot.HeardSelfSayVerbal(factSpeaker, factSpeaker.LastResponder.Value, args, factSpeaker.LastResult, control);
+                UserConversationScope factSpeakerLastResponder = factSpeaker.LastResponder;
+                User factSpeakerLastResponderValue = null;
+                if (factSpeakerLastResponder != null)
+                {
+                    factSpeakerLastResponderValue = factSpeakerLastResponder.Value;
+                }
+                robot.HeardSelfSayVerbal(factSpeaker, factSpeakerLastResponderValue, args, factSpeaker.LastResult, control);
                 return true;
             }
 
