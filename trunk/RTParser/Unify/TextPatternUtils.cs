@@ -7,6 +7,7 @@ using MushDLR223.Utilities;
 
 namespace RTParser.Utils
 {
+    [Serializable]
     public class TextPatternUtils : StaticXMLUtils
     {
 
