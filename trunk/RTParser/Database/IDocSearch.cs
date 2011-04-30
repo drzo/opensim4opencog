@@ -27,6 +27,7 @@ namespace RTParser.Database
 
         public override string ToString()
         {
+            if (!RTPBot.IncludeMeNeValue) return Text;
             return TextPatternUtils.SafeFormat("{0} (menevalue= {1:1} )", Text, Score);
         }
 
