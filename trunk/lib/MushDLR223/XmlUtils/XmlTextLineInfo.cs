@@ -247,11 +247,11 @@ namespace MushDLR223.Utilities
 
         public bool ReadOnly { get; set; }
 
-        public void SetLineInfo(int linenum, int linepos)
+        public void SetLineInfo(int linenum, int linepos, string filename)
         {
             if (lParent != null)
             {
-                lParent.SetLineInfo(linenum, linepos);
+                lParent.SetLineInfo(linenum, linepos, filename);
             }
         }
 
@@ -300,10 +300,16 @@ namespace MushDLR223.Utilities
         public override XmlNode CloneNode(bool deep)
         {
             XmlTextLineInfo v = new XmlTextLineInfo(base.Data, (XmlDocumentLineInfo) OwnerDocument);
-            v.SetLineInfo(LineNumber, LinePosition);
+            v.SetLineInfo(LineNumber, LinePosition, Filename);
             v.ReadOnly = ReadOnly;
             v.CloneOf = CloneOf ?? this;
             return v;
+        }
+
+        public string Filename
+        {
+            get { return StaticXMLUtils.FileNameOfXmlNode(this); }
+            set { throw new NotImplementedException(); }
         }
 
         public override string ToString()

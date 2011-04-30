@@ -9,7 +9,7 @@ namespace MushDLR223.Utilities
 {
     public interface XmlSourceLineInfo : IXmlLineInfo, XmlSourceInfo
     {
-        void SetLineInfo(int number, int position);
+        void SetLineInfo(int number, int position, string filename);
         void SetPos(long pos);
         void SetParentFromNode(XmlNode xmlNode);
     }
@@ -17,12 +17,13 @@ namespace MushDLR223.Utilities
     public interface XmlSourceInfo
     {
         bool ReadOnly { get; set; }
+        string Filename { get; }
         void SetOwnerDocument(XmlDocumentLineInfo elseway);
         string ToString();
         int GetHashCode();
     }
 
-    public class LineInfoElementImpl : XmlElement, XmlSourceLineInfo
+    public class LineInfoElementImpl : XmlElement, XmlSourceLineInfo, IHasFilename
     {
         // Summary:
         //     Gets an System.Xml.XmlAttributeCollection containing the list of attributes
@@ -354,7 +355,7 @@ namespace MushDLR223.Utilities
 
         #region XmlSourceLineInfo Members
 
-        public void SetLineInfo(int linenum, int linepos)
+        public void SetLineInfo(int linenum, int linepos, string filename)
         {
             if (linenum < LineNumber)
             {
@@ -365,7 +366,7 @@ namespace MushDLR223.Utilities
             {
                 if (lineNumData == null)
                 {
-                    lineNumData = new LineInfoData(linenum, linepos);
+                    lineNumData = new LineInfoData(linenum, linepos, filename);
                 }
                 else
                 {
@@ -377,7 +378,7 @@ namespace MushDLR223.Utilities
                     }
                     else
                     {
-                        lineNumData = new LineInfoData(linenum, linepos);
+                        lineNumData = new LineInfoData(linenum, linepos, filename);
                     }
                 }
             }
@@ -566,7 +567,7 @@ namespace MushDLR223.Utilities
 #if OUTXML_CACHE      
             newnode.outerXMLCache = outerXMLCache;
 #endif
-            newnode.SetLineInfo(LineNumber, LinePosition);
+            newnode.SetLineInfo(LineNumber, LinePosition, Filename);
             if (deep)
             {
                 bool newnodeWas = newnode.protect;
@@ -634,6 +635,24 @@ namespace MushDLR223.Utilities
                 newnode.protect = false;
             }
             return newnode;
+        }
+
+        public string Filename
+        {
+            get
+            {
+                if (lineNumData is IHasFilename) return ((IHasFilename) lineNumData).Filename;
+                return StaticXMLUtils.FileNameOfXmlNode(this);
+            }
+            set
+            {
+                if (lineNumData is IHasFilename)
+                {
+                    ((IHasFilename) lineNumData).Filename = value;
+                    return;
+                } 
+                throw new NotImplementedException();
+            }
         }
 
         public override XmlNode RemoveChild(XmlNode newChild)
@@ -825,23 +844,29 @@ namespace MushDLR223.Utilities
         }
     }
 
-    public class LineInfoData : IXmlLineInfo
+    public class LineInfoData : IXmlLineInfo, IHasFilename
     {
         public override string ToString()
         {
-            return LineNumber + ":" + LinePosition;
+            return Filename + LineNumber + ":" + LinePosition;
         }
-        public LineInfoData(int linenum, int linepos)
+        public LineInfoData(int linenum, int linepos, string fname)
         {
             LineNumber = linenum;
             LinePosition = linepos;
+            Filename = fname;
         }
         public bool HasLineInfo()
         {
             return true;
         }
+        public String Filename { get; set; }
         public int LineNumber { get; set; }
         public int LinePosition { get; set; }
+    }
+    public interface IHasFilename
+    {
+        String Filename { get; set; }
     }
 
     // End LineInfoElement class.

@@ -320,7 +320,7 @@ namespace RTParser.Utils
 
                 string disables = WhyDisabled ?? "";
                 string getSourceWithTopic;
-                return string.Format("TemplateInfo: {0} {1} {2} {3}", disables, GetSourceWithTopic(PrintOptions.SAVE_TO_FILE), SourceInfo(), rules);
+                return string.Format("TemplateInfo: {0} {1} {2} {3}", disables, GetSourceWithTopic(PrintOptions.PROOF_OUTPUT), SourceInfo(), rules);
             }
         }
 

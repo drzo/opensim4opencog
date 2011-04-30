@@ -88,7 +88,7 @@ namespace RTParser.Utils
 
         string IAIMLInfo.SourceInfo()
         {
-            return StaticXMLUtils.LocationInfo(srcNode);
+            return StaticXMLUtils.GetLineNumberOfXmlNode(this);
         }
 
         public virtual GraphMaster Graph
@@ -141,7 +141,7 @@ namespace RTParser.Utils
 
             string escapedStuff = "";
 
-            if (!printOptions.IncludeLineInfoExternal)
+            //if (!printOptions.IncludeLineInfoExternal)
             {
                 if (!printOptions.GroupFileElements)
                 {
@@ -207,7 +207,7 @@ namespace RTParser.Utils
         {
             if (_srcNode!=null) return printOptions.FormatXML(CategoryXml);
             string thatStr = "", scoreStr = "";
-            if (That != null && That.IsCatchAll)
+            if (That != null && !That.IsCatchAll)
             {
                 thatStr = String.Format("<that>{0}</that>", That);
             }
@@ -482,7 +482,7 @@ namespace RTParser.Utils
         
         bool IsTraced { get; set; }
         Node GraphmasterNode { get; set; }
-        Unifiable Filename { get; }
+        string Filename { get; }
         ResponseInfo Response { get; set; }
 
         //  void SetCategoryTag(Unifiable categoryPath, PatternInfo patternInfo, CategoryInfo categoryInfo, XmlNode outerNode, XmlNode templateNode, GuardInfo guard, ThatInfo thatInfo);

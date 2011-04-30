@@ -189,6 +189,7 @@ namespace RTParser.Utils
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
+            return false;
             if (!Equals(other.word, word)) return false;
             //if (!Equals(other.Graph, Graph)) return false;
             if (!Equals(other.ParentObject, ParentObject)) return false;

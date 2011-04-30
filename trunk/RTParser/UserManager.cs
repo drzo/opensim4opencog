@@ -1005,12 +1005,13 @@ namespace RTParser
             {
                 if (!RTPBot.IncludeMeNeValue)
                 {
-                    useOut = string.Format("{0}", said);
+//                    useOut = string.Format("{0}", said);
+                    useOut = string.Format("{0} menevalue= 1{1:1} ", said, res.Score * 1.4);
 
                 }
                 else
                 {
-                    useOut = string.Format("{0} (menevalue= {1:1} )", said, res.Score*1.4);
+                    useOut = string.Format("{0} menevalue= {1:1} ", said, res.Score * 1.4);
                 }
 
             }

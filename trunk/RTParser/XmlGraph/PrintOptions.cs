@@ -8,10 +8,16 @@ namespace RTParser.Utils
 {
     public class PrintOptions
     {
-        public PrintOptions()
+        private string Named = null;
+        public PrintOptions(string named)
         {
+            Named = named;
             ClearHistory();
-        }   
+        }
+        public override string ToString()
+        {
+            return "" + Named +": "+ base.ToString();
+        }
         public XmlWriterSettings XMLWriterSettings = new XmlWriterSettings();
 
         public string CurrentGraphName;
@@ -49,13 +55,19 @@ namespace RTParser.Utils
         readonly public StringBuilder sw = new StringBuilder();
         //readonly public StringWriter tw;
 
-        public static PrintOptions CONSOLE_LISTING = new PrintOptions();
-        public static PrintOptions VERBOSE_FOR_MATCHING = new PrintOptions();
+        public static PrintOptions CONSOLE_LISTING = new PrintOptions("CONSOLE_LISTING");
+        public static PrintOptions VERBOSE_FOR_MATCHING = new PrintOptions("VERBOSE_FOR_MATCHING");
 
-        public static PrintOptions SAVE_TO_FILE = new PrintOptions()
-                                                      {
-                                                          CategoryPerLine = false,
-                                                      };
+        public static PrintOptions SAVE_TO_FILE = new PrintOptions("SAVE_TO_FILE")
+        {
+            CategoryPerLine = false,
+        };
+        public static PrintOptions PROOF_OUTPUT = new PrintOptions("PROOF_OUTPUT")
+        {
+            CategoryPerLine = true,
+            IncludeFileNamePerNode = true,
+            
+        };
 
         private XmlWriter currentWriter;
         private TextWriter lastW;

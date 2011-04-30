@@ -159,7 +159,11 @@ namespace MushDLR223.Utilities
             bool success;
 
             string path = request.Uri.PathAndQuery;//.TrimEnd('/');
-            string pathd = HttpUtility.UrlDecode(request.Uri.PathAndQuery);//.TrimEnd('/');
+            if (path.Contains("5580"))
+            {
+                path = path.Replace("?:5580/", "");
+            }
+            string pathd = HttpUtility.UrlDecode(path);//.TrimEnd('/');
             LogInfo("_listener " + path + " from " + request.RemoteEndPoint);
             if (request.UriPath.EndsWith(".ico"))
             {
@@ -338,8 +342,18 @@ namespace MushDLR223.Utilities
             response.AddToBody(text + Environment.NewLine);            
 #endif
         }
-
         static internal string GetVariable(IHttpRequest request, string varName, string defaultValue)
+        {
+            var ret = GetVariable0(request, varName, defaultValue);
+            if (ret==null) return ret;
+            if (ret.Contains("5580"))
+            {
+                ret = ret.Replace("?:5580/", "");
+            }
+            return ret;
+        }
+
+        static internal string GetVariable0(IHttpRequest request, string varName, string defaultValue)
         {
 #if USE_HTTPSERVER_DLL
             if (request.Param.Contains(varName))

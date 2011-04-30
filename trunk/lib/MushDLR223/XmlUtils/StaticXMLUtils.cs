@@ -629,6 +629,8 @@ namespace MushDLR223.Utilities
                                           if (node == null) return null;
                                           XmlDocument od = node.OwnerDocument;
                                           if (od == null) return null;
+                                          var doc3 = od as IHasFilename;
+                                          if (doc3 != null) return doc3.Filename;
                                           var doc2 = od as XmlDocumentLineInfo;
                                           if (doc2 != null) return doc2.InfoString;
                                           string st = od.ToString().Trim();
@@ -1441,7 +1443,23 @@ namespace MushDLR223.Utilities
 
         public static string MakeXmlCommentSafe(string unescapedStuff)
         {
+            if (string.IsNullOrEmpty(unescapedStuff)) return "";
             return ReplacePairs(unescapedStuff, "<!--", "<#--", "-->", "--#>");
+        }
+
+        public static void SetLineInfo(XmlNode value0, IXmlLineInfo info, string filename)
+        {
+            var value = value0 as XmlSourceLineInfo;
+            if (value != null)
+            {
+                value.SetLineInfo(info.LineNumber, info.LinePosition, filename);
+
+            }
+            var value1 = value0 as XmlSourceInfo;
+            if (value1 != null)
+            {
+                //value1.SetOwnerDocument();
+            }
         }
     }
 
