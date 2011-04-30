@@ -664,7 +664,7 @@ namespace RTParser.Variables
                         return;
                     }
                 }
-                WithoutTrace(dict, () => dict.addSetting(name, Unifiable.MakeStringUnifiable(value, false)));
+                WithoutTrace(dict, () => dict.addSetting(name, Unifiable.MakeUnifiableFromString(value, false)));
             }
             else
             {
@@ -685,7 +685,7 @@ namespace RTParser.Variables
                         return;
                     }
                 }
-                WithoutTrace(dict, () => dict.updateSetting(name, Unifiable.MakeStringUnifiable(value, false)));
+                WithoutTrace(dict, () => dict.updateSetting(name, Unifiable.MakeUnifiableFromString(value, false)));
             }
         }
 

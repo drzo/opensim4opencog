@@ -16,19 +16,87 @@ namespace RTParser.Utils
     [Serializable]
     public sealed class TemplateInfoImpl : CategoryInfoImpl1, TemplateInfo
     {
+        public long RunLowMemHooks()
+        {
+            long total = 0;
+            if (_srcNode != null)
+            {
+                _srcNode = null;
+                total++;
+            }
+            if (_srcNode != null)
+            {
+                _srcNodeString = null;
+                total++;
+            }
+            if (_subQuery != null)
+            {
+                _subQuery = null;
+                total++;
+            }
+            if (_textSaved != null)
+            {
+                _textSaved = null;
+                total++;
+            }
+            if (_templateKey != null)
+            {
+                _templateKey = null;
+                total++;
+            }
+            if (_preconditionKey != null)
+            {
+                _preconditionKey = null;
+                total++;
+            }
+            if (Preconds != null) foreach (ConversationCondition list in Preconds)
+            {
+                total += list.RunLowMemHooks();
+            }
+            return total;
+        }
+
         //public CategoryInfo ParentCategoryInfo;
         public CategoryInfo CategoryInfo { get { return this; } }
         //public Node GraphmasterNode;
-        public override GuardInfo Guard { get; set; }
-        public override ResponseInfo Response { get; set; }
-        public SubQuery Query { get; set; }
+        private Unifiable _guard;
+        public override GuardInfo Guard
+        {
+            get { return _guard; }
+            set { _guard = value; }
+        }
+        
+        private Unifiable _response;
+        public override ResponseInfo Response
+        {
+            get { return _response; }
+            set { _response = value; }
+        }
+
+        public SubQuery Query
+        {
+            get { return _subQuery; }
+            set { _subQuery = value; }
+        }
+
+        [NonSerialized]
+        private SubQuery _subQuery;
+        
         private double _rating;
         public double TemplateRating
         {
             get { return _rating; }
             set { _rating = value; }
         }
-        public Unifiable TextSaved { get; set; }
+
+        [NonSerialized]
+        private Unifiable _textSaved;
+        public Unifiable TextSaved
+        {
+            get { return _textSaved; }
+            set { _textSaved = value; }
+        }
+
         public bool NeckCut = false;        
 
 //        public event Func<SubQuery, Request, bool> OutputsCreateOnSuccees;
@@ -65,6 +133,7 @@ namespace RTParser.Utils
             //if (TemplateFailedCallback != null) TemplateFailedCallback(query, request);
         }
 
+        [NonSerialized]
         string _templateKey;
 
         public override int CompareTo(TemplateInfo other)
@@ -84,7 +153,7 @@ namespace RTParser.Utils
                 if (tn != null) return tn;
                 var response = Response;
                 if (response != null && response.PatternNode != null) return response.PatternNode;
-                return TemplateXml;
+                return base.TemplateXml;
             }
             // set { Response.srcNode = value; }
         }
@@ -97,9 +166,8 @@ namespace RTParser.Utils
         {
             if (templateNode == null || responseInfo.FullPath == Unifiable.Empty)
             {
-                throw new UnauthorizedAccessException();
-            }
-            srcNode = templateNode;
+                throw new NotImplementedException();                
+            }       
             TemplateRating = 1.0;
             Guard = guard;
             if ((thatInfo != null && !thatInfo.IsCatchAll) || (guard != null && !guard.IsCatchAll)
@@ -113,28 +181,27 @@ namespace RTParser.Utils
             Topic = topicInfo;
             Pattern = pattern;
             GraphmasterNode = patternNode;
-            PreconditionKey = patternNode.GetPath();
+            srcNode = templateNode;
             //ParentCategoryInfo = categoryInfo;
             try
-            {
-                if (CategoryXml.Attributes != null)
+            {                
                 {
                     bool doCut;
-                    if (StaticXMLUtils.TryParseBool(CategoryXml, "cut", out doCut) || StaticXMLUtils.TryParseBool(TemplateXml, "cut", out doCut))
+                    if (StaticXMLUtils.TryParseBool(templateNode, "cut", out doCut) || StaticXMLUtils.TryParseBool(cateNode, "cut", out doCut))
                     {
                         NeckCut = doCut;
                     }
                 }
-                string scoreString = StaticXMLUtils.GetAttribValue(TemplateXml, "score", null);
+                string scoreString = StaticXMLUtils.GetAttribValue(templateNode, "score", null);
                 scoreString = scoreString ?? StaticXMLUtils.GetAttribValue(cateNode, "score", null);
-                TemplateRating = double.Parse(scoreString ?? "1.0");
+                TemplateRating = scoreString != null ? double.Parse(scoreString) : 1.0;
             }
             catch
             {
             }
             if (TemplateRating != 1.0)
             {
-                RTPBot.writeDebugLine("!! SCORE =" + TemplateRating + " for " + OuterXml + " in " + CategoryInfo);
+                RTPBot.writeDebugLine("!! SCORE =" + TemplateRating + " for " + this);
             }
         }
 
@@ -188,7 +255,7 @@ namespace RTParser.Utils
         {
             get
             {
-                if (IsSilentTag(TemplateXml))
+                if (StaticAIMLUtils.IsSilentTag(TemplateXml))
                 {
                     return true;
                 }
@@ -221,8 +288,9 @@ namespace RTParser.Utils
 
         public string SourceInfo()
         {
-            return StaticXMLUtils.LocationInfo(srcNode);
+            return Filename + ":" + StaticXMLUtils.GetLineNumberOfXmlNode(this);
         }
+
         /*
         public TemplateInfo Response
         {
@@ -236,35 +304,24 @@ namespace RTParser.Utils
         {
             return TemplateKey.GetHashCode();
         }
-
-        internal override XmlNode srcNode { get; set; }
         
         public override string ToString()
         {
-            var tryit = TemplateXml;
-            tryit = tryit != null ? TemplateXml.ParentNode : CategoryXml;
-            if (tryit != null)
             {
                 string rules = GetRuleStrings;
                 if (rules != "")
                 {
                     rules = "\n" + rules;
                 }
+                if (Guard != null)
+                {
+                    rules += "\n Guard:" + Guard.ToString();
+                }
+
                 string disables = WhyDisabled ?? "";
-                return "" + disables + " " + TextPatternUtils.CleanWhitepaces(tryit.OuterXml) + " " +
-                       StaticXMLUtils.LocationEscapedInfo(tryit) + rules;
+                string getSourceWithTopic;
+                return string.Format("TemplateInfo: {0} {1} {2} {3}", disables, GetSourceWithTopic(PrintOptions.SAVE_TO_FILE), SourceInfo(), rules);
             }
-            //string s = base.ToString();
-            /*            if (Guard != null)
-                        {
-                            s = s + Guard.ToString();
-                        }
-                        if (That != null)
-                        {
-                            s = s + That.OuterXml;
-                        }*/
-            return "TemplateInfoKey:" + TemplateKey;
-            //            return s;
         }
 
         //public override Unifiable FullPath { get; set; }
@@ -507,7 +564,7 @@ namespace RTParser.Utils
         Unifiable TextSaved { get; set; }
         double TemplateRating { get; set;  }
     }
-    public interface TemplateInfo : CategoryInfo, TemplateResult
+    public interface TemplateInfo : CategoryInfo, TemplateResult, IXmlLineInfo
     {
         string ToString();
         XmlNode TemplateXml { get; }
@@ -529,6 +586,7 @@ namespace RTParser.Utils
         void OnOutputsCreated(SubQuery query, Request request);
         bool BuildIndexes();
         bool RemoveIndexes();
+        long RunLowMemHooks();
     }
 
     public interface IAIMLInfo

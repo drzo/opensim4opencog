@@ -14,24 +14,25 @@ namespace RTParser.Utils
     [Serializable]
     abstract public class CategoryInfoImpl1 : GraphLinkInfo, IAIMLInfo, IComparable<TemplateInfo>, CategoryInfo
     {
-        public Unifiable Filename { get; set; }
-
         public abstract GuardInfo Guard { get; set; }
         public abstract ResponseInfo Response { get; set; }
-        public GraphMaster InGraph { get; set; }
+        string _graph;
+        public GraphMaster InGraph
+        {
+            get
+            {
+                if (_graph == null) return null;
+                return RTPBot.FindGraph(_graph);
+            }
+            set { if (value != null) _graph = value.ScriptingName; }
+        }
 
         public PatternInfo Pattern { get; set; }
         public List<ConversationCondition> Preconds { get; set; }
         public TemplateInfo Template { get { return (TemplateInfo)this; } }
         public ThatInfo That { get; set; }
         public TopicInfo Topic { get; set; }
-
-        static XmlNode CheckXml(XmlNode xmlNode)
-        {
-            if (xmlNode != null) return xmlNode;
-            return xmlNode;
-        }
-
+      
         //private TemplateInfo ParentCategory;
 
         abstract public bool IsTraced { get; set; }
@@ -75,19 +76,19 @@ namespace RTParser.Utils
 
         public XmlNode TopicXml
         {
-            get { return CheckXml(StaticXMLUtils.FindNode("topic", CategoryXml, null)) ?? StaticXMLUtils.FindHigher("topic", CategoryXml, null) ?? TopicStar; }
+            get { return CheckXml(StaticXMLUtils.FindNode("topic", CategoryXml, null)) ?? StaticXMLUtils.FindHigher("topic", CategoryXml, null) ?? StaticAIMLUtils.TopicStar; }
         }
 
         public XmlNode ThatXml
         {
-            get { return CheckXml(StaticXMLUtils.FindNode("that", CategoryXml, null)) ?? StaticXMLUtils.FindHigher("that", CategoryXml, null) ?? ThatStar; }
+            get { return CheckXml(StaticXMLUtils.FindNode("that", CategoryXml, null)) ?? StaticXMLUtils.FindHigher("that", CategoryXml, null) ?? StaticAIMLUtils.ThatStar; }
         }
 
         #region IAIMLInfo Members
 
         string IAIMLInfo.SourceInfo()
         {
-            return StaticXMLUtils.LocationInfo(TemplateXml);
+            return StaticXMLUtils.LocationInfo(srcNode);
         }
 
         public virtual GraphMaster Graph
@@ -100,7 +101,13 @@ namespace RTParser.Utils
         }
 
         //protected abstract XmlNode TemplateXml { get; set; }
-        public virtual Node GraphmasterNode { get; set; }
+        [NonSerialized]
+        protected object _graphmasterNode;
+        public virtual Node GraphmasterNode
+        {
+            get { return _graphmasterNode as Node; }
+            set { _graphmasterNode = value; }
+        }
 
         virtual public string ToFileString(PrintOptions printOptions)
         {
@@ -157,7 +164,7 @@ namespace RTParser.Utils
             escapedStuff = StaticXMLUtils.MakeXmlCommentSafe(escapedStuff);
             if (IsDisabled)
             {
-                s = DLRConsole.SafeFormat("<!-- {0} {1} {2} -->", MakeXmlCommentSafe(WhyDisabled), MakeXmlCommentSafe(s), escapedStuff);
+                s = DLRConsole.SafeFormat("<!-- {0} {1} {2} -->", StaticAIMLUtils.MakeXmlCommentSafe(WhyDisabled), StaticAIMLUtils.MakeXmlCommentSafe(s), escapedStuff);
             } else
             {
                 s = DLRConsole.SafeFormat("{0} <!-- {1}  -->", s, escapedStuff);
@@ -168,10 +175,10 @@ namespace RTParser.Utils
         public string GetSourceWithTopic(PrintOptions printOptions)
         {
             string s = "";
-            XmlNode topic1 = this.TopicXml;
+            //XmlNode topic1 = this.TopicXml;
             string insideTopic = printOptions.InsideTopic;
             string thisTopic = Topic ?? insideTopic;
-            thisTopic = StaticXMLUtils.GetAttribValue(topic1, "name,topic", () => thisTopic, null);
+            //thisTopic = StaticXMLUtils.GetAttribValue(topic1, "name,topic", () => thisTopic, null);
             bool hasTopic = (thisTopic != insideTopic);
             if (hasTopic)
             {
@@ -188,7 +195,7 @@ namespace RTParser.Utils
                 s += "\">";
             }
 
-            s += printOptions.FormatXML(CategoryXml);
+            s += GetCategoryXML(printOptions);
             if (printOptions.IncludeRuleComments) s += GetRuleStrings;
 
             if (hasTopic) s += "</topic>";
@@ -196,21 +203,58 @@ namespace RTParser.Utils
             return s;
         }
 
+        private string GetCategoryXML(PrintOptions printOptions)
+        {
+            if (_srcNode!=null) return printOptions.FormatXML(CategoryXml);
+            string thatStr = "", scoreStr = "";
+            if (That != null && That.IsCatchAll)
+            {
+                thatStr = String.Format("<that>{0}</that>", That);
+            }
+            double templateTemplateRating = Template.TemplateRating;
+            if (templateTemplateRating != 1.0)
+            {
+                scoreStr = string.Format(" score=\"{0}\"", templateTemplateRating);
+            }
+            return String.Format("<category><pattern>{0}</pattern>{1}<template{2}>{3}</template></category>", Pattern,
+                                 thatStr, scoreStr, Response);
+        }
+
         public string LineNumberInfo
         {
             get
             {
-                return StaticXMLUtils.GetLineNumberOfXmlNode(srcNode);
+                return StaticXMLUtils.GetLineNumberOfXmlNode(this);
             }
         }
 
         public abstract string GetRuleStrings { get; }
 
-        protected virtual string PreconditionKey { get; set; }
+        [NonSerialized] protected string _preconditionKey;
+        protected virtual string PreconditionKey
+        {
+            get
+            {
+                if (_preconditionKey == null) _preconditionKey = GraphmasterNode.GetPath();
+                return _preconditionKey;
+            }
+            set
+            {                
+                _preconditionKey = value;
+            }
+        }
 
         #endregion
 
         public abstract int CompareTo(TemplateInfo other);
+
+        public override string MakeFreshXML()
+        {
+            XmlNode value0 = _srcNode as XmlNode;
+            if (value0 != null) return value0.OuterXml;
+            if (_srcNodeString != null) return _srcNodeString;
+            return null;           
+        }
 
         public override string ToString()
         {

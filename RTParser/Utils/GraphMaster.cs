@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
+using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -24,6 +25,7 @@ using System.Threading;
 
 namespace RTParser.Utils
 {
+    //[Serializable]
     public class GraphMaster : ParentChild
     {
         private static string _STAR_PATH;
@@ -122,6 +124,8 @@ namespace RTParser.Utils
 
         private int parallel0;
         //private Node PostParallelRootNode;
+
+        [NonSerialized]
         private Node RootNode;
         [UserScopedSetting]
         public bool SilentTagsInPutParallel { get; set; }
@@ -130,7 +134,8 @@ namespace RTParser.Utils
         public bool UnTraced;
         // ReSharper disable FieldCanBeMadeReadOnly.Local
         private List<TemplateInfo> UnusedTemplates;
-        public static readonly Dictionary<string, XmlNode> PatternNodes = new Dictionary<string, XmlNode>();
+        [NonSerialized]
+        public static Dictionary<string, XmlNode> PatternNodes = new Dictionary<string, XmlNode>();
 
         /// <summary>
         /// Search and try to elimentate duplicate Templates
@@ -170,7 +175,8 @@ namespace RTParser.Utils
 
             // most graphs try to recuse on themselves until otehrwise stated (like in make-parallel)
             Srai = gn;
-            RootNode = new Node(this, Unifiable.Empty);
+            RootNode = new Node(null, Unifiable.Empty);
+            RootNode.Graph = this;
             //PostParallelRootNode = new Node(this, Unifiable.Empty);
             if (!TrackTemplates)
             {
@@ -483,7 +489,7 @@ namespace RTParser.Utils
         /// Proccessor starts
         /// </summary>
         /// <param name="path">the path to the file for saving</param>
-        public void saveToBinaryFile(Unifiable path)
+        public void saveToBinaryFile(string path, BinaryFormatter bf)
         {
             // check to delete an existing version of the file
             FileInfo fi = new FileInfo(path);
@@ -493,20 +499,28 @@ namespace RTParser.Utils
             }
 
             FileStream saveFile = HostSystem.Create(path);
-            BinaryFormatter bf = new BinaryFormatter();
-            bf.Serialize(saveFile, this.RootNode);
-            //bf.Serialize(saveFile, this.PostParallelRootNode);
-            saveFile.Close();
+            
+            try
+            {
+                //var testO = this.RootNode.AllDecendantTemplates[0];
+                //bf.Serialize(saveFile, testO);
+                bf.Serialize(saveFile, this.RootNode);
+                //bf.Serialize(saveFile, this.PostParallelRootNode);
+
+            }
+            finally
+            {
+                saveFile.Close();                
+            }
         }
 
         /// <summary>
         /// Loads a dump of the graphmaster into memory so avoiding processing the AIML files again
         /// </summary>
         /// <param name="path">the path to the dump file</param>
-        public void loadFromBinaryFile(Unifiable path)
+        public void loadFromBinaryFile(string path, BinaryFormatter bf)
         {
             Stream loadFile = HostSystem.OpenRead(path);
-            BinaryFormatter bf = new BinaryFormatter();
             this.RootNode = (Node)bf.Deserialize(loadFile);
             //this.PostParallelRootNode = (Node)bf.Deserialize(loadFile);
             loadFile.Close();
@@ -1625,6 +1639,12 @@ namespace RTParser.Utils
         internal bool AlsoKnownAs(string p)
         {
             return GraphNames.Contains(p);
+        }
+
+        public bool InRunLowMemHooks = false;
+        public long RunLowMemHooks()
+        {
+            return RootNode.RunLowMemHooks();
         }
     }
 }

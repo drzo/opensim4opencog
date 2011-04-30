@@ -22,8 +22,43 @@ namespace RTParser.Utils
     /// Encapsulates a node in the graphmaster tree structure
     /// </summary>
     [Serializable]
-    public class Node : StaticAIMLUtils, IComparable<Node>, ParentChild
+    public class Node : IComparable<Node>, ParentChild
     {
+        [NonSerialized]
+        private bool inLowMemoryHooks = false;
+        public long RunLowMemHooks()
+        {
+            long saved = 0;
+            if (inLowMemoryHooks) return saved;
+            inLowMemoryHooks = true;
+            if (word != null)
+            {
+                // saved += word.RunLowMemHooks();
+            }
+            if (TemplateInfos != null)
+                foreach (TemplateInfo list in TemplateInfoCopy)
+                {
+                    saved += list.RunLowMemHooks();
+                }
+            if (TemplateInfosDisabled != null)
+                foreach (TemplateInfo list in TemplateInfosDisabled)
+                {
+                    saved += list.RunLowMemHooks();
+                }
+            if (children0 != null)
+                foreach (KeyValuePair<string, Node> pair in children0)
+                {
+                    saved += pair.Value.RunLowMemHooks();
+                }
+            if (specialChildren != null)
+                foreach (KeyValuePair<string, Node> pair in specialChildren)
+                {
+                    saved += pair.Value.RunLowMemHooks();
+                }
+            inLowMemoryHooks = false;
+            return saved;
+        }
+
         const bool needsKeySanityCheck = false;
         public static bool UseZeroArgs;
         public static StringAppendableUnifiableImpl EmptyStringAppendable = new StringAppendableUnifiableImpl();
@@ -46,7 +81,7 @@ namespace RTParser.Utils
         /// </summary>
         internal UList TemplateInfosDisabled; //Unifiable.Empty;
 
-        private readonly ParentChild _parentObject;
+        private readonly Node _parentObject;
         public bool disabled;
 
         /// <summary>
@@ -54,23 +89,28 @@ namespace RTParser.Utils
         /// </summary>
         readonly Unifiable word = null;//Unifiable.Empty;
 
-        //private GraphMaster _graph;
-
+        private string _graph;
+        
         public GraphMaster Graph
         {
             get
             {
-                var Parent0 = _parentObject;
-                while (Parent0 != null)
+                if (_graph != null) return RTPBot.FindGraph(_graph);
+                Node Parent0 = _parentObject;
+                if (Parent0 != null)
                 {
-                    if (Parent0 is GraphMaster) return (GraphMaster)Parent0;
-                    Parent0 = Parent0.ParentObject;
+                    return Parent0.Graph;
                 }
                 return null;
             }
+            set
+            {
+                _graph = value.ScriptingName;
+            }
         }
+        
 
-        public Node(ParentChild P, Unifiable W)
+        public Node(Node P, Unifiable W)
         {
             _parentObject = P;
             if (W != null && W.IsEmpty)
@@ -150,7 +190,7 @@ namespace RTParser.Utils
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             if (!Equals(other.word, word)) return false;
-            if (!Equals(other.Graph, Graph)) return false;
+            //if (!Equals(other.Graph, Graph)) return false;
             if (!Equals(other.ParentObject, ParentObject)) return false;
             writeToLog("ERROR optimally this should be imposible");
             return true;
@@ -220,7 +260,7 @@ namespace RTParser.Utils
             }
             if (a1 == b1)
             {
-                return ReferenceCompare(thiz, that);
+                return StaticAIMLUtils.ReferenceCompare(thiz, that);
             }
             return a1.CompareTo(b1);
             //}
@@ -338,14 +378,14 @@ namespace RTParser.Utils
 
                 // does the metaprops only operate on verbal tags
                 bool sentientTags;
-                if (TryParseBool(nodes, "verbal", out sentientTags))
+                if (StaticAIMLUtils.TryParseBool(nodes, "verbal", out sentientTags))
                 {
                     onlyNonSilent = sentientTags;
                 }
 
                 if (templateNode == null)
                 {
-                    writeToLog("TheTemplateOverwrite0: onlyNonSilent=" + onlyNonSilent + " " + LocationInfo(cateNode));
+                    writeToLog("TheTemplateOverwrite0: onlyNonSilent=" + onlyNonSilent + " " + StaticAIMLUtils.LocationInfo(cateNode));
                     wouldBeRemoval = true;
                     DeleteTemplates(onlyNonSilent);
                     return null;
@@ -353,7 +393,7 @@ namespace RTParser.Utils
                 // this is a removall specfier!
                 if (templateNode.ChildNodes.Count == 0)
                 {
-                    if (templateNode != TheTemplateOverwrite)
+                    if (templateNode != StaticAIMLUtils.TheTemplateOverwrite)
                     {
                         //  writeToLog("TheTemplateOverwrite1: onlyNonSilent=" + onlyNonSilent + " " + templateNode.OuterXml + " " + LocationInfo(cateNode));
                     }
@@ -369,14 +409,14 @@ namespace RTParser.Utils
                 // does the metaprops special normal aiml way of "replace"
                 bool removeAllFirst = master.RemovePreviousTemplatesFromNodes;
                 bool tf;
-                if (TryParseBool(nodes, "replace", out tf))
+                if (StaticAIMLUtils.TryParseBool(nodes, "replace", out tf))
                 {
                     if (tf)
                     {
                         removeAllFirst = true;
                     }
                 }
-                if (TryParseBool(nodes, "ifMissing", out tf))
+                if (StaticAIMLUtils.TryParseBool(nodes, "ifMissing", out tf))
                 {
                     TemplateInfo first = FirstTemplate(onlyNonSilent);
                     if (first != null)
@@ -385,7 +425,7 @@ namespace RTParser.Utils
                         return categoryInfos;
                     }
                 }
-                if (TryParseBool(nodes, "append", out tf))
+                if (StaticAIMLUtils.TryParseBool(nodes, "append", out tf))
                 {
                     TemplateInfo first = FirstTemplate(onlyNonSilent);
                     if (first != null)
@@ -410,7 +450,7 @@ namespace RTParser.Utils
                 }
                 t.IsSearchDisabled = false;
                 bool isTraced;
-                if (TryParseBool(nodes, "isTraced", out isTraced))
+                if (StaticAIMLUtils.TryParseBool(nodes, "isTraced", out isTraced))
                 {
                     t.IsTraced = isTraced;
                 }
@@ -418,7 +458,7 @@ namespace RTParser.Utils
                 if (t != null) t.AddRules(additionalRules);
 
                 bool isDisabled;
-                if (TryParseBool(nodes, "disabled", out isDisabled))
+                if (StaticAIMLUtils.TryParseBool(nodes, "disabled", out isDisabled))
                 {
                     t.IsDisabled = isDisabled;
                 }
@@ -741,7 +781,7 @@ namespace RTParser.Utils
                     if (!found)
                         foreach (var c in children0)
                         {
-                            string ks = ToUpper(c.Key);
+                            string ks = StaticAIMLUtils.ToUpper(c.Key);
                             if (ks == fs)
                             {
                                 childNode = c.Value;
@@ -1037,7 +1077,7 @@ namespace RTParser.Utils
             // get the first word of the sentence
             string firstWord = splitPath[at];
             //Unifiable firstWordU = splitPath[at];
-            string firstWordU = ToUpper(firstWord);
+            string firstWordU = StaticAIMLUtils.ToUpper(firstWord);
             // and concatenate the rest of the input into a new path for child nodes
             //string newPath = path.Substring(firstWord.Length, path.Length - firstWord.Length);
     
@@ -1450,6 +1490,7 @@ namespace RTParser.Utils
         }
     }
 
+    [Serializable]
     internal class KeySorterImpl : IComparer<string>
     {
         #region Implementation of IComparer<string>

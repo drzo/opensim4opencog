@@ -451,7 +451,7 @@ namespace RTParser
         {
             try
             {
-                user.LastRequest = request;
+                user.LastRequest = request ?? user.LastRequest;
                 return BotDirective(user, input, console, null);
             }
             catch (Exception e)
@@ -687,6 +687,32 @@ namespace RTParser
             if (cmd == "echo")
             {
                 console(args);
+                return true;
+            }
+            if (cmd == "ping")
+            {
+                console("pong");
+                return true;
+            }
+            if (cmd == "gload")
+            {
+                console("Loading graphmasters");
+                robot.ScanAndLoadGraphs();
+                return true;
+            }
+            if (cmd == "gsave")
+            {
+                console("Saving graphmasters");
+                robot.SaveLoadedGraphs();
+                return true;
+            }
+            if (cmd == "gc")
+            {
+                console("Running lowmemory hooks with " + System.GC.GetTotalMemory(false) + "/" +
+                        System.GC.GetTotalMemory(true));
+                robot.RunLowMemHooks();
+                console("Finish lowmemory hooks with " + System.GC.GetTotalMemory(false) + "/" +
+                        System.GC.GetTotalMemory(true));
                 return true;
             }
             if (showHelp) console("@load <graph> - <uri>");
@@ -974,7 +1000,7 @@ namespace RTParser
                 if (args == "")
                 {
                     console("-----------------------------------------------------------------");
-                    foreach (var ggg in new ListAsSet<GraphMaster>(GraphMaster.CopyOf(robot.LocalGraphsByName).Values))
+                    foreach (var ggg in robot.SetOfLocalGraphs)
                     {
                         console("-----------------------------------------------------------------");
                         console("local=" + ggg + " keys='" + AsString(ggg.GraphNames) + "'");
@@ -982,7 +1008,7 @@ namespace RTParser
                         console("-----------------------------------------------------------------");
                     }
                     console("-----------------------------------------------------------------");
-                    foreach (var ggg in new ListAsSet<GraphMaster>(GraphMaster.CopyOf(RTPBot.GraphsByName).Values))
+                    foreach (var ggg in RTPBot.SetOfGraphs)
                     {
                         console("-----------------------------------------------------------------");
                         console("global=" + ggg + " keys='" + AsString(ggg.GraphNames) + "'");

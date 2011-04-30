@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Xml;
+using System.Xml.XPath;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using RTParser.AIMLTagHandlers;
 
 namespace RTParser.Utils
 {
+    [Serializable]
     public class ConversationCondition
     {
         public bool IsConditionTrue(SubQuery subQuery)
@@ -67,7 +69,8 @@ namespace RTParser.Utils
         public string Pattern;
         public string IndexVal;
         public bool IndexPosition;
-        public XmlNode SourceNode;
+        [NonSerialized]
+        public object SourceNode;
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
@@ -77,9 +80,10 @@ namespace RTParser.Utils
             if (IndexVal != null) sb.Append(" pos=" + IndexVal );
             if (IndexPosition) sb.Append(" idx=" + IndexPosition);
             if (Pattern != null) sb.Append(" match=\"" + Pattern + "\" ");
-            if (SourceNode != null)
+            var sSourceNode = SourceNode as XmlNode;
+            if (sSourceNode != null)
             {
-                sb.AppendLine(StaticXMLUtils.LocationInfo(SourceNode) + SourceNode.OuterXml);
+                sb.AppendLine(StaticXMLUtils.LocationInfo(sSourceNode) + sSourceNode.OuterXml);
             }
             return sb.ToString();
 
@@ -130,5 +134,15 @@ namespace RTParser.Utils
         }
 
 
+
+        internal long RunLowMemHooks()
+        {
+            if (SourceNode != null)
+            {
+                SourceNode = null;
+                return 1;
+            }
+            return 0;
+        }
     }
 }
