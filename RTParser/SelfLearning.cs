@@ -24,14 +24,15 @@ namespace RTParser
     {
         private bool AllreadyUnderstandingSentences = false;
         readonly private object AllreadyUnderstandingSentencesLock = new object();
-        public static bool UnderstandSentenceOutsideQueue = true;
-        public bool TurnOffSelfListening = true;
+        public static bool UnderstandSentenceOutsideQueue = false;
+        public bool TurnOffSelfListening = false;
+        public bool WaitUntilVerbalOutput = false;
 
         public void HeardSelfSayVerbal(User theFactSpeaker, User toWhom, string message, Result result, ThreadControl control)
         {
-            if (this.TurnOffSelfListening) return;
             message = ToHeard(message);
             if (string.IsNullOrEmpty(message)) return;
+            message = message.TrimStart();
             currentEar.AddMore(message);
             if (!currentEar.IsReady())
             {
@@ -90,6 +91,8 @@ namespace RTParser
             bool toWhomNonNull = toWhom != null;
             string whatListenerLastSaid = null;
             if (toWhomNonNull) whatListenerLastSaid = toWhom.JustSaid;
+            var log = ConversationLog.GetConversationLog(theFactSpeaker, toWhom, true);
+            Utterance ele = log.AddSpoken(this, theFactSpeaker, toWhom, message);
             Result res = HeardSome1Say11Sentence(theFactSpeaker, toWhom, message, result, control);
             if (toWhomNonNull) toWhom.ResponderJustSaid = message;
             theFactSpeaker.JustSaid = message;
@@ -191,18 +194,18 @@ namespace RTParser
             message = ToHeard(message);
             if (string.IsNullOrEmpty(message)) return result;
             writeChatTrace(desc);
-            if (control == null || UnderstandSentenceOutsideQueue)
+            if (UnderstandSentenceOutsideQueue)
             {
                 var res = UnderstandSentence(theFactSpeaker, toWhom, desc, message, result, control);
                 theFactSpeaker.JustSaid = message;
                 return res;
             }
 
-            control.AbortRaised += (ctl, abrtedE) => writeToLog("Aborted " + desc);
+            if (control != null) control.AbortRaised += (ctl, abrtedE) => writeToLog("Aborted " + desc);
             HeardSelfSayQueue.EnqueueWithTimeLimit(()
                                                    => result = UnderstandSentence(theFactSpeaker, toWhom, desc, message, result, control), desc,
                                                    TimeSpan.FromSeconds(10), control);
-            control.WaitUntilComplete();
+            //if (control != null) control.WaitUntilComplete();
             return result;
         }
 

@@ -363,6 +363,11 @@ namespace RTParser
             RTPBot myBot = this;
             User BotAsAUser = myBot.BotAsUser;
             myUser = myUser ?? myBot.LastUser;
+            if (string.IsNullOrEmpty(input))
+            {
+                writeLine("");
+                return;
+            }
             string myName = BotAsAUser.UserName;
             {
                 writeLine("-----------------------------------------------------------------");
@@ -573,27 +578,11 @@ namespace RTParser
             if (showHelp)
                 console(
                     "@withuser <user> - <text>  -- (aka. simply @)  runs text/command intentionally setting LastUser");
-            if (cmd == "withuser" || cmd == "@")
-            {
-                string said;
-                string user;
-                if (!SplitOff(args, "-", out user, out said))
-                {
-                    user = myUser.UserName;
-                    said = args;
-                }
-                User wasUser = robot.FindUser(user);
-                Result res = robot.GlobalChatWithUser(said, user, null, RTPBot.writeDebugLine, true, false);
-                // detect a user "rename"
-                robot.DetectUserChange(myUser, wasUser, user);
-                robot.OutputResult(res, console, false);
-                return true;
-            }
 
             if (showHelp)
                 console(
                     "@locally <user> - <text>  -- runs text/command not intentionally not setting LastUser");
-            if (cmd == "locally" || cmd == "@")
+            if (cmd == "locally" || cmd == "@" || cmd == "withuser")
             {
                 string said;
                 string user;
@@ -602,8 +591,9 @@ namespace RTParser
                     user = myUser.UserName;
                     said = args;
                 }
+                bool isRemote = (cmd == "@" || cmd == "withuser");
                 User wasUser = robot.FindUser(user);
-                Result res = robot.GlobalChatWithUser(said, user, null, RTPBot.writeDebugLine, true, true);
+                Result res = robot.GlobalChatWithUser(said, user, null, RTPBot.writeDebugLine, true, !isRemote);
                 Request request = res.request;
                 request.ResponderSelfListens = false;
                 // detect a user "rename"
@@ -613,6 +603,10 @@ namespace RTParser
                 {
                     //myUser = FindUser(user);
                     request.SetSpeakerAndResponder(myUser, theResponder);
+                    if (cmd == "withuser" || cmd == "@")
+                    {
+                        robot.LastUser = myUser;
+                    }
                 }
                 var justsaid = robot.OutputResult(res, console, false);
                 if (theResponder == null)
@@ -625,12 +619,14 @@ namespace RTParser
                     return true;
                 }
                 myUser.LastResponder = theResponder;
-                theResponder.JustSaid = justsaid;
-                // ReSharper disable ConditionIsAlwaysTrueOrFalse
-                if (robot.ProcessHeardPreds && request.ResponderSelfListens)
-                    // ReSharper restore ConditionIsAlwaysTrueOrFalse
-                    robot.HeardSelfSayResponse(theResponder, myUser, justsaid, res, control);
-
+                if (!robot.WaitUntilVerbalOutput)
+                {
+                    theResponder.JustSaid = justsaid;
+                    // ReSharper disable ConditionIsAlwaysTrueOrFalse
+                    if (robot.ProcessHeardPreds && request.ResponderSelfListens)
+                        // ReSharper restore ConditionIsAlwaysTrueOrFalse
+                        robot.HeardSelfSayResponse(theResponder, myUser, justsaid, res, control);
+                }
                 return true;
             }
             if (showHelp)
@@ -761,7 +757,7 @@ namespace RTParser
                 {
                     factSpeakerLastResponderValue = factSpeakerLastResponder.Value;
                 }
-                robot.HeardSelfSayVerbal(factSpeaker, factSpeakerLastResponderValue, args, factSpeaker.LastResult, control);
+                robot.HeardSelfSayVerbal(factSpeaker, factSpeakerLastResponderValue, said, factSpeaker.LastResult, control);
                 return true;
             }
 
@@ -776,8 +772,13 @@ namespace RTParser
                     said = args;
                 }
                 User factSpeaker = robot.FindOrCreateUser(who);
-                robot.HeardSomeoneSay1Sentence(factSpeaker, factSpeaker.LastResponder.Value, said, robot.LastResult,
-                                            control);
+                UserConversationScope factSpeakerLastResponder = factSpeaker.LastResponder;
+                User factSpeakerLastResponderValue = null;
+                if (factSpeakerLastResponder != null)
+                {
+                    factSpeakerLastResponderValue = factSpeakerLastResponder.Value;
+                }
+                robot.HeardSomeoneSay1Sentence(factSpeaker, factSpeakerLastResponderValue, said, factSpeaker.LastResult, control);
                 return true;
             }
 

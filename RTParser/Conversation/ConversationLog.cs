@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using RTParser.Utils;
 
 namespace RTParser
 {
@@ -6,9 +8,16 @@ namespace RTParser
     {
         static public readonly Dictionary<string, ConversationLog> ConversationLogs = new Dictionary<string, ConversationLog>();
 
-        private string Key;
-        private User User1;
-        private User User2;
+        public LinkedList<Utterance> Elements = new LinkedList<Utterance>();
+
+        public override string ToString()
+        {
+            return "CL: " + Key;
+        }
+
+        readonly private string Key;
+        public User User1;
+        public User User2;
         private ConversationLog(string find, User user1, User user2)
         {
 
@@ -51,6 +60,30 @@ namespace RTParser
                 }
                 return tqh;
             }
+        }
+
+        public Utterance AddSpoken(RTPBot robot, User speaker, User toWhom, Unifiable message)
+        {
+            var ce = new Utterance(robot.EnsureEnglish, speaker, toWhom, message, -1);
+            Elements.AddFirst(ce);
+            return ce;
+        }
+
+        public Utterance GetLastSaidBy(User user)
+        {
+            foreach (Utterance element in Elements)
+            {
+                if (element.Speaker == user)
+                {
+                    return element;
+                }
+            }
+            return null;
+        }
+        public Utterance GetLastSaid()
+        {
+            if (Elements.Count==0) return null;
+            return Elements.First.Value;
         }
     }
 }

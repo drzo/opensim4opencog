@@ -5,7 +5,7 @@ using RTParser.Variables;
 
 namespace RTParser
 {
-    public interface InteractionResult : Utterance
+    public interface InteractionResult
     {
         /// <summary>
         /// The bot that is providing the answer
@@ -37,7 +37,7 @@ namespace RTParser
         Request request { get; }
         Result result { get; }
 
-        ParsedSentences ChatOutput { get; }
+        Utterance ChatOutput { get; }
 
         /// <summary>
         /// The user for whom this is a result

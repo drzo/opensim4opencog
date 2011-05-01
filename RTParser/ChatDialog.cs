@@ -71,7 +71,8 @@ namespace RTParser
                 if (IsInteractiveUser(_lastUser)) return _lastUser;
                 //User LU = _lastResult != null ? _lastResult.Requester.Value : null;
                 //if (IsInteractiveUser(LU)) return LU;
-                return null;
+                return _lastUser;
+                //return null;
             }
             set
             {
@@ -636,7 +637,7 @@ namespace RTParser
         {
             //writeToLog = writeToLog ?? DEVNULL;
             {
-                ParsedSentences parsedSentences = ParsedSentences.GetParsedSentences(request, isTraced, writeToLog);
+                Utterance utterance = Utterance.GetParsedSentences(request, isTraced, writeToLog);
 
                 bool printedSQs = false;
                 G = G ?? DefaultStartGraph;
@@ -657,12 +658,12 @@ namespace RTParser
 
                 // Gathers the Pattern SubQueries!
                 int sentNum = -1;
-                foreach (Unifiable userSentence in parsedSentences.NormalizedPaths)
+                foreach (Unifiable userSentence in utterance.NormalizedPaths)
                 {
                     sentNum++;
                     if (request.IsToplevelRequest)
                     {
-                        string english = parsedSentences.EnglishSentences[sentNum];
+                        string english = utterance.EnglishSentences[sentNum];
                         if (NatLangDb.WasQuestion(english))
                         {
                             request.Requester.Predicates.updateSetting("question", english);

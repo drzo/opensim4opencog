@@ -9,7 +9,7 @@ using RTParser.Utils;
 
 namespace RTParser
 {
-    public class ParsedSentences
+    public class Utterance
     {
         private static char[] toCharArray = "@#$%^&*()_+<>,/{}[]\\\";'~~".ToCharArray();
 
@@ -32,8 +32,10 @@ namespace RTParser
         public Action OnGetParsed;
         public Unifiable OrignalRawText;
 
-        public ParsedSentences(Func<string, string> generatePhrase, Unifiable rawText, int maxSentences)
+        public Utterance(Func<string, string> generatePhrase,UserConversationScope speaker, UserConversationScope toWhom, Unifiable rawText, int maxSentences)
         {
+            Speaker = speaker;
+            ToWhom = toWhom;
             OrignalRawText = rawText;
             OutputSentencesToEnglish = generatePhrase;
             maxResults = maxSentences + 10;
@@ -62,6 +64,37 @@ namespace RTParser
             }
         }
 
+        /// <summary>
+        /// The user that made this Utterance
+        /// </summary>
+        public UserConversationScope Speaker { get; set; }
+        /// <summary>
+        /// The user responding to the request
+        /// </summary>
+        public UserConversationScope ToWhom { get; set; }
+
+        /// <summary>
+        /// The last meaning unit extracted from what the ToWhom said previous
+        /// </summary>
+        public Unifiable That
+        {
+            get { return InResponse.RawText; }
+        }
+
+        /// <summary>
+        /// The last Utterance containing That
+        /// </summary>
+        public Utterance InResponse
+        {
+            get
+            {
+                if (_inResponse != null) return _inResponse;
+                throw new NotImplementedException();
+            }
+            set { _inResponse = value; }
+        }
+
+        private Utterance _inResponse;
         /// <summary>
         /// Returns the raw sentences without any logging 
         /// </summary>
@@ -291,7 +324,7 @@ namespace RTParser
                                 }
                                 if (topic.IsCatchAll)
                                 {
-                                    topic = "NOTHAT";
+                                    topic = "TOTOPIC";
                                 }
                             }
                             string thisInput = path.LegacyPath.AsString().Trim().ToUpper();
@@ -307,31 +340,31 @@ namespace RTParser
             }
         }
 
-        public static ParsedSentences GetParsedSentences(Request request, bool isTraced, OutputDelegate writeToLog)
+        public static Utterance GetParsedSentences(Request request, bool isTraced, OutputDelegate writeToLog)
         {
-            ParsedSentences parsedSentences = request.ChatInput;
+            Utterance utterance = request.ChatInput;
 
-            int NormalizedPathsCount = parsedSentences.NormalizedPaths.Count;
+            int NormalizedPathsCount = utterance.NormalizedPaths.Count;
 
             if (isTraced && NormalizedPathsCount != 1)
             {
-                foreach (Unifiable path in parsedSentences.NormalizedPaths)
+                foreach (Unifiable path in utterance.NormalizedPaths)
                 {
                     writeToLog("  i: " + path.LegacyPath);
                 }
                 writeToLog("NormalizedPaths.Count = " + NormalizedPathsCount);
             }
             request.Stage = SideEffectStage.PARSE_INPUT_COMPLETE;
-            return parsedSentences;
+            return utterance;
         }
 
-        public static ParsedSentences GetParsedUserInputSentences(Request request, Unifiable fromUInput)
+        public static Utterance GetParsedUserInputSentences(Request request, Unifiable fromUInput)
         {
             Func<string, string> GenEnglish = (str) => request.TargetBot.EnsureEnglish(str);
             string fromInput = EnsureEnglishPassThru(fromUInput);
             // Normalize the input
             IEnumerable<Unifiable> rawSentences = SplitIntoSentences.Split(fromInput);
-            var parsedSentences = new ParsedSentences(GenEnglish, fromUInput, -1);
+            var parsedSentences = new Utterance(GenEnglish, request.Requester, request.Responder, fromUInput, -1);
             List<Unifiable> userInputSentences = parsedSentences.EnglishSentences;
             userInputSentences.AddRange(rawSentences);
             Func<string, string> englishToNormaizedInput = arg => EngishToNormalizedInput(request, arg);
