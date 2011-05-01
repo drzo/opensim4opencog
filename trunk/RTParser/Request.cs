@@ -62,7 +62,7 @@ namespace RTParser
         SubQuery CurrentQuery { get; set; }
         RTPBot TargetBot { get; set; }
    //     Unifiable rawInput { get; }
-        ParsedSentences ChatInput { get; }
+        Utterance ChatInput { get; }
         IList<Result> UsedResults { get; set; }
         IList<TemplateInfo> RequestTemplates { get; }
         int MaxInputs { get; set; }
@@ -306,7 +306,7 @@ namespace RTParser
         /// <summary>
         /// The raw input from the user
         /// </summary>
-        public ParsedSentences ChatInput { get; set; }
+        public Utterance ChatInput { get; set; }
 
         public Request ParentRequest { get; set; }
 
@@ -549,7 +549,7 @@ namespace RTParser
             if (parent != null)
             {
                 //ChatInput = parent.ChatInput;
-                ChatInput = ParsedSentences.GetParsedUserInputSentences(thisRequest, rawInput);
+                ChatInput = Utterance.GetParsedUserInputSentences(thisRequest, rawInput);
                 Requester = parent.Requester;
                 depth = parent.depth + 1;
                 OriginalSalientRequest = parent.OriginalSalientRequest;
@@ -557,7 +557,7 @@ namespace RTParser
             }
             else
             {
-                ChatInput = ParsedSentences.GetParsedUserInputSentences(thisRequest, rawInput);
+                ChatInput = Utterance.GetParsedUserInputSentences(thisRequest, rawInput);
             }
             DebugLevel = -1;
             if (parent != null) targetUser = parent.Responder;
@@ -573,7 +573,13 @@ namespace RTParser
             }
             if (targetUser != null) Responder = targetUser;
             _responderUser = targetUser;
-            That = thatSaid;
+            var inresp = ConversationLog.GetConversationLog(Requester, Responder, true).GetLastSaidBy(Responder);            
+            if (inresp != null)
+            {
+                ChatInput.InResponse = inresp;
+                thatSaid = thatSaid ?? inresp.TheMainSentence;
+            }
+            That = thatSaid;            
             UsedResults = new ListAsSet<Result>();
             Flags = Unifiable.EnglishNothing;
             QuerySettingsSettable querySettings = GetQuerySettings();

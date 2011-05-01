@@ -27,7 +27,7 @@ namespace RTParser
         /// </summary>
         public List<SubQuery> SubQueries { get; set; }
 
-        public static int MaxPrintResults = 1;
+        public static int MaxPrintResults = 10;
         private string AlreadyUsed = "xtxtxtxtxtxtxtxtxxt";
         private int RotatedTemplate;
 
@@ -90,7 +90,12 @@ namespace RTParser
 
         //  private readonly ParsedSentences ChatInput;
         public abstract Result result { get; }
-        public ParsedSentences ChatOutput { get; private set; }
+        private Utterance _chatOutput;
+        public Utterance ChatOutput
+        {
+            get { return _chatOutput; }
+            private set { _chatOutput = value; }
+        }
 
         //public override bool IsTraced { get; set; }
 
@@ -165,7 +170,8 @@ namespace RTParser
             //this.Requester = user;
             altResponder = targetUser;
             request.TargetBot = bot;
-            ChatOutput = new ParsedSentences(bot.EnsureEnglish, null, MaxPrintResults);
+            ChatOutput = new Utterance(bot.EnsureEnglish, user, altResponder, null, MaxPrintResults)
+                              {InResponse = ChatInput};
             //OutputSentences = ChatOutput.SemanticSentences;
             writeToLog = writeToLog ?? user.WriteToUserTrace;
             writeToLog = writeToLog ?? request.WriteLine;
@@ -479,7 +485,7 @@ namespace RTParser
         }
 
         public string _normalizedOutput;
-        public readonly ParsedSentences ChatInput;
+        public readonly Utterance ChatInput;
         private SubQuery _CurrentQuery;
         private string matchable;
         private int OutputPings;

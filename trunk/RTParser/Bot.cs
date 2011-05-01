@@ -126,7 +126,7 @@ namespace RTParser
         //public Request BotAsRequestUsed = null;
         public Request GetBotRequest(string s)
         {
-            var botAsUser1 = BotAsUser;
+            var botAsUser1 = BotAsUser ?? LastUser;
             s = Trim(s);
             if (!s.StartsWith("<")) s = "<!-- " + s.Replace("<!--", "<#").Replace("-->", "#>") + " -->";
             var r = new AIMLbot.MasterRequest(s, botAsUser1, Unifiable.EnglishNothing, botAsUser1, this, null,
