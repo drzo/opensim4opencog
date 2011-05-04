@@ -52,6 +52,7 @@ namespace RTParser
         void LoadDirectory(string userdir);
         void SaveDirectory(string userDirectory);
         void SyncDirectory(string userdir);
+        void SaveOften();
         bool DoUserCommand(string args, OutputDelegate console);
 
         void WriteToUserTrace(string s, params object[] args);
@@ -187,7 +188,7 @@ namespace RTParser
             get { return GetTaskQueueHandler("HeardSelfSsy"); }
         }
 
-        public Timer SaveTimer;
+        public static Thread SaveTimer;
 
         public void Enqueue(string queuename, TaskType taskType, string taskName, ThreadStart evt)
         {
@@ -197,8 +198,14 @@ namespace RTParser
         }
 
         private readonly object SaveLock = new object();
-
-        private void SaveOften(object state)
+        public static void SaveAllOften(RTPBot robot)
+        {
+            foreach (User node in robot.SetOfUsers)
+            {
+                node.SaveOften();
+            }
+        }
+        public void SaveOften()
         {
             if (IsRoleAcct) return;
             if (NeverSave) return;
@@ -621,7 +628,18 @@ namespace RTParser
                 UserName = userID;
                 SetMeMyselfAndI(UserName);
                 //this.Predicates.addSetting("topic", "NOTOPIC");
-                SaveTimer = new Timer(SaveOften, this, new TimeSpan(0, 5, 0), new TimeSpan(0, 5, 0));
+                if (SaveTimer == null)
+                {
+                    SaveTimer = new Thread(() =>
+                                               {
+                                                   Thread.Sleep(new TimeSpan(0, 5, 0));
+                                                   SaveAllOften(bot);
+                                               })
+                                    {
+                                        Name = "SaveUsersTimer"
+                                    };
+                    SaveTimer.Start();
+                }
                 needsSave = true;
                 StampResponseGiven();
                 bot.AddExcuteHandler(userID, ChatWithThisUser);
@@ -673,28 +691,29 @@ namespace RTParser
             {
                 try
                 {
-                    SaveTimer.Dispose();
+                    SaveTimer.Abort();
                 }
                 catch (Exception)
                 {
                 }
-                lock (ShutdownHooks)
+                SaveTimer = null;
+            }
+            lock (ShutdownHooks)
+            {
+                foreach (var threadStart in ShutdownHooks)
                 {
-                    foreach (var threadStart in ShutdownHooks)
+                    try
                     {
-                        try
-                        {
-                            threadStart.Invoke();
-                        }
-                        catch (Exception exception)
-                        {
-                            writeDebugLine("ERROR: shutdownhook " + threadStart + " " + exception);
-                        }
-                        ShutdownHooks.Clear();
+                        threadStart.Invoke();
                     }
+                    catch (Exception exception)
+                    {
+                        writeDebugLine("ERROR: shutdownhook " + threadStart + " " + exception);
+                    }
+                    ShutdownHooks.Clear();
                 }
             }
-            SaveOften(this);
+            SaveOften();
         }
 
         /// <summary>
@@ -1152,7 +1171,7 @@ namespace RTParser
                 {
                     case "save":
                         {
-                            SaveOften(this);
+                            SaveOften();
                         }
                         return true;
                     default:

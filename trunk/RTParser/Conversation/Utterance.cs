@@ -23,6 +23,8 @@ namespace RTParser
         private readonly Func<string, string> OutputSentencesToEnglish;
         public readonly List<Unifiable> SemanticSentences = new List<Unifiable>();
 
+        public bool IsSpeakerInputGleaned = false;
+
         /// <summary>
         /// The raw input from the user
         /// </summary>

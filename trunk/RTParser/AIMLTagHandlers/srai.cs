@@ -496,7 +496,7 @@ namespace RTParser.AIMLTagHandlers
             mybot.writeChatTrace("\"S{0}\" -> \"SIN:{1}\" ;\n", depth, subRequestrawInput);
             //mybot.writeChatTrace("\"SIN:{0}\" -> \"LN:{1}\" ;\n", subRequestrawInput, CatTextInfo());
             mybot.writeChatTrace("\"SIN:{0}\" -> \"PATH:{1}\" [label=\"{2}\"] ;\n",
-                                 subRequestrawInput, depth, subResult.NormalizedPaths);
+                                 subRequestrawInput, depth, subResult.InputPaths);
             mybot.writeChatTrace("\"PATH:{0}\" -> \"LN:{1}\" [label=\"{2}\"] ;\n", depth, depth,
                                  AIMLLoader.TextAndSourceInfo(templateNode));
 

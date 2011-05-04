@@ -91,8 +91,9 @@ namespace RTParser.Utils
                                 Unifiable newValue = settings.grabSetting(n);
                                 if (newValue != v)
                                 {
-                                    writeToLog("ERROR unexpected '" + n + "'='" + newValue + "' expecting '" +
-                                               v + "' ");
+                                    writeToLog("ERROR unexpected '" + n + "'='" +
+                                        Unifiable.DescribeUnifiable(newValue) + "' expecting '" +
+                                              Unifiable.DescribeUnifiable(v) + "' ");
                                 }
                                 settings.removeSetting(n);
                             });
@@ -105,8 +106,9 @@ namespace RTParser.Utils
                                 Unifiable newValue = settings.grabSetting(n);
                                 if (newValue != v)
                                 {
-                                    writeToLog("ERROR unexpected '" + n + "'='" + newValue + "' expecting '" +
-                                               v + "' ");
+                                    writeToLog("ERROR unexpected '" + n + "'='" +
+                                        Unifiable.DescribeUnifiable(newValue) + "' expecting '" +
+                                              Unifiable.DescribeUnifiable(v) + "' ");
                                 }
                                 settings.updateSetting(n, oldValue);
                             });
@@ -170,7 +172,7 @@ namespace RTParser.Utils
         public static UndoStack GetStackFor(UndoStackHolder o)
         {
             UndoStackHolder holder = o as UndoStackHolder;
-            holder.ToString();
+            //holder.ToString();
             UndoStack u;
             if (holder != null)
             {                

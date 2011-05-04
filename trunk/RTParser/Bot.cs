@@ -1323,7 +1323,7 @@ The AIMLbot program.
             message = message.Replace("*RAWINPUT*", request.rawInput);
             message = message.Replace("*USER*", request.Requester.UserID);
             StringAppendableUnifiableImpl paths = Unifiable.CreateAppendable();
-            foreach (Unifiable path in request.CurrentResult.NormalizedPaths)
+            foreach (Unifiable path in request.CurrentResult.InputPaths)
             {
                 paths.Append(path.LegacyPath + Environment.NewLine);
             }

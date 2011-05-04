@@ -24,7 +24,7 @@ namespace RTParser
         /// <summary>
         /// The normalized sentence(s) (paths) fed into the graphmaster
         /// </summary>
-        List<Unifiable> NormalizedPaths { get; }
+        //List<Unifiable> InputPaths { get; }
 
         /// <summary>
         /// The individual sentences produced by the bot that form the complete response
@@ -84,6 +84,7 @@ namespace RTParser
         bool Started { get; set; }
         TimeSpan Durration { get; }
         string WhyResultComplete { get; set; }
+        UserConversationScope Requester { get; }
         //   User Requester { get; set; }
         //   User Responder { get; }
         string ToString();
