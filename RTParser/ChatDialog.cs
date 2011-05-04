@@ -249,13 +249,20 @@ namespace RTParser
 
         public Result SaidUser(string input, string user, string[] otherName, OutputDelegate traceConsole, bool saveResults, bool saveResultsOnJustHeard)
         {
-            return GlobalChatWithUser(input, user, otherName == null ? null : otherName[0], traceConsole, saveResults,
+            User CurrentUser = GetCurrentUser(user);
+            string otherUserName = otherName == null ? null : otherName[0];
+            User targetUser = GetTargetUser(otherUserName, input, BotAsUser);
+            var request = CurrentUser.CreateRequest(input, targetUser);
+            request.IsTraced = true;
+            request.OriginalSalientRequest = request;
+            request.SaveResultsOnJustHeard = saveResultsOnJustHeard;
+            return GlobalChatWithUser(request, input, user, otherUserName, traceConsole, saveResults,
                                       saveResultsOnJustHeard);
         }
 
-        internal Result GlobalChatWithUser(string input, string user, string otherName, OutputDelegate traceConsole, bool saveResults, bool saveResultsOnJustHeard)
+        internal User GetTargetUser(string otherName, string input, User fallback)
         {
-            User targetUser = BotAsUser;
+            User targetUser = fallback ?? BotAsUser;
             string youser = input;
             int lastIndex = input.IndexOfAny("-,:".ToCharArray());
             User targ = null;
@@ -271,8 +278,11 @@ namespace RTParser
                     targ = FindUser(otherName);
                     if (targ != null) targetUser = targ;
                 }
+            return targetUser;
+        }
 
-            traceConsole = traceConsole ?? writeDebugLine;
+        public User GetCurrentUser(string user)
+        {
             User CurrentUser = null;
             if (user != null)
             {
@@ -291,13 +301,19 @@ namespace RTParser
             else
             {
                 CurrentUser = this.LastUser;
-            }          
+            }
+            return CurrentUser;
+        }
+        internal Result GlobalChatWithUser(Request request, string input, string user, string otherName, OutputDelegate traceConsole, bool saveResults, bool saveResultsOnJustHeard)
+        {
+            traceConsole = traceConsole ?? writeDebugLine;
+            User CurrentUser = GetCurrentUser(user);
             var varMSM = this.pMSM;
             varMSM.clearEvidence();
             varMSM.clearNextStateValues();
-            //  myUser.TopicSetting = "collectevidencepatterns";
+            // myUser.TopicSetting = "collectevidencepatterns";
             Result res = null;
-            var request = CurrentUser.CreateRequest(input, targetUser);
+            request = request ?? CurrentUser.CreateRequest(input, GetTargetUser(otherName, input, BotAsUser));
             request.IsTraced = true;
             request.OriginalSalientRequest = request;
             request.SaveResultsOnJustHeard = saveResultsOnJustHeard;
@@ -341,8 +357,8 @@ namespace RTParser
             }
             if (saveResults)
             {
-                LastResult = res;
                 this.LastUser = CurrentUser;
+                LastResult = res;
             }
 
             traceConsole(useOut);
@@ -416,7 +432,7 @@ namespace RTParser
             bool isTraced = request.IsTraced | request.IsToplevelRequest;
 
             UndoStack undoStack = UndoStack.GetStackFor(request);
-            Unifiable requestrawInput = request.rawInput;
+            Unifiable requestrawInput = request.rawInput.Trim();
 
             undoStack.pushValues(userPredicates, "i", user.UserName);
             undoStack.pushValues(userPredicates, "rawinput", requestrawInput);

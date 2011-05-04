@@ -65,6 +65,7 @@ namespace RTParser
         public Utterance AddSpoken(RTPBot robot, User speaker, User toWhom, Unifiable message)
         {
             var ce = new Utterance(robot.EnsureEnglish, speaker, toWhom, message, -1);
+            RTPBot.writeDebugLine("AddSpoken: " + ce);
             Elements.AddFirst(ce);
             return ce;
         }

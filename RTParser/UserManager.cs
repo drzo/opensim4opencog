@@ -324,6 +324,10 @@ namespace RTParser
             if (fromname == "") return false;
             if (fromname == "to_to") return false;
             if (fromname.Contains("????")) return false;
+            if (fromname.Contains("<") || fromname.Contains("\\") || fromname.Contains("sapi"))
+            {
+                return false;
+            }
             if (fromname.Contains(",")) return false;
             if (fromname.Contains("}")) return false;
             if (fromname.Contains("{")) return false;
@@ -948,7 +952,7 @@ namespace RTParser
             return defaultVal;
         }
 
-        public string OutputResult(Result res, OutputDelegate console, bool includeWeigth)
+        public string OutputResult(InteractionResult res, OutputDelegate console, bool includeWeigth)
         {
             User CurrentUser = res.Requester.Value;
             string user = CurrentUser.UserName;

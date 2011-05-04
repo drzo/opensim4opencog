@@ -14,12 +14,7 @@ namespace RTParser
     /// <summary>
     /// Encapsulates information about the result of a request to the bot
     /// </summary>
-#if interfaces   
-    public abstract class ResultImpl : QuerySettings, Result, InteractionResult, RequestOrQuery
-#else
-    public abstract class Result : QuerySettings, /*ResultImpl, */ InteractionResult, RequestOrQuery
-#endif
-
+    public abstract class Result : QuerySettings, InteractionResult, RequestOrQuery
     {
         /// <summary>
         /// The subQueries processed by the bot's graphmaster that contain the templates that 
@@ -93,7 +88,14 @@ namespace RTParser
         private Utterance _chatOutput;
         public Utterance ChatOutput
         {
-            get { return _chatOutput; }
+            get
+            {
+                if (_chatOutput==null)
+                {
+                    return null;
+                }
+                return _chatOutput;
+            }
             private set { _chatOutput = value; }
         }
 
@@ -110,7 +112,7 @@ namespace RTParser
         /// <summary>
         /// The normalized sentence(s) (paths) fed into the graphmaster
         /// </summary>
-        public List<Unifiable> NormalizedPaths
+        public List<Unifiable> InputPaths
         {
             get { return ChatInput.NormalizedPaths; }
         }
@@ -268,7 +270,7 @@ namespace RTParser
                         else
                         {
                             var paths = Unifiable.CreateAppendable();
-                            foreach (Unifiable pattern in NormalizedPaths)
+                            foreach (Unifiable pattern in InputPaths)
                             {
                                 //return pattern;
                                 paths.Append(pattern.LegacyPath + Environment.NewLine);
@@ -528,7 +530,7 @@ namespace RTParser
             {
                 if (IsTraced)
                 {
-                    writeToLog("AIMLTRACE SQ: " + this + " \n" + query.ToString().TrimStart());
+                   // writeToLog("AIMLTRACE SQ: " + this + " \n" + query.ToString().TrimStart());
                 }
                 if (!SubQueries.Contains(query)) SubQueries.Add(query);
             }
@@ -953,121 +955,5 @@ namespace RTParser
                 return scope;
             }
         }
-    }
-#if interfaces   
-    public interface Result : InteractionResult, RequestOrQuery
-#else
-    public interface ResultImpl : InteractionResult, RequestOrQuery
-#endif
-    {
-#if false
-        /// <summary>
-        /// The bot that is providing the answer
-        /// </summary>
-        //     RTPBot TargetBot { get; set; }
-        /// The user that is providing the <that/> answer
-        //        UserDuringProcessing Responder { get; set; }
-        //        string WhyComplete { get; set; }
-        bool IsTraced { get; set; }
-
-        /// <summary>
-        /// The individual sentences that constitute the raw input from the user
-        /// </summary>
-        List<Unifiable> InputSentences { get; }
-
-        /// <summary>
-        /// The normalized sentence(s) (paths) fed into the graphmaster
-        /// </summary>
-        List<Unifiable> NormalizedPaths { get; }
-
-        /// <summary>
-        /// The individual sentences produced by the bot that form the complete response
-        /// </summary>
-        List<Unifiable> OutputSentences { get; }
-
-        /// <summary>
-        /// The request from the user
-        /// </summary>
-        Request request { get; }
-
-        /// <summary>
-        /// The subQueries processed by the bot's graphmaster that contain the templates that 
-        /// are to be converted into the collection of Sentences
-        /// </summary>
-        List<SubQuery> SubQueries { get; }
-
-        ParsedSentences ChatOutput { get; }
-
-        /// <summary>
-        /// The user for whom this is a result
-        /// </summary>
-        ///UserDuringProcessing Requester { get; set; }
-        // OutputDelegate writeToLog { get; set; }
-        int TemplatesSucceeded { get; set; }
-
-        int OutputsCreated { get; set; }
-        //   GraphQuery TopLevel { get; set; }
-        double Score { get; }
-
-        /// <summary>
-        /// If the query is being traced
-        /// </summary>
-        //    bool IsTraced { get; set; }
-        string SetOutput { set; }
-
-        /// <summary>
-        /// The raw input from the user
-        /// </summary>
-        //Unifiable rawInput { get; }
-
-        /// <summary>
-        /// The result from the bot with logging and checking
-        /// </summary>
-        Unifiable Output { get; }
-
-        string EnglishOutput { get; }
-
-        /// <summary>
-        /// Returns the raw sentences without any logging 
-        /// </summary>
-        Unifiable RawOutput { get; }
-
-        bool IsEmpty { get; }
-        int OutputSentenceCount { get; }
-        ISettingsDictionary RequesterPredicates { get; }
-        // SubQuery CurrentQuery { get; set; }
-        // bool IsComplete { get; set; }
-        bool IsSalient { get; }
-        //    IList<TemplateInfo> UsedTemplates { get; }
-        //   ChatLabel CatchLabel { get; set; }
-        Result ParentResult { get; }
-        string NormalizedOutput { get; }
-        double TemplateRating { get; set; }
-        bool Started { get; set; }
-        TimeSpan Durration { get; }
-        void CollectRequest();
-        string WhyResultComplete { get; set; }
-        IList<TemplateInfo> ResultTemplates { get; }
-        RTPBot TargetBot { get; }
-     //   UserDuringProcessing Requester { get; set; }
-        GraphMaster Graph { get; }
-        void AddSubqueries(GraphQuery queries);
-        void AddOutputSentences(TemplateInfo ti, string unifiable, double score);
-        void AddResultFormat(string format, params object[] args);
-        string ToString();
-        Unifiable GetOutputSentence(int sentence);
-        void RotateUsedTemplates();
-        void ResetAnswers(bool b);
-        bool CanResultUseTemplate(TemplateInfo info);
-        OutputDelegate writeToLog { get; set; }
-        ChatLabel CatchLabel { get; set; }
-    //    UserDuringProcessing Responder { get; }
-        SubQuery CurrentQuery { get; set; }
-        int MaxCanEvalResult { get; set; }
-        bool IsComplete { get; set; }
-        int HasFailed { get; set; }
-        int HasSuceeded { get; set; }
-        void Exit();
-#endif
     }
 }

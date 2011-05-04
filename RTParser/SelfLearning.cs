@@ -93,14 +93,14 @@ namespace RTParser
             if (toWhomNonNull) whatListenerLastSaid = toWhom.JustSaid;
             var log = ConversationLog.GetConversationLog(theFactSpeaker, toWhom, true);
             Utterance ele = log.AddSpoken(this, theFactSpeaker, toWhom, message);
-            Result res = HeardSome1Say11Sentence(theFactSpeaker, toWhom, message, result, control);
+            Result res = HeardSome1Say11Sentence(theFactSpeaker, toWhom, ele, message, result, control);
             if (toWhomNonNull) toWhom.ResponderJustSaid = message;
             theFactSpeaker.JustSaid = message;
             if (toWhomNonNull) toWhom.JustSaid = whatListenerLastSaid;
             return res;
         }
 
-        public Result HeardSome1Say11Sentence(User theFactSpeaker, User toWhom, string message, Result result, ThreadControl control)
+        public Result HeardSome1Say11Sentence(User theFactSpeaker, User toWhom, Utterance ele, string message, Result result, ThreadControl control)
         {
             if (this.TurnOffSelfListening) return result;
             Result LR = result;
@@ -144,7 +144,7 @@ namespace RTParser
             if (!lts)
             {
                 writeDebugLine("-----------------------------------------------------------------");
-                writeDebugLine("SELF: " + message);
+                writeDebugLine(theFactSpeaker + ": " + message);
                 writeDebugLine("-----------------------------------------------------------------");
                 return null;
             }
@@ -152,7 +152,7 @@ namespace RTParser
             string desc = string.Format("ROBOT {1} USER: {0}", message, wasQuestion ? "ASKS" : "TELLS");
             string realLast =null;
             if (toWhomNonNull)  realLast = toWhom.JustSaid;
-            var res = RememberSpoken(theFactSpeaker, toWhom, desc, message, result, control);
+            var res = RememberSpoken(ele, theFactSpeaker, toWhom, desc, message, result, control);
             theFactSpeaker.JustSaid = message;
             if (toWhomNonNull) toWhom.JustSaid = realLast;
             return res;
@@ -188,7 +188,7 @@ namespace RTParser
             return message;
         }
 
-        private Result RememberSpoken(User theFactSpeaker, User toWhom, string desc, string message, Result result, ThreadControl control)
+        private Result RememberSpoken(Utterance ele, User theFactSpeaker, User toWhom, string desc, string message, Result result, ThreadControl control)
         {
             if (this.TurnOffSelfListening) return result;
             message = ToHeard(message);
@@ -196,20 +196,20 @@ namespace RTParser
             writeChatTrace(desc);
             if (UnderstandSentenceOutsideQueue)
             {
-                var res = UnderstandSentence(theFactSpeaker, toWhom, desc, message, result, control);
+                var res = UnderstandSentence(ele, theFactSpeaker, toWhom, desc, message, result, control);
                 theFactSpeaker.JustSaid = message;
                 return res;
             }
 
             if (control != null) control.AbortRaised += (ctl, abrtedE) => writeToLog("Aborted " + desc);
             HeardSelfSayQueue.EnqueueWithTimeLimit(()
-                                                   => result = UnderstandSentence(theFactSpeaker, toWhom, desc, message, result, control), desc,
+                                                   => result = UnderstandSentence(ele, theFactSpeaker, toWhom, desc, message, result, control), desc,
                                                    TimeSpan.FromSeconds(10), control);
             //if (control != null) control.WaitUntilComplete();
             return result;
         }
 
-        private Result UnderstandSentence(User theFactSpeaker, User toWhom, string desc, string message, Result res, ThreadControl control)
+        private Result UnderstandSentence(Utterance ele, User theFactSpeaker, User toWhom, string desc, string message, Result res, ThreadControl control)
         {
             if (this.TurnOffSelfListening) return res;
             string whatListenerLastSaid = toWhom == null ? null : toWhom.JustSaid;
@@ -265,7 +265,8 @@ namespace RTParser
                 r.IsToplevelRequest = true;
                 try
                 {
-                    Result res2 = ChatWithRequest(r);
+                    Result res2 = ChatWithRequest(r);                   
+                    ele.IsSpeakerInputGleaned = true;
                     writeDebugLineBannered("COMPLETED HEARDSELF: " + message + " res = " + res2);
                     return res2;
                 }

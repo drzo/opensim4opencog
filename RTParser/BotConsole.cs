@@ -591,10 +591,17 @@ namespace RTParser
                     user = myUser.UserName;
                     said = args;
                 }
-                bool isRemote = (cmd == "@" || cmd == "withuser");
+                bool waitUntilVerbalOutput = ((cmd == "@" || cmd == "withuser") || robot.WaitUntilVerbalOutput);
                 User wasUser = robot.FindUser(user);
-                Result res = robot.GlobalChatWithUser(said, user, null, RTPBot.writeDebugLine, true, !isRemote);
-                Request request = res.request;
+                User targetUser = robot.GetTargetUser(null, said, robot.BotAsUser);
+                robot.HeardSomeoneSay1Sentence(myUser, targetUser, said, myUser.LastResult, control);
+                User CurrentUser = robot.GetCurrentUser(user);
+                MasterRequest request = CurrentUser.CreateRequest(said, targetUser);
+                request.IsTraced = true;
+                request.OriginalSalientRequest = request;
+                request.SaveResultsOnJustHeard = !waitUntilVerbalOutput;
+                request.ResponderSelfListens = !waitUntilVerbalOutput;
+                Result res = robot.GlobalChatWithUser(request, said, user, null, RTPBot.writeDebugLine, !waitUntilVerbalOutput, request.SaveResultsOnJustHeard);
                 request.ResponderSelfListens = false;
                 // detect a user "rename"
                 bool userChanged = robot.DetectUserChange(myUser, wasUser, user);
@@ -619,7 +626,7 @@ namespace RTParser
                     return true;
                 }
                 myUser.LastResponder = theResponder;
-                if (!robot.WaitUntilVerbalOutput)
+                if (!waitUntilVerbalOutput)
                 {
                     theResponder.JustSaid = justsaid;
                     // ReSharper disable ConditionIsAlwaysTrueOrFalse
