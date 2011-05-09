@@ -49,7 +49,10 @@ namespace RTParser.Utils
                                                                      "com",
                                                                      "dr wallice",
                                                                      "wallice",
-                                                                     "aiml",
+                                                                    "wallace",
+                                                                    "chatbot",
+                                                                    "chatterbot",
+                                                                   //  "aiml",
                                                                      "alicebots.com",
                                                                      "alice",
                                                                      "england",
@@ -1122,6 +1125,7 @@ namespace RTParser.Utils
             GuardInfo guard = guardnode == null ? null : loaderOpts.CtxGraph.GetGuardInfo(guardnode);
             string errors = "";
             XmlNode TemplateOverwrite = StaticAIMLUtils.TheTemplateOverwrite;
+            bool unusableCategory = false;
             if (ReferenceEquals(null, templateNode))
             {
                 if (TemplateOverwrite != null)
@@ -1138,7 +1142,8 @@ namespace RTParser.Utils
             {
                 if (UnusableCategory(templateNode))
                 {
-                    score /= 2;                   
+                    unusableCategory = true;
+                    score /= 10;                  
                 }
             }
             if (ReferenceEquals(null, patternNode))
@@ -1214,7 +1219,7 @@ namespace RTParser.Utils
                             responseInfo = loaderOpts.CtxGraph.FindResponse(templateNode, templateNode.InnerXml);
                         }*/
                         bool wouldBeRemoval;
-
+                        if (unusableCategory) return null;
                         var added = pathCtxGraph.addCategoryTag(categoryPath, patternInfo,
                                                            cateNode, templateNode, guard, topicInfo, thatInfo,
                                                            additionalRules,
