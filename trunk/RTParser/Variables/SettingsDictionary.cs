@@ -1732,7 +1732,7 @@ namespace RTParser.Variables
         public Unifiable grabSetting0(string name)
         {
             HashSet<ISettingsDictionary> noGo = new HashSet<ISettingsDictionary>() {this};
-            foreach (ParentProvider overide in _overides)
+            foreach (ParentProvider overide in GraphMaster.CopyOf(_overides))
             {
                 ISettingsDictionary dict = overide();
                 if (!noGo.Add(dict)) continue;
@@ -1743,9 +1743,10 @@ namespace RTParser.Variables
                     return v;
                 }
             }
-            lock (orderedKeys)
+            bool needsUnlock = System.Threading.Monitor.TryEnter(orderedKeys, TimeSpan.FromSeconds(2));
+            string normalizedName = TransformKey(name);
+            try
             {
-                string normalizedName = TransformKey(name);
                 if (containsLocalCalled0(name))
                 {
                     Unifiable v = localValue(name, normalizedName);
@@ -1783,6 +1784,10 @@ namespace RTParser.Variables
                 }
                 SettingsLog("MISSING '" + name + "'");
                 return Unifiable.MISSING;
+            }
+            finally
+            {
+                if (needsUnlock) System.Threading.Monitor.Exit(orderedKeys);
             }
         }
 
@@ -1849,35 +1854,24 @@ namespace RTParser.Variables
         }
         public bool containsLocalCalled0(string name)
         {
-            lock (orderedKeys)
+            name = TransformName(name);
+            string normalizedName = TransformKey(name);
+
+            if (makedvars.Contains(normalizedName)) return true;
+
+            if (normalizedName.Length > 0)
             {
-                name = TransformName(name);
-                string normalizedName = TransformKey(name);
-
-                if (makedvars.Contains(normalizedName)) return true;
-
-                if (normalizedName.Length > 0)
+                bool needsUnlock = System.Threading.Monitor.TryEnter(orderedKeys, TimeSpan.FromSeconds(2));
+                try
                 {
                     return settingsHash.ContainsKey(normalizedName);
-
-                    if (!this.settingsHash.ContainsKey(normalizedName))
-                    {
-                        if (!this.orderedKeys.Contains(name))
-                        {
-                            if (!this.orderedKeys.Contains(name.ToUpper()))
-                            {
-                                writeToLog("Missing odered key " + name);
-                            }
-                        }
-                        return true;
-                    }
-                    return false;
                 }
-                else
+                finally
                 {
-                    return false;
+                    if (needsUnlock) System.Threading.Monitor.Exit(orderedKeys);
                 }
             }
+            return false;
         }
 
         public bool containsSettingCalled(string name)

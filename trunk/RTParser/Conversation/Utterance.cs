@@ -11,7 +11,6 @@ namespace RTParser
 {
     public class Utterance
     {
-        private static char[] toCharArray = "@#$%^&*()_+<>,/{}[]\\\";'~~".ToCharArray();
 
         /// <summary>
         /// The individual sentences that constitute the raw input from the user
@@ -151,8 +150,8 @@ namespace RTParser
                         String sentenceIn = output;
                         String sentence = OutputSentencesToEnglish(sentenceIn);
                         sentence = MainSentence(sentence);
-                        sentence = sentence.Trim(new[] {'.', ' ', '!', '?'});
-                        if (sentence.Length == 0) continue;
+                        sentence = TextPatternUtils.SymTrim(sentence);
+                        if (sentence.Length < 2) continue;
                         return sentence;
                     }
                 return MainSentence(RawText);
@@ -171,8 +170,8 @@ namespace RTParser
                 sentenceIn = output;
                 String sentence = OutputSentencesToEnglish(sentenceIn);
                 sentence = MainSentence(sentence);
-                sentence = sentence.Trim(new[] {'.', ' ', '!', '?'});
-                if (sentence.Length == 0) continue;
+                sentence = TextPatternUtils.SymTrim(sentence);
+                if (sentence.Length < 2) continue;
                 sentenceNum--;
                 if (sentenceNum == 0) return sentence;
             }
@@ -211,7 +210,7 @@ namespace RTParser
                 // RTPBot.writeDebugLine("AIMLTRACE !REWRITE THAT QUESTION " + sentence + " => " + newClip);
                 if (newClip.Length > 4) sentence = newClip;
             }
-            sentence = sentence.Trim(new[] {'.', ' ', '!', '?'});
+            sentence = TextPatternUtils.SymTrim(sentence, '?');
             sf = sentence.LastIndexOfAny(new[] {'.', '!'});
             if (sf > 0)
             {
@@ -262,10 +261,11 @@ namespace RTParser
                     {
                         RTPBot.writeDebugLine("Question: " + sentenceRaw);
                     }
-                    string sentence = sentenceRaw.Trim(" .,!:".ToCharArray());
+                    char[] toCharArray = " .,!:".ToCharArray();
+                    string sentence = TextPatternUtils.SymTrim(sentenceRaw, toCharArray);
                     sentence = ToInputSubsts(sentence);
                     //result.InputSentences.Add(sentence);
-                    sentence = sentence.Trim(" .,!:".ToCharArray());
+                    sentence = sentence.Trim(toCharArray);
                     if (sentence.Length == 0)
                     {
                         RTPBot.writeDebugLine("skipping input sentence " + sentenceRaw);

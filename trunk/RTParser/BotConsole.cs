@@ -405,8 +405,11 @@ namespace RTParser
                     //if (!myBotBotDirective) continue;
                     writeLine("-----------------------------------------------------------------");
                     writeLine("{0}: {1}", myUser.UserName, myUser.JustSaid);
-                    writeLine("---------------------");
-                    writeLine("{0}: {1}", myName, BotAsAUser.JustSaid);
+                    if (!WaitUntilVerbalOutput)
+                    {
+                        writeLine("---------------------");
+                        writeLine("{0}: {1}", myName, BotAsAUser.JustSaid);
+                    }
                     writeLine("-----------------------------------------------------------------");
                 }
                 catch (Exception e)
@@ -591,7 +594,7 @@ namespace RTParser
                     user = myUser.UserName;
                     said = args;
                 }
-                bool waitUntilVerbalOutput = ((cmd == "@" || cmd == "withuser") || robot.WaitUntilVerbalOutput);
+                bool waitUntilVerbalOutput = ((cmd == "@" || cmd == "withuser") || robot.WaitUntilVerbalOutput);               
                 User wasUser = robot.FindUser(user);
                 User targetUser = robot.GetTargetUser(null, said, robot.BotAsUser);
                 robot.HeardSomeoneSay1Sentence(myUser, targetUser, said, myUser.LastResult, control);
@@ -683,8 +686,13 @@ namespace RTParser
             }
             if (cmd == "topic" || cmd == "that")
             {
+                console("JustSaid = " + myUser.JustSaid);
                 console("that = " + myUser.That);
                 console("topic = " + myUser.Topic);
+                foreach (string c in new[] { "it", "topic", "question", "he", "that" })
+                {
+                    console(c + " = " + myUser.grabSetting(c));
+                }
                 return true;
             }
             if (cmd == "echo")
