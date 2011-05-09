@@ -10,6 +10,9 @@ namespace RTParser.Utils
     [Serializable]
     public class TextPatternUtils : StaticXMLUtils
     {
+        public static string StrTrimWSpace = "@#$%^&*()_+,/{}[]\\\";'~. ";
+        public static char[] SymTrimWSpace = StrTrimWSpace.ToCharArray();
+        public static char[] SymTrimWSpaceWQuest = (StrTrimWSpace + "?").ToCharArray();
 
         public static bool SplitOff(string args, string split, out string left, out string right)
         {
@@ -96,7 +99,7 @@ namespace RTParser.Utils
 
         public static bool IsNullOrEmpty(Object name)
         {
-            if (name is Unifiable) return IsNullOrEmpty(((Unifiable) name).Raw);
+            if (name is Unifiable) return IsNullOrEmpty(((Unifiable)name).Raw);
             if (name == null) return true;
             if (IsNull(name)) return true;
             name = name.ToString();
@@ -105,7 +108,7 @@ namespace RTParser.Utils
                 //writeDebugLine("Special IsMissing " + Unifiable.DescribeUnifiable(name));
                 return true;
             }
-            return ((String) name).Length == 0;
+            return ((String)name).Length == 0;
         }
 
         public static bool IsNull(Object name)
@@ -119,7 +122,7 @@ namespace RTParser.Utils
             }
             if (s is string)
             {
-                if ((string) s == "$NULL")
+                if ((string)s == "$NULL")
                 {
                     return true;
                 }
@@ -172,7 +175,7 @@ namespace RTParser.Utils
                 {
                     return true;
                 }
-            }            
+            }
             return false;
         }
 
@@ -194,7 +197,7 @@ namespace RTParser.Utils
             }
             if ((name is string))
             {
-                string sname = ToUpper(((string) name));
+                string sname = ToUpper(((string)name));
                 return sname == "OM" || sname == "$MISSING";
             }
             if (!(name is Unifiable))
@@ -544,10 +547,10 @@ namespace RTParser.Utils
             }
             return (ss != "NOTHING");
         }
-      /*  public static string ToUpper(Unifiable param1)
-        {
-            return param1.ToUpper();
-        }*/
+        /*  public static string ToUpper(Unifiable param1)
+          {
+              return param1.ToUpper();
+          }*/
 
         protected static bool MessagePrefixName(string sep, string message, out string toWhom, out string fromWhom, out string newMessage)
         {
@@ -561,7 +564,8 @@ namespace RTParser.Utils
             {
                 newMessage = newNewMessage;
                 return true;
-            } else
+            }
+            else
             {
                 toWhom = null;
             }
@@ -596,6 +600,46 @@ namespace RTParser.Utils
                 needComma = true;
             }
             return writer.ToString();
+        }
+
+        public static string ToEmptyOrNot(string message)
+        {
+            if (message == null) return null;
+            string trim = Trim(message);
+            int trimLength = trim.Length;
+            if (trimLength == 0) return "";
+            if (trimLength == 1)
+            {
+                char ch = trim[0];
+                if (ch == ',' || ch == '.') return "";
+            }
+            return trim;
+        }
+
+
+        public static string SymTrim(string sentence, params char[] moreChars)
+        {
+            if (sentence == null) return sentence;
+            string s2;
+            if (moreChars == null || moreChars.Length == 0)
+            {
+                s2 = sentence.Trim(TextPatternUtils.SymTrimWSpace);
+            }
+            else if (moreChars[0] == '?')
+            {
+                s2 = sentence.Trim(TextPatternUtils.SymTrimWSpaceWQuest);
+            }
+            else
+            {
+                return SymTrim(sentence, StrTrimWSpace + new string(moreChars));
+            }
+            return OlderReference(sentence, s2);
+        }
+
+        public static string SymTrim(string sentence, string chars)
+        {
+            string s2 = sentence.Trim(chars.ToCharArray());
+            return OlderReference(sentence, s2);
         }
     }
 }

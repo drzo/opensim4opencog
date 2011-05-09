@@ -255,6 +255,7 @@ namespace RTParser
             GraphMaster _uGraph = bot.GetUserGraph(NameSpace);
             Predicates.IsTraced = false;
             var v = Predicates.grabSettingNoDebug(varname);
+            if (Unifiable.IsMissing(v)) return null;
             GraphMaster _Graph = bot.GetGraph(v, _uGraph);
             if (_Graph != null)
             {
@@ -934,6 +935,16 @@ namespace RTParser
             {
                 Unifiable something;
                 var lastResponder = this.LastResponder;
+                if (lastResponder != null)
+                {
+                    var tt = lastResponder.JustSaid;
+                    if (IsSomething(tt, out something)) return something;
+                }
+                if (Predicates != null)
+                {
+                    var tt = Predicates.grabSettingNoDebug("that");
+                    if (IsSomething(tt, out something)) return something;
+                }
                 Result r = GetResult(0, true) ?? GetResult(0, false, lastResponder);
                 if (r != null && IsSomething(r.NormalizedOutput, out something))
                 {
@@ -964,7 +975,7 @@ namespace RTParser
                 {
                     r.SetOutput = (value);
                 }
-
+                Predicates["that"] = value;
                 if (CurrentRequest != null)
                 {
                     CurrentRequest.ithat = value;
@@ -986,7 +997,7 @@ namespace RTParser
             return Unifiable.EnglishNothing;
         }
 
-        private Unifiable _JustSaid;
+        public Unifiable _JustSaid;
 
         public Unifiable JustSaid
         {
@@ -999,7 +1010,7 @@ namespace RTParser
                     var vv = Predicates.grabSetting("lastsaid,thatstar");
                     if (IsSomething(vv, out something)) return something;
                     var llr = LastResponder.LastResponder;
-                    if (llr == this)
+                    if (llr != null && llr != this)
                     {
                         vv = LastResponder.Value.Predicates.grabSetting("lastsaid");
                         if (IsSomething(vv, out something)) return something;
@@ -1021,12 +1032,13 @@ namespace RTParser
                     return;
                 }
 
-                // the (_JustSaid != value) holds back the infinate looping
-                if (_JustSaid != value)
+                // the (_JustSaid != value) holds back the infinate looping                
+                if (_JustSaid == null || SymTrim(_JustSaid).ToUpper() != SymTrim(value).ToUpper())
                 {
                     Unifiable something;
                     if (IsSomething(value, out something))
                     {
+                        value = something;
                         _JustSaid = value;
                         Predicates.addSetting("lastsaid", value);
                         Predicates.addSetting("thatstar", value);
@@ -1043,6 +1055,7 @@ namespace RTParser
         {
             get
             {
+                return That;
                 {
                     var vv = Predicates.grabSetting("that");
                     if (Unifiable.IsMulti(vv))
@@ -1072,13 +1085,14 @@ namespace RTParser
                         new InvalidOperationException("set_ResponderJustSaid: !IsValue: " + value + " for " + this));
                     return;
                 }
-
+                That = value;
+                return;
                 if (LastResponder != null)
                 {
                     LastResponder.JustSaid = value;
                 }
                 Predicates["that"] = value;
-                That = value;
+                //ithat = value;
             }
         }
 

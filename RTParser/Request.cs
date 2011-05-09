@@ -28,7 +28,7 @@ namespace RTParser
         {
             get
             {
-                return ParentMostRequest.thisScore;                
+                return ParentMostRequest.thisScore;
             }
             set
             {
@@ -40,7 +40,7 @@ namespace RTParser
                         pr.TopLevelScore = value;
                     else
                     {
-                        
+
                     }
                 }
             }
@@ -199,7 +199,7 @@ namespace RTParser
             set
             {
                 _responderUser = value;
-                if (value != null) That = value.JustSaid;
+                // if (value != null) That = value.JustSaid;
             }
         }
 
@@ -399,7 +399,7 @@ namespace RTParser
  Request
 #endif // interface
 (Unifiable rawInput, User user, Unifiable thatSaid, User targetUser, RTPBot bot, Request parent, GraphMaster graphMaster)
-            : this(bot.GetQuerySettings(),false) // Get query settings intially from user
+            : this(bot.GetQuerySettings(), false) // Get query settings intially from user
         {
             ExitQueue = new CommitQueue();
             SideEffects = new CommitQueue();
@@ -435,15 +435,15 @@ namespace RTParser
                     else targetUser = bot.BotAsUser;
                 }
             }
-            if (targetUser != null) Responder = targetUser;
+            //if (targetUser != null) Responder = targetUser;
             _responderUser = targetUser;
-            var inresp = ConversationLog.GetConversationLog(Requester, Responder, true).GetLastSaidBy(Responder);            
+            var inresp = ConversationLog.GetConversationLog(Requester, Responder, true).GetLastSaidBy(Responder);
             if (inresp != null)
             {
                 ChatInput.InResponse = inresp;
                 thatSaid = thatSaid ?? inresp.TheMainSentence;
             }
-            That = thatSaid;            
+            ithat = thatSaid;
             UsedResults = new ListAsSet<Result>();
             Flags = Unifiable.EnglishNothing;
             QuerySettingsSettable querySettings = GetQuerySettings();
@@ -661,16 +661,16 @@ namespace RTParser
 
         private void ListenerTest(GraphMaster master)
         {
-            if (master==null) return;
+            if (master == null) return;
             if (master.AlsoKnownAs("listener"))
             {
-              ///  throw new NotImplementedException();
+                ///  throw new NotImplementedException();
             }
         }
 
         public void AddGraph(GraphMaster master)
         {
-           /// throw new NotImplementedException();
+            /// throw new NotImplementedException();
         }
 
         public GraphMaster Graph0
@@ -787,23 +787,23 @@ namespace RTParser
                             () => { lock (disallowedGraphs) disallowedGraphs.Remove(getGraph); });
         }
 
-       /// <summary>
-       /// TopLevelQuery calls this
-       /// </summary>
-       /// <param name="graph"></param>
-       /// <returns></returns>
+        /// <summary>
+        /// TopLevelQuery calls this
+        /// </summary>
+        /// <param name="graph"></param>
+        /// <returns></returns>
         public bool IsAllowedGraph(GraphMaster graph)
-       {
-           if (LocallyDisallowedGraphs.Contains(graph)) return false;
-           if (IsToplevelRequest)
-           {
-               if (Requester.DisallowedGraphs.Contains(graph)) return false;
-               return true;
-           }
-           var nextCheck = ParentMostRequest;
-           if ((nextCheck == null || nextCheck != this)) return true;
-           return ParentMostRequest.IsAllowedGraph(graph);
-       }
+        {
+            if (LocallyDisallowedGraphs.Contains(graph)) return false;
+            if (IsToplevelRequest)
+            {
+                if (Requester.DisallowedGraphs.Contains(graph)) return false;
+                return true;
+            }
+            var nextCheck = ParentMostRequest;
+            if ((nextCheck == null || nextCheck != this)) return true;
+            return ParentMostRequest.IsAllowedGraph(graph);
+        }
 
         public void AddOutputSentences(TemplateInfo ti, string nai, Result result, double score)
         {
@@ -1158,7 +1158,7 @@ namespace RTParser
                 if (UserImpl.ThatIsStoredBetweenUsers)
                 {
                     if (Requester != null && IsSomething(Requester.That, out something)) return something;
-                    if (Responder != null && IsSomething(Responder.JustSaid, out something)) return something;                    
+                    if (Responder != null && IsSomething(Responder.JustSaid, out something)) return something;
                     return Unifiable.EnglishNothing;
                 }
                 if (IsSomething(ithat, out something)) return something;
@@ -1420,6 +1420,10 @@ namespace RTParser
                 if (Requester != null) return Requester;
                 return TargetSettings;
             }
+            if (named.Contains(" "))
+            {
+                named = named.Replace(" ", "_");
+            }
             if (named == "user") return CheckedValue(named, Requester);
             if (named == "li") return CheckedValue(named, dictionary);
             if (named == "condition") return CheckedValue(named, dictionary);
@@ -1431,7 +1435,7 @@ namespace RTParser
             if (named == "bot.globalsettings") return CheckedValue(named, TargetBot.GlobalSettings);
             if (false && named == "unknown_user")
             {
-            //    return TargetBot.ExemplarUser;
+                //    return TargetBot.ExemplarUser;
             }
             if (named == "bot")
             {
@@ -1459,7 +1463,7 @@ namespace RTParser
             }
             else
             {
-                if (ParentRequest == this)
+                if (ParentRequest == this || IsToplevelRequest)
                 {
                     return null;
                 }
@@ -1752,7 +1756,7 @@ namespace RTParser
                     if (scope != null) return scope;
                 }
 
-                return scope;   
+                return scope;
             }
         }
 
@@ -1760,7 +1764,8 @@ namespace RTParser
 
         public UndoStack UndoStackValue
         {
-            get; set;
+            get;
+            set;
         }
 
         #endregion
@@ -1791,7 +1796,7 @@ namespace RTParser
         {
             try
             {
-              //  writeToLog("DOING NOW " + start.Key);
+                //  writeToLog("DOING NOW " + start.Key);
                 start.Invoke("Commit ");
             }
             catch (Exception exception)
@@ -1802,7 +1807,7 @@ namespace RTParser
 
         public static void writeToLog(string p)
         {
-           // throw new NotImplementedException();
+            // throw new NotImplementedException();
         }
 
         readonly object SyncLock = new object();

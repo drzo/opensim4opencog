@@ -465,10 +465,11 @@ namespace RTParser
                     if (request.IsToplevelRequest)
                     {
                         AddSideEffectHook(request, user, parentResultIn);
-                        user.JustSaid = requestrawInput;
-                        if (target != null)
+                        if (request.SaveResultsOnJustHeard)
                         {
-                            target.JustSaid = user.ResponderJustSaid; //.Output;
+                            user.JustSaid = requestrawInput;
+                            if (target != null)
+                                target.JustSaid = user.ResponderJustSaid; //.Output;
                         }
                     }
                     return allResults;
@@ -1259,15 +1260,17 @@ namespace RTParser
             return o.Length > 0;
         }
 
+
         public string ToHeard(string message)
         {
-            if (message == null) return null;
-            if (Trim(message).Length == 0) return "";
+            string trim = ToEmptyOrNot(message);
+            if (string.IsNullOrEmpty(trim)) return trim;
+
             if (message.StartsWith("  "))
             {
                 return message;
             }
-            message = CleanNops(message);
+            message = CleanNops(trim);
             message = Trim(message);
             if (message == "") return "";
             if (false && message.Contains("<"))
@@ -1304,7 +1307,7 @@ namespace RTParser
             return message;
         }
 
-        static char[] toCharArray = "@#$%^&*()_+<>,/{}[]\\\";'~~".ToCharArray();
+       
         public string ToEnglish(string sentenceIn)
         {
             if (sentenceIn == null)
