@@ -31,11 +31,21 @@ namespace cogbot.Actions
             List<SimObject> PSO = WorldSystem.GetPrimitives(searchArgs.ToArray(), out argsUsed);
             List<Primitive> PS = new List<Primitive>();
             WorldSystem.AsPrimitives(PS,PSO);
+            Primitive rootPim = null;
+            foreach (Primitive ps in PS)
+            {
+                if (ps.ParentID==0)
+                {
+                    rootPim = ps;
+                }
+            }
             if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
             TheBotClient.InvokeGUI(() =>
                                     {
-                                        frmPrimWorkshop pw = new frmPrimWorkshop(TheBotClient.TheRadegastInstance);
-                                        pw.LoadPrims(PS);
+                                        frmPrimWorkshop pw = new frmPrimWorkshop(TheBotClient.TheRadegastInstance,
+                                                                                 rootPim.LocalID);
+                                       // pw.LoadPrims(PS);
+                                       // pw.
                                         pw.Show();
                                     });
             return Success(Name + " on " + PS.Count);
