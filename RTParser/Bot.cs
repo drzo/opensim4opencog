@@ -2190,7 +2190,7 @@ The AIMLbot program.
                         User user = ExemplarUser ?? BotAsUser;
                         Request r = //user.CurrentRequest ??
                                     user.CreateRequest(
-                                        "@echo <!-- loadDictionary '" + named + "' from '" + type + "' -->", BotAsUser);
+                                        "@echo <!-- loadDictionary '" + named + "' from '" + type + "' -->", Unifiable.EnglishNothing, BotAsUser);
                         loadDictionary(dict, named, type, r);
                     }
                 }
@@ -2200,12 +2200,13 @@ The AIMLbot program.
 
         private void loadDictionary(ISettingsDictionary dictionary, string path, string type, Request r0)
         {
-            User user = //LastUser ?? 
+            User user = LastUser ?? 
                 ExemplarUser ?? BotAsUser;
             Request r = r0 ??
                         //user.CurrentRequest ??
-                                    user.CreateRequest(
-                                        "@echo <!-- loadDictionary '" + dictionary + "' from '" + type + "' -->", BotAsUser);
+                        user.CreateRequest(
+                            "@echo <!-- loadDictionary '" + dictionary + "' from '" + type + "' -->", Unifiable.EnglishNothing,
+                            BotAsUser);
             int loaded = 0;
             foreach (string p in GetSearchRoots(r))
             {
