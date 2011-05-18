@@ -608,12 +608,13 @@ namespace CogbotRadegastPluginModule
         {
             Avatar av = currentAvatar;
             if (av == null) return;
-
-            if (!instance.TabConsole.TabExists("AT: " + av.Name))
+            string tabName = "AT: " + av.Name;
+            if (!instance.TabConsole.TabExists(tabName))
             {
-                instance.TabConsole.AddATTab(av);
+                AttachmentTab atTab = new AttachmentTab(instance, av);
+                instance.TabConsole.AddTab(tabName, tabName, atTab);
             }
-            instance.TabConsole.SelectTab("AT: " + av.Name);
+            instance.TabConsole.SelectTab(tabName);
         }
 
         private void tbtnAnim_Click(object sender, EventArgs e)
