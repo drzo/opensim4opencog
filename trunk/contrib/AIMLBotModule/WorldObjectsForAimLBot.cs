@@ -92,11 +92,11 @@ namespace AIMLBotModule
         /// <summary>
         /// Turn towards interesting objects
         /// </summary>
-        public static bool UseNameAttention = false;
+        public static bool UseNameAttention = true;
         /// <summary>
         /// Turn towards interesting objects
         /// </summary>
-        public static bool UseMessageTurnsOnChat = false;
+        public static bool UseMessageTurnsOnChat = true;
         /// <summary>
         /// Move towards interesting objects
         /// </summary>
