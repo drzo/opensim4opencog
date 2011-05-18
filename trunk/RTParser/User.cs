@@ -36,14 +36,15 @@ namespace RTParser
         PrintOptions WriterOptions { get; }
         bool RespondToChat { get; set; }
         int MaxRespondToChatPerMinute { get; set; }
+
         /// <summary>
         /// If user says something to robot we.. do a user.CreateRequest("Hi robot",BotAsUser);
         /// </summary>
         /// <param name="input"></param>
         /// <param name="targetUser"></param>
         /// <returns></returns>
-        MasterRequest CreateRequest(Unifiable input, User targetUser);
-        MasterRequest CreateRequest(Unifiable message, User target, GraphMaster G, Request parentRequest);
+        MasterRequest CreateRequest(Unifiable input, Unifiable said, User targetUser);
+        MasterRequest CreateRequest(Unifiable message, User target, Unifiable targetsaid, GraphMaster G, Request parentRequest);
 
         TaskQueueHandler GetTaskQueueHandler(string find);
         void AddTodoItem(CrossAppDomainDelegate todo);
@@ -73,6 +74,8 @@ namespace RTParser
         Request LastRequest { get; set; }
 
         void RaiseEvent(string p, RTPBot robot);
+
+        MasterRequest CreateRequest(Unifiable message, User targetUser);
     }
 
     /// <summary>
@@ -87,7 +90,7 @@ namespace RTParser
         {
             try
             {
-                var R = CreateRequest("ONUSER" + name + " " + UserID, bot.BotAsUser);
+                var R = CreateRequest("ONUSER" + name + " " + UserID, ResponderJustSaid , bot.BotAsUser);
                 R.Graph = robot.DefaultEventGraph;
                 R.AddGraph(robot.DefaultEventGraph);
                 R.AddGraph(StartGraph);
@@ -103,7 +106,7 @@ namespace RTParser
         {
             get
             {
-                if (_lastRequest == null) return CreateRequest("PING", bot.BotAsUser);
+                if (_lastRequest == null) return CreateRequest("PING", ResponderJustSaid, bot.BotAsUser);
                 return _lastRequest;
             }
             set
@@ -1674,12 +1677,21 @@ namespace RTParser
         }
 
         public MasterRequest CreateRequest(Unifiable message, User target)
-        {            
-            var mr = CreateRequest(message, target, GetResponseGraph(target), null);
+        {                
+            target = target ?? LastResponder.Value;
+            Unifiable targetJustSaid = ResponderJustSaid;
+            if (target != null && !Unifiable.IsNull(targetJustSaid)) targetJustSaid = target.JustSaid;
+            var mr = CreateRequest(message, target, targetJustSaid, GetResponseGraph(target), null);
             return mr;
         }
 
-        public MasterRequest CreateRequest(Unifiable message, User target, GraphMaster G, Request parentRequest)
+        public MasterRequest CreateRequest(Unifiable message, Unifiable said, User target)
+        {            
+            var mr = CreateRequest(message, target, said, GetResponseGraph(target), null);
+            return mr;
+        }
+
+        public MasterRequest CreateRequest(Unifiable message, User target, Unifiable said, GraphMaster G, Request parentRequest)
         {
             if (G == null) G = GetResponseGraph(target);
             bool asIsToplevelRequest = true;
@@ -1687,8 +1699,8 @@ namespace RTParser
             MasterRequest request;
 
             target = target ?? LastResponder.Value;
-            Unifiable targetJustSaid = ResponderJustSaid;
-            if (target != null) targetJustSaid = target.JustSaid;
+            Unifiable targetJustSaid = said ?? ResponderJustSaid;
+            if (target != null && !Unifiable.IsNull(said)) targetJustSaid = target.JustSaid;
             if (parentRequest == null)
             {
                 request = new MasterRequest(message, this, targetJustSaid, target, bot, parentRequest, G);

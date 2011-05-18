@@ -373,7 +373,8 @@ namespace RTParser
         public MasterRequest MakeRequestToBot(Unifiable rawInput, User findOrCreateUser)
         {
             var rtarget = BotAsUser;
-            AIMLbot.MasterRequest r = findOrCreateUser.CreateRequest(rawInput, rtarget);
+            Unifiable botLastSaid = findOrCreateUser.ResponderJustSaid;
+            AIMLbot.MasterRequest r = findOrCreateUser.CreateRequest(rawInput, botLastSaid, rtarget);
             if (rtarget == null)
             {
                 OnBotCreated(() => r.SetSpeakerAndResponder(findOrCreateUser, BotAsUser));

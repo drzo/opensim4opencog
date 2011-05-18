@@ -325,7 +325,7 @@ namespace RTParser
             //Added from AIML content now
             // myBot.AddAiml(evidenceCode);
             User myUser = myBot.LastUser;
-            Request request = myUser.CreateRequest("current user toplevel", myBot.BotAsUser);
+            Request request = myUser.CreateRequest("current user toplevel", "current bot toplevel", myBot.BotAsUser);
             myUser.LastRequest = request;
             myBot.BotDirective(myUser, request, "@help", writeLine);
             writeLine("-----------------------------------------------------------------");
@@ -687,9 +687,9 @@ namespace RTParser
             if (cmd == "topic" || cmd == "that")
             {
                 console("JustSaid = " + myUser.JustSaid);
-                console("that = " + myUser.That);
-                console("topic = " + myUser.Topic);
-                foreach (string c in new[] { "it", "topic", "question", "he", "that" })
+                console("*that = " + myUser.That);
+                console("*topic = " + myUser.Topic);
+                foreach (string c in new[] { "that", "topic", "question", "he", "it", })
                 {
                     console(c + " = " + myUser.grabSetting(c));
                 }
