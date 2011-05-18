@@ -61,6 +61,7 @@ namespace MushDLR223.Utilities
     {
         private ScriptExecutorGetter getter;
         HttpServer.HttpListener _listener;
+        public static bool ShowExecTime = true;
         private int _port;
         private ScriptExecutorGetter clientManager;
         private string defaultUser = "null";
@@ -137,6 +138,7 @@ namespace MushDLR223.Utilities
             finally
             {
                 httpJob.EndTimeOrDateTimeMax = DateTime.Now;
+                //httpJob.EndTimeOrDateTimeMax = DateTime.Now;
                 lock (HttpJobs)
                 {
                     HttpJobs.Remove(httpJob);
@@ -481,6 +483,8 @@ namespace MushDLR223.Utilities
             finally
             {
                 EndTimeOrDateTimeMax = DateTime.Now;
+                TimeSpan usedTime = EndTimeOrDateTimeMax - StarTime;
+                WriteLine("Finished in " + usedTime);
                 Server.JobFinished(this);
             }
         }

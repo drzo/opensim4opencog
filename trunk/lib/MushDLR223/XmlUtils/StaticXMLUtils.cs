@@ -24,7 +24,11 @@ namespace MushDLR223.Utilities
     {
         public static R WithoutTrace<R>(ITraceable itrac, Func<R> func)
         {
-            lock (itrac)
+            if (!System.Threading.Monitor.TryEnter(itrac,TimeSpan.FromSeconds(2)))
+            {
+                return func();
+            }
+            try
             {
                 bool prev = itrac.IsTraced;
                 if (!prev) return func();
@@ -38,6 +42,10 @@ namespace MushDLR223.Utilities
                 {
                     itrac.IsTraced = prev;
                 }
+            }
+            finally
+            {
+                System.Threading.Monitor.Exit(itrac);
             }
         }
 
