@@ -54,7 +54,8 @@ namespace cogbot.TheOpenSims
             int FullPasses = 0;
             while (KeepFollowing)
             {
-                if (!Target.IsRegionAttached)
+                Vector3 lastKnown;
+                if (!Target.TryGetSimPosition(out lastKnown))
                 {
                     DLRConsole.DebugWriteLine("" + this + " Not regions attached " + Target);
                     Thread.Sleep(2000);

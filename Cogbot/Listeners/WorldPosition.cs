@@ -395,7 +395,7 @@ namespace cogbot.Listeners
         public SimPosition GetVector(string[] args, out int argsUsed, SimPosition offset)
         {
             argsUsed = 0;
-            if (args.Length == 0) return TheSimAvatar;
+            if (args.Length == 0) return offset ?? TheSimAvatar;
             //if (args.Length >= 2)
             {
                 SimPosition R = GetSimV(args, 0, out argsUsed, offset);

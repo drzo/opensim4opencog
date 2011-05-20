@@ -210,9 +210,21 @@ namespace cogbot.Listeners
             if (primitives.Count != 1) return null;
             SimObject prim = primitives[0];
             if (prim != null) return prim;
+
+            prim = TryGetSimAvatarFromName(args[0]);
+            argsUsed = prim != null ? 1 : 0;
+            return prim;
+        }
+
+
+        public static SimObject TryGetSimAvatarFromName(string args)
+        {
+            args = args.ToLower();
+            string largs = args.Replace("_", " ");
             foreach (SimAvatar avatar in SimAvatars)
             {
-                if (avatar.DebugInfo().Contains(args[0]))
+                string avatarDebugInfo = avatar.DebugInfo().ToLower();
+                if (avatarDebugInfo.Contains(args) || avatarDebugInfo.Contains(largs))
                     return avatar;
             }
             return null;
@@ -399,9 +411,10 @@ namespace cogbot.Listeners
 
         public ICollection ResolveCollection(string arg0Lower, out int argsUsed, ICollectionProvider skip)
         {
+            if (arg0Lower.StartsWith("$")) arg0Lower = arg0Lower.Substring(1);
             lock (simGroupProviders)
             {
-                foreach (var provider in simGroupProviders)
+                foreach (ICollectionProvider provider in simGroupProviders)
                 {
                     if (skip == provider) continue;
                     ICollection v = provider.GetGroup(arg0Lower);
@@ -428,15 +441,7 @@ namespace cogbot.Listeners
             string arg0Lower = args[0].ToLower();
             // Terminals
 
-            var v = ResolveCollection(arg0Lower, out argsUsed, null);
 
-            if (v != null)
-            {
-                argsUsed = 1;
-                prims.Clear();
-                AsPrimitives(prims, v);
-                return prims;
-            }
             if (arg0Lower == "dist")
             {
                 prims.Clear();
@@ -550,6 +555,15 @@ namespace cogbot.Listeners
             }
             else
             {
+                var v = ResolveCollection(arg0Lower, out argsUsed, null);
+
+                if (v != null)
+                {
+                    argsUsed = 1;
+                    prims.Clear();
+                    AsPrimitives(prims, v);
+                    return prims;
+                }
                 SimObject prim;
                 if (tryGetPrim(args, out prim, out argsUsed))
                 {

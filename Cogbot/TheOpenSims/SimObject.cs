@@ -822,6 +822,7 @@ namespace cogbot.TheOpenSims
                     {
                         return null;
                     }
+                    if (_Prim0 == null) return null;
                     if (_Prim0.RegionHandle != RegionHandle)
                     {
                         if (RegionHandle != 0)
@@ -2550,7 +2551,7 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        public bool HasPrim
+        virtual public bool HasPrim
         {
             get { return !ReferenceEquals(_Prim0, null); }
         }
