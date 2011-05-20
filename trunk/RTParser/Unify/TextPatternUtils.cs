@@ -541,6 +541,7 @@ namespace RTParser.Utils
             {
                 return false;
             }
+            if (ss.Length < 2) return false;
             if (ss == ".")
             {
                 return false;

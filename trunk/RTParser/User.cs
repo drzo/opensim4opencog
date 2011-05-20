@@ -973,6 +973,10 @@ namespace RTParser
             set
             {
                 if (IsNullOrEmpty(value)) throw new NullReferenceException("set_That: " + this);
+                if (!IsEnglish(value))
+                {
+                    return;
+                }
                 Result r = GetResult(0, true);
                 if (r != null)
                 {
@@ -1006,6 +1010,7 @@ namespace RTParser
         {
             get
             {
+                if (true) return That;
                 Unifiable something;
                 if (IsSomething(_JustSaid, out something)) return something;
                 if (LastResponder != null)
@@ -1034,6 +1039,10 @@ namespace RTParser
                     bot.RaiseError(new InvalidOperationException("set_JustSaid: TAG: " + value + " for " + this));
                     return;
                 }
+                if (!IsEnglish(value))
+                {
+                    return;
+                }
 
                 // the (_JustSaid != value) holds back the infinate looping                
                 if (_JustSaid == null || SymTrim(_JustSaid).ToUpper() != SymTrim(value).ToUpper())
@@ -1052,6 +1061,26 @@ namespace RTParser
                     }
                 }
             }
+        }
+
+        private bool IsEnglish(Unifiable value)
+        {
+            if (IsNullOrEmpty(value))
+                return false;
+            if (IsMissing(value))
+                return false;
+            if (IsIncomplete(value))
+                return false;
+            if (!IsValue(value))
+                return false;
+            Unifiable temp;
+            if (!IsSomething(value, out temp)) return false;
+            string svalue = value.AsString();
+            if (svalue.Contains("="))
+                return false;
+            if (svalue.Contains("*"))
+                return false;
+            return true;
         }
 
         public Unifiable ResponderJustSaid

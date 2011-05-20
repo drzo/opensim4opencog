@@ -1540,7 +1540,7 @@ namespace RTParser.Utils
             if (isUserInput)
             {
                 var ress = (string)res;
-                if (ress.Contains("*"))
+                if (false && ress.Contains("*"))
                 {
                     string problem = "generatePath failed: " + ress;
                     writeToLog("ERROR: " + problem);

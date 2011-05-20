@@ -388,7 +388,13 @@ namespace RTParser.AIMLTagHandlers
                             writeToLog(prefix + " FAILING TOOOO DEEEEP '" + request + "'");
                             return Unifiable.INCOMPLETE;
                         }
-
+                        if (subRequestrawInput.Contains("STDCATCHALL STDCATCHALL"))
+                        {
+                            // @TODO @debug this
+                            writeToLog(prefix + " STDCATCHALL X 2 was '" + subRequestrawInput + "'");
+                            return Unifiable.INCOMPLETE;
+                            throw new InvalidCastException("loop STDCATCHALL STDCATCHALL");
+                        }
                         AIMLbot.MasterResult subResult;
                         string subQueryRawOutputText;
                         subResult = GetSubResult(prefix, request, user, mybot, (MasterRequest) subRequest, showDebug,
@@ -437,11 +443,6 @@ namespace RTParser.AIMLTagHandlers
                         }
                         {
 
-                            if (subRequestrawInput.Contains("STDCATCHALL STDCATCHALL"))
-                            {
-                                // @TODO @debug this
-                                throw new InvalidCastException("loop STDCATCHALL STDCATCHALL");
-                            }
                             // ReSharper disable ConditionIsAlwaysTrueOrFalse
                             if (query != null)
                             // ReSharper restore ConditionIsAlwaysTrueOrFalse
