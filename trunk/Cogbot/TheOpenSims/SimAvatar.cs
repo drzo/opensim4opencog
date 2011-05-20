@@ -556,6 +556,15 @@ namespace cogbot.TheOpenSims
             }
         }
 
+        public override bool HasPrim
+        {
+            get
+            {
+                if (base.HasPrim) return true;
+                return false;
+                return LastKnownSimPos != Vector3.Zero;
+            }
+        }
         public override bool IsControllable
         {
             get
@@ -568,7 +577,7 @@ namespace cogbot.TheOpenSims
                 AgentManager ClientSelf = Client.Self;
                 lock (HasPrimLock)
                 {
-                    if (!base.HasPrim)
+                    if (!HasPrim)
                     {
                        // return false;
                     }
