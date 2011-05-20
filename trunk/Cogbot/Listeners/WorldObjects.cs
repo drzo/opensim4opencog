@@ -173,7 +173,7 @@ namespace cogbot.Listeners
                         DoSimulatorsCatchUp = false;
                         CatchUpQueue.AddFirst(DoCatchup);
                     }
-                    client.Settings.USE_LLSD_LOGIN = true;
+                    client.Settings.USE_LLSD_LOGIN = false;
                 }
                 else
                 {
@@ -1264,7 +1264,7 @@ namespace cogbot.Listeners
 
         private static bool DeclareRequested(Simulator simulator, uint id)
         {
-            if (id == 0) return false;
+            if (id == 0 || simulator == null) return false;
             HashSet<uint> uints;
             lock (RequestedObjects)
             {
