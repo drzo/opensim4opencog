@@ -828,15 +828,15 @@ namespace OpenMetaverse
                         case EstateAccessReplyDelta.EstateBans:
                             //if (OnGetEstateBans != null)
                             {
-                                if (message.ParamList.Length > 6)
+                                if (message.ParamList.Length > 5)
                                 {
                                     if (!int.TryParse(Utils.BytesToString(message.ParamList[4].Parameter), out count)) return;
                                     List<UUID> bannedUsers = new List<UUID>();
-                                    for (int i = 7; i < message.ParamList.Length; i++)
+                                    for (int i = 6; i < message.ParamList.Length; i++)
                                     {
                                         try
                                         {
-                                            UUID bannedID = UUIDFactory.GetUUID(message.ParamList[i].Parameter, 0);
+                                            UUID bannedID = new UUID(message.ParamList[i].Parameter, 0);
                                             bannedUsers.Add(bannedID);
                                         }
                                         catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, Client, ex); }
@@ -874,7 +874,7 @@ namespace OpenMetaverse
                                 {
                                     if (!int.TryParse(Utils.BytesToString(message.ParamList[3].Parameter), out count)) return;
                                     List<UUID> allowedGroups = new List<UUID>();
-                                    for (int i = 5; i < message.ParamList.Length; i++)
+                                    for (int i = 6; i < message.ParamList.Length; i++)
                                     {
                                         try
                                         {

@@ -148,6 +148,8 @@ namespace OpenMetaverse.Voice
                 }
             }));
 
+            thread.Name = "VoiceDaemonController";
+            thread.IsBackground = true;
             thread.Start();
         }
 
@@ -332,7 +334,6 @@ namespace OpenMetaverse.Voice
                                     CurrentCaptureDevice,
                                     inputDevices));
                         }
-
                         break;
                     case "Aux.GetRenderDevices.1":
                         outputDevices = new List<string>();

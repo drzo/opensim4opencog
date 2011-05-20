@@ -724,6 +724,25 @@ namespace OpenMetaverse
         /// <summary>Mute flags</summary>
         public MuteFlags Flags;
     }
+
+    /// <summary>Transaction detail sent with MoneyBalanceReply message</summary>
+    public class TransactionInfo
+    {
+        /// <summary>Type of the transaction</summary>
+        public int TransactionType; // FIXME: this should be an enum
+        /// <summary>UUID of the transaction source</summary>
+        public UUID SourceID;
+        /// <summary>Is the transaction source a group</summary>
+        public bool IsSourceGroup;
+        /// <summary>UUID of the transaction destination</summary>
+        public UUID DestID;
+        /// <summary>Is transaction destination a group</summary>
+        public bool IsDestGroup;
+        /// <summary>Transaction amount</summary>
+        public int Amount;
+        /// <summary>Transaction description</summary>
+        public string ItemDescription;
+    }
     #endregion Structs
 
     /// <summary>
@@ -3484,6 +3503,13 @@ namespace OpenMetaverse
                     buttons.Add(Utils.BytesToString(button.ButtonLabel));
                 }
 
+                UUID ownerID = UUID.Zero;
+
+                if (dialog.OwnerData != null && dialog.OwnerData.Length > 0)
+                {
+                    ownerID = dialog.OwnerData[0].OwnerID;
+                }
+
                 OnScriptDialog(new ScriptDialogEventArgs(Utils.BytesToString(dialog.Data.Message),
                     Utils.BytesToString(dialog.Data.ObjectName),
                     dialog.Data.ImageID,
@@ -3491,7 +3517,8 @@ namespace OpenMetaverse
                     Utils.BytesToString(dialog.Data.FirstName),
                     Utils.BytesToString(dialog.Data.LastName),
                     dialog.Data.ChatChannel,
-                    buttons));
+                    buttons,
+                    ownerID));
             }
         }
 
@@ -3644,12 +3671,22 @@ namespace OpenMetaverse
 
                 if (m_MoneyBalance != null)
                 {
+                    TransactionInfo transactionInfo = new TransactionInfo();
+                    transactionInfo.TransactionType = reply.TransactionInfo.TransactionType;
+                    transactionInfo.SourceID = reply.TransactionInfo.SourceID;
+                    transactionInfo.IsSourceGroup = reply.TransactionInfo.IsSourceGroup;
+                    transactionInfo.DestID = reply.TransactionInfo.DestID;
+                    transactionInfo.IsDestGroup = reply.TransactionInfo.IsDestGroup;
+                    transactionInfo.Amount = reply.TransactionInfo.Amount;
+                    transactionInfo.ItemDescription =  Utils.BytesToString(reply.TransactionInfo.ItemDescription);
+
                     OnMoneyBalanceReply(new MoneyBalanceReplyEventArgs(reply.MoneyData.TransactionID,
                         reply.MoneyData.TransactionSuccess,
                         reply.MoneyData.MoneyBalance,
                         reply.MoneyData.SquareMetersCredit,
                         reply.MoneyData.SquareMetersCommitted,
-                        Utils.BytesToString(reply.MoneyData.Description)));
+                        Utils.BytesToString(reply.MoneyData.Description),
+                        transactionInfo));
                 }
             }
 
@@ -4035,6 +4072,7 @@ namespace OpenMetaverse
 
             if (!msg.Success)
             {
+                RequestJoinGroupChat(msg.SessionID);
                 Logger.Log("Attempt to send group chat to non-existant session for group " + msg.SessionID,
                     Helpers.LogLevel.Info, Client);
             }
@@ -4450,6 +4488,7 @@ namespace OpenMetaverse
         private readonly string m_LastName;
         private readonly int m_Channel;
         private readonly List<string> m_ButtonLabels;
+        private readonly UUID m_OwnerID;
 
         /// <summary>Get the dialog message</summary>
         public string Message { get { return m_Message; } }
@@ -4468,6 +4507,8 @@ namespace OpenMetaverse
         public int Channel { get { return m_Channel; } }
         /// <summary>Get the string labels containing the options presented in this dialog</summary>
         public List<string> ButtonLabels { get { return m_ButtonLabels; } }
+        /// <summary>UUID of the scritped object owner</summary>
+        public UUID OwnerID { get { return m_OwnerID; } }
 
         /// <summary>
         /// Construct a new instance of the ScriptDialogEventArgs
@@ -4480,8 +4521,9 @@ namespace OpenMetaverse
         /// <param name="lastName">The last name of the senders owner</param>
         /// <param name="chatChannel">The communication channel the dialog was sent on</param>
         /// <param name="buttons">The string labels containing the options presented in this dialog</param>
+        /// <param name="ownerID">UUID of the scritped object owner</param>
         public ScriptDialogEventArgs(string message, string objectName, UUID imageID,
-            UUID objectID, string firstName, string lastName, int chatChannel, List<string> buttons)
+            UUID objectID, string firstName, string lastName, int chatChannel, List<string> buttons, UUID ownerID)
         {
             this.m_Message = message;
             this.m_ObjectName = objectName;
@@ -4491,6 +4533,7 @@ namespace OpenMetaverse
             this.m_LastName = lastName;
             this.m_Channel = chatChannel;
             this.m_ButtonLabels = buttons;
+            this.m_OwnerID = ownerID;
         }
     }
 
@@ -4636,6 +4679,7 @@ namespace OpenMetaverse
         private readonly int m_MetersCredit;
         private readonly int m_MetersCommitted;
         private readonly string m_Description;
+        private TransactionInfo m_TransactionInfo;
 
         /// <summary>Get the ID of the transaction</summary>
         public UUID TransactionID { get { return m_TransactionID; } }
@@ -4649,7 +4693,8 @@ namespace OpenMetaverse
         public int MetersCommitted { get { return m_MetersCommitted; } }
         /// <summary>Get the description of the transaction</summary>
         public string Description { get { return m_Description; } }
-
+        /// <summary>Detailed transaction information</summary>
+        public TransactionInfo TransactionInfo { get { return m_TransactionInfo; } }
         /// <summary>
         /// Construct a new instance of the MoneyBalanceReplyEventArgs object
         /// </summary>
@@ -4659,7 +4704,7 @@ namespace OpenMetaverse
         /// <param name="metersCredit">The meters credited</param>
         /// <param name="metersCommitted">The meters comitted</param>
         /// <param name="description">A brief description of the transaction</param>
-        public MoneyBalanceReplyEventArgs(UUID transactionID, bool transactionSuccess, int balance, int metersCredit, int metersCommitted, string description)
+        public MoneyBalanceReplyEventArgs(UUID transactionID, bool transactionSuccess, int balance, int metersCredit, int metersCommitted, string description, TransactionInfo transactionInfo)
         {
             this.m_TransactionID = transactionID;
             this.m_Success = transactionSuccess;
@@ -4667,6 +4712,7 @@ namespace OpenMetaverse
             this.m_MetersCredit = metersCredit;
             this.m_MetersCommitted = metersCommitted;
             this.m_Description = description;
+            this.m_TransactionInfo = transactionInfo;
         }
     }
 
