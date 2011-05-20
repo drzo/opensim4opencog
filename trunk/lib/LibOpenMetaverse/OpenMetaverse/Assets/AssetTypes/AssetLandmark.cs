@@ -62,7 +62,7 @@ namespace OpenMetaverse.Assets
         {
             string temp = "Landmark version 2\n";
             temp += "region_id " + RegionID + "\n";
-            temp += String.Format("local_pos {0:0.00} {1:0.00} {2:0.00}\n", Position.X, Position.Y, Position.Z);
+            temp += String.Format(Utils.EnUsCulture, "local_pos {0:0.00} {1:0.00} {2:0.00}\n", Position.X, Position.Y, Position.Z);
             AssetData = Utils.StringToBytes(temp);
         }
 
@@ -80,7 +80,7 @@ namespace OpenMetaverse.Assets
                 String[] vecStrings = text.Substring(text.IndexOf("local_pos") + 10).Split(vecDelim.ToCharArray());
                 if (vecStrings.Length == 3)
                 {
-                    Position = new Vector3(float.Parse(vecStrings[0]), float.Parse(vecStrings[1]), float.Parse(vecStrings[2]));
+                    Position = new Vector3(float.Parse(vecStrings[0], System.Globalization.CultureInfo.InvariantCulture), float.Parse(vecStrings[1], System.Globalization.CultureInfo.InvariantCulture), float.Parse(vecStrings[2], System.Globalization.CultureInfo.InvariantCulture));
                     return true;
                 }
             }
