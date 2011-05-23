@@ -1443,7 +1443,7 @@ namespace MushDLR223.Utilities
             format = SafeFormat(format, args);
             //%%%PauseIfTraced(format);
 
-            if (IsOnMonoUnix) WriteColorText(ConsoleColor.White, "CALL_SYSTEM_ERR_WRITELINE-001 " + format);
+            //if (IsOnMonoUnix) WriteColorText(ConsoleColor.White, "CALL_SYSTEM_ERR_WRITELINE-001 " + format);
             SYSTEM_ERR_WRITELINE_REAL(format);
             SystemFlush();
         }
