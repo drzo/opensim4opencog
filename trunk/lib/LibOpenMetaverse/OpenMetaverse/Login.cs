@@ -1042,9 +1042,23 @@ namespace OpenMetaverse
             #endregion
 
             // TODO: Allow a user callback to be defined for handling the cert
-            ServicePointManager.CertificatePolicy = new TrustAllCertificatePolicy();
+            try
+            {
+                ServicePointManager.CertificatePolicy = new TrustAllCertificatePolicy();
+            }
+            catch (Exception e)
+            {
+                System.Console.WriteLine("" + e);
+            }
             // Even though this will compile on Mono 2.4, it throws a runtime exception
-            //ServicePointManager.ServerCertificateValidationCallback = TrustAllCertificatePolicy.TrustAllCertificateHandler;
+            try
+            {
+                ServicePointManager.ServerCertificateValidationCallback = TrustAllCertificatePolicy.TrustAllCertificateHandler;
+            }
+            catch (Exception e)
+            {
+                System.Console.WriteLine("" + e);
+            }
 
             if (Client.Settings.USE_LLSD_LOGIN)
             {
