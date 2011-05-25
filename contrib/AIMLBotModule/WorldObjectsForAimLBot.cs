@@ -131,6 +131,14 @@ namespace AIMLBotModule
                 StringWriter sw = new StringWriter();
                 {
 
+                    cmd = cmd.Trim();
+                    //if (cmd.StartsWith("@"))
+                    {
+                        if (MyBot.BotDirective(MyUser, request, cmd, sw.WriteLine))
+                        {
+                            return String.Format("{0}{1}", sw, s);
+                        }
+                    } 
                     CmdResult s = client.ExecuteCommand(cmd, sw.WriteLine);
                     if (cmd.StartsWith("anim"))
                     {
