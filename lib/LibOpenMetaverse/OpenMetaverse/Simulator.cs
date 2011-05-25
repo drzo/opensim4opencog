@@ -565,6 +565,11 @@ namespace OpenMetaverse
         /// simulator. Must be Interlocked before modifying. Only
         /// useful for applications manipulating sequence numbers</summary>
         public int Sequence;       
+        /// <summary>
+        /// Is it safe to send agent updates to this sim
+        /// AgentMovementComplete message received
+        /// </summary>
+        public bool AgentMovementComplete;
 
         #endregion Public Members
 
