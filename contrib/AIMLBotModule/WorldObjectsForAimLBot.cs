@@ -136,7 +136,7 @@ namespace AIMLBotModule
                     {
                         if (MyBot.BotDirective(MyUser, request, cmd, sw.WriteLine))
                         {
-                            return String.Format("{0}{1}", sw, s);
+                            return sw.ToString();
                         }
                     } 
                     CmdResult s = client.ExecuteCommand(cmd, sw.WriteLine);
@@ -144,7 +144,7 @@ namespace AIMLBotModule
                     {
                         AddAnimToNextResponse(sw.ToString());
                     }
-                    return String.Format("{0}{1}", sw, s);
+                    return String.Format("{0}{1}", sw.ToString(), s);
                 }
             }
             finally
