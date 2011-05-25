@@ -136,11 +136,8 @@ namespace OpenMetaverse
             req.Add("DispatchRegionInfo");
             req.Add("EstateChangeInfo");
             req.Add("EventQueueGet");
-            req.Add("FetchInventory");
             req.Add("ObjectMedia");
             req.Add("ObjectMediaNavigate");
-            req.Add("FetchLib");
-            req.Add("FetchLibDescendents");
             req.Add("FetchLib2");
             req.Add("FetchLibDescendents2");
             req.Add("FetchInventory2");
@@ -148,12 +145,16 @@ namespace OpenMetaverse
             req.Add("GetDisplayNames");
             req.Add("GetTexture");
             req.Add("GetMesh");
+            req.Add("GetObjectCost");
+            req.Add("GetObjectPhysicsData");
             req.Add("GroupProposalBallot");
             req.Add("HomeLocation");
             req.Add("LandResources");
             req.Add("MapLayer");
             req.Add("MapLayerGod");
             req.Add("NewFileAgentInventory");
+            req.Add("NewFileAgentInventoryVariablePrice");
+            req.Add("ObjectAdd");
             req.Add("ParcelPropertiesUpdate");
             req.Add("ParcelMediaURLFilterList");
             req.Add("ParcelNavigateMedia");
@@ -168,8 +169,9 @@ namespace OpenMetaverse
             req.Add("SendUserReport");
             req.Add("SendUserReportWithScreenshot");
             req.Add("ServerReleaseNotes");
-            req.Add("SetDisplayName");
             req.Add("SimConsole");
+            req.Add("SimulatorFeatures");
+            req.Add("SetDisplayName");
             req.Add("SimConsoleAsync");
             req.Add("StartGroupProposal");
             req.Add("TextureStats");
@@ -183,10 +185,15 @@ namespace OpenMetaverse
             req.Add("UpdateNotecardTaskInventory");
             req.Add("UpdateScriptTask");
             req.Add("UploadBakedTexture");
+            req.Add("UploadObjectAsset");
             req.Add("ViewerMetrics");
             req.Add("ViewerStartAuction");
             req.Add("ViewerStats");
+            // Legacy kept for OpenSim and Cogbot
             req.Add("WebFetchInventoryDescendents");
+            req.Add("FetchInventory");
+            req.Add("FetchLib");
+            req.Add("FetchLibDescendents");
 
             _SeedRequest = new CapsClient(new Uri(_SeedCapsURI));
             _SeedRequest.OnComplete += new CapsClient.CompleteCallback(SeedRequestCompleteHandler);
