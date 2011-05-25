@@ -1010,7 +1010,7 @@ namespace RTParser
         {
             get
             {
-                if (true) return That;
+                //if (true) return That;
                 Unifiable something;
                 if (IsSomething(_JustSaid, out something)) return something;
                 if (LastResponder != null)
