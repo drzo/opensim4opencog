@@ -109,28 +109,12 @@ namespace RTParser
             for (int i = 0; i < tagDLLTypes.Length; i++)
             {
                 Type type = tagDLLTypes[i];
-                var typeCustomAttributes = type.GetCustomAttributes(false);
-                if (typeCustomAttributes.Length == 0 && typeof(AIMLTagHandler).IsAssignableFrom(type) &&
-                    !type.IsAbstract && !type.IsInterface)
+                try
                 {
-                    try
+                    var typeCustomAttributes = type.GetCustomAttributes(false);
+                    if (typeCustomAttributes.Length == 0 && typeof (AIMLTagHandler).IsAssignableFrom(type) &&
+                        !type.IsAbstract && !type.IsInterface)
                     {
-                        AddTagHandler(type);
-                    }
-                    catch (Exception e)
-                    {
-                        RTPBot.writeException(e);
-
-                    }
-                    continue;
-                }
-                for (int j = 0; j < typeCustomAttributes.Length; j++)
-                {
-                    if (typeCustomAttributes[j] is CustomTagAttribute)
-                    {
-                        // We've found a custom tag handling class
-                        // so store the assembly and store it away in the Dictionary<,> as a TagHandler class for 
-                        // later usage
                         try
                         {
                             AddTagHandler(type);
@@ -140,7 +124,30 @@ namespace RTParser
                             RTPBot.writeException(e);
 
                         }
+                        continue;
                     }
+                    for (int j = 0; j < typeCustomAttributes.Length; j++)
+                    {
+                        if (typeCustomAttributes[j] is CustomTagAttribute)
+                        {
+                            // We've found a custom tag handling class
+                            // so store the assembly and store it away in the Dictionary<,> as a TagHandler class for 
+                            // later usage
+                            try
+                            {
+                                AddTagHandler(type);
+                            }
+                            catch (Exception e)
+                            {
+                                RTPBot.writeException(e);
+
+                            }
+                        }
+                    }
+                }
+                catch (Exception ee)
+                {
+                    RTPBot.writeException(ee);
                 }
             }
         }
