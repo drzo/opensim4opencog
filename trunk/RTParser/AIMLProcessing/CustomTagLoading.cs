@@ -113,7 +113,15 @@ namespace RTParser
                 if (typeCustomAttributes.Length == 0 && typeof(AIMLTagHandler).IsAssignableFrom(type) &&
                     !type.IsAbstract && !type.IsInterface)
                 {
-                    AddTagHandler(type);
+                    try
+                    {
+                        AddTagHandler(type);
+                    }
+                    catch (Exception e)
+                    {
+                        RTPBot.writeException(e);
+
+                    }
                     continue;
                 }
                 for (int j = 0; j < typeCustomAttributes.Length; j++)
@@ -123,7 +131,15 @@ namespace RTParser
                         // We've found a custom tag handling class
                         // so store the assembly and store it away in the Dictionary<,> as a TagHandler class for 
                         // later usage
-                        AddTagHandler(type);
+                        try
+                        {
+                            AddTagHandler(type);
+                        }
+                        catch (Exception e)
+                        {
+                            RTPBot.writeException(e);
+
+                        }
                     }
                 }
             }
