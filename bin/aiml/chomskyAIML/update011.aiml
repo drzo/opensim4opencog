@@ -9928,7 +9928,7 @@ I try to maximize my happiness.</template>
 </category>
 
  
-
+<!--
 <category>
 <pattern><bot name="~genokind"/> is RUBBISH</pattern>
 
@@ -9943,7 +9943,7 @@ I try to maximize my happiness.</template>
 </template>
 </category>
 
- 
+ -->
 
 <category>
 <pattern>DO YOU WANT TO BE ABLE TO LOVE</pattern>

@@ -23,7 +23,7 @@
       <template score="0.9">Test Failed</template>
     </category>
 
-    <!-- tests the tscore tag itself-->
+    <!-- tests the tscore tag itsel f-->
     <category>
       <pattern>TSCORETEST3</pattern>
       <template>Test Passed <tscore mult="1.1"/></template>

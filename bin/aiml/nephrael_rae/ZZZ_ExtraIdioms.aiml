@@ -4,19 +4,22 @@
   <srai>
     <learn path="aiml/zeno_aironaut/" />
   </srai>
--->  
-  <load graph="default" path="aiml/example_bot/" />
+
+  <load graph="default" path="aiml/example_bot/*.*ml" />
+--> 
+  <load graph="default" path="aiml/common/*.aiml" />
 
   <!-- example bot calls this now 
   <genlMt name="chomskyAIML"/>
   <learn graph="chomskyAIML" path="aiml/chomskyAIML/" />
-     example bot calls this now -->
+
+  example bot calls this now -->
+
+
   <!--
   
   <learn graph="example_bot" path="aiml/example_bot/" />
-  it used to be this client had not implmented baked appearances yet.. so it would send the last appearch it got from a peerto the server 
   <load>aiml/test_suite/</load>
-  <load>aiml/example_bot/</load>
   
   <aiml graph="chomskyAIML">
     <genlMt name="UniversalVocab"/>

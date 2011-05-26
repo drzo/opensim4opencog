@@ -146,73 +146,31 @@
       </template>
   </category>
 
-  <!-- following in secondlife -->
-  <category>
-    <pattern>FOLLOW NO ONE *</pattern>
-    <template>
-      <think>
-        <system>stop-following</system>
-      </think>Ok, I am on my own now.
-    </template>
-  </category>
-  
-  <category>
-    <pattern>FOLLOW ME</pattern>
-    <template>
-      <think>
-        <system>
-          follow <get name="name"/> 1
-        </system>
-      </think>        
-    </template>
-  </category>
-  <category>
-    <pattern>STOP FOLLOWING *</pattern>
-    <template>
-      <think>
-        <system>stop-following</system>
-      </think>Ok, I am on my own now.
-    </template>
-  </category>
 
   <!-- Current action command -->
   <category>
     <pattern>STOP FOLLOWING</pattern>
-    <template>
-      <think>
-        <system>stop-following</system>
-      </think>Ok, I am on my own now.
-    </template>
-  </category>
-  
-   <category>
-    <pattern>FOLLOW ME *</pattern>
-    <template>
-      <think>
-        <system>
-          follow "<get name="name"/>" 1
-        </system>
-      </think>Ok, I am following you <get name="name"/>
-    </template>
-  </category>
-  
-  <category>
-    <pattern>FOLLOW ME</pattern>
-    <template>
-      <think>
-        <system>
-          follow "<get name="name"/>" 1
-        </system>
-      </think>Ok, I am following you <get name="name"/>
-    </template>
-  </category>
-  
-  <category>
+    <pattern>STOP FOLLOWING *</pattern>
+    <pattern>FOLLOW NO ONE</pattern>
+    <pattern>FOLLOW NO ONE *</pattern>
     <pattern>WAIT HERE</pattern>
     <template>
       <think>
         <system>stop-following</system>
       </think>Ok, I am on my own now.
+    </template>
+  </category>
+  
+  <!-- following in secondlife -->
+   <category>
+    <pattern>FOLLOW ME *</pattern>
+    <pattern>FOLLOW ME</pattern>
+    <template>
+      <think>
+        <system>
+          follow* "<get name="name"/>" 1
+        </system>
+      </think>Ok, I am following you <get name="name"/>
     </template>
   </category>
   
