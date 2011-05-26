@@ -124,20 +124,22 @@
 
 
     <!--
-    <category><pattern>*</pattern></category>
-    <category><pattern>_</pattern></category>
-    <load filename="aiml/stdset/*.aiml" />
+        <category><pattern>*</pattern></category>
+        <category><pattern>_</pattern></category>
+        <load filename="aiml/stdset/*.aiml" />
         <load filename="aiml/stdset/*.aiml" />
         <load filename="aiml/chomskyAIML/*.aiml" />
+
 
     @cloj (setj MyBot.TurnOffSelfListening false)
     @cloj (setj MyBot.TurnOffSelfListening true)
    -->  
 
-        <category><pattern>*</pattern></category>
-        <category><pattern>_</pattern></category>
-        <load filename="aiml/programsharp/*.aiml" />
-
+    <category><pattern>*</pattern></category>
+    <category><pattern>_</pattern></category>
+    <load filename="aiml/stdset/*.aiml" />
+    <load filename="aiml/stdset/*.aiml" />
+    <load filename="aiml/chomskyAIML/*.aiml" />
     </aiml>
 
 
