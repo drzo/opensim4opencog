@@ -557,8 +557,11 @@ namespace MushDLR223.Virtualization
         {
             if (path == null) return null;
             var ipn = IsWildPath(path);
-            if (!ipn && File.Exists(path)) return path;
-            if (!ipn && Directory.Exists(path)) return path;
+            if (!ipn)
+            {
+                string  aep = ActualExistingPath(path, true);
+                if (aep != null) return aep;
+            }
             if (Uri.IsWellFormedUriString(path, UriKind.Absolute))
             {
                 try
@@ -610,6 +613,91 @@ namespace MushDLR223.Virtualization
                 return Path.GetFullPath(path);
             }
             return null;
+        }
+
+        private static string ActualExistingPath(string path, bool mustExist)
+        {
+            string dn = Path.GetDirectoryName(path);
+            if (File.Exists(path))
+            {
+                var fi = new FileInfo(path);
+                fi.GetAccessControl();
+                var pdn = fi.Directory;
+                if (pdn == null)
+                {
+                    return fi.FullName;
+                }
+                var files = pdn.GetFiles();
+                string ffn = Path.GetFileName(fi.FullName).ToLower();
+                foreach (var newFileInfo in files)
+                {
+                    if (newFileInfo.Name.ToLower() == ffn)
+                    {
+                        if (fi.FullName != newFileInfo.FullName)
+                        {
+                            if (dn.ToLower() == pdn.FullName.ToLower())
+                            {
+                                return newFileInfo.FullName;
+                            }
+                            return newFileInfo.Name;
+                        }
+                    }
+                }
+                return path;
+            }
+            if (Directory.Exists(path))
+            {
+                var fi = new DirectoryInfo(path);
+                fi.GetAccessControl();
+                var pdn = fi.Parent;
+                if (pdn == null)
+                {
+                    return fi.FullName;
+                }
+                var files = pdn.GetDirectories();
+                string ffn = Path.GetFileName(fi.FullName).ToLower();
+                foreach (var newFileInfo in files)
+                {
+                    if (newFileInfo.Name.ToLower() == ffn)
+                    {
+                        if (fi.FullName != newFileInfo.FullName)
+                        {
+                            return newFileInfo.FullName;
+                        }
+                    }
+                }
+                return path;
+            }
+            if (!String.IsNullOrEmpty(dn))
+            {                
+                string pfull = Path.GetFullPath(path);
+                if (pfull == path)
+                {
+
+                }
+                var dna = ActualExistingPath(dn, true);
+                var fnp = Path.GetFileName(path);                
+                var fi = new FileInfo(path);
+                var pdn = new DirectoryInfo(dn);
+                var files = pdn.GetFileSystemInfos();
+                string ffn = Path.GetFileName(fi.FullName).ToLower();
+                foreach (var newFileInfo in files)
+                {
+                    if (newFileInfo.Name.ToLower() == ffn)
+                    {
+                        if (fi.FullName != newFileInfo.FullName)
+                        {
+                            if (dn.ToLower() == pdn.FullName.ToLower())
+                            {
+                                return newFileInfo.FullName;
+                            }
+                            return newFileInfo.Name;
+                        }
+                    }
+                }
+                return null;
+            }
+            return dn;
         }
 
         private static Func<Stream, Stream> GetStreamDecoder(string path, bool fakeOne)
