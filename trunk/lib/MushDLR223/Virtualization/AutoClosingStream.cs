@@ -6,7 +6,7 @@ namespace MushDLR223.Virtualization
 {
     public class AutoClosingStream : Stream
     {
-        public Stream UnderlyingStream;
+        public readonly Stream UnderlyingStream;
         public bool AutoClose = true;
         private string origname = "";
 
@@ -15,7 +15,7 @@ namespace MushDLR223.Virtualization
         {
             get
             {
-                if (_isClosed || UnderlyingStream == null || (!CanRead && _isCloseable))
+                if (_isClosed || UnderlyingStreamSetNull || (!CanRead && _isCloseable))
                 {
                     return true;
                 }
@@ -28,6 +28,8 @@ namespace MushDLR223.Virtualization
         }
 
         private bool _isCloseable;
+        public bool UnderlyingStreamSetNull = false;
+
         public bool IsCloseable
         {
             get
@@ -47,6 +49,7 @@ namespace MushDLR223.Virtualization
         public AutoClosingStream(Stream stream)
         {
             UnderlyingStream = stream;
+            var ss = stream.ToString();
             if (UnderlyingStream is FileStream)
             {
                 var io = (System.IO.FileStream)stream;
@@ -88,7 +91,7 @@ namespace MushDLR223.Virtualization
 
         public void Close0()
         {
-            if (UnderlyingStream == null)
+            if (UnderlyingStreamSetNull)
             {
                 IsClosed = true; 
                 return;
@@ -103,7 +106,7 @@ namespace MushDLR223.Virtualization
                 writeToLog("ERROR Autoclosed: " + e);
                 throw e;
             }
-            UnderlyingStream = null;
+            this.UnderlyingStreamSetNull = true;
         }
 
         public void AddToName(string name)
@@ -127,10 +130,10 @@ namespace MushDLR223.Virtualization
 
         protected override void Dispose(bool disposing)
         {
-            if (UnderlyingStream!=null)
+            if (!UnderlyingStreamSetNull)
             {
                 UnderlyingStream.Dispose();
-                UnderlyingStream = null;
+                UnderlyingStreamSetNull = true;
             }
             base.Dispose(disposing);
             IsClosed = true;
