@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Xml;
 using MushDLR223.Virtualization;
@@ -104,7 +105,12 @@ namespace RTParser
         static public void loadCustomTagHandlers(string pathToDLL)
         {
             // return;
-            Assembly tagDLL = Assembly.LoadFrom(pathToDLL);
+            string hostSystemResolveToExistingPath = HostSystem.ResolveToExistingPath(pathToDLL);
+            if (hostSystemResolveToExistingPath==null)
+            {
+                throw new FileNotFoundException(pathToDLL);
+            }
+            Assembly tagDLL = Assembly.LoadFrom(hostSystemResolveToExistingPath);
             var tagDLLTypes = tagDLL.GetTypes();
             for (int i = 0; i < tagDLLTypes.Length; i++)
             {
