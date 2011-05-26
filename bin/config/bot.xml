@@ -57,4 +57,6 @@
  <set name="vocabulary" >10000</set>
  <set name="wear" >my usual plastic computer wardrobe</set>
  <set name="website" >www.AliceBot.Org</set>
+ <set name="~genokind">lisp</set>
+  <set name="hometown">Austin</set>
 </vars>
