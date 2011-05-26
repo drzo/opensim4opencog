@@ -6,7 +6,7 @@
  <category>
    <pattern>REMEMBER *</pattern>
    <template>
-     <think><dbpush><person/></dbpush></think>
+     <think><dbpush><star/></dbpush></think>
    </template>
   </category>
 
@@ -20,7 +20,7 @@
  <category>
    <pattern>CHECK *</pattern>
    <template>
-     Let me think ... <dbquery><person/></dbquery>
+     Let me think ... <dbquery><star/></dbquery>
    </template>
   </category>
 

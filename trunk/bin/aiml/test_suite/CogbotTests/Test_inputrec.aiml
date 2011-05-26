@@ -18,7 +18,7 @@
         expected: Test Passed if INPUTREQTEST1 says INPUTREQTEST1
         -->
         <pattern>INPUTREQTEST2</pattern>
-        <template><srai>INPUTREQTEST1</srai></template>
+        <template><srai>INPUTREQTEST1</srai> and <inputreq/> says INPUTREQTEST2</template>
     </category>
 
 </aiml>
