@@ -610,13 +610,18 @@ namespace MushDLR223.Virtualization
             }
             if (!mustExist)
             {
-                return Path.GetFullPath(path);
+                string dn = Path.GetDirectoryName(path);
+                string dnCased = ActualExistingDirectoryPath(dn);
+                var fnp = Path.GetFileName(path);
+                string nfn = Path.Combine(dnCased, fnp);
+                return nfn;
             }
             return null;
         }
 
         private static string ActualExistingPath(string path, bool mustExist)
         {
+            if (String.IsNullOrEmpty(path)) return path;
             string dn = Path.GetDirectoryName(path);
             if (File.Exists(path))
             {
@@ -626,6 +631,13 @@ namespace MushDLR223.Virtualization
                 if (pdn == null)
                 {
                     return fi.FullName;
+                }
+                var pdnDepth = 0;
+                var pdnDepthDir = pdn;
+                while (pdnDepthDir != null)
+                {
+                    pdnDepthDir = pdnDepthDir.Parent;
+                    pdnDepth++;
                 }
                 var files = pdn.GetFiles();
                 string ffn = Path.GetFileName(fi.FullName).ToLower();
@@ -639,7 +651,9 @@ namespace MushDLR223.Virtualization
                             {
                                 return newFileInfo.FullName;
                             }
-                            return newFileInfo.Name;
+                            if (dn == "") return newFileInfo.Name;
+                            string dnCased = ActualExistingDirectoryPath(dn);
+                            return Path.Combine(dnCased, newFileInfo.Name);
                         }
                     }
                 }
@@ -647,36 +661,13 @@ namespace MushDLR223.Virtualization
             }
             if (Directory.Exists(path))
             {
-                var fi = new DirectoryInfo(path);
-                fi.GetAccessControl();
-                var pdn = fi.Parent;
-                if (pdn == null)
-                {
-                    return fi.FullName;
-                }
-                var files = pdn.GetDirectories();
-                string ffn = Path.GetFileName(fi.FullName).ToLower();
-                foreach (var newFileInfo in files)
-                {
-                    if (newFileInfo.Name.ToLower() == ffn)
-                    {
-                        if (fi.FullName != newFileInfo.FullName)
-                        {
-                            return newFileInfo.FullName;
-                        }
-                    }
-                }
-                return path;
+                return ActualExistingDirectoryPath(dn);
             }
             if (!String.IsNullOrEmpty(dn))
-            {                
+            {
+                string dnCased = ActualExistingDirectoryPath(dn);
                 string pfull = Path.GetFullPath(path);
-                if (pfull == path)
-                {
-
-                }
-                var dna = ActualExistingPath(dn, true);
-                var fnp = Path.GetFileName(path);                
+                var fnp = Path.GetFileName(path);
                 var fi = new FileInfo(path);
                 var pdn = new DirectoryInfo(dn);
                 var files = pdn.GetFileSystemInfos();
@@ -695,9 +686,50 @@ namespace MushDLR223.Virtualization
                         }
                     }
                 }
-                return null;
+                if (mustExist) return null;
+                string nfn = Path.Combine(dnCased, fnp);
+                return nfn;
             }
             return dn;
+        }
+
+        private static string ActualExistingDirectoryPath(string path)
+        {
+            if (String.IsNullOrEmpty(path)) return path;
+            string dn = Path.GetDirectoryName(path);
+            var fi = new DirectoryInfo(path);
+            if (!fi.Exists)
+            {
+                string dnCased = ActualExistingDirectoryPath(dn);
+                var fnp = Path.GetFileName(path);
+                string nfn =  Path.Combine(dnCased, fnp);
+                return nfn;
+            }
+            fi.GetAccessControl();
+            var pdn = fi.Parent;
+            if (pdn == null)
+            {
+                return fi.FullName;
+            }
+            var files = pdn.GetDirectories();
+            string ffn = Path.GetFileName(fi.FullName).ToLower();
+            foreach (var newFileInfo in files)
+            {
+                if (newFileInfo.Name.ToLower() == ffn)
+                {
+                    if (fi.FullName != newFileInfo.FullName)
+                    {
+                        if (dn.ToLower() == pdn.FullName.ToLower())
+                        {
+                            return newFileInfo.FullName;
+                        }
+                        if (dn == "") return newFileInfo.Name;
+                        string dnCased = ActualExistingDirectoryPath(dn);
+                        return Path.Combine(dnCased, newFileInfo.Name);
+                    }
+                }
+            }
+            return path;
         }
 
         private static Func<Stream, Stream> GetStreamDecoder(string path, bool fakeOne)
