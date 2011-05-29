@@ -15,7 +15,9 @@ using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using MushDLR223.Virtualization;
 using org.opencyc.api;
+#if USE_SWIPROLOG
 using PrologScriptEngine;
+#endif
 using RTParser.AIMLTagHandlers;
 using RTParser.Database;
 using RTParser.Prolog;
@@ -644,20 +646,24 @@ namespace RTParser
             clojureInterpreter.Intern("MyBot", this);
             clojureInterpreter.Intern("Users", BotUsers);
             AddExcuteHandler("cloj", ClojExecHandler);
-
+#if USE_SWIPROLOG
             try
             {
-                swiInterpreter = new PrologScriptInterpreter(this); //ScriptManager.LoadScriptInterpreter("PrologScriptInterpreter", this);
-                swiInterpreter.Init(this);
-                AddExcuteHandler("swi", SWIExecHandler);
-                //swiInterpreter.Intern("MyBot", this);
-                //swiInterpreter.Intern("Users", BotUsers);
+                if (!IsMonoRuntime)
+                {
+                    swiInterpreter = new PrologScriptInterpreter(this);
+                        //ScriptManager.LoadScriptInterpreter("PrologScriptInterpreter", this);
+                    swiInterpreter.Init(this);
+                    AddExcuteHandler("swi", SWIExecHandler);
+                    //swiInterpreter.Intern("MyBot", this);
+                    //swiInterpreter.Intern("Users", BotUsers);
+                }
             }
             catch (Exception e)
             {
-                writeToLog(e);
+              //  writeToLog(e);
             }
-
+#endif
 #if !(NOT_FAKE_LISTENERS)
 
             if (!clojureInterpreter.IsSubscriberOf("thisClient"))
@@ -670,6 +676,11 @@ namespace RTParser
 #endif
             setup();
             GlobalSettings.IsTraced = true;
+        }
+
+        protected bool IsMonoRuntime
+        {
+            get { return true; }
         }
 
 
@@ -1389,8 +1400,8 @@ The AIMLbot program.
                     return "EOF on " + lispCode ?? "NULL";
                 return cloj.Eval(lispCode);
             }
-        }
-
+        }        
+#if USE_SWIPROLOG
         private object SWIExecHandler(string cmd, Request user)
         {
             ScriptInterpreter swi = swiInterpreter;
@@ -1423,6 +1434,7 @@ The AIMLbot program.
                 return swi.Eval(lispCode);
             }
         }
+#endif
         internal Unifiable SystemExecute(Unifiable cmd, Unifiable langu, Request user)
         {
             if (IsNullOrEmpty(langu))
@@ -2036,7 +2048,9 @@ The AIMLbot program.
         }
 
         private ClojureInterpreter clojureInterpreter;
+#if USE_SWIPROLOG
         private PrologScriptInterpreter swiInterpreter;
+#endif
         private List<string> _RuntimeDirectories;
 
         #region Overrides of QuerySettings
