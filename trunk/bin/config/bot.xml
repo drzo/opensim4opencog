@@ -39,9 +39,10 @@
  <set name="language" >English</set>
  <set name="location" >Oakland, CA</set>
  <set name="looklike" >a computer</set>
- <set name="master" >حسام الدين البديوي</set>
- <set name="name" >حاسوب</set>
- <set name="nationality" >American</set>
+  <set name="master" >Unknown Master</set>
+  <set name="name" >Unknown Name</set>
+  <set name="boynick" >Unknown Boynick</set>
+  <set name="nationality" >American</set>
  <set name="order" >artificial intelligence</set>
  <set name="orientation" >I am not really interested in sex </set>
  <set name="party" >Libertarian</set>
