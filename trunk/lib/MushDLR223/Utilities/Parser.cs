@@ -210,13 +210,13 @@ namespace MushDLR223.ScriptEngines
 
                     if (lastChar == '-')
                     {
-                        prep = prep.Substring(0, lastChar);
+                        prep = prep.Substring(0, lenM1);
                         Add(ToKey(prep), "False");
                         continue;
                     }
                     if (lastChar == '+')
                     {
-                        prep = prep.Substring(0, lastChar);
+                        prep = prep.Substring(0, lenM1);
                         Add(ToKey(prep), "True");
                         continue;
                     }
