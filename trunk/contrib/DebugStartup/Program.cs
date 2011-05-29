@@ -226,6 +226,7 @@ namespace ABuildStartup
                 DoAndExit(() => RTParser.RTPBot.Main(args));
                 return;
             }
+#if USE_SWIPROLOG            
             if (ClientManager.arguments.GetAfter("--swipl", out oArgs))
             {
                 string[] newArgs = oArgs;
@@ -235,6 +236,7 @@ namespace ABuildStartup
                 DoAndExit(() => PrologScriptEngine.PrologScriptInterpreter.Main(newArgs));
                 return;
             }
+#endif
             if (ClientManager.arguments.GetAfter("--main", out oArgs))
             {
                 string[] newArgs = oArgs;
