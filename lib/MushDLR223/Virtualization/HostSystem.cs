@@ -567,7 +567,7 @@ namespace MushDLR223.Virtualization
                 try
                 {
                     var uri = new Uri(path);
-                    if (uri.IsFile)
+                    if (uri.IsFile && uri.AbsolutePath != path)
                     {
                         return ResolveToExistingPath(uri.AbsolutePath, mustExist);
                     }
@@ -582,7 +582,7 @@ namespace MushDLR223.Virtualization
                 {
                     if (mustExist) return null;
                     var uri = new Uri(path);
-                    if (uri.IsFile)
+                    if (uri.IsFile && uri.AbsolutePath != path)
                     {
                         return ResolveToExistingPath(uri.AbsolutePath, mustExist);
                     }
