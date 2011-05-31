@@ -1141,7 +1141,9 @@ namespace cogbot.TheOpenSims
         public override bool Matches(string name)
         {
             String n = GetName();
-            if (string.IsNullOrEmpty(n)) return false;
+            if (string.IsNullOrEmpty(n)) return string.IsNullOrEmpty(name);
+            if (string.IsNullOrEmpty(name)) return false;
+            if (n.ToLower().Replace("_", " ").Trim() == (name.ToLower().Replace("_", " ").Trim())) return true;
             return SimTypeSystem.MatchString(base.ToString(), name)
                    || SimTypeSystem.MatchString(ToString(), name);
         }
