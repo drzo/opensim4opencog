@@ -3602,7 +3602,7 @@ namespace OpenMetaverse
             relativePosition = movement.Data.Position;
             Movement.Camera.LookDirection(movement.Data.LookAt);
             simulator.Handle = movement.Data.RegionHandle;
-            simulator.SimVersion = Utils.BytesToString(movement.SimData.ChannelVersion);
+            simulator.SharedData.SimVersion = Utils.BytesToString(movement.SimData.ChannelVersion);
             simulator.AgentMovementComplete = true;
         }
 
