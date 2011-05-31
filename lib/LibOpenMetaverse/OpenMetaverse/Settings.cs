@@ -100,10 +100,6 @@ namespace OpenMetaverse
         /// connection to a simulator is assumed lost</summary>
         public int SIMULATOR_TIMEOUT = 30 * 1000;
 
-        /// <summary>Milliseconds waiting on receiving a region handshake before the 
-        /// simulator gives up</summary>
-        public int SIMULATOR_HANDSHAKE_TIMEOUT = 60 * 1000;
-
         /// <summary>Milliseconds to wait for a simulator info request through
         /// the grid interface</summary>
         public int MAP_REQUEST_TIMEOUT = 5 * 1000;

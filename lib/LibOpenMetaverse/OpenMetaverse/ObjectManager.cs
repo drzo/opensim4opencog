@@ -169,16 +169,6 @@ namespace OpenMetaverse
         /// <summary>The event subscribers, null of no subscribers</summary>
         private EventHandler<PrimEventArgs> m_ObjectUpdate;
 
-        ///<summary>Raises the ObjectUpdate Event</summary>
-        /// <param name="e">A ObjectUpdateEventArgs object containing
-        /// the data sent from the simulator</param>
-        protected virtual void OnObjectUpdate(PrimEventArgs e)
-        {
-            EventHandler<PrimEventArgs> handler = m_ObjectUpdate;
-            if (handler != null)
-                handler(this, e);
-        }
-
         /// <summary>Thread sync lock object</summary>
         private readonly object m_ObjectUpdateLock = new object();
 
@@ -293,16 +283,6 @@ namespace OpenMetaverse
 
         /// <summary>The event subscribers, null of no subscribers</summary>
         private EventHandler<TerseObjectUpdateEventArgs> m_TerseObjectUpdate;
-
-        ///<summary>Raises the TerseObjectUpdate Event</summary>
-        /// <param name="e">A TerseObjectUpdateEventArgs object containing
-        /// the data sent from the simulator</param>
-        protected virtual void OnTerseObjectUpdate(TerseObjectUpdateEventArgs e)
-        {
-            EventHandler<TerseObjectUpdateEventArgs> handler = m_TerseObjectUpdate;
-            if (handler != null)
-                handler(this, e);
-        }
 
         /// <summary>Thread sync lock object</summary>
         private readonly object m_TerseObjectUpdateLock = new object();
@@ -2052,12 +2032,12 @@ namespace OpenMetaverse
                                     prim.TreeSpecies = (Tree)block.Data[0];
                                 else
                                     Logger.Log("Got a foliage update with an invalid TreeSpecies field", Helpers.LogLevel.Warning);
-                            //    prim.ScratchPad = Utils.EmptyBytes;
-                            //    break;
-                            //default:
-                            //    prim.ScratchPad = new byte[block.Data.Length];
-                            //    if (block.Data.Length > 0)
-                            //        Buffer.BlockCopy(block.Data, 0, prim.ScratchPad, 0, prim.ScratchPad.Length);
+                                //    prim.ScratchPad = Utils.EmptyBytes;
+                                //    break;
+                                //default:
+                                //    prim.ScratchPad = new byte[block.Data.Length];
+                                //    if (block.Data.Length > 0)
+                                //        Buffer.BlockCopy(block.Data, 0, prim.ScratchPad, 0, prim.ScratchPad.Length);
                                 break;
                         }
                         prim.ScratchPad = Utils.EmptyBytes;
@@ -2347,7 +2327,7 @@ namespace OpenMetaverse
                 try
                 {
                     // UUID
-                    UUID FullID = UUIDFactory.GetUUID(block.Data, 0);
+                    UUID FullID = new UUID(block.Data, 0);
                     i += 16;
                     // Local ID
                     uint LocalID = (uint)(block.Data[i++] + (block.Data[i++] << 8) +
@@ -2406,7 +2386,7 @@ namespace OpenMetaverse
                     CompressedFlags flags = (CompressedFlags)Utils.BytesToUInt(block.Data, i);
                     i += 4;
 
-                    prim.OwnerID = UUIDFactory.GetUUID(block.Data, i);
+                    prim.OwnerID = new UUID(block.Data, i);
                     i += 16;
 
                     // Angular velocity
@@ -2495,7 +2475,7 @@ namespace OpenMetaverse
                     //Sound data
                     if ((flags & CompressedFlags.HasSound) != 0)
                     {
-                        prim.Sound = UUIDFactory.GetUUID(block.Data, i);
+                        prim.Sound = new UUID(block.Data, i);
                         i += 16;
 
                         prim.SoundGain = Utils.BytesToFloat(block.Data, i);
@@ -2748,7 +2728,7 @@ namespace OpenMetaverse
                 int numTextures = objectData.TextureID.Length / 16;
                 props.TextureIDs = new UUID[numTextures];
                 for (int j = 0; j < numTextures; ++j)
-                    props.TextureIDs[j] = UUIDFactory.GetUUID(objectData.TextureID, j * 16);
+                    props.TextureIDs[j] = new UUID(objectData.TextureID, j * 16);
 
                 if (Client.Settings.OBJECT_TRACKING)
                 {
@@ -3088,10 +3068,6 @@ namespace OpenMetaverse
         {
             if (Client.Settings.OBJECT_TRACKING)
             {
-                if (localID == 0)
-                {
-                    throw new ArgumentException("localID is Zero! for prim: " + fullID + " on sim: " + simulator);
-                }
                 lock (simulator.ObjectsPrimitives.Dictionary)
                 {
 
@@ -3099,23 +3075,6 @@ namespace OpenMetaverse
 
                     if (simulator.ObjectsPrimitives.Dictionary.TryGetValue(localID, out prim))
                     {
-                        if (fullID != UUID.Zero)
-                        {
-                            if (prim.ID != fullID)
-                            {
-                                if (prim.ID == UUID.Zero)
-                                {
-                                    prim.ID = fullID;
-                                }
-                                else
-                                {
-                                    throw new ArgumentException("fullID is changinging for prim: " + localID + " from " +
-                                                                prim.ID + " to " + fullID + " on sim: " + simulator);
-                                }
-                            }
-                            prim.LocalID = localID;
-                            prim.RegionHandle = simulator.Handle;
-                        }
                         return prim;
                     }
                     else
@@ -3124,10 +3083,7 @@ namespace OpenMetaverse
                         prim.LocalID = localID;
                         prim.ID = fullID;
                         prim.RegionHandle = simulator.Handle;
-                        if (fullID == UUID.Zero)
-                        {
-                            if (false) throw new ArgumentException("fullID is Zero! for prim: " + localID + " on sim: " + simulator);
-                        }
+
                         simulator.ObjectsPrimitives.Dictionary[localID] = prim;
 
                         return prim;

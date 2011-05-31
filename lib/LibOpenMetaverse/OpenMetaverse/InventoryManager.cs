@@ -862,7 +862,7 @@ namespace OpenMetaverse
     public class InventoryManager
     {
         /// <summary>Used for converting shadow_id to asset_id</summary>
-        public static readonly UUID MAGIC_ID = UUIDFactory.GetUUID("3c115e51-04f4-523c-9fa6-98aff1034730");
+        public static readonly UUID MAGIC_ID = new UUID("3c115e51-04f4-523c-9fa6-98aff1034730");
 
         protected struct InventorySearch
         {
@@ -1055,7 +1055,7 @@ namespace OpenMetaverse
         /// <param name="assetID">New asset UUID</param>
         public delegate void InventoryUploadedAssetCallback(bool success, string status, UUID itemID, UUID assetID);
 
-     
+
         /// <summary>The event subscribers, null of no subscribers</summary>
         private EventHandler<SaveAssetToInventoryEventArgs> m_SaveAssetToInventory;
 
@@ -1090,7 +1090,7 @@ namespace OpenMetaverse
         /// <param name="itemID">Script inventory UUID</param>
         /// <param name="assetID">Script's new asset UUID</param>
         public delegate void ScriptUpdatedCallback(bool uploadSuccess, string uploadStatus, bool compileSuccess, List<string> compileMessages, UUID itemID, UUID assetID);
-        
+
         /// <summary>The event subscribers, null of no subscribers</summary>
         private EventHandler<ScriptRunningReplyEventArgs> m_ScriptRunningReply;
 
@@ -1114,7 +1114,7 @@ namespace OpenMetaverse
             add { lock (m_ScriptRunningReplyLock) { m_ScriptRunningReply += value; } }
             remove { lock (m_ScriptRunningReplyLock) { m_ScriptRunningReply -= value; } }
         }
-        #endregion Delegates        
+        #endregion Delegates
 
         #region String Arrays
 
@@ -2242,7 +2242,7 @@ namespace OpenMetaverse
                 InventoryFolder folder = (InventoryFolder)bse;
                 CreateLink(folderID, folder, callback);
             }
-            else if (bse is InventoryItem)  
+            else if (bse is InventoryItem)
             {
                 InventoryItem item = (InventoryItem)bse;
                 CreateLink(folderID, item.UUID, item.Name, item.Description, AssetType.Link, item.InventoryType, UUID.Random(), callback);
@@ -2296,7 +2296,7 @@ namespace OpenMetaverse
             create.InventoryBlock.InvType = (sbyte)invType;
             create.InventoryBlock.Name = Utils.StringToBytes(name);
             create.InventoryBlock.Description = Utils.StringToBytes(description);
-            
+
             Client.Network.SendPacket(create);
         }
 
@@ -3229,7 +3229,7 @@ namespace OpenMetaverse
         {
             SetScriptRunningPacket request = new SetScriptRunningPacket();
             request.AgentData.AgentID = Client.Self.AgentID;
-            request.AgentData.SessionID = Client.Self.SessionID;            
+            request.AgentData.SessionID = Client.Self.SessionID;
             request.Script.Running = running;
             request.Script.ItemID = scriptID;
             request.Script.ObjectID = objectID;
@@ -3731,7 +3731,7 @@ namespace OpenMetaverse
                     if (e.IM.BinaryBucket.Length == 17)
                     {
                         type = (AssetType)e.IM.BinaryBucket[0];
-                        objectID = UUIDFactory.GetUUID(e.IM.BinaryBucket, 1);
+                        objectID = new UUID(e.IM.BinaryBucket, 1);
                         fromTask = false;
                     }
                     else
@@ -3791,9 +3791,9 @@ namespace OpenMetaverse
                                 break;
                             case InstantMessageDialog.GroupNotice:
                                 imp.MessageBlock.Dialog = (byte)InstantMessageDialog.GroupNoticeInventoryAccepted;
-                                break;                         
+                                break;
                         }
-                        imp.MessageBlock.BinaryBucket = args.FolderID.GetBytes();                        
+                        imp.MessageBlock.BinaryBucket = args.FolderID.GetBytes();
                     }
                     else
                     {
@@ -4008,12 +4008,12 @@ namespace OpenMetaverse
                 {
                     // Request full item update so we keep store in sync
                     RequestFetchInventory((UUID)(((object[])client.UserData)[1]), contents["new_asset"].AsUUID());
-                    
+
 
                     try
                     {
                         List<string> compileErrors = null;
-                        
+
                         if (contents.ContainsKey("errors"))
                         {
                             OSDArray errors = (OSDArray)contents["errors"];
@@ -4504,7 +4504,7 @@ namespace OpenMetaverse
                     Utils.BytesToString(reply.InventoryData.Filename)));
             }
         }
-        
+
         protected void ScriptRunningReplyMessageHandler(string capsKey, Interfaces.IMessage message, Simulator simulator)
         {
             if (m_ScriptRunningReply != null)
@@ -4518,7 +4518,7 @@ namespace OpenMetaverse
     }
 
     #region EventArgs
-   
+
     public class InventoryObjectOfferedEventArgs : EventArgs
     {
         private readonly InstantMessage m_Offer;
@@ -4535,7 +4535,7 @@ namespace OpenMetaverse
         public AssetType AssetType { get { return m_AssetType; } }
         public UUID ObjectID { get { return m_ObjectID; } }
         public bool FromTask { get { return m_FromTask; } }
-        
+
         public InventoryObjectOfferedEventArgs(InstantMessage offerDetails, AssetType type, UUID objectID, bool fromTask, UUID folderID)
         {
             this.Accept = false;
@@ -4546,7 +4546,7 @@ namespace OpenMetaverse
             this.m_FromTask = fromTask;
         }
     }
-    
+
     public class FolderUpdatedEventArgs : EventArgs
     {
         private readonly UUID m_FolderID;
@@ -4572,7 +4572,7 @@ namespace OpenMetaverse
             this.m_Item = item;
         }
     }
-   
+
     public class FindObjectByPathReplyEventArgs : EventArgs
     {
         private readonly String m_Path;
@@ -4617,7 +4617,7 @@ namespace OpenMetaverse
             this.m_Type = type;
         }
     }
-    
+
     public class TaskInventoryReplyEventArgs : EventArgs
     {
         private readonly UUID m_ItemID;
@@ -4635,14 +4635,14 @@ namespace OpenMetaverse
             this.m_AssetFilename = assetFilename;
         }
     }
-    
+
     public class SaveAssetToInventoryEventArgs : EventArgs
     {
         private readonly UUID m_ItemID;
         private readonly UUID m_NewAssetID;
 
         public UUID ItemID { get { return m_ItemID; } }
-        public UUID NewAssetID { get { return m_NewAssetID; } } 
+        public UUID NewAssetID { get { return m_NewAssetID; } }
 
         public SaveAssetToInventoryEventArgs(UUID itemID, UUID newAssetID)
         {
@@ -4650,7 +4650,7 @@ namespace OpenMetaverse
             this.m_NewAssetID = newAssetID;
         }
     }
-    
+
     public class ScriptRunningReplyEventArgs : EventArgs
     {
         private readonly UUID m_ObjectID;
@@ -4661,7 +4661,7 @@ namespace OpenMetaverse
         public UUID ObjectID { get { return m_ObjectID; } }
         public UUID ScriptID { get { return m_ScriptID; } }
         public bool IsMono { get { return m_IsMono; } }
-        public bool IsRunning { get { return m_IsRunning; } } 
+        public bool IsRunning { get { return m_IsRunning; } }
 
         public ScriptRunningReplyEventArgs(UUID objectID, UUID sctriptID, bool isMono, bool isRunning)
         {

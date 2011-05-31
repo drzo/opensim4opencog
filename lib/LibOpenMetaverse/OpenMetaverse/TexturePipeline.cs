@@ -296,11 +296,11 @@ namespace OpenMetaverse
 
             if (callback != null)
             {
-                if (_Client.Assets.Cache.HasAsset(textureID, AssetType.Texture))
+                if (_Client.Assets.Cache.HasAsset(textureID))
                 {
                     ImageDownload image = new ImageDownload();
                     image.ID = textureID;
-                    image.AssetData = _Client.Assets.Cache.GetCachedAssetBytes(textureID, AssetType.Texture);
+                    image.AssetData = _Client.Assets.Cache.GetCachedAssetBytes(textureID);
                     image.Size = image.AssetData.Length;
                     image.Transferred = image.AssetData.Length;
                     image.ImageType = imageType;
@@ -712,8 +712,7 @@ namespace OpenMetaverse
                     task.Transfer.Success = true;
                     RemoveTransfer(task.Transfer.ID);
                     resetEvents[task.RequestSlot].Set(); // free up request slot
-                    _Client.Assets.Cache.SaveAssetToCache(task.RequestID, task.Transfer.AssetData,
-                                                          task.Transfer.AssetType);
+                    _Client.Assets.Cache.SaveAssetToCache(task.RequestID, task.Transfer.AssetData);
                     foreach (TextureDownloadCallback callback in task.Callbacks)
                         callback(TextureRequestState.Finished, new AssetTexture(task.RequestID, task.Transfer.AssetData));
 
@@ -786,8 +785,7 @@ namespace OpenMetaverse
                     RemoveTransfer(task.RequestID);
                     resetEvents[task.RequestSlot].Set();
 
-                    _Client.Assets.Cache.SaveAssetToCache(task.RequestID, task.Transfer.AssetData,
-                                                          task.Transfer.AssetType);
+                    _Client.Assets.Cache.SaveAssetToCache(task.RequestID, task.Transfer.AssetData);
 
                     foreach (TextureDownloadCallback callback in task.Callbacks)
                         callback(TextureRequestState.Finished, new AssetTexture(task.RequestID, task.Transfer.AssetData));

@@ -1085,50 +1085,36 @@ namespace OpenMetaverse
         /// <param name="msDelay">Number of milliseconds to pause in between each request</param>
         public void RequestAllSimParcels(Simulator simulator, bool refresh, int msDelay)
         {
-            int[,] simulatorParcelMap = simulator.ParcelMap;
-            lock (simulatorParcelMap)
+            if (simulator.DownloadingParcelMap)
             {
-                if (simulator.DownloadingParcelMap)
-                {
-                    Logger.Log("Already downloading parcels in " + simulator.Name, Helpers.LogLevel.Info, Client);
-                    return;
-                }
-                else
-                {
-                    simulator.SharedData.DownloadingParcelMap = true;
-                    WaitForSimParcel = new AutoResetEvent(false);
-                }
+                Logger.Log("Already downloading parcels in " + simulator.Name, Helpers.LogLevel.Info, Client);
+                return;
+            }
+            else
+            {
+                simulator.DownloadingParcelMap = true;
+                WaitForSimParcel = new AutoResetEvent(false);
+            }
 
-
-                if (refresh)
-                {
-                    bool[,] RequestedParcelMap = simulator.SharedData.RequestedParcelMap;
-
+            if (refresh)
+            {
                     for (int y = 0; y < 64; y++)
                         for (int x = 0; x < 64; x++)
-                        {
-                            simulatorParcelMap[y, x] = 0;
-                            RequestedParcelMap[y, x] = false;
-                        }
-                }
+                            simulator.ParcelMap[y, x] = 0;
             }
 
             Thread th = new Thread(delegate()
             {
                 int count = 0, timeouts = 0, y, x;
-                bool[,] RequestedParcelMap = simulator.SharedData.RequestedParcelMap;
+
                 for (y = 0; y < 64; y++)
                 {
                     for (x = 0; x < 64; x++)
                     {
                         if (!Client.Network.Connected)
                             return;
-                        lock (simulatorParcelMap)
-                        {
-                            if (simulatorParcelMap[y, x] != 0) continue;
-                            if (RequestedParcelMap[y, x]) continue;
-                            RequestedParcelMap[y, x] = true;
-                        }
+
+                        if (simulator.ParcelMap[y, x] == 0)
                         {
                             Client.Parcels.RequestParcelProperties(simulator,
                                                              (y + 1) * 4.0f, (x + 1) * 4.0f,
@@ -1147,7 +1133,7 @@ namespace OpenMetaverse
                     "Full simulator parcel information retrieved. Sent {0} parcel requests. Current outgoing queue: {1}, Retry Count {2}",
                     count, Client.Network.OutboxCount, timeouts), Helpers.LogLevel.Info, Client);
 
-                lock (simulatorParcelMap) simulator.SharedData.DownloadingParcelMap = false;
+                simulator.DownloadingParcelMap = false;
             });
 
             th.Start();
@@ -1967,7 +1953,7 @@ namespace OpenMetaverse
 
                 Buffer.BlockCopy(overlay.ParcelData.Data, 0, simulator.ParcelOverlay,
                     overlay.ParcelData.SequenceID * length, length);
-                simulator.SharedData.ParcelOverlaysReceived++;
+                simulator.ParcelOverlaysReceived++;
 
                 if (simulator.ParcelOverlaysReceived >= OVERLAY_COUNT)
                 {

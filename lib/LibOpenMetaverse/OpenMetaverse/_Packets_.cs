@@ -14591,10 +14591,10 @@ namespace OpenMetaverse.Packets
             public float Restitution;
             public float GravityMultiplier;
 
-        public override int Length
-        {
-            get
+            public override int Length
             {
+                get
+                {
                     return 17;
                 }
             }
@@ -32146,10 +32146,10 @@ namespace OpenMetaverse.Packets
         {
             public UUID OwnerID;
 
-        public override int Length
-        {
-            get
+            public override int Length
             {
+                get
+                {
                     return 16;
                 }
             }

@@ -134,16 +134,16 @@ namespace OpenMetaverse
         /// bake</summary>
         public static readonly UUID[] BAKED_TEXTURE_HASH = new UUID[]
         {
-            UUIDFactory.GetUUID("18ded8d6-bcfc-e415-8539-944c0f5ea7a6"),
-            UUIDFactory.GetUUID("338c29e3-3024-4dbb-998d-7c04cf4fa88f"),
-            UUIDFactory.GetUUID("91b4a2c7-1b1a-ba16-9a16-1f8f8dcc1c3f"),
-            UUIDFactory.GetUUID("b2cf28af-b840-1071-3c6a-78085d8128b5"),
-            UUIDFactory.GetUUID("ea800387-ea1a-14e0-56cb-24f2022f969a"),
-            UUIDFactory.GetUUID("0af1ef7c-ad24-11dd-8790-001f5bf833e8")
+            new UUID("18ded8d6-bcfc-e415-8539-944c0f5ea7a6"),
+            new UUID("338c29e3-3024-4dbb-998d-7c04cf4fa88f"),
+            new UUID("91b4a2c7-1b1a-ba16-9a16-1f8f8dcc1c3f"),
+            new UUID("b2cf28af-b840-1071-3c6a-78085d8128b5"),
+            new UUID("ea800387-ea1a-14e0-56cb-24f2022f969a"),
+            new UUID("0af1ef7c-ad24-11dd-8790-001f5bf833e8")
         };
         /// <summary>Default avatar texture, used to detect when a custom
         /// texture is not set for a face</summary>
-        public static readonly UUID DEFAULT_AVATAR_TEXTURE = UUIDFactory.GetUUID("c228d1cf-4b5d-4ba8-84f4-899a0796aa97");
+        public static readonly UUID DEFAULT_AVATAR_TEXTURE = new UUID("c228d1cf-4b5d-4ba8-84f4-899a0796aa97");
 
         #endregion Constants
 
@@ -742,30 +742,30 @@ namespace OpenMetaverse
 
             if (safe)
             {
-            // If we don't already have a the current agent wearables downloaded, updating to a
-            // new set of wearables that doesn't have all of the bodyparts can leave the avatar
-            // in an inconsistent state. If any bodypart entries are empty, we need to fetch the
-            // current wearables first
-            bool needsCurrentWearables = false;
-            lock (Wearables)
-            {
-                for (int i = 0; i < WEARABLE_COUNT; i++)
+                // If we don't already have a the current agent wearables downloaded, updating to a
+                // new set of wearables that doesn't have all of the bodyparts can leave the avatar
+                // in an inconsistent state. If any bodypart entries are empty, we need to fetch the
+                // current wearables first
+                bool needsCurrentWearables = false;
+                lock (Wearables)
                 {
-                    WearableType wearableType = (WearableType)i;
-                    if (WearableTypeToAssetType(wearableType) == AssetType.Bodypart && !Wearables.ContainsKey(wearableType))
+                    for (int i = 0; i < WEARABLE_COUNT; i++)
                     {
-                        needsCurrentWearables = true;
-                        break;
+                        WearableType wearableType = (WearableType)i;
+                        if (WearableTypeToAssetType(wearableType) == AssetType.Bodypart && !Wearables.ContainsKey(wearableType))
+                        {
+                            needsCurrentWearables = true;
+                            break;
+                        }
                     }
                 }
-            }
 
-            if (needsCurrentWearables && !GetAgentWearables())
-            {
-                Logger.Log("Failed to fetch the current agent wearables, cannot safely replace outfit",
-                    Helpers.LogLevel.Error);
-                return;
-            }
+                if (needsCurrentWearables && !GetAgentWearables())
+                {
+                    Logger.Log("Failed to fetch the current agent wearables, cannot safely replace outfit",
+                        Helpers.LogLevel.Error);
+                    return;
+                }
             }
 
             // Replace our local Wearables collection, send the packet(s) to update our
@@ -1652,13 +1652,6 @@ namespace OpenMetaverse
         /// </summary>
         private void RequestAgentSetAppearance()
         {
-            AgentSetAppearancePacket set = MakeAppearancePacket();
-            Client.Network.SendPacket(set);
-            Logger.DebugLog("Send AgentSetAppearance packet");
-        }
-
-        public AgentSetAppearancePacket MakeAppearancePacket()
-        {
             AgentSetAppearancePacket set = new AgentSetAppearancePacket();
             set.AgentData.AgentID = Client.Self.AgentID;
             set.AgentData.SessionID = Client.Self.SessionID;
@@ -1831,7 +1824,9 @@ namespace OpenMetaverse
 
                 #endregion Agent Size
             }
-            return set;
+
+            Client.Network.SendPacket(set);
+            Logger.DebugLog("Send AgentSetAppearance packet");
         }
 
         private void DelayedRequestSetAppearance()
@@ -2213,6 +2208,11 @@ namespace OpenMetaverse
         }
 
         #endregion Static Helpers
+
+        public AgentSetAppearancePacket MakeAppearancePacket()
+        {
+            return new AgentSetAppearancePacket();
+        }
     }
 
     #region AppearanceManager EventArgs Classes

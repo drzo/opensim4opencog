@@ -189,11 +189,6 @@ namespace OpenMetaverse
             req.Add("ViewerMetrics");
             req.Add("ViewerStartAuction");
             req.Add("ViewerStats");
-            // Legacy kept for OpenSim and Cogbot
-            req.Add("WebFetchInventoryDescendents");
-            req.Add("FetchInventory");
-            req.Add("FetchLib");
-            req.Add("FetchLibDescendents");
 
             _SeedRequest = new CapsClient(new Uri(_SeedCapsURI));
             _SeedRequest.OnComplete += new CapsClient.CompleteCallback(SeedRequestCompleteHandler);

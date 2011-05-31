@@ -409,7 +409,7 @@ namespace OpenMetaverse
         /// </summary>
         public class SculptData
         {
-            public UUID SculptTexture = UUID.Zero;
+            public UUID SculptTexture;
             private byte type;
 
             public SculptType Type
@@ -450,7 +450,7 @@ namespace OpenMetaverse
             {
                 if (data.Length >= 17)
                 {
-                    SculptTexture = UUIDFactory.GetUUID(data, pos);
+                    SculptTexture = new UUID(data, pos);
                     type = data[pos + 16];
                 }
                 else
@@ -507,13 +507,13 @@ namespace OpenMetaverse
         public class ObjectProperties
         {
             /// <summary></summary>
-            public UUID ObjectID = UUID.Zero;
+            public UUID ObjectID;
             /// <summary></summary>
-            public UUID CreatorID = UUID.Zero;
+            public UUID CreatorID;
             /// <summary></summary>
-            public UUID OwnerID = UUID.Zero;
+            public UUID OwnerID;
             /// <summary></summary>
-            public UUID GroupID = UUID.Zero;
+            public UUID GroupID;
             /// <summary></summary>
             public DateTime CreationDate;
             /// <summary></summary>
@@ -535,13 +535,13 @@ namespace OpenMetaverse
             /// <summary></summary>
             public short InventorySerial;
             /// <summary></summary>
-            public UUID ItemID = UUID.Zero;
+            public UUID ItemID;
             /// <summary></summary>
-            public UUID FolderID = UUID.Zero;
+            public UUID FolderID;
             /// <summary></summary>
-            public UUID FromTaskID = UUID.Zero;
+            public UUID FromTaskID;
             /// <summary></summary>
-            public UUID LastOwnerID = UUID.Zero;
+            public UUID LastOwnerID;
             /// <summary></summary>
             public string Name;
             /// <summary></summary>
@@ -660,9 +660,9 @@ namespace OpenMetaverse
         #region Public Members
 
         /// <summary></summary>
-        public UUID ID = UUID.Zero;
+        public UUID ID;
         /// <summary></summary>
-        public UUID GroupID = UUID.Zero;
+        public UUID GroupID;
         /// <summary></summary>
         public uint LocalID;
         /// <summary></summary>
@@ -1011,13 +1011,13 @@ namespace OpenMetaverse
             prim.Scale = ((OSDArray)map["scale"]).AsVector3();
             
             if (map["flex"])
-            prim.Flexible = FlexibleData.FromOSD(map["flex"]);
+                prim.Flexible = FlexibleData.FromOSD(map["flex"]);
             
             if (map["light"])
-            prim.Light = LightData.FromOSD(map["light"]);
+                prim.Light = LightData.FromOSD(map["light"]);
             
             if (map["sculpt"])
-            prim.Sculpt = SculptData.FromOSD(map["sculpt"]);
+                prim.Sculpt = SculptData.FromOSD(map["sculpt"]);
             
             prim.Textures = TextureEntry.FromOSD(map["textures"]);
             prim.Properties = new ObjectProperties();
