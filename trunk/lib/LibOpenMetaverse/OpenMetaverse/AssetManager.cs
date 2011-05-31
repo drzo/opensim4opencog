@@ -536,9 +536,9 @@ namespace OpenMetaverse
             transfer.Callback = callback;
 
             // Check asset cache first
-            if (callback != null && Cache.HasAsset(assetID, type))
+            if (callback != null && Cache.HasAsset(assetID))
             {
-                byte[] data = Cache.GetCachedAssetBytes(assetID, type);
+                byte[] data = Cache.GetCachedAssetBytes(assetID);
                 transfer.AssetData = data;
                 transfer.Success = true;
                 transfer.Status = StatusCode.OK;
@@ -593,7 +593,7 @@ namespace OpenMetaverse
 
             XferDownload transfer = new XferDownload();
             transfer.XferID = id;
-            transfer.ID = UUIDFactory.GetUUID(id); // Our dictionary tracks transfers with UUIDs, so convert the ulong back
+            transfer.ID = new UUID(id); // Our dictionary tracks transfers with UUIDs, so convert the ulong back
             transfer.Filename = filename;
             transfer.VFileID = vFileID;
             transfer.AssetType = vFileType;
@@ -640,9 +640,9 @@ namespace OpenMetaverse
             transfer.Callback = callback;
 
             // Check asset cache first
-            if (callback != null && Cache.HasAsset(assetID, type))
+            if (callback != null && Cache.HasAsset(assetID))
             {
-                byte[] data = Cache.GetCachedAssetBytes(assetID, type);
+                byte[] data = Cache.GetCachedAssetBytes(assetID);
                 transfer.AssetData = data;
                 transfer.Success = true;
                 transfer.Status = StatusCode.OK;
@@ -1086,12 +1086,10 @@ namespace OpenMetaverse
             if (Client.Network.CurrentSim.Caps != null &&
                 Client.Network.CurrentSim.Caps.CapabilityURI("GetMesh") != null)
             {
-                const AssetType type = AssetType.Mesh;
                 // Do we have this mesh asset in the cache?
-                if (Client.Assets.Cache.HasAsset(meshID, type))
+                if (Client.Assets.Cache.HasAsset(meshID))
                 {
-                    callback(true,
-                             new AssetMesh(meshID, Client.Assets.Cache.GetCachedAssetBytes(meshID, type)));
+                    callback(true, new AssetMesh(meshID, Client.Assets.Cache.GetCachedAssetBytes(meshID)));
                     return;
                 }
 
@@ -1107,7 +1105,7 @@ namespace OpenMetaverse
                         if (error == null && responseData != null) // success
                         {
                             callback(true, new AssetMesh(meshID, responseData));
-                            Client.Assets.Cache.SaveAssetToCache(meshID, responseData, type);
+                            Client.Assets.Cache.SaveAssetToCache(meshID, responseData);
                         }
                         else // download failed
                         {
@@ -1153,11 +1151,11 @@ namespace OpenMetaverse
                 return;
 
             // Do we have this image in the cache?
-            if (Client.Assets.Cache.HasAsset(textureID, AssetType.Texture))
+            if (Client.Assets.Cache.HasAsset(textureID))
             {
                 ImageDownload image = new ImageDownload();
                 image.ID = textureID;
-                image.AssetData = Client.Assets.Cache.GetCachedAssetBytes(textureID, AssetType.Texture);
+                image.AssetData = Client.Assets.Cache.GetCachedAssetBytes(textureID);
                 image.Size = image.AssetData.Length;
                 image.Transferred = image.AssetData.Length;
                 image.ImageType = imageType;
@@ -1202,7 +1200,7 @@ namespace OpenMetaverse
                         callback(TextureRequestState.Finished, new AssetTexture(image.ID, image.AssetData));
                         FireImageProgressEvent(image.ID, image.Transferred, image.Size);
 
-                        Client.Assets.Cache.SaveAssetToCache(textureID, responseData, AssetType.Texture);
+                        Client.Assets.Cache.SaveAssetToCache(textureID, responseData);
                     }
                     else // download failed
                     {
@@ -1265,14 +1263,9 @@ namespace OpenMetaverse
                 case AssetType.Gesture:
                     asset = new AssetGesture();
                     break;
-                case AssetType.CallingCard:
-                    asset = new AssetCallingCard();
-                    break;
                 default:
-                    asset = new AssetMutable(type);
-                    asset.locked = true;
                     Logger.Log("Unimplemented asset type: " + type, Helpers.LogLevel.Error, Client);
-                    break;
+                    return null;
             }
 
             return asset;
@@ -1305,16 +1298,9 @@ namespace OpenMetaverse
                 // The first packet reserves the first four bytes of the data for the
                 // total length of the asset and appends 1000 bytes of data after that
                 send.DataPacket.Data = new byte[1004];
-                int uploadSize = upload.Size;
-                Buffer.BlockCopy(Utils.IntToBytes(uploadSize), 0, send.DataPacket.Data, 0, 4);
-                int transferSize = Math.Min(1000, uploadSize);
-                Buffer.BlockCopy(upload.AssetData, 0, send.DataPacket.Data, 4, transferSize);
-                if (transferSize<1000)
-                {
-                    // last packet - small transfer
-                    send.XferID.Packet |= (uint)0x80000000; // This signals the final packet
-                }
-                upload.Transferred += transferSize;
+                Buffer.BlockCopy(Utils.IntToBytes(upload.Size), 0, send.DataPacket.Data, 0, 4);
+                Buffer.BlockCopy(upload.AssetData, 0, send.DataPacket.Data, 4, 1000);
+                upload.Transferred += 1000;
 
                 lock (Transfers)
                 {
@@ -1322,9 +1308,8 @@ namespace OpenMetaverse
                     Transfers[upload.ID] = upload;
                 }
             }
-            else if ((upload.Transferred + 1000) < upload.Size)
+            else if ((send.XferID.Packet + 1) * 1000 < upload.Size)
             {
-                // this uses at least 1000 in length
                 // This packet is somewhere in the middle of the transfer, or a perfectly
                 // aligned packet at the end of the transfer
                 send.DataPacket.Data = new byte[1000];
@@ -1334,10 +1319,9 @@ namespace OpenMetaverse
             else
             {
                 // Special handler for the last packet which will be less than 1000 bytes
-                //was int lastlen = upload.Size - ((int)send.XferID.Packet * 1000);
-                int lastlen = upload.Size - upload.Transferred;
+                int lastlen = upload.Size - ((int)send.XferID.Packet * 1000);
                 send.DataPacket.Data = new byte[lastlen];
-                Buffer.BlockCopy(upload.AssetData, upload.Transferred, send.DataPacket.Data, 0, lastlen);
+                Buffer.BlockCopy(upload.AssetData, (int)send.XferID.Packet * 1000, send.DataPacket.Data, 0, lastlen);
                 send.XferID.Packet |= (uint)0x80000000; // This signals the final packet
                 upload.Transferred += lastlen;
             }
@@ -1399,7 +1383,7 @@ namespace OpenMetaverse
 
                     if (download.Source == SourceType.Asset && info.TransferInfo.Params.Length == 20)
                     {
-                        download.AssetID = UUIDFactory.GetUUID(info.TransferInfo.Params, 0);
+                        download.AssetID = new UUID(info.TransferInfo.Params, 0);
                         download.AssetType = (AssetType)(sbyte)info.TransferInfo.Params[16];
 
                         //Client.DebugLog(String.Format("TransferInfo packet received. AssetID: {0} Type: {1}",
@@ -1408,12 +1392,12 @@ namespace OpenMetaverse
                     else if (download.Source == SourceType.SimInventoryItem && info.TransferInfo.Params.Length == 100)
                     {
                         // TODO: Can we use these?
-                        //UUID agentID = UUIDFactory.GetUUID(info.TransferInfo.Params, 0);
-                        //UUID sessionID = UUIDFactory.GetUUID(info.TransferInfo.Params, 16);
-                        //UUID ownerID = UUIDFactory.GetUUID(info.TransferInfo.Params, 32);
-                        //UUID taskID = UUIDFactory.GetUUID(info.TransferInfo.Params, 48);
-                        //UUID itemID = UUIDFactory.GetUUID(info.TransferInfo.Params, 64);
-                        download.AssetID = UUIDFactory.GetUUID(info.TransferInfo.Params, 80);
+                        //UUID agentID = new UUID(info.TransferInfo.Params, 0);
+                        //UUID sessionID = new UUID(info.TransferInfo.Params, 16);
+                        //UUID ownerID = new UUID(info.TransferInfo.Params, 32);
+                        //UUID taskID = new UUID(info.TransferInfo.Params, 48);
+                        //UUID itemID = new UUID(info.TransferInfo.Params, 64);
+                        download.AssetID = new UUID(info.TransferInfo.Params, 80);
                         download.AssetType = (AssetType)(sbyte)info.TransferInfo.Params[96];
 
                         //Client.DebugLog(String.Format("TransferInfo packet received. AgentID: {0} SessionID: {1} " + 
@@ -1436,20 +1420,10 @@ namespace OpenMetaverse
             }
         }
 
-
-        private readonly object TransferPacketHandlerLock = new object();
-        protected void TransferPacketHandler(object sender, PacketReceivedEventArgs e)
-        {
-            lock (TransferPacketHandlerLock)
-            {
-                TransferPacketHandler0(sender, e); 
-            } 
-        }
-
         /// <summary>Process an incoming packet and raise the appropriate events</summary>
         /// <param name="sender">The sender</param>
         /// <param name="e">The EventArgs object containing the packet data</param>
-        protected void TransferPacketHandler0(object sender, PacketReceivedEventArgs e)
+        protected void TransferPacketHandler(object sender, PacketReceivedEventArgs e)
         {
             TransferPacketPacket asset = (TransferPacketPacket)e.Packet;
             Transfer transfer;
@@ -1491,32 +1465,18 @@ namespace OpenMetaverse
                     }
                 }
 
-                int packetDataLen = asset.TransferData.Data.Length;
                 // This assumes that every transfer packet except the last one is exactly 1000 bytes,
-                int startPos = 1000 * asset.TransferData.Packet;
-                int bufferLen = download.AssetData.Length;
-                if ((startPos + packetDataLen) > bufferLen)
-                {
-                    int nextPacketDataLen = bufferLen - startPos;
-                    string stringFormat =
-                        String.Format(
-                            "nextPacketDataLen={0} TransferData.Data.Length={1}, startPos ={2} AssetData.Length={3}, TransferData.Packet={4}",
-                            nextPacketDataLen, packetDataLen, startPos, bufferLen, asset.TransferData.Packet);
-                    Logger.Log(stringFormat, Helpers.LogLevel.Error);
-                    if (nextPacketDataLen < 0) nextPacketDataLen = 0;
-                    packetDataLen = nextPacketDataLen;
-
-                }
-                // hopefully that is a safe assumption to make                
+                // hopefully that is a safe assumption to make
                 try
                 {
-                    Buffer.BlockCopy(asset.TransferData.Data, 0, download.AssetData, startPos, packetDataLen);
-                    download.Transferred += packetDataLen;
+                    Buffer.BlockCopy(asset.TransferData.Data, 0, download.AssetData, 1000 * asset.TransferData.Packet,
+                        asset.TransferData.Data.Length);
+                    download.Transferred += asset.TransferData.Data.Length;
                 }
                 catch (ArgumentException)
                 {
-                    Logger.Log(String.Format("TransferPacket handling failed. TransferData.Data.Length={0}, startPos ={1} AssetData.Length={2}, TransferData.Packet={3}",
-                        packetDataLen, startPos, bufferLen, asset.TransferData.Packet), Helpers.LogLevel.Error);
+                    Logger.Log(String.Format("TransferPacket handling failed. TransferData.Data.Length={0}, AssetData.Length={1}, TransferData.Packet={2}",
+                        asset.TransferData.Data.Length, download.AssetData.Length, asset.TransferData.Packet), Helpers.LogLevel.Error);
                     return;
                 }
 
@@ -1533,7 +1493,7 @@ namespace OpenMetaverse
                     lock (Transfers) Transfers.Remove(download.ID);
 
                     // Cache successful asset download
-                    Cache.SaveAssetToCache(download.AssetID, download.AssetData, download.AssetType);
+                    Cache.SaveAssetToCache(download.AssetID, download.AssetData);
 
                     if (download.Callback != null)
                     {
@@ -1579,7 +1539,7 @@ namespace OpenMetaverse
                 upload.XferID = request.XferID.ID;
                 upload.Type = (AssetType)request.XferID.VFileType;
 
-                UUID transferID = UUIDFactory.GetUUID(upload.XferID);
+                UUID transferID = new UUID(upload.XferID);
                 Transfers[transferID] = upload;
 
                 // Send the first packet containing actual asset data
@@ -1594,9 +1554,9 @@ namespace OpenMetaverse
         {
             ConfirmXferPacketPacket confirm = (ConfirmXferPacketPacket)e.Packet;
 
-            // Building a UUID.GetUUID every time an ACK is received for an upload is a horrible
+            // Building a new UUID every time an ACK is received for an upload is a horrible
             // thing, but this whole Xfer system is horrible
-            UUID transferID = UUIDFactory.GetUUID(confirm.XferID.ID);
+            UUID transferID = new UUID(confirm.XferID.ID);
             Transfer transfer;
             AssetUpload upload = null;
 
@@ -1677,7 +1637,7 @@ namespace OpenMetaverse
             SendXferPacketPacket xfer = (SendXferPacketPacket)e.Packet;
 
             // Lame ulong to UUID conversion, please go away Xfer system
-            UUID transferID = UUIDFactory.GetUUID(xfer.XferID.ID);
+            UUID transferID = new UUID(xfer.XferID.ID);
             Transfer transfer;
             XferDownload download = null;
 
@@ -1758,7 +1718,7 @@ namespace OpenMetaverse
             XferDownload download = null;
 
             // Lame ulong to UUID conversion, please go away Xfer system
-            UUID transferID = UUIDFactory.GetUUID(abort.XferID.ID);
+            UUID transferID = new UUID(abort.XferID.ID);
 
             lock (Transfers)
             {

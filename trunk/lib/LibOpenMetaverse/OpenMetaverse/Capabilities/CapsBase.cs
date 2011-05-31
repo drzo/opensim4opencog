@@ -55,23 +55,9 @@ namespace OpenMetaverse.Http
 
         static CapsBase()
         {
-            try
-            {
-                ServicePointManager.CertificatePolicy = new TrustAllCertificatePolicy();
-            }
-            catch (Exception e)
-            {
-                System.Console.WriteLine("" + e);
-            }
+            ServicePointManager.CertificatePolicy = new TrustAllCertificatePolicy();
             // Even though this will compile on Mono 2.4, it throws a runtime exception
-            try
-            {
-                ServicePointManager.ServerCertificateValidationCallback = TrustAllCertificatePolicy.TrustAllCertificateHandler;
-            }
-            catch (Exception e)
-            {
-                System.Console.WriteLine("" + e);
-            }
+            //ServicePointManager.ServerCertificateValidationCallback = TrustAllCertificatePolicy.TrustAllCertificateHandler;
         }
 
         private class RequestState
@@ -166,7 +152,7 @@ namespace OpenMetaverse.Http
             // If not on mono, set accept-encoding header that allows response compression
             if (Type.GetType("Mono.Runtime") == null)
             {
-            request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+                request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
             }
             return request;
         }

@@ -315,7 +315,7 @@ namespace OpenMetaverse
         {
             if (bitPos != 0) throw new IndexOutOfRangeException();
 
-            UUID val = UUIDFactory.GetUUID(Data, bytePos);
+            UUID val = new UUID(Data, bytePos);
             bytePos += 16;
             return val;
         }

@@ -318,10 +318,8 @@ namespace OpenMetaverse.Voice
                         inputDevices = new List<string>();
                         foreach (CaptureDevice device in rsp.Results.CaptureDevices)
                             inputDevices.Add(device.Device);
-                        if (rsp.Results.CurrentCaptureDevice != null)
-                        {
-                            currentCaptureDevice = rsp.Results.CurrentCaptureDevice.Device;
-                        }
+                        currentCaptureDevice = rsp.Results.CurrentCaptureDevice.Device;
+ 
                         if (OnAuxGetCaptureDevicesResponse != null && rsp.Results.CaptureDevices.Count > 0)
                         {
                             OnAuxGetCaptureDevicesResponse(
@@ -331,7 +329,7 @@ namespace OpenMetaverse.Voice
                                     int.Parse(rsp.ReturnCode),
                                     int.Parse(rsp.Results.StatusCode),
                                     rsp.Results.StatusString,
-                                    CurrentCaptureDevice,
+                                    rsp.Results.CurrentCaptureDevice.Device,
                                     inputDevices));
                         }
                         break;
@@ -339,11 +337,8 @@ namespace OpenMetaverse.Voice
                         outputDevices = new List<string>();
                         foreach (RenderDevice device in rsp.Results.RenderDevices)
                             outputDevices.Add(device.Device);
+                        currentPlaybackDevice = rsp.Results.CurrentRenderDevice.Device;
 
-                        if (rsp.Results.CurrentCaptureDevice != null)
-                        {
-                            currentCaptureDevice = rsp.Results.CurrentCaptureDevice.Device;
-                        }
                         if (OnAuxGetRenderDevicesResponse != null)
                         {
                             OnAuxGetRenderDevicesResponse(
@@ -353,7 +348,7 @@ namespace OpenMetaverse.Voice
                                     int.Parse(rsp.ReturnCode),
                                     int.Parse(rsp.Results.StatusCode),
                                     rsp.Results.StatusString,
-                                    currentPlaybackDevice,
+                                    rsp.Results.CurrentRenderDevice.Device,
                                     outputDevices));
                         }
                         break;

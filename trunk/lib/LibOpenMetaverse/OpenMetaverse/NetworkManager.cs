@@ -173,40 +173,9 @@ namespace OpenMetaverse
         /// the data sent from the simulator</param>
         protected virtual void OnSimConnecting(SimConnectingEventArgs e)
         {
-            EventRaised(m_SimConnectingLock, "SimConnecting");
             EventHandler<SimConnectingEventArgs> handler = m_SimConnecting;
             if (handler != null)
                 handler(this, e);
-        }
-
-        /// <summary>If events were raised .. helps know handler adders misssed some</summary>
-        static private Dictionary<object, int> m_EventsRaised = new Dictionary<object, int>();
-        public static void EventRaised(object o, string name)
-        {
-            lock (m_EventsRaised)
-           {
-               int number;
-               if (!m_EventsRaised.TryGetValue(o,out number))
-               {
-                   m_EventsRaised[o] = 1;
-               } else
-               {
-                   m_EventsRaised[o] = number + 1;
-               }
-           }
-        }
-
-        public static void EventAdded(object o, string name)
-        {
-            int number;
-            lock (m_EventsRaised)
-            {
-                if (!m_EventsRaised.TryGetValue(o, out number))
-                {
-                    return;
-                }
-            }
-            Logger.Log(name + " Event being registered late: " + number, Helpers.LogLevel.Error);
         }
 
         /// <summary>Thread sync lock object</summary>
@@ -216,8 +185,7 @@ namespace OpenMetaverse
         /// ...</summary>
         public event EventHandler<SimConnectingEventArgs> SimConnecting
         {
-            add { EventAdded(m_SimConnectingLock, "SimConnecting"); 
-                lock (m_SimConnectingLock) { m_SimConnecting += value; } }
+            add { lock (m_SimConnectingLock) { m_SimConnecting += value; } }
             remove { lock (m_SimConnectingLock) { m_SimConnecting -= value; } }
         }
 
@@ -229,7 +197,6 @@ namespace OpenMetaverse
         /// the data sent from the simulator</param>
         protected virtual void OnSimConnected(SimConnectedEventArgs e)
         {
-            EventRaised(m_SimConnectedLock, "SimConnected");
             EventHandler<SimConnectedEventArgs> handler = m_SimConnected;
             if (handler != null)
                 handler(this, e);
@@ -242,20 +209,7 @@ namespace OpenMetaverse
         /// ...</summary>
         public event EventHandler<SimConnectedEventArgs> SimConnected
         {
-            add
-            {
-                EventAdded(m_SimConnectedLock, "SimConnected");
-                if (Connected)
-                {
-                    Logger.Log("SimConnected while Connected!!??", Helpers.LogLevel.Error, Client);
-                }
-                lock (m_SimConnectedLock)
-                {
-                    {
-                        m_SimConnected += value;
-                    }
-                }
-            }
+            add { lock (m_SimConnectedLock) { m_SimConnected += value; } }
             remove { lock (m_SimConnectedLock) { m_SimConnected -= value; } }
         }
 
@@ -339,7 +293,6 @@ namespace OpenMetaverse
         /// the data sent from the simulator</param>
         protected virtual void OnEventQueueRunning(EventQueueRunningEventArgs e)
         {
-            EventRaised(m_SimConnectingLock, "EventQueueRunning");
             EventHandler<EventQueueRunningEventArgs> handler = m_EventQueueRunning;
             if (handler != null)
                 handler(this, e);
@@ -352,14 +305,7 @@ namespace OpenMetaverse
         /// ...</summary>
         public event EventHandler<EventQueueRunningEventArgs> EventQueueRunning
         {
-            add
-            {
-                EventAdded(m_SimConnectingLock, "EventQueueRunning");
-                lock (m_EventQueueRunningLock)
-                {
-                    m_EventQueueRunning += value;
-                }
-            }
+            add { lock (m_EventQueueRunningLock) { m_EventQueueRunning += value; } }
             remove { lock (m_EventQueueRunningLock) { m_EventQueueRunning -= value; } }
         }
 
@@ -393,8 +339,6 @@ namespace OpenMetaverse
 
         /// <summary>All of the simulators we are currently connected to</summary>
         public List<Simulator> Simulators = new List<Simulator>();
-        public Dictionary<string, Simulator> Endpoint2Simulators = new Dictionary<string, Simulator>();
-        public object SimulatorsLock = new object();
 
         /// <summary>Handlers for incoming capability events</summary>
         internal CapsEventDictionary CapsEvents;
@@ -583,21 +527,16 @@ namespace OpenMetaverse
         /// <returns>A Simulator object on success, otherwise null</returns>
         public Simulator Connect(IPEndPoint endPoint, ulong handle, bool setDefault, string seedcaps)
         {
-            Simulator simulator = null;
+            Simulator simulator = FindSimulator(endPoint);
 
-            lock (SimulatorsLock)
+            if (simulator == null)
             {
-                simulator = FindSimulator(endPoint);
+                // We're not tracking this sim, create a new Simulator object
+                simulator = new Simulator(Client, endPoint, handle);
 
-                if (simulator == null)
-                {
-                    // We're not tracking this sim, create a new Simulator object
-                    simulator = new Simulator(Client, endPoint, handle);
-                    Endpoint2Simulators.Add(endPoint.ToString(), simulator);
-                    // Immediately add this simulator to the list of current sims. It will be removed if the
-                    // connection fails
-                    lock (Simulators) Simulators.Add(simulator);
-                }
+                // Immediately add this simulator to the list of current sims. It will be removed if the
+                // connection fails
+                lock (Simulators) Simulators.Add(simulator);
             }
 
             if (!simulator.Connected)
@@ -636,10 +575,6 @@ namespace OpenMetaverse
                         lock (Simulators)
                         {
                             Simulators.Remove(simulator);
-                            lock(SimulatorsLock)
-                            {
-                                Endpoint2Simulators.Remove(endPoint.ToString());
-                            }
                         }
                         return null;
                     }
@@ -680,11 +615,8 @@ namespace OpenMetaverse
                     lock (Simulators)
                     {
                         Simulators.Remove(simulator);
-                    }
-                    lock (SimulatorsLock)
-                    {
-                        Endpoint2Simulators.Remove(endPoint.ToString());
-                    }
+                    }                    
+
                     return null;
                 }
             }
@@ -786,10 +718,6 @@ namespace OpenMetaverse
                 }
 
                 lock (Simulators) Simulators.Remove(simulator);
-                lock (SimulatorsLock)
-                {
-                    Endpoint2Simulators.Remove(simulator.IPEndPoint.ToString());
-                }
 
                 if (Simulators.Count == 0) Shutdown(DisconnectType.SimShutdown);
             }
@@ -844,10 +772,6 @@ namespace OpenMetaverse
 
                 Simulators.Clear();
             }
-            lock (SimulatorsLock)
-            {
-                Endpoint2Simulators.Clear();
-            }
 
             if (CurrentSim != null)
             {
@@ -882,12 +806,12 @@ namespace OpenMetaverse
         /// <returns>A Simulator reference on success, otherwise null</returns>
         public Simulator FindSimulator(IPEndPoint endPoint)
         {
-            lock (SimulatorsLock)
+            lock (Simulators)
             {
-                Simulator sim;
-                if (Endpoint2Simulators.TryGetValue(endPoint.ToString(), out sim))
+                for (int i = 0; i < Simulators.Count; i++)
                 {
-                    return sim;
+                    if (Simulators[i].IPEndPoint.Equals(endPoint))
+                        return Simulators[i];
                 }
             }
 
@@ -961,7 +885,7 @@ namespace OpenMetaverse
                     if (packet != null)
                     {
                         // Skip blacklisted packets
-                        lock (UDPBlacklist) if (UDPBlacklist.Contains(packet.Type.ToString()))
+                        if (UDPBlacklist.Contains(packet.Type.ToString()))
                         {
                             Logger.Log(String.Format("Discarding Blacklisted packet {0} from {1}",
                                 packet.Type, simulator.IPEndPoint), Helpers.LogLevel.Warning);
@@ -975,7 +899,7 @@ namespace OpenMetaverse
             }
         }
 
-        public void SetCurrentSim(Simulator simulator, string seedcaps)
+        private void SetCurrentSim(Simulator simulator, string seedcaps)
         {
             if (simulator != CurrentSim)
             {
@@ -1199,12 +1123,10 @@ namespace OpenMetaverse
         protected void RegionHandshakeHandler(object sender, PacketReceivedEventArgs e)
         {
             RegionHandshakePacket handshake = (RegionHandshakePacket)e.Packet;
-            Simulator simulatorInst = e.Simulator;
-            var simulator = simulatorInst.SharedData;
+            Simulator simulator = e.Simulator;
             e.Simulator.ID = handshake.RegionInfo.CacheID;
 
-            simulatorInst.IsEstateManager = handshake.RegionInfo.IsEstateManager;
-
+            simulator.IsEstateManager = handshake.RegionInfo.IsEstateManager;
             simulator.Name = Utils.BytesToString(handshake.RegionInfo.SimName);
             simulator.SimOwner = handshake.RegionInfo.SimOwner;
             simulator.TerrainBase0 = handshake.RegionInfo.TerrainBase0;
@@ -1224,10 +1146,9 @@ namespace OpenMetaverse
             simulator.TerrainStartHeight10 = handshake.RegionInfo.TerrainStartHeight10;
             simulator.TerrainStartHeight11 = handshake.RegionInfo.TerrainStartHeight11;
             simulator.WaterHeight = handshake.RegionInfo.WaterHeight;
-
-            simulatorInst.Flags = (RegionFlags)handshake.RegionInfo.RegionFlags;
-            simulatorInst.BillableFactor = handshake.RegionInfo.BillableFactor;
-            simulatorInst.Access = (SimAccess)handshake.RegionInfo.SimAccess;
+            simulator.Flags = (RegionFlags)handshake.RegionInfo.RegionFlags;
+            simulator.BillableFactor = handshake.RegionInfo.BillableFactor;
+            simulator.Access = (SimAccess)handshake.RegionInfo.SimAccess;
 
             simulator.RegionID = handshake.RegionInfo2.RegionID;
             simulator.ColoLocation = Utils.BytesToString(handshake.RegionInfo3.ColoName);
@@ -1241,15 +1162,12 @@ namespace OpenMetaverse
             reply.AgentData.AgentID = Client.Self.AgentID;
             reply.AgentData.SessionID = Client.Self.SessionID;
             reply.RegionInfo.Flags = 0;
-            SendPacket(reply, simulatorInst);
+            SendPacket(reply, simulator);
 
             // We're officially connected to this sim
-            lock (simulatorInst.HandshakeLock)
-            {
-                simulatorInst.connected = true;
-                simulatorInst.handshakeComplete = true;
-            }
-            simulatorInst.ConnectedEvent.Set();
+            simulator.connected = true;
+            simulator.handshakeComplete = true;
+            simulator.ConnectedEvent.Set();
         }
 
         protected void EnableSimulatorHandler(string capsKey, IMessage message, Simulator simulator)
@@ -1265,9 +1183,8 @@ namespace OpenMetaverse
                 ulong handle = msg.Simulators[i].RegionHandle;
 
                 IPEndPoint endPoint = new IPEndPoint(ip, port);
-                
-                Simulator sim = FindSimulator(endPoint);
-                if (sim != null) return;
+
+                if (FindSimulator(endPoint) != null) return;
 
                 if (Connect(ip, port, handle, false, null) == null)
                 {

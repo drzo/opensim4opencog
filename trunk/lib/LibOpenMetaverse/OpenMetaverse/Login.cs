@@ -937,10 +937,7 @@ namespace OpenMetaverse
         {
             // FIXME: Now that we're using CAPS we could cancel the current login and start a new one
             if (CurrentContext != null)
-            {
-                Logger.DebugLog("Login already in progress: " + CurrentContext, Client);
-                //throw new Exception("Login already in progress");
-            }
+                throw new Exception("Login already in progress");
 
             LoginEvent.Reset();
             CurrentContext = loginParams;
@@ -981,22 +978,6 @@ namespace OpenMetaverse
         }
 
         #endregion
-        public void AbortLogin()
-        {
-            LoginParams loginParams = CurrentContext;
-            CurrentContext = null; // Will force any pending callbacks to bail out early
-            LoginEvent.Set();
-            // FIXME: Now that we're using CAPS we could cancel the current login and start a new one
-            if (loginParams == null)
-            {
-                Logger.DebugLog("No Login was in progress: " + CurrentContext, Client);
-            }
-            else
-            {
-                InternalStatusCode = LoginStatus.Failed;
-                InternalLoginMessage = "Aborted";
-            }
-        }
 
         #region Private Methods
 
@@ -1012,8 +993,6 @@ namespace OpenMetaverse
             if (loginParams.Options == null)
                 loginParams.Options = new List<string>().ToArray();
 
-            if (loginParams.Password == null)
-                loginParams.Password = String.Empty;
             // Convert the password to MD5 if it isn't already
             if (loginParams.Password.Length != 35 && !loginParams.Password.StartsWith("$1$"))
                 loginParams.Password = Utils.MD5(loginParams.Password);
@@ -1042,23 +1021,9 @@ namespace OpenMetaverse
             #endregion
 
             // TODO: Allow a user callback to be defined for handling the cert
-            try
-            {
-                ServicePointManager.CertificatePolicy = new TrustAllCertificatePolicy();
-            }
-            catch (Exception e)
-            {
-                System.Console.WriteLine("" + e);
-            }
+            ServicePointManager.CertificatePolicy = new TrustAllCertificatePolicy();
             // Even though this will compile on Mono 2.4, it throws a runtime exception
-            try
-            {
-                ServicePointManager.ServerCertificateValidationCallback = TrustAllCertificatePolicy.TrustAllCertificateHandler;
-            }
-            catch (Exception e)
-            {
-                System.Console.WriteLine("" + e);
-            }
+            //ServicePointManager.ServerCertificateValidationCallback = TrustAllCertificatePolicy.TrustAllCertificateHandler;
 
             if (Client.Settings.USE_LLSD_LOGIN)
             {
@@ -1265,7 +1230,7 @@ namespace OpenMetaverse
 			ushort simPort = 0;
 			uint regionX = 0;
 			uint regionY = 0;
-            string reason = reply.Reason;
+			string reason = reply.Reason;
             string message = reply.Message;
 
             if (reply.Login == "true")
@@ -1298,10 +1263,7 @@ namespace OpenMetaverse
                 /* Add any blacklisted UDP packets to the blacklist
                  * for exclusion from packet processing */
                 if (reply.UDPBlacklist != null)
-                {
-                    Logger.Log("UDPBlacklist: " + reply.UDPBlacklist, Helpers.LogLevel.Info);
-                    lock (UDPBlacklist) UDPBlacklist.AddRange(reply.UDPBlacklist.Split(','));
-                }
+                    UDPBlacklist.AddRange(reply.UDPBlacklist.Split(','));
 
                 // Misc:
                 MaxAgentGroups = reply.MaxAgentGroups;

@@ -41,7 +41,7 @@ namespace OpenMetaverse
     public class AgentDisplayName
     {
         /// <summary> Agent UUID </summary>
-        public UUID ID = UUID.Zero;
+        public UUID ID;
         /// <summary> Username </summary>
         public string UserName;
         /// <summary> Display name </summary>
@@ -1034,7 +1034,7 @@ namespace OpenMetaverse
                 avatarGroup.AcceptNotices = msg.GroupDataBlock[i].AcceptNotices;
                 avatarGroup.GroupID = msg.GroupDataBlock[i].GroupID;
                 avatarGroup.GroupInsigniaID = msg.GroupDataBlock[i].GroupInsigniaID;
-                avatarGroup.GroupName = msg.GroupDataBlock[i].GroupName;                
+                avatarGroup.GroupName = msg.GroupDataBlock[i].GroupName;
                 avatarGroup.GroupPowers = msg.GroupDataBlock[i].GroupPowers;
                 avatarGroup.ListInProfile = msg.NewGroupDataBlock[i].ListInProfile;
 
@@ -1151,8 +1151,8 @@ namespace OpenMetaverse
                         {
                             if (block.TypeData.Length == 56)
                             {
-                                UUID sourceAvatar = UUIDFactory.GetUUID(block.TypeData, 0);
-                                UUID targetObject = UUIDFactory.GetUUID(block.TypeData, 16);
+                                UUID sourceAvatar = new UUID(block.TypeData, 0);
+                                UUID targetObject = new UUID(block.TypeData, 16);
                                 Vector3d targetPos = new Vector3d(block.TypeData, 32);
                                 OnViewerEffect(new ViewerEffectEventArgs(type, sourceAvatar, targetObject, targetPos, block.Duration, block.ID));
                             }
@@ -1169,8 +1169,8 @@ namespace OpenMetaverse
                         {
                             if (block.TypeData.Length == 57)
                             {
-                                UUID sourceAvatar = UUIDFactory.GetUUID(block.TypeData, 0);
-                                UUID targetObject = UUIDFactory.GetUUID(block.TypeData, 16);
+                                UUID sourceAvatar = new UUID(block.TypeData, 0);
+                                UUID targetObject = new UUID(block.TypeData, 16);
                                 Vector3d targetPos = new Vector3d(block.TypeData, 32);
                                 LookAtType lookAt = (LookAtType)block.TypeData[56];
 
@@ -1189,8 +1189,8 @@ namespace OpenMetaverse
                         {
                             if (block.TypeData.Length == 57)
                             {
-                                UUID sourceAvatar = UUIDFactory.GetUUID(block.TypeData, 0);
-                                UUID targetObject = UUIDFactory.GetUUID(block.TypeData, 16);
+                                UUID sourceAvatar = new UUID(block.TypeData, 0);
+                                UUID targetObject = new UUID(block.TypeData, 16);
                                 Vector3d targetPos = new Vector3d(block.TypeData, 32);
                                 PointAtType pointAt = (PointAtType)block.TypeData[56];
 
