@@ -978,6 +978,22 @@ namespace OpenMetaverse
         }
 
         #endregion
+        public void AbortLogin()
+        {
+            LoginParams loginParams = CurrentContext;
+            CurrentContext = null; // Will force any pending callbacks to bail out early
+            LoginEvent.Set();
+            // FIXME: Now that we're using CAPS we could cancel the current login and start a new one
+            if (loginParams == null)
+            {
+                Logger.DebugLog("No Login was in progress: " + CurrentContext, Client);
+            }
+            else
+            {
+                InternalStatusCode = LoginStatus.Failed;
+                InternalLoginMessage = "Aborted";
+            }
+        }
 
         #region Private Methods
 
