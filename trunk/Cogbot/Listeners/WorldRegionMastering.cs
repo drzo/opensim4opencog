@@ -1,3 +1,4 @@
+#define GroupChatLeftEventArgs
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -547,7 +548,9 @@ namespace cogbot.Listeners
             client.Self.MeanCollision -= Self_OnMeanCollision;
             client.Self.RegionCrossed += Self_OnRegionCrossed;
             client.Self.GroupChatJoined += Self_OnGroupChatJoin;
+#if GroupChatLeftEventArgs
             client.Self.GroupChatLeft += Self_OnGroupChatLeft;
+#endif
             client.Self.AlertMessage += Self_OnAlertMessage;
             client.Self.ScriptControlChange += Self_OnScriptControlChange;
             client.Self.CameraConstraint -= Self_OnCameraConstraint;
