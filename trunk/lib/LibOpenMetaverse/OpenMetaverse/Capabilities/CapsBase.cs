@@ -55,9 +55,23 @@ namespace OpenMetaverse.Http
 
         static CapsBase()
         {
+            try
+            {
             ServicePointManager.CertificatePolicy = new TrustAllCertificatePolicy();
+            }
+            catch (Exception e)
+            {
+                System.Console.WriteLine("" + e);
+            }
             // Even though this will compile on Mono 2.4, it throws a runtime exception
-            //ServicePointManager.ServerCertificateValidationCallback = TrustAllCertificatePolicy.TrustAllCertificateHandler;
+            try
+            {
+                ServicePointManager.ServerCertificateValidationCallback = TrustAllCertificatePolicy.TrustAllCertificateHandler;
+            }
+            catch (Exception e)
+            {
+                System.Console.WriteLine("" + e);
+            }
         }
 
         private class RequestState
