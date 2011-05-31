@@ -1652,6 +1652,13 @@ namespace OpenMetaverse
         /// </summary>
         private void RequestAgentSetAppearance()
         {
+            AgentSetAppearancePacket set = MakeAppearancePacket();
+            Client.Network.SendPacket(set);
+            Logger.DebugLog("Send AgentSetAppearance packet");
+        }
+
+        public AgentSetAppearancePacket MakeAppearancePacket()
+        {
             AgentSetAppearancePacket set = new AgentSetAppearancePacket();
             set.AgentData.AgentID = Client.Self.AgentID;
             set.AgentData.SessionID = Client.Self.SessionID;
@@ -1824,9 +1831,7 @@ namespace OpenMetaverse
 
                 #endregion Agent Size
             }
-
-            Client.Network.SendPacket(set);
-            Logger.DebugLog("Send AgentSetAppearance packet");
+            return set;
         }
 
         private void DelayedRequestSetAppearance()
@@ -2208,11 +2213,6 @@ namespace OpenMetaverse
         }
 
         #endregion Static Helpers
-
-        public AgentSetAppearancePacket MakeAppearancePacket()
-        {
-            return new AgentSetAppearancePacket();
-        }
     }
 
     #region AppearanceManager EventArgs Classes
