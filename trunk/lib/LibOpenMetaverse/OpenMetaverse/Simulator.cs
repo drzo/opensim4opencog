@@ -1,3 +1,4 @@
+#define POOLED_SIMDATA
 /*
  * Copyright (c) 2007-2009, openmetaverse.org
  * All rights reserved.
@@ -243,8 +244,31 @@ namespace OpenMetaverse
         public UUID ID = UUID.Zero;
         /// <summary>The capabilities for this simulator</summary>
         public Caps Caps = null;
+
+#if POOLED_SIMDATA
+        public SimPooledData SharedData = null;
+        public class SimPooledData
+        {
+            public SimPooledData(bool STORE_LAND_PATCHES)
+            {
+                if (STORE_LAND_PATCHES)
+                {
+                    Terrain = new TerrainPatch[16 * 16];
+                    WindSpeeds = new Vector2[16 * 16];
+                }
+            }
+#endif // POOLED_SIMDATA
+            public ulong _Handle;
         /// <summary></summary>
-        public ulong Handle;
+            public ulong Handle
+            {
+                get { return _Handle; }
+                set
+                {
+                    if (value == 0) throw new ArgumentException("Should not set Region handle to 0 on " + Name);
+                    _Handle = value;
+                }
+            }
         /// <summary>The current version of software this simulator is running</summary>
         public string SimVersion = String.Empty;
         /// <summary></summary>
@@ -290,18 +314,7 @@ namespace OpenMetaverse
         public UUID TerrainDetail2 = UUID.Zero;
         /// <summary></summary>
         public UUID TerrainDetail3 = UUID.Zero;
-        /// <summary>true if your agent has Estate Manager rights on this region</summary>
-        public bool IsEstateManager;
-        /// <summary></summary>
-        public RegionFlags Flags;
-        /// <summary></summary>
-        public SimAccess Access;
-        /// <summary></summary>
-        public float BillableFactor;
-        /// <summary>Statistics information for this simulator and the
-        /// connection to the simulator, calculated by the simulator itself
-        /// and the library</summary>
-        public SimStats Stats;
+
         /// <summary>The regions Unique ID</summary>
         public UUID RegionID = UUID.Zero;
         /// <summary>The physical data center the simulator is located</summary>
@@ -345,11 +358,6 @@ namespace OpenMetaverse
         /// </remarks>
         public string ProductSku;
 
-        /// <summary>The current sequence number for packets sent to this
-        /// simulator. Must be Interlocked before modifying. Only
-        /// useful for applications manipulating sequence numbers</summary>
-        public int Sequence;
-        
         /// <summary>
         /// A thread-safe dictionary containing avatars in a simulator        
         /// </summary>
@@ -371,6 +379,130 @@ namespace OpenMetaverse
         public InternalDictionary<int, Parcel> Parcels = new InternalDictionary<int, Parcel>();
 
         /// <summary>
+            /// Checks simulator parcel map to make sure it has downloaded all data successfully
+            /// </summary>
+            /// <returns>true if map is full (contains no 0's)</returns>
+            public bool IsParcelMapFull()
+            {
+                var thisParcelMap = this._ParcelMap;
+
+                lock (_ParcelMap) for (int y = 63; y >= 0; y--)
+                    {
+                        for (int x = 63; x >= 0; x--)
+                        {
+                            if (thisParcelMap[y, x] == 0)
+                                return false;
+                        }
+                    }
+                return true;
+            }
+
+            // simulator <> parcel LocalID Map
+            internal int[,] _ParcelMap = new int[64, 64];
+            internal bool[,] RequestedParcelMap = new bool[64, 64];
+            internal bool DownloadingParcelMap = false;
+
+#if POOLED_SIMDATA
+        }
+#endif // POOLED_SIMDATA
+
+#if POOLED_SIMDATA
+        /// <summary></summary>
+        public ulong Handle
+        {
+            get { return SharedData.Handle; }
+            set { SharedData = GetSharedData(value, true); }
+        }
+        /// <summary>The current version of software this simulator is running</summary>
+        public string SimVersion { get { return SharedData.SimVersion; } }
+        /// <summary></summary>
+        public string Name  { get { return SharedData.Name; } }
+        /// <summary>A 64x64 grid of parcel coloring values. The values stored 
+        /// in this array are of the <seealso cref="ParcelArrayType"/> type</summary>
+        public byte[] ParcelOverlay { get { return SharedData.ParcelOverlay; } }
+        /// <summary></summary>
+        public int ParcelOverlaysReceived { get { return SharedData.ParcelOverlaysReceived; } }
+        /// <summary></summary>
+        public float TerrainHeightRange00 { get { return SharedData.TerrainHeightRange00; } }
+        /// <summary></summary>
+        public float TerrainHeightRange01 { get { return SharedData.TerrainHeightRange01; } }
+        /// <summary></summary>
+        public float TerrainHeightRange10 { get { return SharedData.TerrainHeightRange10; } }
+        /// <summary></summary>
+        public float TerrainHeightRange11 { get { return SharedData.TerrainHeightRange11; } }
+        /// <summary></summary>
+        public float TerrainStartHeight00 { get { return SharedData.TerrainStartHeight00; } }
+        /// <summary></summary>
+        public float TerrainStartHeight01 { get { return SharedData.TerrainStartHeight01; } }
+        /// <summary></summary>
+        public float TerrainStartHeight10 { get { return SharedData.TerrainStartHeight10; } }
+        /// <summary></summary>
+        public float TerrainStartHeight11 { get { return SharedData.TerrainStartHeight11; } }
+        /// <summary></summary>
+        public float WaterHeight { get { return SharedData.WaterHeight; } }
+        /// <summary></summary>
+        public UUID SimOwner { get { return SharedData.SimOwner; } }
+        /// <summary></summary>
+        public UUID TerrainBase0 { get { return SharedData.TerrainBase0; } }
+        /// <summary></summary>
+        public UUID TerrainBase1 { get { return SharedData.TerrainBase1; } }
+        /// <summary></summary>
+        public UUID TerrainBase2 { get { return SharedData.TerrainBase2; } }
+        /// <summary></summary>
+        public UUID TerrainBase3 { get { return SharedData.TerrainBase3; } }
+        /// <summary></summary>
+        public UUID TerrainDetail0 { get { return SharedData.TerrainDetail0; } }
+        /// <summary></summary>
+        public UUID TerrainDetail1 { get { return SharedData.TerrainDetail1; } }
+        /// <summary></summary>
+        public UUID TerrainDetail2 { get { return SharedData.TerrainDetail2; } }
+        /// <summary></summary>
+        public UUID TerrainDetail3 { get { return SharedData.TerrainDetail3; } }
+
+        /// <summary>The regions Unique ID</summary>
+        public UUID RegionID { get { return SharedData.RegionID; } }
+        /// <summary>The physical data center the simulator is located</summary>
+        /// <remarks>Known values are:
+        /// <list type="table">
+        /// <item>Dallas</item>
+        /// <item>Chandler</item>
+        /// <item>SF</item>
+        /// </list>
+        /// </remarks>
+        public string ColoLocation { get { return SharedData.ColoLocation; } }
+        /// <summary>The CPU Class of the simulator</summary>
+        /// <remarks>Most full mainland/estate sims appear to be 5,
+        /// Homesteads and Openspace appear to be 501</remarks>
+        public int CPUClass { get { return SharedData.CPUClass; } }
+        /// <summary>The number of regions sharing the same CPU as this one</summary>
+        /// <remarks>"Full Sims" appear to be 1, Homesteads appear to be 4</remarks>
+        public int CPURatio { get { return SharedData.CPURatio; } }
+        /// <summary>The billing product name</summary>
+        /// <remarks>Known values are:
+        /// <list type="table">
+        /// <item>Mainland / Full Region (Sku: 023)</item>
+        /// <item>Estate / Full Region (Sku: 024)</item>
+        /// <item>Estate / Openspace (Sku: 027)</item>
+        /// <item>Estate / Homestead (Sku: 029)</item>
+        /// <item>Mainland / Homestead (Sku: 129) (Linden Owned)</item>
+        /// <item>Mainland / Linden Homes (Sku: 131)</item>
+        /// </list>
+        /// </remarks>
+        public string ProductName { get { return SharedData.ProductName; } }
+        /// <summary>The billing product SKU</summary>
+        /// <remarks>Known values are:
+        /// <list type="table">
+        /// <item>023 Mainland / Full Region</item>
+        /// <item>024 Estate / Full Region</item>
+        /// <item>027 Estate / Openspace</item>
+        /// <item>029 Estate / Homestead</item>
+        /// <item>129 Mainland / Homestead (Linden Owned)</item>
+        /// <item>131 Linden Homes / Full Region</item>
+        /// </list>
+        /// </remarks>
+        public string ProductSku { get { return SharedData.ProductSku; } }
+
+        /// <summary>
         /// Provides access to an internal thread-safe multidimensional array containing a x,y grid mapped
         /// to each 64x64 parcel's LocalID.
         /// </summary>
@@ -378,33 +510,61 @@ namespace OpenMetaverse
         {
             get
             {
-                lock (this)
-                    return _ParcelMap;
+                lock (SharedData.Parcels)
+                    return SharedData._ParcelMap;
             }
             set
             {
-                lock (this)
-                    _ParcelMap = value;
+                lock (SharedData.Parcels)
+                    SharedData._ParcelMap = value;
             }
         }
+
+        /// <summary>
+        /// A thread-safe dictionary containing avatars in a simulator        
+        /// </summary>
+        public InternalDictionary<uint, Avatar> ObjectsAvatars { get { return SharedData.ObjectsAvatars; } }
+
+        /// <summary>
+        /// A thread-safe dictionary containing primitives in a simulator
+        /// </summary>
+        public InternalDictionary<uint, Primitive> ObjectsPrimitives { get { return SharedData.ObjectsPrimitives; } }
+
+        public TerrainPatch[] Terrain { get { return SharedData.Terrain; } }
+
+        public Vector2[] WindSpeeds { get { return SharedData.WindSpeeds; } }
+
+        /// <summary>
+        /// Provides access to an internal thread-safe dictionary containing parcel
+        /// information found in this simulator
+        /// </summary>
+        public InternalDictionary<int, Parcel> Parcels { get { return SharedData.Parcels; } }
 
         /// <summary>
         /// Checks simulator parcel map to make sure it has downloaded all data successfully
         /// </summary>
         /// <returns>true if map is full (contains no 0's)</returns>
-        public bool IsParcelMapFull()
-        {
-            for (int y = 0; y < 64; y++)
-            {
-                for (int x = 0; x < 64; x++)
-                {
-                    if (this.ParcelMap[y, x] == 0)
-                        return false;
-                }
-            }
-            return true;
-        }
+        public bool IsParcelMapFull()  {  return SharedData.IsParcelMapFull(); }
 
+#endif // POOLED_SIMDATA
+
+        /// <summary>true if your agent has Estate Manager rights on this region</summary>
+        public bool IsEstateManager;
+        /// <summary></summary>
+        public RegionFlags Flags;
+        /// <summary></summary>
+        public SimAccess Access;
+        /// <summary></summary>
+        public float BillableFactor;
+        /// <summary>Statistics information for this simulator and the
+        /// connection to the simulator, calculated by the simulator itself
+        /// and the library</summary>
+        public SimStats Stats;
+
+        /// <summary>The current sequence number for packets sent to this
+        /// simulator. Must be Interlocked before modifying. Only
+        /// useful for applications manipulating sequence numbers</summary>
+        public int Sequence;       
         /// <summary>
         /// Is it safe to send agent updates to this sim
         /// AgentMovementComplete message received
@@ -425,7 +585,11 @@ namespace OpenMetaverse
         /// <summary>AvatarPositions key representing TrackAgent target</summary>
         public UUID PreyID { get { return preyID; } }
         /// <summary>Indicates if UDP connection to the sim is fully established</summary>
-        public bool HandshakeComplete { get { return handshakeComplete; } }
+        public bool HandshakeComplete { get
+        {
+            if (handshakeComplete) return true;
+            return handshakeComplete;
+        } }
 
         #endregion Properties
 
@@ -459,11 +623,15 @@ namespace OpenMetaverse
         private Timer AckTimer;
         private Timer PingTimer;
         private Timer StatsTimer;
-        // simulator <> parcel LocalID Map
-        private int[,] _ParcelMap = new int[64, 64];
-        internal bool DownloadingParcelMap = false;
-        private AutoResetEvent GotUseCircuitCodeAck = new AutoResetEvent(false);
+    
+        internal bool DownloadingParcelMap { get { return SharedData.DownloadingParcelMap;} }
+
         #endregion Internal/Private Members
+
+        static Dictionary<ulong, SimPooledData> SimGlobalData = new Dictionary<ulong, SimPooledData>();
+        readonly public object HandshakeLock = new object();
+        readonly public object ConnectingLock = new object();
+        private readonly AutoResetEvent GotUseCircuitCodeAck = new AutoResetEvent(false);
 
         /// <summary>
         /// 
@@ -481,13 +649,32 @@ namespace OpenMetaverse
             PacketArchive = new IncomingPacketIDCollection(Settings.PACKET_ARCHIVE_SIZE);
             InBytes = new Queue<long>(Client.Settings.STATS_QUEUE_SIZE);
             OutBytes = new Queue<long>(Client.Settings.STATS_QUEUE_SIZE);
-
+#if !(POOLED_SIMDATA)
             if (client.Settings.STORE_LAND_PATCHES)
             {
                 Terrain = new TerrainPatch[16 * 16];
                 WindSpeeds = new Vector2[16 * 16];
             }
+#endif
         }
+
+#if POOLED_SIMDATA
+        static public SimPooledData GetSharedData(ulong handle, bool createIfMissing)
+        {
+            if (handle == 0) throw new ArgumentException("Should not search for Region handle 0!");
+            lock (SimGlobalData)
+            {
+                SimPooledData simPooledData;
+                if (!SimGlobalData.TryGetValue(handle, out simPooledData))
+                {
+                    if (!createIfMissing) return null;
+                    SimGlobalData[handle] = simPooledData = new SimPooledData(true /*Client.Settings.STORE_LAND_PATCHES*/);
+                    simPooledData.Handle = handle;
+                }
+                return simPooledData;
+            }
+        }
+#endif
 
         /// <summary>
         /// Called when this Simulator object is being destroyed
@@ -525,6 +712,16 @@ namespace OpenMetaverse
         /// unknown, false if there was a failure</returns>
         public bool Connect(bool moveToSim)
         {
+            bool c = false;
+            lock (ConnectingLock)
+            {
+                c = Connect0(moveToSim);
+            }
+            return c;
+        }
+        public bool Connect0(bool moveToSim)
+        {
+            bool washandshakeComplete = handshakeComplete;
             handshakeComplete = false;
 
             if (connected)
