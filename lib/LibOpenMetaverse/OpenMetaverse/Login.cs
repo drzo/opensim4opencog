@@ -993,6 +993,8 @@ namespace OpenMetaverse
             if (loginParams.Options == null)
                 loginParams.Options = new List<string>().ToArray();
 
+            if (loginParams.Password == null)
+                loginParams.Password = String.Empty;
             // Convert the password to MD5 if it isn't already
             if (loginParams.Password.Length != 35 && !loginParams.Password.StartsWith("$1$"))
                 loginParams.Password = Utils.MD5(loginParams.Password);
@@ -1021,9 +1023,23 @@ namespace OpenMetaverse
             #endregion
 
             // TODO: Allow a user callback to be defined for handling the cert
+            try
+            {
             ServicePointManager.CertificatePolicy = new TrustAllCertificatePolicy();
+            }
+            catch (Exception e)
+            {
+                System.Console.WriteLine("" + e);
+            }
             // Even though this will compile on Mono 2.4, it throws a runtime exception
-            //ServicePointManager.ServerCertificateValidationCallback = TrustAllCertificatePolicy.TrustAllCertificateHandler;
+            try
+            {
+                ServicePointManager.ServerCertificateValidationCallback = TrustAllCertificatePolicy.TrustAllCertificateHandler;
+            }
+            catch (Exception e)
+            {
+                System.Console.WriteLine("" + e);
+            }
 
             if (Client.Settings.USE_LLSD_LOGIN)
             {
