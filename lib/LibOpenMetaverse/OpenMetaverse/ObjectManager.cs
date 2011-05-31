@@ -169,6 +169,16 @@ namespace OpenMetaverse
         /// <summary>The event subscribers, null of no subscribers</summary>
         private EventHandler<PrimEventArgs> m_ObjectUpdate;
 
+        ///<summary>Raises the ObjectUpdate Event</summary>
+        /// <param name="e">A ObjectUpdateEventArgs object containing
+        /// the data sent from the simulator</param>
+        protected virtual void OnObjectUpdate(PrimEventArgs e)
+        {
+            EventHandler<PrimEventArgs> handler = m_ObjectUpdate;
+            if (handler != null)
+                handler(this, e);
+        }
+
         /// <summary>Thread sync lock object</summary>
         private readonly object m_ObjectUpdateLock = new object();
 
@@ -283,6 +293,16 @@ namespace OpenMetaverse
 
         /// <summary>The event subscribers, null of no subscribers</summary>
         private EventHandler<TerseObjectUpdateEventArgs> m_TerseObjectUpdate;
+
+        ///<summary>Raises the TerseObjectUpdate Event</summary>
+        /// <param name="e">A TerseObjectUpdateEventArgs object containing
+        /// the data sent from the simulator</param>
+        protected virtual void OnTerseObjectUpdate(TerseObjectUpdateEventArgs e)
+        {
+            EventHandler<TerseObjectUpdateEventArgs> handler = m_TerseObjectUpdate;
+            if (handler != null)
+                handler(this, e);
+        }
 
         /// <summary>Thread sync lock object</summary>
         private readonly object m_TerseObjectUpdateLock = new object();
@@ -3068,6 +3088,10 @@ namespace OpenMetaverse
         {
             if (Client.Settings.OBJECT_TRACKING)
             {
+                if (localID == 0)
+                {
+                    throw new ArgumentException("localID is Zero! for prim: " + fullID + " on sim: " + simulator);
+                }
                 lock (simulator.ObjectsPrimitives.Dictionary)
                 {
 
@@ -3075,6 +3099,23 @@ namespace OpenMetaverse
 
                     if (simulator.ObjectsPrimitives.Dictionary.TryGetValue(localID, out prim))
                     {
+                        if (fullID != UUID.Zero)
+                        {
+                            if (prim.ID != fullID)
+                            {
+                                if (prim.ID == UUID.Zero)
+                                {
+                                    prim.ID = fullID;
+                                }
+                                else
+                                {
+                                    throw new ArgumentException("fullID is changinging for prim: " + localID + " from " +
+                                                                prim.ID + " to " + fullID + " on sim: " + simulator);
+                                }
+                            }
+                            prim.LocalID = localID;
+                            prim.RegionHandle = simulator.Handle;
+                        }
                         return prim;
                     }
                     else
@@ -3083,7 +3124,10 @@ namespace OpenMetaverse
                         prim.LocalID = localID;
                         prim.ID = fullID;
                         prim.RegionHandle = simulator.Handle;
-
+                        if (fullID == UUID.Zero)
+                        {
+                            if (false) throw new ArgumentException("fullID is Zero! for prim: " + localID + " on sim: " + simulator);
+                        }
                         simulator.ObjectsPrimitives.Dictionary[localID] = prim;
 
                         return prim;
