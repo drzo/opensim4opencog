@@ -561,6 +561,13 @@ namespace cogbot.TheOpenSims
             get
             {
                 if (base.HasPrim) return true;
+                if (RegionHandle != 0)
+                {
+                    Simulator S = WorldSystem.GetSimulator(RegionHandle);
+                    _Prim0 = WorldSystem.GetLibOMVHostedPrim(ID, S, true);
+                    if (_Prim0 == null) return false;
+                    return true;
+                }
                 return false;
                 return LastKnownSimPos != Vector3.Zero;
             }

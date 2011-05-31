@@ -1,3 +1,4 @@
+#define GroupChatLeftEventArgs
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -320,9 +321,9 @@ namespace cogbot.Listeners
 
         static public readonly string[] paramNamesOnGroupChatLeft = new string[] { "groupchatSessionID" };
         static public readonly Type[] paramTypesOnGroupChatLeft = new Type[] { typeof(UUID) };
-
+#if GroupChatLeftEventArgs
         public virtual void Self_OnGroupChatLeft(object sender, GroupChatLeftEventArgs e) { OnEvent("On-Group-Chat-Left", paramNamesOnGroupChatLeft, paramTypesOnGroupChatLeft, e); }
-
+#endif
         static public readonly string[] paramNamesOnAlertMessage = new string[] { "message" };
         static public readonly Type[] paramTypesOnAlertMessage = new Type[] { typeof(string) };
 
@@ -758,7 +759,9 @@ namespace cogbot.Listeners
             client.Self.MeanCollision += Self_OnMeanCollision;
             client.Self.RegionCrossed += Self_OnRegionCrossed;
             client.Self.GroupChatJoined += Self_OnGroupChatJoin;
+#if GroupChatLeftEventArgs
             client.Self.GroupChatLeft += Self_OnGroupChatLeft;
+#endif
             client.Self.AlertMessage += Self_OnAlertMessage;
             client.Self.ScriptControlChange += Self_OnScriptControlChange;
             client.Self.CameraConstraint += Self_OnCameraConstraint;
@@ -886,7 +889,9 @@ namespace cogbot.Listeners
             client.Self.MeanCollision -= Self_OnMeanCollision;
             client.Self.RegionCrossed -= Self_OnRegionCrossed;
             client.Self.GroupChatJoined -= Self_OnGroupChatJoin;
+#if GroupChatLeftEventArgs
             client.Self.GroupChatLeft -= Self_OnGroupChatLeft;
+#endif
             client.Self.AlertMessage -= Self_OnAlertMessage;
             client.Self.ScriptControlChange -= Self_OnScriptControlChange;
             client.Self.CameraConstraint -= Self_OnCameraConstraint;

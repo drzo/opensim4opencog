@@ -909,6 +909,32 @@ namespace cogbot.Listeners
         }
 
 
+        public Primitive GetLibOMVHostedPrim(UUID id, Simulator simulator, bool onlyAvatars)
+        {
+            Primitive found;
+            if (!onlyAvatars)
+            {
+                found = simulator.ObjectsPrimitives.Find(delegate(Primitive prim0)
+                                                             {
+                                                                 //EnsureSelected(prim0.LocalID, simulator);
+                                                                 //EnsureSelected(prim0.ParentID, simulator);
+                                                                 return (prim0.ID == id);
+                                                             });
+                if (found != null) return found;
+            }
+            ///lock (simulator.ObjectsAvatars.Dictionary)
+            {
+                found = simulator.ObjectsAvatars.Find(prim0 =>
+                                                          {
+                                                              if (prim0.ID == id)
+                                                                  return true;
+                                                              return false;
+                                                          });
+                if (found != null) return found;
+            }
+            return null;
+        }
+
         public Primitive GetPrimitive(UUID id, Simulator simulator)
         {
             //lock (uuidTypeObject)                        
@@ -943,25 +969,8 @@ namespace cogbot.Listeners
 
 
             // lock (simulator.ObjectsPrimitives.Dictionary)
-            {
-                found = simulator.ObjectsPrimitives.Find(delegate(Primitive prim0)
-                                                             {
-                                                                 //EnsureSelected(prim0.LocalID, simulator);
-                                                                 //EnsureSelected(prim0.ParentID, simulator);
-                                                                 return (prim0.ID == id);
-                                                             });
-                if (found != null) return found;
-            }
-            ///lock (simulator.ObjectsAvatars.Dictionary)
-            {
-                found = simulator.ObjectsAvatars.Find(prim0 =>
-                                                          {
-                                                              if (prim0.ID == id)
-                                                                  return true;
-                                                              return false;
-                                                          });
-                if (found != null) return found;
-            }
+            found = GetLibOMVHostedPrim(id, simulator, false);
+            if (found != null) return found;
 
             //ulong handle = simulator.Handle;
             ////  lock (AllSimulators)
@@ -1453,6 +1462,7 @@ namespace cogbot.Listeners
                     //client.Avatars.RequestAvatarPicks(uuid);
                     SimObjects.AddTo(obj0);
                     RegisterUUID(uuid, obj0);
+                    obj0.PollForPrim(this, simulator);
                     RequestAvatarMetadata(uuid);
                     return (SimAvatarImpl) obj0;
                 }

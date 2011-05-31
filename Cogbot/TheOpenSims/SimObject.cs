@@ -453,8 +453,8 @@ namespace cogbot.TheOpenSims
 
             lock (_primRefs)
             {
-                _primRefs.Remove(primitive);
-                IsKilled = _primRefs.Count == 0;
+               // _primRefs.Remove(primitive);
+                IsKilled = _primRefs.Count < 1;
                 if (ReferenceEquals(_Prim0, primitive))
                 {
                     _Prim0 = null;
@@ -484,6 +484,15 @@ namespace cogbot.TheOpenSims
                 _infoMap[ad.Key] = ad;
         }
 
+        internal void PollForPrim(WorldObjects worldObjects, Simulator sim)
+        {
+            if (sim == null)
+            {
+                return;
+            }
+            Primitive A = worldObjects.GetLibOMVHostedPrim(ID, sim, false);
+            if (A != null) this.SetFirstPrim(A);
+        }
 
         readonly private List<Primitive> _primRefs = new List<Primitive>();
         public virtual void ResetPrim(Primitive prim, BotClient bc, Simulator sim)
@@ -818,11 +827,21 @@ namespace cogbot.TheOpenSims
             {
                 lock (HasPrimLock)
                 {
-                    if (!HasPrim)
+                    if (_Prim0 == null)
                     {
+                        if (RegionHandle !=0)
+                        {
+                            Simulator S = WorldSystem.GetSimulator(RegionHandle);
+                            _Prim0 = WorldSystem.GetLibOMVHostedPrim(ID, S, false);
+                            if (_Prim0 == null) return null;
+                            return _Prim0;
+                        }
+                        if (!HasPrim)
+                        {
+                            return null;
+                        }
                         return null;
                     }
-                    if (_Prim0 == null) return null;
                     if (_Prim0.RegionHandle != RegionHandle)
                     {
                         if (RegionHandle != 0)
@@ -1230,7 +1249,7 @@ namespace cogbot.TheOpenSims
         {
             if (needUpdate)
             {
-                UpdateProperties(_propertiesCache);
+                if (_propertiesCache != null) UpdateProperties(_propertiesCache);
             }
             if (IsRegionAttached)
             {
