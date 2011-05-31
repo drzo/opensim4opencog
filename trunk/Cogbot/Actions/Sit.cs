@@ -6,6 +6,7 @@ using cogbot.TheOpenSims;
 using OpenMetaverse; //using libsecondlife;
 
 using MushDLR223.ScriptEngines;
+using PathSystem3D.Navigation;
 
 namespace cogbot.Actions.Movement
 {
@@ -20,7 +21,7 @@ namespace cogbot.Actions.Movement
             Description = "Sit on the ground or on an object.";
             Usage = "To sit on ground, type \"sit\" \r\n" +
                           "To sit on an object, type \"sit on <object name>\"";
-            Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
+            Parameters = new[] { new NamedParam("location", typeof(SimPosition), typeof(SimPosition)) };
             Category = CommandCategory.Movement;
         }
 

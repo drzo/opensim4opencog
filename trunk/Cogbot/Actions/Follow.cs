@@ -22,7 +22,7 @@ namespace cogbot.Actions.Movement
             Usage = "To start following an avatar, type \"follow <avatar name>\" \r\n" +
                           "To stop following an avatar, type \"stop-following <avatar name>\"";
             Category = CommandCategory.Movement;
-            Parameters = new[] { new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
+            Parameters = new[] { new NamedParam("location", typeof(SimPosition), typeof(SimPosition)) };
             Name = "Follow*";
         }
 

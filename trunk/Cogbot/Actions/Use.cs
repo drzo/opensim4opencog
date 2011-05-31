@@ -37,7 +37,7 @@ namespace cogbot.Actions.Agent
                SimObject objToUse;
                if (WorldSystem.tryGetPrim(objname, out objToUse))
                {
-                   if ((BotNeeds)TheSimAvatar["CurrentNeeds"]==null)
+                   if ((BotNeeds)TheSimAvatar["CurrentNeeds"] == null)
                    {
                        TheSimAvatar["CurrentNeeds"] = new BotNeeds(90.0f);
                    }
