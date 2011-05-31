@@ -1784,6 +1784,7 @@ namespace MushDLR223.Utilities
             }
             bool success = false;
             if (DebugQueue) WriteLine("InvokeJoin Cross-Thread: " + s);
+            if (RealTodo == 0 && !Busy) WaitingString = "";
             TrySetThreadName(s);
             AutoResetEvent are = new AutoResetEvent(false);
             ThreadStart TJ = (
