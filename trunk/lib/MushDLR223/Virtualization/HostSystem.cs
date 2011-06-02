@@ -526,6 +526,7 @@ namespace MushDLR223.Virtualization
             }
             catch (Exception)
             {
+                return null;
             }
             return ret;
         }
@@ -533,7 +534,11 @@ namespace MushDLR223.Virtualization
         public static string ResolveToExistingPath00(string path)
         {
             string physicalPath = ResolveToExistingPath(path, true);
-            if (!IsNullOrEmpty(physicalPath)) return physicalPath;
+            if (!IsNullOrEmpty(physicalPath))
+            {
+                string ss = ActualExistingPath(path, true);
+                return ss;
+            }
             // string betterish = null;
             foreach (var func in PathResolvers)
             {
@@ -552,13 +557,26 @@ namespace MushDLR223.Virtualization
             }
             return null;
         }
-
         private static string ResolveToExistingPath(string path, bool mustExist)
+        {            
+            string rte = ResolveToExistingPath0(path, mustExist);
+            if (string.IsNullOrEmpty(rte)) return rte;
+            if (rte.Length < path.Length)
+            {
+                return path;
+            }
+            return rte;
+        }
+        private static string ResolveToExistingPath0(string path, bool mustExist)
         {
             if (path == null) return null;
             var ipn = IsWildPath(path);
             if (!ipn)
             {
+                if (File.Exists(path))
+                {
+                    return path;
+                }
                 string  aep = ActualExistingPath(path, true);
                 if (aep != null) return aep;
             }
@@ -661,7 +679,7 @@ namespace MushDLR223.Virtualization
             }
             if (Directory.Exists(path))
             {
-                return ActualExistingDirectoryPath(dn);
+                return ActualExistingDirectoryPath(path);
             }
             if (!String.IsNullOrEmpty(dn))
             {
