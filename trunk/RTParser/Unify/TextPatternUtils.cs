@@ -276,7 +276,7 @@ namespace RTParser.Utils
                      || s.Contains(" some") || s.Contains("*") || s.Contains(" _ ")
                      || s.Contains(" nothing ") || s.Contains("undefine")
                      || s.Contains("$");
-            if (b) return true;
+            if (b) return true && !s.Contains(" in ") && !s.Contains(" at ") && !s.Contains(" on ");
             if (unifiable is Unifiable)
             {
                 if (!((Unifiable)unifiable).IsWildCard) return false;

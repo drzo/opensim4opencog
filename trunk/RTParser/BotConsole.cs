@@ -693,7 +693,7 @@ namespace RTParser
                 console("*JustSaid = " + myUser.JustSaid);
                 console("*that = " + myUser.That);
                 console("*topic = " + myUser.Topic);
-                foreach (string c in new[] { "that", "topic", "question", "he", "it", "yours_question", "name", })
+                foreach (string c in new[] { "that", "topic", "question", "he", "it", "yours_question", "they", "them", "who", "what", "when", "where", "why", "how", "name", })
                 {
                     console(c + " = " + myUser.grabSetting(c));
                 }
