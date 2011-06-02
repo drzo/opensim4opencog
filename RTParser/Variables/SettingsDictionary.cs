@@ -431,6 +431,7 @@ namespace RTParser.Variables
         /// <param name="pathToSettings">The file containing the settings</param>
         public void loadSettings(string pathToSettings, Request request)
         {
+
             OutputDelegate writeToLog = request.writeToLog;
             if (pathToSettings == null) return;
             lock (orderedKeys)
@@ -2007,6 +2008,11 @@ namespace RTParser.Variables
 
         public static void IndexSet(ISettingsDictionary dictionary, string name, Unifiable value)
         {
+            if (Unifiable.IsIncomplete(value))
+            {
+                RTPBot.writeDebugLine("IndexSet IsIncomplete " + name);
+                //return;
+            }
             dictionary.addSetting(name, value);
         }
 

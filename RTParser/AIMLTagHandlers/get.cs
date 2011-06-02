@@ -132,8 +132,13 @@ namespace RTParser.AIMLTagHandlers
                         Unifiable defaultVal = GetAttribValue("default", null);
                         if (defaultVal == null)
                         {
-                            QueryHasFailed = true;
-                            return v;
+                            if (v == null) return "";
+                            if (!QueryHasSuceeded)
+                            {
+                                QueryHasFailed = true;
+                                return v;
+                            }
+                        
                         }
                         return defaultVal;
                     }

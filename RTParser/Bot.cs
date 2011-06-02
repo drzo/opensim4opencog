@@ -1809,7 +1809,7 @@ The AIMLbot program.
                 loadConfigs(this, file, request);
                 request.GraphsAcceptingUserInput = false;
                 loadAIMLFromURI(file, request);
-                foreach (string s1 in HostSystem.GetFiles(file, "*Settings*.xml"))
+                foreach (string s1 in HostSystem.GetFiles(file, "Settings*.xml"))
                 {
                     loadSettingsFile(s1, request);
                 }
@@ -1856,6 +1856,7 @@ The AIMLbot program.
             //BotAsUser.UserName = "heardselfsay";
             //BotUsers["heardselfsay"] = BotAsUser;            
             thisBotAsUser.UserName = myName;
+            AllDictionaries["bot"] = thisBotAsUser.Predicates;
             thisBotAsUser.removeSetting("userdir");
             NamePath = ToScriptableName(NameAsSet);
             thisBotAsUser.UserID = NamePath;

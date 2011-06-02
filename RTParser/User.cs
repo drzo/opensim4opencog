@@ -427,12 +427,22 @@ namespace RTParser
             {
                 string[] split = value.Split(new[] {" ", "-", "_"}, StringSplitOptions.RemoveEmptyEntries);
                 Predicates.IsIdentityReadOnly = false;
+                Predicates["id"] = UserID;
+                if (IsIncomplete(value))
+                {
+                    throw new NullReferenceException("SetMeMyselfAndI: " + value);
+                    return;
+                }
                 Predicates["name"] = value;
                 Predicates["me"] = value;
-                Predicates["id"] = UserID;
                 Predicates["myself"] = value;
                 Predicates["i"] = value;
                 Predicates["my"] = NatLangDb.MakePossesive(value);
+                if (IsIncomplete(split[0]))
+                {
+                    throw new NullReferenceException("SetMeMyselfAndI: " + split[0]);
+                    return;
+                }
                 Predicates["firstname"] = split[0];
                 if (split.Length > 1)
                 {

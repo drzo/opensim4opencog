@@ -17,14 +17,20 @@ namespace RTParser.Utils
         public abstract GuardInfo Guard { get; set; }
         public abstract ResponseInfo Response { get; set; }
         string _graph;
+        private GraphMaster _graphCache = null;
         public GraphMaster InGraph
         {
             get
             {
                 if (_graph == null) return null;
-                return RTPBot.FindGraph(_graph);
+                if (_graphCache == null) RTPBot.FindGraph(_graph);
+                return _graphCache;
             }
-            set { if (value != null) _graph = value.ScriptingName; }
+            set
+            {
+                _graphCache = null;
+                if (value != null) _graph = value.ScriptingName;
+            }
         }
 
         public PatternInfo Pattern { get; set; }
