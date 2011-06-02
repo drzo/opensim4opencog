@@ -175,6 +175,7 @@
       <pattern>_</pattern>
     </category>
 
+   <load filename="aiml/programsharp/Z_Secondlife.aiml" />
   </aiml>
 
 
