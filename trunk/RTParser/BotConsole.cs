@@ -602,6 +602,10 @@ namespace RTParser
                 MasterRequest request = CurrentUser.CreateRequest(said, targetUser);
                 request.IsTraced = true;
                 request.OriginalSalientRequest = request;
+                if (cmd == "locally")
+                {
+                    waitUntilVerbalOutput = false;
+                }
                 request.SaveResultsOnJustHeard = !waitUntilVerbalOutput;
                 request.ResponderSelfListens = !waitUntilVerbalOutput;
                 Result res = robot.GlobalChatWithUser(request, said, user, null, RTPBot.writeDebugLine, !waitUntilVerbalOutput, request.SaveResultsOnJustHeard);
@@ -686,10 +690,10 @@ namespace RTParser
             }
             if (cmd == "topic" || cmd == "that")
             {
-                console("JustSaid = " + myUser.JustSaid);
+                console("*JustSaid = " + myUser.JustSaid);
                 console("*that = " + myUser.That);
                 console("*topic = " + myUser.Topic);
-                foreach (string c in new[] { "that", "topic", "question", "he", "it", })
+                foreach (string c in new[] { "that", "topic", "question", "he", "it", "yours_question", "name", })
                 {
                     console(c + " = " + myUser.grabSetting(c));
                 }
