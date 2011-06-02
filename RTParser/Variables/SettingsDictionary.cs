@@ -2040,6 +2040,10 @@ namespace RTParser.Variables
             if (CheckAddToCollection(dictionary, pp, cols))
             {
                 if (pp == null) pp = () => dictionary;
+                if (cols.Count > 1000)
+                {
+                    return;
+                }
                 cols.Insert(0, pp);
             }
         }
@@ -2190,6 +2194,11 @@ namespace RTParser.Variables
 
         static List<ISettingsDictionary> ProvidersFrom(IEnumerable<ParentProvider> providers, object exceptFor)
         {
+            var icol = (ICollection<ParentProvider>) providers;
+            if (icol.Count > 1000)
+            {
+
+            }
             var found = new List<ISettingsDictionary>();
             lock (providers)
             {

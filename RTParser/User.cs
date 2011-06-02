@@ -256,7 +256,7 @@ namespace RTParser
         private GraphMaster FindGraphLocally(string varname)
         {
             GraphMaster _uGraph = bot.GetUserGraph(NameSpace);
-            Predicates.IsTraced = false;
+            //Predicates.IsTraced = false;
             var v = Predicates.grabSettingNoDebug(varname);
             if (Unifiable.IsMissing(v)) return null;
             GraphMaster _Graph = bot.GetGraph(v, _uGraph);
@@ -292,7 +292,8 @@ namespace RTParser
         {
             get
             {
-                var v = FindGraphLocally("startgraph") ?? bot.DefaultStartGraph;
+                GraphMaster v = FindGraphLocally("startgraph") ?? bot.DefaultStartGraph;
+                if (v.Size == 0) v = bot.DefaultStartGraph;
                 return v;
             }
             set
