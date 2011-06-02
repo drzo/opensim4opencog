@@ -281,7 +281,7 @@ namespace RTParser
                             requestThat = request.That;
                             //throw new NullReferenceException("set_That: " + request);
                         }
-
+                        requestThat = Utterance.MainSentence(requestThat);
                         Unifiable path = loader.generatePath(sentence,
                                                              //thatNum + " " +
                                                              requestThat, request.Flags,
@@ -314,6 +314,7 @@ namespace RTParser
                         {
                             thatNum++;
                             string thats = that.AsString();
+                            thats = Utterance.MainSentence(thats);
                             Unifiable path = loader.generatePath(sentence, //thatNum + " " +
                                                                  thats, request.Flags,
                                                                  //topicNum + " " +
