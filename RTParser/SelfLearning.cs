@@ -248,8 +248,10 @@ namespace RTParser
             //return LR;
             try
             {
+                var HG = DefaultHeardSelfSayGraph;
+                if (HG.Size == 0) HG = GetGraph("listener", _h);
                 if (message == null || message.Length < 4) return null;
-                Request r = theFactSpeaker.CreateRequest(message, toWhom, null, DefaultHeardSelfSayGraph, null);
+                Request r = theFactSpeaker.CreateRequest(message, toWhom, null, HG, null);
                 // irregardless we only mentally played what the responder responded with
                 r.ResponderSelfListens = false;
                 // because the  listener cant hear this inner dialog
@@ -258,7 +260,7 @@ namespace RTParser
                 {
                     r.WhyComplete = "THREADABORTED";
                 };
-                var G = DefaultHeardSelfSayGraph;
+                var G = HG;
                 if (G == null)
                 {
                     writeDebugLineBannered("HeardSelfSayGraph == null: " + message + " res = " + prevResult);

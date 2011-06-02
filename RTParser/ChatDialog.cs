@@ -264,13 +264,17 @@ namespace RTParser
         {
             User targetUser = fallback ?? BotAsUser;
             string youser = input;
+
             int lastIndex = input.IndexOfAny("-,:".ToCharArray());
             User targ = null;
             if (lastIndex > 0)
             {
                 youser = input.Substring(0, lastIndex);
-                targ = FindUser(youser);
-                if (targ != null) targetUser = targ;
+                if (!youser.Contains("<"))
+                {
+                    targ = FindUser(youser);
+                    if (targ != null) targetUser = targ;
+                }
             }
             if (otherName != null)
                 if (targ == null)
