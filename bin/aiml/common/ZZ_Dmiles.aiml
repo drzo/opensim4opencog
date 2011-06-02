@@ -1,7 +1,17 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <aiml graph="default">
 
+    <system>@cloj (setj RTPBot:TryUnderstandSentence True)</system>
+
     <aiml graph="listener">
+
+      <category isTraced="true">
+      <pattern>THEY *</pattern>
+      <template>
+         <set name="they"><person/></set>
+      </template>
+    </category>
+
 
     <!-- grab out favorite whatnot like food,color,movie,etc but not the actual instance -->
     <category isTraced="true">
