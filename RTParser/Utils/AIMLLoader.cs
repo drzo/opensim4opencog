@@ -198,6 +198,8 @@ namespace RTParser.Utils
         }
         private static string ResolveToURI0(string pathIn, LoaderOptions loadOpts)
         {
+            pathIn = HostSystem.ActualExistingPathIfExists(pathIn) ?? pathIn;
+
             string baseFile = GetBaseDirectory(loadOpts);
             var inPath = HostSystem.ToRelativePath(pathIn, baseFile);
             IEnumerable<string> combine;
@@ -209,8 +211,10 @@ namespace RTParser.Utils
             string rpath = HostSystem.Combine(prefix, relPath);
             if (HostSystem.FileOrDirExists(rpath) && !HostSystem.IsWildPath(rpath))
             {
+                rpath = HostSystem.ActualExistingPathIfExists(rpath);
                 return rpath;
             }
+            relPath = HostSystem.ActualExistingPathIfExists(relPath);
             if (!HostSystem.FileOrDirExists(relPath))
             {
                 if (!relPath.Contains("*")) RTPBot.writeDebugLine("WARNING PATH NOT EXIST ERROR: " + relPath);
