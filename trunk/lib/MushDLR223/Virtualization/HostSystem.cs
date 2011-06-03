@@ -637,14 +637,14 @@ namespace MushDLR223.Virtualization
             return null;
         }
 
-        private static string ActualExistingPath(string path, bool mustExist)
+        public static string ActualExistingPath(string path, bool mustExist)
         {
             if (String.IsNullOrEmpty(path)) return path;
             string dn = Path.GetDirectoryName(path);
             if (File.Exists(path))
             {
                 var fi = new FileInfo(path);
-                fi.GetAccessControl();
+                //fi.GetAccessControl();
                 var pdn = fi.Directory;
                 if (pdn == null)
                 {
@@ -723,7 +723,7 @@ namespace MushDLR223.Virtualization
                 string nfn =  Path.Combine(dnCased, fnp);
                 return nfn;
             }
-            fi.GetAccessControl();
+            //fi.GetAccessControl();
             var pdn = fi.Parent;
             if (pdn == null)
             {
@@ -989,6 +989,14 @@ namespace MushDLR223.Virtualization
             {
                 writeToLog("WARNING: closing stream " + e);
             }
+        }
+
+        public static string ActualExistingPathIfExists(string path)
+        {
+            if (IsWildPath(path)) return path;
+            string newPath = ActualExistingPath(path, true) ?? path;
+            if (string.IsNullOrEmpty(newPath)) return path;
+            return newPath;
         }
     }
 }
