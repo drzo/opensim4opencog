@@ -431,7 +431,7 @@ namespace RTParser.Variables
         /// <param name="pathToSettings">The file containing the settings</param>
         public void loadSettings(string pathToSettings, Request request)
         {
-
+            pathToSettings = HostSystem.ResolveToExistingPath(pathToSettings);
             OutputDelegate writeToLog = request.writeToLog;
             if (pathToSettings == null) return;
             lock (orderedKeys)
