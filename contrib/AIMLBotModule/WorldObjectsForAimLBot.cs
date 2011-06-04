@@ -1085,7 +1085,13 @@ namespace AIMLBotModule
             r.IsTraced = true;
             Result res = MyBot.ChatWithRequest(r);
             string useOut = MyBot.CleanupCyc(res.Output);
+            if (NeverSay(useOut)) return null;
             return useOut;
+        }
+
+        private bool NeverSay(string useOut)
+        {
+            return (useOut != null && useOut.Contains("RANDOM TOPIC."));
         }
 
         public SUnifiable AIMLInterpScored(string input, User myUser, out double scored)
