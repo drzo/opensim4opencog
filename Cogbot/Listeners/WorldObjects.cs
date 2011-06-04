@@ -383,16 +383,8 @@ namespace cogbot.Listeners
             {
                 EnsureSelected(prim.LocalID, simulator);
             }
-            // Ensure at least one prim
-            if (obj0.Prim == null)
-            {
-                obj0.SetFirstPrim(prim);
-                obj0.ConfirmedObject = true;
-            }
-            if (!obj0.IsRegionAttached)
-            {
-                obj0.ResetPrim(prim, client, simulator);
-            }
+            obj0.ConfirmedObject = true;
+            obj0.ResetPrim(prim, client, simulator);
         }
 
         public SimObject GetSimObject(Primitive prim, Simulator simulator)
@@ -912,6 +904,16 @@ namespace cogbot.Listeners
         public Primitive GetLibOMVHostedPrim(UUID id, Simulator simulator, bool onlyAvatars)
         {
             Primitive found;
+            ///lock (simulator.ObjectsAvatars.Dictionary)
+            {
+                found = simulator.ObjectsAvatars.Find(prim0 =>
+                {
+                    if (prim0.ID == id)
+                        return true;
+                    return false;
+                });
+                if (found != null) return found;
+            }
             if (!onlyAvatars)
             {
                 found = simulator.ObjectsPrimitives.Find(delegate(Primitive prim0)
@@ -922,19 +924,27 @@ namespace cogbot.Listeners
                                                              });
                 if (found != null) return found;
             }
-            ///lock (simulator.ObjectsAvatars.Dictionary)
-            {
-                found = simulator.ObjectsAvatars.Find(prim0 =>
-                                                          {
-                                                              if (prim0.ID == id)
-                                                                  return true;
-                                                              return false;
-                                                          });
-                if (found != null) return found;
-            }
             return null;
         }
 
+        public Primitive GetLibOMVHostedPrim(uint id, Simulator simulator, bool onlyAvatars)
+        {
+            LockInfo.TestLock("simulator.ObjectsPrimitives.Dictionary", simulator.ObjectsPrimitives.Dictionary,
+                  TimeSpan.FromSeconds(30));
+            Avatar av;
+            lock (simulator.ObjectsAvatars.Dictionary)
+                if (simulator.ObjectsAvatars.TryGetValue(id, out av))
+                {
+                    return av;
+                }
+            Primitive prim;
+            if (!onlyAvatars) lock (simulator.ObjectsPrimitives.Dictionary)
+                if (simulator.ObjectsPrimitives.TryGetValue(id, out prim))
+                {
+                    return prim;
+                }
+            return null;
+        }
         public Primitive GetPrimitive(UUID id, Simulator simulator)
         {
             //lock (uuidTypeObject)                        
@@ -960,57 +970,17 @@ namespace cogbot.Listeners
 
                     foreach (Simulator sim in sims)
                     {
-                        Primitive p = GetPrimitive(id, sim);
+                        Primitive p = GetLibOMVHostedPrim(id, sim, false);
                         if (p != null) return p;
                     }
                     return null;
                 }
-            }
-
-
-            // lock (simulator.ObjectsPrimitives.Dictionary)
-            found = GetLibOMVHostedPrim(id, simulator, false);
-            if (found != null) return found;
-
-            //ulong handle = simulator.Handle;
-            ////  lock (AllSimulators)
-            //foreach (Simulator sim in AllSimulators)
-            //{
-            //    if (sim.Handle == handle && sim != simulator)
-            //    {
-            //        //  lock (sim.ObjectsPrimitives.Dictionary)
-            //        {
-            //            found = sim.ObjectsPrimitives.Find(delegate(Primitive prim0)
-            //                                                   {
-            //                                                       //EnsureSelected(prim0.LocalID, sim);
-            //                                                       //EnsureSelected(prim0.ParentID, sim);
-            //                                                       return (prim0.ID == id);
-            //                                                   });
-            //            if (found != null) return found;
-            //        }
-            //        //  lock (sim.ObjectsAvatars.Dictionary)
-            //        {
-            //            found = sim.ObjectsAvatars.Find(delegate(Avatar prim0)
-            //                                                {
-            //                                                    if (prim0.ID == id)
-            //                                                    {
-            //                                                        return true;
-            //                                                    }
-            //                                                    return false;
-            //                                                });
-            //            if (found != null) return found;
-            //        }
-            //    }
-            //}
-            //lock (uuidTypeObject)
-            object simobjectf;
-            if (uuidTypeObject.TryGetValue(id, out simobjectf))
+            } else
             {
-                //object simobject = uuidTypeObject[id];
-                if (simobjectf != null && simobjectf is SimObject)
-                    return ((SimObject)simobjectf).Prim;
+                found = GetLibOMVHostedPrim(id, simulator, false);
+                if (found != null) return found;
+                return null;
             }
-            return null;
         }
 
         public Primitive GetPrimitive(String str)
@@ -1033,41 +1003,19 @@ namespace cogbot.Listeners
 
                 foreach (Simulator sim in sims)
                 {
-                    Primitive p = GetPrimitive(id, sim);
+                    Primitive p = GetPrimitive0(id, sim);
                     if (p != null) return p;
                 }
                 return null;
             }
-            Primitive prim;
-            lock (simulator.ObjectsPrimitives.Dictionary)
-                if (simulator.ObjectsPrimitives.TryGetValue(id, out prim))
-                {
-                    return prim;
-                }
-            Avatar av;
-            lock (simulator.ObjectsAvatars.Dictionary)
-                if (simulator.ObjectsAvatars.TryGetValue(id, out av))
-                {
-                    return av;
-                }
-            RequestObject(simulator, id);
-            //ulong handle = simulator.Handle;
-            //EnsureSelected(id, simulator);
-            //lock (AllSimulators)
-            //foreach (Simulator sim in AllSimulators)
-            //{
-            //    if (sim.Handle == handle && sim != simulator)
-            //    {
-            //        if (sim.ObjectsPrimitives.TryGetValue(id, out prim))
-            //        {
-            //            return prim;
-            //        }
-            //        if (sim.ObjectsAvatars.TryGetValue(id, out av))
-            //        {
-            //            return av;
-            //        }
-            //    }
-            //}
+            return GetPrimitive0(id, simulator);
+        }
+
+        private Primitive GetPrimitive0(uint id, Simulator simulator)
+        {
+            Primitive prim = GetLibOMVHostedPrim(id, simulator, false);
+            if (prim != null) return prim;
+            EnsureRequested(simulator, id);
             return null;
         }
 
@@ -1263,7 +1211,7 @@ namespace cogbot.Listeners
         //}
         readonly static Dictionary<ulong, HashSet<uint>> RequestedObjects = new Dictionary<ulong, HashSet<uint>>();
 
-        internal static void RequestObject(Simulator simulator, uint id)
+        internal static void EnsureRequested(Simulator simulator, uint id)
         {
             if (id==0) return;
             //if (IsOpenSim) return;

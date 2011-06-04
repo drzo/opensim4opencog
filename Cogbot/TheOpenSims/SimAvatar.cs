@@ -308,8 +308,8 @@ namespace cogbot.TheOpenSims
             get
             {
                 Primitive P = Prim;
-                if (P == null) return null;
                 if (P is Avatar) return (Avatar) P;
+                return null;
                 uint l = P.LocalID;
                 UUID id = P.ID;
                 var simulator = GetSimulator();
@@ -321,7 +321,7 @@ namespace cogbot.TheOpenSims
                                                                  });
                 if (found != null)
                 {
-                    _Prim0 = found;
+                    SetFirstPrim(found);
                     return found;
                 }
                 return null;
@@ -564,8 +564,9 @@ namespace cogbot.TheOpenSims
                 if (RegionHandle != 0)
                 {
                     Simulator S = WorldSystem.GetSimulator(RegionHandle);
-                    _Prim0 = WorldSystem.GetLibOMVHostedPrim(ID, S, true);
+                    var _Prim0 = WorldSystem.GetLibOMVHostedPrim(ID, S, true);
                     if (_Prim0 == null) return false;
+                    SetFirstPrim(_Prim0);
                     return true;
                 }
                 return false;
