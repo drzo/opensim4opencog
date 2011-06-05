@@ -18,7 +18,7 @@ namespace cogbot.Actions.Search
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int faceIndex;
-            UUID textureID;
+            UUID textureID = UUID.Zero;
 
             if (args.Length < 2)
                 return ShowUsage();// " findtexture [face-index] [texture-uuid]";

@@ -69,13 +69,13 @@ namespace cogbot.TheOpenSims
         private System.Timers.Timer beamTimer;
         private List<Vector3d> beamTarget;
         private Random beamRandom = new Random();
-        private UUID pointID;
-        private UUID sphereID;
+        private UUID pointID = UUID.Zero;
+        private UUID sphereID = UUID.Zero;
         private List<UUID> beamID;
         private int numBeans;
         private Color4[] beamColors = new Color4[3] { new Color4(0, 255, 0, 255), new Color4(255, 0, 0, 255), new Color4(0, 0, 255, 255) };
         private SimPosition targetPrim;
-        private UUID effectSource;
+        private UUID effectSource = UUID.Zero;
 
         public void SetPointing(SimPosition prim, int numBeans)
         {

@@ -26,7 +26,7 @@ namespace cogbot.Actions.Communication
             if (args.Length < 2)
                 return ShowUsage(); // " imgroup [group_uuid] [message]";
 
-            UUID ToGroupID;
+            UUID ToGroupID = UUID.Zero;
             ManualResetEvent WaitForSessionStart = new ManualResetEvent(false);
 
             int argsUsed;

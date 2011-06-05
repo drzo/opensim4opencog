@@ -24,7 +24,7 @@ namespace cogbot.Actions.Land
             int argsUsed;
             Simulator CurSim = TryGetSim(args, out argsUsed) ?? Client.Network.CurrentSim;
             int parcelID;
-            UUID ownerUUID;
+            UUID ownerUUID = UUID.Zero;
 
             int counter = 0;
             StringBuilder result = new StringBuilder();

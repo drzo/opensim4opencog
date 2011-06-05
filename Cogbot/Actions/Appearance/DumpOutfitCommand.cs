@@ -27,7 +27,7 @@ namespace cogbot.Actions.Appearance
             if (args.Length < 1)
                 return ShowUsage(); // " dumpoutfit [avatar-uuid]";
 
-            //UUID target;
+            //UUID target = UUID.Zero;
 
             //if (!UUIDTryParse(args, 0 , out target))
             //    return ShowUsage();// " dumpoutfit [avatar-uuid]";

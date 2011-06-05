@@ -19,7 +19,7 @@ namespace METAbolt
         private SLNetCom netcom;
         private GridClient client;
 
-        private UUID queryID;
+        private UUID queryID = UUID.Zero;
         private Dictionary<string, UUID> findGroupsResults;
 
         public event EventHandler SelectedIndexChanged;

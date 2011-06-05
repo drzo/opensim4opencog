@@ -22,7 +22,7 @@ namespace cogbot.Actions.Search
         {
             if (args.Length < 1) return ShowUsage();
             var v = WorldObjects.uuidTypeObject;
-            UUID uuid;
+            UUID uuid = UUID.Zero;
             string botcmd = String.Join(" ", args, 0, args.Length).Trim();
             int argsUsed;
             UUIDTryParse(args,0, out uuid, out argsUsed);

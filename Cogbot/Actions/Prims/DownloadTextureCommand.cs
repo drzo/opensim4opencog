@@ -12,7 +12,7 @@ namespace cogbot.Actions.SimExport
 
     public class DownloadTextureCommand : Command, RegionMasterCommand
     {
-        UUID TextureID;
+        UUID TextureID = UUID.Zero;
         AutoResetEvent DownloadHandle = new AutoResetEvent(false);
         AssetTexture Asset;
         TextureRequestState resultState;

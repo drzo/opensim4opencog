@@ -26,7 +26,7 @@ namespace cogbot.Actions.Friends
             if (args.Length < 1)
                 return ShowUsage();
 
-            UUID targetID;
+            UUID targetID = UUID.Zero;
 
             int argsUsed;
             if (!UUIDTryParse(args, 0, out targetID, out argsUsed)) 

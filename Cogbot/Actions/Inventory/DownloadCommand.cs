@@ -45,7 +45,7 @@ namespace cogbot.Actions.SimExport
                 assetType = (AssetType)fi.GetValue(null);
             }
             //var v = WorldObjects.uuidTypeObject;
-            UUID AssetID;
+            UUID AssetID = UUID.Zero;
             int argsUsed;
             UUIDTryParse(args, 0, out AssetID, out argsUsed);
             AutoResetEvent DownloadHandle = new AutoResetEvent(false);

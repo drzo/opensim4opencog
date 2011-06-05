@@ -14,7 +14,7 @@ namespace cogbot.TheOpenSims
         //    AspectName = s;
         //}
         //public string AspectName;
-        //public UUID SLRef; // the overhead bubble
+        //public UUID SLRef = UUID.Zero; // the overhead bubble
         //public override string ToString()
         //{
         //    return GetType().Name + "::" + AspectName;

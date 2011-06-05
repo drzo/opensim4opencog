@@ -401,7 +401,7 @@ namespace cogbot.Listeners
                 SimPosition R = GetSimV(args, 0, out argsUsed, offset);
                 if (R != null) return R;
             }
-            UUID uuid;
+            UUID uuid = UUID.Zero;
             if (UUID.TryParse(args[0], out uuid))
             {
                 SimObject O = null;

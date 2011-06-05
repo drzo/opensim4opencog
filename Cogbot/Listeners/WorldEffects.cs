@@ -639,7 +639,10 @@ namespace cogbot.Listeners
                 //}
                 if (sourceAvatar==UUID.Zero)
                 {
-                    Debug("Received a " + type.ToString() + " ViewerEffect sourceAvatar==NULL " + targetObject, Helpers.LogLevel.Warning, Client); 
+                    var ag1 = Client.Self.AgentID;
+                    var ag2 = block.AgentID;
+                    var ag3 = effect.AgentData.AgentID;
+                    Debug("Received a " + type.ToString() + " ViewerEffect sourceAvatar==NULL " + targetObject + " " + GetObject(ag1) + " " + GetObject(ag2) + " " + GetObject(ag3), Helpers.LogLevel.Warning, Client); 
                 }
 
                 // Each ViewerEffect type uses it's own custom binary format for additional BVHData. Fun eh?

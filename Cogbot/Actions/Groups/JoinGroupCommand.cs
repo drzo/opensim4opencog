@@ -13,7 +13,7 @@ namespace cogbot.Actions.Groups
     {
         ManualResetEvent GetGroupsSearchEvent = new ManualResetEvent(false);
         private UUID queryID = UUID.Zero;
-        private UUID resolvedGroupID;
+        private UUID resolvedGroupID = UUID.Zero;
         private string groupName;
         private string resolvedGroupName;
         private bool joinedGroup;

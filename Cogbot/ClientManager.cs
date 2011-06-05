@@ -530,7 +530,7 @@ namespace cogbot
         }
         // TODO's
         // Play Animations(the
-        // private static UUID type_anim_uuid = new UUID("c541c47f-e0c0-058b-ad1a-d6ae3a4584d9");
+        // private static UUID type_anim_uuid = UUIDFactory.GetUUID("c541c47f-e0c0-058b-ad1a-d6ae3a4584d9");
         // Client.Self.AnimationStart(type_anim_uuid,false);
         // Client.Self.AnimationStop(type_anim_uuid,false);
 
@@ -1811,7 +1811,7 @@ namespace cogbot
         readonly internal LoginParams loginParams = new LoginParams();
         public bool GroupCommands;
         public string MasterName;
-        public UUID MasterKey;
+        public UUID MasterKey = UUID.Zero;
         public BotClient Client;        
 
 

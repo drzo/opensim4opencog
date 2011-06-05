@@ -92,7 +92,7 @@ namespace cogbot.TheOpenSims
             {
                 lock (HasPrimLock) if (HasPrim)
                     {
-                        if (!string.IsNullOrEmpty(theAvatar.ProfileProperties.BornOn))
+                        if (theAvatar.ProfileProperties != null && !string.IsNullOrEmpty(theAvatar.ProfileProperties.BornOn))
                         {
                             _profileProperties = theAvatar.ProfileProperties;
                         }
@@ -103,7 +103,7 @@ namespace cogbot.TheOpenSims
             {
                 lock (HasPrimLock) if (HasPrim)
                     {
-                        if (string.IsNullOrEmpty(theAvatar.ProfileProperties.BornOn))
+                        if (theAvatar.ProfileProperties == null || string.IsNullOrEmpty(theAvatar.ProfileProperties.BornOn))
                         {
                             theAvatar.ProfileProperties = value;
                         }
@@ -2256,7 +2256,7 @@ namespace cogbot.TheOpenSims
 
 
 
-                //UUID mostCurrentAnim;// = UUID.Zero; 
+                //UUID mostCurrentAnim = UUID.Zero;// = UUID.Zero; 
                 ///  List<String> names = new List<String>(); 
                 Dictionary<UUID, int> RemovedThisEvent = new Dictionary<UUID, int>(ExpectedCurrentAnims.Dictionary);
                 anims.ForEach(delegate(UUID key)

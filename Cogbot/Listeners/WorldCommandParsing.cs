@@ -42,7 +42,7 @@ namespace cogbot.Listeners
             }
             string name = splitted[0].Trim().Replace("  ", " ");
             uint pickNum = 0;
-            UUID uuid;
+            UUID uuid = UUID.Zero;
             if (name.Contains("-") && UUID.TryParse(name, out uuid))
             {
                 prim = GetSimObjectFromUUID(uuid);

@@ -89,7 +89,7 @@ namespace cogbot
         readonly public GridClient gridClient;
         // TODO's
         // Play Animations
-        // private static UUID type_anim_uuid = new UUID("c541c47f-e0c0-058b-ad1a-d6ae3a4584d9");
+        // private static UUID type_anim_uuid = UUIDFactory.GetUUID("c541c47f-e0c0-058b-ad1a-d6ae3a4584d9");
         // Client.Self.AnimationStart(type_anim_uuid,false);
         // Client.Self.AnimationStop(type_anim_uuid,false);
 
@@ -256,7 +256,7 @@ namespace cogbot
             {
                 if (!string.IsNullOrEmpty(value))
                 {
-                    UUID found;
+                    UUID found = UUID.Zero;
                     if (UUID.TryParse(value, out found))
                     {
                         MasterKey = found;
@@ -418,7 +418,7 @@ namespace cogbot
         public List<string> muteList;
         public bool muted = false;
 
-        private UUID GroupMembersRequestID;
+        private UUID GroupMembersRequestID = UUID.Zero;
         public Dictionary<UUID, Group> GroupsCache = null;
         private ManualResetEvent GroupsEvent = new ManualResetEvent(false);
 
@@ -798,7 +798,7 @@ namespace cogbot
 
         public UUID GroupName2UUID(String groupName)
         {
-            UUID tryUUID;
+            UUID tryUUID = UUID.Zero;
             if (UUID.TryParse(groupName, out tryUUID))
                 return tryUUID;
             if (null == GroupsCache)
@@ -1171,7 +1171,7 @@ namespace cogbot
             // what we simply want
             //    Client.Appearance.WearOutfit(folderName.Split('/'), false);
 
-            UUID folderID;
+            UUID folderID = UUID.Zero;
             InventoryFolder rootFolder = Inventory.Store.RootFolder;
             //List<FolderData> folderContents;
             // List<ItemData> folderItems;
@@ -2585,8 +2585,8 @@ namespace cogbot
     public class IMessageSentEventArgs : EventArgs
     {
         private string message;
-        private UUID targetID;
-        private UUID sessionID;
+        private UUID targetID = UUID.Zero;
+        private UUID sessionID = UUID.Zero;
         private DateTime timestamp;
 
         public IMessageSentEventArgs(string message, UUID targetID, UUID sessionID, DateTime timestamp)

@@ -19,7 +19,7 @@ namespace cogbot.Actions.Objects
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            UUID primID;
+            UUID primID = UUID.Zero;
 
             if (args.Length < 1)
             {

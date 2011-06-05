@@ -23,7 +23,7 @@ namespace cogbot.Actions.Inventory.Shell
             {
                 return ShowUsage();// " give <agent uuid> <item1> [item2] [item3] [...]";
             }
-            UUID dest;
+            UUID dest = UUID.Zero;
             int argsUsed;
             if (!UUIDTryParse(args, 0, out dest, out argsUsed))
             {

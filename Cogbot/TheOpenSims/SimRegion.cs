@@ -56,7 +56,7 @@ namespace cogbot.TheOpenSims
         public static Vector2[] XYOf = {vC, vN, vNE, vE, vSE, vS, vSW, vW, vNW};
         private readonly float MAXY = 256f;
         public readonly ulong RegionHandle;
-        private GridRegion _GridInfo;
+        private GridRegion _GridInfo = new GridRegion();
         private Vector2 _GridLoc = Vector2.Zero;
         readonly private List<Simulator> _Simulators = new List<Simulator>();
         public float AverageHieght = 21.5f;
@@ -122,7 +122,7 @@ namespace cogbot.TheOpenSims
 
         }
 
-        private UUID _RegionID;
+        private UUID _RegionID = UUID.Zero;
         public static SimRegion UNKNOWN = new SimRegion(0, null);
 
         protected UUID RegionID
@@ -508,7 +508,7 @@ namespace cogbot.TheOpenSims
                     return GetRegion(s);
                 }
             }
-            UUID rid;
+            UUID rid = UUID.Zero;
             if (UUID.TryParse(simname, out rid))
             {
                 return GetRegion(rid,gc);

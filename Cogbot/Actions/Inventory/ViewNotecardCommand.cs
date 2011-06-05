@@ -37,7 +37,7 @@ namespace cogbot.Actions.Inventory
             {
                 return ShowUsage();// " viewnote [notecard asset uuid]";
             }
-            UUID note;
+            UUID note = UUID.Zero;
             if (!UUID.TryParse(args[0], out note))
             {
                 return Failure( "First argument expected UUID.");

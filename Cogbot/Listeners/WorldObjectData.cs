@@ -633,6 +633,7 @@ namespace cogbot.Listeners
             if (avatar == null) return "NULL avatar";
             string s = String.Empty;
             s += (avatar.Name + " is " + TheSimAvatar.DistanceVectorString(GetSimObject(avatar)) + " distant.");
+            if (avatar.ProfileProperties == null) return s;
             if (avatar.ProfileProperties.BornOn != null)
                 s += ("Born on: " + avatar.ProfileProperties.BornOn);
             if (avatar.ProfileProperties.AboutText != null)

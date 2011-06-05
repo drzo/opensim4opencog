@@ -47,7 +47,7 @@ namespace cogbot.Actions.SimExport
             if (args.Length != 2 && !(args.Length == 1 && SelectedObject != UUID.Zero))
                 return ShowUsage();
 
-            UUID id;
+            UUID id = UUID.Zero;
             uint localid;
             string file;
 
