@@ -37,7 +37,7 @@ namespace OpenMetaverse
         public Vector3 Position;
         public float Score;
         public float MonoScore;
-        public UUID TaskID;
+        public UUID TaskID = UUID.Zero;
         public uint TaskLocalID;
         public string TaskName;
         public string OwnerName;
@@ -130,12 +130,12 @@ namespace OpenMetaverse
         #region Structs
         /// <summary>Ground texture settings for each corner of the region</summary>
         // TODO: maybe move this class to the Simulator object and implement it there too        
-        public struct GroundTextureSettings
+        public class GroundTextureSettings : WasAStruct
         {
-            public UUID Low;
-            public UUID MidLow;
-            public UUID MidHigh;
-            public UUID High;
+            public UUID Low = UUID.Zero;
+            public UUID MidLow = UUID.Zero;
+            public UUID MidHigh = UUID.Zero;
+            public UUID High = UUID.Zero;
         }
 
         /// <summary>Used by GroundTextureHeightSettings</summary>
@@ -775,7 +775,7 @@ namespace OpenMetaverse
             if (method == "estateupdateinfo")
             {
                 string estateName = Utils.BytesToString(message.ParamList[0].Parameter);
-                UUID estateOwner = new UUID(Utils.BytesToString(message.ParamList[1].Parameter));
+                UUID estateOwner = UUIDFactory.GetUUID(Utils.BytesToString(message.ParamList[1].Parameter));
                 estateID = Utils.BytesToUInt(message.ParamList[2].Parameter);
                 /*
                 foreach (EstateOwnerMessagePacket.ParamListBlock param in message.ParamList)
@@ -815,7 +815,7 @@ namespace OpenMetaverse
                                     {
                                         try
                                         {
-                                            UUID managerID = new UUID(message.ParamList[i].Parameter, 0);
+                                            UUID managerID = UUIDFactory.GetUUID(message.ParamList[i].Parameter, 0);
                                             managers.Add(managerID);
                                         }
                                         catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, Client, ex); }
@@ -836,7 +836,7 @@ namespace OpenMetaverse
                                     {
                                         try
                                         {
-                                            UUID bannedID = new UUID(message.ParamList[i].Parameter, 0);
+                                            UUID bannedID = UUIDFactory.GetUUID(message.ParamList[i].Parameter, 0);
                                             bannedUsers.Add(bannedID);
                                         }
                                         catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, Client, ex); }
@@ -857,7 +857,7 @@ namespace OpenMetaverse
                                     {
                                         try
                                         {
-                                            UUID allowedID = new UUID(message.ParamList[i].Parameter, 0);
+                                            UUID allowedID = UUIDFactory.GetUUID(message.ParamList[i].Parameter, 0);
                                             allowedUsers.Add(allowedID);
                                         }
                                         catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, Client, ex); }
@@ -878,7 +878,7 @@ namespace OpenMetaverse
                                     {
                                         try
                                         {
-                                            UUID groupID = new UUID(message.ParamList[i].Parameter, 0);
+                                            UUID groupID = UUIDFactory.GetUUID(message.ParamList[i].Parameter, 0);
                                             allowedGroups.Add(groupID);
                                         }
                                         catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, Client, ex); }
@@ -1156,10 +1156,10 @@ namespace OpenMetaverse
     /// <summary>Returned, along with other info, upon a successful .RequestInfo()</summary>
     public class EstateCovenantReplyEventArgs : EventArgs
     {
-        private readonly UUID m_covenantID;
+        private readonly UUID m_covenantID = UUID.Zero;
         private readonly long m_timestamp;
         private readonly string m_estateName;
-        private readonly UUID m_estateOwnerID;
+        private readonly UUID m_estateOwnerID = UUID.Zero;
 
         /// <summary>
         /// The Covenant
@@ -1200,7 +1200,7 @@ namespace OpenMetaverse
         private readonly uint m_estateID;
         private readonly bool m_denyNoPaymentInfo;
         private readonly string m_estateName;
-        private readonly UUID m_estateOwner;
+        private readonly UUID m_estateOwner = UUID.Zero;
 
         /// <summary>
         /// The estate's name

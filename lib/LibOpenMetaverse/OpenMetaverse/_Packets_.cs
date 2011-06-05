@@ -2061,8 +2061,8 @@ namespace OpenMetaverse.Packets
         public sealed class CircuitCodeBlock : PacketBlock
         {
             public uint Code;
-            public UUID SessionID;
-            public UUID ID;
+            public UUID SessionID = UUID.Zero;
+            public UUID ID = UUID.Zero;
 
             public override int Length
             {
@@ -2083,8 +2083,8 @@ namespace OpenMetaverse.Packets
                 try
                 {
                     Code = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    ID.FromBytes(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    ID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -2177,7 +2177,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class TelehubBlockBlock : PacketBlock
         {
-            public UUID ObjectID;
+            public UUID ObjectID = UUID.Zero;
             public byte[] ObjectName;
             public Vector3 TelehubPos;
             public Quaternion TelehubRot;
@@ -2203,7 +2203,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     ObjectName = new byte[length];
                     Buffer.BlockCopy(bytes, i, ObjectName, 0, length); i += length;
@@ -2644,9 +2644,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID QueryID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID QueryID = UUID.Zero;
 
             public override int Length
             {
@@ -2666,9 +2666,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    QueryID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    QueryID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -2812,8 +2812,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID QueryID;
+            public UUID AgentID = UUID.Zero;
+            public UUID QueryID = UUID.Zero;
 
             public override int Length
             {
@@ -2833,8 +2833,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    QueryID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    QueryID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -2853,7 +2853,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID AvatarID;
+            public UUID AvatarID = UUID.Zero;
             public byte[] FirstName;
             public byte[] LastName;
 
@@ -2879,7 +2879,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    AvatarID.FromBytes(bytes, i); i += 16;
+                    AvatarID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     FirstName = new byte[length];
                     Buffer.BlockCopy(bytes, i, FirstName, 0, length); i += length;
@@ -3057,9 +3057,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID QueryID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID QueryID = UUID.Zero;
 
             public override int Length
             {
@@ -3079,9 +3079,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    QueryID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    QueryID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -3101,7 +3101,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class TransactionDataBlock : PacketBlock
         {
-            public UUID TransactionID;
+            public UUID TransactionID = UUID.Zero;
 
             public override int Length
             {
@@ -3121,7 +3121,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -3284,8 +3284,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID QueryID;
+            public UUID AgentID = UUID.Zero;
+            public UUID QueryID = UUID.Zero;
 
             public override int Length
             {
@@ -3305,8 +3305,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    QueryID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    QueryID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -3325,7 +3325,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class TransactionDataBlock : PacketBlock
         {
-            public UUID TransactionID;
+            public UUID TransactionID = UUID.Zero;
 
             public override int Length
             {
@@ -3345,7 +3345,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -3363,7 +3363,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class QueryDataBlock : PacketBlock
         {
-            public UUID OwnerID;
+            public UUID OwnerID = UUID.Zero;
             public byte[] Name;
             public byte[] Desc;
             public int ActualArea;
@@ -3373,7 +3373,7 @@ namespace OpenMetaverse.Packets
             public float GlobalY;
             public float GlobalZ;
             public byte[] SimName;
-            public UUID SnapshotID;
+            public UUID SnapshotID = UUID.Zero;
             public float Dwell;
             public int Price;
 
@@ -3400,7 +3400,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    OwnerID.FromBytes(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     Name = new byte[length];
                     Buffer.BlockCopy(bytes, i, Name, 0, length); i += length;
@@ -3416,7 +3416,7 @@ namespace OpenMetaverse.Packets
                     length = bytes[i++];
                     SimName = new byte[length];
                     Buffer.BlockCopy(bytes, i, SimName, 0, length); i += length;
-                    SnapshotID.FromBytes(bytes, i); i += 16;
+                    SnapshotID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Dwell = Utils.BytesToFloat(bytes, i); i += 4;
                     Price = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
@@ -3611,8 +3611,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -3632,8 +3632,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -3652,7 +3652,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class QueryDataBlock : PacketBlock
         {
-            public UUID QueryID;
+            public UUID QueryID = UUID.Zero;
             public byte[] QueryText;
             public uint QueryFlags;
             public int QueryStart;
@@ -3678,7 +3678,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    QueryID.FromBytes(bytes, i); i += 16;
+                    QueryID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     QueryText = new byte[length];
                     Buffer.BlockCopy(bytes, i, QueryText, 0, length); i += length;
@@ -3786,8 +3786,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -3807,8 +3807,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -3827,7 +3827,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class QueryDataBlock : PacketBlock
         {
-            public UUID QueryID;
+            public UUID QueryID = UUID.Zero;
             public byte[] QueryText;
             public uint QueryFlags;
             public sbyte Category;
@@ -3856,7 +3856,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    QueryID.FromBytes(bytes, i); i += 16;
+                    QueryID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     QueryText = new byte[length];
                     Buffer.BlockCopy(bytes, i, QueryText, 0, length); i += length;
@@ -3971,7 +3971,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -3991,7 +3991,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -4009,7 +4009,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class QueryDataBlock : PacketBlock
         {
-            public UUID QueryID;
+            public UUID QueryID = UUID.Zero;
 
             public override int Length
             {
@@ -4029,7 +4029,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    QueryID.FromBytes(bytes, i); i += 16;
+                    QueryID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -4047,7 +4047,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class QueryRepliesBlock : PacketBlock
         {
-            public UUID ParcelID;
+            public UUID ParcelID = UUID.Zero;
             public byte[] Name;
             public bool ForSale;
             public bool Auction;
@@ -4074,7 +4074,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ParcelID.FromBytes(bytes, i); i += 16;
+                    ParcelID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     Name = new byte[length];
                     Buffer.BlockCopy(bytes, i, Name, 0, length); i += length;
@@ -4376,7 +4376,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -4396,7 +4396,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -4414,7 +4414,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class QueryDataBlock : PacketBlock
         {
-            public UUID QueryID;
+            public UUID QueryID = UUID.Zero;
 
             public override int Length
             {
@@ -4434,7 +4434,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    QueryID.FromBytes(bytes, i); i += 16;
+                    QueryID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -4452,7 +4452,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class QueryRepliesBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
             public byte[] FirstName;
             public byte[] LastName;
             public byte[] Group;
@@ -4482,7 +4482,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     FirstName = new byte[length];
                     Buffer.BlockCopy(bytes, i, FirstName, 0, length); i += length;
@@ -4679,7 +4679,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -4699,7 +4699,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -4717,7 +4717,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class QueryDataBlock : PacketBlock
         {
-            public UUID QueryID;
+            public UUID QueryID = UUID.Zero;
 
             public override int Length
             {
@@ -4737,7 +4737,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    QueryID.FromBytes(bytes, i); i += 16;
+                    QueryID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -4755,7 +4755,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class QueryRepliesBlock : PacketBlock
         {
-            public UUID OwnerID;
+            public UUID OwnerID = UUID.Zero;
             public byte[] Name;
             public uint EventID;
             public byte[] Date;
@@ -4784,7 +4784,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    OwnerID.FromBytes(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     Name = new byte[length];
                     Buffer.BlockCopy(bytes, i, Name, 0, length); i += length;
@@ -5058,7 +5058,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -5078,7 +5078,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -5096,7 +5096,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class QueryDataBlock : PacketBlock
         {
-            public UUID QueryID;
+            public UUID QueryID = UUID.Zero;
 
             public override int Length
             {
@@ -5116,7 +5116,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    QueryID.FromBytes(bytes, i); i += 16;
+                    QueryID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -5134,7 +5134,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class QueryRepliesBlock : PacketBlock
         {
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
             public byte[] GroupName;
             public int Members;
             public float SearchOrder;
@@ -5160,7 +5160,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     GroupName = new byte[length];
                     Buffer.BlockCopy(bytes, i, GroupName, 0, length); i += length;
@@ -5347,8 +5347,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -5368,8 +5368,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -5388,7 +5388,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class QueryDataBlock : PacketBlock
         {
-            public UUID QueryID;
+            public UUID QueryID = UUID.Zero;
             public byte[] QueryText;
             public uint QueryFlags;
             public uint Category;
@@ -5415,7 +5415,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    QueryID.FromBytes(bytes, i); i += 16;
+                    QueryID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     QueryText = new byte[length];
                     Buffer.BlockCopy(bytes, i, QueryText, 0, length); i += length;
@@ -5525,7 +5525,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -5545,7 +5545,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -5563,7 +5563,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class QueryDataBlock : PacketBlock
         {
-            public UUID QueryID;
+            public UUID QueryID = UUID.Zero;
 
             public override int Length
             {
@@ -5583,7 +5583,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    QueryID.FromBytes(bytes, i); i += 16;
+                    QueryID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -5601,7 +5601,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class QueryRepliesBlock : PacketBlock
         {
-            public UUID ClassifiedID;
+            public UUID ClassifiedID = UUID.Zero;
             public byte[] Name;
             public byte ClassifiedFlags;
             public uint CreationDate;
@@ -5629,7 +5629,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ClassifiedID.FromBytes(bytes, i); i += 16;
+                    ClassifiedID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     Name = new byte[length];
                     Buffer.BlockCopy(bytes, i, Name, 0, length); i += length;
@@ -5900,8 +5900,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID TargetID;
+            public UUID AgentID = UUID.Zero;
+            public UUID TargetID = UUID.Zero;
 
             public override int Length
             {
@@ -5921,8 +5921,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    TargetID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    TargetID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -5941,7 +5941,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID ClassifiedID;
+            public UUID ClassifiedID = UUID.Zero;
             public byte[] Name;
 
             public override int Length
@@ -5965,7 +5965,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ClassifiedID.FromBytes(bytes, i); i += 16;
+                    ClassifiedID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     Name = new byte[length];
                     Buffer.BlockCopy(bytes, i, Name, 0, length); i += length;
@@ -6138,8 +6138,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -6159,8 +6159,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -6179,7 +6179,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID ClassifiedID;
+            public UUID ClassifiedID = UUID.Zero;
 
             public override int Length
             {
@@ -6199,7 +6199,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ClassifiedID.FromBytes(bytes, i); i += 16;
+                    ClassifiedID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -6298,7 +6298,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -6318,7 +6318,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -6336,16 +6336,16 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID ClassifiedID;
-            public UUID CreatorID;
+            public UUID ClassifiedID = UUID.Zero;
+            public UUID CreatorID = UUID.Zero;
             public uint CreationDate;
             public uint ExpirationDate;
             public uint Category;
             public byte[] Name;
             public byte[] Desc;
-            public UUID ParcelID;
+            public UUID ParcelID = UUID.Zero;
             public uint ParentEstate;
-            public UUID SnapshotID;
+            public UUID SnapshotID = UUID.Zero;
             public byte[] SimName;
             public Vector3d PosGlobal;
             public byte[] ParcelName;
@@ -6376,8 +6376,8 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ClassifiedID.FromBytes(bytes, i); i += 16;
-                    CreatorID.FromBytes(bytes, i); i += 16;
+                    ClassifiedID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    CreatorID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     CreationDate = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     ExpirationDate = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Category = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -6387,9 +6387,9 @@ namespace OpenMetaverse.Packets
                     length = (bytes[i++] + (bytes[i++] << 8));
                     Desc = new byte[length];
                     Buffer.BlockCopy(bytes, i, Desc, 0, length); i += length;
-                    ParcelID.FromBytes(bytes, i); i += 16;
+                    ParcelID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     ParentEstate = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    SnapshotID.FromBytes(bytes, i); i += 16;
+                    SnapshotID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     SimName = new byte[length];
                     Buffer.BlockCopy(bytes, i, SimName, 0, length); i += length;
@@ -6515,8 +6515,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -6536,8 +6536,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -6556,13 +6556,13 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID ClassifiedID;
+            public UUID ClassifiedID = UUID.Zero;
             public uint Category;
             public byte[] Name;
             public byte[] Desc;
-            public UUID ParcelID;
+            public UUID ParcelID = UUID.Zero;
             public uint ParentEstate;
-            public UUID SnapshotID;
+            public UUID SnapshotID = UUID.Zero;
             public Vector3d PosGlobal;
             public byte ClassifiedFlags;
             public int PriceForListing;
@@ -6589,7 +6589,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ClassifiedID.FromBytes(bytes, i); i += 16;
+                    ClassifiedID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Category = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     length = bytes[i++];
                     Name = new byte[length];
@@ -6597,9 +6597,9 @@ namespace OpenMetaverse.Packets
                     length = (bytes[i++] + (bytes[i++] << 8));
                     Desc = new byte[length];
                     Buffer.BlockCopy(bytes, i, Desc, 0, length); i += length;
-                    ParcelID.FromBytes(bytes, i); i += 16;
+                    ParcelID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     ParentEstate = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    SnapshotID.FromBytes(bytes, i); i += 16;
+                    SnapshotID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     PosGlobal.FromBytes(bytes, i); i += 24;
                     ClassifiedFlags = (byte)bytes[i++];
                     PriceForListing = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -6712,8 +6712,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -6733,8 +6733,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -6753,7 +6753,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID ClassifiedID;
+            public UUID ClassifiedID = UUID.Zero;
 
             public override int Length
             {
@@ -6773,7 +6773,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ClassifiedID.FromBytes(bytes, i); i += 16;
+                    ClassifiedID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -6871,8 +6871,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -6892,8 +6892,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -6912,8 +6912,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID ClassifiedID;
-            public UUID QueryID;
+            public UUID ClassifiedID = UUID.Zero;
+            public UUID QueryID = UUID.Zero;
 
             public override int Length
             {
@@ -6933,8 +6933,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ClassifiedID.FromBytes(bytes, i); i += 16;
-                    QueryID.FromBytes(bytes, i); i += 16;
+                    ClassifiedID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    QueryID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -7033,8 +7033,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -7054,8 +7054,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -7074,7 +7074,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class QueryDataBlock : PacketBlock
         {
-            public UUID QueryID;
+            public UUID QueryID = UUID.Zero;
             public uint QueryFlags;
             public uint SearchType;
             public int Price;
@@ -7099,7 +7099,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    QueryID.FromBytes(bytes, i); i += 16;
+                    QueryID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     QueryFlags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     SearchType = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Price = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -7208,7 +7208,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -7228,7 +7228,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -7246,7 +7246,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class QueryDataBlock : PacketBlock
         {
-            public UUID QueryID;
+            public UUID QueryID = UUID.Zero;
 
             public override int Length
             {
@@ -7266,7 +7266,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    QueryID.FromBytes(bytes, i); i += 16;
+                    QueryID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -7284,7 +7284,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class QueryRepliesBlock : PacketBlock
         {
-            public UUID ParcelID;
+            public UUID ParcelID = UUID.Zero;
             public byte[] Name;
             public bool Auction;
             public bool ForSale;
@@ -7312,7 +7312,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ParcelID.FromBytes(bytes, i); i += 16;
+                    ParcelID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     Name = new byte[length];
                     Buffer.BlockCopy(bytes, i, Name, 0, length); i += length;
@@ -7503,8 +7503,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -7524,8 +7524,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -7544,7 +7544,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class QueryDataBlock : PacketBlock
         {
-            public UUID QueryID;
+            public UUID QueryID = UUID.Zero;
             public uint QueryFlags;
 
             public override int Length
@@ -7565,7 +7565,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    QueryID.FromBytes(bytes, i); i += 16;
+                    QueryID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     QueryFlags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -7666,7 +7666,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -7686,7 +7686,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -7704,7 +7704,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class QueryDataBlock : PacketBlock
         {
-            public UUID QueryID;
+            public UUID QueryID = UUID.Zero;
 
             public override int Length
             {
@@ -7724,7 +7724,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    QueryID.FromBytes(bytes, i); i += 16;
+                    QueryID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -7742,7 +7742,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class QueryRepliesBlock : PacketBlock
         {
-            public UUID ParcelID;
+            public UUID ParcelID = UUID.Zero;
             public byte[] Name;
             public float Dwell;
 
@@ -7767,7 +7767,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ParcelID.FromBytes(bytes, i); i += 16;
+                    ParcelID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     Name = new byte[length];
                     Buffer.BlockCopy(bytes, i, Name, 0, length); i += length;
@@ -7952,8 +7952,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -7973,8 +7973,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -7993,7 +7993,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID ParcelID;
+            public UUID ParcelID = UUID.Zero;
 
             public override int Length
             {
@@ -8013,7 +8013,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ParcelID.FromBytes(bytes, i); i += 16;
+                    ParcelID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -8111,7 +8111,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -8131,7 +8131,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -8149,8 +8149,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID ParcelID;
-            public UUID OwnerID;
+            public UUID ParcelID = UUID.Zero;
+            public UUID OwnerID = UUID.Zero;
             public byte[] Name;
             public byte[] Desc;
             public int ActualArea;
@@ -8160,7 +8160,7 @@ namespace OpenMetaverse.Packets
             public float GlobalY;
             public float GlobalZ;
             public byte[] SimName;
-            public UUID SnapshotID;
+            public UUID SnapshotID = UUID.Zero;
             public float Dwell;
             public int SalePrice;
             public int AuctionID;
@@ -8188,8 +8188,8 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ParcelID.FromBytes(bytes, i); i += 16;
-                    OwnerID.FromBytes(bytes, i); i += 16;
+                    ParcelID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     Name = new byte[length];
                     Buffer.BlockCopy(bytes, i, Name, 0, length); i += length;
@@ -8205,7 +8205,7 @@ namespace OpenMetaverse.Packets
                     length = bytes[i++];
                     SimName = new byte[length];
                     Buffer.BlockCopy(bytes, i, SimName, 0, length); i += length;
-                    SnapshotID.FromBytes(bytes, i); i += 16;
+                    SnapshotID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Dwell = Utils.BytesToFloat(bytes, i); i += 4;
                     SalePrice = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     AuctionID = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -8324,8 +8324,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -8345,8 +8345,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -8483,7 +8483,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID OwnerID;
+            public UUID OwnerID = UUID.Zero;
             public bool IsGroupOwned;
             public int Count;
             public bool OnlineStatus;
@@ -8506,7 +8506,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    OwnerID.FromBytes(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     IsGroupOwned = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     Count = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     OnlineStatus = (bytes[i++] != 0) ? (bool)true : (bool)false;
@@ -8672,8 +8672,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -8693,8 +8693,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -8713,7 +8713,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -8733,7 +8733,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -8831,8 +8831,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID GroupID;
+            public UUID AgentID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -8852,8 +8852,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -8872,7 +8872,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID NoticeID;
+            public UUID NoticeID = UUID.Zero;
             public uint Timestamp;
             public byte[] FromName;
             public byte[] Subject;
@@ -8901,7 +8901,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    NoticeID.FromBytes(bytes, i); i += 16;
+                    NoticeID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Timestamp = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     length = (bytes[i++] + (bytes[i++] << 8));
                     FromName = new byte[length];
@@ -9087,8 +9087,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -9108,8 +9108,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -9128,7 +9128,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID GroupNoticeID;
+            public UUID GroupNoticeID = UUID.Zero;
 
             public override int Length
             {
@@ -9148,7 +9148,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    GroupNoticeID.FromBytes(bytes, i); i += 16;
+                    GroupNoticeID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -9246,8 +9246,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -9267,8 +9267,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -9287,7 +9287,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InfoBlock : PacketBlock
         {
-            public UUID RegionID;
+            public UUID RegionID = UUID.Zero;
             public Vector3 Position;
             public Vector3 LookAt;
 
@@ -9309,7 +9309,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    RegionID.FromBytes(bytes, i); i += 16;
+                    RegionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Position.FromBytes(bytes, i); i += 12;
                     LookAt.FromBytes(bytes, i); i += 12;
                 }
@@ -9411,8 +9411,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -9432,8 +9432,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -9576,7 +9576,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InfoBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
             public uint LocationID;
             public Vector3 Position;
             public Vector3 LookAt;
@@ -9600,7 +9600,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     LocationID = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Position.FromBytes(bytes, i); i += 12;
                     LookAt.FromBytes(bytes, i); i += 12;
@@ -9699,9 +9699,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InfoBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID LandmarkID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID LandmarkID = UUID.Zero;
 
             public override int Length
             {
@@ -9721,9 +9721,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    LandmarkID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    LandmarkID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -9817,7 +9817,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -9837,7 +9837,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -9982,7 +9982,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InfoBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
             public uint LocationID;
             public uint SimIP;
             public ushort SimPort;
@@ -10012,7 +10012,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     LocationID = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     SimIP = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     SimPort = (ushort)((bytes[i++] << 8) + bytes[i++]);
@@ -10122,8 +10122,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -10143,8 +10143,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -10210,7 +10210,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class TargetDataBlock : PacketBlock
         {
-            public UUID TargetID;
+            public UUID TargetID = UUID.Zero;
 
             public override int Length
             {
@@ -10230,7 +10230,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    TargetID.FromBytes(bytes, i); i += 16;
+                    TargetID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -10407,9 +10407,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InfoBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID LureID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID LureID = UUID.Zero;
             public uint TeleportFlags;
 
             public override int Length
@@ -10430,9 +10430,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    LureID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    LureID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     TeleportFlags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -10527,8 +10527,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InfoBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -10548,8 +10548,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -10752,7 +10752,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InfoBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
             public byte[] Reason;
 
             public override int Length
@@ -10776,7 +10776,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     Reason = new byte[length];
                     Buffer.BlockCopy(bytes, i, Reason, 0, length); i += length;
@@ -11000,9 +11000,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID GroupID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -11022,9 +11022,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -11044,7 +11044,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ObjectDataBlock : PacketBlock
         {
-            public UUID ObjectID;
+            public UUID ObjectID = UUID.Zero;
 
             public override int Length
             {
@@ -11064,7 +11064,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -11232,9 +11232,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID GroupID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -11254,9 +11254,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -11276,7 +11276,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ObjectDataBlock : PacketBlock
         {
-            public UUID ObjectID;
+            public UUID ObjectID = UUID.Zero;
 
             public override int Length
             {
@@ -11296,7 +11296,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -11464,8 +11464,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -11485,8 +11485,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -11578,8 +11578,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public uint SerialNum;
 
             public override int Length
@@ -11600,8 +11600,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     SerialNum = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -11695,8 +11695,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public uint SerialNum;
 
             public override int Length
@@ -11717,8 +11717,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     SerialNum = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -11812,8 +11812,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -11833,8 +11833,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -11985,8 +11985,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public uint CircuitCode;
 
             public override int Length
@@ -12007,8 +12007,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     CircuitCode = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -12157,8 +12157,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public uint CircuitCode;
 
             public override int Length
@@ -12179,8 +12179,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     CircuitCode = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -12322,8 +12322,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public uint CircuitCode;
 
             public override int Length
@@ -12344,8 +12344,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     CircuitCode = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -12492,8 +12492,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public uint SerialNum;
             public Vector3 Size;
 
@@ -12515,8 +12515,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     SerialNum = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Size.FromBytes(bytes, i); i += 12;
                 }
@@ -12539,7 +12539,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class WearableDataBlock : PacketBlock
         {
-            public UUID CacheID;
+            public UUID CacheID = UUID.Zero;
             public byte TextureIndex;
 
             public override int Length
@@ -12560,7 +12560,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    CacheID.FromBytes(bytes, i); i += 16;
+                    CacheID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     TextureIndex = (byte)bytes[i++];
                 }
                 catch (Exception)
@@ -12792,8 +12792,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -12813,8 +12813,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -12951,7 +12951,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ImageIDBlock : PacketBlock
         {
-            public UUID ID;
+            public UUID ID = UUID.Zero;
 
             public override int Length
             {
@@ -12971,7 +12971,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ID.FromBytes(bytes, i); i += 16;
+                    ID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -13062,7 +13062,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class TextureDataBlock : PacketBlock
         {
-            public UUID TextureID;
+            public UUID TextureID = UUID.Zero;
 
             public override int Length
             {
@@ -13082,7 +13082,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    TextureID.FromBytes(bytes, i); i += 16;
+                    TextureID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -13173,8 +13173,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public bool AlwaysRun;
 
             public override int Length
@@ -13195,8 +13195,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     AlwaysRun = (bytes[i++] != 0) ? (bool)true : (bool)false;
                 }
                 catch (Exception)
@@ -13290,8 +13290,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public bool Force;
 
             public override int Length
@@ -13312,8 +13312,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Force = (bytes[i++] != 0) ? (bool)true : (bool)false;
                 }
                 catch (Exception)
@@ -13523,9 +13523,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID GroupID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -13545,9 +13545,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -13806,16 +13806,16 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID GroupID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
             public Vector3 RayStart;
             public Vector3 RayEnd;
             public bool BypassRaycast;
             public bool RayEndIsIntersection;
             public bool CopyCenters;
             public bool CopyRotates;
-            public UUID RayTargetID;
+            public UUID RayTargetID = UUID.Zero;
             public uint DuplicateFlags;
 
             public override int Length
@@ -13836,16 +13836,16 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     RayStart.FromBytes(bytes, i); i += 12;
                     RayEnd.FromBytes(bytes, i); i += 12;
                     BypassRaycast = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     RayEndIsIntersection = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     CopyCenters = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     CopyRotates = (bytes[i++] != 0) ? (bool)true : (bool)false;
-                    RayTargetID.FromBytes(bytes, i); i += 16;
+                    RayTargetID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     DuplicateFlags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -14063,8 +14063,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -14084,8 +14084,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -14296,8 +14296,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -14317,8 +14317,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -14529,8 +14529,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public uint ObjectLocalID;
             public bool UsePhysics;
             public bool IsTemporary;
@@ -14555,8 +14555,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     ObjectLocalID = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     UsePhysics = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     IsTemporary = (bytes[i++] != 0) ? (bool)true : (bool)false;
@@ -14786,8 +14786,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -14807,8 +14807,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -15019,8 +15019,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -15040,8 +15040,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -15266,8 +15266,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -15287,8 +15287,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -15499,8 +15499,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -15520,8 +15520,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -15788,8 +15788,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -15809,8 +15809,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -16037,8 +16037,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -16058,8 +16058,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -16079,8 +16079,8 @@ namespace OpenMetaverse.Packets
         public sealed class HeaderDataBlock : PacketBlock
         {
             public bool Override;
-            public UUID OwnerID;
-            public UUID GroupID;
+            public UUID OwnerID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -16101,8 +16101,8 @@ namespace OpenMetaverse.Packets
                 try
                 {
                     Override = (bytes[i++] != 0) ? (bool)true : (bool)false;
-                    OwnerID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -16320,9 +16320,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID GroupID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -16342,9 +16342,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -16553,10 +16553,10 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID GroupID;
-            public UUID CategoryID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
+            public UUID CategoryID = UUID.Zero;
 
             public override int Length
             {
@@ -16576,10 +16576,10 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
-                    CategoryID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    CategoryID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -16795,8 +16795,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -16816,8 +16816,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -16836,9 +16836,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID ObjectID;
-            public UUID ItemID;
-            public UUID FolderID;
+            public UUID ObjectID = UUID.Zero;
+            public UUID ItemID = UUID.Zero;
+            public UUID FolderID = UUID.Zero;
 
             public override int Length
             {
@@ -16858,9 +16858,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
-                    ItemID.FromBytes(bytes, i); i += 16;
-                    FolderID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -16961,7 +16961,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID ObjectID;
+            public UUID ObjectID = UUID.Zero;
             public bool Delete;
 
             public override int Length
@@ -16982,7 +16982,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Delete = (bytes[i++] != 0) ? (bool)true : (bool)false;
                 }
                 catch (Exception)
@@ -17076,8 +17076,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -17097,8 +17097,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -17362,8 +17362,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -17383,8 +17383,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -17598,8 +17598,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -17619,8 +17619,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -17837,8 +17837,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -17858,8 +17858,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -18076,8 +18076,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -18097,8 +18097,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -18309,8 +18309,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -18330,8 +18330,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -18539,8 +18539,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -18560,8 +18560,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -18769,8 +18769,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public byte AttachmentPoint;
 
             public override int Length
@@ -18791,8 +18791,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     AttachmentPoint = (byte)bytes[i++];
                 }
                 catch (Exception)
@@ -19005,8 +19005,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -19026,8 +19026,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -19234,8 +19234,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -19255,8 +19255,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -19463,8 +19463,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -19484,8 +19484,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -19692,8 +19692,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -19713,8 +19713,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -19921,8 +19921,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -19942,8 +19942,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -20216,8 +20216,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -20237,8 +20237,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -20257,7 +20257,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ObjectDataBlock : PacketBlock
         {
-            public UUID ObjectID;
+            public UUID ObjectID = UUID.Zero;
             public Vector3 GrabOffsetInitial;
             public Vector3 GrabPosition;
             public uint TimeSinceLast;
@@ -20280,7 +20280,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     GrabOffsetInitial.FromBytes(bytes, i); i += 12;
                     GrabPosition.FromBytes(bytes, i); i += 12;
                     TimeSinceLast = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -20517,8 +20517,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -20538,8 +20538,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -20808,8 +20808,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -20829,8 +20829,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -20849,7 +20849,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ObjectDataBlock : PacketBlock
         {
-            public UUID ObjectID;
+            public UUID ObjectID = UUID.Zero;
 
             public override int Length
             {
@@ -20869,7 +20869,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -20968,8 +20968,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -20989,8 +20989,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -21009,7 +21009,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ObjectDataBlock : PacketBlock
         {
-            public UUID ObjectID;
+            public UUID ObjectID = UUID.Zero;
             public Quaternion Rotation;
 
             public override int Length
@@ -21030,7 +21030,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Rotation.FromBytes(bytes, i, true); i += 12;
                 }
                 catch (Exception)
@@ -21131,8 +21131,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -21152,8 +21152,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -21172,7 +21172,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ObjectDataBlock : PacketBlock
         {
-            public UUID ObjectID;
+            public UUID ObjectID = UUID.Zero;
 
             public override int Length
             {
@@ -21192,7 +21192,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -21291,8 +21291,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID RequestID;
+            public UUID AgentID = UUID.Zero;
+            public UUID RequestID = UUID.Zero;
             public short VolumeDetail;
 
             public override int Length
@@ -21313,8 +21313,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    RequestID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    RequestID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     VolumeDetail = (short)(bytes[i++] + (bytes[i++] << 8));
                 }
                 catch (Exception)
@@ -21336,7 +21336,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ObjectDataBlock : PacketBlock
         {
-            public UUID ObjectID;
+            public UUID ObjectID = UUID.Zero;
 
             public override int Length
             {
@@ -21356,7 +21356,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -21525,8 +21525,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -21546,8 +21546,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -21903,8 +21903,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -21924,8 +21924,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -22017,8 +22017,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -22038,8 +22038,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -22131,8 +22131,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -22152,8 +22152,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -22410,8 +22410,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -22431,8 +22431,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -22451,7 +22451,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlockBlock : PacketBlock
         {
-            public UUID TargetID;
+            public UUID TargetID = UUID.Zero;
             public uint Flags;
 
             public override int Length
@@ -22472,7 +22472,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    TargetID.FromBytes(bytes, i); i += 16;
+                    TargetID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -22572,8 +22572,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -22593,8 +22593,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -22613,7 +22613,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class TargetDataBlock : PacketBlock
         {
-            public UUID PreyID;
+            public UUID PreyID = UUID.Zero;
 
             public override int Length
             {
@@ -22633,7 +22633,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    PreyID.FromBytes(bytes, i); i += 16;
+                    PreyID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -22731,8 +22731,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public uint IP;
             public uint StartTime;
             public float RunTime;
@@ -22770,8 +22770,8 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     IP = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     StartTime = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     RunTime = Utils.BytesToFloat(bytes, i); i += 4;
@@ -23201,8 +23201,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -23222,8 +23222,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -23242,8 +23242,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID TaskID;
-            public UUID ItemID;
+            public UUID TaskID = UUID.Zero;
+            public UUID ItemID = UUID.Zero;
             public int Questions;
 
             public override int Length
@@ -23264,8 +23264,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    TaskID.FromBytes(bytes, i); i += 16;
-                    ItemID.FromBytes(bytes, i); i += 16;
+                    TaskID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Questions = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -23366,8 +23366,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -23387,8 +23387,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -23411,11 +23411,11 @@ namespace OpenMetaverse.Packets
             public byte Category;
             public Vector3 Position;
             public byte CheckFlags;
-            public UUID ScreenshotID;
-            public UUID ObjectID;
-            public UUID AbuserID;
+            public UUID ScreenshotID = UUID.Zero;
+            public UUID ObjectID = UUID.Zero;
+            public UUID AbuserID = UUID.Zero;
             public byte[] AbuseRegionName;
-            public UUID AbuseRegionID;
+            public UUID AbuseRegionID = UUID.Zero;
             public byte[] Summary;
             public byte[] Details;
             public byte[] VersionString;
@@ -23448,13 +23448,13 @@ namespace OpenMetaverse.Packets
                     Category = (byte)bytes[i++];
                     Position.FromBytes(bytes, i); i += 12;
                     CheckFlags = (byte)bytes[i++];
-                    ScreenshotID.FromBytes(bytes, i); i += 16;
-                    ObjectID.FromBytes(bytes, i); i += 16;
-                    AbuserID.FromBytes(bytes, i); i += 16;
+                    ScreenshotID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    AbuserID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     AbuseRegionName = new byte[length];
                     Buffer.BlockCopy(bytes, i, AbuseRegionName, 0, length); i += length;
-                    AbuseRegionID.FromBytes(bytes, i); i += 16;
+                    AbuseRegionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     Summary = new byte[length];
                     Buffer.BlockCopy(bytes, i, Summary, 0, length); i += length;
@@ -23823,7 +23823,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -23843,7 +23843,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -23988,8 +23988,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class MeanCollisionBlock : PacketBlock
         {
-            public UUID Victim;
-            public UUID Perp;
+            public UUID Victim = UUID.Zero;
+            public UUID Perp = UUID.Zero;
             public uint Time;
             public float Mag;
             public byte Type;
@@ -24012,8 +24012,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    Victim.FromBytes(bytes, i); i += 16;
-                    Perp.FromBytes(bytes, i); i += 16;
+                    Victim = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    Perp = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Time = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Mag = Utils.BytesToFloat(bytes, i); i += 4;
                     Type = (byte)bytes[i++];
@@ -24404,8 +24404,8 @@ namespace OpenMetaverse.Packets
         public sealed class ChatDataBlock : PacketBlock
         {
             public byte[] FromName;
-            public UUID SourceID;
-            public UUID OwnerID;
+            public UUID SourceID = UUID.Zero;
+            public UUID OwnerID = UUID.Zero;
             public byte SourceType;
             public byte ChatType;
             public byte Audible;
@@ -24437,8 +24437,8 @@ namespace OpenMetaverse.Packets
                     length = bytes[i++];
                     FromName = new byte[length];
                     Buffer.BlockCopy(bytes, i, FromName, 0, length); i += length;
-                    SourceID.FromBytes(bytes, i); i += 16;
-                    OwnerID.FromBytes(bytes, i); i += 16;
+                    SourceID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     SourceType = (byte)bytes[i++];
                     ChatType = (byte)bytes[i++];
                     Audible = (byte)bytes[i++];
@@ -24776,8 +24776,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -24797,8 +24797,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -24890,8 +24890,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -24911,8 +24911,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -25168,8 +25168,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -25189,8 +25189,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -25358,19 +25358,19 @@ namespace OpenMetaverse.Packets
             public uint RegionFlags;
             public byte SimAccess;
             public byte[] SimName;
-            public UUID SimOwner;
+            public UUID SimOwner = UUID.Zero;
             public bool IsEstateManager;
             public float WaterHeight;
             public float BillableFactor;
-            public UUID CacheID;
-            public UUID TerrainBase0;
-            public UUID TerrainBase1;
-            public UUID TerrainBase2;
-            public UUID TerrainBase3;
-            public UUID TerrainDetail0;
-            public UUID TerrainDetail1;
-            public UUID TerrainDetail2;
-            public UUID TerrainDetail3;
+            public UUID CacheID = UUID.Zero;
+            public UUID TerrainBase0 = UUID.Zero;
+            public UUID TerrainBase1 = UUID.Zero;
+            public UUID TerrainBase2 = UUID.Zero;
+            public UUID TerrainBase3 = UUID.Zero;
+            public UUID TerrainDetail0 = UUID.Zero;
+            public UUID TerrainDetail1 = UUID.Zero;
+            public UUID TerrainDetail2 = UUID.Zero;
+            public UUID TerrainDetail3 = UUID.Zero;
             public float TerrainStartHeight00;
             public float TerrainStartHeight01;
             public float TerrainStartHeight10;
@@ -25406,19 +25406,19 @@ namespace OpenMetaverse.Packets
                     length = bytes[i++];
                     SimName = new byte[length];
                     Buffer.BlockCopy(bytes, i, SimName, 0, length); i += length;
-                    SimOwner.FromBytes(bytes, i); i += 16;
+                    SimOwner = UUIDFactory.GetUUID(bytes, i); i += 16;
                     IsEstateManager = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     WaterHeight = Utils.BytesToFloat(bytes, i); i += 4;
                     BillableFactor = Utils.BytesToFloat(bytes, i); i += 4;
-                    CacheID.FromBytes(bytes, i); i += 16;
-                    TerrainBase0.FromBytes(bytes, i); i += 16;
-                    TerrainBase1.FromBytes(bytes, i); i += 16;
-                    TerrainBase2.FromBytes(bytes, i); i += 16;
-                    TerrainBase3.FromBytes(bytes, i); i += 16;
-                    TerrainDetail0.FromBytes(bytes, i); i += 16;
-                    TerrainDetail1.FromBytes(bytes, i); i += 16;
-                    TerrainDetail2.FromBytes(bytes, i); i += 16;
-                    TerrainDetail3.FromBytes(bytes, i); i += 16;
+                    CacheID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    TerrainBase0 = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    TerrainBase1 = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    TerrainBase2 = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    TerrainBase3 = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    TerrainDetail0 = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    TerrainDetail1 = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    TerrainDetail2 = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    TerrainDetail3 = UUIDFactory.GetUUID(bytes, i); i += 16;
                     TerrainStartHeight00 = Utils.BytesToFloat(bytes, i); i += 4;
                     TerrainStartHeight01 = Utils.BytesToFloat(bytes, i); i += 4;
                     TerrainStartHeight10 = Utils.BytesToFloat(bytes, i); i += 4;
@@ -25468,7 +25468,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class RegionInfo2Block : PacketBlock
         {
-            public UUID RegionID;
+            public UUID RegionID = UUID.Zero;
 
             public override int Length
             {
@@ -25488,7 +25488,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    RegionID.FromBytes(bytes, i); i += 16;
+                    RegionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -25658,8 +25658,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -25679,8 +25679,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -26128,7 +26128,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class TransferInfoBlock : PacketBlock
         {
-            public UUID TransferID;
+            public UUID TransferID = UUID.Zero;
             public int ChannelType;
             public int SourceType;
             public float Priority;
@@ -26155,7 +26155,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    TransferID.FromBytes(bytes, i); i += 16;
+                    TransferID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     ChannelType = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     SourceType = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Priority = Utils.BytesToFloat(bytes, i); i += 4;
@@ -26259,7 +26259,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class TransferInfoBlock : PacketBlock
         {
-            public UUID TransferID;
+            public UUID TransferID = UUID.Zero;
             public int ChannelType;
             public int TargetType;
             public int Status;
@@ -26287,7 +26287,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    TransferID.FromBytes(bytes, i); i += 16;
+                    TransferID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     ChannelType = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     TargetType = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Status = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -26393,7 +26393,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class TransferInfoBlock : PacketBlock
         {
-            public UUID TransferID;
+            public UUID TransferID = UUID.Zero;
             public int ChannelType;
 
             public override int Length
@@ -26414,7 +26414,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    TransferID.FromBytes(bytes, i); i += 16;
+                    TransferID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     ChannelType = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -26513,7 +26513,7 @@ namespace OpenMetaverse.Packets
             public byte FilePath;
             public bool DeleteOnCompletion;
             public bool UseBigPackets;
-            public UUID VFileID;
+            public UUID VFileID = UUID.Zero;
             public short VFileType;
 
             public override int Length
@@ -26544,7 +26544,7 @@ namespace OpenMetaverse.Packets
                     FilePath = (byte)bytes[i++];
                     DeleteOnCompletion = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     UseBigPackets = (bytes[i++] != 0) ? (bool)true : (bool)false;
-                    VFileID.FromBytes(bytes, i); i += 16;
+                    VFileID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     VFileType = (short)(bytes[i++] + (bytes[i++] << 8));
                 }
                 catch (Exception)
@@ -26759,7 +26759,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class SenderBlock : PacketBlock
         {
-            public UUID ID;
+            public UUID ID = UUID.Zero;
             public bool IsTrial;
 
             public override int Length
@@ -26780,7 +26780,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ID.FromBytes(bytes, i); i += 16;
+                    ID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     IsTrial = (bytes[i++] != 0) ? (bool)true : (bool)false;
                 }
                 catch (Exception)
@@ -27043,7 +27043,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ObjectDataBlock : PacketBlock
         {
-            public UUID ObjectID;
+            public UUID ObjectID = UUID.Zero;
 
             public override int Length
             {
@@ -27063,7 +27063,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -27272,7 +27272,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ObjectDataBlock : PacketBlock
         {
-            public UUID ObjectID;
+            public UUID ObjectID = UUID.Zero;
 
             public override int Length
             {
@@ -27292,7 +27292,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -27383,7 +27383,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ObjectDataBlock : PacketBlock
         {
-            public UUID ObjectID;
+            public UUID ObjectID = UUID.Zero;
 
             public override int Length
             {
@@ -27403,7 +27403,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -27494,7 +27494,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ObjectDataBlock : PacketBlock
         {
-            public UUID ObjectID;
+            public UUID ObjectID = UUID.Zero;
             public int DefaultPayPrice;
 
             public override int Length
@@ -27515,7 +27515,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     DefaultPayPrice = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -27765,8 +27765,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class UserInfoBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public byte[] Reason;
 
             public override int Length
@@ -27790,8 +27790,8 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = (bytes[i++] + (bytes[i++] << 8));
                     Reason = new byte[length];
                     Buffer.BlockCopy(bytes, i, Reason, 0, length); i += length;
@@ -27896,9 +27896,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class UserInfoBlock : PacketBlock
         {
-            public UUID GodID;
-            public UUID GodSessionID;
-            public UUID AgentID;
+            public UUID GodID = UUID.Zero;
+            public UUID GodSessionID = UUID.Zero;
+            public UUID AgentID = UUID.Zero;
             public uint KickFlags;
             public byte[] Reason;
 
@@ -27923,9 +27923,9 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    GodID.FromBytes(bytes, i); i += 16;
-                    GodSessionID.FromBytes(bytes, i); i += 16;
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    GodID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GodSessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     KickFlags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     length = (bytes[i++] + (bytes[i++] << 8));
                     Reason = new byte[length];
@@ -28026,8 +28026,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -28047,8 +28047,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -28067,7 +28067,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID TargetID;
+            public UUID TargetID = UUID.Zero;
             public uint Flags;
 
             public override int Length
@@ -28088,7 +28088,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    TargetID.FromBytes(bytes, i); i += 16;
+                    TargetID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -28188,8 +28188,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -28209,8 +28209,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -28229,7 +28229,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID TargetID;
+            public UUID TargetID = UUID.Zero;
             public uint Flags;
 
             public override int Length
@@ -28250,7 +28250,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    TargetID.FromBytes(bytes, i); i += 16;
+                    TargetID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -28350,9 +28350,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID AvatarID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID AvatarID = UUID.Zero;
 
             public override int Length
             {
@@ -28372,9 +28372,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    AvatarID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    AvatarID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -28467,8 +28467,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID AvatarID;
+            public UUID AgentID = UUID.Zero;
+            public UUID AvatarID = UUID.Zero;
 
             public override int Length
             {
@@ -28488,8 +28488,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    AvatarID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    AvatarID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -28508,9 +28508,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class PropertiesDataBlock : PacketBlock
         {
-            public UUID ImageID;
-            public UUID FLImageID;
-            public UUID PartnerID;
+            public UUID ImageID = UUID.Zero;
+            public UUID FLImageID = UUID.Zero;
+            public UUID PartnerID = UUID.Zero;
             public byte[] AboutText;
             public byte[] FLAboutText;
             public byte[] BornOn;
@@ -28543,9 +28543,9 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ImageID.FromBytes(bytes, i); i += 16;
-                    FLImageID.FromBytes(bytes, i); i += 16;
-                    PartnerID.FromBytes(bytes, i); i += 16;
+                    ImageID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    FLImageID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    PartnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = (bytes[i++] + (bytes[i++] << 8));
                     AboutText = new byte[length];
                     Buffer.BlockCopy(bytes, i, AboutText, 0, length); i += length;
@@ -28674,8 +28674,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID AvatarID;
+            public UUID AgentID = UUID.Zero;
+            public UUID AvatarID = UUID.Zero;
 
             public override int Length
             {
@@ -28695,8 +28695,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    AvatarID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    AvatarID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -28860,8 +28860,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID AvatarID;
+            public UUID AgentID = UUID.Zero;
+            public UUID AvatarID = UUID.Zero;
 
             public override int Length
             {
@@ -28881,8 +28881,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    AvatarID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    AvatarID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -28904,9 +28904,9 @@ namespace OpenMetaverse.Packets
             public ulong GroupPowers;
             public bool AcceptNotices;
             public byte[] GroupTitle;
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
             public byte[] GroupName;
-            public UUID GroupInsigniaID;
+            public UUID GroupInsigniaID = UUID.Zero;
 
             public override int Length
             {
@@ -28935,11 +28935,11 @@ namespace OpenMetaverse.Packets
                     length = bytes[i++];
                     GroupTitle = new byte[length];
                     Buffer.BlockCopy(bytes, i, GroupTitle, 0, length); i += length;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     GroupName = new byte[length];
                     Buffer.BlockCopy(bytes, i, GroupName, 0, length); i += length;
-                    GroupInsigniaID.FromBytes(bytes, i); i += 16;
+                    GroupInsigniaID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -29107,8 +29107,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -29128,8 +29128,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -29148,8 +29148,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class PropertiesDataBlock : PacketBlock
         {
-            public UUID ImageID;
-            public UUID FLImageID;
+            public UUID ImageID = UUID.Zero;
+            public UUID FLImageID = UUID.Zero;
             public byte[] AboutText;
             public byte[] FLAboutText;
             public bool AllowPublish;
@@ -29179,8 +29179,8 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ImageID.FromBytes(bytes, i); i += 16;
-                    FLImageID.FromBytes(bytes, i); i += 16;
+                    ImageID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    FLImageID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = (bytes[i++] + (bytes[i++] << 8));
                     AboutText = new byte[length];
                     Buffer.BlockCopy(bytes, i, AboutText, 0, length); i += length;
@@ -29300,8 +29300,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -29321,8 +29321,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -29486,7 +29486,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -29506,7 +29506,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -29524,7 +29524,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID TargetID;
+            public UUID TargetID = UUID.Zero;
             public byte[] Notes;
 
             public override int Length
@@ -29548,7 +29548,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    TargetID.FromBytes(bytes, i); i += 16;
+                    TargetID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = (bytes[i++] + (bytes[i++] << 8));
                     Notes = new byte[length];
                     Buffer.BlockCopy(bytes, i, Notes, 0, length); i += length;
@@ -29652,8 +29652,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -29673,8 +29673,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -29693,7 +29693,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID TargetID;
+            public UUID TargetID = UUID.Zero;
             public byte[] Notes;
 
             public override int Length
@@ -29717,7 +29717,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    TargetID.FromBytes(bytes, i); i += 16;
+                    TargetID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = (bytes[i++] + (bytes[i++] << 8));
                     Notes = new byte[length];
                     Buffer.BlockCopy(bytes, i, Notes, 0, length); i += length;
@@ -29821,8 +29821,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID TargetID;
+            public UUID AgentID = UUID.Zero;
+            public UUID TargetID = UUID.Zero;
 
             public override int Length
             {
@@ -29842,8 +29842,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    TargetID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    TargetID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -29862,7 +29862,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID PickID;
+            public UUID PickID = UUID.Zero;
             public byte[] PickName;
 
             public override int Length
@@ -29886,7 +29886,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    PickID.FromBytes(bytes, i); i += 16;
+                    PickID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     PickName = new byte[length];
                     Buffer.BlockCopy(bytes, i, PickName, 0, length); i += length;
@@ -30059,8 +30059,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -30080,8 +30080,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -30218,7 +30218,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -30238,7 +30238,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -30437,8 +30437,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -30458,8 +30458,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -30596,8 +30596,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -30617,8 +30617,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -30755,8 +30755,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -30776,8 +30776,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -30834,7 +30834,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class QueryDataBlock : PacketBlock
         {
-            public UUID QueryID;
+            public UUID QueryID = UUID.Zero;
             public byte[] QueryText;
             public uint QueryFlags;
             public int QueryStart;
@@ -30860,7 +30860,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    QueryID.FromBytes(bytes, i); i += 16;
+                    QueryID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     QueryText = new byte[length];
                     Buffer.BlockCopy(bytes, i, QueryText, 0, length); i += length;
@@ -30974,7 +30974,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -30994,7 +30994,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -31012,13 +31012,13 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID PickID;
-            public UUID CreatorID;
+            public UUID PickID = UUID.Zero;
+            public UUID CreatorID = UUID.Zero;
             public bool TopPick;
-            public UUID ParcelID;
+            public UUID ParcelID = UUID.Zero;
             public byte[] Name;
             public byte[] Desc;
-            public UUID SnapshotID;
+            public UUID SnapshotID = UUID.Zero;
             public byte[] User;
             public byte[] OriginalName;
             public byte[] SimName;
@@ -31051,17 +31051,17 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    PickID.FromBytes(bytes, i); i += 16;
-                    CreatorID.FromBytes(bytes, i); i += 16;
+                    PickID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    CreatorID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     TopPick = (bytes[i++] != 0) ? (bool)true : (bool)false;
-                    ParcelID.FromBytes(bytes, i); i += 16;
+                    ParcelID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     Name = new byte[length];
                     Buffer.BlockCopy(bytes, i, Name, 0, length); i += length;
                     length = (bytes[i++] + (bytes[i++] << 8));
                     Desc = new byte[length];
                     Buffer.BlockCopy(bytes, i, Desc, 0, length); i += length;
-                    SnapshotID.FromBytes(bytes, i); i += 16;
+                    SnapshotID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     User = new byte[length];
                     Buffer.BlockCopy(bytes, i, User, 0, length); i += length;
@@ -31189,8 +31189,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -31210,8 +31210,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -31230,13 +31230,13 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID PickID;
-            public UUID CreatorID;
+            public UUID PickID = UUID.Zero;
+            public UUID CreatorID = UUID.Zero;
             public bool TopPick;
-            public UUID ParcelID;
+            public UUID ParcelID = UUID.Zero;
             public byte[] Name;
             public byte[] Desc;
-            public UUID SnapshotID;
+            public UUID SnapshotID = UUID.Zero;
             public Vector3d PosGlobal;
             public int SortOrder;
             public bool Enabled;
@@ -31263,17 +31263,17 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    PickID.FromBytes(bytes, i); i += 16;
-                    CreatorID.FromBytes(bytes, i); i += 16;
+                    PickID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    CreatorID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     TopPick = (bytes[i++] != 0) ? (bool)true : (bool)false;
-                    ParcelID.FromBytes(bytes, i); i += 16;
+                    ParcelID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     Name = new byte[length];
                     Buffer.BlockCopy(bytes, i, Name, 0, length); i += length;
                     length = (bytes[i++] + (bytes[i++] << 8));
                     Desc = new byte[length];
                     Buffer.BlockCopy(bytes, i, Desc, 0, length); i += length;
-                    SnapshotID.FromBytes(bytes, i); i += 16;
+                    SnapshotID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     PosGlobal.FromBytes(bytes, i); i += 24;
                     SortOrder = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Enabled = (bytes[i++] != 0) ? (bool)true : (bool)false;
@@ -31386,8 +31386,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -31407,8 +31407,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -31427,7 +31427,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID PickID;
+            public UUID PickID = UUID.Zero;
 
             public override int Length
             {
@@ -31447,7 +31447,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    PickID.FromBytes(bytes, i); i += 16;
+                    PickID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -31545,8 +31545,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -31566,8 +31566,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -31586,8 +31586,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID PickID;
-            public UUID QueryID;
+            public UUID PickID = UUID.Zero;
+            public UUID QueryID = UUID.Zero;
 
             public override int Length
             {
@@ -31607,8 +31607,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    PickID.FromBytes(bytes, i); i += 16;
-                    QueryID.FromBytes(bytes, i); i += 16;
+                    PickID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    QueryID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -31707,8 +31707,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID TaskID;
-            public UUID ItemID;
+            public UUID TaskID = UUID.Zero;
+            public UUID ItemID = UUID.Zero;
             public byte[] ObjectName;
             public byte[] ObjectOwner;
             public int Questions;
@@ -31735,8 +31735,8 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    TaskID.FromBytes(bytes, i); i += 16;
-                    ItemID.FromBytes(bytes, i); i += 16;
+                    TaskID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     ObjectName = new byte[length];
                     Buffer.BlockCopy(bytes, i, ObjectName, 0, length); i += length;
@@ -32025,13 +32025,13 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID ObjectID;
+            public UUID ObjectID = UUID.Zero;
             public byte[] FirstName;
             public byte[] LastName;
             public byte[] ObjectName;
             public byte[] Message;
             public int ChatChannel;
-            public UUID ImageID;
+            public UUID ImageID = UUID.Zero;
 
             public override int Length
             {
@@ -32057,7 +32057,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     FirstName = new byte[length];
                     Buffer.BlockCopy(bytes, i, FirstName, 0, length); i += length;
@@ -32071,7 +32071,7 @@ namespace OpenMetaverse.Packets
                     Message = new byte[length];
                     Buffer.BlockCopy(bytes, i, Message, 0, length); i += length;
                     ChatChannel = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    ImageID.FromBytes(bytes, i); i += 16;
+                    ImageID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -32144,7 +32144,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class OwnerDataBlock : PacketBlock
         {
-            public UUID OwnerID;
+            public UUID OwnerID = UUID.Zero;
 
             public override int Length
             {
@@ -32164,7 +32164,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    OwnerID.FromBytes(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -32375,8 +32375,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -32396,8 +32396,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -32416,7 +32416,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID ObjectID;
+            public UUID ObjectID = UUID.Zero;
             public int ChatChannel;
             public int ButtonIndex;
             public byte[] ButtonLabel;
@@ -32442,7 +32442,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     ChatChannel = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     ButtonIndex = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     length = bytes[i++];
@@ -32550,8 +32550,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -32571,8 +32571,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -32664,8 +32664,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -32685,8 +32685,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -32705,7 +32705,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID ObjectID;
+            public UUID ObjectID = UUID.Zero;
             public uint ObjectPermissions;
 
             public override int Length
@@ -32726,7 +32726,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     ObjectPermissions = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -32827,8 +32827,8 @@ namespace OpenMetaverse.Packets
         public sealed class DataBlock : PacketBlock
         {
             public byte[] ObjectName;
-            public UUID ObjectID;
-            public UUID OwnerID;
+            public UUID ObjectID = UUID.Zero;
+            public UUID OwnerID = UUID.Zero;
             public bool OwnerIsGroup;
             public byte[] Message;
             public byte[] URL;
@@ -32859,8 +32859,8 @@ namespace OpenMetaverse.Packets
                     length = bytes[i++];
                     ObjectName = new byte[length];
                     Buffer.BlockCopy(bytes, i, ObjectName, 0, length); i += length;
-                    ObjectID.FromBytes(bytes, i); i += 16;
-                    OwnerID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     OwnerIsGroup = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     length = bytes[i++];
                     Message = new byte[length];
@@ -33218,8 +33218,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -33239,8 +33239,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -33381,8 +33381,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -33402,8 +33402,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -33430,14 +33430,14 @@ namespace OpenMetaverse.Packets
             public byte[] Desc;
             public byte[] MusicURL;
             public byte[] MediaURL;
-            public UUID MediaID;
+            public UUID MediaID = UUID.Zero;
             public byte MediaAutoScale;
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
             public int PassPrice;
             public float PassHours;
             public byte Category;
-            public UUID AuthBuyerID;
-            public UUID SnapshotID;
+            public UUID AuthBuyerID = UUID.Zero;
+            public UUID SnapshotID = UUID.Zero;
             public Vector3 UserLocation;
             public Vector3 UserLookAt;
             public byte LandingType;
@@ -33482,14 +33482,14 @@ namespace OpenMetaverse.Packets
                     length = bytes[i++];
                     MediaURL = new byte[length];
                     Buffer.BlockCopy(bytes, i, MediaURL, 0, length); i += length;
-                    MediaID.FromBytes(bytes, i); i += 16;
+                    MediaID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     MediaAutoScale = (byte)bytes[i++];
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     PassPrice = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     PassHours = Utils.BytesToFloat(bytes, i); i += 4;
                     Category = (byte)bytes[i++];
-                    AuthBuyerID.FromBytes(bytes, i); i += 16;
-                    SnapshotID.FromBytes(bytes, i); i += 16;
+                    AuthBuyerID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SnapshotID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     UserLocation.FromBytes(bytes, i); i += 12;
                     UserLookAt.FromBytes(bytes, i); i += 12;
                     LandingType = (byte)bytes[i++];
@@ -33613,8 +33613,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -33634,8 +33634,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -33695,7 +33695,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class TaskIDsBlock : PacketBlock
         {
-            public UUID TaskID;
+            public UUID TaskID = UUID.Zero;
 
             public override int Length
             {
@@ -33715,7 +33715,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    TaskID.FromBytes(bytes, i); i += 16;
+                    TaskID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -33733,7 +33733,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class OwnerIDsBlock : PacketBlock
         {
-            public UUID OwnerID;
+            public UUID OwnerID = UUID.Zero;
 
             public override int Length
             {
@@ -33753,7 +33753,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    OwnerID.FromBytes(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -33973,8 +33973,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -33994,8 +33994,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -34136,8 +34136,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -34157,8 +34157,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -34218,7 +34218,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class TaskIDsBlock : PacketBlock
         {
-            public UUID TaskID;
+            public UUID TaskID = UUID.Zero;
 
             public override int Length
             {
@@ -34238,7 +34238,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    TaskID.FromBytes(bytes, i); i += 16;
+                    TaskID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -34256,7 +34256,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class OwnerIDsBlock : PacketBlock
         {
-            public UUID OwnerID;
+            public UUID OwnerID = UUID.Zero;
 
             public override int Length
             {
@@ -34276,7 +34276,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    OwnerID.FromBytes(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -34496,8 +34496,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -34517,8 +34517,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -34578,7 +34578,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ReturnIDsBlock : PacketBlock
         {
-            public UUID ReturnID;
+            public UUID ReturnID = UUID.Zero;
 
             public override int Length
             {
@@ -34598,7 +34598,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ReturnID.FromBytes(bytes, i); i += 16;
+                    ReturnID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -34776,8 +34776,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -34797,8 +34797,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -34890,10 +34890,10 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID CovenantID;
+            public UUID CovenantID = UUID.Zero;
             public uint CovenantTimestamp;
             public byte[] EstateName;
-            public UUID EstateOwnerID;
+            public UUID EstateOwnerID = UUID.Zero;
 
             public override int Length
             {
@@ -34916,12 +34916,12 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    CovenantID.FromBytes(bytes, i); i += 16;
+                    CovenantID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     CovenantTimestamp = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     length = bytes[i++];
                     EstateName = new byte[length];
                     Buffer.BlockCopy(bytes, i, EstateName, 0, length); i += length;
-                    EstateOwnerID.FromBytes(bytes, i); i += 16;
+                    EstateOwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -35242,8 +35242,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -35263,8 +35263,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -35401,8 +35401,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -35422,8 +35422,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -35442,7 +35442,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
             public int LocalID;
 
             public override int Length
@@ -35463,7 +35463,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     LocalID = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -35563,8 +35563,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -35584,8 +35584,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -35722,8 +35722,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -35743,8 +35743,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -35763,7 +35763,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
             public bool IsGroupOwned;
             public bool Final;
 
@@ -35785,7 +35785,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     IsGroupOwned = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     Final = (bytes[i++] != 0) ? (bool)true : (bool)false;
                 }
@@ -36014,8 +36014,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -36035,8 +36035,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -36182,8 +36182,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -36203,8 +36203,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -36350,8 +36350,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -36371,8 +36371,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -36509,8 +36509,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -36530,8 +36530,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -36550,7 +36550,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
             public bool IsGroupOwned;
             public bool RemoveContribution;
             public int LocalID;
@@ -36574,7 +36574,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     IsGroupOwned = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     RemoveContribution = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     LocalID = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -36729,8 +36729,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -36750,8 +36750,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -36770,7 +36770,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID OwnerID;
+            public UUID OwnerID = UUID.Zero;
             public int LocalID;
 
             public override int Length
@@ -36791,7 +36791,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    OwnerID.FromBytes(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     LocalID = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -36892,8 +36892,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -36913,8 +36913,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -37058,7 +37058,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
             public int SequenceID;
             public uint Flags;
             public int LocalID;
@@ -37081,7 +37081,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     SequenceID = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     LocalID = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -37105,7 +37105,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ListBlock : PacketBlock
         {
-            public UUID ID;
+            public UUID ID = UUID.Zero;
             public int Time;
             public uint Flags;
 
@@ -37127,7 +37127,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ID.FromBytes(bytes, i); i += 16;
+                    ID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Time = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
@@ -37300,8 +37300,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -37321,8 +37321,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -37343,7 +37343,7 @@ namespace OpenMetaverse.Packets
         {
             public uint Flags;
             public int LocalID;
-            public UUID TransactionID;
+            public UUID TransactionID = UUID.Zero;
             public int SequenceID;
             public int Sections;
 
@@ -37367,7 +37367,7 @@ namespace OpenMetaverse.Packets
                 {
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     LocalID = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     SequenceID = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Sections = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
@@ -37391,7 +37391,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ListBlock : PacketBlock
         {
-            public UUID ID;
+            public UUID ID = UUID.Zero;
             public int Time;
             public uint Flags;
 
@@ -37413,7 +37413,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ID.FromBytes(bytes, i); i += 16;
+                    ID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Time = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
@@ -37595,8 +37595,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -37616,8 +37616,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -37637,7 +37637,7 @@ namespace OpenMetaverse.Packets
         public sealed class DataBlock : PacketBlock
         {
             public int LocalID;
-            public UUID ParcelID;
+            public UUID ParcelID = UUID.Zero;
 
             public override int Length
             {
@@ -37658,7 +37658,7 @@ namespace OpenMetaverse.Packets
                 try
                 {
                     LocalID = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    ParcelID.FromBytes(bytes, i); i += 16;
+                    ParcelID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -37757,7 +37757,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -37777,7 +37777,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -37796,7 +37796,7 @@ namespace OpenMetaverse.Packets
         public sealed class DataBlock : PacketBlock
         {
             public int LocalID;
-            public UUID ParcelID;
+            public UUID ParcelID = UUID.Zero;
             public float Dwell;
 
             public override int Length
@@ -37818,7 +37818,7 @@ namespace OpenMetaverse.Packets
                 try
                 {
                     LocalID = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    ParcelID.FromBytes(bytes, i); i += 16;
+                    ParcelID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Dwell = Utils.BytesToFloat(bytes, i); i += 4;
                 }
                 catch (Exception)
@@ -37919,8 +37919,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -37940,8 +37940,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -38078,8 +38078,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -38099,8 +38099,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -38120,7 +38120,7 @@ namespace OpenMetaverse.Packets
         public sealed class ParcelDataBlock : PacketBlock
         {
             public int LocalID;
-            public UUID SnapshotID;
+            public UUID SnapshotID = UUID.Zero;
 
             public override int Length
             {
@@ -38141,7 +38141,7 @@ namespace OpenMetaverse.Packets
                 try
                 {
                     LocalID = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    SnapshotID.FromBytes(bytes, i); i += 16;
+                    SnapshotID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -38240,7 +38240,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class UUIDNameBlockBlock : PacketBlock
         {
-            public UUID ID;
+            public UUID ID = UUID.Zero;
 
             public override int Length
             {
@@ -38260,7 +38260,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ID.FromBytes(bytes, i); i += 16;
+                    ID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -38419,7 +38419,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class UUIDNameBlockBlock : PacketBlock
         {
-            public UUID ID;
+            public UUID ID = UUID.Zero;
             public byte[] FirstName;
             public byte[] LastName;
 
@@ -38445,7 +38445,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ID.FromBytes(bytes, i); i += 16;
+                    ID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     FirstName = new byte[length];
                     Buffer.BlockCopy(bytes, i, FirstName, 0, length); i += length;
@@ -38614,7 +38614,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class UUIDNameBlockBlock : PacketBlock
         {
-            public UUID ID;
+            public UUID ID = UUID.Zero;
 
             public override int Length
             {
@@ -38634,7 +38634,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ID.FromBytes(bytes, i); i += 16;
+                    ID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -38793,7 +38793,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class UUIDNameBlockBlock : PacketBlock
         {
-            public UUID ID;
+            public UUID ID = UUID.Zero;
             public byte[] GroupName;
 
             public override int Length
@@ -38817,7 +38817,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ID.FromBytes(bytes, i); i += 16;
+                    ID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     GroupName = new byte[length];
                     Buffer.BlockCopy(bytes, i, GroupName, 0, length); i += length;
@@ -38981,8 +38981,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -39002,8 +39002,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -39096,8 +39096,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -39117,8 +39117,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -39210,8 +39210,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ScriptBlock : PacketBlock
         {
-            public UUID ObjectID;
-            public UUID ItemID;
+            public UUID ObjectID = UUID.Zero;
+            public UUID ItemID = UUID.Zero;
 
             public override int Length
             {
@@ -39231,8 +39231,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
-                    ItemID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -39324,8 +39324,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ScriptBlock : PacketBlock
         {
-            public UUID ObjectID;
-            public UUID ItemID;
+            public UUID ObjectID = UUID.Zero;
+            public UUID ItemID = UUID.Zero;
             public bool Running;
 
             public override int Length
@@ -39346,8 +39346,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
-                    ItemID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Running = (bytes[i++] != 0) ? (bool)true : (bool)false;
                 }
                 catch (Exception)
@@ -39441,8 +39441,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -39462,8 +39462,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -39482,8 +39482,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ScriptBlock : PacketBlock
         {
-            public UUID ObjectID;
-            public UUID ItemID;
+            public UUID ObjectID = UUID.Zero;
+            public UUID ItemID = UUID.Zero;
             public bool Running;
 
             public override int Length
@@ -39504,8 +39504,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
-                    ItemID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Running = (bytes[i++] != 0) ? (bool)true : (bool)false;
                 }
                 catch (Exception)
@@ -39606,8 +39606,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -39627,8 +39627,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -39647,8 +39647,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ScriptBlock : PacketBlock
         {
-            public UUID ObjectID;
-            public UUID ItemID;
+            public UUID ObjectID = UUID.Zero;
+            public UUID ItemID = UUID.Zero;
 
             public override int Length
             {
@@ -39668,8 +39668,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
-                    ItemID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -39768,9 +39768,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class RequesterBlock : PacketBlock
         {
-            public UUID SourceID;
-            public UUID RequestID;
-            public UUID SearchID;
+            public UUID SourceID = UUID.Zero;
+            public UUID RequestID = UUID.Zero;
+            public UUID SearchID = UUID.Zero;
             public Vector3 SearchPos;
             public Quaternion SearchDir;
             public byte[] SearchName;
@@ -39801,9 +39801,9 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    SourceID.FromBytes(bytes, i); i += 16;
-                    RequestID.FromBytes(bytes, i); i += 16;
-                    SearchID.FromBytes(bytes, i); i += 16;
+                    SourceID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    RequestID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SearchID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     SearchPos.FromBytes(bytes, i); i += 12;
                     SearchDir.FromBytes(bytes, i, true); i += 12;
                     length = bytes[i++];
@@ -39916,7 +39916,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class RequesterBlock : PacketBlock
         {
-            public UUID SourceID;
+            public UUID SourceID = UUID.Zero;
 
             public override int Length
             {
@@ -39936,7 +39936,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    SourceID.FromBytes(bytes, i); i += 16;
+                    SourceID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -39954,9 +39954,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class SensedDataBlock : PacketBlock
         {
-            public UUID ObjectID;
-            public UUID OwnerID;
-            public UUID GroupID;
+            public UUID ObjectID = UUID.Zero;
+            public UUID OwnerID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
             public Vector3 Position;
             public Vector3 Velocity;
             public Quaternion Rotation;
@@ -39985,9 +39985,9 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
-                    OwnerID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Position.FromBytes(bytes, i); i += 12;
                     Velocity.FromBytes(bytes, i); i += 12;
                     Rotation.FromBytes(bytes, i, true); i += 12;
@@ -40173,8 +40173,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public uint CircuitCode;
 
             public override int Length
@@ -40195,8 +40195,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     CircuitCode = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -40290,8 +40290,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -40311,8 +40311,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -40510,8 +40510,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -40531,8 +40531,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -40624,8 +40624,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -40645,8 +40645,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -40665,7 +40665,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InventoryDataBlock : PacketBlock
         {
-            public UUID ItemID;
+            public UUID ItemID = UUID.Zero;
 
             public override int Length
             {
@@ -40685,7 +40685,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ItemID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -40854,8 +40854,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -40875,8 +40875,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -40896,13 +40896,13 @@ namespace OpenMetaverse.Packets
         public sealed class MessageBlockBlock : PacketBlock
         {
             public bool FromGroup;
-            public UUID ToAgentID;
+            public UUID ToAgentID = UUID.Zero;
             public uint ParentEstateID;
-            public UUID RegionID;
+            public UUID RegionID = UUID.Zero;
             public Vector3 Position;
             public byte Offline;
             public byte Dialog;
-            public UUID ID;
+            public UUID ID = UUID.Zero;
             public uint Timestamp;
             public byte[] FromAgentName;
             public byte[] Message;
@@ -40932,13 +40932,13 @@ namespace OpenMetaverse.Packets
                 try
                 {
                     FromGroup = (bytes[i++] != 0) ? (bool)true : (bool)false;
-                    ToAgentID.FromBytes(bytes, i); i += 16;
+                    ToAgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     ParentEstateID = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    RegionID.FromBytes(bytes, i); i += 16;
+                    RegionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Position.FromBytes(bytes, i); i += 12;
                     Offline = (byte)bytes[i++];
                     Dialog = (byte)bytes[i++];
-                    ID.FromBytes(bytes, i); i += 16;
+                    ID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Timestamp = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     length = bytes[i++];
                     FromAgentName = new byte[length];
@@ -41063,8 +41063,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -41084,8 +41084,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -41177,8 +41177,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentBlockBlock : PacketBlock
         {
-            public UUID Hunter;
-            public UUID Prey;
+            public UUID Hunter = UUID.Zero;
+            public UUID Prey = UUID.Zero;
             public uint SpaceIP;
 
             public override int Length
@@ -41199,8 +41199,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    Hunter.FromBytes(bytes, i); i += 16;
-                    Prey.FromBytes(bytes, i); i += 16;
+                    Hunter = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    Prey = UUIDFactory.GetUUID(bytes, i); i += 16;
                     SpaceIP = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -41412,8 +41412,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -41433,8 +41433,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -41454,7 +41454,7 @@ namespace OpenMetaverse.Packets
         public sealed class RequestBlockBlock : PacketBlock
         {
             public bool Godlike;
-            public UUID Token;
+            public UUID Token = UUID.Zero;
 
             public override int Length
             {
@@ -41475,7 +41475,7 @@ namespace OpenMetaverse.Packets
                 try
                 {
                     Godlike = (bytes[i++] != 0) ? (bool)true : (bool)false;
-                    Token.FromBytes(bytes, i); i += 16;
+                    Token = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -41574,8 +41574,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -41595,8 +41595,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -41616,7 +41616,7 @@ namespace OpenMetaverse.Packets
         public sealed class GrantDataBlock : PacketBlock
         {
             public byte GodLevel;
-            public UUID Token;
+            public UUID Token = UUID.Zero;
 
             public override int Length
             {
@@ -41637,7 +41637,7 @@ namespace OpenMetaverse.Packets
                 try
                 {
                     GodLevel = (byte)bytes[i++];
-                    Token.FromBytes(bytes, i); i += 16;
+                    Token = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -41736,9 +41736,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID TransactionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID TransactionID = UUID.Zero;
 
             public override int Length
             {
@@ -41758,9 +41758,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -41781,7 +41781,7 @@ namespace OpenMetaverse.Packets
         public sealed class MethodDataBlock : PacketBlock
         {
             public byte[] Method;
-            public UUID Invoice;
+            public UUID Invoice = UUID.Zero;
 
             public override int Length
             {
@@ -41807,7 +41807,7 @@ namespace OpenMetaverse.Packets
                     length = bytes[i++];
                     Method = new byte[length];
                     Buffer.BlockCopy(bytes, i, Method, 0, length); i += length;
-                    Invoice.FromBytes(bytes, i); i += 16;
+                    Invoice = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -42031,9 +42031,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID TransactionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID TransactionID = UUID.Zero;
 
             public override int Length
             {
@@ -42053,9 +42053,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -42076,7 +42076,7 @@ namespace OpenMetaverse.Packets
         public sealed class MethodDataBlock : PacketBlock
         {
             public byte[] Method;
-            public UUID Invoice;
+            public UUID Invoice = UUID.Zero;
 
             public override int Length
             {
@@ -42102,7 +42102,7 @@ namespace OpenMetaverse.Packets
                     length = bytes[i++];
                     Method = new byte[length];
                     Buffer.BlockCopy(bytes, i, Method, 0, length); i += length;
-                    Invoice.FromBytes(bytes, i); i += 16;
+                    Invoice = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -42326,9 +42326,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID TransactionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID TransactionID = UUID.Zero;
 
             public override int Length
             {
@@ -42348,9 +42348,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -42371,7 +42371,7 @@ namespace OpenMetaverse.Packets
         public sealed class MethodDataBlock : PacketBlock
         {
             public byte[] Method;
-            public UUID Invoice;
+            public UUID Invoice = UUID.Zero;
 
             public override int Length
             {
@@ -42397,7 +42397,7 @@ namespace OpenMetaverse.Packets
                     length = bytes[i++];
                     Method = new byte[length];
                     Buffer.BlockCopy(bytes, i, Method, 0, length); i += length;
-                    Invoice.FromBytes(bytes, i); i += 16;
+                    Invoice = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -42621,8 +42621,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -42642,8 +42642,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -42780,8 +42780,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -42801,8 +42801,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -42821,7 +42821,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class MuteDataBlock : PacketBlock
         {
-            public UUID MuteID;
+            public UUID MuteID = UUID.Zero;
             public byte[] MuteName;
             public int MuteType;
             public uint MuteFlags;
@@ -42847,7 +42847,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    MuteID.FromBytes(bytes, i); i += 16;
+                    MuteID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     MuteName = new byte[length];
                     Buffer.BlockCopy(bytes, i, MuteName, 0, length); i += length;
@@ -42954,8 +42954,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -42975,8 +42975,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -42995,7 +42995,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class MuteDataBlock : PacketBlock
         {
-            public UUID MuteID;
+            public UUID MuteID = UUID.Zero;
             public byte[] MuteName;
 
             public override int Length
@@ -43019,7 +43019,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    MuteID.FromBytes(bytes, i); i += 16;
+                    MuteID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     MuteName = new byte[length];
                     Buffer.BlockCopy(bytes, i, MuteName, 0, length); i += length;
@@ -43122,8 +43122,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -43143,8 +43143,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -43163,8 +43163,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class NotecardDataBlock : PacketBlock
         {
-            public UUID NotecardItemID;
-            public UUID ObjectID;
+            public UUID NotecardItemID = UUID.Zero;
+            public UUID ObjectID = UUID.Zero;
 
             public override int Length
             {
@@ -43184,8 +43184,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    NotecardItemID.FromBytes(bytes, i); i += 16;
-                    ObjectID.FromBytes(bytes, i); i += 16;
+                    NotecardItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -43204,8 +43204,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InventoryDataBlock : PacketBlock
         {
-            public UUID ItemID;
-            public UUID FolderID;
+            public UUID ItemID = UUID.Zero;
+            public UUID FolderID = UUID.Zero;
 
             public override int Length
             {
@@ -43225,8 +43225,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ItemID.FromBytes(bytes, i); i += 16;
-                    FolderID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -43405,9 +43405,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID TransactionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID TransactionID = UUID.Zero;
 
             public override int Length
             {
@@ -43427,9 +43427,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -43449,19 +43449,19 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InventoryDataBlock : PacketBlock
         {
-            public UUID ItemID;
-            public UUID FolderID;
+            public UUID ItemID = UUID.Zero;
+            public UUID FolderID = UUID.Zero;
             public uint CallbackID;
-            public UUID CreatorID;
-            public UUID OwnerID;
-            public UUID GroupID;
+            public UUID CreatorID = UUID.Zero;
+            public UUID OwnerID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
             public uint BaseMask;
             public uint OwnerMask;
             public uint GroupMask;
             public uint EveryoneMask;
             public uint NextOwnerMask;
             public bool GroupOwned;
-            public UUID TransactionID;
+            public UUID TransactionID = UUID.Zero;
             public sbyte Type;
             public sbyte InvType;
             public uint Flags;
@@ -43494,19 +43494,19 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ItemID.FromBytes(bytes, i); i += 16;
-                    FolderID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     CallbackID = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    CreatorID.FromBytes(bytes, i); i += 16;
-                    OwnerID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    CreatorID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     BaseMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     OwnerMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     GroupMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     EveryoneMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     NextOwnerMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     GroupOwned = (bytes[i++] != 0) ? (bool)true : (bool)false;
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Type = (sbyte)bytes[i++];
                     InvType = (sbyte)bytes[i++];
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -43711,9 +43711,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
             public bool SimApproved;
-            public UUID TransactionID;
+            public UUID TransactionID = UUID.Zero;
 
             public override int Length
             {
@@ -43733,9 +43733,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     SimApproved = (bytes[i++] != 0) ? (bool)true : (bool)false;
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -43755,19 +43755,19 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InventoryDataBlock : PacketBlock
         {
-            public UUID ItemID;
-            public UUID FolderID;
+            public UUID ItemID = UUID.Zero;
+            public UUID FolderID = UUID.Zero;
             public uint CallbackID;
-            public UUID CreatorID;
-            public UUID OwnerID;
-            public UUID GroupID;
+            public UUID CreatorID = UUID.Zero;
+            public UUID OwnerID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
             public uint BaseMask;
             public uint OwnerMask;
             public uint GroupMask;
             public uint EveryoneMask;
             public uint NextOwnerMask;
             public bool GroupOwned;
-            public UUID AssetID;
+            public UUID AssetID = UUID.Zero;
             public sbyte Type;
             public sbyte InvType;
             public uint Flags;
@@ -43800,19 +43800,19 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ItemID.FromBytes(bytes, i); i += 16;
-                    FolderID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     CallbackID = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    CreatorID.FromBytes(bytes, i); i += 16;
-                    OwnerID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    CreatorID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     BaseMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     OwnerMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     GroupMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     EveryoneMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     NextOwnerMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     GroupOwned = (bytes[i++] != 0) ? (bool)true : (bool)false;
-                    AssetID.FromBytes(bytes, i); i += 16;
+                    AssetID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Type = (sbyte)bytes[i++];
                     InvType = (sbyte)bytes[i++];
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -44017,8 +44017,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public bool Stamp;
 
             public override int Length
@@ -44039,8 +44039,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Stamp = (bytes[i++] != 0) ? (bool)true : (bool)false;
                 }
                 catch (Exception)
@@ -44061,8 +44061,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InventoryDataBlock : PacketBlock
         {
-            public UUID ItemID;
-            public UUID FolderID;
+            public UUID ItemID = UUID.Zero;
+            public UUID FolderID = UUID.Zero;
             public byte[] NewName;
 
             public override int Length
@@ -44086,8 +44086,8 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ItemID.FromBytes(bytes, i); i += 16;
-                    FolderID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     NewName = new byte[length];
                     Buffer.BlockCopy(bytes, i, NewName, 0, length); i += length;
@@ -44262,8 +44262,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -44283,8 +44283,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -44304,9 +44304,9 @@ namespace OpenMetaverse.Packets
         public sealed class InventoryDataBlock : PacketBlock
         {
             public uint CallbackID;
-            public UUID OldAgentID;
-            public UUID OldItemID;
-            public UUID NewFolderID;
+            public UUID OldAgentID = UUID.Zero;
+            public UUID OldItemID = UUID.Zero;
+            public UUID NewFolderID = UUID.Zero;
             public byte[] NewName;
 
             public override int Length
@@ -44331,9 +44331,9 @@ namespace OpenMetaverse.Packets
                 try
                 {
                     CallbackID = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    OldAgentID.FromBytes(bytes, i); i += 16;
-                    OldItemID.FromBytes(bytes, i); i += 16;
-                    NewFolderID.FromBytes(bytes, i); i += 16;
+                    OldAgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OldItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    NewFolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     NewName = new byte[length];
                     Buffer.BlockCopy(bytes, i, NewName, 0, length); i += length;
@@ -44510,8 +44510,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -44531,8 +44531,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -44551,7 +44551,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InventoryDataBlock : PacketBlock
         {
-            public UUID ItemID;
+            public UUID ItemID = UUID.Zero;
 
             public override int Length
             {
@@ -44571,7 +44571,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ItemID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -44739,8 +44739,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -44760,8 +44760,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -44780,7 +44780,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InventoryDataBlock : PacketBlock
         {
-            public UUID ItemID;
+            public UUID ItemID = UUID.Zero;
             public uint Flags;
 
             public override int Length
@@ -44801,7 +44801,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ItemID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -44971,7 +44971,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -44991,7 +44991,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -45009,8 +45009,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InventoryDataBlock : PacketBlock
         {
-            public UUID ItemID;
-            public UUID NewAssetID;
+            public UUID ItemID = UUID.Zero;
+            public UUID NewAssetID = UUID.Zero;
 
             public override int Length
             {
@@ -45030,8 +45030,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ItemID.FromBytes(bytes, i); i += 16;
-                    NewAssetID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    NewAssetID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -45130,8 +45130,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -45151,8 +45151,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -45171,8 +45171,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class FolderDataBlock : PacketBlock
         {
-            public UUID FolderID;
-            public UUID ParentID;
+            public UUID FolderID = UUID.Zero;
+            public UUID ParentID = UUID.Zero;
             public sbyte Type;
             public byte[] Name;
 
@@ -45197,8 +45197,8 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    FolderID.FromBytes(bytes, i); i += 16;
-                    ParentID.FromBytes(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    ParentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Type = (sbyte)bytes[i++];
                     length = bytes[i++];
                     Name = new byte[length];
@@ -45304,8 +45304,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -45325,8 +45325,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -45345,8 +45345,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class FolderDataBlock : PacketBlock
         {
-            public UUID FolderID;
-            public UUID ParentID;
+            public UUID FolderID = UUID.Zero;
+            public UUID ParentID = UUID.Zero;
             public sbyte Type;
             public byte[] Name;
 
@@ -45371,8 +45371,8 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    FolderID.FromBytes(bytes, i); i += 16;
-                    ParentID.FromBytes(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    ParentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Type = (sbyte)bytes[i++];
                     length = bytes[i++];
                     Name = new byte[length];
@@ -45548,8 +45548,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public bool Stamp;
 
             public override int Length
@@ -45570,8 +45570,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Stamp = (bytes[i++] != 0) ? (bool)true : (bool)false;
                 }
                 catch (Exception)
@@ -45592,8 +45592,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InventoryDataBlock : PacketBlock
         {
-            public UUID FolderID;
-            public UUID ParentID;
+            public UUID FolderID = UUID.Zero;
+            public UUID ParentID = UUID.Zero;
 
             public override int Length
             {
@@ -45613,8 +45613,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    FolderID.FromBytes(bytes, i); i += 16;
-                    ParentID.FromBytes(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    ParentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -45784,8 +45784,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -45805,8 +45805,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -45825,7 +45825,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class FolderDataBlock : PacketBlock
         {
-            public UUID FolderID;
+            public UUID FolderID = UUID.Zero;
 
             public override int Length
             {
@@ -45845,7 +45845,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    FolderID.FromBytes(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -46013,8 +46013,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -46034,8 +46034,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -46054,8 +46054,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InventoryDataBlock : PacketBlock
         {
-            public UUID FolderID;
-            public UUID OwnerID;
+            public UUID FolderID = UUID.Zero;
+            public UUID OwnerID = UUID.Zero;
             public int SortOrder;
             public bool FetchFolders;
             public bool FetchItems;
@@ -46078,8 +46078,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    FolderID.FromBytes(bytes, i); i += 16;
-                    OwnerID.FromBytes(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     SortOrder = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     FetchFolders = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     FetchItems = (bytes[i++] != 0) ? (bool)true : (bool)false;
@@ -46185,9 +46185,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID FolderID;
-            public UUID OwnerID;
+            public UUID AgentID = UUID.Zero;
+            public UUID FolderID = UUID.Zero;
+            public UUID OwnerID = UUID.Zero;
             public int Version;
             public int Descendents;
 
@@ -46209,9 +46209,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    FolderID.FromBytes(bytes, i); i += 16;
-                    OwnerID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Version = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Descendents = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
@@ -46235,8 +46235,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class FolderDataBlock : PacketBlock
         {
-            public UUID FolderID;
-            public UUID ParentID;
+            public UUID FolderID = UUID.Zero;
+            public UUID ParentID = UUID.Zero;
             public sbyte Type;
             public byte[] Name;
 
@@ -46261,8 +46261,8 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    FolderID.FromBytes(bytes, i); i += 16;
-                    ParentID.FromBytes(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    ParentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Type = (sbyte)bytes[i++];
                     length = bytes[i++];
                     Name = new byte[length];
@@ -46288,18 +46288,18 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ItemDataBlock : PacketBlock
         {
-            public UUID ItemID;
-            public UUID FolderID;
-            public UUID CreatorID;
-            public UUID OwnerID;
-            public UUID GroupID;
+            public UUID ItemID = UUID.Zero;
+            public UUID FolderID = UUID.Zero;
+            public UUID CreatorID = UUID.Zero;
+            public UUID OwnerID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
             public uint BaseMask;
             public uint OwnerMask;
             public uint GroupMask;
             public uint EveryoneMask;
             public uint NextOwnerMask;
             public bool GroupOwned;
-            public UUID AssetID;
+            public UUID AssetID = UUID.Zero;
             public sbyte Type;
             public sbyte InvType;
             public uint Flags;
@@ -46332,18 +46332,18 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ItemID.FromBytes(bytes, i); i += 16;
-                    FolderID.FromBytes(bytes, i); i += 16;
-                    CreatorID.FromBytes(bytes, i); i += 16;
-                    OwnerID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    CreatorID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     BaseMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     OwnerMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     GroupMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     EveryoneMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     NextOwnerMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     GroupOwned = (bytes[i++] != 0) ? (bool)true : (bool)false;
-                    AssetID.FromBytes(bytes, i); i += 16;
+                    AssetID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Type = (sbyte)bytes[i++];
                     InvType = (sbyte)bytes[i++];
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -46589,8 +46589,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -46610,8 +46610,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -46630,8 +46630,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InventoryDataBlock : PacketBlock
         {
-            public UUID OwnerID;
-            public UUID ItemID;
+            public UUID OwnerID = UUID.Zero;
+            public UUID ItemID = UUID.Zero;
 
             public override int Length
             {
@@ -46651,8 +46651,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    OwnerID.FromBytes(bytes, i); i += 16;
-                    ItemID.FromBytes(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -46822,7 +46822,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -46842,7 +46842,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -46860,18 +46860,18 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InventoryDataBlock : PacketBlock
         {
-            public UUID ItemID;
-            public UUID FolderID;
-            public UUID CreatorID;
-            public UUID OwnerID;
-            public UUID GroupID;
+            public UUID ItemID = UUID.Zero;
+            public UUID FolderID = UUID.Zero;
+            public UUID CreatorID = UUID.Zero;
+            public UUID OwnerID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
             public uint BaseMask;
             public uint OwnerMask;
             public uint GroupMask;
             public uint EveryoneMask;
             public uint NextOwnerMask;
             public bool GroupOwned;
-            public UUID AssetID;
+            public UUID AssetID = UUID.Zero;
             public sbyte Type;
             public sbyte InvType;
             public uint Flags;
@@ -46904,18 +46904,18 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ItemID.FromBytes(bytes, i); i += 16;
-                    FolderID.FromBytes(bytes, i); i += 16;
-                    CreatorID.FromBytes(bytes, i); i += 16;
-                    OwnerID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    CreatorID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     BaseMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     OwnerMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     GroupMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     EveryoneMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     NextOwnerMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     GroupOwned = (bytes[i++] != 0) ? (bool)true : (bool)false;
-                    AssetID.FromBytes(bytes, i); i += 16;
+                    AssetID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Type = (sbyte)bytes[i++];
                     InvType = (sbyte)bytes[i++];
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -47119,8 +47119,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID TransactionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID TransactionID = UUID.Zero;
 
             public override int Length
             {
@@ -47140,8 +47140,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -47160,8 +47160,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class FolderDataBlock : PacketBlock
         {
-            public UUID FolderID;
-            public UUID ParentID;
+            public UUID FolderID = UUID.Zero;
+            public UUID ParentID = UUID.Zero;
             public sbyte Type;
             public byte[] Name;
 
@@ -47186,8 +47186,8 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    FolderID.FromBytes(bytes, i); i += 16;
-                    ParentID.FromBytes(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    ParentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Type = (sbyte)bytes[i++];
                     length = bytes[i++];
                     Name = new byte[length];
@@ -47213,19 +47213,19 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ItemDataBlock : PacketBlock
         {
-            public UUID ItemID;
+            public UUID ItemID = UUID.Zero;
             public uint CallbackID;
-            public UUID FolderID;
-            public UUID CreatorID;
-            public UUID OwnerID;
-            public UUID GroupID;
+            public UUID FolderID = UUID.Zero;
+            public UUID CreatorID = UUID.Zero;
+            public UUID OwnerID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
             public uint BaseMask;
             public uint OwnerMask;
             public uint GroupMask;
             public uint EveryoneMask;
             public uint NextOwnerMask;
             public bool GroupOwned;
-            public UUID AssetID;
+            public UUID AssetID = UUID.Zero;
             public sbyte Type;
             public sbyte InvType;
             public uint Flags;
@@ -47258,19 +47258,19 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ItemID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     CallbackID = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    FolderID.FromBytes(bytes, i); i += 16;
-                    CreatorID.FromBytes(bytes, i); i += 16;
-                    OwnerID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    CreatorID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     BaseMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     OwnerMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     GroupMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     EveryoneMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     NextOwnerMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     GroupOwned = (bytes[i++] != 0) ? (bool)true : (bool)false;
-                    AssetID.FromBytes(bytes, i); i += 16;
+                    AssetID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Type = (sbyte)bytes[i++];
                     InvType = (sbyte)bytes[i++];
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -47517,8 +47517,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -47538,8 +47538,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -47558,7 +47558,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class FolderDataBlock : PacketBlock
         {
-            public UUID FolderID;
+            public UUID FolderID = UUID.Zero;
 
             public override int Length
             {
@@ -47578,7 +47578,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    FolderID.FromBytes(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -47596,7 +47596,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ItemDataBlock : PacketBlock
         {
-            public UUID ItemID;
+            public UUID ItemID = UUID.Zero;
 
             public override int Length
             {
@@ -47616,7 +47616,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ItemID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -47826,8 +47826,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -47847,8 +47847,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -47867,7 +47867,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InventoryDataBlock : PacketBlock
         {
-            public UUID FolderID;
+            public UUID FolderID = UUID.Zero;
 
             public override int Length
             {
@@ -47887,7 +47887,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    FolderID.FromBytes(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -47986,8 +47986,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -48007,8 +48007,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -48068,18 +48068,18 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InventoryDataBlock : PacketBlock
         {
-            public UUID ItemID;
-            public UUID FolderID;
-            public UUID CreatorID;
-            public UUID OwnerID;
-            public UUID GroupID;
+            public UUID ItemID = UUID.Zero;
+            public UUID FolderID = UUID.Zero;
+            public UUID CreatorID = UUID.Zero;
+            public UUID OwnerID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
             public uint BaseMask;
             public uint OwnerMask;
             public uint GroupMask;
             public uint EveryoneMask;
             public uint NextOwnerMask;
             public bool GroupOwned;
-            public UUID TransactionID;
+            public UUID TransactionID = UUID.Zero;
             public sbyte Type;
             public sbyte InvType;
             public uint Flags;
@@ -48112,18 +48112,18 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ItemID.FromBytes(bytes, i); i += 16;
-                    FolderID.FromBytes(bytes, i); i += 16;
-                    CreatorID.FromBytes(bytes, i); i += 16;
-                    OwnerID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    CreatorID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     BaseMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     OwnerMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     GroupMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     EveryoneMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     NextOwnerMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     GroupOwned = (bytes[i++] != 0) ? (bool)true : (bool)false;
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Type = (sbyte)bytes[i++];
                     InvType = (sbyte)bytes[i++];
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -48264,8 +48264,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -48285,8 +48285,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -48306,7 +48306,7 @@ namespace OpenMetaverse.Packets
         public sealed class InventoryDataBlock : PacketBlock
         {
             public uint LocalID;
-            public UUID ItemID;
+            public UUID ItemID = UUID.Zero;
 
             public override int Length
             {
@@ -48327,7 +48327,7 @@ namespace OpenMetaverse.Packets
                 try
                 {
                     LocalID = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    ItemID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -48427,9 +48427,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID FolderID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID FolderID = UUID.Zero;
 
             public override int Length
             {
@@ -48449,9 +48449,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    FolderID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -48472,7 +48472,7 @@ namespace OpenMetaverse.Packets
         public sealed class InventoryDataBlock : PacketBlock
         {
             public uint LocalID;
-            public UUID ItemID;
+            public UUID ItemID = UUID.Zero;
 
             public override int Length
             {
@@ -48493,7 +48493,7 @@ namespace OpenMetaverse.Packets
                 try
                 {
                     LocalID = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    ItemID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -48592,8 +48592,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -48613,8 +48613,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -48751,7 +48751,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InventoryDataBlock : PacketBlock
         {
-            public UUID TaskID;
+            public UUID TaskID = UUID.Zero;
             public short Serial;
             public byte[] Filename;
 
@@ -48776,7 +48776,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    TaskID.FromBytes(bytes, i); i += 16;
+                    TaskID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Serial = (short)(bytes[i++] + (bytes[i++] << 8));
                     length = bytes[i++];
                     Filename = new byte[length];
@@ -48876,8 +48876,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -48897,8 +48897,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -48917,10 +48917,10 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentBlockBlock : PacketBlock
         {
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
             public byte Destination;
-            public UUID DestinationID;
-            public UUID TransactionID;
+            public UUID DestinationID = UUID.Zero;
+            public UUID TransactionID = UUID.Zero;
             public byte PacketCount;
             public byte PacketNumber;
 
@@ -48942,10 +48942,10 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Destination = (byte)bytes[i++];
-                    DestinationID.FromBytes(bytes, i); i += 16;
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    DestinationID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     PacketCount = (byte)bytes[i++];
                     PacketNumber = (byte)bytes[i++];
                 }
@@ -49168,7 +49168,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class TransactionDataBlock : PacketBlock
         {
-            public UUID TransactionID;
+            public UUID TransactionID = UUID.Zero;
             public bool Success;
 
             public override int Length
@@ -49189,7 +49189,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Success = (bytes[i++] != 0) ? (bool)true : (bool)false;
                 }
                 catch (Exception)
@@ -49282,9 +49282,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID GroupID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -49304,9 +49304,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -49326,11 +49326,11 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class RezDataBlock : PacketBlock
         {
-            public UUID FromTaskID;
+            public UUID FromTaskID = UUID.Zero;
             public byte BypassRaycast;
             public Vector3 RayStart;
             public Vector3 RayEnd;
-            public UUID RayTargetID;
+            public UUID RayTargetID = UUID.Zero;
             public bool RayEndIsIntersection;
             public bool RezSelected;
             public bool RemoveItem;
@@ -49357,11 +49357,11 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    FromTaskID.FromBytes(bytes, i); i += 16;
+                    FromTaskID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     BypassRaycast = (byte)bytes[i++];
                     RayStart.FromBytes(bytes, i); i += 12;
                     RayEnd.FromBytes(bytes, i); i += 12;
-                    RayTargetID.FromBytes(bytes, i); i += 16;
+                    RayTargetID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     RayEndIsIntersection = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     RezSelected = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     RemoveItem = (bytes[i++] != 0) ? (bool)true : (bool)false;
@@ -49397,18 +49397,18 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InventoryDataBlock : PacketBlock
         {
-            public UUID ItemID;
-            public UUID FolderID;
-            public UUID CreatorID;
-            public UUID OwnerID;
-            public UUID GroupID;
+            public UUID ItemID = UUID.Zero;
+            public UUID FolderID = UUID.Zero;
+            public UUID CreatorID = UUID.Zero;
+            public UUID OwnerID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
             public uint BaseMask;
             public uint OwnerMask;
             public uint GroupMask;
             public uint EveryoneMask;
             public uint NextOwnerMask;
             public bool GroupOwned;
-            public UUID TransactionID;
+            public UUID TransactionID = UUID.Zero;
             public sbyte Type;
             public sbyte InvType;
             public uint Flags;
@@ -49441,18 +49441,18 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ItemID.FromBytes(bytes, i); i += 16;
-                    FolderID.FromBytes(bytes, i); i += 16;
-                    CreatorID.FromBytes(bytes, i); i += 16;
-                    OwnerID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    CreatorID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     BaseMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     OwnerMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     GroupMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     EveryoneMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     NextOwnerMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     GroupOwned = (bytes[i++] != 0) ? (bool)true : (bool)false;
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Type = (sbyte)bytes[i++];
                     InvType = (sbyte)bytes[i++];
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -49593,9 +49593,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID GroupID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -49615,9 +49615,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -49637,11 +49637,11 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class RezDataBlock : PacketBlock
         {
-            public UUID FromTaskID;
+            public UUID FromTaskID = UUID.Zero;
             public byte BypassRaycast;
             public Vector3 RayStart;
             public Vector3 RayEnd;
-            public UUID RayTargetID;
+            public UUID RayTargetID = UUID.Zero;
             public bool RayEndIsIntersection;
             public bool RezSelected;
             public bool RemoveItem;
@@ -49668,11 +49668,11 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    FromTaskID.FromBytes(bytes, i); i += 16;
+                    FromTaskID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     BypassRaycast = (byte)bytes[i++];
                     RayStart.FromBytes(bytes, i); i += 12;
                     RayEnd.FromBytes(bytes, i); i += 12;
-                    RayTargetID.FromBytes(bytes, i); i += 16;
+                    RayTargetID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     RayEndIsIntersection = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     RezSelected = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     RemoveItem = (bytes[i++] != 0) ? (bool)true : (bool)false;
@@ -49708,8 +49708,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class NotecardDataBlock : PacketBlock
         {
-            public UUID NotecardItemID;
-            public UUID ObjectID;
+            public UUID NotecardItemID = UUID.Zero;
+            public UUID ObjectID = UUID.Zero;
 
             public override int Length
             {
@@ -49729,8 +49729,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    NotecardItemID.FromBytes(bytes, i); i += 16;
-                    ObjectID.FromBytes(bytes, i); i += 16;
+                    NotecardItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -49749,7 +49749,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InventoryDataBlock : PacketBlock
         {
-            public UUID ItemID;
+            public UUID ItemID = UUID.Zero;
 
             public override int Length
             {
@@ -49769,7 +49769,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ItemID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -49956,8 +49956,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -49977,8 +49977,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -49997,7 +49997,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class TransactionBlockBlock : PacketBlock
         {
-            public UUID TransactionID;
+            public UUID TransactionID = UUID.Zero;
 
             public override int Length
             {
@@ -50017,7 +50017,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -50035,7 +50035,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class FolderDataBlock : PacketBlock
         {
-            public UUID FolderID;
+            public UUID FolderID = UUID.Zero;
 
             public override int Length
             {
@@ -50055,7 +50055,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    FolderID.FromBytes(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -50232,8 +50232,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -50253,8 +50253,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -50273,7 +50273,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class TransactionBlockBlock : PacketBlock
         {
-            public UUID TransactionID;
+            public UUID TransactionID = UUID.Zero;
 
             public override int Length
             {
@@ -50293,7 +50293,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -50391,8 +50391,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -50412,8 +50412,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -50432,7 +50432,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ExBlockBlock : PacketBlock
         {
-            public UUID OtherID;
+            public UUID OtherID = UUID.Zero;
 
             public override int Length
             {
@@ -50452,7 +50452,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    OtherID.FromBytes(bytes, i); i += 16;
+                    OtherID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -50550,8 +50550,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -50571,8 +50571,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -50591,8 +50591,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentBlockBlock : PacketBlock
         {
-            public UUID DestID;
-            public UUID TransactionID;
+            public UUID DestID = UUID.Zero;
+            public UUID TransactionID = UUID.Zero;
 
             public override int Length
             {
@@ -50612,8 +50612,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    DestID.FromBytes(bytes, i); i += 16;
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    DestID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -50712,8 +50712,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -50733,8 +50733,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -50753,7 +50753,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class TransactionBlockBlock : PacketBlock
         {
-            public UUID TransactionID;
+            public UUID TransactionID = UUID.Zero;
 
             public override int Length
             {
@@ -50773,7 +50773,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -50791,7 +50791,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class FolderDataBlock : PacketBlock
         {
-            public UUID FolderID;
+            public UUID FolderID = UUID.Zero;
 
             public override int Length
             {
@@ -50811,7 +50811,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    FolderID.FromBytes(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -50988,8 +50988,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -51009,8 +51009,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -51029,7 +51029,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class TransactionBlockBlock : PacketBlock
         {
-            public UUID TransactionID;
+            public UUID TransactionID = UUID.Zero;
 
             public override int Length
             {
@@ -51049,7 +51049,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -51147,9 +51147,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID GroupID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -51169,9 +51169,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -51232,18 +51232,18 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InventoryBlockBlock : PacketBlock
         {
-            public UUID ItemID;
-            public UUID FolderID;
-            public UUID CreatorID;
-            public UUID OwnerID;
-            public UUID GroupID;
+            public UUID ItemID = UUID.Zero;
+            public UUID FolderID = UUID.Zero;
+            public UUID CreatorID = UUID.Zero;
+            public UUID OwnerID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
             public uint BaseMask;
             public uint OwnerMask;
             public uint GroupMask;
             public uint EveryoneMask;
             public uint NextOwnerMask;
             public bool GroupOwned;
-            public UUID TransactionID;
+            public UUID TransactionID = UUID.Zero;
             public sbyte Type;
             public sbyte InvType;
             public uint Flags;
@@ -51276,18 +51276,18 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ItemID.FromBytes(bytes, i); i += 16;
-                    FolderID.FromBytes(bytes, i); i += 16;
-                    CreatorID.FromBytes(bytes, i); i += 16;
-                    OwnerID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    CreatorID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     BaseMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     OwnerMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     GroupMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     EveryoneMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     NextOwnerMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     GroupOwned = (bytes[i++] != 0) ? (bool)true : (bool)false;
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Type = (sbyte)bytes[i++];
                     InvType = (sbyte)bytes[i++];
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -51428,8 +51428,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -51449,8 +51449,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -51470,8 +51470,8 @@ namespace OpenMetaverse.Packets
         public sealed class InventoryBlockBlock : PacketBlock
         {
             public uint CallbackID;
-            public UUID FolderID;
-            public UUID TransactionID;
+            public UUID FolderID = UUID.Zero;
+            public UUID TransactionID = UUID.Zero;
             public uint NextOwnerMask;
             public sbyte Type;
             public sbyte InvType;
@@ -51502,8 +51502,8 @@ namespace OpenMetaverse.Packets
                 try
                 {
                     CallbackID = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    FolderID.FromBytes(bytes, i); i += 16;
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     NextOwnerMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Type = (sbyte)bytes[i++];
                     InvType = (sbyte)bytes[i++];
@@ -51622,8 +51622,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -51643,8 +51643,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -51701,7 +51701,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InventoryBlockBlock : PacketBlock
         {
-            public UUID FolderID;
+            public UUID FolderID = UUID.Zero;
             public byte[] Name;
 
             public override int Length
@@ -51725,7 +51725,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    FolderID.FromBytes(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     Name = new byte[length];
                     Buffer.BlockCopy(bytes, i, Name, 0, length); i += length;
@@ -51836,7 +51836,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class RequestBlockBlock : PacketBlock
         {
-            public UUID RegionID;
+            public UUID RegionID = UUID.Zero;
 
             public override int Length
             {
@@ -51856,7 +51856,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    RegionID.FromBytes(bytes, i); i += 16;
+                    RegionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -51947,7 +51947,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ReplyBlockBlock : PacketBlock
         {
-            public UUID RegionID;
+            public UUID RegionID = UUID.Zero;
             public ulong RegionHandle;
 
             public override int Length
@@ -51968,7 +51968,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    RegionID.FromBytes(bytes, i); i += 16;
+                    RegionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     RegionHandle = (ulong)((ulong)bytes[i++] + ((ulong)bytes[i++] << 8) + ((ulong)bytes[i++] << 16) + ((ulong)bytes[i++] << 24) + ((ulong)bytes[i++] << 32) + ((ulong)bytes[i++] << 40) + ((ulong)bytes[i++] << 48) + ((ulong)bytes[i++] << 56));
                 }
                 catch (Exception)
@@ -52061,8 +52061,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -52082,8 +52082,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -52102,8 +52102,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class MoneyDataBlock : PacketBlock
         {
-            public UUID SourceID;
-            public UUID DestID;
+            public UUID SourceID = UUID.Zero;
+            public UUID DestID = UUID.Zero;
             public byte Flags;
             public int Amount;
             public byte AggregatePermNextOwner;
@@ -52132,8 +52132,8 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    SourceID.FromBytes(bytes, i); i += 16;
-                    DestID.FromBytes(bytes, i); i += 16;
+                    SourceID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    DestID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Flags = (byte)bytes[i++];
                     Amount = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     AggregatePermNextOwner = (byte)bytes[i++];
@@ -52248,8 +52248,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -52269,8 +52269,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -52289,7 +52289,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class MoneyDataBlock : PacketBlock
         {
-            public UUID TransactionID;
+            public UUID TransactionID = UUID.Zero;
 
             public override int Length
             {
@@ -52309,7 +52309,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -52408,8 +52408,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class MoneyDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID TransactionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID TransactionID = UUID.Zero;
             public bool TransactionSuccess;
             public int MoneyBalance;
             public int SquareMetersCredit;
@@ -52437,8 +52437,8 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     TransactionSuccess = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     MoneyBalance = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     SquareMetersCredit = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -52471,9 +52471,9 @@ namespace OpenMetaverse.Packets
         public sealed class TransactionInfoBlock : PacketBlock
         {
             public int TransactionType;
-            public UUID SourceID;
+            public UUID SourceID = UUID.Zero;
             public bool IsSourceGroup;
-            public UUID DestID;
+            public UUID DestID = UUID.Zero;
             public bool IsDestGroup;
             public int Amount;
             public byte[] ItemDescription;
@@ -52500,9 +52500,9 @@ namespace OpenMetaverse.Packets
                 try
                 {
                     TransactionType = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    SourceID.FromBytes(bytes, i); i += 16;
+                    SourceID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     IsSourceGroup = (bytes[i++] != 0) ? (bool)true : (bool)false;
-                    DestID.FromBytes(bytes, i); i += 16;
+                    DestID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     IsDestGroup = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     Amount = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     length = bytes[i++];
@@ -52655,8 +52655,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class MoneyDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID TransactionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID TransactionID = UUID.Zero;
             public bool TransactionSuccess;
             public int MoneyBalance;
             public int SquareMetersCredit;
@@ -52684,8 +52684,8 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     TransactionSuccess = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     MoneyBalance = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     SquareMetersCredit = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -52718,9 +52718,9 @@ namespace OpenMetaverse.Packets
         public sealed class TransactionInfoBlock : PacketBlock
         {
             public int TransactionType;
-            public UUID SourceID;
+            public UUID SourceID = UUID.Zero;
             public bool IsSourceGroup;
-            public UUID DestID;
+            public UUID DestID = UUID.Zero;
             public bool IsDestGroup;
             public int Amount;
             public byte[] ItemDescription;
@@ -52747,9 +52747,9 @@ namespace OpenMetaverse.Packets
                 try
                 {
                     TransactionType = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    SourceID.FromBytes(bytes, i); i += 16;
+                    SourceID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     IsSourceGroup = (bytes[i++] != 0) ? (bool)true : (bool)false;
-                    DestID.FromBytes(bytes, i); i += 16;
+                    DestID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     IsDestGroup = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     Amount = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     length = bytes[i++];
@@ -52867,8 +52867,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public uint Flags;
 
             public override int Length
@@ -52889,8 +52889,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -52911,8 +52911,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID ItemID;
-            public UUID AssetID;
+            public UUID ItemID = UUID.Zero;
+            public UUID AssetID = UUID.Zero;
             public uint GestureFlags;
 
             public override int Length
@@ -52933,8 +52933,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ItemID.FromBytes(bytes, i); i += 16;
-                    AssetID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    AssetID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     GestureFlags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -53105,8 +53105,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public uint Flags;
 
             public override int Length
@@ -53127,8 +53127,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -53149,7 +53149,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID ItemID;
+            public UUID ItemID = UUID.Zero;
             public uint GestureFlags;
 
             public override int Length
@@ -53170,7 +53170,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ItemID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     GestureFlags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -53340,7 +53340,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class MuteDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
             public byte[] Filename;
 
             public override int Length
@@ -53364,7 +53364,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     Filename = new byte[length];
                     Buffer.BlockCopy(bytes, i, Filename, 0, length); i += length;
@@ -53460,7 +53460,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -53480,7 +53480,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -53571,8 +53571,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -53592,8 +53592,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -53612,7 +53612,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class RightsBlock : PacketBlock
         {
-            public UUID AgentRelated;
+            public UUID AgentRelated = UUID.Zero;
             public int RelatedRights;
 
             public override int Length
@@ -53633,7 +53633,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentRelated.FromBytes(bytes, i); i += 16;
+                    AgentRelated = UUIDFactory.GetUUID(bytes, i); i += 16;
                     RelatedRights = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -53803,7 +53803,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -53823,7 +53823,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -53841,7 +53841,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class RightsBlock : PacketBlock
         {
-            public UUID AgentRelated;
+            public UUID AgentRelated = UUID.Zero;
             public int RelatedRights;
 
             public override int Length
@@ -53862,7 +53862,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentRelated.FromBytes(bytes, i); i += 16;
+                    AgentRelated = UUIDFactory.GetUUID(bytes, i); i += 16;
                     RelatedRights = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -54032,7 +54032,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentBlockBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -54052,7 +54052,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -54211,7 +54211,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentBlockBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -54231,7 +54231,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -54390,8 +54390,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -54411,8 +54411,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -54565,7 +54565,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AssetBlockBlock : PacketBlock
         {
-            public UUID TransactionID;
+            public UUID TransactionID = UUID.Zero;
             public sbyte Type;
             public bool Tempfile;
             public bool StoreLocal;
@@ -54592,7 +54592,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Type = (sbyte)bytes[i++];
                     Tempfile = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     StoreLocal = (bytes[i++] != 0) ? (bool)true : (bool)false;
@@ -54695,7 +54695,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AssetBlockBlock : PacketBlock
         {
-            public UUID UUID;
+            public UUID UUID = UUID.Zero;
             public sbyte Type;
             public bool Success;
 
@@ -54717,7 +54717,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    UUID.FromBytes(bytes, i); i += 16;
+                    UUID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Type = (sbyte)bytes[i++];
                     Success = (bytes[i++] != 0) ? (bool)true : (bool)false;
                 }
@@ -54812,8 +54812,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -54833,8 +54833,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -54856,7 +54856,7 @@ namespace OpenMetaverse.Packets
             public byte[] Name;
             public byte[] Charter;
             public bool ShowInList;
-            public UUID InsigniaID;
+            public UUID InsigniaID = UUID.Zero;
             public int MembershipFee;
             public bool OpenEnrollment;
             public bool AllowPublish;
@@ -54891,7 +54891,7 @@ namespace OpenMetaverse.Packets
                     Charter = new byte[length];
                     Buffer.BlockCopy(bytes, i, Charter, 0, length); i += length;
                     ShowInList = (bytes[i++] != 0) ? (bool)true : (bool)false;
-                    InsigniaID.FromBytes(bytes, i); i += 16;
+                    InsigniaID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     MembershipFee = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     OpenEnrollment = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     AllowPublish = (bytes[i++] != 0) ? (bool)true : (bool)false;
@@ -55004,7 +55004,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -55024,7 +55024,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -55042,7 +55042,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ReplyDataBlock : PacketBlock
         {
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
             public bool Success;
             public byte[] Message;
 
@@ -55067,7 +55067,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Success = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     length = bytes[i++];
                     Message = new byte[length];
@@ -55172,8 +55172,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -55193,8 +55193,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -55213,10 +55213,10 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class GroupDataBlock : PacketBlock
         {
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
             public byte[] Charter;
             public bool ShowInList;
-            public UUID InsigniaID;
+            public UUID InsigniaID = UUID.Zero;
             public int MembershipFee;
             public bool OpenEnrollment;
             public bool AllowPublish;
@@ -55243,12 +55243,12 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = (bytes[i++] + (bytes[i++] << 8));
                     Charter = new byte[length];
                     Buffer.BlockCopy(bytes, i, Charter, 0, length); i += length;
                     ShowInList = (bytes[i++] != 0) ? (bool)true : (bool)false;
-                    InsigniaID.FromBytes(bytes, i); i += 16;
+                    InsigniaID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     MembershipFee = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     OpenEnrollment = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     AllowPublish = (bytes[i++] != 0) ? (bool)true : (bool)false;
@@ -55360,9 +55360,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID GroupID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -55382,9 +55382,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -55404,8 +55404,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class RoleChangeBlock : PacketBlock
         {
-            public UUID RoleID;
-            public UUID MemberID;
+            public UUID RoleID = UUID.Zero;
+            public UUID MemberID = UUID.Zero;
             public uint Change;
 
             public override int Length
@@ -55426,8 +55426,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    RoleID.FromBytes(bytes, i); i += 16;
-                    MemberID.FromBytes(bytes, i); i += 16;
+                    RoleID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    MemberID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Change = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -55598,8 +55598,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -55619,8 +55619,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -55639,7 +55639,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class GroupDataBlock : PacketBlock
         {
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -55659,7 +55659,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -55758,7 +55758,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -55778,7 +55778,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -55796,7 +55796,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class GroupDataBlock : PacketBlock
         {
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
             public bool Success;
 
             public override int Length
@@ -55817,7 +55817,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Success = (bytes[i++] != 0) ? (bool)true : (bool)false;
                 }
                 catch (Exception)
@@ -55917,8 +55917,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -55938,8 +55938,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -55958,7 +55958,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class GroupDataBlock : PacketBlock
         {
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -55978,7 +55978,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -55996,7 +55996,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class EjectDataBlock : PacketBlock
         {
-            public UUID EjecteeID;
+            public UUID EjecteeID = UUID.Zero;
 
             public override int Length
             {
@@ -56016,7 +56016,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    EjecteeID.FromBytes(bytes, i); i += 16;
+                    EjecteeID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -56193,7 +56193,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -56213,7 +56213,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -56231,7 +56231,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class GroupDataBlock : PacketBlock
         {
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -56251,7 +56251,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -56394,8 +56394,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -56415,8 +56415,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -56435,7 +56435,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class GroupDataBlock : PacketBlock
         {
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -56455,7 +56455,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -56553,7 +56553,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -56573,7 +56573,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -56591,7 +56591,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class GroupDataBlock : PacketBlock
         {
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
             public bool Success;
 
             public override int Length
@@ -56612,7 +56612,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Success = (bytes[i++] != 0) ? (bool)true : (bool)false;
                 }
                 catch (Exception)
@@ -56712,8 +56712,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -56733,8 +56733,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -56753,7 +56753,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class GroupDataBlock : PacketBlock
         {
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -56773,7 +56773,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -56791,8 +56791,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InviteDataBlock : PacketBlock
         {
-            public UUID InviteeID;
-            public UUID RoleID;
+            public UUID InviteeID = UUID.Zero;
+            public UUID RoleID = UUID.Zero;
 
             public override int Length
             {
@@ -56812,8 +56812,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    InviteeID.FromBytes(bytes, i); i += 16;
-                    RoleID.FromBytes(bytes, i); i += 16;
+                    InviteeID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    RoleID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -56991,8 +56991,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -57012,8 +57012,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -57032,7 +57032,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class GroupDataBlock : PacketBlock
         {
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -57052,7 +57052,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -57150,7 +57150,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -57170,7 +57170,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -57188,14 +57188,14 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class GroupDataBlock : PacketBlock
         {
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
             public byte[] Name;
             public byte[] Charter;
             public bool ShowInList;
             public byte[] MemberTitle;
             public ulong PowersMask;
-            public UUID InsigniaID;
-            public UUID FounderID;
+            public UUID InsigniaID = UUID.Zero;
+            public UUID FounderID = UUID.Zero;
             public int MembershipFee;
             public bool OpenEnrollment;
             public int Money;
@@ -57203,7 +57203,7 @@ namespace OpenMetaverse.Packets
             public int GroupRolesCount;
             public bool AllowPublish;
             public bool MaturePublish;
-            public UUID OwnerRole;
+            public UUID OwnerRole = UUID.Zero;
 
             public override int Length
             {
@@ -57228,7 +57228,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     Name = new byte[length];
                     Buffer.BlockCopy(bytes, i, Name, 0, length); i += length;
@@ -57240,8 +57240,8 @@ namespace OpenMetaverse.Packets
                     MemberTitle = new byte[length];
                     Buffer.BlockCopy(bytes, i, MemberTitle, 0, length); i += length;
                     PowersMask = (ulong)((ulong)bytes[i++] + ((ulong)bytes[i++] << 8) + ((ulong)bytes[i++] << 16) + ((ulong)bytes[i++] << 24) + ((ulong)bytes[i++] << 32) + ((ulong)bytes[i++] << 40) + ((ulong)bytes[i++] << 48) + ((ulong)bytes[i++] << 56));
-                    InsigniaID.FromBytes(bytes, i); i += 16;
-                    FounderID.FromBytes(bytes, i); i += 16;
+                    InsigniaID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    FounderID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     MembershipFee = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     OpenEnrollment = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     Money = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -57249,7 +57249,7 @@ namespace OpenMetaverse.Packets
                     GroupRolesCount = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     AllowPublish = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     MaturePublish = (bytes[i++] != 0) ? (bool)true : (bool)false;
-                    OwnerRole.FromBytes(bytes, i); i += 16;
+                    OwnerRole = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -57367,9 +57367,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID GroupID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -57389,9 +57389,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -57411,7 +57411,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class MoneyDataBlock : PacketBlock
         {
-            public UUID RequestID;
+            public UUID RequestID = UUID.Zero;
             public int IntervalDays;
             public int CurrentInterval;
 
@@ -57433,7 +57433,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    RequestID.FromBytes(bytes, i); i += 16;
+                    RequestID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     IntervalDays = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     CurrentInterval = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
@@ -57536,8 +57536,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID GroupID;
+            public UUID AgentID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -57557,8 +57557,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -57577,7 +57577,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class MoneyDataBlock : PacketBlock
         {
-            public UUID RequestID;
+            public UUID RequestID = UUID.Zero;
             public int IntervalDays;
             public int CurrentInterval;
             public byte[] StartDate;
@@ -57621,7 +57621,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    RequestID.FromBytes(bytes, i); i += 16;
+                    RequestID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     IntervalDays = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     CurrentInterval = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     length = bytes[i++];
@@ -57767,9 +57767,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID GroupID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -57789,9 +57789,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -57811,7 +57811,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class MoneyDataBlock : PacketBlock
         {
-            public UUID RequestID;
+            public UUID RequestID = UUID.Zero;
             public int IntervalDays;
             public int CurrentInterval;
 
@@ -57833,7 +57833,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    RequestID.FromBytes(bytes, i); i += 16;
+                    RequestID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     IntervalDays = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     CurrentInterval = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
@@ -57936,8 +57936,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID GroupID;
+            public UUID AgentID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -57957,8 +57957,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -57977,7 +57977,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class MoneyDataBlock : PacketBlock
         {
-            public UUID RequestID;
+            public UUID RequestID = UUID.Zero;
             public int IntervalDays;
             public int CurrentInterval;
             public byte[] StartDate;
@@ -58003,7 +58003,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    RequestID.FromBytes(bytes, i); i += 16;
+                    RequestID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     IntervalDays = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     CurrentInterval = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     length = bytes[i++];
@@ -58237,9 +58237,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID GroupID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -58259,9 +58259,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -58281,7 +58281,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class MoneyDataBlock : PacketBlock
         {
-            public UUID RequestID;
+            public UUID RequestID = UUID.Zero;
             public int IntervalDays;
             public int CurrentInterval;
 
@@ -58303,7 +58303,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    RequestID.FromBytes(bytes, i); i += 16;
+                    RequestID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     IntervalDays = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     CurrentInterval = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
@@ -58406,8 +58406,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID GroupID;
+            public UUID AgentID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -58427,8 +58427,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -58447,7 +58447,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class MoneyDataBlock : PacketBlock
         {
-            public UUID RequestID;
+            public UUID RequestID = UUID.Zero;
             public int IntervalDays;
             public int CurrentInterval;
             public byte[] StartDate;
@@ -58473,7 +58473,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    RequestID.FromBytes(bytes, i); i += 16;
+                    RequestID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     IntervalDays = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     CurrentInterval = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     length = bytes[i++];
@@ -58724,8 +58724,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -58745,8 +58745,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -58765,7 +58765,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class GroupDataBlock : PacketBlock
         {
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -58785,7 +58785,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -58803,7 +58803,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class TransactionDataBlock : PacketBlock
         {
-            public UUID TransactionID;
+            public UUID TransactionID = UUID.Zero;
 
             public override int Length
             {
@@ -58823,7 +58823,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -58928,8 +58928,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID GroupID;
+            public UUID AgentID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -58949,8 +58949,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -58969,7 +58969,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class TransactionDataBlock : PacketBlock
         {
-            public UUID TransactionID;
+            public UUID TransactionID = UUID.Zero;
             public uint TotalNumItems;
 
             public override int Length
@@ -58990,7 +58990,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     TotalNumItems = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -59010,8 +59010,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ProposalDataBlock : PacketBlock
         {
-            public UUID VoteID;
-            public UUID VoteInitiator;
+            public UUID VoteID = UUID.Zero;
+            public UUID VoteInitiator = UUID.Zero;
             public byte[] TerseDateID;
             public byte[] StartDateTime;
             public byte[] EndDateTime;
@@ -59046,8 +59046,8 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    VoteID.FromBytes(bytes, i); i += 16;
-                    VoteInitiator.FromBytes(bytes, i); i += 16;
+                    VoteID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    VoteInitiator = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     TerseDateID = new byte[length];
                     Buffer.BlockCopy(bytes, i, TerseDateID, 0, length); i += length;
@@ -59257,8 +59257,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -59278,8 +59278,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -59298,7 +59298,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class GroupDataBlock : PacketBlock
         {
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -59318,7 +59318,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -59336,7 +59336,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class TransactionDataBlock : PacketBlock
         {
-            public UUID TransactionID;
+            public UUID TransactionID = UUID.Zero;
 
             public override int Length
             {
@@ -59356,7 +59356,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -59461,8 +59461,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID GroupID;
+            public UUID AgentID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -59482,8 +59482,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -59502,7 +59502,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class TransactionDataBlock : PacketBlock
         {
-            public UUID TransactionID;
+            public UUID TransactionID = UUID.Zero;
             public uint TotalNumItems;
 
             public override int Length
@@ -59523,7 +59523,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     TotalNumItems = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -59543,11 +59543,11 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class HistoryItemDataBlock : PacketBlock
         {
-            public UUID VoteID;
+            public UUID VoteID = UUID.Zero;
             public byte[] TerseDateID;
             public byte[] StartDateTime;
             public byte[] EndDateTime;
-            public UUID VoteInitiator;
+            public UUID VoteInitiator = UUID.Zero;
             public byte[] VoteType;
             public byte[] VoteResult;
             public float Majority;
@@ -59580,7 +59580,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    VoteID.FromBytes(bytes, i); i += 16;
+                    VoteID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     TerseDateID = new byte[length];
                     Buffer.BlockCopy(bytes, i, TerseDateID, 0, length); i += length;
@@ -59590,7 +59590,7 @@ namespace OpenMetaverse.Packets
                     length = bytes[i++];
                     EndDateTime = new byte[length];
                     Buffer.BlockCopy(bytes, i, EndDateTime, 0, length); i += length;
-                    VoteInitiator.FromBytes(bytes, i); i += 16;
+                    VoteInitiator = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     VoteType = new byte[length];
                     Buffer.BlockCopy(bytes, i, VoteType, 0, length); i += length;
@@ -59635,7 +59635,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class VoteItemBlock : PacketBlock
         {
-            public UUID CandidateID;
+            public UUID CandidateID = UUID.Zero;
             public byte[] VoteCast;
             public int NumVotes;
 
@@ -59660,7 +59660,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    CandidateID.FromBytes(bytes, i); i += 16;
+                    CandidateID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     VoteCast = new byte[length];
                     Buffer.BlockCopy(bytes, i, VoteCast, 0, length); i += length;
@@ -59854,8 +59854,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -59875,8 +59875,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -59895,7 +59895,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ProposalDataBlock : PacketBlock
         {
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
             public int Quorum;
             public float Majority;
             public int Duration;
@@ -59922,7 +59922,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Quorum = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Majority = Utils.BytesToFloat(bytes, i); i += 4;
                     Duration = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -60032,8 +60032,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -60053,8 +60053,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -60073,8 +60073,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ProposalDataBlock : PacketBlock
         {
-            public UUID ProposalID;
-            public UUID GroupID;
+            public UUID ProposalID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
             public byte[] VoteCast;
 
             public override int Length
@@ -60098,8 +60098,8 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ProposalID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    ProposalID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     VoteCast = new byte[length];
                     Buffer.BlockCopy(bytes, i, VoteCast, 0, length); i += length;
@@ -60203,8 +60203,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -60224,8 +60224,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -60244,8 +60244,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class GroupDataBlock : PacketBlock
         {
-            public UUID GroupID;
-            public UUID RequestID;
+            public UUID GroupID = UUID.Zero;
+            public UUID RequestID = UUID.Zero;
 
             public override int Length
             {
@@ -60265,8 +60265,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
-                    RequestID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    RequestID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -60365,7 +60365,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -60385,7 +60385,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -60403,8 +60403,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class GroupDataBlock : PacketBlock
         {
-            public UUID GroupID;
-            public UUID RequestID;
+            public UUID GroupID = UUID.Zero;
+            public UUID RequestID = UUID.Zero;
             public int MemberCount;
 
             public override int Length
@@ -60425,8 +60425,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
-                    RequestID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    RequestID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     MemberCount = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -60447,7 +60447,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class MemberDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
             public int Contribution;
             public byte[] OnlineStatus;
             public ulong AgentPowers;
@@ -60476,7 +60476,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Contribution = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     length = bytes[i++];
                     OnlineStatus = new byte[length];
@@ -60670,9 +60670,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID GroupID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -60692,9 +60692,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -60788,8 +60788,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -60809,8 +60809,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -60829,7 +60829,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
             public int Contribution;
 
             public override int Length
@@ -60850,7 +60850,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Contribution = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -60950,8 +60950,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -60971,8 +60971,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -60991,7 +60991,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlock : PacketBlock
         {
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
             public bool AcceptNotices;
 
             public override int Length
@@ -61012,7 +61012,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     AcceptNotices = (bytes[i++] != 0) ? (bool)true : (bool)false;
                 }
                 catch (Exception)
@@ -61157,8 +61157,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -61178,8 +61178,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -61198,8 +61198,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class GroupDataBlock : PacketBlock
         {
-            public UUID GroupID;
-            public UUID RequestID;
+            public UUID GroupID = UUID.Zero;
+            public UUID RequestID = UUID.Zero;
 
             public override int Length
             {
@@ -61219,8 +61219,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
-                    RequestID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    RequestID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -61319,7 +61319,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -61339,7 +61339,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -61357,8 +61357,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class GroupDataBlock : PacketBlock
         {
-            public UUID GroupID;
-            public UUID RequestID;
+            public UUID GroupID = UUID.Zero;
+            public UUID RequestID = UUID.Zero;
             public int RoleCount;
 
             public override int Length
@@ -61379,8 +61379,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
-                    RequestID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    RequestID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     RoleCount = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -61401,7 +61401,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class RoleDataBlock : PacketBlock
         {
-            public UUID RoleID;
+            public UUID RoleID = UUID.Zero;
             public byte[] Name;
             public byte[] Title;
             public byte[] Description;
@@ -61431,7 +61431,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    RoleID.FromBytes(bytes, i); i += 16;
+                    RoleID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     Name = new byte[length];
                     Buffer.BlockCopy(bytes, i, Name, 0, length); i += length;
@@ -61627,8 +61627,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -61648,8 +61648,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -61668,8 +61668,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class GroupDataBlock : PacketBlock
         {
-            public UUID GroupID;
-            public UUID RequestID;
+            public UUID GroupID = UUID.Zero;
+            public UUID RequestID = UUID.Zero;
 
             public override int Length
             {
@@ -61689,8 +61689,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
-                    RequestID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    RequestID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -61789,9 +61789,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID GroupID;
-            public UUID RequestID;
+            public UUID AgentID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
+            public UUID RequestID = UUID.Zero;
             public uint TotalPairs;
 
             public override int Length
@@ -61812,9 +61812,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
-                    RequestID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    RequestID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     TotalPairs = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -61836,8 +61836,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class MemberDataBlock : PacketBlock
         {
-            public UUID RoleID;
-            public UUID MemberID;
+            public UUID RoleID = UUID.Zero;
+            public UUID MemberID = UUID.Zero;
 
             public override int Length
             {
@@ -61857,8 +61857,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    RoleID.FromBytes(bytes, i); i += 16;
-                    MemberID.FromBytes(bytes, i); i += 16;
+                    RoleID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    MemberID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -62027,10 +62027,10 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID GroupID;
-            public UUID RequestID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
+            public UUID RequestID = UUID.Zero;
 
             public override int Length
             {
@@ -62050,10 +62050,10 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
-                    RequestID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    RequestID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -62147,9 +62147,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID GroupID;
-            public UUID RequestID;
+            public UUID AgentID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
+            public UUID RequestID = UUID.Zero;
 
             public override int Length
             {
@@ -62169,9 +62169,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
-                    RequestID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    RequestID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -62192,7 +62192,7 @@ namespace OpenMetaverse.Packets
         public sealed class GroupDataBlock : PacketBlock
         {
             public byte[] Title;
-            public UUID RoleID;
+            public UUID RoleID = UUID.Zero;
             public bool Selected;
 
             public override int Length
@@ -62219,7 +62219,7 @@ namespace OpenMetaverse.Packets
                     length = bytes[i++];
                     Title = new byte[length];
                     Buffer.BlockCopy(bytes, i, Title, 0, length); i += length;
-                    RoleID.FromBytes(bytes, i); i += 16;
+                    RoleID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Selected = (bytes[i++] != 0) ? (bool)true : (bool)false;
                 }
                 catch (Exception)
@@ -62392,10 +62392,10 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID GroupID;
-            public UUID TitleRoleID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
+            public UUID TitleRoleID = UUID.Zero;
 
             public override int Length
             {
@@ -62415,10 +62415,10 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
-                    TitleRoleID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    TitleRoleID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -62512,9 +62512,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID GroupID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -62534,9 +62534,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -62556,7 +62556,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class RoleDataBlock : PacketBlock
         {
-            public UUID RoleID;
+            public UUID RoleID = UUID.Zero;
             public byte[] Name;
             public byte[] Description;
             public byte[] Title;
@@ -62586,7 +62586,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    RoleID.FromBytes(bytes, i); i += 16;
+                    RoleID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     Name = new byte[length];
                     Buffer.BlockCopy(bytes, i, Name, 0, length); i += length;
@@ -62773,8 +62773,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class RequestDataBlock : PacketBlock
         {
-            public UUID RequestID;
-            public UUID AgentID;
+            public UUID RequestID = UUID.Zero;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -62794,8 +62794,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    RequestID.FromBytes(bytes, i); i += 16;
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    RequestID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -62887,8 +62887,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ReplyDataBlock : PacketBlock
         {
-            public UUID RequestID;
-            public UUID GroupID;
+            public UUID RequestID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
             public byte[] Selection;
 
             public override int Length
@@ -62912,8 +62912,8 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    RequestID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    RequestID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     Selection = new byte[length];
                     Buffer.BlockCopy(bytes, i, Selection, 0, length); i += length;
@@ -63010,8 +63010,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -63031,8 +63031,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -63124,8 +63124,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public uint SerialNum;
 
             public override int Length
@@ -63146,8 +63146,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     SerialNum = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -63168,8 +63168,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class WearableDataBlock : PacketBlock
         {
-            public UUID ItemID;
-            public UUID AssetID;
+            public UUID ItemID = UUID.Zero;
+            public UUID AssetID = UUID.Zero;
             public byte WearableType;
 
             public override int Length
@@ -63190,8 +63190,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ItemID.FromBytes(bytes, i); i += 16;
-                    AssetID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    AssetID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     WearableType = (byte)bytes[i++];
                 }
                 catch (Exception)
@@ -63363,8 +63363,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -63384,8 +63384,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -63404,7 +63404,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class WearableDataBlock : PacketBlock
         {
-            public UUID ItemID;
+            public UUID ItemID = UUID.Zero;
             public byte WearableType;
 
             public override int Length
@@ -63425,7 +63425,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ItemID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     WearableType = (byte)bytes[i++];
                 }
                 catch (Exception)
@@ -63596,8 +63596,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public int SerialNum;
 
             public override int Length
@@ -63618,8 +63618,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     SerialNum = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -63640,7 +63640,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class WearableDataBlock : PacketBlock
         {
-            public UUID ID;
+            public UUID ID = UUID.Zero;
             public byte TextureIndex;
 
             public override int Length
@@ -63661,7 +63661,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ID.FromBytes(bytes, i); i += 16;
+                    ID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     TextureIndex = (byte)bytes[i++];
                 }
                 catch (Exception)
@@ -63831,8 +63831,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public int SerialNum;
 
             public override int Length
@@ -63853,8 +63853,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     SerialNum = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -63875,7 +63875,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class WearableDataBlock : PacketBlock
         {
-            public UUID TextureID;
+            public UUID TextureID = UUID.Zero;
             public byte TextureIndex;
             public byte[] HostName;
 
@@ -63900,7 +63900,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    TextureID.FromBytes(bytes, i); i += 16;
+                    TextureID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     TextureIndex = (byte)bytes[i++];
                     length = bytes[i++];
                     HostName = new byte[length];
@@ -64075,8 +64075,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -64096,8 +64096,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -64189,11 +64189,11 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
             public byte[] FirstName;
             public byte[] LastName;
             public byte[] GroupTitle;
-            public UUID ActiveGroupID;
+            public UUID ActiveGroupID = UUID.Zero;
             public ulong GroupPowers;
             public byte[] GroupName;
 
@@ -64221,7 +64221,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     FirstName = new byte[length];
                     Buffer.BlockCopy(bytes, i, FirstName, 0, length); i += length;
@@ -64231,7 +64231,7 @@ namespace OpenMetaverse.Packets
                     length = bytes[i++];
                     GroupTitle = new byte[length];
                     Buffer.BlockCopy(bytes, i, GroupTitle, 0, length); i += length;
-                    ActiveGroupID.FromBytes(bytes, i); i += 16;
+                    ActiveGroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     GroupPowers = (ulong)((ulong)bytes[i++] + ((ulong)bytes[i++] << 8) + ((ulong)bytes[i++] << 16) + ((ulong)bytes[i++] << 24) + ((ulong)bytes[i++] << 32) + ((ulong)bytes[i++] << 40) + ((ulong)bytes[i++] << 48) + ((ulong)bytes[i++] << 56));
                     length = bytes[i++];
                     GroupName = new byte[length];
@@ -64337,8 +64337,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentGroupDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID GroupID;
+            public UUID AgentID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
             public ulong AgentPowers;
             public byte[] GroupTitle;
 
@@ -64363,8 +64363,8 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     AgentPowers = (ulong)((ulong)bytes[i++] + ((ulong)bytes[i++] << 8) + ((ulong)bytes[i++] << 16) + ((ulong)bytes[i++] << 24) + ((ulong)bytes[i++] << 32) + ((ulong)bytes[i++] << 40) + ((ulong)bytes[i++] << 48) + ((ulong)bytes[i++] << 56));
                     length = bytes[i++];
                     GroupTitle = new byte[length];
@@ -64532,7 +64532,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -64552,7 +64552,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -64570,10 +64570,10 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class GroupDataBlock : PacketBlock
         {
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
             public ulong GroupPowers;
             public bool AcceptNotices;
-            public UUID GroupInsigniaID;
+            public UUID GroupInsigniaID = UUID.Zero;
             public int Contribution;
             public byte[] GroupName;
 
@@ -64598,10 +64598,10 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     GroupPowers = (ulong)((ulong)bytes[i++] + ((ulong)bytes[i++] << 8) + ((ulong)bytes[i++] << 16) + ((ulong)bytes[i++] << 24) + ((ulong)bytes[i++] << 32) + ((ulong)bytes[i++] << 40) + ((ulong)bytes[i++] << 48) + ((ulong)bytes[i++] << 56));
                     AcceptNotices = (bytes[i++] != 0) ? (bool)true : (bool)false;
-                    GroupInsigniaID.FromBytes(bytes, i); i += 16;
+                    GroupInsigniaID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Contribution = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     length = bytes[i++];
                     GroupName = new byte[length];
@@ -64780,8 +64780,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID GroupID;
+            public UUID AgentID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -64801,8 +64801,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -64895,8 +64895,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -64916,8 +64916,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -64936,8 +64936,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ObjectDataBlock : PacketBlock
         {
-            public UUID ItemID;
-            public UUID OwnerID;
+            public UUID ItemID = UUID.Zero;
+            public UUID OwnerID = UUID.Zero;
             public byte AttachmentPt;
             public uint ItemFlags;
             public uint GroupMask;
@@ -64968,8 +64968,8 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ItemID.FromBytes(bytes, i); i += 16;
-                    OwnerID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     AttachmentPt = (byte)bytes[i++];
                     ItemFlags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     GroupMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -65089,8 +65089,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -65110,8 +65110,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -65130,7 +65130,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class HeaderDataBlock : PacketBlock
         {
-            public UUID CompoundMsgID;
+            public UUID CompoundMsgID = UUID.Zero;
             public byte TotalObjects;
             public bool FirstDetachAll;
 
@@ -65152,7 +65152,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    CompoundMsgID.FromBytes(bytes, i); i += 16;
+                    CompoundMsgID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     TotalObjects = (byte)bytes[i++];
                     FirstDetachAll = (bytes[i++] != 0) ? (bool)true : (bool)false;
                 }
@@ -65174,8 +65174,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ObjectDataBlock : PacketBlock
         {
-            public UUID ItemID;
-            public UUID OwnerID;
+            public UUID ItemID = UUID.Zero;
+            public UUID OwnerID = UUID.Zero;
             public byte AttachmentPt;
             public uint ItemFlags;
             public uint GroupMask;
@@ -65206,8 +65206,8 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ItemID.FromBytes(bytes, i); i += 16;
-                    OwnerID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     AttachmentPt = (byte)bytes[i++];
                     ItemFlags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     GroupMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -65406,8 +65406,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ObjectDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID ItemID;
+            public UUID AgentID = UUID.Zero;
+            public UUID ItemID = UUID.Zero;
 
             public override int Length
             {
@@ -65427,8 +65427,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    ItemID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -65520,8 +65520,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -65541,8 +65541,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -65561,7 +65561,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class HeaderDataBlock : PacketBlock
         {
-            public UUID NewFolderID;
+            public UUID NewFolderID = UUID.Zero;
 
             public override int Length
             {
@@ -65581,7 +65581,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    NewFolderID.FromBytes(bytes, i); i += 16;
+                    NewFolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -65599,8 +65599,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ObjectDataBlock : PacketBlock
         {
-            public UUID OldItemID;
-            public UUID OldFolderID;
+            public UUID OldItemID = UUID.Zero;
+            public UUID OldFolderID = UUID.Zero;
 
             public override int Length
             {
@@ -65620,8 +65620,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    OldItemID.FromBytes(bytes, i); i += 16;
-                    OldFolderID.FromBytes(bytes, i); i += 16;
+                    OldItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OldFolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -65799,8 +65799,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -65820,8 +65820,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -65913,7 +65913,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -65933,7 +65933,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -66086,8 +66086,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -66107,8 +66107,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -66254,7 +66254,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -66274,7 +66274,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -66423,8 +66423,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public uint Flags;
             public uint EstateID;
             public bool Godlike;
@@ -66447,8 +66447,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     EstateID = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Godlike = (bytes[i++] != 0) ? (bool)true : (bool)false;
@@ -66546,7 +66546,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
             public uint Flags;
 
             public override int Length
@@ -66567,7 +66567,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -66591,7 +66591,7 @@ namespace OpenMetaverse.Packets
             public uint Right;
             public uint Top;
             public uint Bottom;
-            public UUID ImageID;
+            public UUID ImageID = UUID.Zero;
 
             public override int Length
             {
@@ -66615,7 +66615,7 @@ namespace OpenMetaverse.Packets
                     Right = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Top = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Bottom = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    ImageID.FromBytes(bytes, i); i += 16;
+                    ImageID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -66787,8 +66787,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public uint Flags;
             public uint EstateID;
             public bool Godlike;
@@ -66811,8 +66811,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     EstateID = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Godlike = (bytes[i++] != 0) ? (bool)true : (bool)false;
@@ -66968,8 +66968,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public uint Flags;
             public uint EstateID;
             public bool Godlike;
@@ -66992,8 +66992,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     EstateID = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Godlike = (bytes[i++] != 0) ? (bool)true : (bool)false;
@@ -67142,7 +67142,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
             public uint Flags;
 
             public override int Length
@@ -67163,7 +67163,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -67190,7 +67190,7 @@ namespace OpenMetaverse.Packets
             public uint RegionFlags;
             public byte WaterHeight;
             public byte Agents;
-            public UUID MapImageID;
+            public UUID MapImageID = UUID.Zero;
 
             public override int Length
             {
@@ -67222,7 +67222,7 @@ namespace OpenMetaverse.Packets
                     RegionFlags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     WaterHeight = (byte)bytes[i++];
                     Agents = (byte)bytes[i++];
-                    MapImageID.FromBytes(bytes, i); i += 16;
+                    MapImageID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -67400,8 +67400,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public uint Flags;
             public uint EstateID;
             public bool Godlike;
@@ -67424,8 +67424,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     EstateID = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Godlike = (bytes[i++] != 0) ? (bool)true : (bool)false;
@@ -67571,7 +67571,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
             public uint Flags;
 
             public override int Length
@@ -67592,7 +67592,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -67652,7 +67652,7 @@ namespace OpenMetaverse.Packets
         {
             public uint X;
             public uint Y;
-            public UUID ID;
+            public UUID ID = UUID.Zero;
             public int Extra;
             public int Extra2;
             public byte[] Name;
@@ -67680,7 +67680,7 @@ namespace OpenMetaverse.Packets
                 {
                     X = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Y = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    ID.FromBytes(bytes, i); i += 16;
+                    ID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Extra = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Extra2 = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     length = bytes[i++];
@@ -67868,9 +67868,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID AssetID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID AssetID = UUID.Zero;
             public Vector3d PosGlobal;
             public byte[] To;
             public byte[] From;
@@ -67905,9 +67905,9 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    AssetID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    AssetID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     PosGlobal.FromBytes(bytes, i); i += 24;
                     length = bytes[i++];
                     To = new byte[length];
@@ -68150,7 +68150,7 @@ namespace OpenMetaverse.Packets
         public sealed class DataBlockBlock : PacketBlock
         {
             public byte[] MediaURL;
-            public UUID MediaID;
+            public UUID MediaID = UUID.Zero;
             public byte MediaAutoScale;
 
             public override int Length
@@ -68177,7 +68177,7 @@ namespace OpenMetaverse.Packets
                     length = bytes[i++];
                     MediaURL = new byte[length];
                     Buffer.BlockCopy(bytes, i, MediaURL, 0, length); i += length;
-                    MediaID.FromBytes(bytes, i); i += 16;
+                    MediaID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     MediaAutoScale = (byte)bytes[i++];
                 }
                 catch (Exception)
@@ -68339,8 +68339,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -68360,8 +68360,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -68558,7 +68558,7 @@ namespace OpenMetaverse.Packets
         public sealed class ReportDataBlock : PacketBlock
         {
             public uint TaskLocalID;
-            public UUID TaskID;
+            public UUID TaskID = UUID.Zero;
             public float LocationX;
             public float LocationY;
             public float LocationZ;
@@ -68589,7 +68589,7 @@ namespace OpenMetaverse.Packets
                 try
                 {
                     TaskLocalID = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    TaskID.FromBytes(bytes, i); i += 16;
+                    TaskID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     LocationX = Utils.BytesToFloat(bytes, i); i += 4;
                     LocationY = Utils.BytesToFloat(bytes, i); i += 4;
                     LocationZ = Utils.BytesToFloat(bytes, i); i += 4;
@@ -68776,7 +68776,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -68796,7 +68796,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -68816,7 +68816,7 @@ namespace OpenMetaverse.Packets
         {
             public int Code;
             public byte[] Token;
-            public UUID ID;
+            public UUID ID = UUID.Zero;
             public byte[] System;
             public byte[] Message;
             public byte[] Data;
@@ -68849,7 +68849,7 @@ namespace OpenMetaverse.Packets
                     length = bytes[i++];
                     Token = new byte[length];
                     Buffer.BlockCopy(bytes, i, Token, 0, length); i += length;
-                    ID.FromBytes(bytes, i); i += 16;
+                    ID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     System = new byte[length];
                     Buffer.BlockCopy(bytes, i, System, 0, length); i += length;
@@ -68968,8 +68968,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -68989,8 +68989,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -69200,8 +69200,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -69221,8 +69221,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -69241,18 +69241,18 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class InventoryDataBlock : PacketBlock
         {
-            public UUID ItemID;
-            public UUID FolderID;
-            public UUID CreatorID;
-            public UUID OwnerID;
-            public UUID GroupID;
+            public UUID ItemID = UUID.Zero;
+            public UUID FolderID = UUID.Zero;
+            public UUID CreatorID = UUID.Zero;
+            public UUID OwnerID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
             public uint BaseMask;
             public uint OwnerMask;
             public uint GroupMask;
             public uint EveryoneMask;
             public uint NextOwnerMask;
             public bool GroupOwned;
-            public UUID TransactionID;
+            public UUID TransactionID = UUID.Zero;
             public sbyte Type;
             public sbyte InvType;
             public uint Flags;
@@ -69285,18 +69285,18 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ItemID.FromBytes(bytes, i); i += 16;
-                    FolderID.FromBytes(bytes, i); i += 16;
-                    CreatorID.FromBytes(bytes, i); i += 16;
-                    OwnerID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    CreatorID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     BaseMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     OwnerMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     GroupMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     EveryoneMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     NextOwnerMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     GroupOwned = (bytes[i++] != 0) ? (bool)true : (bool)false;
-                    TransactionID.FromBytes(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Type = (sbyte)bytes[i++];
                     InvType = (sbyte)bytes[i++];
                     Flags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -69429,8 +69429,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -69450,8 +69450,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -69471,9 +69471,9 @@ namespace OpenMetaverse.Packets
         public sealed class InventoryBlockBlock : PacketBlock
         {
             public uint CallbackID;
-            public UUID FolderID;
-            public UUID TransactionID;
-            public UUID OldItemID;
+            public UUID FolderID = UUID.Zero;
+            public UUID TransactionID = UUID.Zero;
+            public UUID OldItemID = UUID.Zero;
             public sbyte Type;
             public sbyte InvType;
             public byte[] Name;
@@ -69502,9 +69502,9 @@ namespace OpenMetaverse.Packets
                 try
                 {
                     CallbackID = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    FolderID.FromBytes(bytes, i); i += 16;
-                    TransactionID.FromBytes(bytes, i); i += 16;
-                    OldItemID.FromBytes(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    TransactionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OldItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Type = (sbyte)bytes[i++];
                     InvType = (sbyte)bytes[i++];
                     length = bytes[i++];
@@ -69980,9 +69980,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
-            public UUID GroupID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
 
             public override int Length
             {
@@ -70002,9 +70002,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -70048,7 +70048,7 @@ namespace OpenMetaverse.Packets
             public byte BypassRaycast;
             public Vector3 RayStart;
             public Vector3 RayEnd;
-            public UUID RayTargetID;
+            public UUID RayTargetID = UUID.Zero;
             public byte RayEndIsIntersection;
             public Vector3 Scale;
             public Quaternion Rotation;
@@ -70096,7 +70096,7 @@ namespace OpenMetaverse.Packets
                     BypassRaycast = (byte)bytes[i++];
                     RayStart.FromBytes(bytes, i); i += 12;
                     RayEnd.FromBytes(bytes, i); i += 12;
-                    RayTargetID.FromBytes(bytes, i); i += 16;
+                    RayTargetID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     RayEndIsIntersection = (byte)bytes[i++];
                     Scale.FromBytes(bytes, i); i += 12;
                     Rotation.FromBytes(bytes, i, true); i += 12;
@@ -70232,8 +70232,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -70253,8 +70253,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -70474,8 +70474,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -70495,8 +70495,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -70707,8 +70707,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -70728,8 +70728,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -70940,8 +70940,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -70961,8 +70961,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -70982,7 +70982,7 @@ namespace OpenMetaverse.Packets
         public sealed class ObjectDataBlock : PacketBlock
         {
             public uint RequestFlags;
-            public UUID ObjectID;
+            public UUID ObjectID = UUID.Zero;
 
             public override int Length
             {
@@ -71003,7 +71003,7 @@ namespace OpenMetaverse.Packets
                 try
                 {
                     RequestFlags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    ObjectID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -71190,7 +71190,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public override int Length
             {
@@ -71210,7 +71210,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -71349,8 +71349,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -71370,8 +71370,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -71573,8 +71573,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -71594,8 +71594,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -71687,10 +71687,10 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ObjectDataBlock : PacketBlock
         {
-            public UUID ObjectID;
-            public UUID CreatorID;
-            public UUID OwnerID;
-            public UUID GroupID;
+            public UUID ObjectID = UUID.Zero;
+            public UUID CreatorID = UUID.Zero;
+            public UUID OwnerID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
             public ulong CreationDate;
             public uint BaseMask;
             public uint OwnerMask;
@@ -71705,10 +71705,10 @@ namespace OpenMetaverse.Packets
             public byte AggregatePermTexturesOwner;
             public uint Category;
             public short InventorySerial;
-            public UUID ItemID;
-            public UUID FolderID;
-            public UUID FromTaskID;
-            public UUID LastOwnerID;
+            public UUID ItemID = UUID.Zero;
+            public UUID FolderID = UUID.Zero;
+            public UUID FromTaskID = UUID.Zero;
+            public UUID LastOwnerID = UUID.Zero;
             public byte[] Name;
             public byte[] Description;
             public byte[] TouchName;
@@ -71740,10 +71740,10 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
-                    CreatorID.FromBytes(bytes, i); i += 16;
-                    OwnerID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    CreatorID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     CreationDate = (ulong)((ulong)bytes[i++] + ((ulong)bytes[i++] << 8) + ((ulong)bytes[i++] << 16) + ((ulong)bytes[i++] << 24) + ((ulong)bytes[i++] << 32) + ((ulong)bytes[i++] << 40) + ((ulong)bytes[i++] << 48) + ((ulong)bytes[i++] << 56));
                     BaseMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     OwnerMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -71758,10 +71758,10 @@ namespace OpenMetaverse.Packets
                     AggregatePermTexturesOwner = (byte)bytes[i++];
                     Category = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     InventorySerial = (short)(bytes[i++] + (bytes[i++] << 8));
-                    ItemID.FromBytes(bytes, i); i += 16;
-                    FolderID.FromBytes(bytes, i); i += 16;
-                    FromTaskID.FromBytes(bytes, i); i += 16;
-                    LastOwnerID.FromBytes(bytes, i); i += 16;
+                    ItemID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    FolderID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    FromTaskID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    LastOwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     Name = new byte[length];
                     Buffer.BlockCopy(bytes, i, Name, 0, length); i += length;
@@ -71969,9 +71969,9 @@ namespace OpenMetaverse.Packets
         public sealed class ObjectDataBlock : PacketBlock
         {
             public uint RequestFlags;
-            public UUID ObjectID;
-            public UUID OwnerID;
-            public UUID GroupID;
+            public UUID ObjectID = UUID.Zero;
+            public UUID OwnerID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
             public uint BaseMask;
             public uint OwnerMask;
             public uint GroupMask;
@@ -71981,7 +71981,7 @@ namespace OpenMetaverse.Packets
             public byte SaleType;
             public int SalePrice;
             public uint Category;
-            public UUID LastOwnerID;
+            public UUID LastOwnerID = UUID.Zero;
             public byte[] Name;
             public byte[] Description;
 
@@ -72008,9 +72008,9 @@ namespace OpenMetaverse.Packets
                 try
                 {
                     RequestFlags = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    ObjectID.FromBytes(bytes, i); i += 16;
-                    OwnerID.FromBytes(bytes, i); i += 16;
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     BaseMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     OwnerMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     GroupMask = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -72020,7 +72020,7 @@ namespace OpenMetaverse.Packets
                     SaleType = (byte)bytes[i++];
                     SalePrice = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Category = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    LastOwnerID.FromBytes(bytes, i); i += 16;
+                    LastOwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     length = bytes[i++];
                     Name = new byte[length];
                     Buffer.BlockCopy(bytes, i, Name, 0, length); i += length;
@@ -72135,8 +72135,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -72156,8 +72156,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -72310,9 +72310,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlockBlock : PacketBlock
         {
-            public UUID SoundID;
-            public UUID ObjectID;
-            public UUID OwnerID;
+            public UUID SoundID = UUID.Zero;
+            public UUID ObjectID = UUID.Zero;
+            public UUID OwnerID = UUID.Zero;
             public float Gain;
             public byte Flags;
 
@@ -72334,9 +72334,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    SoundID.FromBytes(bytes, i); i += 16;
-                    ObjectID.FromBytes(bytes, i); i += 16;
-                    OwnerID.FromBytes(bytes, i); i += 16;
+                    SoundID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Gain = Utils.BytesToFloat(bytes, i); i += 4;
                     Flags = (byte)bytes[i++];
                 }
@@ -72433,7 +72433,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlockBlock : PacketBlock
         {
-            public UUID ObjectID;
+            public UUID ObjectID = UUID.Zero;
             public float Gain;
 
             public override int Length
@@ -72454,7 +72454,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Gain = Utils.BytesToFloat(bytes, i); i += 4;
                 }
                 catch (Exception)
@@ -72547,9 +72547,9 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class DataBlockBlock : PacketBlock
         {
-            public UUID ObjectID;
-            public UUID OwnerID;
-            public UUID SoundID;
+            public UUID ObjectID = UUID.Zero;
+            public UUID OwnerID = UUID.Zero;
+            public UUID SoundID = UUID.Zero;
 
             public override int Length
             {
@@ -72569,9 +72569,9 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
-                    OwnerID.FromBytes(bytes, i); i += 16;
-                    SoundID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SoundID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -72732,8 +72732,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -72753,8 +72753,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -72773,8 +72773,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class EffectBlock : PacketBlock
         {
-            public UUID ID;
-            public UUID AgentID;
+            public UUID ID = UUID.Zero;
+            public UUID AgentID = UUID.Zero;
             public byte Type;
             public float Duration;
             public byte[] Color;
@@ -72801,8 +72801,8 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    ID.FromBytes(bytes, i); i += 16;
-                    AgentID.FromBytes(bytes, i); i += 16;
+                    ID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Type = (byte)bytes[i++];
                     Duration = Utils.BytesToFloat(bytes, i); i += 4;
                     Color = new byte[4];
@@ -73209,8 +73209,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public Quaternion BodyRotation;
             public Quaternion HeadRotation;
             public byte State;
@@ -73240,8 +73240,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     BodyRotation.FromBytes(bytes, i, true); i += 12;
                     HeadRotation.FromBytes(bytes, i, true); i += 12;
                     State = (byte)bytes[i++];
@@ -73354,8 +73354,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -73375,8 +73375,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -73395,7 +73395,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AnimationListBlock : PacketBlock
         {
-            public UUID AnimID;
+            public UUID AnimID = UUID.Zero;
             public bool StartAnim;
 
             public override int Length
@@ -73416,7 +73416,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AnimID.FromBytes(bytes, i); i += 16;
+                    AnimID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     StartAnim = (bytes[i++] != 0) ? (bool)true : (bool)false;
                 }
                 catch (Exception)
@@ -73672,8 +73672,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -73693,8 +73693,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -73713,7 +73713,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class TargetObjectBlock : PacketBlock
         {
-            public UUID TargetID;
+            public UUID TargetID = UUID.Zero;
             public Vector3 Offset;
 
             public override int Length
@@ -73734,7 +73734,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    TargetID.FromBytes(bytes, i); i += 16;
+                    TargetID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Offset.FromBytes(bytes, i); i += 12;
                 }
                 catch (Exception)
@@ -73835,8 +73835,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -73856,8 +73856,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -73949,8 +73949,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AgentDataBlock : PacketBlock
         {
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -73970,8 +73970,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -73990,7 +73990,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class RequestImageBlock : PacketBlock
         {
-            public UUID Image;
+            public UUID Image = UUID.Zero;
             public sbyte DiscardLevel;
             public float DownloadPriority;
             public uint Packet;
@@ -74014,7 +74014,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    Image.FromBytes(bytes, i); i += 16;
+                    Image = UUIDFactory.GetUUID(bytes, i); i += 16;
                     DiscardLevel = (sbyte)bytes[i++];
                     DownloadPriority = Utils.BytesToFloat(bytes, i); i += 4;
                     Packet = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -74190,7 +74190,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ImageIDBlock : PacketBlock
         {
-            public UUID ID;
+            public UUID ID = UUID.Zero;
             public byte Codec;
             public uint Size;
             public ushort Packets;
@@ -74213,7 +74213,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ID.FromBytes(bytes, i); i += 16;
+                    ID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Codec = (byte)bytes[i++];
                     Size = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Packets = (ushort)(bytes[i++] + (bytes[i++] << 8));
@@ -74363,7 +74363,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class ImageIDBlock : PacketBlock
         {
-            public UUID ID;
+            public UUID ID = UUID.Zero;
             public ushort Packet;
 
             public override int Length
@@ -74384,7 +74384,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ID.FromBytes(bytes, i); i += 16;
+                    ID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Packet = (ushort)(bytes[i++] + (bytes[i++] << 8));
                 }
                 catch (Exception)
@@ -74737,7 +74737,7 @@ namespace OpenMetaverse.Packets
         {
             public uint ID;
             public byte State;
-            public UUID FullID;
+            public UUID FullID = UUID.Zero;
             public uint CRC;
             public byte PCode;
             public byte Material;
@@ -74773,8 +74773,8 @@ namespace OpenMetaverse.Packets
             public byte[] MediaURL;
             public byte[] PSBlock;
             public byte[] ExtraParams;
-            public UUID Sound;
-            public UUID OwnerID;
+            public UUID Sound = UUID.Zero;
+            public UUID OwnerID = UUID.Zero;
             public float Gain;
             public byte Flags;
             public float Radius;
@@ -74813,7 +74813,7 @@ namespace OpenMetaverse.Packets
                 {
                     ID = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     State = (byte)bytes[i++];
-                    FullID.FromBytes(bytes, i); i += 16;
+                    FullID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     CRC = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     PCode = (byte)bytes[i++];
                     Material = (byte)bytes[i++];
@@ -74868,8 +74868,8 @@ namespace OpenMetaverse.Packets
                     length = bytes[i++];
                     ExtraParams = new byte[length];
                     Buffer.BlockCopy(bytes, i, ExtraParams, 0, length); i += length;
-                    Sound.FromBytes(bytes, i); i += 16;
-                    OwnerID.FromBytes(bytes, i); i += 16;
+                    Sound = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Gain = Utils.BytesToFloat(bytes, i); i += 4;
                     Flags = (byte)bytes[i++];
                     Radius = Utils.BytesToFloat(bytes, i); i += 4;
@@ -76005,7 +76005,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class TransferDataBlock : PacketBlock
         {
-            public UUID TransferID;
+            public UUID TransferID = UUID.Zero;
             public int ChannelType;
             public int Packet;
             public int Status;
@@ -76032,7 +76032,7 @@ namespace OpenMetaverse.Packets
                 int length;
                 try
                 {
-                    TransferID.FromBytes(bytes, i); i += 16;
+                    TransferID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     ChannelType = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Packet = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     Status = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -76415,7 +76415,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class SenderBlock : PacketBlock
         {
-            public UUID ID;
+            public UUID ID = UUID.Zero;
 
             public override int Length
             {
@@ -76435,7 +76435,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ID.FromBytes(bytes, i); i += 16;
+                    ID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -76453,7 +76453,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AnimationListBlock : PacketBlock
         {
-            public UUID AnimID;
+            public UUID AnimID = UUID.Zero;
             public int AnimSequenceID;
 
             public override int Length
@@ -76474,7 +76474,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    AnimID.FromBytes(bytes, i); i += 16;
+                    AnimID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     AnimSequenceID = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                 }
                 catch (Exception)
@@ -76494,7 +76494,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AnimationSourceListBlock : PacketBlock
         {
-            public UUID ObjectID;
+            public UUID ObjectID = UUID.Zero;
 
             public override int Length
             {
@@ -76514,7 +76514,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ObjectID.FromBytes(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -76810,7 +76810,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class SitObjectBlock : PacketBlock
         {
-            public UUID ID;
+            public UUID ID = UUID.Zero;
 
             public override int Length
             {
@@ -76830,7 +76830,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    ID.FromBytes(bytes, i); i += 16;
+                    ID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -77101,7 +77101,7 @@ namespace OpenMetaverse.Packets
             public int OtherCount;
             public int PublicCount;
             public int LocalID;
-            public UUID OwnerID;
+            public UUID OwnerID = UUID.Zero;
             public bool IsGroupOwned;
             public uint AuctionID;
             public int ClaimDate;
@@ -77128,14 +77128,14 @@ namespace OpenMetaverse.Packets
             public byte[] Desc;
             public byte[] MusicURL;
             public byte[] MediaURL;
-            public UUID MediaID;
+            public UUID MediaID = UUID.Zero;
             public byte MediaAutoScale;
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
             public int PassPrice;
             public float PassHours;
             public byte Category;
-            public UUID AuthBuyerID;
-            public UUID SnapshotID;
+            public UUID AuthBuyerID = UUID.Zero;
+            public UUID SnapshotID = UUID.Zero;
             public Vector3 UserLocation;
             public Vector3 UserLookAt;
             public byte LandingType;
@@ -77176,7 +77176,7 @@ namespace OpenMetaverse.Packets
                     OtherCount = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     PublicCount = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     LocalID = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    OwnerID.FromBytes(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     IsGroupOwned = (bytes[i++] != 0) ? (bool)true : (bool)false;
                     AuctionID = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     ClaimDate = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
@@ -77213,14 +77213,14 @@ namespace OpenMetaverse.Packets
                     length = bytes[i++];
                     MediaURL = new byte[length];
                     Buffer.BlockCopy(bytes, i, MediaURL, 0, length); i += length;
-                    MediaID.FromBytes(bytes, i); i += 16;
+                    MediaID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     MediaAutoScale = (byte)bytes[i++];
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     PassPrice = (int)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
                     PassHours = Utils.BytesToFloat(bytes, i); i += 4;
                     Category = (byte)bytes[i++];
-                    AuthBuyerID.FromBytes(bytes, i); i += 16;
-                    SnapshotID.FromBytes(bytes, i); i += 16;
+                    AuthBuyerID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SnapshotID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     UserLocation.FromBytes(bytes, i); i += 12;
                     UserLookAt.FromBytes(bytes, i); i += 12;
                     LandingType = (byte)bytes[i++];
@@ -77420,8 +77420,8 @@ namespace OpenMetaverse.Packets
         {
             public ulong RegionHandle;
             public uint ViewerCircuitCode;
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public Vector3 AgentPos;
             public Vector3 AgentVel;
             public Vector3 Center;
@@ -77440,10 +77440,10 @@ namespace OpenMetaverse.Packets
             public float EnergyLevel;
             public byte GodLevel;
             public bool AlwaysRun;
-            public UUID PreyAgent;
+            public UUID PreyAgent = UUID.Zero;
             public byte AgentAccess;
             public byte[] AgentTextures;
-            public UUID ActiveGroupID;
+            public UUID ActiveGroupID = UUID.Zero;
 
             public override int Length
             {
@@ -77469,8 +77469,8 @@ namespace OpenMetaverse.Packets
                 {
                     RegionHandle = (ulong)((ulong)bytes[i++] + ((ulong)bytes[i++] << 8) + ((ulong)bytes[i++] << 16) + ((ulong)bytes[i++] << 24) + ((ulong)bytes[i++] << 32) + ((ulong)bytes[i++] << 40) + ((ulong)bytes[i++] << 48) + ((ulong)bytes[i++] << 56));
                     ViewerCircuitCode = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     AgentPos.FromBytes(bytes, i); i += 12;
                     AgentVel.FromBytes(bytes, i); i += 12;
                     Center.FromBytes(bytes, i); i += 12;
@@ -77491,12 +77491,12 @@ namespace OpenMetaverse.Packets
                     EnergyLevel = Utils.BytesToFloat(bytes, i); i += 4;
                     GodLevel = (byte)bytes[i++];
                     AlwaysRun = (bytes[i++] != 0) ? (bool)true : (bool)false;
-                    PreyAgent.FromBytes(bytes, i); i += 16;
+                    PreyAgent = UUIDFactory.GetUUID(bytes, i); i += 16;
                     AgentAccess = (byte)bytes[i++];
                     length = (bytes[i++] + (bytes[i++] << 8));
                     AgentTextures = new byte[length];
                     Buffer.BlockCopy(bytes, i, AgentTextures, 0, length); i += length;
-                    ActiveGroupID.FromBytes(bytes, i); i += 16;
+                    ActiveGroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -77542,7 +77542,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class GroupDataBlock : PacketBlock
         {
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
             public ulong GroupPowers;
             public bool AcceptNotices;
 
@@ -77564,7 +77564,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    GroupID.FromBytes(bytes, i); i += 16;
+                    GroupID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     GroupPowers = (ulong)((ulong)bytes[i++] + ((ulong)bytes[i++] << 8) + ((ulong)bytes[i++] << 16) + ((ulong)bytes[i++] << 24) + ((ulong)bytes[i++] << 32) + ((ulong)bytes[i++] << 40) + ((ulong)bytes[i++] << 48) + ((ulong)bytes[i++] << 56));
                     AcceptNotices = (bytes[i++] != 0) ? (bool)true : (bool)false;
                 }
@@ -77586,8 +77586,8 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class AnimationDataBlock : PacketBlock
         {
-            public UUID Animation;
-            public UUID ObjectID;
+            public UUID Animation = UUID.Zero;
+            public UUID ObjectID = UUID.Zero;
 
             public override int Length
             {
@@ -77607,8 +77607,8 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    Animation.FromBytes(bytes, i); i += 16;
-                    ObjectID.FromBytes(bytes, i); i += 16;
+                    Animation = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -77627,7 +77627,7 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class GranterBlockBlock : PacketBlock
         {
-            public UUID GranterID;
+            public UUID GranterID = UUID.Zero;
 
             public override int Length
             {
@@ -77647,7 +77647,7 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    GranterID.FromBytes(bytes, i); i += 16;
+                    GranterID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -78232,8 +78232,8 @@ namespace OpenMetaverse.Packets
         {
             public ulong RegionHandle;
             public uint ViewerCircuitCode;
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
 
             public override int Length
             {
@@ -78255,8 +78255,8 @@ namespace OpenMetaverse.Packets
                 {
                     RegionHandle = (ulong)((ulong)bytes[i++] + ((ulong)bytes[i++] << 8) + ((ulong)bytes[i++] << 16) + ((ulong)bytes[i++] << 24) + ((ulong)bytes[i++] << 32) + ((ulong)bytes[i++] << 40) + ((ulong)bytes[i++] << 48) + ((ulong)bytes[i++] << 56));
                     ViewerCircuitCode = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                 }
                 catch (Exception)
                 {
@@ -78352,8 +78352,8 @@ namespace OpenMetaverse.Packets
         {
             public ulong RegionHandle;
             public uint ViewerCircuitCode;
-            public UUID AgentID;
-            public UUID SessionID;
+            public UUID AgentID = UUID.Zero;
+            public UUID SessionID = UUID.Zero;
             public Vector3 AgentPos;
             public Vector3 AgentVel;
             public Vector3 Center;
@@ -78383,8 +78383,8 @@ namespace OpenMetaverse.Packets
                 {
                     RegionHandle = (ulong)((ulong)bytes[i++] + ((ulong)bytes[i++] << 8) + ((ulong)bytes[i++] << 16) + ((ulong)bytes[i++] << 24) + ((ulong)bytes[i++] << 32) + ((ulong)bytes[i++] << 40) + ((ulong)bytes[i++] << 48) + ((ulong)bytes[i++] << 56));
                     ViewerCircuitCode = (uint)(bytes[i++] + (bytes[i++] << 8) + (bytes[i++] << 16) + (bytes[i++] << 24));
-                    AgentID.FromBytes(bytes, i); i += 16;
-                    SessionID.FromBytes(bytes, i); i += 16;
+                    AgentID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    SessionID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     AgentPos.FromBytes(bytes, i); i += 12;
                     AgentVel.FromBytes(bytes, i); i += 12;
                     Center.FromBytes(bytes, i); i += 12;
@@ -78494,10 +78494,10 @@ namespace OpenMetaverse.Packets
         /// <exclude/>
         public sealed class SoundDataBlock : PacketBlock
         {
-            public UUID SoundID;
-            public UUID OwnerID;
-            public UUID ObjectID;
-            public UUID ParentID;
+            public UUID SoundID = UUID.Zero;
+            public UUID OwnerID = UUID.Zero;
+            public UUID ObjectID = UUID.Zero;
+            public UUID ParentID = UUID.Zero;
             public ulong Handle;
             public Vector3 Position;
             public float Gain;
@@ -78520,10 +78520,10 @@ namespace OpenMetaverse.Packets
             {
                 try
                 {
-                    SoundID.FromBytes(bytes, i); i += 16;
-                    OwnerID.FromBytes(bytes, i); i += 16;
-                    ObjectID.FromBytes(bytes, i); i += 16;
-                    ParentID.FromBytes(bytes, i); i += 16;
+                    SoundID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    OwnerID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    ObjectID = UUIDFactory.GetUUID(bytes, i); i += 16;
+                    ParentID = UUIDFactory.GetUUID(bytes, i); i += 16;
                     Handle = (ulong)((ulong)bytes[i++] + ((ulong)bytes[i++] << 8) + ((ulong)bytes[i++] << 16) + ((ulong)bytes[i++] << 24) + ((ulong)bytes[i++] << 32) + ((ulong)bytes[i++] << 40) + ((ulong)bytes[i++] << 48) + ((ulong)bytes[i++] << 56));
                     Position.FromBytes(bytes, i); i += 12;
                     Gain = Utils.BytesToFloat(bytes, i); i += 4;

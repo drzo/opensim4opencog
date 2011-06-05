@@ -35,15 +35,15 @@ namespace OpenMetaverse.Messages.CableBeach
     /// <summary>
     /// Holds information about a grid region
     /// </summary>
-    public struct RegionInfo
+    public class RegionInfo: WasAStruct
     {
         public string Name;
-        public UUID ID;
+        public UUID ID = UUID.Zero;
         public ulong Handle;
         public bool Online;
         public IPAddress IP;
         public int Port;
-        public UUID MapTextureID;
+        public UUID MapTextureID = UUID.Zero;
         public Uri Owner;
         public RegionFlags Flags;
         public int AgentCount;
@@ -175,7 +175,7 @@ namespace OpenMetaverse.Messages.CableBeach
 
     public class DeleteRegionMessage : IMessage
     {
-        public UUID ID;
+        public UUID ID = UUID.Zero;
 
         public OSDMap Serialize()
         {
@@ -256,7 +256,7 @@ namespace OpenMetaverse.Messages.CableBeach
 
     public class FetchRegionQueryID : FetchRegionQuery
     {
-        public UUID ID;
+        public UUID ID = UUID.Zero;
 
         public OSDMap Serialize()
         {
@@ -485,7 +485,7 @@ namespace OpenMetaverse.Messages.CableBeach
 
     public abstract class MetadataBlock
     {
-        public UUID ID;
+        public UUID ID = UUID.Zero;
         public string Name;
         public string Description;
         public DateTime CreationDate;
@@ -651,7 +651,7 @@ namespace OpenMetaverse.Messages.CableBeach
 
     public class CreateAssetReplyMessage : IMessage
     {
-        public UUID AssetID;
+        public UUID AssetID = UUID.Zero;
         public Uri AssetUri;
 
         public OSDMap Serialize()
@@ -675,10 +675,10 @@ namespace OpenMetaverse.Messages.CableBeach
 
     public abstract class InventoryBlock
     {
-        public UUID ID;
-        public UUID ParentID;
+        public UUID ID = UUID.Zero;
+        public UUID ParentID = UUID.Zero;
         public string Name;
-        public UUID OwnerID;
+        public UUID OwnerID = UUID.Zero;
 
         public abstract OSDMap Serialize();
         public abstract void Deserialize(OSDMap map);
@@ -686,10 +686,10 @@ namespace OpenMetaverse.Messages.CableBeach
 
     public class InventoryBlockItem : InventoryBlock
     {
-        public UUID AssetID;
+        public UUID AssetID = UUID.Zero;
         public string ContentType;
-        public UUID CreatorID;
-        public UUID GroupID;
+        public UUID CreatorID = UUID.Zero;
+        public UUID GroupID = UUID.Zero;
         public string Description;
         public bool GroupOwned;
         public uint PermsBase;
@@ -822,7 +822,7 @@ namespace OpenMetaverse.Messages.CableBeach
 
     public class CreateInventoryReplyMessage : IMessage
     {
-        public UUID RootFolderID;
+        public UUID RootFolderID = UUID.Zero;
 
         public OSDMap Serialize()
         {
@@ -902,7 +902,7 @@ namespace OpenMetaverse.Messages.CableBeach
     public class FetchObjectMessage : IMessage
     {
         public Uri Identity;
-        public UUID ObjectID;
+        public UUID ObjectID = UUID.Zero;
 
         public OSDMap Serialize()
         {
@@ -959,7 +959,7 @@ namespace OpenMetaverse.Messages.CableBeach
     public class PurgeFolderMessage : IMessage
     {
         public Uri Identity;
-        public UUID FolderID;
+        public UUID FolderID = UUID.Zero;
 
         public OSDMap Serialize()
         {
@@ -1018,10 +1018,10 @@ namespace OpenMetaverse.Messages.CableBeach
         public class Folder
         {
             public string Name;
-            public UUID ParentID;
+            public UUID ParentID = UUID.Zero;
             public int Version;
             public string PreferredContentType;
-            public UUID FolderID;
+            public UUID FolderID = UUID.Zero;
         }
 
         public Folder[] Folders;
@@ -1090,8 +1090,8 @@ namespace OpenMetaverse.Messages.CableBeach
     {
         public class Gesture
         {
-            public UUID ItemID;
-            public UUID AssetID;
+            public UUID ItemID = UUID.Zero;
+            public UUID AssetID = UUID.Zero;
         }
 
         public Gesture[] Gestures;
@@ -1136,9 +1136,9 @@ namespace OpenMetaverse.Messages.CableBeach
     public class EnableClientMessage : IMessage
     {
         public Uri Identity;
-        public UUID AgentID;
-        public UUID SessionID;
-        public UUID SecureSessionID;
+        public UUID AgentID = UUID.Zero;
+        public UUID SessionID = UUID.Zero;
+        public UUID SecureSessionID = UUID.Zero;
         public int CircuitCode;
         public ulong RegionHandle;
         public bool ChildAgent;
@@ -1237,7 +1237,7 @@ namespace OpenMetaverse.Messages.CableBeach
 
     public class EnableClientCompleteMessage : IMessage
     {
-        public UUID AgentID;
+        public UUID AgentID = UUID.Zero;
 
         public OSDMap Serialize()
         {
@@ -1254,7 +1254,7 @@ namespace OpenMetaverse.Messages.CableBeach
 
     public class CloseAgentConnectionMessage : IMessage
     {
-        public UUID AgentID;
+        public UUID AgentID = UUID.Zero;
 
         public OSDMap Serialize()
         {
@@ -1298,8 +1298,8 @@ namespace OpenMetaverse.Messages.CableBeach
 
     public class ChildAgentUpdateMessage : IMessage
     {
-        public UUID AgentID;
-        public UUID SessionID;
+        public UUID AgentID = UUID.Zero;
+        public UUID SessionID = UUID.Zero;
         public Vector3 Position;
         public Vector3 Velocity;
         public ulong RegionHandle;
@@ -1339,7 +1339,7 @@ namespace OpenMetaverse.Messages.CableBeach
 
     public class PassObjectMessage : IMessage
     {
-        public UUID ID;
+        public UUID ID = UUID.Zero;
 
         public OSDMap Serialize()
         {

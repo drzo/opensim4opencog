@@ -79,7 +79,7 @@ namespace OpenMetaverse.Assets
         /// <summary>
         /// Animation asset <see cref="UUID"/>
         /// </summary>
-        public UUID ID;
+        public UUID ID = UUID.Zero;
 
         /// <summary>
         /// Animation inventory name
@@ -115,7 +115,7 @@ namespace OpenMetaverse.Assets
         /// <summary>
         /// Sound asset <see cref="UUID"/>
         /// </summary>
-        public UUID ID;
+        public UUID ID = UUID.Zero;
 
         /// <summary>
         /// Sound inventory name

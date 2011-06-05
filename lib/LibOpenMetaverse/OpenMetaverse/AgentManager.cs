@@ -675,18 +675,18 @@ namespace OpenMetaverse
     /// <summary>
     /// Instant Message
     /// </summary>
-    public struct InstantMessage
+    public class InstantMessage: WasAStruct
     {
         /// <summary>Key of sender</summary>
-        public UUID FromAgentID;
+        public UUID FromAgentID = UUID.Zero;
         /// <summary>Name of sender</summary>
         public string FromAgentName;
         /// <summary>Key of destination avatar</summary>
-        public UUID ToAgentID;
+        public UUID ToAgentID = UUID.Zero;
         /// <summary>ID of originating estate</summary>
         public uint ParentEstateID;
         /// <summary>Key of originating region</summary>
-        public UUID RegionID;
+        public UUID RegionID = UUID.Zero;
         /// <summary>Coordinates in originating region</summary>
         public Vector3 Position;
         /// <summary>Instant message type</summary>
@@ -694,7 +694,7 @@ namespace OpenMetaverse
         /// <summary>Group IM session toggle</summary>
         public bool GroupIM;
         /// <summary>Key of IM session, for Group Messages, the groups UUID</summary>
-        public UUID IMSessionID;
+        public UUID IMSessionID = UUID.Zero;
         /// <summary>Timestamp of the instant message</summary>
         public DateTime Timestamp;
         /// <summary>Instant message text</summary>
@@ -718,7 +718,7 @@ namespace OpenMetaverse
         /// <summary>Type of the mute entry</summary>
         public MuteType Type;
         /// <summary>UUID of the mute etnry</summary>
-        public UUID ID;
+        public UUID ID = UUID.Zero;
         /// <summary>Mute entry name</summary>
         public string Name;
         /// <summary>Mute flags</summary>
@@ -731,11 +731,11 @@ namespace OpenMetaverse
         /// <summary>Type of the transaction</summary>
         public int TransactionType; // FIXME: this should be an enum
         /// <summary>UUID of the transaction source</summary>
-        public UUID SourceID;
+        public UUID SourceID = UUID.Zero;
         /// <summary>Is the transaction source a group</summary>
         public bool IsSourceGroup;
         /// <summary>UUID of the transaction destination</summary>
-        public UUID DestID;
+        public UUID DestID = UUID.Zero;
         /// <summary>Is transaction destination a group</summary>
         public bool IsDestGroup;
         /// <summary>Transaction amount</summary>
@@ -1485,9 +1485,9 @@ namespace OpenMetaverse
 
         #region Private Members
 
-        private UUID id;
-        private UUID sessionID;
-        private UUID secureSessionID;
+        private UUID id = UUID.Zero;
+        private UUID sessionID = UUID.Zero;
+        private UUID secureSessionID = UUID.Zero;
         private string startLocation = String.Empty;
         private string agentAccess = String.Empty;
         private Vector3 homePosition;
@@ -1501,7 +1501,7 @@ namespace OpenMetaverse
         private uint heightWidthGenCounter;
         private float health;
         private int balance;
-        private UUID activeGroup;
+        private UUID activeGroup = UUID.Zero;
         private GroupPowers activeGroupPowers;
         private Dictionary<UUID, AssetGesture> gestureCache = new Dictionary<UUID, AssetGesture>();
         #endregion Private Members
@@ -3434,7 +3434,7 @@ namespace OpenMetaverse
 
                 if (m_InstantMessage != null)
                 {
-                    InstantMessage message;
+                    InstantMessage message = new InstantMessage();
                     message.FromAgentID = im.AgentData.AgentID;
                     message.FromAgentName = Utils.BytesToString(im.MessageBlock.FromAgentName);
                     message.ToAgentID = im.MessageBlock.ToAgentID;
@@ -4370,7 +4370,7 @@ namespace OpenMetaverse
                                     {
                                         MuteEntry me = new MuteEntry();
                                         me.Type = (MuteType)int.Parse(m.Groups["MyteType"].Value);
-                                        me.ID = new UUID(m.Groups["Key"].Value);
+                                        me.ID = UUIDFactory.GetUUID(m.Groups["Key"].Value);
                                         me.Name = m.Groups["Name"].Value;
                                         int flags = 0;
                                         int.TryParse(m.Groups["Flags"].Value, out flags);
@@ -4418,8 +4418,8 @@ namespace OpenMetaverse
         private readonly ChatType m_Type;
         private readonly ChatSourceType m_SourceType;
         private readonly string m_FromName;
-        private readonly UUID m_SourceID;
-        private readonly UUID m_OwnerID;
+        private readonly UUID m_SourceID = UUID.Zero;
+        private readonly UUID m_OwnerID = UUID.Zero;
         private readonly Vector3 m_Position;
 
         /// <summary>Get the simulator sending the message</summary>
@@ -4473,13 +4473,13 @@ namespace OpenMetaverse
     {
         private readonly string m_Message;
         private readonly string m_ObjectName;
-        private readonly UUID m_ImageID;
-        private readonly UUID m_ObjectID;
+        private readonly UUID m_ImageID = UUID.Zero;
+        private readonly UUID m_ObjectID = UUID.Zero;
         private readonly string m_FirstName;
         private readonly string m_LastName;
         private readonly int m_Channel;
         private readonly List<string> m_ButtonLabels;
-        private readonly UUID m_OwnerID;
+        private readonly UUID m_OwnerID = UUID.Zero;
 
         /// <summary>Get the dialog message</summary>
         public string Message { get { return m_Message; } }
@@ -4533,8 +4533,8 @@ namespace OpenMetaverse
     public class ScriptQuestionEventArgs : EventArgs
     {
         private readonly Simulator m_Simulator;
-        private readonly UUID m_TaskID;
-        private readonly UUID m_ItemID;
+        private readonly UUID m_TaskID = UUID.Zero;
+        private readonly UUID m_ItemID = UUID.Zero;
         private readonly string m_ObjectName;
         private readonly string m_ObjectOwnerName;
         private readonly ScriptPermission m_Questions;
@@ -4578,8 +4578,8 @@ namespace OpenMetaverse
     public class LoadUrlEventArgs : EventArgs
     {
         private readonly string m_ObjectName;
-        private readonly UUID m_ObjectID;
-        private readonly UUID m_OwnerID;
+        private readonly UUID m_ObjectID = UUID.Zero;
+        private readonly UUID m_OwnerID = UUID.Zero;
         private readonly bool m_OwnerIsGroup;
         private readonly string m_Message;
         private readonly string m_URL;
@@ -4664,7 +4664,7 @@ namespace OpenMetaverse
     /// money is given, or land is purchased</summary>
     public class MoneyBalanceReplyEventArgs : EventArgs
     {
-        private readonly UUID m_TransactionID;
+        private readonly UUID m_TransactionID = UUID.Zero;
         private readonly bool m_Success;
         private readonly int m_Balance;
         private readonly int m_MetersCredit;
@@ -4731,7 +4731,7 @@ namespace OpenMetaverse
     {
         private readonly string m_FirstName;
         private readonly string m_LastName;
-        private readonly UUID m_ActiveGroupID;
+        private readonly UUID m_ActiveGroupID = UUID.Zero;
         private readonly string m_GroupTitle;
         private readonly GroupPowers m_GroupPowers;
         private readonly string m_GroupName;
@@ -4796,8 +4796,8 @@ namespace OpenMetaverse
     public class MeanCollisionEventArgs : EventArgs
     {
         private readonly MeanCollisionType m_Type;
-        private readonly UUID m_Aggressor;
-        private readonly UUID m_Victim;
+        private readonly UUID m_Aggressor = UUID.Zero;
+        private readonly UUID m_Victim = UUID.Zero;
         private readonly float m_Magnitude;
         private readonly DateTime m_Time;
 
@@ -4857,9 +4857,9 @@ namespace OpenMetaverse
     /// <summary>Data sent from the simulator when your agent joins a group chat session</summary>
     public class GroupChatJoinedEventArgs : EventArgs
     {
-        private readonly UUID m_SessionID;
+        private readonly UUID m_SessionID = UUID.Zero;
         private readonly string m_SessionName;
-        private readonly UUID m_TmpSessionID;
+        private readonly UUID m_TmpSessionID = UUID.Zero;
         private readonly bool m_Success;
 
         /// <summary>Get the ID of the group chat session</summary>
@@ -4890,7 +4890,7 @@ namespace OpenMetaverse
     /// <summary>The session information when your agent exits a group chat session</summary>
     public class GroupChatLeftEventArgs : EventArgs
     {
-        private readonly UUID m_SessionID;
+        private readonly UUID m_SessionID = UUID.Zero;
 
         /// <summary>Get the ID of the session your agent left</summary>
         public UUID SessionID { get { return m_SessionID; } }
@@ -4977,11 +4977,11 @@ namespace OpenMetaverse
     /// </summary>
     public class ScriptSensorReplyEventArgs : EventArgs
     {
-        private readonly UUID m_RequestorID;
-        private readonly UUID m_GroupID;
+        private readonly UUID m_RequestorID = UUID.Zero;
+        private readonly UUID m_GroupID = UUID.Zero;
         private readonly string m_Name;
-        private readonly UUID m_ObjectID;
-        private readonly UUID m_OwnerID;
+        private readonly UUID m_ObjectID = UUID.Zero;
+        private readonly UUID m_OwnerID = UUID.Zero;
         private readonly Vector3 m_Position;
         private readonly float m_Range;
         private readonly Quaternion m_Rotation;
@@ -5042,7 +5042,7 @@ namespace OpenMetaverse
     /// <summary>Contains the response data returned from the simulator in response to a <see cref="RequestSit"/></summary>
     public class AvatarSitResponseEventArgs : EventArgs
     {
-        private readonly UUID m_ObjectID;
+        private readonly UUID m_ObjectID = UUID.Zero;
         private readonly bool m_Autopilot;
         private readonly Vector3 m_CameraAtOffset;
         private readonly Vector3 m_CameraEyeOffset;
@@ -5082,8 +5082,8 @@ namespace OpenMetaverse
     /// <summary>Data sent when an agent joins a chat session your agent is currently participating in</summary>
     public class ChatSessionMemberAddedEventArgs : EventArgs
     {
-        private readonly UUID m_SessionID;
-        private readonly UUID m_AgentID;
+        private readonly UUID m_SessionID = UUID.Zero;
+        private readonly UUID m_AgentID = UUID.Zero;
 
         /// <summary>Get the ID of the chat session</summary>
         public UUID SessionID { get { return m_SessionID; } }
@@ -5105,8 +5105,8 @@ namespace OpenMetaverse
     /// <summary>Data sent when an agent exits a chat session your agent is currently participating in</summary>
     public class ChatSessionMemberLeftEventArgs : EventArgs
     {
-        private readonly UUID m_SessionID;
-        private readonly UUID m_AgentID;
+        private readonly UUID m_SessionID = UUID.Zero;
+        private readonly UUID m_AgentID = UUID.Zero;
 
         /// <summary>Get the ID of the chat session</summary>
         public UUID SessionID { get { return m_SessionID; } }

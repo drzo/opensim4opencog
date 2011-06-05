@@ -54,7 +54,7 @@ namespace OpenMetaverse
     /// </summary>
     public class FriendInfo
     {
-        private UUID m_id;
+        private UUID m_id = UUID.Zero;
         private string m_name;
         private bool m_isOnline;
         private bool m_canSeeMeOnline;
@@ -963,9 +963,9 @@ namespace OpenMetaverse
     /// <summary>Sent when another agent requests a friendship with our agent</summary>
     public class FriendshipOfferedEventArgs : EventArgs
     {
-        private readonly UUID m_AgentID;
+        private readonly UUID m_AgentID = UUID.Zero;
         private readonly string m_AgentName;
-        private readonly UUID m_SessionID;
+        private readonly UUID m_SessionID = UUID.Zero;
 
         /// <summary>Get the ID of the agent requesting friendship</summary>
         public UUID AgentID { get { return m_AgentID; } }
@@ -993,7 +993,7 @@ namespace OpenMetaverse
     /// <summary>A response containing the results of our request to form a friendship with another agent</summary>
     public class FriendshipResponseEventArgs : EventArgs
     {
-        private readonly UUID m_AgentID;
+        private readonly UUID m_AgentID = UUID.Zero;
         private readonly string m_AgentName;
         private readonly bool m_Accepted;
 
@@ -1021,7 +1021,7 @@ namespace OpenMetaverse
     /// <summary>Contains data sent when a friend terminates a friendship with us</summary>
     public class FriendshipTerminatedEventArgs : EventArgs
     {
-        private readonly UUID m_AgentID;
+        private readonly UUID m_AgentID = UUID.Zero;
         private readonly string m_AgentName;
 
         /// <summary>Get the ID of the agent that terminated the friendship with us</summary>
@@ -1046,7 +1046,7 @@ namespace OpenMetaverse
     /// </summary>
     public class FriendFoundReplyEventArgs : EventArgs
     {
-        private readonly UUID m_AgentID;
+        private readonly UUID m_AgentID = UUID.Zero;
         private readonly ulong m_RegionHandle;
         private readonly Vector3 m_Location;
 

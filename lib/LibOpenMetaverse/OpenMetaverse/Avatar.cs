@@ -118,14 +118,18 @@ namespace OpenMetaverse
         /// Avatar properties including about text, profile URL, image IDs and 
         /// publishing settings
         /// </summary>
-        public struct AvatarProperties
+        public class AvatarProperties : WasAStruct
         {
+            public override string ToString()
+            {
+                return Helpers.StructToString(this);
+            }
             /// <summary>First Life about text</summary>
             public string FirstLifeText;
             /// <summary>First Life image ID</summary>
-            public UUID FirstLifeImage;
+            public UUID FirstLifeImage = UUID.Zero;
             /// <summary></summary>
-            public UUID Partner;
+            public UUID Partner = UUID.Zero;
             /// <summary></summary>
             public string AboutText;
             /// <summary></summary>
@@ -133,7 +137,7 @@ namespace OpenMetaverse
             /// <summary></summary>
             public string CharterMember;
             /// <summary>Profile image ID</summary>
-            public UUID ProfileImage;
+            public UUID ProfileImage = UUID.Zero;
             /// <summary>Flags of the profile</summary>
             public ProfileFlags Flags;
             /// <summary>Web URL for this profile</summary>

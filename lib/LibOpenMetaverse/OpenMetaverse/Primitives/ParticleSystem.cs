@@ -41,7 +41,7 @@ namespace OpenMetaverse
         /// <summary>
         /// Complete structure for the particle system
         /// </summary>
-        public struct ParticleSystem
+        public class ParticleSystem : WasAStruct
         {
             /// <summary>
             /// Particle source pattern
@@ -146,9 +146,9 @@ namespace OpenMetaverse
             /// <summary>A <see cref="T:Vector3"/> which represents the Acceleration from the source which particles are emitted</summary>
             public Vector3 PartAcceleration;
             /// <summary>The <see cref="T:UUID"/> Key of the texture displayed on the particle</summary>
-            public UUID Texture;
+            public UUID Texture = UUID.Zero;
             /// <summary>The <see cref="T:UUID"/> Key of the specified target object or avatar particles will follow</summary>
-            public UUID Target;
+            public UUID Target = UUID.Zero;
             /// <summary>Flags of particle from <seealso cref="T:ParticleDataFlags"/></summary>
             public ParticleDataFlags PartDataFlags;
             /// <summary>Max Age particle system will emit particles for</summary>
@@ -305,6 +305,10 @@ namespace OpenMetaverse
                 return map;
             }
 
+            public ParticleSystem()
+            {
+                throw new NotImplementedException();
+            }
             public static ParticleSystem FromOSD(OSD osd)
             {
                 ParticleSystem partSys = new ParticleSystem();

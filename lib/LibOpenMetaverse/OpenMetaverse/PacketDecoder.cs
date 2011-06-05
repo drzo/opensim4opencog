@@ -306,7 +306,7 @@ namespace OpenMetaverse.Packets
             // UUID
             result.AppendFormat("{0,30}: {1,-40} [{2}]" + Environment.NewLine,
                                         "ID",
-                                        new UUID(block, 0),
+                                        UUIDFactory.GetUUID(block, 0),
                                         "UUID");
             i += 16;
 
@@ -385,7 +385,7 @@ namespace OpenMetaverse.Packets
             // Owners ID
             result.AppendFormat("{0,30}: {1,-40} [{2}]" + Environment.NewLine,
                                         "OwnerID",
-                                        new UUID(block, i),
+                                        UUIDFactory.GetUUID(block, i),
                                         "UUID");
             i += 16;
 
@@ -490,7 +490,7 @@ namespace OpenMetaverse.Packets
             {
                 result.AppendFormat("{0,30}: {1,-40} [{2}]" + Environment.NewLine,
                     "SoundID",
-                    new UUID(block, i),
+                    UUIDFactory.GetUUID(block, i),
                     "UUID");
                 i += 16;
 
@@ -706,7 +706,7 @@ namespace OpenMetaverse.Packets
 
             if (bytes.Length == 17)
             {
-                return String.Format("{0,30}: {1,-40} [UUID]", fieldName, new UUID((byte[])fieldData, 0));
+                return String.Format("{0,30}: {1,-40} [UUID]", fieldName, UUIDFactory.GetUUID((byte[])fieldData, 0));
             }
             else
             {
@@ -1013,13 +1013,13 @@ namespace OpenMetaverse.Packets
             else if (bytes.Length == 17)
             {
                 bucket = String.Format("{0,-36} {1} ({2})",
-                    new UUID(bytes, 1),
+                    UUIDFactory.GetUUID(bytes, 1),
                     bytes[0],
                     (AssetType)(sbyte)bytes[0]);
             }
             else if (bytes.Length == 16) // the folder ID for the asset to be stored into if we accept an inventory offer
             {
-                bucket = new UUID(bytes, 0).ToString();
+                bucket = UUIDFactory.GetUUID(bytes, 0).ToString();
             }
             else
             {
@@ -1109,7 +1109,7 @@ namespace OpenMetaverse.Packets
             {
                 result.AppendFormat("{0,30}: {1,-40} [UUID]" + Environment.NewLine,
                                     "AssetID",
-                                    new UUID(paramData, 0));
+                                    UUIDFactory.GetUUID(paramData, 0));
 
                 result.AppendFormat("{0,30}: {1,-2} {2,-37} [AssetType]" + Environment.NewLine,
                 "AssetType",
@@ -1119,31 +1119,31 @@ namespace OpenMetaverse.Packets
             }
             else if (paramData.Length == 100)
             {
-                //UUID agentID = new UUID(info.TransferInfo.Params, 0);
+                //UUID agentID = UUIDFactory.GetUUID(info.TransferInfo.Params, 0);
                 result.AppendFormat("{0,30}: {1,-40} [UUID]" + Environment.NewLine,
                                     "AgentID",
-                                    new UUID(paramData, 0));
+                                    UUIDFactory.GetUUID(paramData, 0));
 
-                //UUID sessionID = new UUID(info.TransferInfo.Params, 16);
+                //UUID sessionID = UUIDFactory.GetUUID(info.TransferInfo.Params, 16);
                 result.AppendFormat("{0,30}: {1,-40} [UUID]" + Environment.NewLine,
                                     "SessionID",
-                                    new UUID(paramData, 16));
-                //UUID ownerID = new UUID(info.TransferInfo.Params, 32);
+                                    UUIDFactory.GetUUID(paramData, 16));
+                //UUID ownerID = UUIDFactory.GetUUID(info.TransferInfo.Params, 32);
                 result.AppendFormat("{0,30}: {1,-40} [UUID]" + Environment.NewLine,
                                     "OwnerID",
-                                    new UUID(paramData, 32));
-                //UUID taskID = new UUID(info.TransferInfo.Params, 48);
+                                    UUIDFactory.GetUUID(paramData, 32));
+                //UUID taskID = UUIDFactory.GetUUID(info.TransferInfo.Params, 48);
                 result.AppendFormat("{0,30}: {1,-40} [UUID]" + Environment.NewLine,
                                     "TaskID",
-                                    new UUID(paramData, 48));
-                //UUID itemID = new UUID(info.TransferInfo.Params, 64);
+                                    UUIDFactory.GetUUID(paramData, 48));
+                //UUID itemID = UUIDFactory.GetUUID(info.TransferInfo.Params, 64);
                 result.AppendFormat("{0,30}: {1,-40} [UUID]" + Environment.NewLine,
                                     "ItemID",
-                                    new UUID(paramData, 64));
+                                    UUIDFactory.GetUUID(paramData, 64));
 
                 result.AppendFormat("{0,30}: {1,-40} [UUID]" + Environment.NewLine,
                                     "AssetID",
-                                    new UUID(paramData, 80));
+                                    UUIDFactory.GetUUID(paramData, 80));
 
                 result.AppendFormat("{0,30}: {1,-2} {2,-37} [AssetType]" + Environment.NewLine,
                     "AssetType",
@@ -1411,8 +1411,8 @@ namespace OpenMetaverse.Packets
             StringBuilder sb = new StringBuilder();
             if (data.Length == 56 || data.Length == 57)
             {
-                UUID sourceAvatar = new UUID(data, 0);
-                UUID targetObject = new UUID(data, 16);
+                UUID sourceAvatar = UUIDFactory.GetUUID(data, 0);
+                UUID targetObject = UUIDFactory.GetUUID(data, 16);
                 Vector3d targetPos = new Vector3d(data, 32);
                 sb.AppendFormat("{0,30}: {1,-40} [UUID]" + Environment.NewLine, fieldName, "Source AvatarID=" + sourceAvatar);
                 sb.AppendFormat("{0,30}: {1,-40} [UUID]" + Environment.NewLine, fieldName, "Target ObjectID=" + targetObject);

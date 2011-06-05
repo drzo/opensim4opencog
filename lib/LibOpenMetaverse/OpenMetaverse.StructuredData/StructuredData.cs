@@ -593,7 +593,7 @@ namespace OpenMetaverse.StructuredData
         public override byte[] AsBinary() { return Encoding.UTF8.GetBytes(value); }
         public override UUID AsUUID()
         {
-            UUID uuid;
+            UUID uuid = UUID.Zero;
             if (UUID.TryParse(value, out uuid))
                 return uuid;
             else
@@ -624,7 +624,7 @@ namespace OpenMetaverse.StructuredData
     /// </summary>
     public sealed class OSDUUID : OSD
     {
-        private UUID value;
+        private UUID value = UUID.Zero;
 
         public override OSDType Type { get { return OSDType.UUID; } }
 

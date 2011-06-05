@@ -173,7 +173,7 @@ namespace OpenMetaverse
             get { return _Owner; }
         }
 
-        private UUID _Owner;
+        private UUID _Owner = UUID.Zero;
 
         private GridClient Client;
         //private InventoryManager Manager;

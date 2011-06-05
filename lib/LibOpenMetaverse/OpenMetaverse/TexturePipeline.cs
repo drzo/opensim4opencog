@@ -94,7 +94,7 @@ namespace OpenMetaverse
             /// <summary>The current <seealso cref="TextureRequestState"/> which identifies the current status of the request</summary>
             public TextureRequestState State;
             /// <summary>The Unique Request ID, This is also the Asset ID of the texture being requested</summary>
-            public UUID RequestID;
+            public UUID RequestID = UUID.Zero;
             /// <summary>The slot this request is occupying in the threadpoolSlots array</summary>
             public int RequestSlot;
             /// <summary>The ImageType of the request.</summary>

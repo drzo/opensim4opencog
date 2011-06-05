@@ -398,7 +398,7 @@ namespace OpenMetaverse.Assets
 
         static UUID ReadUUID(XmlTextReader reader, string name)
         {
-            UUID id;
+            UUID id = UUID.Zero;
             string idStr;
 
             reader.ReadStartElement(name);
@@ -510,7 +510,7 @@ namespace OpenMetaverse.Assets
 
         public class SculptBlock
         {
-            public UUID Texture;
+            public UUID Texture = UUID.Zero;
             public int Type;
 
             public OSDMap Serialize()
@@ -543,8 +543,8 @@ namespace OpenMetaverse.Assets
             public int BurstParticleCount;
             public Vector3 AngularVelocity;
             public Vector3 Acceleration;
-            public UUID TextureID;
-            public UUID TargetID;
+            public UUID TextureID = UUID.Zero;
+            public UUID TargetID = UUID.Zero;
             public int DataFlags;
             public float ParticleMaxAge;
             public Color4 ParticleStartColor;
@@ -676,14 +676,14 @@ namespace OpenMetaverse.Assets
         {
             public class ItemBlock
             {
-                public UUID ID;
+                public UUID ID = UUID.Zero;
                 public string Name;
-                public UUID OwnerID;
-                public UUID CreatorID;
-                public UUID GroupID;
-                public UUID LastOwnerID;
-                public UUID PermsGranterID;
-                public UUID AssetID;
+                public UUID OwnerID = UUID.Zero;
+                public UUID CreatorID = UUID.Zero;
+                public UUID GroupID = UUID.Zero;
+                public UUID LastOwnerID = UUID.Zero;
+                public UUID PermsGranterID = UUID.Zero;
+                public UUID AssetID = UUID.Zero;
                 public AssetType Type;
                 public InventoryType InvType;
                 public string Description;
@@ -784,7 +784,7 @@ namespace OpenMetaverse.Assets
             }
         }
 
-        public UUID ID;
+        public UUID ID = UUID.Zero;
         public bool AllowedDrop;
         public Vector3 AttachmentPosition;
         public Quaternion AttachmentRotation;
@@ -796,11 +796,11 @@ namespace OpenMetaverse.Assets
         public uint PermsGroup;
         public uint PermsEveryone;
         public uint PermsNextOwner;
-        public UUID CreatorID;
-        public UUID OwnerID;
-        public UUID LastOwnerID;
-        public UUID GroupID;
-        public UUID FolderID;
+        public UUID CreatorID = UUID.Zero;
+        public UUID OwnerID = UUID.Zero;
+        public UUID LastOwnerID = UUID.Zero;
+        public UUID GroupID = UUID.Zero;
+        public UUID FolderID = UUID.Zero;
         public ulong RegionHandle;
         public int ClickAction;
         public int LastAttachmentPoint;
@@ -821,7 +821,7 @@ namespace OpenMetaverse.Assets
         public int PCode;
         public int Material;
         public bool PassTouches;
-        public UUID SoundID;
+        public UUID SoundID = UUID.Zero;
         public float SoundGain;
         public float SoundRadius;
         public int SoundFlags;
@@ -830,7 +830,7 @@ namespace OpenMetaverse.Assets
         public string SitName;
         public string TouchName;
         public bool Selected;
-        public UUID SelectorID;
+        public UUID SelectorID = UUID.Zero;
         public bool UsePhysics;
         public bool Phantom;
         public int RemoteScriptAccessPIN;
@@ -844,7 +844,7 @@ namespace OpenMetaverse.Assets
         public int SalePrice;
         public int SaleType;
         public byte[] ScriptState;
-        public UUID CollisionSound;
+        public UUID CollisionSound = UUID.Zero;
         public float CollisionSoundVolume;
         public FlexibleBlock Flexible;
         public LightBlock Light;

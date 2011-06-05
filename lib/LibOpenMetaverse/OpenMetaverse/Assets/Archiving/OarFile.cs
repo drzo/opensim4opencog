@@ -120,7 +120,7 @@ namespace OpenMetaverse.Assets
             }
 
             string extension = filename.Substring(i);
-            UUID uuid;
+            UUID uuid = UUID.Zero;
             UUID.TryParse(filename.Remove(filename.Length - extension.Length), out uuid);
 
             if (ArchiveConstants.EXTENSION_TO_ASSET_TYPE.ContainsKey(extension))
@@ -398,7 +398,7 @@ namespace OpenMetaverse.Assets
             for (int i = 0; i < files.Length; i++)
             {
                 string file = files[i];
-                UUID id;
+                UUID id = UUID.Zero;
 
                 if (UUID.TryParse(Path.GetFileNameWithoutExtension(file), out id))
                     idToFiles[id] = file;

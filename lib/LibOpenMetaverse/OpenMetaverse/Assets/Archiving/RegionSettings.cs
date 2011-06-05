@@ -20,10 +20,10 @@ namespace OpenMetaverse.Assets
         public int AgentLimit;
         public float ObjectBonus;
 
-        public UUID TerrainDetail0;
-        public UUID TerrainDetail1;
-        public UUID TerrainDetail2;
-        public UUID TerrainDetail3;
+        public UUID TerrainDetail0 = UUID.Zero;
+        public UUID TerrainDetail1 = UUID.Zero;
+        public UUID TerrainDetail2 = UUID.Zero;
+        public UUID TerrainDetail3 = UUID.Zero;
         public float TerrainHeightRange00;
         public float TerrainHeightRange01;
         public float TerrainHeightRange10;

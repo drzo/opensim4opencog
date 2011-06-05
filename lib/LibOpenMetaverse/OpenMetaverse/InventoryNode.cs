@@ -36,7 +36,7 @@ namespace OpenMetaverse
     {
         private InventoryBase data;
         private InventoryNode parent;
-        private UUID parentID; //used for de-seralization 
+        private UUID parentID = UUID.Zero; //used for de-seralization 
         private InventoryNodeDictionary nodes;
         private bool needsUpdate = true;
 
