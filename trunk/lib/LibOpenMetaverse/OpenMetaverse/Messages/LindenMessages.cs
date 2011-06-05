@@ -40,7 +40,7 @@ namespace OpenMetaverse.Messages.Linden
     public class TeleportFinishMessage : IMessage
     {
         /// <summary>The <see cref="UUID"/> of the agent</summary>
-        public UUID AgentID;
+        public UUID AgentID = UUID.Zero;
         /// <summary></summary>
         public int LocationID;
         /// <summary>The simulators handle the agent teleported to</summary>
@@ -110,7 +110,7 @@ namespace OpenMetaverse.Messages.Linden
     /// </summary>
     public class EstablishAgentCommunicationMessage : IMessage
     {
-        public UUID AgentID;
+        public UUID AgentID = UUID.Zero;
         public IPAddress Address;
         public int Port;
         public Uri SeedCapability;
@@ -148,8 +148,8 @@ namespace OpenMetaverse.Messages.Linden
     {
         public Vector3 LookAt;
         public Vector3 Position;
-        public UUID AgentID;
-        public UUID SessionID;
+        public UUID AgentID = UUID.Zero;
+        public UUID SessionID = UUID.Zero;
         public ulong RegionHandle;
         public Uri SeedCapability;
         public IPAddress IP;
@@ -280,7 +280,7 @@ namespace OpenMetaverse.Messages.Linden
         /// Which could be used to look up a value in a dictionary or enum</summary>
         public string MessageKey;
         /// <summary>The <see cref="UUID"/> of the Agent</summary>
-        public UUID AgentID;
+        public UUID AgentID = UUID.Zero;
         /// <summary>A string human readable message containing the reason </summary>
         /// <remarks>An example: Could not teleport closer to destination</remarks>
         public string Reason;
@@ -342,7 +342,7 @@ namespace OpenMetaverse.Messages.Linden
             public Vector3 Location;
             public string OwnerName;
             public float Score;
-            public UUID TaskID;
+            public UUID TaskID = UUID.Zero;
             public uint TaskLocalID;
             public string TaskName;
             public float MonoScore;
@@ -463,7 +463,7 @@ namespace OpenMetaverse.Messages.Linden
         {
             /// <summary>The <see cref="UUID"/> of the prim owner, 
             /// UUID.Zero if agent has no permission to view prim owner information</summary>
-            public UUID OwnerID;
+            public UUID OwnerID = UUID.Zero;
             /// <summary>The total number of prims</summary>
             public int Count;
             /// <summary>True if the OwnerID is a <see cref="Group"/></summary>
@@ -571,7 +571,7 @@ namespace OpenMetaverse.Messages.Linden
         /// <summary></summary>
         public uint AuctionID;
         /// <summary>Key of authorized buyer</summary>
-        public UUID AuthBuyerID;
+        public UUID AuthBuyerID = UUID.Zero;
         /// <summary>Bitmap describing land layout in 4x4m squares across the 
         /// entire region</summary>
         public byte[] Bitmap;
@@ -586,7 +586,7 @@ namespace OpenMetaverse.Messages.Linden
         /// <summary></summary>
         public ParcelFlags ParcelFlags;
         /// <summary></summary>
-        public UUID GroupID;
+        public UUID GroupID = UUID.Zero;
         /// <summary>Total number of primitives owned by the parcel group on 
         /// this parcel</summary>
         public int GroupPrims;
@@ -598,7 +598,7 @@ namespace OpenMetaverse.Messages.Linden
         public int MaxPrims;
         /// <summary>The Asset UUID of the Texture which when applied to a 
         /// primitive will display the media</summary>
-        public UUID MediaID;
+        public UUID MediaID = UUID.Zero;
         /// <summary>A URL which points to any Quicktime supported media type</summary>
         public string MediaURL;
         /// <summary>A byte, if 0x1 viewer should auto scale media to fit object</summary>
@@ -614,7 +614,7 @@ namespace OpenMetaverse.Messages.Linden
         /// <summary>Total number of other primitives on this parcel</summary>
         public int OtherPrims;
         /// <summary>UUID of the owner of this parcel</summary>
-        public UUID OwnerID;
+        public UUID OwnerID = UUID.Zero;
         /// <summary>Total number of primitives owned by the parcel owner on 
         /// this parcel</summary>
         public int OwnerPrims;
@@ -665,7 +665,7 @@ namespace OpenMetaverse.Messages.Linden
         /// <summary></summary>
         public bool SnapSelection;
         /// <summary>Key of parcel snapshot</summary>
-        public UUID SnapshotID;
+        public UUID SnapshotID = UUID.Zero;
         /// <summary>Parcel ownership status</summary>
         public ParcelStatus Status;
         /// <summary>Total number of primitives on this parcel</summary>
@@ -863,7 +863,7 @@ namespace OpenMetaverse.Messages.Linden
     {
         /// <summary>The <seealso cref="UUID"/> of the agent authorized to purchase this
         /// parcel of land or a NULL <seealso cref="UUID"/> if the sale is authorized to anyone</summary>
-        public UUID AuthBuyerID;
+        public UUID AuthBuyerID = UUID.Zero;
         /// <summary>true to enable auto scaling of the parcel media</summary>
         public bool MediaAutoScale;
         /// <summary>The category of this parcel used when search is enabled to restrict
@@ -873,7 +873,7 @@ namespace OpenMetaverse.Messages.Linden
         public string Desc;
         /// <summary>The <seealso cref="UUID"/> of the <seealso cref="Group"/> which allows for additional
         /// powers and restrictions.</summary>
-        public UUID GroupID;
+        public UUID GroupID = UUID.Zero;
         /// <summary>The <seealso cref="LandingType"/> which specifies how avatars which teleport
         /// to this parcel are handled</summary>
         public LandingType Landing;
@@ -887,7 +887,7 @@ namespace OpenMetaverse.Messages.Linden
         /// <summary></summary>
         public bool MediaLoop;
         /// <summary></summary>
-        public UUID MediaID;
+        public UUID MediaID = UUID.Zero;
         /// <summary></summary>
         public string MediaType;
         /// <summary></summary>
@@ -911,7 +911,7 @@ namespace OpenMetaverse.Messages.Linden
         /// <summary></summary>
         public uint SalePrice;
         /// <summary></summary>
-        public UUID SnapshotID;
+        public UUID SnapshotID = UUID.Zero;
         /// <summary></summary>
         public Vector3 UserLocation;
         /// <summary></summary>
@@ -1007,7 +1007,7 @@ namespace OpenMetaverse.Messages.Linden
         /// <summary>Region handle of the parcel we are looking up</summary>
         public ulong RegionHandle;
         /// <summary>Region <see cref="UUID"/> of the parcel we are looking up</summary>
-        public UUID RegionID;
+        public UUID RegionID = UUID.Zero;
 
         /// <summary>
         /// Serialize the object
@@ -1042,7 +1042,7 @@ namespace OpenMetaverse.Messages.Linden
     public class RemoteParcelRequestReply : RemoteParcelRequestBlock
     {
         /// <summary>The grid-wide unique parcel ID</summary>
-        public UUID ParcelID;
+        public UUID ParcelID = UUID.Zero;
 
         /// <summary>
         /// Serialize the object
@@ -1110,7 +1110,7 @@ namespace OpenMetaverse.Messages.Linden
 
     public class NewFileAgentInventoryMessage : IMessage
     {
-        public UUID FolderID;
+        public UUID FolderID = UUID.Zero;
         public AssetType AssetType;
         public InventoryType InventoryType;
         public string Name;
@@ -1183,7 +1183,7 @@ namespace OpenMetaverse.Messages.Linden
 
     public class NewFileAgentInventoryVariablePriceMessage : IMessage
     {
-        public UUID FolderID;
+        public UUID FolderID = UUID.Zero;
         public AssetType AssetType;
         public InventoryType InventoryType;
         public string Name;
@@ -1263,8 +1263,8 @@ namespace OpenMetaverse.Messages.Linden
 
     public class NewFileAgentInventoryUploadReplyMessage : IMessage
     {
-        public UUID NewInventoryItem;
-        public UUID NewAsset;
+        public UUID NewInventoryItem = UUID.Zero;
+        public UUID NewAsset = UUID.Zero;
         public string State;
         public PermissionMask NewBaseMask;
         public PermissionMask NewEveryoneMask;
@@ -1340,7 +1340,7 @@ namespace OpenMetaverse.Messages.Linden
     public class AgentGroupDataUpdateMessage : IMessage
     {
         /// <summary>The Agent receiving the message</summary>
-        public UUID AgentID;
+        public UUID AgentID = UUID.Zero;
 
         /// <summary>Group Details specific to the agent</summary>
         public class GroupData
@@ -1350,9 +1350,9 @@ namespace OpenMetaverse.Messages.Linden
             /// <summary>The agents tier contribution to the group</summary>
             public int Contribution;
             /// <summary>The Groups <seealso cref="UUID"/></summary>
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
             /// <summary>The <seealso cref="UUID"/> of the groups insignia</summary>
-            public UUID GroupInsigniaID;
+            public UUID GroupInsigniaID = UUID.Zero;
             /// <summary>The name of the group</summary>
             public string GroupName;
             /// <summary>The aggregate permissions the agent has in the group for all roles the agent
@@ -1529,9 +1529,9 @@ namespace OpenMetaverse.Messages.Linden
         public class AgentData
         {
             /// <summary>The ID of the Agent leaving the group</summary>
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
             /// <summary>The GroupID the Agent is leaving</summary>
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
         }
 
         /// <summary>
@@ -1642,7 +1642,7 @@ namespace OpenMetaverse.Messages.Linden
     public class UploaderRequestComplete : AssetUploaderBlock
     {
         /// <summary>The uploaded texture asset ID</summary>
-        public UUID AssetID;
+        public UUID AssetID = UUID.Zero;
 
         public UploaderRequestComplete()
         {
@@ -1868,12 +1868,12 @@ namespace OpenMetaverse.Messages.Linden
     public class ScriptRunningReplyMessage : IMessage
     {
         /// <summary>The Asset ID of the script</summary>
-        public UUID ItemID;
+        public UUID ItemID = UUID.Zero;
         /// <summary>True of the script is compiled/ran using the mono interpreter, false indicates it 
         /// uses the older less efficient lsl2 interprter</summary>
         public bool Mono;
         /// <summary>The Task containing the scripts <seealso cref="UUID"/></summary>
-        public UUID ObjectID;
+        public UUID ObjectID = UUID.Zero;
         /// <summary>true of the script is in a running state</summary>
         public bool Running;
 
@@ -1961,9 +1961,9 @@ namespace OpenMetaverse.Messages.Linden
     public class UpdateNotecardTaskInventoryMessage : IMessage
     {
         /// <summary>The <seealso cref="UUID"/> of the Task containing the notecard asset to update</summary>
-        public UUID TaskID;
+        public UUID TaskID = UUID.Zero;
         /// <summary>The notecard assets <seealso cref="UUID"/> contained in the tasks inventory</summary>
-        public UUID ItemID;
+        public UUID ItemID = UUID.Zero;
 
         /// <summary>
         /// Serialize the object
@@ -1999,7 +1999,7 @@ namespace OpenMetaverse.Messages.Linden
         /// <summary>
         /// The Notecard AssetID to replace
         /// </summary>
-        public UUID ItemID;
+        public UUID ItemID = UUID.Zero;
 
         /// <summary>
         /// Serialize the object
@@ -2064,10 +2064,10 @@ namespace OpenMetaverse.Messages.Linden
     public class CopyInventoryFromNotecardMessage : IMessage
     {
         public int CallbackID;
-        public UUID FolderID;
-        public UUID ItemID;
-        public UUID NotecardID;
-        public UUID ObjectID;
+        public UUID FolderID = UUID.Zero;
+        public UUID ItemID = UUID.Zero;
+        public UUID NotecardID = UUID.Zero;
+        public UUID ObjectID = UUID.Zero;
 
         /// <summary>
         /// Serialize the object
@@ -2112,7 +2112,7 @@ namespace OpenMetaverse.Messages.Linden
         /// to update the script</summary>
         public string Error;
         /// <summary>A new AssetID assigned to the script</summary>
-        public UUID AssetID;
+        public UUID AssetID = UUID.Zero;
 
         public override OSDMap Serialize()
         {
@@ -2150,13 +2150,13 @@ namespace OpenMetaverse.Messages.Linden
         /// <summary>if true, set the script mode to running</summary>
         public bool ScriptRunning;
         /// <summary>The scripts InventoryItem ItemID to update</summary>
-        public UUID ItemID;
+        public UUID ItemID = UUID.Zero;
         /// <summary>A lowercase string containing either "mono" or "lsl2" which 
         /// specifies the script is compiled and ran on the mono runtime, or the older
         /// lsl runtime</summary>
         public string Target; // mono or lsl2
         /// <summary>The tasks <see cref="UUID"/> which contains the script to update</summary>
-        public UUID TaskID;
+        public UUID TaskID = UUID.Zero;
 
         /// <summary>
         /// Serialize the object
@@ -2233,7 +2233,7 @@ namespace OpenMetaverse.Messages.Linden
     public class UploaderRequestScriptComplete : AssetUploaderBlock
     {
         /// <summary>The uploaded texture asset ID</summary>
-        public UUID AssetID;
+        public UUID AssetID = UUID.Zero;
         /// <summary>true of the script was compiled successfully</summary>
         public bool Compiled;
 
@@ -2265,7 +2265,7 @@ namespace OpenMetaverse.Messages.Linden
     public class UpdateScriptAgentRequestMessage : AssetUploaderBlock
     {
         /// <summary>The existing asset if of the script in the agents inventory to replace</summary>
-        public UUID ItemID;
+        public UUID ItemID = UUID.Zero;
         /// <summary>The language of the script</summary>
         /// <remarks>Defaults to lsl version 2, "mono" might be another possible option</remarks>
         public string Target = "lsl2"; // lsl2
@@ -2426,7 +2426,7 @@ namespace OpenMetaverse.Messages.Linden
         public class LayerData
         {
             /// <summary>The Asset ID of the regions tile overlay</summary>
-            public UUID ImageID;
+            public UUID ImageID = UUID.Zero;
             /// <summary>The grid location of the southern border of the map tile</summary>
             public int Bottom;
             /// <summary>The grid location of the western border of the map tile</summary>
@@ -2571,7 +2571,7 @@ namespace OpenMetaverse.Messages.Linden
     // variant A - the request to the simulator
     public class SearchStatRequestRequest : SearchStatRequestBlock
     {
-        public UUID ClassifiedID;
+        public UUID ClassifiedID = UUID.Zero;
 
         public override OSDMap Serialize()
         {
@@ -2666,7 +2666,7 @@ namespace OpenMetaverse.Messages.Linden
         /// <summary>An array containing the <see cref="UUID"/> of the agents invited to this conference</summary>
         public UUID[] AgentsBlock;
         /// <summary>The conferences Session ID</summary>
-        public UUID SessionID;
+        public UUID SessionID = UUID.Zero;
 
         public ChatSessionRequestStartConference()
         {
@@ -2719,9 +2719,9 @@ namespace OpenMetaverse.Messages.Linden
     public class ChatSessionRequestMuteUpdate : ChatSessionRequestBlock
     {
         /// <summary>The Session ID</summary>
-        public UUID SessionID;
+        public UUID SessionID = UUID.Zero;
         /// <summary></summary>
-        public UUID AgentID;
+        public UUID AgentID = UUID.Zero;
         /// <summary>A list containing Key/Value pairs, known valid values:
         /// key: text value: true/false - allow/disallow specified agents ability to use text in session
         /// key: voice value: true/false - allow/disallow specified agents ability to use voice in session
@@ -2788,7 +2788,7 @@ namespace OpenMetaverse.Messages.Linden
     public class ChatSessionAcceptInvitation : ChatSessionRequestBlock
     {
         /// <summary>The conference SessionID</summary>
-        public UUID SessionID;
+        public UUID SessionID = UUID.Zero;
 
         public ChatSessionAcceptInvitation()
         {
@@ -2854,7 +2854,7 @@ namespace OpenMetaverse.Messages.Linden
 
     public class ChatterboxSessionEventReplyMessage : IMessage
     {
-        public UUID SessionID;
+        public UUID SessionID = UUID.Zero;
         public bool Success;
 
         /// <summary>
@@ -2883,8 +2883,8 @@ namespace OpenMetaverse.Messages.Linden
 
     public class ChatterBoxSessionStartReplyMessage : IMessage
     {
-        public UUID SessionID;
-        public UUID TempSessionID;
+        public UUID SessionID = UUID.Zero;
+        public UUID TempSessionID = UUID.Zero;
         public bool Success;
 
         public string SessionName;
@@ -2945,15 +2945,15 @@ namespace OpenMetaverse.Messages.Linden
     public class ChatterBoxInvitationMessage : IMessage
     {
         /// <summary>Key of sender</summary>
-        public UUID FromAgentID;
+        public UUID FromAgentID = UUID.Zero;
         /// <summary>Name of sender</summary>
         public string FromAgentName;
         /// <summary>Key of destination avatar</summary>
-        public UUID ToAgentID;
+        public UUID ToAgentID = UUID.Zero;
         /// <summary>ID of originating estate</summary>
         public uint ParentEstateID;
         /// <summary>Key of originating region</summary>
-        public UUID RegionID;
+        public UUID RegionID = UUID.Zero;
         /// <summary>Coordinates in originating region</summary>
         public Vector3 Position;
         /// <summary>Instant message type</summary>
@@ -2961,7 +2961,7 @@ namespace OpenMetaverse.Messages.Linden
         /// <summary>Group IM session toggle</summary>
         public bool GroupIM;
         /// <summary>Key of IM session, for Group Messages, the groups UUID</summary>
-        public UUID IMSessionID;
+        public UUID IMSessionID = UUID.Zero;
         /// <summary>Timestamp of the instant message</summary>
         public DateTime Timestamp;
         /// <summary>Instant message text</summary>
@@ -3094,11 +3094,11 @@ namespace OpenMetaverse.Messages.Linden
         // a message containing only moderator updates
         // <llsd><map><key>events</key><array><map><key>body</key><map><key>agent_updates</key><map><key>ca00e3e1-0fdb-4136-8ed4-0aab739b29e8</key><map><key>info</key><map><key>mutes</key><map><key>text</key><boolean>1</boolean></map></map></map></map><key>session_id</key><string>be7a1def-bd8a-5043-5d5b-49e3805adf6b</string><key>updates</key><map /></map><key>message</key><string>ChatterBoxSessionAgentListUpdates</string></map></array><key>id</key><integer>7</integer></map></llsd>
 
-        public UUID SessionID;
+        public UUID SessionID = UUID.Zero;
 
         public class AgentUpdatesBlock
         {
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             public bool CanVoiceChat;
             public bool IsModerator;
@@ -3240,7 +3240,7 @@ namespace OpenMetaverse.Messages.Linden
         /// <summary>
         /// The ChatterBoxSession's SessionID
         /// </summary>
-        public UUID SessionID;
+        public UUID SessionID = UUID.Zero;
 
         /// <summary>
         /// Serialize the object
@@ -3417,7 +3417,7 @@ namespace OpenMetaverse.Messages.Linden
         public float MiscVersion;
         public bool VertexBuffersEnabled;
 
-        public UUID SessionID;
+        public UUID SessionID = UUID.Zero;
 
         public int StatsDropped;
         public int StatsFailedResends;
@@ -3608,9 +3608,9 @@ namespace OpenMetaverse.Messages.Linden
     /// </summary>
     public class PlacesReplyMessage : IMessage
     {
-        public UUID AgentID;
-        public UUID QueryID;
-        public UUID TransactionID;
+        public UUID AgentID = UUID.Zero;
+        public UUID QueryID = UUID.Zero;
+        public UUID TransactionID = UUID.Zero;
 
         public class QueryData
         {
@@ -3623,9 +3623,9 @@ namespace OpenMetaverse.Messages.Linden
             public float GlobalY;
             public float GlobalZ;
             public string Name;
-            public UUID OwnerID;
+            public UUID OwnerID = UUID.Zero;
             public string SimName;
-            public UUID SnapShotID;
+            public UUID SnapShotID = UUID.Zero;
             public string ProductSku;
             public int Price;
         }
@@ -3757,8 +3757,8 @@ namespace OpenMetaverse.Messages.Linden
     [Serializable]
     public class DirLandReplyMessage : IMessage
     {
-        public UUID AgentID;
-        public UUID QueryID;
+        public UUID AgentID = UUID.Zero;
+        public UUID QueryID = UUID.Zero;
 
         [Serializable]
         public class QueryReply
@@ -3767,7 +3767,7 @@ namespace OpenMetaverse.Messages.Linden
             public bool Auction;
             public bool ForSale;
             public string Name;
-            public UUID ParcelID;
+            public UUID ParcelID = UUID.Zero;
             public string ProductSku;
             public int SalePrice;
         }
@@ -3861,7 +3861,7 @@ namespace OpenMetaverse.Messages.Linden
                 public Color4 Color;
                 public bool Fullbright;
                 public float Glow;
-                public UUID ImageID;
+                public UUID ImageID = UUID.Zero;
                 public float ImageRot;
                 public int MediaFlags;
                 public float OffsetS;
@@ -3926,7 +3926,7 @@ namespace OpenMetaverse.Messages.Linden
             
             public Face[] Faces;
             public ExtraParam[] ExtraParams;
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
             public Material Material;
             public string Name;
             public Vector3 Position;
@@ -3950,7 +3950,7 @@ namespace OpenMetaverse.Messages.Linden
             public int ProfileCurve;
             public float ProfileEnd;
             public float ProfileHollow;
-            public UUID SculptID;
+            public UUID SculptID = UUID.Zero;
             public SculptType SculptType;
 
             public OSDMap Serialize()
@@ -4208,7 +4208,7 @@ namespace OpenMetaverse.Messages.Linden
         /// <summary>
         /// Prim UUID where navigation occured
         /// </summary>
-        public UUID PrimID;
+        public UUID PrimID = UUID.Zero;
 
         /// <summary>
         /// Face index
@@ -4258,7 +4258,7 @@ namespace OpenMetaverse.Messages.Linden
         /// <summary>
         /// Prim UUID
         /// </summary>
-        public UUID PrimID;
+        public UUID PrimID = UUID.Zero;
 
         /// <summary>
         /// Requested operation, either GET or UPDATE
@@ -4297,7 +4297,7 @@ namespace OpenMetaverse.Messages.Linden
         /// <summary>
         /// Prim UUID
         /// </summary>
-        public UUID PrimID;
+        public UUID PrimID = UUID.Zero;
 
         /// <summary>
         /// Array of media entries indexed by face number
@@ -4377,7 +4377,7 @@ namespace OpenMetaverse.Messages.Linden
         /// <summary>
         /// Prim UUID
         /// </summary>
-        public UUID PrimID;
+        public UUID PrimID = UUID.Zero;
 
         /// <summary>
         /// Array of media entries indexed by face number
@@ -4495,7 +4495,7 @@ namespace OpenMetaverse.Messages.Linden
     public class ObjectResourcesDetail
     {
         /// <summary>Object UUID</summary>
-        public UUID ID;
+        public UUID ID = UUID.Zero;
         /// <summary>Object name</summary>
         public string Name;
         /// <summary>Indicates if object is group owned</summary>
@@ -4503,7 +4503,7 @@ namespace OpenMetaverse.Messages.Linden
         /// <summary>Locatio of the object</summary>
         public Vector3d Location;
         /// <summary>Object owner</summary>
-        public UUID OwnerID;
+        public UUID OwnerID = UUID.Zero;
         /// <summary>Resource usage, keys are resource names, values are resource usage for that specific resource</summary>
         public Dictionary<string, int> Resources;
 
@@ -4543,7 +4543,7 @@ namespace OpenMetaverse.Messages.Linden
     public class ParcelResourcesDetail
     {
         /// <summary>Parcel UUID</summary>
-        public UUID ID;
+        public UUID ID = UUID.Zero;
         /// <summary>Parcel local ID</summary>
         public int LocalID;
         /// <summary>Parcel name</summary>
@@ -4551,7 +4551,7 @@ namespace OpenMetaverse.Messages.Linden
         /// <summary>Indicates if parcel is group owned</summary>
         public bool GroupOwned;
         /// <summary>Parcel owner</summary>
-        public UUID OwnerID;
+        public UUID OwnerID = UUID.Zero;
         /// <summary>Array of <see cref="ObjectResourcesDetail"/> containing per object resource usage</summary>
         public ObjectResourcesDetail[] Objects;
 
@@ -4703,7 +4703,7 @@ namespace OpenMetaverse.Messages.Linden
     public class LandResourcesRequest : IMessage
     {
         /// <summary>UUID of the parel to request resource usage info</summary>
-        public UUID ParcelID;
+        public UUID ParcelID = UUID.Zero;
 
         /// <summary>
         /// Serializes object

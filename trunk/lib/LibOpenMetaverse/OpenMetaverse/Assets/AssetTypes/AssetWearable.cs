@@ -47,13 +47,13 @@ namespace OpenMetaverse.Assets
         /// <summary>An Integer representing the purchase price of the asset</summary>
         public int SalePrice;
         /// <summary>The <seealso cref="UUID"/> of the assets creator</summary>
-        public UUID Creator;
+        public UUID Creator = UUID.Zero;
         /// <summary>The <seealso cref="UUID"/> of the assets current owner</summary>
-        public UUID Owner;
+        public UUID Owner = UUID.Zero;
         /// <summary>The <seealso cref="UUID"/> of the assets prior owner</summary>
-        public UUID LastOwner;
+        public UUID LastOwner = UUID.Zero;
         /// <summary>The <seealso cref="UUID"/> of the Group this asset is set to</summary>
-        public UUID Group;
+        public UUID Group = UUID.Zero;
         /// <summary>True if the asset is owned by a <seealso cref="Group"/></summary>
         public bool GroupOwned;
         /// <summary>The Permissions mask of the asset</summary>

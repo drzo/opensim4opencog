@@ -1,4 +1,5 @@
-// #define INTERNABLE_UUIDS
+#define INTERNABLE_UUIDS
+#define USE_REAL_FACTORY
 
 /*
  * Copyright (c) 2008, openmetaverse.org
@@ -27,20 +28,45 @@
  */
 
 using System;
-#if !(INTERNABLE_UUIDS)
-    using UUIDCantBeNull = OpenMetaverse.UUID;
+#if !(USE_UUID_INTERFACE)
+using System.Collections.Generic;
+using System.Reflection;
+using System.Text;
+using UUIDCantBeNull = OpenMetaverse.UUID;
 #endif
 
 namespace OpenMetaverse
 {
+    public class WasAStruct
+    {
+        public override string ToString()
+        {
+            return StructToString(this);
+        }
+
+        public static string StructToString(object t)
+        {
+            StringBuilder result = new StringBuilder();
+            Type structType = t.GetType();
+            FieldInfo[] fields = structType.GetFields();
+
+            foreach (FieldInfo field in fields)
+            {
+                result.Append(field.Name + ": " + field.GetValue(t) + " ");
+            }
+            result.AppendLine();
+            return result.ToString().TrimEnd();
+        }
+    }
 #if (INTERNABLE_UUIDS)
 
-
+#if USE_UUID_INTERFACE
     public interface UUID
     {
         Guid GetGuid();
         byte[] GetBytes();
     }
+#endif
 
         // The following extension methods can be accessed by instances of any 
         // class that implements IMyInterface.
@@ -75,26 +101,40 @@ namespace OpenMetaverse
         public static UUID GetUUID(byte[] data, int pos)
         {
 #if INTERNABLE_UUIDS
-            return new UUIDCantBeNull(data, pos);
+            return GetUUID(UUID.GuidFromBytes(data, pos));
 #else
             return new UUIDCantBeNull(data, pos);
 #endif
         }
         public static UUIDCantBeNull GetUUID(string s)
         {
-            return new UUIDCantBeNull(s);
+            return GetUUID(UUID.GuidFromString(s));
         }
+#if !(USE_REAL_FACTORY)
         public static UUID GetUUID(UUID s)
         {
-            return new UUIDCantBeNull(s);
+            return new UUIDCantBeNull(s, true);
         }
+#else
+        static readonly Dictionary<Guid,UUID> GuidToUUID = new Dictionary<Guid, UUID>();
+#endif
+
         public static UUID GetUUID(Guid s)
         {
-            return new UUIDCantBeNull(s);
+            lock (GuidToUUID)
+            {
+                UUID u;
+                if (!GuidToUUID.TryGetValue(s, out u))
+                {
+                    u = GuidToUUID[s] = new UUID(s, true);
+                }
+                return u;
+            }
+            //return new UUIDCantBeNull(s ,true);
         }
         public static UUID GetUUID(ulong s)
         {
-            return new UUIDCantBeNull(s);
+            return GetUUID(UUID.GuidFromLong(s));
         }
 
         /// <summary>A cache of UUID.Zero as a string to optimize a common path</summary>
@@ -111,14 +151,18 @@ namespace OpenMetaverse
     /// </summary>
     [Serializable]
 #if INTERNABLE_UUIDS
+#if USE_UUID_INTERFACE
     public class UUIDCantBeNull : IComparable<UUID>, IEquatable<UUID>, UUID
+#else
+    public class UUID : IComparable<UUID>, IEquatable<UUID>
+#endif
 #else
     public struct UUID : IComparable<UUID>, IEquatable<UUID>
 #endif
     {
         /// <summary>The System.Guid object this struct wraps around</summary>
 #if INTERNABLE_UUIDS
-        internal Guid _Guid;
+        readonly internal Guid _Guid;
 #else
         public Guid _Guid;
 #endif
@@ -127,8 +171,26 @@ namespace OpenMetaverse
             return _Guid;
         }
 
+        public static Guid GuidFromLong(ulong val)
+        {
+            byte[] end = BitConverter.GetBytes(val);
+            if (!BitConverter.IsLittleEndian)
+                Array.Reverse(end);
+
+            return new Guid(0, 0, 0, end);
+        }
+
+        public static Guid GuidFromString(string val)
+        {
+            return new Guid(val);
+        }
+
         #region Constructors
 
+        private UUID( bool ro)
+        {
+            
+        }
 
         /// <summary>
         /// Constructor that takes a string UUID representation
@@ -136,10 +198,10 @@ namespace OpenMetaverse
         /// <param name="val">A string representation of a UUID, case 
         /// insensitive and can either be hyphenated or non-hyphenated</param>
         /// <example>UUID("11f8aa9c-b071-4242-836b-13b7abe0d489")</example>
-#if INTERNABLE_UUIDS
+#if USE_UUID_INTERFACE
         public UUIDCantBeNull(string val)
 #else
-        public UUID(string val)
+        public UUID(string val, bool ro)
 #endif
         {
             if (String.IsNullOrEmpty(val))
@@ -159,34 +221,34 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="val">A Guid object that contains the unique identifier
         /// to be represented by this UUID</param>
-#if INTERNABLE_UUIDS
+#if USE_UUID_INTERFACE
         public UUIDCantBeNull(UUID val)
         {
             _Guid = val.GetGuid();
         }
 #else
-        public UUID(Guid val)
+        public UUID(Guid val, bool ro)
         {
             _Guid = val;
             toStringCache = null;
         }
 #endif
 
-
+#if !(USE_REAL_FACTORY)
         /// <summary>
         /// Constructor that takes a byte array containing a UUID
         /// </summary>
         /// <param name="source">Byte array containing a 16 byte UUID</param>
         /// <param name="pos">Beginning offset in the array</param>
-#if INTERNABLE_UUIDS
+#if USE_UUID_INTERFACE
         public UUIDCantBeNull(byte[] source, int pos)
 #else
-        public UUID(byte[] source, int pos)
+        public UUID(byte[] source, int pos, bool ro)
 #endif
         {
-            _Guid = Zero.GetGuid();
+            //_Guid = Zero.GetGuid();
             toStringCache = null;
-            FromBytes(source, pos);
+            _Guid = GuidFromBytes(source, pos);
         }
 
         /// <summary>
@@ -194,10 +256,10 @@ namespace OpenMetaverse
         /// convert to a UUID
         /// </summary>
         /// <param name="val">64-bit unsigned integer to convert to a UUID</param>
-#if INTERNABLE_UUIDS
+#if USE_UUID_INTERFACE
         public UUIDCantBeNull(ulong val)
 #else
-        public UUID(ulong val)
+        public UUID(ulong val, bool ro)
 #endif
         {
             byte[] end = BitConverter.GetBytes(val);
@@ -208,7 +270,7 @@ namespace OpenMetaverse
             _Guid = new Guid(0, 0, 0, end);
         }
 
-#if INTERNABLE_UUIDS
+#if USE_UUID_INTERFACE
         public UUIDCantBeNull(Guid source)
         {
             _Guid = source;
@@ -219,16 +281,16 @@ namespace OpenMetaverse
         /// Copy constructor
         /// </summary>
         /// <param name="val">UUID to copy</param>
-#if INTERNABLE_UUIDS
+#if USE_UUID_INTERFACE
         public UUIDCantBeNull(UUIDCantBeNull val)
 #else
-        public UUID(UUID val)
+        public UUID(UUID val, bool ro)
 #endif
         {
             _Guid = val._Guid;
             toStringCache = null;
         }
-
+#endif //USE_REAL_FACTORY
         #endregion Constructors
 
         #region Public Methods
@@ -246,16 +308,22 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="source">Byte array containing the UUID to assign this UUID to</param>
         /// <param name="pos">Starting position of the UUID in the byte array</param>
-        public void FromBytes(byte[] source, int pos)
+        ///         public void FromUUIDBytes(byte[] source, int pos)
+        //{
+       //     _Guid = GuidFromBytes(source, pos);
+      //  }
+
+        /// 
+        static public Guid GuidFromBytes(byte[] source, int pos)
         {
             int a = (source[pos + 0] << 24) | (source[pos + 1] << 16) | (source[pos + 2] << 8) | source[pos + 3];
             short b = (short)((source[pos + 4] << 8) | source[pos + 5]);
             short c = (short)((source[pos + 6] << 8) | source[pos + 7]);
 
-            _Guid = new Guid(a, b, c, source[pos + 8], source[pos + 9], source[pos + 10], source[pos + 11],
+            var _Guid = new Guid(a, b, c, source[pos + 8], source[pos + 9], source[pos + 10], source[pos + 11],
                 source[pos + 12], source[pos + 13], source[pos + 14], source[pos + 15]);
+            return _Guid;
         }
-
         /// <summary>
         /// Returns a copy of the raw bytes for this UUID
         /// </summary>
@@ -496,10 +564,16 @@ namespace OpenMetaverse
         public static bool operator ==(UUIDCantBeNull lhs, UUIDCantBeNull rhs)
         {
 #if INTERNABLE_UUIDS
-            lhs = lhs ?? Zero;
-            rhs = rhs ?? Zero;
+            lhs = ZeroCheck(lhs);
+            rhs = ZeroCheck(rhs);
 #endif
             return lhs.GetGuid() == rhs.GetGuid();
+        }
+
+        private static UUID ZeroCheck(UUID lhs)
+        {
+            if (!ReferenceEquals(lhs, null)) return lhs;
+            return Zero;
         }
 
         /// <summary>
@@ -522,8 +596,8 @@ namespace OpenMetaverse
         public static UUID operator ^(UUIDCantBeNull lhs, UUIDCantBeNull rhs)
         {
 #if INTERNABLE_UUIDS
-            lhs = lhs ?? Zero;
-            rhs = rhs ?? Zero;
+            lhs = ZeroCheck(lhs);
+            rhs = ZeroCheck(rhs);
 #endif
             byte[] lhsbytes = lhs.GetBytes();
             byte[] rhsbytes = rhs.GetBytes();

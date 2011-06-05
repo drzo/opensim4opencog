@@ -41,7 +41,7 @@ namespace OpenMetaverse
     public class AgentDisplayName
     {
         /// <summary> Agent UUID </summary>
-        public UUID ID;
+        public UUID ID = UUID.Zero;
         /// <summary> Username </summary>
         public string UserName;
         /// <summary> Display name </summary>
@@ -116,14 +116,14 @@ namespace OpenMetaverse
     /// <summary>
     /// Holds group information for Avatars such as those you might find in a profile
     /// </summary>
-    public struct AvatarGroup
+    public class AvatarGroup : WasAStruct
     {
         /// <summary>true of Avatar accepts group notices</summary>
         public bool AcceptNotices;
         /// <summary>Groups Key</summary>
-        public UUID GroupID;
+        public UUID GroupID = UUID.Zero;
         /// <summary>Texture Key for groups insignia</summary>
-        public UUID GroupInsigniaID;
+        public UUID GroupInsigniaID = UUID.Zero;
         /// <summary>Name of the group</summary>
         public string GroupName;
         /// <summary>Powers avatar has in the group</summary>
@@ -137,29 +137,29 @@ namespace OpenMetaverse
     /// <summary>
     /// Contains an animation currently being played by an agent
     /// </summary>
-    public struct Animation
+    public class Animation : WasAStruct
     {
         /// <summary>The ID of the animation asset</summary>
-        public UUID AnimationID;
+        public UUID AnimationID = UUID.Zero;
         /// <summary>A number to indicate start order of currently playing animations</summary>
         /// <remarks>On Linden Grids this number is unique per region, with OpenSim it is per client</remarks>
         public int AnimationSequence;
         /// <summary></summary>
-        public UUID AnimationSourceObjectID;
+        public UUID AnimationSourceObjectID = UUID.Zero;
     }
 
     /// <summary>
     /// Holds group information on an individual profile pick
     /// </summary>
-    public struct ProfilePick
+    public class ProfilePick : WasAStruct
     {
-        public UUID PickID;
-        public UUID CreatorID;
+        public UUID PickID = UUID.Zero;
+        public UUID CreatorID = UUID.Zero;
         public bool TopPick;
-        public UUID ParcelID;
+        public UUID ParcelID = UUID.Zero;
         public string Name;
         public string Desc;
-        public UUID SnapshotID;
+        public UUID SnapshotID = UUID.Zero;
         public string User;
         public string OriginalName;
         public string SimName;
@@ -168,13 +168,13 @@ namespace OpenMetaverse
         public bool Enabled;
     }
 
-    public struct ClassifiedAd
+    public class ClassifiedAd : WasAStruct
     {
-        public UUID ClassifiedID;
+        public UUID ClassifiedID = UUID.Zero;
         public uint Catagory;
-        public UUID ParcelID;
+        public UUID ParcelID = UUID.Zero;
         public uint ParentEstate;
-        public UUID SnapShotID;
+        public UUID SnapShotID = UUID.Zero;
         public Vector3d Position;
         public byte ClassifiedFlags;
         public int Price;
@@ -1151,8 +1151,8 @@ namespace OpenMetaverse
                         {
                             if (block.TypeData.Length == 56)
                             {
-                                UUID sourceAvatar = new UUID(block.TypeData, 0);
-                                UUID targetObject = new UUID(block.TypeData, 16);
+                                UUID sourceAvatar = UUIDFactory.GetUUID(block.TypeData, 0);
+                                UUID targetObject = UUIDFactory.GetUUID(block.TypeData, 16);
                                 Vector3d targetPos = new Vector3d(block.TypeData, 32);
                                 OnViewerEffect(new ViewerEffectEventArgs(type, sourceAvatar, targetObject, targetPos, block.Duration, block.ID));
                             }
@@ -1169,8 +1169,8 @@ namespace OpenMetaverse
                         {
                             if (block.TypeData.Length == 57)
                             {
-                                UUID sourceAvatar = new UUID(block.TypeData, 0);
-                                UUID targetObject = new UUID(block.TypeData, 16);
+                                UUID sourceAvatar = UUIDFactory.GetUUID(block.TypeData, 0);
+                                UUID targetObject = UUIDFactory.GetUUID(block.TypeData, 16);
                                 Vector3d targetPos = new Vector3d(block.TypeData, 32);
                                 LookAtType lookAt = (LookAtType)block.TypeData[56];
 
@@ -1189,8 +1189,8 @@ namespace OpenMetaverse
                         {
                             if (block.TypeData.Length == 57)
                             {
-                                UUID sourceAvatar = new UUID(block.TypeData, 0);
-                                UUID targetObject = new UUID(block.TypeData, 16);
+                                UUID sourceAvatar = UUIDFactory.GetUUID(block.TypeData, 0);
+                                UUID targetObject = UUIDFactory.GetUUID(block.TypeData, 16);
                                 Vector3d targetPos = new Vector3d(block.TypeData, 32);
                                 PointAtType pointAt = (PointAtType)block.TypeData[56];
 
@@ -1351,7 +1351,7 @@ namespace OpenMetaverse
     /// </example>
     public class AvatarAnimationEventArgs : EventArgs
     {
-        private readonly UUID m_AvatarID;
+        private readonly UUID m_AvatarID = UUID.Zero;
         private readonly List<Animation> m_Animations;
 
         /// <summary>Get the ID of the agent</summary>
@@ -1392,7 +1392,7 @@ namespace OpenMetaverse
     {
 
         private readonly Simulator m_Simulator;
-        private readonly UUID m_AvatarID;
+        private readonly UUID m_AvatarID = UUID.Zero;
         private readonly bool m_IsTrial;
         private readonly Primitive.TextureEntryFace m_DefaultTexture;
         private readonly Primitive.TextureEntryFace[] m_FaceTextures;
@@ -1435,7 +1435,7 @@ namespace OpenMetaverse
     /// <summary>Represents the interests from the profile of an agent</summary>
     public class AvatarInterestsReplyEventArgs : EventArgs
     {
-        private readonly UUID m_AvatarID;
+        private readonly UUID m_AvatarID = UUID.Zero;
         private readonly Avatar.Interests m_Interests;
 
         /// <summary>Get the ID of the agent</summary>
@@ -1452,7 +1452,7 @@ namespace OpenMetaverse
     /// <summary>The properties of an agent</summary>
     public class AvatarPropertiesReplyEventArgs : EventArgs
     {
-        private readonly UUID m_AvatarID;
+        private readonly UUID m_AvatarID = UUID.Zero;
         private readonly Avatar.AvatarProperties m_Properties;
 
         /// <summary>Get the ID of the agent</summary>
@@ -1469,7 +1469,7 @@ namespace OpenMetaverse
 
     public class AvatarGroupsReplyEventArgs : EventArgs
     {
-        private readonly UUID m_AvatarID;
+        private readonly UUID m_AvatarID = UUID.Zero;
         private readonly List<AvatarGroup> m_Groups;
 
         /// <summary>Get the ID of the agent</summary>
@@ -1485,7 +1485,7 @@ namespace OpenMetaverse
 
     public class AvatarPicksReplyEventArgs : EventArgs
     {
-        private readonly UUID m_AvatarID;
+        private readonly UUID m_AvatarID = UUID.Zero;
         private readonly Dictionary<UUID, string> m_Picks;
 
         /// <summary>Get the ID of the agent</summary>
@@ -1501,7 +1501,7 @@ namespace OpenMetaverse
 
     public class PickInfoReplyEventArgs : EventArgs
     {
-        private readonly UUID m_PickID;
+        private readonly UUID m_PickID = UUID.Zero;
         private readonly ProfilePick m_Pick;
 
         public UUID PickID { get { return m_PickID; } }
@@ -1517,7 +1517,7 @@ namespace OpenMetaverse
 
     public class AvatarClassifiedReplyEventArgs : EventArgs
     {
-        private readonly UUID m_AvatarID;
+        private readonly UUID m_AvatarID = UUID.Zero;
         private readonly Dictionary<UUID, string> m_Classifieds;
 
         /// <summary>Get the ID of the avatar</summary>
@@ -1533,7 +1533,7 @@ namespace OpenMetaverse
 
     public class ClassifiedInfoReplyEventArgs : EventArgs
     {
-        private readonly UUID m_ClassifiedID;
+        private readonly UUID m_ClassifiedID = UUID.Zero;
         private readonly ClassifiedAd m_Classified;
 
         public UUID ClassifiedID { get { return m_ClassifiedID; } }
@@ -1561,7 +1561,7 @@ namespace OpenMetaverse
 
     public class AvatarPickerReplyEventArgs : EventArgs
     {
-        private readonly UUID m_QueryID;
+        private readonly UUID m_QueryID = UUID.Zero;
         private readonly Dictionary<UUID, string> m_Avatars;
 
         public UUID QueryID { get { return m_QueryID; } }
@@ -1577,11 +1577,11 @@ namespace OpenMetaverse
     public class ViewerEffectEventArgs : EventArgs
     {
         private readonly EffectType m_Type;
-        private readonly UUID m_SourceID;
-        private readonly UUID m_TargetID;
+        private readonly UUID m_SourceID = UUID.Zero;
+        private readonly UUID m_TargetID = UUID.Zero;
         private readonly Vector3d m_TargetPosition;
         private readonly float m_Duration;
-        private readonly UUID m_EffectID;
+        private readonly UUID m_EffectID = UUID.Zero;
 
         public EffectType Type { get { return m_Type; } }
         public UUID SourceID { get { return m_SourceID; } }
@@ -1604,12 +1604,12 @@ namespace OpenMetaverse
     public class ViewerEffectPointAtEventArgs : EventArgs
     {
         private readonly Simulator m_Simulator;
-        private readonly UUID m_SourceID;
-        private readonly UUID m_TargetID;
+        private readonly UUID m_SourceID = UUID.Zero;
+        private readonly UUID m_TargetID = UUID.Zero;
         private readonly Vector3d m_TargetPosition;
         private readonly PointAtType m_PointType;
         private readonly float m_Duration;
-        private readonly UUID m_EffectID;
+        private readonly UUID m_EffectID = UUID.Zero;
 
         public Simulator Simulator { get { return m_Simulator; } }
         public UUID SourceID { get { return m_SourceID; } }
@@ -1633,12 +1633,12 @@ namespace OpenMetaverse
 
     public class ViewerEffectLookAtEventArgs : EventArgs
     {
-        private readonly UUID m_SourceID;
-        private readonly UUID m_TargetID;
+        private readonly UUID m_SourceID = UUID.Zero;
+        private readonly UUID m_TargetID = UUID.Zero;
         private readonly Vector3d m_TargetPosition;
         private readonly LookAtType m_LookType;
         private readonly float m_Duration;
-        private readonly UUID m_EffectID;
+        private readonly UUID m_EffectID = UUID.Zero;
 
 
         public UUID SourceID { get { return m_SourceID; } }

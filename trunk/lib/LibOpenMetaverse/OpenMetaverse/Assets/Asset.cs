@@ -40,7 +40,7 @@ namespace OpenMetaverse.Assets
         /// <summary>True if the asset it only stored on the server temporarily</summary>
         public bool Temporary;
         /// <summary>A unique ID</summary>
-        private UUID _AssetID;
+        private UUID _AssetID = UUID.Zero;
         /// <summary>The assets unique ID</summary>
         public UUID AssetID
         {

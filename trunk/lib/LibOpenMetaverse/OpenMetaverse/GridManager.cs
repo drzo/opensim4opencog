@@ -82,7 +82,7 @@ namespace OpenMetaverse
     /// <summary>
 	/// Information about a region on the grid map
 	/// </summary>
-	public struct GridRegion
+    public class GridRegion : WasAStruct
 	{
         /// <summary>Sim X position on World Map</summary>
 		public int X;
@@ -99,7 +99,7 @@ namespace OpenMetaverse
         /// <summary></summary>
 		public byte Agents;
         /// <summary>UUID of the World Map image</summary>
-		public UUID MapImageID;
+		public UUID MapImageID = UUID.Zero;
         /// <summary>Unique identifier for this region, a combination of the X 
         /// and Y position</summary>
 		public ulong RegionHandle;
@@ -146,13 +146,13 @@ namespace OpenMetaverse
     /// <summary>
     /// Visual chunk of the grid map
     /// </summary>
-    public struct GridLayer
+    public class GridLayer : WasAStruct
     {
         public int Bottom;
         public int Left;
         public int Top;
         public int Right;
-        public UUID ImageID;
+        public UUID ImageID = UUID.Zero;
 
         public bool ContainsRegion(int x, int y)
         {
@@ -210,7 +210,7 @@ namespace OpenMetaverse
         public int Size;
         public int Price;
         public string Name;
-        public UUID ID;        
+        public UUID ID = UUID.Zero;        
     }
 
     /// <summary>
@@ -221,7 +221,7 @@ namespace OpenMetaverse
         public int Size;
         public int Price;
         public string Name;
-        public UUID ID;
+        public UUID ID = UUID.Zero;
     }
 
     /// <summary>
@@ -627,7 +627,7 @@ namespace OpenMetaverse
                 {
                     OSDMap thisLayerData = (OSDMap)layerData[i];
 
-                    GridLayer layer;
+                    GridLayer layer = new GridLayer();
                     layer.Bottom = thisLayerData["Bottom"].AsInteger();
                     layer.Left = thisLayerData["Left"].AsInteger();
                     layer.Top = thisLayerData["Top"].AsInteger();
@@ -656,7 +656,7 @@ namespace OpenMetaverse
             {
                 if (block.X != 0 && block.Y != 0)
                 {
-                    GridRegion region;
+                    GridRegion region = new GridRegion();
 
                     region.X = block.X;
                     region.Y = block.Y;
@@ -911,7 +911,7 @@ namespace OpenMetaverse
 
     public class RegionHandleReplyEventArgs : EventArgs
     {
-        private readonly UUID m_RegionID;
+        private readonly UUID m_RegionID = UUID.Zero;
         private readonly ulong m_RegionHandle;
 
         public UUID RegionID { get { return m_RegionID; } }

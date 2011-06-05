@@ -127,13 +127,13 @@ namespace OpenMetaverse
     public abstract class InventoryBase : ISerializable
     {
         /// <summary><seealso cref="OpenMetaverse.UUID"/> of item/folder</summary>
-        public UUID UUID;
+        public UUID UUID = UUID.Zero;
         /// <summary><seealso cref="OpenMetaverse.UUID"/> of parent folder</summary>
-        public UUID ParentUUID;
+        public UUID ParentUUID = UUID.Zero;
         /// <summary>Name of item/folder</summary>
         public string Name;
         /// <summary>Item/Folder Owners <seealso cref="OpenMetaverse.UUID"/></summary>
-        public UUID OwnerID;
+        public UUID OwnerID = UUID.Zero;
 
         /// <summary>
         /// Constructor, takes an itemID as a parameter
@@ -211,7 +211,7 @@ namespace OpenMetaverse
     public class InventoryItem : InventoryBase
     {
         /// <summary>The <seealso cref="OpenMetaverse.UUID"/> of this item</summary>
-        public UUID AssetUUID;
+        public UUID AssetUUID = UUID.Zero;
         /// <summary>The combined <seealso cref="OpenMetaverse.Permissions"/> of this item</summary>
         public Permissions Permissions;
         /// <summary>The type of item from <seealso cref="OpenMetaverse.AssetType"/></summary>
@@ -219,11 +219,11 @@ namespace OpenMetaverse
         /// <summary>The type of item from the <seealso cref="OpenMetaverse.InventoryType"/> enum</summary>
         public InventoryType InventoryType;
         /// <summary>The <seealso cref="OpenMetaverse.UUID"/> of the creator of this item</summary>
-        public UUID CreatorID;
+        public UUID CreatorID = UUID.Zero;
         /// <summary>A Description of this item</summary>
         public string Description;
         /// <summary>The <seealso cref="OpenMetaverse.Group"/>s <seealso cref="OpenMetaverse.UUID"/> this item is set to or owned by</summary>
-        public UUID GroupID;
+        public UUID GroupID = UUID.Zero;
         /// <summary>If true, item is owned by a group</summary>
         public bool GroupOwned;
         /// <summary>The price this item can be purchased for</summary>
@@ -236,9 +236,9 @@ namespace OpenMetaverse
         /// UTC (Coordinated Universal Time)</summary>
         public DateTime CreationDate;
         /// <summary>Used to update the AssetID in requests sent to the server</summary>
-        public UUID TransactionID;
+        public UUID TransactionID = UUID.Zero;
         /// <summary>The <seealso cref="OpenMetaverse.UUID"/> of the previous owner of the item</summary>
-        public UUID LastOwnerID;
+        public UUID LastOwnerID = UUID.Zero;
 
         /// <summary>
         ///  Construct a new InventoryItem object
@@ -862,12 +862,12 @@ namespace OpenMetaverse
     public class InventoryManager
     {
         /// <summary>Used for converting shadow_id to asset_id</summary>
-        public static readonly UUID MAGIC_ID = new UUID("3c115e51-04f4-523c-9fa6-98aff1034730");
+        public static readonly UUID MAGIC_ID = UUIDFactory.GetUUID("3c115e51-04f4-523c-9fa6-98aff1034730");
 
-        protected struct InventorySearch
+        protected class InventorySearch : WasAStruct
         {
-            public UUID Folder;
-            public UUID Owner;
+            public UUID Folder = UUID.Zero;
+            public UUID Owner = UUID.Zero;
             public string[] Path;
             public int Level;
         }
@@ -1594,7 +1594,7 @@ namespace OpenMetaverse
                 throw new ArgumentException("Empty path is not supported");
 
             // Store this search
-            InventorySearch search;
+            InventorySearch search = new InventorySearch();
             search.Folder = baseFolder;
             search.Owner = inventoryOwner;
             search.Path = path.Split('/');
@@ -3638,7 +3638,7 @@ namespace OpenMetaverse
                                 }
                                 else if (key == "shadow_id")
                                 {
-                                    UUID shadowID;
+                                    UUID shadowID = UUID.Zero;
                                     if (UUID.TryParse(value, out shadowID))
                                         assetID = DecryptShadowID(shadowID);
                                 }
@@ -3731,7 +3731,7 @@ namespace OpenMetaverse
                     if (e.IM.BinaryBucket.Length == 17)
                     {
                         type = (AssetType)e.IM.BinaryBucket[0];
-                        objectID = new UUID(e.IM.BinaryBucket, 1);
+                        objectID = UUIDFactory.GetUUID(e.IM.BinaryBucket, 1);
                         fromTask = false;
                     }
                     else
@@ -4523,7 +4523,7 @@ namespace OpenMetaverse
     {
         private readonly InstantMessage m_Offer;
         private readonly AssetType m_AssetType;
-        private readonly UUID m_ObjectID;
+        private readonly UUID m_ObjectID = UUID.Zero;
         private readonly bool m_FromTask;
 
         /// <summary>Set to true to accept offer, false to decline it</summary>
@@ -4549,7 +4549,7 @@ namespace OpenMetaverse
 
     public class FolderUpdatedEventArgs : EventArgs
     {
-        private readonly UUID m_FolderID;
+        private readonly UUID m_FolderID = UUID.Zero;
         public UUID FolderID { get { return m_FolderID; } }
         private readonly bool m_Success;
         public bool Success { get { return m_Success; } }
@@ -4576,7 +4576,7 @@ namespace OpenMetaverse
     public class FindObjectByPathReplyEventArgs : EventArgs
     {
         private readonly String m_Path;
-        private readonly UUID m_InventoryObjectID;
+        private readonly UUID m_InventoryObjectID = UUID.Zero;
 
         public String Path { get { return m_Path; } }
         public UUID InventoryObjectID { get { return m_InventoryObjectID; } }
@@ -4596,10 +4596,10 @@ namespace OpenMetaverse
     /// </summary>
     public class TaskItemReceivedEventArgs : EventArgs
     {
-        private readonly UUID m_ItemID;
-        private readonly UUID m_FolderID;
-        private readonly UUID m_CreatorID;
-        private readonly UUID m_AssetID;
+        private readonly UUID m_ItemID = UUID.Zero;
+        private readonly UUID m_FolderID = UUID.Zero;
+        private readonly UUID m_CreatorID = UUID.Zero;
+        private readonly UUID m_AssetID = UUID.Zero;
         private readonly InventoryType m_Type;
 
         public UUID ItemID { get { return m_ItemID; } }
@@ -4620,7 +4620,7 @@ namespace OpenMetaverse
 
     public class TaskInventoryReplyEventArgs : EventArgs
     {
-        private readonly UUID m_ItemID;
+        private readonly UUID m_ItemID = UUID.Zero;
         private readonly Int16 m_Serial;
         private readonly String m_AssetFilename;
 
@@ -4638,8 +4638,8 @@ namespace OpenMetaverse
 
     public class SaveAssetToInventoryEventArgs : EventArgs
     {
-        private readonly UUID m_ItemID;
-        private readonly UUID m_NewAssetID;
+        private readonly UUID m_ItemID = UUID.Zero;
+        private readonly UUID m_NewAssetID = UUID.Zero;
 
         public UUID ItemID { get { return m_ItemID; } }
         public UUID NewAssetID { get { return m_NewAssetID; } }
@@ -4653,8 +4653,8 @@ namespace OpenMetaverse
 
     public class ScriptRunningReplyEventArgs : EventArgs
     {
-        private readonly UUID m_ObjectID;
-        private readonly UUID m_ScriptID;
+        private readonly UUID m_ObjectID = UUID.Zero;
+        private readonly UUID m_ScriptID = UUID.Zero;
         private readonly bool m_IsMono;
         private readonly bool m_IsRunning;
 

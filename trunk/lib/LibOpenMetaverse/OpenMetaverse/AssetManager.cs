@@ -160,7 +160,7 @@ namespace OpenMetaverse
     /// </summary>
     public class Transfer
     {
-        public UUID ID;
+        public UUID ID = UUID.Zero;
         public int Size;
         public byte[] AssetData = Utils.EmptyBytes;
         public int Transferred;
@@ -189,7 +189,7 @@ namespace OpenMetaverse
     /// </summary>
     public class AssetDownload : Transfer
     {
-        public UUID AssetID;
+        public UUID AssetID = UUID.Zero;
         public ChannelType Channel;
         public SourceType Source;
         public TargetType Target;
@@ -211,7 +211,7 @@ namespace OpenMetaverse
     public class XferDownload : Transfer
     {
         public ulong XferID;
-        public UUID VFileID;
+        public UUID VFileID = UUID.Zero;
         public uint PacketNum;
         public string Filename = String.Empty;
         public TransferError Error = TransferError.None;
@@ -248,7 +248,7 @@ namespace OpenMetaverse
     /// </summary>
     public class AssetUpload : Transfer
     {
-        public UUID AssetID;
+        public UUID AssetID = UUID.Zero;
         public AssetType Type;
         public ulong XferID;
         public uint PacketNum;
@@ -264,7 +264,7 @@ namespace OpenMetaverse
     /// </summary>
     public class ImageRequest
     {
-        public UUID ImageID;
+        public UUID ImageID = UUID.Zero;
         public ImageType Type;
         public float Priority;
         public int DiscardLevel;
@@ -593,7 +593,7 @@ namespace OpenMetaverse
 
             XferDownload transfer = new XferDownload();
             transfer.XferID = id;
-            transfer.ID = new UUID(id); // Our dictionary tracks transfers with UUIDs, so convert the ulong back
+            transfer.ID = UUIDFactory.GetUUID(id); // Our dictionary tracks transfers with UUIDs, so convert the ulong back
             transfer.Filename = filename;
             transfer.VFileID = vFileID;
             transfer.AssetType = vFileType;
@@ -713,7 +713,7 @@ namespace OpenMetaverse
             if (asset.AssetData == null)
                 throw new ArgumentException("Can't upload an asset with no data (did you forget to call Encode?)");
 
-            UUID assetID;
+            UUID assetID = UUID.Zero;
             UUID transferID = RequestUpload(out assetID, asset.AssetType, asset.AssetData, storeLocal);
             asset.AssetID = assetID;
             return transferID;
@@ -730,7 +730,7 @@ namespace OpenMetaverse
         /// events being fired</returns>
         public UUID RequestUpload(AssetType type, byte[] data, bool storeLocal)
         {
-            UUID assetID;
+            UUID assetID = UUID.Zero;
             return RequestUpload(out assetID, type, data, storeLocal);
         }
 
@@ -912,7 +912,7 @@ namespace OpenMetaverse
 
                         AssetUploaded += udpCallback;
 
-                        UUID assetID;
+                        UUID assetID = UUID.Zero;
                         bool success;
 
                         try
@@ -1390,7 +1390,7 @@ namespace OpenMetaverse
 
                     if (download.Source == SourceType.Asset && info.TransferInfo.Params.Length == 20)
                     {
-                        download.AssetID = new UUID(info.TransferInfo.Params, 0);
+                        download.AssetID = UUIDFactory.GetUUID(info.TransferInfo.Params, 0);
                         download.AssetType = (AssetType)(sbyte)info.TransferInfo.Params[16];
 
                         //Client.DebugLog(String.Format("TransferInfo packet received. AssetID: {0} Type: {1}",
@@ -1399,12 +1399,12 @@ namespace OpenMetaverse
                     else if (download.Source == SourceType.SimInventoryItem && info.TransferInfo.Params.Length == 100)
                     {
                         // TODO: Can we use these?
-                        //UUID agentID = new UUID(info.TransferInfo.Params, 0);
-                        //UUID sessionID = new UUID(info.TransferInfo.Params, 16);
-                        //UUID ownerID = new UUID(info.TransferInfo.Params, 32);
-                        //UUID taskID = new UUID(info.TransferInfo.Params, 48);
-                        //UUID itemID = new UUID(info.TransferInfo.Params, 64);
-                        download.AssetID = new UUID(info.TransferInfo.Params, 80);
+                        //UUID agentID = UUIDFactory.GetUUID(info.TransferInfo.Params, 0);
+                        //UUID sessionID = UUIDFactory.GetUUID(info.TransferInfo.Params, 16);
+                        //UUID ownerID = UUIDFactory.GetUUID(info.TransferInfo.Params, 32);
+                        //UUID taskID = UUIDFactory.GetUUID(info.TransferInfo.Params, 48);
+                        //UUID itemID = UUIDFactory.GetUUID(info.TransferInfo.Params, 64);
+                        download.AssetID = UUIDFactory.GetUUID(info.TransferInfo.Params, 80);
                         download.AssetType = (AssetType)(sbyte)info.TransferInfo.Params[96];
 
                         //Client.DebugLog(String.Format("TransferInfo packet received. AgentID: {0} SessionID: {1} " + 
@@ -1546,7 +1546,7 @@ namespace OpenMetaverse
                 upload.XferID = request.XferID.ID;
                 upload.Type = (AssetType)request.XferID.VFileType;
 
-                UUID transferID = new UUID(upload.XferID);
+                UUID transferID = UUIDFactory.GetUUID(upload.XferID);
                 Transfers[transferID] = upload;
 
                 // Send the first packet containing actual asset data
@@ -1563,7 +1563,7 @@ namespace OpenMetaverse
 
             // Building a new UUID every time an ACK is received for an upload is a horrible
             // thing, but this whole Xfer system is horrible
-            UUID transferID = new UUID(confirm.XferID.ID);
+            UUID transferID = UUIDFactory.GetUUID(confirm.XferID.ID);
             Transfer transfer;
             AssetUpload upload = null;
 
@@ -1644,7 +1644,7 @@ namespace OpenMetaverse
             SendXferPacketPacket xfer = (SendXferPacketPacket)e.Packet;
 
             // Lame ulong to UUID conversion, please go away Xfer system
-            UUID transferID = new UUID(xfer.XferID.ID);
+            UUID transferID = UUIDFactory.GetUUID(xfer.XferID.ID);
             Transfer transfer;
             XferDownload download = null;
 
@@ -1725,7 +1725,7 @@ namespace OpenMetaverse
             XferDownload download = null;
 
             // Lame ulong to UUID conversion, please go away Xfer system
-            UUID transferID = new UUID(abort.XferID.ID);
+            UUID transferID = UUIDFactory.GetUUID(abort.XferID.ID);
 
             lock (Transfers)
             {
@@ -1800,7 +1800,7 @@ namespace OpenMetaverse
     // <summary>Provides data for ImageReceiveProgress event</summary>
     public class ImageReceiveProgressEventArgs : EventArgs
     {
-        private readonly UUID m_ImageID;
+        private readonly UUID m_ImageID = UUID.Zero;
         private readonly int m_Received;
         private readonly int m_Total;
 

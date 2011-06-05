@@ -393,12 +393,12 @@ namespace OpenMetaverse
     /// <summary>
     /// Some information about a parcel of land returned from a DirectoryManager search
     /// </summary>
-    public struct ParcelInfo
+    public class ParcelInfo : WasAStruct
     {
         /// <summary>Global Key of record</summary>
-        public UUID ID;
+        public UUID ID = UUID.Zero;
         /// <summary>Parcel Owners <seealso cref="UUID"/></summary>
-        public UUID OwnerID;
+        public UUID OwnerID = UUID.Zero;
         /// <summary>Name field of parcel, limited to 128 characters</summary>
         public string Name;
         /// <summary>Description field of parcel, limited to 256 characters</summary>
@@ -418,7 +418,7 @@ namespace OpenMetaverse
         /// <summary>Name of simulator parcel is located in</summary>
         public string SimName;
         /// <summary>Texture <seealso cref="T:OpenMetaverse.UUID"/> of parcels display picture</summary>
-        public UUID SnapshotID;
+        public UUID SnapshotID = UUID.Zero;
         /// <summary>Float representing calculated traffic based on time spent on parcel by avatars</summary>
         public float Dwell;
         /// <summary>Sale price of parcel (not used)</summary>
@@ -430,7 +430,7 @@ namespace OpenMetaverse
     /// <summary>
     /// Parcel Media Information
     /// </summary>
-    public struct ParcelMedia
+    public class ParcelMedia : WasAStruct
     {
         /// <summary>A byte, if 0x1 viewer should auto scale media to fit object</summary>
         public bool MediaAutoScale;
@@ -438,7 +438,7 @@ namespace OpenMetaverse
         public bool MediaLoop;
         /// <summary>The Asset UUID of the Texture which when applied to a 
         /// primitive will display the media</summary>
-        public UUID MediaID;
+        public UUID MediaID = UUID.Zero;
         /// <summary>A URL which points to any Quicktime supported media type</summary>
         public string MediaURL;
         /// <summary>A description of the media</summary>
@@ -469,7 +469,7 @@ namespace OpenMetaverse
         /// <summary>Simulator-local ID of this parcel</summary>
         public int LocalID;
         /// <summary>UUID of the owner of this parcel</summary>
-        public UUID OwnerID;
+        public UUID OwnerID = UUID.Zero;
         /// <summary>Whether the land is deeded to a group or not</summary>
         public bool IsGroupOwned;
         /// <summary></summary>
@@ -530,7 +530,7 @@ namespace OpenMetaverse
         /// <summary>URL For Music Stream</summary>
         public string MusicURL;
         /// <summary></summary>
-        public UUID GroupID;
+        public UUID GroupID = UUID.Zero;
         /// <summary>Price for a temporary pass</summary>
         public int PassPrice;
         /// <summary>How long is pass valid for</summary>
@@ -538,9 +538,9 @@ namespace OpenMetaverse
         /// <summary></summary>
         public ParcelCategory Category;
         /// <summary>Key of authorized buyer</summary>
-        public UUID AuthBuyerID;
+        public UUID AuthBuyerID = UUID.Zero;
         /// <summary>Key of parcel snapshot</summary>
-        public UUID SnapshotID;
+        public UUID SnapshotID = UUID.Zero;
         /// <summary>The landing point location</summary>
         public Vector3 UserLocation;
         /// <summary>The landing point LookAt</summary>
@@ -707,10 +707,10 @@ namespace OpenMetaverse
         /// <summary>
         /// Parcel Accesslist
         /// </summary>
-        public struct ParcelAccessEntry
+        public class ParcelAccessEntry : WasAStruct
         {
             /// <summary>Agents <seealso cref="T:OpenMetaverse.UUID"/></summary>
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
             /// <summary></summary>
             public DateTime Time;
             /// <summary>Flags for specific entry in white/black lists</summary>
@@ -720,10 +720,10 @@ namespace OpenMetaverse
         /// <summary>
         /// Owners of primitives on parcel
         /// </summary>
-        public struct ParcelPrimOwners
+        public class ParcelPrimOwners : WasAStruct
         {
             /// <summary>Prim Owners <seealso cref="T:OpenMetaverse.UUID"/></summary>
-            public UUID OwnerID;
+            public UUID OwnerID = UUID.Zero;
             /// <summary>True of owner is group</summary>
             public bool IsGroupOwned;
             /// <summary>Total count of prims owned by OwnerID</summary>
@@ -2007,7 +2007,7 @@ namespace OpenMetaverse
     /// <summary>Contains a parcels dwell data returned from the simulator in response to an <see cref="RequestParcelDwell"/></summary>
     public class ParcelDwellReplyEventArgs : EventArgs
     {
-        private readonly UUID m_ParcelID;
+        private readonly UUID m_ParcelID = UUID.Zero;
         private readonly int m_LocalID;
         private readonly float m_Dwell;
 

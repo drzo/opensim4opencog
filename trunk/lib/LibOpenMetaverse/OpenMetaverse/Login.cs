@@ -120,7 +120,7 @@ namespace OpenMetaverse
 
         /// <summary>A randomly generated ID to distinguish between login attempts. This value is only used
         /// internally in the library and is never sent over the wire</summary>
-        internal UUID LoginID;
+        internal UUID LoginID = UUID.Zero;
 
         /// <summary>
         /// Default constuctor, initializes sane default values
@@ -204,7 +204,7 @@ namespace OpenMetaverse
     /// <summary>
     /// The decoded data returned from the login server after a successful login
     /// </summary>
-    public struct LoginResponseData
+    public class LoginResponseData : WasAStruct
     {
         /// <summary>true, false, indeterminate</summary>
         //[XmlRpcMember("login")]
@@ -213,9 +213,9 @@ namespace OpenMetaverse
         public string Reason;
         /// <summary>Login message of the day</summary>
         public string Message;
-        public UUID AgentID;
-        public UUID SessionID;
-        public UUID SecureSessionID;
+        public UUID AgentID = UUID.Zero;
+        public UUID SessionID = UUID.Zero;
+        public UUID SecureSessionID = UUID.Zero;
         public string FirstName;
         public string LastName;
         public string StartLocation;
@@ -237,11 +237,11 @@ namespace OpenMetaverse
 
         #region Inventory
 
-        public UUID InventoryRoot;
-        public UUID LibraryRoot;
+        public UUID InventoryRoot = UUID.Zero;
+        public UUID LibraryRoot = UUID.Zero;
         public InventoryFolder[] InventorySkeleton;
         public InventoryFolder[] LibrarySkeleton;
-        public UUID LibraryOwner;
+        public UUID LibraryOwner = UUID.Zero;
 
         #endregion
 
@@ -536,7 +536,7 @@ namespace OpenMetaverse
         {
             if (reply.ContainsKey(key))
             {
-                UUID value;
+                UUID value = UUID.Zero;
                 if (UUID.TryParse((string)reply[key], out value))
                     return value;
             }
@@ -698,7 +698,7 @@ namespace OpenMetaverse
 
         public InventoryFolder[] ParseInventorySkeleton(string key, Hashtable reply)
         {
-            UUID ownerID;
+            UUID ownerID = UUID.Zero;
             if (key.Equals("inventory-skel-lib"))
                 ownerID = LibraryOwner;
             else

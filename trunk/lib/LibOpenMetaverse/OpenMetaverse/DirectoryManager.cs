@@ -254,11 +254,11 @@ namespace OpenMetaverse
         /// <summary>
         /// A classified ad on the grid
         /// </summary>
-        public struct Classified
+        public class Classified : WasAStruct
         {
             /// <summary>UUID for this ad, useful for looking up detailed
             /// information about it</summary>
-            public UUID ID;
+            public UUID ID = UUID.Zero;
             /// <summary>The title of this classified ad</summary>
             public string Name;
             /// <summary>Flags that show certain options applied to the classified</summary>
@@ -282,12 +282,12 @@ namespace OpenMetaverse
         /// A parcel retrieved from the dataserver such as results from the 
         /// "For-Sale" listings or "Places" Search
         /// </summary>
-        public struct DirectoryParcel
+        public class DirectoryParcel : WasAStruct
         {
             /// <summary>The unique dataserver parcel ID</summary>
             /// <remarks>This id is used to obtain additional information from the entry
             /// by using the <see cref="ParcelManager.InfoRequest"/> method</remarks>
-            public UUID ID;
+            public UUID ID = UUID.Zero;
             /// <summary>A string containing the name of the parcel</summary>
             public string Name;
             /// <summary>The size of the parcel</summary>
@@ -314,7 +314,7 @@ namespace OpenMetaverse
         /// <summary>
         /// An Avatar returned from the dataserver
         /// </summary>
-        public struct AgentSearchData
+        public class AgentSearchData : WasAStruct
         {
             /// <summary>Online status of agent</summary>
             /// <remarks>This field appears to be obsolete and always returns false</remarks>
@@ -324,7 +324,7 @@ namespace OpenMetaverse
             /// <summary>The agents last name</summary>
             public string LastName;
             /// <summary>The agents <see cref="UUID"/></summary>
-            public UUID AgentID;
+            public UUID AgentID = UUID.Zero;
 
             /// <summary>Print the struct data as a string</summary>
             /// <returns>A string containing the field name, and field value</returns>
@@ -337,10 +337,10 @@ namespace OpenMetaverse
         /// <summary>
         ///  Response to a "Groups" Search
         /// </summary>
-        public struct GroupSearchData
+        public class GroupSearchData: WasAStruct
         {
             /// <summary>The Group ID</summary>
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
             /// <summary>The name of the group</summary>
             public string GroupName;
             /// <summary>The current number of members</summary>
@@ -367,10 +367,10 @@ namespace OpenMetaverse
         /// </para>
         /// Note: This is not the same as searching the land for sale data source
         /// </summary>
-        public struct PlacesSearchData
+        public class PlacesSearchData: WasAStruct
         {
             /// <summary>The ID of the Agent of Group that owns the parcel</summary>
-            public UUID OwnerID;
+            public UUID OwnerID = UUID.Zero;
             /// <summary>The name</summary>
             public string Name;
             /// <summary>The description</summary>
@@ -392,7 +392,7 @@ namespace OpenMetaverse
             /// <summary>The name of the Region the parcel is located in</summary>
             public string SimName;
             /// <summary>The Asset ID of the parcels Snapshot texture</summary>
-            public UUID SnapshotID;
+            public UUID SnapshotID = UUID.Zero;
             /// <summary>The calculated visitor traffic</summary>
             public float Dwell;
             /// <summary>The billing product SKU</summary>
@@ -429,10 +429,10 @@ namespace OpenMetaverse
         /// <summary>
         /// An "Event" Listing summary
         /// </summary>
-        public struct EventsSearchData
+        public class EventsSearchData: WasAStruct
         {
             /// <summary>The ID of the event creator</summary>
-            public UUID Owner;
+            public UUID Owner = UUID.Zero;
             /// <summary>The name of the event</summary>
             public string Name;
             /// <summary>The events ID</summary>
@@ -455,12 +455,12 @@ namespace OpenMetaverse
         /// <summary>
         /// The details of an "Event"
         /// </summary>
-        public struct EventInfo
+        public class EventInfo : WasAStruct
         {
             /// <summary>The events ID</summary>
             public uint ID;
             /// <summary>The ID of the event creator</summary>
-            public UUID Creator;
+            public UUID Creator = UUID.Zero;
             /// <summary>The name of the event</summary>
             public string Name;
             /// <summary>The category</summary>
@@ -1464,7 +1464,7 @@ namespace OpenMetaverse
     /// <summary>Contains the "Event" detail data returned from the data server</summary>
     public class DirEventsReplyEventArgs : EventArgs
     {
-        private readonly UUID m_QueryID;
+        private readonly UUID m_QueryID = UUID.Zero;
         /// <summary>The ID returned by <see cref="DirectoryManager.StartEventsSearch"/></summary>
         public UUID QueryID { get { return m_QueryID; } }
 
@@ -1487,7 +1487,7 @@ namespace OpenMetaverse
     /// <summary>Contains the "Event" list data returned from the data server</summary>
     public class PlacesReplyEventArgs : EventArgs
     {
-        private readonly UUID m_QueryID;
+        private readonly UUID m_QueryID = UUID.Zero;
         /// <summary>The ID returned by <see cref="DirectoryManager.StartPlacesSearch"/></summary>
         public UUID QueryID { get { return m_QueryID; } }
 
@@ -1510,7 +1510,7 @@ namespace OpenMetaverse
     /// <summary>Contains the places data returned from the data server</summary>
     public class DirPlacesReplyEventArgs : EventArgs
     {
-        private readonly UUID m_QueryID;
+        private readonly UUID m_QueryID = UUID.Zero;
         /// <summary>The ID returned by <see cref="DirectoryManager.StartDirPlacesSearch"/></summary>
         public UUID QueryID { get { return m_QueryID; } }
 
@@ -1548,7 +1548,7 @@ namespace OpenMetaverse
     /// <summary>Contains the group data returned from the data server</summary>
     public class DirGroupsReplyEventArgs : EventArgs
     {
-        private readonly UUID m_QueryID;
+        private readonly UUID m_QueryID = UUID.Zero;
         /// <summary>The ID returned by <see cref="DirectoryManager.StartGroupSearch"/></summary>
         public UUID QueryID { get { return m_QueryID; } }
 
@@ -1571,7 +1571,7 @@ namespace OpenMetaverse
     /// <summary>Contains the people data returned from the data server</summary>
     public class DirPeopleReplyEventArgs : EventArgs
     {
-        private readonly UUID m_QueryID;
+        private readonly UUID m_QueryID = UUID.Zero;
         /// <summary>The ID returned by <see cref="DirectoryManager.StartPeopleSearch"/></summary>
         public UUID QueryID { get { return m_QueryID; } }
 

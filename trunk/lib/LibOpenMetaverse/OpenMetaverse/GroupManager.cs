@@ -38,10 +38,10 @@ namespace OpenMetaverse
     /// <summary>
     /// Avatar group management
     /// </summary>
-    public struct GroupMember
+    public class GroupMember : WasAStruct
     {
         /// <summary>Key of Group Member</summary>
-        public UUID ID;
+        public UUID ID = UUID.Zero;
         /// <summary>Total land contribution</summary>
         public int Contribution;
         /// <summary>Online status information</summary>
@@ -57,12 +57,12 @@ namespace OpenMetaverse
     /// <summary>
     /// Role manager for a group
     /// </summary>
-    public struct GroupRole
+    public class GroupRole : WasAStruct
     {
         /// <summary>Key of the group</summary>
-        public UUID GroupID;
+        public UUID GroupID = UUID.Zero;
         /// <summary>Key of Role</summary>
-        public UUID ID;
+        public UUID ID = UUID.Zero;
         /// <summary>Name of Role</summary>
         public string Name;
         /// <summary>Group Title associated with Role</summary>
@@ -82,12 +82,12 @@ namespace OpenMetaverse
     /// <summary>
     /// Class to represent Group Title
     /// </summary>
-    public struct GroupTitle
+    public class GroupTitle : WasAStruct
     {
         /// <summary>Key of the group</summary>
-        public UUID GroupID;
+        public UUID GroupID = UUID.Zero;
         /// <summary>ID of the role title belongs to</summary>
-        public UUID RoleID;
+        public UUID RoleID = UUID.Zero;
         /// <summary>Group Title</summary>
         public string Title;
         /// <summary>Whether title is Active</summary>
@@ -102,16 +102,16 @@ namespace OpenMetaverse
     /// <summary>
     /// Represents a group on the grid
     /// </summary>
-    public struct Group
+    public class Group: WasAStruct
     {
         /// <summary>Key of Group</summary>
-        public UUID ID;
+        public UUID ID = UUID.Zero;
         /// <summary>Key of Group Insignia</summary>
-        public UUID InsigniaID;
+        public UUID InsigniaID = UUID.Zero;
         /// <summary>Key of Group Founder</summary>
-        public UUID FounderID;
+        public UUID FounderID = UUID.Zero;
         /// <summary>Key of Group Role for Owners</summary>
-        public UUID OwnerRole;
+        public UUID OwnerRole = UUID.Zero;
         /// <summary>Name of Group</summary>
         public string Name;
         /// <summary>Text of Group Charter</summary>
@@ -154,10 +154,10 @@ namespace OpenMetaverse
     /// <summary>
     /// A group Vote
     /// </summary>
-    public struct Vote
+    public class Vote : WasAStruct
     {
         /// <summary>Key of Avatar who created Vote</summary>
-        public UUID Candidate;
+        public UUID Candidate = UUID.Zero;
         /// <summary>Text of the Vote proposal</summary>
         public string VoteString;
         /// <summary>Total number of votes</summary>
@@ -229,16 +229,16 @@ namespace OpenMetaverse
     /// <summary>
     /// Struct representing a group notice
     /// </summary>
-    public struct GroupNotice
+    public class GroupNotice : WasAStruct
     {
         /// <summary></summary>
         public string Subject;
         /// <summary></summary>
         public string Message;
         /// <summary></summary>
-        public UUID AttachmentID;
+        public UUID AttachmentID = UUID.Zero;
         /// <summary></summary>
-        public UUID OwnerID;
+        public UUID OwnerID = UUID.Zero;
 
         /// <summary>
         /// 
@@ -267,10 +267,10 @@ namespace OpenMetaverse
     /// <summary>
     /// Struct representing a group notice list entry
     /// </summary>
-    public struct GroupNoticesListEntry
+    public class GroupNoticesListEntry : WasAStruct
     {
         /// <summary>Notice ID</summary>
-        public UUID NoticeID;
+        public UUID NoticeID = UUID.Zero;
         /// <summary>Creation timestamp of notice</summary>
         public uint Timestamp;
         /// <summary>Agent name who created notice</summary>
@@ -287,10 +287,10 @@ namespace OpenMetaverse
     /// <summary>
     /// Struct representing a member of a group chat session and their settings
     /// </summary>
-    public struct ChatSessionMember
+    public class ChatSessionMember : WasAStruct
     {
         /// <summary>The <see cref="UUID"/> of the Avatar</summary>
-        public UUID AvatarKey;
+        public UUID AvatarKey = UUID.Zero;
         /// <summary>True if user has voice chat enabled</summary>
         public bool CanVoiceChat;
         /// <summary>True of Avatar has moderator abilities</summary>
@@ -1894,8 +1894,8 @@ namespace OpenMetaverse
     /// <summary>Represents the members of a group</summary>
     public class GroupMembersReplyEventArgs : EventArgs
     {
-        private readonly UUID m_RequestID;
-        private readonly UUID m_GroupID;
+        private readonly UUID m_RequestID = UUID.Zero;
+        private readonly UUID m_GroupID = UUID.Zero;
         private readonly Dictionary<UUID, GroupMember> m_Members;
 
         /// <summary>Get the ID as returned by the request to correlate
@@ -1923,8 +1923,8 @@ namespace OpenMetaverse
     /// <summary>Represents the roles associated with a group</summary>
     public class GroupRolesDataReplyEventArgs : EventArgs
     {
-        private readonly UUID m_RequestID;
-        private readonly UUID m_GroupID;
+        private readonly UUID m_RequestID = UUID.Zero;
+        private readonly UUID m_GroupID = UUID.Zero;
         private readonly Dictionary<UUID, GroupRole> m_Roles;
 
         /// <summary>Get the ID as returned by the request to correlate
@@ -1951,8 +1951,8 @@ namespace OpenMetaverse
     /// <summary>Represents the Role to Member mappings for a group</summary>
     public class GroupRolesMembersReplyEventArgs : EventArgs
     {
-        private readonly UUID m_RequestID;
-        private readonly UUID m_GroupID;
+        private readonly UUID m_RequestID = UUID.Zero;
+        private readonly UUID m_GroupID = UUID.Zero;
         private readonly List<KeyValuePair<UUID, UUID>> m_RolesMembers;
 
         /// <summary>Get the ID as returned by the request to correlate
@@ -1979,8 +1979,8 @@ namespace OpenMetaverse
     /// <summary>Represents the titles for a group</summary>
     public class GroupTitlesReplyEventArgs : EventArgs
     {
-        private readonly UUID m_RequestID;
-        private readonly UUID m_GroupID;
+        private readonly UUID m_RequestID = UUID.Zero;
+        private readonly UUID m_GroupID = UUID.Zero;
         private readonly Dictionary<UUID, GroupTitle> m_Titles;
 
         /// <summary>Get the ID as returned by the request to correlate
@@ -2007,7 +2007,7 @@ namespace OpenMetaverse
     /// <summary>Represents the summary data for a group</summary>
     public class GroupAccountSummaryReplyEventArgs : EventArgs
     {
-        private readonly UUID m_GroupID;
+        private readonly UUID m_GroupID = UUID.Zero;
         private readonly GroupAccountSummary m_Summary;
 
         /// <summary>Get the ID of the group</summary>
@@ -2028,7 +2028,7 @@ namespace OpenMetaverse
     /// <summary>A response to a group create request</summary>
     public class GroupCreatedReplyEventArgs : EventArgs
     {
-        private readonly UUID m_GroupID;
+        private readonly UUID m_GroupID = UUID.Zero;
         private readonly bool m_Success;
         private readonly string m_Message;
 
@@ -2054,7 +2054,7 @@ namespace OpenMetaverse
     /// <summary>Represents a response to a request</summary>
     public class GroupOperationEventArgs : EventArgs
     {
-        private readonly UUID m_GroupID;
+        private readonly UUID m_GroupID = UUID.Zero;
         private readonly bool m_Success;
 
         /// <summary>Get the ID of the group</summary>
@@ -2075,7 +2075,7 @@ namespace OpenMetaverse
     /// <summary>Represents your agent leaving a group</summary>
     public class GroupDroppedEventArgs : EventArgs
     {
-        private readonly UUID m_GroupID;
+        private readonly UUID m_GroupID = UUID.Zero;
         /// <summary>Get the ID of the group</summary>
         public UUID GroupID { get { return m_GroupID; } }
 
@@ -2090,7 +2090,7 @@ namespace OpenMetaverse
     /// <summary>Represents a list of active group notices</summary>
     public class GroupNoticesListReplyEventArgs : EventArgs
     {
-        private readonly UUID m_GroupID;
+        private readonly UUID m_GroupID = UUID.Zero;
         private readonly List<GroupNoticesListEntry> m_Notices;
 
         /// <summary>Get the ID of the group</summary>
@@ -2131,7 +2131,7 @@ namespace OpenMetaverse
     /// to join a group.</remarks>
     public class GroupInvitationEventArgs : EventArgs
     {
-        private readonly UUID m_FromAgentID;
+        private readonly UUID m_FromAgentID = UUID.Zero;
         private readonly string m_FromAgentName;
         private readonly string m_Message;
         private readonly Simulator m_Simulator;

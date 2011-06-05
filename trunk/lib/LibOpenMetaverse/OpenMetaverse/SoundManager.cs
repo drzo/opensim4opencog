@@ -307,9 +307,9 @@ namespace OpenMetaverse
     public class AttachedSoundEventArgs : EventArgs
     {
         private readonly Simulator m_Simulator;
-        private readonly UUID m_SoundID;
-        private readonly UUID m_OwnerID;
-        private readonly UUID m_ObjectID;
+        private readonly UUID m_SoundID = UUID.Zero;
+        private readonly UUID m_OwnerID = UUID.Zero;
+        private readonly UUID m_ObjectID = UUID.Zero;
         private readonly float m_Gain;
         private readonly SoundFlags m_Flags;
 
@@ -352,7 +352,7 @@ namespace OpenMetaverse
     public class AttachedSoundGainChangeEventArgs : EventArgs
     {
         private readonly Simulator m_Simulator;
-        private readonly UUID m_ObjectID;
+        private readonly UUID m_ObjectID = UUID.Zero;
         private readonly float m_Gain;
 
         /// <summary>Simulator where the event originated</summary>
@@ -405,10 +405,10 @@ namespace OpenMetaverse
     public class SoundTriggerEventArgs : EventArgs
     {
         private readonly Simulator m_Simulator;
-        private readonly UUID m_SoundID;
-        private readonly UUID m_OwnerID;
-        private readonly UUID m_ObjectID;
-        private readonly UUID m_ParentID;
+        private readonly UUID m_SoundID = UUID.Zero;
+        private readonly UUID m_OwnerID = UUID.Zero;
+        private readonly UUID m_ObjectID = UUID.Zero;
+        private readonly UUID m_ParentID = UUID.Zero;
         private readonly float m_Gain;
         private readonly ulong m_RegionHandle;
         private readonly Vector3 m_Position;
@@ -474,9 +474,9 @@ namespace OpenMetaverse
     public class PreloadSoundEventArgs : EventArgs
     {
         private readonly Simulator m_Simulator;
-        private readonly UUID m_SoundID;
-        private readonly UUID m_OwnerID;
-        private readonly UUID m_ObjectID;
+        private readonly UUID m_SoundID = UUID.Zero;
+        private readonly UUID m_OwnerID = UUID.Zero;
+        private readonly UUID m_ObjectID = UUID.Zero;
 
         /// <summary>Simulator where the event originated</summary>
         public Simulator Simulator { get { return m_Simulator; } }

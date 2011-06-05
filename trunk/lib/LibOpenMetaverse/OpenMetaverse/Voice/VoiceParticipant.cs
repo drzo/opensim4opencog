@@ -36,7 +36,7 @@ namespace OpenMetaverse.Voice
     {
         private string Sip;
         private string AvatarName { get; set; }
-        private UUID id;
+        private UUID id = UUID.Zero;
 
         private bool muted;
         private int volume;
@@ -84,8 +84,7 @@ namespace OpenMetaverse.Voice
                 temp = temp.Replace('_', '/');
 
                 byte[] binary = Convert.FromBase64String(temp.Substring(1));
-                UUID u = UUID.Zero;
-                u.FromBytes(binary, 0);
+                UUID u = UUIDFactory.GetUUID(binary, 0);
                 return u;
             }
 

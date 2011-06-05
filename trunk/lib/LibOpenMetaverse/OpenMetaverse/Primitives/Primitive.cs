@@ -409,7 +409,7 @@ namespace OpenMetaverse
         /// </summary>
         public class SculptData
         {
-            public UUID SculptTexture;
+            public UUID SculptTexture = UUID.Zero;
             private byte type;
 
             public SculptType Type
@@ -450,7 +450,7 @@ namespace OpenMetaverse
             {
                 if (data.Length >= 17)
                 {
-                    SculptTexture = new UUID(data, pos);
+                    SculptTexture = UUIDFactory.GetUUID(data, pos);
                     type = data[pos + 16];
                 }
                 else
@@ -507,13 +507,13 @@ namespace OpenMetaverse
         public class ObjectProperties
         {
             /// <summary></summary>
-            public UUID ObjectID;
+            public UUID ObjectID = UUID.Zero;
             /// <summary></summary>
-            public UUID CreatorID;
+            public UUID CreatorID = UUID.Zero;
             /// <summary></summary>
-            public UUID OwnerID;
+            public UUID OwnerID = UUID.Zero;
             /// <summary></summary>
-            public UUID GroupID;
+            public UUID GroupID = UUID.Zero;
             /// <summary></summary>
             public DateTime CreationDate;
             /// <summary></summary>
@@ -535,13 +535,13 @@ namespace OpenMetaverse
             /// <summary></summary>
             public short InventorySerial;
             /// <summary></summary>
-            public UUID ItemID;
+            public UUID ItemID = UUID.Zero;
             /// <summary></summary>
-            public UUID FolderID;
+            public UUID FolderID = UUID.Zero;
             /// <summary></summary>
-            public UUID FromTaskID;
+            public UUID FromTaskID = UUID.Zero;
             /// <summary></summary>
-            public UUID LastOwnerID;
+            public UUID LastOwnerID = UUID.Zero;
             /// <summary></summary>
             public string Name;
             /// <summary></summary>
@@ -660,9 +660,9 @@ namespace OpenMetaverse
         #region Public Members
 
         /// <summary></summary>
-        public UUID ID;
+        public UUID ID = UUID.Zero;
         /// <summary></summary>
-        public UUID GroupID;
+        public UUID GroupID = UUID.Zero;
         /// <summary></summary>
         public uint LocalID;
         /// <summary></summary>
@@ -699,10 +699,10 @@ namespace OpenMetaverse
         /// <summary></summary>
         public ClickAction ClickAction;
         /// <summary></summary>
-        public UUID Sound;
+        public UUID Sound = UUID.Zero;
         /// <summary>Identifies the owner if audio or a particle system is
         /// active</summary>
-        public UUID OwnerID;
+        public UUID OwnerID = UUID.Zero;
         /// <summary></summary>
         public SoundFlags SoundFlags;
         /// <summary></summary>
