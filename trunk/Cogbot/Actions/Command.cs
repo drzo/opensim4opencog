@@ -343,7 +343,7 @@ namespace cogbot.Actions
 
         public UUID UUIDParse(string p)
         {
-            UUID uuid;
+            UUID uuid = UUID.Zero;
             int argsUsed;
             if (UUIDTryParse(new[] { p }, 0, out uuid,out argsUsed)) return uuid;
             return UUID.Parse(p);

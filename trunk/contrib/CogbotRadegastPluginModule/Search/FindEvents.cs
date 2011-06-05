@@ -24,7 +24,7 @@ namespace METAbolt
 
         private ListViewItemComparer lvcompare;
 
-        private UUID queryID;
+        private UUID queryID = UUID.Zero;
         private Dictionary<string, uint> findEventsResults;
 
         public event EventHandler SelectedIndexChanged;

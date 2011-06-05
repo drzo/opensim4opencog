@@ -37,8 +37,8 @@ namespace cogbot.Actions.Objects
                 //Client.Objects.OnObjectProperties += callback;
                 int argsUsed;
                 Simulator CurSim = TryGetSim(args, out argsUsed) ?? Client.Network.CurrentSim;
-                UUID rootID;
-                UUID groupID;
+                UUID rootID = UUID.Zero;
+                UUID groupID = UUID.Zero;
                 Simulator CurrentSim = CurSim;
 
                 bool doTaskInv = false;

@@ -780,7 +780,7 @@ namespace cogbot.Listeners
 
         public UUID GetUserID(string ToAvatarName)
         {
-            UUID found;
+            UUID found = UUID.Zero;
             // case sensitive
             lock (Name2Key) if (Name2Key.TryGetValue(ToAvatarName, out found)) return found;
             // case insensitive
@@ -917,7 +917,7 @@ namespace cogbot.Listeners
             ManualResetEvent keyResolution = new ManualResetEvent(false);
             UUID query = UUID.Zero;
             BotClient Client = client;
-            UUID masterUUID;
+            UUID masterUUID = UUID.Zero;
             if (UUID.TryParse(masterName, out masterUUID))
             {
                 Client.MasterKey = masterUUID;

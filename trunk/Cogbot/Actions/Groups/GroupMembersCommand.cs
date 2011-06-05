@@ -17,8 +17,8 @@ namespace cogbot.Actions.Groups
     {
             private ManualResetEvent GroupsEvent = new ManualResetEvent(false);
         private string GroupName;
-        private UUID GroupUUID;
-        private UUID GroupRequestID;
+        private UUID GroupUUID = UUID.Zero;
+        private UUID GroupRequestID = UUID.Zero;
 
         public GroupMembersCommand(BotClient testClient)
         {

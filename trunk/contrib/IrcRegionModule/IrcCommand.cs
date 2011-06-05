@@ -90,7 +90,7 @@ namespace IrcRegionModule
             if (ircClient.IsMe(data.Nick)) return;
             if (data.Message.Contains("[off]")) return;
             string nick = data.Nick + " " + data.Channel.Substring(1);
-            UUID id;
+            UUID id = UUID.Zero;
             lock (IrcUUIDs)
             {
                 if (!IrcUUIDs.TryGetValue(nick, out id))
@@ -118,7 +118,7 @@ namespace IrcRegionModule
 
         public bool IsFromIRC(string nick)
         {
-            UUID id;
+            UUID id = UUID.Zero;
             lock (IrcUUIDs)
             {
                 if (!IrcUUIDs.TryGetValue(nick, out id))

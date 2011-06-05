@@ -1451,7 +1451,7 @@ namespace cogbot.TheOpenSims
         {
             a = a.ToLower();
             FillAssetNames();
-            UUID partial;// = default(UUID);
+            UUID partial = UUID.Zero;// = default(UUID);
             if (UUID.TryParse(a,out partial))
             {
                 return partial;
@@ -1573,7 +1573,7 @@ namespace cogbot.TheOpenSims
             SimAsset anim = FindAsset(uUID);
             if (anim != null)
             {
-                taskQueueQuick.Enqueue(anim.ProbeCache);
+                //taskQueueQuick.Enqueue("ProbeCache " + type + " " + uUID, anim.ProbeCache);
                 return anim;
             }
             lock (uuidAsset)
@@ -1629,7 +1629,7 @@ namespace cogbot.TheOpenSims
                     uuidAsset[uUID] = anim;
                 }
                 anim.AssetType = type;
-                anim.ProbeCache();
+                taskQueueQuick.Enqueue("ProbeCache " + type + " " + uUID, anim.ProbeCache);
             }
             {
                 InternAsset(anim);
@@ -1684,7 +1684,7 @@ namespace cogbot.TheOpenSims
     {
         class TaskInfo
         {
-            public UUID RequestID;
+            public UUID RequestID = UUID.Zero;
             public int RequestNbr;
             public AssetType Type;
 

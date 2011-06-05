@@ -10,8 +10,8 @@ namespace cogbot.Actions
 {
     class Whisper : Command, BotPersonalCommand
     {
-        public UUID currentAvatar;
-        public UUID currentSession;
+        public UUID currentAvatar = UUID.Zero;
+        public UUID currentSession = UUID.Zero;
 
         public Whisper(BotClient Client)
             : base(Client)

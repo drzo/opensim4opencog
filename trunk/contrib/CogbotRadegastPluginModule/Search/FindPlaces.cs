@@ -25,7 +25,7 @@ namespace METAbolt
 
         //private ListViewItemComparer lvcompare;
 
-        private UUID queryID;
+        private UUID queryID = UUID.Zero;
         private Dictionary<string, DirectoryManager.PlacesSearchData> findPlacesResults;
         private DirectoryManager.PlacesSearchData EmptyPlace;
 

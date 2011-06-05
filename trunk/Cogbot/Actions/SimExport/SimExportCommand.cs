@@ -125,7 +125,7 @@ namespace cogbot.Actions.SimExport
                 foreach (string file in files)
                 {
                     // Parse the UUID out of the filename
-                    UUID id;
+                    UUID id = UUID.Zero;
                     if (UUIDTryParse(Path.GetFileNameWithoutExtension(file).Substring(0, 36), out id))
                         texturesFinished[id] = id;
                 }

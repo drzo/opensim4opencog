@@ -32,7 +32,7 @@ namespace cogbot.Actions.Movement
             TheBotClient.describeNext = true;
             // base.acceptInput(verb, args);
             string[] args = pargs.tokens;
-            UUID primID;
+            UUID primID = UUID.Zero;
             SimActor TheSimAvatar = this.TheSimAvatar;
             if (verb == "stop-following")
             {

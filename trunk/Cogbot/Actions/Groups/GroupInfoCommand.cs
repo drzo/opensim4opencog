@@ -11,7 +11,7 @@ namespace cogbot.Actions.Groups
     public class GroupInfoCommand : Command, GridMasterCommand
     {
         private string GroupName;
-        private UUID GroupUUID;
+        private UUID GroupUUID = UUID.Zero;
 
         public GroupInfoCommand(BotClient testClient)
         {

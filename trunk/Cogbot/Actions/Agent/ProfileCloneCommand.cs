@@ -18,7 +18,7 @@ namespace cogbot.Actions.Agent
         bool ReceivedInterests = false;
         bool ReceivedGroups = false;
         ManualResetEvent ReceivedProfileEvent = new ManualResetEvent(false);
-        UUID targetID;
+        UUID targetID = UUID.Zero;
 
         bool registeredCallbacks = false;
 

@@ -13,8 +13,8 @@ namespace FashionBotModule
         private bool EnumeratingClothing;
         private List<UUID> ClothingFolderFolders;
         int current_subfolder =-1;
-        private UUID ClothingFolder;
-        private UUID Owner;
+        private UUID ClothingFolder = UUID.Zero;
+        private UUID Owner = UUID.Zero;
         private List<UUID> Received = new List<UUID>();
 
         public FashionBotModuleMain(BotClient _parent) : base(_parent)

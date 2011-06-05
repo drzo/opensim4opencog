@@ -16,10 +16,10 @@ namespace cogbot.Actions.SimExport
 {
     public class QueuedDownloadInfo
     {
-        public UUID AssetID;
-        public UUID ItemID;
-        public UUID TaskID;
-        public UUID OwnerID;
+        public UUID AssetID = UUID.Zero;
+        public UUID ItemID = UUID.Zero;
+        public UUID TaskID = UUID.Zero;
+        public UUID OwnerID = UUID.Zero;
         public AssetType Type;
         public string FileName;
         public DateTime WhenRequested;

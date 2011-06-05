@@ -27,7 +27,7 @@ namespace cogbot.Actions.SimExport
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            UUID assetID;
+            UUID assetID = UUID.Zero;
 
             if (args.Length != 1 || !UUID.TryParse(args[0], out assetID))
                 return ShowUsage();// " xfer [uuid]";
