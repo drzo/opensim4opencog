@@ -6,31 +6,31 @@ echo END: assemblies perms
 
 echo START: copy assembies
 
-cp lib/Radegast/assemblies/*.dll bin/
-cp lib/Radegast/*.dll bin/
-cp lib/Radegast/*.pdb bin/
-cp lib/Radegast/*.config bin/
-rm -f lib/Radegast/libop*
-cp lib/Radegast/*.so bin/
-cp lib/Radegast/*.dylib bin/
+cp sources/external/Radegast/assemblies/*.dll bin/
+cp sources/external/Radegast/*.dll bin/
+cp sources/external/Radegast/*.pdb bin/
+cp sources/external/Radegast/*.config bin/
+rm -f sources/external/Radegast/libop*
+cp sources/external/Radegast/*.so bin/
+cp sources/external/Radegast/*.dylib bin/
 svn revert bin/LAIR*.dll
-cp lib/LAIR.ResourceAPIs/PennBank/TreeBankGrapher/bin/Release/*.dll bin/
+cp sources/external/LAIR.ResourceAPIs/PennBank/TreeBankGrapher/bin/Release/*.dll bin/
 svn revert bin/LAIR.MachineLearning.dll
 svn revert bin/LAIR.Collect*.dll
 svn revert bin/*.dll bin/*.exe bin/*.so
 
-#cp lib/Radegast/*.ico /tmp
-#cp -a lib/Radegast/Resources/ /tmp/
+#cp sources/external/Radegast/*.ico /tmp
+#cp -a sources/external/Radegast/Resources/ /tmp/
 
 
-rm -f lib/LookingGlass-svn/bin/Prebuild.exe
-rm -f lib/LookingGlass-svn/bin/OpenMeta*
-rm -f lib/LookingGlass-svn/bin/HttpServer.dll
-rm -f lib/LookingGlass-svn/bin/PrimMesher.dll
-rm -f lib/LookingGlass-svn/bin/Radegast.exe
-rm -f lib/LookingGlass-svn/bin/libo*
+rm -f sources/external/LookingGlass-svn/bin/Prebuild.exe
+rm -f sources/external/LookingGlass-svn/bin/OpenMeta*
+rm -f sources/external/LookingGlass-svn/bin/HttpServer.dll
+rm -f sources/external/LookingGlass-svn/bin/PrimMesher.dll
+rm -f sources/external/LookingGlass-svn/bin/Radegast.exe
+rm -f sources/external/LookingGlass-svn/bin/libo*
 
-cp lib/LookingGlass-svn/bin/*.* bin/
+cp sources/external/LookingGlass-svn/bin/*.* bin/
 
 echo DONE: copy assembies
 mv ./bin/Mono.Security.dll ./bin/Mono.Security.dll.WindowsOnly
@@ -39,7 +39,7 @@ echo START: Generating NANT build files
 mono ./bin/Prebuild.exe  prebuild.xml /target nant
 
 # Stomp on BuildFiles
-cp NullBuild.txt lib/Radegast.Plugin.Speech/RadSpeechWin/RadSpeechWin.dll.build
+cp NullBuild.txt sources/external/Radegast.Plugin.Speech/RadSpeechWin/RadSpeechWin.dll.build
 
 #delay building LookingGlass on Linux
 find ./lib/LookingGlass-svn/src -iname "*.build" -exec cp NullBuild.txt '{}' \;
