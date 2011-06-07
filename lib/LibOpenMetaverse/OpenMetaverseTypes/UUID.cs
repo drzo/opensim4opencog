@@ -517,7 +517,9 @@ namespace OpenMetaverse
             if (!(o is UUID)) return false;
 
             UUID uuid = (UUID)o;
-            return _Guid == uuid.GetGuid();
+            if (ReferenceEquals(o, this)) return true;
+            if (_Guid != uuid.GetGuid()) return false;
+            return true;
         }
 
         /// <summary>
@@ -628,7 +630,7 @@ namespace OpenMetaverse
             if (val == null) return UUID.Zero;
             return (UUID) val;
         }
-#warning OMG a perfect world!
+#warning OMG it is a perfect world!
 #endif
         #endregion Operator
 
@@ -639,5 +641,7 @@ namespace OpenMetaverse
         /// <summary>An UUID with a value of all zeroes</summary>
         public static readonly UUIDCantBeNull Zero = UUIDFactory. GetUUID(ZeroString);
 
+        [NonSerialized]
+        public object ExternalData;
     }
 }
