@@ -22,6 +22,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Windows.Forms;
 using SbsSW.SwiPlCs.Exceptions;         // in PlHalt
 
 using System.Runtime.InteropServices;	// marscall
@@ -29,6 +30,16 @@ using System.Runtime.InteropServices;	// marscall
 // ReSharper disable InconsistentNaming
 namespace SbsSW.SwiPlCs
 {
+    public static class swipl_win
+    {
+        static public int install()
+        {
+            PrologClient.IsPLWin = true;
+            PrologClient.RedirectStreams = false;
+            PrologClient.SetupProlog();            
+            return libpl.PL_succeed;
+        }
+    }
     /**********************************
     * Wrapper libpl(cs) - DllFileName - D:\\Lesta\\swi-pl\\pl\\bin\\LibPlD.dll *
     **********************************/

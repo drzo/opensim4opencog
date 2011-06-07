@@ -23,15 +23,18 @@ using System;           // CLSCompliant
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Security.Permissions;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("SWI-Pl-cs2 - A .NET interface to SWI-Prolog ©")]
+//[assembly: AssemblyTitle("SWI-Pl-cs2 - A .NET interface to SWI-Prolog ©")]
+[assembly: AssemblyTitle("SWIPlCs - A .NET interface to SWI-Prolog ©")]
 [assembly: AssemblyDescription(".NET interface to SWI-Prolog ©")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("SBS-Softwaresysteme written by Uwe Lesta/Douglas Miles")]
-[assembly: AssemblyProduct("SWI-Pl-cs2")]
+//[assembly: AssemblyProduct("SWI-Pl-cs2")]
+[assembly: AssemblyProduct("SWIPlCs")]
 [assembly: AssemblyCopyright("Copyright © 2010 under LGPL 2.1")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -39,7 +42,7 @@ using System.Runtime.InteropServices;
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access atom type in this assembly from 
 // COM, set the ComVisible attribute to true on that type.
-[assembly: ComVisible(false)]
+[assembly: ComVisible(true)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("5782cb18-d94e-4fba-9f25-410bf962bb77")]
@@ -53,8 +56,10 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.5990.0")]
-[assembly: AssemblyFileVersion("1.1.5990.0")]
+//[assembly: AssemblyVersion("1.1.5990.0")]
+//[assembly: AssemblyFileVersion("1.1.5990.0")]
+[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]
 
 // Not internal tests
 //[assembly: InternalsVisibleTo("NUnitTest")]
@@ -74,6 +79,8 @@ using System.Runtime.InteropServices;
 
 
 
-[assembly: InternalsVisibleTo("TestSwiPl, PublicKey=002400000480000094000000060200000024000052534131000400000100010083dc9537d3928376e3970266c16e2c02df12b991a1325c17f8ae92ac945a5a7922e2b3d2ad24eef3ee6f9b39a0523f72281cd3ab5f69c81e2903910e751d644d4c759f4b501e664dc0de71c0836c75710feba8997827c5058d8616fa1e1d21f26521275686cd0f161e7cf6300599129dd84eb90b9d2147d1de87551761c342bb")]
+//[assembly: InternalsVisibleTo("TestSwiPl, PublicKey=002400000480000094000000060200000024000052534131000400000100010083dc9537d3928376e3970266c16e2c02df12b991a1325c17f8ae92ac945a5a7922e2b3d2ad24eef3ee6f9b39a0523f72281cd3ab5f69c81e2903910e751d644d4c759f4b501e664dc0de71c0836c75710feba8997827c5058d8616fa1e1d21f26521275686cd0f161e7cf6300599129dd84eb90b9d2147d1de87551761c342bb")]
 
 [assembly: CLSCompliant(true)]
+
+[assembly:SecurityPermission(SecurityAction.RequestMinimum, UnmanagedCode = true)]
