@@ -42,30 +42,30 @@ mono ./bin/Prebuild.exe  prebuild.xml /target nant
 cp NullBuild.txt sources/external/Radegast.Plugin.Speech/RadSpeechWin/RadSpeechWin.dll.build
 
 #delay building LookingGlass on Linux
-find ./lib/LookingGlass-svn/src -iname "*.build" -exec cp NullBuild.txt '{}' \;
+find ./sources/external/LookingGlass-svn/src -iname "*.build" -exec cp NullBuild.txt '{}' \;
 
-cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.Renderer/LookingGlass.Renderer.dll.build
-cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.World/LookingGlass.World.dll.build
-cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.Radegast/LookingGlass.Radegast.dll.build
-cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.View/LookingGlass.View.dll.build
-cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.Comm/LookingGlass.Comm.dll.build
-cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.Comm.LLLP/LookingGlass.Comm.LLLP.dll.build
-cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.Framework/LookingGlass.Framework.dll.build
-cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.Rest/LookingGlass.Rest.dll.build
-cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.World.LL/LookingGlass.World.LL.dll.build
-cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass/LookingGlass.exe.build
-cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.Renderer.Ogre/LookingGlass.Renderer.Ogre.dll.build
-cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.World.OS/LookingGlass.World.OS.dll.build
-cp NullBuild.txt ./lib/LookingGlass-svn/src/LookingGlass.World.Services/LookingGlass.World.Services.dll.build
-cp NullBuild.txt ./lib/xglore/xglore.exe.build
-cp NullBuild.txt ./lib/Lucene/src/Lucene.Net/Lucene.Net.dll.build
-cp NullBuild.txt ./lib/LAIR.ResourceAPIs/PennBank/PennBank/LAIR.ResourceAPIs.PennBank.dll.build
-cp NullBuild.txt ./lib/LAIR.ResourceAPIs/NomBank/NomBank/LAIR.ResourceAPIs.NomBank.dll.build
-cp NullBuild.txt ./lib/LAIR.ResourceAPIs/PennBank/TreeBankGrapher/TreeBankGrapher.exe.build
-cp NullBuild.txt ./lib/LAIR.ResourceAPIs/Wikipedia/Wikipedia/LAIR.ResourceAPIs.Wikipedia.dll.build
-cp NullBuild.txt ./lib/LAIR.ResourceAPIs/Wikipedia/MirrorTables/MirrorTables.exe.build
+cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.Renderer/LookingGlass.Renderer.dll.build
+cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.World/LookingGlass.World.dll.build
+cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.Radegast/LookingGlass.Radegast.dll.build
+cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.View/LookingGlass.View.dll.build
+cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.Comm/LookingGlass.Comm.dll.build
+cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.Comm.LLLP/LookingGlass.Comm.LLLP.dll.build
+cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.Framework/LookingGlass.Framework.dll.build
+cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.Rest/LookingGlass.Rest.dll.build
+cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.World.LL/LookingGlass.World.LL.dll.build
+cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass/LookingGlass.exe.build
+cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.Renderer.Ogre/LookingGlass.Renderer.Ogre.dll.build
+cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.World.OS/LookingGlass.World.OS.dll.build
+cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.World.Services/LookingGlass.World.Services.dll.build
+cp NullBuild.txt ./sources/external/xglore/xglore.exe.build
+cp NullBuild.txt ./sources/external/Lucene/src/Lucene.Net/Lucene.Net.dll.build
+cp NullBuild.txt ./sources/external/LAIR.ResourceAPIs/PennBank/PennBank/LAIR.ResourceAPIs.PennBank.dll.build
+cp NullBuild.txt ./sources/external/LAIR.ResourceAPIs/NomBank/NomBank/LAIR.ResourceAPIs.NomBank.dll.build
+cp NullBuild.txt ./sources/external/LAIR.ResourceAPIs/PennBank/TreeBankGrapher/TreeBankGrapher.exe.build
+cp NullBuild.txt ./sources/external/LAIR.ResourceAPIs/Wikipedia/Wikipedia/LAIR.ResourceAPIs.Wikipedia.dll.build
+cp NullBuild.txt ./sources/external/LAIR.ResourceAPIs/Wikipedia/MirrorTables/MirrorTables.exe.build
 cp NullBuild.txt ./bin/CogbotLib.dll.build
-cp NullBuild.txt ./lib/LAIR.ResourceAPIs/Cogbot.LAIR/Cogbot.LAIR.exe.build
+cp NullBuild.txt ./sources/external/LAIR.ResourceAPIs/Cogbot.LAIR/Cogbot.LAIR.exe.build
 
 echo DONE: Generating NANT build files
 rm -rf bin/LookingGlass*.*
