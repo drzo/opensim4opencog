@@ -38,38 +38,38 @@
 
       <!-- External Libraries -->
  <!--
-    <Project name="ExtensionLoader" path="lib/ExtensionLoader" type="Library" guid="F0CCD62E-8055-4419-8171-F2C5FD7C8B6D">
+    <Project name="ExtensionLoader" path="sources/external/ExtensionLoader" type="Library" guid="F0CCD62E-8055-4419-8171-F2C5FD7C8B6D">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../bin/</OutputPath>
+          <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../bin/</OutputPath>
+          <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../bin</ReferencePath>
+      <ReferencePath>../../../bin</ReferencePath>
       <Reference name="System"/>
       <Files>
         <Match pattern="*.cs" recurse="true"/>
       </Files>
     </Project>
 
-      <Project name="HttpServer" path="lib/HttpServer" type="Library" guid="455E7D70-1C85-4D7F-9F01-DC801B8B8C34">
+      <Project name="HttpServer" path="sources/external/HttpServer" type="Library" guid="455E7D70-1C85-4D7F-9F01-DC801B8B8C34">
         <Configuration name="Debug">
           <Options>
-            <OutputPath>../../bin/</OutputPath>
+            <OutputPath>../../../bin/</OutputPath>
           </Options>
         </Configuration>
         <Configuration name="Release">
           <Options>
-            <OutputPath>../../bin/</OutputPath>
+            <OutputPath>../../../bin/</OutputPath>
           </Options>
         </Configuration>
 
-        <ReferencePath>../../bin</ReferencePath>
+        <ReferencePath>../../../bin</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Web"/>
         <Files>
@@ -77,23 +77,23 @@
         </Files>
       </Project>
       -->
-      <Project name="LAIR.CommonPort" path="lib/LAIR.ResourceAPIs/LAIR.CommonPort" type="Library" rootNamespace="LAIR.CommonPort" frameworkVersion="v3_5">
+      <Project name="LAIR.CommonPort" path="sources/external/LAIR.ResourceAPIs/LAIR.CommonPort" type="Library" rootNamespace="LAIR.CommonPort" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
-            <OutputPath>../../../bin/</OutputPath>
+            <OutputPath>../../../../bin/</OutputPath>
             <PlatformTarget>x86</PlatformTarget>
             <XmlDocFile>LAIR.CommonPort.XML</XmlDocFile>
            </Options>
         </Configuration>
         <Configuration name="Release">
           <Options>
-            <OutputPath>../../../bin/</OutputPath>
+            <OutputPath>../../../../bin/</OutputPath>
             <PlatformTarget>x86</PlatformTarget>
             <XmlDocFile>LAIR.CommonPort.XML</XmlDocFile>
           </Options>
         </Configuration>
 
-        <ReferencePath>../../../bin</ReferencePath>
+        <ReferencePath>../../../../bin</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Core"/>
         <Reference name="System.Xml" localCopy="false"/>
@@ -116,18 +116,18 @@
       </Project>
 
 
-    <Project name="Lucene.Net" path="lib/Lucene/src/Lucene.Net" type="Library" frameworkVersion="v3_5">
+    <Project name="Lucene.Net" path="sources/external/Lucene/src/Lucene.Net" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
-      <ReferencePath>../../../../bin</ReferencePath>
+      <ReferencePath>../../../../../bin</ReferencePath>
       <Reference name="System" localCopy="false"/>
       <Reference name="System.Core" localCopy="false"/>
       <Reference name="System.Configuration" localCopy="false"/>
@@ -143,21 +143,21 @@
       </Files>
     </Project>
 
-          <Project name="LAIR.ResourceAPIs.PennBank" path="lib/LAIR.ResourceAPIs/PennBank/PennBank" type="Library" rootNamespace="LAIR.ResourceAPIs.PennBank" frameworkVersion="v3_5">
+          <Project name="LAIR.ResourceAPIs.PennBank" path="sources/external/LAIR.ResourceAPIs/PennBank/PennBank" type="Library" rootNamespace="LAIR.ResourceAPIs.PennBank" frameworkVersion="v3_5">
            <Configuration name="Debug">
              <Options>
-               <OutputPath>../../../../bin/</OutputPath>
+               <OutputPath>../../../../../bin/</OutputPath>
                <XmlDocFile>LAIR.ResourceAPIs.PennBank.XML</XmlDocFile>
               </Options>
            </Configuration>
            <Configuration name="Release">
              <Options>
-               <OutputPath>../../../../bin/</OutputPath>
+               <OutputPath>../../../../../bin/</OutputPath>
                <XmlDocFile>LAIR.ResourceAPIs.PennBank.XML</XmlDocFile>
              </Options>
            </Configuration>
 
-           <ReferencePath>../../../../bin</ReferencePath>
+           <ReferencePath>../../../../../bin</ReferencePath>
            <Reference name="System"/>
            <Reference name="System.Core"/>
            <Reference name="System.Xml"/>
@@ -180,21 +180,21 @@
            </Files>
          </Project>
 
-          <Project name="LAIR.ResourceAPIs.NomBank" path="lib/LAIR.ResourceAPIs/NomBank/NomBank" type="Library" rootNamespace="LAIR.ResourceAPIs.NomBank" frameworkVersion="v3_5">
+          <Project name="LAIR.ResourceAPIs.NomBank" path="sources/external/LAIR.ResourceAPIs/NomBank/NomBank" type="Library" rootNamespace="LAIR.ResourceAPIs.NomBank" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
-            <OutputPath>../../../../bin/</OutputPath>
+            <OutputPath>../../../../../bin/</OutputPath>
             <XmlDocFile>LAIR.ResourceAPIs.NomBank.XML</XmlDocFile>
            </Options>
         </Configuration>
         <Configuration name="Release">
           <Options>
-            <OutputPath>../../../../bin/</OutputPath>
+            <OutputPath>../../../../../bin/</OutputPath>
             <XmlDocFile>LAIR.ResourceAPIs.NomBank.XML</XmlDocFile>
           </Options>
         </Configuration>
 
-        <ReferencePath>../../../../bin</ReferencePath>
+        <ReferencePath>../../../../../bin</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Core"/>
         <Reference name="System.Xml"/>
@@ -219,21 +219,21 @@
       </Project>
 
 
-    <Project name="LAIR.ResourceAPIs.WordNet" path="lib/LAIR.ResourceAPIs/WordNet/WordNet" type="Library" rootNamespace="LAIR.ResourceAPIs.WordNet" frameworkVersion="v3_5">
+    <Project name="LAIR.ResourceAPIs.WordNet" path="sources/external/LAIR.ResourceAPIs/WordNet/WordNet" type="Library" rootNamespace="LAIR.ResourceAPIs.WordNet" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
           <XmlDocFile>LAIR.ResourceAPIs.WordNet.XML</XmlDocFile>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
           <XmlDocFile>LAIR.ResourceAPIs.WordNet.XML</XmlDocFile>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin</ReferencePath>
+      <ReferencePath>../../../../../bin</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Core"/>
       <Reference name="System.Xml"/>
@@ -256,21 +256,21 @@
       </Files>
     </Project>
 
-    <Project name="TreeBankGrapher" path="lib/LAIR.ResourceAPIs/PennBank/TreeBankGrapher" type="Exe" rootNamespace="TreeBankGrapher" frameworkVersion="v3_5">
+    <Project name="TreeBankGrapher" path="sources/external/LAIR.ResourceAPIs/PennBank/TreeBankGrapher" type="Exe" rootNamespace="TreeBankGrapher" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
           <XmlDocFile>TreeBankGrapher.XML</XmlDocFile>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
           <XmlDocFile>TreeBankGrapher.XML</XmlDocFile>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin</ReferencePath>
+      <ReferencePath>../../../../../bin</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Core"/>
       <Reference name="System.Xml"/>
@@ -301,21 +301,21 @@
       </Files>
     </Project>
 
-    <Project name="LAIR.ResourceAPIs.VerbNet" path="lib/LAIR.ResourceAPIs/VerbNet/VerbNet" type="Library" rootNamespace="LAIR.ResourceAPIs.VerbNet" frameworkVersion="v3_5">
+    <Project name="LAIR.ResourceAPIs.VerbNet" path="sources/external/LAIR.ResourceAPIs/VerbNet/VerbNet" type="Library" rootNamespace="LAIR.ResourceAPIs.VerbNet" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
           <XmlDocFile>LAIR.ResourceAPIs.VerbNet.XML</XmlDocFile>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
           <XmlDocFile>LAIR.ResourceAPIs.VerbNet.XML</XmlDocFile>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin</ReferencePath>
+      <ReferencePath>../../../../../bin</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Core"/>
       <Reference name="System.Xml"/>
@@ -341,21 +341,21 @@
       </Files>
     </Project>
 
-    <Project name="LAIR.ResourceAPIs.FrameNet" path="lib/LAIR.ResourceAPIs/FrameNet/FrameNet" type="Library" rootNamespace="LAIR.ResourceAPIs.FrameNet" frameworkVersion="v3_5">
+    <Project name="LAIR.ResourceAPIs.FrameNet" path="sources/external/LAIR.ResourceAPIs/FrameNet/FrameNet" type="Library" rootNamespace="LAIR.ResourceAPIs.FrameNet" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
           <XmlDocFile>LAIR.ResourceAPIs.FrameNet.XML</XmlDocFile>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
           <XmlDocFile>LAIR.ResourceAPIs.FrameNet.XML</XmlDocFile>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin</ReferencePath>
+      <ReferencePath>../../../../../bin</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Core"/>
       <Reference name="System.Xml"/>
@@ -380,21 +380,21 @@
     </Project>
 
 
-    <Project name="LAIR.ResourceAPIs.SemLink" path="lib/LAIR.ResourceAPIs/SemLink/SemLink" type="Library" rootNamespace="LAIR.ResourceAPIs.SemLink" frameworkVersion="v3_5">
+    <Project name="LAIR.ResourceAPIs.SemLink" path="sources/external/LAIR.ResourceAPIs/SemLink/SemLink" type="Library" rootNamespace="LAIR.ResourceAPIs.SemLink" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
           <XmlDocFile>LAIR.ResourceAPIs.SemLink.XML</XmlDocFile>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
           <XmlDocFile>LAIR.ResourceAPIs.SemLink.XML</XmlDocFile>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin</ReferencePath>
+      <ReferencePath>../../../../../bin</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Core"/>
       <Reference name="System.Xml"/>
@@ -417,21 +417,21 @@
       </Files>
     </Project>
 
-    <Project name="LAIR.ResourceAPIs.Wikipedia" path="lib/LAIR.ResourceAPIs/Wikipedia/Wikipedia" type="Library" rootNamespace="LAIR.ResourceAPIs.Wikipedia" frameworkVersion="v3_5">
+    <Project name="LAIR.ResourceAPIs.Wikipedia" path="sources/external/LAIR.ResourceAPIs/Wikipedia/Wikipedia" type="Library" rootNamespace="LAIR.ResourceAPIs.Wikipedia" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
           <XmlDocFile>LAIR.ResourceAPIs.Wikipedia.XML</XmlDocFile>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
           <XmlDocFile>LAIR.ResourceAPIs.Wikipedia.XML</XmlDocFile>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin</ReferencePath>
+      <ReferencePath>../../../../../bin</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Core"/>
       <Reference name="System.Xml"/>
@@ -461,21 +461,21 @@
 
 
      
-    <Project name="MirrorTables" path="lib/LAIR.ResourceAPIs/Wikipedia/MirrorTables" type="Exe" rootNamespace="MirrorTables" frameworkVersion="v3_5">
+    <Project name="MirrorTables" path="sources/external/LAIR.ResourceAPIs/Wikipedia/MirrorTables" type="Exe" rootNamespace="MirrorTables" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
           <XmlDocFile>MirrorTables.XML</XmlDocFile>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
           <XmlDocFile>MirrorTables.XML</XmlDocFile>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin</ReferencePath>
+      <ReferencePath>../../../../../bin</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Core"/>
       <Reference name="System.Xml"/>
@@ -507,19 +507,19 @@
       </Files>
     </Project>
 
-    <Project name="SwiPlCs" path="contrib/SWIPlCs" type="Library" frameworkVersion="v3_5">
+    <Project name="SwiPlCs" path="sources/main/SWIPlCs" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../bin/</OutputPath>
+          <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../bin/</OutputPath>
+          <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../bin</ReferencePath>
+      <ReferencePath>../../../bin</ReferencePath>
       <Reference name="SWIJPL.dll" localCopy="false"/>
       <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
@@ -543,21 +543,21 @@
       </Files>
     </Project>
 
-      <Project name="OpenMetaverseTypes" path="lib/LibOpenMetaverse/OpenMetaverseTypes" type="Library" rootNamespace="OpenMetaverse" frameworkVersion="v3_5">
+      <Project name="OpenMetaverseTypes" path="sources/external/LibOpenMetaverse/OpenMetaverseTypes" type="Library" rootNamespace="OpenMetaverse" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
-            <OutputPath>../../../bin/</OutputPath>
+            <OutputPath>../../../../bin/</OutputPath>
             <XmlDocFile>OpenMetaverseTypes.XML</XmlDocFile>
           </Options>
         </Configuration>
         <Configuration name="Release">
           <Options>
-            <OutputPath>../../../bin/</OutputPath>
+            <OutputPath>../../../../bin/</OutputPath>
             <XmlDocFile>OpenMetaverseTypes.XML</XmlDocFile>
           </Options>
         </Configuration>
 
-        <ReferencePath>../../../bin</ReferencePath>
+        <ReferencePath>../../../../bin</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Core"/>
         <Reference name="System.Xml"/>
@@ -567,21 +567,21 @@
         </Files>
       </Project>
 
-      <Project name="OpenMetaverse.StructuredData" path="lib/LibOpenMetaverse/OpenMetaverse.StructuredData" type="Library" rootNamespace="OpenMetaverse.StructuredData" frameworkVersion="v3_5">
+      <Project name="OpenMetaverse.StructuredData" path="sources/external/LibOpenMetaverse/OpenMetaverse.StructuredData" type="Library" rootNamespace="OpenMetaverse.StructuredData" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
-            <OutputPath>../../../bin/</OutputPath>
+            <OutputPath>../../../../bin/</OutputPath>
             <XmlDocFile>OpenMetaverse.StructuredData.XML</XmlDocFile>
           </Options>
         </Configuration>
         <Configuration name="Release">
           <Options>
-            <OutputPath>../../../bin/</OutputPath>
+            <OutputPath>../../../../bin/</OutputPath>
             <XmlDocFile>OpenMetaverse.StructuredData.XML</XmlDocFile>
           </Options>
         </Configuration>
 
-        <ReferencePath>../../../bin</ReferencePath>
+        <ReferencePath>../../../../bin</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Xml"/>
         <Reference name="OpenMetaverseTypes"/>
@@ -591,20 +591,20 @@
       </Project>
 
       <!--
-      <Project name="OpenMetaverse.Http" path="lib/LibOpenMetaverse/OpenMetaverse.Http" type="Library" rootNamespace="OpenMetaverse.Http" frameworkVersion="v3_5">
+      <Project name="OpenMetaverse.Http" path="sources/external/LibOpenMetaverse/OpenMetaverse.Http" type="Library" rootNamespace="OpenMetaverse.Http" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
-            <OutputPath>../../bin/</OutputPath>
+            <OutputPath>../../../bin/</OutputPath>
           </Options>
         </Configuration>
         <Configuration name="Release">
           <Options>
-            <OutputPath>../../bin/</OutputPath>
+            <OutputPath>../../../bin/</OutputPath>
             <XmlDocFile>OpenMetaverse.Http.XML</XmlDocFile>
           </Options>
         </Configuration>
 
-        <ReferencePath>../../bin</ReferencePath>
+        <ReferencePath>../../../bin</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Xml"/>
         <Reference name="OpenMetaverseTypes"/>
@@ -617,21 +617,21 @@
         </Files>
       </Project>
 -->
-      <Project name="OpenMetaverse" path="lib/LibOpenMetaverse/OpenMetaverse" type="Library" rootNamespace="OpenMetaverse" frameworkVersion="v3_5">
+      <Project name="OpenMetaverse" path="sources/external/LibOpenMetaverse/OpenMetaverse" type="Library" rootNamespace="OpenMetaverse" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
-            <OutputPath>../../../bin/</OutputPath>
+            <OutputPath>../../../../bin/</OutputPath>
             <XmlDocFile>OpenMetaverse.XML</XmlDocFile>
           </Options>
         </Configuration>
         <Configuration name="Release">
           <Options>
-            <OutputPath>../../../bin/</OutputPath>
+            <OutputPath>../../../../bin/</OutputPath>
             <XmlDocFile>OpenMetaverse.XML</XmlDocFile>
           </Options>
         </Configuration>
 
-        <ReferencePath>../../../bin</ReferencePath>
+        <ReferencePath>../../../../bin</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Core"/>
         <Reference name="System.Xml"/>
@@ -649,21 +649,21 @@
         </Files>
       </Project>
 
-      <Project name="OpenMetaverse.Utilities" path="lib/LibOpenMetaverse/OpenMetaverse.Utilities" type="Library" frameworkVersion="v3_5">
+      <Project name="OpenMetaverse.Utilities" path="sources/external/LibOpenMetaverse/OpenMetaverse.Utilities" type="Library" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
-            <OutputPath>../../../bin/</OutputPath>
+            <OutputPath>../../../../bin/</OutputPath>
             <XmlDocFile>OpenMetaverse.Utilities.XML</XmlDocFile>
           </Options>
         </Configuration>
         <Configuration name="Release">
           <Options>
-            <OutputPath>../../../bin/</OutputPath>
+            <OutputPath>../../../../bin/</OutputPath>
             <XmlDocFile>OpenMetaverse.Utilities.XML</XmlDocFile>
           </Options>
         </Configuration>
 
-        <ReferencePath>../../../bin</ReferencePath>
+        <ReferencePath>../../../../bin</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Xml"/>
         <Reference name="System.Data"/>
@@ -676,7 +676,31 @@
         </Files>
       </Project>
 
-      <Project name="OpenMetaverse.Rendering.Meshmerizer" path="lib/LibOpenMetaverse/OpenMetaverse.Rendering.Meshmerizer" type="Library" frameworkVersion="v3_5">
+      <Project name="OpenMetaverse.Rendering.Meshmerizer" path="sources/external/LibOpenMetaverse/OpenMetaverse.Rendering.Meshmerizer" type="Library" frameworkVersion="v3_5">
+        <Configuration name="Debug">
+          <Options>
+            <OutputPath>../../../../bin/</OutputPath>
+          </Options>
+        </Configuration>
+        <Configuration name="Release">
+          <Options>
+            <OutputPath>../../../../bin/</OutputPath>
+          </Options>
+        </Configuration>
+
+        <ReferencePath>../../../../bin</ReferencePath>
+        <Reference name="System"/>
+        <Reference name="System.Drawing"/>        
+        <Reference name="OpenMetaverse"/>
+        <Reference name="OpenMetaverseTypes"/>
+        <Reference name="PrimMesher.dll" localCopy="false"/>
+        <Files>
+          <Match pattern="*.cs" recurse="true"/>
+        </Files>
+      </Project>
+
+      <!--
+      <Project name="WebDAVSharp" path="sources/external/WebDAVSharp" type="Library">
         <Configuration name="Debug">
           <Options>
             <OutputPath>../../../bin/</OutputPath>
@@ -689,30 +713,6 @@
         </Configuration>
 
         <ReferencePath>../../../bin</ReferencePath>
-        <Reference name="System"/>
-        <Reference name="System.Drawing"/>        
-        <Reference name="OpenMetaverse"/>
-        <Reference name="OpenMetaverseTypes"/>
-        <Reference name="PrimMesher.dll" localCopy="false"/>
-        <Files>
-          <Match pattern="*.cs" recurse="true"/>
-        </Files>
-      </Project>
-
-      <!--
-      <Project name="WebDAVSharp" path="lib/WebDAVSharp" type="Library">
-        <Configuration name="Debug">
-          <Options>
-            <OutputPath>../../bin/</OutputPath>
-          </Options>
-        </Configuration>
-        <Configuration name="Release">
-          <Options>
-            <OutputPath>../../bin/</OutputPath>
-          </Options>
-        </Configuration>
-
-        <ReferencePath>../../bin</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Xml"/>
         <Reference name="log4net"/>
@@ -727,16 +727,16 @@
       <Project name="OpenMetaverse.Rendering.GPL" path="OpenMetaverse.Rendering.GPL" type="Library">
         <Configuration name="Debug">
           <Options>
-            <OutputPath>../bin/</OutputPath>
+            <OutputPath>../../bin/</OutputPath>
           </Options>
         </Configuration>
         <Configuration name="Release">
           <Options>
-            <OutputPath>../bin/</OutputPath>
+            <OutputPath>../../bin/</OutputPath>
           </Options>
         </Configuration>
 
-        <ReferencePath>../bin</ReferencePath>
+        <ReferencePath>../../bin</ReferencePath>
         <Reference name="System"/>
         <Reference name="OpenMetaverse"/>
         <Reference name="OpenMetaverseTypes"/>
@@ -746,19 +746,19 @@
       </Project>
       -->
     
-    <Project name="DotLisp" path="lib/DotLisp" type="Library" frameworkVersion="v3_5">
+    <Project name="DotLisp" path="sources/external/DotLisp" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../bin/</OutputPath>
+          <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../bin/</OutputPath>
+          <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../bin</ReferencePath>
+      <ReferencePath>../../../bin</ReferencePath>
       <Reference name="System" localCopy="false"/>
       <Reference name="System.Data" localCopy="false"/>
       <Reference name="System.Xml" localCopy="false"/>
@@ -767,19 +767,19 @@
       </Files>
     </Project>
 
-    <Project name="MushDLR223" path="lib/MushDLR223" type="Library" frameworkVersion="v3_5">
+    <Project name="MushDLR223" path="sources/main/MushDLR223" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../bin/</OutputPath>
+          <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../bin/</OutputPath>
+          <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../bin</ReferencePath>
+      <ReferencePath>../../../bin</ReferencePath>
       <Reference name="System" localCopy="false"/>
       <Reference name="System.Core" localCopy="false" />
       <Reference name="System.Data" localCopy="false"/>
@@ -804,20 +804,20 @@
       </Files>
     </Project>
 
-    <Project name="AIMLbot" path="RTParser" type="Library" frameworkVersion="v3_5">
+    <Project name="AIMLbot" path="sources/main/RTParser" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../bin/</OutputPath>
+          <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
             
-          <OutputPath>../bin/</OutputPath>
+          <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../bin</ReferencePath>
+      <ReferencePath>../../../bin/</ReferencePath>
       <Reference name="System" localCopy="false"/>
       <Reference name="System.Data" localCopy="false"/>
       <Reference name="System.Xml" localCopy="false"/>
@@ -843,20 +843,20 @@
       </Files>
   </Project>
 
-    <Project name="PathSystem3D" path="contrib/PathSystem3D" type="Library" frameworkVersion="v3_5">
+    <Project name="PathSystem3D" path="sources/main/PathSystem3D" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../bin/</OutputPath>
+          <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
             
-          <OutputPath>../../bin/</OutputPath>
+          <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../bin</ReferencePath>
+      <ReferencePath>../../../bin</ReferencePath>
       <Reference name="OpenMetaverseTypes" localCopy="false"/>
       <Reference name="OpenMetaverse" localCopy="false"/>
       <Reference name="System" localCopy="false"/>
@@ -878,16 +878,16 @@
     <Project name="Simian" path="Simian" type="exe" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../bin/</OutputPath>
+          <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../bin/</OutputPath>
+          <OutputPath>../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../bin</ReferencePath>
+      <ReferencePath>../../bin</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Core"/>
       <Reference name="System.Drawing"/>
@@ -909,20 +909,20 @@
       </Files>
     </Project>
   -->
-    <Project name="Radegast" path="lib/Radegast" type="exe" frameworkVersion="v3_5">
+    <Project name="Radegast" path="sources/external/Radegast" type="exe" frameworkVersion="v3_5">
         <Configuration name="Debug">
             <Options>
-                <OutputPath>../../bin/</OutputPath>
+                <OutputPath>../../../bin/</OutputPath>
             </Options>
         </Configuration>
         <Configuration name="Release">
             <Options>
-                <OutputPath>../../bin/</OutputPath>
+                <OutputPath>../../../bin/</OutputPath>
                 <PlatformTarget>anycpu</PlatformTarget>
             </Options>
         </Configuration>
 
-        <ReferencePath>../../bin</ReferencePath>
+        <ReferencePath>../../../bin</ReferencePath>
 
         <Reference name="System" localCopy="false" />
         <Reference name="System.Core" localCopy="false" />
@@ -968,22 +968,22 @@
     </Project>
 
 
-    <Project name="Cogbot" path="Cogbot" type="exe" frameworkVersion="v3_5">
+    <Project name="LibCogbot" path="sources/main/LibCogbot" type="Library" frameworkVersion="v3_5">
        <Configuration name="Debug">
          <Options>
-           <OutputPath>../bin/</OutputPath>
+           <OutputPath>../../../bin/</OutputPath>
            <XmlDocFile>Cogbot.XML</XmlDocFile>
          </Options>
        </Configuration>
        <Configuration name="Release">
          <Options>
 
-           <OutputPath>../bin/</OutputPath>
+           <OutputPath>../../../bin/</OutputPath>
            <XmlDocFile>Cogbot.XML</XmlDocFile>
          </Options>
        </Configuration>
 
-       <ReferencePath>../bin</ReferencePath>
+       <ReferencePath>../../../bin</ReferencePath>
        <Reference name="log4net.dll" localCopy="false"/>
        <Reference name="PathSystem3D" localCopy="false"/>
        <Reference name="Mono.Security.dll" localCopy="false"/>
@@ -1034,21 +1034,21 @@
  </Project>
 
 
- <Project name="AIMLBotModule" path="contrib/AIMLBotModule" type="Library" frameworkVersion="v3_5">
+ <Project name="AIMLBotModule" path="sources/modules/AIMLBotModule" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-            <OutputPath>../../bin/</OutputPath>
+            <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
             
-            <OutputPath>../../bin/</OutputPath>
+            <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../bin</ReferencePath>
-      <Reference name="Cogbot.exe" localCopy="false"/>
+      <ReferencePath>../../../bin</ReferencePath>
+      <Reference name="LibCogbot" localCopy="false"/>
       <Reference name="MushDLR223"  localCopy="false"/>
       <Reference name="PathSystem3D" localCopy="false"/>
       <Reference name="OpenMetaverse" localCopy="false"/>
@@ -1067,19 +1067,19 @@
       </Files>
 </Project>
 <!--
- <Project name="xglore" path="lib/xglore" type="exe" frameworkVersion="v3_5">
+ <Project name="xglore" path="sources/external/xglore" type="exe" frameworkVersion="v3_5">
      <Configuration name="Debug">
        <Options>
-           <OutputPath>../../bin/</OutputPath>
+           <OutputPath>../../../bin/</OutputPath>
        </Options>
      </Configuration>
      <Configuration name="Release">
        <Options>
-           <OutputPath>../../bin/</OutputPath>
+           <OutputPath>../../../bin/</OutputPath>
        </Options>
      </Configuration>
 
-     <ReferencePath>../../bin</ReferencePath>
+     <ReferencePath>../../../bin</ReferencePath>
      <Reference name="System" localCopy="false"/>
      <Reference name="System.Core" localCopy="false"/>
      <Reference name="System.Data" localCopy="false"/>
@@ -1096,19 +1096,19 @@
      </Files>
 </Project>
 -->
- <Project name="IKVM.Runtime.JNI" path="lib/IKVM.JNI" type="Library" frameworkVersion="v3_5">
+ <Project name="IKVM.Runtime.JNI" path="sources/external/IKVM.JNI" type="Library" frameworkVersion="v3_5">
      <Configuration name="Debug">
        <Options>
-           <OutputPath>../../bin/</OutputPath>
+           <OutputPath>../../../bin/</OutputPath>
        </Options>
      </Configuration>
      <Configuration name="Release">
        <Options>
-           <OutputPath>../../bin/</OutputPath>
+           <OutputPath>../../../bin/</OutputPath>
        </Options>
      </Configuration>
 
-     <ReferencePath>../../bin</ReferencePath>
+     <ReferencePath>../../../bin</ReferencePath>
      <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
      <Reference name="System" localCopy="false"/>
@@ -1125,19 +1125,19 @@
      </Files>
 </Project>
     
- <Project name="PrologScriptEngine" path="contrib/PrologScriptEngine" type="Library" frameworkVersion="v3_5">
+ <Project name="PrologScriptEngine" path="sources/modules/PrologScriptEngine" type="Library" frameworkVersion="v3_5">
   <Configuration name="Debug">
     <Options>
-        <OutputPath>../../bin/</OutputPath>
+        <OutputPath>../../../bin/</OutputPath>
     </Options>
   </Configuration>
   <Configuration name="Release">
     <Options>
-        <OutputPath>../../bin/</OutputPath>
+        <OutputPath>../../../bin/</OutputPath>
     </Options>
   </Configuration>
 
-  <ReferencePath>../../bin</ReferencePath>
+  <ReferencePath>../../../bin</ReferencePath>
   <Reference name="System" localCopy="false"/>
   <Reference name="System.Core" localCopy="false"/>
   <Reference name="System.Data" localCopy="false"/>
@@ -1146,7 +1146,7 @@
   <Reference name="System.Drawing" localCopy="false"/>
   <Reference name="System.Windows.Forms" localCopy="false"/>
   <Reference name="System.Xml" localCopy="false"/>
-   <Reference name="Cogbot.exe" localCopy="false"/>
+   <Reference name="LibCogbot.dll" localCopy="false"/>
    <Reference name="MushDLR223"  localCopy="false"/>
    <Reference name="PathSystem3D" localCopy="false"/>
    <Reference name="OpenMetaverse" localCopy="false"/>
@@ -1162,19 +1162,19 @@
 </Project>
 
 
- <Project name="PrologBotModule" path="contrib/SwiPrologBotModule" type="Library" frameworkVersion="v3_5">
+ <Project name="PrologBotModule" path="sources/modules/SwiPrologBotModule" type="Library" frameworkVersion="v3_5">
   <Configuration name="Debug">
     <Options>
-        <OutputPath>../../bin/</OutputPath>
+        <OutputPath>../../../bin/</OutputPath>
     </Options>
   </Configuration>
   <Configuration name="Release">
     <Options>
-        <OutputPath>../../bin/</OutputPath>
+        <OutputPath>../../../bin/</OutputPath>
     </Options>
   </Configuration>
 
-  <ReferencePath>../../bin</ReferencePath>
+  <ReferencePath>../../../bin</ReferencePath>
   <Reference name="System" localCopy="false"/>
   <Reference name="System.Core" localCopy="false"/>
   <Reference name="System.Data" localCopy="false"/>
@@ -1183,7 +1183,7 @@
   <Reference name="System.Drawing" localCopy="false"/>
   <Reference name="System.Windows.Forms" localCopy="false"/>
   <Reference name="System.Xml" localCopy="false"/>
-   <Reference name="Cogbot.exe" localCopy="false"/>
+   <Reference name="LibCogbot" localCopy="false"/>
    <Reference name="MushDLR223"  localCopy="false"/>
    <Reference name="PathSystem3D" localCopy="false"/>
    <Reference name="OpenMetaverse" localCopy="false"/>
@@ -1201,21 +1201,21 @@
 </Project>
 
 
- <Project name="CSProlog" path="RTParser/Prolog" type="Exe" frameworkVersion="v3_5">
+ <Project name="CSProlog" path="sources/main/RTParser/Prolog" type="Exe" frameworkVersion="v3_5">
      <Configuration name="Debug">
        <Options>
-           <OutputPath>../../bin/</OutputPath>
+           <OutputPath>../../../../bin/</OutputPath>
            <CompilerDefines>TRACE;DEBUG</CompilerDefines>
        </Options>
-     </Configuration>
+     </Configuration  >
      <Configuration name="Release">
        <Options>
-           <OutputPath>../../bin/</OutputPath>
+           <OutputPath>../../../../bin/</OutputPath>
            <CompilerDefines>TRACE</CompilerDefines>
        </Options>
      </Configuration>
 
-     <ReferencePath>../../bin</ReferencePath>
+     <ReferencePath>../../../../bin</ReferencePath>
      <Reference name="System" localCopy="false"/>
      <Reference name="System.Core" localCopy="false"/>
      <Reference name="System.Data" localCopy="false"/>
@@ -1237,7 +1237,7 @@
 <!--
 
 
-      <Reference name="Cogbot.exe" localCopy="false"/>
+      <Reference name="LibCogbot" localCopy="false"/>
       <Reference name="PathSystem3D" localCopy="false"/>
       <Reference name="OpenMetaverse" localCopy="false"/>
       <Reference name="OpenMetaverseTypes" localCopy="false"/>      
@@ -1249,20 +1249,20 @@
       <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
 
 
- <Project name="GraphvizDot" path="lib/xglore/Plugins/GraphvizDot" type="Library" frameworkVersion="v3_5">
+ <Project name="GraphvizDot" path="sources/external/xglore/Plugins/GraphvizDot" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-            <OutputPath>../../../../bin/</OutputPath>
+            <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-            <OutputPath>../../../../bin/</OutputPath>
+            <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin</ReferencePath>
-      <Reference name="Cogbot.exe" localCopy="false"/>
+      <ReferencePath>../../../../../bin</ReferencePath>
+      <Reference name="LibCogbot" localCopy="false"/>
       <Reference name="PathSystem3D" localCopy="false"/>
       <Reference name="OpenMetaverse" localCopy="false"/>
       <Reference name="OpenMetaverseTypes" localCopy="false"/>      
@@ -1281,21 +1281,21 @@
 
 -->
 
-  <Project name="TheSimiansModule" path="contrib/TheSimiansModule" type="Library" frameworkVersion="v3_5">
+  <Project name="TheSimiansModule" path="sources/modules/TheSimiansModule" type="Library" frameworkVersion="v3_5">
      <Configuration name="Debug">
        <Options>
-           <OutputPath>../../bin/</OutputPath>
+           <OutputPath>../../../bin/</OutputPath>
        </Options>
      </Configuration>
      <Configuration name="Release">
        <Options>
            
-           <OutputPath>../../bin/</OutputPath>
+           <OutputPath>../../../bin/</OutputPath>
        </Options>
      </Configuration>
 
-     <ReferencePath>../../bin</ReferencePath>
-     <Reference name="Cogbot.exe" localCopy="false"/>
+     <ReferencePath>../../../bin</ReferencePath>
+     <Reference name="LibCogbot" localCopy="false"/>
      <Reference name="MushDLR223"  localCopy="false"/>
      <Reference name="System.Drawing" localCopy="false"/>
      <Reference name="System.Windows.Forms" localCopy="false"/>
@@ -1314,21 +1314,21 @@
 </Project>
 
 
-  <Project name="CycWorldModule" path="contrib/CycWorldModule" type="Library" frameworkVersion="v3_5">
+  <Project name="CycWorldModule" path="sources/modules/CycWorldModule" type="Library" frameworkVersion="v3_5">
      <Configuration name="Debug">
        <Options>
-           <OutputPath>../../bin/</OutputPath>
+           <OutputPath>../../../bin/</OutputPath>
        </Options>
      </Configuration>
      <Configuration name="Release">
        <Options>
            
-           <OutputPath>../../bin/</OutputPath>
+           <OutputPath>../../../bin/</OutputPath>
        </Options>
      </Configuration>
 
-     <ReferencePath>../../bin</ReferencePath>
-     <Reference name="Cogbot.exe" localCopy="false"/>
+     <ReferencePath>../../../bin</ReferencePath>
+     <Reference name="LibCogbot" localCopy="false"/>
      <Reference name="PathSystem3D" localCopy="false"/>
      <Reference name="System.Core" localCopy="false"/>
      <Reference name="System.Drawing" localCopy="false"/>
@@ -1356,21 +1356,21 @@
 </Project>
 
 
-  <Project name="FashionBotModule" path="contrib/FashionBotModule" type="Library" frameworkVersion="v3_5">
+  <Project name="FashionBotModule" path="sources/modules/FashionBotModule" type="Library" frameworkVersion="v3_5">
      <Configuration name="Debug">
        <Options>
-           <OutputPath>../../bin/</OutputPath>
+           <OutputPath>../../../bin/</OutputPath>
        </Options>
      </Configuration>
      <Configuration name="Release">
        <Options>
 
-           <OutputPath>../../bin/</OutputPath>
+           <OutputPath>../../../bin/</OutputPath>
        </Options>
      </Configuration>
 
-     <ReferencePath>../../bin</ReferencePath>
-     <Reference name="Cogbot.exe" localCopy="false"/>
+     <ReferencePath>../../../bin</ReferencePath>
+     <Reference name="LibCogbot" localCopy="false"/>
      <Reference name="MushDLR223"  localCopy="false"/>
      <Reference name="PathSystem3D" localCopy="false"/>
      <Reference name="System.Drawing" localCopy="false"/>
@@ -1389,21 +1389,21 @@
 </Project>
 
     <!---
-  <Project name="PDDLAuthoring" path="contrib/PDDLAuthoring" type="Library" frameworkVersion="v3_5">
+  <Project name="PDDLAuthoring" path="sources/modules/PDDLAuthoring" type="Library" frameworkVersion="v3_5">
      <Configuration name="Debug">
        <Options>
-           <OutputPath>../../bin/</OutputPath>
+           <OutputPath>../../../bin/</OutputPath>
        </Options>
      </Configuration>
      <Configuration name="Release">
        <Options>
 
-           <OutputPath>../../bin/</OutputPath>
+           <OutputPath>../../../bin/</OutputPath>
        </Options>
      </Configuration>
 
-     <ReferencePath>../../bin</ReferencePath>
-     <Reference name="Cogbot.exe" localCopy="false"/>
+     <ReferencePath>../../../bin</ReferencePath>
+     <Reference name="LibCogbot" localCopy="false"/>
      <Reference name="PathSystem3D" localCopy="false"/>
      <Reference name="System.Drawing" localCopy="false"/>
      <Reference name="System.Windows.Forms" localCopy="false"/>
@@ -1423,21 +1423,21 @@
 
 -->
 
-    <Project name="IrcRegionModule" path="contrib/IrcRegionModule" type="Library" frameworkVersion="v3_5">
+    <Project name="IrcRegionModule" path="sources/modules/IrcRegionModule" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../bin/</OutputPath>
+          <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
           
-          <OutputPath>../../bin/</OutputPath>
+          <OutputPath>../../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../bin</ReferencePath>
-      <Reference name="Cogbot.exe" localCopy="false"/>
+      <ReferencePath>../../../bin</ReferencePath>
+      <Reference name="LibCogbot" localCopy="false"/>
       <Reference name="MushDLR223"  localCopy="false"/>
       <Reference name="System.Data" localCopy="false"/>
       <Reference name="OpenMetaverse" localCopy="false"/>
@@ -1450,20 +1450,20 @@
       </Files>
     </Project>
 
-  <Project name="CogbotRadegastPluginModule" path="contrib/CogbotRadegastPluginModule" type="Library" frameworkVersion="v3_5">
+  <Project name="CogbotRadegastPluginModule" path="sources/modules/CogbotRadegastPluginModule" type="Library" frameworkVersion="v3_5">
      <Configuration name="Debug">
        <Options>
-         <OutputPath>../../bin/</OutputPath>
+         <OutputPath>../../../bin/</OutputPath>
        </Options>
      </Configuration>
      <Configuration name="Release">
        <Options>         
-         <OutputPath>../../bin/</OutputPath>
+         <OutputPath>../../../bin/</OutputPath>
        </Options>
      </Configuration>
 
-     <ReferencePath>../../bin</ReferencePath>
-     <Reference name="Cogbot.exe" localCopy="false"/>
+     <ReferencePath>../../../bin</ReferencePath>
+     <Reference name="LibCogbot" localCopy="false"/>
      <Reference name="PathSystem3D" localCopy="false"/>
      <Reference name="MushDLR223"  localCopy="false"/>
      <Reference name="System.Drawing" localCopy="false"/>
@@ -1484,19 +1484,19 @@
      </Files>
 </Project>
 
-        <Project name="Radegast.Plugin.Speech" path="lib/Radegast.Plugin.Speech/RadSpeech" type="Library" frameworkVersion="v3_5">
+        <Project name="Radegast.Plugin.Speech" path="sources/external/Radegast.Plugin.Speech/RadSpeech" type="Library" frameworkVersion="v3_5">
          <Configuration name="Debug">
            <Options>
-             <OutputPath>../../../bin/</OutputPath>
+             <OutputPath>../../../../bin/</OutputPath>
            </Options>
          </Configuration>
          <Configuration name="Release">
            <Options>
-             <OutputPath>../../../bin/</OutputPath>             
+             <OutputPath>../../../../bin/</OutputPath>             
            </Options>
          </Configuration>
 
-         <ReferencePath>../../../bin</ReferencePath>
+         <ReferencePath>../../../../bin</ReferencePath>
          <Reference name="OpenMetaverse" localCopy="false"/>
          <Reference name="OpenMetaverseTypes" localCopy="false"/>
          <Reference name="OpenMetaverse.StructuredData"/>
@@ -1518,19 +1518,19 @@
          </Files>
       </Project>
 
-        <Project name="RadSpeechLin" path="lib/Radegast.Plugin.Speech/RadSpeechLin" type="Library" frameworkVersion="v3_5">
+        <Project name="RadSpeechLin" path="sources/external/Radegast.Plugin.Speech/RadSpeechLin" type="Library" frameworkVersion="v3_5">
          <Configuration name="Debug">
            <Options>
-             <OutputPath>../../../bin/</OutputPath>
+             <OutputPath>../../../../bin/</OutputPath>
            </Options>
          </Configuration>
          <Configuration name="Release">
            <Options>
-             <OutputPath>../../bin/</OutputPath>
+             <OutputPath>../../../bin/</OutputPath>
            </Options>
          </Configuration>
 
-         <ReferencePath>../../../bin</ReferencePath>
+         <ReferencePath>../../../../bin</ReferencePath>
          <Reference name="OpenMetaverse" localCopy="false"/>
          <Reference name="OpenMetaverseTypes" localCopy="false"/>\
          <Reference name="OpenMetaverse.StructuredData"/>
@@ -1549,19 +1549,19 @@
          </Files>
       </Project>
 
-        <Project name="RadSpeechWin" path="lib/Radegast.Plugin.Speech/RadSpeechWin" type="Library" frameworkVersion="v3_5">
+        <Project name="RadSpeechWin" path="sources/external/Radegast.Plugin.Speech/RadSpeechWin" type="Library" frameworkVersion="v3_5">
          <Configuration name="Debug">
            <Options>
-             <OutputPath>../../../bin/</OutputPath>
+             <OutputPath>../../../../bin/</OutputPath>
            </Options>
          </Configuration>
          <Configuration name="Release">
            <Options>
-             <OutputPath>../../bin/</OutputPath>
+             <OutputPath>../../../bin/</OutputPath>
            </Options>
          </Configuration>
 
-         <ReferencePath>../../../bin</ReferencePath>
+         <ReferencePath>../../../../bin</ReferencePath>
          <Reference name="OpenMetaverse" localCopy="false"/>
          <Reference name="OpenMetaverseTypes" localCopy="false"/>
          <Reference name="OpenMetaverse.StructuredData"/>
@@ -1582,19 +1582,19 @@
       </Project>
 
 
-        <Project name="RadSpeechMac" path="lib/Radegast.Plugin.Speech/RadSpeechMac" type="Library" frameworkVersion="v3_5">
+        <Project name="RadSpeechMac" path="sources/external/Radegast.Plugin.Speech/RadSpeechMac" type="Library" frameworkVersion="v3_5">
          <Configuration name="Debug">
            <Options>
-             <OutputPath>../../../bin/</OutputPath>
+             <OutputPath>../../../../bin/</OutputPath>
            </Options>
          </Configuration>
          <Configuration name="Release">
            <Options>
-             <OutputPath>../../bin/</OutputPath>
+             <OutputPath>../../../bin/</OutputPath>
            </Options>
          </Configuration>
 
-         <ReferencePath>../../../bin</ReferencePath>
+         <ReferencePath>../../../../bin</ReferencePath>
          <Reference name="OpenMetaverse" localCopy="false"/>
          <Reference name="OpenMetaverseTypes" localCopy="false"/>
          <Reference name="OpenMetaverse.StructuredData"/>
@@ -1620,19 +1620,19 @@
 
  <!-- 
  OpenSim 
-  <Project name="IdealistViewer" path="lib/IdealistViewer" type="Exe">
+  <Project name="IdealistViewer" path="sources/external/IdealistViewer" type="Exe">
     <Configuration name="Debug">
       <Options>
-        <OutputPath>../../bin/</OutputPath>
+        <OutputPath>../../../bin/</OutputPath>
       </Options>
     </Configuration>
     <Configuration name="Release">
       <Options>
-        <OutputPath>../../bin/</OutputPath>
+        <OutputPath>../../../bin/</OutputPath>
       </Options>
     </Configuration>
 
-    <ReferencePath>../bin</ReferencePath>
+    <ReferencePath>../../bin</ReferencePath>
     <Reference name="System" localCopy="false"/>
     <Reference name="System.Drawing" localCopy="false"/>
     <Reference name="System.Xml"/>
@@ -1662,21 +1662,21 @@ app -->
   <!--
 
 
-  <Project name="IdealistRadegastPlugin" path="lib/IdealistRadegastPlugin" type="Library" frameworkVersion="v3_5">
+  <Project name="IdealistRadegastPlugin" path="sources/external/IdealistRadegastPlugin" type="Library" frameworkVersion="v3_5">
    <Configuration name="Debug">
      <Options>
-       <OutputPath>../../bin/</OutputPath>
+       <OutputPath>../../../bin/</OutputPath>
      </Options>
    </Configuration>
    <Configuration name="Release">
      <Options>
        
-       <OutputPath>../../bin/</OutputPath>
+       <OutputPath>../../../bin/</OutputPath>
        <PlatformTarget>anycpu</PlatformTarget>
      </Options>
    </Configuration>
 
-   <ReferencePath>../../bin</ReferencePath>
+   <ReferencePath>../../../bin</ReferencePath>
    <Reference name="OpenMetaverse" localCopy="false"/>
    <Reference name="OpenMetaverseTypes" localCopy="false"/>
    
@@ -1706,19 +1706,19 @@ app -->
 
 -->
 
-    <Project name="LookingGlass.Framework" path="lib/LookingGlass-svn/src/LookingGlass.Framework" type="Library" frameworkVersion="v3_5">
+    <Project name="LookingGlass.Framework" path="sources/external/LookingGlass-svn/src/LookingGlass.Framework" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Windows.Forms"/>
@@ -1737,19 +1737,19 @@ app -->
       </Files>
     </Project>
 
-    <Project name="LookingGlass.Comm" path="lib/LookingGlass-svn/src/LookingGlass.Comm" type="Library" frameworkVersion="v3_5">
+    <Project name="LookingGlass.Comm" path="sources/external/LookingGlass-svn/src/LookingGlass.Comm" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
@@ -1767,19 +1767,19 @@ app -->
     </Project>
 
 
-    <Project name="LookingGlass.Rest" path="lib/LookingGlass-svn/src/LookingGlass.Rest" type="Library" frameworkVersion="v3_5">
+    <Project name="LookingGlass.Rest" path="sources/external/LookingGlass-svn/src/LookingGlass.Rest" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Web"/>
@@ -1797,19 +1797,19 @@ app -->
     </Project>
 
 
-    <Project name="LookingGlass.World" path="lib/LookingGlass-svn/src/LookingGlass.World" type="Library" frameworkVersion="v3_5">
+    <Project name="LookingGlass.World" path="sources/external/LookingGlass-svn/src/LookingGlass.World" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Drawing"/>
       <Reference name="LookingGlass.Comm"/>
@@ -1824,19 +1824,19 @@ app -->
     </Project>
 
 
-    <Project name="LookingGlass.World.LL" path="lib/LookingGlass-svn/src/LookingGlass.World.LL" type="Library" frameworkVersion="v3_5">
+    <Project name="LookingGlass.World.LL" path="sources/external/LookingGlass-svn/src/LookingGlass.World.LL" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
@@ -1852,19 +1852,19 @@ app -->
       </Files>
     </Project>
 
-    <Project name="LookingGlass.World.OS" path="lib/LookingGlass-svn/src/LookingGlass.World.OS" type="Library" frameworkVersion="v3_5">
+    <Project name="LookingGlass.World.OS" path="sources/external/LookingGlass-svn/src/LookingGlass.World.OS" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.XML"/>
@@ -1879,19 +1879,19 @@ app -->
       </Files>
     </Project>
 
-    <Project name="LookingGlass.World.Services" path="lib/LookingGlass-svn/src/LookingGlass.World.Services" type="Library" frameworkVersion="v3_5">
+    <Project name="LookingGlass.World.Services" path="sources/external/LookingGlass-svn/src/LookingGlass.World.Services" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="LookingGlass.Comm"/>
@@ -1907,19 +1907,19 @@ app -->
       </Files>
     </Project>
 
-    <Project name="LookingGlass.Renderer" path="lib/LookingGlass-svn/src/LookingGlass.Renderer" type="Library" frameworkVersion="v3_5">
+    <Project name="LookingGlass.Renderer" path="sources/external/LookingGlass-svn/src/LookingGlass.Renderer" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
@@ -1936,19 +1936,19 @@ app -->
       </Files>
     </Project>
 
-    <Project name="LookingGlass.Renderer.Ogre" path="lib/LookingGlass-svn/src/LookingGlass.Renderer.Ogre" type="Library" frameworkVersion="v3_5">
+    <Project name="LookingGlass.Renderer.Ogre" path="sources/external/LookingGlass-svn/src/LookingGlass.Renderer.Ogre" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
@@ -1967,19 +1967,19 @@ app -->
       </Files>
     </Project>
 
-    <Project name="LookingGlass.Renderer.Map" path="lib/LookingGlass-svn/src/LookingGlass.Renderer.Map" type="Library" frameworkVersion="v3_5">
+    <Project name="LookingGlass.Renderer.Map" path="sources/external/LookingGlass-svn/src/LookingGlass.Renderer.Map" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Core"/>
       <Reference name="LookingGlass.Framework"/>
@@ -1993,19 +1993,19 @@ app -->
       </Files>
     </Project>
 
-    <Project name="LookingGlass.Renderer.OGL" path="lib/LookingGlass-svn/src/LookingGlass.Renderer.OGL" type="Library" frameworkVersion="v3_5">
+    <Project name="LookingGlass.Renderer.OGL" path="sources/external/LookingGlass-svn/src/LookingGlass.Renderer.OGL" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Core"/>
       <Reference name="System.Data"/>
@@ -2027,19 +2027,19 @@ app -->
     </Project>
 
 
-    <Project name="LookingGlass.View" path="lib/LookingGlass-svn/src/LookingGlass.View" type="Library" frameworkVersion="v3_5">
+    <Project name="LookingGlass.View" path="sources/external/LookingGlass-svn/src/LookingGlass.View" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
@@ -2061,19 +2061,19 @@ app -->
     </Project>
 
 
-    <Project name="LookingGlass.Comm.LLLP" path="lib/LookingGlass-svn/src/LookingGlass.Comm.LLLP" type="Library" frameworkVersion="v3_5">
+    <Project name="LookingGlass.Comm.LLLP" path="sources/external/LookingGlass-svn/src/LookingGlass.Comm.LLLP" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Xml"/>
       <Reference name="System.Data"/>
@@ -2093,19 +2093,19 @@ app -->
     </Project>
 
 
-    <Project name="LookingGlass.Radegast" path="lib/LookingGlass-svn/src/LookingGlass.Radegast" type="Library" frameworkVersion="v3_5">
+    <Project name="LookingGlass.Radegast" path="sources/external/LookingGlass-svn/src/LookingGlass.Radegast" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
@@ -2127,19 +2127,19 @@ app -->
       </Files>
     </Project>
 
-    <Project name="LookingGlass" path="lib/LookingGlass-svn/src/LookingGlass" type="Exe" frameworkVersion="v3_5">
+    <Project name="LookingGlass" path="sources/external/LookingGlass-svn/src/LookingGlass" type="Exe" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
@@ -2160,19 +2160,19 @@ app -->
 
 
     <!--
-    <Project name="LookingGlassOgre" language="C++" path="lib/LookingGlass-svn/src/LookingGlassOgre" type="Library" frameworkVersion="v3_5">
+    <Project name="LookingGlassOgre" language="C++" path="sources/external/LookingGlass-svn/src/LookingGlassOgre" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../../bin/</ReferencePath>
+      <ReferencePath>../../../../../bin/</ReferencePath>
       <Reference name="OgreMain.lib"/>
       <Reference name="OIS.lib"/>
       <Files>
@@ -2181,23 +2181,23 @@ app -->
     </Project>
 -->
 
-    <Project name="Cogbot.LAIR" path="lib/LAIR.ResourceAPIs/Cogbot.LAIR" type="Exe" rootNamespace="Cogbot.LAIR" frameworkVersion="v3_5">
+    <Project name="Cogbot.LAIR" path="sources/external/LAIR.ResourceAPIs/Cogbot.LAIR" type="Exe" rootNamespace="Cogbot.LAIR" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../bin/</OutputPath>
+          <OutputPath>../../../../bin/</OutputPath>
           <PlatformTarget>x86</PlatformTarget>
           <XmlDocFile>Cogbot.LAIR.XML</XmlDocFile>
          </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../bin/</OutputPath>
+          <OutputPath>../../../../bin/</OutputPath>
           <PlatformTarget>x86</PlatformTarget>
           <XmlDocFile>Cogbot.LAIR.XML</XmlDocFile>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../bin</ReferencePath>
+      <ReferencePath>../../../../bin</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Core"/>
       <Reference name="System.Xml" localCopy="false"/>
@@ -2235,23 +2235,23 @@ app -->
 
 
 
-    <Project name="SharpWordNet" path="lib/SharpNLP/OpenNLP/SharpWordNet" type="Library" rootNamespace="SharpWordNet" frameworkVersion="v3_5">
+    <Project name="SharpWordNet" path="sources/external/SharpNLP/OpenNLP/SharpWordNet" type="Library" rootNamespace="SharpWordNet" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
           <PlatformTarget>x86</PlatformTarget>
           <XmlDocFile>Cogbot.LAIR.XML</XmlDocFile>
          </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../bin/</OutputPath>
+          <OutputPath>../../../../../bin/</OutputPath>
           <PlatformTarget>x86</PlatformTarget>
           <XmlDocFile>Cogbot.LAIR.XML</XmlDocFile>
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../bin</ReferencePath>
+      <ReferencePath>../../../../../bin</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Core"/>
       <Reference name="System.Xml" localCopy="false"/>
@@ -2289,24 +2289,24 @@ app -->
 
 
     <!-- DebugApp app -->
-  <Project name="ABuildStartup" path="contrib/DebugStartup" type="Exe" frameworkVersion="v3_5">
+  <Project name="ABuildStartup" path="sources/main/Cogbot" type="Exe" frameworkVersion="v3_5">
   <Configuration name="Debug">
     <Options>
-      <OutputPath>../../bin/</OutputPath>
+      <OutputPath>../../../bin/</OutputPath>
 <!--     <PlatformTarget>x86</PlatformTarget> -->
     </Options>
   </Configuration>
   <Configuration name="Release">
     <Options>
-      <OutputPath>../../bin/</OutputPath>
+      <OutputPath>../../../bin/</OutputPath>
       <!--     <PlatformTarget>x86</PlatformTarget> -->
     </Options>
   </Configuration>
-  <ReferencePath>../../bin</ReferencePath>
+  <ReferencePath>../../../bin</ReferencePath>
       <!--<Reference name="Mono.Addins.dll" localCopy="false"/>-->
       <Reference name="AIMLbot" />
       <Reference name="AIMLBotModule" />
-      <Reference name="Cogbot.exe" />
+      <Reference name="LibCogbot" />
         <Reference name="MySql.Data.dll" localCopy="false"/>
       <Reference name="LAIR.ResourceAPIs.WordNet"/>
       <Reference name="MushDLR223"  localCopy="false"/>
@@ -2379,20 +2379,20 @@ app -->
 
 
 
-    <Project name="ABuildStartup32" path="contrib/DebugStartup32" type="Exe" frameworkVersion="v3_5">
+    <Project name="ABuildStartup32" path="sources/main/Cogbot32" type="Exe" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../bin/</OutputPath>
+          <OutputPath>../../../bin/</OutputPath>
           <PlatformTarget>x86</PlatformTarget>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../bin/</OutputPath>
+          <OutputPath>../../../bin/</OutputPath>
           <PlatformTarget>x86</PlatformTarget>
         </Options>
       </Configuration>
-      <ReferencePath>../../bin</ReferencePath>
+      <ReferencePath>../../../bin</ReferencePath>
       <Reference name="System" localCopy="false"/>
       <Reference name="ABuildStartup.exe" localCopy="false"/>
       <Files>

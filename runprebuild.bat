@@ -4,18 +4,18 @@ SET PREBUILDTARGET=%1
 REM IF NO COMAND LINE ARG IS SPECIFIED use Vsiaul Studio 2008
 IF "%1"=="" SET PREBUILDTARGET=vs2008
 
-xcopy /f /y /c lib\Radegast\assemblies\*.* bin\
-xcopy /f /y /c lib\Radegast\*.dll bin\
-xcopy /f /y /c lib\Radegast\*.pdb bin\
-xcopy /f /y /c lib\Radegast\*.config bin\
-xcopy /f /y /c lib\Radegast\*.so bin\
-xcopy /f /y /c lib\Radegast\*.dylib bin\
-del lib\LookingGlass-svn\bin\Prebuild.exe
-del lib\LookingGlass-svn\bin\HttpServer.dll
-del lib\LookingGlass-svn\bin\PrimMesher.dll
-del lib\LookingGlass-svn\bin\Radegast.exe
-del lib\LookingGlass-svn\bin\OpenMetav*.*
-xcopy /f /y /c lib\LookingGlass-svn\bin\*.* bin\
+xcopy /f /y /c sources\external\Radegast\assemblies\*.* bin\
+xcopy /f /y /c sources\external\Radegast\*.dll bin\
+xcopy /f /y /c sources\external\Radegast\*.pdb bin\
+xcopy /f /y /c sources\external\Radegast\*.config bin\
+xcopy /f /y /c sources\external\Radegast\*.so bin\
+xcopy /f /y /c sources\external\Radegast\*.dylib bin\
+del sources\external\LookingGlass-svn\bin\Prebuild.exe
+del sources\external\LookingGlass-svn\bin\HttpServer.dll
+del sources\external\LookingGlass-svn\bin\PrimMesher.dll
+del sources\external\LookingGlass-svn\bin\Radegast.exe
+del sources\external\LookingGlass-svn\bin\OpenMetav*.*
+xcopy /f /y /c sources\external\LookingGlass-svn\bin\*.* bin\
 REM from cygwin
 svn revert bin/*.dll
 svn revert bin/*.exe
@@ -25,7 +25,7 @@ svn revert bin/*.so
 move XML.dll XML.dll.XGLoreWindowsOnly
 move GraphvizDot.dll GraphvizDot.dll.XGLoreWindowsOnly
 
-xcopy /f /y /c lib\LAIR.ResourceAPIs\PennBank\TreeBankGrapher\bin\Release\LAIR.Misc.dll bin\
+xcopy /f /y /c sources\external\LAIR.ResourceAPIs\PennBank\TreeBankGrapher\bin\Release\LAIR.Misc.dll bin\
 
 
 bin\Prebuild.exe  prebuild.xml /target %PREBUILDTARGET%
@@ -42,10 +42,10 @@ del "bin\SWIPlCs.*"
 del "bin\SWIJPL.*"
 
 
-xcopy /f /y /c lib\ikvm\bin-x86\*.* lib\ikvm\bin\
-xcopy /f /y /c lib\ikvm\bin\*.* bin\
-xcopy /f /y /c lib\ikvm\bin\*.* "C:\Program Files (x86)\pl\bin"
-xcopy /f /y /c lib\ikvm\bin\*.* lib\ABCL.Net\bin\
+xcopy /f /y /c sources\external\ikvm\bin-x86\*.* sources\external\ikvm\bin\
+xcopy /f /y /c sources\external\ikvm\bin\*.* bin\
+xcopy /f /y /c sources\external\ikvm\bin\*.* "C:\Program Files (x86)\pl\bin"
+xcopy /f /y /c sources\external\ikvm\bin\*.* sources\external\ABCL.Net\bin\
 
 dir /s IKVM.OpenJDK.ClassLibrary.dll
 
