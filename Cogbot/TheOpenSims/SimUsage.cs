@@ -8,7 +8,9 @@ using PathSystem3D.Navigation;
 
 namespace cogbot.TheOpenSims
 {
-
+    /// <summary>
+    /// An Afforance in Secondlife
+    /// </summary>
     abstract public class SimUsage : BotMentalAspect
     {
         public abstract FirstOrderTerm GetTerm();

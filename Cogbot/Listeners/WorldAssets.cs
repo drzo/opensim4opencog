@@ -28,10 +28,10 @@ namespace cogbot.Listeners
 
         public Asset GetAsset(UUID id)
         {
-            lock (uuidTypeObject)
+            lock (UUIDTypeObject)
             {
                 Object assetObject;
-                uuidTypeObject.TryGetValue(id, out assetObject);
+                UUIDTypeObjectTryGetValue(id, out assetObject);
                 if (assetObject is Asset)
                 {
                     return (Asset)assetObject;
@@ -74,7 +74,7 @@ namespace cogbot.Listeners
             //lock (uuidTypeObject)
             {
                 object iObject;
-                if (uuidTypeObject.TryGetValue(uUID, out iObject))
+                if (UUIDTypeObjectTryGetValue(uUID, out iObject))
                 {
                     if (iObject is ImageDownload)
                     {
@@ -107,9 +107,9 @@ namespace cogbot.Listeners
                         }
                     }
                 }
-                lock (uuidTypeObject)
+                lock (UUIDTypeObject)
                 {
-                    uuidTypeObject[uUID] = ID;
+                    UUIDTypeObjectSetValue(uUID, ID);
                 }
             }
             if (Settings.LOG_LEVEL == Helpers.LogLevel.Debug)
@@ -265,7 +265,7 @@ namespace cogbot.Listeners
                 }
                 jpegdata = assetTexture.AssetData;
                 sa._TypeData = jpegdata;
-                uuidTypeObject[assetTexture.AssetID] = jpegdata;
+                UUIDTypeObjectSetValue(assetTexture.AssetID, jpegdata);
                 assetTexture.Decode();
             }
             catch (Exception excp)

@@ -260,11 +260,15 @@ namespace cogbot.TheOpenSims
         {
 
             string s = String.Format("{0} {1} {2}", GetName(), ID, GetHeading()) + "\n " + base.ToString();
-            lock (ActionEventQueue) foreach (SimObjectEvent s1 in ActionEventQueue)
+            lock (ActionEventQueue)
+            {
+                if (ActionEventQueue.Count == 0) return s + " -NoActions- ";
+                foreach (SimObjectEvent s1 in ActionEventQueue)
                 {
                     s += "\n " + s1;
 
                 }
+            }
             return s;
 
         }
@@ -2509,7 +2513,7 @@ namespace cogbot.TheOpenSims
         private string PostureType;
         private SimObjectEvent LastPostureEvent;
         readonly private object postureLock = new object();
-        public static bool UseTeleportFallback;
+        public static bool UseTeleportFallback = true;
         public bool IsProfile;
         public Dictionary<UUID, AvatarGroup> GroupRoles { get; set; }
 

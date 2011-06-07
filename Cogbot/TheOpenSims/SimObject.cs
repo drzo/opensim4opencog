@@ -935,6 +935,7 @@ namespace cogbot.TheOpenSims
         //: base(prim.ID.ToString())
         // : base(prim, SimRegion.SceneProviderFromSimulator(sim))
         {
+            ActionEventQueue = new Queue<SimObjectEvent>(MaxEventSize);
             ID = id;
             if (sim != null) RegionHandle = sim.Handle;
             WorldSystem = objectSystem;
@@ -2304,7 +2305,7 @@ namespace cogbot.TheOpenSims
         }
 
         public static int MaxEventSize = 10; // Keeps only last 9 events
-        public Queue<SimObjectEvent> ActionEventQueue = new Queue<SimObjectEvent>(MaxEventSize);
+        public Queue<SimObjectEvent> ActionEventQueue { get; set; }
         public SimObjectEvent lastEvent = null;
 
         public readonly Dictionary<string, SimObjectEvent> LastEventByName = new Dictionary<string, SimObjectEvent>();
@@ -2734,5 +2735,6 @@ namespace cogbot.TheOpenSims
         SimHeading GetHeading();
         bool TryGetGlobalPosition(out Vector3d pos);
         void UpdatePosition(ulong handle, Vector3 pos);
+        Queue<SimObjectEvent> ActionEventQueue { get; set; }
     }
 }

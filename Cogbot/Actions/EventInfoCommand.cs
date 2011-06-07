@@ -30,6 +30,9 @@ namespace cogbot.Actions.Inventory
             }
             Client.describeNext = false;
             float range;
+            int blanks = 0;
+            int nonblanks = 0;
+
             if (float.TryParse(subject, out range))
             {
                 SimAvatar simAva = WorldSystem.TheSimAvatar;
@@ -40,57 +43,49 @@ namespace cogbot.Actions.Inventory
                     {
                         foreach (SimObject o in objs)
                         {
+                            if (o.ActionEventQueue.Count == 0)
+                            {
+                                blanks++;
+                                if (!(o is SimAvatar)) continue;
+                            } 
                             string s = DebugInfo(o);
                             WriteLine(s);
+                            nonblanks++;
                         }
-                        return Success("simEventComplete");
                     }
                 }
             }
             else
             {
-                if (TheBotClient.describers.ContainsKey(subject))
-                    TheBotClient.describers[subject].Invoke(true, WriteLine);
-                else
+                int argsUsed = 0;
+                var PS = WorldSystem.GetPrimitives(Parser.SplitOff(args, argsUsed), out argsUsed);
+                foreach (SimObject o in PS)
                 {
-                    int count = 0;
-                    SimAvatar simAva = WorldSystem.TheSimAvatar;
-                    if (simAva != null)
+                    string s = DebugInfo(o);
+                    WriteLine(s);
+                    if (o.ActionEventQueue.Count == 0)
                     {
-                        List<SimObject> objs = simAva.GetKnownObjects().CopyOf();
-                        lock (objs) if (objs.Count > 0)
-                        {
-                            foreach (SimObject o in objs)
-                            {
-                                if (o.Matches(subject))
-                                {
-                                    count++;
-                                    string s = DebugInfo(o);
-                                    WriteLine(s);
-                                }
-                            }
-                        }
+                        blanks++;
+                        continue;
                     }
-                    if (count==0)
-                    {
-                        foreach (SimObject o in WorldSystem.GetAllSimObjects())
-                        {
-                            if (o.Matches(subject))
-                            {
-                                count++;
-                                string s = DebugInfo(o);
-                                WriteLine(s);
-                            }
-                        }                        
-                    }
+                    nonblanks++;
                 }
             }
-            return Success("simEventComplete");
+            return Success("simEventComplete blanks=" + blanks + " nonblanks=" + nonblanks);
         }
 
         private string DebugInfo(SimObject o)
         {
-            string s = o.DebugInfo();
+            var ActionEventQueue = o.ActionEventQueue;
+            string s = o.ToString();
+            lock (ActionEventQueue)
+            {
+                s += " ActionCount= " + ActionEventQueue.Count;
+                foreach (SimObjectEvent s1 in ActionEventQueue)
+                {
+                    s += "\n " + s1;
+                }
+            }
             return s.Replace("{", "{{").Replace("}", "}}");
         }
     }

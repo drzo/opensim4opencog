@@ -387,7 +387,7 @@ namespace cogbot.TheOpenSims
             {
                 if (value == UUID.Zero) return;
                 //lock (SimAssetStore.uuidAsset)
-                SimAssetStore.uuidAsset[value] = this;
+                SimAssetStore.uuidAssetSetValue(value, this);
                 lock (AssetIDs)
                 {
                     if (AssetIDs.Contains(value)) return;

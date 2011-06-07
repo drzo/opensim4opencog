@@ -65,7 +65,8 @@ namespace cogbot.Listeners
         private static readonly TaskQueueHandler MetaDataQueue = PropertyQueue;//new TaskQueueHandler("MetaData Getter", TimeSpan.FromSeconds(0), false);
         public static readonly TaskQueueHandler OnConnectedQueue = new TaskQueueHandler("OnConnectedQueue", TimeSpan.FromMilliseconds(20), false);
         public static readonly TaskQueueHandler SlowConnectedQueue = SimAssetStore.SlowConnectedQueue;
-        internal static readonly Dictionary<UUID, object> uuidTypeObject = new Dictionary<UUID, object>();
+        internal static readonly Dictionary<UUID, object> UUIDTypeObjectReal = new Dictionary<UUID, object>();
+        internal static readonly object UUIDTypeObject = UUIDTypeObjectReal;
         private static readonly object WorldObjectsMasterLock = new object();
 
         private static int CountnumAvatars;
@@ -462,7 +463,7 @@ namespace cogbot.Listeners
             if (id == UUID.Zero) return null;
             Object obj0;
             //lock (uuidTypeObject)
-            if (uuidTypeObject.TryGetValue(id, out obj0))
+            if (UUIDTypeObjectTryGetValue(id, out obj0))
             {
                 if (obj0 is SimObject)
                 {
@@ -489,7 +490,7 @@ namespace cogbot.Listeners
             if (prim == null || prim.ID == UUID.Zero) return null;
             Object obj0;
             //lock (uuidTypeObject)
-            if (uuidTypeObject.TryGetValue(prim.ID, out obj0))
+            if (UUIDTypeObjectTryGetValue(prim.ID, out obj0))
             {
                 if (obj0 is SimObject)
                 {
@@ -607,12 +608,12 @@ namespace cogbot.Listeners
         public static void RegisterUUIDMaybe(UUID id, object type)
         {
             object before;
-            if (uuidTypeObject.TryGetValue(id, out before)) return;
-            lock (uuidTypeObject)
+            if (UUIDTypeObjectTryGetValue(id, out before)) return;
+            lock (UUIDTypeObject)
             {
-                if (!uuidTypeObject.TryGetValue(id, out before))
+                if (!UUIDTypeObjectTryGetValue(id, out before))
                 {
-                    uuidTypeObject[id] = type;
+                    UUIDTypeObjectSetValue(id, type);
                 }
             }
         }
@@ -624,19 +625,19 @@ namespace cogbot.Listeners
                 Debug("cant register " + type);
             }
             if (type is SimObject)
-                lock (uuidTypeObject) uuidTypeObject[id] = type;
+                lock (UUIDTypeObject) UUIDTypeObjectSetValue(id, type);
             else
             {
-                lock (uuidTypeObject)
+                lock (UUIDTypeObject)
                 {
                     object before;
-                    if (uuidTypeObject.TryGetValue(id, out before))
+                    if (UUIDTypeObjectTryGetValue(id, out before))
                     {
                         if (before == type) return;
                         //todo Master.SendNewEvent("uuid-change",""+id, before, type);
                         Debug("uuid change" + id + " " + before + " -> " + type);
                     }
-                    uuidTypeObject[id] = type;
+                    UUIDTypeObjectSetValue(id, type);
                 }
             }
         }
@@ -816,7 +817,7 @@ namespace cogbot.Listeners
             Primitive prim = GetPrimitive(avatarID, simulator);
             if (prim is Avatar) return (Avatar)prim;
             // in case we request later
-            if (!uuidTypeObject.ContainsKey(avatarID))
+            if (!UUIDTypeObjectContainsKey(avatarID))
             {
                 if (client.Network.Connected) RequestAvatarName(avatarID);
             }
@@ -858,7 +859,7 @@ namespace cogbot.Listeners
 
             object found;
             //lock (uuidTypeObject)
-            if (uuidTypeObject.TryGetValue(id, out found))
+            if (UUIDTypeObjectTryGetValue(id, out found))
             {
                 //object found = uuidTypeObject[id];
                 //if (found != null)
@@ -889,7 +890,7 @@ namespace cogbot.Listeners
             //lock (uuidTypeObject)
             {
                 Object assetObject;
-                if (uuidTypeObject.TryGetValue(id, out assetObject))
+                if (UUIDTypeObjectTryGetValue(id, out assetObject))
                     return "" + assetObject;
             }
             //            name = "unknown_anim " + id;
@@ -951,7 +952,7 @@ namespace cogbot.Listeners
             Primitive found = null;
             {
                 object simobject;
-                if (uuidTypeObject.TryGetValue(id, out simobject))
+                if (UUIDTypeObjectTryGetValue(id, out simobject))
                 {
                     //object simobject = uuidTypeObject[id];
                     if (simobject != null && simobject is SimObject)
@@ -1394,7 +1395,7 @@ namespace cogbot.Listeners
             if (obj0 != null) return (SimAvatarImpl)obj0;
             lock (GetSimLock(simulator ?? client.Network.CurrentSim))
             {
-                lock (uuidTypeObject)
+                lock (UUIDTypeObject)
                     //lock (SimObjects)
                     //  lock (SimAvatars)
                 {
@@ -1428,7 +1429,7 @@ namespace cogbot.Listeners
             if (obj0 != null) return obj0;
             simulator = simulator ?? client.Network.CurrentSim;
             lock (GetSimLock(simulator ?? client.Network.CurrentSim))
-                lock (uuidTypeObject)
+                lock (UUIDTypeObject)
                    // lock (SimObjects)
                      //   lock (SimAvatars)
                         {
@@ -1439,6 +1440,29 @@ namespace cogbot.Listeners
                             RegisterUUID(uuid, obj0);
                             return obj0;
                         }
+        }
+
+        public static bool UUIDTypeObjectTryGetValue(UUID uuid, out object obj)
+        {           
+            obj = uuid.ExternalData;
+            return obj != null;
+            return UUIDTypeObjectReal.TryGetValue(uuid, out obj);
+        }
+        public static bool UUIDTypeObjectContainsKey(UUID uuid)
+        {
+            var obj = uuid.ExternalData;
+            return obj != null;
+            //return uuid.ExternalData;
+            //if (!b) return uuidTypeObject.TryGetValue(uuid, out o);
+            //lock (WorldObjects.uuidTypeObject)
+            return UUIDTypeObjectReal.ContainsKey(uuid);
+        }
+        public static object UUIDTypeObjectSetValue(UUID uuid, object value)
+        {
+            //if (!b) return uuidTypeObject.TryGetValue(uuid, out o);
+            //lock (WorldObjects.uuidTypeObject)
+            return uuid.ExternalData = value;
+            return UUIDTypeObjectReal[uuid] = value;
         }
     }
 }
