@@ -2161,7 +2161,7 @@ namespace SbsSW.SwiPlCs
                 DelegateStreamWriteFunction wf = new DelegateStreamWriteFunction(Swrite_function);
                 if (!IsStreamFunctionWriteModified)
                 {
-                    PlEngine.SetStreamFunctionWrite(PlStreamType.Output, wf);
+                    if (PrologClient.RedirectStreams) PlEngine.SetStreamFunctionWrite(PlStreamType.Output, wf);
                     IsStreamFunctionWriteModified = false;
                 }
                 String[] local_argv = new String[argv.Length+1];
@@ -2178,7 +2178,7 @@ namespace SbsSW.SwiPlCs
                     if (!IsStreamFunctionReadModified)
                     {
                         DelegateStreamReadFunction rf = new DelegateStreamReadFunction(Sread_function);
-                        PlEngine.SetStreamFunctionRead(PlStreamType.Input, rf);
+                        if (PrologClient.RedirectStreams) PlEngine.SetStreamFunctionRead(PlStreamType.Input, rf);
                         IsStreamFunctionReadModified = false;
                     }
                 }
@@ -2224,7 +2224,12 @@ namespace SbsSW.SwiPlCs
         #region default_io_doc
         static internal long Swrite_function(IntPtr handle, string buf, long bufsize)
         {
-            string s = buf.Substring(0, (int)bufsize);
+            long ssize = bufsize;
+            if (bufsize > buf.Length)
+            {
+                ssize = buf.Length;
+            }
+            string s = buf.Substring(0, (int)ssize);
             Console.Write(s);
             System.Diagnostics.Trace.WriteLine(s);
             return bufsize;

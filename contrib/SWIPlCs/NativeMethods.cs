@@ -138,7 +138,7 @@ namespace SbsSW.SwiPlCs
 			{
 			    var fileName = DllFileName;
                 if (File.Exists(fileName)) return fileName;
-			    fileName = Path.Combine(Path.Combine(PrologClient.SwiHomeDir, "bin"), PlLib);
+			    fileName = Path.Combine(Path.Combine(PrologClient.SwiHomeDir ?? PrologClient.AltSwiHomeDir, "bin"), PlLib);
                 if (File.Exists(fileName)) return fileName;
                 return DllFileName;
 			}

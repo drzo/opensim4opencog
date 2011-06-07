@@ -5,6 +5,20 @@ using SbsSW.SwiPlCs.Exceptions;
 
 namespace SbsSW.SwiPlCs
 {
+    public class PrologVisible : Attribute
+    {
+        public string ModuleName;
+        public string Name;
+        public int Arity = -1;
+        public Type TypeOf;
+        public PlForeignSwitches ForeignSwitches = PlForeignSwitches.None;
+
+        public PrologVisible()
+        {
+
+        }
+    }
+
     public interface SCCH
     {
         bool Setup(PlTermV a0);
