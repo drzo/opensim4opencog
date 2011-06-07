@@ -1125,7 +1125,7 @@
      </Files>
 </Project>
     
- <Project name="PrologScriptEngine" path="sources/modules/PrologScriptEngine" type="Library" frameworkVersion="v3_5">
+ <Project name="PrologScriptEngine" path="sources/main/PrologScriptEngine" type="Library" frameworkVersion="v3_5">
   <Configuration name="Debug">
     <Options>
         <OutputPath>../../../bin/</OutputPath>
@@ -1725,7 +1725,7 @@ app -->
       <Reference name="System.Xml"/>
       <Reference name="log4net.dll"/>
       <Reference name="OpenMetaverse.dll"/>
-      <Reference name="OpenMetaverseTypes.dll"/>
+      <Reference name="OpenMetaverseTypes"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
       <Files>
         <Match pattern="*.cs" recurse="false"/>
@@ -1757,7 +1757,7 @@ app -->
       <Reference name="LookingGlass.Framework"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
-      <Reference name="OpenMetaverseTypes.dll"/>
+      <Reference name="OpenMetaverseTypes"/>
 <!-- -
       <Reference name="OpenMetaverse.Http.dll"/>
 -->
@@ -1789,7 +1789,7 @@ app -->
       <Reference name="LookingGlass.Renderer"/>
       <Reference name="LookingGlass.World"/>
       <Reference name="OpenMetaverse.dll"/>
-      <Reference name="OpenMetaverseTypes.dll"/>
+      <Reference name="OpenMetaverseTypes"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
       <Files>
         <Match pattern="*.cs" recurse="false"/>
@@ -1815,7 +1815,7 @@ app -->
       <Reference name="LookingGlass.Comm"/>
       <Reference name="LookingGlass.Framework"/>
       <Reference name="OpenMetaverse.dll"/>
-      <Reference name="OpenMetaverseTypes.dll"/>
+      <Reference name="OpenMetaverseTypes"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
       <Reference name="CSJ2K.dll"/>
       <Files>
@@ -1846,7 +1846,7 @@ app -->
       <Reference name="LookingGlass.World"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
-      <Reference name="OpenMetaverseTypes.dll"/>
+      <Reference name="OpenMetaverseTypes"/>
       <Files>
         <Match pattern="*.cs" recurse="false"/>
       </Files>
@@ -1873,7 +1873,7 @@ app -->
       <Reference name="LookingGlass.World"/>
       <Reference name="LookingGlass.World.LL"/>
       <Reference name="OpenMetaverse.dll"/>
-      <Reference name="OpenMetaverseTypes.dll"/>
+      <Reference name="OpenMetaverseTypes"/>
       <Files>
         <Match pattern="*.cs" recurse="false"/>
       </Files>
@@ -1900,7 +1900,7 @@ app -->
       <Reference name="LookingGlass.World"/>
       <Reference name="LookingGlass.World.LL"/>
       <Reference name="OpenMetaverse.dll"/>
-      <Reference name="OpenMetaverseTypes.dll"/>
+      <Reference name="OpenMetaverseTypes"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
       <Files>
         <Match pattern="*.cs" recurse="false"/>
@@ -1928,7 +1928,7 @@ app -->
       <Reference name="LookingGlass.Framework"/>
       <Reference name="LookingGlass.World"/>
       <Reference name="OpenMetaverse.dll"/>
-      <Reference name="OpenMetaverseTypes.dll"/>
+      <Reference name="OpenMetaverseTypes"/>
       <Reference name="PrimMesher.dll"/>
       <Files>
         <Match pattern="*.cs" recurse="false"/>
@@ -1961,7 +1961,7 @@ app -->
       <Reference name="LookingGlass.World.LL"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
-      <Reference name="OpenMetaverseTypes.dll"/>
+      <Reference name="OpenMetaverseTypes"/>
       <Files>
         <Match pattern="*.cs" recurse="false"/>
       </Files>
@@ -1987,7 +1987,7 @@ app -->
       <Reference name="LookingGlass.World"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
-      <Reference name="OpenMetaverseTypes.dll"/>
+      <Reference name="OpenMetaverseTypes"/>
       <Files>
         <Match pattern="*.cs" recurse="false"/>
       </Files>
@@ -2020,7 +2020,7 @@ app -->
       <Reference name="OpenTK.GLControl.dll"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
-      <Reference name="OpenMetaverseTypes.dll"/>
+      <Reference name="OpenMetaverseTypes"/>
       <Files>
         <Match pattern="*.cs" recurse="false"/>
       </Files>
@@ -2048,9 +2048,9 @@ app -->
       <Reference name="LookingGlass.Renderer"/>
       <Reference name="LookingGlass.Rest"/>
       <Reference name="LookingGlass.World"/>
-      <Reference name="OpenMetaverse.dll"/>
-      <Reference name="OpenMetaverseTypes.dll"/>
-      <Reference name="OpenMetaverse.StructuredData.dll"/>
+      <Reference name="OpenMetaverse"/>
+      <Reference name="OpenMetaverseTypes"/>
+      <Reference name="OpenMetaverse.StructuredData"/>
       <Files>
         <Match pattern="ViewWindow.cs" recurse="false" subType="Form"/>
         <Match pattern="ViewAvatars.cs" recurse="false" subType="Form"/>
@@ -2086,7 +2086,7 @@ app -->
       <Reference name="LookingGlass.World.OS"/>
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
-      <Reference name="OpenMetaverseTypes.dll"/>
+      <Reference name="OpenMetaverseTypes"/>
       <Files>
         <Match pattern="*.cs" recurse="false"/>
       </Files>
@@ -2118,7 +2118,7 @@ app -->
       <Reference name="LookingGlass.World"/>
       <Reference name="Radegast.exe"/>
       <Reference name="OpenMetaverse.dll"/>
-      <Reference name="OpenMetaverseTypes.dll"/>
+      <Reference name="OpenMetaverseTypes"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
       <Files>
         <Match pattern="RadegastWindow.cs" recurse="false" subType="form"/>
