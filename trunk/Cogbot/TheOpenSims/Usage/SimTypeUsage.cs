@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace cogbot.TheOpenSims
 {
+    /// <summary>
+    /// An Afforance in Secondlife
+    /// </summary>
     public class SimTypeUsage : SimUsage
     {
 

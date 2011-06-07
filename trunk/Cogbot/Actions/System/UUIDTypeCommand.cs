@@ -21,17 +21,14 @@ namespace cogbot.Actions.Search
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1) return ShowUsage();
-            var v = WorldObjects.uuidTypeObject;
             UUID uuid = UUID.Zero;
             string botcmd = String.Join(" ", args, 0, args.Length).Trim();
             int argsUsed;
             UUIDTryParse(args,0, out uuid, out argsUsed);
 
             object obj = null;
-            lock (v)
-            {
-                v.TryGetValue(uuid, out obj);
-            }
+            lock (WorldObjects.UUIDTypeObject)
+                WorldObjects.UUIDTypeObjectTryGetValue(uuid, out obj);
             if (obj != null)
             {
                 WriteLine("Object is of Type " + obj.GetType());

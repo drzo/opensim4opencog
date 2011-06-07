@@ -301,10 +301,10 @@ namespace cogbot.Listeners
         {
             if (DiscoverTaskUUIDs)
             {
-                lock (uuidTypeObject)
+                lock (UUIDTypeObject)
                 {
                     object g;
-                    if (!uuidTypeObject.TryGetValue(uuid, out g))
+                    if (!UUIDTypeObjectTryGetValue(uuid, out g))
                     {
                         var o = CreateSimObject(uuid, this, simulator);
                         // SimGeneric o = DeclareGeneric("Task", uuid, "DeclareTask");
@@ -497,12 +497,12 @@ namespace cogbot.Listeners
             if (uuid == UUID.Zero) return null;
             object g;
             SimGeneric sg = null;
-            if (uuidTypeObject.TryGetValue(uuid, out g))
+            if (UUIDTypeObjectTryGetValue(uuid, out g))
                 if (g is SimGeneric) return g as SimGeneric;
 
-            lock (uuidTypeObject)
+            lock (UUIDTypeObject)
             {
-                if (uuidTypeObject.TryGetValue(uuid, out g))
+                if (UUIDTypeObjectTryGetValue(uuid, out g))
                 {
                     if (g is SimGeneric) return g as SimGeneric;
 
@@ -515,11 +515,11 @@ namespace cogbot.Listeners
                             Debug(issue);
                             return null;
                         }
-                        sg = (SimGeneric)(uuidTypeObject[uuid] = new SimGeneric(genericName, uuid) { Value = g });
+                        sg = (SimGeneric) (UUIDTypeObjectSetValue(uuid, new SimGeneric(genericName, uuid) {Value = g}));
                         return sg;
                     }
                 }
-                sg = (SimGeneric) (uuidTypeObject[uuid] = new SimGeneric(genericName, uuid));
+                sg = (SimGeneric) (UUIDTypeObjectSetValue(uuid, new SimGeneric(genericName, uuid)));
                 return sg;
             }
         }

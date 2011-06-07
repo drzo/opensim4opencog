@@ -17,9 +17,22 @@ namespace cogbot.TheOpenSims
 
         //internal static readonly Dictionary<UUID, object> uuidAsset = new Dictionary<UUID, object>();
 
-        static internal Dictionary<UUID, object> uuidAsset
+        static internal object uuidAsset
         {
-            get { return WorldObjects.uuidTypeObject; }
+            get { return WorldObjects.UUIDTypeObject; }
+        }
+
+        public static bool uuidAssetTryGetValue(UUID uuid, out object obj)
+        {
+            return WorldObjects.UUIDTypeObjectTryGetValue(uuid, out obj);
+        }
+        public static bool UUIDTypeObjectContainsKey(UUID uuid)
+        {
+            return WorldObjects.UUIDTypeObjectContainsKey(uuid);
+        }
+        public static object uuidAssetSetValue(UUID uuid, object value)
+        {
+            return WorldObjects.UUIDTypeObjectSetValue(uuid, value);
         }
 
         public static SimAssetStore TheStore;
@@ -1431,7 +1444,7 @@ namespace cogbot.TheOpenSims
             FillAssetNames();
             String name;
             object anim;
-            if (uuidAsset.TryGetValue(uuid, out anim))
+            if (uuidAssetTryGetValue(uuid, out anim))
             {
                 if (anim is SimAsset)
                 {
@@ -1489,7 +1502,7 @@ namespace cogbot.TheOpenSims
             //lock (uuidAsset)
             {
                 FillAssetNames();
-                if (!uuidAsset.TryGetValue(uUID, out anim))
+                if (!uuidAssetTryGetValue(uUID, out anim))
                 {
                     if (false)lock (SimAssets)
                         foreach (var A in SimAssets)
@@ -1576,7 +1589,7 @@ namespace cogbot.TheOpenSims
                 //taskQueueQuick.Enqueue("ProbeCache " + type + " " + uUID, anim.ProbeCache);
                 return anim;
             }
-            lock (uuidAsset)
+            lock (WorldObjects.UUIDTypeObject)
             {
                 string noname = null;
                 anim = FindAsset(uUID);
@@ -1626,7 +1639,7 @@ namespace cogbot.TheOpenSims
                             throw new NotImplementedException("FindOrCreateAsset " + type);
                             break;
                     }
-                    uuidAsset[uUID] = anim;
+                    uuidAssetSetValue(uUID, anim);
                 }
                 anim.AssetType = type;
                 taskQueueQuick.Enqueue("ProbeCache " + type + " " + uUID, anim.ProbeCache);
