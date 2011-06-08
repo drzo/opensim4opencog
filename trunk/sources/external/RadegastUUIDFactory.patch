@@ -1,0 +1,146 @@
+Index: Core/Media/UISounds.cs
+===================================================================
+--- Radegast/Core/Media/UISounds.cs	(revision 888)
++++ Radegast/Core/Media/UISounds.cs	(working copy)
+@@ -40,28 +40,28 @@
+     public static class UISounds
+     {
+         /// <summary>Sound of incoming IM</summary>
+-        public static UUID IM = new UUID("67cc2844-00f3-2b3c-b991-6418d01e1bb7");
++        public static UUID IM = UUIDFactory.GetUUID("67cc2844-00f3-2b3c-b991-6418d01e1bb7");
+         
+         /// <summary>Typing sound</summary>
+-        public static UUID Typing = new UUID("5e191c7b-8996-9ced-a177-b2ac32bfea06");
++        public static UUID Typing = UUIDFactory.GetUUID("5e191c7b-8996-9ced-a177-b2ac32bfea06");
+ 
+         /// <summary>When user opens new IM window</summary>
+-        public static UUID IMWindow = new UUID("c825dfbc-9827-7e02-6507-3713d18916c1");
++        public static UUID IMWindow = UUIDFactory.GetUUID("c825dfbc-9827-7e02-6507-3713d18916c1");
+ 
+         /// <summary>When money balance is increased</summary>
+-        public static UUID MoneyIn = new UUID("104974e3-dfda-428b-99ee-b0d4e748d3a3");
++        public static UUID MoneyIn = UUIDFactory.GetUUID("104974e3-dfda-428b-99ee-b0d4e748d3a3");
+ 
+         /// <summary>When money balance is decreased</summary>
+-        public static UUID MoneyOut = new UUID("77a018af-098e-c037-51a6-178f05877c6f");
++        public static UUID MoneyOut = UUIDFactory.GetUUID("77a018af-098e-c037-51a6-178f05877c6f");
+ 
+         /// <summary>Object rezzed from inventory</summary>
+-        public static UUID ObjectRez = new UUID("f4a0660f-5446-dea2-80b7-6482a082803c");
++        public static UUID ObjectRez = UUIDFactory.GetUUID("f4a0660f-5446-dea2-80b7-6482a082803c");
+ 
+         /// <summary>Object create</summary>
+-        public static UUID ObjectCreate = new UUID("3c8fc726-1fd6-862d-fa01-16c5b2568db6");
++        public static UUID ObjectCreate = UUIDFactory.GetUUID("3c8fc726-1fd6-862d-fa01-16c5b2568db6");
+ 
+         /// <summary>Object deleted</summary>
+-        public static UUID ObjectDelete = new UUID("0cb7b00a-4c10-6948-84de-a93c09af2ba9");
++        public static UUID ObjectDelete = UUIDFactory.GetUUID("0cb7b00a-4c10-6948-84de-a93c09af2ba9");
+ 
+     }
+ }
+Index: Core/StateManager.cs
+===================================================================
+--- Radegast/Core/StateManager.cs	(revision 888)
++++ Radegast/Core/StateManager.cs	(working copy)
+@@ -75,9 +75,9 @@
+         private float followDistance = 3.0f;
+         private UUID followID;
+ 
+-        private UUID awayAnimationID = new UUID("fd037134-85d4-f241-72c6-4f42164fedee");
+-        private UUID busyAnimationID = new UUID("efcf670c2d188128973a034ebc806b67");
+-        private UUID typingAnimationID = new UUID("c541c47f-e0c0-058b-ad1a-d6ae3a4584d9");
++        private UUID awayAnimationID = UUIDFactory.GetUUID("fd037134-85d4-f241-72c6-4f42164fedee");
++        private UUID busyAnimationID = UUIDFactory.GetUUID("efcf670c2d188128973a034ebc806b67");
++        private UUID typingAnimationID = UUIDFactory.GetUUID("c541c47f-e0c0-058b-ad1a-d6ae3a4584d9");
+         internal static Random rnd = new Random();
+         private System.Threading.Timer lookAtTimer;
+ 
+Index: GUI/Consoles/ChatConsole.cs
+===================================================================
+--- Radegast/GUI/Consoles/ChatConsole.cs	(revision 888)
++++ Radegast/GUI/Consoles/ChatConsole.cs	(working copy)
+@@ -833,7 +833,7 @@
+             {
+                 try
+                 {
+-                    UUID agentID = new UUID(item.Tag.ToString());
++                    UUID agentID = UUIDFactory.GetUUID(item.Tag.ToString());
+                     instance.MainForm.ShowAgentProfile(instance.Names.Get(agentID), agentID);
+                 }
+                 catch (Exception) { }
+Index: GUI/Consoles/GroupDetails.cs
+===================================================================
+--- Radegast/GUI/Consoles/GroupDetails.cs	(revision 888)
++++ Radegast/GUI/Consoles/GroupDetails.cs	(working copy)
+@@ -713,7 +713,7 @@
+             {
+                 try
+                 {
+-                    UUID agentID = new UUID(item.Name);
++                    UUID agentID = UUIDFactory.GetUUID(item.Name);
+                     instance.MainForm.ShowAgentProfile(item.Text, agentID);
+                 }
+                 catch (Exception) { }
+@@ -727,7 +727,7 @@
+             {
+                 try
+                 {
+-                    UUID agentID = new UUID(item.Name);
++                    UUID agentID = UUIDFactory.GetUUID(item.Name);
+                     instance.MainForm.ShowAgentProfile(item.Text, agentID);
+                 }
+                 catch (Exception) { }
+Index: GUI/Consoles/GroupIMTabWindow.cs
+===================================================================
+--- Radegast/GUI/Consoles/GroupIMTabWindow.cs	(revision 888)
++++ Radegast/GUI/Consoles/GroupIMTabWindow.cs	(working copy)
+@@ -439,7 +439,7 @@
+             {
+                 try
+                 {
+-                    instance.MainForm.ShowAgentProfile(item.Text, new UUID(item.Name));
++                    instance.MainForm.ShowAgentProfile(item.Text, UUIDFactory.GetUUID(item.Name));
+                 }
+                 catch (Exception) { }
+             }
+Index: GUI/Consoles/Inventory/InventoryConsole.cs
+===================================================================
+--- Radegast/GUI/Consoles/Inventory/InventoryConsole.cs	(revision 888)
++++ Radegast/GUI/Consoles/Inventory/InventoryConsole.cs	(working copy)
+@@ -223,7 +223,7 @@
+                 {
+                     AttachmentInfo attachment = new AttachmentInfo();
+                     attachment.Prim = prim;
+-                    attachment.InventoryID = new UUID(prim.NameValues[i].Value.ToString());
++                    attachment.InventoryID = UUIDFactory.GetUUID(prim.NameValues[i].Value.ToString());
+                     attachment.PrimID = prim.ID;
+ 
+                     lock (attachments)
+Index: GUI/Consoles/TabsConsole.cs
+===================================================================
+--- Radegast/GUI/Consoles/TabsConsole.cs	(revision 888)
++++ Radegast/GUI/Consoles/TabsConsole.cs	(working copy)
+@@ -59,7 +59,7 @@
+                         {
+                             if (item.Name != client.Self.AgentID.ToString())
+                             {
+-                                res.Add(new NearbyAvatar() { ID = new UUID(item.Name), Name = item.Text });
++                                res.Add(new NearbyAvatar() { ID = UUIDFactory.GetUUID(item.Name), Name = item.Text });
+                             }
+                         }
+                     }
+Index: GUI/Notifications/InventoryOfferNotification.cs
+===================================================================
+--- Radegast/GUI/Notifications/InventoryOfferNotification.cs	(revision 888)
++++ Radegast/GUI/Notifications/InventoryOfferNotification.cs	(working copy)
+@@ -69,7 +69,7 @@
+ 
+                 if (msg.BinaryBucket.Length == 17)
+                 {
+-                    objectID = new UUID(msg.BinaryBucket, 1);
++                    objectID = UUIDFactory.GetUUID(msg.BinaryBucket, 1);
+                 }
+ 
+                 if (msg.Dialog == InstantMessageDialog.InventoryOffered)
+
