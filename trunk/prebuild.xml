@@ -986,7 +986,7 @@
        <ReferencePath>../../../bin</ReferencePath>
        <Reference name="log4net.dll" localCopy="false"/>
        <Reference name="PathSystem3D" localCopy="false"/>
-       <Reference name="Mono.Security.dll" localCopy="false"/>
+       <!--<Reference name="Mono.Security.dll" localCopy="false"/>-->
        <Reference name="OpenMetaverse" localCopy="false"/>
        <Reference name="OpenMetaverseTypes" localCopy="false"/>       
        <Reference name="OpenMetaverse.Utilities" localCopy="false"/>
@@ -1146,7 +1146,7 @@
   <Reference name="System.Drawing" localCopy="false"/>
   <Reference name="System.Windows.Forms" localCopy="false"/>
   <Reference name="System.Xml" localCopy="false"/>
-   <Reference name="Cogbot.Library.dll" localCopy="false"/>
+   <Reference name="Cogbot.Library" localCopy="false"/>
    <Reference name="MushDLR223"  localCopy="false"/>
    <Reference name="PathSystem3D" localCopy="false"/>
    <Reference name="OpenMetaverse" localCopy="false"/>

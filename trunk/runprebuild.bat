@@ -30,6 +30,8 @@ xcopy /f /y /c sources\external\LAIR.ResourceAPIs\PennBank\TreeBankGrapher\bin\R
 
 bin\Prebuild.exe  prebuild.xml /target %PREBUILDTARGET%
 
+del Cogbot.sln
+
 pause
 
 exit /b 0

@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{48A2BB8C-0A24-4960-858F-0A4079B33228}</ProjectGuid>
+    <ProjectGuid>{5DA90FC2-7F3B-4504-BB3E-7D70B97889A3}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon>
@@ -115,27 +115,27 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\LAIR.ResourceAPIs\PennBank\PennBank\LAIR.ResourceAPIs.PennBank.csproj">
       <Name>LAIR.ResourceAPIs.PennBank</Name>
-      <Project>{28ED0CFB-3EC2-42E6-85B0-E06665EED10C}</Project>
+      <Project>{FD50FE06-D022-4306-8C5F-A4781C8C5BAC}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\..\LAIR.ResourceAPIs\FrameNet\FrameNet\LAIR.ResourceAPIs.FrameNet.csproj">
       <Name>LAIR.ResourceAPIs.FrameNet</Name>
-      <Project>{7759F1FD-77ED-4FAC-924E-A1C43197B354}</Project>
+      <Project>{88499248-1ED4-4782-98EC-76304D75CDD4}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\..\LAIR.ResourceAPIs\WordNet\WordNet\LAIR.ResourceAPIs.WordNet.csproj">
       <Name>LAIR.ResourceAPIs.WordNet</Name>
-      <Project>{D5A29974-0654-4B55-86A8-2211D2C7C73F}</Project>
+      <Project>{62C1127C-E30E-475E-8F4A-EB17A12CB169}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\..\LAIR.ResourceAPIs\NomBank\NomBank\LAIR.ResourceAPIs.NomBank.csproj">
       <Name>LAIR.ResourceAPIs.NomBank</Name>
-      <Project>{1A7E708B-A6B9-4566-AA20-1F7F6FB9D5A6}</Project>
+      <Project>{23821935-04BD-4CCF-8F2A-690399DAE600}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\..\LAIR.ResourceAPIs\LAIR.CommonPort\LAIR.CommonPort.csproj">
       <Name>LAIR.CommonPort</Name>
-      <Project>{56F8A3E9-DBC9-434B-B864-83AED0868DFC}</Project>
+      <Project>{2905F940-6FA5-4E6F-B017-A7E0D601FFC2}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
