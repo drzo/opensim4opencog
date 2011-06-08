@@ -191,6 +191,12 @@ namespace SbsSW.SwiPlCs.Callback
     [System.Runtime.InteropServices.UnmanagedFunctionPointerAttribute(System.Runtime.InteropServices.CallingConvention.Cdecl)]
     public delegate bool DelegateParameter3(PlTerm term1, PlTerm term2, PlTerm term3);
 
+    /// <inheritdoc cref="DelegateParameter2" />
+    /// <param name="term1"></param>
+    /// <param name="term2"></param>
+    /// <param name="term3"></param>
+    [System.Runtime.InteropServices.UnmanagedFunctionPointerAttribute(System.Runtime.InteropServices.CallingConvention.Cdecl)]
+    public delegate bool DelegateParameter4(PlTerm term1, PlTerm term2, PlTerm term3, PlTerm term4);
 
     /// <summary>
     /// <para>With this delegate you can build a call-back predicate with a variable amount of parameters.</para>
@@ -559,9 +565,9 @@ namespace SbsSW.SwiPlCs
                 if (0 == pos)
                 {
                     if (this.IsList)
-                        return new PlTerm("'.'");
+                        return PlTerm.PlAtom(".");
                     else
-                        return new PlTerm(this.Name);
+                        return PlTerm.PlAtom(this.Name);
                 }
                 else
                 {
