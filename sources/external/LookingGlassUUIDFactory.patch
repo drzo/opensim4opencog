@@ -1,0 +1,54 @@
+Index: LookingGlass-svn/src/LookingGlass.Renderer.OGL/RendererOGL.cs
+===================================================================
+--- LookingGlass-svn/src/LookingGlass.Renderer.OGL/RendererOGL.cs	(revision 299)
++++ LookingGlass-svn/src/LookingGlass.Renderer.OGL/RendererOGL.cs	(working copy)
+@@ -303,7 +303,7 @@
+     private void OnTextureDownloadFinished(string textureEntityName, bool hasTransparancy) {
+         m_log.Log(LogLevel.DRENDERDETAIL, "OnTextureDownloadFinished {0}", textureEntityName);
+         EntityName entName = new EntityName(textureEntityName);
+-        OMV.UUID id = new OMV.UUID(entName.ExtractEntityFromEntityName());
++        OMV.UUID id = OMV.UUIDFactory.GetUUID(entName.ExtractEntityFromEntityName());
+ 
+         TextureInfo info;
+         lock (Textures) {
+Index: LookingGlass-svn/src/LookingGlass.World.LL/LLAssetContext.cs
+===================================================================
+--- LookingGlass-svn/src/LookingGlass.World.LL/LLAssetContext.cs	(revision 299)
++++ LookingGlass-svn/src/LookingGlass.World.LL/LLAssetContext.cs	(working copy)
+@@ -108,7 +108,7 @@
+     public override void DoTextureLoad(EntityName textureEntityName, AssetType typ, DownloadFinishedCallback finishCall) {
+         EntityNameLL textureEnt = new EntityNameLL(textureEntityName);
+         string worldID = textureEnt.EntityPart;
+-        OMV.UUID binID = new OMV.UUID(worldID);
++        OMV.UUID binID = OMV.UUIDFactory.GetUUID(worldID);
+ 
+         // do we already have the file?
+         string textureFilename = Path.Combine(CacheDirBase, textureEnt.CacheFilename);
+Index: LookingGlass-svn/src/LookingGlass.World.OS/OSAssetContextCap.cs
+===================================================================
+--- LookingGlass-svn/src/LookingGlass.World.OS/OSAssetContextCap.cs	(revision 299)
++++ LookingGlass-svn/src/LookingGlass.World.OS/OSAssetContextCap.cs	(working copy)
+@@ -85,8 +85,8 @@
+ 
+     public override void DoTextureLoad(EntityName textureEntityName, AssetType typ, DownloadFinishedCallback finishCall) {
+         EntityNameLL textureEnt = new EntityNameLL(textureEntityName);
+-        string worldID = textureEnt.EntityPart;
+-        OMV.UUID binID = new OMV.UUID(worldID);
++        string worldID = textureEnt.EntityPart;
++        OMV.UUID binID = OMV.UUIDFactory.GetUUID(worldID);
+ 
+         // do we already have the file?
+         string textureFilename = Path.Combine(CacheDirBase, textureEnt.CacheFilename);
+Index: LookingGlass-svn/src/LookingGlass.World.OS/OSAssetContextV1.cs
+===================================================================
+--- LookingGlass-svn/src/LookingGlass.World.OS/OSAssetContextV1.cs	(revision 299)
++++ LookingGlass-svn/src/LookingGlass.World.OS/OSAssetContextV1.cs	(working copy)
+@@ -95,7 +95,7 @@
+     public override void DoTextureLoad(EntityName textureEntityName, AssetType typ, DownloadFinishedCallback finishCall) {
+         EntityNameLL textureEnt = new EntityNameLL(textureEntityName);
+         string worldID = textureEnt.EntityPart;
+-        OMV.UUID binID = new OMV.UUID(worldID);
++        OMV.UUID binID = OMV.UUIDFactory.GetUUID(worldID);
+ 
+         if (m_basePath == null) return;
+ 
