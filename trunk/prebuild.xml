@@ -968,7 +968,7 @@
     </Project>
 
 
-    <Project name="LibCogbot" path="sources/main/LibCogbot" type="Library" frameworkVersion="v3_5">
+    <Project name="Cogbot.Library" path="sources/main/LibCogbot" type="Library" frameworkVersion="v3_5">
        <Configuration name="Debug">
          <Options>
            <OutputPath>../../../bin/</OutputPath>
@@ -1048,7 +1048,7 @@
       </Configuration>
 
       <ReferencePath>../../../bin</ReferencePath>
-      <Reference name="LibCogbot" localCopy="false"/>
+      <Reference name="Cogbot.Library" localCopy="false"/>
       <Reference name="MushDLR223"  localCopy="false"/>
       <Reference name="PathSystem3D" localCopy="false"/>
       <Reference name="OpenMetaverse" localCopy="false"/>
@@ -1146,7 +1146,7 @@
   <Reference name="System.Drawing" localCopy="false"/>
   <Reference name="System.Windows.Forms" localCopy="false"/>
   <Reference name="System.Xml" localCopy="false"/>
-   <Reference name="LibCogbot.dll" localCopy="false"/>
+   <Reference name="Cogbot.Library.dll" localCopy="false"/>
    <Reference name="MushDLR223"  localCopy="false"/>
    <Reference name="PathSystem3D" localCopy="false"/>
    <Reference name="OpenMetaverse" localCopy="false"/>
@@ -1183,7 +1183,7 @@
   <Reference name="System.Drawing" localCopy="false"/>
   <Reference name="System.Windows.Forms" localCopy="false"/>
   <Reference name="System.Xml" localCopy="false"/>
-   <Reference name="LibCogbot" localCopy="false"/>
+   <Reference name="Cogbot.Library" localCopy="false"/>
    <Reference name="MushDLR223"  localCopy="false"/>
    <Reference name="PathSystem3D" localCopy="false"/>
    <Reference name="OpenMetaverse" localCopy="false"/>
@@ -1237,7 +1237,7 @@
 <!--
 
 
-      <Reference name="LibCogbot" localCopy="false"/>
+      <Reference name="Cogbot.Library" localCopy="false"/>
       <Reference name="PathSystem3D" localCopy="false"/>
       <Reference name="OpenMetaverse" localCopy="false"/>
       <Reference name="OpenMetaverseTypes" localCopy="false"/>      
@@ -1262,7 +1262,7 @@
       </Configuration>
 
       <ReferencePath>../../../../../bin</ReferencePath>
-      <Reference name="LibCogbot" localCopy="false"/>
+      <Reference name="Cogbot.Library" localCopy="false"/>
       <Reference name="PathSystem3D" localCopy="false"/>
       <Reference name="OpenMetaverse" localCopy="false"/>
       <Reference name="OpenMetaverseTypes" localCopy="false"/>      
@@ -1295,7 +1295,7 @@
      </Configuration>
 
      <ReferencePath>../../../bin</ReferencePath>
-     <Reference name="LibCogbot" localCopy="false"/>
+     <Reference name="Cogbot.Library" localCopy="false"/>
      <Reference name="MushDLR223"  localCopy="false"/>
      <Reference name="System.Drawing" localCopy="false"/>
      <Reference name="System.Windows.Forms" localCopy="false"/>
@@ -1328,7 +1328,7 @@
      </Configuration>
 
      <ReferencePath>../../../bin</ReferencePath>
-     <Reference name="LibCogbot" localCopy="false"/>
+     <Reference name="Cogbot.Library" localCopy="false"/>
      <Reference name="PathSystem3D" localCopy="false"/>
      <Reference name="System.Core" localCopy="false"/>
      <Reference name="System.Drawing" localCopy="false"/>
@@ -1370,7 +1370,7 @@
      </Configuration>
 
      <ReferencePath>../../../bin</ReferencePath>
-     <Reference name="LibCogbot" localCopy="false"/>
+     <Reference name="Cogbot.Library" localCopy="false"/>
      <Reference name="MushDLR223"  localCopy="false"/>
      <Reference name="PathSystem3D" localCopy="false"/>
      <Reference name="System.Drawing" localCopy="false"/>
@@ -1403,7 +1403,7 @@
      </Configuration>
 
      <ReferencePath>../../../bin</ReferencePath>
-     <Reference name="LibCogbot" localCopy="false"/>
+     <Reference name="Cogbot.Library" localCopy="false"/>
      <Reference name="PathSystem3D" localCopy="false"/>
      <Reference name="System.Drawing" localCopy="false"/>
      <Reference name="System.Windows.Forms" localCopy="false"/>
@@ -1437,7 +1437,7 @@
       </Configuration>
 
       <ReferencePath>../../../bin</ReferencePath>
-      <Reference name="LibCogbot" localCopy="false"/>
+      <Reference name="Cogbot.Library" localCopy="false"/>
       <Reference name="MushDLR223"  localCopy="false"/>
       <Reference name="System.Data" localCopy="false"/>
       <Reference name="OpenMetaverse" localCopy="false"/>
@@ -1463,7 +1463,7 @@
      </Configuration>
 
      <ReferencePath>../../../bin</ReferencePath>
-     <Reference name="LibCogbot" localCopy="false"/>
+     <Reference name="Cogbot.Library" localCopy="false"/>
      <Reference name="PathSystem3D" localCopy="false"/>
      <Reference name="MushDLR223"  localCopy="false"/>
      <Reference name="System.Drawing" localCopy="false"/>
@@ -2289,7 +2289,7 @@ app -->
 
 
     <!-- DebugApp app -->
-  <Project name="ABuildStartup" path="sources/main/Cogbot" type="Exe" frameworkVersion="v3_5">
+  <Project name="Cogbot" path="sources/main/Cogbot" type="Exe" frameworkVersion="v3_5">
   <Configuration name="Debug">
     <Options>
       <OutputPath>../../../bin/</OutputPath>
@@ -2306,7 +2306,7 @@ app -->
       <!--<Reference name="Mono.Addins.dll" localCopy="false"/>-->
       <Reference name="AIMLbot" />
       <Reference name="AIMLBotModule" />
-      <Reference name="LibCogbot" />
+      <Reference name="Cogbot.Library" />
         <Reference name="MySql.Data.dll" localCopy="false"/>
       <Reference name="LAIR.ResourceAPIs.WordNet"/>
       <Reference name="MushDLR223"  localCopy="false"/>
@@ -2379,7 +2379,7 @@ app -->
 
 
 
-    <Project name="ABuildStartup32" path="sources/main/Cogbot32" type="Exe" frameworkVersion="v3_5">
+    <Project name="Cogbot32" path="sources/main/Cogbot32" type="Exe" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
@@ -2394,7 +2394,7 @@ app -->
       </Configuration>
       <ReferencePath>../../../bin</ReferencePath>
       <Reference name="System" localCopy="false"/>
-      <Reference name="ABuildStartup.exe" localCopy="false"/>
+      <Reference name="Cogbot.exe" localCopy="false"/>
       <Files>
         <Match pattern="*.cs" recurse="true"/>
         <!--<Match pattern="frm*.cs" subType="Form"/>-->

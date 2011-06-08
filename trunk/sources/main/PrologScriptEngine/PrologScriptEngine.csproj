@@ -3,14 +3,14 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{48A2BB8C-0A24-4960-858F-0A4079B33228}</ProjectGuid>
+    <ProjectGuid>{EA218BC5-C7DC-49E8-8AC4-7026FD842469}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon>
     </ApplicationIcon>
     <AssemblyKeyContainerName>
     </AssemblyKeyContainerName>
-    <AssemblyName>SharpWordNet</AssemblyName>
+    <AssemblyName>PrologScriptEngine</AssemblyName>
     <DefaultClientScript>JScript</DefaultClientScript>
     <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
@@ -19,7 +19,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>
     </AppDesignerFolder>
-    <RootNamespace>SharpWordNet</RootNamespace>
+    <RootNamespace>PrologScriptEngine</RootNamespace>
     <StartupObject>
     </StartupObject>
     <FileUpgradeFlags>
@@ -32,18 +32,19 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;VISUAL_STUDIO</DefineConstants>
-    <DocumentationFile>Cogbot.LAIR.XML</DocumentationFile>
+    <DocumentationFile>
+    </DocumentationFile>
     <DebugSymbols>False</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>True</Optimize>
-    <OutputPath>..\..\..\..\..\bin\</OutputPath>
+    <OutputPath>..\..\..\bin\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>3</WarningLevel>
     <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>anycpu</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -52,18 +53,19 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;DEBUG;VISUAL_STUDIO</DefineConstants>
-    <DocumentationFile>Cogbot.LAIR.XML</DocumentationFile>
+    <DocumentationFile>
+    </DocumentationFile>
     <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>False</Optimize>
-    <OutputPath>..\..\..\..\..\bin\</OutputPath>
+    <OutputPath>..\..\..\bin\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningLevel>3</WarningLevel>
     <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>anycpu</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System">
@@ -72,11 +74,14 @@
     <Reference Include="System.Core">
       <Name>System.Core</Name>
     </Reference>
-    <Reference Include="System.Xml">
-      <Name>System.Xml</Name>
-    </Reference>
     <Reference Include="System.Data">
       <Name>System.Data</Name>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <Name>System.Data.DataSetExtensions</Name>
+    </Reference>
+    <Reference Include="System.Deployment">
+      <Name>System.Deployment</Name>
     </Reference>
     <Reference Include="System.Drawing">
       <Name>System.Drawing</Name>
@@ -84,98 +89,51 @@
     <Reference Include="System.Windows.Forms">
       <Name>System.Windows.Forms</Name>
     </Reference>
-    <Reference Include="System.Data.DataSetExtensions">
-      <Name>System.Data.DataSetExtensions</Name>
+    <Reference Include="System.Xml">
+      <Name>System.Xml</Name>
     </Reference>
-    <Reference Include="log4net.dll">
-      <Name>log4net.dll</Name>
+    <Reference Include="Cogbot.Library.dll">
+      <Name>Cogbot.Library.dll</Name>
     </Reference>
-    <Reference Include="MySql.Data.dll">
-      <Name>MySql.Data.dll</Name>
-    </Reference>
-    <Reference Include="LAIR.Collections">
-      <Name>LAIR.Collections</Name>
-    </Reference>
-    <Reference Include="LAIR.Extensions">
-      <Name>LAIR.Extensions</Name>
-    </Reference>
-    <Reference Include="LAIR.GraphViz">
-      <Name>LAIR.GraphViz</Name>
-    </Reference>
-    <Reference Include="LAIR.IO">
-      <Name>LAIR.IO</Name>
-    </Reference>
-    <Reference Include="LAIR.MachineLearning">
-      <Name>LAIR.MachineLearning</Name>
-    </Reference>
-    <Reference Include="LAIR.XML">
-      <Name>LAIR.XML</Name>
+    <Reference Include="SwiPlCs.dll">
+      <Name>SwiPlCs.dll</Name>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\LAIR.ResourceAPIs\PennBank\PennBank\LAIR.ResourceAPIs.PennBank.csproj">
-      <Name>LAIR.ResourceAPIs.PennBank</Name>
-      <Project>{28ED0CFB-3EC2-42E6-85B0-E06665EED10C}</Project>
+    <ProjectReference Include="..\MushDLR223\MushDLR223.csproj">
+      <Name>MushDLR223</Name>
+      <Project>{2B52E726-7CB6-44D2-B00C-91ECE7B6200D}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\LAIR.ResourceAPIs\FrameNet\FrameNet\LAIR.ResourceAPIs.FrameNet.csproj">
-      <Name>LAIR.ResourceAPIs.FrameNet</Name>
-      <Project>{7759F1FD-77ED-4FAC-924E-A1C43197B354}</Project>
+    <ProjectReference Include="..\PathSystem3D\PathSystem3D.csproj">
+      <Name>PathSystem3D</Name>
+      <Project>{5A1A90B2-D790-4325-B20F-27DF1E3B1AEE}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\LAIR.ResourceAPIs\WordNet\WordNet\LAIR.ResourceAPIs.WordNet.csproj">
-      <Name>LAIR.ResourceAPIs.WordNet</Name>
-      <Project>{D5A29974-0654-4B55-86A8-2211D2C7C73F}</Project>
+    <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse\OpenMetaverse.csproj">
+      <Name>OpenMetaverse</Name>
+      <Project>{ED97DB83-502C-48EA-B0CB-FC43C27A3266}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\LAIR.ResourceAPIs\NomBank\NomBank\LAIR.ResourceAPIs.NomBank.csproj">
-      <Name>LAIR.ResourceAPIs.NomBank</Name>
-      <Project>{1A7E708B-A6B9-4566-AA20-1F7F6FB9D5A6}</Project>
+    <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverseTypes\OpenMetaverseTypes.csproj">
+      <Name>OpenMetaverseTypes</Name>
+      <Project>{C7B43958-5A72-4622-849B-D84BBBA68F69}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\LAIR.ResourceAPIs\LAIR.CommonPort\LAIR.CommonPort.csproj">
-      <Name>LAIR.CommonPort</Name>
-      <Project>{56F8A3E9-DBC9-434B-B864-83AED0868DFC}</Project>
+    <ProjectReference Include="..\..\external\DotLisp\DotLisp.csproj">
+      <Name>DotLisp</Name>
+      <Project>{6CC5C007-FB63-411E-900D-D2CB9361DCDF}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\Radegast\Radegast.csproj">
+      <Name>Radegast</Name>
+      <Project>{14B008C7-5FBF-436A-81DC-EEF1C8E7DE04}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssemblyInfo.cs">
+    <Compile Include="PrologScriptInterpreter.cs">
     </Compile>
-    <Compile Include="DataFileEngine.cs">
-    </Compile>
-    <Compile Include="IndexWord.cs">
-    </Compile>
-    <Compile Include="Relation.cs">
-    </Compile>
-    <Compile Include="RelationType.cs">
-    </Compile>
-    <Compile Include="Synset.cs">
-    </Compile>
-    <Compile Include="Tokenizer.cs">
-    </Compile>
-    <Compile Include="WordNetEngine.cs">
-    </Compile>
-    <Compile Include="Morph\AbstractDelegatingOperation.cs">
-    </Compile>
-    <Compile Include="Morph\DetachSuffixesOperation.cs">
-    </Compile>
-    <Compile Include="Morph\IOperation.cs">
-    </Compile>
-    <Compile Include="Morph\LookupExceptionsOperation.cs">
-    </Compile>
-    <Compile Include="Morph\LookupIndexWordOperation.cs">
-    </Compile>
-    <Compile Include="Morph\TokenizerOperation.cs">
-    </Compile>
-    <Compile Include="Morph\Util.cs">
-    </Compile>
-    <Compile Include="TestHarness\WordNetBrowser.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <EmbeddedResource Include="TestHarness\WordNetBrowser.resx">
-      <DependentUpon>WordNetBrowser.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

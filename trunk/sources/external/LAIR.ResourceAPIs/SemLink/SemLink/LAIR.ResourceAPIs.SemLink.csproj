@@ -1,27 +1,24 @@
-﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
-    <ProductVersion>9.0.30729</ProductVersion>
+    <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{4659B583-E207-49F7-B1B5-85E0027D5D2A}</ProjectGuid>
+    <ProjectGuid>{C29C52F6-DBB9-4F38-9AB6-1C2D2702270A}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ApplicationIcon>
-    </ApplicationIcon>
+    <ApplicationIcon></ApplicationIcon>
     <AssemblyKeyContainerName>
     </AssemblyKeyContainerName>
-    <AssemblyName>MirrorTables</AssemblyName>
+    <AssemblyName>LAIR.ResourceAPIs.SemLink</AssemblyName>
     <DefaultClientScript>JScript</DefaultClientScript>
     <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
     <DelaySign>false</DelaySign>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-    <OutputType>Exe</OutputType>
-    <AppDesignerFolder>
-    </AppDesignerFolder>
-    <RootNamespace>MirrorTables</RootNamespace>
-    <StartupObject>
-    </StartupObject>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder></AppDesignerFolder>
+    <RootNamespace>LAIR.ResourceAPIs.SemLink</RootNamespace>
+    <StartupObject></StartupObject>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
   </PropertyGroup>
@@ -32,7 +29,7 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;VISUAL_STUDIO</DefineConstants>
-    <DocumentationFile>MirrorTables.XML</DocumentationFile>
+    <DocumentationFile>LAIR.ResourceAPIs.SemLink.XML</DocumentationFile>
     <DebugSymbols>False</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>True</Optimize>
@@ -52,7 +49,7 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;DEBUG;VISUAL_STUDIO</DefineConstants>
-    <DocumentationFile>MirrorTables.XML</DocumentationFile>
+    <DocumentationFile>LAIR.ResourceAPIs.SemLink.XML</DocumentationFile>
     <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>False</Optimize>
@@ -67,62 +64,46 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System">
-      <Name>System</Name>
+        <Name>System</Name>
     </Reference>
     <Reference Include="System.Core">
-      <Name>System.Core</Name>
+        <Name>System.Core</Name>
     </Reference>
     <Reference Include="System.Xml">
-      <Name>System.Xml</Name>
+        <Name>System.Xml</Name>
     </Reference>
     <Reference Include="System.Data">
-      <Name>System.Data</Name>
+        <Name>System.Data</Name>
     </Reference>
     <Reference Include="System.Data.DataSetExtensions">
-      <Name>System.Data.DataSetExtensions</Name>
-    </Reference>
-    <Reference Include="System.Drawing">
-      <Name>System.Drawing</Name>
-    </Reference>
-    <Reference Include="System.Windows.Forms">
-      <Name>System.Windows.Forms</Name>
+        <Name>System.Data.DataSetExtensions</Name>
     </Reference>
     <Reference Include="log4net.dll">
-      <Name>log4net.dll</Name>
+        <Name>log4net.dll</Name>
     </Reference>
     <Reference Include="MySql.Data.dll">
-      <Name>MySql.Data.dll</Name>
+        <Name>MySql.Data.dll</Name>
     </Reference>
-    <Reference Include="LAIR.Collections.dll">
-      <Name>LAIR.Collections.dll</Name>
+    <Reference Include="LAIR.Collections">
+        <Name>LAIR.Collections</Name>
     </Reference>
     <Reference Include="LAIR.Extensions">
-      <Name>LAIR.Extensions</Name>
+        <Name>LAIR.Extensions</Name>
     </Reference>
     <Reference Include="LAIR.GraphViz">
-      <Name>LAIR.GraphViz</Name>
+        <Name>LAIR.GraphViz</Name>
     </Reference>
     <Reference Include="LAIR.IO">
-      <Name>LAIR.IO</Name>
+        <Name>LAIR.IO</Name>
     </Reference>
     <Reference Include="LAIR.MachineLearning">
-      <Name>LAIR.MachineLearning</Name>
+        <Name>LAIR.MachineLearning</Name>
     </Reference>
     <Reference Include="LAIR.XML">
-      <Name>LAIR.XML</Name>
+        <Name>LAIR.XML</Name>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\PennBank\PennBank\LAIR.ResourceAPIs.PennBank.csproj">
-      <Name>LAIR.ResourceAPIs.PennBank</Name>
-      <Project>{28ED0CFB-3EC2-42E6-85B0-E06665EED10C}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
-    <ProjectReference Include="..\Wikipedia\LAIR.ResourceAPIs.Wikipedia.csproj">
-      <Name>LAIR.ResourceAPIs.Wikipedia</Name>
-      <Project>{86199C69-FB9E-477D-9050-5A2419E74FFE}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
     <ProjectReference Include="..\..\LAIR.CommonPort\LAIR.CommonPort.csproj">
       <Name>LAIR.CommonPort</Name>
       <Project>{56F8A3E9-DBC9-434B-B864-83AED0868DFC}</Project>
@@ -130,37 +111,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MirrorTablesForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="MirrorTablesForm.Designer.cs">
-      <DependentUpon>MirrorTablesForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Program.cs">
+    <Compile Include="SemLinkEngine.cs">
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">
     </Compile>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
-    <EmbeddedResource Include="MirrorTablesForm.resx">
-      <DependentUpon>MirrorTablesForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

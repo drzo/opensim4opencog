@@ -1,27 +1,24 @@
-﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
-    <ProductVersion>9.0.30729</ProductVersion>
+    <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{48A2BB8C-0A24-4960-858F-0A4079B33228}</ProjectGuid>
+    <ProjectGuid>{7759F1FD-77ED-4FAC-924E-A1C43197B354}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ApplicationIcon>
-    </ApplicationIcon>
+    <ApplicationIcon></ApplicationIcon>
     <AssemblyKeyContainerName>
     </AssemblyKeyContainerName>
-    <AssemblyName>SharpWordNet</AssemblyName>
+    <AssemblyName>LAIR.ResourceAPIs.FrameNet</AssemblyName>
     <DefaultClientScript>JScript</DefaultClientScript>
     <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
     <DelaySign>false</DelaySign>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>
-    </AppDesignerFolder>
-    <RootNamespace>SharpWordNet</RootNamespace>
-    <StartupObject>
-    </StartupObject>
+    <AppDesignerFolder></AppDesignerFolder>
+    <RootNamespace>LAIR.ResourceAPIs.FrameNet</RootNamespace>
+    <StartupObject></StartupObject>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
   </PropertyGroup>
@@ -32,7 +29,7 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;VISUAL_STUDIO</DefineConstants>
-    <DocumentationFile>Cogbot.LAIR.XML</DocumentationFile>
+    <DocumentationFile>LAIR.ResourceAPIs.FrameNet.XML</DocumentationFile>
     <DebugSymbols>False</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>True</Optimize>
@@ -43,7 +40,7 @@
     <WarningLevel>3</WarningLevel>
     <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>anycpu</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -52,7 +49,7 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;DEBUG;VISUAL_STUDIO</DefineConstants>
-    <DocumentationFile>Cogbot.LAIR.XML</DocumentationFile>
+    <DocumentationFile>LAIR.ResourceAPIs.FrameNet.XML</DocumentationFile>
     <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>False</Optimize>
@@ -63,119 +60,86 @@
     <WarningLevel>3</WarningLevel>
     <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>anycpu</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System">
-      <Name>System</Name>
+        <Name>System</Name>
     </Reference>
     <Reference Include="System.Core">
-      <Name>System.Core</Name>
+        <Name>System.Core</Name>
     </Reference>
     <Reference Include="System.Xml">
-      <Name>System.Xml</Name>
+        <Name>System.Xml</Name>
     </Reference>
     <Reference Include="System.Data">
-      <Name>System.Data</Name>
-    </Reference>
-    <Reference Include="System.Drawing">
-      <Name>System.Drawing</Name>
-    </Reference>
-    <Reference Include="System.Windows.Forms">
-      <Name>System.Windows.Forms</Name>
+        <Name>System.Data</Name>
     </Reference>
     <Reference Include="System.Data.DataSetExtensions">
-      <Name>System.Data.DataSetExtensions</Name>
+        <Name>System.Data.DataSetExtensions</Name>
     </Reference>
     <Reference Include="log4net.dll">
-      <Name>log4net.dll</Name>
+        <Name>log4net.dll</Name>
     </Reference>
     <Reference Include="MySql.Data.dll">
-      <Name>MySql.Data.dll</Name>
+        <Name>MySql.Data.dll</Name>
     </Reference>
-    <Reference Include="LAIR.Collections">
-      <Name>LAIR.Collections</Name>
+    <Reference Include="LAIR.Collections.dll">
+        <Name>LAIR.Collections.dll</Name>
     </Reference>
     <Reference Include="LAIR.Extensions">
-      <Name>LAIR.Extensions</Name>
+        <Name>LAIR.Extensions</Name>
     </Reference>
     <Reference Include="LAIR.GraphViz">
-      <Name>LAIR.GraphViz</Name>
+        <Name>LAIR.GraphViz</Name>
     </Reference>
     <Reference Include="LAIR.IO">
-      <Name>LAIR.IO</Name>
+        <Name>LAIR.IO</Name>
     </Reference>
     <Reference Include="LAIR.MachineLearning">
-      <Name>LAIR.MachineLearning</Name>
+        <Name>LAIR.MachineLearning</Name>
     </Reference>
     <Reference Include="LAIR.XML">
-      <Name>LAIR.XML</Name>
+        <Name>LAIR.XML</Name>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\LAIR.ResourceAPIs\PennBank\PennBank\LAIR.ResourceAPIs.PennBank.csproj">
+    <ProjectReference Include="..\..\PennBank\PennBank\LAIR.ResourceAPIs.PennBank.csproj">
       <Name>LAIR.ResourceAPIs.PennBank</Name>
       <Project>{28ED0CFB-3EC2-42E6-85B0-E06665EED10C}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\LAIR.ResourceAPIs\FrameNet\FrameNet\LAIR.ResourceAPIs.FrameNet.csproj">
-      <Name>LAIR.ResourceAPIs.FrameNet</Name>
-      <Project>{7759F1FD-77ED-4FAC-924E-A1C43197B354}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\LAIR.ResourceAPIs\WordNet\WordNet\LAIR.ResourceAPIs.WordNet.csproj">
-      <Name>LAIR.ResourceAPIs.WordNet</Name>
-      <Project>{D5A29974-0654-4B55-86A8-2211D2C7C73F}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\LAIR.ResourceAPIs\NomBank\NomBank\LAIR.ResourceAPIs.NomBank.csproj">
-      <Name>LAIR.ResourceAPIs.NomBank</Name>
-      <Project>{1A7E708B-A6B9-4566-AA20-1F7F6FB9D5A6}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\LAIR.ResourceAPIs\LAIR.CommonPort\LAIR.CommonPort.csproj">
+    <ProjectReference Include="..\..\LAIR.CommonPort\LAIR.CommonPort.csproj">
       <Name>LAIR.CommonPort</Name>
       <Project>{56F8A3E9-DBC9-434B-B864-83AED0868DFC}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssemblyInfo.cs">
+    <Compile Include="AnnotatedSpan.cs">
     </Compile>
-    <Compile Include="DataFileEngine.cs">
+    <Compile Include="Attestation.cs">
     </Compile>
-    <Compile Include="IndexWord.cs">
+    <Compile Include="Frame.cs">
     </Compile>
-    <Compile Include="Relation.cs">
+    <Compile Include="FrameElement.cs">
     </Compile>
-    <Compile Include="RelationType.cs">
+    <Compile Include="FrameElementSet.cs">
     </Compile>
-    <Compile Include="Synset.cs">
+    <Compile Include="FrameNetEngine.cs">
     </Compile>
-    <Compile Include="Tokenizer.cs">
+    <Compile Include="FrameSet.cs">
     </Compile>
-    <Compile Include="WordNetEngine.cs">
+    <Compile Include="Lexeme.cs">
     </Compile>
-    <Compile Include="Morph\AbstractDelegatingOperation.cs">
+    <Compile Include="LexicalUnit.cs">
     </Compile>
-    <Compile Include="Morph\DetachSuffixesOperation.cs">
+    <Compile Include="LexicalUnitAnnotationEngine.cs">
     </Compile>
-    <Compile Include="Morph\IOperation.cs">
+    <Compile Include="LexicalUnitSet.cs">
     </Compile>
-    <Compile Include="Morph\LookupExceptionsOperation.cs">
+    <Compile Include="Properties\AssemblyInfo.cs">
     </Compile>
-    <Compile Include="Morph\LookupIndexWordOperation.cs">
-    </Compile>
-    <Compile Include="Morph\TokenizerOperation.cs">
-    </Compile>
-    <Compile Include="Morph\Util.cs">
-    </Compile>
-    <Compile Include="TestHarness\WordNetBrowser.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <EmbeddedResource Include="TestHarness\WordNetBrowser.resx">
-      <DependentUpon>WordNetBrowser.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>
