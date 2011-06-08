@@ -59,6 +59,10 @@ namespace SbsSW.SwiPlCs
         }
         public static void InternMethod(string module, string pn, MethodInfo list, object defaultInstanceWhenMissing)
         {
+            if (list == null)
+            {
+                return;
+            }
             Type type = list.DeclaringType;
             pn = pn ?? (type.Name + "." + list.Name);
             ParameterInfo[] ps = list.GetParameters();
@@ -68,12 +72,69 @@ namespace SbsSW.SwiPlCs
             bool isbool = rt == typeof(bool);
             bool hasReturnValue = nonvoid && !isbool;
             bool isStatic = list.IsStatic;
+            if (isbool && isStatic)
+            {
+                bool isVanilla = true;
+                foreach (ParameterInfo info in ps)
+                {
+                    if (info.ParameterType!=typeof(PlTerm))
+                    {
+                        isVanilla = false;
+                        break;                        
+                    }
+                }
+                if (isVanilla)
+                {
+                    Delegate d = null;
+                    switch (paramlen)
+                    {
+                        case 0:
+                            {
+                                d = new DelegateParameter0(() => (bool) InvokeCaught(list, null, new object[0]));
+                                PlEngine.RegisterForeign(module, pn, paramlen, d, PlForeignSwitches.None);
+                                return;
+                            }
+                        case 1:
+                            PlEngine.RegisterForeign(module, pn, paramlen,
+                                                     new DelegateParameter1(
+                                                         (p1) => (bool) InvokeCaught(list, null, new object[] {p1})),
+                                                     PlForeignSwitches.None);
+                            return;
+                        case 2:
+                            PlEngine.RegisterForeign(module, pn, paramlen,
+                                                     new DelegateParameter2(
+                                                         (p1, p2) =>
+                                                         (bool) InvokeCaught(list, null, new object[] {p1, p2})),
+                                                     PlForeignSwitches.None);
+                            return;
+                        case 3:
+                            PlEngine.RegisterForeign(module, pn, paramlen,
+                                                     new DelegateParameter3(
+                                                         (p1, p2, p3) =>
+                                                         (bool)InvokeCaught(list, null, new object[] { p1, p2, p3})),
+                                                     PlForeignSwitches.None);
+                            return;
+                        case 4:
+                            PlEngine.RegisterForeign(module, pn, paramlen,
+                                                     new DelegateParameter4(
+                                                         (p1, p2, p3, p4) =>
+                                                         (bool) InvokeCaught(list, null, new object[] {p1, p2, p3, p4})),
+                                                     PlForeignSwitches.None);
+                            return;
+                        default:
+                            break;
+                    }
+                }
+            }
             int plarity = paramlen + (hasReturnValue ? 1 : 0) + (isStatic ? 0 : 1);
 
             Delegate del
                 = new DelegateParameterVarArgs((PlTermV termVector) =>
                                                    {
-
+                                                       if (termVector.Size != plarity)
+                                                       {
+                                                           return false;
+                                                       }
                                                        object target = isStatic
                                                                            ? null
                                                                            : ToVM(termVector[0], type) ??
@@ -88,15 +149,8 @@ namespace SbsSW.SwiPlCs
                                                            tvargnum++;
                                                        }
 
-                                                       object result;
-                                                       try
-                                                       {
-                                                           result = list.Invoke(target, newVariable);
-                                                       }
-                                                       catch (Exception ex)
-                                                       {
-                                                           throw new PlException(ex.Message, ex);
-                                                       }
+                                                       object result = InvokeCaught(list, target, newVariable);
+
                                                        if (isbool)
                                                        {
                                                            return (bool) result;
@@ -111,6 +165,80 @@ namespace SbsSW.SwiPlCs
 
             PlEngine.RegisterForeign(module, pn, plarity, del, PlForeignSwitches.VarArgs);
 
+        }
+
+        private static object InvokeCaught(MethodInfo info, object o, object[] os)
+        {
+            try
+            {
+                return info.Invoke(o, os);
+            }
+            catch (Exception ex)
+            {
+                ex = ex.InnerException ?? ex;
+                throw new PlException(ex.Message, ex);
+            }           
+        }
+
+        private static Type GetArityType(int paramlen)
+        {
+            switch(paramlen)
+            {
+                case 0:
+                    return typeof(DelegateParameter0);
+                case 1:
+                    return typeof(DelegateParameter1);
+                case 2:
+                    return typeof(DelegateParameter2);
+                case 3:
+                    return typeof(DelegateParameter3);
+                case 4:
+                    return typeof(DelegateParameter3);
+                default:
+                    return null;
+            }
+        }
+
+        private static Type GetType(PlTerm clazz)
+        {
+            object toObject = ToVM(clazz, null);
+            if (toObject is Type) return (Type) toObject;
+            Type type = null;
+            if (clazz.IsAtom || clazz.IsString)
+            {
+                type = ResolveType(clazz.Name);
+            }
+            if (type == null)
+            {
+                return typeof (object);
+            }
+            return type;
+        }
+
+        [PrologVisible]
+        static public bool cliFindMethod(PlTerm clazz, PlTerm methodName, PlTerm argTypes, PlTerm methodOut)
+        {
+            Type c = GetType(clazz);
+            string mn = methodName.Name;
+            MethodInfo mi = c.GetMethod(mn);
+            if (mi != null)
+            {
+                return methodOut.Unify(ToProlog(mi));
+            }
+            int len = 0;
+            List<Type> types = new List<Type>();
+            foreach (PlTerm term in argTypes)
+            {
+                types.Add(GetType(term));
+                len++;                
+            }
+            var atypes = types.ToArray();
+            mi = c.GetMethod(mn, atypes);
+            if (mi != null)
+            {
+                return methodOut.Unify(ToProlog(mi));
+            }
+            return false;
         }
 
         public static Dictionary<Int64, PlRef> termToObjectPins = new Dictionary<Int64, PlRef>();
@@ -190,7 +318,7 @@ namespace SbsSW.SwiPlCs
 	Y \== true.     % not a ref
          
          */
-        private static object ToVMLookup(string name, int arity, PlTerm arg1, PlTerm orig)
+        private static object ToVMLookup(string name, int arity, PlTerm arg1, PlTerm orig, Type pt)
         {
             //{T}
             //@(_Tag)
@@ -209,11 +337,16 @@ namespace SbsSW.SwiPlCs
                         }
                     case "null":
                         {
+                            if (pt != null && pt.IsValueType)
+                            {
+                                return pt.GetConstructor(new Type[0]).Invoke(new object[0]);
+                            }
                             return null;
                         }
                     case "void":
                         {
-                            return JPL.JVOID;
+                            if (pt == typeof (void)) return JPL.JVOID;
+                            return null;
                         }
                     default:
                         {
@@ -226,9 +359,18 @@ namespace SbsSW.SwiPlCs
                                     if (!atomToPlRef.TryGetValue(name, out oldValue))
                                     {
                                         //throw new NullReferenceException("no value for tag=" + name);
+                                        if (pt != null && pt.IsInstanceOfType(o))
+                                        {
+                                            return o;
+                                        }
                                         return o;
                                     }
-                                    return oldValue.Value;
+                                    var v = oldValue.Value;
+                                    if (pt != null && pt.IsInstanceOfType(v))
+                                    {
+                                        return v;
+                                    }
+                                    return v;
                                 }
                             }
                         }
@@ -286,6 +428,7 @@ namespace SbsSW.SwiPlCs
                 case PlType.PlString:
                     {
                         string s = (string) o;
+                        if (pt==null) return s;
                         var constructor = pt.GetConstructor(new[] { typeof(string) });
                         if (constructor != null)
                         {
@@ -308,7 +451,7 @@ namespace SbsSW.SwiPlCs
                     {
                         lock (ToFromConvertLock)
                         {
-                            return ToVMLookup(o.Name, o.Arity, o[0], o);
+                            return ToVMLookup(o.Name, o.Arity, o[1], o ,pt);
                         }
                     }
                     break;
@@ -1053,21 +1196,30 @@ namespace SbsSW.SwiPlCs
         }
 
         [PrologVisible]
-        private static bool cliFindType(PlTerm term1, PlTerm term2)
+        public static bool cliFindType(PlTerm term1, PlTerm term2)
         {
-            if (term1.IsAtom)
+//            if (term1.IsAtom)
             {
-                string className = term1.Name;
-                Type s1 = ResolveType(className);
+                string className = (string)term1;//.Name;
+                Type s1 = GetType(term1);
                 if (s1 != null)
                 {
-                    var c = ikvm.runtime.Util.getFriendlyClassFromType(s1);
+                    var c = s1;// ikvm.runtime.Util.getFriendlyClassFromType(s1);
                     if (c != null)
                     {
                         Console.WriteLine("name:" + className + " type:" + s1.FullName + " class:" + c);
                         string tag = jpl.fli.Prolog.object_to_tag(c);
-                        var t1 = term2[1];
+                        var t1 = term2;
+                        if (t1.IsCompound)
+                        {
+                            t1 = t1[1];
+                        }
+                        else if (t1.IsVar)
+                        {
+                            return t1.Unify(PlTerm.PlCompound("@", PlTerm.PlAtom(tag)));
+                        }
                         //var t2 = new PlTerm(t1.TermRef + 1);
+
                         //libpl.PL_put_atom_chars(t1.TermRef + 1, tag);
                         bool ret = t1.Unify(tag); // = t1;
                         return ret;
@@ -1206,7 +1358,7 @@ namespace SbsSW.SwiPlCs
             return true;
         }
 
-        private static bool LoadAssembly(Assembly assembly)
+        public static bool LoadAssembly(Assembly assembly)
         {
             foreach (Type t in assembly.GetTypes())
             {
@@ -1258,7 +1410,8 @@ namespace SbsSW.SwiPlCs
                                   }
                               });
 
-            PlEngine.RegisterForeign("jpl", "link_swiplcs", 1, new DelegateParameter1(link_swiplcs), PlForeignSwitches.None);
+            PlEngine.RegisterForeign(null, "link_swiplcs", 1, new DelegateParameter1(link_swiplcs),
+                                     PlForeignSwitches.None);
             //DoQuery(new Query("ensure_loaded(library(jpl))."));
             /*
              

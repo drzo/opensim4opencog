@@ -13,5 +13,12 @@ namespace ABuildStartup
         {
 			Program.Main();
 		}
+
+        static public int SizeOfIntPtr()
+        {
+            Console.WriteLine("SizeOf IntPtr32 is: {0}", IntPtr.Size);
+            return IntPtr.Size;
+        }
+
     }
 }

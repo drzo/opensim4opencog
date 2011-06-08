@@ -3574,7 +3574,9 @@ namespace IKVM.Runtime
 
 		internal object UnwrapRef(IntPtr o)
 		{
-			int i = o.ToInt32();
+            int i = o.ToInt32(); 
+            //long il = o.ToInt64(); int i = (int)il;    
+
 			if(i > 0)
 			{
 				return GetManagedJNIEnv().UnwrapLocalRef(i);

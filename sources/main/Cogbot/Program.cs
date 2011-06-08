@@ -226,6 +226,21 @@ namespace ABuildStartup
                 DoAndExit(() => RTParser.RTPBot.Main(args));
                 return;
             }
+            if (ClientManager.arguments.GetAfter("--plwin", out oArgs))
+            {
+                DoAndExit(() =>
+                              {
+                                  var firstProc = new System.Diagnostics.Process();
+                                  firstProc.StartInfo.FileName = "swipl-win.exe";
+                                  firstProc.StartInfo.Arguments = "-f StartCogbot.pl";
+
+                                  firstProc.EnableRaisingEvents = true;
+                                  AllocConsole();
+                                  firstProc.Start();
+                                  firstProc.WaitForExit();
+                              });                
+                return;
+            }
 #if USE_SWIPROLOG            
             if (ClientManager.arguments.GetAfter("--swipl", out oArgs))
             {
