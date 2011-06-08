@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{EA218BC5-C7DC-49E8-8AC4-7026FD842469}</ProjectGuid>
+    <ProjectGuid>{C84C7340-E2A9-4189-8CA7-A26249860654}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon>
@@ -92,42 +92,43 @@
     <Reference Include="System.Xml">
       <Name>System.Xml</Name>
     </Reference>
-    <Reference Include="Cogbot.Library.dll">
-      <Name>Cogbot.Library.dll</Name>
-    </Reference>
     <Reference Include="SwiPlCs.dll">
       <Name>SwiPlCs.dll</Name>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\LibCogbot\Cogbot.Library.csproj">
+      <Project>{64AE3F05-E588-49B7-A1AB-E428FC0AA28C}</Project>
+      <Name>Cogbot.Library</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MushDLR223\MushDLR223.csproj">
       <Name>MushDLR223</Name>
-      <Project>{2B52E726-7CB6-44D2-B00C-91ECE7B6200D}</Project>
+      <Project>{F5671362-954F-4407-8394-1A195CD3531A}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\PathSystem3D\PathSystem3D.csproj">
       <Name>PathSystem3D</Name>
-      <Project>{5A1A90B2-D790-4325-B20F-27DF1E3B1AEE}</Project>
+      <Project>{22CC03AD-67F0-4101-AFB3-67DA0E9055A4}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse\OpenMetaverse.csproj">
       <Name>OpenMetaverse</Name>
-      <Project>{ED97DB83-502C-48EA-B0CB-FC43C27A3266}</Project>
+      <Project>{1AE02E1F-4ED0-4452-B47B-6E1A46AC472C}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverseTypes\OpenMetaverseTypes.csproj">
       <Name>OpenMetaverseTypes</Name>
-      <Project>{C7B43958-5A72-4622-849B-D84BBBA68F69}</Project>
+      <Project>{BEF17C7B-0B05-4CED-B1D9-3C04CB4CC505}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\DotLisp\DotLisp.csproj">
       <Name>DotLisp</Name>
-      <Project>{6CC5C007-FB63-411E-900D-D2CB9361DCDF}</Project>
+      <Project>{6C343181-E150-487B-9A1C-F4E8FA2DDA10}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\Radegast\Radegast.csproj">
       <Name>Radegast</Name>
-      <Project>{14B008C7-5FBF-436A-81DC-EEF1C8E7DE04}</Project>
+      <Project>{3D0B2749-989E-4AE8-BD7A-5A2AA599472B}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
