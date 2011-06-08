@@ -3,13 +3,13 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{64179770-13FD-4917-BEFD-3D057FB1B35E}</ProjectGuid>
+    <ProjectGuid>{282A54B5-908A-4B16-BB24-1F3DFE8AA3BD}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon></ApplicationIcon>
     <AssemblyKeyContainerName>
     </AssemblyKeyContainerName>
-    <AssemblyName>SwiPlCs</AssemblyName>
+    <AssemblyName>IKVM.Runtime.JNI</AssemblyName>
     <DefaultClientScript>JScript</DefaultClientScript>
     <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
@@ -17,7 +17,7 @@
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <OutputType>Library</OutputType>
     <AppDesignerFolder></AppDesignerFolder>
-    <RootNamespace>SwiPlCs</RootNamespace>
+    <RootNamespace>IKVM.Runtime.JNI</RootNamespace>
     <StartupObject></StartupObject>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -63,17 +63,11 @@
     <PlatformTarget>anycpu</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="SWIJPL.dll">
-        <Name>SWIJPL.dll</Name>
-    </Reference>
     <Reference Include="IKVM.OpenJDK.Core.dll">
         <Name>IKVM.OpenJDK.Core.dll</Name>
     </Reference>
     <Reference Include="IKVM.Runtime.dll">
         <Name>IKVM.Runtime.dll</Name>
-    </Reference>
-    <Reference Include="IKVM.Runtime.JNI.dll">
-        <Name>IKVM.Runtime.JNI.dll</Name>
     </Reference>
     <Reference Include="System">
         <Name>System</Name>
@@ -99,27 +93,18 @@
     <Reference Include="System.Xml">
         <Name>System.Xml</Name>
     </Reference>
+    <Reference Include="System.Xml.Linq">
+        <Name>System.Xml.Linq</Name>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DesignByContract.cs">
+    <Compile Include="CommonAssemblyInfo.cs">
     </Compile>
-    <Compile Include="Exceptions.cs">
+    <Compile Include="JniAssemblyInfo.cs">
     </Compile>
-    <Compile Include="LibPl.cs">
-    </Compile>
-    <Compile Include="NativeMethods.cs">
-    </Compile>
-    <Compile Include="NondetContextHandle.cs">
-    </Compile>
-    <Compile Include="PrologClient.cs">
-    </Compile>
-    <Compile Include="SWI-cs-PlQuery.cs">
-    </Compile>
-    <Compile Include="SWI-cs.cs">
-    </Compile>
-    <Compile Include="Properties\AssemblyInfo.cs">
+    <Compile Include="JniInterface.cs">
     </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
