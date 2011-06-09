@@ -392,8 +392,11 @@ namespace SbsSW.SwiPlCs
             return iRet;
         }
 
-        internal static int PL_get_long(uint term, ref int i)
-        { return SafeNativeMethods.PL_get_long(term, ref i); }
+        internal static int PL_get_int64(uint term, ref ulong i)
+        { return SafeNativeMethods.PL_get_int64(term, ref i); }
+
+        internal static int PL_get_integer(uint term, ref int i)
+        { return SafeNativeMethods.PL_get_integer(term, ref i); }
 
         internal static int PL_get_long(uint term, ref long i)
         { return SafeNativeMethods.PL_get_long(term, ref i); }
@@ -514,6 +517,10 @@ namespace SbsSW.SwiPlCs
         // Handling exceptions
         internal static uint PL_exception(uint qid)
         { return SafeNativeMethods.PL_exception(qid); }
+
+        // Handling exceptions
+        internal static void PL_warning(string text, params IntPtr[] varargs)
+        { SafeNativeMethods.PL_warning(text,varargs); }
 
         internal static int PL_raise_exception(uint exception_term)
         { return SafeNativeMethods.PL_raise_exception(exception_term); }
