@@ -464,6 +464,106 @@ namespace SbsSW.SwiPlCs
     }
     */
 
+    public class PlArrayEnumerator: IEnumerator<PlTerm>
+    {
+        PlTerm orig;
+        int index = 0;
+        public PlArrayEnumerator(PlTerm compound, int startElement)
+        {
+            orig = compound;
+            index = startElement - 1;
+        }
+
+        #region IEnumerator<PlTerm> Members
+
+        PlTerm IEnumerator<PlTerm>.Current
+        {
+            get { return orig[index]; }
+        }
+
+        #endregion
+
+        #region IDisposable Members
+
+        void IDisposable.Dispose()
+        {
+            //orig = null;
+        }
+
+        #endregion
+
+        #region IEnumerator Members
+
+        object IEnumerator.Current
+        {
+            get { return orig[index]; }
+        }
+
+        bool IEnumerator.MoveNext()
+        {
+            return (index++ < orig.Arity);
+        }
+
+        void IEnumerator.Reset()
+        {
+            index = 0;
+        }
+
+        #endregion
+    }
+
+    public class PlTermVEnumerator : IEnumerator<PlTerm>
+    {
+        PlTermV orig;
+        int index = 0;
+        public PlTermVEnumerator(PlTermV compound, int startElement)
+        {
+            orig = compound;
+            index = startElement - 1;
+        }
+
+        #region IEnumerator<PlTerm> Members
+
+        PlTerm IEnumerator<PlTerm>.Current
+        {
+            get { return orig[index]; }
+        }
+
+        #endregion
+
+        #region IDisposable Members
+
+        void IDisposable.Dispose()
+        {
+            //orig = null;
+        }
+
+        #endregion
+
+        #region IEnumerator Members
+
+        object IEnumerator.Current
+        {
+            get { return orig[index]; }
+        }
+
+        bool IEnumerator.MoveNext()
+        {
+            return (index++ < orig.Size);
+        }
+
+        void IEnumerator.Reset()
+        {
+            index = 0;
+        }
+
+        #endregion
+    }
+    public interface IndexableWithLength<T>
+    {
+        T this[int index] { get; }
+        int Length { get; }
+    }
     /********************************
     *     GENERIC PROLOG TERM		*
     ********************************/
@@ -485,7 +585,7 @@ namespace SbsSW.SwiPlCs
     /// <item><term><see cref="PlCharList(string)"/></term><description>Create a Prolog list of one-character atoms from a 0-terminated C-string.</description></item>  
     /// </list>   
     /// </remarks>
-    public struct PlTerm : IComparable, IEnumerable<PlTerm>// TODO, IList<PlTerm> // LISTS
+    public struct PlTerm : IComparable, IEnumerable<PlTerm>, IndexableWithLength<PlTerm>// TODO, IList<PlTerm> // LISTS
     {
 
         ///<summary>
@@ -1107,6 +1207,11 @@ namespace SbsSW.SwiPlCs
         /// <returns>A System.Collections.Generic.IEnumerator&lt;T that can be used to iterate through the collection.</returns>
         public IEnumerator<PlTerm> GetEnumerator()
         {
+            if (IsList) return GetEnumeratorL();
+            return new PlArrayEnumerator(this, 1);
+        }
+        public IEnumerator<PlTerm> GetEnumeratorL()
+        {
             Check.Require(this.IsList);
             PlTerm t = new PlTerm(); //null;
             while (this.Next(ref t))
@@ -1437,9 +1542,9 @@ namespace SbsSW.SwiPlCs
         {
             Check.Require(term.TermRefIntern != 0);
             int v = 0;
-            if (0 != libpl.PL_get_long(term.TermRef, ref v))
+            if (0 != libpl.PL_get_integer(term.TermRef, ref v))
                 return v;
-            throw new PlTypeException("long", term);
+            throw new PlTypeException("int", term);
         }
 
         /// <summary>
@@ -1562,7 +1667,7 @@ namespace SbsSW.SwiPlCs
         public static bool operator ==(PlTerm term, int lng)
         {
             int v0 = 0;
-            if (0 != libpl.PL_get_long(term.TermRef, ref v0))
+            if (0 != libpl.PL_get_integer(term.TermRef, ref v0))
                 return v0 == lng;
             else
                 return false; // throw new PlTypeException("integer", term);
@@ -1610,7 +1715,7 @@ namespace SbsSW.SwiPlCs
         public static bool operator !=(PlTerm term, int lng)
         {
             int v0 = 0;
-            if (0 != libpl.PL_get_long(term.TermRef, ref v0))
+            if (0 != libpl.PL_get_integer(term.TermRef, ref v0))
                 return v0 != lng;
             else
                 return true; // throw new PlTypeException("integer", term);
@@ -1639,6 +1744,23 @@ namespace SbsSW.SwiPlCs
         #endregion compare operators
 
 
+
+        #region IndexableWithLength<PlTerm> Members
+
+        PlTerm IndexableWithLength<PlTerm>.this[int index]
+        {
+            get
+            {
+                return this[index];
+            }
+        }
+
+        int IndexableWithLength<PlTerm>.Length
+        {
+            get { return Arity; }
+        }
+
+        #endregion
     } // class PlTerm
     #endregion
 
@@ -1656,12 +1778,29 @@ namespace SbsSW.SwiPlCs
     /// <para>The only useful member function is the overloading of [], providing (0-based) access to the elements. <see cref="this[Int32]"/> 
     /// Range checking is performed and raises a ArgumentOutOfRangeException exception.</para> 
     /// </summary>
-    public struct PlTermV : IEquatable<PlTermV>   
+    public struct PlTermV : IEquatable<PlTermV>, IEnumerable<PlTerm>, IndexableWithLength<PlTerm>
     {
 
         private uint _a0; // term_t
         private int _size;
 
+
+        #region IndexableWithLength<PlTerm> Members
+
+        PlTerm IndexableWithLength<PlTerm>.this[int index]
+        {
+            get
+            {
+                return this[index];
+            }
+        }
+
+        int IndexableWithLength<PlTerm>.Length
+        {
+            get { return Size; }
+        }
+
+        #endregion
         public override string ToString()
         {
             try
@@ -1872,6 +2011,24 @@ namespace SbsSW.SwiPlCs
         #endregion
 
 
+
+        #region IEnumerable<PlTerm> Members
+
+        IEnumerator<PlTerm> IEnumerable<PlTerm>.GetEnumerator()
+        {
+            return new PlTermVEnumerator(this, 0);
+        }
+
+        #endregion
+
+        #region IEnumerable Members
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return new PlTermVEnumerator(this, 0);
+        }
+
+        #endregion
     } // class PlTermV
     #endregion
 

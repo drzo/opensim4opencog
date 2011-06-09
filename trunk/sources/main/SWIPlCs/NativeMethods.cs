@@ -178,6 +178,23 @@ namespace SbsSW.SwiPlCs
 		[DllImport(DllFileName)]	// PL_EXPORT(int)		PL_destroy_engine(PL_engine_t engine);
 		internal static extern int PL_destroy_engine(IntPtr engine);
 
+        /*******************************
+        *	     COMPARE		*
+        *******************************/
+
+        //PL_EXPORT(int)		PL_compare(term_t t1, term_t t2);
+        //PL_EXPORT(int)		PL_same_compound(term_t t1, term_t t2);
+
+        /*******************************
+        *	     MESSAGES		*
+        *******************************/
+
+        //PL_EXPORT(int)		PL_warning(const char *fmt, ...);
+        [DllImport(DllFileName, CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true)]
+        internal static extern int PL_warning(string text, params IntPtr[] varargs);
+        //PL_EXPORT(void)		PL_fatal_error(const char *fmt, ...);
+        [DllImport(DllFileName, CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true)]
+        internal static extern void PL_fatal_error(string text, params IntPtr[] varargs);
 
         [DllImport(DllFileName, CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true)]
 		internal static extern uint PL_new_atom(string text);
@@ -217,6 +234,7 @@ namespace SbsSW.SwiPlCs
         [DllImport(DllFileName)]
         internal static extern void PL_close_query(uint qid);
 	
+
 		// PlTerm
         [DllImport(DllFileName, CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true)] // return term_t
 		internal static extern void PL_put_atom_chars(uint term, string chars);
@@ -237,16 +255,30 @@ namespace SbsSW.SwiPlCs
         [DllImport(DllFileName, CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true)]
         internal static extern int PL_get_chars(uint term, [In, Out]ref IntPtr s, uint flags);
 
-        // __pl_export int		PL_get_long(term_t term, long *i);
+        // __pl_export int		PL_get_integer(term_t term, int *i);
         [DllImport(DllFileName)]
-        internal static extern int PL_get_long(uint term, [In, Out] ref int i);
+        internal static extern int PL_get_integer(uint term, [In, Out] ref int i);
         // __pl_export int		PL_get_long(term_t term, long *i);
         [DllImport(DllFileName)]
         internal static extern int PL_get_long(uint term, [In, Out] ref long i);
+
+        // __pl_export int		PL_get_intptr(term_t term, intptr_t *f);
+        [DllImport(DllFileName)]
+        internal static extern int PL_get_intptr(uint term, [In, Out] ref IntPtr i);
+
+        // __pl_export int		PL_get_pointer(term_t term, void **f);
+        [DllImport(DllFileName)]
+        internal static extern int PL_get_pointer(uint term, [In, Out] ref IntPtr i);
+
+        // __pl_export int		PL_get_int64(term_t term, int64_t *f);
+        [DllImport(DllFileName)]
+        internal static extern int PL_get_int64(uint term, [In, Out] ref ulong i);
+
+        
         // __pl_export int		PL_get_float(term_t term, double *f);
-		[DllImport(DllFileName)]
-		internal static extern int PL_get_float(uint term, [In, Out] ref double i);
-		// __pl_export int		PL_get_atom(term_t term, atom_t *atom);
+        [DllImport(DllFileName)]
+        internal static extern int PL_get_float(uint term, [In, Out] ref double i);
+        // __pl_export int		PL_get_atom(term_t term, atom_t *atom);
 		[DllImport(DllFileName)]
 		internal static extern int PL_get_atom(uint term, [In, Out] ref uint atom_t);
 		//__pl_export int		PL_term_type(term_t term);
