@@ -175,10 +175,28 @@ namespace ABuildStartup
 
         public static ABuildStartupCommandLine ABuildStartCommandLine;
         /// <summary>
-        /// The main entry point for the application.
+        /// runs in a STA thread (by creating one)  Does not "join"
         /// </summary>
-        [STAThread]
+        /// <param name="args"></param>        
         public static void Main0(string[] args)
+        {
+            if (true || Thread.CurrentThread.ApartmentState == ApartmentState.STA)
+            {
+                Thread newThread = new Thread(new ThreadStart(() => Main1(args)));
+                newThread.SetApartmentState(ApartmentState.STA);
+                newThread.Start();
+                //newThread.Join();
+                return;
+            }
+        }
+
+
+        /// <summary>
+        /// runs in current thread
+        /// </summary>
+        /// <param name="args"></param>
+        [STAThread]
+        public static void Main1(string[] args)
         {
             var DLRConsoleError = DLRConsole.Error;
             DLRConsole.DetectMainEnv(DLRConsoleError);
