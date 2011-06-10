@@ -141,6 +141,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="swipl.lib"
+				OutputFile="$(OutDir)\$(ProjectName)35.dll"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
@@ -404,6 +406,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SWI-Prolog.h"
+				>
+			</File>
+			<File
 				RelativePath=".\targetver.h"
 				>
 			</File>
@@ -414,6 +420,10 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 		</Filter>
+		<File
+			RelativePath=".\swipl.lib"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
