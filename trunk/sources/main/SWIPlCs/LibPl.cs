@@ -36,7 +36,7 @@ namespace SbsSW.SwiPlCs
         {
             PrologClient.IsPLWin = true;
             PrologClient.RedirectStreams = false;
-            PrologClient.SetupProlog();            
+            PrologClient.SetupProlog();
             return libpl.PL_succeed;
         }
     }
@@ -145,7 +145,8 @@ namespace SbsSW.SwiPlCs
             Write = 1
         }
 
-        internal static bool Is64Bit() {
+        internal static bool Is64Bit()
+        {
 #if _PL_X64
             return true;
 #endif
@@ -519,8 +520,8 @@ namespace SbsSW.SwiPlCs
         { return SafeNativeMethods.PL_exception(qid); }
 
         // Handling exceptions
-        internal static void PL_warning(string text, params IntPtr[] varargs)
-        { SafeNativeMethods.PL_warning(text,varargs); }
+        internal static int PL_warning(string text, params IntPtr[] varargs)
+        { return SafeNativeMethods.PL_warning(text, varargs); }
 
         internal static int PL_raise_exception(uint exception_term)
         { return SafeNativeMethods.PL_raise_exception(exception_term); }
