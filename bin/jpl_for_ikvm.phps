@@ -1864,7 +1864,7 @@ jCallVoidMethod(Obj, MethodID, Types, Params) :-
 
 % jFindClass(+ClassName, -Class) :-
 
-jFindClass(ClassName, Class) :- cliFindClass(ClassName, Class),!.
+jFindClass(ClassName, Class) :- user:cliFindClass(ClassName, Class),!.
 jFindClass(ClassName, Class) :-
 	jni_func(6, ClassName, Class).
 
@@ -4624,10 +4624,10 @@ java_home(Home) :-
 :- volatile
 	jvm_ready/0.
 
-:- module_transparent(link_swiplcs/1).
+%%%:- module_transparent(link_swiplcs/1).
 
-load_swiplcs:- 
-   context_module(X), link_swiplcs(X),
+load_swiplcs:- use_module(clipl),
+   context_module(X), user:link_swiplcs(X),
    post_load_swipl.
 
 post_load_swipl:-set_prolog_flag(debug,true).
@@ -4635,7 +4635,7 @@ post_load_swipl:-set_prolog_flag(debug,true).
 setup_jvm :-
 	jvm_ready, !.
 %%logicmoo
-setup_jvm :- catch((load_swiplcs,assert(jvm_ready)),E,report_java_setup_problem(E)),!.
+%%%setup_jvm :- load_swiplcs,assert(jvm_ready),!.
 setup_jvm :-
 	add_jpl_to_classpath,
 	add_java_to_ldpath,
@@ -4651,5 +4651,5 @@ report_java_setup_problem(E) :-
 :- initialization(setup_jvm, now).
 
 
-%%	IKVM Version 666
+%%	IKVM Version 668
 

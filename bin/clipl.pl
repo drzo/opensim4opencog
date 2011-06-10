@@ -6,12 +6,20 @@
             cli_GetSymbol/3,
             cli_IsDefined/2,
             cliLoadAssembly/1,
-            link_swiplcs/1
+            link_swiplcs/1,
+            cliFindClass/2,
+       %%     cliFindType/2,
+       %%     cliFindMethod/4,
+        %%    cliCall/4,
+          %%  cliGet/3,
+         %%   cliSet/3,
+            to_string/2
+
           ]).
 
-%%:- load_foreign_library('swicli.dll').
 :-load_foreign_library(swicli).
-:-use_module(library(jpl)).
+:-cli_load_lib('SwiPlCs','SbsSW.SwiPlCs.swipl_win','install').
+:-cliLoadAssembly('SwiPlCs.dll').
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
