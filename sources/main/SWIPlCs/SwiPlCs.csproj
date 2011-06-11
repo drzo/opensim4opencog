@@ -130,6 +130,7 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CycTypeInfo.cs" />
     <Compile Include="DesignByContract.cs">
     </Compile>
     <Compile Include="EventHandlerInProlog.cs" />
