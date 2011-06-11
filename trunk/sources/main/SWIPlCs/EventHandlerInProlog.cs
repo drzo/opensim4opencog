@@ -79,7 +79,7 @@ namespace SbsSW.SwiPlCs
             Arity = (invokeMethod.IsStatic ? 0 : 1) + ParamArity + (IsVoid ? 0 : 1);
             if (Arity != key.Arity)
             {
-                throw new ArgumentException("Arity of needed info " + Arity + " does not match " + key.Arity);
+                throw new ArgumentException("Arity of needed info " + Arity + " does not match " + key.Arity + " for " + this);
             }
             ParamTypes = new Type[ParamArity];
             for (int i = 0; i < ParamArity; i++)
@@ -173,7 +173,8 @@ namespace SbsSW.SwiPlCs
         }
         object CallProlog(params object[] paramz)
         {
-            return PrologClient.CallProlog(this, Module, Name, Arity, Origin, paramz, ReturnType);
+            lock (oneEvtHandlerAtATime) return PrologClient.CallProlog(this, Module, Name, Arity, Origin, paramz, ReturnType);
         }
+        static readonly Object oneEvtHandlerAtATime = new object();
     }
 }

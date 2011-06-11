@@ -23,7 +23,7 @@ using ClassLoader = java.lang.ClassLoader;
 using Class = java.lang.Class;
 using sun.reflect.misc;
 using Util = ikvm.runtime.Util;
-
+using CycFort = SbsSW.SwiPlCs.PlTerm;
 namespace SbsSW.SwiPlCs
 {
     public class PrologClient
@@ -56,6 +56,163 @@ namespace SbsSW.SwiPlCs
         const string ExportModule = "user";
         public static List<Assembly> AssembliesLoaded = new List<Assembly>();
         public static List<Assembly> AssembliesLoading = new List<Assembly>();
+        public static Dictionary<Thread, IntPtr> SafeThreads = new Dictionary<Thread, IntPtr>();
+        public static Dictionary<int, Thread> engineToThread = new Dictionary<int, Thread>();
+
+        public static void RegisterMainThread()
+        {
+            lock (SafeThreads)
+            {
+                var t = Thread.CurrentThread;
+                SafeThreads.Add(t, IntPtr.Zero);
+                int self = libpl.PL_thread_self();
+                engineToThread.Add(self, t);
+            }
+        }
+        public static bool OneToOneEnginesPeThread = true;
+        public static void RegisterThread(Thread thread)
+        {
+            lock (SafeThreads)
+            {
+
+                int self = libpl.PL_thread_self();
+                IntPtr _iEngineNumber;
+                IntPtr _oiEngineNumber;
+                Thread otherThread;
+                bool threadOnceHadEngine = SafeThreads.TryGetValue(thread, out _iEngineNumber);
+                bool plthreadHasThread = engineToThread.TryGetValue(self, out otherThread);
+                bool plThreadHasDifferntThread = false;
+                if (plthreadHasThread)
+                {
+                    plThreadHasDifferntThread = otherThread != thread;
+                }
+                if (threadOnceHadEngine)
+                {
+                    if (thread == CreatorThread) return;
+                    IntPtr pNullPointer = IntPtr.Zero;
+                    int iRet = libpl.PL_set_engine(_iEngineNumber, ref pNullPointer);
+                    if (iRet == libpl.PL_ENGINE_SET)
+                    {
+                        if (_iEngineNumber == IntPtr.Zero)
+                        {
+                            // we know our number now!
+                            //  SafeThreads[thread] = pNullPointer;
+                            return;
+                        }
+                        return; // all is fine!
+                    }
+                    switch (iRet)
+                    {
+                        case libpl.PL_ENGINE_SET:
+                            {
+                                break; // all is fine!
+                            }
+                        case libpl.PL_ENGINE_INVAL: throw (new PlLibException("PlSetEngine returns Invalid")); //break;
+                        case libpl.PL_ENGINE_INUSE: throw (new PlLibException("PlSetEngine returns it is used by an other thread")); //break;
+                        default: throw (new PlLibException("Unknown return from PlSetEngine"));
+                    }
+                    return; // all was fine;
+                }
+                else
+                {
+                    // thread never had engine
+                    _iEngineNumber = libpl.PL_create_engine(IntPtr.Zero);
+                    SafeThreads.Add(thread, _iEngineNumber);
+                    int self2 = libpl.PL_thread_self();
+                    if (self2 == -1)
+                    {
+                        if (libpl.PL_is_initialised(IntPtr.Zero, IntPtr.Zero) == libpl.PL_fail)
+                        {
+                            try
+                            {
+                                int ret = libpl.PL_thread_attach_engine(_iEngineNumber);
+                                int self3 = libpl.PL_thread_self();
+                                engineToThread.Add(self3, thread);
+                                return;
+                            }
+                            catch (Exception ex)
+                            {
+                                throw (new PlException("PL_create_engine : " + ex.Message));
+                            }
+                        } else
+                        {
+                            //int ret = libpl.PL_thread_attach_engine(_iEngineNumber);
+                            IntPtr pNullPointer = IntPtr.Zero;
+                            int iRet = libpl.PL_set_engine(_iEngineNumber, ref pNullPointer);
+                            switch (iRet)
+                            {
+                                case libpl.PL_ENGINE_SET:
+                                    {
+                                        int self4 = libpl.PL_thread_self();
+                                        engineToThread.Add(self4, thread);
+                                        return; // all is fine!
+                                    }
+                                case libpl.PL_ENGINE_INVAL: throw (new PlLibException("PlSetEngine returns Invalid")); //break;
+                                case libpl.PL_ENGINE_INUSE: throw (new PlLibException("PlSetEngine returns it is used by an other thread")); //break;
+                                default: throw (new PlLibException("Unknown return from PlSetEngine"));
+                            }
+                            int self3 = libpl.PL_thread_self();
+                            engineToThread.Add(self3, thread);
+                        }
+                    }
+
+                    engineToThread.Add(self2, thread);
+                }
+                /*
+                //
+                if (self != ret)
+                {
+                    engineToThread[ret] = thread;
+                }
+
+                if (engineToThread.TryGetValue(self, out otherThread))
+                {
+                    // All good!
+                    if (otherThread == thread)
+                        return;
+                    bool othreadOnceHadEngine = SafeThreads.TryGetValue(otherThread, out _oiEngineNumber);
+                    int ret = libpl.PL_thread_attach_engine(_iEngineNumber);
+                    if (self != ret)
+                    {
+                        engineToThread[ret] = thread;
+                        //what does this mean?
+                        SafeThreads.TryGetValue(thread, out _iEngineNumber);
+                    }
+                }
+                libpl.PL_set_engine(libpl.PL_ENGINE_CURRENT, ref oldEngine);
+                if (!OneToOneEnginesPeThread)
+                {
+                }
+                SafeThreads.Add(thread, _iEngineNumber);
+                  */
+            }
+        }
+
+        public static void DeregisterThread(Thread thread)
+        {
+            return;
+            lock (SafeThreads)
+            {
+                int self = libpl.PL_thread_self();
+                IntPtr _iEngineNumber;
+                if (!SafeThreads.TryGetValue(thread, out _iEngineNumber))
+                {
+                    return;
+                }
+                SafeThreads.Remove(thread);
+                if (libpl.PL_destroy_engine(_iEngineNumber) != 0)
+                {
+                    try
+                    {
+                        _iEngineNumber = libpl.PL_create_engine(IntPtr.Zero);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw (new PlException("PL_create_engine : " + ex.Message));
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// The OS and not the .Net process
@@ -149,38 +306,38 @@ namespace SbsSW.SwiPlCs
 
             Delegate del
                 = new DelegateParameterVarArgs((PlTermV termVector) =>
-                {
-                    if (termVector.Size != plarity)
-                    {
-                        return false;
-                    }
-                    object target = isStatic
-                                        ? null
-                                        : ToVM(termVector[0], type) ??
-                                          defaultInstanceWhenMissing;
-                    object[] newVariable = new object[paramlen];
+                                                   {
+                                                       if (termVector.Size != plarity)
+                                                       {
+                                                           return false;
+                                                       }
+                                                       object target = isStatic
+                                                                           ? null
+                                                                           : ToVM(termVector[0], type) ??
+                                                                             defaultInstanceWhenMissing;
+                                                       object[] newVariable = new object[paramlen];
 
-                    int tvargnum = isStatic ? 0 : 1;
-                    for (int argnum = 0; argnum < paramlen; argnum++)
-                    {
-                        newVariable[argnum] = ToVM(termVector[tvargnum],
-                                                   ps[argnum].ParameterType);
-                        tvargnum++;
-                    }
+                                                       int tvargnum = isStatic ? 0 : 1;
+                                                       for (int argnum = 0; argnum < paramlen; argnum++)
+                                                       {
+                                                           newVariable[argnum] = ToVM(termVector[tvargnum],
+                                                                                      ps[argnum].ParameterType);
+                                                           tvargnum++;
+                                                       }
 
-                    object result = InvokeCaught(list, target, newVariable);
+                                                       object result = InvokeCaught(list, target, newVariable);
 
-                    if (isbool)
-                    {
-                        return (bool)result;
-                    }
-                    if (nonvoid)
-                    {
-                        return termVector[plarity - 1].Unify(ToProlog(result));
-                    }
-                    return true;
+                                                       if (isbool)
+                                                       {
+                                                           return (bool)result;
+                                                       }
+                                                       if (nonvoid)
+                                                       {
+                                                           return termVector[plarity - 1].Unify(ToProlog(result));
+                                                       }
+                                                       return true;
 
-                });
+                                                   });
 
             PlEngine.RegisterForeign(module, pn, plarity, del, PlForeignSwitches.VarArgs);
 
@@ -614,11 +771,26 @@ namespace SbsSW.SwiPlCs
             if (mi == null)
             {
                 FieldInfo fi = c.GetField(evi.Name, BindingFlagsALL);
-                if (fi!=null)
+                if (fi != null)
                 {
-                    Delegate del = (Delegate)fi.GetValue(getInstance);
-                    if (del != null) return valueOut.Unify(ToProlog(del.DynamicInvoke(PlListToArray(valueIn, paramInfos))));                    
+                    Delegate del = (Delegate) fi.GetValue(getInstance);
+                    if (del != null)
+                        return valueOut.Unify(ToProlog(del.DynamicInvoke(PlListToArray(valueIn, paramInfos))));
                 }
+                string fn1 = fn.Substring(1);
+                int len = fn.Length;
+                foreach (FieldInfo info in c.GetFields(BindingFlagsALL))
+                {
+                    if (info.Name.EndsWith(fn1))
+                    {
+                        if (info.Name.Length - len < 3)
+                        {
+                            Delegate del = (Delegate) info.GetValue(info.IsStatic ? null : getInstance);
+                            if (del != null)
+                                return valueOut.Unify(ToProlog(del.DynamicInvoke(PlListToArray(valueIn, paramInfos))));
+                        }
+                    }
+                } 
             }
             if (mi == null)
             {
@@ -654,9 +826,18 @@ namespace SbsSW.SwiPlCs
             Key.Origin = getInstance;
             Key.Event = fi;
 
-            var handlerInProlog = new EventHandlerInProlog(Key);
-            lock (PrologEventHandlers) PrologEventHandlers.Add(Key, handlerInProlog);
-            fi.AddEventHandler(getInstance, handlerInProlog.Delegate);
+            lock (PrologEventHandlers)
+            {
+                EventHandlerInProlog handlerInProlog;
+                if (PrologEventHandlers.TryGetValue(Key, out handlerInProlog))
+                {
+                    fi.RemoveEventHandler(getInstance, handlerInProlog.Delegate);
+                    PrologEventHandlers.Remove(Key);
+                }
+                handlerInProlog = new EventHandlerInProlog(Key);
+                PrologEventHandlers.Add(Key, handlerInProlog);
+                fi.AddEventHandler(getInstance, handlerInProlog.Delegate);
+            }
             return true;
         }
         [PrologVisible(ModuleName = ExportModule)]
@@ -849,6 +1030,297 @@ namespace SbsSW.SwiPlCs
         public static PlTerm PLNULL { get { return PlTerm.PlCompound("@", PlTerm.PlAtom("void")); } }
         public static PlTerm PLTRUE { get { return PlTerm.PlCompound("@", PlTerm.PlAtom("true")); } }
         public static PlTerm PLFALSE { get { return PlTerm.PlCompound("@", PlTerm.PlAtom("false")); } }
+        static System.Collections.IEnumerable Unfold(object value, out bool unFolded)
+        {
+            IList<object> results = new List<object>();
+            var type = value.GetType();
+            var utype = Enum.GetUnderlyingType(type);
+            var values = Enum.GetValues(type);
+            if (utype == typeof(byte) || utype == typeof(sbyte) || utype == typeof(Int16) || utype == typeof(UInt16) || utype == typeof(Int32))
+            {
+                unFolded = true;
+                var num = (Int32)Convert.ChangeType(value, typeof(Int32));
+                if (num == 0)
+                {
+                    results.Add(value);
+                    return results;
+                }
+                foreach (var val in values)
+                {
+                    var v = (Int32)Convert.ChangeType(val, typeof(Int32));
+                    if (v == 0) continue;
+                    if ((v & num) == v)
+                    {
+                        results.Add(Enum.ToObject(value.GetType(), val));
+                    }
+                }
+            }
+            else if (utype == typeof(UInt32))
+            {
+                unFolded = true;
+                var num = (UInt32)value;
+                if (num == 0)
+                {
+                    results.Add(value);
+                    return results;
+                }
+                foreach (var val in values)
+                {
+                    var v = (UInt32)Convert.ChangeType(val, typeof(UInt32));
+                    if ((v & num) == v) results.Add(Enum.ToObject(value.GetType(), val));
+                }
+            }
+            else if (utype == typeof(Int64))
+            {
+                unFolded = true;
+                var num = (Int64)value;
+                if (num == 0)
+                {
+                    results.Add(value);
+                    return results;
+                }
+                foreach (var val in values)
+                {
+                    var v = (Int64)Convert.ChangeType(val, typeof(Int64));
+                    if (v == 0L)
+                    {
+                        continue;
+                    }
+                    if ((v & num) == v) results.Add(Enum.ToObject(value.GetType(), val));
+                }
+            }
+            else if (utype == typeof(UInt64))
+            {
+                unFolded = true;
+                var num = (UInt64)value;
+                if (num == 0)
+                {
+                    results.Add(value);
+                    return results;
+                }
+                foreach (var val in values)
+                {
+                    var v = (UInt64)Convert.ChangeType(val, typeof(UInt64));
+                    if (v == 0U)
+                    {
+                        continue;
+                    }
+                    if ((v & num) == v) results.Add(Enum.ToObject(value.GetType(), val));
+                }
+            }
+            else
+            {
+                throw new NotSupportedException();
+            }
+            return results;
+        }
+
+        private delegate void WithEnum(CycFort p);
+        private void ForEachEnumValue(WithEnum withValue, object p)
+        {
+            Type pType = p.GetType();
+            if (!CycTypeInfo.IsFlagType(pType))
+            {
+                CycFort fort = (CycFort)ToFort(p);
+                withValue(fort);
+                return;
+            }
+            Array pTypeValues = System.Enum.GetValues(pType);
+            Array.Reverse(pTypeValues);
+
+            if (p is byte)
+            {
+                byte b = (byte)p;
+                if (b == 0)
+                {
+                    withValue((CycFort)ToFort(p));
+                    return;
+                }
+                foreach (object v in pTypeValues)
+                {
+                    byte bv = (byte)v;
+                    if (bv >= b)
+                    {
+                        withValue((CycFort)ToFort(v));
+                        b -= bv;
+                    }
+                    if (b == 0) return;
+                }
+                return;
+            }
+            if (p is sbyte)
+            {
+                sbyte b = (sbyte)p;
+                if (b == 0)
+                {
+                    withValue((CycFort)ToFort(p));
+                    return;
+                }
+                foreach (object v in pTypeValues)
+                {
+                    sbyte bv = (sbyte)v;
+                    if (bv >= b)
+                    {
+                        withValue((CycFort)ToFort(v));
+                        b -= bv;
+                    }
+                    if (b == 0) return;
+                }
+                return;
+            }
+            if (p is UInt16)
+            {
+                ushort b = (UInt16)p;
+                if (b == 0)
+                {
+                    withValue((CycFort)ToFort(p));
+                    return;
+                }
+                foreach (object v in pTypeValues)
+                {
+                    ushort bv = (ushort)v;
+                    if (bv >= b)
+                    {
+                        withValue((CycFort)ToFort(v));
+                        b -= bv;
+                    }
+                    if (b == 0) return;
+                }
+                return;
+            }
+            if (p is Int16)
+            {
+                short b = (Int16)p;
+                if (b == 0)
+                {
+                    withValue((CycFort)ToFort(p));
+                    return;
+                }
+                foreach (object v in pTypeValues)
+                {
+                    short bv = (short)v;
+                    if (bv >= b)
+                    {
+                        withValue((CycFort)ToFort(v));
+                        b -= bv;
+                    }
+                    if (b == 0) return;
+                }
+                return;
+            }
+            if (p is UInt32)
+            {
+                uint b = (UInt32)p;
+                if (b == 0)
+                {
+                    withValue((CycFort)ToFort(p));
+                    return;
+                }
+                foreach (object v in pTypeValues)
+                {
+                    uint bv = (uint)v;
+                    if (bv >= b)
+                    {
+                        withValue((CycFort)ToFort(v));
+                        b -= bv;
+                    }
+                    if (b == 0) return;
+                }
+                return;
+            }
+            if (p is Int32)
+            {
+                int b = (Int32)p;
+                if (b == 0)
+                {
+                    withValue((CycFort)ToFort(p));
+                    return;
+                }
+                foreach (object v in pTypeValues)
+                {
+                    int bv = (int)v;
+                    if (bv >= b)
+                    {
+                        withValue((CycFort)ToFort(v));
+                        b -= bv;
+                    }
+                    if (b == 0) return;
+                }
+                return;
+            }
+            if (p is UInt64)
+            {
+                ulong b = (UInt64)p;
+                if (b == 0)
+                {
+                    withValue((CycFort)ToFort(p));
+                    return;
+                }
+                foreach (object v in pTypeValues)
+                {
+                    ulong bv = (ulong)v;
+                    if (bv >= b)
+                    {
+                        withValue((CycFort)ToFort(v));
+                        b -= bv;
+                    }
+                    if (b == 0) return;
+                }
+                return;
+            }
+            if (p is Int64)
+            {
+                long b = (Int64)p;
+                if (b == 0)
+                {
+                    withValue((CycFort)ToFort(p));
+                    return;
+                }
+                foreach (object v in pTypeValues)
+                {
+                    long bv = (long)v;
+                    if (bv >= b)
+                    {
+                        withValue((CycFort)ToFort(v));
+                        b -= bv;
+                    }
+                    if (b == 0) return;
+                }
+                return;
+            }
+            string s = p.ToString();
+            bool unfolded;
+            foreach (var unfold in Unfold(p, out unfolded))
+            {
+                withValue((CycFort)ToFort(unfold));
+                //return;
+            }
+            if (unfolded) return;
+            Trace();
+            if (p is IConvertible)
+            {
+                withValue((CycFort)ToFort(p));
+                return;
+            }
+
+            if (p is Enum)
+            {
+                withValue((CycFort)ToFort(p));
+                return;
+            }
+            withValue((CycFort)ToFort(p));
+        }
+
+        private void Trace()
+        {
+            throw new NotImplementedException();
+        }
+
+        private object ToFort(object o)
+        {
+            return ToProlog(o);
+        }
+
         public static Object ToFromConvertLock = new object();
         public static PlTerm ToProlog(object o)
         {
@@ -856,6 +1328,8 @@ namespace SbsSW.SwiPlCs
             if (o is string) return VMStringsAsAtoms ? PlTerm.PlAtom((string) o) : PlTerm.PlString((string) o);
             if (o is Term) return ToPLCS((Term)o);
             if (o == null) return PLNULL;
+            Type t = o.GetType();
+
             if (o is ValueType)
             {
                 if (o is char)
@@ -874,15 +1348,32 @@ namespace SbsSW.SwiPlCs
                     bool found;
                     PlTerm res = ToVMNumber(o, out found);
                     if (found) return res;
+                    if (t.IsPrimitive)
+                    {
+                        Warn("@TODO Missing code for primitive " + t);
+                    }
                 }
                 catch (Exception e)
                 {
                     // conversion errors
                 }
             }
+            if (t.IsEnum)
+            {
+                return PlTerm.PlCompound("enum", C(t.FullName), C(o.ToString()));
+            }
+            if (t.IsValueType && !t.IsEnum && !t.IsPrimitive && t.Namespace != "System")
+            {
+                return ToFieldLayout("struct", o, t);
+            }
+            if (o is EventInfo)
+            {
+                return ToFieldLayout("event", o, t);
+            }
             lock (ToFromConvertLock)
             {
                 var tag = object_to_tag(o);
+                if (true) return PlTerm.PlCompound("@", PlTerm.PlAtom(tag));
                 PlRef oref;
                 if (!objectToPlRef.TryGetValue(o, out oref))
                 {
@@ -932,6 +1423,20 @@ namespace SbsSW.SwiPlCs
             }
         }
 
+        public static PlTerm ToFieldLayout(string named, object o, Type t)
+        {
+            FieldInfo[] tGetFields =
+                t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            int len = tGetFields.Length;
+            PlTermV tv = new PlTermV(len + 1);
+            tv[0].Unify(C(t.FullName));
+            int tvi = 1;
+            for (int i = 0; i < len; i++)
+            {
+                tv[tvi++].Unify(ToProlog(tGetFields[i].GetValue(o)));
+            }
+            return PlTerm.PlCompound(named, tv);
+        }
 
         readonly static private Dictionary<object, string> ObjToTag = new Dictionary<object, string>();
         readonly static private Dictionary<string, object> TagToObj = new Dictionary<string, object>();
@@ -961,6 +1466,10 @@ namespace SbsSW.SwiPlCs
                 s = "C#" + iptr.ToInt64();
                 ObjToTag[o] = s;
                 TagToObj[s] = o;
+                if (ObjToTag.Count % 10000 == 0)
+                {
+                    Console.WriteLine("ObjToTag=" + ObjToTag);
+                }
 
                 return s;
             }
@@ -1539,9 +2048,9 @@ namespace SbsSW.SwiPlCs
         //FileInfo & DirectoryInfo are in System.IO
         //This is something you should be able to tweak to your specific needs.
         static void CopyFiles(string source,
-                      string destination,
-                      bool overwrite,
-                      string searchPattern, bool recurse)
+                              string destination,
+                              bool overwrite,
+                              string searchPattern, bool recurse)
         {
             if (Directory.Exists(source))
                 CopyFiles(new DirectoryInfo(source), new DirectoryInfo(destination), overwrite, searchPattern, recurse);
@@ -1876,6 +2385,7 @@ namespace SbsSW.SwiPlCs
         public static void RegisterPLCSForeigns()
         {
             CreatorThread = Thread.CurrentThread;
+            RegisterMainThread();
             PlForeignSwitches Nondeterministic = PlForeignSwitches.Nondeterministic;
             Fn015.Register();
             PlEngine.RegisterForeign(null, "foo2", 2, new DelegateParameterBacktrack2(FooTwo), Nondeterministic);
@@ -1886,6 +2396,7 @@ namespace SbsSW.SwiPlCs
             InternMethod(null, "loadAssembly", typeof(PrologClient).GetMethod("LoadAssembly"));
             InternMethod(null, "cwl", typeof(Console).GetMethod("WriteLine", new Type[] { typeof(string) }));
             RegisterJPLForeigns();
+            RegisterThread(CreatorThread);
             //PLNULL = PlTerm.PlCompound("@", PlTerm.PlAtom("null"));
             //PLVOID = PlTerm.PlCompound("@", PlTerm.PlAtom("void"));
             //PLTRUE = PlTerm.PlCompound("@", PlTerm.PlAtom("true"));
@@ -1979,9 +2490,17 @@ namespace SbsSW.SwiPlCs
         [PrologVisible(ModuleName = ExportModule)]
         private static bool cliToString(PlTerm obj, PlTerm str)
         {
-            object o = GetInstance(obj);
-            if (o == null) return str.Unify(PlTerm.PlString("" + obj));
-            return str.Unify(PlTerm.PlString("" + o));
+            try
+            {
+                object o = GetInstance(obj);
+                if (o == null) return str.Unify(PlTerm.PlString("" + obj));
+                return str.Unify(PlTerm.PlString("" + o));               
+            } catch(Exception e)
+            {
+                object o = GetInstance(obj);
+                if (o == null) return str.Unify(PlTerm.PlString("" + obj));
+                return str.Unify(PlTerm.PlString("" + o));
+            }
         }
         private static Class ResolveClass(string name)
         {
@@ -2259,18 +2778,18 @@ namespace SbsSW.SwiPlCs
             // backup old jpl.pl and copy over it
             if (!JplDisabled)
                 SafelyRun(() =>
-                {
-                    if (File.Exists(IKVMHome + "\\jpl_for_ikvm.phps"))
-                    {
-                        if (!File.Exists(SwiHomeDir + "\\library\\jpl.pl.old"))
-                        {
-                            File.Copy(SwiHomeDir + "\\library\\jpl.pl",
-                                      SwiHomeDir + "\\library\\jpl.pl.old",
-                                      true);
-                        }
-                        File.Copy(IKVMHome + "\\jpl_for_ikvm.phps", SwiHomeDir + "\\library\\jpl.pl", true);
-                    }
-                });
+                              {
+                                  if (File.Exists(IKVMHome + "\\jpl_for_ikvm.phps"))
+                                  {
+                                      if (!File.Exists(SwiHomeDir + "\\library\\jpl.pl.old"))
+                                      {
+                                          File.Copy(SwiHomeDir + "\\library\\jpl.pl",
+                                                    SwiHomeDir + "\\library\\jpl.pl.old",
+                                                    true);
+                                      }
+                                      File.Copy(IKVMHome + "\\jpl_for_ikvm.phps", SwiHomeDir + "\\library\\jpl.pl", true);
+                                  }
+                              });
 
             PlEngine.RegisterForeign(null, "link_swiplcs", 1, new DelegateParameter1(link_swiplcs),
                                      PlForeignSwitches.None);
@@ -2920,7 +3439,7 @@ typedef struct // define a context structure  { ... } context;
                     }
                     break;
             }
-        redo:
+            redo:
             unsafe
             {
                 NonDetTest* o = (NonDetTest*)0;
@@ -2977,26 +3496,36 @@ typedef struct // define a context structure  { ... } context;
 
         public static object CallProlog(object target, string module, string name, int arity, object origin, object[] paramz, Type returnType)
         {
+            Thread threadCurrentThread = Thread.CurrentThread;
+            RegisterThread(threadCurrentThread);
             PlTermV args = new PlTermV(arity);
             int fillAt = 0;
             if (origin != null)
             {
-                args[fillAt++] = PrologClient.ToProlog(origin);
+                args[fillAt++].Unify(ToProlog(origin));
             }
             for (int i = 0; i < paramz.Length; i++)
             {
-                args[fillAt++] = PrologClient.ToProlog(paramz[i]);
+                args[fillAt++].Unify(ToProlog(paramz[i]));
             }
-            bool IsVoid = returnType != typeof(void);
-            if (IsVoid)
+            bool IsVoid = returnType == typeof(void);
+            if (!IsVoid)
             {
-                args[fillAt] = PlTerm.PlVar();
+                //args[fillAt] = PlTerm.PlVar();
             }
-            if (!PrologClient.PlCall(module, name, args))
+            if (!PlQuery.PlCall(module, name, args))
             {
                 if (!IsVoid) PrologClient.Warn("Failed Event Handler " + target + " failed");
             }
-            return PrologClient.ToVM(args[fillAt], returnType);
+            if (IsVoid) return null;
+            object ret = PrologClient.ToVM(args[fillAt], returnType);
+            DeregisterThread(threadCurrentThread);
+            return ret;
+        }
+
+        public static PlTerm C(string collection)
+        {
+            return PlTerm.PlAtom(collection);
         }
     }
 
