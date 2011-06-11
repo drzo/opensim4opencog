@@ -1442,6 +1442,10 @@ namespace SbsSW.SwiPlCs
         readonly static private Dictionary<string, object> TagToObj = new Dictionary<string, object>();
         public static object tag_to_object(string s)
         {
+            if (string.IsNullOrEmpty(s) || s == "void" || !s.StartsWith("C#"))
+            {
+                throw new ArgumentOutOfRangeException("tag_to_object: " + s);
+            }
             lock (ObjToTag)
             {
                 object o;
@@ -1454,6 +1458,17 @@ namespace SbsSW.SwiPlCs
         }
         public static string object_to_tag(object o)
         {
+            if (o == null)
+            {
+                throw new ArgumentOutOfRangeException("object_to_tag: NULL");
+            }
+
+            Type t = o.GetType();
+            if (t.IsValueType || t.IsPrimitive)
+            {
+                throw new ArgumentOutOfRangeException("object_to_tag:" + t + " from " + o);
+            }
+
             lock (ObjToTag)
             {
                 string s;
