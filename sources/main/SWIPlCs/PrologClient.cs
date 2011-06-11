@@ -2953,7 +2953,6 @@ typedef struct // define a context structure  { ... } context;
         readonly public MethodInfo invokeMethod;
         readonly public Type[] parmTypes;
         private readonly Type EventInfoEventHandlerType;
-        private EventHandler<EventArgs> Handler;
 
         public object Origin
         {
@@ -2962,10 +2961,9 @@ typedef struct // define a context structure  { ... } context;
 
         public EventHandlerInProlog(EventHandlerInPrologKey key)
         {
-            this.Handler = Invoke;
-
             Key = key;
-            EventInfoEventHandlerType = key.Event.EventHandlerType;
+            var keyEvent = key.Event;
+            EventInfoEventHandlerType = keyEvent.EventHandlerType;
             invokeMethod = EventInfoEventHandlerType.GetMethod("Invoke");
             ParameterInfo[] parms = invokeMethod.GetParameters();
             parmTypes = new Type[parms.Length];
@@ -2973,18 +2971,60 @@ typedef struct // define a context structure  { ... } context;
             {
                 parmTypes[i] = parms[i].ParameterType;
             }
-            Delegate = Delegate.CreateDelegate(EventInfoEventHandlerType, key.Origin, GetHandlerMethod(parmTypes));
+            Delegate = Delegate.CreateDelegate(EventInfoEventHandlerType, this,
+                                               GetHandlerMethod(parmTypes, invokeMethod.ReturnType));
         }
-#if false
-        private MethodInfo GetHandlerMethod(Type[] types)
+        private MethodInfo GetHandlerMethod(Type[] types, Type returnType)
         {
             Type mt = null;
             Type c = GetType();
-            switch ()
+            int arity = types.Length;
+            Type[] typesPlusReturn = new Type[arity + 1];
+            for (int i = 0; i < arity; i++)
             {
-                   MethodInfo mt = c.GetMethod("GenericFun" + types.Length).MakeGenericMethod(types);
+                typesPlusReturn[i] = types[i];
             }
+            typesPlusReturn[arity] = returnType;
+            return c.GetMethod("GenericFun" + arity).MakeGenericMethod(typesPlusReturn);
         }
+
+        public R GenericFun0< R>()
+        {
+            return (R)CallProlog(Origin, new object[] { });
+        }
+        public R GenericFun1<A, R>(A a)
+        {
+            return (R)CallProlog(Origin, new object[] { a });
+        }
+        public R GenericFun2<A, B, R>(A a, B b)
+        {
+            return (R)CallProlog(Origin, new object[] { a, b });
+        }
+        public R GenericFun3<A, B, C, R>(A a, B b, C c)
+        {
+            return (R)CallProlog(Origin, new object[] { a, b, c });
+        }
+        public R GenericFun4<A, B, C, D, R>(A a, B b, C c, D d)
+        {
+            return (R)CallProlog(Origin, new object[] { a, b, c, d });
+        }
+
+        public object[] GenericFun5<A, B, C, D, E, R>(A a, B b, C c, D d, E e)
+        {
+            return (R)CallProlog(Origin, new object[] { a, b, c, d, e, f });
+        }
+        public object[] GenericFun6<A, B, C, D, E, F, R>(A a, B b, C c, D d, E e, F g)
+        {
+            return (R)CallProlog(Origin, new object[] { a, b, c, d, e, f, g });
+        }
+        static object CallProlog(object origin, object[] paramz)
+        {
+            throw new NotImplementedException();
+        }
+
+    }
+
+#if false
         void makeHandler()
         {
             // Use Reflection.Emit to create a dynamic assembly that
@@ -3043,99 +3083,6 @@ typedef struct // define a context structure  { ... } context;
 
         }
 #endif
-        public void Invoke(object sender, EventArgs args)
-        {
-            Console.WriteLine("hi");
-        }
-        public R GenericFun0<A, R>()
-        {
-            return (R)CallProlog(Origin, new object[] { });
-        }
-        public R GenericFun1<A, R>(A a)
-        {
-            return (R)CallProlog(Origin, new object[] { a });
-        }
-        public R GenericFun2<A, B, R>(A a, B b)
-        {
-            return (R)CallProlog(Origin, new object[] { a, b });
-        }
-        public R GenericFun3<A, B, C, R>(A a, B b, C c)
-        {
-            return (R)CallProlog(Origin, new object[] { a, b, c });
-        }
-        public R GenericFun4<A, B, C, D, R>(A a, B b, C c, D d)
-        {
-            return (R)CallProlog(Origin, new object[] { a, b, c, d });
-        }
-
-        public object[] GenericFun5<A, B, C, D, E, R>(A a, B b, C c, D d, E e)
-        {
-            return (R)CallProlog(Origin, new object[] { a, b, c, d, e, f });
-        }
-        public object[] GenericFun6<A, B, C, D, E, F, R>(A a, B b, C c, D d, E e, F g)
-        {
-            return (R)CallProlog(Origin, new object[] { a, b, c, d, e, f, g });
-        }
-        static object CallProlog(object origin, object[] paramz)
-        {
-            throw new NotImplementedException();
-        }
-    }
-    public class EventExample
-    {
-        public static event EventHandler MyEvent;
-        public void Test()
-        {
-            bool called;
-            var eventInfo = GetType().GetEvent("MyEvent");
-            EventFireNotifier.GenerateHandlerNorifier(eventInfo, callbackEventInfo => { called = true; });
-            MyEvent(null, null);
-            ;
-        }
-    }
-    public class EventFireNotifier
-    {
-        static private readonly Dictionary<int, EventInfo> eventsMap = new Dictionary<int, EventInfo>();
-        static private readonly Dictionary<int, Action<EventInfo>> actionsMap = new Dictionary<int, Action<EventInfo>>();
-        static private int lastIndexUsed;
-        public static MethodInfo GenerateHandlerNorifier(EventInfo eventInfo, Action<EventInfo> action)
-        {
-            MethodInfo method = eventInfo.EventHandlerType.GetMethod("Invoke");
-            AppDomain myDomain = AppDomain.CurrentDomain;
-            var asmName = new AssemblyName() { Name = "HandlersDynamicAssembly" };
-            AssemblyBuilder myAsmBuilder = myDomain.DefineDynamicAssembly(asmName, AssemblyBuilderAccess.RunAndSave);
-            ModuleBuilder myModule = myAsmBuilder.DefineDynamicModule("DynamicHandlersModule");
-            TypeBuilder typeBuilder = myModule.DefineType("EventHandlersContainer", TypeAttributes.Public);
-            var eventIndex = ++lastIndexUsed;
-            eventsMap.Add(eventIndex, eventInfo);
-            actionsMap.Add(eventIndex, action);
-            var handlerName = "HandlerNotifierMethod" + eventIndex;
-            var parameterTypes = method.GetParameters().Select(info => info.ParameterType).ToArray();
-            AddMethodDynamically(typeBuilder, handlerName, parameterTypes, method.ReturnType, eventIndex);
-            Type type = typeBuilder.CreateType();
-            MethodInfo notifier = type.GetMethod(handlerName);
-            var handlerDelegate = Delegate.CreateDelegate(eventInfo.EventHandlerType, notifier);
-            eventInfo.AddEventHandler(null, handlerDelegate);
-            return notifier;
-        }
-
-        public static void AddMethodDynamically(TypeBuilder myTypeBld, string mthdName, Type[] mthdParams, Type returnType, int eventIndex)
-        {
-            MethodBuilder myMthdBld = myTypeBld.DefineMethod(mthdName,
-                                                             MethodAttributes.Public | MethodAttributes.Static,
-                                                             returnType, mthdParams);
-            ILGenerator generator = myMthdBld.GetILGenerator();
-            generator.Emit(OpCodes.Ldc_I4, eventIndex);
-            generator.EmitCall(OpCodes.Call, typeof(EventFireNotifier).GetMethod("Notifier"), null);
-            generator.Emit(OpCodes.Ret);
-        }
-
-        public static void Notifier(int eventIndex)
-        {
-            var eventInfo = eventsMap[eventIndex];
-            actionsMap[eventIndex].DynamicInvoke(eventInfo);
-        }
-    }
 
 
     public class PlRef
