@@ -2505,7 +2505,7 @@ namespace cogbot.TheOpenSims
                                       WorldObjects.ToParameter("doneBy", this),
                                       WorldObjects.ToParameter("isa", a),
                                       WorldObjects.ToParameter(headingString, GetHeading()));
-            oe.serial = serial;
+            oe.Serial = serial;
             if (m != null) oe.AddParam("isa", m);
             return oe;
         }
@@ -2529,13 +2529,13 @@ namespace cogbot.TheOpenSims
                     SimObjectEvent ending = new SimObjectEvent(
                         SimEventStatus.Stop,
                         PostureType + (IsFlying ? "-Flying" : ""),
-                        SimEventType.ANIM, SimEventClass.REGIONAL, evt.Parameters) { serial = LastPostureEvent.serial };
+                        SimEventType.ANIM, SimEventClass.REGIONAL, evt.Parameters) { Serial = LastPostureEvent.Serial };
                     LogEvent(ending);
                     PostureType = evt.Verb;
                     SimObjectEvent starting = new SimObjectEvent(
                         SimEventStatus.Start,
                         PostureType + (IsFlying ? "-Flying" : ""),
-                        SimEventType.ANIM, SimEventClass.REGIONAL, evt.Parameters) { serial = evt.serial };
+                        SimEventType.ANIM, SimEventClass.REGIONAL, evt.Parameters) { Serial = evt.Serial };
                     LogEvent(starting);
                 }
                 PostureType = evt.Verb;
@@ -2598,7 +2598,7 @@ namespace cogbot.TheOpenSims
                 SimObjectEvent simEvent = new SimObjectEvent(SimEventStatus.Start, name, SimEventType.ANIM, SimEventClass.REGIONAL,
                                                              WorldObjects.ToParameter("doneBy", this),
                                                              WorldObjects.ToParameter("eventOccursAt", GetHeading()));
-                simEvent.serial = wasStarted;
+                simEvent.Serial = wasStarted;
                 startStops.Add(simEvent);
             }
             if (wasStopped != 0)
@@ -2606,7 +2606,7 @@ namespace cogbot.TheOpenSims
                 SimObjectEvent simEvent = new SimObjectEvent(SimEventStatus.Stop, name, SimEventType.ANIM, SimEventClass.REGIONAL,
                                                              WorldObjects.ToParameter("doneBy", this),
                                                              WorldObjects.ToParameter("toLocation", GetHeading()));
-                simEvent.serial = wasStopped;
+                simEvent.Serial = wasStopped;
                 startStops.Insert(0, simEvent);
             }
         }
