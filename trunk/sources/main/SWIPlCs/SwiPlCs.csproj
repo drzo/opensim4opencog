@@ -132,6 +132,7 @@
   <ItemGroup>
     <Compile Include="DesignByContract.cs">
     </Compile>
+    <Compile Include="EventHandlerInProlog.cs" />
     <Compile Include="Exceptions.cs">
     </Compile>
     <Compile Include="LibPl.cs">
