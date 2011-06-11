@@ -85,6 +85,33 @@ namespace cogbot
         /// for specific data stream types</summary>
         public AgentThrottle Throttle { get { return gridClient.Throttle; } }
 
+
+        /// <summary>The event subscribers. null if no subcribers</summary>
+        private EventHandler<SimObjectEvent> m_EachSimEvent;
+
+        /// <summary>Raises the EachSimEvent event</summary>
+        /// <param name="e">An EachSimEventEventArgs object containing the
+        /// data returned from the data server</param>
+        protected virtual void OnEachSimEvent(SimObjectEvent e)
+        {
+            EventHandler<SimObjectEvent> handler = m_EachSimEvent;
+            if (handler != null)
+                handler(this, e);
+        }
+
+        /// <summary>Thread sync lock object</summary>
+        private readonly object m_EachSimEventLock = new object();
+
+        /// <summary>Triggered when Each Sim Event packet is received,
+        /// telling us what our avatar is currently wearing
+        /// <see cref="RequestAgentWearables"/> request.</summary>
+        public event EventHandler<SimObjectEvent> EachSimEvent
+        {
+            add { lock (m_EachSimEventLock) { m_EachSimEvent += value; } }
+            remove { lock (m_EachSimEventLock) { m_EachSimEvent -= value; } }
+        }
+
+
         readonly TaskQueueHandler OneAtATimeQueue;
         readonly public GridClient gridClient;
         // TODO's
@@ -1762,6 +1789,7 @@ namespace cogbot
 
         public void SendPipelineEvent(SimObjectEvent evt)
         {
+            OnEachSimEvent(evt);
             botPipeline.SendEvent(evt);
         }
 

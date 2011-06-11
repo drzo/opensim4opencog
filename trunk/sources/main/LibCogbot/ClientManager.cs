@@ -29,7 +29,7 @@ namespace cogbot
         private static readonly TaskQueueHandler OneAtATimeQueue = new TaskQueueHandler("ClientManager OneAtATime", new TimeSpan(0, 0, 0, 0, 10), true, false);
         public static readonly TaskQueueHandler PostAutoExec = new TaskQueueHandler("PostExec", new TimeSpan(0, 0, 0, 0, 10), false, false);
         public static object SingleInstanceLock = new object();
-
+        public static event Action<BotClient> BotClientCreated;
         private bool InvokeJoin(string s)
         {
             return OneAtATimeQueue.InvokeJoin(s, -1);
@@ -992,6 +992,8 @@ namespace cogbot
                     client = new BotClient(this, gc);
                     client.SetLoginAcct(account);
                     lock (BotByName) BotByName[account.BotLName] = client;
+                    LastRefBotClient = client;
+                    if (BotClientCreated == null) BotClientCreated(client);
                 }
                 account.Client = client;
                 //if (inst != null)
@@ -1770,6 +1772,8 @@ namespace cogbot
                 if (KnownBotClients.Count==0)
                 {
                     bc = new BotClient(this, client);
+                    LastRefBotClient = bc;
+                    if (BotClientCreated != null) BotClientCreated(bc);
                     return bc;
                 }
             }

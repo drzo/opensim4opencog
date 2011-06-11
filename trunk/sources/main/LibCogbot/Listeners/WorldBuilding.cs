@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Xml.Serialization;
 using DotLisp;
 using MushDLR223.Utilities;
 using OpenMetaverse.StructuredData;
@@ -28,6 +29,13 @@ namespace cogbot.Listeners
                 {
                     kv = new KeyValuePair<List<PropertyInfo>, List<FieldInfo>>(new List<PropertyInfo>(),
                                                                                new List<FieldInfo>());
+                    var ta = t.GetCustomAttributes(typeof (XmlTypeAttribute), false);
+                    bool specialXMLType = false;
+                    if (ta != null && ta.Length > 0)
+                    {
+                        XmlTypeAttribute xta = (XmlTypeAttribute) ta[0];
+                        specialXMLType = true;
+                    }
                     HashSet<string> lowerProps = new HashSet<string>();
                     BindingFlags flags = BindingFlags.Instance | BindingFlags.Public; //BindingFlags.NonPublic
                     foreach (
@@ -37,11 +45,16 @@ namespace cogbot.Listeners
                         {
 
                             if (o.Name.StartsWith("_")) continue;
-                            if (o.DeclaringType == typeof(Object)) continue;
+                            if (o.DeclaringType == typeof (Object)) continue;
                             if (!lowerProps.Add(o.Name.ToLower())) continue;
                             if (o.GetIndexParameters().Length > 0)
                             {
                                 continue;
+                            }
+                            if (specialXMLType)
+                            {
+                                var use = o.GetCustomAttributes(typeof(XmlArrayItemAttribute), false);
+                                if (use == null || use.Length < 1) continue;
                             }
                             kv.Key.Add(o);
 
@@ -50,8 +63,13 @@ namespace cogbot.Listeners
                     foreach (FieldInfo o in t.GetFields(flags))
                     {
                         if (o.Name.StartsWith("_")) continue;
-                        if (o.DeclaringType == typeof(Object)) continue;
+                        if (o.DeclaringType == typeof (Object)) continue;
                         if (!lowerProps.Add(o.Name.ToLower())) continue;
+                        if (specialXMLType)
+                        {
+                            var use = o.GetCustomAttributes(typeof(XmlArrayItemAttribute), false);
+                            if (use == null || use.Length < 1) continue;
+                        }
                         kv.Value.Add(o);
                     }
                 }

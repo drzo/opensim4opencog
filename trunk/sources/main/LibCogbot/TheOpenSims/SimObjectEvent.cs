@@ -2,8 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Xml.Serialization;
 using cogbot.Listeners;
 using cogbot.ScriptEngines;
+using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
@@ -73,7 +75,8 @@ namespace cogbot.TheOpenSims
         }
     }
 
-    public class SimObjectEvent : BotMentalAspect
+    [XmlType(TypeName = "simObjectEvt")]
+    public class SimObjectEvent : EventArgs, BotMentalAspect
     {
         public ICollection<NamedParam> GetInfoMap()
         {
@@ -82,7 +85,8 @@ namespace cogbot.TheOpenSims
 
         private static long serialCount = DateTime.UtcNow.Ticks;
         private long _serial = serialCount++;
-        public long serial
+        [XmlArrayItem]
+        public long Serial
         {
             get { return _serial; }
             set
@@ -91,8 +95,9 @@ namespace cogbot.TheOpenSims
                 _EVETSTRING = null;
                 ToEventString();
             }
-        } 
+        }
 
+        [XmlArrayItem]
         public readonly DateTime Time = DateTime.UtcNow;
 
         // string eventName;
@@ -195,10 +200,15 @@ namespace cogbot.TheOpenSims
             return new SimObjectUsage(SimTypeSystem.FindObjectUse(Verb), (SimObject)Parameters[1].Value);
         }
 
+        [XmlArrayItem]
         public string Verb;
+        [XmlArrayItem]
         public List<NamedParam> Parameters;
+        [XmlArrayItem]
         public SimEventType EventType;
+        [XmlArrayItem]
         public SimEventStatus EventStatus;
+        [XmlArrayItem]
         public readonly SimEventClass EventClass;
 
         public SimObjectEvent(SimEventStatus status, string eventName, SimEventType type, SimEventClass clazz, IEnumerable<NamedParam> args)
@@ -234,11 +244,13 @@ namespace cogbot.TheOpenSims
            // ParameterNames();
         }
 
+        [XmlArrayItem]
         public string EventName
         {
             get { return Verb + "-" + EventStatus.ToString(); }
         }
 
+        [XmlArrayItem]
         public string EventID
         {
             get { return EventName; }
@@ -286,7 +298,7 @@ namespace cogbot.TheOpenSims
             return string.Format("{0}: {1} {2}",
                                  EventID,
                                  ScriptEngines.ScriptEventListener.argsListString(Parameters),
-                                 serial);
+                                 Serial);
         }
 
         public FirstOrderTerm GetTerm()
@@ -431,7 +443,7 @@ namespace cogbot.TheOpenSims
         public string ToEventString()
         {
             if (_EVETSTRING != null) return _EVETSTRING;
-            _EVETSTRING = string.Format("{0}: {1}", GetVerb(), serial);
+            _EVETSTRING = string.Format("{0}: {1}", GetVerb(), Serial);
             foreach (var c in Parameters)
             {
                 object cValue = c.Value;
