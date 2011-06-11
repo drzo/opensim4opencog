@@ -459,7 +459,9 @@ namespace OpenMetaverse
         {
             if (searchPath != null)
             {
-                string filename = System.IO.Path.Combine(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), searchPath), resourceName);
+                Assembly assemblyGetEntryAssembly = Assembly.GetEntryAssembly();
+                string assemblyGetEntryAssemblyLocation = assemblyGetEntryAssembly.Location;
+                string filename = System.IO.Path.Combine(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(assemblyGetEntryAssemblyLocation), searchPath), resourceName);
                 try
                 {
                     return new System.IO.FileStream(
