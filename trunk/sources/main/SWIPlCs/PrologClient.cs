@@ -2,7 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using System.Threading;
 using ikvm.extensions;
@@ -51,6 +53,7 @@ namespace SbsSW.SwiPlCs
         public static BindingFlags BindingFlagsALL = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static |
                                                      BindingFlags.Instance;
 
+        const string ExportModule = "user";
         public static List<Assembly> AssembliesLoaded = new List<Assembly>();
         public static List<Assembly> AssembliesLoading = new List<Assembly>();
 
@@ -329,7 +332,7 @@ namespace SbsSW.SwiPlCs
             //return null;
         }
 
-        [PrologVisible(ModuleName = "user")]
+        [PrologVisible(ModuleName = ExportModule)]
         private static object[] PlListToArray(IEnumerable<PlTerm> term, ParameterInfo[] terms)
         {
             if (term is PlTerm)
@@ -348,7 +351,7 @@ namespace SbsSW.SwiPlCs
             return ret;
         }
 
-        [PrologVisible(ModuleName = "user")]
+        [PrologVisible(ModuleName = ExportModule)]
         static public bool cliMembers(PlTerm clazzOrInstance, PlTerm membersOut)
         {
             Type c = GetTypeFromInstance(clazzOrInstance);
@@ -463,7 +466,7 @@ namespace SbsSW.SwiPlCs
             return PlTerm.PlAtom(type.FullName);
         }
 
-        [PrologVisible(ModuleName = "user")]
+        [PrologVisible(ModuleName = ExportModule)]
         static public bool cliFindConstructor(PlTerm memberSpec, PlTerm methodOut)
         {
             Type c = ResolveType(memberSpec.Name);
@@ -482,7 +485,7 @@ namespace SbsSW.SwiPlCs
         /// <param name="valueIn"></param>
         /// <param name="valueOut"></param>
         /// <returns></returns>
-        [PrologVisible(ModuleName = "user")]
+        [PrologVisible(ModuleName = ExportModule)]
         static public bool cliNew(PlTerm memberSpec, PlTerm valueIn, PlTerm valueOut)
         {
             Type c = ResolveType(memberSpec.Name);
@@ -503,7 +506,7 @@ namespace SbsSW.SwiPlCs
         /// <param name="rank"></param>
         /// <param name="valueOut"></param>
         /// <returns></returns>
-        [PrologVisible(ModuleName = "user")]
+        [PrologVisible(ModuleName = ExportModule)]
         static public bool cliNewArray(PlTerm typeSpec, PlTerm rank, PlTerm valueOut)
         {
             Type c = GetType(typeSpec);
@@ -523,7 +526,7 @@ namespace SbsSW.SwiPlCs
         /// <param name="rank"></param>
         /// <param name="valueOut"></param>
         /// <returns></returns>
-        [PrologVisible(ModuleName = "user")]
+        [PrologVisible(ModuleName = ExportModule)]
         static public bool cliArrayToVector(PlTerm arrayValue, PlTerm valueOut)
         {
             object getInstance = GetInstance(arrayValue);
@@ -542,7 +545,7 @@ namespace SbsSW.SwiPlCs
             Type et = value.GetType().GetElementType();
             return valueOut.Unify(PlTerm.PlCompound(typeToSpec(et).Name, termv));
         }
-        [PrologVisible(ModuleName = "user")]
+        [PrologVisible(ModuleName = ExportModule)]
         static public bool cliVectorToArray(PlTerm arrayValue, PlTerm valueOut)
         {
             Type elementType = ResolveType(arrayValue.Name);
@@ -561,7 +564,7 @@ namespace SbsSW.SwiPlCs
             }
             return valueOut.Unify(ToProlog(value));
         }
-        [PrologVisible(ModuleName = "user")]
+        [PrologVisible(ModuleName = ExportModule)]
         static public bool cliFindMethod(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm methodOut)
         {
             object getInstance = GetInstance(clazzOrInstance);
@@ -576,7 +579,7 @@ namespace SbsSW.SwiPlCs
 
 
 
-        [PrologVisible(ModuleName = "user")]
+        [PrologVisible(ModuleName = ExportModule)]
         static public bool cliCall(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm valueIn, PlTerm valueOut)
         {
             object getInstance = GetInstance(clazzOrInstance);
@@ -592,7 +595,58 @@ namespace SbsSW.SwiPlCs
             return valueOut.Unify(ToProlog(InvokeCaught(mi, target, value)));
         }
 
-        [PrologVisible(ModuleName = "user")]
+        public static Dictionary<EventHandlerInPrologKey, EventHandlerInProlog> PrologEventHandlers =
+            new Dictionary<EventHandlerInPrologKey, EventHandlerInProlog>();
+
+        [PrologVisible(ModuleName = ExportModule)]
+        static public bool cliAddEventHandler(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm prologPred)
+        {
+            object getInstance = GetInstance(clazzOrInstance);
+            Type c = GetTypeFromInstance(clazzOrInstance);
+            string fn = memberSpec.Name;
+            EventInfo fi = c.GetEvent(fn, BindingFlagsALL);
+            if (fi == null)
+            {
+                return Warn("Cant find event " + memberSpec + " on " + c);
+            }
+            var Key = new EventHandlerInPrologKey();
+            Key.Name = prologPred.Name;
+            Key.arity = prologPred.Arity;
+            Key.Origin = getInstance;
+            Key.Event = fi;
+
+            var handlerInProlog = new EventHandlerInProlog(Key);
+            lock (PrologEventHandlers) PrologEventHandlers.Add(Key, handlerInProlog);
+            fi.AddEventHandler(getInstance, handlerInProlog.Delegate);
+            return true;
+        }
+        [PrologVisible(ModuleName = ExportModule)]
+        static public bool cliRemoveEventHandler(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm prologPred)
+        {
+            object getInstance = GetInstance(clazzOrInstance);
+            Type c = GetTypeFromInstance(clazzOrInstance);
+            string fn = memberSpec.Name;
+            EventInfo fi = c.GetEvent(fn, BindingFlagsALL);
+            if (fi == null)
+            {
+                return Warn("Cant find event " + memberSpec + " on " + c);
+            }
+            var Key = new EventHandlerInPrologKey();
+            Key.Name = prologPred.Name;
+            Key.arity = prologPred.Arity;
+            Key.Origin = getInstance;
+            Key.Event = fi;
+            EventHandlerInProlog handlerInProlog;
+            lock (PrologEventHandlers) if (PrologEventHandlers.TryGetValue(Key, out handlerInProlog))
+            {
+                fi.RemoveEventHandler(getInstance, handlerInProlog.Delegate);
+                PrologEventHandlers.Remove(Key);
+                return true;
+            }
+            return Warn("Cant find registered handler " + prologPred + " for " + memberSpec + " on " + c);
+        }
+
+        [PrologVisible(ModuleName = ExportModule)]
         static public bool cliGet(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm valueOut)
         {
             object getInstance = GetInstance(clazzOrInstance);
@@ -607,13 +661,17 @@ namespace SbsSW.SwiPlCs
             if (pi != null)
             {
                 var mi = pi.GetSetMethod();
+                if (mi == null)
+                {
+                    return Warn("Cant find getter for property " + memberSpec + " on " + c);
+                }
                 return valueOut.Unify(ToProlog(InvokeCaught(mi, mi.IsStatic ? null : getInstance, new object[0])));
             }
             Warn("Cant find getter " + memberSpec + " on " + c);
             return false;
         }
 
-        [PrologVisible(ModuleName = "user")]
+        [PrologVisible(ModuleName = ExportModule)]
         static public bool cliSet(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm valueIn)
         {
             object getInstance = GetInstance(clazzOrInstance);
@@ -632,6 +690,10 @@ namespace SbsSW.SwiPlCs
             if (pi != null)
             {
                 var mi = pi.GetSetMethod();
+                if (mi == null)
+                {
+                    return Warn("Cant find setter for property " + memberSpec + " on " + c);
+                }
                 object value = ToVM(valueIn, pi.PropertyType);
                 object target = mi.IsStatic ? null : getInstance;
                 InvokeCaught(mi, target, new[] { value });
@@ -641,7 +703,7 @@ namespace SbsSW.SwiPlCs
             return false;
         }
 
-        [PrologVisible(ModuleName = "user")]
+        [PrologVisible(ModuleName = ExportModule)]
         static public bool cliGetType(PlTerm valueIn, PlTerm valueOut)
         {
             object val = ToVM(valueIn, null);
@@ -653,14 +715,14 @@ namespace SbsSW.SwiPlCs
             return valueOut.Unify(ToProlog(val.GetType()));
         }
 
-        [PrologVisible(ModuleName = "user")]
+        [PrologVisible(ModuleName = ExportModule)]
         static public bool cliGetClass(PlTerm valueIn, PlTerm valueOut)
         {
             object val = ToVM(valueIn, null);
             // extension method
             return valueOut.Unify(ToProlog(val.getClass()));
         }
-        [PrologVisible(ModuleName = "user")]
+        [PrologVisible(ModuleName = ExportModule)]
         static public bool cliClassFromType(PlTerm valueIn, PlTerm valueOut)
         {
             Type val = GetType(valueIn);
@@ -668,7 +730,7 @@ namespace SbsSW.SwiPlCs
             Class c = ikvm.runtime.Util.getFriendlyClassFromType(val);
             return valueOut.Unify(ToProlog(c));
         }
-        [PrologVisible(ModuleName = "user")]
+        [PrologVisible(ModuleName = ExportModule)]
         static public bool cliTypeFromClass(PlTerm valueIn, PlTerm valueOut)
         {
             Class val = GetType(valueIn);
@@ -676,7 +738,7 @@ namespace SbsSW.SwiPlCs
             var c = ikvm.runtime.Util.getInstanceTypeFromClass(val);
             return valueOut.Unify(ToProlog(c));
         }
-        [PrologVisible(ModuleName = "user")]
+        [PrologVisible(ModuleName = ExportModule)]
         static public bool cliJavaToString(PlTerm valueIn, PlTerm valueOut)
         {
             object getInstance = GetInstance(valueIn);
@@ -690,14 +752,14 @@ namespace SbsSW.SwiPlCs
             }
             return valueOut.Unify(PlTerm.PlString(val.toString()));
         }
-        [PrologVisible(ModuleName = "user")]
+        [PrologVisible(ModuleName = ExportModule)]
         static public bool cliGetClassname(PlTerm valueIn, PlTerm valueOut)
         {
             Class val = ToVM(valueIn, null) as Class;
             if (val == null) return false;
             return valueOut.Unify(val.getName());
         }
-        [PrologVisible(ModuleName = "user")]
+        [PrologVisible(ModuleName = ExportModule)]
         static public bool cliGetTypename(PlTerm valueIn, PlTerm valueOut)
         {
             Type val = ToVM(valueIn, null) as Type;
@@ -744,15 +806,15 @@ namespace SbsSW.SwiPlCs
         public static Dictionary<Int64, PlRef> termToObjectPins = new Dictionary<Int64, PlRef>();
         public static Dictionary<object, PlRef> objectToPlRef = new Dictionary<object, PlRef>();
         public static Dictionary<string, PlRef> atomToPlRef = new Dictionary<string, PlRef>();
-        public static PlTerm PLVOID = new PlTerm();
-        public static PlTerm PLNULL = new PlTerm();
-        public static PlTerm PLTRUE = new PlTerm();
-        public static PlTerm PLFALSE = new PlTerm();
+        public static PlTerm PLVOID { get { return PlTerm.PlCompound("@", PlTerm.PlAtom("null")); } }
+        public static PlTerm PLNULL { get { return PlTerm.PlCompound("@", PlTerm.PlAtom("void")); } }
+        public static PlTerm PLTRUE { get { return PlTerm.PlCompound("@", PlTerm.PlAtom("true")); } }
+        public static PlTerm PLFALSE { get { return PlTerm.PlCompound("@", PlTerm.PlAtom("false")); } }
         public static Object ToFromConvertLock = new object();
         private static PlTerm ToProlog(object o)
         {
             if (o is PlTerm) return (PlTerm)o;
-            if (o is string) return PlTerm.PlString((string)o);
+            if (o is string) return VMStringsAsAtoms ? PlTerm.PlAtom((string) o) : PlTerm.PlString((string) o);
             if (o is Term) return ToPLCS((Term)o);
             if (o == null) return PLNULL;
             if (o is ValueType)
@@ -1785,13 +1847,13 @@ namespace SbsSW.SwiPlCs
             InternMethod(null, "loadAssembly", typeof(PrologClient).GetMethod("LoadAssembly"));
             InternMethod(null, "cwl", typeof(Console).GetMethod("WriteLine", new Type[] { typeof(string) }));
             RegisterJPLForeigns();
-            PLNULL = PlTerm.PlCompound("@", PlTerm.PlAtom("null"));
-            PLVOID = PlTerm.PlCompound("@", PlTerm.PlAtom("void"));
-            PLTRUE = PlTerm.PlCompound("@", PlTerm.PlAtom("true"));
-            PLFALSE = PlTerm.PlCompound("@", PlTerm.PlAtom("false"));
+            //PLNULL = PlTerm.PlCompound("@", PlTerm.PlAtom("null"));
+            //PLVOID = PlTerm.PlCompound("@", PlTerm.PlAtom("void"));
+            //PLTRUE = PlTerm.PlCompound("@", PlTerm.PlAtom("true"));
+            //PLFALSE = PlTerm.PlCompound("@", PlTerm.PlAtom("false"));
         }
 
-        [PrologVisible(ModuleName = "user")]
+        [PrologVisible(ModuleName = ExportModule)]
         public static bool cliFindType(PlTerm term1, PlTerm term2)
         {
             //            if (term1.IsAtom)
@@ -1830,7 +1892,7 @@ namespace SbsSW.SwiPlCs
             return false;
         }
 
-        [PrologVisible(ModuleName = "user")]
+        [PrologVisible(ModuleName = ExportModule)]
         private static Class cliFindClass1(PlTerm className)
         {
             return ResolveClass(className.Name);
@@ -1875,8 +1937,7 @@ namespace SbsSW.SwiPlCs
         /// <param name="obj"></param>
         /// <param name="str"></param>
         /// <returns></returns>
-
-        [PrologVisible(ModuleName = "user")]
+        [PrologVisible(ModuleName = ExportModule)]
         private static bool cliToString(PlTerm obj, PlTerm str)
         {
             object o = GetInstance(obj);
@@ -1885,17 +1946,18 @@ namespace SbsSW.SwiPlCs
         }
         private static Class ResolveClass(string name)
         {
-            Type t = ResolveClass0(name);
+            if (name == "@" || name == "$cli_object" || name == "array" || name == null) return null;
+            Type t = ResolveClassAsType(name);
             Class c = ikvm.runtime.Util.getFriendlyClassFromType((Type)t);
             return c;
         }
-        private static Type ResolveClass0(string name)
+        private static Type ResolveClassAsType(string name)
         {
             Type s1 = ResolveType0(name);
             if (s1 != null) return s1;
             if (name.EndsWith("[]"))
             {
-                Type t1 = ResolveClass0(name.Substring(0, name.Length - 2));
+                Type t1 = ResolveClassAsType(name.Substring(0, name.Length - 2));
                 return t1.MakeArrayType();
             }
             var name2 = name.Replace("/", ".");
@@ -1915,7 +1977,7 @@ namespace SbsSW.SwiPlCs
 
         private static Type ResolveType(string name)
         {
-            if (name == "@") return null;
+            if (name == "@" || name == "$cli_object" || name == "array" || name == null) return null;
             if (name.EndsWith("[]"))
             {
                 Type t = ResolveType(name.Substring(0, name.Length - 2));
@@ -1965,11 +2027,11 @@ namespace SbsSW.SwiPlCs
                 }
                 if (type == null)
                 {
-                    type = Type.GetTypeFromProgID(typeName);
+                    type = getPrimitiveType(typeName);
                 }
                 if (type == null)
                 {
-                    type = getPrimitiveType(typeName);
+                    type = Type.GetTypeFromProgID(typeName);
                 }
             }
             return type;
@@ -2722,7 +2784,8 @@ typedef struct // define a context structure  { ... } context;
         public static Thread CreatorThread;
         public static bool IsPLWin;
         public static bool RedirectStreams = true;
-
+        private static bool VMStringsAsAtoms = false;
+        
         // foo(X,Y),writeq(f(X,Y)),nl,X=5.
         public static int Foo(PlTerm t0, PlTerm term2, IntPtr control)
         {
@@ -2874,6 +2937,206 @@ typedef struct // define a context structure  { ... } context;
         }
 
     }
+
+    public struct EventHandlerInPrologKey
+    {
+        public EventInfo Event;
+        public Object Origin;
+        public String Name;
+        public int arity;
+
+    }
+    public class EventHandlerInProlog
+    {
+        public EventHandlerInPrologKey Key;
+        readonly public Delegate Delegate;
+        readonly public MethodInfo invokeMethod;
+        readonly public Type[] parmTypes;
+        private readonly Type EventInfoEventHandlerType;
+        private EventHandler<EventArgs> Handler;
+
+        public object Origin
+        {
+            get { return Key.Origin; }
+        }
+
+        public EventHandlerInProlog(EventHandlerInPrologKey key)
+        {
+            this.Handler = Invoke;
+
+            Key = key;
+            EventInfoEventHandlerType = key.Event.EventHandlerType;
+            invokeMethod = EventInfoEventHandlerType.GetMethod("Invoke");
+            ParameterInfo[] parms = invokeMethod.GetParameters();
+            parmTypes = new Type[parms.Length];
+            for (int i = 0; i < parms.Length; i++)
+            {
+                parmTypes[i] = parms[i].ParameterType;
+            }
+            Delegate = Delegate.CreateDelegate(EventInfoEventHandlerType, key.Origin, GetHandlerMethod(parmTypes));
+        }
+#if false
+        private MethodInfo GetHandlerMethod(Type[] types)
+        {
+            Type mt = null;
+            Type c = GetType();
+            switch ()
+            {
+                   MethodInfo mt = c.GetMethod("GenericFun" + types.Length).MakeGenericMethod(types);
+            }
+        }
+        void makeHandler()
+        {
+            // Use Reflection.Emit to create a dynamic assembly that
+            // will be run but not saved. An assembly must have at 
+            // least one module, which in this case contains a single
+            // type. The only purpose of this type is to contain the 
+            // event handler method. (In the .NET Framework version 
+            // 2.0 you can use dynamic methods, which are simpler 
+            // because there is no need to create an assembly, module,
+            // or type.)
+            AssemblyName aName = new AssemblyName();
+            aName.Name = "DynamicTypes";
+            AssemblyBuilder ab = AppDomain.CurrentDomain.DefineDynamicAssembly(aName, AssemblyBuilderAccess.Run);
+            ModuleBuilder mb = ab.DefineDynamicModule(aName.Name);
+            TypeBuilder tb = mb.DefineType("Handler", TypeAttributes.Class | TypeAttributes.Public);
+            var localHandler = this.GetType().GetMethod("Invoke");
+
+            ConstructorBuilder Ctor = tb.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard,
+                                                           null);
+            {
+                ILGenerator ilc = Ctor.GetILGenerator();
+                ilc.Emit(OpCodes.Ldarg_0);
+                ilc.Emit(OpCodes.Call, typeof(object).GetConstructor(new Type[0]));
+                ilc.Emit(OpCodes.Ret);
+            }
+            // Create the method that will handle the event. The name
+            // is not important. The method is static, because there is
+            // no reason to create an instance of the dynamic type.
+            //
+            // The parameter types and return type of the method are
+            // the same as those of the delegate's Invoke method, 
+            // captured earlier.
+            MethodBuilder handler = tb.DefineMethod("DynamicHandler",
+                                                    MethodAttributes.Public | MethodAttributes.Static,
+                                                    invokeMethod.ReturnType, parmTypes);
+
+            // Generate code to handle the event.
+            //
+            ILGenerator il = handler.GetILGenerator();
+            int index = 0;
+            foreach (Type type in parmTypes)
+            {
+                il.Emit(OpCodeFor(type, i));
+            }
+           // il.Emit(OpCodes.Ldarg_0);
+            //il.Emit(OpCodes.Ldarg_1);
+            il.EmitCall(OpCodes.Call, localHandler, new Type[] { typeof(object), typeof(object[]) });
+            il.Emit(OpCodes.Ret);
+
+            // CreateType must be called before the Handler type can
+            // be used. In order to create the delegate that will
+            // handle the event, a MethodInfo from the finished type
+            // is required.
+            Type finished = tb.CreateType();
+            eventHandler = finished.GetMethod("DynamicHandler");
+
+        }
+#endif
+        public void Invoke(object sender, EventArgs args)
+        {
+            Console.WriteLine("hi");
+        }
+        public R GenericFun0<A, R>()
+        {
+            return (R)CallProlog(Origin, new object[] { });
+        }
+        public R GenericFun1<A, R>(A a)
+        {
+            return (R)CallProlog(Origin, new object[] { a });
+        }
+        public R GenericFun2<A, B, R>(A a, B b)
+        {
+            return (R)CallProlog(Origin, new object[] { a, b });
+        }
+        public R GenericFun3<A, B, C, R>(A a, B b, C c)
+        {
+            return (R)CallProlog(Origin, new object[] { a, b, c });
+        }
+        public R GenericFun4<A, B, C, D, R>(A a, B b, C c, D d)
+        {
+            return (R)CallProlog(Origin, new object[] { a, b, c, d });
+        }
+
+        public object[] GenericFun5<A, B, C, D, E, R>(A a, B b, C c, D d, E e)
+        {
+            return (R)CallProlog(Origin, new object[] { a, b, c, d, e, f });
+        }
+        public object[] GenericFun6<A, B, C, D, E, F, R>(A a, B b, C c, D d, E e, F g)
+        {
+            return (R)CallProlog(Origin, new object[] { a, b, c, d, e, f, g });
+        }
+        static object CallProlog(object origin, object[] paramz)
+        {
+            throw new NotImplementedException();
+        }
+    }
+    public class EventExample
+    {
+        public static event EventHandler MyEvent;
+        public void Test()
+        {
+            bool called;
+            var eventInfo = GetType().GetEvent("MyEvent");
+            EventFireNotifier.GenerateHandlerNorifier(eventInfo, callbackEventInfo => { called = true; });
+            MyEvent(null, null);
+            ;
+        }
+    }
+    public class EventFireNotifier
+    {
+        static private readonly Dictionary<int, EventInfo> eventsMap = new Dictionary<int, EventInfo>();
+        static private readonly Dictionary<int, Action<EventInfo>> actionsMap = new Dictionary<int, Action<EventInfo>>();
+        static private int lastIndexUsed;
+        public static MethodInfo GenerateHandlerNorifier(EventInfo eventInfo, Action<EventInfo> action)
+        {
+            MethodInfo method = eventInfo.EventHandlerType.GetMethod("Invoke");
+            AppDomain myDomain = AppDomain.CurrentDomain;
+            var asmName = new AssemblyName() { Name = "HandlersDynamicAssembly" };
+            AssemblyBuilder myAsmBuilder = myDomain.DefineDynamicAssembly(asmName, AssemblyBuilderAccess.RunAndSave);
+            ModuleBuilder myModule = myAsmBuilder.DefineDynamicModule("DynamicHandlersModule");
+            TypeBuilder typeBuilder = myModule.DefineType("EventHandlersContainer", TypeAttributes.Public);
+            var eventIndex = ++lastIndexUsed;
+            eventsMap.Add(eventIndex, eventInfo);
+            actionsMap.Add(eventIndex, action);
+            var handlerName = "HandlerNotifierMethod" + eventIndex;
+            var parameterTypes = method.GetParameters().Select(info => info.ParameterType).ToArray();
+            AddMethodDynamically(typeBuilder, handlerName, parameterTypes, method.ReturnType, eventIndex);
+            Type type = typeBuilder.CreateType();
+            MethodInfo notifier = type.GetMethod(handlerName);
+            var handlerDelegate = Delegate.CreateDelegate(eventInfo.EventHandlerType, notifier);
+            eventInfo.AddEventHandler(null, handlerDelegate);
+            return notifier;
+        }
+
+        public static void AddMethodDynamically(TypeBuilder myTypeBld, string mthdName, Type[] mthdParams, Type returnType, int eventIndex)
+        {
+            MethodBuilder myMthdBld = myTypeBld.DefineMethod(mthdName,
+                                                             MethodAttributes.Public | MethodAttributes.Static,
+                                                             returnType, mthdParams);
+            ILGenerator generator = myMthdBld.GetILGenerator();
+            generator.Emit(OpCodes.Ldc_I4, eventIndex);
+            generator.EmitCall(OpCodes.Call, typeof(EventFireNotifier).GetMethod("Notifier"), null);
+            generator.Emit(OpCodes.Ret);
+        }
+
+        public static void Notifier(int eventIndex)
+        {
+            var eventInfo = eventsMap[eventIndex];
+            actionsMap[eventIndex].DynamicInvoke(eventInfo);
+        }
+    }
+
 
     public class PlRef
     {
