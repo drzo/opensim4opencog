@@ -8,6 +8,8 @@
             cliLoadAssembly/1,
             link_swiplcs/1,
             cliFindClass/2,
+            cliCollection/2,
+            cliToStringS/2,
        %%     cliFindType/2,
        %%     cliFindMethod/4,
         %%    cliCall/4,
@@ -17,10 +19,18 @@
 
           ]).
 
-:-load_foreign_library(swicli).
+:-load_foreign_library(swicli35).
 :-cli_load_lib('SwiPlCs','SbsSW.SwiPlCs.swipl_win','install').
 :-cliLoadAssembly('SwiPlCs.dll').
 
+cliCollection(Obj,Ele):-user:cliCall(Obj,'ToArray',[],Array),user:cliArrayToVector(Array,Vect),!,arg(_,Vect,Ele).
+
+cliIsObject('@'(A)):-atom(A).
+
+cliToStringS(Term,Term):- (var(Term);atomic(Term);not(compound(Term))),!.
+cliToStringS(Term,String):-cliIsObject(Term),!,user:cliToString(Term,String).
+cliToStringS([A|B],[AS|BS]):-cliToStringS(A,AS),cliToStringS(B,BS),!.
+cliToStringS(Term,String):-Term=..[F|A],cliToStringS(A,AS),String=..[F|AS],!.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %% cli_debug/[1,2]
