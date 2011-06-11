@@ -1017,7 +1017,7 @@ namespace MushDLR223.Utilities
                 }
                 if (ms == 0)
                 {
-                    return string.Format("0ms");
+                    return "0ms";
                 }
                 // why do we ever get here?!
                 return string.Format("{0}ms", ms);
