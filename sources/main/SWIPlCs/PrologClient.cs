@@ -2936,6 +2936,10 @@ typedef struct // define a context structure  { ... } context;
             if (File.Exists(file)) Consult(file);
         }
 
+        public static object CallProlog(string name, int arity, object origin, object[] objects)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public struct EventHandlerInPrologKey
@@ -2988,7 +2992,7 @@ typedef struct // define a context structure  { ... } context;
             return c.GetMethod("GenericFun" + arity).MakeGenericMethod(typesPlusReturn);
         }
 
-        public R GenericFun0< R>()
+        public R GenericFun0<R>()
         {
             return (R)CallProlog(Origin, new object[] { });
         }
@@ -3008,18 +3012,17 @@ typedef struct // define a context structure  { ... } context;
         {
             return (R)CallProlog(Origin, new object[] { a, b, c, d });
         }
-
-        public object[] GenericFun5<A, B, C, D, E, R>(A a, B b, C c, D d, E e)
+        public R GenericFun5<A, B, C, D, E, R>(A a, B b, C c, D d, E e)
+        {
+            return (R)CallProlog(Origin, new object[] { a, b, c, d, e });
+        }
+        public R GenericFun6<A, B, C, D, E, F, R>(A a, B b, C c, D d, E e, F f)
         {
             return (R)CallProlog(Origin, new object[] { a, b, c, d, e, f });
         }
-        public object[] GenericFun6<A, B, C, D, E, F, R>(A a, B b, C c, D d, E e, F g)
+        object CallProlog(object origin, object[] paramz)
         {
-            return (R)CallProlog(Origin, new object[] { a, b, c, d, e, f, g });
-        }
-        static object CallProlog(object origin, object[] paramz)
-        {
-            throw new NotImplementedException();
+            return PrologClient.CallProlog(Key.Name, Key.arity, origin, paramz);
         }
 
     }
