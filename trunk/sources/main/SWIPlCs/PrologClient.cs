@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Xml.Serialization;
 using ikvm.extensions;
 using IKVM.Internal;
 using ikvm.runtime;
@@ -1349,7 +1350,7 @@ namespace SbsSW.SwiPlCs
                     PlTerm res = ToVMNumber(o, out found);
                     if (found) return res;
                     if (t.IsPrimitive)
-                    {
+                    {                       
                         Warn("@TODO Missing code for primitive " + t);
                     }
                 }
@@ -1360,13 +1361,13 @@ namespace SbsSW.SwiPlCs
             }
             if (t.IsEnum)
             {
-                return PlTerm.PlCompound("enum", C(t.FullName), C(o.ToString()));
+                return PlTerm.PlCompound("enum", C(t.Name), C(o.ToString()));
             }
-            if (t.IsValueType && !t.IsEnum && !t.IsPrimitive && t.Namespace != "System")
+            if (t.IsValueType && !t.IsEnum && !t.IsPrimitive && t.Namespace != "System" || t == typeof(DateTime))
             {
                 return ToFieldLayout("struct", o, t);
             }
-            if (o is EventInfo)
+            if (o is EventArgs)
             {
                 return ToFieldLayout("event", o, t);
             }
@@ -1386,7 +1387,7 @@ namespace SbsSW.SwiPlCs
                         PlRef oldValue;
                         if (atomToPlRef.TryGetValue(tag, out oldValue))
                         {
-                            throw new NullReferenceException("already a value for tag=" + oldValue);
+                            Warn("already a value for tag=" + oldValue);
                         }
                         atomToPlRef[tag] = oref;
                     }
@@ -1403,7 +1404,7 @@ namespace SbsSW.SwiPlCs
                         PlRef oldValue;
                         if (termToObjectPins.TryGetValue(ohandle, out oldValue))
                         {
-                            throw new NullReferenceException("already a value for ohandle=" + oldValue);
+                            Warn("already a value for ohandle=" + oldValue);
                         }
                         termToObjectPins[ohandle] = oref;
                     }
@@ -1425,11 +1426,42 @@ namespace SbsSW.SwiPlCs
 
         public static PlTerm ToFieldLayout(string named, object o, Type t)
         {
-            FieldInfo[] tGetFields =
-                t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            bool specialXMLType = false;
+            if (!t.IsEnum)
+            {
+                var ta = t.GetCustomAttributes(typeof (XmlTypeAttribute), false);
+                if (ta != null && ta.Length > 0)
+                {
+                    XmlTypeAttribute xta = (XmlTypeAttribute) ta[0];
+                    specialXMLType = true;
+                }
+            }
+            FieldInfo[] tGetFields = null;
+            if (specialXMLType)
+            {
+                List<FieldInfo> fis = new List<FieldInfo>();
+                foreach (var e in t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                {
+                    var use = e.GetCustomAttributes(typeof(XmlArrayItemAttribute), false);
+                    if (use == null || use.Length < 1)
+                    {
+                        continue;
+                    }
+                    fis.Add(e);
+                }
+                tGetFields = fis.ToArray();
+            }
+            else
+            {
+                tGetFields = t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            }
+            if (tGetFields.Length == 0)
+            {
+                Warn("No fields in " + t);
+            }
             int len = tGetFields.Length;
             PlTermV tv = new PlTermV(len + 1);
-            tv[0].Unify(C(t.FullName));
+            tv[0].Unify(C(t.Name));
             int tvi = 1;
             for (int i = 0; i < len; i++)
             {
@@ -1444,7 +1476,7 @@ namespace SbsSW.SwiPlCs
         {
             if (string.IsNullOrEmpty(s) || s == "void" || !s.StartsWith("C#"))
             {
-                throw new ArgumentOutOfRangeException("tag_to_object: " + s);
+                Warn("tag_to_object: " + s);
             }
             lock (ObjToTag)
             {
@@ -1460,13 +1492,14 @@ namespace SbsSW.SwiPlCs
         {
             if (o == null)
             {
-                throw new ArgumentOutOfRangeException("object_to_tag: NULL");
+                Warn("object_to_tag: NULL");
+                return null;
             }
 
             Type t = o.GetType();
             if (t.IsValueType || t.IsPrimitive)
             {
-                throw new ArgumentOutOfRangeException("object_to_tag:" + t + " from " + o);
+                Warn("object_to_tag:" + t + " from " + o);
             }
 
             lock (ObjToTag)
@@ -1514,7 +1547,13 @@ namespace SbsSW.SwiPlCs
             // potentually too big?!
             if (o is ulong)
             {
-                //return new PlTerm(Convert.ToDouble(o));                
+                ulong u64 = (ulong) o;
+                if (u64 <= Int64.MaxValue)
+                {
+                    return new PlTerm(Convert.ToInt64(o));
+                }
+                //return new PlTerm((double)o);
+                return new PlTerm(Convert.ToDouble(o));                
             }
             converted = false;
             return default(PlTerm);
@@ -1569,7 +1608,7 @@ namespace SbsSW.SwiPlCs
                                     PlRef oldValue;
                                     if (!atomToPlRef.TryGetValue(name, out oldValue))
                                     {
-                                        //throw new NullReferenceException("no value for tag=" + name);
+                                        //Warn("no value for tag=" + name);
                                         if (pt != null && pt.IsInstanceOfType(o))
                                         {
                                             return o;
@@ -1597,7 +1636,7 @@ namespace SbsSW.SwiPlCs
                         Int64 ohandle = (long)arg1;
                         if (!termToObjectPins.TryGetValue(ohandle, out oldValue))
                         {
-                            throw new NullReferenceException("no value for ohandle=" + ohandle);
+                            Warn("no value for ohandle=" + ohandle);
                         }
                         return oldValue.Value;
                     }
