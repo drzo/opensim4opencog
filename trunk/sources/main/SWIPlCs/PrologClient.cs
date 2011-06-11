@@ -2938,7 +2938,11 @@ typedef struct // define a context structure  { ... } context;
 
         public static object CallProlog(string name, int arity, object origin, object[] objects)
         {
-            throw new NotImplementedException();
+            return null;
+
+
+
+
         }
     }
 
@@ -2960,6 +2964,7 @@ typedef struct // define a context structure  { ... } context;
 
         public object Origin
         {
+
             get { return Key.Origin; }
         }
 
@@ -2983,46 +2988,77 @@ typedef struct // define a context structure  { ... } context;
             Type mt = null;
             Type c = GetType();
             int arity = types.Length;
+            if (returnType == typeof (void)) return 
+            return c.GetMethod("GenericFun" + arity).MakeGenericMethod(types);
             Type[] typesPlusReturn = new Type[arity + 1];
-            for (int i = 0; i < arity; i++)
-            {
-                typesPlusReturn[i] = types[i];
-            }
+            Array.Copy(types, typesPlusReturn, arity);
             typesPlusReturn[arity] = returnType;
-            return c.GetMethod("GenericFun" + arity).MakeGenericMethod(typesPlusReturn);
+            return c.GetMethod("GenericFunR" + arity).MakeGenericMethod(typesPlusReturn);
         }
 
-        public R GenericFun0<R>()
+        // non-void functions 0-6
+        public R GenericFunR0<R>()
         {
-            return (R)CallProlog(Origin, new object[] { });
+            return (R)CallProlog();
         }
-        public R GenericFun1<A, R>(A a)
+        public R GenericFunR1<A, R>(A a)
         {
-            return (R)CallProlog(Origin, new object[] { a });
+            return (R)CallProlog(a);
         }
-        public R GenericFun2<A, B, R>(A a, B b)
+        public R GenericFunR2<A, B, R>(A a, B b)
         {
-            return (R)CallProlog(Origin, new object[] { a, b });
+            return (R)CallProlog(a, b);
         }
-        public R GenericFun3<A, B, C, R>(A a, B b, C c)
+        public R GenericFunR3<A, B, C, R>(A a, B b, C c)
         {
-            return (R)CallProlog(Origin, new object[] { a, b, c });
+            return (R)CallProlog(a, b, c);
         }
-        public R GenericFun4<A, B, C, D, R>(A a, B b, C c, D d)
+        public R GenericFunR4<A, B, C, D, R>(A a, B b, C c, D d)
         {
-            return (R)CallProlog(Origin, new object[] { a, b, c, d });
+            return (R)CallProlog(a, b, c, d);
         }
-        public R GenericFun5<A, B, C, D, E, R>(A a, B b, C c, D d, E e)
+        public R GenericFunR5<A, B, C, D, E, R>(A a, B b, C c, D d, E e)
         {
-            return (R)CallProlog(Origin, new object[] { a, b, c, d, e });
+            return (R)CallProlog(a, b, c, d, e);
         }
-        public R GenericFun6<A, B, C, D, E, F, R>(A a, B b, C c, D d, E e, F f)
+        public R GenericFunR6<A, B, C, D, E, F, R>(A a, B b, C c, D d, E e, F f)
         {
-            return (R)CallProlog(Origin, new object[] { a, b, c, d, e, f });
+            return (R)CallProlog(a, b, c, d, e, f);
         }
-        object CallProlog(object origin, object[] paramz)
+
+        // void functions 0-6
+        public void GenericFun0()
         {
-            return PrologClient.CallProlog(Key.Name, Key.arity, origin, paramz);
+            CallProlog();
+        }
+        public void GenericFun1<A>(A a)
+        {
+            CallProlog(a);
+        }
+        public void GenericFun2<A, B>(A a, B b)
+        {
+            CallProlog(a, b);
+        }
+        public void GenericFun3<A, B, C>(A a, B b, C c)
+        {
+             CallProlog(a, b, c);
+        }
+        public void GenericFun4<A, B, C, D>(A a, B b, C c, D d)
+        {
+          CallProlog(a, b, c, d);
+        }
+        public void GenericFun5<A, B, C, D, E>(A a, B b, C c, D d, E e)
+        {
+            CallProlog(a, b, c, d, e);
+        }
+        public void GenericFun6<A, B, C, D, E, F>(A a, B b, C c, D d, E e, F f)
+        {
+         CallProlog(a, b, c, d, e, f);
+        }
+
+        object CallProlog(params object[] paramz)
+        {
+            return PrologClient.CallProlog(Key.Name, Key.arity, Origin, paramz);
         }
 
     }
