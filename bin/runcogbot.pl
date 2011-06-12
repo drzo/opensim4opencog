@@ -60,6 +60,13 @@ onSimEvent(A,B,C):-cliToStringS(onSimEvent(A,B,C),AS),writeq(AS),nl.
 onFirstBotClient(A,B):- botClient(Obj), cliAddEventHandler(Obj,'EachSimEvent',onSimEvent(_,_,_)),
    cliToStringS(onFirstBotClient(A-B-Obj),Objs),writeq(Objs),nl.
 
+listS(P):-call(P,A),cliToString(A,S),writeq(S),fail.
+listS(P):-writeq('done'(P)),nl.
+
+listAvs:-listS(simAvatar).
+listObjs:-listS(simObject).
+
+
 :- cliAddEventHandler('cogbot.ClientManager','BotClientCreated',onFirstBotClient(_,_)).
 
 :-dynamic(ranSL).

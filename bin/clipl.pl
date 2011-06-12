@@ -19,11 +19,44 @@
 
           ]).
 
+:-module_transparent(cliCall/4).
+:-module_transparent(cliGet/3).
+
 :-load_foreign_library(swicli35).
 :-cli_load_lib('SwiPlCs','SbsSW.SwiPlCs.swipl_win','install').
 :-cliLoadAssembly('SwiPlCs.dll').
 
-cliCollection(Obj,Ele):-user:cliCall(Obj,'ToArray',[],Array),user:cliArrayToVector(Array,Vect),!,arg(_,Vect,Ele).
+
+
+%% old version:s cliCollection(Obj,Ele):-user:cliCall(Obj,'ToArray',[],Array),user:cliArrayToTerm(Array,Vect),!,arg(_,Vect,Ele).
+cliCollection(Obj,Ele):-  
+      user:cliCall(Obj,'GetEnumerator',[],Enum),
+      call_cleanup(cli_enumerator_element(Enum,Ele),user:cliFree(Enum)).
+
+
+
+
+
+
+
+
+%type   jpl_iterator_element(object, datum)
+
+% jpl_iterator_element(+Iterator, -Element) :-
+
+cli_iterator_element(I, E) :- %%cliIsInstance('java.util.Iterator',I),!,
+	(   user:cliCall(I, hasNext, [], @(true))
+	->  (   user:cliCall(I, next, [], E)        % surely it's steadfast...
+	;   cli_iterator_element(I, E)
+	)
+	).
+cli_enumerator_element(I, E) :- %%cliIsInstance('System.Collections.IEnumerator',I),!,
+	(   user:cliCall(I, 'MoveNext', [], @(true))
+	->  (   user:cliGet(I, 'Current', E)        % surely it's steadfast...
+	;   cli_enumerator_element(I, E)
+	)
+	).
+
 
 cliIsObject('@'(A)):-atom(A).
 
