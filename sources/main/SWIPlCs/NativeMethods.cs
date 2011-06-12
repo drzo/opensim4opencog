@@ -379,8 +379,12 @@ namespace SbsSW.SwiPlCs
         internal static extern int PL_unify_float(uint t1, double n);
         [DllImport(DllFileName, CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true)]
         internal static extern int PL_unify_atom_chars(uint t1, string atom);
+        [DllImport(DllFileName, CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true)]
+        internal static extern int PL_unify_string_chars(uint t1, string atom);
+        [DllImport(DllFileName, CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true)]
+        internal static extern int PL_unify_list_chars(uint t1, string atom);
 
-
+        
 
 		// Exceptions
 		// Handling exceptions
