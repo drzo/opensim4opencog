@@ -177,7 +177,7 @@ namespace RTParser
 
         private static void MainConsoleWriteLn(string fmt, params object[] ps)
         {
-            writeDebugLine("-" + fmt, ps);
+            writeDebugLine("--" + fmt, ps);
         }
 
         public static void Main(string[] args)
