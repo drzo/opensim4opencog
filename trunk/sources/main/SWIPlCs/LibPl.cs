@@ -79,7 +79,7 @@ namespace SbsSW.SwiPlCs
         //	 ENGINES (MT-ONLY)
         public const int PL_ENGINE_MAIN = 0x1;			//	  ((PL_engine_t)0x1)
         public const int PL_ENGINE_CURRENT = 0x2;		// ((PL_engine_t)0x2)
-
+        
         public const int PL_ENGINE_SET = 0;			// engine set successfully 
         public const int PL_ENGINE_INVAL = 2;			// engine doesn'termRef exist
         public const int PL_ENGINE_INUSE = 3;			// engine is in use 
@@ -502,6 +502,13 @@ namespace SbsSW.SwiPlCs
 
         internal static int PL_unify_atom_chars(uint t1, string atom)
         { return SafeNativeMethods.PL_unify_atom_chars(t1, atom); }
+
+        internal static int PL_unify_string_chars(uint t1, string atom)
+        { return SafeNativeMethods.PL_unify_string_chars(t1, atom); }
+
+
+        internal static int PL_unify_list_chars(uint t1, string atom)
+        { return SafeNativeMethods.PL_unify_list_chars(t1, atom); }
 
         internal static int PL_unify_integer(uint t1, Int32 n)
         { return SafeNativeMethods.PL_unify_integer(t1, n); }
