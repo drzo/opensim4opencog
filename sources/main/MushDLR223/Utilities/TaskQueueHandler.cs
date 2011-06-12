@@ -13,7 +13,7 @@ namespace MushDLR223.Utilities
     public class TaskQueueHandler : IDisposable
     {        
         public static readonly OutputDelegate errOutput = DLRConsole.SYSTEM_ERR_WRITELINE;
-        public static bool TurnOffTaskQueueDebugMessages = true;
+        public static bool TurnOffDebugMessages = true;
         protected ThreadControl LocalThreadControl = new ThreadControl(new ManualResetEvent(false));
         readonly List<ThreadStart> OnFinnaly = new List<ThreadStart>();
         public TimeSpan PING_INTERVAL = TimeSpan.FromSeconds(30); // 30 seconds
@@ -619,7 +619,7 @@ namespace MushDLR223.Utilities
                 if (!needsExit)
                 {
                     string str = "EventQueue_Handler is locked out!";
-                    if (!TurnOffTaskQueueDebugMessages) errOutput(str);
+                    if (!TurnOffDebugMessages) errOutput(str);
                     VeryBad(str);
                     throw new InternalBufferOverflowException(str);
 
@@ -740,7 +740,7 @@ namespace MushDLR223.Utilities
                     //wait longer (still no tasks)
                     continue;
                 }
-                if (!TurnOffTaskQueueDebugMessages) errOutput(CreateMessage("WaitOne: TIMEOUT ERROR {0} was {1} ", INFO,
+                if (!TurnOffDebugMessages) errOutput(CreateMessage("WaitOne: TIMEOUT ERROR {0} was {1} ", INFO,
                                         GetTimeString(ThisMaxOperationTimespan)));
                 problems = true;
                 //TestLock(BusyTrackingLock);
@@ -752,7 +752,7 @@ namespace MushDLR223.Utilities
                     }
                     //var len = DateTime.Now.Subtract(BusyStart);
                 }
-                if (!TurnOffTaskQueueDebugMessages) errOutput(CreateMessage("Moving on with TIMEOUT {0} was {1} ", INFO,
+                if (!TurnOffDebugMessages) errOutput(CreateMessage("Moving on with TIMEOUT {0} was {1} ", INFO,
                                         GetTimeString(ThisMaxOperationTimespan)));
                 if (this.RealTodo > 0) return true; ////r = true;
                 return false;
@@ -1562,7 +1562,7 @@ namespace MushDLR223.Utilities
 
         public void WriteLine(string s, params object[] parms)
         {
-            if (TurnOffTaskQueueDebugMessages) return;
+            if (TurnOffDebugMessages) return;
             if (inWriteline)
             {
                 DLRConsole.SYSTEM_ERR_WRITELINE("inWriteLine!!!!!!!!=" + new Exception().StackTrace);
@@ -1584,14 +1584,14 @@ namespace MushDLR223.Utilities
 
         private void VeryBad(String action)
         {
-            if (TurnOffTaskQueueDebugMessages) return;
+            if (TurnOffDebugMessages) return;
             action = CreateMessage(action);
             WriteLine(action);
         }
 
         public void WriteLine00(string s, params object[] parms)
         {
-            if (TurnOffTaskQueueDebugMessages) return;
+            if (TurnOffDebugMessages) return;
             debugOutput = debugOutput ?? errOutput;
             s = CreateMessage(s, parms);
             string trimmed = s.Trim(" .\n".ToCharArray());
