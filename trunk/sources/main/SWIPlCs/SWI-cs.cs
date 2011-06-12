@@ -1381,6 +1381,10 @@ namespace SbsSW.SwiPlCs
         {
             return 0 != libpl.PL_unify_atom_chars(this.TermRef, atom);
         }
+        public bool UnifyAtom(string atom)
+        {
+            return 0 != libpl.PL_unify_atom_chars(this.TermRef, atom);
+        }
 
         public bool Unify(long atom)
         {
@@ -1761,6 +1765,15 @@ namespace SbsSW.SwiPlCs
         }
 
         #endregion
+
+        public bool FromObject(object o)
+        {
+            if (!IsVar)
+            {
+                PrologClient.Warn("Not a free object! " + this);
+            }
+            return 0 != PrologClient.UnifyToProlog(o, this);
+        }
     } // class PlTerm
     #endregion
 
@@ -2506,7 +2519,7 @@ namespace SbsSW.SwiPlCs
     /// <summary>
     /// Experimental
     /// </summary>
-    internal class PrologServer
+    public class PrologServer
     {
         /// <summary>
         /// 
