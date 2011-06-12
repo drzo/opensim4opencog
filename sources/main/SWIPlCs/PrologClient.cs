@@ -89,34 +89,23 @@ namespace SbsSW.SwiPlCs
                 }
                 if (threadOnceHadEngine)
                 {
-                    if (thread == CreatorThread) return;
-                    IntPtr pNullPointer = IntPtr.Zero;
-                    int iRet = libpl.PL_set_engine(_iEngineNumber, ref pNullPointer);
-                    if (iRet == libpl.PL_ENGINE_SET)
-                    {
-                        if (_iEngineNumber == IntPtr.Zero)
-                        {
-                            // we know our number now!
-                            //  SafeThreads[thread] = pNullPointer;
-                            return;
-                        }
-                        return; // all is fine!
-                    }
-                    switch (iRet)
-                    {
-                        case libpl.PL_ENGINE_SET:
-                            {
-                                break; // all is fine!
-                            }
-                        case libpl.PL_ENGINE_INVAL: throw (new PlLibException("PlSetEngine returns Invalid")); //break;
-                        case libpl.PL_ENGINE_INUSE: throw (new PlLibException("PlSetEngine returns it is used by an other thread")); //break;
-                        default: throw (new PlLibException("Unknown return from PlSetEngine"));
-                    }
+                    if (thread == CreatorThread || true) return;
+
+                    int iRet = CheckEngine();
+                   
                     return; // all was fine;
                 }
                 else
                 {
                     // thread never had engine
+                    int ret = libpl.PL_thread_attach_engine(IntPtr.Zero);
+                    int self0 = libpl.PL_thread_self();
+                    if (ret == self0)
+                    {
+                        SafeThreads.Add(thread, IntPtr.Zero);
+                        RegisterThread(thread);
+                        return;
+                    }
                     _iEngineNumber = libpl.PL_create_engine(IntPtr.Zero);
                     SafeThreads.Add(thread, _iEngineNumber);
                     int self2 = libpl.PL_thread_self();
@@ -126,7 +115,7 @@ namespace SbsSW.SwiPlCs
                         {
                             try
                             {
-                                int ret = libpl.PL_thread_attach_engine(_iEngineNumber);
+                                ret = libpl.PL_thread_attach_engine(_iEngineNumber);
                                 int self3 = libpl.PL_thread_self();
                                 engineToThread.Add(self3, thread);
                                 return;
@@ -188,6 +177,30 @@ namespace SbsSW.SwiPlCs
                   */
             }
         }
+
+        private static int CheckEngine()
+        {
+            IntPtr _iEngineNumber;
+            IntPtr pNullPointer = IntPtr.Zero;
+            IntPtr PL_ENGINE_CURRENT_PTR = new IntPtr(libpl.PL_ENGINE_CURRENT); // ((PL_engine_t)0x2)
+            int iRet = libpl.PL_set_engine(PL_ENGINE_CURRENT_PTR, ref pNullPointer);
+            switch (iRet)
+            {
+                case libpl.PL_ENGINE_SET:
+                    {
+                        break; // all is fine!
+                    }
+                case libpl.PL_ENGINE_INVAL:
+                    throw (new PlLibException("PlSetEngine returns Invalid")); //break;
+                case libpl.PL_ENGINE_INUSE:
+                    throw (new PlLibException("PlSetEngine returns it is used by an other thread")); //break;
+                default:
+                    throw (new PlLibException("Unknown return from PlSetEngine"));
+            }
+
+            return iRet;
+        }
+
 
         public static void DeregisterThread(Thread thread)
         {
@@ -334,7 +347,7 @@ namespace SbsSW.SwiPlCs
                                                        }
                                                        if (nonvoid)
                                                        {
-                                                           return termVector[plarity - 1].Unify(ToProlog(result));
+                                                           return termVector[plarity - 1].FromObject((result));
                                                        }
                                                        return true;
 
@@ -566,16 +579,22 @@ namespace SbsSW.SwiPlCs
 
         private static PlTermV ToPlTermV(PlTerm[] terms)
         {
-            var tv = new PlTermV(terms.Length);
+            var tv = NewPlTermV(terms.Length);
             for (int i = 0; i < terms.Length; i++)
             {
                 tv[i] = terms[i];
             }
             return tv;
         }
+
+        private static PlTermV NewPlTermV(int length)
+        {
+            return new PlTermV(length);
+        }
+
         private static PlTermV ToPlTermV(ParameterInfo[] terms)
         {
-            var tv = new PlTermV(terms.Length);
+            var tv = NewPlTermV(terms.Length);
             for (int i = 0; i < terms.Length; i++)
             {
                 tv[i] = typeToSpec(terms[i].ParameterType);
@@ -631,7 +650,7 @@ namespace SbsSW.SwiPlCs
             ConstructorInfo mi = findConstructor(memberSpec, c);
             if (mi != null)
             {
-                return methodOut.Unify(ToProlog(mi));
+                return methodOut.FromObject((mi));
             }
             return false;
         }
@@ -654,7 +673,7 @@ namespace SbsSW.SwiPlCs
                 return false;
             }
             object[] values = PlListToArray(valueIn, mi.GetParameters());
-            return valueOut.Unify(ToProlog(mi.Invoke(values)));
+            return valueOut.FromObject((mi.Invoke(values)));
         }
 
         /// <summary>
@@ -674,7 +693,7 @@ namespace SbsSW.SwiPlCs
                 return false;
             }
             var value = c.MakeArrayType(rank.intValue());
-            return valueOut.Unify(ToProlog(value));
+            return valueOut.FromObject((value));
         }
 
         /// <summary>
@@ -695,10 +714,10 @@ namespace SbsSW.SwiPlCs
                 return false;
             }
             int len = value.Length;
-            var termv = new PlTermV(len);
+            var termv = NewPlTermV(len);
             for (int i = 0; i < len; i++)
             {
-                bool pf = termv[i].Unify(ToProlog(value.GetValue(i)));
+                bool pf = termv[i].FromObject((value.GetValue(i)));
             }
             Type et = value.GetType().GetElementType();
             return valueOut.Unify(PlTerm.PlCompound(typeToSpec(et).Name, termv));
@@ -720,7 +739,7 @@ namespace SbsSW.SwiPlCs
                 value.SetValue(GetInstance(arrayValue[argn]), i);
                 argn++;
             }
-            return valueOut.Unify(ToProlog(value));
+            return valueOut.FromObject((value));
         }
         [PrologVisible(ModuleName = ExportModule)]
         static public bool cliFindMethod(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm methodOut)
@@ -730,7 +749,7 @@ namespace SbsSW.SwiPlCs
             MethodInfo mi = findMethod(memberSpec, c);
             if (mi != null)
             {
-                return methodOut.Unify(ToProlog(mi));
+                return methodOut.FromObject((mi));
             }
             return false;
         }
@@ -752,7 +771,7 @@ namespace SbsSW.SwiPlCs
             }
             object[] value = PlListToArray(valueIn, mi.GetParameters());
             object target = mi.IsStatic ? null : getInstance;
-            return valueOut.Unify(ToProlog(InvokeCaught(mi, target, value)));
+            return valueOut.FromObject((InvokeCaught(mi, target, value)));
         }
 
         [PrologVisible(ModuleName = ExportModule)]
@@ -776,7 +795,7 @@ namespace SbsSW.SwiPlCs
                 {
                     Delegate del = (Delegate) fi.GetValue(getInstance);
                     if (del != null)
-                        return valueOut.Unify(ToProlog(del.DynamicInvoke(PlListToArray(valueIn, paramInfos))));
+                        return valueOut.FromObject((del.DynamicInvoke(PlListToArray(valueIn, paramInfos))));
                 }
                 string fn1 = fn.Substring(1);
                 int len = fn.Length;
@@ -788,7 +807,7 @@ namespace SbsSW.SwiPlCs
                         {
                             Delegate del = (Delegate) info.GetValue(info.IsStatic ? null : getInstance);
                             if (del != null)
-                                return valueOut.Unify(ToProlog(del.DynamicInvoke(PlListToArray(valueIn, paramInfos))));
+                                return valueOut.FromObject((del.DynamicInvoke(PlListToArray(valueIn, paramInfos))));
                         }
                     }
                 } 
@@ -804,7 +823,7 @@ namespace SbsSW.SwiPlCs
             }
             object[] value = PlListToArray(valueIn, mi.GetParameters());
             object target = mi.IsStatic ? null : getInstance;
-            return valueOut.Unify(ToProlog(InvokeCaught(mi, target, value)));
+            return valueOut.FromObject((InvokeCaught(mi, target, value)));
         }
 
         public static Dictionary<EventHandlerInPrologKey, EventHandlerInProlog> PrologEventHandlers =
@@ -870,13 +889,17 @@ namespace SbsSW.SwiPlCs
         [PrologVisible(ModuleName = ExportModule)]
         static public bool cliGet(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm valueOut)
         {
+            if (clazzOrInstance.IsVar)
+            {
+                return Warn("Cant find instance " + clazzOrInstance);
+            }
             object getInstance = GetInstance(clazzOrInstance);
             Type c = GetTypeFromInstance(clazzOrInstance);
             string fn = memberSpec.Name;
             FieldInfo fi = c.GetField(fn, BindingFlagsALL);
             if (fi != null)
             {
-                return valueOut.Unify(ToProlog(fi.GetValue(fi.IsStatic ? null : getInstance)));
+                return valueOut.FromObject((fi.GetValue(fi.IsStatic ? null : getInstance)));
             }
             var pi = c.GetProperty(fn, BindingFlagsALL);
             if (pi != null)
@@ -886,7 +909,7 @@ namespace SbsSW.SwiPlCs
                 {
                     return Warn("Cant find getter for property " + memberSpec + " on " + c);
                 }
-                return valueOut.Unify(ToProlog(InvokeCaught(mi, mi.IsStatic ? null : getInstance, new object[0])));
+                return valueOut.FromObject((InvokeCaught(mi, mi.IsStatic ? null : getInstance, new object[0])));
             }
             Warn("Cant find getter " + memberSpec + " on " + c);
             return false;
@@ -933,7 +956,7 @@ namespace SbsSW.SwiPlCs
                 Warn("Cannot get object for " + valueIn);
                 return true;
             }
-            return valueOut.Unify(ToProlog(val.GetType()));
+            return valueOut.FromObject((val.GetType()));
         }
 
         [PrologVisible(ModuleName = ExportModule)]
@@ -941,7 +964,7 @@ namespace SbsSW.SwiPlCs
         {
             object val = ToVM(valueIn, null);
             // extension method
-            return valueOut.Unify(ToProlog(val.getClass()));
+            return valueOut.FromObject((val.getClass()));
         }
         [PrologVisible(ModuleName = ExportModule)]
         static public bool cliClassFromType(PlTerm valueIn, PlTerm valueOut)
@@ -949,7 +972,7 @@ namespace SbsSW.SwiPlCs
             Type val = GetType(valueIn);
             if (val == null) return false;
             Class c = ikvm.runtime.Util.getFriendlyClassFromType(val);
-            return valueOut.Unify(ToProlog(c));
+            return valueOut.FromObject((c));
         }
         [PrologVisible(ModuleName = ExportModule)]
         static public bool cliTypeFromClass(PlTerm valueIn, PlTerm valueOut)
@@ -957,7 +980,7 @@ namespace SbsSW.SwiPlCs
             Class val = GetType(valueIn);
             if (val == null) return false;
             var c = ikvm.runtime.Util.getInstanceTypeFromClass(val);
-            return valueOut.Unify(ToProlog(c));
+            return valueOut.FromObject((c));
         }
         [PrologVisible(ModuleName = ExportModule)]
         static public bool cliJavaToString(PlTerm valueIn, PlTerm valueOut)
@@ -1323,13 +1346,58 @@ namespace SbsSW.SwiPlCs
         }
 
         public static Object ToFromConvertLock = new object();
-        public static PlTerm ToProlog(object o)
+        public static int UnifyToProlog(object o, PlTerm term)
         {
-            if (o is PlTerm) return (PlTerm)o;
-            if (o is string) return VMStringsAsAtoms ? PlTerm.PlAtom((string) o) : PlTerm.PlString((string) o);
-            if (o is Term) return ToPLCS((Term)o);
-            if (o == null) return PLNULL;
+            if (!term.IsVar)
+            {
+                Warn("Not a free var " + term);
+                return 0;
+            }
+            uint TermRef = term.TermRef;                       
+            if (TermRef==0)
+            {
+                Warn("Not a allocated term " + o);
+                return 0;
+            }
+            if (o is PlTerm) return libpl.PL_unify(TermRef, ((PlTerm) o).TermRef);
+            if (o is Term) return UnifyToProlog(ToPLCS((Term)o), term);
+
+            if (o is string)
+            {
+                switch (VMStringsAsAtoms)
+                {
+                    case libpl.CVT_STRING:
+                        return libpl.PL_unify_string_chars(TermRef, (string) o);
+                    case libpl.CVT_ATOM:
+                        return libpl.PL_unify_atom_chars(TermRef, (string) o);
+                    case libpl.CVT_LIST:
+                        return libpl.PL_unify_list_chars(TermRef, (string) o);
+                    default:
+                        Warn("UNKNOWN VMStringsAsAtoms " + VMStringsAsAtoms);
+                        return 0;
+                }
+            }
+            if (o == null) 
+            {
+                AddTagged(TermRef, "null");
+                return 1;
+            }             
+            if (true.Equals(o)) 
+            {
+                AddTagged(TermRef, "true");
+                return 1;
+            }
+            if (false.Equals(o)) 
+            {
+                AddTagged(TermRef, "false");
+                return 1;
+            }             
             Type t = o.GetType();
+            if (t==typeof(void))
+            {
+                AddTagged(TermRef, "void");
+                return 1;
+            }
 
             if (o is ValueType)
             {
@@ -1337,44 +1405,66 @@ namespace SbsSW.SwiPlCs
                 {
                     try
                     {
-                        return PlTerm.PlAtom(new string((char)o, 1));
+                        char ch = (char) o;
+                        string cs = new string(ch, 1);
+                        switch (VMStringsAsAtoms)
+                        {
+                            case libpl.CVT_STRING:
+                                return libpl.PL_unify_atom_chars(TermRef, cs);
+                            case libpl.CVT_ATOM:
+                                return libpl.PL_unify_atom_chars(TermRef, cs);
+                            case libpl.CVT_LIST:
+                                return libpl.PL_unify_integer(TermRef, (int) ch);
+                            default:
+                                Warn("UNKNOWN VMStringsAsAtoms " + VMStringsAsAtoms);
+                                return 0;
+                        }
                     }
                     catch (Exception e)
                     {
-                        // unmappable errors?
+                        Warn("@TODO unmappable errors? " + o + " type " + t);
+                        //
                     }
                 }
                 try
                 {
-                    bool found;
-                    PlTerm res = ToVMNumber(o, out found);
-                    if (found) return res;
+                    int res = ToVMNumber(o, term);
+                    if (res == 1) return res;
+                    if (res != -1)
+                    {
+                        Warn("@TODO Missing code for ToVmNumber? " + o + " type " + t);
+                        return res;
+                    }
                     if (t.IsPrimitive)
-                    {                       
-                        Warn("@TODO Missing code for primitive " + t);
+                    {
+                        Warn("@TODO Missing code for primitive? " + o + " type " + t);
                     }
                 }
                 catch (Exception e)
                 {
-                    // conversion errors
+                    Warn("@TODO unmappable errors? " + o + " type " + t);
                 }
             }
             if (t.IsEnum)
             {
-                return PlTerm.PlCompound("enum", C(t.Name), C(o.ToString()));
+                libpl.PL_cons_functor_v(TermRef,
+                                        libpl.PL_new_functor(libpl.PL_new_atom("enum"), 2),
+                                        new PlTermV(C(t.Name), C(o.ToString())).A0);
+                return 1;
             }
             if (t.IsValueType && !t.IsEnum && !t.IsPrimitive && t.Namespace != "System" || t == typeof(DateTime))
             {
-                return ToFieldLayout("struct", o, t);
+                return ToFieldLayout("struct", o, t, term);
             }
             if (o is EventArgs)
             {
-                return ToFieldLayout("event", o, t);
+                return ToFieldLayout("event", o, t ,term);
             }
             lock (ToFromConvertLock)
             {
                 var tag = object_to_tag(o);
-                if (true) return PlTerm.PlCompound("@", PlTerm.PlAtom(tag));
+                AddTagged(TermRef, tag);
+                return 1;
                 PlRef oref;
                 if (!objectToPlRef.TryGetValue(o, out oref))
                 {
@@ -1413,18 +1503,27 @@ namespace SbsSW.SwiPlCs
 #else
                     oref.Term = PlTerm.PlCompound("@", PlTerm.PlAtom(tag));
 #endif
-                    return oref.Term;
+                    return -1;// oref.Term;
                 }
                 else
                 {
                     oref.Term = PlTerm.PlCompound("@", PlTerm.PlAtom(tag));
-                    return oref.Term;
+                    return -1;// oref.Term;
                 }
 
             }
         }
 
-        public static PlTerm ToFieldLayout(string named, object o, Type t)
+        private static void AddTagged(uint TermRef, string tag)
+        {
+            uint nt = libpl.PL_new_term_ref();
+            libpl.PL_cons_functor_v(nt,
+                                    libpl.PL_new_functor(libpl.PL_new_atom("@"), 1),
+                                    new PlTermV(PlTerm.PlAtom(tag)).A0);
+            libpl.PL_unify(TermRef, nt);
+        }
+
+        public static int ToFieldLayout(string named, object o, Type t, PlTerm term)
         {
             bool specialXMLType = false;
             if (!t.IsEnum)
@@ -1460,14 +1559,18 @@ namespace SbsSW.SwiPlCs
                 Warn("No fields in " + t);
             }
             int len = tGetFields.Length;
-            PlTermV tv = new PlTermV(len + 1);
-            tv[0].Unify(C(t.Name));
+            PlTermV tv = NewPlTermV(len + 1);
+            tv[0].UnifyAtom(t.Name);
             int tvi = 1;
             for (int i = 0; i < len; i++)
             {
-                tv[tvi++].Unify(ToProlog(tGetFields[i].GetValue(o)));
+                object v = tGetFields[i].GetValue(o);
+                tv[tvi++].FromObject((v));
             }
-            return PlTerm.PlCompound(named, tv);
+            libpl.PL_cons_functor_v(term.TermRef,
+                                    libpl.PL_new_functor(libpl.PL_new_atom(named), tv.Size),
+                                    tv.A0);
+            return 1;
         }
 
         readonly static private Dictionary<object, string> ObjToTag = new Dictionary<object, string>();
@@ -1524,39 +1627,32 @@ namespace SbsSW.SwiPlCs
             //return jpl.fli.Prolog.object_to_tag(o);
         }
 
-        private static PlTerm ToVMNumber(object o, out bool converted)
+        private static int ToVMNumber(object o, PlTerm term)
         {
-            converted = true;
-            if (o is bool)
-            {
-                if (true.Equals(o)) return PLTRUE;
-                if (false.Equals(o)) return PLFALSE;
-            }
+          
             // signed types
             if (o is short || o is sbyte || o is int)
-                return new PlTerm((int)o);
+                return libpl.PL_unify_integer(term.TermRef, (int) o);            
             if (o is long)
-                return new PlTerm((long)o);
+                return libpl.PL_unify_integer(term.TermRef, (long)o);
             if (o is decimal || o is Single || o is float || o is double)
-                return new PlTerm((double)o);
+                return libpl.PL_unify_float(term.TermRef, (double)o);
             // unsigned types
             if (o is ushort || o is byte)
-                return new PlTerm(Convert.ToInt32(o));
+                return libpl.PL_unify_integer(term.TermRef, (int)Convert.ToInt32(o));
             if (o is UInt32)
-                return new PlTerm(Convert.ToInt64(o));
+                return libpl.PL_unify_integer(term.TermRef, (long)Convert.ToInt64(o));
             // potentually too big?!
             if (o is ulong)
             {
                 ulong u64 = (ulong) o;
                 if (u64 <= Int64.MaxValue)
                 {
-                    return new PlTerm(Convert.ToInt64(o));
+                    return libpl.PL_unify_integer(term.TermRef, (long)Convert.ToInt64(o));
                 }
-                //return new PlTerm((double)o);
-                return new PlTerm(Convert.ToDouble(o));                
+                return libpl.PL_unify_float(term.TermRef, (double)o);
             }
-            converted = false;
-            return default(PlTerm);
+            return -1;
         }
 
         /*
@@ -1748,7 +1844,10 @@ namespace SbsSW.SwiPlCs
             if (args is jpl.JRef)
             {
                 var jref = (jpl.JRef)args;// return new PlTerm(args.doubleValue());
-                return ToProlog(jref.@ref());
+                var obj = jref.@ref();
+                var t = new PlTerm();
+                t.FromObject(obj);
+                return t;
             }
             throw new ArgumentOutOfRangeException();
         }
@@ -1756,7 +1855,7 @@ namespace SbsSW.SwiPlCs
         private static PlTermV ToPLCSV(Term[] terms)
         {
             int size = terms.Length;
-            PlTermV target = new PlTermV(size);
+            PlTermV target = NewPlTermV(size);
             for (int i = 0; i < size; i++)
             {
                 target[i] = ToPLCS(terms[i]);
@@ -1767,7 +1866,7 @@ namespace SbsSW.SwiPlCs
         private static PlTermV ToPLCSV(PlTerm[] terms)
         {
             int size = terms.Length;
-            PlTermV target = new PlTermV(size);
+            PlTermV target = NewPlTermV(size);
             for (int i = 0; i < size; i++)
             {
                 target[i] = terms[i];
@@ -1778,7 +1877,7 @@ namespace SbsSW.SwiPlCs
         private static PlTermV ToPLCSV1(PlTerm a0, PlTerm[] terms)
         {
             int size = terms.Length;
-            PlTermV target = new PlTermV(size + 1);
+            PlTermV target = NewPlTermV(size + 1);
             int to = 1;
             target[0] = a0;
             for (int i = 0; i < size; i++)
@@ -1882,7 +1981,17 @@ namespace SbsSW.SwiPlCs
         }
         protected PlTerm ThisClientTerm
         {
-            get { return ToProlog(this); }
+            get
+            {
+                return ToProlog(this);
+            }
+        }
+
+        private PlTerm ToProlog(object value)
+        {
+            PlTerm t = new PlTerm();
+            t.FromObject(value);
+            return t;
         }
 
         private bool ModuleCall0(string s, PlTermV termV)
@@ -1901,14 +2010,18 @@ namespace SbsSW.SwiPlCs
 
         public object Eval(object obj)
         {
+            PlTerm termin = PlTerm.PlVar();
+            termin.FromObject(obj);
             PlTerm termout = PlTerm.PlVar();
-            if (!ModuleCall("Eval", ToProlog(obj), termout)) return null;
+            if (!ModuleCall("Eval", termin, termout)) return null;
             return ToVM(termout, typeof(System.Object));
         }
 
         public void Intern(string varname, object value)
         {
-            ModuleCall("Intern", PlNamed(varname), ToProlog(value));
+            PlTerm termin = PlTerm.PlVar();
+            termin.FromObject(value);
+            ModuleCall("Intern", PlNamed(varname), termin);
         }
 
 
@@ -3396,7 +3509,7 @@ typedef struct // define a context structure  { ... } context;
         public static Thread CreatorThread;
         public static bool IsPLWin;
         public static bool RedirectStreams = true;
-        private static bool VMStringsAsAtoms = false;
+        public static int VMStringsAsAtoms = libpl.CVT_STRING;
         
         // foo(X,Y),writeq(f(X,Y)),nl,X=5.
         public static int Foo(PlTerm t0, PlTerm term2, IntPtr control)
@@ -3552,15 +3665,15 @@ typedef struct // define a context structure  { ... } context;
         {
             Thread threadCurrentThread = Thread.CurrentThread;
             RegisterThread(threadCurrentThread);
-            PlTermV args = new PlTermV(arity);
+            PlTermV args = NewPlTermV(arity);
             int fillAt = 0;
             if (origin != null)
             {
-                args[fillAt++].Unify(ToProlog(origin));
+                args[fillAt++].FromObject((origin));
             }
             for (int i = 0; i < paramz.Length; i++)
             {
-                args[fillAt++].Unify(ToProlog(paramz[i]));
+                args[fillAt++].FromObject((paramz[i]));
             }
             bool IsVoid = returnType == typeof(void);
             if (!IsVoid)
