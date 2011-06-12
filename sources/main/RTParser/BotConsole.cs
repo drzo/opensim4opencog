@@ -1331,7 +1331,7 @@ namespace RTParser
                 DLRConsole.SYSTEM_ERR_WRITELINE("HIDDEN ERRORS: {0}", real);
                 return;
             }
-            DLRConsole.SYSTEM_ERR_WRITELINE("SPAMMY: {0}", real);
+            if (false) DLRConsole.SYSTEM_ERR_WRITELINE("SPAMMY: {0}", real);
         }
 
         public void TraceTest(String s, Action action)
