@@ -22,6 +22,8 @@ namespace MushDLR223.Utilities
 
     public class StaticXMLUtils
     {
+        public static bool TurnOffDebugMessages = true;
+
         public static R WithoutTrace<R>(ITraceable itrac, Func<R> func)
         {
             if (!System.Threading.Monitor.TryEnter(itrac,TimeSpan.FromSeconds(2)))
@@ -867,7 +869,11 @@ namespace MushDLR223.Utilities
 
         public static void writeDebugLine(string format, params object[] args)
         {
-            DLRConsole.DebugWriteLine(format, args);
+            string printStr = DLRConsole.SafeFormat(format, args);
+            if (!TurnOffDebugMessages || printStr.Contains("ERROR"))
+            {
+                DLRConsole.DebugWriteLine(format, args);
+            }
         }
 
         public static bool TryParseBool(XmlNode templateNode, string attribName, out bool tf)
