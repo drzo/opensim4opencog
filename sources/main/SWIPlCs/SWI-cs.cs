@@ -1475,6 +1475,8 @@ namespace SbsSW.SwiPlCs
                 if (0 != libpl.PL_get_name_arity(this.TermRef, ref name, ref arity))
                     return libpl.PL_atom_chars(name);
 
+                if (IsString) return ToString();
+
                 throw new NotSupportedException("Only possible for compound or atoms");
                 //throw new PlTypeException("compound", this);   // FyCop Don't like this type of exception
             }
@@ -1772,7 +1774,13 @@ namespace SbsSW.SwiPlCs
             {
                 PrologClient.Warn("Not a free object! " + this);
             }
-            return 0 != PrologClient.UnifyToProlog(o, this);
+            var v = PrologClient.UnifyToProlog(o, this);
+            if (IsVar || v == 0)
+            {
+                PrologClient.Warn("Unify failed! " + this);
+                return false;
+            }
+            return v != 0;
         }
     } // class PlTerm
     #endregion
