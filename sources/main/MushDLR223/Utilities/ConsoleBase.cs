@@ -1883,7 +1883,7 @@ namespace MushDLR223.Utilities
                     DebugWriteLine("Stack overflow comming!? " + st);
                     return true;
                 }
-                DebugWriteLine("DepthCheck");
+                ///DebugWriteLine("DepthCheck");
                 //throw new Exception("Stack overflow comming!");
                 return true;
             }
