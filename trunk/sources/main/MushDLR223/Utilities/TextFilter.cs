@@ -49,7 +49,7 @@ namespace MushDLR223.Utilities
                 }
                // lock (this)
                 {
-                    printIt = message.StartsWith("-");
+                    printIt = message.StartsWith("--");
                     if (printIt)
                     {
                         message = message.Substring(1);
