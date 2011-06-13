@@ -379,7 +379,8 @@ namespace SbsSW.SwiPlCs
             catch (Exception ex)
             {
                 var pe = ToPlException(ex);
-                string s = pe.ToString() + "\n" + pe.StackTrace;
+                string s = ex.ToString() + "\n" + ex.StackTrace;
+                Warn("ex: " + s);
                 throw pe;
             }
         }
