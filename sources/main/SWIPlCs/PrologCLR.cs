@@ -107,6 +107,11 @@ namespace SbsSW.SwiPlCs
 
         private static FieldInfo findField(PlTerm memberSpec, Type c)
         {
+            if (c == null)
+            {
+                Warn("findField no class for " + memberSpec);
+                return null;
+            }
             if (memberSpec.IsVar)
             {
                 Warn("findField IsVar " + memberSpec + " on type " + c);
@@ -128,6 +133,11 @@ namespace SbsSW.SwiPlCs
         }
         private static PropertyInfo findProperty(PlTerm memberSpec, Type c)
         {
+            if (c == null)
+            {
+                Warn("findProperty no class for " + memberSpec);
+                return null;
+            }
             if (memberSpec.IsVar)
             {
                 Warn("findProperty IsVar " + memberSpec + " on type " + c);
@@ -149,6 +159,11 @@ namespace SbsSW.SwiPlCs
 
         private static MethodInfo findMethod(PlTerm memberSpec, Type c)
         {
+            if (c == null)
+            {
+                Warn("findMethod no class for " + memberSpec);
+                return null;
+            }
             if (memberSpec.IsVar)
             {
                 Warn("findMethod IsVar " + memberSpec + " on type " + c);
@@ -188,6 +203,11 @@ namespace SbsSW.SwiPlCs
 
         private static ConstructorInfo findConstructor(PlTerm memberSpec, Type c)
         {
+            if (c == null)
+            {
+                Warn("findConstructor no class for " + memberSpec);
+                return null;
+            }
             if (TaggedObject(memberSpec))
             {
                 var r = tag_to_object(memberSpec[1].Name) as ConstructorInfo;
