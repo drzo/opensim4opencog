@@ -888,7 +888,7 @@ namespace SbsSW.SwiPlCs
         /// <param name="functor">The functor (name) of the compound term</param>
         /// <param name="arg1">The first Argument as a <see cref="PlTerm"/></param>
         /// <returns>a new <see cref="PlTerm"/></returns>
-        static public PlTerm PlCompound(string functor, PlTerm arg1)
+        static public PlTerm PlCompound(string functor, params PlTerm[] arg1)
         {
             PlTermV args = new PlTermV(arg1);
             return PlTerm.PlCompound(functor, args);
@@ -916,6 +916,11 @@ namespace SbsSW.SwiPlCs
         static public PlTerm PlCompound(string functor, PlTerm arg1, PlTerm arg2, PlTerm arg3)
         {
             PlTermV args = new PlTermV(arg1, arg2, arg3);
+            return PlTerm.PlCompound(functor, args);
+        }
+        static public PlTerm PlCompound(string functor, PlTerm arg1, PlTerm arg2, PlTerm arg3, PlTerm arg4)
+        {
+            PlTermV args = new PlTermV(arg1, arg2, arg3, arg4);
             return PlTerm.PlCompound(functor, args);
         }
 #pragma warning restore 1573
@@ -1794,9 +1799,33 @@ namespace SbsSW.SwiPlCs
             return v != 0;
         }
 
-        internal PlTerm Arg(int p)
+        /// <summary>
+        /// Zero Based 
+        /// </summary>
+        /// <param name="p"></param>
+        /// <returns></returns>
+        internal PlTerm Arg(int p0)
         {
-            return this[p + 1];
+            return this[p0 + 1];
+        }
+        /// <summary>
+        /// Zero Based 
+        /// </summary>
+        /// <param name="p"></param>
+        /// <returns></returns>
+        public PlTerm ArgItem(int p0)
+        {
+            if (IsList)
+            {
+                PlTerm li = Copy();
+                int itnum = p0;
+                while (itnum-- > 0)
+                {
+                    li = li.Arg(1);
+                }
+                return li.Arg(0);
+            }
+            return this[p0 + 1];
         }
     } // class PlTerm
     #endregion
@@ -1906,6 +1935,16 @@ namespace SbsSW.SwiPlCs
             _a0 = libpl.PL_new_term_refs(2);
             libpl.PL_put_term(_a0 + 0, term0.TermRef);
             libpl.PL_put_term(_a0 + 1, term1.TermRef);
+        }
+               
+        public PlTermV(params PlTerm[] terms)
+        {
+            _size = terms.Length;
+            _a0 = libpl.PL_new_term_refs(_size);
+            for (int i = 0; i < _size; i++)
+            {
+                libpl.PL_put_term((uint) (_a0 + i), terms[i].TermRef);
+            }
         }
 
         public PlTermV(PlTerm terms, int arity)
