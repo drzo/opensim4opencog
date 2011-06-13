@@ -49,6 +49,9 @@ namespace SbsSW.SwiPlCs
 
         public static List<Assembly> AssembliesLoaded = new List<Assembly>();
         public static List<Assembly> AssembliesLoading = new List<Assembly>();
+        public static List<Type> TypesLoaded = new List<Type>();
+        public static List<Type> TypesLoading = new List<Type>();
+
         public static Dictionary<Thread, IntPtr> SafeThreads = new Dictionary<Thread, IntPtr>();
         public static Dictionary<int, Thread> engineToThread = new Dictionary<int, Thread>();
 
@@ -434,6 +437,26 @@ namespace SbsSW.SwiPlCs
             }
             return tv;
         }
+        private static PlTerm ToPlListParams(ParameterInfo[] terms)
+        {
+            PlTerm listOf = PlTerm.PlAtom("[]");
+            for (int i = terms.Length - 1; i >= 0; i--)
+            {
+                PlTerm term = typeToSpec(terms[i].ParameterType);
+                listOf = PlTerm.PlCompound(".", term, listOf);
+            }
+            return listOf;
+        }
+        private static PlTerm ToPlListTypes(Type[] terms)
+        {
+            PlTerm listOf = PlTerm.PlAtom("[]");
+            for (int i = terms.Length - 1; i >= 0; i--)
+            {
+                PlTerm term = typeToSpec(terms[i]);
+                listOf = PlTerm.PlCompound(".", term, listOf);
+            }
+            return listOf;
+        }
         private static PlTermV ToPlTermVSpecs(Type[] terms)
         {
             var tv = NewPlTermV(terms.Length);
@@ -480,9 +503,11 @@ namespace SbsSW.SwiPlCs
             get { return PlTerm.PlAtom("[]"); }
         }
 
+#if plvar_pins
         public static Dictionary<Int64, PlRef> termToObjectPins = new Dictionary<Int64, PlRef>();
         public static Dictionary<object, PlRef> objectToPlRef = new Dictionary<object, PlRef>();
         public static Dictionary<string, PlRef> atomToPlRef = new Dictionary<string, PlRef>();
+#endif
         public static PlTerm PLVOID { get { return PlTerm.PlCompound("@", PlTerm.PlAtom("null")); } }
         public static PlTerm PLNULL { get { return PlTerm.PlCompound("@", PlTerm.PlAtom("void")); } }
         public static PlTerm PLTRUE { get { return PlTerm.PlCompound("@", PlTerm.PlAtom("true")); } }
@@ -1484,7 +1509,7 @@ namespace SbsSW.SwiPlCs
         }
 
         private static void LoadTypesFromAssembly(Assembly assembly)
-        {
+        {            
             try
             {
                 foreach (Type t in assembly.GetTypes())
@@ -1509,17 +1534,23 @@ namespace SbsSW.SwiPlCs
         [PrologVisible(Name = "cliLoadType", Arity = 1, TypeOf = null)]
         private static void LoadType(Type t)
         {
-            foreach (var m in t.GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static))
+            lock (TypesLoaded)
             {
-                object[] f = m.GetCustomAttributes(typeof(PrologVisible), false);
-                if (f != null && f.Length > 0)
+                if (TypesLoaded.Contains(t)) return;
+                TypesLoading.Add(t);
+                foreach (var m in t.GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static))
                 {
-                    cliLoadMethod(m, (PrologVisible)f[0]);
+                    object[] f = m.GetCustomAttributes(typeof (PrologVisible), false);
+                    if (f != null && f.Length > 0)
+                    {
+                        LoadMethod(m, (PrologVisible) f[0]);
+                    }
                 }
+                TypesLoaded.Add(t);
             }
         }
 
-        private static void cliLoadMethod(MethodInfo m, PrologVisible pm)
+        private static void LoadMethod(MethodInfo m, PrologVisible pm)
         {
             if (pm.Name == null)
             {
@@ -2281,10 +2312,6 @@ typedef struct // define a context structure  { ... } context;
             return ret;
         }
 
-        public static PlTerm C(string collection)
-        {
-            return PlTerm.PlAtom(collection);
-        }
     }
 
     [System.Security.SuppressUnmanagedCodeSecurityAttribute]

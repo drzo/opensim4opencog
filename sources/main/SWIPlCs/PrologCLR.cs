@@ -49,6 +49,8 @@ namespace SbsSW.SwiPlCs
 
         public static BindingFlags BindingFlagsALL = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static |
                                                      BindingFlags.Instance | BindingFlags.IgnoreCase;
+        public static BindingFlags InstanceFields = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.IgnoreCase;
+        
 
         const string ExportModule = "user";
 
@@ -489,46 +491,139 @@ namespace SbsSW.SwiPlCs
                 exclude.Add(info);
             }
             ordinal = 0;
-            foreach (MemberInfo info in members)
+            foreach (var info in c.GetConstructors(BindingFlagsALL))
             {
-                if (exclude.Contains(info)) continue;
                 AddMemberToList(info, list, cname, ordinal++);
                 exclude.Add(info);
             }
+            ordinal = 0;
+            foreach (var info in c.GetEvents(BindingFlagsALL))
+            {
+                AddMemberToList(info, list, cname, ordinal++);
+                exclude.Add(info);
+            }
+
+            foreach (MemberInfo info in members)
+            {
+                break;               
+                try
+                {
+                    if (exclude.Contains(info)) continue;
+                }
+                catch (Exception e)
+                {
+                    Debug("Warn exclude.Contains " + info + ": " + e);
+                    continue;
+                }
+                AddMemberToList(info, list, cname, ordinal++);
+                exclude.Add(info);
+            }
+
             return membersOut.Unify(ToPlList(list.ToArray()));
         }
 
         private static void AddMemberToList(MemberInfo info, List<PlTerm> list, string cname, int ordinal)
         {
+
+            PlTerm memb = MemberTerm(info, cname, ordinal);
+            if (memb.TermRef != 0) list.Add(memb);
+        }
+
+        private static PlTerm MemberTerm(MemberInfo info, string cname, int ordinal)
+        {
             string mn = info.Name;
             switch (info.MemberType)
             {
                 case MemberTypes.Constructor:
-                    list.Add(PlTerm.PlCompound("c", new PlTerm(ordinal), PlTerm.PlCompound(cname, ToPlTermVParams(((ConstructorInfo)info).GetParameters()))));
+                    {
+                        var fi = (ConstructorInfo)info;
+                        var mi = fi;
+                        return (PlTerm.PlCompound("c", new PlTerm(ordinal), PlTerm.PlAtom(mn),
+                                                  ToPlListParams(fi.GetParameters()),
+                                                  (mi.IsGenericMethodDefinition ? ToPlListTypes(mi.GetGenericArguments()) : ATOM_NIL),
+                                                  PlTerm.PlCompound("static",
+                                                                    AtomFlag(mi.IsStatic, "static"),
+                                                                    typeToSpec(fi.DeclaringType)),
+                                                  PlTerm.PlCompound("access_pafv",
+                                                                    AtomFlag(mi.IsPublic, "public"),
+                                                                    AtomFlag(mi.IsAssembly, "assembly"),
+                                                                    AtomFlag(mi.IsFamily, "family"),
+                                                                    AtomFlag(mi.IsPrivate, "private"))));
+                    }
                     break;
                 case MemberTypes.Event:
                     {
-                        var ei = ((EventInfo)info);
-                        ParameterInfo[] parme = GetParmeters(ei);
-
-                        if (parme != null)
-                        {
-                            list.Add(PlTerm.PlCompound("e", new PlTerm(ordinal), PlTerm.PlCompound(mn, ToPlTermVParams(parme))));
-                        }
-                        else
-                        {
-                            list.Add(PlTerm.PlCompound("eh", new PlTerm(ordinal), PlTerm.PlCompound(mn, typeToSpec(ei.EventHandlerType))));
-                        }
+                        var fi = (EventInfo) info;
+                        MethodInfo mi = (fi.GetRaiseMethod() ??
+                                         (fi.EventHandlerType != null ? fi.EventHandlerType.GetMethod("Invoke") : null) ??
+                                         fi.GetAddMethod() ?? fi.GetRemoveMethod());
+                        ParameterInfo[] parme = GetParmeters(fi);
+                        return  (PlTerm.PlCompound("e", new PlTerm(ordinal), PlTerm.PlAtom(mn),
+                                                   typeToSpec(fi.DeclaringType),
+                                                   typeToSpec(fi.EventHandlerType),
+                                                   ToPlListParams(parme),
+                                                   (mi.IsGenericMethodDefinition ? ToPlListTypes(mi.GetGenericArguments()) : ATOM_NIL),
+                                                   PlTerm.PlCompound("static",
+                                                                     AtomFlag(mi.IsStatic, "static"),
+                                                                     typeToSpec(fi.DeclaringType)),
+                                                   PlTerm.PlCompound("access_pafv",
+                                                                     AtomFlag(mi.IsPublic, "public"),
+                                                                     AtomFlag(mi.IsAssembly, "assembly"),
+                                                                     AtomFlag(mi.IsFamily, "family"),
+                                                                     AtomFlag(mi.IsPrivate, "private"))));
                     }
                     break;
                 case MemberTypes.Field:
-                    list.Add(PlTerm.PlCompound("f", new PlTerm(ordinal), PlTerm.PlCompound(mn, typeToSpec(((FieldInfo)info).FieldType))));
+                    {                        
+                        var fi = (FieldInfo)info;
+                        var mi = fi;
+                        return (PlTerm.PlCompound("f", new PlTerm(ordinal), PlTerm.PlAtom(mn),
+                                                   typeToSpec(fi.FieldType),
+                                                   PlTerm.PlCompound("static",
+                                                                     AtomFlag(mi.IsStatic, "static"),
+                                                                     typeToSpec(fi.DeclaringType)),
+                                                   PlTerm.PlCompound("access_pafv",
+                                                                     AtomFlag(mi.IsPublic, "public"),
+                                                                     AtomFlag(mi.IsAssembly, "assembly"),
+                                                                     AtomFlag(mi.IsFamily, "family"),
+                                                                     AtomFlag(mi.IsPrivate, "private"))));
+                    }
                     break;
                 case MemberTypes.Method:
-                    list.Add(PlTerm.PlCompound("m", new PlTerm(ordinal), PlTerm.PlCompound(mn, ToPlTermVParams(((MethodInfo)info).GetParameters()))));
+                    {
+                        var fi = (MethodInfo)info;
+                        var mi = fi;
+                        return (PlTerm.PlCompound("m", new PlTerm(ordinal), PlTerm.PlAtom(mn),
+                                                  typeToSpec(fi.ReturnParameter.ParameterType),
+                                                  ToPlListParams(fi.GetParameters()),
+                                                   (mi.IsGenericMethodDefinition ? ToPlListTypes(mi.GetGenericArguments()) : ATOM_NIL),
+                                                  PlTerm.PlCompound("static",
+                                                                    AtomFlag(mi.IsStatic, "static"),
+                                                                    typeToSpec(fi.DeclaringType)),
+                                                  PlTerm.PlCompound("access_pafv",
+                                                                    AtomFlag(mi.IsPublic, "public"),
+                                                                    AtomFlag(mi.IsAssembly, "assembly"),
+                                                                    AtomFlag(mi.IsFamily, "family"),
+                                                                    AtomFlag(mi.IsPrivate, "private"))));
+                    }
                     break;
                 case MemberTypes.Property:
-                    list.Add(PlTerm.PlCompound("p", new PlTerm(ordinal), PlTerm.PlCompound(mn, typeToSpec(((PropertyInfo)info).PropertyType))));
+                    {
+                        var fi = (PropertyInfo) info;
+                        MethodInfo mi = (fi.CanRead ? fi.GetGetMethod(true) : fi.GetSetMethod(true));
+                        return (PlTerm.PlCompound("p", new PlTerm(ordinal), PlTerm.PlAtom(mn),
+                                                  typeToSpec(fi.PropertyType),
+                                                  ToPlListParams(fi.GetIndexParameters()),
+                                                   (mi.IsGenericMethodDefinition ? ToPlListTypes(mi.GetGenericArguments()) : ATOM_NIL),
+                                                  PlTerm.PlCompound("static",
+                                                                    AtomFlag(mi.IsStatic, "static"),
+                                                                    typeToSpec(fi.DeclaringType)),
+                                                  PlTerm.PlCompound("access_pafv",
+                                                                    AtomFlag(mi.IsPublic, "public"),
+                                                                    AtomFlag(mi.IsAssembly, "assembly"),
+                                                                    AtomFlag(mi.IsFamily, "family"),
+                                                                    AtomFlag(mi.IsPrivate, "private"))));
+                    }
                     break;
                 case MemberTypes.TypeInfo:
                     break;
@@ -541,6 +636,14 @@ namespace SbsSW.SwiPlCs
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+            return default(PlTerm);
+        }
+
+        private static PlTerm AtomFlag(bool tf, string name)
+        {
+            PlTerm plTermPlAtom = PlTerm.PlAtom(tf ? "true" : "false");
+            return plTermPlAtom;
+            return PlTerm.PlCompound(name, plTermPlAtom);
         }
 
         private static ParameterInfo[] GetParmeters(EventInfo ei)
@@ -571,18 +674,22 @@ namespace SbsSW.SwiPlCs
             if (type.IsGenericParameter)
             {
                 Type[] gt = type.GetGenericParameterConstraints();
-                return PlTerm.PlCompound("<" + type.FullName + ">", ToPlTermVSpecs(gt));
+                return PlTerm.PlCompound("<" + type.FullName ?? type.Name + ">", ToPlTermVSpecs(gt));
             }
             if (type.IsGenericType)
             {
                 Type gt = type.GetGenericTypeDefinition();
                 Type[] gtp = type.GetGenericArguments();
                 PlTermV vt = ToPlTermVSpecs(gtp);
-                string typeName = type.FullName;
-                int indexOf = typeName.IndexOf("`" + gtp.Length);
+                string typeName = type.FullName ?? type.Name;
+                int gtpLength = gtp.Length;
+                int indexOf = typeName.IndexOf("`" + gtpLength);
                 if (indexOf > 0)
                 {
                     typeName = typeName.Substring(0, indexOf);
+                } else
+                {
+                    Debug("cant chop arity " + gtpLength + " off string '" + typeName + "' ");
                 }
                 return PlTerm.PlCompound(typeName, vt);
             }
@@ -646,6 +753,11 @@ namespace SbsSW.SwiPlCs
                 return SpecialUnify(valueOut, plvar);
             }
             Type c = GetType(clazzSpec);
+            if (c == null)
+            {
+                Warn("Cant resolve clazzSpec " + clazzSpec);
+                return false;
+            }
             ConstructorInfo mi = findConstructor(memberSpec, c);
             if (mi == null)
             {
@@ -981,11 +1093,16 @@ namespace SbsSW.SwiPlCs
             }
             object getInstance = GetInstance(clazzOrInstance);
             Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
+            object cliGet01 = cliGet0(getInstance, memberSpec, c);
+            return valueOut.FromObject(cliGet01);
+        }
+        static public object cliGet0(object getInstance, PlTerm memberSpec, Type c)
+        {
             FieldInfo fi = findField(memberSpec, c);
             if (fi != null)
             {
                 object fiGetValue = fi.GetValue(fi.IsStatic ? null : getInstance);
-                return valueOut.FromObject(fiGetValue);
+                return (fiGetValue);
             }
             var pi = findProperty(memberSpec, c);
             if (pi != null)
@@ -993,9 +1110,10 @@ namespace SbsSW.SwiPlCs
                 var mi = pi.GetGetMethod();
                 if (mi != null)
                 {
-                    return valueOut.FromObject((InvokeCaught(mi, mi.IsStatic ? null : getInstance, new object[0])));
+                    return ((InvokeCaught(mi, mi.IsStatic ? null : getInstance, new object[0])));
                 }
-                return Warn("Cant find getter for property " + memberSpec + " on " + c + " for " + pi);
+                Warn("Cant find getter for property " + memberSpec + " on " + c + " for " + pi);
+                return null;
             }
             else
             {
@@ -1008,12 +1126,12 @@ namespace SbsSW.SwiPlCs
                 if (mi == null)
                 {
                     Warn("Cant find getter " + memberSpec + " on " + c);
-                    return false;
+                    return null;
                 }
                 object[] value = PlListToCastedArray(memberSpec, mi.GetParameters());
                 object target = mi.IsStatic ? null : getInstance;
                 object retval = InvokeCaught(mi, target, value);
-                return valueOut.FromObject(retval);
+                return retval;
             }
         }
 
@@ -1780,10 +1898,7 @@ namespace SbsSW.SwiPlCs
             }
             if (t.IsEnum)
             {
-                libpl.PL_cons_functor_v(TermRef,
-                                        libpl.PL_new_functor(libpl.PL_new_atom("enum"), 2),
-                                        new PlTermV(typeToSpec(t), C(o.ToString())).A0);
-                return libpl.PL_succeed;
+                return FromEnum(TermRef, o, t);
             }
             lock (FunctorToLayout)
             {
@@ -1814,6 +1929,7 @@ namespace SbsSW.SwiPlCs
                 var tag = object_to_tag(o);
                 AddTagged(TermRef, tag);
                 return libpl.PL_succeed;
+#if plvar_pins
                 PlRef oref;
                 if (!objectToPlRef.TryGetValue(o, out oref))
                 {
@@ -1859,8 +1975,21 @@ namespace SbsSW.SwiPlCs
                     oref.Term = PlTerm.PlCompound("@", PlTerm.PlAtom(tag));
                     return -1; // oref.Term;
                 }
-
+#endif // plvar_pins
             }
+        }
+
+        public static PlTerm C(string collection)
+        {
+            return PlTerm.PlAtom(collection);
+        }
+
+        private static int FromEnum(uint TermRef, object o, Type t)
+        {
+            libpl.PL_cons_functor_v(TermRef,
+                                    libpl.PL_new_functor(libpl.PL_new_atom("enum"), 2),
+                                    new PlTermV(typeToSpec(t), PlTerm.PlAtom(o.ToString())).A0);
+            return libpl.PL_succeed;
         }
 
         private static bool IsStructRecomposable(Type t)
@@ -1925,7 +2054,7 @@ namespace SbsSW.SwiPlCs
             if (specialXMLType)
             {
                 List<FieldInfo> fis = new List<FieldInfo>();
-                foreach (var e in t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                foreach (var e in t.GetFields(InstanceFields))
                 {
                     var use = e.GetCustomAttributes(typeof(XmlArrayItemAttribute), false);
                     if (use == null || use.Length < 1)
@@ -1943,16 +2072,16 @@ namespace SbsSW.SwiPlCs
                 var ta = t.GetCustomAttributes(typeof (StructLayoutAttribute), false);
                 if (ta != null && ta.Length > 0)
                 {
-                    StructLayoutAttribute xta = (StructLayoutAttribute) ta[0];
+                    StructLayoutAttribute xta = (StructLayoutAttribute)ta[0];
                     // ReSharper disable ConditionIsAlwaysTrueOrFalse
                     if (xta.Value == LayoutKind.Sequential || true /* all sequential layouts*/)
-                        // ReSharper restore ConditionIsAlwaysTrueOrFalse
+                    // ReSharper restore ConditionIsAlwaysTrueOrFalse
                     {
-                        tGetFields = t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                        tGetFields = t.GetFields(InstanceFields);
                     }
                 }
                 if (tGetFields == null)
-                    tGetFields = t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    tGetFields = t.GetFields(InstanceFields);
             }
             if (tGetFields.Length == 0)
             {
@@ -2027,18 +2156,29 @@ namespace SbsSW.SwiPlCs
          */
         private static object ToVMLookup(string name, int arity, PlTerm arg1, PlTerm orig, Type pt)
         {
-            if (name == "static")
+            PrologTermLayout pltl;
+            string key = name + "/" + arity;
+            lock (FunctorToLayout)
+            {
+                if (FunctorToLayout.TryGetValue(key, out pltl))
+                {
+                    Type type = pltl.ObjectType;
+                    FieldInfo[] fis = pltl.FieldInfos;
+                    return CreateInstance(type, fis, orig, 1);
+                }
+            }
+            if (key == "static/1")
             {
                 return null;
             }
-            if (name == "{}")
+            if (key == "{}/1")
             {
                 return orig;
             }
             if (pt == typeof(object)) pt = null;
             //{T}
             //@(_Tag)
-            if (name == "@" && arity == 1 && arg1.IsAtom)
+            if (key == "@/1" && arg1.IsAtom)
             {
                 name = arg1.Name;
                 switch (name)
@@ -2069,6 +2209,8 @@ namespace SbsSW.SwiPlCs
                             lock (ToFromConvertLock)
                             {
                                 object o = tag_to_object(name);
+                                return o;
+#if plvar_pins                                
                                 lock (atomToPlRef)
                                 {
                                     PlRef oldValue;
@@ -2088,10 +2230,12 @@ namespace SbsSW.SwiPlCs
                                     }
                                     return v;
                                 }
+#endif
                             }
                         }
                 }
             }
+#if plvar_pins
             if (name == "$cli_object")
             {
                 lock (ToFromConvertLock)
@@ -2108,25 +2252,68 @@ namespace SbsSW.SwiPlCs
                     }
                 }
             }
-            if (name == "struct" || name == "event")
+#endif
+            if (key == "enum/2")
+            {
+                Type type = GetType(arg1);
+                PlTerm arg2 = orig.Arg(1);
+                object value = Enum.Parse(type, arg2.Name, true);
+                if (value == null) Warn("cant parse enum: " + arg2 + " for type " + type);
+                return value;
+            }
+            if (name == "array")
+            {
+                Type type = GetType(arg1);
+                var arry = Array.CreateInstance(type, arity - 1);
+                int copied = FillArray(arry, type, orig, 2);
+                return arry;
+            }
+            if (name == "struct" || name == "event" || name == "object")
             {
                 Type type = GetType(arg1);
                 FieldInfo[] fis = GetStructFormat(type);
                 return CreateInstance(type, fis, orig, 2);
             }
-            PrologTermLayout pltl;
-            string key = name + "/" + arity;
-            lock (FunctorToLayout)
+            if (orig.IsList)
             {
-                if (FunctorToLayout.TryGetValue(key, out pltl))
+                if (arg1.IsInteger || arg1.IsAtom)
                 {
-                    Type type = pltl.ObjectType;
-                    FieldInfo[] fis = pltl.FieldInfos;
-                    return CreateInstance(type, fis, orig, 1);
+                    Debug("maybe this is a string " + orig);
+                }
+                else
+                {
+                    var o1 = GetInstance(arg1);
+                    if (o1 != null)
+                    {
+                        // send a list into cliGet0
+                        return cliGet0(arg1, orig.Arg(1), o1.GetType());
+                    }
                 }
             }
-            return (string)orig;
+            Type t = ResolveType(name);
+            if (t == null)
+            {
+                Warn("Cant GetInstance from " + orig);
+                return (string)orig;
+            }       
+            if (pt == null || pt.IsAssignableFrom(t))
+            {
+                foreach (var m in t.GetConstructors())
+                {
+                    ParameterInfo[] mGetParameters = m.GetParameters();
+                    if (mGetParameters.Length == arity)
+                    {
+                        Warn("using contructor " + m);
+                        var values = PlListToCastedArray(orig, m.GetParameters());
+                        return m.Invoke(values);
+                    }
+                }
+            }
+            // Debug("Get Instance fallthru");
+            FieldInfo[] ofs = GetStructFormat(t);
+            return CreateInstance(t, ofs, orig, 1);
         }
+
         private static object CreateInstance(Type type, FieldInfo[] fis, PlTerm orig, int plarg)
         {
             object newStruct = Activator.CreateInstance(type);
@@ -2137,16 +2324,26 @@ namespace SbsSW.SwiPlCs
             }
             return newStruct;
         }
-
+        private static int FillArray(IList fis, Type elementType, PlTerm orig, int plarg)
+        {
+            int elements = 0;
+            for (int i = 0; i < fis.Count; i++)
+            {
+                fis[i] = CastTerm(orig[i], elementType);
+                elements++;
+            }
+            return elements;
+        }
         public static Object CastTerm(PlTerm o, Type pt)
         {
             object r = CastTerm0(o, pt);
             if (pt == null || r == null)
                 return r;
+            Type fr = r.GetType();
             if (pt.IsInstanceOfType(r)) return r;
             try
             {
-                if (PrologBinder.CanConvertFrom(r.GetType(), pt))
+//                if (PrologBinder.CanConvertFrom(r.GetType(), pt))
                 {
                     var value = Convert.ChangeType(r, pt);
                     if (pt.IsInstanceOfType(value)) return value;
@@ -2158,7 +2355,7 @@ namespace SbsSW.SwiPlCs
                 }
             } catch(Exception e)
             {
-                
+                Debug("conversion " + fr + " to " + pt + " resulted in " + e);               
             }
             Warn("Having time of it convcerting " + r + " to " + pt);
 
@@ -2246,7 +2443,8 @@ namespace SbsSW.SwiPlCs
         public Type ObjectType;
         public FieldInfo[] FieldInfos;
     }
-
+    
+#if plvar_pins
     public class PlRef
     {
         public object Value;
@@ -2257,4 +2455,5 @@ namespace SbsSW.SwiPlCs
         public Term JPLRef;
         public string Tag;
     }
+#endif
 }
