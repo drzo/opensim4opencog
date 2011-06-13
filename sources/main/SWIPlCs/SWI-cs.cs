@@ -1193,7 +1193,7 @@ namespace SbsSW.SwiPlCs
         {
             Check.Require(this.IsList);
             List<string> l = new List<string>();
-            foreach (PlTerm t in this)
+            foreach (PlTerm t in this.Copy())
             {
                 l.Add(t.ToString());
             }
@@ -1208,10 +1208,14 @@ namespace SbsSW.SwiPlCs
         /// <returns>A System.Collections.Generic.IEnumerator&lt;T that can be used to iterate through the collection.</returns>
         public IEnumerator<PlTerm> GetEnumerator()
         {
-            if (IsList) return GetEnumeratorL();
+            if (IsList)
+            {
+                // list is destrctive!?!
+                return Copy().GetEnumeratorL();
+            }
             return new PlArrayEnumerator(this, 1);
         }
-        public IEnumerator<PlTerm> GetEnumeratorL()
+        private IEnumerator<PlTerm> GetEnumeratorL()
         {
             Check.Require(this.IsList);
             PlTerm t = new PlTerm(); //null;
@@ -1478,7 +1482,7 @@ namespace SbsSW.SwiPlCs
 
                 if (IsString) return ToString();
 
-                throw new NotSupportedException("Only possible for compound or atoms");
+                throw new NotSupportedException("Only possible for compound or atoms or string");
                 //throw new PlTypeException("compound", this);   // FyCop Don't like this type of exception
             }
         }
@@ -1767,6 +1771,12 @@ namespace SbsSW.SwiPlCs
             get { return Arity; }
         }
 
+        internal PlTerm[] Args
+        {
+            get { throw new NotImplementedException(); }
+           // set { throw new NotImplementedException(); }
+        }
+
         #endregion
 
         public bool FromObject(object o)
@@ -1782,6 +1792,11 @@ namespace SbsSW.SwiPlCs
                 return false;
             }
             return v != 0;
+        }
+
+        internal PlTerm Arg(int p)
+        {
+            return this[p + 1];
         }
     } // class PlTerm
     #endregion

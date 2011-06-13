@@ -171,10 +171,24 @@ namespace SbsSW.SwiPlCs
         {
             CallProlog(a, b, c, d, e, f, g);
         }
+#pragma unmanaged
         object CallProlog(params object[] paramz)
         {
-            lock (oneEvtHandlerAtATime) return PrologClient.CallProlog(this, Module, Name, Arity, Origin, paramz, ReturnType);
+            lock (oneEvtHandlerAtATime)
+            {
+                try
+                {
+                    return PrologClient.CallProlog(this, Module, Name, Arity, Origin, paramz, ReturnType);
+                }
+                catch (Exception e)
+                {
+                    PrologClient.Warn("CallProlog: " + this + " ex: " + e);
+
+                    return null;
+                }
+            }
         }
+
         static readonly Object oneEvtHandlerAtATime = new object();
     }
 }
