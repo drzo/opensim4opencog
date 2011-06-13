@@ -69,6 +69,7 @@ using SbsSW.DesignByContract;
 using SbsSW.SwiPlCs.Exceptions;
 using SbsSW.SwiPlCs.Streams;
 using System.Collections.ObjectModel;
+using Class=java.lang.Class;
 
 /********************************
 *	       TYPES	Comment     *
