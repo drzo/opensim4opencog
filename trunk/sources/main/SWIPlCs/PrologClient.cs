@@ -81,6 +81,17 @@ namespace SbsSW.SwiPlCs
                 }
                 if (threadOnceHadEngine)
                 {
+                    if (self < 1)
+                    {
+                        Debug("self < 1: " + thread);
+                        return; //maybe mnot fine                       
+                    }
+                    if (plThreadHasDifferntThread)
+                    {
+                        Debug("plThreadHasDifferntThread " + thread);
+                        return; //maybe mnot fine       
+                    }
+                    return; // all was fine;
                   //  if (thread == CreatorThread || true) return;
 
                     int iRet = CheckEngine();
@@ -95,6 +106,7 @@ namespace SbsSW.SwiPlCs
                     if (ret == self0)
                     {
                         SafeThreads.Add(thread, IntPtr.Zero);
+                        engineToThread[self0] = thread;
                         RegisterThread(thread);
                         return;
                     }
@@ -168,6 +180,11 @@ namespace SbsSW.SwiPlCs
                 SafeThreads.Add(thread, _iEngineNumber);
                   */
             }
+        }
+
+        private static void Debug(string plthreadhasdifferntthread)
+        {
+           
         }
 
         private static int CheckEngine()
@@ -320,14 +337,14 @@ namespace SbsSW.SwiPlCs
                                                        }
                                                        object target = isStatic
                                                                            ? null
-                                                                           : ToVM(termVector[0], type) ??
+                                                                           : CastTerm(termVector[0], type) ??
                                                                              defaultInstanceWhenMissing;
                                                        object[] newVariable = new object[paramlen];
 
                                                        int tvargnum = isStatic ? 0 : 1;
                                                        for (int argnum = 0; argnum < paramlen; argnum++)
                                                        {
-                                                           newVariable[argnum] = ToVM(termVector[tvargnum],
+                                                           newVariable[argnum] = CastTerm(termVector[tvargnum],
                                                                                       ps[argnum].ParameterType);
                                                            tvargnum++;
                                                        }
@@ -695,7 +712,7 @@ namespace SbsSW.SwiPlCs
             }
         }
 
-        private PlTerm ToProlog(object value)
+        public static PlTerm ToProlog(object value)
         {
             PlTerm t = new PlTerm();
             t.FromObject(value);
@@ -722,7 +739,7 @@ namespace SbsSW.SwiPlCs
             termin.FromObject(obj);
             PlTerm termout = PlTerm.PlVar();
             if (!ModuleCall("Eval", termin, termout)) return null;
-            return PrologCli.ToVM(termout, typeof(System.Object));
+            return PrologCli.CastTerm(termout, typeof(System.Object));
         }
 
         public void Intern(string varname, object value)
@@ -742,7 +759,7 @@ namespace SbsSW.SwiPlCs
         {
             PlTerm termout = PlTerm.PlVar();
             if (!ModuleCall("GetSymbol", PlNamed(name), termout)) return null;
-            return PrologCli.ToVM(termout, typeof(System.Object));
+            return PrologCli.CastTerm(termout, typeof(System.Object));
         }
 
         public object Read(string line, TextWriter @delegate)
@@ -2259,7 +2276,7 @@ typedef struct // define a context structure  { ... } context;
                 if (!IsVoid) PrologClient.Warn("Failed Event Handler " + target + " failed");
             }
             if (IsVoid) return null;
-            object ret = PrologClient.ToVM(args[fillAt], returnType);
+            object ret = PrologClient.CastTerm(args[fillAt], returnType);
             DeregisterThread(threadCurrentThread);
             return ret;
         }

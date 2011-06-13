@@ -528,7 +528,16 @@ namespace SbsSW.SwiPlCs
 
         // Handling exceptions
         internal static int PL_warning(string text, params IntPtr[] varargs)
-        { return SafeNativeMethods.PL_warning(text, varargs); }
+        {
+            try
+            {
+                return SafeNativeMethods.PL_warning(text, varargs);
+            }
+            catch (Exception e)
+            {
+                return PL_succeed;
+            } 
+        }
 
         internal static int PL_raise_exception(uint exception_term)
         { return SafeNativeMethods.PL_raise_exception(exception_term); }

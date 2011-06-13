@@ -261,7 +261,14 @@ namespace SbsSW.SwiPlCs
         /// <inheritdoc />
         ~PlQuery()
         {
-            Dispose(false);
+            try
+            {
+                Dispose(false);
+            }
+            catch (Exception e)
+            {
+                PrologClient.Warn("dispose casued " + e);                
+            }
         }
 
         /// <summary>

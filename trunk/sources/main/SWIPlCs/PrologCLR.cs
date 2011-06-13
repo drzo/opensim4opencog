@@ -239,7 +239,7 @@ namespace SbsSW.SwiPlCs
             }
         }
 
-        private static Type GetType(PlTerm clazzSpec)
+        public static Type GetType(PlTerm clazzSpec)
         {
             if (clazzSpec.IsVar)
             {
@@ -275,6 +275,10 @@ namespace SbsSW.SwiPlCs
                 {
                     return GetType(clazzSpec[1]).MakeArrayType();
                 }
+                if (clazzName == "static")
+                {
+                    return GetType(clazzSpec[1]);
+                } 
                 type = ResolveType(clazzName + "`" + arity);
                 if (type != null)
                 {
@@ -314,7 +318,7 @@ namespace SbsSW.SwiPlCs
                 }
                 Warn("cant find compound as class: " + clazzSpec);
             }
-            object toObject = ToVM(clazzSpec, null);
+            object toObject = GetInstance(clazzSpec);
             if (toObject is Type) return (Type)toObject;
             if (toObject != null)
             {
@@ -452,7 +456,7 @@ namespace SbsSW.SwiPlCs
             int idx = 0;
             foreach (PlTerm arg in term)
             {
-                ret[idx] = ToVM(arg, paramInfos[idx].ParameterType);
+                ret[idx] = CastTerm(arg, paramInfos[idx].ParameterType);
                 if (idx++ >= len) break;
             }
             return ret;
@@ -461,7 +465,7 @@ namespace SbsSW.SwiPlCs
         [PrologVisible(ModuleName = ExportModule)]
         static public bool cliMembers(PlTerm clazzOrInstance, PlTerm membersOut)
         {
-            Type c = GetTypeFromInstance(clazzOrInstance);
+            Type c = GetTypeFromInstance(null, clazzOrInstance);
             MemberInfo[] members = c.GetMembers(BindingFlagsALL);
             List<PlTerm> list = new List<PlTerm>();
             string cname = c.Name;
@@ -791,7 +795,7 @@ namespace SbsSW.SwiPlCs
                 return SpecialUnify(methodOut, plvar);
             }
             object getInstance = GetInstance(clazzOrInstance);
-            Type c = GetTypeFromInstance(clazzOrInstance);
+            Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
             MethodInfo mi = findMethod(memberSpec, c);
             if (mi != null)
             {
@@ -812,7 +816,7 @@ namespace SbsSW.SwiPlCs
                 return SpecialUnify(valueOut, plvar);
             }
             object getInstance = GetInstance(clazzOrInstance);
-            Type c = GetTypeFromInstance(clazzOrInstance);
+            Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
             MethodInfo mi = findMethod(memberSpec, c);
             if (mi == null)
             {
@@ -838,7 +842,7 @@ namespace SbsSW.SwiPlCs
                 return SpecialUnify(valueOut, plvar);
             }
             object getInstance = GetInstance(clazzOrInstance);
-            Type c = GetTypeFromInstance(clazzOrInstance);
+            Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
             EventInfo evi = findEventInfo(memberSpec, c);
             if (evi == null)
             {
@@ -893,7 +897,7 @@ namespace SbsSW.SwiPlCs
         static public bool cliAddEventHandler(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm prologPred)
         {
             object getInstance = GetInstance(clazzOrInstance);
-            Type c = GetTypeFromInstance(clazzOrInstance);
+            Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
             EventInfo fi = findEventInfo(memberSpec, c);
             if (fi == null)
             {
@@ -923,7 +927,7 @@ namespace SbsSW.SwiPlCs
         static public bool cliRemoveEventHandler(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm prologPred)
         {
             object getInstance = GetInstance(clazzOrInstance);
-            Type c = GetTypeFromInstance(clazzOrInstance);
+            Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
             EventInfo fi = findEventInfo(memberSpec, c);//
             if (fi == null)
             {
@@ -945,6 +949,24 @@ namespace SbsSW.SwiPlCs
         }
 
         [PrologVisible(ModuleName = ExportModule)]
+        static public bool cliCast(PlTerm valueIn, PlTerm clazzSpec, PlTerm valueOut)
+        {
+            if (valueIn.IsVar)
+            {
+                return Warn("Cant find instance " + valueIn);
+            }
+            if (!valueOut.IsVar)
+            {
+                var plvar = PlTerm.PlVar();
+                cliCast(valueIn, clazzSpec, plvar);
+                return SpecialUnify(valueOut, plvar);
+            }
+            Type type = GetType(clazzSpec);
+            object retval = CastTerm(valueIn, type);
+            return valueOut.FromObject(retval);
+        }
+
+        [PrologVisible(ModuleName = ExportModule)]
         static public bool cliGet(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm valueOut)
         {
             if (clazzOrInstance.IsVar)
@@ -958,11 +980,12 @@ namespace SbsSW.SwiPlCs
                 return SpecialUnify(valueOut, plvar);
             }
             object getInstance = GetInstance(clazzOrInstance);
-            Type c = GetTypeFromInstance(clazzOrInstance);
+            Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
             FieldInfo fi = findField(memberSpec, c);
             if (fi != null)
             {
-                return valueOut.FromObject((fi.GetValue(fi.IsStatic ? null : getInstance)));
+                object fiGetValue = fi.GetValue(fi.IsStatic ? null : getInstance);
+                return valueOut.FromObject(fiGetValue);
             }
             var pi = findProperty(memberSpec, c);
             if (pi != null)
@@ -998,11 +1021,11 @@ namespace SbsSW.SwiPlCs
         static public bool cliSet(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm valueIn)
         {
             object getInstance = GetInstance(clazzOrInstance);
-            Type c = GetTypeFromInstance(clazzOrInstance);
+            Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
             FieldInfo fi = findField(memberSpec, c);
             if (fi != null)
             {
-                object value = ToVM(valueIn, fi.FieldType);
+                object value = CastTerm(valueIn, fi.FieldType);
                 object target = fi.IsStatic ? null : getInstance;
                 fi.SetValue(target, value);
                 return true;
@@ -1013,7 +1036,7 @@ namespace SbsSW.SwiPlCs
                 var mi = pi.GetSetMethod();
                 if (mi != null)
                 {
-                    object value = ToVM(valueIn, pi.PropertyType);
+                    object value = CastTerm(valueIn, pi.PropertyType);
                     object target = mi.IsStatic ? null : getInstance;
                     InvokeCaught(mi, target, new[] { value });
                     return true;
@@ -1050,7 +1073,7 @@ namespace SbsSW.SwiPlCs
                 cliGetType(valueIn, plvar);
                 return SpecialUnify(valueOut, plvar);
             }
-            object val = ToVM(valueIn, null);
+            object val = GetInstance(valueIn);
             if (val == null)
             {
                 Warn("Cannot get object for " + valueIn);
@@ -1068,7 +1091,7 @@ namespace SbsSW.SwiPlCs
                 cliGetClass(valueIn, plvar);
                 return SpecialUnify(valueOut, plvar);
             }
-            object val = ToVM(valueIn, null);
+            object val = GetInstance(valueIn);
             // extension method
             return valueOut.FromObject((val.getClass()));
         }
@@ -1161,7 +1184,7 @@ namespace SbsSW.SwiPlCs
                 }
                 if (obj.IsString) return str.Unify(obj);
                 if (obj.IsVar) return str.Unify((string)obj);
-                object o = ToVM(obj, null);
+                object o = GetInstance(obj);
                 if (o == null) return str.FromObject("" + obj);
                 return str.FromObject("" + o);
             }
@@ -1203,7 +1226,7 @@ namespace SbsSW.SwiPlCs
                 cliGetClassname(valueIn, plvar);
                 return SpecialUnify(valueOut, plvar);
             }
-            Class val = ToVM(valueIn, null) as Class;
+            Class val = CastTerm(valueIn, typeof(Class)) as Class;
             if (val == null) return false;
             return valueOut.Unify(val.getName());
         }
@@ -1216,9 +1239,42 @@ namespace SbsSW.SwiPlCs
                 cliGetTypename(valueIn, plvar);
                 return SpecialUnify(valueOut, plvar);
             }
-            Type val = ToVM(valueIn, null) as Type;
+            Type val = CastTerm(valueIn, typeof(Type)) as Type;
             if (val == null) return false;
             return valueOut.Unify(val.FullName);
+        }
+
+        [PrologVisible(ModuleName = ExportModule)]
+        static public bool cliAddLayout(PlTerm clazzSpec, PlTerm memberSpec)
+        {
+            Type type = GetType(clazzSpec);
+            string name = memberSpec.Name;
+            int arity = memberSpec.Arity;
+            FieldInfo[] fieldInfos = new FieldInfo[arity];
+            for (int i = 0; i < arity; i++)
+            {
+                fieldInfos[i] = findField(memberSpec.Arg(i), type);
+            }
+            AddPrologTermLayout(type, name, fieldInfos);
+            return true;
+        }
+
+        readonly private static Dictionary<string, PrologTermLayout> FunctorToLayout = new Dictionary<string, PrologTermLayout>();
+        readonly private static Dictionary<Type, PrologTermLayout> TypeToLayout = new Dictionary<Type, PrologTermLayout>();
+
+        static public void AddPrologTermLayout(Type type, string name, FieldInfo[] fieldInfos)
+        {
+            PrologTermLayout layout = new PrologTermLayout();
+            layout.FieldInfos = fieldInfos;
+            layout.Name = name;
+            layout.ObjectType = type;
+            int arity = fieldInfos.Length;
+            layout.Arity = arity;
+            lock (FunctorToLayout)
+            {
+                FunctorToLayout[name + "/" + arity] = layout;
+                TypeToLayout[type] = layout;
+            }
         }
 
         private static object GetInstance(PlTerm classOrInstance)
@@ -1242,26 +1298,27 @@ namespace SbsSW.SwiPlCs
                 }
                 else
                 {
-                    return ToVM(classOrInstance, null);
+                    return CastTerm(classOrInstance, null);
                 }
-                return ToVM(classOrInstance, null);
+                return CastTerm(classOrInstance, null);
             }
-            if (classOrInstance.Name == "@")
-            {
-                return ToVMLookup("@", 1, classOrInstance[1], classOrInstance, null);
-            }
-            Warn("GetInstance(??) " + classOrInstance);
-            return ToVM(classOrInstance, null);
+            string name = classOrInstance.Name;
+            int arity = classOrInstance.Arity;
+            return ToVMLookup(name, arity, classOrInstance[1], classOrInstance, null);
         }
 
         /// <summary>
         /// Returns the Type when denoated by a 'namespace.type' (usefull for static instance specification)
         ///    if a @C#234234  the type of the object unless its a a class
         ///    c(a) => System.Char   "sdfsdf" =>  System.String   uint(5) => System.UInt32
+        /// 
+        ///    instanceMaybe maybe Null.. it is passed in so the method code doesn't have to call GetInstance again
+        ///       on classOrInstance
         /// </summary>
+        /// <param name="instanceMaybe"></param>
         /// <param name="classOrInstance"></param>
         /// <returns></returns>
-        private static Type GetTypeFromInstance(PlTerm classOrInstance)
+        private static Type GetTypeFromInstance(object instanceMaybe, PlTerm classOrInstance)
         {
             if (classOrInstance.IsAtom)
             {
@@ -1269,9 +1326,18 @@ namespace SbsSW.SwiPlCs
             }
             if (classOrInstance.IsString)
             {
+                if (instanceMaybe != null) return instanceMaybe.GetType();
                 return typeof(string);
             }
-            object val = ToVM(classOrInstance, null);
+            if (classOrInstance.IsCompound)
+            {
+                if (classOrInstance.Name == "static")
+                {
+                    return GetType(classOrInstance[1]);
+                }
+            }
+
+            object val = instanceMaybe ?? GetInstance(classOrInstance);
             if (val is Type) return (Type)val;
             if (val == null)
             {
@@ -1576,13 +1642,13 @@ namespace SbsSW.SwiPlCs
         {
             bool b = valueOut.Unify(plvar);
             if (b) return true;
-            object obj1 = ToVM(plvar, null);
+            object obj1 = GetInstance(plvar);
             if (ReferenceEquals(obj1, null))
             {
                 return false;
             }
             Type t1 = obj1.GetType();
-            object obj2 = ToVM(valueOut, t1);
+            object obj2 = CastTerm(valueOut, t1);
             if (ReferenceEquals(obj2, null))
             {
                 return false;
@@ -1719,6 +1785,22 @@ namespace SbsSW.SwiPlCs
                                         new PlTermV(typeToSpec(t), C(o.ToString())).A0);
                 return libpl.PL_succeed;
             }
+            lock (FunctorToLayout)
+            {
+                PrologTermLayout layout;
+                if (TypeToLayout.TryGetValue(t, out layout))
+                {
+                    FieldInfo[] tGetFields = GetStructFormat(t);
+                    int len = tGetFields.Length;
+                    PlTermV tv = NewPlTermV(len);
+                    for (int i = 0; i < len; i++)
+                    {
+                        object v = tGetFields[i].GetValue(o);
+                        tv[i].FromObject((v));
+                    }
+                    return term.Unify(PlTerm.PlCompound(layout.Name, tv)) ? libpl.PL_succeed : libpl.PL_fail;
+                }
+            }
             if (IsStructRecomposable(t))
             {
                 return ToFieldLayout("struct", typeToName(t), o, t, term);
@@ -1816,8 +1898,19 @@ namespace SbsSW.SwiPlCs
 
         }
 
-        public static int ToFieldLayout(string named, string arg1, object o, Type t, PlTerm term)
+        private static FieldInfo[] GetStructFormat(Type t)
         {
+            if (false)
+            {
+                lock (FunctorToLayout)
+                {
+                    PrologTermLayout layout;
+                    if (TypeToLayout.TryGetValue(t, out layout))
+                    {
+                        return layout.FieldInfos;
+                    }
+                }
+            }
             bool specialXMLType = false;
             if (!t.IsEnum)
             {
@@ -1845,12 +1938,35 @@ namespace SbsSW.SwiPlCs
             }
             else
             {
-                tGetFields = t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                // look for [StructLayout(LayoutKind.Sequential)]
+
+                var ta = t.GetCustomAttributes(typeof (StructLayoutAttribute), false);
+                if (ta != null && ta.Length > 0)
+                {
+                    StructLayoutAttribute xta = (StructLayoutAttribute) ta[0];
+                    // ReSharper disable ConditionIsAlwaysTrueOrFalse
+                    if (xta.Value == LayoutKind.Sequential || true /* all sequential layouts*/)
+                        // ReSharper restore ConditionIsAlwaysTrueOrFalse
+                    {
+                        tGetFields = t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    }
+                }
+                if (tGetFields == null)
+                    tGetFields = t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             }
             if (tGetFields.Length == 0)
             {
                 Warn("No fields in " + t);
             }
+            return tGetFields;
+        }
+
+
+        public static int ToFieldLayout(string named, string arg1, object o, Type t, PlTerm term)
+        {
+
+            FieldInfo[] tGetFields = GetStructFormat(t);
+
             int len = tGetFields.Length;
             PlTermV tv = NewPlTermV(len + 1);
             tv[0].UnifyAtom(arg1);
@@ -1911,6 +2027,15 @@ namespace SbsSW.SwiPlCs
          */
         private static object ToVMLookup(string name, int arity, PlTerm arg1, PlTerm orig, Type pt)
         {
+            if (name == "static")
+            {
+                return null;
+            }
+            if (name == "{}")
+            {
+                return orig;
+            }
+            if (pt == typeof(object)) pt = null;
             //{T}
             //@(_Tag)
             if (name == "@" && arity == 1 && arg1.IsAtom)
@@ -1983,10 +2108,65 @@ namespace SbsSW.SwiPlCs
                     }
                 }
             }
+            if (name == "struct" || name == "event")
+            {
+                Type type = GetType(arg1);
+                FieldInfo[] fis = GetStructFormat(type);
+                return CreateInstance(type, fis, orig, 2);
+            }
+            PrologTermLayout pltl;
+            string key = name + "/" + arity;
+            lock (FunctorToLayout)
+            {
+                if (FunctorToLayout.TryGetValue(key, out pltl))
+                {
+                    Type type = pltl.ObjectType;
+                    FieldInfo[] fis = pltl.FieldInfos;
+                    return CreateInstance(type, fis, orig, 1);
+                }
+            }
             return (string)orig;
         }
+        private static object CreateInstance(Type type, FieldInfo[] fis, PlTerm orig, int plarg)
+        {
+            object newStruct = Activator.CreateInstance(type);
+            for (int i = 0; i < fis.Length; i++)
+            {
+                FieldInfo fi = fis[i];
+                fi.SetValue(newStruct, CastTerm(orig[plarg++], fi.FieldType));
+            }
+            return newStruct;
+        }
 
-        public static Object ToVM(PlTerm o, Type pt)
+        public static Object CastTerm(PlTerm o, Type pt)
+        {
+            object r = CastTerm0(o, pt);
+            if (pt == null || r == null)
+                return r;
+            if (pt.IsInstanceOfType(r)) return r;
+            try
+            {
+                if (PrologBinder.CanConvertFrom(r.GetType(), pt))
+                {
+                    var value = Convert.ChangeType(r, pt);
+                    if (pt.IsInstanceOfType(value)) return value;
+                }
+                if (r is double && pt == typeof(float))
+                {
+                    double d = (double) r;
+                    return Convert.ToSingle(d);                    
+                }
+            } catch(Exception e)
+            {
+                
+            }
+            Warn("Having time of it convcerting " + r + " to " + pt);
+
+
+            return r;
+        }
+
+        public static Object CastTerm0(PlTerm o, Type pt)
         {
             if (pt == typeof(PlTerm)) return o;
             if (pt == typeof(string))
@@ -2058,6 +2238,15 @@ namespace SbsSW.SwiPlCs
         }
 
       }
+
+    internal class PrologTermLayout
+    {
+        public string Name;
+        public int Arity;
+        public Type ObjectType;
+        public FieldInfo[] FieldInfos;
+    }
+
     public class PlRef
     {
         public object Value;
