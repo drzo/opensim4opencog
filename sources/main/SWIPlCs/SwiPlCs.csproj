@@ -142,6 +142,7 @@
     </Compile>
     <Compile Include="NondetContextHandle.cs">
     </Compile>
+    <Compile Include="PrologCLR.cs" />
     <Compile Include="PrologClient.cs">
     </Compile>
     <Compile Include="SWI-cs-PlQuery.cs">
