@@ -211,9 +211,11 @@ namespace SbsSW.SwiPlCs
         [DllImport(DllFileName)]
         internal static extern uint PL_open_foreign_frame();
         [DllImport(DllFileName)]
-		internal static extern void PL_close_foreign_frame(uint fid_t);
-		[DllImport(DllFileName)]
+        internal static extern void PL_close_foreign_frame(uint fid_t);
+        [DllImport(DllFileName)]
 		internal static extern void PL_rewind_foreign_frame(uint fid_t);
+        [DllImport(DllFileName)]
+        internal static extern void PL_discard_foreign_frame(uint fid_t);
         // record recorded erase
         [DllImport(DllFileName)]
         internal static extern uint PL_record(uint term_t);
@@ -272,7 +274,7 @@ namespace SbsSW.SwiPlCs
 
         // __pl_export int		PL_get_int64(term_t term, int64_t *f);
         [DllImport(DllFileName)]
-        internal static extern int PL_get_int64(uint term, [In, Out] ref ulong i);
+        internal static extern int PL_get_int64(uint term, [In, Out] ref long i);
 
         
         // __pl_export int		PL_get_float(term_t term, double *f);

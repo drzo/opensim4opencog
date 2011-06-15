@@ -65,6 +65,7 @@ using System.Collections;		        // IEnumerable PlTail
 using System.Collections.Generic;		// IEnumerable ( PlQuery )
 using System.Runtime.InteropServices;
 using System.Text;						// ToStringAsListFormat
+using System.Threading;
 using SbsSW.DesignByContract;
 using SbsSW.SwiPlCs.Exceptions;
 using SbsSW.SwiPlCs.Streams;
@@ -1357,6 +1358,89 @@ namespace SbsSW.SwiPlCs
 
         #endregion
 
+        #region unification
+        /// <overloads>
+        /// This methods performs Prolog unification and returns true if successful and false otherwise.
+        /// It is equal to the prolog =/2 operator.
+        /// <para>See <see cref="Put(PlTerm)"/> for an example.</para>
+        /// <remarks>
+        /// This methods are introduced for clear separation between the destructive assignment in C# using =
+        /// and prolog unification.
+        /// </remarks>
+        /// </overloads>
+        /// <summary>Put a PlTerm with a PlTerm</summary>
+        /// <example>
+        /// <code source="..\..\TestSwiPl\PlTerm.cs" region="UnifyTermVar_doc" />
+        /// </example>
+        /// <param name="term">the second term for unification</param>
+        /// <returns>true or false</returns>
+        public void Put(PlTerm term)
+        {
+             libpl.PL_put_term(this.TermRef, term.TermRef);
+        }
+
+
+        /// <inheritdoc cref="Put(PlTerm)"/>
+        /// <param name="atom">A string to Put with</param>
+        public void Put(string atom)
+        {
+             libpl.PL_put_atom_chars(this.TermRef, atom);
+        }
+
+        public void Put(long atom)
+        {
+             libpl.PL_put_integer(this.TermRef, atom);
+        }
+
+        public void Put(ulong atom)
+        {
+            if (atom > long.MaxValue)
+            {
+                // slow but works
+                Put(new PlTerm("" + atom));
+                return;
+            }
+             libpl.PL_put_integer(this.TermRef, (long)atom);
+        }
+
+        public void Put(double atom)
+        {
+             libpl.PL_put_float(this.TermRef, atom);
+        }
+
+        /*
+        <!--
+        int operator =(const PlTerm &t2)	// term 
+        {
+            return PL_put(_termRef, t2._termRef);
+        }
+        int operator =(const PlAtom &atom)	// atom
+        {
+            return PL_put_atom(TermRef, atom._handle);
+        }
+        int operator =(const char *v)		// atom (from char *)
+        {
+            return PL_put_atom_chars(_termRef, v);
+        }
+        int operator =(long v)		// integer
+        {
+            return PL_put_integer(_termRef, v);
+        }
+        int operator =(int v)			// integer
+        {
+            return PL_put_integer(_termRef, v);
+        }
+        int operator =(double v)		// float
+        {
+            return PL_put_float(_termRef, v);
+        }
+        int operator =(const PlFunctor &f)	// functor
+        {
+            return PL_put_functor(_termRef, f.functor);
+        }
+        -->
+        */
+        #endregion unification
 
         #region unification
         /// <overloads>
@@ -1401,6 +1485,15 @@ namespace SbsSW.SwiPlCs
             return 0 != libpl.PL_unify_integer(this.TermRef, atom);
         }
 
+        public bool Unify(ulong atom)
+        {
+            if (atom > long.MaxValue)
+            {
+                // slow but works
+                return Unify(new PlTerm("" + atom));
+            }
+            return 0 != libpl.PL_unify_integer(this.TermRef, (long)atom);
+        }
 
         public bool Unify(double atom)
         {
@@ -1579,6 +1672,43 @@ namespace SbsSW.SwiPlCs
             if (0 != libpl.PL_get_long(term.TermRef, ref v))
                 return v;
             throw new PlTypeException("long", term);
+        }
+
+        public static explicit operator IntPtr(PlTerm term)
+        {
+            Check.Require(term.TermRefIntern != 0);
+            IntPtr v = IntPtr.Zero;
+            if (0 != libpl.PL_get_intptr(term.TermRef, ref v))
+                return v;
+            throw new PlTypeException("intptr", term);
+        }
+
+        public static explicit operator ulong(PlTerm term)
+        {
+            Check.Require(term.TermRefIntern != 0);
+            string s = (string) term;
+            ulong ulongValue;
+            if (ulong.TryParse(s, out ulongValue))
+            {
+                return ulongValue;
+            }
+            throw new PlTypeException("ulong", term);
+        }
+
+
+        public static explicit operator java.math.BigInteger(PlTerm term)
+        {
+            Check.Require(term.TermRefIntern != 0);
+            string s = (string)term;
+            return new java.math.BigInteger(s);
+        }
+
+
+        public static explicit operator java.math.BigDecimal(PlTerm term)
+        {
+            Check.Require(term.TermRefIntern != 0);
+            string s = (string)term;
+            return new java.math.BigDecimal(s);
         }
 
         /// <summary>
@@ -1913,7 +2043,7 @@ namespace SbsSW.SwiPlCs
             _a0 = libpl.PL_new_term_refs(size);
             _size = size;
         }
-
+        /*
         /// <summary>Create a PlTermV from the given <see cref="PlTerm"/>s.</summary>
         /// <param name="term0">The first <see cref="PlTerm"/> in the vector.</param>
         public PlTermV(PlTerm term0)
@@ -1921,13 +2051,13 @@ namespace SbsSW.SwiPlCs
             Check.Require(term0.TermRefIntern != 0);
             _size = 1;
             _a0 = term0.TermRef;
-        }
+        }*/
 
 // warning CS1573: Parameter 'term0' has no matching param tag in the XML comment for 'SbsSW.SwiPlCs.PlTermV.PlTermV(SbsSW.SwiPlCs.PlTerm, SbsSW.SwiPlCs.PlTerm)' (but other parameters do)
 #pragma warning disable 1573
         /// <inheritdoc cref="PlTermV(PlTerm)" />
         /// <param name="term1">The second <see cref="PlTerm"/> in the vector.</param>
-        public PlTermV(PlTerm term0, PlTerm term1)
+        /*public PlTermV(PlTerm term0, PlTerm term1)
         {
             Check.Require(term0.TermRefIntern != 0);
             Check.Require(term1.TermRefIntern != 0);
@@ -1936,14 +2066,15 @@ namespace SbsSW.SwiPlCs
             libpl.PL_put_term(_a0 + 0, term0.TermRef);
             libpl.PL_put_term(_a0 + 1, term1.TermRef);
         }
-               
+          */     
         public PlTermV(params PlTerm[] terms)
         {
             _size = terms.Length;
             _a0 = libpl.PL_new_term_refs(_size);
             for (int i = 0; i < _size; i++)
             {
-                libpl.PL_put_term((uint) (_a0 + i), terms[i].TermRef);
+                //if (terms[i].TermRefIntern != 0) 
+                    libpl.PL_put_term((uint)(_a0 + i), terms[i].TermRef);
             }
         }
 
@@ -1953,6 +2084,7 @@ namespace SbsSW.SwiPlCs
             Check.Require(terms.TermRefIntern != 0);
             _a0 = terms.TermRefIntern;
         }
+        /*
 
         /// <inheritdoc cref="PlTermV(PlTerm, PlTerm)" />
         /// <param name="term2">The third <see cref="PlTerm"/> in the vector.</param>
@@ -1966,7 +2098,7 @@ namespace SbsSW.SwiPlCs
             libpl.PL_put_term(_a0 + 0, term0.TermRef);
             libpl.PL_put_term(_a0 + 1, term1.TermRef);
             libpl.PL_put_term(_a0 + 2, term2.TermRef);
-        }
+        }*/
 #pragma warning restore 1573
         #endregion
 

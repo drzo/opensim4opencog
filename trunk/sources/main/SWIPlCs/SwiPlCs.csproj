@@ -136,6 +136,7 @@
     <Compile Include="EventHandlerInProlog.cs" />
     <Compile Include="Exceptions.cs">
     </Compile>
+    <Compile Include="PrologBackedDictionary.cs" />
     <Compile Include="PrologCLRExt.cs" />
     <Compile Include="LibPl.cs">
     </Compile>
@@ -152,6 +153,12 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MushDLR223\MushDLR223.csproj">
+      <Project>{F5671362-954F-4407-8394-1A195CD3531A}</Project>
+      <Name>MushDLR223</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

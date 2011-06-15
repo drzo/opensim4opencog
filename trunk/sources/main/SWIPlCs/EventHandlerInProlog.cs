@@ -65,7 +65,7 @@ namespace SbsSW.SwiPlCs
         private readonly int ParamArity;
 
         public EventHandlerInProlog(EventHandlerInPrologKey key)
-        {
+        {            
             Name = key.Name;
             Origin = key.Origin;
             var keyEvent = Event = key.Event;
@@ -87,6 +87,7 @@ namespace SbsSW.SwiPlCs
                 ParamTypes[i] = parms[i].ParameterType;
             }
             Delegate = Delegate.CreateDelegate(eht, this, HandlerMethod);
+            SyncLock = Delegate;
         }
 
         private MethodInfo _handlerMethod;
@@ -135,7 +136,7 @@ namespace SbsSW.SwiPlCs
         }
         public R GenericFunR7<A, B, C, D, E, F, G, R>(A a, B b, C c, D d, E e, F f, G g)
         {
-            return (R) CallProlog(a, b, c, d, e, f, g);
+            return (R)CallProlog(a, b, c, d, e, f, g);
         }
 
         // void functions 0-6
@@ -171,14 +172,45 @@ namespace SbsSW.SwiPlCs
         {
             CallProlog(a, b, c, d, e, f, g);
         }
-#pragma unmanaged
+
         object CallProlog(params object[] paramz)
         {
-            lock (oneEvtHandlerAtATime)
+            if (!IsUsingGlobalQueue) return CallProlog0(paramz);
+            string threadName = "CallProlog " + Thread.CurrentThread.Name;
+            PrologClient.PrologEventQueue.Enqueue(threadName, () => CallProlog0(paramz));
+            return null;
+        }
+
+        object CallProlog0(object[] paramz)
+        {
+            if (IsSyncronous)
+            {
+                var syncLock = SyncLock;
+                if (syncLock != null)
+                {
+                    lock (syncLock)
+                    {
+                        return CallProlog1(paramz);
+                    }
+                }
+            }
+            return CallProlog1(paramz);
+        }
+
+#pragma unmanaged
+        object CallProlog1(object[] paramz)
+        {
+            //lock (oneEvtHandlerAtATime)
             {
                 try
                 {
+                    PrologEvents++;
                     return PrologClient.CallProlog(this, Module, Name, Arity, Origin, paramz, ReturnType);
+                }
+                catch (AccessViolationException e)
+                {
+                    PrologClient.Warn("CallProlog: " + this + " ex: " + e);
+                    return null;
                 }
                 catch (Exception e)
                 {
@@ -190,5 +222,9 @@ namespace SbsSW.SwiPlCs
         }
 
         static readonly Object oneEvtHandlerAtATime = new object();
+        public bool IsUsingGlobalQueue;
+        public bool IsSyncronous = true;
+        public object SyncLock;
+        public static ulong PrologEvents;
     }
 }

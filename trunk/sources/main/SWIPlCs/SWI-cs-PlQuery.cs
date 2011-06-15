@@ -470,8 +470,9 @@ namespace SbsSW.SwiPlCs
                 uint ex; // term_t
                 if ((ex = libpl.PL_exception(_qid)) > 0)
                 {
-                    _qid = 0;   // to avoid an AccessViolationException on Dispose. E.g. if the query is miss spelled.
-                    PlException etmp = new PlException(new PlTerm(ex));
+                    PlTerm exceptionTerm = new PlTerm(ex);
+                    PlException etmp = new PlException(exceptionTerm);
+                    _qid = 0; // to avoid an AccessViolationException on Dispose. E.g. if the query is miss spelled.
                     etmp.Throw();
                 }
             }
