@@ -15,6 +15,7 @@ using java.net;
 using java.util;
 //using jpl;
 using jpl;
+using MushDLR223.Utilities;
 using SbsSW.SwiPlCs.Callback;
 using SbsSW.SwiPlCs.Exceptions;
 using SbsSW.SwiPlCs.Streams;
@@ -52,7 +53,7 @@ namespace SbsSW.SwiPlCs
         public static BindingFlags InstanceFields = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.IgnoreCase;
         
 
-        const string ExportModule = "user";
+        const string ExportModule = "clipl";
 
 
 
@@ -82,13 +83,26 @@ namespace SbsSW.SwiPlCs
             }
             if (memberSpec.IsInteger)
             {
+                int ordinal = memberSpec.intValue();
                 var mis = c.GetEvents(BindingFlagsALL);
-                return mis[memberSpec.intValue()];
+                if (ordinal < 0 || ordinal >= mis.Length) return null;
+                return mis[ordinal];
             }
             if (TaggedObject(memberSpec))
             {
                 var r = tag_to_object(memberSpec[1].Name) as EventInfo;
                 if (r != null) return r;
+            }
+            if (memberSpec.IsCompound)
+            {
+                if (memberSpec.Name == "e")
+                {
+                    var arg1 = memberSpec.Arg(0);
+                    if (arg1.IsInteger)
+                    {
+                        return findEventInfo(arg1, c);
+                    }
+                }
             }
             EventInfo ei = c.GetEvent(memberSpec.Name, BindingFlagsALL);
             if (ei != null) return ei;
@@ -119,13 +133,23 @@ namespace SbsSW.SwiPlCs
             }
             if (memberSpec.IsInteger)
             {
+                int ordinal = memberSpec.intValue();
                 var mis = c.GetFields(BindingFlagsALL);
-                return mis[memberSpec.intValue()];
+                if (ordinal < 0 || ordinal >= mis.Length) return null;
+                return mis[ordinal];
             }
             if (TaggedObject(memberSpec))
             {
                 var r = tag_to_object(memberSpec[1].Name) as FieldInfo;
                 if (r != null) return r;
+            }
+            if (memberSpec.IsCompound)
+            {
+                if (memberSpec.Name != "f")
+                {
+                    return null;
+                }
+                return findField(memberSpec.Arg(0), c);
             }
             string fn = memberSpec.Name;
             FieldInfo fi = c.GetField(fn, BindingFlagsALL);
@@ -145,13 +169,23 @@ namespace SbsSW.SwiPlCs
             }
             if (memberSpec.IsInteger)
             {
+                int ordinal = memberSpec.intValue();
                 var mis = c.GetProperties(BindingFlagsALL);
-                return mis[memberSpec.intValue()];
+                if (ordinal < 0 || ordinal >= mis.Length) return null;
+                return mis[ordinal];
             }
             if (TaggedObject(memberSpec))
             {
                 var r = tag_to_object(memberSpec[1].Name) as PropertyInfo;
                 if (r != null) return r;
+            }
+            if (memberSpec.IsCompound)
+            {
+                if (memberSpec.Name != "p")
+                {
+                    return null;
+                }
+                return findProperty(memberSpec.Arg(0), c);
             }
             string fn = memberSpec.Name;
             return c.GetProperty(fn, BindingFlagsALL) ?? c.GetProperty("Is" + fn, BindingFlagsALL);
@@ -391,27 +425,28 @@ namespace SbsSW.SwiPlCs
         }
 
         [PrologVisible(ModuleName = ExportModule)]
-        private static Class cliFindClass1(PlTerm className)
+        public static bool cliFindClass(PlTerm clazzName, PlTerm clazzObjectOut)
         {
-            return ResolveClass(className.Name);
-        }
-        [PrologVisible(ModuleName = ExportModule)]
-        public static bool cliFindClass(PlTerm term1, PlTerm term2)
-        {
-            if (term1.IsAtom)
+            if (clazzName.IsAtom)
             {
-                string className = term1.Name;
+                string className = clazzName.Name;
                 Class c = ResolveClass(className);
                 if (c != null)
                 {
                     Console.WriteLine("cliFindClass:" + className + " class:" + c);
                     string tag = object_to_tag(c);
-                    return AddTagged(term1.TermRef, tag) != 0;
+                    return AddTagged(clazzObjectOut.TermRef, tag) != 0;
                 }
                 Console.WriteLine("cant ResolveClass " + className);
                 return false;
             }
-            Console.WriteLine("cant IsAtom " + term1);
+            Type t = GetType(clazzName);
+            if (t != null)
+            {
+                Class c = ikvm.runtime.Util.getFriendlyClassFromType(t);
+                string tag = object_to_tag(c);
+                return AddTagged(clazzObjectOut.TermRef, tag) != 0;
+            }
             return false;
         }
 
@@ -558,17 +593,18 @@ namespace SbsSW.SwiPlCs
                     {
                         var fi = (ConstructorInfo)info;
                         var mi = fi;
-                        return (PlTerm.PlCompound("c", new PlTerm(ordinal), PlTerm.PlAtom(mn),
-                                                  ToPlListParams(fi.GetParameters()),
-                                                  (mi.IsGenericMethodDefinition ? ToPlListTypes(mi.GetGenericArguments()) : ATOM_NIL),
-                                                  PlTerm.PlCompound("static",
-                                                                    AtomFlag(mi.IsStatic, "static"),
-                                                                    typeToSpec(fi.DeclaringType)),
-                                                  PlTerm.PlCompound("access_pafv",
-                                                                    AtomFlag(mi.IsPublic, "public"),
-                                                                    AtomFlag(mi.IsAssembly, "assembly"),
-                                                                    AtomFlag(mi.IsFamily, "family"),
-                                                                    AtomFlag(mi.IsPrivate, "private"))));
+                        return PlC("c", new PlTerm(ordinal), PlTerm.PlAtom(mn),
+                                   ToPlListParams(fi.GetParameters()),
+                                   (mi.IsGenericMethodDefinition ? ToPlListTypes(mi.GetGenericArguments()) : ATOM_NIL),
+
+                                   PlC("decl",
+                                       AFlag(mi.IsStatic, "static"),
+                                       typeToSpec(fi.DeclaringType)),
+                                   PlC("access_pafv",
+                                       AFlag(mi.IsPublic),
+                                       AFlag(mi.IsAssembly),
+                                       AFlag(mi.IsFamily),
+                                       AFlag(mi.IsPrivate)));
                     }
                     break;
                 case MemberTypes.Event:
@@ -578,71 +614,76 @@ namespace SbsSW.SwiPlCs
                                          (fi.EventHandlerType != null ? fi.EventHandlerType.GetMethod("Invoke") : null) ??
                                          fi.GetAddMethod() ?? fi.GetRemoveMethod());
                         ParameterInfo[] parme = GetParmeters(fi);
-                        return  (PlTerm.PlCompound("e", new PlTerm(ordinal), PlTerm.PlAtom(mn),
-                                                   typeToSpec(fi.DeclaringType),
-                                                   typeToSpec(fi.EventHandlerType),
-                                                   ToPlListParams(parme),
-                                                   (mi.IsGenericMethodDefinition ? ToPlListTypes(mi.GetGenericArguments()) : ATOM_NIL),
-                                                   PlTerm.PlCompound("static",
-                                                                     AtomFlag(mi.IsStatic, "static"),
-                                                                     typeToSpec(fi.DeclaringType)),
-                                                   PlTerm.PlCompound("access_pafv",
-                                                                     AtomFlag(mi.IsPublic, "public"),
-                                                                     AtomFlag(mi.IsAssembly, "assembly"),
-                                                                     AtomFlag(mi.IsFamily, "family"),
-                                                                     AtomFlag(mi.IsPrivate, "private"))));
+                        return PlC("e", new PlTerm(ordinal), PlTerm.PlAtom(mn),
+                                   typeToSpec(fi.EventHandlerType),
+                                   ToPlListParams(parme),
+                                   (mi.IsGenericMethodDefinition ? ToPlListTypes(mi.GetGenericArguments()) : ATOM_NIL),
+
+                                   PlC("decl",
+                                       AFlag(mi.IsStatic, "static"),
+                                       typeToSpec(fi.DeclaringType)),
+                                   PlC("access_pafv",
+                                       AFlag(mi.IsPublic),
+                                       AFlag(mi.IsAssembly),
+                                       AFlag(mi.IsFamily),
+                                       AFlag(mi.IsPrivate)));
                     }
                     break;
                 case MemberTypes.Field:
                     {                        
                         var fi = (FieldInfo)info;
                         var mi = fi;
-                        return (PlTerm.PlCompound("f", new PlTerm(ordinal), PlTerm.PlAtom(mn),
-                                                   typeToSpec(fi.FieldType),
-                                                   PlTerm.PlCompound("static",
-                                                                     AtomFlag(mi.IsStatic, "static"),
-                                                                     typeToSpec(fi.DeclaringType)),
-                                                   PlTerm.PlCompound("access_pafv",
-                                                                     AtomFlag(mi.IsPublic, "public"),
-                                                                     AtomFlag(mi.IsAssembly, "assembly"),
-                                                                     AtomFlag(mi.IsFamily, "family"),
-                                                                     AtomFlag(mi.IsPrivate, "private"))));
+                        return PlC("f", new PlTerm(ordinal), PlTerm.PlAtom(mn),
+                                   typeToSpec(fi.FieldType),
+
+                                   PlC("decl",
+                                       AFlag(mi.IsStatic, "static"),
+                                       typeToSpec(fi.DeclaringType)),
+                                   PlC("access_pafv",
+                                       AFlag(mi.IsPublic),
+                                       AFlag(mi.IsAssembly),
+                                       AFlag(mi.IsFamily),
+                                       AFlag(mi.IsPrivate)));
                     }
                     break;
                 case MemberTypes.Method:
                     {
                         var fi = (MethodInfo)info;
                         var mi = fi;
-                        return (PlTerm.PlCompound("m", new PlTerm(ordinal), PlTerm.PlAtom(mn),
-                                                  typeToSpec(fi.ReturnParameter.ParameterType),
-                                                  ToPlListParams(fi.GetParameters()),
-                                                   (mi.IsGenericMethodDefinition ? ToPlListTypes(mi.GetGenericArguments()) : ATOM_NIL),
-                                                  PlTerm.PlCompound("static",
-                                                                    AtomFlag(mi.IsStatic, "static"),
-                                                                    typeToSpec(fi.DeclaringType)),
-                                                  PlTerm.PlCompound("access_pafv",
-                                                                    AtomFlag(mi.IsPublic, "public"),
-                                                                    AtomFlag(mi.IsAssembly, "assembly"),
-                                                                    AtomFlag(mi.IsFamily, "family"),
-                                                                    AtomFlag(mi.IsPrivate, "private"))));
+                        return PlC("m", new PlTerm(ordinal), PlTerm.PlAtom(mn),
+                                   typeToSpec(fi.ReturnParameter.ParameterType),
+                                   ToPlListParams(fi.GetParameters()),
+                                   (mi.IsGenericMethodDefinition ? ToPlListTypes(mi.GetGenericArguments()) : ATOM_NIL),
+
+                                   PlC("decl",
+                                       AFlag(mi.IsStatic, "static"),
+                                       typeToSpec(fi.DeclaringType)),
+                                   PlC("access_pafv",
+                                       AFlag(mi.IsPublic),
+                                       AFlag(mi.IsAssembly),
+                                       AFlag(mi.IsFamily),
+                                       AFlag(mi.IsPrivate)));
                     }
                     break;
                 case MemberTypes.Property:
                     {
                         var fi = (PropertyInfo) info;
                         MethodInfo mi = (fi.CanRead ? fi.GetGetMethod(true) : fi.GetSetMethod(true));
-                        return (PlTerm.PlCompound("p", new PlTerm(ordinal), PlTerm.PlAtom(mn),
-                                                  typeToSpec(fi.PropertyType),
-                                                  ToPlListParams(fi.GetIndexParameters()),
-                                                   (mi.IsGenericMethodDefinition ? ToPlListTypes(mi.GetGenericArguments()) : ATOM_NIL),
-                                                  PlTerm.PlCompound("static",
-                                                                    AtomFlag(mi.IsStatic, "static"),
-                                                                    typeToSpec(fi.DeclaringType)),
-                                                  PlTerm.PlCompound("access_pafv",
-                                                                    AtomFlag(mi.IsPublic, "public"),
-                                                                    AtomFlag(mi.IsAssembly, "assembly"),
-                                                                    AtomFlag(mi.IsFamily, "family"),
-                                                                    AtomFlag(mi.IsPrivate, "private"))));
+                        return PlC("p", new PlTerm(ordinal), PlTerm.PlAtom(mn),
+                                   typeToSpec(fi.PropertyType),
+                                   ToPlListParams(fi.GetIndexParameters()),
+                                   (mi.IsGenericMethodDefinition ? ToPlListTypes(mi.GetGenericArguments()) : ATOM_NIL),
+                                   AFlag(fi.CanRead, "CanRead"),
+                                   AFlag(fi.CanWrite, "CanWrite"),
+
+                                   PlC("decl",
+                                       AFlag(mi.IsStatic, "static"),
+                                       typeToSpec(fi.DeclaringType)),
+                                   PlC("access_pafv",
+                                       AFlag(mi.IsPublic),
+                                       AFlag(mi.IsAssembly),
+                                       AFlag(mi.IsFamily),
+                                       AFlag(mi.IsPrivate)));
                     }
                     break;
                 case MemberTypes.TypeInfo:
@@ -659,11 +700,24 @@ namespace SbsSW.SwiPlCs
             return default(PlTerm);
         }
 
-        private static PlTerm AtomFlag(bool tf, string name)
+        public static PlTerm PlC(string decl, params PlTerm[] plTerms)
+        {
+            return PlTerm.PlCompound(decl, plTerms);
+        }
+        public static PlTerm PlC(string decl, PlTermV termV)
+        {
+            return PlTerm.PlCompound(decl, termV);
+        }
+
+        private static PlTerm AFlag(bool tf, string name)
+        {
+            PlTerm plTermPlAtom = PlTerm.PlAtom(tf ? "true" : "false");
+            return PlC(name, plTermPlAtom);
+        }
+        private static PlTerm AFlag(bool tf)
         {
             PlTerm plTermPlAtom = PlTerm.PlAtom(tf ? "true" : "false");
             return plTermPlAtom;
-            return PlTerm.PlCompound(name, plTermPlAtom);
         }
 
         private static ParameterInfo[] GetParmeters(EventInfo ei)
@@ -683,18 +737,18 @@ namespace SbsSW.SwiPlCs
         }
 
 
-        private static readonly Dictionary<string, Type> ShortNameType = new Dictionary<string, Type>();
+        private static IDictionary<string, Type> ShortNameType;
         private static readonly Dictionary<Type, string> TypeShortName = new Dictionary<Type, string>();
         private static PlTerm typeToSpec(Type type)
         {
             if (type.IsArray && type.HasElementType)
             {
-                return PlTerm.PlCompound("arrayOf", typeToSpec(type.GetElementType()));
+                return PlC("arrayOf", typeToSpec(type.GetElementType()));
             }
             if (type.IsGenericParameter)
             {
                 Type[] gt = type.GetGenericParameterConstraints();
-                return PlTerm.PlCompound("<" + type.FullName ?? type.Name + ">", ToPlTermVSpecs(gt));
+                return PlC("<" + type.FullName ?? type.Name + ">", ToPlTermVSpecs(gt));
             }
             if (type.IsGenericType)
             {
@@ -711,7 +765,7 @@ namespace SbsSW.SwiPlCs
                 {
                     Debug("cant chop arity " + gtpLength + " off string '" + typeName + "' ");
                 }
-                return PlTerm.PlCompound(typeName, vt);
+                return PlC(typeName, vt);
             }
             return PlTerm.PlAtom(typeToName(type));
         }
@@ -757,7 +811,7 @@ namespace SbsSW.SwiPlCs
         }
 
         /// <summary>
-        /// ?- cliNew('java.lang.Long'(long),[44],Out),cliToString(Out,Str).
+        /// ?- cliNew('java.lang.Long',[long],[44],Out),cliToString(Out,Str).
         /// </summary>
         /// <param name="memberSpec"></param>
         /// <param name="valueIn"></param>
@@ -890,7 +944,7 @@ namespace SbsSW.SwiPlCs
                 bool pf = termv[i].FromObject((value.GetValue(i)));
             }
             Type et = value.GetType().GetElementType();
-            return valueOut.Unify(PlTerm.PlCompound(typeToSpec(et).Name, termv));
+            return valueOut.Unify(PlC(typeToSpec(et).Name, termv));
         }
         [PrologVisible(ModuleName = ExportModule)]
         static public bool cliTermToArray(PlTerm arrayValue, PlTerm valueOut)
@@ -1025,6 +1079,8 @@ namespace SbsSW.SwiPlCs
         public static Dictionary<EventHandlerInPrologKey, EventHandlerInProlog> PrologEventHandlers =
             new Dictionary<EventHandlerInPrologKey, EventHandlerInProlog>();
 
+        public static TaskQueueHandler PrologEventQueue = new TaskQueueHandler("PrologEventHandler");
+
         [PrologVisible(ModuleName = ExportModule)]
         static public bool cliAddEventHandler(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm prologPred)
         {
@@ -1139,6 +1195,7 @@ namespace SbsSW.SwiPlCs
             {
                 string fn = memberSpec.Name;
                 MethodInfo mi = findMethod(memberSpec, c) ??
+                                c.GetMethod(fn, BindingFlagsALL) ??
                                 c.GetMethod("get_" + fn, BindingFlagsALL) ??
                                 c.GetMethod("Get" + fn, BindingFlagsALL) ??
                                 c.GetMethod("Is" + fn, BindingFlagsALL) ??
@@ -1264,6 +1321,7 @@ namespace SbsSW.SwiPlCs
         [PrologVisible(ModuleName = ExportModule)]
         static public bool cliShortType(PlTerm valueName, PlTerm valueIn)
         {
+            if (!valueName.IsString && !valueName.IsAtom) return Warn("valueName must be string or atom " + valueName);
             string name = valueName.Name;
             Type otherType;
             lock (ShortNameType)
@@ -1415,7 +1473,7 @@ namespace SbsSW.SwiPlCs
             }
         }
 
-        private static object GetInstance(PlTerm classOrInstance)
+        public static object GetInstance(PlTerm classOrInstance)
         {
             if (classOrInstance.IsVar)
             {
@@ -1442,7 +1500,7 @@ namespace SbsSW.SwiPlCs
             }
             string name = classOrInstance.Name;
             int arity = classOrInstance.Arity;
-            return ToVMLookup(name, arity, classOrInstance[1], classOrInstance, null);
+            return CastCompoundTerm(name, arity, classOrInstance[1], classOrInstance, null);
         }
 
         /// <summary>
@@ -1817,19 +1875,19 @@ namespace SbsSW.SwiPlCs
                 Warn("Not a allocated term " + o);
                 return libpl.PL_fail;
             }
-            if (o is PlTerm) return libpl.PL_unify(TermRef, ((PlTerm)o).TermRef);
-            if (o is Term) return UnifyToProlog(ToPLCS((Term)o), term);
+            if (o is PlTerm) return libpl.PL_unify(TermRef, ((PlTerm) o).TermRef);
+            if (o is Term) return UnifyToProlog(ToPLCS((Term) o), term);
 
             if (o is string)
             {
                 switch (VMStringsAsAtoms)
                 {
                     case libpl.CVT_STRING:
-                        return libpl.PL_unify_string_chars(TermRef, (string)o);
+                        return libpl.PL_unify_string_chars(TermRef, (string) o);
                     case libpl.CVT_ATOM:
-                        return libpl.PL_unify_atom_chars(TermRef, (string)o);
+                        return libpl.PL_unify_atom_chars(TermRef, (string) o);
                     case libpl.CVT_LIST:
-                        return libpl.PL_unify_list_chars(TermRef, (string)o);
+                        return libpl.PL_unify_list_chars(TermRef, (string) o);
                     default:
                         Warn("UNKNOWN VMStringsAsAtoms " + VMStringsAsAtoms);
                         return libpl.PL_fail;
@@ -1838,13 +1896,6 @@ namespace SbsSW.SwiPlCs
             if (o == null)
             {
                 return AddTagged(TermRef, "null");
-            }
-
-            Type t = o.GetType();
-
-            if (t == typeof(void))
-            {
-                return AddTagged(TermRef, "void");
             }
 
             if (o is Type || o is Class)
@@ -1858,25 +1909,26 @@ namespace SbsSW.SwiPlCs
                         return libpl.PL_succeed;
                     }
                 }
-                return term.Unify(typeToSpec((Type)o)) ? libpl.PL_succeed : libpl.PL_fail;
+                return term.Unify(typeToSpec((Type) o)) ? libpl.PL_succeed : libpl.PL_fail;
             }
 
+            Type t = o.GetType();
+            if (t == typeof(void))
+            {
+                return AddTagged(TermRef, "void");
+            }
             if (o is ValueType)
             {
-                if (true.Equals(o))
+                if (o is bool)
                 {
-                    return AddTagged(TermRef, "true");
+                    bool tf = (bool) o;
+                    return AddTagged(TermRef, tf ? "true" : "false");
                 }
-                if (false.Equals(o))
-                {
-                    return AddTagged(TermRef, "false");
-                }
-
                 if (o is char)
                 {
                     try
                     {
-                        char ch = (char)o;
+                        char ch = (char) o;
                         string cs = new string(ch, 1);
                         switch (VMStringsAsAtoms)
                         {
@@ -1885,7 +1937,7 @@ namespace SbsSW.SwiPlCs
                             case libpl.CVT_ATOM:
                                 return libpl.PL_unify_atom_chars(TermRef, cs);
                             case libpl.CVT_LIST:
-                                return libpl.PL_unify_integer(TermRef, (int)ch);
+                                return libpl.PL_unify_integer(TermRef, (int) ch);
                             default:
                                 Warn("UNKNOWN VMStringsAsAtoms " + VMStringsAsAtoms);
                                 return libpl.PL_fail;
@@ -1897,28 +1949,32 @@ namespace SbsSW.SwiPlCs
                         //
                     }
                 }
-                try
+                if (t.IsEnum)
                 {
-                    int res = ToVMNumber(o, term);
-                    if (res == 1) return res;
-                    if (res != -1)
+                    return FromEnum(TermRef, o, t);
+                }
+                if (t.IsPrimitive)
+                {
+                    try
                     {
-                        Warn("@TODO Missing code for ToVmNumber? " + o + " type " + t);
-                        return res;
+                        int res = ToVMNumber(o, term);
+                        if (res == libpl.PL_succeed) return res;
+                        if (res == libpl.PL_fail) return res;
+                        if (res != -1)
+                        {
+                           // Warn("@TODO Missing code for ToVmNumber? " + o + " type " + t);
+                            return res;
+                        }
+                        if (t.IsPrimitive)
+                        {
+                            Warn("@TODO Missing code for primitive? " + o + " type " + t);
+                        }
                     }
-                    if (t.IsPrimitive)
+                    catch (Exception e)
                     {
-                        Warn("@TODO Missing code for primitive? " + o + " type " + t);
+                        Warn("@TODO unmappable errors? " + o + " type " + t);
                     }
                 }
-                catch (Exception e)
-                {
-                    Warn("@TODO unmappable errors? " + o + " type " + t);
-                }
-            }
-            if (t.IsEnum)
-            {
-                return FromEnum(TermRef, o, t);
             }
             lock (FunctorToLayout)
             {
@@ -1933,9 +1989,9 @@ namespace SbsSW.SwiPlCs
                         object v = tGetFields[i].GetValue(o);
                         tv[i].FromObject((v));
                     }
-                    return term.Unify(PlTerm.PlCompound(layout.Name, tv)) ? libpl.PL_succeed : libpl.PL_fail;
+                    return term.Unify(PlC(layout.Name, tv)) ? libpl.PL_succeed : libpl.PL_fail;
                 }
-            }
+            }{}
             if (IsStructRecomposable(t))
             {
                 return ToFieldLayout("struct", typeToName(t), o, t, term);
@@ -1984,15 +2040,15 @@ namespace SbsSW.SwiPlCs
                         termToObjectPins[ohandle] = oref;
                     }
                     //PL_put_integer
-                    oref.Term = PlTerm.PlCompound("$cli_object", new PlTerm((long) ohandle), plvar);
+                    oref.Term = comp("$cli_object", new PlTerm((long) ohandle), plvar);
 #else
-                    oref.Term = PlTerm.PlCompound("@", PlTerm.PlAtom(tag));
+                    oref.Term = comp("@", PlTerm.PlAtom(tag));
 #endif
                     return -1; // oref.Term;
                 }
                 else
                 {
-                    oref.Term = PlTerm.PlCompound("@", PlTerm.PlAtom(tag));
+                    oref.Term = comp("@", PlTerm.PlAtom(tag));
                     return -1; // oref.Term;
                 }
 #endif // plvar_pins
@@ -2127,7 +2183,7 @@ namespace SbsSW.SwiPlCs
             }
             if (true)
             {
-                return term.Unify(PlTerm.PlCompound(named, tv)) ? libpl.PL_succeed : libpl.PL_fail;
+                return term.Unify(PlC(named, tv)) ? libpl.PL_succeed : libpl.PL_fail;
             }
             uint termTermRef = term.TermRef;
 
@@ -2148,7 +2204,7 @@ namespace SbsSW.SwiPlCs
             if (o is decimal || o is Single || o is float || o is double)
                 return libpl.PL_unify_float(term.TermRef, (double)Convert.ToDouble(o));
             // unsigned types
-            if (o is ushort || o is byte)
+            if (o is ushort || o is byte )
                 return libpl.PL_unify_integer(term.TermRef, (int)Convert.ToInt32(o));
             if (o is UInt32)
                 return libpl.PL_unify_integer(term.TermRef, (long)Convert.ToInt64(o));
@@ -2160,7 +2216,8 @@ namespace SbsSW.SwiPlCs
                 {
                     return libpl.PL_unify_integer(term.TermRef, (long)Convert.ToInt64(o));
                 }
-                return libpl.PL_unify_float(term.TermRef, (double)Convert.ToDouble(o));
+                return term.Unify(u64) ? libpl.PL_succeed : libpl.PL_fail;
+                //return libpl.PL_unify_float(term.TermRef, (double)Convert.ToDouble(o));
             }
             return -1;
         }
@@ -2174,7 +2231,7 @@ namespace SbsSW.SwiPlCs
 	Y \== true.     % not a ref
          
          */
-        private static object ToVMLookup(string name, int arity, PlTerm arg1, PlTerm orig, Type pt)
+        private static object CastCompoundTerm(string name, int arity, PlTerm arg1, PlTerm orig, Type pt)
         {
             PrologTermLayout pltl;
             string key = name + "/" + arity;
@@ -2383,6 +2440,31 @@ namespace SbsSW.SwiPlCs
             return r;
         }
 
+        private static readonly Type[] arrayOfStringType = new Type[] {typeof (string)};
+        static object ToBigInteger(string value)
+        {
+            
+            // .net 4.0 and Mono
+            Type t = ResolveType("System.Numerics.BigInteger");
+            if (t != null) return t.GetMethod("Parse", arrayOfStringType).Invoke(null, new object[] { value });
+            // Just Mono
+            t = ResolveType("Mono.Math.BigInteger");
+            if (t != null) return t.GetMethod("Parse", arrayOfStringType).Invoke(null, new object[] { value });
+            // IKVM           
+            return new java.math.BigInteger(value);
+        }
+        static object ToBigDecimal(string value)
+        {
+            Type[] arrayOfStringType = new Type[] { typeof(string) };
+            // .net 4.0 and Mono
+            Type t = ResolveType("System.Numerics.BigDecimal");
+            if (t != null) return t.GetMethod("Parse", arrayOfStringType).Invoke(null, new object[] { value });
+            // Just Mono
+            t = ResolveType("Java.Math.BigDecimal");
+            if (t != null) return t.GetMethod("Parse", arrayOfStringType).Invoke(null, new object[] { value });
+            // IKVM           
+            return new java.math.BigDecimal(value);
+        }
         public static Object CastTerm0(PlTerm o, Type pt)
         {
             if (pt == typeof(PlTerm)) return o;
@@ -2404,16 +2486,29 @@ namespace SbsSW.SwiPlCs
                     break;
                 case PlType.PlInteger:
                     {
-                        int i = 0;
-                        if (0 != libpl.PL_get_integer(o.TermRef, ref i))
+                        long i = 0;
+                        if (0 != libpl.PL_get_long(o.TermRef, ref i))
                             return i;
-                        long lng = (long)o;
-                        return lng;
+                        try
+                        {
+                            return (ulong)o;
+                        }
+                        catch (Exception)
+                        {
+                            return ToBigInteger((string) o);                            
+                        }
                     }
                     break;
                 case PlType.PlFloat:
                     {
-                        return (double)o;
+                        try
+                        {
+                            return (double)o;
+                        }
+                        catch (Exception)
+                        {
+                            return ToBigDecimal((string)o);
+                        }
                     }
                     break;
                 case PlType.PlAtom:
@@ -2444,14 +2539,13 @@ namespace SbsSW.SwiPlCs
                     {
                         lock (ToFromConvertLock)
                         {
-                            return ToVMLookup(o.Name, o.Arity, o[1], o, pt);
+                            return CastCompoundTerm(o.Name, o.Arity, o[1], o, pt);
                         }
                     }
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            return o.ToString();
         }
 
       }

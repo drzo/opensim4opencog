@@ -63,8 +63,15 @@ namespace SbsSW.SwiPlCs
                 SafeThreads.Add(t, IntPtr.Zero);
                 int self = libpl.PL_thread_self();
                 engineToThread.Add(self, t);
+                Application.ThreadExit += new EventHandler(OnThreadExit);
             }
         }
+
+        private static void OnThreadExit(object sender, EventArgs e)
+        {
+          
+        }
+
         public static bool OneToOneEnginesPeThread = true;
         public static void RegisterThread(Thread thread)
         {
@@ -109,7 +116,7 @@ namespace SbsSW.SwiPlCs
                     if (ret == self0)
                     {
                         SafeThreads.Add(thread, IntPtr.Zero);
-                        engineToThread[self0] = thread;
+                        engineToThread[self0] = thread;                       
                         RegisterThread(thread);
                         return;
                     }
@@ -374,6 +381,12 @@ namespace SbsSW.SwiPlCs
         {
             try
             {
+                if (info.IsGenericMethod)
+                {
+                    Type[] paramTypes = GetObjectTypes(info.GetParameters());
+                    Type[] t = GetObjectTypes(os, paramTypes);
+                    info = info.MakeGenericMethod(t);
+                }
                 return info.Invoke(o, os);
             }
             catch (Exception ex)
@@ -381,10 +394,31 @@ namespace SbsSW.SwiPlCs
                 var pe = ToPlException(ex);
                 string s = ex.ToString() + "\n" + ex.StackTrace;
                 Warn("ex: " + s);
-                throw pe;
+                //throw pe;
+                return pe;
             }
         }
-
+        private static Type[] GetObjectTypes(ParameterInfo[] parameterInfos)
+        {
+            int parameterInfosLength = parameterInfos.Length;
+            Type[] t = new Type[parameterInfosLength];
+            for (int i = 0; i < parameterInfosLength; i++)
+            {
+                t[i] = parameterInfos[i].ParameterType;
+            }
+            return t;
+        }
+        private static Type[] GetObjectTypes(object[] objects, Type[] otherwise)
+        {
+            Type[] t = new Type[objects.Length];
+            for (int i = 0; i < objects.Length; i++)
+            {
+                var obj = objects[i];
+                if (obj != null) t[i] = objects[i].GetType();
+                else t[i] = otherwise[i];
+            }
+            return t;
+        }
         private static PlException ToPlException(Exception ex)
         {
             if (ex is PlException) return (PlException)ex;
@@ -398,6 +432,10 @@ namespace SbsSW.SwiPlCs
         }
         public static bool Warn(string text)
         {
+            ulong prologEvents = EventHandlerInProlog.PrologEvents;
+            ulong refCount = libpl.TermRefCount;
+            CheckEngine();
+            PrologClient.RegisterThread(System.Threading.Thread.CurrentThread);
             return libpl.PL_warning(text) == 0;
         }
 
@@ -468,35 +506,10 @@ namespace SbsSW.SwiPlCs
             return tv;
         }
 
-        private static PlTerm paramInfoToSpecs(ParameterInfo[] terms)
-        {
-            int termLen = terms.Length;
-            if (termLen == 0) return ATOM_NIL;
-            if (termLen == 1)
-            {
-                return listOfOne(typeToSpec(terms[0].ParameterType));
-            }
-            termLen--;
-            PlTerm ret = listOfLeastOne(typeToSpec(terms[0].ParameterType));
-            PlTerm current = ret;
-            for (int i = 1; i < termLen; i++)
-            {
-                ParameterInfo info = terms[i];
-                var current2 = listOfLeastOne(typeToSpec(info.ParameterType));
-                current[2].Unify(current2);
-                current = current2;
-            }
-            current[2].Unify(listOfOne(typeToSpec(terms[termLen].ParameterType)));
-            return ret;
-        }
 
         private static PlTerm listOfOne(PlTerm term)
         {
             return PlTerm.PlCompound(".", term, ATOM_NIL);
-        }
-        private static PlTerm listOfLeastOne(PlTerm term)
-        {
-            return PlTerm.PlCompound(".", term, PlTerm.PlVar());
         }
 
         protected static PlTerm ATOM_NIL
@@ -711,7 +724,7 @@ namespace SbsSW.SwiPlCs
 
         public static void SetField(object target, string name, object value)
         {
-            FieldInfo field = target.GetType().GetField(name);
+            FieldInfo field = target.GetType().GetField(name, BindingFlagsALL);
             //if (!field.IsPublic) field..IsPublic = true;
             field.SetValue(field.IsStatic ? null : target, value);
         }
@@ -740,7 +753,7 @@ namespace SbsSW.SwiPlCs
 
         public static PlTerm ToProlog(object value)
         {
-            PlTerm t = new PlTerm();
+            PlTerm t = PlTerm.PlVar();
             t.FromObject(value);
             return t;
         }
@@ -1304,6 +1317,8 @@ namespace SbsSW.SwiPlCs
         {
             CreatorThread = Thread.CurrentThread;
             RegisterMainThread();
+            ShortNameType = new Dictionary<string, Type>();
+            //ShortNameType = new PrologBackedDictionary<string, Type>(null, "shortTypeName");
             PlForeignSwitches Nondeterministic = PlForeignSwitches.Nondeterministic;
             Fn015.Register();
             PlEngine.RegisterForeign(null, "foo2", 2, new DelegateParameterBacktrack2(FooTwo), Nondeterministic);
@@ -1330,7 +1345,7 @@ namespace SbsSW.SwiPlCs
         }
         private static Type ResolveClassAsType(string name)
         {
-            Type s1 = ResolveType0(name);
+            Type s1 = ResolveType(name);
             if (s1 != null) return s1;
             if (name.EndsWith("[]"))
             {
@@ -1340,13 +1355,13 @@ namespace SbsSW.SwiPlCs
             var name2 = name.Replace("/", ".");
             if (name2 != name)
             {
-                s1 = ResolveType0(name2);
+                s1 = ResolveType(name2);
                 if (s1 != null) return s1;
             }
             name2 = name.Replace("cli.", "");
             if (name2 != name)
             {
-                s1 = ResolveType0(name2);
+                s1 = ResolveType(name2);
                 if (s1 != null) return s1;
             }
             return null;
@@ -1354,11 +1369,25 @@ namespace SbsSW.SwiPlCs
 
         private static Type ResolveType(string name)
         {
-            if (name == "@" || name == "$cli_object" || name == "array" || name == null) return null;
+            if (name == "@" || name == "[]" || name == "$cli_object" || name == "array" || name == null) return null;
             if (name.EndsWith("[]"))
             {
                 Type t = ResolveType(name.Substring(0, name.Length - 2));
                 return t.MakeArrayType();
+            }
+            if (name.EndsWith("?"))
+            {
+                return typeof(Nullable<>).MakeGenericType(new[] { ResolveType(name.Substring(0, name.Length - 1)) });
+            }
+            if (name.EndsWith("&"))
+            {
+                Type t = ResolveType(name.Substring(0, name.Length - 1));
+                return t.MakeByRefType();
+            }
+            if (name.EndsWith("*"))
+            {
+                Type t = ResolveType(name.Substring(0, name.Length - 1));
+                return t.MakePointerType();
             }
             var s1 = ResolveType0(name);
             if (s1 != null) return s1;
@@ -1379,12 +1408,15 @@ namespace SbsSW.SwiPlCs
 
         public static Type ResolveType0(string typeName)
         {
-            Type type;
-            lock (ShortNameType)
+            Type type = null;
+            if (!typeName.Contains("."))
             {
-                if (ShortNameType.TryGetValue(typeName, out type))
+                lock (ShortNameType)
                 {
-                    //return type;
+                    if (ShortNameType.TryGetValue(typeName, out type))
+                    {
+                        return type;
+                    }
                 }
             }
             type = type ?? Type.GetType(typeName);
@@ -1433,20 +1465,31 @@ namespace SbsSW.SwiPlCs
             {
                 case "byte":
                 case "B":
+                case "uint8":
+                case "ubyte":
                     return typeof(byte);
+                case "int16":
+                    return typeof(Int16);
                 case "int":
+                case "int32":
                 case "I":
                     return typeof(int);
                 case "long":
+                case "int64":
                 case "J":
                     return typeof(long);
                 case "short":
                 case "S":
                     return typeof(short);
                 case "sbyte":
+                case "int8":
                     return typeof(sbyte);
                 case "uint":
+                case "uint32":
                     return typeof(uint);
+                case "uint16":
+                    return typeof(UInt16);
+                case "uint64":
                 case "ulong":
                     return typeof(ulong);
                 case "ushort":
@@ -1454,8 +1497,10 @@ namespace SbsSW.SwiPlCs
                 case "decimal":
                     return typeof(decimal);
                 case "double":
+                case "D":
                     return typeof(double);
                 case "float":
+                case "F":
                     return typeof(float);
                 case "object":
                     return typeof(object);
@@ -1469,6 +1514,7 @@ namespace SbsSW.SwiPlCs
                     return typeof(char);
                 case "bool":
                 case "boolean":
+                case "bit":
                 case "Z":
                     return typeof(bool);
                 default:
@@ -2093,7 +2139,7 @@ typedef struct // define a context structure  { ... } context;
 
 
         static private PinnedObject<NonDetTest> ndtp;
-        public static bool JplDisabled = false;
+        public static bool JplDisabled = true;
         public static bool PlCsDisabled = false;
         private static string _ikvmHome;
         public static string IKVMHome
@@ -2288,6 +2334,7 @@ typedef struct // define a context structure  { ... } context;
         {
             Thread threadCurrentThread = Thread.CurrentThread;
             RegisterThread(threadCurrentThread);
+            uint fid = libpl.PL_open_foreign_frame();
             PlTermV args = NewPlTermV(arity);
             int fillAt = 0;
             if (origin != null)
@@ -2309,6 +2356,8 @@ typedef struct // define a context structure  { ... } context;
             }
             if (IsVoid) return null;
             object ret = PrologClient.CastTerm(args[fillAt], returnType);
+            libpl.PL_discard_foreign_frame(fid);
+            ///libpl.PL_close_foreign_frame(fid);
             DeregisterThread(threadCurrentThread);
             return ret;
         }

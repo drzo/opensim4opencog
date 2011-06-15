@@ -22,6 +22,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using SbsSW.SwiPlCs.Exceptions;         // in PlHalt
 
@@ -97,6 +98,7 @@ namespace SbsSW.SwiPlCs
         // Unmanaged resource. CLR will ensure SafeHandles get freed, without requiring a finalizer on this class.
         static SafeLibraryHandle m_hLibrary;
         public static bool NoToString = false;
+        public static ulong TermRefCount;
 
 
         private static bool IsValid
@@ -332,6 +334,11 @@ namespace SbsSW.SwiPlCs
             if (IsValid)
                 SafeNativeMethods.PL_close_foreign_frame(fid_t);
         }
+        internal static void PL_discard_foreign_frame(uint fid_t)
+        {
+            if (IsValid)
+                SafeNativeMethods.PL_discard_foreign_frame(fid_t);
+        }
 
         internal static void PL_rewind_foreign_frame(uint fid_t)
         { SafeNativeMethods.PL_close_foreign_frame(fid_t); }
@@ -372,7 +379,14 @@ namespace SbsSW.SwiPlCs
         { SafeNativeMethods.PL_put_atom_chars(term, chars); }
 
         internal static uint PL_new_term_ref()
-        { return SafeNativeMethods.PL_new_term_ref(); }
+        {
+            TermRefCount++;
+            if (TermRefCount % 1000 == 0)
+            {
+
+            }
+            return SafeNativeMethods.PL_new_term_ref();
+        }
 
         internal static void PL_put_integer(uint term, long i)
         { SafeNativeMethods.PL_put_integer(term, i); }
@@ -393,8 +407,14 @@ namespace SbsSW.SwiPlCs
             return iRet;
         }
 
-        internal static int PL_get_int64(uint term, ref ulong i)
+        internal static int PL_get_int64(uint term, ref long i)
         { return SafeNativeMethods.PL_get_int64(term, ref i); }
+
+        internal static int PL_get_pointer(uint term, ref IntPtr i)
+        { return SafeNativeMethods.PL_get_pointer(term, ref i); }
+
+        internal static int PL_get_intptr(uint term, ref IntPtr i)
+        { return SafeNativeMethods.PL_get_intptr(term, ref i); }
 
         internal static int PL_get_integer(uint term, ref int i)
         { return SafeNativeMethods.PL_get_integer(term, ref i); }
@@ -419,7 +439,21 @@ namespace SbsSW.SwiPlCs
 
         // PlTermV
         internal static uint PL_new_term_refs(int n)
-        { return SafeNativeMethods.PL_new_term_refs(n); }
+        {
+            //PrologClient.RegisterThread(Thread.CurrentThread);
+            int nn = n;
+            {
+                while (nn-->0)
+                {
+                    TermRefCount++;
+                    if (TermRefCount % 1000 == 0)
+                    {
+
+                    }                    
+                }
+            }
+            return SafeNativeMethods.PL_new_term_refs(n);
+        }
 
         internal static void PL_put_term(uint t1, uint t2)
         { SafeNativeMethods.PL_put_term(t1, t2); }
@@ -429,7 +463,10 @@ namespace SbsSW.SwiPlCs
         { return SafeNativeMethods.PL_chars_to_term(chars, term); }
 
         internal static void PL_cons_functor_v(uint term, uint functor_t, uint term_a0)
-        { SafeNativeMethods.PL_cons_functor_v(term, functor_t, term_a0); }
+        {
+            //PrologClient.RegisterThread(Thread.CurrentThread);
+            SafeNativeMethods.PL_cons_functor_v(term, functor_t, term_a0);
+        }
 
         internal static uint PL_new_functor(uint atom_a, int a)
         { return SafeNativeMethods.PL_new_functor(atom_a, a); }
