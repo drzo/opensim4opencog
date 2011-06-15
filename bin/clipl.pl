@@ -5,21 +5,34 @@
             cli_Eval/3,
             cli_GetSymbol/3,
             cli_IsDefined/2,
-            cliLoadAssembly/1,
-            link_swiplcs/1,
-            cliFindClass/2,
+            cliAddEventHandler/3,
+            cliAddLayout/2,
+            cliCall/3,
+            cliCall/4,
             cliCollection/2,
+            cliFindClass/2,
+            cliFindMethod/3,
+            cliFindType/2,
+            cliGet/3,
+            cliGetS/3,
+            cliLoadAssembly/1,
+            cliMemb/2,
+            cliMemb/3,
+            cliMembers/2,
+            cliNew/3,
+            cliNew/4,
+            cliSet/3,
+            cliShortType/2,
+            cliToString/2,
             cliToStringS/2,
-       %%     cliFindType/2,
-       %%     cliFindMethod/4,
-        %%    cliCall/4,
-          %%  cliGet/3,
-         %%   cliSet/3,
-            to_string/2
 
+            link_swiplcs/1,
+            to_string/2
           ]).
 
-:-module_transparent(cliCall/4).
+:-dynamic(shortTypeName/2).
+
+:-module_transparent(shortTypeName/2).
 :-module_transparent(cliGet/3).
 
 :-load_foreign_library(swicli35).
@@ -27,16 +40,24 @@
 :-cliLoadAssembly('SwiPlCs.dll').
 
 
-
-%% old version:s cliCollection(Obj,Ele):-user:cliCall(Obj,'ToArray',[],Array),user:cliArrayToTerm(Array,Vect),!,arg(_,Vect,Ele).
+%% old version:s cliCollection(Obj,Ele):-cliCall(Obj,'ToArray',[],Array),cliArrayToTerm(Array,Vect),!,arg(_,Vect,Ele).
 cliCollection(Obj,Ele):-  
-      user:cliCall(Obj,'GetEnumerator',[],Enum),
-      call_cleanup(cli_enumerator_element(Enum,Ele),user:cliFree(Enum)).
+      cliCall(Obj,'GetEnumerator',[],Enum),
+      call_cleanup(cli_enumerator_element(Enum,Ele),cliFree(Enum)).
+   
+cliWriteln(S):-cliToString(S,W),writeq(W),nl.
 
 
+cliMemb(O,X):-cliMembers(O,Y),member(X,Y).
+cliMemb(O,F,X):-cliMemb(O,X),member(F,[f,p, c,m ,e]),functor(X,F,_).
 
+%% ?- cliNew('java.lang.Long'(long),[44],Out),cliToString(Out,Str).
+%% same as..
+%% ?- cliNew('java.lang.Long',[long],[44],Out),cliToString(Out,Str).
+%% arity 4 exists to specify generic types
+cliNew(Clazz,ConstArgs,Out):-Clazz=..[BasicType|ParmSpc],cliNew(BasicType,ParmSpc,ConstArgs,Out).
 
-
+cliCall(Obj,CallTerm,Out):-CallTerm=..[MethodName|Args],cliCall(Obj,MethodName,Args,Out).
 
 
 
@@ -45,24 +66,31 @@ cliCollection(Obj,Ele):-
 % jpl_iterator_element(+Iterator, -Element) :-
 
 cli_iterator_element(I, E) :- %%cliIsInstance('java.util.Iterator',I),!,
-	(   user:cliCall(I, hasNext, [], @(true))
-	->  (   user:cliCall(I, next, [], E)        % surely it's steadfast...
+	(   cliCall(I, hasNext, [], @(true))
+	->  (   cliCall(I, next, [], E)        % surely it's steadfast...
 	;   cli_iterator_element(I, E)
 	)
 	).
 cli_enumerator_element(I, E) :- %%cliIsInstance('System.Collections.IEnumerator',I),!,
-	(   user:cliCall(I, 'MoveNext', [], @(true))
-	->  (   user:cliGet(I, 'Current', E)        % surely it's steadfast...
+	(   cliCall(I, 'MoveNext', [], @(true))
+	->  (   cliGet(I, 'Current', E)        % surely it's steadfast...
 	;   cli_enumerator_element(I, E)
 	)
 	).
 
 
-cliIsObject('@'(A)):-atom(A).
+cliIsObject(X):- \+ cliIsNull(X),functor(X,F,_),F='@'.
+
+cliIsNull(Obj):-(var(Obj);Obj='@'(null);Obj='@'(void)),!.
+
+cliGetS(Obj,_,_):-cliIsNull(Obj),!,fail.
+cliGetS(Obj,[P],Value):-!,cliGet(Obj,P,Value).
+cliGetS(Obj,[P|N],Value):-cliGet(Obj,P,M),cliGetS(M,N,Value),!.
+
 
 cliToStringS(Term,Term):- (var(Term);atomic(Term);not(compound(Term))),!.
-cliToStringS(Term,String):-cliIsObject(Term),!,user:cliToString(Term,String).
-cliToStringS([A|B],[AS|BS]):-cliToStringS(A,AS),cliToStringS(B,BS),!.
+cliToStringS(Term,String):-cliIsObject(Term),!,cliToString(Term,String).
+cliToStringS([A|B],[AS|BS]):-!,cliToStringS(A,AS),cliToStringS(B,BS).
 cliToStringS(Term,String):-Term=..[F|A],cliToStringS(A,AS),String=..[F|AS],!.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
