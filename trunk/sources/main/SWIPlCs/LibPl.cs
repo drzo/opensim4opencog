@@ -149,9 +149,6 @@ namespace SbsSW.SwiPlCs
 
         internal static bool Is64Bit()
         {
-#if _PL_X64
-            return true;
-#endif
             int bits = IntPtr.Size * 8;
             return bits == 64;
         }
@@ -159,17 +156,9 @@ namespace SbsSW.SwiPlCs
         {
             //int size_of_IOSTREAM = 136;
 
-#if _PL_X64
-#warning _PL_X64 is defined
-            int size_of_IOSTREAM = 232;
-            int offset_to_poninter_of_IOFUNCTIONS = 104;
-            int size_of_pointer = 8;
-#else
-#warning _PL_X64 is NOT defined
-            int size_of_IOSTREAM = 144;
-            int offset_to_poninter_of_IOFUNCTIONS = 72;
-            int size_of_pointer = 4;
-#endif
+            int size_of_IOSTREAM;
+            int offset_to_poninter_of_IOFUNCTIONS;
+            int size_of_pointer;
             if (Is64Bit())
             {
                 size_of_IOSTREAM = 232;

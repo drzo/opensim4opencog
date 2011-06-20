@@ -40,15 +40,12 @@ namespace SbsSW.SwiPlCs
         /// <returns></returns>
         internal static bool Is64BitRuntime()
         {
-#if _PL_X64
-            return true;
-#endif
             int bits = IntPtr.Size * 8;
             return bits == 64;
         }
 
         public static List<Assembly> AssembliesLoaded = new List<Assembly>();
-        public static List<Assembly> AssembliesLoading = new List<Assembly>();
+        public static List<string> AssembliesLoading = new List<string>();
         public static List<Type> TypesLoaded = new List<Type>();
         public static List<Type> TypesLoading = new List<Type>();
 
@@ -1065,6 +1062,8 @@ namespace SbsSW.SwiPlCs
             if (source.Exists) CopyFiles(source, destination, true, "*.*", false);
         }
 
+#pragma warning disable 414, 3021
+        [CLSCompliant(false)]
         public class ScriptingClassLoader : URLClassLoader
         {
             readonly IList<ClassLoader> lc = new List<ClassLoader>();
@@ -1142,6 +1141,7 @@ namespace SbsSW.SwiPlCs
                 return clz;
             }
         }
+#pragma warning restore 414, 3021
 
         private static void TestClassLoader()
         {
@@ -1522,15 +1522,16 @@ namespace SbsSW.SwiPlCs
             }
         }
 
-        public static bool LoadAssembly(Assembly assembly)
+        public static bool ResolveAssembly(Assembly assembly)
         {
+            string assemblyName = assembly.FullName;
             lock (AssembliesLoaded)
             {
-                if (AssembliesLoading.Contains(assembly))
+                if (AssembliesLoading.Contains(assemblyName))
                 {
                     return true;
                 }
-                AssembliesLoading.Add(assembly);
+                AssembliesLoading.Add(assemblyName);
                 LoadReferencedAssemblies(assembly);
                 // push to the front
                 AssembliesLoaded.Remove(assembly);
@@ -1544,19 +1545,22 @@ namespace SbsSW.SwiPlCs
         {
             foreach (var refed in assembly.GetReferencedAssemblies())
             {
+                string assemblyName = refed.FullName;
                 try
                 {
-                    LoadAssembly(Assembly.Load(refed));
+                    Assembly assemblyLoad = Assembly.Load(refed);
+                    ResolveAssembly(assemblyLoad);
                 }
                 catch (Exception e)
                 {
-                    // Warn(e.Message);
+                    Warn("LoadReferencedAssemblies:" + assemblyName + " caused " + e);
                 }
             }
         }
 
         private static void LoadTypesFromAssembly(Assembly assembly)
-        {            
+        {
+            string assemblyName = assembly.FullName;
             try
             {
                 foreach (Type t in assembly.GetTypes())

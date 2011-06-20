@@ -6,6 +6,7 @@
 	ProjectGUID="{03BC6175-CC46-44EB-B731-A15AD348832F}"
 	RootNamespace="DummyLibraryUsage"
 	Keyword="Win32Proj"
+	AssemblyReferenceSearchPaths="&quot;..\..\..\bin&quot;"
 	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
@@ -32,6 +33,7 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+				CommandLine=""
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -65,13 +67,14 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="swipl32.lib"
+				OutputFile="$(OutDir)\$(ProjectName)35.dll"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
 				SubSystem="2"
 				TargetMachine="1"
 				AllowIsolation="true"
-				CLRUnmanagedCodeCheck="true"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -108,6 +111,7 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+				CommandLine=""
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -141,15 +145,13 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="swipl.lib"
+				AdditionalDependencies="swipl64.lib"
 				OutputFile="$(OutDir)\$(ProjectName)35.dll"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
 				SubSystem="2"
 				TargetMachine="17"
-				AllowIsolation="true"
-				ErrorReporting="0"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -333,21 +335,6 @@
 			AssemblyName="System, Version=2.0.0.0, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL"
 			MinFrameworkVersion="131072"
 		/>
-		<AssemblyReference
-			RelativePath="..\..\..\bin\IKVM.Reflection.dll"
-			AssemblyName="IKVM.Reflection, Version=0.43.3817.0, processorArchitecture=MSIL"
-			MinFrameworkVersion="0"
-		/>
-		<AssemblyReference
-			RelativePath="..\..\..\bin\IKVM.Runtime.dll"
-			AssemblyName="IKVM.Runtime, Version=0.43.3817.0, processorArchitecture=MSIL"
-			MinFrameworkVersion="196613"
-		/>
-		<AssemblyReference
-			RelativePath="..\..\..\bin\IKVM.Runtime.JNI.dll"
-			AssemblyName="IKVM.Runtime.JNI, Version=0.43.3817.0, processorArchitecture=MSIL"
-			MinFrameworkVersion="196613"
-		/>
 	</References>
 	<Files>
 		<Filter
@@ -421,7 +408,11 @@
 			>
 		</Filter>
 		<File
-			RelativePath=".\swipl.lib"
+			RelativePath=".\swipl32.lib"
+			>
+		</File>
+		<File
+			RelativePath=".\swipl64.lib"
 			>
 		</File>
 	</Files>

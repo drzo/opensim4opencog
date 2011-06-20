@@ -44,7 +44,7 @@ extern "C" {
 			System::Reflection::Assembly^ assembly = System::Reflection::Assembly::Load(gcnew System::String(anamestr));
 			System::Type^ type = assembly->GetType(gcnew System::String(cnamestr));
 			System::Reflection::MethodInfo^ method = type->GetMethod(gcnew System::String(mnamestr));
-			method->Invoke(0,gcnew cli::array<System::Object^,1>(0));
+			method->Invoke(nullptr, gcnew cli::array<System::Object^,1>(0));
 			PL_succeed;
 		}
 		PL_fail;

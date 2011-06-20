@@ -254,7 +254,7 @@ namespace SbsSW.SwiPlCs
         }
 
         [TermConversion]
-        static public Term[] toTermList(Term t)
+        static public Term[] toTermListTerm(Term t)
         {
             if (t.Arity == 2 && t.IsList)
             {
@@ -289,7 +289,7 @@ namespace SbsSW.SwiPlCs
             }
             if (term.IsList)
             {
-                return terms_to_objects(toTermList(term)/*ctx*/);
+                return terms_to_objects(toTermListTerm(term)/*ctx*/);
             }
             if (term.IsAtom)
             {
@@ -472,7 +472,7 @@ namespace SbsSW.SwiPlCs
         static public Term ToTermList(IEnumerable ie)
         {
             if (ie is IList) return ToTermIList((IList)ie);
-            if (ie is ICollection) return ToTermList((ICollection)ie);
+            if (ie is ICollection) return ToTermListICol((ICollection)ie);
             var lst = new System.Collections.Generic.List<object>();
             foreach (var e in ie)
             {
@@ -481,7 +481,7 @@ namespace SbsSW.SwiPlCs
             return ToTermIList(lst);
         }
 
-        static public Term ToTermList(ICollection ie)
+        static public Term ToTermListICol(ICollection ie)
         {
             if (ie is IList) return ToTermIList((IList)ie);
             int cnt = ie.Count;
