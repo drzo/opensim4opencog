@@ -37,13 +37,22 @@ cacheShortNames:-
 %------------------------------------------------------------------------------
 % some type layout conversions (to make cleaner code)
 %------------------------------------------------------------------------------
-
+ 
 addLayouts:-
   cliAddLayout('Vector3',v3(x,y,z)),
   cliAddLayout('Vector3d',v3d('X','Y','Z')),
-  cliAddLayout('Quaternion',quat('X','Y','Z','W')).
+  cliAddLayout('Vector4',v4('X','Y','Z','W')),
+  cliAddLayout('Quaternion',quat('X','Y','Z','W')),
+ %%  cliAddLayout('UUID',uuid('_Guid')),
+ cliToFromLayout('UUID',uuid('ToString'),'UUIDFromString'),
+ %%  cliAddLayout('Guid',guid(string)),
+  !.
 
 :-addLayouts.
+
+
+
+
 %------------------------------------------------------------------------------
 % object getter functions
 %------------------------------------------------------------------------------
@@ -65,7 +74,7 @@ clientManager(SingleInstance):-cliGet('cogbot.ClientManager','SingleInstance',Si
 %% get the botClient Instance
 botClient(Obj):-clientManager(Man),cliGet(Man,'LastRefBotClient',Obj).
 
-botClient([P|N],Value):-!,botClient(Obj),cliGetS(Obj,[P|N],Value).
+botClient([P|N],Value):-!,botClient(Obj),cliGet(Obj,[P|N],Value).
 botClient(Property,Value):-botClient(Obj),cliGet(Obj,Property,Value).
 
 %% get the gridClient Instance
@@ -89,12 +98,12 @@ listPrims:-listS(simObject).
 %% print some events 
 onSimEvent(_A,_B,_C):-!. % comment out this first line to print them
 onSimEvent(A,B,C):-!,assertz(wasSimEvent(A,B,C)).
-onSimEvent(_A,_B,C):-cliToStringS(onSimEvent(C),AS),writeq(AS),nl.
+onSimEvent(_A,_B,C):-cliToString(onSimEvent(C),AS),writeq(AS),nl.
 
 %% on first bot client created register the global event handler
 onFirstBotClient(A,B):- 
    botClient(Obj), cliAddEventHandler(Obj,'EachSimEvent',onSimEvent(_,_,_)),
-   cliToStringS(onFirstBotClient(A-B-Obj),Objs),writeq(Objs),nl.
+   cliToString(onFirstBotClient(A-B-Obj),Objs),writeq(Objs),nl.
 
 %% register onFirstBotClient
 :- cliAddEventHandler('cogbot.ClientManager','BotClientCreated',onFirstBotClient(_,_)).
@@ -108,7 +117,7 @@ onFirstBotClient(A,B):-
 runSL:-ranSL,!.
 runSL:-asserta(ranSL),!,cliCall('ABuildStartup.Program','Main',[],_).
 
-:-runSL.
+%% :-runSL.
 
 %------------------------------------------------------------------------------
 % CLR Introspection of event handlers
@@ -124,6 +133,13 @@ listMembs. % so pred doesnt fail
 
 :-listMembs.
 
+resolveAvatar(Name,Name):-cliIsObject(Name),cliIsType(Name,'SimAvatar'),!.
+resolveAvatar(Name,Object):-cliIsObject(Name),cliToString(Name,String),!,resolveAvatar(String,Object).
+resolveAvatar(Name,Object):-cliCall('cogbot.Listeners.WorldObjects','TryGetSimAvatarFromName'(string),[Name],Object).
+
+resolveObjectByName(Name,Object):-cliCall('cogbot.Listeners.WorldObjects','TryGetSimAvatarFromName'(string),[Name],Object).
+
+sayTo(Speaker,ToWho,What):-resolveAvatar(ToWho,Listener),cliCall(Speaker,talkto('SimAvatar',string),[Listener,What],_O).
 
 %------------------------------------------------------------------------------
 %------------------------------------------------------------------------------
@@ -150,6 +166,58 @@ Z = "System.Collections.Generic.Dictionary`2+ValueCollection[OpenMetaverse.UUID,
 Y = @'C#720558400',
 L = ["Scripts", "Photo Album", "*MD* Brown Leather Hat w/Bling", "Body Parts", "Notecards", "Objects", "Clothing", "Landmarks", "Textures"|...].
 
+
+%------------------------------------------------------------------------------
+% simAvatar examples
+%------------------------------------------------------------------------------
+[1] 58 ?- simAvatar(X),cliGet(X,hasprim,@(true)),cliToString(X,S).
+X = @'C#638101232',
+S = "BinaBot Daxeline" ;
+X = @'C#638101728',
+S = "Nephrael Rajesh" ;
+X = @'C#638111960',
+S = "Trollerblades Wasp" ;
+false.
+
+
+[debug] 11 ?- simAvatar(X),cliGet(X,'DebugInfo',Y).
+X = @'C#723685664',
+Y = "BinaBot Daxeline 6d808b3b-990b-474e-a37c-6cf88a9ffb02 Belphegor/152.6617/44.31475/63.0686@59.7028\n Avatar 6d808b3b-990b-474e-a37c-6cf88a9ffb02 (localID 98440636)(childs 2)(PrimFlagsTrue Physics, ObjectModify, ObjectCopy, ObjectYouOwner, ObjectMove, ObjectTransfer)[Avatar](!IsPassable) -NoActions- " ;
+X = @'C#723739264',
+Y = "Jess Riederer 6ce37e11-17d5-4a4f-a225-b1d214ff322a HEADING: Jess Riederer\n UNATTACHED_PRIM 6ce37e11-17d5-4a4f-a225-b1d214ff322a -NoActions- " ;
+X = @'C#723740080',
+Y = "VankHalon2 Resident 1fdb943b-1502-42fa-bc52-21812d836cec HEADING: VankHalon2 Resident\n UNATTACHED_PRIM 1fdb943b-1502-42fa-bc52-21812d836cec -NoActions- " ;
+X = @'C#723739864',
+Y = "TeegZaas Resident 31feab04-79d0-40db-b6a6-4284af659811 HEADING: TeegZaas Resident\n UNATTACHED_PRIM 31feab04-79d0-40db-b6a6-4284af659811 -NoActions- " ;
+X = @'C#723739664',
+Y = "Nephrael Rajesh 8f92ed5d-9883-4a25-8b82-87fc2c2e1a85 HEADING: Nephrael Rajesh\n UNATTACHED_PRIM 8f92ed5d-9883-4a25-8b82-87fc2c2e1a85 -NoActions- " ;
+X = @'C#723740432',
+Y = "Nephrael Rae 9d01e386-7aa1-4b7f-ae24-fddfb97fd506 HEADING: Nephrael Rae\n UNATTACHED_PRIM 9d01e386-7aa1-4b7f-ae24-fddfb97fd506 -NoActions- " ;
+X = @'C#723740200',
+Y = "Annie Obscure 9eda1cfc-e0c4-41ed-b2d2-e62bb70366df HEADING: Annie Obscure\n UNATTACHED_PRIM 9eda1cfc-e0c4-41ed-b2d2-e62bb70366df -NoActions- " ;
+X = @'C#723740656',
+Y = "Nocco Oldrich 3b26fd9c-59d6-48d0-ac99-4cff578c4ab6 HEADING: Nocco Oldrich\n UNATTACHED_PRIM 3b26fd9c-59d6-48d0-ac99-4cff578c4ab6 -NoActions- " ;
+X = @'C#723743632',
+Y = "Satir DeCuir 9702bd45-9880-48ab-a516-e96e40731a13 HEADING: Satir DeCuir\n UNATTACHED_PRIM 9702bd45-9880-48ab-a516-e96e40731a13 -NoActions- " ;
+X = @'C#723744208',
+Y = "Draven Littlebird d191e38e-32f9-4f83-9289-6b580eb804ad HEADING: Draven Littlebird\n UNATTACHED_PRIM d191e38e-32f9-4f83-9289-6b580eb804ad\n EffectType-Beam-Once: \"{doneBy=Draven Littlebird,Choices=NIL,info=NIL}\" \"{objectActedOn=UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{eventPartiallyOccursAt=?/0/0/0@90,Choices=NIL,info=NIL}\" \"{simDuration=1,Choices=NIL,info=NIL}\" \"{id=f8dae11b-b6a6-fe43-7281-c62f1313367b,Choices=NIL,info=NIL}\" 634437706401961059\n LookAtType-Focus-Once: \"{doneBy=Draven Littlebird,Choices=NIL,info=NIL}\" \"{objectActedOn=UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{eventPartiallyOccursAt=HEADING: UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{simDuration=1.701412E+38,Choices=NIL,info=NIL}\" \"{id=1d7c699c-b42a-3e7e-b825-3e9e6d13ed30,Choices=NIL,info=NIL}\" 634437706401961061\n EffectType-Beam-Once: \"{doneBy=Draven Littlebird,Choices=NIL,info=NIL}\" \"{objectActedOn=UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{eventPartiallyOccursAt=?/0/0/0@90,Choices=NIL,info=NIL}\" \"{simDuration=1,Choices=NIL,info=NIL}\" \"{id=362bf818-1fb3-0289-ca40-2812cf9c5662,Choices=NIL,info=NIL}\" 634437706401961801\n LookAtType-Focus-Once: \"{doneBy=Draven Littlebird,Choices=NIL,info=NIL}\" \"{objectActedOn=UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{eventPartiallyOccursAt=HEADING: UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{simDuration=1.701412E+38,Choices=NIL,info=NIL}\" \"{id=1d7c699c-b42a-3e7e-b825-3e9e6d13ed30,Choices=NIL,info=NIL}\" 634437706401962759\n EffectType-Beam-Once: \"{doneBy=Draven Littlebird,Choices=NIL,info=NIL}\" \"{objectActedOn=UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{eventPartiallyOccursAt=?/0/0/0@90,Choices=NIL,info=NIL}\" \"{simDuration=1,Choices=NIL,info=NIL}\" \"{id=25bea9ae-0427-5ece-cab4-31ed14317d2e,Choices=NIL,info=NIL}\" 634437706401963078\n EffectType-Beam-Once: \"{doneBy=Draven Littlebird,Choices=NIL,info=NIL}\" \"{objectActedOn=UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{eventPartiallyOccursAt=?/0/0/0@90,Choices=NIL,info=NIL}\" \"{simDuration=1,Choices=NIL,info=NIL}\" \"{id=324dc944-f207-ab79-68e3-884c935b70fc,Choices=NIL,info=NIL}\" 634437706401964540\n LookAtType-Focus-Once: \"{doneBy=Draven Littlebird,Choices=NIL,info=NIL}\" \"{objectActedOn=UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{eventPartiallyOccursAt=HEADING: UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{simDuration=1.701412E+38,Choices=NIL,info=NIL}\" \"{id=1d7c699c-b42a-3e7e-b825-3e9e6d13ed30,Choices=NIL,info=NIL}\" 634437706401964582\n LookAtType-Focus-Once: \"{doneBy=Draven Littlebird,Choices=NIL,info=NIL}\" \"{objectActedOn=UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{eventPartiallyOccursAt=HEADING: UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{simDuration=1.701412E+38,Choices=NIL,info=NIL}\" \"{id=1d7c699c-b42a-3e7e-b825-3e9e6d13ed30,Choices=NIL,info=NIL}\" 634437706401964664\n EffectType-Beam-Once: \"{doneBy=Draven Littlebird,Choices=NIL,info=NIL}\" \"{objectActedOn=UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{eventPartiallyOccursAt=?/0/0/0@90,Choices=NIL,info=NIL}\" \"{simDuration=1,Choices=NIL,info=NIL}\" \"{id=140c32c1-911d-96b3-6885-af10d639ff99,Choices=NIL,info=NIL}\" 634437706401964959\n EffectType-Beam-Once: \"{doneBy=Draven Littlebird,Choices=NIL,info=NIL}\" \"{objectActedOn=UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{eventPartiallyOccursAt=?/0/0/0@90,Choices=NIL,info=NIL}\" \"{simDuration=1,Choices=NIL,info=NIL}\" \"{id=6cbd2457-f2e1-30d2-dcc5-1749461be3f1,Choices=NIL,info=NIL}\" 634437706401965809" .
+
+
+[debug] 14 ?- simAvatar(X),cliGet(X,'ActionEventQueue',Y),cliCollection(Y,Z).
+X = @'C#723744208',
+Y = @'C#728007880',
+Z = event('SimObjectEvent', struct('DateTime', 5246123754218764857), "LookAtType-FreeLook", @'C#728025192', enum('SimEventType', 'EFFECT'), enum('SimEventStatus', 'Once'), enum('SimEventClass', 'REGIONAL')) ;
+X = @'C#723744208',
+Y = @'C#728007880',
+Z = event('SimObjectEvent', struct('DateTime', 5246123754234604700), "LookAtType-FreeLook", @'C#728029648', enum('SimEventType', 'EFFECT'), enum('SimEventStatus', 'Once'), enum('SimEventClass', 'REGIONAL')) ;
+X = @'C#723744208',
+Y = @'C#728007880',
+Z = event('SimObjectEvent', struct('DateTime', 5246123754290346888), "LookAtType-FreeLook", @'C#728029304', enum('SimEventType', 'EFFECT'), enum('SimEventStatus', 'Once'), enum('SimEventClass', 'REGIONAL')) ;
+X = @'C#723744208',
+Y = @'C#728007880',
+Z = event('SimObjectEvent', struct('DateTime', 5246123754295014857), "LookAtType-FreeLook", @'C#728030112', enum('SimEventType', 'EFFECT'), enum('SimEventStatus', 'Once'), enum('SimEventClass', 'REGIONAL')) ;
+
+[1] 65 ?- simAvatar(X),cliGet(X,hasprim,@(true)),cliToString(X,S),cliGet(X,'ActionEventQueue',AEQ),cliCol(AEQ,EE),cliToDataTerm(EE,DATA).
 
 
 [debug] 3 ?- cliNew('System.Collections.Generic.List'(string),[int],[10],O),cliMembers(O,M),!,member(E,M),writeq(E),nl,fail.
