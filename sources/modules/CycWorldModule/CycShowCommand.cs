@@ -14,7 +14,7 @@ namespace CycWorldModule
             : base(Client)
         {
             Name = "CycShow";
-            Parameters = new []{ new NamedParam(typeof(SimObject), typeof(UUID))};
+            Parameters = new []{ new NamedParam("uri",typeof(SimObject), typeof(UUID))};
         }
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {

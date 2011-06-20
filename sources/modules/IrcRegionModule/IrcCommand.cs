@@ -102,7 +102,7 @@ namespace IrcRegionModule
             Client.Self.Chat(string.Format("{0}: {1}", nick, data.Message), 0, ChatType.Normal);
             try
             {
-                Client.FakeEvent(Client.Self, "ChatFromSimulator", this,
+                Client.FakeEvent(Client.Self, "m_Chat", this,
                                  new ChatEventArgs(Client.Network.CurrentSim, data.Message, ChatAudibleLevel.Fully,
                                                    ChatType.Normal,
                                                    ChatSourceType.Agent, nick,
