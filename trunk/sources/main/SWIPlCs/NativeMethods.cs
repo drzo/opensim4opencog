@@ -361,7 +361,11 @@ namespace SbsSW.SwiPlCs
 		//__pl_export int		PL_get_list(term_t l, term_t h, term_t term);
 		//__pl_export int		PL_get_nil(term_t l);
 		// __pl_export int		PL_unify(term_t t1, term_t t2);
-		[DllImport(DllFileName)]
+        [DllImport(DllFileName)]
+        internal static extern int PL_unify_intptr(uint term, IntPtr intptr);
+        [DllImport(DllFileName)]
+        internal static extern int PL_unify_pointer(uint term, IntPtr intptr);
+        [DllImport(DllFileName)]
 		internal static extern uint PL_copy_term_ref(uint term_t);
 		[DllImport(DllFileName)]
 		internal static extern int PL_unify_list(uint term_t_l, uint term_t_h, uint term_t_t);
