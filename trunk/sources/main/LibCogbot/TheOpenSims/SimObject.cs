@@ -432,20 +432,35 @@ namespace cogbot.TheOpenSims
         // protected SimRegion PathStore;
         public Box3Fill OuterBox
         {
-            get { return _Mesh.OuterBox; }
+            get
+            {
+                var _Mesh = this._Mesh;
+                if (_Mesh != null)
+                {
+                    return _Mesh.OuterBox;
+                }
+                return null;
+            }
         }
 
         public uint LocalID
         {
             get
             {
+                var Prim = this.Prim;
+                if (Prim == null) return 0;
                 return Prim.LocalID;
             }
         }
 
         public uint ParentID
         {
-            get { return Prim.ParentID; }
+            get
+            {
+                var Prim = this.Prim;
+                if (Prim == null) return 0; 
+                return Prim.ParentID;
+            }
         }
 
         public virtual bool KilledPrim(Primitive primitive, Simulator simulator)
@@ -471,11 +486,11 @@ namespace cogbot.TheOpenSims
             lock (_infoMap) return new List<NamedParam>(_infoMap.Values);
         }
 
-        public void SetInfoMap(string key, MemberInfo type, object value)
+        public void SetInfoMap(object target, string key, MemberInfo type, object value)
         {
             if (!WorldObjects.MaintainSimObjectInfoMap) return;
             if (value == null) value = new NullType(this, type);
-            AddInfoMapItem(new NamedParam(type, key, GetType(), value));
+            AddInfoMapItem(new NamedParam(target, type, key, null , value));
         }
 
         public void AddInfoMapItem(NamedParam ad)
@@ -1012,7 +1027,7 @@ namespace cogbot.TheOpenSims
             set
             {
                 if (value == _Parent) return;
-                SetInfoMap("Parent", GetType().GetProperty("Parent"), value);
+                SetInfoMap(this, "Parent", GetType().GetProperty("Parent"), value);
                 if (value == null)
                 {
                     _Parent.Children.Remove(this);
@@ -2606,6 +2621,12 @@ namespace cogbot.TheOpenSims
         {
             get
             {
+                if (_infoMap.ContainsKey(s))
+                {
+                    var val = _infoMap[s].Value;
+                    if (val is NullType) return null;
+                    return val;
+                }
                 if (!dict.ContainsKey(s))
                 {
                     return null;
@@ -2614,6 +2635,10 @@ namespace cogbot.TheOpenSims
             }
             set
             {
+                if (_infoMap.ContainsKey(s))
+                {
+                    _infoMap[s].SetValue(value);
+                }
                 dict[s] = value;
             }
         }

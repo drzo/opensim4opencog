@@ -15,7 +15,7 @@ namespace cogbot.Listeners
 
     public partial class WorldObjects
     {
-        static Dictionary<Type, KeyValuePair<List<PropertyInfo>, List<FieldInfo>>> PropForTypes = new Dictionary<Type, KeyValuePair<List<PropertyInfo>, List<FieldInfo>>>();
+        static readonly Dictionary<Type, KeyValuePair<List<PropertyInfo>, List<FieldInfo>>> PropForTypes = new Dictionary<Type, KeyValuePair<List<PropertyInfo>, List<FieldInfo>>>();
 
         private static KeyValuePair<List<PropertyInfo>, List<FieldInfo>> GetPropsForTypes(Type t)
         {
@@ -103,7 +103,7 @@ namespace cogbot.Listeners
                         {
                             GetUUIDType(o, (UUID)v);
                         }
-                        dict.Add(new NamedParam(o, prefix + o.Name, o.PropertyType, v));
+                        dict.Add(new NamedParam(properties, o, prefix + o.Name, o.PropertyType, v));
                     }
                     catch (Exception e)
                     {
@@ -124,7 +124,7 @@ namespace cogbot.Listeners
                     {
                         GetUUIDType(o, (UUID) v);
                     }
-                    dict.Add(new NamedParam(o, prefix + o.Name, o.FieldType, v));
+                    dict.Add(new NamedParam(properties, o, prefix + o.Name, o.FieldType, v));
                 }
                 catch (Exception e)
                 {

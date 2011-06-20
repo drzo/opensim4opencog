@@ -203,7 +203,7 @@ namespace cogbot.TheOpenSims
         [XmlArrayItem]
         public string Verb;
         [XmlArrayItem]
-        public List<NamedParam> Parameters;
+        public IList<NamedParam> Parameters;
         [XmlArrayItem]
         public SimEventType EventType;
         [XmlArrayItem]

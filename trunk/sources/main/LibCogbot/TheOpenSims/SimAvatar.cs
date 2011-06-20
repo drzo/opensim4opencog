@@ -540,6 +540,8 @@ namespace cogbot.TheOpenSims
                     if (Client.Self.Movement.SitOnGround) return true;
                 }
                 if (SimAssetStore.Matches(GetCurrentAnims(), "sit").Count > 0) return true;
+                var theAvatar = this.theAvatar;
+                if (theAvatar == null) return false;
                 return theAvatar.ParentID != 0;
             }
             set
@@ -557,6 +559,19 @@ namespace cogbot.TheOpenSims
                     }
                 }
                 Debug("Uncontroled IsStting=" + value);
+            }
+        }
+
+        protected bool noticedOnline;
+        public virtual bool IsOnline
+        {
+            get
+            {
+                return HasPrim || noticedOnline;
+            }
+            set
+            {
+                noticedOnline = value;
             }
         }
 
@@ -2687,6 +2702,7 @@ namespace cogbot.TheOpenSims
         //BotNeeds CurrentNeeds { get; }
         Avatar theAvatar { get; }
         bool IsSitting { get; }
+        bool IsOnline { get; }
         float ZHeading { get; }
         IEnumerable<SimTypeUsage> KnownTypeUsages { get; }
         BotAction LastAction { get; }

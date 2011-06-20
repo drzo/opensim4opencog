@@ -15,7 +15,7 @@ namespace cogbot.Actions.Scripting
             Category = CommandCategory.BotClient;
             Parameters = new[]
                              {
-                                 new NamedParam("pathname", typeof (String)),
+                                 new NamedParam("pathname", typeof (String), typeof (String)),
                                  new NamedParam("scripttype", typeof (String), null, "bot", "cs")
                              };
 

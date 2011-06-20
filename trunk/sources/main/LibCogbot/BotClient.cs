@@ -2059,8 +2059,15 @@ namespace cogbot
         {
 
             Type type = target.GetType();
-            EventInfo eventInfo = type.GetEvent(infoName);
-            MethodInfo m = eventInfo.GetRaiseMethod(true);
+            EventInfo eventInfo = type.GetEvent(infoName, BindingFlags.Instance | BindingFlags.Public |
+                                                          BindingFlags.NonPublic | BindingFlags.IgnoreCase);
+            MethodInfo m = null;
+            if (eventInfo != null)
+            {
+                infoName = eventInfo.Name;
+                m = eventInfo.GetRaiseMethod(true);
+            }
+            
             Exception lastException = null;
             if (m != null)
             {
@@ -2079,24 +2086,54 @@ namespace cogbot
             else
             {
                 {
-                    FieldInfo fieldInfo = type.GetField(eventInfo.Name,
-                                                        BindingFlags.Instance | BindingFlags.NonPublic |
-                                                        BindingFlags.Public);
-                    if (fieldInfo != null)
+                    foreach (var o in new[] {"", "_", "m_"})
                     {
-                        Delegate del = fieldInfo.GetValue(target) as Delegate;
 
-                        if (del != null)
+
+                        FieldInfo fieldInfo = type.GetField(o + infoName,
+                                                            BindingFlags.Instance | BindingFlags.NonPublic) ??
+                                              type.GetField(o + infoName,
+                                                            BindingFlags.Instance | BindingFlags.Public)
+                                              ?? type.GetField(o + infoName,
+                                                               BindingFlags.Instance | BindingFlags.Public |
+                                                               BindingFlags.NonPublic | BindingFlags.IgnoreCase);
+
+                        if (fieldInfo != null)
                         {
-                            del.DynamicInvoke(parameters);
-                            return;
+                            Delegate del = fieldInfo.GetValue(target) as Delegate;
+
+                            if (del != null)
+                            {
+                                del.DynamicInvoke(parameters);
+                                return;
+                            }
                         }
                     }
                 }
-            }
-            var ms = eventInfo.GetOtherMethods(true);
-            foreach (MethodInfo info in ms)
-            {
+                if (eventInfo != null)
+                {
+                    m = eventInfo.EventHandlerType.GetMethod("Invoke");
+
+                    if (m != null)
+                    {
+                        Type dt = m.DeclaringType;
+                        try
+                        {
+
+
+                            m.Invoke(target, parameters);
+                            return;
+                        }
+                        catch (Exception e)
+                        {
+                            lastException = e;
+                        }
+                    }
+                }
+                var ms = eventInfo.GetOtherMethods(true);
+                foreach (MethodInfo info in ms)
+                {
+                }
             }
 
             if (lastException != null) throw lastException;
