@@ -729,6 +729,10 @@ PL_EXPORT(int) PL_write_term(IOSTREAM *s,
         //PL_EXPORT(void *)	PL_realloc(void *mem, size_t size);
         //PL_EXPORT(void)		PL_free(void *mem);
 
+        public static int PL_unify_intptr(uint term, IntPtr intptr)
+        {
+            return SafeNativeMethods.PL_unify_intptr(term, intptr);
+        }
     } // libpl
     #endregion
 
