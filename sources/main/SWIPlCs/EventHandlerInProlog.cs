@@ -197,7 +197,7 @@ namespace SbsSW.SwiPlCs
             return CallProlog1(paramz);
         }
 
-#pragma unmanaged
+//#pragma unsafe
         object CallProlog1(object[] paramz)
         {
             //lock (oneEvtHandlerAtATime)

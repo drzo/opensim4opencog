@@ -507,6 +507,18 @@ namespace SbsSW.SwiPlCs
         {
             try
             {
+                return cliLoadAssemblyUncaught(term1);
+            }
+            catch (Exception e)
+            {
+                Warn("cliLoadAssembly: " + term1 + " caused " + e);
+                return false;
+            }
+        }
+        public static bool cliLoadAssemblyUncaught(PlTerm term1)
+        {
+            try
+            {
                 if (term1.IsVar)
                 {
                     Warn("cliLoadAssembly IsVar " + term1);
@@ -514,30 +526,53 @@ namespace SbsSW.SwiPlCs
                 }
                 if (TaggedObject(term1))
                 {
-                    var assembly = GetInstance(term1);
-                    if (assembly is Assembly)
+                    var assemblyOrType = GetInstance(term1);
+                    if (assemblyOrType is Assembly)
                     {
-                        return LoadAssembly((Assembly)assembly);
+                        return ResolveAssembly((Assembly) assemblyOrType);
                     }
-                    if (assembly is Type)
+                    if (assemblyOrType is Type)
                     {
-                        return LoadAssembly(((Type)assembly).Assembly);
+                        return ResolveAssembly(((Type) assemblyOrType).Assembly);
                     }
-                    return Warn("Cannot get assembly from " + assembly + " for " + term1);
+                    return Warn("Cannot get assembly from " + assemblyOrType + " for " + term1);
                 }
                 string name = term1.Name;
+                Assembly assembly = null;
+                try
+                {
+                    assembly = Assembly.Load(name);
+                    if (assembly != null) return ResolveAssembly(assembly);
+                }
+                catch (Exception e)
+                {
+                    //Warn("Load: " + name + " caused " + e);
+                }
                 var fi = new FileInfo(name);
                 if (fi.Exists)
                 {
-                    return LoadAssembly(Assembly.LoadFile(fi.FullName));
+                    string fiFullName = fi.FullName;
+                    try
+                    {
+                        assembly = Assembly.LoadFile(fiFullName);
+                        if (assembly != null) return ResolveAssembly(assembly);
+                    }
+                    catch (Exception e)
+                    {
+                        Warn("LoadFile: " + fiFullName + " caused " + e);
+                    }
                 }
-                else
+                try
                 {
-                    var assembly = Assembly.Load(name);
-                    if (assembly == null) assembly = Assembly.LoadWithPartialName(name);
-                    if (assembly == null) return Warn("Cannot get assembly from " + name + " for " + term1);
-                    return LoadAssembly(assembly);
+                    if (assembly == null) assembly = Assembly.LoadWithPartialName(name);                    
                 }
+                catch (Exception e)
+                {
+                    Warn("LoadWithPartialName: " + name + " caused " + e);
+                }
+                if (assembly == null) return Warn("Cannot get assembly from " + name + " for " + term1);
+                return ResolveAssembly(assembly);
+
             }
             catch (Exception exception)
             {
@@ -2407,6 +2442,15 @@ namespace SbsSW.SwiPlCs
                     }
                     fis.Add(e);
                 }
+                foreach (var e in t.GetProperties(InstanceFields))
+                {
+                    var use = e.GetCustomAttributes(typeof(XmlArrayItemAttribute), false);
+                    if (use == null || use.Length < 1)
+                    {
+                        continue;
+                    }
+                    fis.Add(e);
+                }
                 tGetFields = fis.ToArray();
             }
             else
@@ -2679,7 +2723,9 @@ namespace SbsSW.SwiPlCs
             for (int i = 0; i < fisLength; i++)
             {
                 MemberInfo fi = fis[i];
-                paramz[i] = CastTerm(orig[plarg++], FieldType(fi));
+                PlTerm origArg = orig[plarg];
+                paramz[i] = CastTerm(origArg, FieldType(fi));
+                plarg++;
             }
             object newStruct = null;
             try
@@ -2690,10 +2736,11 @@ namespace SbsSW.SwiPlCs
             {
                 foreach (ConstructorInfo ci in type.GetConstructors(BindingFlagsALL))
                 {
-                    if (ci.GetParameters().Length > 0) continue;
+                    if (ci.GetParameters().Length != paramz.Length) continue;
                     if (ci.IsStatic) continue;
-                    newStruct = ci.Invoke(null);
+                    newStruct = ci.Invoke(paramz);
                 }
+                if (newStruct != null) return newStruct;
             }                        
             for (int i = 0; i < fis.Length; i++)
             {
@@ -2728,7 +2775,7 @@ namespace SbsSW.SwiPlCs
             throw new IndexOutOfRangeException("" + field);
         }
 
-        private static void SetMemberValue(MemberInfo field, object o, object value)
+        public static void SetMemberValue(MemberInfo field, object o, object value)
         {
             if (field is FieldInfo)
             {
@@ -2737,7 +2784,13 @@ namespace SbsSW.SwiPlCs
             }
             if (field is PropertyInfo)
             {
-                ((PropertyInfo)field).GetSetMethod(true).Invoke(o, new object[] { value });
+                MethodInfo setterMethod = ((PropertyInfo)field).GetSetMethod(true);
+                if (setterMethod == null)
+                {
+                    Warn("No setter method on " + field);
+                    return;
+                }
+                setterMethod.Invoke(o, new object[] { value });
                 return;
             }
             if (field is MethodInfo)
@@ -2793,6 +2846,7 @@ namespace SbsSW.SwiPlCs
         }
         public static Object CastTerm(PlTerm o, Type pt)
         {
+            if (pt == typeof(object)) pt = null;
             object r = CastTerm0(o, pt);
             if (pt == null || r == null)
                 return r;
