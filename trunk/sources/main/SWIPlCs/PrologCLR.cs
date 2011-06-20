@@ -48,6 +48,10 @@ namespace SbsSW.SwiPlCs
         }
 
 
+        public static BindingFlags BindingFlagsJustStatic = BindingFlags.Public | BindingFlags.NonPublic |
+                                                            BindingFlags.Static;
+        public static BindingFlags BindingFlagsInstance = BindingFlags.Public | BindingFlags.NonPublic |
+                                                            BindingFlags.Static;
         public static BindingFlags BindingFlagsALL = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static |
                                                      BindingFlags.Instance | BindingFlags.IgnoreCase;
         public static BindingFlags InstanceFields = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.IgnoreCase;
@@ -59,6 +63,15 @@ namespace SbsSW.SwiPlCs
 
         private static Type[] GetParamSpec(PlTerm memberSpec)
         {
+            if (memberSpec.IsInteger)
+            {
+                Type[] lenType = new Type[memberSpec.intValue()];
+                for (int i = 0; i < lenType.Length; i++)
+                {
+                    lenType[i] = typeof (object);
+                }
+                return lenType;
+            }
             if (memberSpec.IsList)
             {
                 memberSpec = memberSpec.Copy();
@@ -118,7 +131,19 @@ namespace SbsSW.SwiPlCs
             }
             return null;
         }
-
+        private static MemberInfo findMember(PlTerm memberSpec, Type c)
+        {
+            if (TaggedObject(memberSpec))
+            {
+                var r = tag_to_object(memberSpec[1].Name) as MemberInfo;
+                if (r != null) return r;
+            }
+            return findField(memberSpec, c) ??
+                   (MemberInfo)
+                   findProperty(memberSpec, c) ??
+                   findMethod(memberSpec, -1, c);
+                    //findConstructor(memberSpec, c));
+        }
         private static FieldInfo findField(PlTerm memberSpec, Type c)
         {
             if (c == null)
@@ -191,7 +216,7 @@ namespace SbsSW.SwiPlCs
             return c.GetProperty(fn, BindingFlagsALL) ?? c.GetProperty("Is" + fn, BindingFlagsALL);
         }
 
-        private static MethodInfo findMethod(PlTerm memberSpec, Type c)
+        private static MethodInfo findMethod(PlTerm memberSpec, int arity, Type c)
         {
             if (c == null)
             {
@@ -214,13 +239,22 @@ namespace SbsSW.SwiPlCs
                 if (r != null) return r;
             }
             string fn = memberSpec.Name;
-            var mi = c.GetMethod(fn, BindingFlagsALL);
+            var mi = GetMethod(c, fn, BindingFlagsALL);
             if (mi != null) return mi;
             Type[] paramz = GetParamSpec(memberSpec);
-            mi = c.GetMethod(fn, paramz);
-            if (mi != null) return mi;
+            try
+            {
+                mi = c.GetMethod(fn, paramz);
+                if (mi != null) return mi;
+            }
+            catch (AmbiguousMatchException e)
+            {
+                Debug("AME: " + e + " fn = " + fn);
+            }
             MethodInfo[] members = c.GetMethods(BindingFlagsALL);
-            int arity = memberSpec.Arity;
+            if (arity < 0) arity = memberSpec.Arity;
+            string fnLower = fn.ToLower();
+            MethodInfo candidate = null;
             foreach (var infos in members)
             {
                 if (infos.GetParameters().Length == arity)
@@ -229,8 +263,13 @@ namespace SbsSW.SwiPlCs
                     {
                         return infos;
                     }
+                    if (candidate == null && infos.Name.ToLower() == fnLower)
+                    {
+                        candidate = infos;
+                    }
                 }
             }
+            if (candidate != null) return candidate;
             return null;
         }
 
@@ -253,22 +292,29 @@ namespace SbsSW.SwiPlCs
                 return mis[memberSpec.intValue()];
             }
             Type[] paramz = GetParamSpec(memberSpec);
-            if (paramz == null)
+            if (paramz != null)
             {
-
+                var mi = c.GetConstructor(paramz);
+                if (mi != null) return mi;
             }
-            var mi = c.GetConstructor(paramz);
-            if (mi != null) return mi;
             ConstructorInfo[] members = c.GetConstructors(BindingFlagsALL);
             int arity = memberSpec.Arity;
+            ConstructorInfo candidate = null;
             foreach (var infos in members)
             {
                 if (infos.GetParameters().Length == arity)
                 {
-                    return infos;
+                    if (infos.IsStatic)
+                    {
+                        if (candidate == null)
+                        {
+                            candidate = infos;
+                        }
+                    }
+                    else return infos;
                 }
             }
-            return null;
+            return candidate;
         }
 
         private static bool TaggedObject(PlTerm info)
@@ -914,6 +960,44 @@ namespace SbsSW.SwiPlCs
             }
             return false;
         }
+
+        [PrologVisible(ModuleName = ExportModule)]
+        static public bool cliGetTerm(PlTerm valueCol, PlTerm valueIn, PlTerm valueOut)
+        {
+            List<object> objs;
+            if (valueCol.IsVar)
+            {
+                objs = new List<object>();
+                valueCol.FromObject(objs);
+            } else
+            {
+                objs = (List<object>) CastTerm(valueCol, typeof (ICollection));
+            }
+            if (!valueOut.IsVar)
+            {
+                var plvar = PlTerm.PlVar();
+                cliGetTerm(valueCol, valueIn, plvar);
+                return SpecialUnify(valueOut, plvar);
+            }
+            if (TaggedObject(valueIn))
+            {
+                object val = GetInstance(valueIn);
+                int index = objs.IndexOf(val);
+                if (index < 0)
+                {
+                    index = objs.Count;
+                    objs.Add(val);
+                    var type = val.GetType();
+                    if (type.IsArray)
+                    {
+                        return valueIn.Unify(valueOut);
+                    }
+                    return ToFieldLayout("object", typeToName(type), val, type, valueOut, false, false) != libpl.PL_fail;
+                }
+            }
+            return valueIn.Unify(valueOut);
+        }
+
         /// <summary>
         /// ?- cliNewArray(long,10,Out),cliToString(Out,Str).
         /// </summary>
@@ -945,6 +1029,31 @@ namespace SbsSW.SwiPlCs
             }
             Type et = value.GetType().GetElementType();
             return valueOut.Unify(PlC(typeToSpec(et).Name, termv));
+        }
+        [PrologVisible(ModuleName = ExportModule)]
+        static public bool cliArrayToTermList(PlTerm arrayValue, PlTerm valueOut)
+        {
+            if (!valueOut.IsVar)
+            {
+                var plvar = PlTerm.PlVar();
+                cliArrayToTermList(arrayValue, plvar);
+                return SpecialUnify(valueOut, plvar);
+            }
+            object getInstance = GetInstance(arrayValue);
+            var value = getInstance as Array;
+            if (value == null)
+            {
+                Warn("Cant find array from " + arrayValue + " as " + getInstance.GetType());
+                return false;
+            }
+            int len = value.Length;
+            var termv = ATOM_NIL;
+            for (int i = len - 1; i >= 0; i--)
+            {
+                termv = PlC(".", ToProlog((value.GetValue(i))), termv);
+            }
+            //Type et = value.GetType().GetElementType();
+            return valueOut.Unify(termv);
         }
         [PrologVisible(ModuleName = ExportModule)]
         static public bool cliTermToArray(PlTerm arrayValue, PlTerm valueOut)
@@ -982,7 +1091,7 @@ namespace SbsSW.SwiPlCs
             }
             object getInstance = GetInstance(clazzOrInstance);
             Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
-            MethodInfo mi = findMethod(memberSpec, c);
+            MethodInfo mi = findMethod(memberSpec, -1, c);
             if (mi != null)
             {
                 return methodOut.FromObject((mi));
@@ -1003,12 +1112,13 @@ namespace SbsSW.SwiPlCs
             }
             object getInstance = GetInstance(clazzOrInstance);
             Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
-            MethodInfo mi = findMethod(memberSpec, c);
+            int arity = Arglen(valueIn);
+            MethodInfo mi = findMethod(memberSpec, arity, c);
             if (mi == null)
             {
                 var ei = findEventInfo(memberSpec, c);
                 if (ei != null) return cliRaiseEventHandler(clazzOrInstance, memberSpec, valueIn, valueOut);
-                if (valueIn.IsAtom && valueIn.Name == "[]") return cliGet(clazzOrInstance, memberSpec, valueOut);
+                if (valueIn.IsAtom && valueIn.Name == "[]") return cliGetRaw(clazzOrInstance, memberSpec, valueOut);
                 Warn("Cant find method " + memberSpec + " on " + c);
                 return false;
             }
@@ -1016,6 +1126,24 @@ namespace SbsSW.SwiPlCs
             object target = mi.IsStatic ? null : getInstance;
             object retval = InvokeCaught(mi, target, value);
             return valueOut.FromObject(retval);
+        }
+
+        private static int Arglen(PlTerm valueIn)
+        {
+            if (valueIn.IsList)
+            {
+                int len = 0;
+                PlTerm each = valueIn;
+                while (each.IsList && !each.IsAtom)
+                {
+                    each = each.Arg(1);
+                    len++;
+                }
+                return len;
+            }
+            if (valueIn.IsCompound) return valueIn.Arity;
+            if (valueIn.IsAtom) return 0;
+            return -1;
         }
 
         [PrologVisible(ModuleName = ExportModule)]
@@ -1155,7 +1283,7 @@ namespace SbsSW.SwiPlCs
         }
 
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliGet(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm valueOut)
+        static public bool cliGetRaw(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm valueOut)
         {
             if (clazzOrInstance.IsVar)
             {
@@ -1164,11 +1292,16 @@ namespace SbsSW.SwiPlCs
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                cliGet(clazzOrInstance, memberSpec, plvar);
+                cliGetRaw(clazzOrInstance, memberSpec, plvar);
                 return SpecialUnify(valueOut, plvar);
             }
             object getInstance = GetInstance(clazzOrInstance);
             Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
+            if (getInstance == null && c == null)
+            {
+                Warn("Cant find instance " + clazzOrInstance);
+                return false;
+            }
             object cliGet01 = cliGet0(getInstance, memberSpec, c);
             return valueOut.FromObject(cliGet01);
         }
@@ -1194,12 +1327,12 @@ namespace SbsSW.SwiPlCs
             else
             {
                 string fn = memberSpec.Name;
-                MethodInfo mi = findMethod(memberSpec, c) ??
-                                c.GetMethod(fn, BindingFlagsALL) ??
-                                c.GetMethod("get_" + fn, BindingFlagsALL) ??
-                                c.GetMethod("Get" + fn, BindingFlagsALL) ??
-                                c.GetMethod("Is" + fn, BindingFlagsALL) ??
-                                c.GetMethod("To" + fn, BindingFlagsALL);
+                MethodInfo mi = findMethod(memberSpec, -1, c) ??
+                                GetMethod(c, fn, BindingFlagsALL) ??
+                                GetMethod(c, "get_" + fn, BindingFlagsALL) ??
+                                GetMethod(c, "Get" + fn, BindingFlagsALL) ??
+                                GetMethod(c, "Is" + fn, BindingFlagsALL) ??
+                                GetMethod(c, "To" + fn, BindingFlagsALL);
                 if (mi == null)
                 {
                     Warn("Cant find getter " + memberSpec + " on " + c);
@@ -1212,8 +1345,20 @@ namespace SbsSW.SwiPlCs
             }
         }
 
+        private static MethodInfo GetMethod(Type type, string s, BindingFlags flags)
+        {
+            try
+            {
+                return type.GetMethod(s, flags);
+            }
+            catch (AmbiguousMatchException)
+            {
+                return null;
+            }
+        }
+
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliSet(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm valueIn)
+        static public bool cliSetRaw(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm valueIn)
         {
             object getInstance = GetInstance(clazzOrInstance);
             Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
@@ -1241,10 +1386,10 @@ namespace SbsSW.SwiPlCs
             else
             {
                 string fn = memberSpec.Name;
-                MethodInfo mi = findMethod(memberSpec, c) ??
-                                c.GetMethod("set_" + fn, BindingFlagsALL) ??
-                                c.GetMethod("Set" + fn, BindingFlagsALL) ??
-                                c.GetMethod("from" + fn, BindingFlagsALL);
+                MethodInfo mi = findMethod(memberSpec, -1, c) ??
+                                GetMethod(c, "set_" + fn, BindingFlagsALL) ??
+                                GetMethod(c, "Set" + fn, BindingFlagsALL) ??
+                                GetMethod(c, "from" + fn, BindingFlagsALL);
                 if (mi == null)
                 {
                     Warn("Cant find setter " + memberSpec + " on " + c);
@@ -1360,6 +1505,20 @@ namespace SbsSW.SwiPlCs
                 }
             }
         }
+        [PrologVisible(ModuleName = ExportModule)]
+        static public bool cliToTagged(PlTerm obj, PlTerm str)
+        {
+            if (!str.IsVar)
+            {
+                var plvar = PlTerm.PlVar();
+                cliToStringRaw(obj, plvar);
+                return SpecialUnify(str, plvar);
+            }
+            if (obj.IsString) return str.Unify(obj);
+            if (obj.IsVar) return str.Unify((string)obj);
+            object o = GetInstance(obj);
+            return AddTagged(str.TermRef, object_to_tag(o)) != 0;
+        }
         /// <summary>
         /// 1 ?- cliToString(-1,X).
         /// X = "4294967295".
@@ -1368,14 +1527,14 @@ namespace SbsSW.SwiPlCs
         /// <param name="str"></param>
         /// <returns></returns>
         [PrologVisible(ModuleName = ExportModule)]
-        public static bool cliToString(PlTerm obj, PlTerm str)
+        public static bool cliToStringRaw(PlTerm obj, PlTerm str)
         {
             try
             {
                 if (!str.IsVar)
                 {
                     var plvar = PlTerm.PlVar();
-                    cliToString(obj, plvar);
+                    cliToStringRaw(obj, plvar);
                     return SpecialUnify(str, plvar);
                 }
                 if (obj.IsString) return str.Unify(obj);
@@ -1441,30 +1600,135 @@ namespace SbsSW.SwiPlCs
         }
 
         [PrologVisible(ModuleName = ExportModule)]
+        static public bool cliPropsForType(PlTerm clazzSpec, PlTerm memberSpecs)
+        {
+            Type type = GetType(clazzSpec);
+            var props = GetPropsForTypes(type);
+            var value = props.Key.ToArray();
+            int len = value.Length;
+            var termv = ATOM_NIL;
+            for (int i = len - 1; i >= 0; i--)
+            {
+                termv = PlC(".", ToProlog((value[i].Name)), termv);
+            }
+            var value2 = props.Value.ToArray();
+            len = value2.Length;
+            for (int i = len - 1; i >= 0; i--)
+            {
+                termv = PlC(".", ToProlog((value2[i].Name)), termv);
+            }
+            return memberSpecs.Unify(termv);
+        }        
+        static readonly Dictionary<Type, KeyValuePair<List<PropertyInfo>, List<FieldInfo>>> PropForTypes = new Dictionary<Type, KeyValuePair<List<PropertyInfo>, List<FieldInfo>>>();
+
+        private static KeyValuePair<List<PropertyInfo>, List<FieldInfo>> GetPropsForTypes(Type t)
+        {
+            KeyValuePair<List<PropertyInfo>, List<FieldInfo>> kv;
+
+            if (PropForTypes.TryGetValue(t, out kv)) return kv;
+
+            lock (PropForTypes)
+            {
+                if (!PropForTypes.TryGetValue(t, out kv))
+                {
+                    kv = new KeyValuePair<List<PropertyInfo>, List<FieldInfo>>(new List<PropertyInfo>(),
+                                                                               new List<FieldInfo>());
+                    var ta = t.GetCustomAttributes(typeof(XmlTypeAttribute), false);
+                    bool specialXMLType = false;
+                    if (ta != null && ta.Length > 0)
+                    {
+                        XmlTypeAttribute xta = (XmlTypeAttribute)ta[0];
+                        specialXMLType = true;
+                    }
+                    HashSet<string> lowerProps = new HashSet<string>();
+                    BindingFlags flags = BindingFlags.Instance | BindingFlags.Public; //BindingFlags.NonPublic
+                    foreach (
+                        PropertyInfo o in t.GetProperties(flags))
+                    {
+                        if (o.CanRead)
+                        {
+
+                            if (o.Name.StartsWith("_")) continue;
+                            if (o.DeclaringType == typeof(Object)) continue;
+                            if (!lowerProps.Add(o.Name.ToLower())) continue;
+                            if (o.GetIndexParameters().Length > 0)
+                            {
+                                continue;
+                            }
+                            if (specialXMLType)
+                            {
+                                var use = o.GetCustomAttributes(typeof(XmlArrayItemAttribute), false);
+                                if (use == null || use.Length < 1) continue;
+                            }
+                            kv.Key.Add(o);
+
+                        }
+                    }
+                    foreach (FieldInfo o in t.GetFields(flags))
+                    {
+                        if (o.Name.StartsWith("_")) continue;
+                        if (o.DeclaringType == typeof(Object)) continue;
+                        if (!lowerProps.Add(o.Name.ToLower())) continue;
+                        if (specialXMLType)
+                        {
+                            var use = o.GetCustomAttributes(typeof(XmlArrayItemAttribute), false);
+                            if (use == null || use.Length < 1) continue;
+                        }
+                        kv.Value.Add(o);
+                    }
+                }
+                return kv;
+            }
+        }
+
+        [PrologVisible(ModuleName = ExportModule)]
+        static public bool cliToFromLayout(PlTerm clazzSpec, PlTerm memberSpec, PlTerm toSpec)
+        {
+            Type type = GetType(clazzSpec);
+            string name = memberSpec.Name;
+            int arity = memberSpec.Arity;
+            MemberInfo[] fieldInfos = new MemberInfo[arity];
+            for (int i = 0; i < arity; i++)
+            {
+                var arg = memberSpec.Arg(i);
+                fieldInfos[i] = findMember(arg, type);
+            }
+            var toMemb = findMember(toSpec, type);
+            AddPrologTermLayout(type, name, fieldInfos, toMemb);
+            return true;
+        }
+
+        [PrologVisible(ModuleName = ExportModule)]
         static public bool cliAddLayout(PlTerm clazzSpec, PlTerm memberSpec)
         {
             Type type = GetType(clazzSpec);
             string name = memberSpec.Name;
             int arity = memberSpec.Arity;
-            FieldInfo[] fieldInfos = new FieldInfo[arity];
+            MemberInfo[] fieldInfos = new MemberInfo[arity];
             for (int i = 0; i < arity; i++)
             {
-                fieldInfos[i] = findField(memberSpec.Arg(i), type);
+                var arg = memberSpec.Arg(i);
+                fieldInfos[i] = findMember(arg, type);
             }
-            AddPrologTermLayout(type, name, fieldInfos);
+            AddPrologTermLayout(type, name, fieldInfos, null);
             return true;
         }
 
         readonly private static Dictionary<string, PrologTermLayout> FunctorToLayout = new Dictionary<string, PrologTermLayout>();
         readonly private static Dictionary<Type, PrologTermLayout> TypeToLayout = new Dictionary<Type, PrologTermLayout>();
 
-        static public void AddPrologTermLayout(Type type, string name, FieldInfo[] fieldInfos)
+        static public void AddPrologTermLayout(Type type, string name, MemberInfo[] fieldInfos, MemberInfo toType)
         {
             PrologTermLayout layout = new PrologTermLayout();
             layout.FieldInfos = fieldInfos;
             layout.Name = name;
             layout.ObjectType = type;
+            layout.ToType = toType;
             int arity = fieldInfos.Length;
+            if (toType != null)
+            {
+                arity = 1;
+            }
             layout.Arity = arity;
             lock (FunctorToLayout)
             {
@@ -1485,12 +1749,16 @@ namespace SbsSW.SwiPlCs
                 if (classOrInstance.IsAtom)
                 {
                     Type t = GetType(classOrInstance);
+                    // we do this for static invokations like: cliGet('java.lang.Integer','MAX_VALUE',...)
+                    // the arg1 denotes a type, then return null!
                     if (t != null) return null;
                     Warn("GetInstance(atom) " + classOrInstance);
+                    // possibly should always return null?!
                 }
                 else if (classOrInstance.IsString)
                 {
-                    Warn("GetInstance(string) " + classOrInstance);
+                    Debug("GetInstance(string) " + classOrInstance);
+                    return (string) classOrInstance;
                 }
                 else
                 {
@@ -1981,24 +2249,24 @@ namespace SbsSW.SwiPlCs
                 PrologTermLayout layout;
                 if (TypeToLayout.TryGetValue(t, out layout))
                 {
-                    FieldInfo[] tGetFields = GetStructFormat(t);
+                    MemberInfo[] tGetFields = layout.FieldInfos;// GetStructFormat(t);
                     int len = tGetFields.Length;
                     PlTermV tv = NewPlTermV(len);
                     for (int i = 0; i < len; i++)
                     {
-                        object v = tGetFields[i].GetValue(o);
+                        object v = GetMemberValue(tGetFields[i],o);
                         tv[i].FromObject((v));
                     }
                     return term.Unify(PlC(layout.Name, tv)) ? libpl.PL_succeed : libpl.PL_fail;
                 }
-            }{}
+            }
             if (IsStructRecomposable(t))
             {
-                return ToFieldLayout("struct", typeToName(t), o, t, term);
+                return ToFieldLayout("struct", typeToName(t), o, t, term, false, false);
             }
             if (o is EventArgs)
             {
-                return ToFieldLayout("event", typeToName(t), o, t, term);
+                return ToFieldLayout("event", typeToName(t), o, t, term, false, false);
             }
             lock (ToFromConvertLock)
             {
@@ -2103,7 +2371,7 @@ namespace SbsSW.SwiPlCs
 
         }
 
-        private static FieldInfo[] GetStructFormat(Type t)
+        private static MemberInfo[] GetStructFormat(Type t)
         {
             if (false)
             {
@@ -2126,10 +2394,10 @@ namespace SbsSW.SwiPlCs
                     specialXMLType = true;
                 }
             }
-            FieldInfo[] tGetFields = null;
+            MemberInfo[] tGetFields = null;
             if (specialXMLType)
             {
-                List<FieldInfo> fis = new List<FieldInfo>();
+                List<MemberInfo> fis = new List<MemberInfo>();
                 foreach (var e in t.GetFields(InstanceFields))
                 {
                     var use = e.GetCustomAttributes(typeof(XmlArrayItemAttribute), false);
@@ -2167,10 +2435,10 @@ namespace SbsSW.SwiPlCs
         }
 
 
-        public static int ToFieldLayout(string named, string arg1, object o, Type t, PlTerm term)
+        public static int ToFieldLayout(string named, string arg1, object o, Type t, PlTerm term, bool childs, bool addNames)
         {
 
-            FieldInfo[] tGetFields = GetStructFormat(t);
+            MemberInfo[] tGetFields = GetStructFormat(t);
 
             int len = tGetFields.Length;
             PlTermV tv = NewPlTermV(len + 1);
@@ -2178,7 +2446,7 @@ namespace SbsSW.SwiPlCs
             int tvi = 1;
             for (int i = 0; i < len; i++)
             {
-                object v = tGetFields[i].GetValue(o);
+                object v = GetMemberValue(tGetFields[i], o);
                 tv[tvi++].FromObject((v));
             }
             if (true)
@@ -2219,6 +2487,14 @@ namespace SbsSW.SwiPlCs
                 return term.Unify(u64) ? libpl.PL_succeed : libpl.PL_fail;
                 //return libpl.PL_unify_float(term.TermRef, (double)Convert.ToDouble(o));
             }
+            if (o is IntPtr)
+            {
+                return libpl.PL_unify_intptr(term.TermRef, (IntPtr) o);
+            }
+            if (o is UIntPtr)
+            {
+                return libpl.PL_unify_intptr(term.TermRef, (IntPtr) o);
+            }
             return -1;
         }
 
@@ -2240,7 +2516,12 @@ namespace SbsSW.SwiPlCs
                 if (FunctorToLayout.TryGetValue(key, out pltl))
                 {
                     Type type = pltl.ObjectType;
-                    FieldInfo[] fis = pltl.FieldInfos;
+                    MemberInfo[] fis = pltl.FieldInfos;
+                    MemberInfo toType = pltl.ToType;
+                    if (toType != null)
+                    {
+                        return GetMemberValue(toType, GetInstance(arg1));
+                    }
                     return CreateInstance(type, fis, orig, 1);
                 }
             }
@@ -2250,7 +2531,7 @@ namespace SbsSW.SwiPlCs
             }
             if (key == "{}/1")
             {
-                return orig;
+                return arg1;
             }
             if (pt == typeof(object)) pt = null;
             //{T}
@@ -2348,7 +2629,7 @@ namespace SbsSW.SwiPlCs
             if (name == "struct" || name == "event" || name == "object")
             {
                 Type type = GetType(arg1);
-                FieldInfo[] fis = GetStructFormat(type);
+                MemberInfo[] fis = GetStructFormat(type);
                 return CreateInstance(type, fis, orig, 2);
             }
             if (orig.IsList)
@@ -2387,20 +2668,119 @@ namespace SbsSW.SwiPlCs
                 }
             }
             // Debug("Get Instance fallthru");
-            FieldInfo[] ofs = GetStructFormat(t);
+            MemberInfo[] ofs = GetStructFormat(t);
             return CreateInstance(t, ofs, orig, 1);
         }
 
-        private static object CreateInstance(Type type, FieldInfo[] fis, PlTerm orig, int plarg)
+        private static object CreateInstance(Type type, MemberInfo[] fis, PlTerm orig, int plarg)
         {
-            object newStruct = Activator.CreateInstance(type);
+            int fisLength = fis.Length;
+            object[] paramz = new object[fisLength];
+            for (int i = 0; i < fisLength; i++)
+            {
+                MemberInfo fi = fis[i];
+                paramz[i] = CastTerm(orig[plarg++], FieldType(fi));
+            }
+            object newStruct = null;
+            try
+            {
+                newStruct = Activator.CreateInstance(type);
+            }
+            catch (System.MissingMethodException)
+            {
+                foreach (ConstructorInfo ci in type.GetConstructors(BindingFlagsALL))
+                {
+                    if (ci.GetParameters().Length > 0) continue;
+                    if (ci.IsStatic) continue;
+                    newStruct = ci.Invoke(null);
+                }
+            }                        
             for (int i = 0; i < fis.Length; i++)
             {
-                FieldInfo fi = fis[i];
-                fi.SetValue(newStruct, CastTerm(orig[plarg++], fi.FieldType));
+                MemberInfo fi = fis[i];
+                SetMemberValue(fi, newStruct, paramz[i]);
             }
+             
+
             return newStruct;
         }
+
+        private static object GetMemberValue(MemberInfo field, object o)
+        {
+            if (field is FieldInfo)
+            {
+                return ((FieldInfo)field).GetValue(o);
+            }
+            if (field is PropertyInfo)
+            {
+                return ((PropertyInfo)field).GetGetMethod(true).Invoke(o, null);
+            }
+            if (field is MethodInfo)
+            {
+                MethodInfo mi = (MethodInfo)field;
+                if (mi.IsStatic) return mi.Invoke(null, new object[] { o });
+                return ((MethodInfo)field).Invoke(o, null);
+            }
+            if (field is ConstructorInfo)
+            {
+                return ((ConstructorInfo)field).Invoke(new object[] { o });
+            }
+            throw new IndexOutOfRangeException("" + field);
+        }
+
+        private static void SetMemberValue(MemberInfo field, object o, object value)
+        {
+            if (field is FieldInfo)
+            {
+                 ((FieldInfo) field).SetValue(o, value);
+                return;
+            }
+            if (field is PropertyInfo)
+            {
+                ((PropertyInfo)field).GetSetMethod(true).Invoke(o, new object[] { value });
+                return;
+            }
+            if (field is MethodInfo)
+            {
+                MethodInfo mi = (MethodInfo) field;
+                if (mi.IsStatic)
+                {
+                    mi.Invoke(null, new object[] {o, value});
+                    return;
+                }
+                ((MethodInfo) field).Invoke(o, new object[] {value});
+                return;
+            }
+            throw new IndexOutOfRangeException("" + field);
+            if (field is ConstructorInfo)
+            {
+                ((ConstructorInfo) field).Invoke(new object[] {o, value});
+                return;
+            }
+        }
+
+        private static Type FieldType(MemberInfo field)
+        {
+            if (field is FieldInfo)
+            {
+                return ((FieldInfo) field).FieldType;
+            }
+            if (field is PropertyInfo)
+            {
+                return ((PropertyInfo) field).PropertyType;
+            }
+            if (field is MethodInfo)
+            {
+                MethodInfo mi = (MethodInfo)field;
+                return mi.ReturnType;
+            }
+            if (field is ConstructorInfo)
+            {
+                return ((ConstructorInfo) field).DeclaringType;
+            }
+            throw new IndexOutOfRangeException("" + field);
+        }
+
         private static int FillArray(IList fis, Type elementType, PlTerm orig, int plarg)
         {
             int elements = 0;
@@ -2418,26 +2798,189 @@ namespace SbsSW.SwiPlCs
                 return r;
             Type fr = r.GetType();
             if (pt.IsInstanceOfType(r)) return r;
+            return RecastObject(pt, r, fr);
+        }
+
+        private static object RecastObject(Type pt, object r, Type fr)
+        {
             try
             {
-//                if (PrologBinder.CanConvertFrom(r.GetType(), pt))
+                if (r is double && pt == typeof(float))
+                {
+                    double d = (double)r;
+                    return Convert.ToSingle(d);
+                }
+                //                if (PrologBinder.CanConvertFrom(r.GetType(), pt))
                 {
                     var value = Convert.ChangeType(r, pt);
                     if (pt.IsInstanceOfType(value)) return value;
                 }
-                if (r is double && pt == typeof(float))
-                {
-                    double d = (double) r;
-                    return Convert.ToSingle(d);                    
-                }
-            } catch(Exception e)
+            }
+            catch (Exception e)
             {
-                Debug("conversion " + fr + " to " + pt + " resulted in " + e);               
+                Debug("conversion " + fr + " to " + pt + " resulted in " + e);
+            }
+
+            try
+            {
+                ICollection<Func<object, object>> tryAll = new List<Func<object, object>>();
+                var fc = findCast(fr, pt, tryAll);
+                if (fc != null)
+                {
+                    try
+                    {
+                        var value = fc(r);
+                        if (pt.IsInstanceOfType(value)) return value;
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+                foreach (var ti in tryAll)
+                {
+                    try
+                    {
+                        var value = ti(r);
+                        if (pt.IsInstanceOfType(value)) return value;
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug("conversion " + fr + " to " + pt + " resulted in " + e);
             }
             Warn("Having time of it convcerting " + r + " to " + pt);
 
 
             return r;
+        }
+
+        private static readonly List<Type> ConvertorClasses = new List<Type>();
+
+        private static Func<object, object> findCast(Type from, Type to, ICollection<Func<object, object>> allMethods)
+        {
+            Func<object, object> meth;
+            if (to.IsPrimitive)
+            {
+                meth = ((r) => Convert.ChangeType(r, to));
+                if (allMethods != null) allMethods.Add(meth); else return meth;
+            }
+            if (to.IsArray && from.IsArray)
+            {
+                var eto = to.GetElementType();
+                var efrom = from.GetElementType();
+                meth = ((r) =>
+                            {
+                                Array ar = ((Array) r);
+                                int len = ar.Length;
+                                Array ret = Array.CreateInstance(eto, len);
+                                for (int i = 0; i < len; i++)
+                                {
+                                    ret.SetValue(RecastObject(eto, ar.GetValue(i), efrom), i);
+                                }
+                                return ret;
+                            });
+                if (allMethods != null) allMethods.Add(meth); else return meth;
+            }
+            ConstructorInfo ci = to.GetConstructor(new Type[] {from});
+            if (ci != null)
+            {
+                meth =  (r) => ci.Invoke(new object[] { r });
+                if (allMethods != null) allMethods.Add(meth); else return meth;
+            }
+            ConstructorInfo pc = null;
+            foreach (ConstructorInfo mi in to.GetConstructors(BindingFlagsALL))
+            {
+                var ps = mi.GetParameters();
+                if (ps.Length == 0 && !mi.IsStatic)
+                {
+                    pc = mi;
+                    continue;
+                }
+                if (ps.Length == 1)
+                {
+                    Type pt = ps[0].ParameterType;
+                    if (pt.IsAssignableFrom(from))
+                    {
+                        ConstructorInfo info = mi;
+                        meth =  (r) => info.Invoke(new object[] {r});
+                        if (allMethods != null) allMethods.Add(meth); else return meth;
+                    }
+                }
+            }
+            var someStatic = SomeStaticMethod(to, to, from, allMethods);
+            if (someStatic != null) return someStatic;
+            someStatic = SomeStaticMethod(to, from, from, allMethods);
+            if (someStatic != null) return someStatic;
+            foreach (MethodInfo mi in from.GetMethods(BindingFlagsInstance))
+            {
+                if (!mi.IsStatic)
+                {
+                    var ps = mi.GetParameters();
+                    if (ps.Length == 0)
+                    {
+                        if (!to.IsAssignableFrom(mi.ReturnType)) continue;
+                        Type pt = ps[0].ParameterType;
+                        if (pt.IsAssignableFrom(from))
+                        {
+                            MethodInfo info = mi;
+                            meth = (r) => info.Invoke(null, new object[] { r });
+                            if (allMethods != null) allMethods.Add(meth); else return meth;
+                        }
+                    }
+                }
+            }
+            if (pc != null)
+            {
+                foreach (var f in to.GetFields(BindingFlagsInstance))
+                {
+                    FieldInfo info = f;
+                    meth = (r) =>
+                               {
+                                   var ret = pc.Invoke(null);
+                                   info.SetValue(ret, r);
+                                   return ret;
+                               };
+                    if (allMethods != null) allMethods.Add(meth); else return meth;
+                }
+            }
+            if (ConvertorClasses.Count==0)
+            {
+                ConvertorClasses.Add(typeof (Convert));
+                ConvertorClasses.Add(typeof (PrologConvert));
+            }
+            foreach (Type convertorClasse in ConvertorClasses)
+            {
+                var someStaticM = SomeStaticMethod(to, convertorClasse, from, allMethods);
+                if (someStaticM != null) return someStatic;
+            }
+            return null;
+        }
+        private static Func<object, object> SomeStaticMethod(Type to, Type srch, Type from, ICollection<Func<object, object>> allMethods)
+        {
+            Func<object, object> meth;
+            foreach (MethodInfo mi in srch.GetMethods(BindingFlagsJustStatic))
+            {
+                if (mi.IsStatic)
+                {
+                    var ps = mi.GetParameters();
+                    if (ps.Length == 1)
+                    {
+                        if (!to.IsAssignableFrom(mi.ReturnType)) continue;
+                        Type pt = ps[0].ParameterType;
+                        if (pt.IsAssignableFrom(from))
+                        {
+                            MethodInfo info = mi;
+                            meth = (r) => info.Invoke(null, new object[] { r });
+                            if (allMethods != null) allMethods.Add(meth); else return meth;
+                        }
+                    }
+                }
+            }
+            return null;
         }
 
         private static readonly Type[] arrayOfStringType = new Type[] {typeof (string)};
@@ -2550,12 +3093,25 @@ namespace SbsSW.SwiPlCs
 
       }
 
+    internal class PrologConvert //: OpenMetaverse.UUIDFactory
+    {
+        static public Guid ToGuid(object from)
+        {
+            return new Guid("" + from);
+        }
+        static public String ToStr(object from)
+        {
+            return "" + from;
+        }
+    }
+
     internal class PrologTermLayout
     {
         public string Name;
         public int Arity;
         public Type ObjectType;
-        public FieldInfo[] FieldInfos;
+        public MemberInfo[] FieldInfos;
+        public MemberInfo ToType;
     }
     
 #if plvar_pins
