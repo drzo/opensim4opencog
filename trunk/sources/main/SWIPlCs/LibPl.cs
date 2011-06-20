@@ -286,6 +286,17 @@ namespace SbsSW.SwiPlCs
             return Marshal.PtrToStringAnsi(SafeNativeMethods.PL_atom_chars(t_atom));
         }
 
+        internal static uint PL_new_atom_wchars(int len, string text)
+        {
+            return SafeNativeMethods.PL_new_atom_wchars(len, text);
+        }
+        internal static String PL_atom_wchars(uint t_atom)
+        {
+            int len = 0;
+            IntPtr iptr = SafeNativeMethods.PL_atom_wchars(t_atom, ref len);
+            string m = Marshal.PtrToStringAuto(iptr, len);
+            return m;
+        }
 
 
         /********************************

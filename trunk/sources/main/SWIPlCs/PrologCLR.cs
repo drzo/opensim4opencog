@@ -2183,12 +2183,33 @@ namespace SbsSW.SwiPlCs
 
             if (o is string)
             {
+                string s = (string) o;
                 switch (VMStringsAsAtoms)
                 {
                     case libpl.CVT_STRING:
-                        return libpl.PL_unify_string_chars(TermRef, (string) o);
+                        {
+                            try
+                            {
+                                return libpl.PL_unify_string_chars(TermRef, (string)o);
+                            }
+                            catch (Exception)
+                            {
+
+                                libpl.PL_put_atom(TermRef, libpl.PL_new_atom_wchars(s.Length, s));
+                                return libpl.PL_succeed;
+                            }
+                        }
                     case libpl.CVT_ATOM:
-                        return libpl.PL_unify_atom_chars(TermRef, (string) o);
+                        try
+                        {
+                            return libpl.PL_unify_atom_chars(TermRef, (string)o);
+                        }
+                        catch (Exception)
+                        {
+
+                            libpl.PL_put_atom(TermRef, libpl.PL_new_atom_wchars(s.Length, s));
+                            return libpl.PL_succeed;
+                        }
                     case libpl.CVT_LIST:
                         return libpl.PL_unify_list_chars(TermRef, (string) o);
                     default:

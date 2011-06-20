@@ -197,12 +197,20 @@ namespace SbsSW.SwiPlCs
         internal static extern void PL_fatal_error(string text, params IntPtr[] varargs);
 
         [DllImport(DllFileName, CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true)]
-		internal static extern uint PL_new_atom(string text);
+        internal static extern uint PL_new_atom(string text);
         [DllImport(DllFileName, CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true)] // return const char *
-//TODO ausprobieren		[return: MarshalAs(UnmanagedType.LPStr)]
+        //TODO ausprobieren		[return: MarshalAs(UnmanagedType.LPStr)]
         //internal static extern String PL_atom_chars(uint t_atom);
-		internal static extern IntPtr PL_atom_chars(uint t_atom);
-        
+        internal static extern IntPtr PL_atom_chars(uint t_atom);
+
+
+        [DllImport(DllFileName, CharSet = CharSet.Auto, BestFitMapping = true, ThrowOnUnmappableChar = true)]
+        internal static extern uint PL_new_atom_wchars(int len, string text);
+        [DllImport(DllFileName, CharSet = CharSet.Auto, BestFitMapping = true, ThrowOnUnmappableChar = true)] // return const char *
+        internal static extern IntPtr PL_atom_wchars(uint t_atom, ref int len);
+
+
+
         // Pl_Query
         [DllImport(DllFileName)]
         internal static extern uint PL_query(uint pl_query_switch);
@@ -383,11 +391,12 @@ namespace SbsSW.SwiPlCs
         internal static extern int PL_unify_integer(uint t1, Int64 n);
         [DllImport(DllFileName)]
         internal static extern int PL_unify_float(uint t1, double n);
-        [DllImport(DllFileName, CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true)]
+
+        [DllImport(DllFileName, CharSet = CharSet.Ansi, BestFitMapping = true, ThrowOnUnmappableChar = false)]
         internal static extern int PL_unify_atom_chars(uint t1, string atom);
-        [DllImport(DllFileName, CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true)]
+        [DllImport(DllFileName, CharSet = CharSet.Ansi, BestFitMapping = true, ThrowOnUnmappableChar = false)]
         internal static extern int PL_unify_string_chars(uint t1, string atom);
-        [DllImport(DllFileName, CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true)]
+        [DllImport(DllFileName, CharSet = CharSet.Ansi, BestFitMapping = true, ThrowOnUnmappableChar = false)]
         internal static extern int PL_unify_list_chars(uint t1, string atom);
 
         
