@@ -46,7 +46,7 @@ namespace cogbot
         /// <param name="k"></param>
         /// <param name="type"></param>
         /// <param name="v"></param>
-        internal NamedParam(KeyType k, Type type, Type v)
+        public NamedParam(KeyType k, Type type, Type v)
         {
             memberTarget = null;
             _key = ToKey(k);
