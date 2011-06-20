@@ -436,7 +436,7 @@ namespace SbsSW.SwiPlCs
             ulong refCount = libpl.TermRefCount;
             CheckEngine();
             PrologClient.RegisterThread(System.Threading.Thread.CurrentThread);
-            return libpl.PL_warning(text) == 0;
+            return libpl.PL_warning(text) != 0;
         }
 
         private static PlTerm ToPlList(PlTerm[] terms)
