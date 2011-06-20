@@ -2,14 +2,25 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Xml.Serialization;
 using cogbot.TheOpenSims;
+using MushDLR223.Utilities;
+using SbsSW.SwiPlCs;
 using KeyType = System.String;
 namespace cogbot
 {
+    [XmlType]
     public struct NamedParam
     {
-        public NamedParam(KeyType k, object v)
+        /// <summary>
+        /// For building simevent info
+        /// </summary>
+        /// <param name="k"></param>
+        /// <param name="v"></param>
+        internal NamedParam(KeyType k, object v)
         {
+            memberTarget = null;
             _key = ToKey(k);
             _value = v;
             _Type = null;
@@ -17,8 +28,10 @@ namespace cogbot
             info = null;
             checkKey(k);
         }
-        public NamedParam(string k, Type v)
+        
+        private NamedParam(string k, Type v)
         {
+            memberTarget = null;
             _key = ToKey(k);
             _value = v;
             _Type = null;
@@ -26,8 +39,16 @@ namespace cogbot
             info = null;
             checkKey(k);
         }
-        public NamedParam(KeyType k, Type type, object v)
+
+        /// <summary>
+        /// Used for describing commands
+        /// </summary>
+        /// <param name="k"></param>
+        /// <param name="type"></param>
+        /// <param name="v"></param>
+        internal NamedParam(KeyType k, Type type, Type v)
         {
+            memberTarget = null;
             _key = ToKey(k);
             _value = v;
             _Type = type;
@@ -36,7 +57,7 @@ namespace cogbot
             checkKey(k);
         }
 
-        private void checkKey(object o)
+        private static void checkKey(object o)
         {
             return;
             if (o!=null) if (o.ToString().Contains("offsetU"))
@@ -45,17 +66,35 @@ namespace cogbot
             }
         }
 
-        public NamedParam(MemberInfo inf, KeyType k, Type type, object v)
+        /// <summary>
+        /// Used for making InfoMaps
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="inf"></param>
+        /// <param name="k"></param>
+        /// <param name="type"></param>
+        /// <param name="v"></param>
+        internal NamedParam(object target, MemberInfo inf, KeyType k, Type type, object v)
         {
+            memberTarget = target;
             info = inf;
             _key = ToKey(k);
             _value = v;
-            _Type = type;
+            _Type = type ?? FieldType(inf);
             Choices = null;
             checkKey(k);
         }
-        public NamedParam(KeyType k, Type type, object v, params object[] choices)
+
+        /// <summary>
+        /// Used for describing commands
+        /// </summary>
+        /// <param name="k"></param>
+        /// <param name="type"></param>
+        /// <param name="v"></param>
+        /// <param name="choices"></param>
+        internal NamedParam(KeyType k, Type type, object v, params object[] choices)
         {
+            memberTarget = null;
             _key = ToKey(k);
             _value = v;
             _Type = type;
@@ -64,20 +103,55 @@ namespace cogbot
             checkKey(k);
         }
 
+        private static Type FieldType(MemberInfo field)
+        {
+            if (field is FieldInfo)
+            {
+                return ((FieldInfo)field).FieldType;
+            }
+            if (field is PropertyInfo)
+            {
+                return ((PropertyInfo)field).PropertyType;
+            }
+            if (field is MethodInfo)
+            {
+                MethodInfo mi = (MethodInfo)field;
+                return mi.ReturnType;
+            }
+            if (field is ConstructorInfo)
+            {
+                return ((ConstructorInfo)field).DeclaringType;
+            }
+            throw new IndexOutOfRangeException("" + field);
+        }
+
         private static string ToKey(string s)
         {
             if (s == null) return null;
             return string.Intern(s);
         }
 
-        private readonly KeyType _key;
-        private readonly object _value;
-        readonly public object[] Choices;
-        public readonly MemberInfo info;
-        private readonly Type _Type;
-
-        public NamedParam(NamedParam param, object o)
+        public KeyValuePair<string, object> Pair
         {
+            get { return new KeyValuePair<string, object>(_key, _value); }
+        }
+
+
+        private KeyType _key;
+        private object _value;
+        readonly public object[] Choices;
+        public MemberInfo info;
+        private Type _Type;
+        public object memberTarget;
+
+        /// <summary>
+        /// Used for constructing Cyc-like functions
+        /// </summary>
+        /// <param name="param"></param>
+        /// <param name="o"></param>
+        internal NamedParam(NamedParam param, object o)
+        {
+            memberTarget = param.memberTarget;
             _Type = param._Type;
             _value = o;
             _key = param._key;
@@ -85,8 +159,14 @@ namespace cogbot
             info = param.info;
         }
 
-        public NamedParam(Type type, Type DataType)
+        /// <summary>
+        /// Used for describing commands 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="DataType"></param>
+        internal NamedParam(Type type, Type DataType)
         {
+            memberTarget = null;
             _Type = type;
             _value = NullType.GetNullType(DataType);
             _key = _Type.Name;
@@ -122,20 +202,35 @@ namespace cogbot
             }
         }
 
+        [XmlArrayItem]
         public object Value
         {
             get { return _value; }
+            set { SetValue(value); }
         }
 
+        internal void SetValue(object value)
+        {
+            _value = value;
+            if (info == null || memberTarget == null)
+            {
+                DLRConsole.DebugWriteLine("No way to set value on NamedParam " + this);
+                return;
+            }
+            SetMemberValue(info, memberTarget, value);
+        }
+
+        [XmlArrayItem]
         public string Key
         {
             get { return _key; }
+            set { _key = value; }
         }
 
         public override string ToString()
         {
             if (_key == null) return string.Format("{0}", (_value ?? "NULL"));
-            return _key + "=" + _value;
+            return string.Format("{0}='{1}'", (_key ?? "NULL"), (_value ?? "NULL"));
         }
 
         public static bool operator ==(NamedParam p1,NamedParam p2)
@@ -190,5 +285,41 @@ namespace cogbot
             return Parameters;
         }
 
+        public static void SetMemberValue(MemberInfo field, object o, object value)
+        {
+            if (field is FieldInfo)
+            {
+                ((FieldInfo)field).SetValue(o, value);
+                return;
+            }
+            if (field is PropertyInfo)
+            {
+                MethodInfo setterMethod = ((PropertyInfo)field).GetSetMethod(true);
+                if (setterMethod == null)
+                {
+                    DLRConsole.DebugWriteLine("No setter method on " + field);
+                    return;
+                }
+                setterMethod.Invoke(o, new object[] { value });
+                return;
+            }
+            if (field is MethodInfo)
+            {
+                MethodInfo mi = (MethodInfo)field;
+                if (mi.IsStatic)
+                {
+                    mi.Invoke(null, new object[] { o, value });
+                    return;
+                }
+                ((MethodInfo)field).Invoke(o, new object[] { value });
+                return;
+            }
+            throw new IndexOutOfRangeException("" + field);
+            if (field is ConstructorInfo)
+            {
+                ((ConstructorInfo)field).Invoke(new object[] { o, value });
+                return;
+            }
+        }
     }
 }
