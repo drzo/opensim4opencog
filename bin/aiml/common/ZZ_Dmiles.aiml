@@ -12,6 +12,13 @@
       </template>
     </category>
 
+      <category isTraced="true">
+      <pattern>WHO ARE THEY</pattern>
+      <template>
+         <set name="they"><person/></set>
+      </template>
+    </category>
+
 
     <!-- grab out favorite whatnot like food,color,movie,etc but not the actual instance -->
     <category isTraced="true">

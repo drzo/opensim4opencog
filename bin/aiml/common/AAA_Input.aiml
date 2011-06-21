@@ -166,6 +166,8 @@
     <learn graph="default" path="aiml/kotoko_irata/gamebot/*.aiml" />
     <load filename="aiml/stdset/*.aiml" />
     <load filename="aiml/programsharp/*.aiml" />
+    <load filename="aiml/chomskyAIML/*.aiml" />
+       <load filename="aiml/chomskyAIML/*.aiml" />
    -->
     <load filename="aiml/chomskyAIML/*.aiml" />
     <category>
