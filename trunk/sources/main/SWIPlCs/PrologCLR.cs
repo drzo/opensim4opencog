@@ -68,7 +68,7 @@ namespace SbsSW.SwiPlCs
                 Type[] lenType = new Type[memberSpec.intValue()];
                 for (int i = 0; i < lenType.Length; i++)
                 {
-                    lenType[i] = typeof (object);
+                    lenType[i] = null;
                 }
                 return lenType;
             }
@@ -117,6 +117,7 @@ namespace SbsSW.SwiPlCs
                     }
                 }
             }
+            if (c == null) return null;
             EventInfo ei = c.GetEvent(memberSpec.Name, BindingFlagsALL);
             if (ei != null) return ei;
             var members = c.GetEvents(BindingFlagsALL);
@@ -418,7 +419,7 @@ namespace SbsSW.SwiPlCs
                     }
                     //  return type;
                 }
-                Warn("cant find compound as class: " + clazzSpec);
+                WarnMissing("cant find compound as class: " + clazzSpec);
             }
             object toObject = GetInstance(clazzSpec);
             if (toObject is Type) return (Type)toObject;
@@ -587,7 +588,10 @@ namespace SbsSW.SwiPlCs
             if (term is PlTerm)
             {
                 PlTerm tlist = (PlTerm)term;
-                term = tlist.Copy();
+                if (tlist.IsList)
+                {
+                    term = tlist.Copy();
+                }
             }
             int len = paramInfos.Length;
             object[] ret = new object[len];
@@ -595,7 +599,7 @@ namespace SbsSW.SwiPlCs
             foreach (PlTerm arg in term)
             {
                 ret[idx] = CastTerm(arg, paramInfos[idx].ParameterType);
-                if (idx++ >= len) break;
+                if (++idx >= len) break;
             }
             return ret;
         }
@@ -1137,12 +1141,12 @@ namespace SbsSW.SwiPlCs
 
 
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliCall(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm valueIn, PlTerm valueOut)
+        static public bool cliCallRaw(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm valueIn, PlTerm valueOut)
         {
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                cliCall(clazzOrInstance, memberSpec, valueIn, plvar);
+                cliCallRaw(clazzOrInstance, memberSpec, valueIn, plvar);
                 return SpecialUnify(valueOut, plvar);
             }
             object getInstance = GetInstance(clazzOrInstance);
@@ -1160,7 +1164,7 @@ namespace SbsSW.SwiPlCs
             object[] value = PlListToCastedArray(valueIn, mi.GetParameters());
             object target = mi.IsStatic ? null : getInstance;
             object retval = InvokeCaught(mi, target, value);
-            return valueOut.FromObject(retval);
+            return valueOut.FromObject(retval ?? VoidOrNull(mi));
         }
 
         private static int Arglen(PlTerm valueIn)
@@ -1236,7 +1240,12 @@ namespace SbsSW.SwiPlCs
             }
             object[] value = PlListToCastedArray(valueIn, mi.GetParameters());
             object target = mi.IsStatic ? null : getInstance;
-            return valueOut.FromObject((InvokeCaught(mi, target, value)));
+            return valueOut.FromObject(InvokeCaught(mi, target, value) ?? VoidOrNull(mi));
+        }
+
+        private static object VoidOrNull(MethodInfo info)
+        {
+            return info.ReturnType == typeof (void) ? (object) PLVOID : PLNULL;
         }
 
         public static Dictionary<EventHandlerInPrologKey, EventHandlerInProlog> PrologEventHandlers =
@@ -1337,15 +1346,18 @@ namespace SbsSW.SwiPlCs
                 Warn("Cant find instance " + clazzOrInstance);
                 return false;
             }
-            object cliGet01 = cliGet0(getInstance, memberSpec, c);
+            bool found;
+            object cliGet01 = cliGet0(getInstance, memberSpec, c, out found);
+            if (!found) return false;
             return valueOut.FromObject(cliGet01);
         }
-        static public object cliGet0(object getInstance, PlTerm memberSpec, Type c)
+        static public object cliGet0(object getInstance, PlTerm memberSpec, Type c, out bool found)
         {
             FieldInfo fi = findField(memberSpec, c);
             if (fi != null)
             {
                 object fiGetValue = fi.GetValue(fi.IsStatic ? null : getInstance);
+                found = true;
                 return (fiGetValue);
             }
             var pi = findProperty(memberSpec, c);
@@ -1354,9 +1366,11 @@ namespace SbsSW.SwiPlCs
                 var mi = pi.GetGetMethod();
                 if (mi != null)
                 {
-                    return ((InvokeCaught(mi, mi.IsStatic ? null : getInstance, new object[0])));
+                    found = true;
+                    return ((InvokeCaught(mi, mi.IsStatic ? null : getInstance, new object[0]) ?? VoidOrNull(mi)));
                 }
-                Warn("Cant find getter for property " + memberSpec + " on " + c + " for " + pi);
+                WarnMissing("Cant find getter for property " + memberSpec + " on " + c + " for " + pi);
+                found = false;
                 return null;
             }
             else
@@ -1370,14 +1384,26 @@ namespace SbsSW.SwiPlCs
                                 GetMethod(c, "To" + fn, BindingFlagsALL);
                 if (mi == null)
                 {
-                    Warn("Cant find getter " + memberSpec + " on " + c);
+                    WarnMissing("Cant find getter " + memberSpec + " on " + c);
+                    found = false;
                     return null;
                 }
                 object[] value = PlListToCastedArray(memberSpec, mi.GetParameters());
                 object target = mi.IsStatic ? null : getInstance;
-                object retval = InvokeCaught(mi, target, value);
+                object retval = InvokeCaught(mi, target, value) ?? VoidOrNull(mi);
+                found = true;
                 return retval;
             }
+        }
+
+        private static bool WarnMissing(string s)
+        {
+            if (true)
+            {
+                Debug(s);
+                return false;
+            }
+            return Warn(s);
         }
 
         private static MethodInfo GetMethod(Type type, string s, BindingFlags flags)
@@ -1397,6 +1423,11 @@ namespace SbsSW.SwiPlCs
         {
             object getInstance = GetInstance(clazzOrInstance);
             Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
+            return cliSet0(getInstance, memberSpec, valueIn, c);
+        }
+
+        static public bool cliSet0(object getInstance, PlTerm memberSpec,  PlTerm valueIn, Type c) {
+
             FieldInfo fi = findField(memberSpec, c);
             if (fi != null)
             {
@@ -1416,7 +1447,7 @@ namespace SbsSW.SwiPlCs
                     InvokeCaught(mi, target, new[] { value });
                     return true;
                 }
-                return Warn("Cant find setter for property " + memberSpec + " on " + c);
+                return WarnMissing("Cant find setter for property " + memberSpec + " on " + c);
             }
             else
             {
@@ -1427,7 +1458,7 @@ namespace SbsSW.SwiPlCs
                                 GetMethod(c, "from" + fn, BindingFlagsALL);
                 if (mi == null)
                 {
-                    Warn("Cant find setter " + memberSpec + " on " + c);
+                    WarnMissing("Cant find setter " + memberSpec + " on " + c);
                     return false;
                 }
                 object[] value = PlListToCastedArray(valueIn, mi.GetParameters());
@@ -1435,7 +1466,7 @@ namespace SbsSW.SwiPlCs
                 object retval = InvokeCaught(mi, target, value);
                 return true;// valueOut.FromObject(retval);
             }
-            Warn("Cant find setter " + memberSpec + " on " + c);
+            WarnMissing("Cant find setter " + memberSpec + " on " + c);
             return false;
         }
 
@@ -1549,8 +1580,8 @@ namespace SbsSW.SwiPlCs
                 cliToStringRaw(obj, plvar);
                 return SpecialUnify(str, plvar);
             }
-            if (obj.IsString) return str.Unify(obj);
-            if (obj.IsVar) return str.Unify((string)obj);
+            //if (obj.IsString) return str.Unify(obj);
+            if (obj.IsVar) return str.Unify(obj);
             object o = GetInstance(obj);
             return AddTagged(str.TermRef, object_to_tag(o)) != 0;
         }
@@ -1837,7 +1868,7 @@ namespace SbsSW.SwiPlCs
             }
 
             object val = instanceMaybe ?? GetInstance(classOrInstance);
-            if (val is Type) return (Type)val;
+            //if (val is Type) return (Type)val;
             if (val == null)
             {
                 Warn("GetTypeFromInstance: " + classOrInstance);
@@ -2709,7 +2740,9 @@ namespace SbsSW.SwiPlCs
                     if (o1 != null)
                     {
                         // send a list into cliGet0
-                        return cliGet0(arg1, orig.Arg(1), o1.GetType());
+                        bool found;
+                        var res = cliGet0(arg1, orig.Arg(1), o1.GetType(), out found);
+                        if (found) return res;
                     }
                 }
             }
@@ -2938,6 +2971,23 @@ namespace SbsSW.SwiPlCs
         private static Func<object, object> findCast(Type from, Type to, ICollection<Func<object, object>> allMethods)
         {
             Func<object, object> meth;
+            if (to.IsAssignableFrom(from))
+            {
+                meth = (r) => r;
+                if (allMethods != null) allMethods.Add(meth); else return meth;
+            }
+            if (to.IsEnum)
+            {
+                meth = (r) =>
+                           {
+                               if (r == null)
+                               {
+                                   return null;
+                               }
+                               return Enum.Parse(to, r.ToString());
+                           };
+                if (allMethods != null) allMethods.Add(meth); else return meth;
+            }
             if (to.IsPrimitive)
             {
                 meth = ((r) => Convert.ChangeType(r, to));
@@ -3104,9 +3154,16 @@ namespace SbsSW.SwiPlCs
                     break;
                 case PlType.PlInteger:
                     {
-                        long i = 0;
-                        if (0 != libpl.PL_get_long(o.TermRef, ref i))
+                        int i = 0;
+                        if (0 != libpl.PL_get_integer(o.TermRef, ref i))
                             return i;
+                        try
+                        {
+                            return (long)o;
+                        }
+                        catch (Exception)
+                        {
+                        }
                         try
                         {
                             return (ulong)o;
@@ -3146,7 +3203,7 @@ namespace SbsSW.SwiPlCs
                             if (pt.IsAssignableFrom(m.ReturnType) && mGetParameters.Length == 1 &&
                                 mGetParameters[0].ParameterType.IsAssignableFrom(typeof(string)))
                             {
-                                Warn("using " + m);
+                                WarnMissing("using " + m);
                                 return m.Invoke(null, new object[] { s });
                             }
                         }
