@@ -30,6 +30,7 @@
             cliPropsForType/2,
             cliSet/3,
             cliSetRaw/3,
+            cliSubProperty/2,
             cliShortType/2,
             cliSubclass/2,
             cliToData/2,
@@ -39,11 +40,15 @@
             cliToStringRaw/2,
             cliToTagged/2,
             cliWriteln/1,
+            cliUnify/2,
             link_swiplcs/1,
             to_string/2
           ]).
 
 :-dynamic(shortTypeName/2).
+:-dynamic(cliSubProperty/2).
+
+:-set_prolog_flag(double_quotes,string).
 
 :-module_transparent(shortTypeName/2).
 :-module_transparent(cliGet/3).
@@ -71,7 +76,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %% cliIsType(+Impl,+Type) tests to see if the Impl Object is assignable to Type
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cliIsType(Impl,Type):-cliFindType(Type,RealType),cliCall(RealType,'IsInstance'(object),[Impl],'@'(true)).
+cliIsType(Impl,Type):-cliFindType(Type,RealType),cliCall(RealType,'IsInstanceOfType'(object),[Impl],'@'(true)).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
@@ -109,13 +114,22 @@ cliToString(Term,String):-Term=..[F|A],cliToString(A,AS),String=..[F|AS],!.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %% cliIsNull(+Obj) is Object null or void or variable
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cliIsNull(Obj):-(var(Obj);Obj='@'(null);Obj='@'(void)),!.
+cliIsNull(Obj):-notrace(var(Obj);Obj='@'(null);Obj='@'(void)),!.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%% cliIsObject(+Obj) is Object a tagged object and not null or void
+%% cliIsObject(+Obj) is Object a CLR object and not null or void
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cliIsObject(X):- \+ cliIsNull(X),functor(X,F,_),F='@'.
+cliIsObject([_|_]):-!,fail.
+cliIsObject('@'(O)):-!, O\=void,O\=null.
+cliIsObject(enum(_,_)):-!.
+cliIsObject(O):-functor(O,F,_),memberchk(F,[struct,object]).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%% cliIsTaggedObject(+Obj) is Object a tagged object and not null or void
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cliIsTaggedObject([_|_]):-!,fail.
+cliIsTaggedObject('@'(O)):-!, O\=void,O\=null.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
@@ -138,8 +152,10 @@ cliNew(Clazz,ConstArgs,Out):-Clazz=..[BasicType|ParmSpc],cliNew(BasicType,ParmSp
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %%% cliCall(+Obj, +CallTerm, -Out).
+%%% cliCall(+Obj, +MethodSpec, +Params, -Out).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 cliCall(Obj,CallTerm,Out):-CallTerm=..[MethodName|Args],cliCall(Obj,MethodName,Args,Out).
+cliCall(Obj,MethodSpec,Params,Out):-cliCallRaw(Obj,MethodSpec,Params,OutRaw),!,Out=OutRaw.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
@@ -148,7 +164,19 @@ cliCall(Obj,CallTerm,Out):-CallTerm=..[MethodName|Args],cliCall(Obj,MethodName,A
 cliGet(Obj,_,_):-cliIsNull(Obj),!,fail.
 cliGet(Obj,[P],Value):-!,cliGet(Obj,P,Value).
 cliGet(Obj,[P|N],Value):-!,cliGet(Obj,P,M),cliGet(M,N,Value),!.
-cliGet(Obj,P,Value):-cliGetRaw(Obj,P,Value).
+cliGet(Obj,P,Value):-cliGetOverloaded(Obj,P,Value),!.
+
+cliGetOverloaded(Obj,_,_):-cliIsNull(Obj),!,fail.
+cliGetOverloaded(Obj,P,Value):-cliGetHook(Obj,P,ValueOut),!,cliUnify(Value,ValueOut).
+cliGetOverloaded(Obj,P,Value):-cliSubProperty(Type,Sub),cliIsType(Obj,Type),cliGetRawS(Obj,Sub,SubValue),cliGetOverloaded(SubValue,P,Value),!.
+cliGetOverloaded(Obj,P,Value):-cliGetRaw(Obj,P,ValueOut),!,cliUnify(Value,ValueOut).
+
+cliGetRawS(Obj,[P],Value):-!,cliGetRawS(Obj,P,Value).
+cliGetRawS(Obj,[P|N],Value):-!,cliGetRawS(Obj,P,M),cliGetRawS(M,N,Value),!.
+cliGetRawS(Obj,P,Value):-cliGetRaw(Obj,P,Value),!.
+
+:-dynamic(cliGetHook/3).
+:-multifile(cliGetHook/3).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
@@ -157,8 +185,27 @@ cliGet(Obj,P,Value):-cliGetRaw(Obj,P,Value).
 cliSet(Obj,_,_):-cliIsNull(Obj),!,fail.
 cliSet(Obj,[P],Value):-!,cliSet(Obj,P,Value).
 cliSet(Obj,[P|N],Value):-!,cliGet(Obj,P,M),cliSet(M,N,Value),!.
-cliSet(Obj,P,Value):-cliSetRaw(Obj,P,Value).
+cliSet(Obj,P,Value):-cliSetOverloaded(Obj,P,Value).
 
+cliSetOverloaded(Obj,_,_):-cliIsNull(Obj),!,fail.
+cliSetOverloaded(Obj,P,Value):-cliSetHook(Obj,P,Value),!.
+cliSetOverloaded(Obj,P,Value):-cliSubProperty(Type,Sub),cliIsType(Obj,Type),cliGetRawS(Obj,Sub,SubValue),cliSetOverloaded(SubValue,P,Value),!.
+cliSetOverloaded(Obj,P,Value):-cliSetRaw(Obj,P,Value),!.
+
+:-dynamic(cliSetHook/3).
+:-multifile(cliSetHook/3).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%%% cliUnify(OE,PE)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cliUnify(OE,PE):-OE=PE,!.
+cliUnify(enum(_,O1),O2):-!,cliUnify(O1,O2).
+cliUnify(O2,enum(_,O1)):-!,cliUnify(O1,O2).
+cliUnify(O1,O2):-atomic(O1),atomic(O2),string_to_atom(S1,O1),string_to_atom(S2,O2),!,S1==S2.
+cliUnify(O1,O2):-cliIsTaggedObject(O1),cliToString(O1,S1),!,cliUnify(S1,O2).
+cliUnify([O1|ARGS1],[O2|ARGS2]):-!,cliUnify(O1,O2),cliUnify(ARGS1,ARGS2).
+cliUnify(O1,O2):-O1=..[F|ARGS1],!,O2=..[F|ARGS2],cliUnify(ARGS1,ARGS2).
 
 %type   jpl_iterator_element(object, datum)
 

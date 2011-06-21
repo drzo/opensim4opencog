@@ -9,10 +9,13 @@
 
 %% add to search paths
 
-:- asserta(user:file_search_path(foreign, '.')).
-:- asserta(user:file_search_path(jpl_examples, 'examples/prolog')).
-:- asserta(user:file_search_path(jar, '.')).
-:- asserta(user:file_search_path(library, '.')).
+assertIfNew(Gaf):-catch(call(Gaf),_,fail),!.
+assertIfNew(Gaf):-assert(Gaf).
+
+:- assertIfNew(user:file_search_path(foreign, '.')).
+:- assertIfNew(user:file_search_path(jpl_examples, 'examples/prolog')).
+:- assertIfNew(user:file_search_path(jar, '.')).
+:- assertIfNew(user:file_search_path(library, '.')).
 
 %------------------------------------------------------------------------------
 
@@ -24,7 +27,7 @@
 %------------------------------------------------------------------------------
 
 %% load the cogbot assembly
-:-cliLoadAssembly('Cogbot.exe').
+:- current_prolog_flag(address_bits,32) -> cliLoadAssembly('Cogbot32.exe') ; cliLoadAssembly('Cogbot.exe').
 
 %% cache the type names
 
@@ -75,7 +78,10 @@ clientManager(SingleInstance):-cliGet('cogbot.ClientManager','SingleInstance',Si
 botClient(Obj):-clientManager(Man),cliGet(Man,'LastRefBotClient',Obj).
 
 botClient([P|N],Value):-!,botClient(Obj),cliGet(Obj,[P|N],Value).
-botClient(Property,Value):-botClient(Obj),cliGet(Obj,Property,Value).
+botClient(Property,Value):-botClient(Obj),cliGet(Obj,Property,Value),!.
+
+botClientCall([P|N],Value):-!,botClient(Obj),cliGet(Obj,P,Mid),cliGet(Mid,N,Value).
+botClientCall(Property,Value):-botClient(Obj),cliCall(Obj,Property,Value).
 
 %% get the gridClient Instance
 gridClient(Obj):-botClient(BC),cliGet(BC,'gridClient',Obj).
@@ -117,7 +123,14 @@ onFirstBotClient(A,B):-
 runSL:-ranSL,!.
 runSL:-asserta(ranSL),!,cliCall('ABuildStartup.Program','Main',[],_).
 
-%% :-runSL.
+:-runSL.
+
+%%:-retractall(cliSubProperty(_,_)).
+:-assertIfNew(cliSubProperty('cogbot.TheOpenSims.SimAvatar','ProfileProperties')).
+:-assertIfNew(cliSubProperty('cogbot.TheOpenSims.SimAvatar','AvatarInterests')).
+:-assertIfNew(cliSubProperty('cogbot.TheOpenSims.SimAvatar','FriendshipInfo')).
+:-assertIfNew(cliSubProperty('cogbot.TheOpenSims.SimObject','Prim')).
+:-assertIfNew(cliSubProperty('cogbot.TheOpenSims.SimObject','Properties')).
 
 %------------------------------------------------------------------------------
 % CLR Introspection of event handlers
@@ -141,6 +154,9 @@ resolveObjectByName(Name,Object):-cliCall('cogbot.Listeners.WorldObjects','TryGe
 
 sayTo(Speaker,ToWho,What):-resolveAvatar(ToWho,Listener),cliCall(Speaker,talkto('SimAvatar',string),[Listener,What],_O).
 
+simObject(X,OE):-simObject(X),cliGet(X,infoMap,Y),cliCol(Y,PE),cliUnify(OE,PE).
+
+:-set_prolog_flag(double_quotes,string).
 %------------------------------------------------------------------------------
 %------------------------------------------------------------------------------
 end_of_file.
@@ -151,6 +167,20 @@ Y = @'C#742328240',
 Z = p(0, 'Store', 'Inventory', [], [], 'CanRead'(true), 'CanWrite'(false), decl(static(false), 'InventoryManager'), access_pafv(true, false, false, false)) ;
 false.
 
+
+ 22 ?- botClientCall(talk("hello world"),O).
+ O = @null.
+
+
+  botClientCall(talk("hello world from prolog!",0,enum('OpenMetaverse.ChatType','Shout')),O).
+
+  botClientCall([name,indexOf(char('D'))],O).
+  cliToTagged(sbyte(-1),O),cliWriteln(O).
+
+ simAvatar(A),cliGet(A,'isonline',B),cliGet(A,'globalposition',C),cliWriteln(A-B-C).
+ simObject(X,struct('NamedParam',A,'FirstName')).
+
+simObject(X,struct('NamedParam',A,B)).
 %------------------------------------------------------------------------------
 % Inventory examples
 %------------------------------------------------------------------------------
@@ -166,6 +196,50 @@ Z = "System.Collections.Generic.Dictionary`2+ValueCollection[OpenMetaverse.UUID,
 Y = @'C#720558400',
 L = ["Scripts", "Photo Album", "*MD* Brown Leather Hat w/Bling", "Body Parts", "Notecards", "Objects", "Clothing", "Landmarks", "Textures"|...].
 
+15 ?- cliToTagged(sbyte(127),O),cliGetType(O,T),cliWriteln(O is T).
+"127"is"System.SByte"
+O = @'C#283319280',
+T = @'C#283324332'.
+
+16 ?- cliToTagged(long(127),O),cliGetType(O,T),cliWriteln(O is T).
+"127"is"System.Int64"
+O = @'C#283345876',
+T = @'C#283345868'.
+
+17 ?- cliToTagged(ulong(127),O),cliGetType(O,T),cliWriteln(O is T).
+"127"is"System.UInt64"
+O = @'C#283346772',
+T = @'C#283346760'.
+
+15 ?- cliToTagged(sbyte(127),O),cliGetType(O,T),cliWriteln(O is T).
+"127"is"System.SByte"
+O = @'C#283319280',
+T = @'C#283324332'.
+
+16 ?- cliToTagged(long(127),O),cliGetType(O,T),cliWriteln(O is T).
+"127"is"System.Int64"
+O = @'C#283345876',
+T = @'C#283345868'.
+
+18 ?- cliToTagged(343434127,O),cliGetType(O,T),cliWriteln(O is T).
+"343434127"is"System.Int32"
+O = @'C#281925284',
+T = @'C#281925280'.
+
+19 ?- cliToTagged(3434341271,O),cliGetType(O,T),cliWriteln(O is T).
+"3434341271"is"System.UInt64"
+O = @'C#281926616',
+T = @'C#283346760'.
+
+21 ?- cliToTagged(343434127111,O),cliGetType(O,T),cliWriteln(O is T).
+"343434127111"is"System.UInt64"
+O = @'C#281930092',
+T = @'C#283346760'.
+
+28 ?- cliToTagged(34343412711111111111111111111111111111,O),cliGetType(O,T),cliWriteln(O is T).
+"34343412711111111111111111111111111111"is"java.math.BigInteger"
+O = @'C#281813796',
+T = @'C#281810860'.
 
 %------------------------------------------------------------------------------
 % simAvatar examples
@@ -202,6 +276,30 @@ Y = "Satir DeCuir 9702bd45-9880-48ab-a516-e96e40731a13 HEADING: Satir DeCuir\n U
 X = @'C#723744208',
 Y = "Draven Littlebird d191e38e-32f9-4f83-9289-6b580eb804ad HEADING: Draven Littlebird\n UNATTACHED_PRIM d191e38e-32f9-4f83-9289-6b580eb804ad\n EffectType-Beam-Once: \"{doneBy=Draven Littlebird,Choices=NIL,info=NIL}\" \"{objectActedOn=UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{eventPartiallyOccursAt=?/0/0/0@90,Choices=NIL,info=NIL}\" \"{simDuration=1,Choices=NIL,info=NIL}\" \"{id=f8dae11b-b6a6-fe43-7281-c62f1313367b,Choices=NIL,info=NIL}\" 634437706401961059\n LookAtType-Focus-Once: \"{doneBy=Draven Littlebird,Choices=NIL,info=NIL}\" \"{objectActedOn=UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{eventPartiallyOccursAt=HEADING: UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{simDuration=1.701412E+38,Choices=NIL,info=NIL}\" \"{id=1d7c699c-b42a-3e7e-b825-3e9e6d13ed30,Choices=NIL,info=NIL}\" 634437706401961061\n EffectType-Beam-Once: \"{doneBy=Draven Littlebird,Choices=NIL,info=NIL}\" \"{objectActedOn=UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{eventPartiallyOccursAt=?/0/0/0@90,Choices=NIL,info=NIL}\" \"{simDuration=1,Choices=NIL,info=NIL}\" \"{id=362bf818-1fb3-0289-ca40-2812cf9c5662,Choices=NIL,info=NIL}\" 634437706401961801\n LookAtType-Focus-Once: \"{doneBy=Draven Littlebird,Choices=NIL,info=NIL}\" \"{objectActedOn=UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{eventPartiallyOccursAt=HEADING: UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{simDuration=1.701412E+38,Choices=NIL,info=NIL}\" \"{id=1d7c699c-b42a-3e7e-b825-3e9e6d13ed30,Choices=NIL,info=NIL}\" 634437706401962759\n EffectType-Beam-Once: \"{doneBy=Draven Littlebird,Choices=NIL,info=NIL}\" \"{objectActedOn=UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{eventPartiallyOccursAt=?/0/0/0@90,Choices=NIL,info=NIL}\" \"{simDuration=1,Choices=NIL,info=NIL}\" \"{id=25bea9ae-0427-5ece-cab4-31ed14317d2e,Choices=NIL,info=NIL}\" 634437706401963078\n EffectType-Beam-Once: \"{doneBy=Draven Littlebird,Choices=NIL,info=NIL}\" \"{objectActedOn=UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{eventPartiallyOccursAt=?/0/0/0@90,Choices=NIL,info=NIL}\" \"{simDuration=1,Choices=NIL,info=NIL}\" \"{id=324dc944-f207-ab79-68e3-884c935b70fc,Choices=NIL,info=NIL}\" 634437706401964540\n LookAtType-Focus-Once: \"{doneBy=Draven Littlebird,Choices=NIL,info=NIL}\" \"{objectActedOn=UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{eventPartiallyOccursAt=HEADING: UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{simDuration=1.701412E+38,Choices=NIL,info=NIL}\" \"{id=1d7c699c-b42a-3e7e-b825-3e9e6d13ed30,Choices=NIL,info=NIL}\" 634437706401964582\n LookAtType-Focus-Once: \"{doneBy=Draven Littlebird,Choices=NIL,info=NIL}\" \"{objectActedOn=UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{eventPartiallyOccursAt=HEADING: UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{simDuration=1.701412E+38,Choices=NIL,info=NIL}\" \"{id=1d7c699c-b42a-3e7e-b825-3e9e6d13ed30,Choices=NIL,info=NIL}\" 634437706401964664\n EffectType-Beam-Once: \"{doneBy=Draven Littlebird,Choices=NIL,info=NIL}\" \"{objectActedOn=UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{eventPartiallyOccursAt=?/0/0/0@90,Choices=NIL,info=NIL}\" \"{simDuration=1,Choices=NIL,info=NIL}\" \"{id=140c32c1-911d-96b3-6885-af10d639ff99,Choices=NIL,info=NIL}\" 634437706401964959\n EffectType-Beam-Once: \"{doneBy=Draven Littlebird,Choices=NIL,info=NIL}\" \"{objectActedOn=UNATTACHED_PRIM 7939a07b-e2e3-9d7b-445f-ff603e760396,Choices=NIL,info=NIL}\" \"{eventPartiallyOccursAt=?/0/0/0@90,Choices=NIL,info=NIL}\" \"{simDuration=1,Choices=NIL,info=NIL}\" \"{id=6cbd2457-f2e1-30d2-dcc5-1749461be3f1,Choices=NIL,info=NIL}\" 634437706401965809" .
 
+
+15 ?- set_prolog_flag(double_quotes,chars).
+true.
+
+16 ?- X="sadfsdf".
+X = [s, a, d, f, s, d, f].
+
+17 ?- set_prolog_flag(double_quotes,codes).
+true.
+
+18 ?- X="sadfsdf".
+X = [115, 97, 100, 102, 115, 100, 102].
+
+19 ?- set_prolog_flag(double_quotes,atom).
+true.
+
+20 ?- X="sadfsdf".
+X = sadfsdf.
+
+21 ?- set_prolog_flag(double_quotes,string).
+true.
+
+22 ?- X="sadfsdf".
+X = "sadfsdf".
 
 [debug] 14 ?- simAvatar(X),cliGet(X,'ActionEventQueue',Y),cliCollection(Y,Z).
 X = @'C#723744208',
