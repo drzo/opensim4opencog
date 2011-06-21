@@ -384,7 +384,9 @@ namespace SbsSW.SwiPlCs
                     Type[] t = GetObjectTypes(os, paramTypes);
                     info = info.MakeGenericMethod(t);
                 }
-                return info.Invoke(o, os);
+                object ret = info.Invoke(o, os);
+                if (ret == null) return VoidOrNull(info);
+                return ret;
             }
             catch (Exception ex)
             {
@@ -392,7 +394,7 @@ namespace SbsSW.SwiPlCs
                 string s = ex.ToString() + "\n" + ex.StackTrace;
                 Warn("ex: " + s);
                 //throw pe;
-                return pe;
+                return false;// pe;
             }
         }
         private static Type[] GetObjectTypes(ParameterInfo[] parameterInfos)
@@ -519,8 +521,8 @@ namespace SbsSW.SwiPlCs
         public static Dictionary<object, PlRef> objectToPlRef = new Dictionary<object, PlRef>();
         public static Dictionary<string, PlRef> atomToPlRef = new Dictionary<string, PlRef>();
 #endif
-        public static PlTerm PLVOID { get { return PlTerm.PlCompound("@", PlTerm.PlAtom("null")); } }
-        public static PlTerm PLNULL { get { return PlTerm.PlCompound("@", PlTerm.PlAtom("void")); } }
+        public static PlTerm PLNULL { get { return PlTerm.PlCompound("@", PlTerm.PlAtom("null")); } }
+        public static PlTerm PLVOID { get { return PlTerm.PlCompound("@", PlTerm.PlAtom("void")); } }
         public static PlTerm PLTRUE { get { return PlTerm.PlCompound("@", PlTerm.PlAtom("true")); } }
         public static PlTerm PLFALSE { get { return PlTerm.PlCompound("@", PlTerm.PlAtom("false")); } }
 
@@ -555,7 +557,7 @@ namespace SbsSW.SwiPlCs
             Type t = o.GetType();
             if (IsStructRecomposable(t) || t.IsPrimitive)
             {
-                Warn("object_to_tag:" + t + " from " + o);
+                Debug("object_to_tag:" + t + " from " + o);
             }
 
             lock (ObjToTag)

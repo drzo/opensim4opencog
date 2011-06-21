@@ -1671,6 +1671,12 @@ namespace SbsSW.SwiPlCs
             long v = 0;
             if (0 != libpl.PL_get_long(term.TermRef, ref v))
                 return v;
+            string s = (string) term;
+            long longValue;
+            if (long.TryParse(s, out longValue))
+            {
+                return longValue;
+            }
             throw new PlTypeException("long", term);
         }
 
