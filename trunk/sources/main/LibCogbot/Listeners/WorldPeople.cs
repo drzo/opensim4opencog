@@ -250,14 +250,17 @@ namespace cogbot.Listeners
             }
             //TODO SendNewEvent("On-Avatar-Properties", GetAvatar(avatarID, null), properties);
         }
-
+        public override void Friends_OnFriendFound(object sender, FriendFoundReplyEventArgs e)
+        {
+            SimAvatar A = DeclareAvatarProfile(e.AgentID);
+            A.UpdatePosition(e.RegionHandle, e.Location);
+        }
         public override void Grid_OnCoarseLocationUpdate(object sender, CoarseLocationUpdateEventArgs e)
         {
             Simulator sim = e.Simulator;
             var newEntries = e.NewEntries;
             var removedEntries = e.RemovedEntries;
-            if (!MaintainAvatarMetaData) return;
-
+            if (newEntries.Count == 0 && removedEntries.Count == 0) return;
             foreach (UUID uuid in newEntries)
             {
                 SimObject A = CreateSimAvatar(uuid, this, sim);
@@ -265,6 +268,11 @@ namespace cogbot.Listeners
                 if (sim.AvatarPositions.TryGetValue(uuid, out pos))
                     A.UpdatePosition(sim.Handle, pos);
             }
+            foreach (UUID uuid in removedEntries)
+            {
+                DeclareAvatar(uuid);
+            }
+            if (!MaintainAvatarMetaData) return;
             //for (int i = 0; i < coarse.Location.Length; i++)
             //{
             //    if (i == coarse.Index.$bot)
@@ -278,9 +286,6 @@ namespace cogbot.Listeners
             //    simulator.avatarPositions.Add(new Vector3(coarse.Location[i].X, coarse.Location[i].Y,
             //        coarse.Location[i].Z * 4));
             //}
-
-            if (newEntries.Count == 0 && removedEntries.Count == 0) return;
-
 
             //OnEvent("On-Coarse-Location-Update", paramNamesOnCoarseLocationUpdate, paramTypesOnCoarseLocationUpdate, sim, newEntries , removedEntries);
         }
@@ -698,6 +703,7 @@ namespace cogbot.Listeners
             if (!string.IsNullOrEmpty(friend.Name))
                 AddName2Key(friend.Name, id);
             DeclareAvatarProfile(id);
+            client.Friends.TrackFriend(id);
             //base.Friends_OnFriendOnline(friend);
         }
 

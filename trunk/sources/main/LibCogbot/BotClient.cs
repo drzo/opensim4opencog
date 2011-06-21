@@ -1960,7 +1960,7 @@ namespace cogbot
         }
 
 
-        public void TalkExact(string str)
+        public void TalkExact(string str, int channel, ChatType type)
         {
             if(!TalkingAllowed)
             {
@@ -1975,7 +1975,7 @@ namespace cogbot
                 }
                 return;
             }
-            Self.Chat(str, 0, ChatType.Normal);
+            Self.Chat(str, channel, type);
         }
 
         public void Intern(string n, object v)
@@ -2487,7 +2487,7 @@ namespace cogbot
                         {
                             toSay = toSay.Trim();
                             if (!String.IsNullOrEmpty(toSay))
-                                TalkExact(toSay);
+                                TalkExact(toSay, 0, ChatType.Normal);
                             toSay = String.Empty;
                             toAnimate.Add(node.Attributes["mark"].Value);
                             continue;
@@ -2502,7 +2502,7 @@ namespace cogbot
                 }
                 toSay = toSay.Trim();
                 if (!String.IsNullOrEmpty(toSay))
-                    TalkExact(toSay);
+                    TalkExact(toSay, 0, ChatType.Normal);
                 int maxAnims = 2;
                 foreach (var animation in toAnimate)
                 {
@@ -2569,7 +2569,7 @@ namespace cogbot
             int len = text.IndexOf("<");
             if (len>0)
             {
-                TalkExact(text.Substring(0, len));
+                TalkExact(text.Substring(0, len), channel, type);
                 text = text.Substring(len);
                 Talk(text, channel, type);
                 return;                
@@ -2602,7 +2602,7 @@ namespace cogbot
             }
             text = text.Trim();
             if (!String.IsNullOrEmpty(text))
-                TalkExact(text);
+                TalkExact(text, channel, type);
         }
 
         /// <summary>
