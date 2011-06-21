@@ -847,10 +847,13 @@ namespace cogbot.TheOpenSims
                         if (RegionHandle !=0)
                         {
                             Simulator S = WorldSystem.GetSimulator(RegionHandle);
-                            var found = WorldSystem.GetLibOMVHostedPrim(ID, S, false);
-                            if (found == null) return null;
-                            SetFirstPrim(found);
-                            return found;
+                            if (S != null)
+                            {
+                                var found = WorldSystem.GetLibOMVHostedPrim(ID, S, false);
+                                if (found == null) return null;
+                                SetFirstPrim(found);
+                                return found;
+                            }
                         }
                         return null;
                     }
@@ -1689,7 +1692,7 @@ namespace cogbot.TheOpenSims
             return TryGetGlobalPosition(out pos, null);
         }
 
-        public void UpdatePosition(ulong handle, Vector3 pos)
+        public virtual void UpdatePosition(ulong handle, Vector3 pos)
         {
             RegionHandle = handle;
             SimPosition = pos;

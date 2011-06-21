@@ -597,7 +597,7 @@ namespace cogbot.Listeners
                                                             Debug("Killing Avatar: " + O);
                                                         }
                                                     }
-                                                    //lock (SimObjects) SimObjects.Remove(O);                                     
+                                                    // lock (SimObjects) SimObjects.Remove(O);                                     
                                                 }
 
                                             }
@@ -901,8 +901,20 @@ namespace cogbot.Listeners
             return "" + id;
         }
 
-
         public Primitive GetLibOMVHostedPrim(UUID id, Simulator simulator, bool onlyAvatars)
+        {
+            if (simulator != null) return GetLibOMVHostedPrim0(id, simulator, onlyAvatars);
+            foreach (Simulator sim in AllSimulators)
+            {
+                Primitive p = GetLibOMVHostedPrim0(id, sim, onlyAvatars);
+                if (p != null)
+                {
+                    return p;
+                }
+            }
+            return null;
+        }
+        public Primitive GetLibOMVHostedPrim0(UUID id, Simulator simulator, bool onlyAvatars)
         {
             Primitive found;
             ///lock (simulator.ObjectsAvatars.Dictionary)

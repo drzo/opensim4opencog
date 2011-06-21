@@ -85,6 +85,18 @@ namespace cogbot.TheOpenSims
             BeamInfos.AddTo(info);
         }
 
+        public FriendInfo FriendshipInfo
+        {
+            get
+            {
+                FriendInfo info;
+                var Client = WorldSystem.client;
+                if (Client == null) return null;
+                if (!Client.Friends.FriendList.TryGetValue(ID, out info)) return null;
+                return info;
+            }
+        }
+
         private Avatar.AvatarProperties _profileProperties;
         public Avatar.AvatarProperties ProfileProperties
         {
@@ -171,6 +183,7 @@ namespace cogbot.TheOpenSims
             ///  get { return WasKilled; }
             set
             {
+                if (WasKilled == value) return;
                 lock (HasPrimLock) if (!WasKilled) /// already
                     {
                         IEnumerable<SimObject> AttachedChildren0 = Children;
@@ -567,12 +580,23 @@ namespace cogbot.TheOpenSims
         {
             get
             {
+                var fi = FriendshipInfo;
+                if (fi != null && fi.CanSeeThemOnline)
+                {
+                     return fi.IsOnline;
+                }
                 return HasPrim || noticedOnline;
             }
             set
             {
                 noticedOnline = value;
             }
+        }
+        
+        public override void UpdatePosition(ulong handle, Vector3 pos)
+        {
+            noticedOnline = !handle.Equals(0);
+            base.UpdatePosition(handle, pos);
         }
 
         public override bool HasPrim
@@ -631,13 +655,26 @@ namespace cogbot.TheOpenSims
         {
             get
             {
+                if (RegionHandle != 0 && SimPosition != default(Vector3))
+                {
+                    return ToGlobal(RegionHandle, SimPosition);                
+                }
+                var Client = WorldSystem.client;
+                var fi = FriendshipInfo;
+                if (fi != null && fi.CanSeeThemOnMap)
+                {
+                    Client.Friends.MapFriend(ID);
+                    Client.Friends.TrackFriend(ID);
+                    //return fi.IsOnline;
+                }
+
                 /// if (Client.Self.AgentID == Prim.ID)
                 /// {
                 ///     if (Client.Settings.OBJECT_TRACKING)
                 ///         return Client.Self.GlobalPosition;
 
                 /// }
-                return base.GlobalPosition;
+                return default(Vector3d);// base.GlobalPosition;
                 //return GetSimRegion().LocalToGlobal(GetSimPosition());
             }
         }
