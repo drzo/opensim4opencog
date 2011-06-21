@@ -460,7 +460,10 @@ namespace OpenMetaverse
             if (searchPath != null)
             {
                 Assembly assemblyGetEntryAssembly = Assembly.GetEntryAssembly();
-                string assemblyGetEntryAssemblyLocation = assemblyGetEntryAssembly.Location;
+
+                string assemblyGetEntryAssemblyLocation = ".";
+                if (assemblyGetEntryAssembly != null)
+                    assemblyGetEntryAssemblyLocation = assemblyGetEntryAssembly.Location;
                 string filename = System.IO.Path.Combine(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(assemblyGetEntryAssemblyLocation), searchPath), resourceName);
                 try
                 {
@@ -478,6 +481,7 @@ namespace OpenMetaverse
                 try
                 {
                     System.Reflection.Assembly a = System.Reflection.Assembly.GetExecutingAssembly();
+                    if (a == null) return null;
                     System.IO.Stream s = a.GetManifestResourceStream("OpenMetaverse.Resources." + resourceName);
                     if (s != null) return s;
                 }
