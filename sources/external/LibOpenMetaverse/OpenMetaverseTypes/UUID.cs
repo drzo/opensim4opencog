@@ -31,6 +31,7 @@ using System;
 #if !(USE_UUID_INTERFACE)
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using UUIDCantBeNull = OpenMetaverse.UUID;
 #endif
@@ -96,6 +97,7 @@ namespace OpenMetaverse
     }
 #endif
 
+    [Serializable]
     public class UUIDFactory
     {
         public static UUID GetUUID(byte[] data, int pos)
@@ -126,7 +128,7 @@ namespace OpenMetaverse
                 UUID u;
                 if (!GuidToUUID.TryGetValue(s, out u))
                 {
-                    u = GuidToUUID[s] = new UUID(s, true);
+                    u = GuidToUUID[s] = new UUID(s);
                 }
                 return u;
             }
@@ -154,7 +156,7 @@ namespace OpenMetaverse
 #if USE_UUID_INTERFACE
     public class UUIDCantBeNull : IComparable<UUID>, IEquatable<UUID>, UUID
 #else
-    public class UUID : IComparable<UUID>, IEquatable<UUID>
+    public class UUID : UUIDFactory, IComparable<UUID>, IEquatable<UUID>
 #endif
 #else
     public struct UUID : IComparable<UUID>, IEquatable<UUID>
@@ -185,12 +187,12 @@ namespace OpenMetaverse
             return new Guid(val);
         }
 
-        #region Constructors
-
-        private UUID( bool ro)
+        public static UUID UUIDFromString(string val)
         {
-            
+            return GetUUID(val);
         }
+
+        #region Constructors
 
         /// <summary>
         /// Constructor that takes a string UUID representation
@@ -201,7 +203,7 @@ namespace OpenMetaverse
 #if USE_UUID_INTERFACE
         public UUIDCantBeNull(string val)
 #else
-        public UUID(string val, bool ro)
+        internal UUID(string val)
 #endif
         {
             if (String.IsNullOrEmpty(val))
@@ -227,7 +229,7 @@ namespace OpenMetaverse
             _Guid = val.GetGuid();
         }
 #else
-        public UUID(Guid val, bool ro)
+        public UUID(Guid val)
         {
             _Guid = val;
             toStringCache = null;
@@ -243,7 +245,7 @@ namespace OpenMetaverse
 #if USE_UUID_INTERFACE
         public UUIDCantBeNull(byte[] source, int pos)
 #else
-        public UUID(byte[] source, int pos, bool ro)
+        internal  UUID(byte[] source, int pos)
 #endif
         {
             //_Guid = Zero.GetGuid();
@@ -259,7 +261,7 @@ namespace OpenMetaverse
 #if USE_UUID_INTERFACE
         public UUIDCantBeNull(ulong val)
 #else
-        public UUID(ulong val, bool ro)
+        public UUID(ulong val)
 #endif
         {
             byte[] end = BitConverter.GetBytes(val);
@@ -284,7 +286,7 @@ namespace OpenMetaverse
 #if USE_UUID_INTERFACE
         public UUIDCantBeNull(UUIDCantBeNull val)
 #else
-        public UUID(UUID val, bool ro)
+        internal UUID(UUID val)
 #endif
         {
             _Guid = val._Guid;
