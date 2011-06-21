@@ -1162,7 +1162,14 @@ namespace OpenMetaverse
             }
         }
 
+        private int? firstHashCode = null;
         public override int GetHashCode()
+        {
+            if (!firstHashCode.HasValue) firstHashCode = GetHashCodeOnce();
+            return firstHashCode.Value;
+        }
+
+        private int GetHashCodeOnce()
         {
             return
                 Position.GetHashCode() ^
@@ -1199,7 +1206,7 @@ namespace OpenMetaverse
                 PrimData.ProfileCurve.GetHashCode() ^
                 PrimData.ProfileEnd.GetHashCode() ^
                 PrimData.ProfileHollow.GetHashCode() ^
-                ParticleSys.GetHashCode() ^
+                (ParticleSys!=null ? ParticleSys.GetHashCode() : 0) ^ 
                 TextColor.GetHashCode() ^
                 TextureAnim.GetHashCode() ^
                 (Textures != null ? Textures.GetHashCode() : 0) ^
