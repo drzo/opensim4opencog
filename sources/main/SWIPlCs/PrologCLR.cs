@@ -15,7 +15,9 @@ using java.net;
 using java.util;
 //using jpl;
 using jpl;
+#if USE_MUSHDLR
 using MushDLR223.Utilities;
+#endif
 using SbsSW.SwiPlCs.Callback;
 using SbsSW.SwiPlCs.Exceptions;
 using SbsSW.SwiPlCs.Streams;
@@ -1251,7 +1253,9 @@ namespace SbsSW.SwiPlCs
         public static Dictionary<EventHandlerInPrologKey, EventHandlerInProlog> PrologEventHandlers =
             new Dictionary<EventHandlerInPrologKey, EventHandlerInProlog>();
 
+#if USE_MUSHDLR
         public static TaskQueueHandler PrologEventQueue = new TaskQueueHandler("PrologEventHandler");
+#endif
 
         [PrologVisible(ModuleName = ExportModule)]
         static public bool cliAddEventHandler(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm prologPred)

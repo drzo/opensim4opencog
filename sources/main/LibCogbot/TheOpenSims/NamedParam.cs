@@ -6,7 +6,6 @@ using System.Runtime.InteropServices;
 using System.Xml.Serialization;
 using cogbot.TheOpenSims;
 using MushDLR223.Utilities;
-using SbsSW.SwiPlCs;
 using KeyType = System.String;
 namespace cogbot
 {

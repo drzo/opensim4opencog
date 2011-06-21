@@ -177,7 +177,9 @@ namespace SbsSW.SwiPlCs
         {
             if (!IsUsingGlobalQueue) return CallProlog0(paramz);
             string threadName = "CallProlog " + Thread.CurrentThread.Name;
-            PrologClient.PrologEventQueue.Enqueue(threadName, () => CallProlog0(paramz));
+#if USE_MUSHDLR
+            PrologEventQueue.Enqueue(threadName, () => CallProlog0(paramz));
+#endif
             return null;
         }
 
