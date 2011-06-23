@@ -56,7 +56,7 @@
 %------------------------------------------------------------------------------
 % Load C++ DLL
 %------------------------------------------------------------------------------
-:-load_foreign_library(swicli35).
+:-load_foreign_library(swicli).
 
 %------------------------------------------------------------------------------
 % The C++ DLL should have given us cli_load_lib/3
@@ -273,7 +273,7 @@ cli_Intern(Engine,Name,Value):-retractall(cli_Interned(Engine,Name,_)),assert(cl
 cli_Eval(Engine,Name,Value):- cli_Eval_Hook(Engine,Name,Value),!,cli_debug(cli_Eval(Engine,Name,Value)),!.
 cli_Eval(Engine,Name,Value):- Value=cli_Eval(Engine,Name),cli_debug(cli_Eval(Name,Value)),!.
 
-cli_Eval_Hook(Engine,In,Out):- Out = foobar(Engine,In).
+cli_Eval_Hook(Engine,In,Out):- catch(call((In,Out=In)),E,Out= foobar(Engine,In,E)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %%% cli_IsDefined/2
@@ -299,3 +299,52 @@ cli_GetSymbol(Engine,Name,Value):- (cli_Interned(Engine,Name,Value);Value=cli_Un
 %:-use_module(library(pce)).
 
 %%:-interactor.
+
+end_of_file.
+
+
+15 ?- cliToTagged(sbyte(127),O),cliGetType(O,T),cliWriteln(O is T).
+"127"is"System.SByte"
+O = @'C#283319280',
+T = @'C#283324332'.
+
+16 ?- cliToTagged(long(127),O),cliGetType(O,T),cliWriteln(O is T).
+"127"is"System.Int64"
+O = @'C#283345876',
+T = @'C#283345868'.
+
+17 ?- cliToTagged(ulong(127),O),cliGetType(O,T),cliWriteln(O is T).
+"127"is"System.UInt64"
+O = @'C#283346772',
+T = @'C#283346760'.
+
+15 ?- cliToTagged(sbyte(127),O),cliGetType(O,T),cliWriteln(O is T).
+"127"is"System.SByte"
+O = @'C#283319280',
+T = @'C#283324332'.
+
+16 ?- cliToTagged(long(127),O),cliGetType(O,T),cliWriteln(O is T).
+"127"is"System.Int64"
+O = @'C#283345876',
+T = @'C#283345868'.
+
+18 ?- cliToTagged(343434127,O),cliGetType(O,T),cliWriteln(O is T).
+"343434127"is"System.Int32"
+O = @'C#281925284',
+T = @'C#281925280'.
+
+19 ?- cliToTagged(3434341271,O),cliGetType(O,T),cliWriteln(O is T).
+"3434341271"is"System.UInt64"
+O = @'C#281926616',
+T = @'C#283346760'.
+
+21 ?- cliToTagged(343434127111,O),cliGetType(O,T),cliWriteln(O is T).
+"343434127111"is"System.UInt64"
+O = @'C#281930092',
+T = @'C#283346760'.
+
+28 ?- cliToTagged(34343412711111111111111111111111111111,O),cliGetType(O,T),cliWriteln(O is T).
+"34343412711111111111111111111111111111"is"java.math.BigInteger"
+O = @'C#281813796',
+T = @'C#281810860'.
+

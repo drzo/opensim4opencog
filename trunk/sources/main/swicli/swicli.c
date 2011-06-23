@@ -46,25 +46,32 @@ extern "C" {
 			System::Type^ type = assembly->GetType(gcnew System::String(cnamestr));
 			System::Reflection::MethodInfo^ method = type->GetMethod(gcnew System::String(mnamestr));
 			method->Invoke(nullptr, gcnew cli::array<System::Object^,1>(0));
-#else
-			/*
-			* Load the default Mono configuration file, this is needed
-			* if you are planning on using the dllmaps defined on the
-			* system configuration
-			*/
-			mono_config_parse (NULL);
+#else        
+			static int MonoInited = 0;
+			static MonoDomain* domain;
+			
+			if (!MonoInited) {
+				MonoInited = 1;
+				/*
+				* Load the default Mono configuration file, this is needed
+				* if you are planning on using the dllmaps defined on the
+				* system configuration
+				*/
+				mono_config_parse (NULL);
 
-			/*  mono_jit_init() creates a domain: each assembly is loaded and run in a MonoDomain. */
-			MonoDomain* domain = mono_jit_init (anamestr);
+				/*  mono_jit_init() creates a domain: each assembly is loaded and run in a MonoDomain. */
+				domain = mono_jit_init (anamestr);
 
-			/* add our special internal call, so that C# code can call us back. */
-			//mono_add_internal_call ("MonoEmbed::gimme", gimme);
+				/* add our special internal call, so that C# code can call us back. */
+				//mono_add_internal_call ("MonoEmbed::gimme", gimme);
+			}
+
 
 			MonoAssembly* assembly = mono_domain_assembly_open (domain, anamestr);
-			if (!assembly) return PL_warning("No assembly anamestr %s", anamestr);
+			if (!assembly) return PL_warning("No assembly file %s", anamestr);
 
 			MonoImage* image = mono_assembly_get_image(assembly);
-			if (!image) return PL_warning("No image anamestr %s", anamestr);
+			if (!image) return PL_warning("No image module %s", anamestr);
 
 			char str[255];
 			strcpy(str,cnamestr);
