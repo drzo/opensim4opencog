@@ -19,14 +19,17 @@ namespace cogbot.Actions.System
             Name = "swip";
             Description = "runs swi-prolog commands on current sim.";
             Category = CommandCategory.Simulator;
-            Parameters = new[] { new NamedParam(typeof(GridClient), null), new NamedParam(typeof(string), null) };
+		    Parameters = new[]
+		                     {
+		                         new NamedParam("prologCode", typeof (string), null)
+		                     };
         }
 
         public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
             int argsUsed;
             string text = args.str;
-            bool UsePSE = false;
+            bool UsePSE = true;
             try
             {
                 if (!UsePSE)
@@ -40,12 +43,14 @@ namespace cogbot.Actions.System
                 ManualResetEvent mre = new ManualResetEvent(false);
                 Client.InvokeGUI(() =>
                                      {
+                                         PrologClient.RegisterThread(Thread.CurrentThread);
                                          cmd = pse.prologClient.Read(text, null) as Nullable<PlTerm>;
                                          o = pse.prologClient.Eval(cmd);
                                          mre.Set();
                                      });
                 mre.WaitOne(2000);
                 if (o == null) return Success("swip: " + cmd.Value);
+                PrologClient.RegisterThread(Thread.CurrentThread);
                 return Success("swip: " + cmd.Value + " " + o);
             }
             catch (Exception e)

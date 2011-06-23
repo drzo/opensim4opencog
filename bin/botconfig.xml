@@ -74,7 +74,8 @@
 
     (thisClient.ExecuteCommand "debug Debug")
     (thisClient.ExecuteCommand "load CogbotRadegastPluginModule")
-    (thisClient.ExecuteCommand "load IrcRegionModule")
+    (thisClient.ExecuteCommand "load PrologBotModule")
+    (thisClient.ExecuteCommand "load IrcRegionModule")     
     (thisClient.ExecuteCommand "thread irc #logicmoo-cogbot cogbot_ irc.freenode.net")  ;; to connect to IRC
 
     ;; (thisClient.ExecuteCommand "showgui tray") ;; minimize radegast to tray - not good on mono becasue the hwnd not created
