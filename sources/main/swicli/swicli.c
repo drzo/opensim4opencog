@@ -7,9 +7,11 @@
 #include <mono/metadata/environment.h>
 #include <mono/metadata/debug-helpers.h>
 #include <mono/metadata/assembly.h>
+#include <mono/metadata/appdomain.h>
 #include <mono/metadata/mono-config.h>
 #include <stdlib.h>
 #include <string.h>
+typedef char gchar;
 #endif //WINDOWS_CPP
 
 #include "SWI-Prolog.h"
@@ -34,12 +36,13 @@ extern "C" {
 	/// ?- load_foreign_library(swicli).
 	/// Assembly + ClassName + StaticMethodName
 	/// Such as  ?- cli_load_lib('SwiPlCs.dll','SbsSW.SwiPlCs.swipl_win','install').
-	foreign_t  cli_load_lib(term_t aname, term_t cname, term_t mname) 	
+	foreign_t  cli_load_lib(term_t dname, term_t aname, term_t cname, term_t mname) 	
 	{ 
+		char *dnamestr;
 		char *anamestr;
 		char *cnamestr;
 		char *mnamestr;
-		if ( PL_get_atom_chars(aname, &anamestr) && PL_get_atom_chars(cname, &cnamestr) && PL_get_atom_chars(mname, &mnamestr) )
+		if ( PL_get_atom_chars(dname, &dnamestr) && PL_get_atom_chars(aname, &anamestr) && PL_get_atom_chars(cname, &cnamestr) && PL_get_atom_chars(mname, &mnamestr) )
 		{
 #ifdef WINDOWS_CPP
 			System::Reflection::Assembly^ assembly = System::Reflection::Assembly::Load(gcnew System::String(anamestr));
@@ -60,14 +63,19 @@ extern "C" {
 				mono_config_parse (NULL);
 
 				/*  mono_jit_init() creates a domain: each assembly is loaded and run in a MonoDomain. */
-				domain = mono_jit_init (anamestr);
+				domain = mono_jit_init (dnamestr);
 
 				/* add our special internal call, so that C# code can call us back. */
 				//mono_add_internal_call ("MonoEmbed::gimme", gimme);
 			}
 
+			MonoImageOpenStatus status = MONO_IMAGE_OK;
 
-			MonoAssembly* assembly = mono_domain_assembly_open (domain, anamestr);
+			MonoAssemblyName* assname = mono_assembly_name_new(anamestr);
+			if (assname==0) return PL_warning("Cant parse assembly name %s", anamestr);
+			MonoAssembly* assembly = mono_assembly_load_with_partial_name (anamestr, &status);
+			mono_assembly_name_free(assname);
+
 			if (!assembly) return PL_warning("No assembly file %s", anamestr);
 
 			MonoImage* image = mono_assembly_get_image(assembly);
@@ -102,7 +110,7 @@ extern "C" {
 	// install_t == __declspec( dllexport )
 	install_t install()
 	{
-		PL_register_foreign("cli_load_lib", 3, cli_load_lib, 0);
+		PL_register_foreign("cli_load_lib", 4, cli_load_lib, 0);
 	}
 
 #ifdef WINDOWS_CPP
