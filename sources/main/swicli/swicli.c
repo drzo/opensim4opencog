@@ -71,12 +71,8 @@ extern "C" {
 
 			MonoImageOpenStatus status = MONO_IMAGE_OK;
 
-			MonoAssemblyName* assname = mono_assembly_name_new(anamestr);
-			if (assname==0) return PL_warning("Cant parse assembly name %s", anamestr);
 			MonoAssembly* assembly = mono_assembly_load_with_partial_name (anamestr, &status);
-			mono_assembly_name_free(assname);
-
-			if (!assembly) return PL_warning("No assembly file %s", anamestr);
+			if (!assembly) return PL_warning("No assembly found named %s", anamestr);
 
 			MonoImage* image = mono_assembly_get_image(assembly);
 			if (!image) return PL_warning("No image module %s", anamestr);
