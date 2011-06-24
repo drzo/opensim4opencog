@@ -442,7 +442,7 @@ namespace cogbot
         ScriptEventListener scriptEventListener = null;
         readonly public ClientManager ClientManager;
 
-        public List<string> muteList;
+        //public List<string> muteList;
         public bool muted = false;
 
         private UUID GroupMembersRequestID = UUID.Zero;
@@ -532,7 +532,7 @@ namespace cogbot
             //Settings.FETCH_MISSING_INVENTORY = true;
             //Settings.SEND_AGENT_THROTTLE = false;
 
-            muteList = new List<string>();
+            //muteList = new List<string>();
 
             // outputDelegate = new OutputDelegate(doOutput);
 
@@ -571,6 +571,7 @@ namespace cogbot
             Commands["jump"] = new Jump(this);
             Commands["crouch"] = new Crouch(this);
             Commands["mute"] = new Actions.Mute(this);
+            Commands["unmute"] = new Actions.Mute(this);
             Commands["move"] = new Actions.Move(this);
             Commands["use"] = new Use(this);
             Commands["eval"] = new Eval(this);
@@ -744,23 +745,7 @@ namespace cogbot
             }
         }
         //breaks up large responses to deal with the max IM size
-        private void SendResponseIM(GridClient client, UUID fromAgentID, OutputDelegate WriteLine, string data)
-        {
-            for (int i = 0; i < data.Length; i += 1024)
-            {
-                int y;
-                if ((i + 1023) > data.Length)
-                {
-                    y = data.Length - i;
-                }
-                else
-                {
-                    y = 1023;
-                }
-                string message = data.Substring(i, y);
-                client.Self.InstantMessage(fromAgentID, message);
-            }
-        }
+
 
         private void updateTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
@@ -872,7 +857,7 @@ namespace cogbot
             var sourceType = e.SourceType;
             var message = e.Message;
             var fromName = e.FromName;
-            if (message.Length > 0 && sourceType == ChatSourceType.Agent && !muteList.Contains(fromName))
+            if (message.Length > 0 && sourceType == ChatSourceType.Agent)
             {
                 WriteLine(String.Format("{0} says, \"{1}\".", fromName, message));
                 PosterBoard["/posterboard/onchat"] = message;
@@ -956,7 +941,17 @@ namespace cogbot
                 else if (im.Dialog == InstantMessageDialog.MessageFromAgent ||
                     im.Dialog == InstantMessageDialog.MessageFromObject)
                 {
-                    //   ClientManager.DoCommandAll(im.Message, im.FromAgentID, WriteLine);
+                    string cmd = im.Message;
+                    if (cmd.StartsWith("cmcmd "))
+                    {
+                        cmd = cmd.Substring(6);
+                        ClientManager.DoCommandAll(cmd, im.FromAgentID, WriteLine);
+                    }
+                    else if (cmd.StartsWith("cmd "))
+                    {
+                        cmd = cmd.Substring(4);
+                        InstantMessage(im.FromAgentID, "" + ExecuteBotCommand(cmd, WriteLine), im.IMSessionID);
+                    }
                 }
                 return;
             }
@@ -967,6 +962,11 @@ namespace cogbot
                                         im.RegionID, im.Position));
                 return;
             }
+        }
+
+        protected UUID TheAvatarID
+        {
+            get { return Self.AgentID; }
         }
 
         public void DisplayNotificationInChat(string str)
@@ -2614,7 +2614,15 @@ namespace cogbot
         {
             if (text == null) return;
             if (text.EndsWith("Meta !-->")) return;
-            if (TheRadegastInstance==null)
+            int len = text.Length;
+            if (len > 1023)
+            {
+                string message = text.Substring(0, 1020);
+                InstantMessage(target, message, session);
+                InstantMessage(target, text.Substring(1020), session);
+                return;
+            }
+            if (TheRadegastInstance == null)
             {
                 this.Self.InstantMessage(target, text, session);
                 return;

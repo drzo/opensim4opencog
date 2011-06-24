@@ -211,13 +211,13 @@ namespace cogbot.Listeners
             SimObject prim = primitives[0];
             if (prim != null) return prim;
 
-            prim = TryGetSimAvatarFromName(args[0]);
+            prim = GetSimAvatarFromNameIfKnown(args[0]);
             argsUsed = prim != null ? 1 : 0;
             return prim;
         }
 
 
-        public static SimObject TryGetSimAvatarFromName(string args)
+        public static SimObject GetSimAvatarFromNameIfKnown(string args)
         {
             args = args.ToLower();
             string largs = args.Replace("_", " ");
@@ -544,6 +544,24 @@ namespace cogbot.Listeners
                 argsUsed++;
                 prims = GetChildren(prims);
             }
+            else if (arg0Lower == "ownedby")
+            {
+                string ownedBy = args[1].ToLower();
+
+                var owners = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, SimObjects);
+                List<SimObject> keep = new List<SimObject>();
+                foreach (var owner in owners)
+                {
+                    foreach (var o in prims)
+                    {
+                        if (o.Prim.OwnerID == owner.ID)
+                        {
+                            keep.Add(o);
+                        }
+                    }
+                }
+                prims = keep;
+            }
             else if (arg0Lower == "bydistance")
             {
                 prims = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, prims);
@@ -567,7 +585,7 @@ namespace cogbot.Listeners
                 SimObject prim;
                 if (tryGetPrim(args, out prim, out argsUsed))
                 {
-                    return new List<SimObject> {prim};
+                    return new List<SimObject> { prim };
                 }
                 else
                 {

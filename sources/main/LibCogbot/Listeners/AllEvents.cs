@@ -164,6 +164,9 @@ namespace cogbot.Listeners
 
 
         }
+        public virtual void Self_OnMuteListUpdated(object sender, EventArgs e)
+        {
+        }
 
         static public readonly string[] paramNamesOnLogin = new string[] { "login", "message" };
         static public readonly Type[] paramTypesOnLogin = new Type[] { typeof(LoginStatus), typeof(string) };
@@ -770,6 +773,7 @@ namespace cogbot.Listeners
             client.Self.ChatSessionMemberAdded += Self_OnChatSessionMemberAdded;
             client.Self.ChatSessionMemberLeft += Self_OnChatSessionMemberLeft;
             client.Avatars.AvatarAppearance += Avatars_OnAvatarAppearance;
+            client.Self.MuteListUpdated += Self_OnMuteListUpdated;
             //client.Avatars.OnAvatarAnimation += Avatars_OnAvatarAnimation;
 
             client.Avatars.AvatarPickerReply += Avatars_OnAvatarNameSearch;

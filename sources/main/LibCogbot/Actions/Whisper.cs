@@ -30,12 +30,27 @@ namespace cogbot.Actions
             string to = args["to"];
 
             if (to.Length > 0) {
-                SimAvatar avatar;
-                if (!WorldSystem.tryGetAvatar(to, out avatar))
+                int argsUsed;
+                List<SimObject> PS =
+                    WorldSystem.GetPrimitives(to.Split(new[] {" "}, StringSplitOptions.RemoveEmptyEntries), out argsUsed);
+                if (!IsEmpty(PS))
                 {
-                    return Failure("I don't know who " + to + "is.");
+                    foreach (var prim in PS)
+                    {
+                        currentAvatar = prim.ID;
+                        break;
+                    }
                 }
-                currentAvatar = avatar.ID;
+                else
+                {
+                    SimAvatar avatar;
+                    if (!WorldSystem.tryGetAvatar(to, out avatar))
+                    {
+                        return Failure("I don't know who " + to + "is.");
+                    }
+                    currentAvatar = avatar.ID;
+                }
+
             }
             else if (currentAvatar == UUID.Zero)
             {

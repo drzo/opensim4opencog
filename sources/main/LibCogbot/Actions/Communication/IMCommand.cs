@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using cogbot.Listeners;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
@@ -24,20 +25,35 @@ namespace cogbot.Actions.Communication
             if (args.Length < 3)
                 return ShowUsage();// " im [firstname] [lastname] [message]";
 
-            string ToAvatarName = String.Empty;
-        
+            string message = String.Empty;
 
-            ToAvatarName = args[0] + " " + args[1];
+            int argsUsed;
+            List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+            if (!IsEmpty(PS))
+            {
+                for (int ct = argsUsed; ct < args.Length; ct++)
+                    message += args[ct] + " ";
+                message = message.TrimEnd();
+                int nfound = 0;
+                foreach (var prim in PS)
+                {
+                    TheBotClient.InstantMessage(prim.ID, message, UUID.Zero);
+                    Success(Name + ": " + prim);
+                    nfound++;
+                }
+                if (nfound > 0) return Success(Name + " found: " + nfound + " object/agent(s)");
+            }
+
 
             // Build the message
-            string message = String.Empty;
             for (int ct = 2; ct < args.Length; ct++)
                 message += args[ct] + " ";
             message = message.TrimEnd();
+            string ToAvatarName = args[0] + " " + args[1];
             UUID found = WorldSystem.GetUserID(ToAvatarName);
             if (found==UUID.Zero) return Failure( "Name lookup for " + ToAvatarName + " failed");
             if (message.Length > 1023) message = message.Remove(1023);
-            Client.Self.InstantMessage(found, message);
+            TheBotClient.InstantMessage(found, message, UUID.Zero);
             return Success("Instant Messaged " + found.ToString() + " with message: " + message);
 
 

@@ -34,7 +34,18 @@ namespace cogbot.TheOpenSims
             return _type + "-" + ID;
         }
 
-        public UUID ID = UUID.Zero;
+        private UUID _id = UUID.Zero;
+        public UUID ID
+        {
+            get
+            {
+                return _id;
+            }
+            set
+            {
+                _id = value;
+            }
+        }
         private object _value;
         private readonly string _type;
 

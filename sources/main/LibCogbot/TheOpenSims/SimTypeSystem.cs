@@ -17,7 +17,10 @@ namespace cogbot.TheOpenSims
 {
     public class SimObjectType : BotMentalAspect
     {
-
+        public UUID ID
+        {
+            get { throw new NotImplementedException("BotMentalAspect.ID " + this); }
+        }
         
         public FirstOrderTerm GetTerm()
         {
