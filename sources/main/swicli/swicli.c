@@ -34,8 +34,8 @@ extern "C" {
 	/// static MonoString* gimme () {   	return mono_string_new (mono_domain_get (), "All your monos are belong to us!"); }
 
 	/// ?- load_foreign_library(swicli).
-	/// Assembly + ClassName + StaticMethodName
-	/// Such as  ?- cli_load_lib('SwiPlCs.dll','SbsSW.SwiPlCs.swipl_win','install').
+	/// This DLL shall have given: cli_load_lib(+AppDomainName, +AssemblyPartialName, +FullClassName, +StaticMethodName).
+	/// used like: cli_load_lib('SWIProlog','SwiPlCs','SbsSW.SwiPlCs.swipl_win','install').
 	foreign_t  cli_load_lib(term_t dname, term_t aname, term_t cname, term_t mname) 	
 	{ 
 		char *dnamestr;
