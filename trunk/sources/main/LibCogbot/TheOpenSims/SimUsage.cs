@@ -18,7 +18,10 @@ namespace cogbot.TheOpenSims
         {
             return WorldObjects.GetMemberValues("", this);
         }
-
+        public UUID ID
+        {
+            get { throw new NotImplementedException("BotMentalAspect.ID " + this); }
+        }
         public String UsageName;
 
         public SimUsage(string name)

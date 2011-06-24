@@ -29,7 +29,18 @@ namespace cogbot.TheOpenSims
             if (!string.IsNullOrEmpty(group.Name)) return group.Name;
             return "Group-" + ID;
         }
-        public UUID ID = UUID.Zero;
+        private UUID _id = UUID.Zero;
+        public UUID ID
+        {
+            get
+            {
+                return _id;
+            }
+            set
+            {
+                _id = value;
+            }
+        }
         private Group group;
         public GroupAccountSummary Summary;
 

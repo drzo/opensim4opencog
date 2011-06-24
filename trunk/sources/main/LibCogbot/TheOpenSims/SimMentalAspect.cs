@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using OpenMetaverse;
 
 namespace cogbot.TheOpenSims
 {
@@ -8,7 +9,7 @@ namespace cogbot.TheOpenSims
     public interface BotMentalAspect
     {
         FirstOrderTerm GetTerm();
-
+        UUID ID { get; }
         //public BotMentalAspect(string s)
         //{
         //    AspectName = s;

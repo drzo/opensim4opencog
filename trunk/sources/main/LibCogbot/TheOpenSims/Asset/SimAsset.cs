@@ -25,6 +25,16 @@ namespace cogbot.TheOpenSims
         public abstract Asset ServerAsset { get; set; }
         public abstract byte[] AssetData { get; set; }
         public abstract bool NeedsRequest { get; set; }
+
+        public UUID ID
+        {
+            get
+            {
+                return AssetID;
+            }
+        }
+
+        abstract public UUID AssetID { get; set; }
     }
 
     abstract public class SimAsset : SimAssetV, ITraceable
@@ -373,7 +383,7 @@ namespace cogbot.TheOpenSims
         }
 
 
-        public UUID AssetID
+        override public UUID AssetID
         {
             get
             {

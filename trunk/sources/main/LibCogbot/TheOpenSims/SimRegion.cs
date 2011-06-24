@@ -142,6 +142,14 @@ namespace cogbot.TheOpenSims
             }
         }
 
+        public UUID ID
+        {
+            get
+            {
+                return RegionID;
+            }
+        }
+
         private SimRegion(ulong Handle, GridClient bc)
             //: base(null, default(Vector2), default(Vector3d), default(Vector3))
         {           

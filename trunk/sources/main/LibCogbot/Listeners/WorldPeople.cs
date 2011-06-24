@@ -94,6 +94,10 @@ namespace cogbot.Listeners
 
         }
 
+        public override void Self_OnMuteListUpdated(object sender, EventArgs e)
+        {
+            client.DisplayNotificationInChat("MuteList count = " + client.Self.MuteList.Count);
+        }
         public override void Self_OnInstantMessage(object sender, InstantMessageEventArgs e)
         {
             var im = e.IM;
@@ -786,6 +790,23 @@ namespace cogbot.Listeners
 
         public UUID GetUserID(string ToAvatarName)
         {
+            if (ToAvatarName.StartsWith("$"))
+            {
+                int usedArgs;
+                var col = ResolveCollection(ToAvatarName.ToLower(), out usedArgs, null);
+                if (col.Count>0)
+                {
+                    foreach (var prim in col)
+                    {
+                        if (prim is SimObject) return ((SimObject)prim).ID;
+                        if (prim is string)
+                        {
+                            string s = (string) prim;
+                            if (s != ToAvatarName) return GetUserID(s);
+                        }
+                    }
+                }
+            }
             UUID found = UUID.Zero;
             // case sensitive
             lock (Name2Key) if (Name2Key.TryGetValue(ToAvatarName, out found)) return found;

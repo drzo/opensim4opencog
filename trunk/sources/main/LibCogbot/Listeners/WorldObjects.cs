@@ -996,6 +996,7 @@ namespace cogbot.Listeners
             }
         }
 
+#if NOTESTUNUSED
         public Primitive GetPrimitive(String str)
         {
             int argsUsed;
@@ -1003,7 +1004,7 @@ namespace cogbot.Listeners
             if (primitives.Count==0) return null;
             return primitives[0].Prim;
         }
-
+#endif
         public Primitive GetPrimitive(uint id, Simulator simulator)
         {
             if (simulator == null)

@@ -78,6 +78,11 @@ namespace cogbot.TheOpenSims
     [XmlType(TypeName = "simObjectEvt")]
     public class SimObjectEvent : EventArgs, BotMentalAspect
     {
+        public UUID ID
+        {
+            get { throw new NotImplementedException("BotMentalAspect.ID " + this); }
+        }
+
         public ICollection<NamedParam> GetInfoMap()
         {
             return WorldObjects.GetMemberValues("", this);
