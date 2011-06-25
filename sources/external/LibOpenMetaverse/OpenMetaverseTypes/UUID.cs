@@ -203,7 +203,7 @@ namespace OpenMetaverse
 #if USE_UUID_INTERFACE
         public UUIDCantBeNull(string val)
 #else
-        internal UUID(string val)
+        public UUID(string val)
 #endif
         {
             if (String.IsNullOrEmpty(val))
