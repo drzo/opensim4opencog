@@ -22,7 +22,7 @@ assertIfNew(Gaf):-assert(Gaf).
 %% load needed modules
 
 :-use_module(library(clipl)).
-:-use_module(library(jpl)).
+%%:-use_module(library(jpl)).
 
 %------------------------------------------------------------------------------
 
@@ -80,8 +80,19 @@ botClient(Obj):-clientManager(Man),cliGet(Man,'LastRefBotClient',Obj).
 botClient([P|N],Value):-!,botClient(Obj),cliGet(Obj,[P|N],Value).
 botClient(Property,Value):-botClient(Obj),cliGet(Obj,Property,Value),!.
 
+botClientCall(Call):-botClientCall(Call,Res),cliWriteln(Res).
 botClientCall([P|N],Value):-!,botClient(Obj),cliGet(Obj,P,Mid),cliGet(Mid,N,Value).
 botClientCall(Property,Value):-botClient(Obj),cliCall(Obj,Property,Value).
+
+botClientCmd([C|Cmd]):-!,concat_atom([C|Cmd],' ',Str),botClientCall(executeCommand(Str)).
+botClientCmd(C):-compound(C),!,C=..[F|A],listifyFlat(A,FL),!,botClientCmd([F|FL]).
+botClientCmd(Str):-botClientCall(executeCommand(Str)).
+
+listifyFlat([],[]):-!.
+listifyFlat([H|T],HT):-!,listifyFlat(H,HL),listifyFlat(T,TL),!,append(HL,TL,HT).
+listifyFlat(C,FA):-functor(C,F,1),!,C=..[F,A],!,listifyFlat(A,FA).
+listifyFlat(C,FA):-compound(C),!,C=..[F|A],!,listifyFlat([F|A],FA).
+listifyFlat(C,[C]).
 
 %% get the gridClient Instance
 gridClient(Obj):-botClient(BC),cliGet(BC,'gridClient',Obj).
@@ -108,7 +119,9 @@ onSimEvent(_A,_B,C):-cliToString(onSimEvent(C),AS),writeq(AS),nl.
 
 %% on first bot client created register the global event handler
 onFirstBotClient(A,B):- 
-   botClient(Obj), cliAddEventHandler(Obj,'EachSimEvent',onSimEvent(_,_,_)),
+ botClient(Obj), 
+  % uncomment the next line if you want all commands to run thru the universal event handler   
+   %%cliAddEventHandler(Obj,'EachSimEvent',onSimEvent(_,_,_)),
    cliToString(onFirstBotClient(A-B-Obj),Objs),writeq(Objs),nl.
 
 %% register onFirstBotClient
@@ -159,6 +172,14 @@ simObject(X,OE):-simObject(X),cliGet(X,infoMap,Y),cliCol(Y,PE),cliUnify(OE,PE).
 :-set_prolog_flag(double_quotes,string).
 %------------------------------------------------------------------------------
 %------------------------------------------------------------------------------
+simDistance(V1,V2,D):-cliCall(V1,distance(V1,V2),D).
+
+simAvDistance(A,C,E):-var(A),nonvar(C),!,simAvDistance(C,A,E).
+simAvDistance(A,C,E):-simAvatar(A),cliGet(A,globalposition,B),simAvatar(C),A\=C,cliGet(C,globalposition,D),simDistance(B,D,E).
+simObjDistance(A,C,E):-var(A),nonvar(C),!,simObjDistance(C,A,E).
+simObjDistance(A,C,E):-simObject(A),cliGet(A,globalposition,B),simObject(C),A\=C,cliGet(C,globalposition,D),simDistance(B,D,E).
+%------------------------------------------------------------------------------
+%------------------------------------------------------------------------------
 end_of_file.
 %------------------------------------------------------------------------------
  6 ?- botClient('Inventory',Y),cliMemb(Y,p,Z).
@@ -167,6 +188,18 @@ Y = @'C#742328240',
 Z = p(0, 'Store', 'Inventory', [], [], 'CanRead'(true), 'CanWrite'(false), decl(static(false), 'InventoryManager'), access_pafv(true, false, false, false)) ;
 false.
 
+14 ?- botClientCmd(say("hi there!")).
+"Success say"
+true.
+
+15 ?- botClientCmd(shout("hi there!")).
+"Success shout"
+
+cliGet('cogbot.TheOpenSims.SimTypeSystem','objectTypes',O),cliGetType(O,T),cliTypeSpec(T,S)
+
+3 ?- botClientCall(executeCommand("jump"),X),cliWriteln(X).
+"Success Jump"
+X = @'C#186521916'.
 
  22 ?- botClientCall(talk("hello world"),O).
  O = @null.
@@ -196,50 +229,6 @@ Z = "System.Collections.Generic.Dictionary`2+ValueCollection[OpenMetaverse.UUID,
 Y = @'C#720558400',
 L = ["Scripts", "Photo Album", "*MD* Brown Leather Hat w/Bling", "Body Parts", "Notecards", "Objects", "Clothing", "Landmarks", "Textures"|...].
 
-15 ?- cliToTagged(sbyte(127),O),cliGetType(O,T),cliWriteln(O is T).
-"127"is"System.SByte"
-O = @'C#283319280',
-T = @'C#283324332'.
-
-16 ?- cliToTagged(long(127),O),cliGetType(O,T),cliWriteln(O is T).
-"127"is"System.Int64"
-O = @'C#283345876',
-T = @'C#283345868'.
-
-17 ?- cliToTagged(ulong(127),O),cliGetType(O,T),cliWriteln(O is T).
-"127"is"System.UInt64"
-O = @'C#283346772',
-T = @'C#283346760'.
-
-15 ?- cliToTagged(sbyte(127),O),cliGetType(O,T),cliWriteln(O is T).
-"127"is"System.SByte"
-O = @'C#283319280',
-T = @'C#283324332'.
-
-16 ?- cliToTagged(long(127),O),cliGetType(O,T),cliWriteln(O is T).
-"127"is"System.Int64"
-O = @'C#283345876',
-T = @'C#283345868'.
-
-18 ?- cliToTagged(343434127,O),cliGetType(O,T),cliWriteln(O is T).
-"343434127"is"System.Int32"
-O = @'C#281925284',
-T = @'C#281925280'.
-
-19 ?- cliToTagged(3434341271,O),cliGetType(O,T),cliWriteln(O is T).
-"3434341271"is"System.UInt64"
-O = @'C#281926616',
-T = @'C#283346760'.
-
-21 ?- cliToTagged(343434127111,O),cliGetType(O,T),cliWriteln(O is T).
-"343434127111"is"System.UInt64"
-O = @'C#281930092',
-T = @'C#283346760'.
-
-28 ?- cliToTagged(34343412711111111111111111111111111111,O),cliGetType(O,T),cliWriteln(O is T).
-"34343412711111111111111111111111111111"is"java.math.BigInteger"
-O = @'C#281813796',
-T = @'C#281810860'.
 
 %------------------------------------------------------------------------------
 % simAvatar examples
@@ -253,6 +242,9 @@ X = @'C#638111960',
 S = "Trollerblades Wasp" ;
 false.
 
+
+
+v
 
 [debug] 11 ?- simAvatar(X),cliGet(X,'DebugInfo',Y).
 X = @'C#723685664',
@@ -616,6 +608,7 @@ onFriendsRightsUpdated(FriendInfo):-writeq([updated,FriendInfo]).
 %%% jni_func(6, 'java.lang.Integer', Class).
 %%% jni_func(6, 'java/lang/String', Class)
 
+/*
 jpl_versions_demo :-
 	cliCall( 'jpl.JPL', version_string, [], Vj),
 	jpl:jpl_c_lib_version( Vc),
@@ -631,7 +624,7 @@ jpl_versions_demo :-
 	;	write( 'WHOOPS! you appear not to have the same version of each library installed'), nl
 	),
 	nl.
-
+*/
 
 % this directive runs the above demo
 
