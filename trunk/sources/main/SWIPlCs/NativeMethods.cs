@@ -49,6 +49,7 @@ using System.Runtime.ConstrainedExecution;
 
 namespace SbsSW.SwiPlCs
 {
+    #if USESAFELIB
 
 	#region Safe Handles and Native imports
 	// See http://msdn.microsoft.com/msdnmag/issues/05/10/Reliability/ for more about safe handles.
@@ -57,19 +58,26 @@ namespace SbsSW.SwiPlCs
 	{
 		private SafeLibraryHandle() : base(true) { }
 
-		protected override bool ReleaseHandle()
-		{
-			return NativeMethods.FreeLibrary(handle);
-		}
+        protected override bool ReleaseHandle()
+        {
+            if (PrologClient.IsLinux)
+            {
+                return NativeMethodsLinux.FreeLibrary(handle);
+            }
+            else
+            {
+                return NativeMethodsWindows.FreeLibrary(handle);
+            }
+        }
 
-		public bool UnLoad()
+	    public bool UnLoad()
 		{
 			return ReleaseHandle();
 		}
 
 	}
 
-	static class NativeMethods
+	static class NativeMethodsWindows
 	{
 		const string s_kernel = "kernel32";
 		[DllImport(s_kernel, CharSet = CharSet.Auto, BestFitMapping = false, SetLastError = true)]
@@ -84,7 +92,27 @@ namespace SbsSW.SwiPlCs
         [DllImport(s_kernel, CharSet = CharSet.Ansi, BestFitMapping = false, SetLastError = true)]
         internal static extern IntPtr GetProcAddress(SafeLibraryHandle hModule, String procname);
 	}
+    static class NativeMethodsLinux
+    {
+        public static SafeLibraryHandle LoadLibrary(string fileName)
+        {
+            return dlopen(fileName);
+        }
+        const string s_kernel = "kernel32";
+        [DllImport(s_kernel, CharSet = CharSet.Auto, BestFitMapping = false, SetLastError = true)]
+        public static extern SafeLibraryHandle dlopen(string fileName);
+
+        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
+        [DllImport(s_kernel, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool FreeLibrary(IntPtr hModule);
+
+        // see: http://blogs.msdn.com/jmstall/archive/2007/01/06/Typesafe-GetProcAddress.aspx
+        [DllImport(s_kernel, CharSet = CharSet.Ansi, BestFitMapping = false, SetLastError = true)]
+        internal static extern IntPtr GetProcAddress(SafeLibraryHandle hModule, String procname);
+    }
 	#endregion // Safe Handles and Native imports
+#endif
 
 
 

@@ -1559,6 +1559,8 @@ namespace SbsSW.SwiPlCs
                 if (0 != libpl.PL_get_name_arity(this.TermRef, ref name, ref arity))
                     return arity;
 
+                if (IsString) return 0;
+
                 throw new NotSupportedException("Only possible for compound or atoms");
                 //throw new PlTypeException("compound", this);   // FxCop Don't like this type of exception
             }
@@ -2533,6 +2535,7 @@ namespace SbsSW.SwiPlCs
             }
             else
             {
+                Console.Error.WriteLine("Init1" );
                 libpl.LoadLibPl();
                 // redirect input and output stream to receive messages from prolog
                 DelegateStreamWriteFunction wf = new DelegateStreamWriteFunction(Swrite_function);
@@ -2546,12 +2549,12 @@ namespace SbsSW.SwiPlCs
                 local_argv[idx++] = "";
                 foreach (string s in argv)
                     local_argv[idx++] = s;
-
+                Console.Error.WriteLine("Init22");
                 if (0 == libpl.PL_initialise(local_argv.Length, local_argv))
                     throw new PlLibException("failed to initialize");
                 else
                 {
-                    
+                    Console.Error.WriteLine("Init3");
                     if (!IsStreamFunctionReadModified)
                     {
                         DelegateStreamReadFunction rf = new DelegateStreamReadFunction(Sread_function);

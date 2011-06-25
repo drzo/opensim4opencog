@@ -1,3 +1,4 @@
+#define USESAFELIB
 /*********************************************************
 * 
 *  Author:        Uwe Lesta
@@ -35,10 +36,19 @@ namespace SbsSW.SwiPlCs
     {
         static public int install()
         {
-            PrologClient.IsPLWin = true;
-            PrologClient.RedirectStreams = false;
-            PrologClient.SetupProlog();
-            return libpl.PL_succeed;
+            try
+            {
+                PrologClient.IsPLWin = true;
+                PrologClient.RedirectStreams = false;
+                PrologClient.SetupProlog();
+                System.Console.Error.WriteLine("swipl_win.install suceeded");
+                return libpl.PL_succeed;
+            } catch(Exception e)
+            {
+                PrologClient.WriteException(e);
+                System.Console.Error.WriteLine("swipl_win.install error");
+                return libpl.PL_fail;
+            }
         }
     }
     /**********************************
@@ -96,38 +106,65 @@ namespace SbsSW.SwiPlCs
         #region helper for initialize and cleanUp halt
 
         // Unmanaged resource. CLR will ensure SafeHandles get freed, without requiring a finalizer on this class.
+#if USESAFELIB
         static SafeLibraryHandle m_hLibrary;
+#endif
         public static bool NoToString = false;
         public static ulong TermRefCount;
 
 
         private static bool IsValid
         {
-            get { return m_hLibrary != null && !m_hLibrary.IsInvalid; }
+            get
+            {
+#if USESAFELIB
+                
+                return m_hLibrary != null && !m_hLibrary.IsInvalid;
+#else 
+                return true;
+#endif
+            }
         }
 
         public static void LoadUnmanagedLibrary(string fileName)
         {
+#if USESAFELIB
             if (m_hLibrary == null)
             {
-                m_hLibrary = NativeMethods.LoadLibrary(fileName);
-                if (m_hLibrary.IsInvalid)
+                if (PrologClient.IsLinux)
                 {
-                    int hr = Marshal.GetHRForLastWin32Error();
-                    Marshal.ThrowExceptionForHR(hr);
+                    m_hLibrary = NativeMethodsLinux.LoadLibrary(fileName);
+                    if (m_hLibrary.IsInvalid)
+                    {
+                        Console.WriteLine("IsInvalid LoadUnmanagedLibrary " + fileName);
+                       // int hr = Marshal.GetHRForLastWin32Error();
+                       // Marshal.ThrowExceptionForHR(hr);
+                    }
+                }
+                else
+                {
+                    m_hLibrary = NativeMethodsWindows.LoadLibrary(fileName);
+                    if (m_hLibrary.IsInvalid)
+                    {
+                        int hr = Marshal.GetHRForLastWin32Error();
+                        Marshal.ThrowExceptionForHR(hr);
+                    }
                 }
             }
+#endif
         }
 
         public static void UnLoadUnmanagedLibrary()
         {
-            if (!m_hLibrary.IsClosed)
+#if USESAFELIB
+            if (m_hLibrary != null && !m_hLibrary.IsClosed)
             {
                 m_hLibrary.Close();
                 m_hLibrary.UnLoad();
                 m_hLibrary.Dispose();
                 m_hLibrary = null;
             }
+#endif
         }
 
 
@@ -172,9 +209,19 @@ namespace SbsSW.SwiPlCs
                 size_of_pointer = 4;
             }
 
+#if USESAFELIB
+
             IntPtr callbackFunctionPtr = Marshal.GetFunctionPointerForDelegate(function);
 
-            IntPtr address_std_stream_array = NativeMethods.GetProcAddress(m_hLibrary, "S__iob");
+            IntPtr address_std_stream_array;
+            if (PrologClient.IsLinux)
+            {
+                address_std_stream_array = NativeMethodsLinux.GetProcAddress(m_hLibrary, "S__iob");
+            }
+            else
+            {
+                address_std_stream_array = NativeMethodsWindows.GetProcAddress(m_hLibrary, "S__iob");
+            }
             IntPtr function_array_out = Marshal.ReadIntPtr(address_std_stream_array, (size_of_IOSTREAM * (int)streamType) + offset_to_poninter_of_IOFUNCTIONS);
 
 #if false
@@ -182,8 +229,8 @@ namespace SbsSW.SwiPlCs
             Marshal.WriteIntPtr(new IntPtr(function_array_out.ToInt64() + (size_of_pointer * (int)functionType)), callbackFunctionPtr);
 #else
             Marshal.WriteIntPtr(new IntPtr(function_array_out.ToInt32() + (size_of_pointer * (int)functionType)), callbackFunctionPtr);
-#endif
-#endif
+#endif // _PL_X64
+#endif // false
             if (Is64Bit())
             {
                 Marshal.WriteIntPtr(new IntPtr(function_array_out.ToInt64() + (size_of_pointer * (int)functionType)), callbackFunctionPtr);
@@ -192,11 +239,23 @@ namespace SbsSW.SwiPlCs
             {
                 Marshal.WriteIntPtr(new IntPtr(function_array_out.ToInt32() + (size_of_pointer * (int)functionType)), callbackFunctionPtr);
             }
+#endif // USESAFELIB
         }
 
+        private static bool LoadedLibPl = false;
         internal static void LoadLibPl()
         {
-            LoadUnmanagedLibrary(SafeNativeMethods.DllFileName1);
+            if (LoadedLibPl) return;
+            try
+            {
+                LoadUnmanagedLibrary(SafeNativeMethods.DllFileName1);
+                LoadedLibPl = true;
+            }
+            catch (Exception ex)
+            {
+                
+               PrologClient.WriteException(ex);
+            }
         }
 
         internal static int PL_initialise(int argc, String[] argv)

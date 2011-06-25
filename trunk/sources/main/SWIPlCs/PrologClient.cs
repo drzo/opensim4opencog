@@ -194,7 +194,7 @@ namespace SbsSW.SwiPlCs
            
         }
 
-        private static int CheckEngine()
+        public static int CheckEngine()
         {
             IntPtr _iEngineNumber;
             IntPtr pNullPointer = IntPtr.Zero;
@@ -297,7 +297,7 @@ namespace SbsSW.SwiPlCs
                     {
                         case 0:
                             {
-                                d = new DelegateParameter0(() => (bool)InvokeCaught(list, null, new object[0]));
+                                d = new DelegateParameter0(() => (bool)InvokeCaught(list, null, ZERO_OBJECTS));
                                 PlEngine.RegisterForeign(module, pn, paramlen, d, PlForeignSwitches.None);
                                 return;
                             }
@@ -823,9 +823,22 @@ namespace SbsSW.SwiPlCs
             }
         }
         public static void SetupProlog0()
-        {
-            SetupIKVM();
-
+        {            
+            Console.WriteLine("SetupProlog");
+            SafelyRun(SetupIKVM);
+            if (!IsUseableSwiProlog(SwiHomeDir))
+            {
+                try
+                {
+                    SwiHomeDir = Application.StartupPath;
+                    if (!IsUseableSwiProlog(SwiHomeDir))
+                    {
+                        SwiHomeDir = null;
+                    }
+                } catch(Exception)
+                {
+                }
+            }
             if (!IsUseableSwiProlog(SwiHomeDir))
             {
                 SwiHomeDir = Environment.GetEnvironmentVariable("SWI_HOME_DIR");
@@ -907,24 +920,31 @@ namespace SbsSW.SwiPlCs
             if (!JplDisabled)
                 CLASSPATH = IKVMHome + "\\SWIJPL.dll" + ";" + IKVMHome + "\\SWIJPL.jar;" + CLASSPATH0;
 
-            Environment.SetEnvironmentVariable("CLASSPATH", CLASSPATH);
-            java.lang.System.setProperty("java.class.path", CLASSPATH);
+            Console.Error.WriteLine("CLASSPATH=" + CLASSPATH);
+            if (CLASSPATH!=null)
+            {
+                Environment.SetEnvironmentVariable("CLASSPATH", CLASSPATH);
+                java.lang.System.setProperty("java.class.path", CLASSPATH);
+            }
             java.lang.System.setProperty("java.library.path", libpath);
             try
             {
-                JPL.setNativeLibraryDir(SwiHomeDir + "\\bin");
-                try
-                {
-                    JPL.loadNativeLibrary();
-                }
-                catch (Exception e)
-                {
-                    WriteException(e);
-                    JplDisabled = true;
-                }
                 if (!JplDisabled)
                 {
-                    SafelyRun(() => jpl.fli.Prolog.initialise());
+                    JPL.setNativeLibraryDir(SwiHomeDir + "\\bin");
+                    try
+                    {
+                        JPL.loadNativeLibrary();
+                    }
+                    catch (Exception e)
+                    {
+                        WriteException(e);
+                        JplDisabled = true;
+                    }
+                    if (!JplDisabled)
+                    {
+                        SafelyRun(() => jpl.fli.Prolog.initialise());
+                    }
                 }
                 SafelyRun(TestClassLoader);
 
@@ -1325,10 +1345,11 @@ namespace SbsSW.SwiPlCs
             Fn015.Register();
             PlEngine.RegisterForeign(null, "foo2", 2, new DelegateParameterBacktrack2(FooTwo), Nondeterministic);
             //PlEngine.RegisterForeign(null, "cliFindClass", 2, new DelegateParameter2(PrologCli.cliFindClass), PlForeignSwitches.None);
-            PlEngine.RegisterForeign(null, "cliLoadAssembly", 1, new DelegateParameter1(PrologCli.cliLoadAssembly), PlForeignSwitches.None);
+            PlEngine.RegisterForeign(ExportModule, "cliLoadAssembly", 1, new DelegateParameter1(PrologCli.cliLoadAssembly), PlForeignSwitches.None);
+            Console.Error.WriteLine("RegisterPLCSForeigns"); 
             PlEngine.RegisterForeign(null, "foo3", 3, new DelegateParameterBacktrackVarArgs(FooThree), Nondeterministic | PlForeignSwitches.VarArgs);
 
-            InternMethod(null, "loadAssembly", typeof(PrologClient).GetMethod("LoadAssembly"));
+            InternMethod(ExportModule, "loadAssembly", typeof(PrologClient).GetMethod("LoadAssembly"));
             InternMethod(null, "cwl", typeof(Console).GetMethod("WriteLine", new Type[] { typeof(string) }));
             RegisterJPLForeigns();
             RegisterThread(CreatorThread);
@@ -1663,6 +1684,7 @@ jpl_jlist_demo :-
 :- jpl_jlist_demo.
 
              */
+            return; //we dont need to really do this
             PlCall("use_module(library(jpl)).");
             PlAssert("jpl0 :- jpl_new( 'java.lang.String', ['hi'], DLM),writeln(DLM)");
             PlAssert("jpl1 :- jpl_new( 'javax.swing.DefaultListModel', [], DLM),writeln(DLM)");
@@ -1797,14 +1819,15 @@ jpl_jlist_demo :-
 
         }
 
-        private static void WriteException(Exception exception)
+        public static void WriteException(Exception exception)
         {
             java.lang.Exception ex = exception as java.lang.Exception;
             if (ex != null)
             {
                 ex.printStackTrace();
+
             }
-            else
+            //else
             {
                 Exception inner = exception.InnerException;
                 if (inner != null && inner != exception)
@@ -2185,7 +2208,9 @@ typedef struct // define a context structure  { ... } context;
         public static bool IsPLWin;
         public static bool RedirectStreams = true;
         public static int VMStringsAsAtoms = libpl.CVT_STRING;
-        
+
+        public static bool IsLinux = false;//Type.GetType("Mono.Runtime") != null;
+
         // foo(X,Y),writeq(f(X,Y)),nl,X=5.
         public static int Foo(PlTerm t0, PlTerm term2, IntPtr control)
         {
