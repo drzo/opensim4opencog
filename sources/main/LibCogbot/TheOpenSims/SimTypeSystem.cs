@@ -19,7 +19,11 @@ namespace cogbot.TheOpenSims
     {
         public UUID ID
         {
-            get { throw new NotImplementedException("BotMentalAspect.ID " + this); }
+            get
+            {
+                return UUID.Zero;
+                throw new NotImplementedException("BotMentalAspect.ID " + this);
+            }
         }
         
         public FirstOrderTerm GetTerm()
