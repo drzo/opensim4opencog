@@ -241,13 +241,14 @@ cliToData(Objs,Term,FAS):-Term=..[F|A],cliToData1(Objs,F,A,Term,FAS).
 cliToData1(_Objs,struct,_A,Term,Term):-!.
 cliToData1(_Objs,object,_A,Term,Term):-!.
 cliToData1(_Objs,enum,_A,Term,Term):-!.
-cliToData1(Objs,_F,A,Term,String):-cliToData(Objs,A,FAS),!,String=..[F|AS],
+
+cliToData1(Objs,_F,A,Term,String):-cliToData(Objs,A,FAS),!,String=..[F|AS].
 
 cliGetTermData(Objs,Term,String):-cliGetType(Term,Type),cliPropsForType(Type,Props),cliGetMap(Objs,Term,Props,Name,Value,Name=Value,Mid),!,cliToData(Objs,Mid,String).
 cliGetTermData(Objs,Term,Mid):-cliGetTerm(Objs,Term,Mid),!.
 
 
-cliGetMap(_Objs,Term,_,_,_,_,List):- cliIsType(Term,'System.Collections.IEnumerable'),findall(ED,(cliCol(Term,E),cliToData(Objs,E,ED)),List),!.
+cliGetMap(Objs,Term,_,_,_,_,List):- cliIsType(Term,'System.Collections.IEnumerable'),findall(ED,(cliCol(Term,E),cliToData(Objs,E,ED)),List),!.
 cliGetMap(Objs,Term,Props,Name,Value,NameValue,List):-cliGetMap1(Objs,Term,Props,Name,Value,NameValue,List).
 
 cliGetMap1(Objs,Term,Props,Name,Value,NameValue,List):-findall(NameValue,(member(Name,Props),cliGetRaw(Term,Name,ValueM),cliToData(Objs,ValueM,Value)),List).
