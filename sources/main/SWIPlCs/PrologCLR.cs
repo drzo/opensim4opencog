@@ -49,6 +49,9 @@ namespace SbsSW.SwiPlCs
             SetupProlog();
         }
 
+        public readonly static Type[] ZERO_TYPES = new Type[0];
+
+        public readonly static Object[] ZERO_OBJECTS = new Object[0];
 
         public static BindingFlags BindingFlagsJustStatic = BindingFlags.Public | BindingFlags.NonPublic |
                                                             BindingFlags.Static;
@@ -74,6 +77,7 @@ namespace SbsSW.SwiPlCs
                 }
                 return lenType;
             }
+            if (memberSpec.IsAtomic) return ZERO_TYPES;
             if (memberSpec.IsList)
             {
                 memberSpec = memberSpec.Copy();
@@ -255,7 +259,7 @@ namespace SbsSW.SwiPlCs
                 Debug("AME: " + e + " fn = " + fn);
             }
             MethodInfo[] members = c.GetMethods(BindingFlagsALL);
-            if (arity < 0) arity = memberSpec.Arity;
+            if (arity < 0) arity = paramz.Length;// memberSpec.Arity;
             string fnLower = fn.ToLower();
             MethodInfo candidate = null;
             foreach (var infos in members)
@@ -1069,7 +1073,7 @@ namespace SbsSW.SwiPlCs
                 bool pf = termv[i].FromObject((value.GetValue(i)));
             }
             Type et = value.GetType().GetElementType();
-            return valueOut.Unify(PlC(typeToSpec(et).Name, termv));
+            return valueOut.Unify(PlC("array", typeToSpec(et), PlC("values", termv)));
         }
         [PrologVisible(ModuleName = ExportModule)]
         static public bool cliArrayToTermList(PlTerm arrayValue, PlTerm valueOut)
@@ -1371,7 +1375,7 @@ namespace SbsSW.SwiPlCs
                 if (mi != null)
                 {
                     found = true;
-                    return ((InvokeCaught(mi, mi.IsStatic ? null : getInstance, new object[0]) ?? VoidOrNull(mi)));
+                    return ((InvokeCaught(mi, mi.IsStatic ? null : getInstance, ZERO_OBJECTS) ?? VoidOrNull(mi)));
                 }
                 WarnMissing("Cant find getter for property " + memberSpec + " on " + c + " for " + pi);
                 found = false;
@@ -1637,7 +1641,7 @@ namespace SbsSW.SwiPlCs
             if (val == null)
             {
                 Class c = ikvm.runtime.Util.getClassFromObject(getInstance);
-                string s = (string)c.getMethod("toString", new Class[0]).invoke(getInstance, new object[0]);
+                string s = (string)c.getMethod("toString", new Class[0]).invoke(getInstance, ZERO_OBJECTS);
                 return valueOut.Unify(PlTerm.PlString(s));
             }
             return valueOut.Unify(PlTerm.PlString(val.toString()));
@@ -1749,6 +1753,12 @@ namespace SbsSW.SwiPlCs
                 }
                 return kv;
             }
+        }
+
+        [PrologVisible(ModuleName = ExportModule)]
+        static public bool cliTypeSpec(PlTerm clazzSpec, PlTerm valueOut)
+        {
+            return valueOut.Unify(typeToSpec(GetType(clazzSpec)));
         }
 
         [PrologVisible(ModuleName = ExportModule)]
@@ -2653,7 +2663,7 @@ namespace SbsSW.SwiPlCs
                         {
                             if (pt != null && pt.IsValueType)
                             {
-                                return pt.GetConstructor(new Type[0]).Invoke(new object[0]);
+                                return pt.GetConstructor(ZERO_TYPES).Invoke(ZERO_OBJECTS);
                             }
                             return null;
                         }

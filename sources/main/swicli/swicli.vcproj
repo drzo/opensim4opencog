@@ -326,7 +326,8 @@
 	</Configurations>
 	<References>
 		<ProjectReference
-			ReferencedProjectIdentifier="{E92C4C1C-BBA8-496C-8A6B-B259BD13BAE3}"
+			ReferencedProjectIdentifier="{5C76E621-C702-4059-B6D5-4B527C52DCBC}"
+			RelativePathToProject=".\sources\main\SWIPlCs\SwiPlCs.csproj"
 		/>
 		<AssemblyReference
 			RelativePath="System.dll"

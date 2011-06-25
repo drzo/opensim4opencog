@@ -60,7 +60,7 @@ extern "C" {
 				* if you are planning on using the dllmaps defined on the
 				* system configuration
 				*/
-				mono_config_parse (NULL);
+				mono_config_parse ("swicli.dll.config");
 
 				/*  mono_jit_init() creates a domain: each assembly is loaded and run in a MonoDomain. */
 				domain = mono_jit_init (dnamestr);
