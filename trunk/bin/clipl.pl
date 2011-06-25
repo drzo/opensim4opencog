@@ -1,6 +1,5 @@
-
 :- module(clipl,
-          [ 
+          [
             cli_debug/1,
             cli_Eval/3,
             cli_GetSymbol/3,
@@ -39,6 +38,7 @@
             cliToString/2,
             cliToStringRaw/2,
             cliToTagged/2,
+            cliTypeSpec/2,
             cliWriteln/1,
             cliUnify/2,
             link_swiplcs/1,
@@ -59,16 +59,20 @@
 :-load_foreign_library(swicli).
 
 %------------------------------------------------------------------------------
-% The C++ DLL should have given us cli_load_lib/3
-%  ?- cli_load_lib( +AssemblyName, +FullClassName, +StaticMethodName).
+% The C++ DLL should have given us cli_load_lib/4
+%  ?- cli_load_lib(+AppDomainName, +AssemblyPartialName, +FullClassName, +StaticMethodName).
 %------------------------------------------------------------------------------
-:-cli_load_lib('SwiPlCs','SbsSW.SwiPlCs.swipl_win','install').
+onWindows:-current_prolog_flag(arch,ARCH),atomic_list_concat([_,_],'win',ARCH).
+
+:- cli_load_lib('SWIProlog','SwiPlCs','SbsSW.SwiPlCs.swipl_win','install').
+
+%% remember to: export LD_LIBRARY_PATH=/development/opensim4opencog/bin:/development/opensim4opencog/lib/x86_64-linux:$LD_LIBRARY_PATH
 
 %------------------------------------------------------------------------------
-%% cli_load_lib/3 should have given us 
+%% cli_load_lib/4 should have given us 
 %   cliLoadAssembly/1
 %------------------------------------------------------------------------------
-:-cliLoadAssembly('SwiPlCs.dll').
+:- cliLoadAssembly('SwiPlCs.dll').
 % the cliLoadAssembly/1 should have give us a few more cli<Predicates>
 
 
@@ -228,18 +232,25 @@ cli_enumerator_element(I, E) :- %%cliIsInstance('System.Collections.IEnumerator'
 
 cliToData(Term,String):- cliNew('System.Collections.Generic.List'(object),[],[],Objs),cliToData(Objs,Term,String).
 cliToData(_,Term,Term):- not(compound(Term)),!.
-cliToData(_Objs,[A|B],[A|B]):-!.
+%%cliToData(_Objs,[A|B],[A|B]):-!.
 cliToData(_Objs,[A|B],[A|B]):-'\+' '\+' A=[_=_],!.
 cliToData(Objs,[A|B],[AS|BS]):-!,cliToData(Objs,A,AS),cliToData(Objs,B,BS).
-cliToData(Objs,Term,String):-cliIsObject(Term),!,cliGetTermData(Objs,Term,Mid),(Term==Mid-> true; cliToData(Objs,Mid,String)).
-cliToData(Objs,Term,String):-Term=..[F|A],cliToData(Objs,A,AS),String=..[F|AS],!.
+cliToData(Objs,Term,String):-cliIsTaggedObject(Term),!,cliGetTermData(Objs,Term,Mid),(Term==Mid-> true; cliToData(Objs,Mid,String)).
+cliToData(Objs,Term,FAS):-Term=..[F|A],cliToData1(Objs,F,A,Term,FAS).
 
-cliGetTermData(_Objs,Term,Mid):-cliGetType(Term,Type),cliPropsForType(Type,Props),cliGetMap(Term,Props,Name,Value,Name=Value,Mid),!.
+cliToData1(_Objs,struct,_A,Term,Term):-!.
+cliToData1(_Objs,object,_A,Term,Term):-!.
+cliToData1(_Objs,enum,_A,Term,Term):-!.
+cliToData1(Objs,_F,A,Term,String):-cliToData(Objs,A,FAS),!,String=..[F|AS],
+
+cliGetTermData(Objs,Term,String):-cliGetType(Term,Type),cliPropsForType(Type,Props),cliGetMap(Objs,Term,Props,Name,Value,Name=Value,Mid),!,cliToData(Objs,Mid,String).
 cliGetTermData(Objs,Term,Mid):-cliGetTerm(Objs,Term,Mid),!.
 
 
-cliGetMap(Term,_,_,_,_,Term):- \+ cliIsObject(Term).
-cliGetMap(Term,Props,Name,Value,NameValue,List):-findall(NameValue,(member(Name,Props),cliGet(Term,Name,Value)),List).
+cliGetMap(_Objs,Term,_,_,_,_,List):- cliIsType(Term,'System.Collections.IEnumerable'),findall(ED,(cliCol(Term,E),cliToData(Objs,E,ED)),List),!.
+cliGetMap(Objs,Term,Props,Name,Value,NameValue,List):-cliGetMap1(Objs,Term,Props,Name,Value,NameValue,List).
+
+cliGetMap1(Objs,Term,Props,Name,Value,NameValue,List):-findall(NameValue,(member(Name,Props),cliGetRaw(Term,Name,ValueM),cliToData(Objs,ValueM,Value)),List).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %%% cli_debug/[1,2]
@@ -295,7 +306,7 @@ cli_GetSymbol(Engine,Name,Value):- (cli_Interned(Engine,Name,Value);Value=cli_Un
 
 :-cli_debug('I am swi_cli.pl in BIN DIR!!').
 
-:-use_module(library(jpl)).
+%:-use_module(library(jpl)).
 %:-use_module(library(pce)).
 
 %%:-interactor.
