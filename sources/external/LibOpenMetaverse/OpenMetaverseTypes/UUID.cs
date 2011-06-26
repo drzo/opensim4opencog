@@ -47,16 +47,74 @@ namespace OpenMetaverse
 
         public static string StructToString(object t)
         {
-            StringBuilder result = new StringBuilder();
+            if (t == null) return "OBJ-NULL";
             Type structType = t.GetType();
-            FieldInfo[] fields = structType.GetFields();
-
-            foreach (FieldInfo field in fields)
+            int numPs = structType.GetProperties().Length;
+            int numFs = structType.GetFields().Length;
+            return StructToString(t, (numFs + numPs) == 0, numPs > 0);
+        }
+        private static readonly object[] EMPTY_OBJECTS = new object[0];
+        public static string StructToString(object t, bool nonPublic, bool properties)
+        {
+            BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.Public;
+            if (nonPublic) bindingFlags = bindingFlags | BindingFlags.NonPublic;
+            Type structType = t.GetType();
+            PropertyInfo[] structTypeGetProperties = structType.GetProperties(bindingFlags);
+            FieldInfo[] structTypeGetFields = structType.GetFields(bindingFlags);
+            if (structTypeGetProperties.Length == 0)
             {
-                result.Append(field.Name + ": " + field.GetValue(t) + " ");
+                if (structTypeGetFields.Length > 0)
+                {
+                    properties = false;
+                } else
+                {
+                    // no fields or properties to speak of
+                    return "" + t;
+                }
+            }
+            StringBuilder result = new StringBuilder();
+            result.Append("stype:" + structType + " ");
+            if (properties)
+            {
+                foreach (PropertyInfo m in structTypeGetProperties)
+                {
+                    if (m.CanRead)
+                    {
+                        try
+                        {
+                            result.Append(m.Name + ": " + StringValue(m.GetGetMethod(nonPublic).Invoke(t, EMPTY_OBJECTS)) + " ");
+                        }
+                        catch (Exception e)
+                        {
+                            result.Append(m.Name + ": " + StringValue(e.Message) + " ");
+                        }
+                    }
+                }
+
+            }
+            else
+            {
+                foreach (FieldInfo m in structTypeGetFields)
+                {
+                    try
+                    {
+                        result.Append(m.Name + ": " + StringValue(m.GetValue(t)) + " ");
+                    }
+                    catch (Exception e)
+                    {
+                        result.Append(m.Name + ": " + StringValue(e.Message) + " ");
+                    }
+                }
             }
             result.AppendLine();
             return result.ToString().TrimEnd();
+        }
+
+        private static string StringValue(object invoke)
+        {
+            if (invoke == null) return "<null>";
+            if (invoke is string) return "\"" + invoke + "\"";
+            return "" + invoke;
         }
     }
 #if (INTERNABLE_UUIDS)

@@ -112,6 +112,11 @@ namespace OpenMetaverse
                 return S;
 
             }
+
+            public override string ToString()
+            {
+                return Helpers.StructToString(this);
+            }
         }
 
         /// <summary>
@@ -286,6 +291,11 @@ namespace OpenMetaverse
 
                 return I;
 
+            }
+
+            public override string ToString()
+            {
+                return Helpers.StructToString(this);
             }
         }
 
