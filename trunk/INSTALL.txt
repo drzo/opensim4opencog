@@ -1,0 +1,31 @@
+
+Making SWI-Prolog live happy:
+
+Create environment variables,
+
+ LD_LIBRARY_PATH=C:\development\opensim4opencog\bin
+ SWI_HOME_DIR=C:\development\opensim4opencog
+
+Add C:\development\opensim4opencog\bin to PATH
+
+Install the 64bit or 32bit version SWI-Prolog to c:\development\opensim4opencog
+
+(This is so Cogbot/IKVM/SWI-Prolog all share the same "Bin" directories)
+If you have another program that uses SWI-Prolog you might have to update how that program knows where it is.  Hopefully this will not be too difficult
+
+
+
+Updating from SVN:
+
+Make sure you are exited out Visual Studio unless you are prepared to say "yes" to 55 modal dialog boxes.  
+Use tortuous SVN to right on "C:\development\opensim4opencog". 
+
+After updating from SVN, it is important to run runprebuild.bat from inside the C:\development\opensim4opencog directory.  
+This will regenerate the *.csproj files that are referenced from Cogbot_VS9.sln (but not the *.sln (Solution file)) 
+
+
+
+
+Open the Solution file from inside Visual Studio 2008:
+
+I do with cmdline: "C:\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\IDE\devenv.exe" Cogbot_VS9.sln
