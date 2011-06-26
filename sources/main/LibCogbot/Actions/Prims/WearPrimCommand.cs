@@ -10,13 +10,13 @@ using MushDLR223.ScriptEngines;
 
 namespace cogbot.Actions.Objects
 {
-    public class WearPrimCommand : cogbot.Actions.Command, RegionMasterCommand
+    public class WearPrimCommand : cogbot.Actions.Command, BotPersonalCommand
     {
 
         public WearPrimCommand(BotClient client)
         {
             Name = "WearPrim";
-            Description = "Takes and wears a prim. Usage: wearprim [prim]";
+            Description = "Takes (derez to inventory) and wears a prim. Usage: wearprim [prim]";
             Category = cogbot.Actions.CommandCategory.Objects;
             Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
         }

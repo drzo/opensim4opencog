@@ -7,13 +7,13 @@ using MushDLR223.ScriptEngines;
 
 namespace cogbot.Actions.Objects
 {
-    public class AttachCommand : Command, RegionMasterCommand
+    public class AttachCommand : Command, BotPersonalCommand
     {
         public AttachCommand(BotClient testClient)
         {
             Name = "attach";
             Description = "attach a prim to specified (or default) attachment point from the world";
-            Usage = "attach <prim> [attachmentPoint] [rotation]";
+            Usage = "attach <prim> [attachmentPoint] [rotation] Example: /attach 98922187 RightHand";
             Category = CommandCategory.Objects;
             Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
