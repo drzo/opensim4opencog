@@ -242,7 +242,7 @@ cliToData1(_Objs,struct,_A,Term,Term):-!.
 cliToData1(_Objs,object,_A,Term,Term):-!.
 cliToData1(_Objs,enum,_A,Term,Term):-!.
 
-cliToData1(Objs,F,A,Term,String):-cliToData(Objs,A,FAS),!,String=..[F|AS].
+cliToData1(Objs,F,A,_Term,String):-cliToData(Objs,A,AS),!,String=..[F|AS].
 
 cliGetTermData(Objs,Term,String):-cliGetType(Term,Type),cliPropsForType(Type,Props),cliGetMap(Objs,Term,Props,Name,Value,Name=Value,Mid),!,cliToData(Objs,Mid,String).
 cliGetTermData(Objs,Term,Mid):-cliGetTerm(Objs,Term,Mid),!.
