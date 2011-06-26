@@ -8,7 +8,8 @@ Create environment variables,
 
 Add C:\development\opensim4opencog\bin to PATH
 
-Install the 64bit or 32bit version SWI-Prolog to c:\development\opensim4opencog
+Install the 64bit or 32bit version SWI-Prolog to "c:\development\opensim4opencog" (but not "c:\development\opensim4opencog\pl")
+File extension ".pl" (which is the default)
 
 (This is so Cogbot/IKVM/SWI-Prolog all share the same "Bin" directories)
 If you have another program that uses SWI-Prolog you might have to update how that program knows where it is.  Hopefully this will not be too difficult
