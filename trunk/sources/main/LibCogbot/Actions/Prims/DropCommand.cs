@@ -7,13 +7,13 @@ using MushDLR223.ScriptEngines;
 
 namespace cogbot.Actions.Objects
 {
-    public class DropCommand : Command, RegionMasterCommand
+    public class DropCommand : Command, BotPersonalCommand
     {
         public DropCommand(BotClient testClient)
         {
             Name = "drop";
             Description = "drops a specified attachment into the world";
-            Usage = "drop <prim|attachmentPoint>";
+            Usage = "drop <prim|attachmentPoint> example: /drop LeftHand ";
             Category = CommandCategory.Objects;
             Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
