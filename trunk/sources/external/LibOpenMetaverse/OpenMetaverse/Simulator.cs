@@ -232,6 +232,11 @@ namespace OpenMetaverse
             public int PendingLocalUploads;
             /// <summary>Unacknowledged bytes in queue</summary>
             public int UnackedBytes;
+
+            public override string ToString()
+            {
+                return Helpers.StructToString(this);
+            }
         }
 
         #endregion Structs
