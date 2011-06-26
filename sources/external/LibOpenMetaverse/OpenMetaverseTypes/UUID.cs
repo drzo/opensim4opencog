@@ -236,7 +236,7 @@ namespace OpenMetaverse
         }
 #endif
 
-#if !(USE_REAL_FACTORY)
+//#if !(USE_REAL_FACTORY)
         /// <summary>
         /// Constructor that takes a byte array containing a UUID
         /// </summary>
@@ -245,7 +245,7 @@ namespace OpenMetaverse
 #if USE_UUID_INTERFACE
         public UUIDCantBeNull(byte[] source, int pos)
 #else
-        internal  UUID(byte[] source, int pos)
+        public  UUID(byte[] source, int pos)
 #endif
         {
             //_Guid = Zero.GetGuid();
@@ -292,7 +292,7 @@ namespace OpenMetaverse
             _Guid = val._Guid;
             toStringCache = null;
         }
-#endif //USE_REAL_FACTORY
+//#endif //USE_REAL_FACTORY
         #endregion Constructors
 
         #region Public Methods
