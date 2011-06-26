@@ -31,11 +31,26 @@ namespace cogbot.Actions.Search
                 WorldObjects.UUIDTypeObjectTryGetValue(uuid, out obj);
             if (obj != null)
             {
-                WriteLine("Object is of Type " + obj.GetType());
+                string typeString = "" + obj.GetType();
+                string objString;
+                try
+                {
+                    objString = "" + obj;
+                }
+                catch (Exception e)
+                {
+                    objString = "" + e;
+                }
+                // some structs .ToString return only their type names
+                if (objString == typeString)
+                {
+                    objString = Helpers.StructToString(obj);
+                }
+                WriteLine("UUID={0} is of Type='{1}' toString='{2}'", uuid, typeString, objString);
             }
             else
             {
-                WriteLine("Object not found for UUID " + uuid);
+                WriteLine("Object not found for UUID=" + uuid);
             }
             return Success("Done with UUID " + uuid + " obj= " + obj);
         }
