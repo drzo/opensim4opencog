@@ -149,8 +149,7 @@ runSL:-asserta(ranSL),!,cliCall('ABuildStartup.Program','Main',[],_).
 % CLR Introspection of event handlers
 %------------------------------------------------------------------------------
 
-gridClientEvents(E):-cliFindType('OpenMetaverse.GridClient',O),cliMemb(O,f,M),arg(3,M,Type),
-    cliMemb(Type,e,E).
+gridClientEvents(E):-cliMemb('OpenMetaverse.GridClient',f,M),arg(3,M,Type),cliMemb(Type,e,E).
 
 
 listMembs:-cliNew('System.Collections.Generic.List'(string),[int],[10],O),cliMembers(O,M),member(E,M),writeq(E),nl,fail.
@@ -195,7 +194,7 @@ true.
 15 ?- botClientCmd(shout("hi there!")).
 "Success shout"
 
-cliGet('cogbot.TheOpenSims.SimTypeSystem','objectTypes',O),cliGetType(O,T),cliTypeSpec(T,S)
+cliGet('cogbot.TheOpenSims.SimTypeSystem','objectTypes',O),cliGetType(O,T),cliTypeSpec(T,S).
 
 3 ?- botClientCall(executeCommand("jump"),X),cliWriteln(X).
 "Success Jump"
