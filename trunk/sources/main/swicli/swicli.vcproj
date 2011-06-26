@@ -145,7 +145,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="swipl64.lib"
-				OutputFile="$(OutDir)\$(ProjectName)35.dll"
+				OutputFile="$(OutDir)\$(ProjectName).dll"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
