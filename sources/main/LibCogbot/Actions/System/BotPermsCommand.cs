@@ -22,7 +22,20 @@ namespace cogbot.Actions.System
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
-                return ShowUsage();
+            {
+                int nfound = 0;
+                foreach (var sl in TheBotClient.SecurityLevels)
+                {
+                    nfound++;
+                    Success(string.Format("{0}={1}", sl.Key, sl.Value));
+                }
+                foreach (var sl in TheBotClient.SecurityLevelsByName)
+                {
+                    nfound++;
+                    Success(string.Format("{0}={1}", sl.Key, sl.Value));
+                }
+                return Success(nfound + " entries found");
+            }
             int argsUsed;
             List<SimObject> worldSystemGetPrimitives = WorldSystem.GetPrimitives(args, out argsUsed);
             if (IsEmpty(worldSystemGetPrimitives))
@@ -40,14 +53,14 @@ namespace cogbot.Actions.System
             foreach (var p in worldSystemGetPrimitives)
             {
 
-                BotPermissions perms = TheBotClient.GetSecurityLevel(p.ID);
+                BotPermissions perms = TheBotClient.GetSecurityLevel(p.ID, null);
                 if (argsUsed==0)
                 {
                     Success("Perms for " + p + " was " + perms);
                     continue;    
                 }
                 Success("Perms for " + p + " was " + perms + " now setting to " + who);
-                TheBotClient.SecurityLevels[p.ID] = who;
+                TheBotClient.SetSecurityLevel(p.ID, null, who);
             }
             return SuccessOrFailure();
         }

@@ -247,7 +247,7 @@ namespace cogbot
             }
         }
 
-        private IList<Thread> botCommandThreads = new ListAsSet<Thread>();
+        private readonly IList<Thread> botCommandThreads = new ListAsSet<Thread>();
         readonly public XmlScriptInterpreter XmlInterp;
         public UUID GroupID = UUID.Zero;
         public Dictionary<UUID, GroupMember> GroupMembers = null; // intialized from a callback
@@ -283,13 +283,14 @@ namespace cogbot
             {
                 if (!string.IsNullOrEmpty(value))
                 {
-                    UUID found = UUID.Zero;
+                    UUID found;                   
                     if (UUID.TryParse(value, out found))
                     {
                         MasterKey = found;
                         return;
                     }
                     _masterName = value;
+                    lock (SecurityLevelsByName) SecurityLevelsByName[value] = BotPermissions.Owner;
                     found = WorldSystem.GetUserID(value);
                     if (found != UUID.Zero)
                     {
@@ -301,6 +302,7 @@ namespace cogbot
 
         // permissions "NextOwner" means banned "Wait until they are an owner before doing anything!"
         public Dictionary<UUID, BotPermissions> SecurityLevels = new Dictionary<UUID, BotPermissions>();
+        public Dictionary<string, BotPermissions> SecurityLevelsByName = new Dictionary<string, BotPermissions>();
 
         private UUID _masterKey = UUID.Zero;
         public UUID MasterKey
@@ -327,7 +329,7 @@ namespace cogbot
                         string maybe = WorldSystem.GetUserName(value);
                         if (!string.IsNullOrEmpty(maybe)) MasterName = maybe;
                     }
-                    SecurityLevels[value] = BotPermissions.Owner;
+                    lock (SecurityLevels) SecurityLevels[value] = BotPermissions.Owner;
                 }
             }
         }
@@ -854,113 +856,258 @@ namespace cogbot
 
         void Self_OnChat(object sender, ChatEventArgs e)
         {
-            var sourceType = e.SourceType;
-            var message = e.Message;
-            var fromName = e.FromName;
-            if (message.Length > 0 && sourceType == ChatSourceType.Agent)
+            InstantMessageDialog Dialog = InstantMessageDialog.MessageFromAgent;
+            switch (e.SourceType)
             {
-                WriteLine(String.Format("{0} says, \"{1}\".", fromName, message));
-                PosterBoard["/posterboard/onchat"] = message;
-                if (fromName == Self.Name)
-                {
-                    PosterBoard["/posterboard/onchat-said"] = message;
-                }
-                else
-                {
-                    PosterBoard["/posterboard/onchat-heard"] = message;
-                }
+                case ChatSourceType.System:
+                    break;
+                case ChatSourceType.Agent:
+                    break;
+                case ChatSourceType.Object:
+                    Dialog = InstantMessageDialog.MessageFromObject;
+                    break;
             }
+
+            Self_OnMessage(e.FromName, e.SourceID, e.OwnerID,
+                           e.Message, UUID.Zero, false,
+                           e.Simulator.RegionID, e.Position,
+                           Dialog, e.Type, e);
         }
 
         private void Self_OnInstantMessage(object sender, InstantMessageEventArgs e)
         {
             InstantMessage im = e.IM;
-            if (im.Dialog == InstantMessageDialog.GroupNotice)
+            ChatType Type = ChatType.Normal;
+            switch (im.Dialog)
             {
-                im.GroupIM = true;
+                case InstantMessageDialog.StartTyping:
+                    Type = ChatType.StartTyping;
+                    break;
+                case InstantMessageDialog.StopTyping:
+                    Type = ChatType.StopTyping;
+                    break;
             }
-            if (im.FromAgentName == GetName()) return;
-            if (im.FromAgentName == "System") return;
-            if (im.Message.Length > 0 && im.Dialog == InstantMessageDialog.MessageFromAgent)
-            {
-                WriteLine(String.Format("{0} whispers, \"{1}\".", im.FromAgentName, im.Message));
+            Self_OnMessage(im.FromAgentName, im.FromAgentID, im.ToAgentID,
+                           im.Message, im.IMSessionID, im.GroupIM,
+                           im.RegionID, im.Position,
+                           im.Dialog, Type, e);
+        }
 
-                Actions.Whisper whisper = (Actions.Whisper)Commands["whisper"];
-                whisper.currentAvatar = im.FromAgentID;
-                whisper.currentSession = im.IMSessionID;
+        private void Self_OnMessage(string FromAgentName, UUID FromAgentID, UUID ToAgentID,
+            string Message, UUID IMSessionID, bool GroupIM,
+            UUID RegionID, Vector3 Position,
+            InstantMessageDialog Dialog, ChatType Type, EventArgs origin)
+        {
+            bool IsOwner = (Type == ChatType.OwnerSay);
+            if (Dialog == InstantMessageDialog.GroupNotice)
+            {
+                GroupIM = true;
             }
 
-            if (im.Message.Length > 0 && im.Dialog == InstantMessageDialog.GroupInvitation)
+            // Received an IM from someone that is authenticated
+            if (FromAgentID == MasterKey || FromAgentName == MasterName)
             {
-                if (im.FromAgentID == _masterKey || im.FromAgentName == MasterName)
+                IsOwner = true;
+            }
+            BotPermissions perms = GetSecurityLevel(FromAgentID, FromAgentName);
+
+            if (perms == BotPermissions.Owner)
+            {
+                IsOwner = true;
+            }
+
+
+            if (origin is ChatEventArgs && Message.Length > 0 && Dialog == InstantMessageDialog.MessageFromAgent)
+            {
+                WriteLine(String.Format("{0} says, \"{1}\".", FromAgentName, Message));
+                PosterBoard["/posterboard/onchat"] = Message;
+                if (FromAgentName == Self.Name)
                 {
-                    string groupName = im.Message;
-                    int found = groupName.IndexOf("Group:");
-                    if (found > 0) groupName = groupName.Substring(found + 6);
-                    Self.InstantMessage(Self.Name, im.FromAgentID, string.Empty, im.IMSessionID,
-                            InstantMessageDialog.GroupInvitationAccept, InstantMessageOnline.Offline, Self.SimPosition,
-                            UUID.Zero, new byte[0]);
-                    found = groupName.IndexOf(":");
-                    if (found > 0)
-                    {
-                        groupName = groupName.Substring(0, found).Trim();
-                        ExecuteCommand("joingroup " + groupName);
-                    }
-
+                    PosterBoard["/posterboard/onchat-said"] = Message;
+                }
+                else
+                {
+                    PosterBoard["/posterboard/onchat-heard"] = Message;
                 }
             }
 
-            bool groupIM = im.GroupIM && GroupMembers != null && GroupMembers.ContainsKey(im.FromAgentID) ? true : false;
+            bool groupIM = GroupIM && GroupMembers != null && GroupMembers.ContainsKey(FromAgentID) ? true : false;
+            string debug = String.Format("{0} {1} {2} {3} '{4}': {5} ({6}:{7} perms = {8} )",
+                             IsOwner ? "IsOwner" : "NonOwner",
+                             GroupIM ? "GroupIM" : "IM", Dialog, Type,
+                             FromAgentName, Message, RegionID, Position, perms);
+            DisplayNotificationInChat(debug);
 
-            if (im.FromAgentID == _masterKey || (GroupCommands && groupIM) || im.FromAgentName == MasterName)
+            switch (Dialog)
             {
-                // Received an IM from someone that is authenticated
-                WriteLine(String.Format("<{0} ({1})> {2}: {3} (@{4}:{5})", im.GroupIM ? "GroupIM" : "IM", im.Dialog,
-                                        im.FromAgentName, im.Message, im.RegionID, im.Position));
-
-                if (im.Dialog == InstantMessageDialog.RequestTeleport)
-                {
-                    if (im.RegionID != UUID.Zero)
+                case InstantMessageDialog.MessageBox:
+                    break;
+                case InstantMessageDialog.GroupInvitation:
+                    if (IsOwner)
                     {
-                        DisplayNotificationInChat("TP to Lure from " + im.FromAgentName);
-                        SimRegion R = SimRegion.GetRegion(im.RegionID, gridClient);
-                        if (R != null)
+                        string groupName = Message;
+                        int found = groupName.IndexOf("Group:");
+                        if (found > 0) groupName = groupName.Substring(found + 6);
+                        Self.InstantMessage(Self.Name, FromAgentID, string.Empty, IMSessionID,
+                                            InstantMessageDialog.GroupInvitationAccept, InstantMessageOnline.Offline,
+                                            Self.SimPosition,
+                                            UUID.Zero, new byte[0]);
+                        found = groupName.IndexOf(":");
+                        if (found > 0)
                         {
-                            Self.Teleport(R.RegionHandle, im.Position);
-                            return;
+                            groupName = groupName.Substring(0, found).Trim();
+                            ExecuteCommand("joingroup " + groupName);
                         }
                     }
-                    DisplayNotificationInChat("Accepting TP Lure from " + im.FromAgentName);
-                    Self.TeleportLureRespond(im.FromAgentID, im.IMSessionID, true);
-                }
-                else if (im.Dialog == InstantMessageDialog.FriendshipOffered)
-                {
-                    DisplayNotificationInChat("Accepting Friendship from " + im.FromAgentName);
-                    Friends.AcceptFriendship(im.FromAgentID, im.IMSessionID);
-                }
-                else if (im.Dialog == InstantMessageDialog.MessageFromAgent ||
-                    im.Dialog == InstantMessageDialog.MessageFromObject)
-                {
-                    string cmd = im.Message;
-                    if (cmd.StartsWith("cmcmd "))
+                    break;
+                case InstantMessageDialog.InventoryOffered:
+                    break;
+                case InstantMessageDialog.InventoryAccepted:
+                    break;
+                case InstantMessageDialog.InventoryDeclined:
+                    break;
+                case InstantMessageDialog.GroupVote:
+                    break;
+                case InstantMessageDialog.TaskInventoryOffered:
+                    break;
+                case InstantMessageDialog.TaskInventoryAccepted:
+                    break;
+                case InstantMessageDialog.TaskInventoryDeclined:
+                    break;
+                case InstantMessageDialog.NewUserDefault:
+                    break;
+                case InstantMessageDialog.SessionAdd:
+                    break;
+                case InstantMessageDialog.SessionOfflineAdd:
+                    break;
+                case InstantMessageDialog.SessionGroupStart:
+                    break;
+                case InstantMessageDialog.SessionCardlessStart:
+                    break;
+                case InstantMessageDialog.SessionSend:
+                    break;
+                case InstantMessageDialog.SessionDrop:
+                    break;
+                case InstantMessageDialog.BusyAutoResponse:
+                    break;
+                case InstantMessageDialog.ConsoleAndChatHistory:
+                    break;
+                case InstantMessageDialog.Lure911:
+                case InstantMessageDialog.RequestTeleport:
+                    if (IsOwner)
                     {
-                        cmd = cmd.Substring(6);
-                        ClientManager.DoCommandAll(cmd, im.FromAgentID, WriteLine);
+                        if (RegionID != UUID.Zero)
+                        {
+                            DisplayNotificationInChat("TP to Lure from " + FromAgentName);
+                            SimRegion R = SimRegion.GetRegion(RegionID, gridClient);
+                            if (R != null)
+                            {
+                                Self.Teleport(R.RegionHandle, Position);
+                                return;
+                            }
+                        }
+                        DisplayNotificationInChat("Accepting TP Lure from " + FromAgentName);
+                        Self.TeleportLureRespond(FromAgentID, IMSessionID, true);
                     }
-                    else if (cmd.StartsWith("cmd "))
+                    break;
+                case InstantMessageDialog.AcceptTeleport:
+                    break;
+                case InstantMessageDialog.DenyTeleport:
+                    break;
+                case InstantMessageDialog.GodLikeRequestTeleport:
+                    break;
+                case InstantMessageDialog.CurrentlyUnused:
+                    break;
+                case InstantMessageDialog.GotoUrl:
+                    break;
+                case InstantMessageDialog.Session911Start:
+                    break;
+                case InstantMessageDialog.FromTaskAsAlert:
+                    break;
+                case InstantMessageDialog.GroupNotice:
+                    break;
+                case InstantMessageDialog.GroupNoticeInventoryAccepted:
+                    break;
+                case InstantMessageDialog.GroupNoticeInventoryDeclined:
+                    break;
+                case InstantMessageDialog.GroupInvitationAccept:
+                    break;
+                case InstantMessageDialog.GroupInvitationDecline:
+                    break;
+                case InstantMessageDialog.GroupNoticeRequested:
+                    break;
+                case InstantMessageDialog.FriendshipOffered:
+                    if (IsOwner)
                     {
-                        cmd = cmd.Substring(4);
-                        InstantMessage(im.FromAgentID, "" + ExecuteBotCommand(cmd, WriteLine), im.IMSessionID);
+                        DisplayNotificationInChat("Accepting Friendship from " + FromAgentName);
+                        Friends.AcceptFriendship(FromAgentID, IMSessionID);
                     }
-                }
-                return;
-            }
-            {
-                // Received an IM from someone that is not the bot's master, ignore
-                DisplayNotificationInChat(String.Format("UNTRUSTED <{0} ({1})> {2} (not master): {3} (@{4}:{5})", im.GroupIM ? "GroupIM" : "IM",
-                                        im.Dialog, im.FromAgentName, im.Message,
-                                        im.RegionID, im.Position));
-                return;
+                    break;
+                case InstantMessageDialog.FriendshipAccepted:
+                    break;
+                case InstantMessageDialog.FriendshipDeclined:
+                    break;
+                case InstantMessageDialog.StartTyping:
+                    break;
+                case InstantMessageDialog.StopTyping:
+                    break;
+                case InstantMessageDialog.MessageFromObject:
+                case InstantMessageDialog.MessageFromAgent:                    
+                    // message from self
+                    if (FromAgentName == GetName()) return;
+                    // message from system
+                    if (FromAgentName == "System") return;
+                    // message from others
+                    Actions.Whisper whisper = (Actions.Whisper) Commands["whisper"];
+                    whisper.currentAvatar = FromAgentID;
+                    whisper.currentSession = IMSessionID;
+                    if (IsOwner)
+                    {
+                        string cmd = Message;
+                        string reply = null;
+                        if (cmd.StartsWith("cmcmd "))
+                        {
+                            cmd = cmd.Substring(6);
+                            TextWriter tw = new StringWriter(new StringBuilder());
+                            tw.WriteLine();
+                            tw.WriteLine(string.Format("invokecm='{0}'", cmd));
+                            ClientManager.DoCommandAll(cmd, FromAgentID, tw.WriteLine);
+                            reply = tw.ToString();
+                        }
+                        else if (cmd.StartsWith("cmd "))
+                        {
+                            cmd = cmd.Substring(4);
+                            TextWriter tw = new StringWriter(new StringBuilder());
+                            tw.WriteLine();
+                            tw.WriteLine(string.Format("invoke='{0}'", cmd));
+                            tw.WriteLine("iresult='" + ExecuteBotCommand(cmd, tw.WriteLine) + "'");
+                            reply = tw.ToString();
+                        }
+                        else if (cmd.StartsWith("/") || cmd.StartsWith("@"))
+                        {
+                            cmd = cmd.Substring(1);
+                            TextWriter tw = new StringWriter(new StringBuilder());
+                            tw.WriteLine();
+                            tw.WriteLine(string.Format("invoke='{0}'", cmd));
+                            tw.WriteLine("iresult='" + ExecuteBotCommand(cmd, tw.WriteLine) + "'");
+                            reply = tw.ToString();
+                        }
+                        if (reply != null)
+                        {
+                            if (IMSessionID != UUID.Zero)
+                            {
+                                InstantMessage(FromAgentID, reply, IMSessionID);
+                            }
+                            else
+                            {
+                                Talk(reply, 0, Type);
+                            }
+                        }
+
+                    }
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -2393,14 +2540,39 @@ namespace cogbot
             InvokeGUI(TheRadegastInstance.MainForm, o);
         }
 
-        public BotPermissions GetSecurityLevel(UUID uuid)
+        public BotPermissions GetSecurityLevel(UUID uuid, string name)
         {
             BotPermissions bp;
-            if (SecurityLevels.TryGetValue(uuid, out bp))
+            if (uuid != UUID.Zero)
             {
-                return bp;
+                lock (SecurityLevels)
+                    if (SecurityLevels.TryGetValue(uuid, out bp))
+                    {
+                        return bp;
+                    }
+            }
+            if (!string.IsNullOrEmpty(name))
+            {
+                lock (SecurityLevelsByName)
+                    if (SecurityLevelsByName.TryGetValue(name, out bp))
+                    {
+                        return bp;
+                    }
             }
             return BotPermissions.Base;
+        }
+
+        public void SetSecurityLevel(UUID uuid, string name, BotPermissions perms)
+        {
+            BotPermissions bp;
+            if (uuid != UUID.Zero)
+            {
+                lock (SecurityLevels) SecurityLevels[uuid] = perms;
+            }
+            if (!string.IsNullOrEmpty(name))
+            {
+                lock (SecurityLevelsByName) SecurityLevelsByName[name] = perms;
+            }
         }
 
         public CmdResult ExecuteTask(string scripttype, TextReader reader, OutputDelegate WriteLine)

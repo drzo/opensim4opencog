@@ -37,7 +37,7 @@ namespace cogbot.Actions.Scripting
             {
                 scripttype = args[1];
             }
-            var sl = Client.GetSecurityLevel(fromAgentID);
+            var sl = Client.GetSecurityLevel(fromAgentID, null);
             if (!File.Exists(filename)) return Failure("Cannot find file " + filename);
             FileStream f = File.OpenRead(filename);
             StreamReader r = new StreamReader(f);
