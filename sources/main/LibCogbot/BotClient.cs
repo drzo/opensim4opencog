@@ -872,6 +872,8 @@ namespace cogbot
                            e.Message, UUID.Zero, false,
                            e.Simulator.RegionID, e.Position,
                            Dialog, e.Type, e);
+            ;
+           
         }
 
         private void Self_OnInstantMessage(object sender, InstantMessageEventArgs e)
@@ -932,10 +934,11 @@ namespace cogbot
             }
 
             bool groupIM = GroupIM && GroupMembers != null && GroupMembers.ContainsKey(FromAgentID) ? true : false;
-            string debug = String.Format("{0} {1} {2} {3} '{4}': {5} ({6}:{7} perms = {8} )",
-                             IsOwner ? "IsOwner" : "NonOwner",
-                             GroupIM ? "GroupIM" : "IM", Dialog, Type,
-                             FromAgentName, Message, RegionID, Position, perms);
+
+            string debug = String.Format("{0} {1} {2} {3} {4}: {5} )",
+                                         IsOwner ? "IsOwner" : "NonOwner",
+                                         groupIM ? "GroupIM" : "IM", Dialog, Type, perms,
+                                         Helpers.StructToString(origin));
             DisplayNotificationInChat(debug);
 
             switch (Dialog)
@@ -1094,7 +1097,7 @@ namespace cogbot
                         }
                         if (reply != null)
                         {
-                            if (IMSessionID != UUID.Zero)
+                            if (origin is InstantMessageEventArgs)
                             {
                                 InstantMessage(FromAgentID, reply, IMSessionID);
                             }
@@ -1284,6 +1287,10 @@ namespace cogbot
                     Appearance.RequestAgentWearables();
                 }
                 Self.RequestMuteList();
+            }
+            if (Self.AgentID != UUID.Zero)
+            {
+                SetSecurityLevel(Self.AgentID, Self.Name, BotPermissions.Owner);
             }
             SendNetworkEvent("On-Simulator-Connected", simulator);
             //            SendNewEvent("on-simulator-connected",simulator);
@@ -2114,6 +2121,15 @@ namespace cogbot
                 WriteLine("!!NOTE!! skipping saying " + str);
                 return;
             }
+            if (str.Contains("\n"))
+            {
+                string[] split = str.Split(new char[] { '\n' });
+                foreach (var s in split)
+                {
+                    TalkExact(s, channel, type);
+                }
+                return;
+            }
             if (!Network.Connected)
             {
                 if (OnInstantMessageSent != null)
@@ -2571,7 +2587,9 @@ namespace cogbot
             }
             if (!string.IsNullOrEmpty(name))
             {
-                lock (SecurityLevelsByName) SecurityLevelsByName[name] = perms;
+                // dont take whitepaces
+                name = name.Trim();
+                if (name != "") lock (SecurityLevelsByName) SecurityLevelsByName[name] = perms;
             }
         }
 
@@ -2582,7 +2600,11 @@ namespace cogbot
             if (o is CmdResult) return (CmdResult)o;
             if (o == null) return new CmdResult("void", true);
             if (si.Eof(o)) return new CmdResult("EOF " + o, true);
-            return new CmdResult("" + si.Eval(o), true);
+            o = si.Eval(o);
+            if (o is CmdResult) return (CmdResult)o;
+            if (o == null) return new CmdResult("void", true);
+            if (si.Eof(o)) return new CmdResult("EOF " + o, true);
+            return new CmdResult("" + o, true);
         }
 
         public string DoHttpGet(string url)
