@@ -2789,6 +2789,15 @@ namespace cogbot
             int len = text.Length;
             if (len > 1023)
             {
+                if (text.Contains("\n"))
+                {
+                    string[] split = text.Split(new char[] { '\n' });
+                    foreach (var s in split)
+                    {
+                        InstantMessage(target, s, session);
+                    }
+                    return;
+                }
                 string message = text.Substring(0, 1020);
                 InstantMessage(target, message, session);
                 InstantMessage(target, text.Substring(1020), session);
