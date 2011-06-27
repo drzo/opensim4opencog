@@ -935,11 +935,14 @@ namespace cogbot
 
             bool groupIM = GroupIM && GroupMembers != null && GroupMembers.ContainsKey(FromAgentID) ? true : false;
 
-            string debug = String.Format("{0} {1} {2} {3} {4}: {5} )",
-                                         IsOwner ? "IsOwner" : "NonOwner",
-                                         groupIM ? "GroupIM" : "IM", Dialog, Type, perms,
-                                         Helpers.StructToString(origin));
-            DisplayNotificationInChat(debug);
+            if (Dialog != InstantMessageDialog.MessageFromAgent)
+            {
+                string debug = String.Format("{0} {1} {2} {3} {4}: {5}",
+                                             IsOwner ? "IsOwner" : "NonOwner",
+                                             groupIM ? "GroupIM" : "IM", Dialog, Type, perms,
+                                             Helpers.StructToString(origin));
+                DisplayNotificationInChat(debug);
+            }
 
             switch (Dialog)
             {
