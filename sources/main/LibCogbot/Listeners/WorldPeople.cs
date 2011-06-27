@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using cogbot.TheOpenSims;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Interfaces;
 using OpenMetaverse.Packets;
@@ -650,7 +651,7 @@ namespace cogbot.Listeners
                 {
                     lock (RequestedAvatarNames)
                     {
-                        StackTrace stackTrace;
+                        object stackTrace;
                         if (RequestedAvatarNames.TryGetValue(id, out stackTrace))
                         {
                            // Debug("AddName2Key: ERROR requested Name for ID=" + id + " " + stackTrace.ToString());
@@ -920,7 +921,7 @@ namespace cogbot.Listeners
             return AA.GetName();
         }
 
-        private Dictionary<UUID, StackTrace> RequestedAvatarNames = new Dictionary<UUID, StackTrace>();
+        private Dictionary<UUID, object> RequestedAvatarNames = new Dictionary<UUID, object>();
         private void RequestAvatarName(UUID uuid)
         {
             if (NeedRequestAvatarName(uuid)) client.Avatars.RequestAvatarName(uuid);
@@ -932,7 +933,10 @@ namespace cogbot.Listeners
             {
                 if (!RequestedAvatarNames.ContainsKey(uuid))
                 {
-                    RequestedAvatarNames.Add(uuid, new StackTrace(true));
+                    object st = null;
+                    if (DLRConsole.SkipStackTraces) st = new object();
+                    st = st ?? new StackTrace(true);
+                    RequestedAvatarNames.Add(uuid, st);
                     return true;
                 }
             }
