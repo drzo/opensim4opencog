@@ -122,7 +122,7 @@ namespace MushDLR223.Utilities
                         return info;
                     }
                     {
-                        info.MoreInfoWST("side-entering " + lockType);
+                        if (!DLRConsole.SkipStackTraces) info.MoreInfoWST("side-entering " + lockType);
                         /*
                         string here = LockInfo.GetStackTraceString();
                         string there = info.StartStack.ToString();
@@ -201,9 +201,10 @@ namespace MushDLR223.Utilities
         public LockInfo(string named)
         {
             Name = named;
-            StartStack = new StackTrace(true);
             StartTime = DateTime.Now;
             FirstThread = Thread.CurrentThread;
+            if (DLRConsole.SkipStackTraces) return;
+            StartStack = new StackTrace(true);
             MoreInfoWST("Created" + this);
         }
         public bool IsLockerCurrentThread
