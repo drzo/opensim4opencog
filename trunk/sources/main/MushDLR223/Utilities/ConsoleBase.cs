@@ -1572,7 +1572,7 @@ namespace MushDLR223.Utilities
 
         public static string FindCallerInStack(HashSet<MemberInfo> transparentCallers, HashSet<MemberInfo> opacheCallers, bool useMethodName)
         {
-            //if (true) return "FindCallerInStack";
+            if (SkipStackTraces) return "FindCallerInStack";
             var st = new System.Diagnostics.StackTrace(true).GetFrames();
             if (st == null) return "NULL";
             {
@@ -1730,6 +1730,8 @@ namespace MushDLR223.Utilities
                                                               {
                                                               };
 
+        public static bool SkipStackTraces = true;
+
         protected static List<TextWriter> Outputs
         {
             get
@@ -1873,7 +1875,7 @@ namespace MushDLR223.Utilities
         }
         public static bool IsTooDeep()
         {
-            // return false;
+            if (DLRConsole.SkipStackTraces) return false;
             StackFrame[] st = new StackTrace(false).GetFrames();
             int newStackTraceGetFramesLength = st == null ? 501 : st.Length;
             if (newStackTraceGetFramesLength > 300)
