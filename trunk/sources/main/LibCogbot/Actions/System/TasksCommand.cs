@@ -22,6 +22,14 @@ namespace cogbot.Actions.System
             int n = 0;
             var botCommandThreads = Client.GetBotCommandThreads();
             List<string> list = new List<string>();
+            bool changeDebug = false;
+            bool newDebug = false;
+            if (args.Length > 0)
+            {
+                changeDebug = true;
+                if (args[0].ToLower().StartsWith("d")) newDebug = true;
+                else if (args[0].ToLower().StartsWith("o")) newDebug = false;
+            }
             lock (botCommandThreads)
             {
                 int num = botCommandThreads.Count;
@@ -48,12 +56,16 @@ namespace cogbot.Actions.System
                 {
                     found++;
                     if (queueHandler.Busy)
-                        list.Insert(0, queueHandler.ToDebugString(true));
+                        WriteLine(queueHandler.ToDebugString(true));
                     else
                     {
                         list.Add(queueHandler.ToDebugString(true));
                     }
-
+                    if (changeDebug)
+                    {
+                        TaskQueueHandler.TurnOffDebugMessages = false;
+                        queueHandler.DebugQueue = newDebug;
+                    }
                 }
             }
             foreach (var s in list)

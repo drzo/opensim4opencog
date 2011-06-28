@@ -42,7 +42,7 @@ namespace MushDLR223.Utilities
         private bool WasStartCalled;
         private Thread PingerThread;
         private Thread TaskThreadCurrent;
-        private Thread StackerThread;
+        public Thread StackerThread;
         private TaskThreadHolder TaskHolder;
         //private Dictionary<Thread,TaskThreadKit> TaskThreadAbortKit = new Dictionary<Thread, TaskThreadKit>();
 
