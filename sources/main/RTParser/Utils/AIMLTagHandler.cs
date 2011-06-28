@@ -549,7 +549,7 @@ namespace RTParser.Utils
             bool success = true;
             if (vv == null) return false;
             if (IsNullOrEmpty(vv)) return false;
-            if (DLRConsole.IsTooDeep()) ;
+            //if (DLRConsole.IsTooDeep()) ;
             //    throw new ChatSignalOverBudget(childHandler.request, "CompleteEvaluatution: too Deep " + vv);
             if (!IsUnevaluated(vv))
             {
