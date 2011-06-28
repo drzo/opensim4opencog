@@ -2021,9 +2021,10 @@ namespace cogbot
             }
             try
             {
-                InvokeJoin("ExecuteBotCommand " + text);
+
                 if (text.StartsWith("("))
                 {
+                    InvokeJoin("ExecuteBotCommand " + text);
                     return new CmdResult(evalLispString(text).ToString(), true);
                 }
                 //            Settings.LOG_LEVEL = Helpers.LogLevel.Debug;
@@ -2081,10 +2082,15 @@ namespace cogbot
 
         static public CmdResult DoCmdAct(Command command, string verb, string args, object callerSession, OutputDelegate del)
         {
-            BotClient robot = command.TheBotClient;
-            //robot.InvokeJoin("ExecuteActBotCommand " + verb + " " + args);
             var callerID = SessionToCallerId(callerSession);
+            string cmdStr = "ExecuteActBotCommand " + verb + " " + args;
+            BotClient robot = command.TheBotClient;
+            if (command is BotPersonalCommand)
+            {
+                robot.InvokeJoin(cmdStr);
+            }
             return command.acceptInputWrapper(verb, args, callerID, del);
+            //robot.OneAtATimeQueue.Enqueue(cmdStr, () => command.acceptInputWrapper(verb, args, callerID, del));
         }
 
         public readonly static UUID OWNERLEVEL = UUIDFactory.GetUUID("ffffffff-ffff-ffff-ffff-ffffffffffff");
