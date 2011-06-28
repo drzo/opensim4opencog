@@ -19,7 +19,7 @@ namespace cogbot.Actions.System
         {
             if (args.Length < 1) return ShowUsage();
             string botcmd = String.Join(" ", args, 0, args.Length).Trim();
-            Client.ExecuteCommand(botcmd, WriteNothing);
+            Client.ExecuteCommand(botcmd, fromAgentID, WriteNothing);
             return Success(string.Empty);
         }
 

@@ -78,7 +78,7 @@ namespace cogbot.Listeners
                     if (!WorldObjects.MaintainSimCollisions(O.RegionHandle)) continue;
                     if (O.IsRegionAttached)
                     {
-                        if (O.UpdateOccupied())
+                        if (O.IsWorthMeshing && O.UpdateOccupied())
                         {
                             RealMeshes++;
                             realUpdates++;

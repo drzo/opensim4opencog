@@ -34,7 +34,7 @@ namespace cogbot.Tutorials
                 SetModeTutorial();
 
                 parent.WriteLine("Welcome to your first Tutorial!");
-                parent.groupActions["mute"].acceptInputWrapper("mute", "all", parent.WriteLine);
+                parent.groupActions["mute"].acceptInputWrapper("mute", "all", null, parent.WriteLine);
                 
                 SetNextCommand();
                 CommandIdx++;
@@ -55,7 +55,7 @@ namespace cogbot.Tutorials
                             RestoreMode();
                             CommandIdx = 0;
                             parent.WriteLine("Congratulations!! You completed your first Tutorial! ");
-                            parent.groupActions["mute"].acceptInputWrapper("mute", "all", parent.WriteLine);
+                            parent.groupActions["mute"].acceptInputWrapper("mute", "all", null, parent.WriteLine);
                         }                     
                     }
                 }

@@ -2327,11 +2327,11 @@ namespace PathSystem3D.Navigation
         {
             if (PanelGUI == null)
             {                
-                PanelGUI = new PathFinderDemo(this);
                 (new Thread(() =>
                                 {
                                     try
                                     {
+                                        PanelGUI = new PathFinderDemo(this);
                                         PanelGUI.CollisionPlaneListUpdate();
                                         PanelGUI.Closing += new CancelEventHandler((sender, e) => PanelGUI = null);
                                         Application.EnableVisualStyles();

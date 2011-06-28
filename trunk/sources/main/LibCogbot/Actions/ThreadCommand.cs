@@ -62,7 +62,7 @@ namespace cogbot.Actions
                                                {
                                                    try
                                                    {
-                                                       var result = Client.ExecuteCommand(cmd, WriteLine);
+                                                       var result = Client.ExecuteCommand(cmd, fromAgentID, WriteLine);
                                                        if (result == null)
                                                        {
                                                            WriteLine("No command found! \"" + cmd + "\"");

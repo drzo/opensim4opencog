@@ -242,7 +242,7 @@ namespace OpenMetaverse
 
         public static Guid GuidFromString(string val)
         {
-            return new Guid(val);
+            return new Guid(val.Trim());
         }
 
         public static UUID UUIDFromString(string val)

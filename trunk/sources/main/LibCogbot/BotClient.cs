@@ -1069,47 +1069,47 @@ namespace cogbot
                     whisper.currentSession = IMSessionID;
                     if (IsOwner)
                     {
+                        OutputDelegate WriteLine;
+                        if (origin is InstantMessageEventArgs)
+                        {
+                            WriteLine = new OutputDelegate((string text, object[] ps) =>
+                            {
+                                string reply0 = DLRConsole.SafeFormat(text, ps);
+                                InstantMessage(FromAgentID, reply0, IMSessionID);
+                            });
+                        }
+                        else
+                        {
+                            WriteLine = new OutputDelegate((string text, object[] ps) =>
+                            {
+                                string reply0 = DLRConsole.SafeFormat(text, ps);
+                                Talk(reply0, 0, Type);
+                            });
+                        }
                         string cmd = Message;
-                        string reply = null;
+
                         if (cmd.StartsWith("cmcmd "))
                         {
                             cmd = cmd.Substring(6);
-                            TextWriter tw = new StringWriter(new StringBuilder());
-                            tw.WriteLine();
-                            tw.WriteLine(string.Format("invokecm='{0}'", cmd));
-                            ClientManager.DoCommandAll(cmd, FromAgentID, tw.WriteLine);
-                            reply = tw.ToString();
+                            WriteLine("");
+                            WriteLine(string.Format("invokecm='{0}'", cmd));
+                            ClientManager.DoCommandAll(cmd, FromAgentID, WriteLine);
                         }
                         else if (cmd.StartsWith("cmd "))
                         {
                             cmd = cmd.Substring(4);
-                            TextWriter tw = new StringWriter(new StringBuilder());
-                            tw.WriteLine();
-                            tw.WriteLine(string.Format("invoke='{0}'", cmd));
-                            tw.WriteLine("iresult='" + ExecuteBotCommand(cmd, tw.WriteLine) + "'");
-                            reply = tw.ToString();
+                            WriteLine(string.Format("invoke='{0}'", cmd));
+                            var res = ExecuteCommand(cmd, FromAgentID, WriteLine);
+                            WriteLine("iresult='" + res + "'");
                         }
                         else if (cmd.StartsWith("/") || cmd.StartsWith("@"))
                         {
                             cmd = cmd.Substring(1);
-                            TextWriter tw = new StringWriter(new StringBuilder());
-                            tw.WriteLine();
-                            tw.WriteLine(string.Format("invoke='{0}'", cmd));
-                            tw.WriteLine("iresult='" + ExecuteBotCommand(cmd, tw.WriteLine) + "'");
-                            reply = tw.ToString();
+                            WriteLine("");
+                            WriteLine(string.Format("invoke='{0}'", cmd));
+                            var res = ExecuteCommand(cmd, FromAgentID, WriteLine);
+                            WriteLine("iresult='" + res + "'");
                         }
-                        if (reply != null)
-                        {
-                            if (origin is InstantMessageEventArgs)
-                            {
-                                InstantMessage(FromAgentID, reply, IMSessionID);
-                            }
-                            else
-                            {
-                                Talk(reply, 0, Type);
-                            }
-                        }
-
                     }
                     break;
                 default:
@@ -1966,7 +1966,7 @@ namespace cogbot
         public CmdResult ExecuteCommand(string text)
         {
             // done inside the callee InvokeJoin("ExecuteCommand " + text);
-            return ExecuteCommand(text, WriteLine); 
+            return ExecuteCommand(text, this, WriteLine);
         }
 
         private bool InvokeJoin(string s)
@@ -1984,13 +1984,13 @@ namespace cogbot
 
         public void InvokeNext(string s, ThreadStart e)
         {
-            OneAtATimeQueue.Enqueue(() =>
+            OneAtATimeQueue.Enqueue(s, () =>
                                         {
                                             e();
                                         });
         }
 
-        public CmdResult ExecuteCommand(string text, OutputDelegate WriteLine)
+        public CmdResult ExecuteCommand(string text, object session, OutputDelegate WriteLine)
         {
             if (string.IsNullOrEmpty(text)) return null;
             text = text.Trim();
@@ -1999,16 +1999,16 @@ namespace cogbot
                 text = text.Substring(1).TrimStart();
             }
             if (string.IsNullOrEmpty(text)) return null;
-            CmdResult res = ExecuteBotCommand(text, WriteLine);
+            CmdResult res = ExecuteBotCommand(text, session, WriteLine);
             if (res != null) return res;
-            res = ClientManager.ExecuteSystemCommand(text, WriteLine);
+            res = ClientManager.ExecuteSystemCommand(text, session, WriteLine);           
             if (res != null) return res;
             WriteLine("I don't understand the ExecuteCommand " + text + ".");
             return null;
         }
 
 
-        public CmdResult ExecuteBotCommand(string text, OutputDelegate WriteLine)
+        public CmdResult ExecuteBotCommand(string text, object session, OutputDelegate WriteLine)
         {
             if (text == null)
             {
@@ -2052,9 +2052,9 @@ namespace cogbot
                     {
                         CmdResult res;
                         if (text.Length > verb.Length)
-                            return DoCmdAct(act, verb, text.Substring(verb.Length + 1), WriteLine);
+                            return DoCmdAct(act, verb, text.Substring(verb.Length + 1), session, WriteLine);
                         else
-                            return DoCmdAct(act, verb, "", WriteLine);
+                            return DoCmdAct(act, verb, "", session, WriteLine);
                     }
                     catch (Exception e)
                     {
@@ -2067,9 +2067,9 @@ namespace cogbot
                     if (WorldSystem == null || WorldSystem.SimAssetSystem == null)
                         return new CmdResult("no world yet for gesture", false);
                     UUID assetID = WorldSystem.SimAssetSystem.GetAssetUUID(text, AssetType.Gesture);
-                    if (assetID != UUID.Zero) return ExecuteBotCommand("gesture " + assetID,WriteLine);
+                    if (assetID != UUID.Zero) return ExecuteBotCommand("gesture " + assetID, session, WriteLine);
                     assetID = WorldSystem.SimAssetSystem.GetAssetUUID(text, AssetType.Animation);
-                    if (assetID != UUID.Zero) return ExecuteBotCommand("anim " + assetID, WriteLine);
+                    if (assetID != UUID.Zero) return ExecuteBotCommand("anim " + assetID, session, WriteLine);
                     return null;
                 }
             }
@@ -2080,10 +2080,29 @@ namespace cogbot
             }
         }
 
-        private CmdResult DoCmdAct(Command command, string verb, string args, OutputDelegate del)
+        static public CmdResult DoCmdAct(Command command, string verb, string args, object callerSession, OutputDelegate del)
         {
-            InvokeJoin("ExecuteActBotCommand " + verb + " " + args);
-            return command.acceptInputWrapper(verb, args, del);
+            BotClient robot = command.TheBotClient;
+            //robot.InvokeJoin("ExecuteActBotCommand " + verb + " " + args);
+            var callerID = SessionToCallerId(callerSession);
+            return command.acceptInputWrapper(verb, args, callerID, del);
+        }
+
+        public readonly static UUID OWNERLEVEL = UUIDFactory.GetUUID("ffffffff-ffff-ffff-ffff-ffffffffffff");
+ 
+        public static UUID SessionToCallerId(object callerSession)
+        {
+            if (callerSession is BotClient) return OWNERLEVEL;
+            if (callerSession == null)
+            {
+                return UUID.Zero;
+            }
+            UUID callerId = callerSession as UUID;
+            if (callerId != null) return callerId;
+            CmdRequest request = callerSession as CmdRequest;
+            if (request != null) return SessionToCallerId(request.CallerAgent);
+            return OWNERLEVEL; 
+            throw new NotImplementedException();
         }
 
         public string GetName()
@@ -2107,7 +2126,7 @@ namespace cogbot
         {
             if (evt.GetVerb() == "On-Execute-Command")
             {
-                ExecuteCommand(evt.GetArgs()[0].ToString(), WriteLine);
+                ExecuteCommand(evt.GetArgs()[0].ToString(), null, WriteLine);
             }
         }
 
@@ -2626,9 +2645,9 @@ namespace cogbot
         }
 
 
-        public CmdResult ExecuteXmlCommand(string cmd, OutputDelegate line)
+        public CmdResult ExecuteXmlCommand(string cmd, object session, OutputDelegate line)
         {
-            return XmlInterp.ExecuteXmlCommand(cmd, line);
+            return XmlInterp.ExecuteXmlCommand(cmd, session, line);
         }
 
 
@@ -2912,4 +2931,16 @@ namespace cogbot
         /// <summary>Ignore like for bots and users we dont chat with</summary>
         Ignore = 0x80
     }
+
+    public class CmdRequest
+    {
+        public UUID CallerAgent;
+        public OutputDelegate Output;
+
+        public CmdRequest(UUID caller)
+        {
+            CallerAgent = caller;
+        }
+    }
+
 }

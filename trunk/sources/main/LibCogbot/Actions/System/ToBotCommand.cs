@@ -20,7 +20,7 @@ namespace cogbot.Actions.System
             BotClient oBotClient = ClientManager.GetBotByName(args[0]);
             if (oBotClient == null) return Success("not for me");
             string botcmd = String.Join(" ", args, 1, args.Length - 1).Trim();
-            return Success("tobot " + oBotClient + " " + oBotClient.ExecuteCommand(botcmd, WriteLine));
+            return Success("tobot " + oBotClient + " " + oBotClient.ExecuteCommand(botcmd, fromAgentID, WriteLine));
         }
     }
 }

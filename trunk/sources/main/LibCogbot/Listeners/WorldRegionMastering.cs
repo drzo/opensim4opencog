@@ -948,10 +948,11 @@ namespace cogbot.Listeners
         public bool IsWorthMeshing(SimObjectImpl impl)
         {
             Vector3d GlobalPosition;
+            var client = GridMaster.client;
             if (impl.TryGetGlobalPosition(out GlobalPosition))
             {
                 double d = Vector3d.Distance(GlobalPosition, client.Self.GlobalPosition);
-                if (d < 50)
+                if (d < WorldObjects.WorthMeshingDistance)
                 {
                     return true;
                 }

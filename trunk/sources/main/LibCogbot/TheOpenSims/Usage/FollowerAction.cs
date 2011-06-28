@@ -116,7 +116,7 @@ namespace cogbot.TheOpenSims
                         {
                             Debug("UseFlight");
                             TheBot.Flying = true;
-                            TheBot.GetGridClient().ExecuteBotCommand("flyto " + simO.ID, Debug);
+                            TheBot.GetGridClient().ExecuteBotCommand("flyto " + simO.ID, TheBot, Debug);
                         }
                         if (CloseEnough())
                         {
@@ -153,7 +153,9 @@ namespace cogbot.TheOpenSims
                             vto /= UseTeleportSteps;
                             vto += TheBot.GlobalPosition;
                             vto.Z = Target.GlobalPosition.Z;
-                            var res = TheBot.GetGridClient().ExecuteBotCommand(string.Format("teleport {0}", vto.ToRawString()), Debug);
+                            var res =
+                                TheBot.GetGridClient().ExecuteBotCommand(
+                                    string.Format("teleport {0}", vto.ToRawString()), TheBot, Debug);
                             if (!res.Success) UseTeleport = false; // cant teleport
                             TheBot.TurnToward(Target);
                             FullPasses = 0;

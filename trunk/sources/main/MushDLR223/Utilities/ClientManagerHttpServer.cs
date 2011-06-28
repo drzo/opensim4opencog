@@ -250,7 +250,8 @@ namespace MushDLR223.Utilities
                 // this is our default handler
                 if (cmd != "MeNe")
                 {
-                    res = _botClient.ExecuteXmlCommand(cmd + " " + GetVariable(request, "args", ""), wrresp.WriteLine);
+                    res = _botClient.ExecuteXmlCommand(cmd + " " + GetVariable(request, "args", ""), request,
+                                                       wrresp.WriteLine);
 
                 }
                 else
@@ -319,11 +320,13 @@ namespace MushDLR223.Utilities
                     if (String.IsNullOrEmpty(username))
                     {
                         //res = _botClient.ExecuteCommand(cmd + " " + text, wrresp.WriteLine);
-                        res = _botClient.ExecuteCommand("aiml @withuser " + defaultUser + " - " + text, wrresp.WriteLine);
+                        res = _botClient.ExecuteCommand("aiml @withuser " + defaultUser + " - " + text, request,
+                                                        wrresp.WriteLine);
                     }
                     else
                     {
-                        res = _botClient.ExecuteCommand("aiml @withuser " + username + " - " + text, wrresp.WriteLine);
+                        res = _botClient.ExecuteCommand("aiml @withuser " + username + " - " + text, request,
+                                                        wrresp.WriteLine);
                     }
                     AddToBody(response, "");
                     AddToBody(response, "\n<!-- End Response !-->");
@@ -526,8 +529,8 @@ namespace MushDLR223.Utilities
 
     public interface ScriptExecutor
     {
-        CmdResult ExecuteCommand(string s, OutputDelegate outputDelegate);
-        CmdResult ExecuteXmlCommand(string s, OutputDelegate outputDelegate);
+        CmdResult ExecuteCommand(string s, object session, OutputDelegate outputDelegate);
+        CmdResult ExecuteXmlCommand(string s, object session, OutputDelegate outputDelegate);
         string GetName();
         object getPosterBoard(object slot);
     }

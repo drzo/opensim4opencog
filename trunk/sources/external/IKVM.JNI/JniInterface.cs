@@ -3574,27 +3574,27 @@ namespace IKVM.Runtime
 
 		internal object UnwrapRef(IntPtr o)
 		{
-            int i = o.ToInt32(); 
-            //long il = o.ToInt64(); int i = (int)il;    
-
-			if(i > 0)
-			{
-				return GetManagedJNIEnv().UnwrapLocalRef(i);
-			}
-			if(i < 0)
-			{
-				return GlobalRefs.Unwrap(i);
-			}
-			return null;
+            //int i = o.ToInt32(); 
+            long il = o.ToInt64(); int i = (int)il;
+            if (il > 0 && il <= Int32.MaxValue)
+            {
+                return GetManagedJNIEnv().UnwrapLocalRef(i);
+            }
+            if(i < 0)
+            {
+                return GlobalRefs.Unwrap(i);
+            }
+            return null;
 		}
 
 		internal static object UnwrapRef(ManagedJNIEnv env, IntPtr o)
 		{
-			int i = o.ToInt32();
-			if(i > 0)
-			{
-				return env.UnwrapLocalRef(i);
-			}
+            //int i = o.ToInt32(); 
+            long il = o.ToInt64(); int i = (int)il;
+            if (il > 0 && il <= Int32.MaxValue)
+            {
+                return env.UnwrapLocalRef(i);
+            }
 			if(i < 0)
 			{
 				return GlobalRefs.Unwrap(i);

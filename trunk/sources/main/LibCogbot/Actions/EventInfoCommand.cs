@@ -43,11 +43,11 @@ namespace cogbot.Actions.Inventory
                     {
                         foreach (SimObject o in objs)
                         {
-                            if (o.ActionEventQueue.Count == 0)
+                            if (o.ActionEventQueue == null || o.ActionEventQueue.Count == 0)
                             {
                                 blanks++;
                                 if (!(o is SimAvatar)) continue;
-                            } 
+                            }
                             string s = DebugInfo(o);
                             WriteLine(s);
                             nonblanks++;
@@ -63,7 +63,7 @@ namespace cogbot.Actions.Inventory
                 {
                     string s = DebugInfo(o);
                     WriteLine(s);
-                    if (o.ActionEventQueue.Count == 0)
+                    if (o.ActionEventQueue == null || o.ActionEventQueue.Count == 0)
                     {
                         blanks++;
                         continue;
@@ -78,12 +78,15 @@ namespace cogbot.Actions.Inventory
         {
             var ActionEventQueue = o.ActionEventQueue;
             string s = o.ToString();
-            lock (ActionEventQueue)
+            if (ActionEventQueue != null)
             {
-                s += " ActionCount= " + ActionEventQueue.Count;
-                foreach (SimObjectEvent s1 in ActionEventQueue)
+                lock (ActionEventQueue)
                 {
-                    s += "\n " + s1;
+                    s += " ActionCount= " + ActionEventQueue.Count;
+                    foreach (SimObjectEvent s1 in ActionEventQueue)
+                    {
+                        s += "\n " + s1;
+                    }
                 }
             }
             return s.Replace("{", "{{").Replace("}", "}}");

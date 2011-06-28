@@ -317,7 +317,7 @@ namespace MushDLR223.Utilities
                 if (cmd != "MeNe")
                 {
                     res = _botClient.ExecuteXmlCommand(cmd + " " + GetVariable(getvars, postvars, "args", () => ""),
-                                                       response.WriteLine);
+                                                       request, response.WriteLine);
 
                 }
                 else
@@ -352,12 +352,13 @@ namespace MushDLR223.Utilities
                     if (String.IsNullOrEmpty(username))
                     {
                         //res = _botClient.ExecuteCommand(cmd + " " + text, wrresp.WriteLine);
-                        res = _botClient.ExecuteCommand("aiml @withuser " + defaultUser + " - " + text,
+                        res = _botClient.ExecuteCommand("aiml @withuser " + defaultUser + " - " + text, request,
                                                         response.WriteLine);
                     }
                     else
                     {
-                        res = _botClient.ExecuteCommand("aiml @withuser " + username + " - " + text, response.WriteLine);
+                        res = _botClient.ExecuteCommand("aiml @withuser " + username + " - " + text, request,
+                                                        response.WriteLine);
                     }
                     AddToBody(response, "");
                     AddToBody(response, "\n<!-- End Response !-->");
