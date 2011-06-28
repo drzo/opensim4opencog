@@ -504,10 +504,9 @@ namespace cogbot
             botPipeline = new SimEventMulticastPipeline(GetName());
             OneAtATimeQueue = new TaskQueueHandler(this, new TimeSpan(0, 0, 0, 0, 10), true, true);
 
-            ClientManager.PostAutoExecEnqueue(() =>
-            {
-                OneAtATimeQueue.Start();
-            });
+            SetSecurityLevel(OWNERLEVEL, null, BotPermissions.Owner);
+            ClientManager.PostAutoExecEnqueue(OneAtATimeQueue.Start);
+
             botPipeline.AddSubscriber(new SimEventTextSubscriber(WriteLine, this));
             // SingleInstance = this;
             ///this = this;// new GridClient();

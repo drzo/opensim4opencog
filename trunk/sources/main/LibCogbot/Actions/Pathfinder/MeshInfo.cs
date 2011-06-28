@@ -29,6 +29,7 @@ namespace cogbot.Actions.Pathfinder
                 objs = WorldSystem.GetAllSimObjects();
                 int meshed = 0;
                 int unmeshed = 0;
+                int notNeedBeMEshed = 0;
                 foreach (var o in objs)
                 {
                     if (o.IsMeshed)
@@ -36,12 +37,23 @@ namespace cogbot.Actions.Pathfinder
                         meshed++;
                         continue;
                     }
-                    unmeshed++;
+                    if (o.IsWorthMeshing)
+                    {
+                        unmeshed++;
+                        continue;
+                    }
+                    notNeedBeMEshed++;
                 }
-                int total = meshed + unmeshed;
+                float total = meshed + unmeshed;
+                float totalAll = meshed + unmeshed + notNeedBeMEshed;
 
                 return
-                    Success(string.Format("Is/UnMeshed = {0}/{1} {2:#.1}% {3}", meshed, unmeshed, 100*meshed/total, Name));
+                    Success(
+                        string.Format("IsMeshed/UnMeshed/UnNeeded = {0}/{1}/{2} {3:0%} complete for {4:0%} of Sim {5}",
+                                      meshed, unmeshed, notNeedBeMEshed,
+                                      meshed/total,
+                                      total/totalAll,
+                                      Name));
             }
             foreach (SimObject o in objs)
             {
