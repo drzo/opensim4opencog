@@ -318,16 +318,19 @@ namespace cogbot.TheOpenSims
             bool UseExtremeDetail = scaleSize > UseExtremeDetailSize;
             LevelOfDetail detail;
             if (scaleSize < UseLowDetailSize)
-                detail = LevelOfDetail.Medium;
+                detail = LevelOfDetail.Low;
             else
-                detail = LevelOfDetail.High;
-            //if (!UseExtremeDetail)
-            //{
-            //    if (primitive.Type == PrimType.Box)
-            //    {
-            //        detail = LevelOfDetail.Medium;
-            //    }
-            //}
+                detail = LevelOfDetail.Medium;
+            if (UseExtremeDetail)
+            {
+                if (primitive.Type == PrimType.Box)
+                {
+                    detail = LevelOfDetail.Medium;
+                } else
+                {
+                    detail = LevelOfDetail.High;
+                }
+            }
 
             PrimMesh primMesh = ConstructionDataToPrimMesh(primitive.PrimData, detail, UseExtremeDetail ? 2 : 1);
             primMesh.Scale(Scale.X, Scale.Y, Scale.Z);

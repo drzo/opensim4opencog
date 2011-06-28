@@ -305,7 +305,8 @@ namespace cogbot.TheOpenSims
                 if (obj != null)
                 {
                     Client.ExecuteCommand("pointat " + obj.ID, this, Debug);
-                }
+                } 
+                else 
                 {
                     var vFinalLocation = pos.UsePosition.GlobalPosition;
                     Client.ExecuteCommand("pointat " + vFinalLocation.ToRawString(), this, Debug);
