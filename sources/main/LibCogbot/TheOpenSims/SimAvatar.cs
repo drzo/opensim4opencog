@@ -1688,9 +1688,12 @@ namespace cogbot.TheOpenSims
                             if (blockCount > 2)
                             {
                                 StopMoving();
-                                Debug("BLOCKED!");
-                                if (!SimAvatarImpl.UseTeleportFallback) return false;
-                                Debug("Blocked so using TP to " + finalTarget);
+                                if (!SimAvatarImpl.UseTeleportFallback)
+                                {
+                                    Debug("BLOCKED!");
+                                    return false;
+                                }
+                                Debug("Blocked so using TP to " + (finalTarget - GlobalPosition));
                                 return this.TeleportTo(finalTarget);
                             }
                         }

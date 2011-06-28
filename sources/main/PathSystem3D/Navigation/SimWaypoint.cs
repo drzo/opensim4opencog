@@ -108,7 +108,18 @@ namespace PathSystem3D.Navigation
             return CIndex.GetZLevel(MinZ, MaxZ);
         }
 
-        public CollisionPlane Plane { get; set; }
+        private CollisionPlane _Plane;
+        public CollisionPlane Plane
+        {
+            get
+            {
+                return _Plane;
+            }
+            set
+            {
+                _Plane = value;
+            }
+        }
 
         public float GetGroundLevel()
         {
@@ -138,7 +149,7 @@ namespace PathSystem3D.Navigation
         }
 
         Vector3d _GlobalPos;
-        bool _Passable = true;
+        bool _Passable;
         ArrayList _IncomingArcs, _OutgoingArcs;
 
         /// <summary>
@@ -546,8 +557,8 @@ namespace PathSystem3D.Navigation
             _MinZ = local.Z;
             _MaxZ = _MinZ + 1.5f;
             CIndex = Ci;
-            Plane = Cp;
-            PathStore = pathStore;
+            _Plane = Cp;
+            _PathStore = pathStore;
             _GlobalPos = global;// RoundPoint(firstP, PathStore);
             _LocalPos = local;
             //PX = PX0;
@@ -555,6 +566,9 @@ namespace PathSystem3D.Navigation
             //PathStore.SimWaypoint[PX, PY] = this;
             //TaintMatrix();
             //UpdateMatrix(pathStore.GL);
+            _Passable = true;
+            _IncomingArcs = null;
+            _OutgoingArcs = null;
         }
 
         //public static Vector3 RoundPoint(Vector3 vect3, SimPathStore PathStore)
@@ -704,7 +718,18 @@ namespace PathSystem3D.Navigation
 
         #region MeshableObject Members
 
-        public SimPathStore PathStore { get; set;}
+        private SimPathStore _PathStore;
+        public SimPathStore PathStore
+        {
+            get
+            {
+                return _PathStore;
+            }
+            set
+            {
+                _PathStore = value;
+            }
+        }
 
         #endregion
     }
