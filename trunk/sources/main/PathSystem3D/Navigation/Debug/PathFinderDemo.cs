@@ -137,6 +137,15 @@ namespace PathSystem3D.Navigation.Debug
 
         void Reactivate()
         {
+            if (this.InvokeRequired)
+            {
+                Invoke(new ShowDelegate(Reactivate0));
+                return;
+            }
+            Reactivate0();
+        }
+        void Reactivate0()
+        {
             try
             {
                 baseShow();
@@ -158,6 +167,11 @@ namespace PathSystem3D.Navigation.Debug
         {
             try
             {
+                if (base.InvokeRequired)
+                {
+                    base.Invoke(new MethodInvoker(() => base.Show()));
+                    return;
+                }
                 base.Show();
             }
             catch (Exception e)
@@ -187,6 +201,8 @@ namespace PathSystem3D.Navigation.Debug
 
         public void RunPathFinder()
         {
+            CollisionPlane CP = PnlGUI.CurrentPlane;
+            if (CP == null) return;
             if (ChkUseFastPathFinder.Checked)
             {
                 if (!(mPathFinder is PathFinderFasting))
@@ -194,7 +210,6 @@ namespace PathSystem3D.Navigation.Debug
                     if (mPathFinder != null)
                         mPathFinder.PathFinderDebug -= new PathFinderDebugHandler(PathFinderDebug);
 
-                    CollisionPlane CP = PnlGUI.CurrentPlane;
                     CP.EnsureUpdated();
 
                     mPathFinder = new PathFinderFasting(CP.ByteMatrix);
@@ -208,9 +223,8 @@ namespace PathSystem3D.Navigation.Debug
                     if (mPathFinder != null)
                         mPathFinder.PathFinderDebug -= new PathFinderDebugHandler(PathFinderDebug);
 
-
-                    CollisionPlane CP = PnlGUI.CurrentPlane;
                     CP.EnsureUpdated();
+
                     mPathFinder = new PathFinder(CP.ByteMatrix);
                     mPathFinder.PathFinderDebug += new PathFinderDebugHandler(PathFinderDebug);
                 }
@@ -466,7 +480,7 @@ namespace PathSystem3D.Navigation.Debug
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PathFinderDemo));
-            this.PnlGUI = new PathSystem3D.Navigation.Debug.PanelPathFinder();
+            this.PnlGUI = new PathSystem3D.Navigation.Debug.PanelPathFinder(PathStore);
             this.ToolStrp = new System.Windows.Forms.ToolStrip();
             this.BtnNew = new System.Windows.Forms.ToolStripButton();
             this.BtnLoad = new System.Windows.Forms.ToolStripButton();
@@ -509,6 +523,7 @@ namespace PathSystem3D.Navigation.Debug
             this.ChkTieBraker = new System.Windows.Forms.CheckBox();
             this.BtnStartStop = new System.Windows.Forms.Button();
             this.PnlSettings = new System.Windows.Forms.Panel();
+            this.BtnShowTile = new System.Windows.Forms.Button();
             this.BtnLoosen = new System.Windows.Forms.Button();
             this.BtnTighten = new System.Windows.Forms.Button();
             this.BtnRefresh = new System.Windows.Forms.Button();
@@ -974,6 +989,7 @@ namespace PathSystem3D.Navigation.Debug
             // PnlSettings
             // 
             this.PnlSettings.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.PnlSettings.Controls.Add(this.BtnShowTile);
             this.PnlSettings.Controls.Add(this.BtnLoosen);
             this.PnlSettings.Controls.Add(this.BtnTighten);
             this.PnlSettings.Controls.Add(this.BtnRefresh);
@@ -1000,8 +1016,18 @@ namespace PathSystem3D.Navigation.Debug
             this.PnlSettings.Controls.Add(this.TBarY);
             this.PnlSettings.Location = new System.Drawing.Point(727, 59);
             this.PnlSettings.Name = "PnlSettings";
-            this.PnlSettings.Size = new System.Drawing.Size(155, 561);
+            this.PnlSettings.Size = new System.Drawing.Size(155, 592);
             this.PnlSettings.TabIndex = 17;
+            // 
+            // BtnShowTile
+            // 
+            this.BtnShowTile.Location = new System.Drawing.Point(5, 559);
+            this.BtnShowTile.Name = "BtnShowTile";
+            this.BtnShowTile.Size = new System.Drawing.Size(138, 22);
+            this.BtnShowTile.TabIndex = 31;
+            this.BtnShowTile.Text = "Show Tile";
+            this.BtnShowTile.UseVisualStyleBackColor = true;
+            this.BtnShowTile.Click += new System.EventHandler(this.BtnShowTile_Click);
             // 
             // BtnLoosen
             // 
@@ -1162,7 +1188,7 @@ namespace PathSystem3D.Navigation.Debug
             this.TBarGridSize.Size = new System.Drawing.Size(144, 33);
             this.TBarGridSize.TabIndex = 11;
             this.TBarGridSize.TickStyle = System.Windows.Forms.TickStyle.TopLeft;
-            this.TBarGridSize.Value = 2;
+            this.TBarGridSize.Value = 1;
             this.TBarGridSize.Scroll += new System.EventHandler(this.TBarGridSize_Scroll);
             // 
             // LblSearchLimit
@@ -1321,6 +1347,7 @@ namespace PathSystem3D.Navigation.Debug
         private Thread WorkThread;
         private void BtnRecomputeMatrix_Click(object sender, EventArgs e)
         {
+            PnlGUI.ShowingTile = false;
             float tryFloat;
             if (float.TryParse(MinZevel.Text, out tryFloat))
             {
@@ -1343,6 +1370,7 @@ namespace PathSystem3D.Navigation.Debug
 
         private void BtnRebakeTerrain_Click(object sender, EventArgs e)
         {
+            PnlGUI.ShowingTile = false;
             CollisionPlane CP = PnlGUI.CurrentPlane;
             if (CP == null || WorkThread != null) return;
             WorkThread = new Thread(new ThreadStart(delegate()
@@ -1419,6 +1447,7 @@ namespace PathSystem3D.Navigation.Debug
 
         private void BtnRefresh_Click(object sender, EventArgs e)
         {
+            PnlGUI.ShowingTile = false;
             PnlGUI.Invalidate();
         }
 
@@ -1451,6 +1480,13 @@ namespace PathSystem3D.Navigation.Debug
 
             }));
 
+        }
+
+        private void BtnShowTile_Click(object sender, EventArgs e)
+        {
+            PnlGUI.ShowingTile = true;
+            if (PathStore == null) return;
+            PnlGUI.ShowRegionImage();
         }
 
 

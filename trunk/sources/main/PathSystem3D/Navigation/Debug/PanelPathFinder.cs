@@ -11,6 +11,8 @@
 //
 using System;
 using System.Data;
+using System.IO;
+using System.Net;
 using System.Text;
 using System.Drawing;
 using System.Windows.Forms;
@@ -49,8 +51,9 @@ namespace PathSystem3D.Navigation.Debug
         #endregion
 
         #region Constructors
-        public PanelPathFinder()
+        public PanelPathFinder(SimPathStore simPathStore)
         {
+            PathStore = simPathStore;
             SetStyle(ControlStyles.ResizeRedraw, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);
             SetStyle(ControlStyles.DoubleBuffer, true);
@@ -163,7 +166,7 @@ namespace PathSystem3D.Navigation.Debug
             }
             try
             {
-                Graphics g = Graphics.FromHwnd(this.Handle);
+                var g = Graphics.FromHwnd(this.Handle);
 
                 Rectangle internalRec = new Rectangle((x * mGridSize) + 2, (TRANSPOSE(y) * mGridSize) + 2, mGridSize - 4, mGridSize - 4);
 
@@ -285,10 +288,11 @@ namespace PathSystem3D.Navigation.Debug
         WaypointProperties tipForm ;
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            if (_Matrix==null) return;
+            if (_Matrix == null) return;
             int x = e.X / mGridSize;
             int sy = e.Y / mGridSize;
             int y = TRANSPOSE(sy);
+            var POINTS_PER_METER = PathStore.POINTS_PER_METER;
             if (x >= PathStore.MAPSPACE || x < 0 || y < 0 || y >= PathStore.MAPSPACE) return;
 
             // For times that tooltips are not working
@@ -298,7 +302,7 @@ namespace PathSystem3D.Navigation.Debug
                 {
                     tipForm = new WaypointProperties();
                 }
-                tipForm.SetWaypoint(PathStore.GetCollisionIndex(x, y),CurrentPlane);
+                tipForm.SetWaypoint(PathStore.GetCollisionIndex(x, y), CurrentPlane);
                 tipForm.Show();
                 tipForm.Activate();
                 return;
@@ -319,35 +323,34 @@ namespace PathSystem3D.Navigation.Debug
                     if (_Matrix != null) str += String.Format(" matrix={0}", Matrix[x, y]);
                     if (_CurrentPlane != null) str += String.Format(" GL={0}", CurrentPlane.HeightMap[o.PX, o.PY]);
                     if (_Matrix != null) if (Matrix[x, y] != before)
-                    {
-                        Matrix[x, y] = before;
-                    }
+                        {
+                            Matrix[x, y] = before;
+                        }
                     if (_CurrentPlane != null) if (CurrentPlane.HeightMap[o.PX, o.PY] != fbef)
-                    {
-                        CurrentPlane.HeightMap[o.PX, o.PY] = fbef;
-                    }
+                        {
+                            CurrentPlane.HeightMap[o.PX, o.PY] = fbef;
+                        }
                 }
                 else
                 {
                     str = "" + Matrix[x, y];
                 }
-                tip.SetToolTip(this, str);
+                tip.SetToolTip(this, str + " at " + x / POINTS_PER_METER + "/" + y / POINTS_PER_METER + "/" + CurrentPlane.MinZ);
                 return;
             }
-
 
             byte[,] mMatrix = Matrix;
             switch (mDrawMode)
             {
                 case DrawModeSetup.Start:
                     this.Invalidate(new Rectangle(mStart.X * mGridSize, mStart.Y * mGridSize, mGridSize, mGridSize));
-                    mStart          = new Point(x,y);
-                    PathStore.SetPassable(x / PathStore.POINTS_PER_METER, y / PathStore.POINTS_PER_METER,ZLevel);// mMatrix[x, y] = 1;
+                    mStart = new Point(x, y);
+                    PathStore.SetPassable(x / POINTS_PER_METER, y / POINTS_PER_METER, ZLevel);// mMatrix[x, y] = 1;
                     break;
                 case DrawModeSetup.End:
                     this.Invalidate(new Rectangle(mEnd.X * mGridSize, mEnd.Y * mGridSize, mGridSize, mGridSize));
-                    mEnd            = new Point(x,y);
-                    PathStore.SetPassable(x / PathStore.POINTS_PER_METER, y / PathStore.POINTS_PER_METER, ZLevel);// mMatrix[x, y] = 1;
+                    mEnd = new Point(x, y);
+                    PathStore.SetPassable(x / POINTS_PER_METER, y / POINTS_PER_METER, ZLevel);// mMatrix[x, y] = 1;
                     break;
                 case DrawModeSetup.Block:
                     if (e.Button == (MouseButtons.Left | MouseButtons.Right))
@@ -355,7 +358,7 @@ namespace PathSystem3D.Navigation.Debug
                     else if (e.Button == MouseButtons.Left)
                         SetMatrix(x, y, mNodeWeight);
                     else if (e.Button == MouseButtons.Right)
-                        SetMatrix(x,y,(byte) (mMatrix[x,y] + mNodeWeight < 256 ? mMatrix[x,y] + mNodeWeight : 255));
+                        SetMatrix(x, y, (byte)(mMatrix[x, y] + mNodeWeight < 256 ? mMatrix[x, y] + mNodeWeight : 255));
                     break;
             }
 
@@ -420,6 +423,9 @@ namespace PathSystem3D.Navigation.Debug
         /// Required designer variable.
         /// </summary>
         private System.ComponentModel.IContainer components = null;
+
+        public bool ShowingTile;
+        private Bitmap MyBitmap;
 
         /// <summary> 
         /// Clean up any resources being used.
@@ -506,6 +512,27 @@ namespace PathSystem3D.Navigation.Debug
                 CurrentPlane = found;
             }            
         }
+
+        public void ShowRegionImage()
+        {
+            if (!ShowingTile) return;
+            try
+            {
+                string str = "http://map.secondlife.com/map-1-" +
+                             (int)PathStore.RegionLocation.X + "-" +
+                             (int)PathStore.RegionLocation.Y + "-objects.jpg";
+                MyBitmap = MyBitmap ?? new Bitmap(WebRequest.Create(str).GetResponse().GetResponseStream());
+                var g = Graphics.FromHwnd(this.Handle);
+                g.DrawImage(MyBitmap, new RectangleF(-GridX, -GridY,
+                                                     (int) (MyBitmap.Width*mGridSize*5.0),
+                                                     (int) (MyBitmap.Height*mGridSize*5.2)));
+            }
+            catch
+            {
+                // this.ShowingTile = false;
+            }
+        }
+
 
         private void PanelPathFinder_Load(object sender, EventArgs e)
         {
