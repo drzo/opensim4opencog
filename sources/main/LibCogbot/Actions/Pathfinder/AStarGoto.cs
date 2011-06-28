@@ -6,11 +6,13 @@ using MushDLR223.ScriptEngines;
 
 namespace cogbot.Actions.Pathfinder
 {
+    [Flags]
     public enum MovementProceedure
     {
         AutoPilot,
         AStar,
         TurnToAndWalk,
+        FlyTo,
         Teleport
     }
 

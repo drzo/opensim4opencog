@@ -6,12 +6,12 @@ using MushDLR223.ScriptEngines;
 
 namespace cogbot.Actions.Pathfinder
 {
-    public class RemeshPrim : cogbot.Actions.Command, SystemApplicationCommand
+    public class UnmeshPrim : cogbot.Actions.Command, SystemApplicationCommand
     {
-        public RemeshPrim(BotClient client)
+        public UnmeshPrim(BotClient client)
         {
             Name = GetType().Name;
-            Description = "Reads the sim prims for improving routes then bakes the region (was called srprim). Usage: remeshprim [prims] ";
+            Description = "Unmeshes all prims(was called srprim). Usage: remeshprim [prims] ";
             Category = cogbot.Actions.CommandCategory.Movement;
             Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
@@ -26,25 +26,26 @@ namespace cogbot.Actions.Pathfinder
                 objs = (ICollection<SimObject>) WorldSystem.GetAllSimObjects();
                 rightNow = false;
             }
-            WriteLine("Meshing " + objs.Count);
+            WriteLine("Unmeshing " + objs.Count);
             foreach (SimObject o in objs)
             {
                 o.IsWorthMeshing = true;
                 if (rightNow)
                 {
-                    o.AddCollisionsNow();
+                    o.RemoveCollisions();
                 }
                 else
                 {
-                    o.AddCollisions();
+                    o.RemoveCollisions();
                 }
             }
             if (rightNow)
             {
-                SimRegion.BakeRegions();
-            } else
+                TheSimAvatar.GetSimRegion().GetPathStore(TheSimAvatar.SimPosition).RemoveAllCollisionPlanes();
+            }
+            else
             {
-                cogbot.Listeners.WorldPathSystem.MeshingQueue.Enqueue(SimRegion.BakeRegions);
+                TheSimAvatar.GetSimRegion().GetPathStore(TheSimAvatar.SimPosition).RemoveAllCollisionPlanes();
             }
 
             return TheBotClient.ExecuteCommand("meshinfo", fromAgentID, WriteLine);

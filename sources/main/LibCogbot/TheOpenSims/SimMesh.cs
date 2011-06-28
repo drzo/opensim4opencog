@@ -288,7 +288,7 @@ namespace cogbot.TheOpenSims
         public static Mesh PrimitiveToMesh(Primitive primitive, Vector3 Scale, Quaternion rot)
         {
 
-            if (primitive.Sculpt != null)
+            if (primitive.Sculpt != null && WorldPathSystem.SculptCollisions)
             {
                 Primitive.SculptData SD = primitive.Sculpt;
                 UUID Id = SD.SculptTexture;

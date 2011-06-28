@@ -224,12 +224,12 @@ namespace cogbot.TheOpenSims
             bool changed = false;
             foreach (var s in GetNearByObjects(20, false))
             {
-                if (s.UpdateOccupied()) changed = true;
+                if (s.AddCollisions()) changed = true;
             }
             if (!changed)
                 foreach (var s in GetNearByObjects(40, false))
                 {
-                    if (s.UpdateOccupied()) changed = true;
+                    if (s.AddCollisions()) changed = true;
                 }
             //WithAnim(Animations.AFRAID,()=> base.OpenNearbyClosedPassages()).Invoke();
             return base.OpenNearbyClosedPassages() || changed;
@@ -1689,7 +1689,9 @@ namespace cogbot.TheOpenSims
                             {
                                 StopMoving();
                                 Debug("BLOCKED!");
-                                return false;
+                                if (!SimAvatarImpl.UseTeleportFallback) return false;
+                                Debug("Blocked so using TP to " + finalTarget);
+                                return this.TeleportTo(finalTarget);
                             }
                         }
                     }
@@ -2179,7 +2181,7 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        public override bool UpdateOccupied()
+        public override bool AddCollisions()
         {
             ///  Vector3 pos = GetSimPosition();
             ///  if (SimPathStore.OutOfRegion(pos)) return;

@@ -353,6 +353,14 @@ namespace cogbot.TheOpenSims
             }
             return TeleportTo(SimRegion.GetRegion(SimRegion.GetRegionHandle(local.PathStore)), local.SimPosition);
         }
+        public virtual bool TeleportTo(Vector3d finalTarget)
+        {
+            if (!IsControllable)
+            {
+                throw Error("GotoTarget !Client.Self.AgentID == Prim.ID");
+            }
+            return TeleportTo(SimWaypointImpl.CreateGlobal(finalTarget));
+        }
 
         public virtual bool TeleportTo(SimRegion R, Vector3 local)
         {
@@ -919,11 +927,19 @@ namespace cogbot.TheOpenSims
         public void RemoveCollisions()
         {
             IsMeshed = false;
+            // say we are busy
+            if (IsMeshing) return;
+            IsMeshing = true;
             if (_Mesh != null)
             {
                 _Mesh.RemoveCollisions();
                 _Mesh = null;
-            }      
+            }
+            foreach (SimObject o in Children)
+            {
+                o.RemoveCollisions();
+            }
+            IsMeshing = false;
         }
 
         public SimObjectType IsTypeOf(SimObjectType superType)
@@ -989,7 +1005,7 @@ namespace cogbot.TheOpenSims
                         Properties = prim.Properties;
                     }
 
-                    if (WorldObjects.MaintainSimCollisions(prim.RegionHandle) && prim.Sculpt != null)
+                    if (WorldObjects.MaintainSimCollisions(prim.RegionHandle) && prim.Sculpt != null && WorldPathSystem.SculptCollisions)
                     {
                         WorldSystem.StartTextureDownload(prim.Sculpt.SculptTexture);
                     }
@@ -1267,28 +1283,53 @@ namespace cogbot.TheOpenSims
             {
                 if (_propertiesCache != null) UpdateProperties(_propertiesCache);
             }
+            UpdateCollisions();
+            toStringNeedsUpdate = true;
+        }
+
+        /// <summary>
+        /// Update our collisions and all of childrens
+        /// </summary>
+        public void UpdateCollisions()
+        {
             if (IsRegionAttached)
             {
                 if (IsWorthMeshing)
                 {
-                    UpdateOccupied();
+                    RemoveCollisions();
+                    AddCollisions();
+                }
+                else
+                {
+                    RemoveCollisions();
                 }
             }
-            toStringNeedsUpdate = true;
+
         }
 
+        private bool? requestedMeshed;
         public bool IsWorthMeshing
         {
-            get { return WorldSystem.IsWorthMeshing(this);}
+            get
+            {
+                if (requestedMeshed.HasValue) return requestedMeshed.Value;
+                if (WorldSystem.IsWorthMeshing(this))
+                {
+                    requestedMeshed = true;
+                    return true;
+                }
+                return false;
+            }
+            set { requestedMeshed = value; }
         }
 
 
         private bool IsMeshing;
-        public virtual bool UpdateOccupied()
+        public virtual bool AddCollisions()
         {
             try
             {
-                return UpdateOccupied0();
+                return QueueMeshing();
             }
             catch (Exception e)
             {
@@ -1297,7 +1338,9 @@ namespace cogbot.TheOpenSims
             }
 
         }
-        public virtual bool UpdateOccupied0()
+
+        private bool IsMeshingQueued = false;
+        public virtual bool QueueMeshing()
         {
             if (!IsRegionAttached)
             {
@@ -1313,10 +1356,10 @@ namespace cogbot.TheOpenSims
             }
             try
             {
-                if (!IsMeshing)
+                if (!IsMeshingQueued)
                 {
-                    IsMeshing = true;
-                    WorldSystem.SimPaths.MeshingQueue.Enqueue(UpdateOccupied1);
+                    IsMeshingQueued = true;
+                    cogbot.Listeners.WorldPathSystem.MeshingQueue.AddFirst("mesh " + ToString(), () => { AddCollisionsNow(); });
                 }
                 return wasMeshUpdated;
                
@@ -1326,39 +1369,44 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        public void UpdateOccupied1()
+        public bool AddCollisionsNow()
         {
             try
             {
-                UpdateOccupied2();
+                return AddCollisionsNowNoCatch();
             }
             catch (Exception e)
             {
                 Debug("While updating " + e);
+                IsMeshed = false;
+                return false;
             }
             finally
             {
-                IsMeshing = false;
-                IsMeshed = true;
+                IsMeshingQueued = false;
             }
         }
 
-        public void UpdateOccupied2()
+        public bool AddCollisionsNowNoCatch()
         {
             if (!IsRegionAttached)
             {
-                return;
+                return false;
             }
             if (!IsRoot)
             {
                 // dont mesh armor
                 if (Parent is SimAvatar)
                 {
-                    return;
+                    return false;
                 }
             }
 
-            if (!WorldObjects.MaintainMeshes) return;
+            if (!WorldObjects.MaintainMeshes) return false;
+
+            // avoids loop (since our parent will call us again)
+            if (IsMeshing || IsMeshed) return false;
+            IsMeshing = true;
 
             bool updated = GetSimRegion().AddCollisions(Mesh);
             // update parent + siblings
@@ -1366,18 +1414,20 @@ namespace cogbot.TheOpenSims
             {
                 if (_Parent != null)
                 {
-                    if (_Parent.UpdateOccupied()) updated = true;
+                    if (_Parent.AddCollisionsNow()) updated = true;
                 }
             }
             // update children
             foreach (SimObject o in Children)
             {
-                if (o.UpdateOccupied())
+                if (o.AddCollisionsNow())
                 {
                     updated = true;
                 }
             }
             wasMeshUpdated = updated;
+            IsMeshed = true;
+            return wasMeshUpdated;
         }
 
         public void AddSuperTypes(IList<SimObjectType> listAsSet)
@@ -2270,7 +2320,7 @@ namespace cogbot.TheOpenSims
             List<SimObject> UnEnterables = new List<SimObject>();
             foreach (SimObject O in GetNearByObjects(3, false))
             {
-                if (O.UpdateOccupied()) changed = true;
+                if (O.AddCollisions()) changed = true;
                 if (!O.IsPhantom)
                 {
                     if (O.IsTypeOf(DOOR) != null)
@@ -2733,7 +2783,11 @@ namespace cogbot.TheOpenSims
 
         //void UpdateProperties(Primitive.ObjectProperties props);
 
-        bool UpdateOccupied();
+        // for pathfinder
+        bool AddCollisions();
+        void UpdateCollisions();
+        void RemoveCollisions();
+        bool AddCollisionsNow();
 
         void Touch(SimObject simObjectImpl);
 
@@ -2753,7 +2807,6 @@ namespace cogbot.TheOpenSims
 
         List<SimObject> GetNearByObjects(double maxDistance, bool rootOnly);
 
-        void RemoveCollisions();
 
         void SetFirstPrim(Primitive primitive);
         UUID ID { get; }
@@ -2775,6 +2828,6 @@ namespace cogbot.TheOpenSims
         void UpdatePosition(ulong handle, Vector3 pos);
         Queue<SimObjectEvent> ActionEventQueue { get; set; }
         bool IsMeshed { get; set;}
-        bool IsWorthMeshing { get; }
+        bool IsWorthMeshing { get; set; }
     }
 }

@@ -15,11 +15,13 @@ namespace cogbot.Listeners
     public class WorldPathSystem: IDisposable
     {
        public SimGlobalRoutes GlobalRoutes = SimGlobalRoutes.Instance;
-       public readonly TaskQueueHandler MeshingQueue = new TaskQueueHandler("world MeshingQueue", TimeSpan.FromSeconds(10), true);
+       static public readonly TaskQueueHandler MeshingQueue = new TaskQueueHandler("world MeshingQueue", TimeSpan.FromSeconds(10), true);
        //   static object GlobalRoutes = new object();
         static Thread TrackPathsThread;
         static bool IsDisposing = false;
 
+        public static bool SculptCollisions = false;
+        public static bool MaintainCollisionsForeground = true;
         public static int MaxMeshes = 18000;
         static public int RealMeshes = 0;
         public static float MinEdgeSizeOfSimplify = 0.5f;
@@ -27,6 +29,7 @@ namespace cogbot.Listeners
 
         public WorldPathSystem(GridClient gc)
         {
+            MeshingQueue.StackerThread.Priority = ThreadPriority.AboveNormal;
             lock (GlobalRoutes)
             {
                 if ((!gc.Settings.AVATAR_TRACKING)) Error("client.Settings.AVATAR_TRACKING != true");
@@ -58,7 +61,7 @@ namespace cogbot.Listeners
             while (!(IsDisposing))
             {
                 Thread.Sleep(10000);
-                if (!WorldObjects.MaintainCollisions) continue;
+                if (!WorldObjects.MaintainCollisions && !MaintainCollisionsForeground) continue;
                 int thisCount = SimObjects.Count;
 
                 if (thisCount == lastCount)
@@ -78,10 +81,30 @@ namespace cogbot.Listeners
                     if (!WorldObjects.MaintainSimCollisions(O.RegionHandle)) continue;
                     if (O.IsRegionAttached)
                     {
-                        if (O.IsWorthMeshing && O.UpdateOccupied())
+                        if (O.IsWorthMeshing)
                         {
-                            RealMeshes++;
-                            realUpdates++;
+                            bool didIt = false;
+                            if (MaintainCollisionsForeground)
+                            {
+                                didIt = O.AddCollisionsNow();
+                            }
+                            else
+                            {
+                                didIt = O.AddCollisions();
+                            }
+                            if (didIt)
+                            {
+                                RealMeshes++;
+                                realUpdates++;
+                            }
+                        }
+                        else
+                        {
+                            if (MaintainCollisionsForeground)
+                            {
+                                SimObject o = O;
+                                WorldPathSystem.MeshingQueue.Enqueue(() => o.AddCollisionsNow());
+                            }
                         }
                     }
                     occUpdate++;

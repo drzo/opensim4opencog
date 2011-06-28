@@ -1566,7 +1566,25 @@ namespace PathSystem3D.Navigation
             }
             return null;
         }
-
+        public CollisionPlane RemoveCollisionPlane(float Z)
+        {
+            if (Matrixes.Count > 0)
+            {
+                lock (Matrixes) foreach (CollisionPlane P in Matrixes)
+                    {
+                        if (P.Accepts(Z))
+                        {
+                            Matrixes.Remove(P);
+                            return P;
+                        }
+                    }
+            }
+            return null;
+        }
+        public void RemoveAllCollisionPlanes()
+        {
+            lock (Matrixes) Matrixes.Clear();
+        }
       //  float CollisionPlaneHeights = 3.0f;
         readonly internal IList<CollisionPlane> Matrixes = new List<CollisionPlane>();
         public byte[,] GetByteMatrix(float Z)
