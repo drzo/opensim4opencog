@@ -76,6 +76,7 @@ namespace cogbot.Actions
     public abstract class Command : IComparable
     {
         private OutputDelegate _writeLine;
+        public UUID CallerID = UUID.Zero;
         protected OutputDelegate WriteLine
         {
             get { return _writeLine; }
@@ -151,8 +152,9 @@ namespace cogbot.Actions
             this.WriteLine = WriteLine;
             try
             {
-                return Execute(args.tokens, UUID.Zero, WriteLine);
-            } catch(Exception e)
+                return Execute(args.tokens, CallerID, WriteLine);
+            }
+            catch (Exception e)
             {
                 return Failure("" + e);
             }
@@ -265,8 +267,9 @@ namespace cogbot.Actions
             }
         }
 
-        public CmdResult acceptInputWrapper(string verb, string args, OutputDelegate WriteLine)
+        public CmdResult acceptInputWrapper(string verb, string args,UUID callerID, OutputDelegate WriteLine)
         {
+            CallerID = callerID;
             success = failure = 0;
             this.WriteLine = WriteLine;
             return acceptInput(verb, Parser.ParseArgs(args), WriteLine);
@@ -274,6 +277,7 @@ namespace cogbot.Actions
 
         public virtual CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
+            CallerID = fromAgentID;
             success = failure = 0;
             this.WriteLine = WriteLine;
             Parser p = Parser.ParseArgs(String.Join(" ", args));
@@ -290,6 +294,7 @@ namespace cogbot.Actions
 
         public virtual CmdResult ExecuteCmd(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
+            CallerID = fromAgentID;
             success = failure = 0;
             this.WriteLine = WriteLine;
             Parser p = Parser.ParseArgs(String.Join(" ", args));

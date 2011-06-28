@@ -138,8 +138,8 @@ namespace AIMLBotModule
                         {
                             return sw.ToString();
                         }
-                    } 
-                    CmdResult s = client.ExecuteCommand(cmd, sw.WriteLine);
+                    }
+                    CmdResult s = client.ExecuteCommand(cmd, request, sw.WriteLine);
                     if (cmd.StartsWith("anim"))
                     {
                         AddAnimToNextResponse(sw.ToString());
@@ -170,7 +170,7 @@ namespace AIMLBotModule
                     }
                     else
                     {
-                        s = client.ExecuteCommand(cmd, sw.WriteLine);
+                        s = client.ExecuteCommand(cmd, request, sw.WriteLine);
                     }
                     return String.Format("{0}{1}", sw, s);
                 }

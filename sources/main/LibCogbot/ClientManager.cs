@@ -220,7 +220,7 @@ namespace cogbot
             return GetBotByName(named);
         }
 
-        public CmdResult ExecuteCommand(string text, OutputDelegate WriteLine)
+        public CmdResult ExecuteCommand(string text, object session, OutputDelegate WriteLine)
         {
             if (string.IsNullOrEmpty(text)) return null;
             text = text.Trim();
@@ -230,15 +230,15 @@ namespace cogbot
             }
             if (string.IsNullOrEmpty(text)) return null;
             WriteLine("textform> {0}", text);
-            CmdResult res = ExecuteBotsCommand(text, WriteLine);
+            CmdResult res = ExecuteBotsCommand(text, session, WriteLine);
             if (res != null && res.Success) return res;
-            res = ExecuteSystemCommand(text, WriteLine);
+            res = ExecuteSystemCommand(text, session, WriteLine);
             if (res != null) return res;
             WriteLine("I don't understand the ExecuteCommand " + text + ".");
             return null;
         }
 
-        private CmdResult ExecuteBotsCommand(string text, OutputDelegate WriteLine)
+        private CmdResult ExecuteBotsCommand(string text, object session, OutputDelegate WriteLine)
         {
             if (string.IsNullOrEmpty(text)) return null;
             text = text.Trim();
@@ -264,7 +264,7 @@ namespace cogbot
 #endif            
             if (OnlyOneCurrentBotClient != null)
             {
-                return OnlyOneCurrentBotClient.ExecuteBotCommand(text, WriteLine);
+                return OnlyOneCurrentBotClient.ExecuteBotCommand(text, session, WriteLine);
 
             }
             string res = null;
@@ -273,7 +273,7 @@ namespace cogbot
             foreach (BotClient currentClient in BotClients)
                 if (currentClient != null)
                 {
-                    CmdResult t = currentClient.ExecuteBotCommand(text, WriteLine);
+                    CmdResult t = currentClient.ExecuteBotCommand(text, session, WriteLine);
                     if (t==null) continue;
                     if (t.Success)
                     {
@@ -299,7 +299,7 @@ namespace cogbot
             return new CmdResult(res + " " + success + " successes", true);
         }
 
-        public CmdResult ExecuteSystemCommand(string text, OutputDelegate WriteLine)
+        public CmdResult ExecuteSystemCommand(string text, object session, OutputDelegate WriteLine)
         {
             string res = String.Empty;
             try
@@ -317,17 +317,16 @@ namespace cogbot
                     verb = verb.ToLower();
                     if (groupActions.ContainsKey(verb))
                     {
-                        if (text.Length > verb.Length)
-                            return groupActions[verb].acceptInputWrapper(verb, text.Substring(verb.Length + 1), WriteLine);
-                        else
-                            return groupActions[verb].acceptInputWrapper(verb, "", WriteLine);
+                        string pargs = (text.Length > verb.Length) ? text.Substring(verb.Length + 1) : "";
+                        return BotClient.DoCmdAct(groupActions[verb], verb, pargs, BotClient.SessionToCallerId(session),
+                                                  WriteLine);
                     }
                     return null;
                 }
             }
             catch (Exception e)
             {
-                string newVariable = "ClientManager: " + e;
+                string newVariable = "ClientManager: " + text + " caused " + e;
                 WriteLine(newVariable);
                 return new CmdResult(newVariable, false);
             }
@@ -443,7 +442,7 @@ namespace cogbot
 
         public CmdResult ExecuteCommand(string text)
         {
-            return ExecuteCommand(text, WriteLine);
+            return ExecuteCommand(text, this, WriteLine);
         }
 
 
@@ -1158,7 +1157,7 @@ namespace cogbot
                 ;
                 string input = Program.consoleBase.CmdPrompt(GetPrompt());
                 if (string.IsNullOrEmpty(input)) continue;
-                CmdResult executeCommand = ExecuteCommand(input, WriteLine);
+                CmdResult executeCommand = ExecuteCommand(input, null, WriteLine);
                 if (executeCommand==null) continue;
                 WriteLine(executeCommand.ToString());
             }

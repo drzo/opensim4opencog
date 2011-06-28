@@ -95,7 +95,7 @@ namespace cogbot.ScriptEngines
             while (stringCodeReader.Peek() != -1)
             {
                 line++;
-                res = BotClient.ExecuteCommand(stringCodeReader.ReadLine(), WriteLine);
+                res = BotClient.ExecuteCommand(stringCodeReader.ReadLine(), context_name, WriteLine);
             }
             return res;
         } // method: Read
@@ -551,7 +551,7 @@ namespace cogbot.ScriptEngines
             WriteLine("   xStartElement: strURI =(" + strURI + ") strName=(" + strName + ") depth=(" + depth + ")");
         }
 
-        public CmdResult ExecuteXmlCommand(string cmd, OutputDelegate outputDelegate)
+        public CmdResult ExecuteXmlCommand(string cmd, object session, OutputDelegate outputDelegate)
         {
             outputDelegate = outputDelegate ?? WriteLine;
             CmdResult res = null;
@@ -560,7 +560,7 @@ namespace cogbot.ScriptEngines
             outputDelegate("<output>"); //string
             try
             {
-                res = BotClient.ExecuteCommand(cmd, outputDelegate);
+                res = BotClient.ExecuteCommand(cmd, session, outputDelegate);
             }
             finally
             {

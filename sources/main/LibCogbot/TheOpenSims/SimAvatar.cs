@@ -273,7 +273,7 @@ namespace cogbot.TheOpenSims
         {
 
             string s = String.Format("{0} {1} {2}", GetName(), ID, GetHeading()) + "\n " + base.ToString();
-            lock (ActionEventQueue)
+            if (ActionEventQueue != null) lock (ActionEventQueue)
             {
                 if (ActionEventQueue.Count == 0) return s + " -NoActions- ";
                 foreach (SimObjectEvent s1 in ActionEventQueue)

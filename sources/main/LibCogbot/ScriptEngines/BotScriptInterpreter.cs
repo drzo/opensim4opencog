@@ -94,7 +94,7 @@ namespace cogbot.ScriptEngines
             while (stringCodeReader.Peek() != -1)
             {
                 line++;
-                res = BotClient.ExecuteCommand(stringCodeReader.ReadLine(), WriteLine);
+                res = BotClient.ExecuteCommand(stringCodeReader.ReadLine(), context_name, WriteLine);
             }
             return res;
         } // method: Read

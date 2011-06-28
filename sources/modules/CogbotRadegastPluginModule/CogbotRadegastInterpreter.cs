@@ -43,8 +43,11 @@ namespace CogbotRadegastPluginModule
             if (cmdline.StartsWith("/")) return true;
             return false;
         }
-
         public void ExecuteCommand(ConsoleWriteLine WriteLine, string cmdline)
+        {
+            ExecuteCommand(WriteLine, this, cmdline);
+        }
+        public void ExecuteCommand(ConsoleWriteLine WriteLine, object session, string cmdline)
         {
             while (cmdline.StartsWith("/"))
             {
@@ -55,11 +58,11 @@ namespace CogbotRadegastPluginModule
             var botClient = BotClient;
             if (botClient == null)
             {
-                result = clientManager.ExecuteCommand(cmdline,newOutputDelegate);
+                result = clientManager.ExecuteCommand(cmdline, session, newOutputDelegate);
             }
             else
             {
-                result = botClient.ExecuteCommand(cmdline,newOutputDelegate);
+                result = botClient.ExecuteCommand(cmdline, session, newOutputDelegate);
             }
 
             if (result != null)
@@ -69,7 +72,7 @@ namespace CogbotRadegastPluginModule
 
         public void Help(string helpArgs, ConsoleWriteLine WriteLine)
         {
-            WriteLine(clientManager.ExecuteCommand("help " + helpArgs, new OutputDelegate(WriteLine)).ToString());         
+            WriteLine(clientManager.ExecuteCommand("help " + helpArgs, null ,new OutputDelegate(WriteLine)).ToString());         
         }
 
         public void Dispose()

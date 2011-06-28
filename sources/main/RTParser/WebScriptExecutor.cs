@@ -34,7 +34,7 @@ namespace RTParser.Web
 
         #region Implementation of ScriptExecutor
 
-        public CmdResult ExecuteCommand(string s, OutputDelegate outputDelegate)
+        public CmdResult ExecuteCommand(string s, object session, OutputDelegate outputDelegate)
         {
             StringWriter sw = new StringWriter();
             if (s == null) return new CmdResult("null cmd", false);
@@ -60,9 +60,9 @@ namespace RTParser.Web
             return new CmdResult(res, r);
         }
 
-        public CmdResult ExecuteXmlCommand(string s, OutputDelegate outputDelegate)
+        public CmdResult ExecuteXmlCommand(string s, object session, OutputDelegate outputDelegate)
         {
-            return ExecuteCommand(s, outputDelegate);
+            return ExecuteCommand(s, session, outputDelegate);
         }
 
         public string GetName()

@@ -21,7 +21,9 @@ namespace cogbot.Listeners
         public static bool MaintainAnimsInFolders = true;
         public static bool GleanAssetsFromFolders = true;
         public static bool MaintainAttachments = true;
-        public static bool MaintainCollisions = false; // keep false so the bot only meshes what it needs
+        public static bool MaintainCollisions = true; // keep false so the bot only meshes what it needs
+        public static bool MaintainMeshes = true;
+        public static int WorthMeshingDistance = 60;
         public static bool MaintainEffects = true;
         public static bool MaintainOnlyMasterEffects = false;
         public static float MaintainEffectsDistance = 80;

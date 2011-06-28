@@ -304,14 +304,14 @@ namespace cogbot.TheOpenSims
                 SimObject obj = pos as SimObject;
                 if (obj != null)
                 {
-                    Client.ExecuteCommand("pointat " + obj.ID, Debug);
+                    Client.ExecuteCommand("pointat " + obj.ID, this, Debug);
                 }
                 {
                     var vFinalLocation = pos.UsePosition.GlobalPosition;
-                    Client.ExecuteCommand("pointat " + vFinalLocation.ToRawString(), Debug);
+                    Client.ExecuteCommand("pointat " + vFinalLocation.ToRawString(), this, Debug);
                 }
             }
-            else Client.ExecuteCommand("pointat", Debug);
+            else Client.ExecuteCommand("pointat", this, Debug);
         }
         public virtual bool IsControllable
         {
@@ -953,7 +953,7 @@ namespace cogbot.TheOpenSims
         //: base(prim.ID.ToString())
         // : base(prim, SimRegion.SceneProviderFromSimulator(sim))
         {
-            ActionEventQueue = new Queue<SimObjectEvent>(MaxEventSize);
+            //ActionEventQueue = new Queue<SimObjectEvent>(MaxEventSize);
             ID = id;
             if (sim != null) RegionHandle = sim.Handle;
             WorldSystem = objectSystem;
@@ -1269,13 +1269,19 @@ namespace cogbot.TheOpenSims
             }
             if (IsRegionAttached)
             {
-                if (WorldSystem.IsWorthMeshing(this))
+                if (IsWorthMeshing)
                 {
                     UpdateOccupied();
                 }
             }
             toStringNeedsUpdate = true;
         }
+
+        public bool IsWorthMeshing
+        {
+            get { return WorldSystem.IsWorthMeshing(this);}
+        }
+
 
         private bool IsMeshing;
         public virtual bool UpdateOccupied()
@@ -1351,6 +1357,8 @@ namespace cogbot.TheOpenSims
                     return;
                 }
             }
+
+            if (!WorldObjects.MaintainMeshes) return;
 
             bool updated = GetSimRegion().AddCollisions(Mesh);
             // update parent + siblings
@@ -2248,6 +2256,7 @@ namespace cogbot.TheOpenSims
 
         public bool IsInside(Vector3 L)
         {
+            if (!WorldObjects.MaintainMeshes) return false;
             return Mesh.IsInside(L.X, L.Y, L.Z);
         }
 
@@ -2345,6 +2354,7 @@ namespace cogbot.TheOpenSims
             object[] args1_N = SE.GetArgs();
             bool saveevent = true;
             object[] args0_N = PushFrontOfArray(ref args1_N, this);
+            if (ActionEventQueue == null) ActionEventQueue = new Queue<SimObjectEvent>(MaxEventSize);
             lock (ActionEventQueue)
             {
                 int ActionEventQueueCount = ActionEventQueue.Count;
@@ -2764,5 +2774,7 @@ namespace cogbot.TheOpenSims
         bool TryGetGlobalPosition(out Vector3d pos);
         void UpdatePosition(ulong handle, Vector3 pos);
         Queue<SimObjectEvent> ActionEventQueue { get; set; }
+        bool IsMeshed { get; set;}
+        bool IsWorthMeshing { get; }
     }
 }
