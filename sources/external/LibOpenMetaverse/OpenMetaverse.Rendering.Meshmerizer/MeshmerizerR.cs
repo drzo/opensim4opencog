@@ -158,7 +158,10 @@ namespace OpenMetaverse.Rendering
                 OMVR.Face oface = new OMVR.Face();
                 oface.Vertices = new List<OMVR.Vertex>();
                 oface.Indices = new List<ushort>();
-                oface.TextureFace = prim.Textures.GetFace((uint)ii);
+                if (prim.Textures != null)
+                {
+                    oface.TextureFace = prim.Textures.GetFace((uint) ii);
+                }
                 int faceVertices = 0;
                 vertexAccount.Clear();
                 OMV.Vector3 pos;
@@ -288,8 +291,10 @@ namespace OpenMetaverse.Rendering
                     mesherLod /= 4;
                     break;
             }
+            Bitmap lst;
+            lock (scupltTexture) lst = new System.Drawing.Bitmap(scupltTexture);
             PrimMesher.SculptMesh newMesh =
-                new PrimMesher.SculptMesh(scupltTexture, smSculptType, mesherLod, true, mirror, invert);
+                new PrimMesher.SculptMesh(lst, smSculptType, mesherLod, true, mirror, invert);
 
             int numPrimFaces = 1;       // a scuplty has only one face
 

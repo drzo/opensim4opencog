@@ -147,13 +147,15 @@ namespace OpenMetaverse
         /// </example>
         public TValue Find(Predicate<TValue> match)
         {
+            List<TValue> search;
             lock (Dictionary)
             {
-                foreach (TValue value in Dictionary.Values)
-                {
-                    if (match(value))
-                        return value;
-                }
+                search = new List<TValue>(Dictionary.Values);
+            }
+            foreach (var value in search)
+            {
+                if (match(value))
+                    return value;
             }
             return default(TValue);
         }
@@ -176,13 +178,15 @@ namespace OpenMetaverse
         public List<TValue> FindAll(Predicate<TValue> match)
         {
             List<TValue> found = new List<TValue>();
+            List<TValue> search;
             lock (Dictionary)
             {
-                foreach (KeyValuePair<TKey, TValue> kvp in Dictionary)
-                {
-                    if (match(kvp.Value))
-                        found.Add(kvp.Value);
-                }
+                 search = new List<TValue>(Dictionary.Values);
+            }
+            foreach (var value in search)
+            {
+                if (match(value))
+                    found.Add(value);
             }
             return found;
         }
@@ -203,13 +207,15 @@ namespace OpenMetaverse
         public List<TKey> FindAll(Predicate<TKey> match)
         {
             List<TKey> found = new List<TKey>();
+            List<TKey> search;
             lock (Dictionary)
             {
-                foreach (KeyValuePair<TKey, TValue> kvp in Dictionary)
-                {
-                    if (match(kvp.Key))
-                        found.Add(kvp.Key);
-                }
+                search = new List<TKey>(Dictionary.Keys);
+            }
+            foreach (var value in search)
+            {
+                if (match(value))
+                    found.Add(value);
             }
             return found;
         }
@@ -232,12 +238,15 @@ namespace OpenMetaverse
         ///</example>
         public void ForEach(Action<TValue> action)
         {
+            List<TValue> found = new List<TValue>();
+            List<TValue> search;
             lock (Dictionary)
             {
-                foreach (TValue value in Dictionary.Values)
-                {
-                    action(value);
-                }
+                search = new List<TValue>(Dictionary.Values);
+            }
+            foreach (var value in search)
+            {
+                action(value);
             }
         }
 
