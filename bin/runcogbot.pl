@@ -88,10 +88,10 @@ worldSystem(Field,Value):-worldSystem(Sys),cliGet(Sys,Field,Value).
 %% get each SimObject
 % this is every primitive, linked or not, as a complex term
 % it's a partially marshalled object from the simulator
-% cliCollection iterates thru elements
-simObject(Ele):-worldSystem('SimObjects',Objs),cliCollection(Objs,Ele).
+% cliCol iterates thru elements
+simObject(Ele):-worldSystem('SimObjects',Objs),cliCol(Objs,Ele).
 
-% the above is simpler form of:   simObject(Ele):-worldSystem(Sys),cliGet(Sys,'SimObjects',Obj),cliCollection(Obj,Ele).
+% the above is simpler form of:   simObject(Ele):-worldSystem(Sys),cliGet(Sys,'SimObjects',Obj),cliCol(Obj,Ele).
 
 %% get each SimAvatar
 %
@@ -99,9 +99,21 @@ simObject(Ele):-worldSystem('SimObjects',Objs),cliCollection(Objs,Ele).
 % actually present if they have a prim
 %
 % simObject and simAvatar handle the complexity of sim crossings
-% there's a simRegion predicate with simParcels (cli not done yet)
 %
-simAvatar(Ele):-cliGet('cogbot.Listeners.WorldObjects','SimAvatars',Obj),cliCollection(Obj,Ele).
+simAvatar(Ele):-simAccount(Ele),cliGet(Ele,hasprim,@true).
+
+%
+% a simAccount/1 is like simAvatar (they are avatars known about in system.. 
+%    including friends not logged in)
+%
+simAccount(Ele):-worldSystem('SimAvatars',Objs),cliCol(Objs,Ele).
+
+%
+% a simRegion predicate with simParcels (cli not done yet)
+%
+simRegion(Ele):-cliGet('cogbot.TheOpenSims.SimRegion','CurrentRegions',Objs),cliCol(Objs,Ele).
+
+simParcel(Ele):-simRegion(Sim),cliGet(Sim,parcels,Objs),cliCol(Objs,Ele).
 
 %% get the clientManager Instance
 %%
@@ -132,7 +144,7 @@ botClient(Obj):-clientManager(Man),cliGet(Man,'LastRefBotClient',Obj).
 % Y = "My Inventory".
 %
 % botClient(['Inventory','Store',rootnode,nodes,values],Y),
-%	findall(S,(cliCollection(Y,Z),cliToString(Z,S)),L),writeq(L).
+%	findall(S,(cliCol(Y,Z),cliToString(Z,S)),L),writeq(L).
 %	["Scripts","Photo Album","*MD* Brown Leather Hat w/Bling",
 %	"Body Parts","Notecards","Objects","Clothing","Landmarks","Textures",
 %     "Gestures","boxed fem_talk","Calling Cards","Animations","Sounds",
@@ -141,7 +153,7 @@ botClient(Obj):-clientManager(Man),cliGet(Man,'LastRefBotClient',Obj).
 %
 %       finds all grandchildren
 %       botClient(['Inventory','Store',rootnode,nodes,values],Y),
-%	     findall(S,(cliCollection(Y,Z),cliGet(Z,'children',GC),
+%	     findall(S,(cliCol(Y,Z),cliGet(Z,'children',GC),
 %	     cliCollecton(GC,'children',GCReal),cliToString(GCReal,S)),L),writeq(L).
 %
 
@@ -305,7 +317,7 @@ Y = "My Inventory".
 Y = @'C#718980688',
 Z = "System.Collections.Generic.Dictionary`2+ValueCollection[OpenMetaverse.UUID,OpenMetaverse.InventoryNode]".
 
-4 ?- botClient(['Inventory','Store',rootnode,nodes,values],Y),findall(S,(cliCollection(Y,Z),cliToString(Z,S)),L),writeq(L).
+4 ?- botClient(['Inventory','Store',rootnode,nodes,values],Y),findall(S,(cliCol(Y,Z),cliToString(Z,S)),L),writeq(L).
 ["Scripts","Photo Album","*MD* Brown Leather Hat w/Bling","Body Parts","Notecards","Objects","Clothing","Landmarks","Textures","Gestures","boxed fem_talk","Calling Cards","Animations","Sounds","Trash","Lost And Found"]
 Y = @'C#720558400',
 L = ["Scripts", "Photo Album", "*MD* Brown Leather Hat w/Bling", "Body Parts", "Notecards", "Objects", "Clothing", "Landmarks", "Textures"|...].
@@ -374,7 +386,7 @@ true.
 22 ?- X="sadfsdf".
 X = "sadfsdf".
 
-[debug] 14 ?- simAvatar(X),cliGet(X,'ActionEventQueue',Y),cliCollection(Y,Z).
+[debug] 14 ?- simAvatar(X),cliGet(X,'ActionEventQueue',Y),cliCol(Y,Z).
 X = @'C#723744208',
 Y = @'C#728007880',
 Z = event('SimObjectEvent', struct('DateTime', 5246123754218764857), "LookAtType-FreeLook", @'C#728025192', enum('SimEventType', 'EFFECT'), enum('SimEventStatus', 'Once'), enum('SimEventClass', 'REGIONAL')) ;
