@@ -86,7 +86,7 @@ cliIsType(Impl,Type):-cliFindType(Type,RealType),cliCall(RealType,'IsInstanceOfT
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %% cliSubclass(+Subclass,+Superclass) tests to see if the Subclass is assignable to Superclass
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cliSubclass(Sub,Sup):-cliFindType(Sub,RealSub),cliFindType(Sup,RealSup),cliCall(RealSup,'IsAssignable'('System.Type'),[RealSub],'@'(true)).
+cliSubclass(Sub,Sup):-cliFindType(Sub,RealSub),cliFindType(Sup,RealSup),cliCall(RealSup,'IsAssignableFrom'('System.Type'),[RealSub],'@'(true)).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
@@ -172,12 +172,14 @@ cliGet(Obj,P,Value):-cliGetOverloaded(Obj,P,Value),!.
 
 cliGetOverloaded(Obj,_,_):-cliIsNull(Obj),!,fail.
 cliGetOverloaded(Obj,P,Value):-cliGetHook(Obj,P,ValueOut),!,cliUnify(Value,ValueOut).
-cliGetOverloaded(Obj,P,Value):-cliSubProperty(Type,Sub),cliIsType(Obj,Type),cliGetRawS(Obj,Sub,SubValue),cliGetOverloaded(SubValue,P,Value),!.
 cliGetOverloaded(Obj,P,Value):-cliGetRaw(Obj,P,ValueOut),!,cliUnify(Value,ValueOut).
+cliGetOverloaded(Obj,P,Value):-not(atom(Obj)),cliGetType(Obj,CType),!,cliGetTypeSubProps(CType,Sub),cliGetRawS(Obj,Sub,SubValue),cliGetOverloaded(SubValue,P,Value),!.
 
 cliGetRawS(Obj,[P],Value):-!,cliGetRawS(Obj,P,Value).
 cliGetRawS(Obj,[P|N],Value):-!,cliGetRawS(Obj,P,M),cliGetRawS(M,N,Value),!.
 cliGetRawS(Obj,P,Value):-cliGetRaw(Obj,P,Value),!.
+
+cliGetTypeSubProps(CType,Sub):-cliSubProperty(Type,Sub),cliSubclass(CType,Type).
 
 :-dynamic(cliGetHook/3).
 :-multifile(cliGetHook/3).
@@ -207,9 +209,9 @@ cliUnify(OE,PE):-OE=PE,!.
 cliUnify(enum(_,O1),O2):-!,cliUnify(O1,O2).
 cliUnify(O2,enum(_,O1)):-!,cliUnify(O1,O2).
 cliUnify(O1,O2):-atomic(O1),atomic(O2),string_to_atom(S1,O1),string_to_atom(S2,O2),!,S1==S2.
-cliUnify(O1,O2):-cliIsTaggedObject(O1),cliToString(O1,S1),!,cliUnify(S1,O2).
 cliUnify([O1|ARGS1],[O2|ARGS2]):-!,cliUnify(O1,O2),cliUnify(ARGS1,ARGS2).
-cliUnify(O1,O2):-O1=..[F|ARGS1],!,O2=..[F|ARGS2],cliUnify(ARGS1,ARGS2).
+cliUnify(O1,O2):-cliIsTaggedObject(O1),cliToString(O1,S1),!,cliUnify(O2,S1).
+cliUnify(O1,O2):-O1=..[F|[A1|RGS1]],!,O2=..[F|[A2|RGS2]],cliUnify([A1|RGS1],[A2|RGS2]).
 
 %type   jpl_iterator_element(object, datum)
 
