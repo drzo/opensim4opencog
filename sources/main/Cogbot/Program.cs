@@ -1,4 +1,9 @@
-﻿using System;
+﻿/*
+ * This is the main for the actual headless cogbot processor.
+ * Usually it's run by the Radegast cogbot plugin
+ */
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
