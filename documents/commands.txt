@@ -1,0 +1,212 @@
+!!crouch: crouch [on|off] 'no argumennt=for 500ms'
+!!fly: To start flying type: "fly"
+!!jump: Jump for 500ms.
+!!say: Say something.
+!!sit: Attempt to sit on the closest prim
+!!stand: Stand up.
+!!wear: Wear an outfit folder from inventory.
+!!whisper: Whisper something.
+!crouch: Starts or stops crouching.
+!describe:   Usage: "describe": describes everything around you 
+ you can also type "describe location", "describe people", "describe objects", or "describe buildings" to describe them respectively.
+!eval: Enqueue a lisp task on a bot.
+!fly: Starts or stops flying.
+!jump: Jumps or flies up
+!location: Finds out in which direction yourself, an object or a building or a person is.
+!login: Login to World Server
+!logout: Logout from Secondlife
+!mute: Maniputate hte MuteList on the server
+!say: Say a message for everyone to hear.
+!sit: Sit on the ground or on an object.
+!stand: Stand
+!stop: Cancels a particular action
+!teleport: Teleport to a location.
+!use:   Usage: Use an item from inventory or world.
+!wear:   Usage: wear [outfit name]
+ you can type  'wear [bake] /My Outfit/Dance Party
+!whisper: Whisper a message to a
+@: Restrict the following commands to one or all avatars.
+activategroup: Set a group as active.
+addfriend: Add avatar friend.
+agentlocations: Downloads all of the agent locations in a specified region.
+anim: Do a animation or gesture.
+animinfo: Show debug info about anims.
+appearance: Set your current appearance to your last saved appearance
+astargoto:   Usage: Use A* Pathfinding to get to object
+attach: attach a prim to specified (or default) attachment point from the world
+attachments: Prints a list of the currently known agent attachments.
+avatarinfo: Print out information on a nearby avatar.
+back: Sends the move back command to the server for a single packet or a given number of seconds.
+backuptext: Backup inventory to a folder on your hard drive.
+balance: Shows the amount of L$.
+blockpath: Puts one minute temp blocks toward objects
+botact: Invoke a command a bot interuptable action (interupts previous foreground action).
+botperms: Sets the bot
+botvar: Maniputlates bot vars.
+buy: Buys from a prim.
+cd: Changes the current working inventory folder.
+changeperms: Recursively changes all of the permissions for child and task inventory objects.
+clone: Clone the appearance of a nearby avatar.
+copy: Copys from a prim.
+createnotecard: Creates a notecard from a local text file and optionally embed an inventory item.
+createscript: Creates a script in your inventory from a local .lsl file.
+crouch: crouch [on|off] 'no argumennt=for 500ms'
+deed: Recursively changes all of the permissions for child and task inventory objects.
+deletefolder: Moves a folder to the Trash Folder
+derez: De-Rezes a specified prim.
+describe:   Usage: "describe": describes everything around you 
+ you can also type "describe location", "describe people", "describe objects", or "describe buildings" to describe them respectively.
+dilation: Shows time dilation for current sim.
+do: Tell a bot to do an action on an object
+download: Downloads the specified asset.
+downloadscript: Downloads the specified stript.
+downloadterrain: Download the RAW terrain file for this estate.
+downloadtexture: Downloads the specified texture.
+drop: drops a specified attachment into the world
+dumpoutfit: Dumps all of the textures from an avatars outfit to the hard drive.
+echomaster: Repeat everything that master says.
+emptylostandfound: Empty inventory Lost And Found folder
+emptytrash: Empty inventory Trash folder
+eval: Enqueue a lisp task on a bot.
+evinfo: Shows the events that have been associated with an object.
+export: Exports an object to an xml file.
+exportparticles: Reverse engineers a prim with a particle system to an LSL script.
+findobjects: Finds all objects, which name contains search-string.
+findsim: Searches for a simulator and returns information about it.
+findtexture: Checks if a specified texture is currently visible on a specified face.
+fly: To start flying type: "fly"
+flyto: Fly the avatar toward the specified position for a maximum of seconds.
+follow: Start or stop following a
+follow*: Start or stop following a
+forward: Sends the move forward command to the server for a single packet or a given number of seconds.
+friendslist: List avatar friends.
+gesture: Do a gesture.
+give: Gives items from the current working directory to an avatar.
+giveallmoney: Gives you all it's money.
+gohome: Teleports home
+goto: Teleport to a location (e.g. "goto Hooper/100/100/30")
+goto_landmark: Teleports to a Landmark.
+gridlayer: Downloads all of the layer chunks for the grid object map
+gridmap: Downloads all visible information about the grid map
+groupinfo: Shows the group UI.
+groupmembers: Dump group members to console.
+grouproles: Dump group roles to console.
+groups: List avatar groups.
+help: Print this help message.
+i: Prints out inventory.
+im: Instant message someone.
+imgroup: Send an instant message to a group.
+import: Import prims from an exported xml file.
+invitegroup: invite an avatar into a group.
+joingroup: join a group.
+jump: Jump for 500ms.
+leavegroup: Leave a group.
+left: Sends the move left command to the server for a single packet or a given number of seconds.
+lindenfollow: Follow another avatar.
+linkset: Takes from a prim.
+load: Loads commands from a dll. (
+locate: Finds out in which direction yourself, an object or a building or a person is.
+location: Finds out in which direction yourself, an object or a building or a person is.
+login: Login to World Server
+logout: Logout from Secondlife
+look:   Usage: "describe": describes everything around you 
+ you can also type "describe location", "describe people", "describe objects", or "describe buildings" to describe them respectively.
+lowersim: Lowers all parent prims on a simulator.
+ls: Lists the contents of the current working inventory folder.
+lure: Send a lure to a
+mapfriend: Show a friends location.
+me: Emote something.  (
+move: Move to a person or object, or in a direction: west, east, north or south.
+moveprim: move prim to the relative specified position.
+moveto: Moves the avatar to the specified global position using simulator autopilot.
+mute: Maniputate hte MuteList on the server
+n/s/e/w: Move to a person or object, or in a direction: west, east, north or south.
+objectinventory: Retrieves a listing of items inside an object (task inventory).
+orphans: Finds objects without locations [prim]
+packetlog: Logs a given number of packets to an xml file.
+parceldetails: Displays parcel details from the ParcelTracker dictionary.
+parcelinfo: Prints out info about all the parcels in this simulator
+parrot: Make a bot parrot all actions by another avatar.
+pay: Pays a prim.
+pointat: PointAts from a prim.
+primcount: Shows the number of objects currently being tracked.
+priminfo: Dumps information about a specified prim.
+primowners: Displays a list of prim owners and prim counts on a parcel.
+primregex: Find prim by text predicat.
+primworkshop: Runs PrimWorkshop on a prim.
+profile: Shows the Avatars profile in a UI component.
+profileclone: Clones another avatars profile as closely as possible. WARNING: This command will destroy your existing profile!
+quietly: Invoke a console command with no return results.
+regioninfo: Prints out info about all the current region
+removefriend: Remove avatar friend.
+returnobjectsowned: Returns all prims with a specific owner.
+right: Sends the move right command to the server for a single packet or a given number of seconds.
+rotate: The rotate command changes the BodyRotation on the server with a single packet.
+rotateprim: Rotate prim to the relative specified position.
+saleinfo: sets or prints SaleInfo on a prim.
+saveuuids: Saves resolution of UUID types.
+say: Say a message for everyone to hear.
+script: Reads BotClient commands from a file. One command per line, arguments separated by spaces.
+searchclassifieds: Searches Classified Ads.
+searchevents: Searches Events list.
+searchgroups: Searches groups.
+searchland: Searches for land for sale. for
+searchpeople: Searches for other avatars.
+searchplaces: Searches Places.
+select: selects one or more object in world.
+selectobject: Re select object [prim]
+selectobjects: Displays a list of prim localIDs on a given parcel with a specific owner.
+sethome: Sets home to the current location.
+setmaster: Sets the
+setmasterkey: Sets the key of the master
+settexture: Set appearance texture of avatar.
+shout: Shout something.
+showeffects: Prints out information for every viewer effect that is received.
+showevent: Shows an Events details.
+showgui: Shows the Radegast UI
+showimage: Shows the specified image.
+simbot: Start theOpenSims type AI.
+simhinfo: Calculates the Height (Z) level of walking at point.
+simzinfo: Calculates the Z level of walking at point.
+sit: Sit on the ground or on an object.
+siton: Attempt to sit on a particular prim, with specified UUID
+sleep:   Usage: sleep [seconds]
+stand: Stand up.
+stats: Provide connection figures and statistics
+stop: Cancels a particular action
+stop following: Start or stop following a
+stopflying: You stop flying.
+stop-flying: You stop flying.
+stop-following: Start or stop following a
+take: Takes from a prim.
+taskrunning: Retrieves or set IsRunning flag on items inside an object (task inventory).
+tasks: Shows the list of task queue stat
+tcpserver:   Usage:
+teleport: Teleport to a location.
+textures: Turns automatic texture downloading on or off.
+thread: executes a command in its own thread.
+touch: Attempt to touch a prim with specified UUID
+tree: Rez a tree 3 meters overhead.
+turnto: turn the avatar toward the specified position for a maximum of seconds. turnto [prim | [x y [z]]
+unmute: Maniputate hte MuteList on the server
+uploadimage: Upload an image to your inventory.
+uploadscript: Upload a local .lsl file file into your inventory.
+uploadterrain: Upload a raw terrain file to a simulator.
+uptime: Shows the login name, login time and length of time logged on.
+use:   Usage: Use an item from inventory or world.
+uuidtype: Resolve the type of Object the UUID represents.
+viewnote: Downloads and displays a notecard asset
+voiceaccount: obtain voice account info.
+voiceparcel: obtain parcel voice info.
+voicetest: VoiceTest [firstname] [lastname] [password] [loginuri]
+waitevent: wait until a certain event takes place.
+waitforlogin: Waits until all bots that are currently attempting to login have succeeded or failed
+walkto: Go to the avatar toward the specified position for a maximum of seconds.
+wear:   Usage: wear [outfit name]
+ you can type  'wear [bake] /My Outfit/Dance Party
+wearprim: Takes (derez to inventory) and wears a prim.
+where: Finds out in which direction yourself, an object or a building or a person is.
+whisper: Whisper a message to a
+who: Lists seen avatars.
+wind: Displays current wind data
+xfer: Downloads the specified asset using the Xfer system.

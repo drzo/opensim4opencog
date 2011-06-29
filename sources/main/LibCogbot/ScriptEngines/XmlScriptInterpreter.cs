@@ -1,3 +1,8 @@
+/*
+ * This is so the bot can interpret script commands written in XML.
+ * It uses XMLInterpreter as a general service.
+ */
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
