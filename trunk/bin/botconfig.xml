@@ -6,7 +6,7 @@
   <tcpIPAddress>0.0.0.0</tcpIPAddress>
   <firstName>Firstname</firstName>
   <lastName>Lastname</lastName>
-  <password>myBotPassword</password>
+  <password>bungiecord Burnstein</password>
   <simURL>http://nourl.osgrid.org/</simURL>
   <startupLisp>
     ;;(setj WorldObjects:MaintainCollisions true)
@@ -35,9 +35,9 @@
     (setj GridAddress "OSGrid") ;; .. depends on grid.xml
     (setj GridAddress "agni") ;; .. depends on grid.xml
 
-    (setj GlobalPasswd "abc123")
+    (setj GlobalPasswd "060788")
 
-    ;;   // follow* "nephrael_rajesh" 1
+    ;;   // follow* "annie_obscure" 1
 
 
     (setj StartLoc "uri:last&amp;173&amp;51&amp;38")
@@ -55,8 +55,8 @@
     (setj StartLoc "Ahern/2/3/40")
     (setj StartLoc "Penn State Isle 2/49/127/25")
     (setj StartLoc "MASA Group/115/156/50")
-    (setj StartLoc "Belphegor/152/41/63")
-    (setj StartLoc "last")
+    (setj StartLoc "Belphegor/154/41/63")
+    '(setj StartLoc "last")
 
     '(create-botclient "Nephrael" "Rae"  GlobalPasswd  "https://login.agni.lindenlab.com/cgi-bin/login.cgi" "uri:Fairyverse&amp;115&amp;125&amp;21")
     '(create-botclient "Douglas" "Miles" GlobalPasswd GridAddress StartLoc)
@@ -65,8 +65,8 @@
     '(create-botclient "Cat" "Bot" GlobalPasswd GridAddress StartLoc )
     '(create-botclient "Nephrael" "Rajesh" GlobalPasswd GridAddress StartLoc)
     '(create-botclient "Nephrael" "Rae" GlobalPasswd GridAddress StartLoc)
-    (create-botclient  "BinaBot" "Daxeline" GlobalPasswd GridAddress StartLoc)
-    '(create-botclient "Jon" "Doe" GlobalPasswd GridAddress StartLoc)
+    '(create-botclient  "BinaBot" "Daxeline" GlobalPasswd GridAddress StartLoc)
+    (create-botclient "bungiecord" "Burnstein" GlobalPasswd GridAddress StartLoc)
 
   </startupLisp>
   <startupClientLisp>
@@ -74,9 +74,8 @@
 
     (thisClient.ExecuteCommand "debug Debug")
     (thisClient.ExecuteCommand "load CogbotRadegastPluginModule")
-    (thisClient.ExecuteCommand "load PrologBotModule")
-    (thisClient.ExecuteCommand "load IrcRegionModule")     
-    (thisClient.ExecuteCommand "thread irc #logicmoo-cogbot cogbot_ irc.freenode.net")  ;; to connect to IRC
+    '(thisClient.ExecuteCommand "load IrcRegionModule")
+    '(thisClient.ExecuteCommand "thread irc #logicmoo-cogbot cogbot_ irc.freenode.net")  ;; to connect to IRC
 
     ;; (thisClient.ExecuteCommand "showgui tray") ;; minimize radegast to tray - not good on mono becasue the hwnd not created
 
@@ -111,8 +110,8 @@
     ;; (thisClient.ExecuteCommand "teleport MilSpecMoo/128/128/31") ;; TP home
      ;;(thisClient.ExecuteCommand (@"teleport {0}" StartLoc)) ;; TP To StartLocation
   
-    (thisClient.ExecuteCommand "thread setmaster Nephrael Rajesh") ;; change this to your name on AGNI
-    ;;(thisClient.ExecuteCommand "thread setmaster Douglas Miles") ;; change this to your name on OpenSim
+    (thisClient.ExecuteCommand "setmaster Annie Obscure") ;; change this to your name on AGNI
+    ;;(thisClient.ExecuteCommand "setmaster Annie Obscure") ;; change this to your name on OpenSim
     
   ;;  (thisClient.ExecuteCommand "aiml @on") ;; turns on/off aiml for all users
     (thisClient.ExecuteCommand "appearance nobake")

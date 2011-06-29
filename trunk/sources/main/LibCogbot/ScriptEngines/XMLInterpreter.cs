@@ -1,4 +1,7 @@
-﻿using System;
+﻿/*
+ *General purpose XML interpreter.
+ */
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Collections;
