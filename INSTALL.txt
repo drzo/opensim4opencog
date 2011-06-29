@@ -30,3 +30,6 @@ This will regenerate the *.csproj files that are referenced from Cogbot_VS9.sln 
 Open the Solution file from inside Visual Studio 2008:
 
 I do with cmdline: "C:\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\IDE\devenv.exe" Cogbot_VS9.sln
+
+
+When exiting from the running robot, use ?- halt.  from prolog.. When it gets the first breakpoint hit the square "stop" debugging.
