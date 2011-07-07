@@ -75,6 +75,8 @@ namespace cogbot.Listeners
 
         public static readonly ListAsSet<SimAvatar> SimAvatars = new ListAsSet<SimAvatar>();
         public static readonly ListAsSet<SimObject> SimObjects = new ListAsSet<SimObject>();
+        public static readonly ListAsSet<SimObject> SimRootObjects = new ListAsSet<SimObject>();
+        public static readonly ListAsSet<SimObject> SimChildObjects = new ListAsSet<SimObject>();
 
         private static Timer EnsureSelectedTimer;
         private static bool inTimer = false;
@@ -450,6 +452,14 @@ namespace cogbot.Listeners
                         return null;
                     }
                     obj0 = CreateSimObject(prim.ID, this, simulator);
+                    if (prim.ParentID == 0)
+                    {
+                        SimRootObjects.AddTo(obj0);
+                    }
+                    else
+                    {
+                        SimChildObjects.AddTo(obj0);
+                    }
                     obj0.ConfirmedObject = true;
                 }
             }
@@ -599,7 +609,9 @@ namespace cogbot.Listeners
                                                             Debug("Killing Avatar: " + O);
                                                         }
                                                     }
-                                                    // lock (SimObjects) SimObjects.Remove(O);                                     
+                                                    // lock (SimObjects) SimObjects.Remove(O);   
+                                                    SimRootObjects.Remove(O);
+                                                    SimChildObjects.Remove(O);
                                                 }
 
                                             }
