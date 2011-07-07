@@ -5,6 +5,7 @@ using OpenMetaverse;
 using Radegast;
 
 using MushDLR223.ScriptEngines;
+using Radegast.Rendering;
 
 namespace cogbot.Actions
 {
