@@ -492,6 +492,8 @@ namespace cogbot.Listeners
             if (O != null)
             {
                 SimObjects.Remove(O);
+                SimRootObjects.Remove(O);
+                SimChildObjects.Remove(O);
                 SendOnRemoveSimObject(O);
             }
             uint objectLocalID = thePrim.LocalID;

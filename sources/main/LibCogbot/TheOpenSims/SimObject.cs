@@ -1005,6 +1005,14 @@ namespace cogbot.TheOpenSims
                         // Properties = prim.Properties;
                         Properties = prim.Properties;
                     }
+                    if (prim.ParentID == 0)
+                    {
+                        WorldObjects.SimRootObjects.AddTo(this);
+                    }
+                    else
+                    {
+                        WorldObjects.SimChildObjects.AddTo(this);
+                    }
 
                     if (WorldObjects.MaintainSimCollisions(prim.RegionHandle) && prim.Sculpt != null && WorldPathSystem.SculptCollisions)
                     {
