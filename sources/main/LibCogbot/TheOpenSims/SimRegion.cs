@@ -775,6 +775,26 @@ namespace cogbot.TheOpenSims
            // base.Parcels_OnParcelInfo(parcel);
         }
 
+        public ICollection<ParcelInfo> ParcelInfos
+        {
+            get
+            {
+                lock (parcelsI)
+                {
+                    return new List<ParcelInfo>(parcelsI.Values);
+                }
+            }
+        }
+        public Dictionary<int, Parcel> ParcelMap
+        {
+            get
+            {
+                lock (parcels)
+                {
+                    return new Dictionary<int, Parcel>(parcels);
+                }
+            }
+        }
         Dictionary<int,Parcel> parcels = new Dictionary<int, Parcel>();
         Dictionary<UUID, ParcelInfo> parcelsI = new Dictionary<UUID, ParcelInfo>();
         static private GridClient AnyClient;
