@@ -310,6 +310,7 @@ namespace OpenMetaverse.Rendering
 
             Dictionary<OMVR.Vertex, int> vertexAccount = new Dictionary<OMVR.Vertex, int>();
 
+
             for (int ii = 0; ii < numPrimFaces; ii++)
             {
                 vertexAccount.Clear(); 
@@ -317,73 +318,27 @@ namespace OpenMetaverse.Rendering
                 oface.Vertices = new List<OMVR.Vertex>();
                 oface.Indices = new List<ushort>();
                 oface.TextureFace = prim.Textures.GetFace((uint)ii);
-                int faceVertices = 0;
+                int faceVertices = newMesh.coords.Count;
                 OMV.Vector3 pos;
                 OMVR.Vertex vert;
                 int indx;
 
-                foreach (PrimMesher.ViewerFace vface in newMesh.viewerFaces)
+                for (int j = 0; j < faceVertices; j++)
                 {
-
                     vert = new OMVR.Vertex();
-                    vert.Position = new OMV.Vector3(vface.v1.X, vface.v1.Y, vface.v1.Z);
-                    vert.TexCoord = new OMV.Vector2(vface.uv1.U, 1.0f - vface.uv1.V);
-                    vert.Normal = new OMV.Vector3(vface.n1.X, vface.n1.Y, vface.n1.Z);
-
-                    if (vertexAccount.ContainsKey(vert))
-                    {
-                        // we aleady have this vertex in the list. Just point the index at it
-                        oface.Indices.Add((ushort)vertexAccount[vert]);
-                    }
-                    else
-                    {
-                        // the vertex is not in the list. Add it and the new index.
+                    vert.Position = new Vector3(newMesh.coords[j].X, newMesh.coords[j].Y, newMesh.coords[j].Z);
+                    vert.Normal = new Vector3(newMesh.normals[j].X, newMesh.normals[j].Y, newMesh.normals[j].Z);
+                    vert.TexCoord = new Vector2(newMesh.uvs[j].U, newMesh.uvs[j].V);
                     oface.Vertices.Add(vert);
-                        indx = oface.Vertices.Count - 1;
-                        vertexAccount.Add(vert, indx);
-                        oface.Indices.Add((ushort)indx);
                     }
 
-                    vert = new OMVR.Vertex();
-                    vert.Position = new OMV.Vector3(vface.v2.X, vface.v2.Y, vface.v2.Z);
-                    vert.TexCoord = new OMV.Vector2(vface.uv2.U, 1.0f - vface.uv2.V);
-                    vert.Normal = new OMV.Vector3(vface.n2.X, vface.n2.Y, vface.n2.Z);
-
-                    if (vertexAccount.ContainsKey(vert))
+                for (int j = 0; j < newMesh.faces.Count; j++)
                     {
-                        // we aleady have this vertex in the list. Just point the index at it
-                        oface.Indices.Add((ushort)vertexAccount[vert]);
-                    }
-                    else
-                    {
-                        // the vertex is not in the list. Add it and the new index.
-                    oface.Vertices.Add(vert);
-                        indx = oface.Vertices.Count - 1;
-                        vertexAccount.Add(vert, indx);
-                        oface.Indices.Add((ushort)indx);
+                    oface.Indices.Add((ushort)newMesh.faces[j].v1);
+                    oface.Indices.Add((ushort)newMesh.faces[j].v2);
+                    oface.Indices.Add((ushort)newMesh.faces[j].v3);
                     }
 
-                    vert = new OMVR.Vertex();
-                    vert.Position = new OMV.Vector3(vface.v3.X, vface.v3.Y, vface.v3.Z);
-                    vert.TexCoord = new OMV.Vector2(vface.uv3.U, 1.0f - vface.uv3.V);
-                    vert.Normal = new OMV.Vector3(vface.n3.X, vface.n3.Y, vface.n3.Z);
-
-                    if (vertexAccount.ContainsKey(vert))
-                    {
-                        // we aleady have this vertex in the list. Just point the index at it
-                        oface.Indices.Add((ushort)vertexAccount[vert]);
-                    }
-                    else
-                    {
-                        // the vertex is not in the list. Add it and the new index.
-                    oface.Vertices.Add(vert);
-                        indx = oface.Vertices.Count - 1;
-                        vertexAccount.Add(vert, indx);
-                        oface.Indices.Add((ushort)indx);
-                    }
-
-                    faceVertices++;
-                }
                 if (faceVertices > 0)
                 {
                     oface.TextureFace = prim.Textures.FaceTextures[ii];
@@ -536,6 +491,42 @@ namespace OpenMetaverse.Rendering
             }
 
             return newPrim;
+        }
+
+        /// <summary>
+        /// Method for generating mesh Face from a heightmap
+        /// </summary>
+        /// <param name="zMap">Two dimension array of floats containing height information</param>
+        /// <param name="xBegin">Starting value for X</param>
+        /// <param name="xEnd">Max value for X</param>
+        /// <param name="yBegin">Starting value for Y</param>
+        /// <param name="yEnd">Max value of Y</param>
+        /// <returns></returns>
+        public OMVR.Face TerrainMesh(float[,] zMap, float xBegin, float xEnd, float yBegin, float yEnd)
+        {
+            PrimMesher.SculptMesh newMesh = new PrimMesher.SculptMesh(zMap, xBegin, xEnd, yBegin, yEnd, true);
+            OMVR.Face terrain = new OMVR.Face();
+            int faceVertices = newMesh.coords.Count;
+            terrain.Vertices = new List<Vertex>(faceVertices);
+            terrain.Indices = new List<ushort>(newMesh.faces.Count * 3);
+
+            for (int j = 0; j < faceVertices; j++)
+            {
+                var vert = new OMVR.Vertex();
+                vert.Position = new Vector3(newMesh.coords[j].X, newMesh.coords[j].Y, newMesh.coords[j].Z);
+                vert.Normal = new Vector3(newMesh.normals[j].X, newMesh.normals[j].Y, newMesh.normals[j].Z);
+                vert.TexCoord = new Vector2(newMesh.uvs[j].U, newMesh.uvs[j].V);
+                terrain.Vertices.Add(vert);
+            }
+
+            for (int j = 0; j < newMesh.faces.Count; j++)
+            {
+                terrain.Indices.Add((ushort)newMesh.faces[j].v1);
+                terrain.Indices.Add((ushort)newMesh.faces[j].v2);
+                terrain.Indices.Add((ushort)newMesh.faces[j].v3);
+            }
+
+            return terrain;
         }
     }
 }
