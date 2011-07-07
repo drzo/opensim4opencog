@@ -1926,12 +1926,12 @@ namespace SbsSW.SwiPlCs
         {
             if (!IsVar)
             {
-                PrologClient.Warn("Not a free object! " + this);
+                PrologClient.Warn("Not a free object! {0}", this);
             }
             var v = PrologClient.UnifyToProlog(o, this);
             if (IsVar || v == 0)
             {
-                PrologClient.Warn("Unify failed! " + this);
+                PrologClient.Warn("Unify failed! {0}", this);
                 return false;
             }
             return v != 0;

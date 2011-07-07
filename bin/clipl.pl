@@ -179,6 +179,7 @@ cliGetRawS(Obj,[P],Value):-!,cliGetRawS(Obj,P,Value).
 cliGetRawS(Obj,[P|N],Value):-!,cliGetRawS(Obj,P,M),cliGetRawS(M,N,Value),!.
 cliGetRawS(Obj,P,Value):-cliGetRaw(Obj,P,Value),!.
 
+%%cliGetTypeSubProps(CType,Sub):-cliProppedType(
 cliGetTypeSubProps(CType,Sub):-cliSubProperty(Type,Sub),cliSubclass(CType,Type).
 
 :-dynamic(cliGetHook/3).

@@ -97,7 +97,7 @@ namespace SbsSW.SwiPlCs
         {
             if (memberSpec.IsVar)
             {
-                Warn("findEventInfo IsVar " + memberSpec + " on type " + c);
+                Warn("findEventInfo IsVar {0} on type {1}", memberSpec, c);
                 return null;
             }
             if (memberSpec.IsInteger)
@@ -155,12 +155,12 @@ namespace SbsSW.SwiPlCs
         {
             if (c == null)
             {
-                Warn("findField no class for " + memberSpec);
+                Warn("findField no class for {0}", memberSpec);
                 return null;
             }
             if (memberSpec.IsVar)
             {
-                Warn("findField IsVar " + memberSpec + " on type " + c);
+                Warn("findField IsVar {0} on type {1}", memberSpec, c);
                 return null;
             }
             if (memberSpec.IsInteger)
@@ -191,12 +191,12 @@ namespace SbsSW.SwiPlCs
         {
             if (c == null)
             {
-                Warn("findProperty no class for " + memberSpec);
+                Warn("findProperty no class for {0}", memberSpec);
                 return null;
             }
             if (memberSpec.IsVar)
             {
-                Warn("findProperty IsVar " + memberSpec + " on type " + c);
+                Warn("findProperty IsVar {0} on type {1}", memberSpec, c);
                 return null;
             }
             if (memberSpec.IsInteger)
@@ -227,12 +227,12 @@ namespace SbsSW.SwiPlCs
         {
             if (c == null)
             {
-                Warn("findMethod no class for " + memberSpec);
+                Warn("findMethod no class for {0}", memberSpec);
                 return null;
             }
             if (memberSpec.IsVar)
             {
-                Warn("findMethod IsVar " + memberSpec + " on type " + c);
+                Warn("findMethod IsVar {0} on type {1}", memberSpec, c);
                 return null;
             }
             if (memberSpec.IsInteger)
@@ -285,7 +285,7 @@ namespace SbsSW.SwiPlCs
         {
             if (c == null)
             {
-                Warn("findConstructor no class for " + memberSpec);
+                Warn("findConstructor no class for {0}", memberSpec);
                 return null;
             }
             if (TaggedObject(memberSpec))
@@ -352,7 +352,7 @@ namespace SbsSW.SwiPlCs
         {
             if (clazzSpec.IsVar)
             {
-                Warn("GetType IsVar " + clazzSpec);
+                Warn("GetType IsVar {0}", clazzSpec);
                 return null;
             }
             if (TaggedObject(clazzSpec))
@@ -360,7 +360,7 @@ namespace SbsSW.SwiPlCs
                 object tagObj = tag_to_object(clazzSpec[1].Name);
                 var r = tagObj as Type;
                 if (r != null) return r;
-                Warn("cant find tagged object as class: " + clazzSpec + "=>" + tagObj);
+                Warn("cant find tagged object as class: {0}=>{1}", clazzSpec, tagObj);
                 if (tagObj != null)
                 {
                     return tagObj.GetType();
@@ -373,7 +373,7 @@ namespace SbsSW.SwiPlCs
                 string name = (string)clazzSpec;
                 type = ResolveType(name);
                 if (type != null) return type;
-                Warn("cant find atom/string as class: " + clazzSpec);
+                Warn("cant find atom/string as class: {0}", clazzSpec);
                 return null;
             }
             if (clazzSpec.IsCompound)
@@ -406,7 +406,7 @@ namespace SbsSW.SwiPlCs
                         }
                         catch (Exception e)
                         {
-                            Warn("GetGenericParameterConstraints: " + e);
+                            Warn("GetGenericParameterConstraints: {0}", e);
                         }
                         try
                         {
@@ -414,7 +414,7 @@ namespace SbsSW.SwiPlCs
                         }
                         catch (Exception e)
                         {
-                            Warn("GetGenericTypeDefinition: " + e);
+                            Warn("GetGenericTypeDefinition: {0}", e);
                         }
 
                         if (arity == genr.Length)
@@ -433,7 +433,7 @@ namespace SbsSW.SwiPlCs
             {
                 return toObject.GetType();
             }
-            Warn("@TODO cant figure type from " + clazzSpec);
+            Warn("@TODO cant figure type from {0}", clazzSpec);
             return typeof(object);
             //return null;
         }
@@ -518,7 +518,7 @@ namespace SbsSW.SwiPlCs
             }
             catch (Exception e)
             {
-                Warn("cliLoadAssembly: " + term1 + " caused " + e);
+                Warn("cliLoadAssembly: {0} caused {1}", term1, e);
                 return false;
             }
         }
@@ -528,7 +528,7 @@ namespace SbsSW.SwiPlCs
             {
                 if (term1.IsVar)
                 {
-                    Warn("cliLoadAssembly IsVar " + term1);
+                    Warn("cliLoadAssembly IsVar {0}", term1);
                     return false;
                 }
                 if (TaggedObject(term1))
@@ -542,7 +542,7 @@ namespace SbsSW.SwiPlCs
                     {
                         return ResolveAssembly(((Type) assemblyOrType).Assembly);
                     }
-                    return Warn("Cannot get assembly from " + assemblyOrType + " for " + term1);
+                    return Warn("Cannot get assembly from {0} for {1}", assemblyOrType, term1);
                 }
                 string name = term1.Name;
                 Assembly assembly = null;
@@ -566,7 +566,7 @@ namespace SbsSW.SwiPlCs
                     }
                     catch (Exception e)
                     {
-                        Warn("LoadFile: " + fiFullName + " caused " + e);
+                        Warn("LoadFile: {0} caused {1}", fiFullName, e);
                     }
                 }
                 try
@@ -575,9 +575,9 @@ namespace SbsSW.SwiPlCs
                 }
                 catch (Exception e)
                 {
-                    Warn("LoadWithPartialName: " + name + " caused " + e);
+                    Warn("LoadWithPartialName: {0} caused {1}", name, e);
                 }
-                if (assembly == null) return Warn("Cannot get assembly from " + name + " for " + term1);
+                if (assembly == null) return Warn("Cannot get assembly from {0} for {1}", name, term1);
                 return ResolveAssembly(assembly);
 
             }
@@ -920,13 +920,13 @@ namespace SbsSW.SwiPlCs
             Type c = GetType(clazzSpec);
             if (c == null)
             {
-                Warn("Cant resolve clazzSpec " + clazzSpec);
+                Warn("Cant resolve clazzSpec {0}", clazzSpec);
                 return false;
             }
             ConstructorInfo mi = findConstructor(memberSpec, c);
             if (mi == null)
             {
-                Warn("Cant find constructor " + memberSpec + " on " + c);
+                Warn("Cant find constructor {0} on {1}", memberSpec, c);
                 return false;
             }
             object[] values = PlListToCastedArray(valueIn, mi.GetParameters());
@@ -952,7 +952,7 @@ namespace SbsSW.SwiPlCs
             Type c = GetType(clazzSpec);
             if (c == null)
             {
-                Warn("Cant find type " + clazzSpec);
+                Warn("Cant find type {0}", clazzSpec);
                 return false;
             }
             var value = c.MakeArrayType(rank.intValue());
@@ -997,7 +997,7 @@ namespace SbsSW.SwiPlCs
                         }
                         catch (Exception e)
                         {
-                            Warn("Dispose of " + obj + " had problem " + e);
+                            Warn("Dispose of {0} had problem {1}", obj, e);
                         }
                     }
                     return ObjToTag.Remove(obj);
@@ -1063,7 +1063,7 @@ namespace SbsSW.SwiPlCs
             var value = getInstance as Array;
             if (value == null)
             {
-                Warn("Cant find array from " + arrayValue + " as " + getInstance.GetType());
+                Warn("Cant find array from {0} as {1}", arrayValue, getInstance.GetType());
                 return false;
             }
             int len = value.Length;
@@ -1088,7 +1088,7 @@ namespace SbsSW.SwiPlCs
             var value = getInstance as Array;
             if (value == null)
             {
-                Warn("Cant find array from " + arrayValue + " as " + getInstance.GetType());
+                Warn("Cant find array from {0} as {1}", arrayValue, getInstance.GetType());
                 return false;
             }
             int len = value.Length;
@@ -1112,7 +1112,7 @@ namespace SbsSW.SwiPlCs
             Type elementType = ResolveType(arrayValue.Name);
             if (elementType == null)
             {
-                Warn("Cant find vector from " + arrayValue);
+                Warn("Cant find vector from {0}", arrayValue);
                 return false;
             }
             int arrayValueArity = arrayValue.Arity;
@@ -1164,7 +1164,7 @@ namespace SbsSW.SwiPlCs
                 var ei = findEventInfo(memberSpec, c);
                 if (ei != null) return cliRaiseEventHandler(clazzOrInstance, memberSpec, valueIn, valueOut);
                 if (valueIn.IsAtom && valueIn.Name == "[]") return cliGetRaw(clazzOrInstance, memberSpec, valueOut);
-                Warn("Cant find method " + memberSpec + " on " + c);
+                Warn("Cant find method {0} on {1}", memberSpec, c);
                 return false;
             }
             object[] value = PlListToCastedArray(valueIn, mi.GetParameters());
@@ -1205,7 +1205,7 @@ namespace SbsSW.SwiPlCs
             EventInfo evi = findEventInfo(memberSpec, c);
             if (evi == null)
             {
-                return Warn("Cant find event " + memberSpec + " on " + c);
+                return Warn("Cant find event {0} on {1}", memberSpec, c);
             }
             MethodInfo eventHandlerMethodProto = evi.EventHandlerType.GetMethod("Invoke");
             ParameterInfo[] paramInfos = GetParmeters(evi);
@@ -1241,7 +1241,7 @@ namespace SbsSW.SwiPlCs
             }
             if (mi == null)
             {
-                Warn("Cant find event raising for  " + evi + " on " + c);
+                Warn("Cant find event raising for  {0} on {1}", evi, c);
                 return false;
             }
             object[] value = PlListToCastedArray(valueIn, mi.GetParameters());
@@ -1269,7 +1269,7 @@ namespace SbsSW.SwiPlCs
             EventInfo fi = findEventInfo(memberSpec, c);
             if (fi == null)
             {
-                return Warn("Cant find event " + memberSpec + " on " + c);
+                return Warn("Cant find event {0} on {1}", memberSpec, c);
             }
             var Key = new EventHandlerInPrologKey();
             Key.Name = prologPred.Name;
@@ -1299,7 +1299,7 @@ namespace SbsSW.SwiPlCs
             EventInfo fi = findEventInfo(memberSpec, c);//
             if (fi == null)
             {
-                return Warn("Cant find event " + memberSpec + " on " + c);
+                return Warn("Cant find event {0} on {1}", memberSpec, c);
             }
             var Key = new EventHandlerInPrologKey();
             Key.Name = prologPred.Name;
@@ -1313,7 +1313,7 @@ namespace SbsSW.SwiPlCs
                     PrologEventHandlers.Remove(Key);
                     return true;
                 }
-            return Warn("Cant find registered handler " + prologPred + " for " + memberSpec + " on " + c);
+            return Warn("Cant find registered handler {0} for {1} on {2}", prologPred, memberSpec, c);
         }
 
         [PrologVisible(ModuleName = ExportModule)]
@@ -1321,7 +1321,7 @@ namespace SbsSW.SwiPlCs
         {
             if (valueIn.IsVar)
             {
-                return Warn("Cant find instance " + valueIn);
+                return Warn("Cant find instance {0}", valueIn);
             }
             if (!valueOut.IsVar)
             {
@@ -1339,7 +1339,7 @@ namespace SbsSW.SwiPlCs
         {
             if (clazzOrInstance.IsVar)
             {
-                return Warn("Cant find instance " + clazzOrInstance);
+                return Warn("Cant find instance {0}", clazzOrInstance);
             }
             if (!valueOut.IsVar)
             {
@@ -1351,7 +1351,7 @@ namespace SbsSW.SwiPlCs
             Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
             if (getInstance == null && c == null)
             {
-                Warn("Cant find instance " + clazzOrInstance);
+                Warn("Cant find instance {0}", clazzOrInstance);
                 return false;
             }
             bool found;
@@ -1383,6 +1383,12 @@ namespace SbsSW.SwiPlCs
             }
             else
             {
+                if (memberSpec.IsVar)
+                {
+                    Warn("cliGet0 on IsVar={0} on {1} for {2}", memberSpec, c, getInstance);
+                    found = false;
+                    return getInstance;
+                }
                 string fn = memberSpec.Name;
                 MethodInfo mi = findMethod(memberSpec, -1, c) ??
                                 GetMethod(c, fn, BindingFlagsALL) ??
@@ -1490,7 +1496,7 @@ namespace SbsSW.SwiPlCs
             object val = GetInstance(valueIn);
             if (val == null)
             {
-                Warn("Cannot get object for " + valueIn);
+                Warn("Cannot get object for {0}", valueIn);
                 return true;
             }
             return valueOut.FromObject((val.GetType()));
@@ -1540,7 +1546,7 @@ namespace SbsSW.SwiPlCs
         [PrologVisible(ModuleName = ExportModule)]
         static public bool cliShortType(PlTerm valueName, PlTerm valueIn)
         {
-            if (!valueName.IsString && !valueName.IsAtom) return Warn("valueName must be string or atom " + valueName);
+            if (!valueName.IsString && !valueName.IsAtom) return Warn("valueName must be string or atom {0}", valueName);
             string name = valueName.Name;
             Type otherType;
             lock (ShortNameType)
@@ -1619,7 +1625,7 @@ namespace SbsSW.SwiPlCs
             }
             catch (Exception e)
             {
-                Warn("cliToString: " + e);
+                Warn("cliToString: {0}", e);
                 object o = GetInstance(obj);
                 if (o == null) return str.FromObject("" + obj);
                 return str.FromObject("" + o);
@@ -1821,7 +1827,7 @@ namespace SbsSW.SwiPlCs
         {
             if (classOrInstance.IsVar)
             {
-                Warn("GetInstance(PlVar) " + classOrInstance);
+                Warn("GetInstance(PlVar) {0}", classOrInstance);
                 return null;
             }
             if (!classOrInstance.IsCompound)
@@ -1832,7 +1838,7 @@ namespace SbsSW.SwiPlCs
                     // we do this for static invokations like: cliGet('java.lang.Integer','MAX_VALUE',...)
                     // the arg1 denotes a type, then return null!
                     if (t != null) return null;
-                    Warn("GetInstance(atom) " + classOrInstance);
+                    Warn("GetInstance(atom) {0}", classOrInstance);
                     // possibly should always return null?!
                 }
                 else if (classOrInstance.IsString)
@@ -1885,7 +1891,7 @@ namespace SbsSW.SwiPlCs
             //if (val is Type) return (Type)val;
             if (val == null)
             {
-                Warn("GetTypeFromInstance: " + classOrInstance);
+                Warn("GetTypeFromInstance: {0}", classOrInstance);
                 return null;
             }
             return val.GetType();
@@ -2214,13 +2220,13 @@ namespace SbsSW.SwiPlCs
         {
             if (!term.IsVar)
             {
-                Warn("Not a free var " + term);
+                Warn("Not a free var {0}", term);
                 return libpl.PL_fail;
             }
             uint TermRef = term.TermRef;
             if (TermRef == 0)
             {
-                Warn("Not a allocated term " + o);
+                Warn("Not a allocated term {0}", o);
                 return libpl.PL_fail;
             }
             if (o is PlTerm) return libpl.PL_unify(TermRef, ((PlTerm) o).TermRef);
@@ -2258,7 +2264,7 @@ namespace SbsSW.SwiPlCs
                     case libpl.CVT_LIST:
                         return libpl.PL_unify_list_chars(TermRef, (string) o);
                     default:
-                        Warn("UNKNOWN VMStringsAsAtoms " + VMStringsAsAtoms);
+                        Warn("UNKNOWN VMStringsAsAtoms {0}", VMStringsAsAtoms);
                         return libpl.PL_fail;
                 }
             }
@@ -2308,13 +2314,13 @@ namespace SbsSW.SwiPlCs
                             case libpl.CVT_LIST:
                                 return libpl.PL_unify_integer(TermRef, (int) ch);
                             default:
-                                Warn("UNKNOWN VMStringsAsAtoms " + VMStringsAsAtoms);
+                                Warn("UNKNOWN VMStringsAsAtoms {0}", VMStringsAsAtoms);
                                 return libpl.PL_fail;
                         }
                     }
                     catch (Exception e)
                     {
-                        Warn("@TODO unmappable errors? " + o + " type " + t);
+                        Warn("@TODO unmappable errors? {0} type {1}", o, t);
                         //
                     }
                 }
@@ -2336,12 +2342,12 @@ namespace SbsSW.SwiPlCs
                         }
                         if (t.IsPrimitive)
                         {
-                            Warn("@TODO Missing code for primitive? " + o + " type " + t);
+                            Warn("@TODO Missing code for primitive? {0} type {1}", o, t);
                         }
                     }
                     catch (Exception e)
                     {
-                        Warn("@TODO unmappable errors? " + o + " type " + t);
+                        Warn("@TODO unmappable errors? {0} type {1}", o, t);
                     }
                 }
             }
@@ -2539,7 +2545,7 @@ namespace SbsSW.SwiPlCs
             }
             if (tGetFields.Length == 0)
             {
-                Warn("No fields in " + t);
+                Warn("No fields in {0}", t);
             }
             return tGetFields;
         }
@@ -2726,7 +2732,7 @@ namespace SbsSW.SwiPlCs
                 Type type = GetType(arg1);
                 PlTerm arg2 = orig.Arg(1);
                 object value = Enum.Parse(type, arg2.Name, true);
-                if (value == null) Warn("cant parse enum: " + arg2 + " for type " + type);
+                if (value == null) Warn("cant parse enum: {0} for type {1}", arg2, type);
                 return value;
             }
             if (name == "array")
@@ -2763,7 +2769,7 @@ namespace SbsSW.SwiPlCs
             Type t = ResolveType(name);
             if (t == null)
             {
-                Warn("Cant GetInstance from " + orig);
+                Warn("Cant GetInstance from {0}", orig);
                 return (string)orig;
             }       
             if (pt == null || pt.IsAssignableFrom(t))
@@ -2773,7 +2779,7 @@ namespace SbsSW.SwiPlCs
                     ParameterInfo[] mGetParameters = m.GetParameters();
                     if (mGetParameters.Length == arity)
                     {
-                        Warn("using contructor " + m);
+                        Warn("using contructor {0}", m);
                         var values = PlListToCastedArray(orig, m.GetParameters());
                         return m.Invoke(values);
                     }
@@ -2855,7 +2861,7 @@ namespace SbsSW.SwiPlCs
                 MethodInfo setterMethod = ((PropertyInfo)field).GetSetMethod(true);
                 if (setterMethod == null)
                 {
-                    Warn("No setter method on " + field);
+                    Warn("No setter method on {0}", field);
                     return;
                 }
                 setterMethod.Invoke(o, new object[] { value });
@@ -2974,7 +2980,7 @@ namespace SbsSW.SwiPlCs
             {
                 Debug("conversion " + fr + " to " + pt + " resulted in " + e);
             }
-            Warn("Having time of it convcerting " + r + " to " + pt);
+            Warn("Having time of it convcerting {0} to {1}", r, pt);
 
 
             return r;

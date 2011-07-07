@@ -211,12 +211,12 @@ namespace SbsSW.SwiPlCs
                 }
                 catch (AccessViolationException e)
                 {
-                    PrologClient.Warn("CallProlog: " + this + " ex: " + e);
+                    PrologClient.Warn("CallProlog: {0} ex: {1}", this, e);
                     return null;
                 }
                 catch (Exception e)
                 {
-                    PrologClient.Warn("CallProlog: " + this + " ex: " + e);
+                    PrologClient.Warn("CallProlog: {0} ex: {1}", this, e);
 
                     return null;
                 }

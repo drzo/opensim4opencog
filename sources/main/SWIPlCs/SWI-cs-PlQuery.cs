@@ -267,7 +267,7 @@ namespace SbsSW.SwiPlCs
             }
             catch (Exception e)
             {
-                PrologClient.Warn("dispose casued " + e);                
+                PrologClient.Warn("dispose casued {0}", e);                
             }
         }
 

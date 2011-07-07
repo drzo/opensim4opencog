@@ -189,7 +189,7 @@ namespace SbsSW.SwiPlCs
             }
         }
 
-        private static void Debug(string plthreadhasdifferntthread)
+        private static void Debug(object plthreadhasdifferntthread)
         {
            
         }
@@ -392,7 +392,7 @@ namespace SbsSW.SwiPlCs
             {
                 var pe = ToPlException(ex);
                 string s = ex.ToString() + "\n" + ex.StackTrace;
-                Warn("ex: " + s);
+                Warn("ex: {0}" , s);
                 //throw pe;
                 return false;// pe;
             }
@@ -429,13 +429,27 @@ namespace SbsSW.SwiPlCs
             }
             return new PlException(ex.Message, ex);
         }
-        public static bool Warn(string text)
+
+        public static bool Warn(string text, params object[] ps)
+        {
+            text = PlStringFormat(text, ps);
+            return libpl.PL_warning(text) != 0;
+        }
+
+        private static string PlStringFormat(string text, params object[] ps)
         {
             ulong prologEvents = EventHandlerInProlog.PrologEvents;
             ulong refCount = libpl.TermRefCount;
             CheckEngine();
-            PrologClient.RegisterThread(System.Threading.Thread.CurrentThread);
-            return libpl.PL_warning(text) != 0;
+            RegisterThread(Thread.CurrentThread);
+            try
+            {
+                if (ps != null && ps.Length > 0) text = String.Format(text, ps);
+            }
+            catch (Exception)
+            {
+            }
+            return text;
         }
 
         private static PlTerm ToPlList(PlTerm[] terms)
@@ -533,7 +547,8 @@ namespace SbsSW.SwiPlCs
         {
             if (string.IsNullOrEmpty(s) || s == "void" || !s.StartsWith("C#"))
             {
-                Warn("tag_to_object: " + s);
+                Warn("tag_to_object: {0} ", s);
+                return null;
             }
             lock (ObjToTag)
             {
@@ -542,7 +557,7 @@ namespace SbsSW.SwiPlCs
                 {
                     return o;
                 }
-                Warn("tag_to_object: " + s);
+                Warn("tag_to_object: {0}", s);
                 return jpl.fli.Prolog.tag_to_object(s);
             }
         }
@@ -557,7 +572,7 @@ namespace SbsSW.SwiPlCs
             Type t = o.GetType();
             if (IsStructRecomposable(t) || t.IsPrimitive)
             {
-                Debug("object_to_tag:" + t + " from " + o);
+                Debug(string.Format("object_to_tag:{0} from {1}", t, o));
             }
 
             lock (ObjToTag)
@@ -1576,7 +1591,7 @@ namespace SbsSW.SwiPlCs
                 }
                 catch (Exception e)
                 {
-                    Warn("LoadReferencedAssemblies:" + assemblyName + " caused " + e);
+                    Warn("LoadReferencedAssemblies:{0} caused {1}", assemblyName, e);
                 }
             }
         }
@@ -2383,7 +2398,7 @@ typedef struct // define a context structure  { ... } context;
             }
             if (!PlQuery.PlCall(module, name, args))
             {
-                if (!IsVoid) PrologClient.Warn("Failed Event Handler " + target + " failed");
+                if (!IsVoid) Warn("Failed Event Handler {0} failed", target);
             }
             if (IsVoid) return null;
             object ret = PrologClient.CastTerm(args[fillAt], returnType);
