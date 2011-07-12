@@ -14,6 +14,7 @@ namespace RTParser
     {
         public static string UNKNOWN_PARTNER = "UNKNOWN_PARTNER";
         public readonly object ListUserDirs = new object();
+        private static bool UseUsersNameInOutput;
         private readonly List<Action> OnBotCreatedHooks = new List<Action>();
         internal OutputDelegate userTraceRedir;
 
@@ -1021,11 +1022,12 @@ namespace RTParser
             }
             user = user.Replace("_", " ").Replace("  ", " ");
             useOut = useOut.Replace("_", " ").Replace("  ", " ");
-            if (useNameInOutput)
+            if (RTPBot.UseUsersNameInOutput && useNameInOutput && !user.Contains("UNKNOWN"))
             {
                 if (!useOut.ToLower().Contains(user.ToLower()))
                 {
                     useOut = user + ", " + useOut;
+                    CurrentUser.NameUsedOrGivenTime = DateTime.Now;
                 }
             }
             console(useOut);
