@@ -14,7 +14,8 @@ namespace RTParser
     {
         public static string UNKNOWN_PARTNER = "UNKNOWN_PARTNER";
         public readonly object ListUserDirs = new object();
-        private static bool UseUsersNameInOutput;
+        public static bool UseUsersNameInOutput = true;
+        public static int UseUserNameEveryNSeconds = 180;
         private readonly List<Action> OnBotCreatedHooks = new List<Action>();
         internal OutputDelegate userTraceRedir;
 
@@ -985,8 +986,8 @@ namespace RTParser
                     if (newlyCreated) useNameInOutput = true;
                 }
             }
-            double dateTimeNowSubtractMinutes = DateTime.Now.Subtract(CurrentUser.NameUsedOrGivenTime).Minutes;
-            if (dateTimeNowSubtractMinutes >= 3)
+            double dateTimeNowSubtractMinutes = DateTime.Now.Subtract(CurrentUser.NameUsedOrGivenTime).Seconds;
+            if (UseUserNameEveryNSeconds > 0 && dateTimeNowSubtractMinutes >= UseUserNameEveryNSeconds)
             {
                 useNameInOutput = true;
             }
