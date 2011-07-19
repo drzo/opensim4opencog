@@ -65,6 +65,22 @@ namespace PathSystem3D.Mesher
             MaxY += offset.Y;
             MinZ += offset.Z;
             MaxZ += offset.Z;
+            Round();
+        }
+
+        private void Round()
+        {
+            MinX = MinRound(MinX);
+            MinY = MinRound(MinY);
+            MinZ = MinRound(MinZ);
+            MaxX = MinRound(MaxX);
+            MaxY = MinRound(MaxY);
+            MaxZ = MinRound(MaxZ);
+        }
+
+        private static float MinRound(float t)
+        {
+            return (float) (Math.Round(t*5)/5);
         }
 
         public static bool operator ==(Box3Fill o1, Box3Fill o2)
@@ -394,6 +410,10 @@ namespace PathSystem3D.Mesher
 
         public static List<Box3Fill> Simplify1(List<Box3Fill> simpl)
         {
+            foreach (Box3Fill box3Fill in simpl)
+            {
+                box3Fill.Round();
+            }
             int c = simpl.Count * 3 / 4;
             simpl.Sort(Bigger1);
             List<Box3Fill> retval = new List<Box3Fill>(c);

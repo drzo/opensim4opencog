@@ -104,7 +104,7 @@ namespace cogbot.TheOpenSims
             OuterBox.AddPos(offset);
             foreach (CollisionObject B in InnerBoxes)
             {
-                B.AddPos(offset);
+                B.AddPos(offset);               
             }
         }
         
@@ -186,9 +186,10 @@ namespace cogbot.TheOpenSims
                 if (WorldObjects.SimplifyBoxes)
                 {
                     int b = InnerBoxes.Count;
-                    InnerBoxes = Box3Fill.Simplify((List<Box3Fill>)InnerBoxes);
-                    if (b>3000)
-                        DLRConsole.DebugWriteLine("Simplfy mesh {0} -> {1} ", b, InnerBoxes.Count + " " + OuterBox.Mass + " " + this.GetObjectName());
+                    InnerBoxes = Box3Fill.Simplify((List<Box3Fill>) InnerBoxes);
+                    if (b > 2000 || InnerBoxes.Count*3 < b)
+                        DLRConsole.DebugWriteLine("Simplfy mesh {0} -> {1} ", b,
+                                                  InnerBoxes.Count + " " + OuterBox.Mass + " " + this.GetObjectName());
                 }
                 AddPos(Position);
             }
@@ -220,6 +221,7 @@ namespace cogbot.TheOpenSims
         }
 
         public static bool FastAndImpercise = false;
+        private float scaleSize;
         /// <summary>
         /// UseExtremeDetailSize is compared to Scale X/Y/Z added together and if greater will try to
         ///   generate more faces
@@ -281,14 +283,18 @@ namespace cogbot.TheOpenSims
 
         static Dictionary<UUID, SculptMesh> SculptedMeshes = new Dictionary<UUID, SculptMesh>();
         private static bool MaintainSculptPool = false;
+        private int sides;
+        private LevelOfDetail detail;
+        private int hollowsides;
 #if COLLIDER_ODE
         private PrimitiveBaseShape pbs;
 #endif
 
-        public static Mesh PrimitiveToMesh(Primitive primitive, Vector3 Scale, Quaternion rot)
+        public Mesh PrimitiveToMesh(Primitive primitive, Vector3 Scale, Quaternion rot)
         {
 
-            if (primitive.Sculpt != null && WorldPathSystem.SculptCollisions)
+            bool wasSculpt = primitive.Sculpt != null;
+            if (wasSculpt && WorldPathSystem.SculptCollisions)
             {
                 Primitive.SculptData SD = primitive.Sculpt;
                 UUID Id = SD.SculptTexture;
@@ -314,9 +320,9 @@ namespace cogbot.TheOpenSims
                 }
             }
 
-            float scaleSize = Scale.X + Scale.Y + Scale.Z;
+            this.scaleSize = Scale.X + Scale.Y + Scale.Z;
             bool UseExtremeDetail = scaleSize > UseExtremeDetailSize;
-            LevelOfDetail detail;
+            //LevelOfDetail detail;
             if (scaleSize < UseLowDetailSize)
                 detail = LevelOfDetail.Low;
             else
@@ -474,7 +480,7 @@ namespace cogbot.TheOpenSims
         /// <param name="pos"></param>
         /// <param name="rot"></param>
         /// <returns></returns>
-        public static PrimMesh PrimitiveToPrimMesh(Primitive thePrim, LevelOfDetail detail, Vector3 Scale, Quaternion rot)
+        public PrimMesh PrimitiveToPrimMesh(Primitive thePrim, LevelOfDetail detail, Vector3 Scale, Quaternion rot)
         {
             bool UseExtremeDetail = Scale.X + Scale.Y + Scale.Z > UseExtremeDetailSize;
             PrimMesh mesh = ConstructionDataToPrimMesh(thePrim.PrimData, detail, UseExtremeDetail ? 2 : 1);
@@ -494,11 +500,11 @@ namespace cogbot.TheOpenSims
 
 
         // from IdealistViewer.PrimMesherG.cs
-        public static PrimMesh ConstructionDataToPrimMesh(Primitive.ConstructionData primData, LevelOfDetail detail, float detailMult)
+        public PrimMesh ConstructionDataToPrimMesh(Primitive.ConstructionData primData, LevelOfDetail detail, float detailMult)
         {
 
-            int sides = 4;
-            int hollowsides = 4;
+            this.sides = 4;
+            this.hollowsides = 4;
 
             float profileBegin = primData.ProfileBegin;
             float profileEnd = primData.ProfileEnd;
