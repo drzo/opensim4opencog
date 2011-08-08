@@ -90,7 +90,14 @@ namespace cogbot.Actions.Inventory.Shell
             {
                 InventoryItem item = b as InventoryItem;
                 ret += item.Name + nl;
-                manager.RequestRezFromInventory(Client.Network.CurrentSim, dest.SimRotation, dest.SimPosition, item);
+                if (dest == null)
+                {
+                    manager.RequestRestoreRezFromInventory(Client.Network.CurrentSim, item, UUID.Zero);
+                }
+                else
+                {
+                    manager.RequestRezFromInventory(Client.Network.CurrentSim, dest.SimRotation, dest.SimPosition, item);
+                }
             }
             else if (b is InventoryFolder)
             {
