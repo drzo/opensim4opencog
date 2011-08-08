@@ -242,14 +242,14 @@ dynamic_transparent([]):-!.
 dynamic_transparent([X]):-dynamic_transparent(X),!.
 dynamic_transparent([X|Xs]):-!,dynamic_transparent(X),dynamic_transparent(Xs),!.
 dynamic_transparent(M:F/A):-!, module_transparent(M:F/A),dynamic(M:F/A).
-dynamic_transparent(F/A):-!,multi_transparent(user:F/A).
+dynamic_transparent(F/A):-!,context_module(M),dynamic_transparent(M:F/A).
 dynamic_transparent(X):-functor(X,F,A),dynamic_transparent(F/A),!.
 
 multi_transparent([]):-!.
 multi_transparent([X]):-multi_transparent(X),!.
 multi_transparent([X|Xs]):-!,multi_transparent(X),multi_transparent(Xs),!.
 multi_transparent(M:F/A):-!, module_transparent(M:F/A),dynamic(M:F/A),multifile(M:F/A).
-multi_transparent(F/A):-!,multi_transparent(user:F/A).
+multi_transparent(F/A):-!,context_module(M),multi_transparent(M:F/A).
 multi_transparent(X):-functor(X,F,A),multi_transparent(F/A),!.
    
 :-multi_transparent(holds/1).
@@ -2294,9 +2294,9 @@ cycl_s([]) --> [].
 
 quantity(Number) -->  [Number] , {  number(Number),! } .
 
-variable(VN)-->  ['??',A], { var_number(A,VN)   } . 
-variable(VN)-->  ['??'], { var_gen(A),var_number(A,VN)   } .     %Anonymous
-variable(VN)-->  ['?',A], { var_number(A,VN)   } . 
+variable(VN)-->  ['??',A], { var_numbered(A,VN)   } . 
+variable(VN)-->  ['??'], { var_gen(A),var_numbered(A,VN)   } .     %Anonymous
+variable(VN)-->  ['?',A], { var_numbered(A,VN)   } . 
 
 checkValidConstAtoms(UQ,R):-not(member(UQ,['(',')','<','>','?','.','#'])),
       once(is_list(UQ) -> (stringToList(RR,UQ),R=string(RR)) ; R=UQ),!.
@@ -2335,7 +2335,7 @@ qual(Q) --> constant(Q), { nonvar(Q) }.
 
 % Construct arbitrary list of args
 arbitrary([]) -->  [].
-arbitrary(VN)-->  ['?',A], { var_number(A,VN)   } . 
+arbitrary(VN)-->  ['?',A], { var_numbered(A,VN)   } . 
 arbitrary([Head]) -->  cycl(Head).
 arbitrary([A|L]) --> cycl(A) , cycl_s(L).
 
@@ -2350,8 +2350,8 @@ arbitrary([A|L]) --> cycl(A) , cycl_s(L).
 %======================================================================
 idGen(X):-flag(idGen,X,X+1).
      
-var_number(A,'$VAR'(VN)):-numbered_var(A,'$VAR'(VN)),!.
-var_number(A,'$VAR'(VN)):-flag(get_next_num,VN,VN+1),asserta(numbered_var(A,'$VAR'(VN))),!.
+var_numbered(A,'$VAR'(VN)):-numbered_var(A,'$VAR'(VN)),!.
+var_numbered(A,'$VAR'(VN)):-flag(get_next_num,VN,VN+1),asserta(numbered_var(A,'$VAR'(VN))),!.
 
 :-dynamic_transparent(numbered_var/2).
 
@@ -4164,12 +4164,47 @@ debugFmt(T):-!,
 indent_e(X):- catch((X < 2),_,true),write(' '),!.
 indent_e(X):-XX is X -1,!,write(' '), indent_e(XX).
 
+
+:-dynamic(user:logLevel/2).
+:-module_transparent(user:logLevel/2).
+:-multifile(user:user:logLevel/2).
+
+setLogLevel(M,L):-retractall(user:logLevel(M,_)),(nonvar(L)->asserta(user:logLevel(M,L));true).
+
+user:logLevel(debug,user_error).
+user:logLevel(error,user_error).
+user:logLevel(private,none).
+user:logLevel(S,Z):-current_stream(X,write,Z),stream_property(Z,alias(S)).
+
+loggerReFmt(L,LR):-user:logLevel(L,LR),L \==LR,!,loggerReFmt(LR,LRR),!.
+loggerReFmt(L,L).
+
+loggerFmt(LF):-functor(LF,F,_),loggerReFmt(F,LR),
+  LR==F->loggerFmtReal(F,LF,[]);loggerFmt(LR,LF,[]).
+
+loggerFmt(L,F):-loggerReFmt(L,LR),loggerFmtReal(LR,F,[]).
+loggerFmt(L,F,A):-loggerReFmt(L,LR),loggerFmtReal(LR,F,A).
+
+loggerFmtReal(none,F,A):-!.
+loggerFmtReal(S,F,A):-
+   current_stream(_,write,S),
+        writeFmtFlushed(S,F,A),
+        flush_output_safe(S),!.
+
+
+
+
+fresh_line:-current_output(Strm),fresh_line(Strm),!.
+fresh_line(Strm):-stream_property(Strm,position('$stream_position'(_,_,POS,_))),ifThen(POS>0,nl(Strm)),!.
+fresh_line(Strm):-trace,nl(Strm),!.
+
 %debugFmt(C,T):- isCycOption(opt_debug=off),!.
 debugFmt(_,F):-F==[-1];F==[[-1]].
+
 debugFmt(F,A):-
-        nl(user_error),
+        fresh_line(user_error),
         writeFmtFlushed(user_error,F,A),
-        nl(user_error),
+        fresh_line(user_error),
         flush_output_safe(user_error),!.
 
 debugFmt(C,T):-!,
