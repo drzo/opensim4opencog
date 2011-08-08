@@ -321,7 +321,7 @@ namespace OpenMetaverse
 
         #endregion
 
-        #region Properties
+        #region Properties and public fields
 
         /// <summary>
         /// Returns true if AppearanceManager is busy and trying to set or change appearance will fail
@@ -333,6 +333,12 @@ namespace OpenMetaverse
                 return AppearanceThreadRunning != 0;
             }
         }
+
+        /// <summary>Visual parameters last sent to the sim</summary>
+        public byte[] MyVisualParameters = null;
+        
+        /// <summary>Textures about this client sent to the sim</summary>
+        public Primitive.TextureEntry MyTextures = null;
 
         #endregion Properties
 
@@ -1666,7 +1672,7 @@ namespace OpenMetaverse
             AgentSetAppearancePacket set = new AgentSetAppearancePacket();
             set.AgentData.AgentID = Client.Self.AgentID;
             set.AgentData.SessionID = Client.Self.SessionID;
-            set.AgentData.SerialNum = (uint)Interlocked.Increment(ref SetAppearanceSerialNum);
+            set.AgentData.SerialNum = (uint) Interlocked.Increment(ref SetAppearanceSerialNum);
 
             // Visual params used in the agent height calculation
             float agentSizeVPHeight = 0.0f;
@@ -1684,7 +1690,7 @@ namespace OpenMetaverse
                 int vpIndex = 0;
                 int nrParams;
                 bool wearingPhysics = false;
-                
+
                 foreach (WearableData wearable in Wearables.Values)
                 {
                     if (wearable.WearableType == WearableType.Physics)
@@ -1762,6 +1768,12 @@ namespace OpenMetaverse
                     if (vpIndex == nrParams) break;
                 }
 
+                MyVisualParameters = new byte[set.VisualParam.Length];
+                for (int i = 0; i < set.VisualParam.Length; i++)
+                {
+                    MyVisualParameters[i] = set.VisualParam[i].ParamValue;
+                }
+
                 #endregion VisualParam
 
                 #region TextureEntry
@@ -1785,6 +1797,7 @@ namespace OpenMetaverse
                 }
 
                 set.ObjectData.TextureEntry = te.GetBytes();
+                MyTextures = te;
 
                 #endregion TextureEntry
 
@@ -1816,7 +1829,7 @@ namespace OpenMetaverse
                     set.WearableData[bakedIndex] = new AgentSetAppearancePacket.WearableDataBlock();
                     set.WearableData[bakedIndex].TextureIndex = BakeIndexToTextureIndex[bakedIndex];
                     set.WearableData[bakedIndex].CacheID = hash;
-                    Logger.DebugLog("Sending TextureIndex " + (BakeType)bakedIndex + " with CacheID " + hash, Client);
+                    Logger.DebugLog("Sending TextureIndex " + (BakeType) bakedIndex + " with CacheID " + hash, Client);
                 }
 
                 #endregion WearableData
@@ -1827,13 +1840,25 @@ namespace OpenMetaverse
                 double agentSizeBase = 1.706;
 
                 // The calculation for the HeadSize scalar may be incorrect, but it seems to work
-                double agentHeight = agentSizeBase + (agentSizeVPLegLength * .1918) + (agentSizeVPHipLength * .0375) +
-                    (agentSizeVPHeight * .12022) + (agentSizeVPHeadSize * .01117) + (agentSizeVPNeckLength * .038) +
-                    (agentSizeVPHeelHeight * .08) + (agentSizeVPPlatformHeight * .07);
+                double agentHeight = agentSizeBase + (agentSizeVPLegLength*.1918) + (agentSizeVPHipLength*.0375) +
+                                     (agentSizeVPHeight*.12022) + (agentSizeVPHeadSize*.01117) +
+                                     (agentSizeVPNeckLength*.038) +
+                                     (agentSizeVPHeelHeight*.08) + (agentSizeVPPlatformHeight*.07);
 
-                set.AgentData.Size = new Vector3(0.45f, 0.6f, (float)agentHeight);
+                set.AgentData.Size = new Vector3(0.45f, 0.6f, (float) agentHeight);
 
                 #endregion Agent Size
+
+                if (Client.Settings.AVATAR_TRACKING)
+                {
+                    Avatar me;
+                    if (Client.Network.CurrentSim.ObjectsAvatars.TryGetValue(Client.Self.LocalID, out me))
+                    {
+                        me.Textures = MyTextures;
+                        me.VisualParameters = MyVisualParameters;
+                    }
+                }
+
             }
             return set;
         }

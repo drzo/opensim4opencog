@@ -35,7 +35,7 @@ using System.Drawing;
 namespace OpenMetaverse.Rendering
 {
     [RendererName("Meshmerizer")]
-    public class Meshmerizer : IRendering
+    public class Meshmerizer // : IRendering
     {
         public SimpleMesh GenerateSimpleMesh(Primitive prim, DetailLevel lod)
         {
