@@ -91,6 +91,8 @@ worldSystem(Field,Value):-worldSystem(Sys),cliGet(Sys,Field,Value).
 % cliCol iterates thru elements
 simObject(Ele):-worldSystem('SimObjects',Objs),cliCol(Objs,Ele).
 
+simRootObject(Ele):-worldSystem('SimRootObjects',Objs),cliCol(Objs,Ele).
+
 % the above is simpler form of:   simObject(Ele):-worldSystem(Sys),cliGet(Sys,'SimObjects',Obj),cliCol(Obj,Ele).
 
 %% get each SimAvatar
