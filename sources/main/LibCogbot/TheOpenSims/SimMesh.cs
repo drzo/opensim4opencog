@@ -187,7 +187,7 @@ namespace cogbot.TheOpenSims
                 {
                     int b = InnerBoxes.Count;
                     InnerBoxes = Box3Fill.Simplify((List<Box3Fill>) InnerBoxes);
-                    if (b > 2000 || InnerBoxes.Count*3 < b)
+                    if (b > 2000 || InnerBoxes.Count * 4 < b)
                         DLRConsole.DebugWriteLine("Simplfy mesh {0} -> {1} ", b,
                                                   InnerBoxes.Count + " " + OuterBox.Mass + " " + this.GetObjectName());
                 }

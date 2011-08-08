@@ -120,7 +120,18 @@ namespace PathSystem3D.Navigation
                 {
                     if (!InnerBoxesSimplified)
                     {
-                        if (InnerBoxes.Count < 100) InnerBoxes = Box3Fill.Simplify(InnerBoxes);
+                        int b = InnerBoxes.Count;
+                        if (b < 100)
+                        {
+                            InnerBoxes = Box3Fill.Simplify(InnerBoxes);
+                        }
+                        else
+                        {
+                            InnerBoxes = Box3Fill.Simplify(InnerBoxes);                            
+                        }
+                        if (b > 100 || InnerBoxes.Count * 4 < b)
+                            Console.Error.WriteLine("Simplfy CI {0} -> {1} ", b,
+                                                    InnerBoxes.Count + " " + this);
                         InnerBoxesSimplified = true;
                     }
                     // this second lock is because we may have replaced the reference during simplification
