@@ -232,7 +232,7 @@ namespace cogbot.TheOpenSims
             {
                 AssetType = download.AssetType;
                 AssetData = download.AssetData;
-                AssetID = download.AssetID;
+                AssetID = UUIDNonZero(AssetID, download.AssetID, download.ID);
             }
         }
 
@@ -245,7 +245,17 @@ namespace cogbot.TheOpenSims
             {
                 AssetType = download.AssetType;
                 AssetData = download.AssetData;
+                AssetID = UUIDNonZero(AssetID, download.AssetID, download.ID);
             }
+        }
+
+        private UUID UUIDNonZero(params UUID[] uuids)
+        {
+            foreach (var uuid in uuids)
+            {
+                if (uuid != null && uuid != UUID.Zero) return uuid;
+            }
+            return uuids[0];
         }
 
         readonly public List<string> Meanings = new List<string>();
