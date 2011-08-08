@@ -193,6 +193,7 @@ namespace RTParser
         {
             if (!TryUnderstandSentence) return null;
             if (this.TurnOffSelfListening) return null;
+            if (NonSalientMessage(message)) return null;
             message = ToHeard(message);
             if (string.IsNullOrEmpty(message)) return null;
             writeChatTrace(desc);
@@ -210,6 +211,11 @@ namespace RTParser
                                                    TimeSpan.FromSeconds(10), control);
             //if (control != null) control.WaitUntilComplete();
             return null;
+        }
+
+        private static bool NonSalientMessage(string message)
+        {
+            return message.Contains("*") || message.StartsWith("/") || message.StartsWith("@");
         }
 
         private Result UnderstandSentence(Utterance ele, User theFactSpeaker, User toWhom, string desc, string message, Result prevResult, ThreadControl control)
