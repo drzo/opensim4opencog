@@ -70,6 +70,7 @@ namespace cogbot.Actions
                 aborted++;
             }
             WorldSystem.TheSimAvatar.StopMoving();
+            Client.ExecuteCommand("pointat", this, WriteLine);
             Client.describeNext = false;
             return Success("Stopped " + aborted);
         }
