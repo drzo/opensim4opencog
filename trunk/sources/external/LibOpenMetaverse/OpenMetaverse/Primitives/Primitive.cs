@@ -154,6 +154,35 @@ namespace OpenMetaverse
             }
 
             #endregion Properties
+
+            /// <summary>
+            /// Calculdates hash code for prim construction data
+            /// </summary>
+            /// <returns>The has</returns>
+            public override int GetHashCode()
+            {
+                return profileCurve.GetHashCode()
+                    ^ PathCurve.GetHashCode()
+                    ^ PathEnd.GetHashCode()
+                    ^ PathRadiusOffset.GetHashCode()
+                    ^ PathSkew.GetHashCode()
+                    ^ PathScaleX.GetHashCode()
+                    ^ PathScaleY.GetHashCode()
+                    ^ PathShearX.GetHashCode()
+                    ^ PathShearY.GetHashCode()
+                    ^ PathTaperX.GetHashCode()
+                    ^ PathTaperY.GetHashCode()
+                    ^ PathBegin.GetHashCode()
+                    ^ PathTwist.GetHashCode()
+                    ^ PathTwistBegin.GetHashCode()
+                    ^ PathRevolutions.GetHashCode()
+                    ^ ProfileBegin.GetHashCode()
+                    ^ ProfileEnd.GetHashCode()
+                    ^ ProfileHollow.GetHashCode()
+                    ^ Material.GetHashCode()
+                    ^ State.GetHashCode()
+                    ^ PCode.GetHashCode();
+            }
         }
 
         /// <summary>
@@ -741,8 +770,13 @@ namespace OpenMetaverse
         {
             get
             {
-                if (Sculpt != null && Sculpt.Type != SculptType.None)
+                if (Sculpt != null && Sculpt.Type != SculptType.None && Sculpt.SculptTexture != UUID.Zero)
+                {
+                    if (Sculpt.Type == SculptType.Mesh)
+                        return PrimType.Mesh;
+                    else
                     return PrimType.Sculpt;
+                }
 
                 bool linearPath = (PrimData.PathCurve == PathCurve.Line || PrimData.PathCurve == PathCurve.Flexible);
                 float scaleY = PrimData.PathScaleY;
@@ -1059,7 +1093,7 @@ namespace OpenMetaverse
                     Flexible = new FlexibleData(data, i);
                 else if (type == ExtraParamType.Light)
                     Light = new LightData(data, i);
-                else if (type == ExtraParamType.Sculpt)
+                else if (type == ExtraParamType.Sculpt || type == ExtraParamType.Mesh)
                     Sculpt = new SculptData(data, i);
 
                 i += (int)paramLength;
@@ -1126,7 +1160,14 @@ namespace OpenMetaverse
             }
             if (sculpt != null)
             {
+                if (Sculpt.Type == SculptType.Mesh)
+                {
+                    Buffer.BlockCopy(Utils.UInt16ToBytes((ushort)ExtraParamType.Mesh), 0, buffer, pos, 2);
+                }
+                else
+                {
                 Buffer.BlockCopy(Utils.UInt16ToBytes((ushort)ExtraParamType.Sculpt), 0, buffer, pos, 2);
+                }
                 pos += 2;
 
                 Buffer.BlockCopy(Utils.UIntToBytes((uint)sculpt.Length), 0, buffer, pos, 4);

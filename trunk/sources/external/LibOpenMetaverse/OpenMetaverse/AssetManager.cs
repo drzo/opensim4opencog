@@ -158,9 +158,23 @@ namespace OpenMetaverse
     /// <summary>
     /// 
     /// </summary>
-    public class Transfer
+    abstract public class Transfer
     {
         public UUID ID = UUID.Zero;
+        public UUID AssetID
+        {
+            get
+            {
+                if (aID!=null)return aID;
+                return ID;
+            }
+            set
+            {
+                aID = value;
+            }
+        }
+
+        private UUID aID = null;
         public int Size;
         public byte[] AssetData = Utils.EmptyBytes;
         public int Transferred;
@@ -189,7 +203,7 @@ namespace OpenMetaverse
     /// </summary>
     public class AssetDownload : Transfer
     {
-        public UUID AssetID = UUID.Zero;
+        //public UUID AssetID = UUID.Zero;
         public ChannelType Channel;
         public SourceType Source;
         public TargetType Target;
@@ -248,7 +262,7 @@ namespace OpenMetaverse
     /// </summary>
     public class AssetUpload : Transfer
     {
-        public UUID AssetID = UUID.Zero;
+       // public UUID AssetID = UUID.Zero;
         public AssetType Type;
         public ulong XferID;
         public uint PacketNum;
@@ -455,6 +469,7 @@ namespace OpenMetaverse
         private GridClient Client;
 
         private Dictionary<UUID, Transfer> Transfers = new Dictionary<UUID, Transfer>();
+        private Dictionary<UUID, AssetDownload> AssetDownloads = new Dictionary<UUID, AssetDownload>();
 
         private AssetUpload PendingUpload;
         private object PendingUploadLock = new object();
@@ -539,6 +554,10 @@ namespace OpenMetaverse
             if (callback != null && Cache.HasAsset(assetID, type))
             {
                 byte[] data = Cache.GetCachedAssetBytes(assetID, type);
+                if (data==null)
+                {
+                    data = Cache.GetCachedAssetBytes(assetID, type);
+                }
                 transfer.AssetData = data;
                 transfer.Success = true;
                 transfer.Status = StatusCode.OK;
@@ -551,6 +570,23 @@ namespace OpenMetaverse
                 catch (Exception e) { Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e); }
 
                 return;
+            }
+
+            lock (AssetDownloads)
+            {
+                AssetDownload traAssetDownload;
+                if (AssetDownloads.TryGetValue(assetID, out traAssetDownload))
+                {
+                    if (callback == null) return;
+                    AssetReceivedCallback prev = traAssetDownload.Callback;
+                    traAssetDownload.Callback = (a, b) =>
+                                                    {
+                                                        if (prev != null) prev(a, b);
+                                                        if (callback != null) callback(a, b);
+                                                    };
+                    return;
+                }
+                AssetDownloads[assetID] = transfer;
             }
 
             // Add this transfer to the dictionary
@@ -1377,6 +1413,7 @@ namespace OpenMetaverse
                 {
                     Logger.Log("Transfer failed with status code " + download.Status, Helpers.LogLevel.Warning, Client);
 
+                    lock (AssetDownloads) AssetDownloads.Remove(download.AssetID);
                     lock (Transfers) Transfers.Remove(download.ID);
 
                     // No data could have been received before the TransferInfo packet
@@ -1461,6 +1498,7 @@ namespace OpenMetaverse
                         Client.Network.SendPacket(abort, download.Simulator);
 
                         download.Success = false;
+                        lock (AssetDownloads) AssetDownloads.Remove(download.AssetID);
                         lock (Transfers) Transfers.Remove(download.ID);
 
                         // Fire the event with our transfer that contains Success = false
@@ -1499,6 +1537,7 @@ namespace OpenMetaverse
                     Logger.DebugLog("Transfer for asset " + download.AssetID.ToString() + " completed", Client);
 
                     download.Success = true;
+                    lock (AssetDownloads) AssetDownloads.Remove(download.AssetID);
                     lock (Transfers) Transfers.Remove(download.ID);
 
                     // Cache successful asset download
@@ -1623,6 +1662,7 @@ namespace OpenMetaverse
 
                 if (found)
                 {
+                    lock (AssetDownloads) AssetDownloads.Remove(foundTransfer.Value.AssetID);
                     lock (Transfers) Transfers.Remove(foundTransfer.Key);
 
                     try { OnAssetUploaded(new AssetUploadEventArgs((AssetUpload)foundTransfer.Value)); }
@@ -1710,6 +1750,7 @@ namespace OpenMetaverse
                         Logger.DebugLog("Xfer download for asset " + download.VFileID.ToString() + " completed", Client);
 
                     download.Success = true;
+                    lock (AssetDownloads) AssetDownloads.Remove(download.AssetID);
                     lock (Transfers) Transfers.Remove(download.ID);
 
                     try { OnXferReceived(new XferReceivedEventArgs(download)); }
@@ -1735,6 +1776,7 @@ namespace OpenMetaverse
                 if (Transfers.TryGetValue(transferID, out transfer))
                 {
                     download = (XferDownload)transfer;
+                    lock (AssetDownloads) AssetDownloads.Remove(transfer.AssetID); 
                     Transfers.Remove(transferID);
                 }
             }

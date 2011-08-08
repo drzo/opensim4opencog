@@ -898,21 +898,23 @@ namespace OpenMetaverse
         private void Network_OnLoginResponse(bool loginSuccess, bool redirect, string message, string reason,
             LoginResponseData replyData)
         {
+            int uuidLength = UUID.Zero.ToString().Length;
+
             if (loginSuccess && replyData.BuddyList != null)
             {
-                if (replyData.BuddyList != null)
+                foreach (BuddyListEntry buddy in replyData.BuddyList)
                 {
-                    foreach (BuddyListEntry buddy in replyData.BuddyList)
+                    UUID bubid;
+                    string id = buddy.buddy_id.Length > uuidLength ? buddy.buddy_id.Substring(0, uuidLength) : buddy.buddy_id;
+                    if (UUID.TryParse(id, out bubid))
                     {
-                        UUID bubid = UUID.Parse(buddy.buddy_id);
                         lock (FriendList.Dictionary)
                         {
                             if (!FriendList.ContainsKey(bubid))
                             {
-                                FriendList.Add(bubid,
-                                new FriendInfo(UUID.Parse(buddy.buddy_id),
+                                FriendList[bubid] = new FriendInfo(bubid, 
                                 (FriendRights)buddy.buddy_rights_given,
-                                (FriendRights)buddy.buddy_rights_has));
+                                    (FriendRights)buddy.buddy_rights_has);
                             }
                         }
                     }

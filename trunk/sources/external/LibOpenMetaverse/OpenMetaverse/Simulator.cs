@@ -770,7 +770,9 @@ namespace OpenMetaverse
                 // Move our agent in to the sim to complete the connection
                 if (moveToSim) Client.Self.CompleteAgentMovement(this);
 
-                if (!ConnectedEvent.WaitOne(Client.Settings.SIMULATOR_TIMEOUT, false))
+                var ct = TimeSpan.FromMilliseconds(Client.Settings.SIMULATOR_TIMEOUT);
+                ct = TimeSpan.FromSeconds(30);
+                if (!ConnectedEvent.WaitOne(ct, false))
                 {
                     Logger.Log("Giving up on waiting for RegionHandshake for " + this.ToString(),
                         Helpers.LogLevel.Warning, Client);

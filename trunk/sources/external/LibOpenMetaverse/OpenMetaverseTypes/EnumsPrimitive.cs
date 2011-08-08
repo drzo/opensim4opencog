@@ -212,7 +212,8 @@ namespace OpenMetaverse
         Torus,
         Tube,
         Ring,
-        Sculpt
+        Sculpt,
+        Mesh
     }
 
     /// <summary>
@@ -228,7 +229,9 @@ namespace OpenMetaverse
         /// <summary>Whether this object has light parameters</summary>
         Light = 0x20,
         /// <summary>Whether this object is a sculpted prim</summary>
-        Sculpt = 0x30
+        Sculpt = 0x30,
+        /// <summary>Whether this object is a mesh</summary>
+        Mesh = 0x60,
     }
 
     /// <summary>

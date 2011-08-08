@@ -153,15 +153,24 @@ namespace OpenMetaverse
             }
             try
             {
+                byte[] data = null;
                 string fileName = FileName(assetID, assetType);
                 bool exists = File.Exists(fileName);
                 if (!exists)
                 {
+                    string sfn = StaticFileName(assetID);
                     //Logger.DebugLog("Reading " + fileName + " from asset cache. (missing) null");
-                    return null;
+                    if (Exists(sfn))
+                    {
+                        data = File.ReadAllBytes(sfn);
+                        File.Copy(sfn, fileName);
+                    }
                 }
-                Logger.DebugLog("Reading " + fileName + " from asset cache.");
-                byte[] data = File.ReadAllBytes(fileName);
+                else
+                {
+                    Logger.DebugLog("Reading " + fileName + " from asset cache.");
+                    data = File.ReadAllBytes(fileName);
+                }
                 return data;
             }
             catch (FileNotFoundException ex)
@@ -207,13 +216,24 @@ namespace OpenMetaverse
         /// <returns>String with the file name of the cahced asset</returns>
         public string FileName(UUID assetID, AssetType assetType)
         {
-            string filename = FileNameWild(assetID, AssetType.Unknown);
+            string filename = FileNameWild(assetID, assetType);
             if (filename.Contains("*"))
             {
                 filename = FindableName(filename);
             }
             return filename;
         }
+
+        /// <summary>
+        /// Constructs a file name of the static cached asset
+        /// </summary>
+        /// <param name="assetID">UUID of the asset</param>
+        /// <returns>String with the file name of the static cached asset</returns>
+        private string StaticFileName(UUID assetID) 
+ 		{
+			return Settings.RESOURCE_DIR + Path.DirectorySeparatorChar + "static_assets" + Path.DirectorySeparatorChar + assetID.ToString();
+   		}
+
         public string FileNameWild(UUID assetID, AssetType assetType)
         {
             if (ComputeAssetCacheFilename != null) {
@@ -366,8 +386,10 @@ namespace OpenMetaverse
         {
             if (!Operational())
                 return false;
+            else if (File.Exists(FileName(assetID, assetType)))
+                return true;
             else
-                return Exists(FileName(assetID, assetType));
+                return Exists(StaticFileName(assetID));
         }
 
         private bool Exists(string name)

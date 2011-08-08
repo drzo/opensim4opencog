@@ -29,9 +29,6 @@
 /*
  * MeshmerizerR class implments OpenMetaverse.Rendering.IRendering interface
  * using PrimMesher (http://forge.opensimulator.org/projects/primmesher).
- * There are a few additions/changes:
- *  TransformTexCoords() does regular transformations but does not do planar
- *      mapping of textures.
  */
 
 using System;
@@ -158,10 +155,7 @@ namespace OpenMetaverse.Rendering
                 OMVR.Face oface = new OMVR.Face();
                 oface.Vertices = new List<OMVR.Vertex>();
                 oface.Indices = new List<ushort>();
-                if (prim.Textures != null)
-                {
                     oface.TextureFace = prim.Textures.GetFace((uint) ii);
-                }
                 int faceVertices = 0;
                 vertexAccount.Clear();
                 OMV.Vector3 pos;
@@ -248,15 +242,8 @@ namespace OpenMetaverse.Rendering
         /// <returns>The faceted mesh or null if can't do it</returns>
         public OMVR.FacetedMesh GenerateFacetedSculptMesh(OMV.Primitive prim, System.Drawing.Bitmap scupltTexture, OMVR.DetailLevel lod)
         {
-            byte sculptType = (byte)prim.Sculpt.Type;
-            bool mirror = ((sculptType & 128) != 0);
-            bool invert = ((sculptType & 64) != 0);
-            // mirror = false; // TODO: libomv doesn't support these and letting them flop around causes problems
-            // invert = false;
-            OMV.SculptType omSculptType = (OMV.SculptType)(sculptType & 0x07);
-
             PrimMesher.SculptMesh.SculptType smSculptType;
-            switch (omSculptType)
+            switch (prim.Sculpt.Type)
             {
                 case OpenMetaverse.SculptType.Cylinder:
                     smSculptType = PrimMesher.SculptMesh.SculptType.cylinder;
@@ -290,11 +277,8 @@ namespace OpenMetaverse.Rendering
                 case OMVR.DetailLevel.Low:
                     mesherLod /= 4;
                     break;
-            }
-            Bitmap lst;
-            lock (scupltTexture) lst = new System.Drawing.Bitmap(scupltTexture);
-            PrimMesher.SculptMesh newMesh =
-                new PrimMesher.SculptMesh(lst, smSculptType, mesherLod, true, mirror, invert);
+            }PrimMesher.SculptMesh newMesh =
+                new PrimMesher.SculptMesh(scupltTexture, smSculptType, mesherLod, true, prim.Sculpt.Mirror, prim.Sculpt.Invert);
 
             int numPrimFaces = 1;       // a scuplty has only one face
 
@@ -319,9 +303,7 @@ namespace OpenMetaverse.Rendering
                 oface.Indices = new List<ushort>();
                 oface.TextureFace = prim.Textures.GetFace((uint)ii);
                 int faceVertices = newMesh.coords.Count;
-                OMV.Vector3 pos;
                 OMVR.Vertex vert;
-                int indx;
 
                 for (int j = 0; j < faceVertices; j++)
                 {
@@ -361,24 +343,46 @@ namespace OpenMetaverse.Rendering
         /// <param name="vertices">Vertex list to modify texture coordinates for</param>
         /// <param name="center">Center-point of the face</param>
         /// <param name="teFace">Face texture parameters</param>
-        public void TransformTexCoords(List<OMVR.Vertex> vertices, OMV.Vector3 center, OMV.Primitive.TextureEntryFace teFace)
+        public void TransformTexCoords(List<OMVR.Vertex> vertices, OMV.Vector3 center, OMV.Primitive.TextureEntryFace teFace, Vector3 primScale)
         {
             // compute trig stuff up front
             float cosineAngle = (float)Math.Cos(teFace.Rotation);
             float sinAngle = (float)Math.Sin(teFace.Rotation);
 
-            // need a check for plainer vs default
-            // just do default for now (I don't know what planar is)
             for (int ii = 0; ii < vertices.Count; ii++)
             {
                 // tex coord comes to us as a number between zero and one
                 // transform about the center of the texture
                 OMVR.Vertex vert = vertices[ii];
+
+                // aply planar tranforms to the UV first if applicable
+                if (teFace.TexMapType == MappingType.Planar)
+                {
+                    Vector3 binormal;
+                    float d = Vector3.Dot(vert.Normal, Vector3.UnitX);
+                    if (d >= 0.5f || d <= -0.5f)
+                    {
+                        binormal = Vector3.UnitY;
+                        if (vert.Normal.X < 0f) binormal *= -1;
+                    }
+                    else
+                    {
+                        binormal = Vector3.UnitX;
+                        if (vert.Normal.Y > 0f) binormal *= -1;
+                    }
+                    Vector3 tangent = binormal % vert.Normal;
+                    Vector3 scaledPos = vert.Position * primScale;
+                    vert.TexCoord.X = 1f + (Vector3.Dot(binormal, scaledPos) * 2f - 0.5f);
+                    vert.TexCoord.Y = -(Vector3.Dot(tangent, scaledPos) * 2f - 0.5f);
+                }
+                
+                float repeatU = teFace.RepeatU;
+                float repeatV = teFace.RepeatV;
                 float tX = vert.TexCoord.X - 0.5f;
                 float tY = vert.TexCoord.Y - 0.5f;
-                // rotate, scale, offset
-                vert.TexCoord.X = (tX * cosineAngle + tY * sinAngle) * teFace.RepeatU + teFace.OffsetU + 0.5f;
-                vert.TexCoord.Y = (-tX * sinAngle + tY * cosineAngle) * teFace.RepeatV + teFace.OffsetV + 0.5f;
+
+                vert.TexCoord.X = (tX * cosineAngle + tY * sinAngle) * repeatU + teFace.OffsetU + 0.5f;
+                vert.TexCoord.Y = (-tX * sinAngle + tY * cosineAngle) * repeatV + teFace.OffsetV + 0.5f;
                 vertices[ii] = vert;
             }
             return;
