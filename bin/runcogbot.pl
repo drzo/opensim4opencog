@@ -275,6 +275,9 @@ simObjDistance(A,C,E):-var(A),nonvar(C),!,simObjDistance(C,A,E).
 simObjDistance(A,C,E):-simObject(A),cliGet(A,globalposition,B),simObject(C),A\=C,cliGet(C,globalposition,D),simDistance(B,D,E).
 %------------------------------------------------------------------------------
 %------------------------------------------------------------------------------
+
+:- file_search_path(test, '../test').
+
 end_of_file.
 %------------------------------------------------------------------------------
  6 ?- botClient('Inventory',Y),cliMemb(Y,p,Z).
