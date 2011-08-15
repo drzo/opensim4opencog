@@ -22,6 +22,8 @@ svn revert bin/*.exe
 svn revert bin/*.pdb
 svn revert bin/*.so
 
+del bin\swicli.dll
+
 mkdir bin\character
 xcopy /f /y /c sources\external\Radegast\character bin\character
 
