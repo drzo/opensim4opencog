@@ -27,7 +27,7 @@
 %  \+ forbidden(_,3,_)
 %
 
-:- module(testsupport, [start_test/1, test_test_support/0, time_limit/2, end_test/0, needed/3, forbidden/3, obstacle/1, apiBotClientCmd/1]).
+:- module(testsupport, [start_test/1, test_test_support/0, time_limit/2, end_test/0, needed/3, forbidden/3, obstacle/1, current_test/1, apiBotClientCmd/1, onChat/3]).
 :-use_module(library(clipl)).
 
 :- dynamic(current_test/1).
@@ -51,15 +51,6 @@ end_test :-
 	writeq('Test '),writeq(Name),writeq(' succeeded'),nl,
 	retractall(current_test(_)).
 
-require_chat_hook :-
-	chat_hook_installed.
-
-require_chat_hook :-
-	asserta(chat_hook_installed),
-	user:gridClient(Obj),
-	cliGet(Obj , 'Self' , S),
-	cliAddEventHandler(S , 'ChatFromSimulator' , onChat(_,_,_)).
-
 onChat(_Originator, _Sender, Event) :-
 	Event = event(
 		      'ChatEventArgs',
@@ -68,10 +59,22 @@ onChat(_Originator, _Sender, Event) :-
 		      _,_,_,
 		      Name,      % string
 		      _,_,_Loc),
-        string_subst(Content , "/me" , Name , Term_As_String),
+        string_subst(Content , "/me " , Name , Term_As_String),
 	string_to_atom(Term_As_String , Term_As_Atom),
-	atom_to_term(Term_As_Atom , Term , _),
-	catch(asserta(Term) , syntax_error , true).
+	catch(atom_to_term(Term_As_Atom , Term , _), SyntaxError,(writeq(SyntaxError),nl,fail)),
+	catch(asserta(Term) , _Assert_error , true).
+
+onChat(_Originator, _Sender, _Event) :-!.
+
+
+require_chat_hook :-
+	chat_hook_installed.
+
+require_chat_hook :-
+	asserta(chat_hook_installed),
+	user:gridClient(Obj),
+	cliGet(Obj , 'Self' , S),
+	cliAddEventHandler(S , 'ChatFromSimulator' , onChat(_,_,_)).
 
 % string_subst(?S , ?T , ?R , ?NS)
 % Substitute all occurances of T with R in S, producing NS
@@ -113,5 +116,5 @@ test_test_support :- string_subst("test /me" , "/me" , "Annie" , "test Annie"),
 	skeemumkin(47),
 	retractall(skeemumkin(_)).
 
-apiBotClientCmd(A) :- user:botClientCmd(A).
+apiBotClientCmd(A) :- user:botClientCmd(A,_).
 
