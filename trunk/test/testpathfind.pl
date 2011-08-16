@@ -78,7 +78,6 @@ test(7, N) :-
 	end_test.
 
 
-
 testpathfind :-
 	repeat,
 	test(_,_),
