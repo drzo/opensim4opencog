@@ -6,7 +6,8 @@
 % forbidden, needed, and obstacle. These chat (on channel zero)
 % prolog, which a listener on the bot asserts into prolog.
 %
-So, hearing
+% So, hearing
+
 %  obstacle (collision(v3(147.50407409668, 134.732803344727, 1001.00823974609)))
 %  the test framework asserts
 %  obstacle (collision(v3(147.50407409668, 134.732803344727, 1001.00823974609))).
@@ -117,5 +118,6 @@ test_test_support :- string_subst("test /me" , "/me" , "Annie" , "test Annie"),
 	retractall(skeemumkin(_)).
 
 apiBotClientCmd(A) :- user:botClientCmd(A,_).
+
 
 user:onChat(X,Y,Z):-testsupport:onChat(X,Y,Z).
