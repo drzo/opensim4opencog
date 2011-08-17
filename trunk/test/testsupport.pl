@@ -28,7 +28,7 @@
 %  \+ forbidden(_,3,_)
 %
 
-:- module(testsupport, [start_test/1, test_test_support/0, time_limit/2, end_test/0, needed/3, forbidden/3, obstacle/1, current_test/1, apiBotClientCmd/1, onChat/3]).
+:- module(testsupport, [start_test/1, test_test_support/0, time_limit/2, test_assert/1, end_test/0, needed/3, forbidden/3, obstacle/1, failure/1, current_test/1, apiBotClientCmd/1, onChat/3]).
 :-use_module(library(clipl)).
 
 :- dynamic(current_test/1).
@@ -36,6 +36,7 @@
 :- dynamic(needed/3).
 :- dynamic(forbidden/3).
 :- dynamic(obstacle/1).
+:- dynamic(failure/1).
 
 % Call prior to starting a test.
 start_test(Name) :-
@@ -45,7 +46,9 @@ start_test(Name) :-
 	require_chat_hook,
 	retractall(needed(_,_,_)),
 	retractall(forbidden(_,_,_)),
-	retractall(obstacle(_)).
+	retractall(obstacle(_)),
+	retractall(failure(_)),
+	apiBotClientCmd(stop).
 
 end_test :-
 	current_test(Name),
@@ -97,13 +100,17 @@ list_string_subst(S , T , R , NS) :-
 list_string_subst(S , _ , _ , S).
 
 %
-%  evaluate Goal, as in call(), but fail if goal fails or
+%  evaluate Goal, as in once(), but fail if goal fails or
 %  takes more than Secs seconds to complete
 time_limit(Secs , Goal) :-
 	get_time(Start),
-	Goal,
+	once(Goal),
 	get_time(Finish),
 	Finish =< Secs + Start.
+
+%
+% evaluate a goal. If the goal fails, the test fails.
+test_assert(Goal) :- once(Goal).
 
 % entry point to test this module
 :- dynamic(skeemumkin/1).

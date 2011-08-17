@@ -6,14 +6,15 @@
 test(1, N) :-
 	N= 'clear path 10 meters',
 	start_test(N),
-	apiBotClientCmd(teleport('annies haven/136.121719/134.346970/1000.985107/')),
-	time_limit(15 , apiBotClientCmd('follow*'('annies haven/135.620544/146.427078/1000.989136/'))),
+        test_assert(apiBotClientCmd(teleport('annies haven/133.630234/132.717392/81.546028/'))),
+	time_limit(15 , apiBotClientCmd('follow*'('annies haven/129.044327/128.206070/81.519630/'))),
 	needed(_,1,1),
 	needed(_,1,2),
 	\+ forbidden(_,1,_),
 	\+ obstacle(_),
+	\+ failure(1),
 	end_test.
-
+/*
 test(2, N) :-
 	N= 'Go around obstacle',
 	start_test(N),
@@ -77,9 +78,9 @@ test(7, N) :-
 	\+ obstacle(_),
 	end_test.
 
-
+*/
 testpathfind :-
-	repeat,
+	cliSet('SimAvatarImpl','UseTeleportFallback','@'(false)),
 	test(_,_),
 	fail.
 
