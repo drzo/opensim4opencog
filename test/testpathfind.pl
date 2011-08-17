@@ -35,6 +35,17 @@ test(3, N) :-
          \+ forbidden(_,3,1),
          end_test.
 
+
+test(4, N) :-
+	N= 'Goal Other Side Of Wall',
+	start_test(N),
+        test_assert(apiBotClientCmd(teleport(start_test_4))),
+        time_limit(25 , stdGoto(stop_test_4)),
+        needed(_,4,1),
+	\+ obstacle(_),
+	end_test.
+
+
 /*
 test(3, N) :-
 	N= 'Rotating Obstacle',
@@ -46,14 +57,6 @@ test(3, N) :-
 	end_test.
 
 
-test(4, N) :-
-	N= 'Goal Other Side Of Wall',
-	start_test(N),
-	apiBotClientCmd(teleport('annies haven/138.298828/225.949951/1000.984985/')),
-	time_limit(15 , apiBotClientCmd('follow*'('annies haven/138.507294/227.840652/1000.988586/'))),
-	needed(_,4,1),
-	\+ obstacle(_),
-	end_test.
 
 
 
