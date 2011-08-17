@@ -1,4 +1,4 @@
-:-module(testpathfind, [testpathfind/0]).
+:-module(testpathfind, [testpathfind/0, tpf/0]).
 
 :- use_module(library(testsupport)).
 :-use_module(library(clipl)).
@@ -6,26 +6,36 @@
 test(1, N) :-
 	N= 'clear path 10 meters',
 	start_test(N),
-        test_assert(apiBotClientCmd(teleport('annies haven/133.630234/132.717392/81.546028/'))),
-	time_limit(15 , apiBotClientCmd('follow*'('annies haven/129.044327/128.206070/81.519630/'))),
+        test_assert(apiBotClientCmd(teleport('annies haven/129.044327/128.206070/81.519630/'))),
+	time_limit(15 , stdGoto('annies haven/133.630234/132.717392/81.546028/')),
 	needed(_,1,1),
 	needed(_,1,2),
 	\+ forbidden(_,1,_),
 	\+ obstacle(_),
 	\+ failure(1),
 	end_test.
-/*
+
 test(2, N) :-
-	N= 'Go around obstacle',
+	N= 'Zero Distance',
 	start_test(N),
-	apiBotClientCmd(teleport('annies haven/138.396942/161.754913/1000.985168/')),
-	time_limit(15 , apiBotClientCmd('follow*'('annies haven/138.968658/173.621033/1000.988831/'))),
-	needed(_,2,1),
-	needed(_,2,2),
-	\+ forbidden(_,_,_),
+	test_assert(apiBotClientCmd(teleport(start_test_2))),
+	time_limit(1 , stdGoto(stop_test_2)),
+        \+ forbidden(_,_,_),
+	\+ obstacle(_),
 	end_test.
 
 
+test(3, N) :-
+         N= 'Go around obstacle',
+         start_test(N),
+         test_assert(apiBotClientCmd(teleport(start_test_3))),
+         time_limit(25 , stdGoto(stop_test_3)),
+         needed(_,3,1),         
+         \+ obstacle(_),
+         \+ forbidden(_,3,1),
+         end_test.
+
+/*
 test(3, N) :-
 	N= 'Rotating Obstacle',
 	start_test(N),
@@ -45,13 +55,6 @@ test(4, N) :-
 	\+ obstacle(_),
 	end_test.
 
-
-test(5, N) :-
-	N= 'Zero Distance',
-	start_test(N),
-	apiBotClientCmd(teleport('annies haven/138.941910/246.661743/1000.985474/')),
-	time_limit(1 , apiBotClientCmd('follow*'('annies haven/138.941910/246.661743/1000.985474/'))),
-	end_test.
 
 
 test(6, N) :-
@@ -84,4 +87,10 @@ testpathfind :-
 	test(_,_),
 	fail.
 
+tpf :-
+        cliSet('SimAvatarImpl','UseTeleportFallback','@'(false)),
+	clause(testpathfind:test(N,S),Cs),
+        doTest(N,S,Cs),
+	fail.
+tpf:-!.
 
