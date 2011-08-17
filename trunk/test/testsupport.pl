@@ -30,7 +30,7 @@
 
 :- module(testsupport, [start_test/1, test_test_support/0, time_limit/2, test_assert/1, end_test/0, needed/3,
                        forbidden/3, obstacle/1, failure/1, current_test/1, apiBotClientCmd/1, onChat/3,
-                       stdGoto/1, stdGoto/2, stdStart/1, doTest/3, callTest/1]).
+                       stdGoto/1, stdGoto/2, stdStart/1, doTest/3, callTest/1, failureCond/1]).
 :-use_module(library(clipl)).
 
 :- dynamic(current_test/1).
@@ -39,9 +39,9 @@
 :- dynamic(forbidden/3).
 :- dynamic(obstacle/1).
 :- dynamic(failure/1).
-:- dynamic(failureCond/2).
+:- dynamic(failureCond/1).
 
-testDebug(Term):-format(user_error,'~q~n',[Term]),flush_output(user_error).
+testDebug(Term):-format(user_error,'  ~q~n',[Term]),flush_output(user_error).
 
 % Call prior to starting a test.
 start_test(Name) :-
@@ -53,7 +53,7 @@ start_test(Name) :-
 	retractall(forbidden(_,_,_)),
 	retractall(obstacle(_)),
 	retractall(failure(_)),
-        retractall(failureCond(_,_)),
+        retractall(failureCond(_)),
 	apiBotClientCmd(stop).
 
 end_test :-
@@ -139,22 +139,24 @@ user:onChat(X,Y,Z):-testsupport:onChat(X,Y,Z).
 
 %% astargoto does not block so we only give it enough time
 stdGoto(Place):-apiBotClientCmd('astargoto'(Place)).
+stdGoto(Time,Place):-callTest((apiBotClientCmd('astargoto'(Place)),sleep(Time))),!.
 stdGoto(Time,Place):-callTest((apiBotClientCmd('follow*'(Place)),sleep(Time))),!.
-stdGoto(Time,Place):-callTest((apiBotClientCmd('astargoto'(Place)),sleep(Time))).
 
 %pass
 doTest(N,_S,Cs):-
+        nl,
         testDebug([starting,test,N]),
         callTest((apiBotClientCmd(stop),Cs)),!,
         apiBotClientCmd(stop).
 
 %fail
-doTest(_N,_S,_Cs):- current_test(Name),apiBotClientCmd(stop),testDebug([failed,test,Name]),listing(failureCond),!.
+doTest(_N,_S,_Cs):- current_test(Name),apiBotClientCmd(stop),testDebug([failed,test,Name]). %%,listing(failureCond),!.
 
-callTest((C,Cs)):-!,callTest(C),callTest(Cs).
+callTest((C,Cs)):-!,callTest(C),!,callTest(Cs),!.
 callTest(time_limit(Time , apiBotClientCmd('follow*'(Place)))):-!,stdGoto(Time,Place).
 callTest(time_limit(Time , stdGoto(Place))):-!,stdGoto(Time,Place).
 callTest(call(Cs)):-testDebug(call(Cs)),Cs,!.
+callTest(end_test):-failureCond(_),!,fail. % squeltch
 callTest(Cs):-testDebug(call(Cs)),Cs,!.
 callTest(Cs):-testDebug(failed(Cs)),assert(failureCond(Cs)),!.
 
