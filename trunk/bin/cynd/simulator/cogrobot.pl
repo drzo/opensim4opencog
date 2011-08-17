@@ -8,14 +8,15 @@
 % set_prolog_flag(double_quotes,string).
 %
 %------------------------------------------------------------------------------
-:-module(cogrobot, 
+:-module(cogrobot,
   [
    runSL/0,listMembs/0,
-   worldSystem/1, worldSystem/2, 
-   botClient/1, botClient/2, 
-   botClientCall/1, botClientCall/2, 
-   botClientCmd/1, botClientCmd/2, 
-   simObject/1, simAvatar/1, simAvDistance/3]).
+   worldSystem/1, worldSystem/2,
+   botClient/1, botClient/2,
+   botClientCall/1, botClientCall/2,
+   botClientCmd/1, botClientCmd/2,
+   simObject/1, simAvatar/1, simAvDistance/3,
+   gridClient/1]).
 
 :- use_module(library(testsupport)).
 :-use_module(library(clipl)).
@@ -115,7 +116,7 @@ simRootObject(Ele):-worldSystem('SimRootObjects',Objs),cliCol(Objs,Ele).
 simAvatar(Ele):-simAccount(Ele),cliGet(Ele,hasprim,@(true)).
 
 %
-% a simAccount/1 is like simAvatar (they are avatars known about in system.. 
+% a simAccount/1 is like simAvatar (they are avatars known about in system..
 %    including friends not logged in)
 %
 simAccount(Ele):-worldSystem('SimAvatars',Objs),cliCol(Objs,Ele).
