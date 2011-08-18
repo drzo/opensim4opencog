@@ -30,7 +30,7 @@ test(3, N) :-
          start_test(N),
          test_assert(apiBotClientCmd(teleport(start_test_3))),
          time_limit(25 , stdGoto(stop_test_3)),
-         needed(_,3,1),         
+         needed(_,3,1),
          \+ obstacle(_),
          \+ forbidden(_,3,1),
          end_test.
@@ -39,10 +39,38 @@ test(3, N) :-
 test(4, N) :-
 	N= 'Goal Other Side Of Wall',
 	start_test(N),
+	start_test(N),
         test_assert(apiBotClientCmd(teleport(start_test_4))),
         time_limit(25 , stdGoto(stop_test_4)),
         needed(_,4,1),
 	\+ obstacle(_),
+	end_test.
+
+test(5, N) :-
+	N= 'on elevated path',
+	start_test(N),
+	test_assert(apiBotClientCmd(teleport('annies haven/149.389313/129.028732/85.411255/'))),
+	time_limit(15 , apiBotClientCmd('follow*'('annies haven/156.894470/137.385620/85.394775/'))),
+	\+ forbidden(_,5,_),
+	end_test.
+
+
+test(7, N) :-
+	N = 'spiral tube',
+	start_test(N),
+	test_assert(apiBotClientCmd(teleport('annies haven/188.477066/142.809982/81.559509/'))),
+	time_limit(60 , apiBotClientCmd('follow*'('annies haven/181.878403/140.768723/101.555061/'))),
+	needed(_,7,1),
+	end_test.
+
+
+test(8, N) :-
+	N = 'ground maze simple',
+	start_test(N),
+	test_assert(apiBotClientCmd(teleport('annies haven/4.813091/6.331439/27.287579/'))),
+	time_limit(30 , apiBotClientCmd('follow*'('annies haven/26.930264/12.801470/27.149252/'))),
+	needed(_,8,1),
+	needed(_,8,2),
 	end_test.
 
 
@@ -58,7 +86,9 @@ test(3, N) :-
 
 
 
-
+/*
+	keep this stuff, it's from the old opensim build, but it's a record
+	of what tests we were doing
 
 test(6, N) :-
 	N= 'narrowest gap we can go through',
