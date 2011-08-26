@@ -28,9 +28,15 @@
 %  \+ forbidden(_,3,_)
 %
 
-:- module(testsupport, [start_test/1, test_test_support/0, time_limit/2, test_assert/1, end_test/0, needed/3,
-                       forbidden/3, obstacle/1, failure/1, current_test/1, apiBotClientCmd/1, onChat/3,
-                       stdGoto/1, stdGoto/2, stdStart/1, doTest/3, callTest/1, failureCond/1]).
+:- module(testsupport, [start_test/1, end_test/0,
+			needed/2, needed/3,
+                        forbidden/1, forbidden/3,
+			obstacle/0, obstacle/1,
+			failure/1, failure/2,
+			current_test/1,
+			apiBotClientCmd/1,
+			onChat/3, std_end/2,
+			doTest/3 , ppTest/1]).
 :-use_module(library(clipl)).
 
 :- dynamic(current_test/1).
@@ -38,10 +44,48 @@
 :- dynamic(needed/3).
 :- dynamic(forbidden/3).
 :- dynamic(obstacle/1).
-:- dynamic(failure/1).
-:- dynamic(failureCond/1).
+:- dynamic(failure/2).
 
+% debug output
 testDebug(Term):-format(user_error,'  ~q~n',[Term]),flush_output(user_error).
+
+% unify if this is the bot's name
+botName(Name) :-
+	Name = 'testbot Ogborn'.  %TODO Douglas, how do I read this from
+% Configuration in ClientManager.cs
+
+needed(TestName , Number) :-
+	botName(Name),
+	needed(Name , TestName  , Number).
+
+forbidden(TestName) :-
+	botName(Name),
+	forbidden(Name , TestName , _).
+
+obstacle :-
+	botName(Name),
+	obstacle(Name).
+
+failure(TestName) :-
+	botName(Name),
+	failure(Name , TestName).
+
+all_needed(_ , 0).
+
+all_needed(N , Num_Needed) :-
+	Num_Needed > 0,
+	needed(N , Num_Needed),
+	NN is Num_Needed - 1,
+	all_needed(N , NN).
+
+std_end(N , Num_Needed) :-
+	all_needed(N , Num_Needed),
+	needed(N,1),
+	needed(N,2),
+	\+ forbidden(N),
+	\+ obstacle,
+	\+ failure(N),
+	end_test.
 
 % Call prior to starting a test.
 start_test(Name) :-
@@ -52,15 +96,20 @@ start_test(Name) :-
 	retractall(needed(_,_,_)),
 	retractall(forbidden(_,_,_)),
 	retractall(obstacle(_)),
-	retractall(failure(_)),
-        retractall(failureCond(_)),
+	retractall(failure(_,_)),
 	apiBotClientCmd(stop).
 
+% call at conclusion of test
 end_test :-
 	current_test(Name),
 	write('Test '),write(Name),write(' succeeded'),nl,flush_output,
 	retractall(current_test(_)).
 
+% this is installed as a callback, called when the bot hears chat
+% the various objects in the VW environment chat facts that it
+% asserts.
+%
+% Then the test can check these facts.
 onChat(_Originator, _Sender, Event) :-
 	Event = event(
 		      'ChatEventArgs',
@@ -76,7 +125,10 @@ onChat(_Originator, _Sender, Event) :-
 
 onChat(_Originator, _Sender, _Event) :-!.
 
-
+% make sure the chat hook is installed
+%
+% we assert chat_hook_installed when we've installed the
+% onChat callback so we only do it once
 require_chat_hook :-
 	chat_hook_installed.
 
@@ -105,59 +157,56 @@ list_string_subst(S , T , R , NS) :-
 
 list_string_subst(S , _ , _ , S).
 
-%
-%  evaluate Goal, as in once(), but fail if goal fails or
-%  takes more than Secs seconds to complete
-time_limit(Secs , Goal) :-
-	get_time(Start),
-	once(Goal),
-	get_time(Finish),
-	Finish =< Secs + Start.
-
-%
-% evaluate a goal. If the goal fails, the test fails.
-test_assert(Goal) :- once(Goal).
-
-% entry point to test this module
-:- dynamic(skeemumkin/1).
-test_test_support :- string_subst("test /me" , "/me" , "Annie" , "test Annie"),
-	string_subst("/me foo" , "/me", "onions" , "onions foo"),
-	string_subst("taco" , "/me" , "foo" , "taco"),
-	string_subst("/me /me" , "/me" , "foo" , "foo foo"),
-	time_limit(5 , sleep(2)),
-	\+ time_limit(3 , sleep(5)),
-	time_limit(5 , assert(skeemumkin(47))),
-	skeemumkin(47),
-	retractall(skeemumkin(_)).
-
 apiBotClientCmd(A) :- user:botClientCmd(A,_).
-
-stdStart(Place):-apiBotClientCmd('teleport'(Place)).
-
 
 user:onChat(X,Y,Z):-testsupport:onChat(X,Y,Z).
 
-%% astargoto does not block so we only give it enough time
-stdGoto(Place):-apiBotClientCmd('astargoto'(Place)).
-stdGoto(Time,Place):-callTest((apiBotClientCmd('astargoto'(Place)),sleep(Time))),!.
-stdGoto(Time,Place):-callTest((apiBotClientCmd('follow*'(Place)),sleep(Time))),!.
+%
+%  doTest(+Name , :Goal , -Results)
+% run the goal, generating the results.
+% The results is success or fail atom
+%
+doTest(_Name , Goal , Results) :-
+	(   catch(once(Goal) , E , (print_message(error , E),fail)) ->
+	    Results = success
+	    ;
+	    Results = fail
+	),!.
 
-%pass
-doTest(N,_S,Cs):-
-        nl,
-        testDebug([starting,test,N]),
-        callTest((apiBotClientCmd(stop),Cs)),!,
-        apiBotClientCmd(stop).
 
-%fail
-doTest(_N,_S,_Cs):- current_test(Name),apiBotClientCmd(stop),testDebug([failed,test,Name]). %%,listing(failureCond),!.
+% famulus to ppTest
+concat_options([] , X , X) :- !.
 
-callTest((C,Cs)):-!,callTest(C),!,callTest(Cs),!.
-callTest(time_limit(Time , apiBotClientCmd('follow*'(Place)))):-!,stdGoto(Time,Place).
-callTest(time_limit(Time , stdGoto(Place))):-!,stdGoto(Time,Place).
-callTest(call(Cs)):-testDebug(call(Cs)),Cs,!.
-callTest(end_test):-failureCond(_),!,fail. % squeltch
-callTest(Cs):-testDebug(call(Cs)),Cs,!.
-callTest(Cs):-testDebug(failed(Cs)),assert(failureCond(Cs)),!.
+concat_options([option(Name , Value)|T] , "" , Out) :- !,
+	swritef(Str , '%p=%p' , [Name , Value]),
+	concat_options(T , Str , Out).
+
+concat_options([option(Name , Value)|T] , In , Out) :-
+	In \= "", !,
+	swritef(Str , '%s, %p=%p' , [In , Name , Value]),
+	concat_options(T , Str , Out).
+
+concat_options([H|T] , In , Out) :-
+	H \= option(_,_),!,
+	concat_options(T , In , Out).
+
+%
+%  flexible pretty print method for tests
+%
+%  failure clause
+ppTest(List) :-
+	member(results(fail) , List), !,
+	(   member(name(N) , List) ;  N = 'no name'),
+	(   member(desc(D) , List) ;  D = ''),
+	concat_options(List , "" , Options),
+	writef('****************\nFAIL: test %p %p %p FAILED\n' , [N,D,Options]), !.
+
+ppTest(List) :-
+	member(results(success) , List), !,
+	(   member(name(N) , List) ;  N = 'no name'),
+	(   member(desc(D) , List) ;  D = ''),
+	concat_options(List , "" , Options),
+	writef('OK: test %p %p %p\n' , [N,D,Options]) , !.
+
 
 
