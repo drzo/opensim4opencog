@@ -1,80 +1,104 @@
-:-module(testpathfind, [testpathfind/0, tpf/0]).
+:-module(testpathfind, [tpf_method/1, tpf/0]).
 
 :- use_module(library(testsupport)).
 :-use_module(library(clipl)).
 
-test(1, N) :-
-	N= 'clear path 10 meters',
+:- dynamic(goMethod/1).
+
+% set the method of movement we're testing
+goMethod('follow*').
+
+
+
+% using the test method of movement, go to Location
+goByMethod(Location) :-
+	goMethod(GM),!, % slight ugliness, just want first one
+	Goal =.. [GM, Location],
+	apiBotClientCmd(Goal).
+
+% convenience method that does the 'normal' thing -
+% tp to Start, move using the standard method to
+move_test(Time , Start , End) :-
+	writeq('{'),
+	apiBotClientCmd(teleport(Start)),
+	writeq(' tp '),
+	goByMethod(End),
+	writeq(' -> '),
+	sleep(Time),
+	writeq('zzz'),nl.
+
+test_desc(easy , 'insanely easy test').
+test(N) :-
+	N = easy,
+	writeq('in easy'),nl.
+
+test_desc(clear , 'clear path 10 meters').
+test(N) :-
+	N = clear,
+	writeq('in clear'),nl,
 	start_test(N),
-        test_assert(apiBotClientCmd(teleport('annies haven/129.044327/128.206070/81.519630/'))),
-	time_limit(15 , stdGoto('annies haven/133.630234/132.717392/81.546028/')),
-	needed(_,1,1),
-	needed(_,1,2),
-	\+ forbidden(_,1,_),
-	\+ obstacle(_),
-	\+ failure(1),
-	end_test.
+	writeq('test started'),nl,
+        move_test(15,
+		'annies haven/129.044327/128.206070/81.519630/',
+	        'annies haven/133.630234/132.717392/81.546028/'),
+	writeq('moved'),nl,
+	std_end(N , 2),
+	writeq(std_end),nl.
 
-test(2, N) :-
-	N= 'Zero Distance',
+test_desc(zero , 'Zero Distance').
+test(N) :-
+	N = zero,
 	start_test(N),
-	test_assert(apiBotClientCmd(teleport(start_test_2))),
-	time_limit(1 , stdGoto(stop_test_2)),
-        \+ forbidden(_,_,_),
-	\+ obstacle(_),
-	end_test.
+	move_test(1 , start_test_2 , stop_test_2),
+        std_end(N , 0).
 
-
-test(3, N) :-
-         N= 'Go around obstacle',
+test_desc(obstacle , 'Go around obstacle').
+test(N) :-
+	 N = obstacle,
          start_test(N),
-         test_assert(apiBotClientCmd(teleport(start_test_3))),
-         time_limit(25 , stdGoto(stop_test_3)),
-         needed(_,3,1),
-         \+ obstacle(_),
-         \+ forbidden(_,3,1),
-         end_test.
+	 move_test(25 , start_test_3 , stop_test_3),
+         std_end(N , 2).
 
-
-test(4, N) :-
-	N= 'Goal Other Side Of Wall',
+test_desc(other_side_wall , 'Goal Other Side Of Wall').
+test(N) :-
+	N = other_side_wall,
 	start_test(N),
+        move_test(25 , start_test_4 , stop_test_4),
+        std_end(N , 1).
+
+test_desc(elev_path , 'On Elevated Path').
+test(N) :-
+	N = elev_path,
 	start_test(N),
-        test_assert(apiBotClientCmd(teleport(start_test_4))),
-        time_limit(25 , stdGoto(stop_test_4)),
-        needed(_,4,1),
-	\+ obstacle(_),
-	end_test.
+	move_test(15 ,
+		  'annies haven/149.389313/129.028732/85.411255/',
+		  'annies haven/156.894470/137.385620/85.394775/'),
+	std_end(N , 0).
 
-test(5, N) :-
-	N= 'on elevated path',
+test_desc(spiral , 'Spiral Tube').
+test(N) :-
+	N = spiral,
 	start_test(N),
-	test_assert(apiBotClientCmd(teleport('annies haven/149.389313/129.028732/85.411255/'))),
-	time_limit(15 , apiBotClientCmd('follow*'('annies haven/156.894470/137.385620/85.394775/'))),
-	\+ forbidden(_,5,_),
-	end_test.
+	move_test(60,
+		  'annies haven/188.477066/142.809982/81.559509/',
+		  'annies haven/181.878403/140.768723/101.555061/'),
+	std_end(N , 1).
 
-
-test(7, N) :-
-	N = 'spiral tube',
+test_desc(grnd_maze , 'Ground maze simple').
+test(N) :-
+	N = grnd_maze,
 	start_test(N),
-	test_assert(apiBotClientCmd(teleport('annies haven/188.477066/142.809982/81.559509/'))),
-	time_limit(60 , apiBotClientCmd('follow*'('annies haven/181.878403/140.768723/101.555061/'))),
-	needed(_,7,1),
-	end_test.
-
-
-test(8, N) :-
-	N = 'ground maze simple',
-	start_test(N),
-	test_assert(apiBotClientCmd(teleport('annies haven/4.813091/6.331439/27.287579/'))),
-	time_limit(30 , apiBotClientCmd('follow*'('annies haven/26.930264/12.801470/27.149252/'))),
-	needed(_,8,1),
-	needed(_,8,2),
-	end_test.
+	move_test(30 ,
+		  'annies haven/4.813091/6.331439/27.287579/',
+		  'annies haven/26.930264/12.801470/27.149252/'),
+	std_end(N , 2).
 
 
 /*
+
+	keep this stuff, it's from the old opensim build, but it's a record
+	of what tests we were doing
+
 test(3, N) :-
 	N= 'Rotating Obstacle',
 	start_test(N),
@@ -84,11 +108,6 @@ test(3, N) :-
 	\+ obstacle(_),
 	end_test.
 
-
-
-/*
-	keep this stuff, it's from the old opensim build, but it's a record
-	of what tests we were doing
 
 test(6, N) :-
 	N= 'narrowest gap we can go through',
@@ -115,15 +134,28 @@ test(7, N) :-
 	end_test.
 
 */
-testpathfind :-
-	cliSet('SimAvatarImpl','UseTeleportFallback','@'(false)),
-	test(_,_),
+
+tpf_method(GoMethod) :-
+	retractall(goMethod(_)),
+	asserta(goMethod(GoMethod)),
+	cliSet('SimAvatarImpl' , 'UseTeleportFallback' , '@'(false)),
+%	clause(testpathfind:test(Name) , _),
+	test_desc(Name , Desc),
+	doTest(Name , testpathfind:test(Name) , Results),
+	ppTest([name(Name),
+		desc(Desc) ,
+		results(Results) ,
+		option('goMethod ' , GoMethod)]),
 	fail.
 
+tpf_method(_) :- !.
+
 tpf :-
-        cliSet('SimAvatarImpl','UseTeleportFallback','@'(false)),
-	clause(testpathfind:test(N,S),Cs),
-        doTest(N,S,Cs),
+	member(Method , ['follow*' , astargoto]),
+	tpf_method(Method),
 	fail.
-tpf:-!.
+
+tpf :- !.
+
+
 
