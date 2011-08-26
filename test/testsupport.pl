@@ -30,21 +30,23 @@
 
 :- module(testsupport, [start_test/1, end_test/0,
 			needed/2, needed/3,
-                        forbidden/1, forbidden/3,
+                        forbidden/1, forbidden/2,
 			obstacle/0, obstacle/1,
 			failure/1, failure/2,
 			current_test/1,
 			apiBotClientCmd/1,
-			onChat/3, std_end/2,
+			onChat/3, std_end/2, std_end/3,
 			doTest/3 , ppTest/1]).
 :-use_module(library(clipl)).
 
 :- dynamic(current_test/1).
 :- dynamic(chat_hook_installed/0).
 :- dynamic(needed/3).
-:- dynamic(forbidden/3).
+:- dynamic(forbidden/2).
 :- dynamic(obstacle/1).
 :- dynamic(failure/2).
+:- dynamic(current_test_started_at_time/1).
+:- dynamic(time_limit_exceeded/2).
 
 % debug output
 testDebug(Term):-format(user_error,'  ~q~n',[Term]),flush_output(user_error).
@@ -60,7 +62,7 @@ needed(TestName , Number) :-
 
 forbidden(TestName) :-
 	botName(Name),
-	forbidden(Name , TestName , _).
+	forbidden(Name , TestName).
 
 obstacle :-
 	botName(Name),
@@ -78,32 +80,69 @@ all_needed(N , Num_Needed) :-
 	NN is Num_Needed - 1,
 	all_needed(N , NN).
 
-std_end(N , Num_Needed) :-
-	all_needed(N , Num_Needed),
-	needed(N,1),
-	needed(N,2),
+%
+% Convenience method that performs common end
+% condition tests and calls end_test.
+% unifies only if the test succeeded
+%
+% std_end(+Name , +NumNeeded)
+% Name is the name of the test
+% NumNeeded is the number of consecutive, 1 based needed/2 tests that
+% must be found
+std_end(N , NumNeeded) :-
+	all_needed(N , NumNeeded),
 	\+ forbidden(N),
 	\+ obstacle,
 	\+ failure(N),
 	end_test.
+
+% same as std_end/2 but has a time limit
+% std_end(+N , +TimeLimit , +NumNeeded)
+%
+std_end(N , TimeLimit , NumNeeded) :-
+	time_limit(TimeLimit),
+	std_end(N , NumNeeded).
 
 % Call prior to starting a test.
 start_test(Name) :-
 	\+ var(Name),
 	retractall(current_test(_)),
 	asserta(current_test(Name)),
+	retractall(current_test_started_at_time(_)),
+	retractall(time_limit_exceeded(_,_)),
+	get_time(Time),
+	assert(current_test_started_at_time(Time)),
 	require_chat_hook,
 	retractall(needed(_,_,_)),
-	retractall(forbidden(_,_,_)),
+	retractall(forbidden(_,_)),
 	retractall(obstacle(_)),
 	retractall(failure(_,_)),
-	apiBotClientCmd(stop).
+	apiBotClientCmd(stop),!.
 
 % call at conclusion of test
+% this only gets there if the test succeeds, so it's pretty suspicious.
 end_test :-
-	current_test(Name),
-	write('Test '),write(Name),write(' succeeded'),nl,flush_output,
+	current_test(_Name),
+%	write('Test '),write(Name),write(' succeeded'),nl,flush_output,
 	retractall(current_test(_)).
+
+% enforce a time limit.
+% unifies only if called within Limit seconds of
+% the start of the test
+% time_limit(+Limit)
+%
+time_limit(Limit) :-
+	get_time(Time),
+	current_test_started_at_time(Start),
+	Taken is Time - Start,
+	(
+	    Taken > Limit
+	->
+	    assert(time_limit_exceeded(Limit , Taken)),
+	    !,fail
+	;
+	    true
+	).
 
 % this is installed as a callback, called when the bot hears chat
 % the various objects in the VW environment chat facts that it
@@ -162,15 +201,46 @@ apiBotClientCmd(A) :- user:botClientCmd(A,_).
 user:onChat(X,Y,Z):-testsupport:onChat(X,Y,Z).
 
 %
+% results(+Name , -R)
+% returns a list of conditions tripped and not tripped
+% for a given test name
+results(Name , R) :-
+	findall(N , needed(Name , N) , Needed),
+	(
+	   forbidden(Name)
+	->
+	   L = [forbidden, needed(Needed)]
+	;
+	   L = [needed(Needed)]
+	),
+	(
+	   obstacle
+	->
+	   LL = [obstacle|L]
+	;
+	   LL = L
+	),
+	(
+	   failure(Name)
+	->
+	   R = [failure|LL]
+	;
+	   R = LL
+	),
+	!.
+
+%
 %  doTest(+Name , :Goal , -Results)
 % run the goal, generating the results.
 % The results is success or fail atom
 %
-doTest(_Name , Goal , Results) :-
+doTest(Name , Goal , Results) :-
 	(   catch(once(Goal) , E , (print_message(error , E),fail)) ->
-	    Results = success
+	    results(Name , R),
+	    Results = [results(success)|R]
 	    ;
-	    Results = fail
+	    results(Name , R),
+	    Results = [results(fail)|R]
 	),!.
 
 
@@ -195,18 +265,35 @@ concat_options([H|T] , In , Out) :-
 %
 %  failure clause
 ppTest(List) :-
-	member(results(fail) , List), !,
+	member(results(R) , List),
+	member(results(fail) , R), !,
 	(   member(name(N) , List) ;  N = 'no name'),
 	(   member(desc(D) , List) ;  D = ''),
 	concat_options(List , "" , Options),
-	writef('****************\nFAIL: test %p %p %p FAILED\n' , [N,D,Options]), !.
+	writef('****************\nFAIL: test %p %p %p FAILED\n%p\n' ,
+	       [N,D,Options,R]),
+	write_time_limit_exceeded , flush_output, !.
 
 ppTest(List) :-
-	member(results(success) , List), !,
+	member(results(R), List),
+	member(results(success) , R), !,
 	(   member(name(N) , List) ;  N = 'no name'),
 	(   member(desc(D) , List) ;  D = ''),
 	concat_options(List , "" , Options),
-	writef('OK: test %p %p %p\n' , [N,D,Options]) , !.
+	writef('OK: test %p %p %p\n%p\n' , [N,D,Options,R]) ,
+	write_time_limit_exceeded, flush_output, !.
+
+
+%
+% print warning if time limit exceeded
+%
+write_time_limit_exceeded :-
+	time_limit_exceeded(Limit , Taken),!,
+	writef('Time limit exceeded, allowed %d, took %d\n' , [Limit,Taken]).
+
+write_time_limit_exceeded :- !.
+
+
 
 
 
