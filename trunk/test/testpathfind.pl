@@ -19,14 +19,12 @@ goByMethod(Location) :-
 % convenience method that does the 'normal' thing -
 % tp to Start, move using the standard method to
 move_test(Time , Start , End) :-
-	writeq('{'),
 	apiBotClientCmd(teleport(Start)),
-	writeq(' tp '),
 	goByMethod(End),
-	writeq(' -> '),
-	sleep(Time),
-	writeq('zzz'),nl.
+	sleep(Time).
 
+
+% this is just to debug the test framework with
 test_desc(easy , 'insanely easy test').
 test(N) :-
 	N = easy,
@@ -35,36 +33,34 @@ test(N) :-
 test_desc(clear , 'clear path 10 meters').
 test(N) :-
 	N = clear,
-	writeq('in clear'),nl,
 	start_test(N),
-	writeq('test started'),nl,
         move_test(15,
 		'annies haven/129.044327/128.206070/81.519630/',
 	        'annies haven/133.630234/132.717392/81.546028/'),
-	writeq('moved'),nl,
-	std_end(N , 2),
-	writeq(std_end),nl.
+	std_end(N , 17 ,2).
+
 
 test_desc(zero , 'Zero Distance').
 test(N) :-
 	N = zero,
 	start_test(N),
 	move_test(1 , start_test_2 , stop_test_2),
-        std_end(N , 0).
+        std_end(N , 2 , 0).
+
 
 test_desc(obstacle , 'Go around obstacle').
 test(N) :-
 	 N = obstacle,
          start_test(N),
 	 move_test(25 , start_test_3 , stop_test_3),
-         std_end(N , 2).
+         std_end(N , 27 , 2).
 
 test_desc(other_side_wall , 'Goal Other Side Of Wall').
 test(N) :-
 	N = other_side_wall,
 	start_test(N),
         move_test(25 , start_test_4 , stop_test_4),
-        std_end(N , 1).
+        std_end(N , 27 , 1).
 
 test_desc(elev_path , 'On Elevated Path').
 test(N) :-
@@ -73,7 +69,7 @@ test(N) :-
 	move_test(15 ,
 		  'annies haven/149.389313/129.028732/85.411255/',
 		  'annies haven/156.894470/137.385620/85.394775/'),
-	std_end(N , 0).
+	std_end(N , 17 , 0).
 
 test_desc(spiral , 'Spiral Tube').
 test(N) :-
@@ -82,7 +78,7 @@ test(N) :-
 	move_test(60,
 		  'annies haven/188.477066/142.809982/81.559509/',
 		  'annies haven/181.878403/140.768723/101.555061/'),
-	std_end(N , 1).
+	std_end(N , 65 , 1).
 
 test_desc(grnd_maze , 'Ground maze simple').
 test(N) :-
@@ -91,7 +87,7 @@ test(N) :-
 	move_test(30 ,
 		  'annies haven/4.813091/6.331439/27.287579/',
 		  'annies haven/26.930264/12.801470/27.149252/'),
-	std_end(N , 2).
+	std_end(N , 34 , 2).
 
 
 /*
