@@ -2430,7 +2430,7 @@ namespace cogbot
         }
         private void SetRadegastLoginForm(LoginConsole console, LoginOptions options)
         {
-            console.txtUsername.Text = (string.Format("{0} {1}", options.FirstName, options.LastName)).Trim();
+            console.cbxUsername.Text = (string.Format("{0} {1}", options.FirstName, options.LastName)).Trim();
 
             switch (options.StartLocation)
             {
