@@ -89,6 +89,23 @@ test(N) :-
 		  'annies haven/26.930264/12.801470/27.149252/'),
 	std_end(N , 34 , 2).
 
+test_desc(island_hop , 'Island hop').
+test(N) :-
+	N = island_hop,
+	start_test(N),
+	move_test(10 , start_island_hop , stop_island_hop),
+	std_end(N , 12 , 2).
+
+test_desc(hill_walk , 'Hill Walk').
+test(N) :-
+	N = hill_walk,
+	start_test(N),
+	move_test(60 , start_hill_walk , stop_hill_walk),
+	std_end(N , 65 , 1).
+
+
+
+
 
 /*
 
