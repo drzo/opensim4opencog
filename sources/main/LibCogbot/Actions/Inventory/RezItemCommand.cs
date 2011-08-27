@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
@@ -23,81 +24,142 @@ namespace cogbot.Actions.Inventory.Shell
         {
             if (args.Length < 2)
             {
-                return ShowUsage();// "rezitem [avatar5,prev,sim/123/232/23@360] <item1> [item2] [item3] [...]";
+                return ShowUsage();// "rezitem [avatar5,prev,sim/123/232/23@360] "fairyverse Goodies" [item2] [item3] [...]";
             }
 
             int argsUsed = 0;
+            string lowerMatch = args[0].ToLower();
             SimPosition dest = null;
-            if (args[0]=="avatar5")
+            if (lowerMatch == "avatar5")
             {
                 argsUsed++;
                 dest = TheSimAvatar.ApproachPosition;
-                
-            } else if (args[0]=="prev")
+
+            }
+            else if (lowerMatch == "prev")
             {
                 argsUsed++;
-            } else
-            {
-               dest = WorldSystem.GetVector(args, out argsUsed);
             }
+            else
+            {
+                dest = WorldSystem.GetVector(args, out argsUsed);
+            }
+            
+            lowerMatch = args[argsUsed];
 
             InventoryManager Manager = Client.Inventory;
+
+            string folderPrefix = "/";
             if (Client.CurrentDirectory == null)
             {
                 Client.CurrentDirectory = Manager.Store.RootFolder;
             }
-            string ret = "";
+
+            var startAt = Client.CurrentDirectory;
+            
+            if (lowerMatch.StartsWith("//"))
+            {
+                startAt = Manager.Store.LibraryFolder;
+                args[argsUsed] = lowerMatch.Substring(2);
+            } else if (lowerMatch.StartsWith("/"))
+            {
+                startAt = Manager.Store.RootFolder;
+                args[argsUsed] = lowerMatch.Substring(1);
+            }
+
+            folderPrefix = "";
+
+            int expected = args.Length - argsUsed;
+
+            List<InventoryItem> found = new List<InventoryItem>();
             for (int i = argsUsed; i < args.Length; ++i)
             {
-                string inventoryName = args[i];
+                var inventoryName = new Regex("^" + args[i] + "$", RegexOptions.IgnoreCase);
                 // WARNING: Uses local copy of inventory contents, need to download them first.
-                String found = RezMatches(Manager, inventoryName,
-                                           FolderContents(Manager, Client.CurrentDirectory.UUID), dest);
-                if (!string.IsNullOrEmpty(found))
-                    ret += "No inventory item named " + inventoryName + " found." + nl;
+                RezMatches(Manager, folderPrefix, inventoryName, FolderContents(Manager, startAt.UUID), found);              
             }
-            return Success(ret);
+
+            foreach (var v in found)
+            {
+                Success("found=" + Fullpath(Manager, v));
+            }
+            if (found.Count != expected)
+            {
+                return Failure("expected " + expected + " item matched not " + found.Count);
+            }
+
+            Simulator sim = Client.Network.CurrentSim;
+            foreach (var v in found)
+            {
+                Success("found=" + v.Name);
+                if (dest == null)
+                {
+                  //  Manager.RequestRestoreRezFromInventory(sim, v, UUID.Random());
+                }
+                else
+                {
+                  //  Manager.RequestRezFromInventory(sim, dest.SimRotation, dest.SimPosition, v);
+                }
+            }
+            return Success("found.Count=" + found.Count);
         }
 
-        private string RezMatches(InventoryManager manager, string inventoryName, IEnumerable<InventoryBase> contents, SimPosition dest)
+        private string Fullpath(InventoryManager manager, InventoryItem item)
         {
-            string found = "";
+            if (item == null) return "null";
+            return Fullpath(manager, manager.Store.GetNodeFor(item.ParentUUID)) + "/" + item.Name;
+        }
+        private string Fullpath(InventoryManager manager, InventoryNode item)
+        {
+            if (item == null) return "";
+            return Fullpath(manager, item.Parent) + "/" + item.Data.Name;
+        }
+        private void RezMatches(InventoryManager manager, String folderPrefix, Regex inventoryName, IEnumerable<InventoryBase> contents, List<InventoryItem> dest)
+        {
             if (contents != null)
                 foreach (InventoryBase b in contents)
                 {
-                    if (inventoryName == b.Name || inventoryName == b.UUID.ToString())
+                    if (inventoryName.IsMatch(b.Name) ||
+                        inventoryName.IsMatch(folderPrefix + b.Name) ||
+                        inventoryName.IsMatch(b.UUID.ToString()))
                     {
-                        found += RezAll(manager, b, dest);
+                        RezAll(manager, b, dest);
                     }
                     else if (b is InventoryFolder)
                     {
-                        found += RezMatches(manager, inventoryName, FolderContents(manager, b.UUID), dest);
+                        RezMatches(manager, folderPrefix + b.Name + "/", inventoryName, FolderContents(manager, b.UUID),
+                                   dest);
+                    }
+                    else if (b is InventoryItem)
+                    {
+                        InventoryItem ii = (InventoryItem)b;
+                        if (inventoryName.IsMatch(ii.AssetUUID.ToString()))
+                        {
+                            RezAll(manager, b, dest);
+                        }
                     }
                 }
-            return found;
         }
 
         private List<InventoryBase> FolderContents(InventoryManager manager, UUID fid)
         {
-            return manager.FolderContents(fid, Client.Self.AgentID, true, true, InventorySortOrder.ByName, 10000);
+            var f = manager.Store.GetContents(fid);
+            if (f != null && f.Count > 0) return f;
+            var contents = manager.FolderContents(fid, Client.Self.AgentID, true, true, InventorySortOrder.ByName, 5);
+            if (contents != null) return contents;
+            contents = manager.FolderContents(fid, UUID.Zero , true, true, InventorySortOrder.ByName, 5);
+            if (contents != null) return contents;
+            return null;
         }
 
-        private string RezAll(InventoryManager manager, InventoryBase b, SimPosition dest)
+        private void RezAll(InventoryManager manager, InventoryBase b, List<InventoryItem> dest)
         {
-            string ret = "";
+            List<InventoryItem> ret = new List<InventoryItem>();
             
             if (b is InventoryItem)
             {
                 InventoryItem item = b as InventoryItem;
-                ret += item.Name + nl;
-                if (dest == null)
-                {
-                    manager.RequestRestoreRezFromInventory(Client.Network.CurrentSim, item, UUID.Zero);
-                }
-                else
-                {
-                    manager.RequestRezFromInventory(Client.Network.CurrentSim, dest.SimRotation, dest.SimPosition, item);
-                }
+                dest.Add(item);
             }
             else if (b is InventoryFolder)
             {
@@ -106,10 +168,9 @@ namespace cogbot.Actions.Inventory.Shell
                 if (folderContents != null)
                     foreach (InventoryBase list in folderContents)
                     {
-                        ret += RezAll(manager, list, dest);
+                        RezAll(manager, list, dest);
                     }
             }
-            return ret;
         }
     }
 }

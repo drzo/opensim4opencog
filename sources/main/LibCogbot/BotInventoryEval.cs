@@ -76,6 +76,11 @@ namespace cogbot
                             if (current_operation == "animationStart") botclient.Self.AnimationStart(ii.UUID, false);
                             if (current_operation == "animationStop") botclient.Self.AnimationStop(ii.UUID, false);
                             if (current_operation == "attach") botclient.Appearance.Attach(ii, AttachmentPoint.Default);
+                            if (current_operation == "rez")
+                            {
+                                botclient.Inventory.RequestRestoreRezFromInventory(botclient.Network.CurrentSim, ii,
+                                                                                   UUID.Random());
+                            }
                         }
                     }
                 }
