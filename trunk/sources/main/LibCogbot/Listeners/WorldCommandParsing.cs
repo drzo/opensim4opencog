@@ -216,6 +216,17 @@ namespace cogbot.Listeners
             return prim;
         }
 
+        public static SimPosition GetSimPositionByName(string arg)
+        {
+            int argsUsed;
+            WorldObjects wo = WorldObjects.GridMaster;
+            string[] args = Parser.Parse(arg);
+            SimPosition prim = wo.GetSimObjectS(args, out argsUsed);
+            if (prim != null) return prim;
+            prim = wo.GetVector(args, out argsUsed);
+            return prim;
+        }
+
 
         public static SimObject GetSimAvatarFromNameIfKnown(string args)
         {
