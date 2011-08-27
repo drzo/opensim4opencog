@@ -431,11 +431,19 @@ namespace PathSystem3D.Navigation
             return SimPathStore.INITIALLY;
         }
 
+        private DateTime lastUpdate = DateTime.Now - TimeSpan.FromHours(1);
         internal void EnsureUpdated()
         {
             RenderHeightMap();
+
             if (!MatrixNeedsUpdate) return;
-            {               
+            {
+                TimeSpan since = DateTime.Now - lastUpdate;
+                if (since < TimeSpan.FromMinutes(1))
+                {
+                    return;
+                }
+                lastUpdate = DateTime.Now;
                 CollisionIndex[,] MeshIndex = PathStore.MeshIndex;
                 MatrixNeedsUpdate = false;
                 byte[,] ToMatrix = ByteMatrix;
