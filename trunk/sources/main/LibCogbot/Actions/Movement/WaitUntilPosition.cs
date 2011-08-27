@@ -28,7 +28,7 @@ namespace cogbot.Actions.Movement
         {
             if (args.Length < 2)
                 return ShowUsage();
-
+            string str = Parser.Rejoin(args, 0);
             int argcount;
             float maxSeconds;
             if (!float.TryParse(args[0], out maxSeconds))
