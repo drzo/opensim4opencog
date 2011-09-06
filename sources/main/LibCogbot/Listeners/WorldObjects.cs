@@ -21,9 +21,41 @@ namespace cogbot.Listeners
         public static bool MaintainAnimsInFolders = true;
         public static bool GleanAssetsFromFolders = true;
         public static bool MaintainAttachments = true;
-        public static bool MaintainCollisions = true; // keep false so the bot only meshes what it needs
-        public static bool MaintainMeshes = true;
-        public static int WorthMeshingDistance = 60;
+        /// keep false so the bot only meshes what it needs
+        public static bool MaintainCollisions
+        {
+            get
+            {
+                return WorldPathSystem.MaintainCollisions;
+            }
+            set
+            {
+                WorldPathSystem.MaintainCollisions = value;
+            }
+        }
+ 
+        public static bool MaintainMeshes     
+        {
+            get
+            {
+                return WorldPathSystem.MaintainMeshes;
+            }
+            set
+            {
+                WorldPathSystem.MaintainMeshes = value;
+            }
+        }
+        public static int WorthMeshingDistance
+        {
+            get
+            {
+                return WorldPathSystem.WorthMeshingDistance;
+            }
+            set
+            {
+                WorldPathSystem.WorthMeshingDistance = value;
+            }
+        }
         public static bool MaintainEffects = true;
         public static bool MaintainOnlyMasterEffects = false;
         public static float MaintainEffectsDistance = 80;
@@ -125,7 +157,7 @@ namespace cogbot.Listeners
                 EventQueue.Dispose();
                 CatchUpQueue.Dispose();
                 PropertyQueue.Dispose();
-                MaintainCollisions = false;
+                WorldPathSystem.MaintainCollisions = false;
                 MaintainActions = false;
                 SimAssetSystem.Dispose();
                 ParentGrabber.Dispose();

@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using cogbot.TheOpenSims;
 using System.Threading;
-using cogbot.Utilities;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
-using THIRDPARTY.OpenSim.Region.Physics.Meshing;
-using PathSystem3D.Mesher;
 
 namespace cogbot.Listeners
 {
@@ -26,6 +22,33 @@ namespace cogbot.Listeners
         static public int RealMeshes = 0;
         public static float MinEdgeSizeOfSimplify = 0.5f;
         public static float MinMassOfSimplify = 0.5f;
+        public static bool MaintainCollisions = true; // keep false so the bot only meshes what it needs
+        public static bool MaintainMeshes = true;
+        public static int WorthMeshingDistance = 160;
+
+        public static readonly List<ulong> MaintainSimCollisionsList = new List<ulong>();
+        public static GridClient GridClientMaster;
+
+        public static bool MaintainSimCollisions(ulong handle)
+        {
+            lock (MaintainSimCollisionsList) return MaintainSimCollisionsList.Contains(handle);
+        }
+
+        public static bool IsWorthMeshing(SimObjectImpl impl)
+        {
+            Vector3d GlobalPosition;
+            GridClient client = GridClientMaster;
+            if (client == null) return true;
+            if (impl.TryGetGlobalPosition(out GlobalPosition))
+            {
+                double d = Vector3d.Distance(GlobalPosition, client.Self.GlobalPosition);
+                if (d < WorldPathSystem.WorthMeshingDistance)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
 
         public WorldPathSystem(GridClient gc)
         {
@@ -42,6 +65,7 @@ namespace cogbot.Listeners
                     //TrackPathsThread.Priority = ThreadPriority.AboveNormal;
                     TrackPathsThread.Start();
                 }
+                GridClientMaster = gc;
             }
         }
 
@@ -61,7 +85,7 @@ namespace cogbot.Listeners
             while (!(IsDisposing))
             {
                 Thread.Sleep(10000);
-                if (!WorldObjects.MaintainCollisions && !MaintainCollisionsForeground) continue;
+                if (!MaintainCollisions && !MaintainCollisionsForeground) continue;
                 int thisCount = SimObjects.Count;
 
                 if (thisCount == lastCount)
@@ -78,7 +102,7 @@ namespace cogbot.Listeners
                 int realUpdates = 0;
                 foreach (SimObject O in SimObjects.CopyOf())
                 {
-                    if (!WorldObjects.MaintainSimCollisions(O.RegionHandle)) continue;
+                    if (!MaintainSimCollisions(O.RegionHandle)) continue;
                     if (O.IsRegionAttached)
                     {
                         if (O.IsWorthMeshing)
@@ -113,7 +137,7 @@ namespace cogbot.Listeners
                         DLRConsole.DebugWrite("." + occUpdate);
                         DLRConsole.SystemFlush();
                     }
-                    if (RealMeshes >= MaxMeshes || !WorldObjects.MaintainCollisions) break;
+                    if (RealMeshes >= MaxMeshes || !MaintainCollisions) break;
                 }
 
                 Debug("\nTrackPaths Completed: " + thisCount + " realUpdates=" + realUpdates);
@@ -141,7 +165,7 @@ namespace cogbot.Listeners
 
         public void Dispose()
         {
-            WorldObjects.MaintainCollisions = false;
+            MaintainCollisions = false;
             IsDisposing = true;
             TrackPathsThread.Abort();
         }

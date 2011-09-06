@@ -21,7 +21,7 @@ namespace cogbot.Actions.Pathfinder
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             int argsUsed;
-            if (!WorldObjects.MaintainMeshes) return Success("WorldObjects.MaintainMeshes = false for " + Name);
+            if (!WorldPathSystem.MaintainMeshes) return Success("WorldObjects.MaintainMeshes = false for " + Name);
             IEnumerable<SimObject> objs = WorldSystem.GetPrimitives(args, out argsUsed);
             if (argsUsed == 0)
             {

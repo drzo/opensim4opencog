@@ -167,6 +167,7 @@ namespace cogbot.Listeners
                     //client.Grid.RequestMapRegion(simulator.Name, GridLayerType.LandForSale);
                     //client.Grid.RequestMapItems(simulator.Handle,OpenMetaverse.GridItemType.Classified,GridLayerType.Terrain);
                     MasteringRegions.Add(simulator.Handle);
+                    var MaintainSimCollisionsList = WorldPathSystem.MaintainSimCollisionsList;
                     if (simulator == client.Network.CurrentSim)
                     {
                         lock (MaintainSimCollisionsList)
@@ -939,26 +940,6 @@ namespace cogbot.Listeners
             return GetSimObjectLock[simulator.Handle];
         }
 
-        private static readonly List<ulong> MaintainSimCollisionsList = new List<ulong>();
-        public static bool MaintainSimCollisions(ulong handle)
-        {
-            lock (MaintainSimCollisionsList) return MaintainSimCollisionsList.Contains(handle);
-        }
-
-        public bool IsWorthMeshing(SimObjectImpl impl)
-        {
-            Vector3d GlobalPosition;
-            var client = GridMaster.client;
-            if (impl.TryGetGlobalPosition(out GlobalPosition))
-            {
-                double d = Vector3d.Distance(GlobalPosition, client.Self.GlobalPosition);
-                if (d < WorldObjects.WorthMeshingDistance)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
 
         private void DeclareProperties(Primitive prim0, Primitive.ObjectProperties props, Simulator simulator)
         {
