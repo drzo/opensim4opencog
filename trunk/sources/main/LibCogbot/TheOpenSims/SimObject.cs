@@ -611,7 +611,11 @@ namespace cogbot.TheOpenSims
 
         public bool IsSculpted
         {
-            get { return Prim != null && Prim.Sculpt != null; }
+            get
+            {
+                Primitive Prim = this.Prim;
+                return Prim != null && Prim.Sculpt != null;
+            }
         }
 
         private bool _Passable;
@@ -1014,7 +1018,7 @@ namespace cogbot.TheOpenSims
                         WorldObjects.SimChildObjects.AddTo(this);
                     }
 
-                    if (WorldObjects.MaintainSimCollisions(prim.RegionHandle) && prim.Sculpt != null && WorldPathSystem.SculptCollisions)
+                    if (WorldPathSystem.MaintainSimCollisions(prim.RegionHandle) && prim.Sculpt != null && WorldPathSystem.SculptCollisions)
                     {
                         WorldSystem.StartTextureDownload(prim.Sculpt.SculptTexture);
                     }
@@ -1322,7 +1326,7 @@ namespace cogbot.TheOpenSims
             get
             {
                 if (requestedMeshed.HasValue) return requestedMeshed.Value;
-                if (WorldSystem.IsWorthMeshing(this))
+                if (WorldPathSystem.IsWorthMeshing(this))
                 {
                     requestedMeshed = true;
                     return true;
@@ -1411,7 +1415,7 @@ namespace cogbot.TheOpenSims
                 }
             }
 
-            if (!WorldObjects.MaintainMeshes) return false;
+            if (!WorldPathSystem.MaintainMeshes) return false;
 
             // avoids loop (since our parent will call us again)
             if (IsMeshing || IsMeshed) return false;
@@ -2315,7 +2319,7 @@ namespace cogbot.TheOpenSims
 
         public bool IsInside(Vector3 L)
         {
-            if (!WorldObjects.MaintainMeshes) return false;
+            if (!WorldPathSystem.MaintainMeshes) return false;
             return Mesh.IsInside(L.X, L.Y, L.Z);
         }
 
