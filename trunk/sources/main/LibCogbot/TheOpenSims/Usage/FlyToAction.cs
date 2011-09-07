@@ -79,7 +79,7 @@ namespace cogbot.TheOpenSims
             ClientMovement.AtNeg = false;
             ZMovement();
             // ClientMovement
-            TheBot.TurnToward(Target);
+            TheCBot.TurnToward(Target);
 
         }
 
@@ -220,7 +220,7 @@ namespace cogbot.TheOpenSims
                 {
                     DoZ = true;
                     EndFlyto();
-                    TheBot.TurnToward(Target);
+                    TheBot.TurnToward(Target.GlobalPosition);
                     //Thread.Sleep(1000); // total 3 seconds
                     return false;
                 }
@@ -250,12 +250,12 @@ namespace cogbot.TheOpenSims
                 ZMovement();
                 if (ClientMovement.AtPos || ClientMovement.AtNeg)
                 {
-                    TheBot.TurnToward(Target);
+                    TheBot.TurnToward(Target.GlobalPosition);
                     //Debug("Flyxy ");
                 }
                 else if (ClientMovement.UpPos || ClientMovement.UpNeg)
                 {
-                    TheBot.TurnToward(Target);
+                    TheBot.TurnToward(Target.GlobalPosition);
                     //ClientMovement.SendUpdate(false);
                     //Debug("Fly z ");
                 }
