@@ -2888,20 +2888,21 @@ namespace cogbot.TheOpenSims
         bool WearItem(InventoryItem item);
     }
 
-    public interface SimControllableAvatar : SimAvatar
+    public interface SimControllableAvatar : SimAvatar, SimAvatarSight
     {
-        void RemoveObject(SimObject O);
-        SimObject FindSimObject(SimObjectType pUse, double maxXYDistance, double maxZDist);
-        SimPosition ApproachPosition { get; }
-        IEnumerable<SimTypeUsage> KnownTypeUsages { get; }
-        BotAction LastAction { get; }
         GridClient GetGridClient();
-        BotClient GetBotClient();
+        BotClient GetBotClient(); 
+        
+        SimPosition ApproachPosition { get; }
+
+
+
+
+
     }
 
-    public interface SimAvatar : SimObject, PathSystem3D.Navigation.SimMover, SimObjectPathMover
+    public interface SimAvatarSight
     {
-
         /// <summary>
         /// Returns hopefully at least three objects sorted by distance
         /// </summary>
@@ -2909,7 +2910,21 @@ namespace cogbot.TheOpenSims
         ListAsSet<SimObject> GetKnownObjects();
         void ScanNewObjects(int minimum, double sightRange, bool rootOnly);
         double SightRange { get; set; }
+        SimObject FindSimObject(SimObjectType pUse, double maxXYDistance, double maxZDist);
+        void RemoveObject(SimObject O);
+    }
+
+    public interface SimAvatarActing
+    {
+        IEnumerable<SimTypeUsage> KnownTypeUsages { get; }
+        BotAction LastAction { get; }
         //BotNeeds CurrentNeeds { get; }
+
+    }
+
+    public interface SimAvatar : SimObject, PathSystem3D.Navigation.SimMover, SimObjectPathMover, SimAvatarSight, SimAvatarActing
+    {
+
         Avatar theAvatar { get; }
         bool IsSitting { get; }
         bool IsOnline { get; }
@@ -2919,8 +2934,7 @@ namespace cogbot.TheOpenSims
         bool IsFlying { get; }
         Dictionary<UUID, AvatarGroup> GroupRoles { get; set; }
         string AspectName { get; set; }
-        BotAction LastAction { get; }
-        IEnumerable<SimTypeUsage> KnownTypeUsages { get; }
+
         void OnAvatarAnimations(List<Animation> anims);
 
         ICollection<UUID> GetCurrentAnims();
@@ -2929,6 +2943,6 @@ namespace cogbot.TheOpenSims
 
         void AddGoupRoles(List<AvatarGroup> groups);
 
-        void RemoveObject(SimObject O);
+
     }
 }
