@@ -312,8 +312,8 @@ namespace cogbot.Listeners
                         if (av != null) TheSimAvatar = (SimActor)GetSimObject(av, client.Network.CurrentSim);
                         if (m_TheSimAvatar == null)
                         {
-                            SimAvatarImpl impl;
-                            TheSimAvatar = impl = CreateSimAvatar(id, this, client.Network.CurrentSim);
+                            SimAvatarClient impl;
+                            TheSimAvatar = impl = new SimAvatarClient(id, this, client.Network.CurrentSim);
                             impl.AspectName = client.GetName();
                         }
                     }
@@ -1207,7 +1207,7 @@ namespace cogbot.Listeners
         {
             if (true)
             {
-                return /* ((float)prim.ToString().Length/5 -*/ (float)TheSimAvatar.Distance(prim);
+                return /* ((float)prim.ToString().Length/5 -*/ (float)((PathSystem3D.Navigation.SimMover)TheSimAvatar).Distance(prim);
             }
             float fitness = 1;
             foreach (SimObjectHeuristic heuristic in objectHeuristics)

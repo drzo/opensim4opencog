@@ -105,16 +105,17 @@ namespace cogbot.Listeners
                     if (!MaintainSimCollisions(O.RegionHandle)) continue;
                     if (O.IsRegionAttached)
                     {
-                        if (O.IsWorthMeshing)
+                        SimObjectPathFinding o = O.PathFinding;
+                        if (o.IsWorthMeshing)
                         {
                             bool didIt = false;
                             if (MaintainCollisionsForeground)
                             {
-                                didIt = O.AddCollisionsNow();
+                                didIt = o.AddCollisionsNow();
                             }
                             else
                             {
-                                didIt = O.AddCollisions();
+                                didIt = o.AddCollisions();
                             }
                             if (didIt)
                             {
@@ -126,8 +127,8 @@ namespace cogbot.Listeners
                         {
                             if (MaintainCollisionsForeground)
                             {
-                                SimObject o = O;
-                                WorldPathSystem.MeshingQueue.Enqueue(() => o.AddCollisionsNow());
+                                var p = O.PathFinding;
+                                WorldPathSystem.MeshingQueue.Enqueue(() => p.AddCollisionsNow());
                             }
                         }
                     }

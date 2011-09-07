@@ -276,7 +276,7 @@ namespace TheSimiansModule
             if (act1 == act2) return 0;
             if (act1 == null) return -1;
             if (act2 == null) return 1;
-            return (int)(act2.RateIt(CurrentNeeds) - act1.RateIt(CurrentNeeds));
+            return (int)(act2.Affordances.RateIt(CurrentNeeds) - act1.Affordances.RateIt(CurrentNeeds));
         }
 
 
@@ -330,7 +330,7 @@ namespace TheSimiansModule
         public void DoBestUse(SimObject someObject)
         {
             if (someObject == null) return;
-            SimTypeUsage use = someObject.GetBestUse(CurrentNeeds);
+            SimTypeUsage use = someObject.Affordances.GetBestUse(CurrentNeeds);
             if (use == null)
             {
                 double closeness = Actor.Approach(someObject, someObject.GetSizeDistance() + 1);
@@ -404,7 +404,7 @@ namespace TheSimiansModule
                          {
                              if (obj!=CurrentAction.Target) continue;
                          }
-                        if (obj.GetTypeUsages().Contains(use))
+                         if (obj.Affordances.GetTypeUsages().Contains(use))
                         {
                             KnownBotAcions.Add(new BotObjectAction(ObservedActor, new SimObjectUsage(use, obj)));
                         }

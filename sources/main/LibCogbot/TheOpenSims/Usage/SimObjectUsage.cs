@@ -41,7 +41,7 @@ namespace cogbot.TheOpenSims
                                                           InvokeBotSideEffect(TheBot);
                                                       });
 
-            SimAssetStore simAssetSystem = TheBot.GetGridClient().WorldSystem.SimAssetSystem;
+            SimAssetStore simAssetSystem = SimAssetStore.TheStore;
             bool animFound = TypeUsage.UseSit;
             // IF UseAnim was specified
             if (!String.IsNullOrEmpty(TypeUsage.UseAnim))
@@ -83,7 +83,7 @@ namespace cogbot.TheOpenSims
                     Debug(TheBot, "Too far away " + howClose + " from " + this);
                     return;
                 }
-                Target.MakeEnterable(TheBot);
+                Target.PathFinding.MakeEnterable(TheBot);
                 closure.Invoke();
                 if (Target == TheBot.ApproachPosition)
                 {
@@ -92,7 +92,7 @@ namespace cogbot.TheOpenSims
             }
             finally
             {
-                Target.RestoreEnterable(TheBot);
+                Target.PathFinding.RestoreEnterable(TheBot);
             }
         }
 
@@ -106,7 +106,7 @@ namespace cogbot.TheOpenSims
                 TheBot["CurrentNeeds"] = CurrentNeeds = new BotNeeds(90.0f);   
             }                
             BotNeeds needsBefore = CurrentNeeds.Copy();
-            BotNeeds update = Target.GetActualUpdate(TypeUsage.UsageName);
+            BotNeeds update = Target.Affordances.GetActualUpdate(TypeUsage.UsageName);
             //TODO rate interaction and update TheBot.Assumptions
             CurrentNeeds.AddFrom(update);
             CurrentNeeds.SetRange(0.0F, 100.0F);
@@ -132,7 +132,7 @@ namespace cogbot.TheOpenSims
 
         public BotNeeds GetProposedChange()
         {
-            return Target.GetProposedUpdate(TypeUsage.UsageName);
+            return Target.Affordances.GetProposedUpdate(TypeUsage.UsageName);
         }
 
         public Vector3 GetUsePosition()

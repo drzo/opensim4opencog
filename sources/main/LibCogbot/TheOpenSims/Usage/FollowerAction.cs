@@ -21,7 +21,7 @@ namespace cogbot.TheOpenSims
         public FollowerAction(SimAvatar impl, SimPosition position)
             : base(impl,position)
         {
-            TheBot = impl;
+            TheBot = (SimControllableAvatar)impl; 
             maxDistance = 3;// position.GetSizeDistance();
             Target = position;
             FollowThread = new Thread(FollowLoop);
@@ -116,7 +116,7 @@ namespace cogbot.TheOpenSims
                         {
                             Debug("UseFlight");
                             TheBot.Flying = true;
-                            TheBot.GetGridClient().ExecuteBotCommand("flyto " + simO.ID, TheBot, Debug);
+                            GetBotClient().ExecuteBotCommand("flyto " + simO.ID, TheBot, Debug);
                         }
                         if (CloseEnough())
                         {
@@ -154,7 +154,7 @@ namespace cogbot.TheOpenSims
                             vto += TheBot.GlobalPosition;
                             vto.Z = Target.GlobalPosition.Z;
                             var res =
-                                TheBot.GetGridClient().ExecuteBotCommand(
+                                GetBotClient().ExecuteBotCommand(
                                     string.Format("teleport {0}", vto.ToRawString()), TheBot, Debug);
                             if (!res.Success) UseTeleport = false; // cant teleport
                             TheBot.TurnToward(Target);
@@ -181,7 +181,7 @@ namespace cogbot.TheOpenSims
             if (!Target.IsRegionAttached) return true;
             double theBotGlobalPositionZ = TheBot.GlobalPosition.Z - Target.GlobalPosition.Z;
             if (Math.Abs(theBotGlobalPositionZ) > 0.7) return false;
-            if (TheBot.Distance(Target) < maxDistance + 2) return true;
+            if (((SimMover)TheBot).Distance(Target) < maxDistance + 2) return true;
             return false;
         }
 

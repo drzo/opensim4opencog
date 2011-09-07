@@ -20,12 +20,13 @@ namespace cogbot.TheOpenSims
 
         public override void Abort()
         {
-            BotClient Client = TheBot.GetGridClient();
+            var Client = GetGridClient();
+            var ClientMovement = Client.Self.Movement;
 
             DeRegCallback();
             TheBot.StopMoving();
             EndFlyto();
-            Client.Self.Movement.Fly = true;
+            ClientMovement.Fly = true;
             if (FollowThread.IsAlive)
             {
                 FollowThread.Abort();
@@ -44,10 +45,10 @@ namespace cogbot.TheOpenSims
 
             //XYMovement();
             //ZMovement();
-            //Client.Self.Movement.SendUpdate(false);
+            //ClientMovement.SendUpdate(false);
 
             // start if not already started
-            BotClient bc = TheBot.GetGridClient();
+            var bc = GetBotClient();
             if (!FollowThread.IsAlive)
             {
                 try
@@ -68,14 +69,16 @@ namespace cogbot.TheOpenSims
         private void SetMovement()
         {
 
-            BotClient Client = TheBot.GetGridClient();
+            var Client = GetGridClient();
+            var ClientMovement = Client.Self.Movement;
+
             RegCallback();
             startTime = DateTime.Now;
-            Client.Self.Movement.Fly = true;
-            Client.Self.Movement.AtPos = true;
-            Client.Self.Movement.AtNeg = false;
+            ClientMovement.Fly = true;
+            ClientMovement.AtPos = true;
+            ClientMovement.AtNeg = false;
             ZMovement();
-            // Client.Self.Movement
+            // ClientMovement
             TheBot.TurnToward(Target);
 
         }
@@ -136,7 +139,7 @@ namespace cogbot.TheOpenSims
         {
             if (!CallbackReged)
             {
-                BotClient Client = TheBot.GetGridClient();
+                var Client = GetGridClient();
                 Client.Objects.TerseObjectUpdate += callback;
                 CallbackReged = true;
             }
@@ -146,7 +149,7 @@ namespace cogbot.TheOpenSims
         {
             if (CallbackReged)
             {
-                BotClient Client = TheBot.GetGridClient();
+                var Client = GetGridClient();
                 Client.Objects.TerseObjectUpdate -= callback;
                 CallbackReged = false;
             }
@@ -159,14 +162,14 @@ namespace cogbot.TheOpenSims
             {
 
 
-                BotClient Client = TheBot.GetGridClient();
-                double dist = TheBot.Distance(Target);
+                var Client = GetGridClient();
+                double dist = ((SimMover)TheBot).Distance(Target);
                 Vector3d premoved = TheBot.GlobalPosition;
                 if (dist > maxDistance)
                 {
-                    //Client.Self.Movement.Fly = true;
+                    //ClientMovement.Fly = true;
                     //KeepFollowing = true;
-                    //Client.Self.Movement.AtPos = true;
+                    //ClientMovement.AtPos = true;
                     //startTime = 10000;
                     if (DoZ)
                     {
@@ -203,14 +206,14 @@ namespace cogbot.TheOpenSims
                     }
                     //DoZ = !DoZ;
                     //if (DoZ) ZMovement();
-                    //Client.Self.Movement.TurnToward(target);
+                    //ClientMovement.TurnToward(target);
                     //System.Threading.Thread.Sleep(100);
 
                     //if (!DoZ) XYMovement();
-                    //  Client.Self.Movement.AtPos = false;
-                    //   Client.Self.Movement.AtNeg = false;
+                    //  ClientMovement.AtPos = false;
+                    //   ClientMovement.AtNeg = false;
                     //  ZMovement();
-                    //   Client.Self.Movement.SendUpdate(false);
+                    //   ClientMovement.SendUpdate(false);
                     return true;
                 }
                 else
@@ -233,7 +236,9 @@ namespace cogbot.TheOpenSims
 
         private void Objects_OnObjectUpdated(object s , TerseObjectUpdateEventArgs e)
         {
-            BotClient Client = TheBot.GetGridClient();
+            var Client = GetGridClient();
+            var ClientMovement = Client.Self.Movement;
+
             if (startTime == DateTime.MinValue)
             {
                 DeRegCallback();
@@ -243,15 +248,15 @@ namespace cogbot.TheOpenSims
             {
                 XYMovement();
                 ZMovement();
-                if (Client.Self.Movement.AtPos || Client.Self.Movement.AtNeg)
+                if (ClientMovement.AtPos || ClientMovement.AtNeg)
                 {
                     TheBot.TurnToward(Target);
                     //Debug("Flyxy ");
                 }
-                else if (Client.Self.Movement.UpPos || Client.Self.Movement.UpNeg)
+                else if (ClientMovement.UpPos || ClientMovement.UpNeg)
                 {
                     TheBot.TurnToward(Target);
-                    //Client.Self.Movement.SendUpdate(false);
+                    //ClientMovement.SendUpdate(false);
                     //Debug("Fly z ");
                 }
                 else if (Vector3d.Distance(Target.GlobalPosition, TheBot.GlobalPosition) <= 2.0)
@@ -275,30 +280,32 @@ namespace cogbot.TheOpenSims
             myPos0.X = (float)myPos.X;
             myPos0.Y = (float)myPos.Y;
             diff = Vector2.Distance(target0, myPos0);
-            BotClient Client = TheBot.GetGridClient();
+            var Client = GetGridClient();
+            var ClientMovement = Client.Self.Movement;
+
             Vector2 vvel = new Vector2(Client.Self.Velocity.X, Client.Self.Velocity.Y);
             float vel = vvel.Length();
             if (diff >= 10.0)
             {
-                Client.Self.Movement.AtPos = true;
-                //  Client.Self.Movement.AtNeg = false;
+                ClientMovement.AtPos = true;
+                //  ClientMovement.AtNeg = false;
                 //if (Math.Abs(diff - olddiff) > 1.5) {
-                //  Client.Self.Movement.AtPos = diff < olddiff;
-                //  Client.Self.Movement.AtNeg = diff > olddiff;
-                //} else if (!Client.Self.Movement.AtPos && !Client.Self.Movement.AtNeg) {
-                //  Client.Self.Movement.AtPos = true;
-                //  Client.Self.Movement.AtNeg = false;
+                //  ClientMovement.AtPos = diff < olddiff;
+                //  ClientMovement.AtNeg = diff > olddiff;
+                //} else if (!ClientMovement.AtPos && !ClientMovement.AtNeg) {
+                //  ClientMovement.AtPos = true;
+                //  ClientMovement.AtNeg = false;
                 //}
                 res = true;
             }
             else if (diff >= 2 && vel < 5)
             {
-                Client.Self.Movement.AtPos = true;
+                ClientMovement.AtPos = true;
             }
             else
             {
-                Client.Self.Movement.AtPos = false;
-                Client.Self.Movement.AtNeg = false;
+                ClientMovement.AtPos = false;
+                ClientMovement.AtNeg = false;
             }
             saveolddiff = olddiff;
             olddiff = diff;
@@ -307,44 +314,49 @@ namespace cogbot.TheOpenSims
 
         private void ZMovement()
         {
-            BotClient Client = TheBot.GetGridClient();
-            Client.Self.Movement.UpPos = false;
-            Client.Self.Movement.UpNeg = false;
+            var Client = GetGridClient();
+            var ClientMovement = Client.Self.Movement;
+
+
+            ClientMovement.UpPos = false;
+            ClientMovement.UpNeg = false;
             float diffz = (float)(target.Z - TheBot.SimPosition.Z);
             if (diffz >= 20.0)
-                Client.Self.Movement.UpPos = true;
+                ClientMovement.UpPos = true;
             else if (diffz <= -20.0)
-                Client.Self.Movement.UpNeg = true;
+                ClientMovement.UpNeg = true;
             else if (diffz >= +5.0 && Client.Self.Velocity.Z < +4.0)
-                Client.Self.Movement.UpPos = true;
+                ClientMovement.UpPos = true;
             else if (diffz <= -5.0 && Client.Self.Velocity.Z > -4.0)
-                Client.Self.Movement.UpNeg = true;
+                ClientMovement.UpNeg = true;
             else if (diffz >= +2.0 && Client.Self.Velocity.Z < +1.0)
-                Client.Self.Movement.UpPos = true;
+                ClientMovement.UpPos = true;
             else if (diffz <= -2.0 && Client.Self.Velocity.Z > -1.0)
-                Client.Self.Movement.UpNeg = true;
+                ClientMovement.UpNeg = true;
         }
 
         public void EndFlyto()
         {
             startTime = DateTime.MinValue;
-            BotClient Client = TheBot.GetGridClient();
-            Client.Self.Movement.AtPos = false;
-            Client.Self.Movement.AtNeg = false;
-            Client.Self.Movement.UpPos = false;
-            Client.Self.Movement.UpNeg = false;
-            Client.Self.Movement.SendUpdate(false);
+            var ClientMovement = GetGridClient().Self.Movement;
+            ClientMovement.AtPos = false;
+            ClientMovement.AtNeg = false;
+            ClientMovement.UpPos = false;
+            ClientMovement.UpNeg = false;
+            ClientMovement.SendUpdate(false);
             DeRegCallback();
             DoZ = true;
         }
 
         private void Debug(string x)
         {
-            BotClient Client = TheBot.GetGridClient();
+            var Client = GetGridClient();
+            var ClientMovement = Client.Self.Movement;
+
             // return; /* remove for debugging */
             TheBot.Debug(x + " {0,3:##0} {1,3:##0} {2,3:##0} diff {3,5:##0.0} olddiff {4,5:##0.0}  At:{5,5} {6,5}  Up:{7,5} {8,5}  v: {9} w: {10}",
                     myPos.X, myPos.Y, myPos.Z, diff, saveolddiff,
-                    Client.Self.Movement.AtPos, Client.Self.Movement.AtNeg, Client.Self.Movement.UpPos, Client.Self.Movement.UpNeg,
+                    ClientMovement.AtPos, ClientMovement.AtNeg, ClientMovement.UpPos, ClientMovement.UpNeg,
                     Client.Self.Velocity.ToString(), Client.Self.AngularVelocity.ToString());
         }
 

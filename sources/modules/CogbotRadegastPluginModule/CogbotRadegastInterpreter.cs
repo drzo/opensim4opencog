@@ -40,6 +40,7 @@ namespace CogbotRadegastPluginModule
 
         public bool IsValidCommand(string cmdline)
         {
+            if (cmdline.StartsWith("//")) return false;
             if (cmdline.StartsWith("/")) return true;
             return false;
         }

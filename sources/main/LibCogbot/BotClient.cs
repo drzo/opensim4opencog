@@ -2749,7 +2749,7 @@ namespace cogbot
                 WriteLine(";; DEBUG NOT ONLINE! anim: " + animate);
                 return;
             }
-            SimAvatarImpl av = WorldSystem.TheSimAvatar as SimAvatarImpl;
+            SimAvatarClient av = WorldSystem.TheSimAvatar as SimAvatarClient;
             if (av != null)
             {
                 SimAsset asset = GetAnimationOrGesture(animate);

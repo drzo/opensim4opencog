@@ -23,7 +23,7 @@ namespace cogbot.TheOpenSims
 
         public override void InvokeReal()
         {
-            GetGridClient().ExecuteCommand(command);
+            GetBotClient().ExecuteCommand(command);
         }
 
         public override Vector3 GetUsePostion()

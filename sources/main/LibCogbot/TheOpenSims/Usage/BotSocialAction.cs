@@ -36,7 +36,7 @@ namespace cogbot.TheOpenSims
         public BotSocialAction(SimAvatar who, SimTypeUsage what, SimAvatar target)
             : base(what.UsageName + " " + target)
         {
-            TheBot = who;
+            TheBot = (SimControllableAvatar) who;
             TypeUsage = what;
             Victem = target;
             CurrentTopic = null;

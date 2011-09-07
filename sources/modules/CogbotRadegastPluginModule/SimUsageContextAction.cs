@@ -109,7 +109,7 @@ namespace CogbotRadegastPluginModule
             List<ToolStripMenuItem> lst = new List<ToolStripMenuItem>();
             SimObject O = GetSimObject(target);
             if (O == null) return lst;
-            foreach (var cl in O.GetTypeUsages())
+            foreach (var cl in O.Affordances.GetTypeUsages())
             {
                 var c = cl;
                 string name = "Do " + c;
