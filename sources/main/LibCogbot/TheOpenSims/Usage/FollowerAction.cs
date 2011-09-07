@@ -95,7 +95,7 @@ namespace cogbot.TheOpenSims
                             useSimpleFollow--;
                             // TheBot.TurnToward(Target);
                             dist = TheBot.Distance(Target);
-                            TheBot.SetMoveTarget(Target, maxDistance);
+                            TheCBot.SetMoveTarget(Target, maxDistance);
                             Thread.Sleep(3000);
                             if (dist > (TheBot.Distance(Target) + 2))
                             {
@@ -128,7 +128,7 @@ namespace cogbot.TheOpenSims
                     if (UsePathfinder)
                     {
                         Debug("UsePathfinder");
-                        if (TheBot.GotoTarget(Target))
+                        if (TheCBot.GotoTarget(Target))
                         {
                             UseFlight = false;
                             useSimpleFollow = 1;
@@ -157,7 +157,7 @@ namespace cogbot.TheOpenSims
                                 GetBotClient().ExecuteBotCommand(
                                     string.Format("teleport {0}", vto.ToRawString()), TheBot, Debug);
                             if (!res.Success) UseTeleport = false; // cant teleport
-                            TheBot.TurnToward(Target);
+                            TheBot.TurnToward(Target.GlobalPosition);
                             FullPasses = 0;
                         }
                     }
@@ -165,7 +165,7 @@ namespace cogbot.TheOpenSims
                 }  
                 else
                 {
-                    TheBot.TurnToward(Target);
+                    TheBot.TurnToward(Target.GlobalPosition);
                     Thread.Sleep(1000); // total 3 seconds
                 }
             }

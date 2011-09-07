@@ -22,7 +22,7 @@ namespace cogbot.TheOpenSims
 
         public override void InvokeReal()
         {
-            TheBot.GotoTarget(Target);
+            TheCBot.GotoTarget(Target);
         }
 
         public override Vector3 GetUsePostion()
