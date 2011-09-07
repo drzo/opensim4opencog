@@ -6,7 +6,7 @@ using PathSystem3D.Mesher;
 
 namespace PathSystem3D.Navigation
 {
-    public interface SimMover : PathSystem3D.Navigation.SimPosition
+    public interface SimMover : PathSystem3D.Navigation.SimPosition, SimDistCalc
     {
         bool TurnToward(Vector3d targetPosition);
         void StopMoving();
@@ -29,6 +29,10 @@ namespace PathSystem3D.Navigation
          */
         bool OpenNearbyClosedPassages();
         void ThreadJump();
+    }
+
+    public interface SimDistCalc
+    {        
         double Distance(SimPosition position);
     }
 

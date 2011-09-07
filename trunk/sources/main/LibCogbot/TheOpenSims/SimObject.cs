@@ -373,7 +373,7 @@ namespace cogbot.TheOpenSims
             return SetObjectPosition(lPos);
         }
 
-        public bool SetObjectPosition(Vector3 localPos)
+        public virtual bool SetObjectPosition(Vector3 localPos)
         {
             if (!IsRoot)
             {
@@ -2738,7 +2738,7 @@ namespace cogbot.TheOpenSims
     }
 
 
-    public interface SimObject : SimPosition, BotMentalAspect, SimMover
+    public interface SimObject : SimPosition, BotMentalAspect, SimDistCalc 
     {
         SimObjectAffordance Affordances { get; }
         List<string> GetMenu(SimAvatar avatar);
@@ -2753,7 +2753,7 @@ namespace cogbot.TheOpenSims
         int CompareDistance(SimObject p1, SimObject p2);
         int CompareDistance(Vector3d v1, Vector3d v2);
         string DebugInfo();
-        double Distance(SimPosition prim);
+        //double Distance(SimPosition prim);
         string DistanceVectorString(Vector3 loc);
         string DistanceVectorString(Vector3d loc3d);
         //inherited from SimPosition: string DistanceVectorString(SimPosition obj);
@@ -2817,7 +2817,7 @@ namespace cogbot.TheOpenSims
 
 
         void SetFirstPrim(Primitive primitive);
-        UUID ID { get; }
+        //UUID ID { get; }
         Primitive.ObjectProperties Properties { get; set; }
         bool HasPrim { get; }
         uint LocalID { get; }
@@ -2827,7 +2827,7 @@ namespace cogbot.TheOpenSims
         bool ShouldEventSource { get; }
         bool KilledPrim(Primitive primitive, Simulator simulator);
 
-        ICollection<NamedParam> GetInfoMap();
+        //ICollection<NamedParam> GetInfoMap();
 
         //void SetInfoMap(string key,Type type, Object value);
         SimHeading GetHeading();

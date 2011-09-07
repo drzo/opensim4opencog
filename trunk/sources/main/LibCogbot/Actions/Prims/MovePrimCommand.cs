@@ -39,7 +39,7 @@ namespace cogbot.Actions.Objects
             {
                 SimPosition localPos = WorldSystem.GetVector(to, out used, O);
                 Vector3d local = localPos.GlobalPosition;
-                O.MoveTo(local, 1f, 10);
+                O.SetObjectPosition(local);
             }
             return Success("acted on " + PS.Count);
         }
