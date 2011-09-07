@@ -334,8 +334,8 @@ namespace TheSimiansModule
             if (use == null)
             {
                 double closeness = Actor.Approach(someObject, someObject.GetSizeDistance() + 1);
-                //AgentManager ClientSelf = Client.Self;
-                ObservedActor.Touch(someObject);
+                //AgentManager ClientSelf = client.Self;
+                Actor.Touch(someObject);
                 if (closeness < 3)
                 {
                     Actor.SitOn(someObject);
