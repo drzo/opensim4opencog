@@ -882,7 +882,7 @@ namespace cogbot.Listeners
                                         }
                                     }
                                     Debug("No avatar object for " + name);
-                                    SimAvatarImpl impl = CreateSimAvatar(key.Value, this, sim);
+                                    SimAvatar impl = CreateSimAvatar(key.Value, this, sim);
                                     impl.AspectName = name;
                                     s = source = impl;
                                     return source;

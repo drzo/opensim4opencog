@@ -27,8 +27,10 @@ namespace cogbot.Actions.Pathfinder
                 rightNow = false;
             }
             WriteLine("Unmeshing " + objs.Count);
-            foreach (SimObject o in objs)
+            foreach (SimObject o2 in objs)
             {
+                SimObjectPathFinding o = o2.PathFinding;
+
                 o.IsWorthMeshing = true;
                 if (rightNow)
                 {

@@ -138,7 +138,7 @@ namespace cogbot.Listeners
                             if (!isNewPrim)
                             {
                                 Debug("PrimData changed for " + prim);
-                                O.RemoveCollisions();
+                                O.PathFinding.RemoveCollisions();
                             }
                             // the old OnNewPrim code will force the reindexing
                         }

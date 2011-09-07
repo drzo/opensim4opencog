@@ -21,9 +21,13 @@ namespace cogbot.TheOpenSims
         public SimAvatar TheBot;
 
 
-        public BotClient GetGridClient()
+        public GridClient GetGridClient()
         {
-            return TheBot.GetGridClient();
+            return ((SimControllableAvatar)TheBot).GetGridClient();
+        }
+        public BotClient GetBotClient()
+        {
+            return ((SimControllableAvatar)TheBot).GetBotClient();
         }
 
         // Returns how much the needs should be changed;

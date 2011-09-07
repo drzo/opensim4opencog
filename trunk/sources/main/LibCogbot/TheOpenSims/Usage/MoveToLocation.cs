@@ -11,7 +11,7 @@ namespace cogbot.TheOpenSims
         public MoveToLocation(SimAvatar impl, SimPosition position)
             : base("MoveTo " + impl + " -> " + impl.DistanceVectorString(position))
         {
-            TheBot = impl;
+            TheBot = (SimControllableAvatar)impl; 
             Target = position;
         }
 

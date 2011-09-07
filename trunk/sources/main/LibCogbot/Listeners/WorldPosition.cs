@@ -503,7 +503,7 @@ namespace cogbot.Listeners
         private float distanceHeuristic(SimObject prim)
         {
             if (prim != null)
-                return (float)(1.0 / Math.Exp((double)TheSimAvatar.Distance(prim))
+                return (float)(1.0 / Math.Exp((double)((SimMover)TheSimAvatar).Distance(prim))
                                );
             else
                 return (float)0.01;

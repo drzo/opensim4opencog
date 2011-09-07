@@ -30,8 +30,9 @@ namespace cogbot.Actions.Pathfinder
                 int meshed = 0;
                 int unmeshed = 0;
                 int notNeedBeMEshed = 0;
-                foreach (var o in objs)
+                foreach (var o2 in objs)
                 {
+                    SimObjectPathFinding o = o2.PathFinding;
                     if (o.IsMeshed)
                     {
                         meshed++;
@@ -58,7 +59,7 @@ namespace cogbot.Actions.Pathfinder
             foreach (SimObject o in objs)
             {
                 WriteLine("MeshInfo: " + o);              
-                WriteLine(o.Mesh.DebugString());
+                WriteLine(o.PathFinding.Mesh.DebugString());
             }
             return Success("Ran " + Name);
         }

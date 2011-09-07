@@ -41,7 +41,7 @@ namespace cogbot.Actions.Agent
                    {
                        TheSimAvatar["CurrentNeeds"] = new BotNeeds(90.0f);
                    }
-                   SimTypeUsage usage = objToUse.GetBestUse((BotNeeds)TheSimAvatar["CurrentNeeds"]);
+                   SimTypeUsage usage = objToUse.Affordances.GetBestUse((BotNeeds)TheSimAvatar["CurrentNeeds"]);
                    if (usage==null)
                    {
                        //usage = new MoveToLocation(TheSimAvatar, objToUse);

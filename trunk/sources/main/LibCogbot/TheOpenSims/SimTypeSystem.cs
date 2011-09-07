@@ -424,7 +424,7 @@ namespace cogbot.TheOpenSims
         //the scripting language might supply a number as a parameter in a foriegn method call, so when i iterate thru the method signatures.. i have to recognise which ones are claiming to accept a numeric argument
         static public List<SimObjectType> GuessSimObjectTypes(Primitive.ObjectProperties props, SimObject obj)
         {
-            List<SimObjectType> possibles = obj.ObjectType.SuperType;
+            List<SimObjectType> possibles = obj.Affordances.ObjectType.SuperType;
 
             if (props != null)
 

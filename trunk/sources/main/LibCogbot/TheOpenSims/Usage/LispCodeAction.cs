@@ -12,7 +12,7 @@ namespace cogbot.TheOpenSims
         public LispCodeAction(SimAvatar impl, object command)
             : base("ExecuteCommand " + impl + " -> " + command)
         {
-            TheBot = impl;
+            TheBot = (SimControllableAvatar)impl;
             this.command = command;
         }
 
@@ -23,7 +23,7 @@ namespace cogbot.TheOpenSims
 
         public override void InvokeReal()
         {
-            GetGridClient().evalLispCode(command);
+            GetBotClient().evalLispCode(command);
         }
 
         public override Vector3 GetUsePostion()

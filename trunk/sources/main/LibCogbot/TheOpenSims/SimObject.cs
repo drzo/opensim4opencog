@@ -15,7 +15,7 @@ using MushDLR223.ScriptEngines;
 namespace cogbot.TheOpenSims
 {
     //TheSims-like object
-    public class SimObjectImpl : SimPosition, BotMentalAspect, SimMover, SimObject, MeshableObject
+    public class SimObjectImpl : SimPosition, BotMentalAspect,  SimObject, MeshableObject
     {
         private bool _confirmedObject;
         public bool ConfirmedObject
@@ -81,17 +81,6 @@ namespace cogbot.TheOpenSims
             return new SimHeading(this);
         }
 
-
-        public bool CanShoot(SimPosition position)
-        {
-            if (!IsRegionAttached || !position.IsRegionAttached) return false;
-            SimPathStore PS1 = PathStore;
-            SimPathStore PS2 = position.PathStore;
-            if (PS1 != PS2) return false;
-            Vector3 end = position.SimPosition;
-            Vector3 first = PS1.FirstOcclusion(SimPosition, end);
-            return (first == end);
-        }
 
         public void AddInfoMap(object properties, string name)
         {
@@ -169,6 +158,11 @@ namespace cogbot.TheOpenSims
         }
 
         #region SimMover Members
+
+        public bool OpenNearbyClosedPassages()
+        {
+            throw new NotImplementedException();
+        }
 
         public virtual void ThreadJump()
         {
@@ -329,7 +323,7 @@ namespace cogbot.TheOpenSims
             {
                 throw Error("FollowPathTo !IsControllable");
             }
-            SimAbstractMover move = SimAbstractMover.CreateSimPathMover(this, globalEnd, distance);
+            SimAbstractMover move = SimAbstractMover.CreateSimPathMover((SimActor)this, globalEnd, distance);
             try
             {
                 move.OnMoverStateChange += OnMoverStateChange;
@@ -443,7 +437,7 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                var _Mesh = this._Mesh;
+                var _Mesh = PathFinding._Mesh;
                 if (_Mesh != null)
                 {
                     return _Mesh.OuterBox;
@@ -628,7 +622,7 @@ namespace cogbot.TheOpenSims
                 if (_PassableKnown) return _Passable;
 
                 if (IsPhantom) return true;
-                if (IsTypeOf(SimTypeSystem.PASSABLE) != null)
+                if (Affordances.IsTypeOf(SimTypeSystem.PASSABLE) != null)
                 {
                     IsPassable = true;
                     return true;
@@ -654,7 +648,7 @@ namespace cogbot.TheOpenSims
                 }
                 _PassableKnown = true;
                 _Passable = value;
-
+                SimMesh _Mesh = PathFinding._Mesh;
                 if (_Mesh != null && _Mesh.IsSolid == value)
                 {
                     _Mesh.IsSolid = !value;
@@ -666,7 +660,7 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                if (MadePhantom) return true;
+                if (PathFinding.MadePhantom) return true;
                 if (IsRoot || true)
                 {
                     Primitive Prim = this.Prim;
@@ -694,12 +688,12 @@ namespace cogbot.TheOpenSims
                 if (value)
                 {
                     WorldSystem.SetPrimFlags(Prim, (PrimFlags)(Prim.Flags | PrimFlags.Phantom));
-                    MadePhantom = true;
+                    PathFinding.MadePhantom = true;
                 }
                 else
                 {
                     WorldSystem.SetPrimFlags(Prim, (PrimFlags)(Prim.Flags - PrimFlags.Phantom));
-                    MadePhantom = false;
+                    PathFinding.MadePhantom = false;
                 }
             }
         }
@@ -717,12 +711,12 @@ namespace cogbot.TheOpenSims
                 if (value)
                 {
                     WorldSystem.SetPrimFlags(Prim, (PrimFlags)(Prim.Flags | PrimFlags.Physics));
-                    MadeNonPhysical = false;
+                    PathFinding.MadeNonPhysical = false;
                 }
                 else
                 {
                     WorldSystem.SetPrimFlags(Prim, (PrimFlags)(Prim.Flags - PrimFlags.Physics));
-                    MadeNonPhysical = true;
+                    PathFinding.MadeNonPhysical = true;
                 }
             }
         }
@@ -889,10 +883,8 @@ namespace cogbot.TheOpenSims
         //    get { return base.Prim; }
         //    set { Prim = value; }
         //}
-        public SimObjectType ObjectType { get; set; }
         public WorldObjects WorldSystem;
-        private bool MadeNonPhysical = false;
-        private bool MadePhantom = false;
+
         private bool needUpdate = true;
 
         public bool NeedsUpdate
@@ -920,7 +912,7 @@ namespace cogbot.TheOpenSims
                         {
                             C.IsKilled = value;
                         }
-                    if (WasKilled) RemoveCollisions();
+                    if (WasKilled) PathFinding.RemoveCollisions();
                 }
             }
             get
@@ -928,29 +920,8 @@ namespace cogbot.TheOpenSims
                 return WasKilled;
             }
         }
+        public SimObjectPathFindingImpl PathFinding { get; set; }
 
-        public void RemoveCollisions()
-        {
-            IsMeshed = false;
-            // say we are busy
-            if (IsMeshing) return;
-            IsMeshing = true;
-            if (_Mesh != null)
-            {
-                _Mesh.RemoveCollisions();
-                _Mesh = null;
-            }
-            foreach (SimObject o in Children)
-            {
-                o.RemoveCollisions();
-            }
-            IsMeshing = false;
-        }
-
-        public SimObjectType IsTypeOf(SimObjectType superType)
-        {
-            return ObjectType.IsSubType(superType);
-        }
 
         protected ListAsSet<SimObject> _children = new ListAsSet<SimObject>();
 
@@ -964,21 +935,20 @@ namespace cogbot.TheOpenSims
             get { return _children.Count > 0; }
         }
 
-        /// <summary>
-        /// the bonus or handicap the object has compared to the defination 
-        /// (more expensive chair might have more effect)
-        /// </summary>
-        public float scaleOnNeeds = 1.11F;
-
         public SimObjectImpl(UUID id, WorldObjects objectSystem, Simulator sim)
         //: base(prim.ID.ToString())
         // : base(prim, SimRegion.SceneProviderFromSimulator(sim))
         {
             //ActionEventQueue = new Queue<SimObjectEvent>(MaxEventSize);
             ID = id;
+            PathFinding = new SimObjectPathFindingImpl {thiz = this};
             if (sim != null) RegionHandle = sim.Handle;
             WorldSystem = objectSystem;
-            ObjectType = SimTypeSystem.CreateInstanceType(id.ToString());
+            Affordances = new SimObjectAffordanceImpl
+                              {
+                                  ObjectType = SimTypeSystem.CreateInstanceType(id.ToString()),
+                                  thiz = this
+                              };
             //_CurrentRegion = SimRegion.GetRegion(sim);
             // PathStore = GetSimRegion();
             //WorldSystem.EnsureSelected(prim.ParentID,sim);
@@ -1086,24 +1056,7 @@ namespace cogbot.TheOpenSims
             simObject._Parent = this;
             simObject.needUpdate = true;
             bool b = Children.AddTo(simObject);
-            if (false) if (b)
-                {
-                    if (!IsTyped)
-                    {
-                        // borrow from child?
-                        // UpdateProperties(simObject.theProperties);
-                    }
-                }
             return b;
-        }
-
-        public bool IsTyped
-        {
-            get
-            {
-                if (WasKilled) return false;
-                return ObjectType.IsComplete;
-            }
         }
 
         public virtual bool IsRoot
@@ -1129,29 +1082,6 @@ namespace cogbot.TheOpenSims
             return str;
         }
 
-        public double RateIt(BotNeeds needs)
-        {
-            return ObjectType.RateIt(needs, GetBestUse(needs)) * scaleOnNeeds;
-        }
-
-        public IList<SimTypeUsage> GetTypeUsages()
-        {
-            return ObjectType.GetTypeUsages();
-        }
-
-        public List<SimObjectUsage> GetUsages()
-        {
-            List<SimObjectUsage> uses = new List<SimObjectUsage>();
-            if (needUpdate)
-            {
-                UpdateProperties(_propertiesCache);
-            }
-            foreach (SimTypeUsage typeUse in ObjectType.GetTypeUsages())
-            {
-                uses.Add(new SimObjectUsage(typeUse, this));
-            }
-            return uses;
-        }
 
         public List<string> GetMenu(SimAvatar avatar)
         {
@@ -1224,8 +1154,8 @@ namespace cogbot.TheOpenSims
                 {
                     _propertiesCache = objectProperties;
                     if (Prim != null && Prim.Properties == null) Prim.Properties = objectProperties;
-                    ObjectType.SitName = objectProperties.SitName;
-                    ObjectType.TouchName = objectProperties.TouchName;
+                    Affordances.ObjectType.SitName = objectProperties.SitName;
+                    Affordances.ObjectType.TouchName = objectProperties.TouchName;
                     if (needUpdate)
                     {
                         needUpdate = false;
@@ -1281,233 +1211,16 @@ namespace cogbot.TheOpenSims
             //throw new NotImplementedException();
         }
 
-
-        private void AddSimObjectTypes(Primitive.ObjectProperties properties)
-        {
-            ObjectType.SitName = properties.SitName;
-            ObjectType.TouchName = properties.TouchName;
-            SimTypeSystem.GuessSimObjectTypes(properties, this);
-        }
-
-
         public virtual void UpdateObject(ObjectMovementUpdate objectUpdate, ObjectMovementUpdate objectUpdateDiff)
         {
             if (needUpdate)
             {
                 if (_propertiesCache != null) UpdateProperties(_propertiesCache);
             }
-            UpdateCollisions();
+            PathFinding.UpdateCollisions();
             toStringNeedsUpdate = true;
         }
 
-        /// <summary>
-        /// Update our collisions and all of childrens
-        /// </summary>
-        public void UpdateCollisions()
-        {
-            if (IsRegionAttached)
-            {
-                if (IsWorthMeshing)
-                {
-                    RemoveCollisions();
-                    AddCollisions();
-                }
-                else
-                {
-                    RemoveCollisions();
-                }
-            }
-
-        }
-
-        private bool? requestedMeshed;
-        public bool IsWorthMeshing
-        {
-            get
-            {
-                if (requestedMeshed.HasValue) return requestedMeshed.Value;
-                if (WorldPathSystem.IsWorthMeshing(this))
-                {
-                    requestedMeshed = true;
-                    return true;
-                }
-                return false;
-            }
-            set { requestedMeshed = value; }
-        }
-
-
-        private bool IsMeshing;
-        public virtual bool AddCollisions()
-        {
-            try
-            {
-                return QueueMeshing();
-            }
-            catch (Exception e)
-            {
-                Debug("While updating " + e);
-                return false;
-            }
-
-        }
-
-        private bool IsMeshingQueued = false;
-        public virtual bool QueueMeshing()
-        {
-            if (!IsRegionAttached)
-            {
-                return false;
-            }
-            if (!IsRoot)
-            {
-                // dont mesh armor
-                if (Parent is SimAvatar)
-                {
-                    return false;
-                }
-            }
-            try
-            {
-                if (!IsMeshingQueued)
-                {
-                    IsMeshingQueued = true;
-                    cogbot.Listeners.WorldPathSystem.MeshingQueue.AddFirst("mesh " + ToString(), () => { AddCollisionsNow(); });
-                }
-                return wasMeshUpdated;
-               
-            } finally
-            {
-                wasMeshUpdated = false;
-            }
-        }
-
-        public bool AddCollisionsNow()
-        {
-            try
-            {
-                return AddCollisionsNowNoCatch();
-            }
-            catch (Exception e)
-            {
-                Debug("While updating " + e);
-                IsMeshed = false;
-                return false;
-            }
-            finally
-            {
-                IsMeshingQueued = false;
-            }
-        }
-
-        public bool AddCollisionsNowNoCatch()
-        {
-            if (!IsRegionAttached)
-            {
-                return false;
-            }
-            if (!IsRoot)
-            {
-                // dont mesh armor
-                if (Parent is SimAvatar)
-                {
-                    return false;
-                }
-            }
-
-            if (!WorldPathSystem.MaintainMeshes) return false;
-
-            // avoids loop (since our parent will call us again)
-            if (IsMeshing || IsMeshed) return false;
-            IsMeshing = true;
-
-            bool updated = GetSimRegion().AddCollisions(Mesh);
-            // update parent + siblings
-            if (!IsRoot)
-            {
-                if (_Parent != null)
-                {
-                    if (_Parent.AddCollisionsNow()) updated = true;
-                }
-            }
-            // update children
-            foreach (SimObject o in Children)
-            {
-                if (o.AddCollisionsNow())
-                {
-                    updated = true;
-                }
-            }
-            wasMeshUpdated = updated;
-            IsMeshed = true;
-            return wasMeshUpdated;
-        }
-
-        public void AddSuperTypes(IList<SimObjectType> listAsSet)
-        {
-            toStringNeedsUpdate = true;
-            //SimObjectType _UNKNOWN = SimObjectType._UNKNOWN;
-            foreach (SimObjectType type in listAsSet)
-            {
-                ObjectType.AddSuperType(type);
-            }
-        }
-
-        public virtual bool RestoreEnterable(SimMover actor)
-        {
-            bool changed = false;
-            Primitive Prim = this.Prim;
-            if (Prim == null) return false;
-            PrimFlags tempFlags = Prim.Flags;
-            if (MadePhantom)
-            {
-                ((SimObject)actor).Touch(this);
-                changed = true;
-                IsPhantom = false;
-            }
-            if (!IsRoot)
-            {
-                SimObject P = Parent;
-                if (P.Prim != this.Prim)
-                    return P.RestoreEnterable(actor);
-            }
-            return changed;
-        }
-
-        public virtual bool MakeEnterable(SimMover actor)
-        {
-            if (IsTypeOf(SimTypeSystem.DOOR) != null)
-            {
-                if (!IsPhantom)
-                {
-                    ((SimObject)actor).Touch(this);
-                    return true;
-                }
-                return false;
-            }
-
-            if (!IsRoot)
-            {
-                SimObject P = Parent;
-                if (P.Prim != this.Prim)
-                    return P.MakeEnterable(actor);
-            }
-
-            bool changed = false;
-            if (!IsPhantom)
-            {
-                IsPhantom = true;
-                ((SimObject)actor).Touch(this);
-                changed = true;
-                // reset automatically after 30 seconds
-                new Thread(new ThreadStart(delegate()
-                                               {
-                                                   Thread.Sleep(30000);
-                                                   IsPhantom = false;
-                                               })).Start();
-            }
-            return changed;
-        }
 
         private string _TOSRTING;
 
@@ -1615,9 +1328,9 @@ namespace cogbot.TheOpenSims
                 if (showTrue != PrimFlags.None) _TOSRTING += "(PrimFlagsTrue " + showTrue + ")";
                 PrimFlags showFalse = ((~Prim.Flags) & FlagsToPrintFalse);
                 if (showFalse != PrimFlags.None) _TOSRTING += "(PrimFlagsFalse " + showFalse + ")";
-                if (_Mesh != null)
+                if (PathFinding._Mesh != null)
                     _TOSRTING += " (size " + GetSizeDistance() + ") ";
-                _TOSRTING += SuperTypeString();
+                _TOSRTING += Affordances.SuperTypeString();
                 if (Prim.Sound != UUID.Zero)
                     _TOSRTING += "(Audible)";
                 if (IsTouchDefined)
@@ -1640,16 +1353,9 @@ namespace cogbot.TheOpenSims
             return _TOSRTINGR;
         }
 
-        public string SuperTypeString()
-        {
-            String str = "[";
-            lock (ObjectType.SuperType)
-                ObjectType.SuperType.ForEach(delegate(SimObjectType item) { str += item.GetTypeName() + " "; });
-            return str.TrimEnd() + "]";
-        }
-
-
-        protected bool RequestedParent = false;
+        public SimObjectAffordance Affordances { get; set;}
+  
+        public bool RequestedParent = false;
 
         public bool IsRegionAttached
         {
@@ -2009,58 +1715,6 @@ namespace cogbot.TheOpenSims
             return false;
         }
 
-
-        public BotNeeds GetActualUpdate(string pUse)
-        {
-            if (needUpdate)
-            {
-                UpdateProperties(_propertiesCache);
-            }
-            return ObjectType.GetUsageActual(pUse).Magnify(scaleOnNeeds);
-        }
-
-
-        public SimTypeUsage GetBestUse(BotNeeds needs)
-        {
-            if (needUpdate)
-            {
-                if (_propertiesCache != null) UpdateProperties(_propertiesCache);
-                else
-                {
-
-                    if (RegionHandle != 0 && _Prim0 != null)
-                    {
-                        WorldObjects.EnsureRequested(GetSimulator(), LocalID);
-                    }
-                }
-            }
-
-            IList<SimTypeUsage> all = ObjectType.GetTypeUsages();
-            if (all.Count == 0) return null;
-            SimTypeUsage typeUsage = all[0];
-            double typeUsageRating = 0.0f;
-            foreach (SimTypeUsage use in all)
-            {
-                double f = ObjectType.RateIt(needs, use);
-                if (f > typeUsageRating)
-                {
-                    typeUsageRating = f;
-                    typeUsage = use;
-                }
-            }
-            return typeUsage;
-        }
-
-        //public Vector3 GetUsePosition()
-        //{
-        //    return GetSimRegion().GetUsePositionOf(GetSimPosition(),GetSizeDistance());
-        //}
-
-        public BotNeeds GetProposedUpdate(string pUse)
-        {
-            return ObjectType.GetUsagePromise(pUse).Magnify(scaleOnNeeds);
-        }
-
         private float cachedSize = 0f;
         /// <summary>
         ///  Gets the distance a ISimAvatar may be from ISimObject to use
@@ -2227,21 +1881,6 @@ namespace cogbot.TheOpenSims
             return ToString();
         }
 
-        private SimMesh _Mesh;
-
-        public SimMesh Mesh
-        {
-            get
-            {
-                if (_Mesh == null)
-                {
-                    _Mesh = new SimMesh(this, Prim, PathStore);
-                }
-                return _Mesh;
-            }
-            // set { _Mesh = value; }
-        }
-
 
         public static int CompareLowestZ(SimObject p1, SimObject p2)
         {
@@ -2260,7 +1899,7 @@ namespace cogbot.TheOpenSims
 
         public float BottemArea()
         {
-            if (_Mesh != null)
+            if (PathFinding._Mesh != null)
             {
                 if (OuterBox.MaxX != float.MinValue)
                 {
@@ -2320,49 +1959,7 @@ namespace cogbot.TheOpenSims
         public bool IsInside(Vector3 L)
         {
             if (!WorldPathSystem.MaintainMeshes) return false;
-            return Mesh.IsInside(L.X, L.Y, L.Z);
-        }
-
-
-        public virtual bool OpenNearbyClosedPassages()
-        {
-            bool changed = false;
-            SimObjectType DOOR = SimTypeSystem.DOOR;
-            // look for closed doors
-
-            List<SimObject> UnEnterables = new List<SimObject>();
-            foreach (SimObject O in GetNearByObjects(3, false))
-            {
-                if (O.AddCollisions()) changed = true;
-                if (!O.IsPhantom)
-                {
-                    if (O.IsTypeOf(DOOR) != null)
-                    {
-                        O.MakeEnterable(this);
-                        UnEnterables.Add(O);
-                        continue;
-                    }
-                    if (O.IsSculpted)
-                    {
-                        O.MakeEnterable(this);
-                        UnEnterables.Add(O);
-                        continue;
-                    }
-                }
-            }
-            if (UnEnterables.Count > 0)
-            {
-                changed = true;
-                new Thread(delegate()
-                               {
-                                   Thread.Sleep(90000); // 90 seconds
-                                   foreach (SimObject O in UnEnterables)
-                                   {
-                                       O.RestoreEnterable(this);
-                                   }
-                               }).Start();
-            }
-            return changed;
+            return PathFinding.Mesh.IsInside(L.X, L.Y, L.Z);
         }
 
 
@@ -2390,7 +1987,7 @@ namespace cogbot.TheOpenSims
                     usage.UseGrab = true;
                     //   usage.UseAnim = evt.Verb;
                 }
-                ObjectType.AddSuperType(simTypeSystemCreateObjectUse);
+                Affordances.ObjectType.AddSuperType(simTypeSystemCreateObjectUse);
             }
         }
 
@@ -2511,9 +2108,9 @@ namespace cogbot.TheOpenSims
                 sn = PrimProperties.SitName;
                 if (!String.IsNullOrEmpty(sn)) return sn;
             }
-            sn = ObjectType.GetTouchName();
+            sn = Affordances.ObjectType.GetTouchName();
             if (!String.IsNullOrEmpty(sn)) return sn;
-            sn = ObjectType.GetSitName();
+            sn = Affordances.ObjectType.GetSitName();
             if (!String.IsNullOrEmpty(sn)) return sn;
             return null;
         }
@@ -2527,7 +2124,7 @@ namespace cogbot.TheOpenSims
                 if (_propertiesCache != null)
                     sn = _propertiesCache.SitName;
                 if (!String.IsNullOrEmpty(sn)) return sn;
-                sn = ObjectType.GetSitName();
+                sn = Affordances.ObjectType.GetSitName();
                 if (!String.IsNullOrEmpty(sn)) return sn;
                 return "SitOnObject";
             }
@@ -2541,7 +2138,7 @@ namespace cogbot.TheOpenSims
                 if (_propertiesCache != null)
                     sn = _propertiesCache.TouchName;
                 if (!String.IsNullOrEmpty(sn)) return sn;
-                sn = ObjectType.GetTouchName();
+                sn = Affordances.ObjectType.GetTouchName();
                 if (!String.IsNullOrEmpty(sn)) return sn;
                 return "TouchTheObject";
             }
@@ -2631,17 +2228,158 @@ namespace cogbot.TheOpenSims
             return noteable;
         }
 
+
+        public class SimObjectAffordanceImpl : SimObjectAffordance
+        {
+            public SimObjectImpl thiz;
+            // Afordance system
+            public SimObjectType ObjectType { get; set; }
+            private bool IsUseableCachedKnown, IsUseableCachedTrue;
+
+            public void AddSuperTypes(IList<SimObjectType> listAsSet)
+            {
+                thiz.toStringNeedsUpdate = true;
+                //SimObjectType _UNKNOWN = SimObjectType._UNKNOWN;
+                foreach (SimObjectType type in listAsSet)
+                {
+                    ObjectType.AddSuperType(type);
+                }
+            }
+
+            public bool IsUseable
+            {
+                get
+                {
+                    if (!IsUseableCachedKnown)
+                    {
+                        IsUseable = thiz.IsSitDefined || thiz.IsSitDefined || IsTypeOf(SimTypeSystem.USEABLE) != null;
+                    }
+                    return IsUseableCachedTrue;
+                }
+
+                set
+                {
+                    IsUseableCachedKnown = true;
+                    IsUseableCachedTrue = value;
+                }
+            }
+
+
+            public bool IsTyped
+            {
+                get
+                {
+                    if (thiz.WasKilled) return false;
+                    return ObjectType.IsComplete;
+                }
+            }
+            /// <summary>
+            /// the bonus or handicap the object has compared to the defination 
+            /// (more expensive chair might have more effect)
+            /// </summary>
+            public float scaleOnNeeds = 1.11F;
+
+            public SimObjectType IsTypeOf(SimObjectType superType)
+            {
+                return ObjectType.IsSubType(superType);
+            }
+
+            public double RateIt(BotNeeds needs)
+            {
+                return ObjectType.RateIt(needs, GetBestUse(needs)) * scaleOnNeeds;
+            }
+
+            public IList<SimTypeUsage> GetTypeUsages()
+            {
+                return ObjectType.GetTypeUsages();
+            }
+
+            public List<SimObjectUsage> GetUsages()
+            {
+                List<SimObjectUsage> uses = new List<SimObjectUsage>();
+                if (thiz.NeedsUpdate)
+                {
+                    thiz.UpdateProperties(thiz._propertiesCache);
+                }
+                foreach (SimTypeUsage typeUse in ObjectType.GetTypeUsages())
+                {
+                    uses.Add(new SimObjectUsage(typeUse, thiz));
+                }
+                return uses;
+            }
+
+            public string SuperTypeString()
+            {
+                String str = "[";
+                lock (ObjectType.SuperType)
+                    ObjectType.SuperType.ForEach(delegate(SimObjectType item) { str += item.GetTypeName() + " "; });
+                return str.TrimEnd() + "]";
+            }
+
+            public BotNeeds GetActualUpdate(string pUse)
+            {
+                if (thiz.needUpdate)
+                {
+                    thiz.UpdateProperties(thiz._propertiesCache);
+                }
+                return ObjectType.GetUsageActual(pUse).Magnify(scaleOnNeeds);
+            }
+
+
+            public SimTypeUsage GetBestUse(BotNeeds needs)
+            {
+                if (thiz.needUpdate)
+                {
+                    if (thiz._propertiesCache != null) thiz.UpdateProperties(thiz._propertiesCache);
+                    else
+                    {
+
+                        if (thiz.RegionHandle != 0 && thiz._Prim0 != null)
+                        {
+                            WorldObjects.EnsureRequested(thiz.GetSimulator(), thiz.LocalID);
+                        }
+                    }
+                }
+
+                IList<SimTypeUsage> all = ObjectType.GetTypeUsages();
+                if (all.Count == 0) return null;
+                SimTypeUsage typeUsage = all[0];
+                double typeUsageRating = 0.0f;
+                foreach (SimTypeUsage use in all)
+                {
+                    double f = ObjectType.RateIt(needs, use);
+                    if (f > typeUsageRating)
+                    {
+                        typeUsageRating = f;
+                        typeUsage = use;
+                    }
+                }
+                return typeUsage;
+            }
+
+            //public Vector3 GetUsePosition()
+            //{
+            //    return GetSimRegion().GetUsePositionOf(GetSimPosition(),GetSizeDistance());
+            //}
+
+            public BotNeeds GetProposedUpdate(string pUse)
+            {
+                return ObjectType.GetUsagePromise(pUse).Magnify(scaleOnNeeds);
+            }
+
+        }
+
         private bool IsSolidCachedKnown, IsSolidCachedTrue;
 
         public bool IsSolid
         {
             get
             {
-                if (MadePhantom) return true; // since we "changed" it
+                if (PathFinding.MadePhantom) return true; // since we "changed" it
                 if (!IsSolidCachedKnown)
                 {
                     IsSolidCachedKnown = true;
-                    IsSolidCachedTrue = !(IsPhantom || IsTypeOf(SimTypeSystem.PASSABLE) != null);
+                    IsSolidCachedTrue = !(IsPhantom || Affordances.IsTypeOf(SimTypeSystem.PASSABLE) != null);
                 }
                 return IsSolidCachedTrue;
             }
@@ -2652,26 +2390,260 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        private bool IsUseableCachedKnown, IsUseableCachedTrue;
-
-        public bool IsUseable
+        public class SimObjectPathFindingImpl : SimObjectPathFinding
         {
-            get
+            public SimObjectImpl thiz;
+            internal SimMesh _Mesh;
+            private bool wasMeshUpdated;
+
+            public SimMesh Mesh
             {
-                if (!IsUseableCachedKnown)
+                get
                 {
-                    IsUseable = IsSitDefined || IsSitDefined || IsTypeOf(SimTypeSystem.USEABLE) != null;
+                    if (_Mesh == null)
+                    {
+                        _Mesh = new SimMesh(thiz, thiz.Prim, thiz.PathStore);
+                    }
+                    return _Mesh;
                 }
-                return IsUseableCachedTrue;
+                // set { _Mesh = value; }
             }
 
-            set
+            internal bool MadeNonPhysical = false;
+            internal bool MadePhantom = false;
+            public bool IsMeshed { get; set; }
+
+            public void RemoveCollisions()
             {
-                IsUseableCachedKnown = true;
-                IsUseableCachedTrue = value;
+                IsMeshed = false;
+                // say we are busy
+                if (IsMeshing) return;
+                IsMeshing = true;
+                if (_Mesh != null)
+                {
+                    _Mesh.RemoveCollisions();
+                    _Mesh = null;
+                }
+                foreach (SimObject o in thiz.Children)
+                {
+                    o.PathFinding.RemoveCollisions();
+                }
+                IsMeshing = false;
+            }
+
+
+            /// <summary>
+            /// Update our collisions and all of childrens
+            /// </summary>
+            public void UpdateCollisions()
+            {
+                if (thiz.IsRegionAttached)
+                {
+                    if (IsWorthMeshing)
+                    {
+                        RemoveCollisions();
+                        AddCollisions();
+                    }
+                    else
+                    {
+                        RemoveCollisions();
+                    }
+                }
+
+            }
+
+            private bool? requestedMeshed;
+            public bool IsWorthMeshing
+            {
+                get
+                {
+                    if (requestedMeshed.HasValue) return requestedMeshed.Value;
+                    if (WorldPathSystem.IsWorthMeshing(thiz))
+                    {
+                        requestedMeshed = true;
+                        return true;
+                    }
+                    return false;
+                }
+                set { requestedMeshed = value; }
+            }
+
+
+            private bool IsMeshing;
+            public virtual bool AddCollisions()
+            {
+                try
+                {
+                    return QueueMeshing();
+                }
+                catch (Exception e)
+                {
+                    thiz.Debug("While updating " + e);
+                    return false;
+                }
+
+            }
+
+            private bool IsMeshingQueued = false;
+            public virtual bool QueueMeshing()
+            {
+                if (!thiz.IsRegionAttached)
+                {
+                    return false;
+                }
+                if (!thiz.IsRoot)
+                {
+                    // dont mesh armor
+                    if (thiz.Parent is SimAvatar)
+                    {
+                        return false;
+                    }
+                }
+                try
+                {
+                    if (!IsMeshingQueued)
+                    {
+                        IsMeshingQueued = true;
+                        cogbot.Listeners.WorldPathSystem.MeshingQueue.AddFirst("mesh " + ToString(), () => { AddCollisionsNow(); });
+                    }
+                    return wasMeshUpdated;
+
+                }
+                finally
+                {
+                    wasMeshUpdated = false;
+                }
+            }
+
+            public bool AddCollisionsNow()
+            {
+                try
+                {
+                    return AddCollisionsNowNoCatch();
+                }
+                catch (Exception e)
+                {
+                    thiz.Debug("While updating " + e);
+                    IsMeshed = false;
+                    return false;
+                }
+                finally
+                {
+                    IsMeshingQueued = false;
+                }
+            }
+
+            public bool AddCollisionsNowNoCatch()
+            {
+                if (!thiz.IsRegionAttached)
+                {
+                    return false;
+                }
+                if (!thiz.IsRoot)
+                {
+                    // dont mesh armor
+                    if (thiz.Parent is SimAvatar)
+                    {
+                        return false;
+                    }
+                }
+
+                if (!WorldPathSystem.MaintainMeshes) return false;
+
+                // avoids loop (since our parent will call us again)
+                if (IsMeshing || IsMeshed) return false;
+                IsMeshing = true;
+
+                bool updated = thiz.GetSimRegion().AddCollisions(Mesh);
+                var _Parent = thiz._Parent;
+                // update parent + siblings
+                if (!thiz.IsRoot)
+                {
+                    if (_Parent != null)
+                    {
+                        if (_Parent.PathFinding.AddCollisionsNow()) updated = true;
+                    }
+                }
+                // update children
+                foreach (SimObject o in thiz.Children)
+                {
+                    if (o.PathFinding.AddCollisionsNow())
+                    {
+                        updated = true;
+                    }
+                }
+                wasMeshUpdated = updated;
+                IsMeshed = true;
+                return wasMeshUpdated;
+            }
+
+
+            public virtual bool RestoreEnterable(SimMover actor)
+            {
+                bool changed = false;
+                Primitive Prim = thiz.Prim;
+                if (Prim == null) return false;
+                PrimFlags tempFlags = Prim.Flags;
+                if (MadePhantom)
+                {
+                    ((SimObjectPathMover)actor).Touch(thiz);
+                    changed = true;
+                    thiz.IsPhantom = false;
+                }
+                if (!thiz.IsRoot)
+                {
+                    SimObject P = thiz.Parent;
+                    if (P.Prim != thiz.Prim)
+                        return P.PathFinding.RestoreEnterable(actor);
+                }
+                return changed;
+            }
+
+            public virtual bool MakeEnterable(SimMover actor)
+            {
+                if (thiz.Affordances.IsTypeOf(SimTypeSystem.DOOR) != null)
+                {
+                    if (!thiz.IsPhantom)
+                    {
+                        ((SimObjectPathMover)actor).Touch(thiz);
+                        return true;
+                    }
+                    return false;
+                }
+
+                if (!thiz.IsRoot)
+                {
+                    SimObject P = thiz.Parent;
+                    if (P.Prim != thiz.Prim)
+                        return P.PathFinding.MakeEnterable(actor);
+                }
+
+                bool changed = false;
+                if (!thiz.IsPhantom)
+                {
+                    thiz.IsPhantom = true;
+                    ((SimObjectPathMover)actor).Touch(thiz);
+                    changed = true;
+                    // reset automatically after 30 seconds
+                    new Thread(new ThreadStart(delegate()
+                    {
+                        Thread.Sleep(30000);
+                        thiz.IsPhantom = false;
+                    })).Start();
+                }
+                return changed;
+            }
+            public bool CanShoot(SimPosition position)
+            {
+                if (!thiz.IsRegionAttached || !position.IsRegionAttached) return false;
+                SimPathStore PS1 = thiz.PathStore;
+                SimPathStore PS2 = position.PathStore;
+                if (PS1 != PS2) return false;
+                Vector3 end = position.SimPosition;
+                Vector3 first = PS1.FirstOcclusion(thiz.SimPosition, end);
+                return (first == end);
             }
         }
-
         virtual public bool HasPrim
         {
             get { return !ReferenceEquals(_Prim0, null); }
@@ -2680,7 +2652,7 @@ namespace cogbot.TheOpenSims
 
         internal Color DebugColor()
         {
-            if (IsUseable) return Color.Green;
+            if (Affordances.IsUseable) return Color.Green;
             return Color.Empty;
         }
 
@@ -2688,10 +2660,8 @@ namespace cogbot.TheOpenSims
 
         readonly Dictionary<string, object> dict = new Dictionary<string, object>();
         protected bool toStringNeedsUpdate = true;
-        private bool wasMeshUpdated;
         public bool IsDebugging { get; set; }
 
-        public bool IsMeshed { get; set; }
 
         public object this[string s]
         {
@@ -2722,13 +2692,64 @@ namespace cogbot.TheOpenSims
         #endregion
     }
 
+    public interface SimObjectAffordance {
+        // Afordance system
+        bool IsTyped { get; }
+        SimObjectType IsTypeOf(SimObjectType superType);
+        IList<SimTypeUsage> GetTypeUsages();
+        List<SimObjectUsage> GetUsages();
+        BotNeeds GetProposedUpdate(string pUse);
+        void AddSuperTypes(IList<SimObjectType> listAsSet);
+        BotNeeds GetActualUpdate(string pUse);
+        SimTypeUsage GetBestUse(BotNeeds needs);
+        bool IsUseable { get; }
+        double RateIt(BotNeeds needs);
+        SimObjectType ObjectType { get; }
+        string SuperTypeString();
+    }
+    public interface SimObjectPathMover
+    {
+        // for pathfinbder mover
+        void Touch(SimObject simObjectImpl);
+        bool GotoTarget(SimPosition pos);
+        bool FollowPathTo(SimPosition globalEnd, double distance);
+        void SendUpdate(int ms);
+        void SetMoveTarget(SimPosition target, double maxDist);
+        bool TeleportTo(SimRegion R, Vector3 local);
+        bool TurnToward(SimPosition targetPosition);
+        bool TurnToward(Vector3 target);        
+    }
+
+
+    public interface SimObjectPathFinding
+    {
+        bool IsMeshed { get; set; }
+        bool IsWorthMeshing { get; set; }
+        // for pathfinder
+        bool MakeEnterable(SimMover actor);
+        bool RestoreEnterable(SimMover actor);
+        //inherited from Object string ToString();
+        SimMesh Mesh { get; }
+        bool AddCollisions();
+        void UpdateCollisions();
+        void RemoveCollisions();
+        bool AddCollisionsNow();
+        bool CanShoot(SimPosition position);
+    }
+
+
     public interface SimObject : SimPosition, BotMentalAspect, SimMover
     {
+        SimObjectAffordance Affordances { get; }
+        List<string> GetMenu(SimAvatar avatar);
+
+        SimObjectImpl.SimObjectPathFindingImpl PathFinding { get; }
+
         object this[String s] { get; set; }
         bool AddChild(SimObject simObject);
-        void AddSuperTypes(IList<SimObjectType> listAsSet);
+        SimObject Parent { get; set; }
         bool BadLocation(Vector3 transValue);
-        float BottemArea();
+        ListAsSet<SimObject> Children { get; }
         int CompareDistance(SimObject p1, SimObject p2);
         int CompareDistance(Vector3d v1, Vector3d v2);
         string DebugInfo();
@@ -2737,19 +2758,9 @@ namespace cogbot.TheOpenSims
         string DistanceVectorString(Vector3d loc3d);
         //inherited from SimPosition: string DistanceVectorString(SimPosition obj);
         Exception Error(string p, params object[] args);
-        bool FollowPathTo(SimPosition globalEnd, double distance);
-        BotNeeds GetActualUpdate(string pUse);
-        SimTypeUsage GetBestUse(BotNeeds needs);
-        ListAsSet<SimObject> Children { get; }
-        Vector3d GetGlobalLeftPos(int angle, double Dist);
-        List<string> GetMenu(SimAvatar avatar);
         string GetName();
-        BotNeeds GetProposedUpdate(string pUse);
         Vector3 GetSimScale();
         Simulator GetSimulator();
-        IList<SimTypeUsage> GetTypeUsages();
-        List<SimObjectUsage> GetUsages();
-        bool GotoTarget(SimPosition pos);
         bool Flying { get; set; }
         bool IsInside(Vector3 L);
         bool IsKilled { set; }
@@ -2762,47 +2773,31 @@ namespace cogbot.TheOpenSims
         AttachmentPoint AttachPoint { get; }
         bool IsChild { get; set; }
         bool IsRoot { get; }
-        bool IsUseable { get; }
         bool IsSculpted { get; }
         bool IsSitDefined { get; }
         bool IsTouchDefined { get; }
         Primitive Prim { get; }
-        Box3Fill OuterBox { get; }
-        bool IsTyped { get; }
-        SimObjectType IsTypeOf(SimObjectType superType);
-        bool MakeEnterable(SimMover actor);
         bool Matches(string name);
-        SimMesh Mesh { get; }
-        SimObject Parent { get; set; }
-        double RateIt(BotNeeds needs);
+
+        Vector3d GetGlobalLeftPos(int angle, double Dist);        
+        Box3Fill OuterBox { get; }
+        float BottemArea();
+
+
+       
         void ResetPrim(Primitive prim, BotClient bc, Simulator sim);
         void ResetRegion(ulong regionHandle);
-        bool RestoreEnterable(SimMover actor);
-        void SendUpdate(int ms);
-        void SetMoveTarget(SimPosition target, double maxDist);
         bool SetObjectPosition(Vector3 localPos);
         bool SetObjectPosition(Vector3d globalPos);
         bool SetObjectRotation(Quaternion localPos);
+
         string SitName { get; }
-        SimObjectType ObjectType { get; }
         ulong RegionHandle { get; }
         void SortByDistance(List<SimObject> sortme);
-        string SuperTypeString();
-        bool TeleportTo(SimRegion R, Vector3 local);
-        //inherited from Object string ToString();
-        bool TurnToward(SimPosition targetPosition);
-        bool TurnToward(Vector3 target);
+
         void UpdateObject(ObjectMovementUpdate objectUpdate, ObjectMovementUpdate objectUpdateDiff);
 
         //void UpdateProperties(Primitive.ObjectProperties props);
-
-        // for pathfinder
-        bool AddCollisions();
-        void UpdateCollisions();
-        void RemoveCollisions();
-        bool AddCollisionsNow();
-
-        void Touch(SimObject simObjectImpl);
 
         // void AddPossibleAction(string textualActionName, params object[] args);
 
@@ -2834,13 +2829,11 @@ namespace cogbot.TheOpenSims
 
         ICollection<NamedParam> GetInfoMap();
 
-        bool CanShoot(SimPosition position);
         //void SetInfoMap(string key,Type type, Object value);
         SimHeading GetHeading();
         bool TryGetGlobalPosition(out Vector3d pos);
         void UpdatePosition(ulong handle, Vector3 pos);
         Queue<SimObjectEvent> ActionEventQueue { get; set; }
-        bool IsMeshed { get; set;}
-        bool IsWorthMeshing { get; set; }
+
     }
 }
