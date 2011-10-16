@@ -728,7 +728,7 @@ namespace CogbotRadegastPluginModule
         {
             if (lvwObjects.SelectedItems.Count != 1) return;
 
-            instance.State.EffectSource = (UUID)lvwObjects.SelectedItems[0].Tag;
+            // instance.State.EffectSource = (UUID)lvwObjects.SelectedItems[0].Tag;
         }
 
         private void ctxPay_Click(object sender, EventArgs e)
