@@ -84,12 +84,16 @@ namespace cogbot.TheOpenSims
 
         public void AddInfoMap(object properties, string name)
         {
-            if (WorldObjects.MaintainSimObjectInfoMap)
+            lock (FILock)
             {
-                List<NamedParam> from = WorldObjects.GetMemberValues("", properties);
-                foreach (var o in from)
+                if (WorldObjects.MaintainSimObjectInfoMap)
                 {
-                    AddInfoMapItem(o);
+                    _infoMap = _infoMap ?? new Dictionary<object, NamedParam>();
+                    List<NamedParam> from = WorldObjects.GetMemberValues("", properties);
+                    foreach (var o in from)
+                    {
+                        AddInfoMapItem(o);
+                    }
                 }
             }
             if (!WorldObjects.SendSimObjectInfoMap) return;
@@ -483,10 +487,13 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        readonly Dictionary<object,NamedParam> _infoMap = new Dictionary<object, NamedParam>(); 
+        private Dictionary<object, NamedParam> _infoMap = null;//new Dictionary<object, NamedParam>(); 
         public ICollection<NamedParam> GetInfoMap()
         {
-            lock (_infoMap) return new List<NamedParam>(_infoMap.Values);
+            lock (FILock)
+            {
+                return new List<NamedParam>(_infoMap.Values);
+            }
         }
 
         public void SetInfoMap(object target, string key, MemberInfo type, object value)
@@ -498,6 +505,10 @@ namespace cogbot.TheOpenSims
 
         public void AddInfoMapItem(NamedParam ad)
         {
+            lock (FILock)
+            {
+                    _infoMap = _infoMap ?? new Dictionary<object, NamedParam>();
+            }
             lock (_infoMap)
                 _infoMap[ad.Key] = ad;
         }
@@ -968,7 +979,7 @@ namespace cogbot.TheOpenSims
             //WorldSystem.EnsureSelected(prim.ParentID,sim);
             // Parent; // at least request it
         }
-
+        
         public virtual void SetFirstPrim(Primitive prim)
         {
             lock (HasPrimLock)
@@ -985,7 +996,11 @@ namespace cogbot.TheOpenSims
                         if (!_primRefs.Contains(prim))
                         {
                             _primRefs.Add(prim);
-                            AddInfoMap(prim, "Primitive");
+                            int tries = 3;
+                            WorldSystem.DelayedEval(() => (prim.Type != PrimType.Unknown), () =>
+                                                                                   {
+                                                                                       AddInfoMap(prim, "Primitive");
+                                                                                   }, tries);
                         }
                     }
                     if (prim.Properties != null)
@@ -1342,7 +1357,7 @@ namespace cogbot.TheOpenSims
             return _TOSRTINGR;
         }
 
-        public SimObjectAffordance Affordances { get; set; }
+        public SimObjectAffordanceImpl Affordances { get; set; }
 
         public bool RequestedParent = false;
 
@@ -2306,8 +2321,8 @@ namespace cogbot.TheOpenSims
 
             public void UpdateFromProperties(Primitive.ObjectProperties objectProperties)
             {
-                ObjectType.SitName = objectProperties.SitName;
-                ObjectType.TouchName = objectProperties.TouchName;
+                if (!string.IsNullOrEmpty(objectProperties.SitName)) ObjectType.SitName = objectProperties.SitName;
+                if (!string.IsNullOrEmpty(objectProperties.TouchName)) ObjectType.TouchName = objectProperties.TouchName;
                 SimTypeSystem.GuessSimObjectTypes(objectProperties, thiz);
             }
 
@@ -2640,7 +2655,8 @@ namespace cogbot.TheOpenSims
 
         #region SimObject Members
 
-        readonly Dictionary<string, object> dict = new Dictionary<string, object>();
+        private Dictionary<string, object> dict;
+        readonly object FILock = new object();
         protected bool toStringNeedsUpdate = true;
         public bool IsDebugging { get; set; }
 
@@ -2649,25 +2665,49 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                if (_infoMap.ContainsKey(s))
+                lock (FILock)
                 {
-                    var val = _infoMap[s].Value;
-                    if (val is NullType) return null;
-                    return val;
+                    if (_infoMap.ContainsKey(s))
+                    {
+                        var val = _infoMap[s].Value;
+                        if (val is NullType) return null;
+                        return val;
+                    }
+                    if (dict==null || !dict.ContainsKey(s))
+                    {
+                        return null;
+                    }
+                    return dict[s];
                 }
-                if (!dict.ContainsKey(s))
-                {
-                    return null;
-                }
-                return dict[s];
             }
             set
             {
-                if (_infoMap.ContainsKey(s))
+                lock (FILock)
                 {
-                    _infoMap[s].SetValue(value);
+
+                    if (_infoMap.ContainsKey(s))
+                    {
+                        _infoMap[s].SetValue(value);
+                    }
+                    if (dict == null) dict = new Dictionary<string, object>(); 
+                    dict[s] = value;
                 }
-                dict[s] = value;
+            }
+        }
+
+        private Dictionary<Type, object> typedObjects;
+        public T AsObject<T>()
+        {
+            lock (FILock)
+            {
+                if (typedObjects == null) return default(T);
+                Type tt = typeof(T);
+                object obj;
+                if (!typedObjects.TryGetValue(tt, out obj))
+                {
+                    obj = typedObjects[tt] = default(T);
+                }
+                return (T)obj;
             }
         }
 
@@ -2724,7 +2764,7 @@ namespace cogbot.TheOpenSims
 
     public interface SimObject : SimPosition, BotMentalAspect, SimDistCalc 
     {
-        SimObjectAffordance Affordances { get; }
+        SimObjectImpl.SimObjectAffordanceImpl Affordances { get; }
         List<string> GetMenu(SimAvatar avatar);
 
         SimObjectImpl.SimObjectPathFindingImpl PathFinding { get; }

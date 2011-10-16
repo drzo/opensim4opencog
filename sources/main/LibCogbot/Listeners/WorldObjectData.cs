@@ -680,5 +680,18 @@ namespace cogbot.Listeners
             */
         }
 
+        public void DelayedEval(Func<bool> func, Action action, int tries)
+        {
+            if (func())
+            {
+                action();
+                return;
+            }
+            if (--tries < 0)
+            {
+                return;
+            }
+            OnConnectedQueue.Enqueue(() => DelayedEval(func, action, tries));
+        }
     }
 }
