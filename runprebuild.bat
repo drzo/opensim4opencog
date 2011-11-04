@@ -10,12 +10,12 @@ xcopy /f /y /c sources\external\Radegast\*.pdb bin\
 xcopy /f /y /c sources\external\Radegast\*.config bin\
 xcopy /f /y /c sources\external\Radegast\*.so bin\
 xcopy /f /y /c sources\external\Radegast\*.dylib bin\
-del sources\external\LookingGlass-svn\bin\Prebuild.exe
-del sources\external\LookingGlass-svn\bin\HttpServer.dll
-del sources\external\LookingGlass-svn\bin\PrimMesher.dll
-del sources\external\LookingGlass-svn\bin\Radegast.exe
-del sources\external\LookingGlass-svn\bin\OpenMetav*.*
-xcopy /f /y /c sources\external\LookingGlass-svn\bin\*.* bin\
+@rem del sources\external\LookingGlass-svn\bin\Prebuild.exe
+@rem del sources\external\LookingGlass-svn\bin\HttpServer.dll
+@rem del sources\external\LookingGlass-svn\bin\PrimMesher.dll
+@rem del sources\external\LookingGlass-svn\bin\Radegast.exe
+@rem del sources\external\LookingGlass-svn\bin\OpenMetav*.*
+@rem xcopy /f /y /c sources\external\LookingGlass-svn\bin\*.* bin\
 REM from cygwin
 svn revert bin/*.dll
 svn revert bin/*.exe
