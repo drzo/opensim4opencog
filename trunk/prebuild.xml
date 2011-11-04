@@ -1388,7 +1388,7 @@
      </Files>
 </Project>
 
-    <!---
+    <!--
   <Project name="PDDLAuthoring" path="sources/modules/PDDLAuthoring" type="Library" frameworkVersion="v3_5">
      <Configuration name="Debug">
        <Options>
@@ -1704,7 +1704,6 @@ app -->
    </Files>
 </Project>
 
--->
 
     <Project name="LookingGlass.Framework" path="sources/external/LookingGlass-svn/src/LookingGlass.Framework" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
@@ -1758,9 +1757,7 @@ app -->
       <Reference name="OpenMetaverse.dll"/>
       <Reference name="OpenMetaverse.StructuredData.dll"/>
       <Reference name="OpenMetaverseTypes"/>
-<!-- -
-      <Reference name="OpenMetaverse.Http.dll"/>
--->
+
       <Files>
         <Match pattern="*.cs" recurse="false"/>
       </Files>
@@ -2158,6 +2155,7 @@ app -->
     </Project>
 
 
+-->
 
     <!--
     <Project name="LookingGlassOgre" language="C++" path="sources/external/LookingGlass-svn/src/LookingGlassOgre" type="Library" frameworkVersion="v3_5">

@@ -1,6 +1,6 @@
 @echo off 
-call runprebuild2008.bat
-C:\WINDOWS\Microsoft.NET\Framework\v3.5\msbuild Cogbot.sln 
+call runprebuild.bat
+C:\WINDOWS\Microsoft.NET\Framework\v3.5\msbuild Cogbot_VS9.sln 
 :SUCCESS 
 echo Build Successful! 
 pause

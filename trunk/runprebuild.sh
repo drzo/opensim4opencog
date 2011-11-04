@@ -23,14 +23,14 @@ svn revert bin/*.dll bin/*.exe bin/*.so
 #cp -a sources/external/Radegast/Resources/ /tmp/
 
 
-rm -f sources/external/LookingGlass-svn/bin/Prebuild.exe
-rm -f sources/external/LookingGlass-svn/bin/OpenMeta*
-rm -f sources/external/LookingGlass-svn/bin/HttpServer.dll
-rm -f sources/external/LookingGlass-svn/bin/PrimMesher.dll
-rm -f sources/external/LookingGlass-svn/bin/Radegast.exe
-rm -f sources/external/LookingGlass-svn/bin/libo*
+#rm -f sources/external/LookingGlass-svn/bin/Prebuild.exe
+#rm -f sources/external/LookingGlass-svn/bin/OpenMeta*
+#rm -f sources/external/LookingGlass-svn/bin/HttpServer.dll
+#rm -f sources/external/LookingGlass-svn/bin/PrimMesher.dll
+#rm -f sources/external/LookingGlass-svn/bin/Radegast.exe
+#rm -f sources/external/LookingGlass-svn/bin/libo*
 
-cp sources/external/LookingGlass-svn/bin/*.* bin/
+#cp sources/external/LookingGlass-svn/bin/*.* bin/
 
 echo DONE: copy assembies
 mv ./bin/Mono.Security.dll ./bin/Mono.Security.dll.WindowsOnly
@@ -44,19 +44,19 @@ cp NullBuild.txt sources/external/Radegast.Plugin.Speech/RadSpeechWin/RadSpeechW
 #delay building LookingGlass on Linux
 find ./sources/external/LookingGlass-svn/src -iname "*.build" -exec cp NullBuild.txt '{}' \;
 
-cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.Renderer/LookingGlass.Renderer.dll.build
-cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.World/LookingGlass.World.dll.build
-cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.Radegast/LookingGlass.Radegast.dll.build
-cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.View/LookingGlass.View.dll.build
-cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.Comm/LookingGlass.Comm.dll.build
-cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.Comm.LLLP/LookingGlass.Comm.LLLP.dll.build
-cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.Framework/LookingGlass.Framework.dll.build
-cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.Rest/LookingGlass.Rest.dll.build
-cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.World.LL/LookingGlass.World.LL.dll.build
-cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass/LookingGlass.exe.build
-cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.Renderer.Ogre/LookingGlass.Renderer.Ogre.dll.build
-cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.World.OS/LookingGlass.World.OS.dll.build
-cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.World.Services/LookingGlass.World.Services.dll.build
+#cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.Renderer/LookingGlass.Renderer.dll.build
+#cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.World/LookingGlass.World.dll.build
+#cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.Radegast/LookingGlass.Radegast.dll.build
+#cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.View/LookingGlass.View.dll.build
+#cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.Comm/LookingGlass.Comm.dll.build
+#cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.Comm.LLLP/LookingGlass.Comm.LLLP.dll.build
+#cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.Framework/LookingGlass.Framework.dll.build
+#cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.Rest/LookingGlass.Rest.dll.build
+#cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.World.LL/LookingGlass.World.LL.dll.build
+#cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass/LookingGlass.exe.build
+#cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.Renderer.Ogre/LookingGlass.Renderer.Ogre.dll.build
+#cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.World.OS/LookingGlass.World.OS.dll.build
+#cp NullBuild.txt ./sources/external/LookingGlass-svn/src/LookingGlass.World.Services/LookingGlass.World.Services.dll.build
 cp NullBuild.txt ./sources/external/xglore/xglore.exe.build
 cp NullBuild.txt ./sources/external/Lucene/src/Lucene.Net/Lucene.Net.dll.build
 cp NullBuild.txt ./sources/external/LAIR.ResourceAPIs/PennBank/PennBank/LAIR.ResourceAPIs.PennBank.dll.build
@@ -68,7 +68,7 @@ cp NullBuild.txt ./bin/CogbotLib.dll.build
 cp NullBuild.txt ./sources/external/LAIR.ResourceAPIs/Cogbot.LAIR/Cogbot.LAIR.exe.build
 
 echo DONE: Generating NANT build files
-rm -rf bin/LookingGlass*.*
+#rm -rf bin/LookingGlass*.*
 rm -rf bin/RadSpeechWin*.*
 
 echo To just build CSProloge.exe
