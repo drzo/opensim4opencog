@@ -246,7 +246,7 @@ namespace ABuildStartup
             {
                 string[] newArgs = oArgs;
                 AllocConsole();
-                DoAndExit(() => RTParser.RTPBot.Main(args));
+                RunType("RTParser.RTPBot", args);
                 return;
             }
             if (ClientManager.arguments.GetAfter("--plwin", out oArgs))
@@ -280,20 +280,7 @@ namespace ABuildStartup
                 string[] newArgs = oArgs;
                 AllocConsole();
                 string c = ClientManager.arguments["--main"];
-                DoAndExit(() =>
-                              {
-                                  Type t = Type.GetType(c, false, false);
-                                  if (t == null) t = Type.GetType(c, false, true);
-
-                                  if (t != null)
-                                  {
-                                      RunType(t, newArgs);
-                                  }
-                                  else
-                                  {
-                                      throw new Exception(c);
-                                  }
-                              });
+                RunType(c, newArgs);
                 return;
             }
             if (ClientManager.arguments.GetWithout("--noconfig", out oArgs))
@@ -474,6 +461,24 @@ namespace ABuildStartup
                 v.Quit();
             }
             Environment.Exit(0);
+        }
+
+        private static void RunType(string c, string[] newArgs)
+        {
+            DoAndExit(() =>
+            {
+                Type t = Type.GetType(c, false, false);
+                if (t == null) t = Type.GetType(c, false, true);
+
+                if (t != null)
+                {
+                    RunType(t, newArgs);
+                }
+                else
+                {
+                    throw new Exception(c);
+                }
+            });
         }
 
         private static void RunType(Type t, string[] newArgs)

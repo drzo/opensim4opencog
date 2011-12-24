@@ -7,14 +7,18 @@ using cogbot;
 using cogbot.Listeners;
 using cogbot.ScriptEngines;
 using MushDLR223.ScriptEngines;
+#if RTPARSER_INCLUDED
 using RTParser.Utils;
 using RTParser.Variables;
-
+#endif 
 namespace PrologScriptEngine
 {
     ///<summary>
     ///</summary>
-    public class SwiPrologModule : WorldObjectsModule, ICollectionProvider, ISettingsDictionary
+    public class SwiPrologModule : WorldObjectsModule, ICollectionProvider        
+#if RTPARSER_INCLUDED
+        , ISettingsDictionary
+#endif
     {
         #region ISettingsDictionary Members
         public bool IsTraced { get; set; }
@@ -36,6 +40,7 @@ namespace PrologScriptEngine
             PLScriptInterpreter = new PrologScriptInterpreter(parent);   
         }
 
+#if RTPARSER_INCLUDED
         /// <summary>
         /// Adds a bespoke setting to the Settings class (accessed via the grabSettings(string name)
         /// method.
@@ -49,6 +54,7 @@ namespace PrologScriptEngine
             return false;
         }
 
+#endif
         /// <summary>
         /// Removes the named setting from this class
         /// </summary>
@@ -58,7 +64,7 @@ namespace PrologScriptEngine
             //throw new NotImplementedException();
             return false;
         }
-
+#if RTPARSER_INCLUDED
         public bool updateSetting(string name, RTParser.Unifiable value)
         {
             //throw new NotImplementedException();
@@ -70,7 +76,7 @@ namespace PrologScriptEngine
             //throw new NotImplementedException();
             return null;
         }
-
+#endif
         public bool containsLocalCalled(string name)
         {
             //throw new NotImplementedException();
