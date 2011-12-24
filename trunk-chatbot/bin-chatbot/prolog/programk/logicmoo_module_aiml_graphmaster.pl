@@ -71,11 +71,12 @@ evalSRAI(Ctx,Votes,_SraiDepth,ATTRIBS,Input,Output,VotesO):-
  var(Proof), 
    withAttributes(Ctx,['evalsrai'=SYM,proof=Proof],
   ((
-    addInherit(SYM,SYMPREV),
+    setup_call_cleanup(addInherit(SYM,SYMPREV),
+    ((
     debugOnError(computeSRAI(Ctx,Votes,SYM,Input,MidIn,VotesM,Proof)),
 
-    computeSRAIStars(Ctx,ATTRIBS,Input,MidIn,VotesM,SYM,Proof,Output,VotesO),
-    remInherit(SYM,SYMPREV),
+    computeSRAIStars(Ctx,ATTRIBS,Input,MidIn,VotesM,SYM,Proof,Output,VotesO))),
+    remInherit(SYM,SYMPREV)),
     ifThen(nonvar(SYM),retractallSrais(SYM))))).
 
     
@@ -210,7 +211,7 @@ computeSRAI222(CtxIn,Votes,ConvThreadHint,SYM,Pattern,Compute,VotesO,ProofOut,Ou
 
 clauseRef(_CateSig,0):-!.
 clauseRef(CateSig,Pattern:Template):-arg(6,CateSig,Pattern),arg(11,CateSig,Template),!.
-clauseRef(CateSig,ClauseNumber):-clause(CateSig,true,ClauseNumber).
+clauseRef(CateSig,ClauseNumber):-trace,clause(CateSig,true,ClauseNumber).
 clauseRef(_CateSig,-1):-!.
 
 savedParts(Save,PreTopic,CommitTemplate,OutputLevel,StarSets_All,Out,ClauseNumber,CateSig):-
@@ -236,8 +237,44 @@ combineStarSets(StarSets_Topic,StarSets_That,StarSets_Pattern,StarSets_All):-
 
 cate_match(Ctx,CateSigFunctor,StarName,TextPattern,CateSig,MatchPattern,StarSets,OutputLevel):-
     getCategoryArg1(Ctx,StarName,MatchPattern,_StarNumber,CateSig),!,
-    argNFound(CateSigFunctor,StarName,MatchPattern,_),
+    argNFoundGenerate(CateSigFunctor,StarName,MatchPattern,_IndexPattern,TextPattern),
     make_star_binders(Ctx,StarName,1,TextPattern,MatchPattern,OutputLevelInv,StarSets),OutputLevel is 1/OutputLevelInv.
+
+ctrace2:-ctrace.
+
+%%checkStarSets(StarSets):-member(Bad=[],StarSets),!,ctrace2,warnIf(member(Bad=[],StarSets)).
+checkStarSets(_StarSets). %%ctrace2.
+
+
+argNFoundGenerate(CateSigFunctor,StarName,MatchPattern,IndexPattern,Nothing):-meansNothing(Nothing,_),!,argNFound(CateSigFunctor,StarName,MatchPattern,IndexPattern).
+argNFoundGenerate(CateSigFunctor,StarName,MatchPattern,IndexPattern,TextPattern):-textPatternToMatchPatternTest(TextPattern,IndexPattern),argNFound(CateSigFunctor,StarName,MatchPattern,IndexPattern),nop(traceIf(not(textPatternToMatchPattern(TextPattern,IndexPattern)))).
+%%%argNFoundGenerate(CateSigFunctor,StarName,MatchPattern,IndexPattern,TextPattern):-trace,argNFound(CateSigFunctor,StarName,MatchPattern,IndexPattern).
+
+argNFoundGenerate(_CateSigFunctor,pattern,MatchPattern,IndexPattern,TextPattern):-textPatternToMatchPattern(TextPattern,IndexPattern),cid_pattern(_,IndexPattern),fromIndexableSArg0(IndexPattern,MatchPattern).
+argNFoundGenerate(_CateSigFunctor,that,MatchPattern,IndexPattern,TextPattern):-textPatternToMatchPattern(TextPattern,IndexPattern),cid_that(_,IndexPattern),fromIndexableSArg0(IndexPattern,MatchPattern).
+argNFoundGenerate(_CateSigFunctor,topic,MatchPattern,IndexPattern,TextPattern):-textPatternToMatchPattern(TextPattern,IndexPattern),cid_topic(_,IndexPattern),fromIndexableSArg0(IndexPattern,MatchPattern).
+
+
+toTAtom(Text,Text):-atom(Text),!.
+toTAtom(Text,Atom):-number(Text),atom_number(Atom,Text),!.
+toTAtom(Text,Atom):-trace,atom_to_number(Atom,Text).
+
+textPred(element(A,B,C),element(A,B,C)):-!.
+textPred(Text,Pred):-toTAtom(Text,Atom),toLowercase(Atom,Pred).
+
+
+textPatternToMatchPattern([Text],MatchPattern):-textPred(Text,Pred),!,member(MatchPattern,[Pred,*,'_']).
+textPatternToMatchPattern([Text,_P|_Attern],MatchPattern):-textPred(Text,Pred),functor(MatchPattern,Pred,1).
+textPatternToMatchPattern([_Text|Pattern],MatchPattern):-member(T,Pattern),textPred(T,Pred),functor(MatchPattern,Pred,2).
+textPatternToMatchPattern(_TextPattern,'_').
+textPatternToMatchPattern(_TextPattern,'*').
+
+%%textPatternToMatchPatternTest(I,O):-textPatternToMatchPattern(I,O).
+textPatternToMatchPatternTest(_TextPattern,_).
+
+%%argNFound(aimlCate,pattern,['ARE', *, 'REAL'],are(real(idx_endswith, *, real))).
+%%argNFound(aimlCate, pattern, ['_', 'OFF'], off(idx_endswith, '_', off)).
+%%argNFound(aimlCate,pattern,['HOW', 'MANY', 'YEARS', *, 'IN', 'SAN', 'FRANCISCO'],how(many(years(in(idx_startswith(*), san(francisco)))))).
 
 %% simpler but slower.. maybe comment (fail) this one out for the faster next one
 %% DOES NOT USE INDEXES 
@@ -372,7 +409,8 @@ generateMatchPatterns(Ctx,StarName,Out,InputPattern,CateSigIn,MinedCates,SetOfEa
   getCategoryArg(Ctx,StarName,IndexPattern,Out,CateSig),
   savedSetPatterns(LSP,OutputLevel,StarSets,IndexPattern),   
   findall(LSP,
-             (argNFound(CateSigFunctor,StarName,MatchPattern,IndexPattern),
+             (argNFoundGenerate(CateSigFunctor,StarName,MatchPattern,IndexPattern,InputPattern),
+              %%argNFound(CateSigFunctor,StarName,MatchPattern,IndexPattern),
               canMatchAtAll_debug(Ctx,StarName,InputPattern,MatchPattern,OutputLevel,StarSets)),
       EachMatchSig),
   prolog_must(EachMatchSig=[_|_]),
@@ -416,7 +454,7 @@ generateMatchPatterns(Ctx,StarName,Out,InputPattern,CateSig,_MinedCates,EachMatc
 % ========================================================================================
 
 canMatchAtAll_debug(Ctx,StarName,InputPattern,MatchPattern,OutputLevel,StarSets):-
-    make_star_binders(Ctx,StarName,1,InputPattern,MatchPattern,OutputLevelInv,StarSets),!,OutputLevel is 1/OutputLevelInv ,
+    make_star_binders(Ctx,StarName,1,InputPattern,MatchPattern,OutputLevelInv,StarSets),checkStarSets(StarSets),!,OutputLevel is 1/OutputLevelInv ,
     nop(debugFmt(pass_canMatchAtAll_debug(Ctx,StarName,InputPattern,MatchPattern,OutputLevel,StarSets))),!.
 
 canMatchAtAll_debug(Ctx,StarName,InputPattern,MatchPattern,_OutputLevel,_StarSets):-
@@ -435,60 +473,100 @@ removeSkippables(A,A).
 % ======================================================================================== 
 % make_star_binders(Ctx, StarName, Text , Pattern, 1/OutputLevel, StarSetsNameValues).
 %
-% pattern_match(Text , Pattern)..  would be simply   make_star_binders(_Ctx, starName, Text , Pattern, _OutputLevel, _StarSetsNameValues).
+% pattern_match(Text , Pattern)..  would be simply   make_star_binders(_Ctx, starName, 1, Text , Pattern, _OutputLevel, _StarSetsNameValues).
 % ========================================================================================
 make_star_binders(_Ctx,StarName,_N,InputPattern,MatchPattern,OutputLevel,StarSets):- 
    prolog_must(var(StarSets)),prolog_must(var(OutputLevel)),prolog_must(ground(StarName:InputPattern:MatchPattern)),fail.  
 
-:-setLogLevel(make_star_binders,none).
+make_star_binders(Ctx,StarName,N,InputText,Indexical,WildValue,Pred):-
+   %%% side with most stars should have to be shorter or same length?
+   %%% cant preguess dual sided stars: ((is_list(InputText),is_list(Indexical))-> (length(InputText,IL),IL2 is IL+2,length(Indexical,PL),PL=<IL2) ; true),
+   removeSkippables(Indexical,IndexicalChanged),
+   %% IF Pattern contains no skippables
+     (Indexical==IndexicalChanged-> 
+      %% THEN remove Skippables
+       (removeSkippables(InputText,Text),!,make_star_binders0(Ctx,StarName,N,Text,Indexical,WildValue,Pred));
+      %% ELSE use skippables
+       make_star_binders0(Ctx,StarName,N,InputText,Indexical,WildValue,Pred)),!.
+
+/*
+SO.. The IF/THEN/ELSE pattern is for when the pattern contains non-text
+
+46 ?- starMatch([('"'),a,*,*],[('"'),a,be,c,('"')],StarSets).
+StarSets = [tstar1=be, tstar2=[c, '"']].
+
+47 ?- starMatch([a,*,*],[('"'),a,be,c,('"')],StarSets).
+StarSets = [tstar1=be, tstar2=[c]].
+
+starMatch(Pattern,Text,StarSets)
+*/
+
+starMatch(Pattern,Text,StarSets):-make_star_binders(_Ctx,'t',1,Text,Pattern,_OutputLevelInv,StarSets).
+
+:-setLogLevel(make_star_binders0,none).
 
 %end check
-make_star_binders(_Ctx,_StarName,_N,L,R,1,[]):-R==[],!,consumeSkippables(L,LL),!,LL==[].
-make_star_binders(_Ctx,_StarName,_N,L,R,1,[]):-L==[],!,consumeSkippables(R,RR),!,RR==[].
+make_star_binders0(_Ctx,_StarName,_N,L,R,1,[]):-R==[],consumeSkippables(L,LL),LL==[],!.
+make_star_binders0(_Ctx,_StarName,_N,L,R,1,[]):-L==[],consumeSkippables(R,RR),RR==[],!.
 
 % left hand star/wild  (cannot really happen (i hope))
-%make_star_binders(_Ctx,StarName,_N,Star,_Match,_OutputLevel,_StarSets):- fail, not([StarName]=Star),isStarOrWild(StarName,Star,_WildValue,_WMatch,_Pred),!,ctrace,fail. 
+%make_star_binders0(_Ctx,StarName,N,Star,_Match,_OutputLevel,_StarSets):- fail, not([StarName]=Star),isStarOrWild(StarName,N,Star,_WildValue,_WMatch,_Pred),!,ctrace,fail. 
 
 
 % simplify
-make_star_binders(Ctx,StarName,N,[Word1|B],[Word2|BB],CountO,StarSets):-
-     sameWords(Word1,Word2),!,make_star_binders(Ctx,StarName,N,B,BB,Count,StarSets),CountO is Count + 1.
+make_star_binders0(Ctx,StarName,N,[Word1|B],[Word2|BB],CountO,StarSets):-
+     sameWords(Word1,Word2),!,make_star_binders0(Ctx,StarName,N,B,BB,Count,StarSets),CountO is Count + 1.
+
+/*
+% simplify (from last)
+
+ 41 ?- starMatch([('"'),a,*,c,*,('"')],[('"'),a,be,c,('"')],StarSets).
+ StarSets = [tstar1=[be], tstar2='"']
+
+   might be good to uncomment the next two lines to prevent this!
+*/
+make_star_binders0(Ctx,StarName,N,Word1B,Word2BB,CountO,StarSets):-append(B,[Word1],Word1B),append(BB,[Word2],Word2BB),
+     sameWords(Word1,Word2),!,make_star_binders0(Ctx,StarName,N,B,BB,Count,StarSets),CountO is Count + 1.
+
+% wildcard and match on opposite sides!  makes tests fail though TODO .. make this possible w/o loops
+%%make_star_binders0(Ctx,StarName,N,[WildCard|BB],[MW|MatchB],ValueO,PredO):- isStarOrWild(StarName,N,WildCard,_WildValue,_Match,_Pred),not(isStarOrWild(StarName,N,MW,_,_,_)),
+%%     make_star_binders0(Ctx,StarName,N,[MW|MatchB],[WildCard|BB],ValueO,PredO).
 
 % tail (all now in) star/wildcard
-make_star_binders(_Ctx,StarName,N,InputText,WildCard,WildValue,[Pred]):-isStarOrWild(StarName,N,WildCard,WildValue,InputText,Pred),!.
+make_star_binders0(_Ctx,StarName,N,InputText,WildCard,WildValue,[Pred]):-isStarOrWild(StarName,N,WildCard,WildValue,InputText,Pred),!,checkStarSets([Pred]).
 
 % once in star.. walk past star
-make_star_binders(Ctx,StarName,N,InputText,[WildCard,M0|More],ValueO,[Pred|StarSets]):-isStarOrWild(StarName,N,WildCard,WildValue,SkipedSTAR,Pred),
-         append(SkipedSTAR,[M1|LeftMore],InputText),sameWords(M0,M1),N2 is N+1,
-         make_star_binders(Ctx,StarName,N2,LeftMore,More,Value,StarSets),!,ValueO is WildValue + Value.
+make_star_binders0(Ctx,StarName,N,InputText,[WildCard,M0|More],ValueO,[Pred|StarSets]):-isStarOrWild(StarName,N,WildCard,WildValue,SkipedSTAR,Pred),
+         (WildCard=='^'->SkipedSTAR=_;SkipedSTAR=[_|_]),append(SkipedSTAR,[M1|LeftMore],InputText),sameWords(M0,M1),N2 is N+1,
+         make_star_binders0(Ctx,StarName,N2,LeftMore,More,Value,StarSets),!,ValueO is WildValue + Value,checkStarSets([Pred|StarSets]).
 
 % is mid-right hand wildcard (this should be the last test)
-make_star_binders(Ctx,StarName,N,[Match|B],[WildCard|BB],ValueO,[Pred|StarSets]):- isStarOrWild(StarName,N,WildCard,WildValue,Match, Pred),!,
+make_star_binders0(Ctx,StarName,N,[Match|B],[WildCard|BB],ValueO,[Pred|StarSets]):- isStarOrWild(StarName,N,WildCard,WildValue,Match, Pred),!,
      N2 is N+1,
-     make_star_binders(Ctx,StarName,N2,B,BB,Value,StarSets),!,ValueO is WildValue + Value.
+     make_star_binders0(Ctx,StarName,N2,B,BB,Value,StarSets),!,ValueO is WildValue + Value,checkStarSets([Pred|StarSets]).
 
 % tail is an atom (indexical unifier)
-make_star_binders(Ctx,StarName,N,InputText,Indexical,WildValue,Pred):-
+make_star_binders0(Ctx,StarName,N,InputText,Indexical,WildValue,Pred):-
       atom(Indexical),!,
-      make_star_binders(Ctx,StarName,N,InputText,[Indexical],WildValue,Pred).
+      make_star_binders0(Ctx,StarName,N,InputText,[Indexical],WildValue,Pred),checkStarSets([Pred]).
 
 % tail is a compound (indexical unifier)
-make_star_binders(Ctx,StarName,N,InputText,Indexical,WildValue,Pred):-
-      not(is_list(Indexical)),/*compound(Indexical),*/toNonIndexable(Indexical,[L|IST]),
-      make_star_binders(Ctx,StarName,N,InputText,[L|IST],WildValue,Pred).
+make_star_binders0(Ctx,StarName,N,InputText,Indexical,WildValue,Pred):-
+      not(is_list(Indexical)),/*compound(Indexical),*/fromIndexableSArg0(Indexical,LIST),LIST=[_|_],
+      make_star_binders0(Ctx,StarName,N,InputText,LIST,WildValue,Pred),checkStarSets([Pred]).
 
 
 
 % skip over skippable words
-make_star_binders(Ctx,StarName,N,Skipable,BB,CountO,StarSets):- 
-  skipablePhrase(Skipable,B),!,make_star_binders(Ctx,StarName,N,B,BB,Count,StarSets),CountO is Count + 1.
-  %%warnIf((isIgnoreableWord(Skipable),!,make_star_binders(Ctx,StarName,N,B,BB,Count,StarSets),CountO is Count + 1)),number(CountO).
+make_star_binders0(Ctx,StarName,N,Skipable,BB,CountO,StarSets):- 
+  skipablePhrase(Skipable,B),!,make_star_binders0(Ctx,StarName,N,B,BB,Count,StarSets),CountO is Count + 1.
+  %%warnIf((isIgnoreableWord(Skipable),!,make_star_binders0(Ctx,StarName,N,B,BB,Count,StarSets),CountO is Count + 1)),number(CountO).
 
 
 skipablePhrase([Skipable|B],B):-isIgnoreableWord(Skipable),!.
 skipablePhrase([Skip,'\b',Ble|B],[Skipable|B]):-joinAtoms([Skip,'\b',Ble],' ',Skipable),!.
 
-isIgnoreableWord(Skipable):-member(Skipable,['-','(',')',',','?','.','','\'']).
+isIgnoreableWord(Skipable):-member(Skipable,['-','(',')',',','?','.','','\'',('"')]).
 isIgnoreableWord(Skipable):-isWhiteWord(Skipable).
 
 isWhiteWord(Skipable):-member(Skipable,[' ','\b','\n','']).
@@ -526,28 +604,32 @@ starNameTransform(Star,StarStar):-starName(Star,StarStar),!.
 starNameTransform(StarName,StarName):-atom_concat(_,'star',StarName),!.
 starNameTransform(StarName,StarNameStar):-atom_concat(StarName,'star',StarNameStar),!.
 
-isStarOrWild(StarName,[StarNameText],WildValue,InputText,Pred):-nonvar(StarNameText),!,isStarOrWild(StarName,_,StarNameText,WildValue,InputText,Pred),!.
+isStarOrWild(StarName,N,[StarNameText],WildValue,InputText,Pred):-nonvar(StarNameText),!,isStarOrWild(StarName,N,StarNameText,WildValue,InputText,Pred),!.
 
+isStarOrWild(StarName,_N,WildCardText,WildValue,InputText,Pred):- isWildCard(StarName,WildCardText,WildValue,InputText,Pred),!.
 isStarOrWild(StarName,N,StarNameText,WildValue,InputText,StarNameStarN=InputText):-
    isStar(StarName,StarNameText,WildValue),!,starNameTransform(StarName,StarNameStar),atom_concat(StarNameStar,N,StarNameStarN),!,traceIf(isStarValue(InputText)).
-isStarOrWild(StarName,_N,WildCardText,WildValue,InputText,Pred):- isWildCard(StarName,WildCardText,WildValue,InputText,Pred),!.
 
-isWildCard(StarName,Wild,1,InputText,call(sameBinding(Wild,InputText))):- not(is_list(Wild)),compound(Wild),Wild=..LWild,not(not(member(StarName,LWild))),!.
+isWildCard(StarName,Wild,1,InputText,call(sameWCBinding(StarName,Wild,InputText))):- not(is_list(Wild)),compound(Wild),!. %%Wild=..LWild,!. %%not(not(member(StarName,LWild))),!.
 
 requireableWord(StarName,M):-not(isOptionalOrStar(StarName,M)).
 
 isOptionalOrStar(_StarName,M):-not(atom(M)),!,ctrace.
-isOptionalOrStar(StarName,M):-isStar(StarName,M),!.
+isOptionalOrStar(StarName,M):-isStar2(StarName,M),!.
 
 /*
 isStar(StarName,'topic'):-!. %%,ctrace.
 isStar(StarName,'that'):-!.
 isStar(StarName,'input'):-!.
 */
-isStar(StarName,StarNameText):-isStar(StarName,StarNameText,_Order),!.
+isStar2(StarName,StarNameText):-isStar(StarName,StarNameText,_Order),!.
 isStar(StarName,StarNameText,WildValue):-not(ground(StarNameText)),ctrace,debugFmt(isStar(StarName,StarNameText,WildValue)),!,fail.
 isStar(StarName,[StarNameText],WildValue):-isStar(StarName,StarNameText,WildValue),!.
+isStar(StarName,element(StarName,_,_),0.8).
+isStar(StarName,star(StarName,_,_),0.8).
+%%isStar(_StarName,element(_,_,_),0.7).
 isStar(_StarName,'*',0.3).
+isStar(_StarName,'^',0.8).
 isStar(_StarName,'_',0.8).
 %%WAS VERY BAD IDEA:  isStar(StarName,StarNameText,6):-atom(StarName),!,StarNameText==StarName,writeq(qqqq-qq),ctrace.
 
@@ -594,4 +676,5 @@ sameWords(Word1,Word2):-atom(Word1),atom(Word2),atoms_match0(Word1,Word2).
  atoms_match0(Word1,Word2):- (isStar0(Word1);isStar0(Word2)),!,fail.
  atoms_match0(Word1,Word1):-!.
  atoms_match0(Word1,Word2):-literal_atom(Word1,WordO),literal_atom(Word2,WordO),!.
+
 

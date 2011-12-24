@@ -225,6 +225,7 @@ numberFyList([A|MajorMinor],[B|MajorMinorM]):-
 numberFyList([A|MajorMinor],[A|MajorMinorM]):-numberFyList(MajorMinor,MajorMinorM).
 
 isStarValue(Value):-ground(Value),not([_,_|_]=Value),member(Value,[[ValueM],ValueM]),!,member(ValueM,['*','_']),!.
+isEmptyValue([]):-ctrace.
 
 xformOutput(Value,ValueO):-isStarValue(Value),!,ctrace,Value=ValueO.
 xformOutput(Value,ValueO):-listify(Value,ValueL),Value\==ValueL,!,xformOutput(ValueL,ValueO).
@@ -276,7 +277,7 @@ addReplacement(Dict,Find,Replace):-currentContext(addReplacement(Dict,Find,Repla
 % ===============================================================================================
 % context/name cleanups
 % ===============================================================================================
-dictNameDictNameC(Ctx,IDict,NameI,Dict,Name):-dictNameDictName(Ctx,IDict,NameI,Dict,Name),!, IDict+NameI \==Dict+Name, debugFmt(IDict+NameI is Dict+Name).
+dictNameDictNameC(Ctx,IDict,NameI,Dict,Name):-dictNameDictName(Ctx,IDict,NameI,Dict,Name),!, IDict+NameI \==Dict+Name, nop(debugFmt(IDict+NameI is Dict+Name)).
 
 dictNameDictName(Ctx,IDict,NameI,Dict,Name):- traceIf(IDict=[_,_,_]),hotrace(dictNameDictName0(Ctx,IDict,NameI,Dict,Name)).
 dictNameDictName0(Ctx,_Dict,D:NameI,Dict,Name):- nonvar(D),!,dictNameDictName(Ctx,D,NameI,Dict,Name).
@@ -303,15 +304,24 @@ withValueAdd(Ctx,Pred,IDict,Name,Value):-is_list(IDict),!,trace,foreach(member(D
 withValueAdd(Ctx,_Pred:Print,Dict,Name,Var):-neverActuallyAdd(Ctx,Print,Dict,Name,Var),!.
 withValueAdd(Ctx,Pred,Dict,Name,Var):-var(Var),!,withValueAdd(Ctx,Pred,Dict,Name,['$var'(Var)]).
 withValueAdd(Ctx,Pred,Dict,Name,Atomic):-atomic(Atomic),Atomic\==[],!,withValueAdd(Ctx,Pred,Dict,Name,[Atomic]).
+withValueAdd(_Ctx,_Pred:_Print,Dict,Name,Value):-uselessNameValue(Dict,Name,Value),!.
 withValueAdd(Ctx,_Pred:Print,Dict,Name,Value):-immediateCall(Ctx,call(Print,Ctx,Dict,Name,Value)),fail.
-withValueAdd(Ctx,Pred,Dict,Name,Value):-isStarValue(Value),debugFmt(withValueAdd(Ctx,Pred,Dict,Name,Value)),traceIf(nonStarDict(Dict)).
+withValueAdd(Ctx,Pred,Dict,Name,Value):-isStarValue(Value),!,debugFmt(withValueAdd(Ctx,Pred,Dict,Name,Value)),traceIf(nonStarDict(Dict)).
 %%withValueAdd(Ctx,Pred,Dict,default(Name),DefaultValue):-getAliceMem(Ctx,Pred,Dict,Name,'OM')->setAliceMem(Ctx,Dict,Name,DefaultValue);true.
 withValueAdd(Ctx,Pred,Dict,Name,NonList):-(not(is_list(NonList))),!,withValueAdd(Ctx,Pred,Dict,Name,[NonList]).
 withValueAdd(Ctx,Pred:_Print,Dict,Name,Value):-checkDictIn(Value,ValueO),call(Pred,Ctx,Dict,Name,ValueO).
 
 nonStarDict(catefallback):-!,fail.
 neverActuallyAdd(Ctx,Pred,Dict,Name,Var):-var(Var),debugFmt(neverActuallyAdd(Ctx,Pred,Dict,Name,Var)),!.
+neverActuallyAdd(Ctx,Pred,Dict,topic,[TooGeneral]):-member(TooGeneral,[general]),debugFmt(neverActuallyAdd(Ctx,Pred,Dict,topic,TooGeneral)),!.
 neverActuallyAdd(Ctx,Pred,Dict,Name,Var):-not(ground(var(Var))),debugFmt(maybeNeverActuallyAdd(Ctx,Pred,Dict,Name,Var)),!.
+
+
+uselessNameValue(_Dict,srcfile,_):-!.
+uselessNameValue(_Dict,srcinfo,[nosrc]):-!.
+
+
+
 % ===============================================================================================
 % Setting globals
 % ===============================================================================================
@@ -365,6 +375,10 @@ omOrNil([]):-!.
 omOrNil('OM').
 omOrNil(['Nothing']).
 
+
+expire1Cache:-dict(N,_,_),number(N),retractall(dict(N,_,_)),fail.
+expire1Cache:-dict(_,_,E),atom(E),atom_concat(evalsrai,_,E),retractall(dict(_,_,E)),fail.
+expire1Cache:-dict(E,_,_),atom(E),atom_concat(evalsrai,_,E),retractall(dict(E,_,_)),fail.
 
 getContextStoredValue(Ctx,IDict,NameI,Value):-dictNameDictNameC(Ctx,IDict,NameI,Dict,Name),!,getContextStoredValue(Ctx,Dict,Name,Value).
 getContextStoredValue(_Ctx,Dict,Name,ValueO):- copy_term(ValueO,ValueI),dict(Dict,Name,ValueI),

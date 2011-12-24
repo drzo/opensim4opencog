@@ -21,7 +21,7 @@
 %    Context values API
 % ===============================================================================================
 pushAttributes(Ctx,Scope,List):-prolog_mustEach((prolog_mostly_ground(List),pushCtxFrame(Ctx,Scope,List),pushAttributes1(Ctx,Scope,List))),!.
-pushAttributes1(Ctx,Scope,[N=V|L]):-pushNameValue(Ctx,Scope,N,V),pushAttributes1(Ctx,Scope,L).
+pushAttributes1(Ctx,Scope,[N=V|L]):-pushNameValue(Ctx,Scope,N,V),!,pushAttributes1(Ctx,Scope,L).
 pushAttributes1(_Ctx,_Scope,[]).
 pushAttributes1(_Ctx,_Scope,_AnyPushed):-!.
 
@@ -113,7 +113,7 @@ valuesMatch11(Ctx,[V|VV],[A|AA]):-valuesMatch1(Ctx,V,A),!,valuesMatch11(Ctx,VV,A
 
 valueMP(Var,M):- member(M, [var(Var), Var=missing, Var=[], Var=(*) ,  Var=('_') , Var=('OM') , (Var=(-(_))) ]),M,!.
 %valueMP(Var,'$deleted'):-functor(Var,·'$deleted',_),!.
-valueMP(V,(V='ERROR')):-prolog_must(ground(V)),term_to_atom(V,A), concat_atom([_,_|_],'ERROR',A),trace,!.
+%valueMP(V,(V='ERROR')):-prolog_must(ground(V)),term_to_atom(V,A), concat_atom([_,_|_],'ERROR',A),trace,!.
 
 
 checkValue(Value):- valueMP(Value,M),throw_safe(M),!.
@@ -204,8 +204,9 @@ popNameValue(Ctx,Scope,N,Expect):-
 %dyn_retract(dict(Scope,N,V)):-(retract(dict(Scope,N,V))),!.
 
 ensureScope(Ctx,Attribs,ScopeName):-prolog_must(ensureScope0(Ctx,Attribs,ScopeName)),!.
-ensureScope0(_Ctx,_ATTRIBS,Scope):-nonvar(Scope),!.
-ensureScope0(_Ctx,_ATTRIBS,Scope):-gensym(scope,Scope),!.
+ensureScope0(_Ctx,_ATTRIBS,Scope):-nonvar(Scope).
+ensureScope0(_Ctx,_ATTRIBS,Scope):-flag(scope,Scope,Scope+1).
+ensureScope0(_Ctx,_ATTRIBS,Scope):-gensym(scope,Scope).
 
 
 % ===================================================================
@@ -519,17 +520,20 @@ attributeValue(Ctx,Scope,Name,Value,Else):-nonvar(Value),!,checkNameValue(attrib
 attributeValue(Ctx,Scope,Name,Value,_ElseVar):-peekNameValue0(Ctx,Scope,Name,Value),!.
 attributeValue(Ctx,_Scope,Name,Value,ElseVar):-makeParamFallback(Ctx,Name,Value,ElseVar),!.
 */
-attributeValue(Ctx,ATTRIBS,NameS,ValueO,_Else):- hotrace((findAttributeValue(Ctx,ATTRIBS,NameS,ValueO,'$failure'))),!.
+attributeValue(Ctx,ATTRIBS,NameS,ValueO,_Else):- ((findAttributeValue(Ctx,ATTRIBS,NameS,ValueO,'$failure'))),!.
 attributeValue(Ctx,XML,NameS,ValueO,_Else):- hotrace((findTagValue(Ctx,XML,NameS,ValueO,'$failure'))),!.
 attributeValue(Ctx,ATTRIBS,NameS,ValueO,_Else):-compound(ATTRIBS),ATTRIBS=..[_|LIST],member(E,LIST),
    attributeValue(Ctx,E,NameS,ValueO,'$failure'),!.
 attributeValue(Ctx,Scope,NameS,ValueO,ElseVar):-ElseVar\=='$failure',makeParamFallback(Ctx,Scope,NameS,ValueO,ElseVar),!.
 
-findAttributeValue(Ctx,ATTRIBS,NameS,ValueO,Else):- hotrace((findAttributeValue0(Ctx,ATTRIBS,NameS,ValueI,Else), aiml_eval_to_unit(Ctx,ValueI,ValueO))),!.
+findAttributeValue(Ctx,ATTRIBS,NameS,ValueO,Else):- ((findAttributeValue0(Ctx,ATTRIBS,NameS,ValueI,Else), aiml_eval_to_unit(Ctx,ValueI,ValueO))),!.
 findAttributeValue(Ctx,ATTRIBS,NameS,ValueO,Else):-   Else\=='$failure',prolog_must((findAttributeValue0(Ctx,ATTRIBS,NameS,ValueI,Else), aiml_eval_to_unit(Ctx,ValueI,ValueO))),!.
 
-findAttributeValue0(_Ctx,ATTRIBS,NameS,ValueO,_Else):- member(Name,NameS), lastMember(NameE=ValueO,ATTRIBS), atomsSameCI(Name,NameE),!.
+findAttributeValue0(_Ctx,ATTRIBS,NameS,ValueO,_Else):- lastMemberTest(NameE=ValueO,ATTRIBS), member(Name,NameS), atomsSameCI(Name,NameE),!.
 findAttributeValue0(Ctx,ATTRIBS,NameS,Value,ElseVar):- makeParamFallback(Ctx,ATTRIBS,NameS,Value,ElseVar),!.
+
+lastMemberTest(E,L):- ground(L),!,reverse(L,R),member(E,R).
+lastMemberTest(E,L):-lastMember(E,L).
 
 findTagValue(_Ctx,XML,_NameS,_ValueO,_Else):-var(XML),!,fail.
 

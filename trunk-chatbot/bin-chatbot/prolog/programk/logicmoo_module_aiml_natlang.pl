@@ -18,7 +18,7 @@ toString_atom(Input,Atom):-toCycApiExpression(Input,Out,[]),ctrace,string_to_ato
 tokenizeInput(Input,Tokens):- notrace(is_string(Input)),toString_atom(Input,Atom),!,tokenizeInput(Atom,Tokens),!.
 %%tokenizeInput(String,Tokens):-hotrace(tokenizeInput0(String,Tokens)),!.
 tokenizeInput(String,Tokens):-hotrace(tokenizeInput0(String,Tokens)),Tokens\==[],ground(Tokens),!.
-tokenizeInput(String,Tokens):-trace,tokenizeInput0(String,Tokens),!.
+tokenizeInput(String,Tokens):-tokenizeInput0(String,Tokens),!.
 
 tokenizeInput0(Input,Tokens):-var(Input),!,Input=Tokens.
 tokenizeInput0([],[]):-!.
@@ -118,4 +118,50 @@ is_literal(X):-atom(X),literal_atom(X,N),!,N=X.
 ignorecase_literal(A,B):-literal_atom_safe(A,B),!.
 ignorecase_literal(A,B):-number(A),atom_number(N,A),literal_atom_safe(N,B),!.
 ignorecase_literal(A,B):-toLowercase(A,B),!.
+
+
+% ===============================================================================================
+% Create Talk Generation Paths
+% ===============================================================================================
+/*
+
+generally we have these types of transformers
+
+
+convert_ele (loading)
+outputPaths (generate possible grounded outputs)
+computeAnswer (really generate output at runtime)
+
+?-  tell(allSaid),allSaid(That,Aiml),'format'('~q.   %%  ~q. ~n',[That,Aiml]),fail.
+
+
+%% create transitions between <template> and <that> 
+tell('allSaid1.pl'),allSaid(That),'format'('oneSaid(~q).~n',[That]),fail. told.
+tell('allThat1.pl'),allThats(That),'format'('oneThat(~q).~n',[That]),fail. told.
+
+*/
+:-['temp/allThat1.pl'],['temp/allSaid1.pl'].
+
+findThatMatch(Aiml1,Aiml2):-allThats(Sarg,Aiml1),allSaid(Path,Aiml2),sameBindingIC(Sarg,Path).
+
+allThats(That):- findall(Sarg,(aimlCateArg(that,_Aiml,Arg),Arg\=(*),fromIndexableSArg(Arg,Sarg)),List),sort(List,Set),member(That,Set).
+allThats(That,Aiml):- findall(Sarg=Aiml,(aimlCateArg(that,Aiml,Arg),Arg\=(*),fromIndexableSArg(Arg,Sarg)),List),sort(List,Set),member(That=Aiml,Set).
+
+allSaid(That):- findall(Sarg,(aimlCateArg(template,_Aiml,Arg),outputPath(_Ctx,Arg,Sarg)),List),sort(List,Set),member(That,Set).
+allSaid(That,Aiml):- findall(Sarg=Aiml,(aimlCateArg(template,Aiml,Arg),outputPath(_Ctx,Arg,Sarg)),List),sort(List,Set),member(That=Aiml,Set).
+
+
+%%?- length(Text,T1),(T1<100->true;!),oneThat(Pattern),oneSaid(Text),starMatch(Pattern,Text,StarSets),'format'('~q.~n',[arMatch(Pattern,Text)]),fail.
+
+
+%%:-dynamic(inGenOutput).
+%%inGenOutput.·
+
+outputPath(Ctx,Input,Path):-!, setup_call_cleanup(assert(inGenOutput),computeInnerTemplate(Ctx,1,Input,Path,_VotesO),retractall(inGenOutput)).
+
+
+outputPath(Ctx,Input,Path):- 
+   withAttributes(Ctx,[generateUnknownVars=true,generateTemplate=true],
+    (computeInnerTemplate(Ctx,1,Input,Path,_VotesO))).
+
 

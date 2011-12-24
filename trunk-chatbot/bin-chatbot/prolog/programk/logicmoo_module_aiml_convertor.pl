@@ -8,6 +8,36 @@
 % Revised At:   $Date: 2002/07/11 21:57:28 $
 % ===================================================================
 
+ppfs:-ppfs('../aiml/chomskyAIML/chomsky04*.aiml').
+
+% ppfs('../aiml/chomskyAIML/*.aiml').
+
+ppfs:-ppfs('../aiml/chomskyAIML/chomsky001.aiml').
+ppfs(FN):-expand_file_name(FN,Exp),member(F,Exp),ppfs1(F),fail.
+ppfs(_).
+
+ppfs1(File):-
+    fileToLineInfoElements(_Ctx,File,Z),
+    atom_concat(File,'.term',Elis),
+    (file_newer(Elis,File) 
+      -> 
+       ('format'('%% skipping: ~q ~n',[Elis]),flush_output(user_output))
+        ; 
+         prolog_mustEach(('format'('%% writing: ~q ~n',[Elis]),flush_output(user_output),setup_call_cleanup(open(Elis,write,Str),writeEachTo(Str,Z),close(Str))))).
+
+writeEachTo(_Str,[]):-!.
+writeEachTo(Str,Atom):-atom(Atom),'format'(Str,'atom_load(~q).~n',[Atom]),'format'('atom_load(~q).~n',[Atom]),!.
+writeEachTo(Str,[H|T]):- !, maplist_safe(writeEachTo(Str),[H|T]).
+writeEachTo(Str,element(aiml,[],STUFF)):- !,writeEachTo(Str,STUFF).
+writeEachTo(Str,element(Foo,S,STUFF)):- member(Foo,[category,topic]),!,'format'(Str,'~q.~n',[element(Foo,S,STUFF)]),!.
+writeEachTo(Str,S):-'format'(Str,'~q.~n',[S]), 'format'('%% UNK ~q.~n',[S]).
+
+
+file_newer(File1,File2):-
+   time_file_safe(File1,Time1), % fails on non-existent
+   time_file_safe(File2,Time2),Time1>Time2.
+
+
 
 %:-module()
 %:-include('logicmoo_utils_header.pl'). %<?
@@ -40,6 +70,7 @@ translate_aiml_structure(Ctx,Structure):- trace,
    load_aiml_structure(Ctx,XMLStructures),!.
 
 
+cateForFile(_Ctx,SRCFILE,aimlCate(_GRAPH,_PRECALL,_TOPIC,_THAT,_INPUT,_PATTERN,_FLAGS,_CALL,_GUARD,_USERDICT,_TEMPLATE,_LINENO,SRCFILE:_-_,_RULESYM)):-useCateID,!.
 cateForFile(_Ctx,SRCFILE,aimlCate(_GRAPH,_PRECALL,_TOPIC,_THAT,_INPUT,_PATTERN,_FLAGS,_CALL,_GUARD,_USERDICT,_TEMPLATE,_LINENO,SRCFILE:_-_)):-!.
 cateForFile(Ctx,File,FileMatch):- ctrace,withNamedValue(Ctx,[anonvarsFroCate=true], makeAimlCate(Ctx,[srcfile=File:_-_],FileMatch)),!.
 
@@ -62,14 +93,11 @@ load_pending_aiml_file(Ctx,File,PLNAME):- debugFmt(load_pending_aiml_file(Ctx,Fi
 translate_single_aiml_file(_Ctx,File,PLNAME,FileMatch):- creating_aiml_file(File,PLNAME),!,
   throw_safe(already(creating_aiml_file(File,PLNAME),FileMatch)),!.
 
-translate_single_aiml_file(_Ctx,File,PLNAME,_FileMatch):-  fail, %% fail if want to always remake file
-   exists_file_safe(PLNAME),
-   time_file_safe(PLNAME,PLTime), % fails on non-existent
-   time_file_safe(File,FTime),
+translate_single_aiml_file(_Ctx,File,PLNAME,_FileMatch):-   %% fail if want to always remake file
+   file_newer(PLNAME,File), % fails on non-existent
    %not(aimlOption(rebuild_Aiml_Files,true)),
-   PLTime > FTime,!,
    debugFmt(up_to_date(create_aiml_file(File,PLNAME))),!,
-   retractall(creating_aiml_file(File,PLNAME)).
+   retractall(creating_aiml_file(File,PLNAME)),!.
 
 %%translate_single_aiml_file(_Ctx,File,PLNAME,FileMatch):- loaded_aiml_file(File,PLNAME,Time),!, throw_safe(already(loaded_aiml_file(File,PLNAME,Time),FileMatch)).
 translate_single_aiml_file(Ctx,File,PLNAME,FileMatch):- loaded_aiml_file(File,PLNAME,Time),!,
@@ -267,7 +295,7 @@ convert_ele(_Ctx,element(star,ALIST,MORE),star(pattern,XLAT2,MORE2)):-!,starInde
   starIndex(_Tag,_Star,ALIST,MORE,XLAT2,MORE2):-convert_attributes(Ctx,ALIST,XLAT2),convert_template(Ctx,MORE,MORE2),!.
 
 convert_ele(_Ctx,element(Tag,ALIST,MORE),star(Star,XLAT2,MORE2)):- starType(Tag,Star),!,starIndex(Tag,Star,ALIST,MORE,XLAT2,MORE2).
-   starType(Tag,Star):-member(Tag=Star,[star=pattern,topicstar=topic,guardstar=guard,inputstar=pattern,thatstar=that]),!.
+   starType(Tag,Star):-member(Tag=Star,[star=pattern,topicstar=topic,guardstar=guard,inputstar=pattern,thatstar=that,get_star=pattern]),!.
    starType(Tag,Star):-atom_concat_safe(Star,'_star',Tag),!.
    starType(Tag,Star):-atom_concat_safe(Star,'star',Tag),!.
 
@@ -337,6 +365,7 @@ transformTagData0(_Ctx,TAG,_Default,*,TAGSTAR):-tagStar(TAG,*,TAGSTAR),!.
 transformTagData0(_Ctx,TAG,_Default,['_'],TAGSTAR):-tagStar(TAG,'_',TAGSTAR),!.
 transformTagData0(_Ctx,TAG,_Default,'_',TAGSTAR):-tagStar(TAG,'_',TAGSTAR),!.
 transformTagData0(Ctx,Tag,_Else,ValueI,ValueO):- ValueI=='$current_value', current_value(Ctx,Tag,ValueO),!.
+transformTagData0(_Ctx,_N,_Else,gensym(Named),ValueO):-useCateID,atom(Named),gensym(Named,ValueO),!.
 transformTagData0(_Ctx,N,Else,ValueO,ValueO):-isVerbatumTag(N),!, member(Else,['$current_value']),!.
 transformTagData0(Ctx,TAG,_Default,PATTERN_IN,PATTERN_OUT):-isPatternTag(TAG),convert_pattern(Ctx,PATTERN_IN,PATTERN_OUT),!.
 
