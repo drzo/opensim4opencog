@@ -30,6 +30,9 @@ xcopy /f /y /c sources\external\Radegast\character bin\character
 mkdir bin\shader_data
 xcopy /f /y /c sources\external\Radegast\shader_data bin\shader_data
 
+mkdir bin\openmetaverse_data
+xcopy /f /y /c /e sources\external\Radegast\openmetaverse_data bin\openmetaverse_data
+
 move XML.dll XML.dll.XGLoreWindowsOnly
 move GraphvizDot.dll GraphvizDot.dll.XGLoreWindowsOnly
 

@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{63189AD7-A7E8-4D46-89A1-75ED863D1B9F}</ProjectGuid>
+    <ProjectGuid>{6255500F-A931-45E4-8A10-F9156935C718}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon></ApplicationIcon>
@@ -48,7 +48,7 @@
     <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
-    <DefineConstants>TRACE;DEBUG;VISUAL_STUDIO</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;VISUAL_STUDIO</DefineConstants>
     <DocumentationFile></DocumentationFile>
     <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
@@ -94,47 +94,42 @@
   <ItemGroup>
     <ProjectReference Include="..\..\main\LibCogbot\Cogbot.Library.csproj">
       <Name>Cogbot.Library</Name>
-      <Project>{A6E3B589-3AAD-484A-AC35-FFFEC48AB5EA}</Project>
+      <Project>{C5404EA5-A365-40CF-B335-9C3CD2C7F5FB}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\main\MushDLR223\MushDLR223.csproj">
       <Name>MushDLR223</Name>
-      <Project>{F3AC0EF8-2B70-4E19-B736-28D47CDC9BB3}</Project>
+      <Project>{C1167694-8EF3-4539-A5C0-14F61AAB088A}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\main\PathSystem3D\PathSystem3D.csproj">
       <Name>PathSystem3D</Name>
-      <Project>{C416B1B0-5A3D-4125-BE1F-7EC8AA97C9AD}</Project>
+      <Project>{79EF351C-8E1B-4DC3-8D69-1CCFD074C0CA}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse\OpenMetaverse.csproj">
       <Name>OpenMetaverse</Name>
-      <Project>{3443FD9E-C6B3-4119-843B-6CB7B2AB38EF}</Project>
+      <Project>{19575429-4721-4D88-AE58-B0C80092344D}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverseTypes\OpenMetaverseTypes.csproj">
       <Name>OpenMetaverseTypes</Name>
-      <Project>{9C1E3598-D5F4-487D-8181-0F7C4B9600EF}</Project>
+      <Project>{E35F8C50-6EFE-4462-9866-2F28B038D414}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\DotLisp\DotLisp.csproj">
       <Name>DotLisp</Name>
-      <Project>{62884043-A482-48BC-BB27-897F9E76699B}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
-    <ProjectReference Include="..\..\main\RTParser\AIMLbot.csproj">
-      <Name>AIMLbot</Name>
-      <Project>{9194093F-1EF8-4CCA-87B5-55F07A96D2A7}</Project>
+      <Project>{C16E33E9-9845-4325-95A1-F535DDC726A0}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\main\PrologScriptEngine\PrologScriptEngine.csproj">
       <Name>PrologScriptEngine</Name>
-      <Project>{0E0B409A-4F83-47F7-8B11-9A470233A741}</Project>
+      <Project>{A94E1AF0-C10A-4B74-8A58-8EEC4B8D2075}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\Radegast\Radegast.csproj">
       <Name>Radegast</Name>
-      <Project>{A808AC1F-225C-48AD-A89A-C7FD2BC2F645}</Project>
+      <Project>{18287A04-D665-4DE0-B3C0-EB4F032B90D7}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
