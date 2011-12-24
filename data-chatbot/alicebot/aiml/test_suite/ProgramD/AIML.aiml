@@ -1031,7 +1031,7 @@ DDDDDDDDDD</html:pre>
     <topic name="SW1">
         <category>
             <pattern>* *</pattern>
-            <template></template>
+            <template><think/></template>
         </category>
     </topic>
     <topic name="SW2">
@@ -1044,4 +1044,59 @@ DDDDDDDDDD</html:pre>
             <template>Test failed.</template>
         </category>
     </topic>
+
+
+    <topic name="SW3"><category><pattern>* *</pattern><template></template></category></topic>
+    <topic name="SW33"><category><pattern>* *</pattern><template>foo2</template></category><category><pattern>*</pattern><template>foo1</template></category></topic>
+    <topic name="SW4"><category><pattern>*</pattern><template></template></category></topic>
+    <topic name="SW3a"><category><pattern>* *</pattern><template>3a</template></category></topic>
+    <topic name="SW4a"><category><pattern>*</pattern><template>4a</template></category></topic>
+    <topic name="SW5"><category><pattern>* *</pattern><template>star star</template></category></topic>
+
+    <category>
+        <pattern>TESTSTARSRURSION2</pattern>
+        <template>
+            Test case #4666.
+            <html:br/>
+            <think><set name="oldtopic"><get name="topic"/></set></think>
+            <think><set name="topic">SR0</set></think>
+            <srai>WILDCARD AND SRURSION TEST</srai>
+            <think><set name="topic"><get name="oldtopic"/></set></think>
+        </template>
+    </category>
+    <topic name="SR0">
+        <category>
+            <pattern>*</pattern>
+            <template>
+                <think><set name="topic">SR1</set></think>
+                <srai><star/></srai>
+                <think><set name="topic">SR2</set></think>
+                <srai><star/></srai>
+            </template>
+        </category>
+    </topic>
+    <topic name="SR1">
+        <category>
+            <pattern>* *</pattern>
+            <template> <think><set name="stdot1"><star index="1"/></set> <set name="stdot2"><star index="2"/></set></think></template>
+        </category>
+        <category>
+            <pattern>*</pattern>
+            <template>poo  <star index="1"/> poo</template>
+        </category>
+        <category><pattern>WC1</pattern><template></template></category>
+        <category><pattern>WC2</pattern><template><think/></template></category>
+    </topic>
+    <topic name="SR2">
+        <category>
+            <pattern>WILDCARD AND SRURSION TEST</pattern>
+            <template>Test passed.</template>
+        </category>
+        <category>
+            <pattern>WILDCARD</pattern>
+            <template>Test failed.</template>
+        </category>
+    </topic>
+
+
 </aiml>

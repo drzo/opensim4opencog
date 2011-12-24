@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
 <!-- suggest this file is learnt via graph="BLACKJACK" -->
-<aiml>
+
+<aiml  version="1.0.1" xmlns="http://alicebot.org/2001/AIML-1.0.1" xmlns:html="http://www.w3.org/1999/xhtml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://alicebot.org/2001/AIML-1.0.1 http://aitools.org/aiml/schema/AIML.xsd">
+
 
 	<!-- Free software (c) 2008 Square Bear.   -->
 	<!-- This program is open source code released under -->
@@ -175,6 +177,19 @@ How many coins do you wish to bet (1-10)?
 <category>
 <pattern>BJMAIN</pattern>
 <template>
+<srai>BJRESET</srai>
+<srai>XDEALERCARD</srai>
+<srai>XPLAYERCARD</srai>
+<srai>XPLAYERCARD</srai>
+<srai>BJCHECKDOUBLE</srai>
+<srai>BJSTATUS</srai>
+</template>
+</category>
+
+
+<category>
+<pattern>BJRESET</pattern>
+<template>
 <think>
 	<set name="dealerhand"></set>
 	<set name="dealertot">0</set>
@@ -189,29 +204,39 @@ How many coins do you wish to bet (1-10)?
 	<set name="plstake">0</set>
 	<set name="plbjwin">0</set>
 	<set name="playcoin">coins</set>
-	<condition name="plbet">
-		<li value="1"><set name="plbjwin">2</set><set name="plstake">1</set><set name="playcoin">coin</set></li>
-		<li value="2"><set name="plbjwin">3</set><set name="plstake">2</set></li>
-		<li value="3"><set name="plbjwin">5</set><set name="plstake">3</set></li>
-		<li value="4"><set name="plbjwin">6</set><set name="plstake">4</set></li>
-		<li value="5"><set name="plbjwin">8</set><set name="plstake">5</set></li>
-		<li value="6"><set name="plbjwin">9</set><set name="plstake">6</set></li>
-		<li value="7"><set name="plbjwin">11</set><set name="plstake">7</set></li>
-		<li value="8"><set name="plbjwin">12</set><set name="plstake">8</set></li>
-		<li value="9"><set name="plbjwin">14</set><set name="plstake">9</set></li>
-		<li value="10"><set name="plbjwin">15</set><set name="plstake">10</set></li>
-	</condition>
+    <condition name="plbet">
+        <li value="1"><set name="plbjwin">2</set><set name="plstake">1</set><set name="playcoin">coin</set></li>
+        <li value="2"><set name="plbjwin">3</set><set name="plstake">2</set></li>
+        <li value="3"><set name="plbjwin">5</set><set name="plstake">3</set></li>
+        <li value="4"><set name="plbjwin">6</set><set name="plstake">4</set></li>
+        <li value="5"><set name="plbjwin">8</set><set name="plstake">5</set></li>
+        <li value="6"><set name="plbjwin">9</set><set name="plstake">6</set></li>
+        <li value="7"><set name="plbjwin">11</set><set name="plstake">7</set></li>
+        <li value="8"><set name="plbjwin">12</set><set name="plstake">8</set></li>
+        <li value="9"><set name="plbjwin">14</set><set name="plstake">9</set></li>
+        <li value="10"><set name="plbjwin">15</set><set name="plstake">10</set></li>
+    </condition>
 </think>
-<srai>XDEALERCARD</srai>
-<srai>XPLAYERCARD</srai>
-<srai>XPLAYERCARD</srai>
-<srai>BJCHECKDOUBLE</srai>
-DEALER: <get name="dealerhand"/><br/><get name="dealertot"/><get name="dealerace"/>.<br/><br/>
-PLAYER: <get name="playerhand"/><br/><get name="playertot"/><get name="playerace"/>.<br/><br/>
-Bank: <get name="coins"/> <get name="bankcoin"/>.<br/>
-Bet: <get name="plbet"/> <get name="playcoin"/>.<br/><br/>
-<get name="gamemessage"/>
 </template>
+</category>
+
+<category>
+<pattern>BJSTATUS</pattern>
+<template>
+   <srai>BJHANDS</srai>
+    Bank: <get name="coins"/> <get name="bankcoin"/>.<br/>
+    Bet: <get name="plbet"/> <get name="playcoin"/>.<br/><br/>
+    <get name="gamemessage"/>
+</template>
+</category>
+
+
+<category>
+<pattern>BJHANDS</pattern>
+ <template>
+    DEALER: <get name="dealerhand"/><br/> ( <get name="dealertot"/> <get name="dealerace"/> ) <br/><br/>
+    PLAYER: <get name="playerhand"/><br/> ( <get name="playertot"/> <get name="playerace"/> ) <br/><br/>
+ </template>
 </category>
 
 
@@ -255,8 +280,7 @@ Bet: <get name="plbet"/> <get name="playcoin"/>.<br/><br/>
 <srai>XPLAYERCARD</srai>
 <condition name="playertot">
 	<li value="BUST!!"><srai>XDEALERFINISH</srai></li>
-<li>DEALER: <get name="dealerhand"/><br/><get name="dealertot"/><get name="dealerace"/>.<br/><br/>
-PLAYER: <get name="playerhand"/><br/><get name="playertot"/><get name="playerace"/>.<br/><br/>
+<li><srai>BJHANDS</srai>
 Bank: <get name="coins"/> <get name="bankcoin"/>.<br/>
 Bet: <get name="plbet"/> <get name="playcoin"/>.<br/><br/>
 Type H to hit or S to stand.</li>
@@ -555,8 +579,7 @@ Type H to hit or S to stand.</li>
 		<li value="BJWIN"><srai>WINBET</srai><srai>BJBONUS</srai></li>
 	</condition> 
 </think>
-DEALER: <get name="dealerhand"/><br/><get name="dealertot"/><get name="dealerace"/>.<br/><br/>
-PLAYER: <get name="playerhand"/><br/><get name="playertot"/><get name="playerace"/>.<br/><br/>
+<srai>BJHANDS</srai>
 <get name="bjresult"/><br/>
 Bank: <get name="coins"/> <get name="bankcoin"/>.<br/><br/>
 <srai>XBJCHECKGAMEOVER</srai>

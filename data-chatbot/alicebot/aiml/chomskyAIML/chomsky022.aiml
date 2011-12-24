@@ -4504,7 +4504,7 @@ Perhaps next time <set name="it">my answer</set> will not be <person/>.
 <category><pattern>YOUR * ARE *</pattern>
 <template>
 <think><set name="topic">general</set></think>
-<random>   <li>How are your <person/>?</li>   <li>Are yours <atir index="2"/> too?</li>   <li>That could be considered an insult in some cultures.</li>  </random>    <think>    <set name="it">      <set name="topic">        <person/>      </set>    </set>  </think>
+<random>   <li>How are your <person/>?</li>   <li>Are yours <star index="2"/> too?</li>   <li>That could be considered an insult in some cultures.</li>  </random>    <think>    <set name="it">      <set name="topic">        <person/>      </set>    </set>  </think>
 </template></category>
   
 <category><pattern>YOUR CLOTHES *</pattern>
