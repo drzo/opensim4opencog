@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{31F0683E-C32F-4678-9610-A7BADE56158F}</ProjectGuid>
+    <ProjectGuid>{074798AE-37E3-480A-A002-57DA9F09052B}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon></ApplicationIcon>
@@ -48,7 +48,7 @@
     <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
-    <DefineConstants>TRACE;DEBUG;VISUAL_STUDIO</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;VISUAL_STUDIO</DefineConstants>
     <DocumentationFile></DocumentationFile>
     <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>

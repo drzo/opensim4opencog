@@ -53,6 +53,7 @@ namespace cogbot.Actions.Appearance
 
             // Get our current appearance
             UUID target = Client.Self.AgentID;
+#if COGBOT_LIBOMV
             AgentSetAppearancePacket set = Client.Appearance.MakeAppearancePacket();
             Primitive.TextureEntry te;
             if (!Client.Appearances.ContainsKey(target))
@@ -103,6 +104,7 @@ namespace cogbot.Actions.Appearance
             #endregion TextureEntry
             // Send the new appearance packet
             Client.Network.SendPacket(set);
+#endif
             return Success("Setting texture entry for " + (AvatarTextureIndex)index + " to " + asset);
 
         }

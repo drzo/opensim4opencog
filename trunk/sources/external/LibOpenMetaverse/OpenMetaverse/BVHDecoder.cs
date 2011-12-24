@@ -1,4 +1,7 @@
-﻿/*
+﻿#if !COGBOT_LIBOMV
+  #error NOT COGBOT_LIBOMV
+#endif
+/*
  * Copyright (c) 2009, openmetaverse.org
  * All rights reserved.
  *

@@ -175,7 +175,7 @@ namespace CogbotRadegastPluginModule
             object obj = GetValue(useType);
             if (obj is SimObject)
             {
-                obj = ((SimObject)obj).ID.ToString();
+                obj = ((BotMentalAspect)obj).ID.ToString();
             }
             else if (obj is Primitive)
             {

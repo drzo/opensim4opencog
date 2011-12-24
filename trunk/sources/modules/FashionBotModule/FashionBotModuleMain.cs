@@ -103,7 +103,9 @@ namespace FashionBotModule
             // replace with our default first
             if (ClothingFolderFolders.Count <= current_subfolder) return;
             // Add new stuff
-            client.Appearance.ReplaceOutfit(client.GetFolderItems(ClothingFolderFolders[current_subfolder]));
+            UUID folder = ClothingFolderFolders[current_subfolder];
+            List<InventoryItem> items = client.GetFolderItems(folder);
+            client.Appearance.ReplaceOutfit(items);
             Thread.Sleep(60000);
         }
 

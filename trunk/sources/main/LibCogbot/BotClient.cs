@@ -2093,7 +2093,7 @@ namespace cogbot
             //robot.OneAtATimeQueue.Enqueue(cmdStr, () => command.acceptInputWrapper(verb, args, callerID, del));
         }
 
-        public readonly static UUID OWNERLEVEL = UUIDFactory.GetUUID("ffffffff-ffff-ffff-ffff-ffffffffffff");
+        public readonly static UUID OWNERLEVEL = UUID.Parse("ffffffff-ffff-ffff-ffff-ffffffffffff");
  
         public static UUID SessionToCallerId(object callerSession)
         {
@@ -2102,8 +2102,9 @@ namespace cogbot
             {
                 return UUID.Zero;
             }
-            UUID callerId = callerSession as UUID;
-            if (callerId != null) return callerId;
+            UUID callerId = UUID.Zero;
+            if (callerSession is UUID) callerId = (UUID)callerSession;
+            if (callerId != UUID.Zero) return callerId;
             CmdRequest request = callerSession as CmdRequest;
             if (request != null) return SessionToCallerId(request.CallerAgent);
             return OWNERLEVEL; 

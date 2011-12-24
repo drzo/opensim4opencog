@@ -3,7 +3,7 @@
   <Solution name="Cogbot" activeConfig="Debug" version="0.6.0-$Rev: 5161 $">
       <Configuration name="Debug">
         <Options>
-          <CompilerDefines>TRACE;DEBUG</CompilerDefines>
+          <CompilerDefines>TRACE;DEBUG;COGBOT_LIBOMV</CompilerDefines>
           <OptimizeCode>false</OptimizeCode>
           <CheckUnderflowOverflow>false</CheckUnderflowOverflow>
           <AllowUnsafe>true</AllowUnsafe>

@@ -29,9 +29,10 @@ namespace cogbot.Actions
                 arg1 = args[0].ToLower();
             }
             Dictionary<string, MuteEntry> dict = null;
-            lock (chat.MuteList.Dictionary)
+            var cmld = chat.MuteList.Dictionary;
+            lock (cmld)
             {
-                dict = new Dictionary<string, MuteEntry>(chat.MuteList.Dictionary);
+                dict = new Dictionary<string, MuteEntry>(cmld);
             }
 
             if (arg1 == "show" || arg1 == "list" || arg1 == "request")
@@ -46,9 +47,9 @@ namespace cogbot.Actions
                 return Success(verb + " found: " + nfound + " object/agent(s)");
             }
 
-            lock (chat.MuteList.Dictionary)
+            lock (cmld)
             {
-                chat.MuteList.Dictionary.Clear();
+                cmld.Clear();
             }
             bool unmute = verb.ToLower().StartsWith("u");
 

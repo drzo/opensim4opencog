@@ -288,7 +288,7 @@ namespace cogbot.TheOpenSims
             {
                 lock (HasPrimLock) if (HasPrim)
                     {
-                        if (theAvatar.ProfileProperties != null && !string.IsNullOrEmpty(theAvatar.ProfileProperties.BornOn))
+                        if (WorldObjects.HasValue(theAvatar.ProfileProperties)  && !string.IsNullOrEmpty(theAvatar.ProfileProperties.BornOn))
                         {
                             _profileProperties = theAvatar.ProfileProperties;
                         }
@@ -299,7 +299,7 @@ namespace cogbot.TheOpenSims
             {
                 lock (HasPrimLock) if (HasPrim)
                     {
-                        if (theAvatar.ProfileProperties == null || string.IsNullOrEmpty(theAvatar.ProfileProperties.BornOn))
+                        if (!WorldObjects.HasValue(theAvatar.ProfileProperties) || string.IsNullOrEmpty(theAvatar.ProfileProperties.BornOn))
                         {
                             theAvatar.ProfileProperties = value;
                         }
@@ -782,18 +782,19 @@ namespace cogbot.TheOpenSims
             {
                 int mostCurrentSequence = int.MinValue;
                 int leastCurrentSequence = int.MaxValue;
-                GetSequenceNumbers(ExpectedCurrentAnims.Dictionary, ref leastCurrentSequence, ref mostCurrentSequence);
+                Dictionary<UUID, int> dictionary = ExpectedCurrentAnims.Dictionary;
+                GetSequenceNumbers(dictionary, ref leastCurrentSequence, ref mostCurrentSequence);
 
                 ///  first time so find the lowest number 
                 int mostCurrentSequence1 = int.MinValue;
                 int leastCurrentSequence1 = int.MaxValue;
-                GetSequenceNumbers(anims.Dictionary, ref leastCurrentSequence1, ref mostCurrentSequence1);
+                GetSequenceNumbers(animDict, ref leastCurrentSequence1, ref mostCurrentSequence1);
 
 
 
                 //UUID mostCurrentAnim = UUID.Zero;// = UUID.Zero; 
                 ///  List<String> names = new List<String>(); 
-                Dictionary<UUID, int> RemovedThisEvent = new Dictionary<UUID, int>(ExpectedCurrentAnims.Dictionary);
+                Dictionary<UUID, int> RemovedThisEvent = new Dictionary<UUID, int>(dictionary);
                 anims.ForEach(delegate(UUID key)
                 {
                     RemovedThisEvent.Remove(key);
@@ -846,7 +847,7 @@ namespace cogbot.TheOpenSims
 
                 foreach (UUID key in RemovedThisEvent.Keys)
                 {
-                    ExpectedCurrentAnims.Dictionary.Remove(key);
+                    dictionary.Remove(key);
                 }
 
                 foreach (UUID list in RemovedAnims.Keys)

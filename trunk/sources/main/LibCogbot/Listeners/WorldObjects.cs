@@ -991,8 +991,9 @@ namespace cogbot.Listeners
             LockInfo.TestLock("simulator.ObjectsPrimitives.Dictionary", simulator.ObjectsPrimitives.Dictionary,
                   TimeSpan.FromSeconds(30));
             Avatar av;
-            lock (simulator.ObjectsAvatars.Dictionary)
-                if (simulator.ObjectsAvatars.TryGetValue(id, out av))
+            Dictionary<uint, Avatar> avDict = simulator.ObjectsAvatars.Dictionary;
+            lock (avDict)
+                if (avDict.TryGetValue(id, out av))
                 {
                     return av;
                 }
@@ -1502,15 +1503,19 @@ namespace cogbot.Listeners
         }
 
         public static bool UUIDTypeObjectTryGetValue(UUID uuid, out object obj)
-        {           
+        {
+#if COGBOT_LIBOMV
             obj = uuid.ExternalData;
             return obj != null;
+#endif
             return UUIDTypeObjectReal.TryGetValue(uuid, out obj);
         }
         public static bool UUIDTypeObjectContainsKey(UUID uuid)
         {
+#if COGBOT_LIBOMV
             var obj = uuid.ExternalData;
             return obj != null;
+#endif
             //return uuid.ExternalData;
             //if (!b) return uuidTypeObject.TryGetValue(uuid, out o);
             //lock (WorldObjects.uuidTypeObject)
@@ -1520,7 +1525,9 @@ namespace cogbot.Listeners
         {
             //if (!b) return uuidTypeObject.TryGetValue(uuid, out o);
             //lock (WorldObjects.uuidTypeObject)
+#if COGBOT_LIBOMV
             return uuid.ExternalData = value;
+#endif
             return UUIDTypeObjectReal[uuid] = value;
         }
     }
