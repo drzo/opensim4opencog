@@ -2684,8 +2684,8 @@ namespace cogbot.TheOpenSims
             {
                 lock (FILock)
                 {
-
-                    if (_infoMap.ContainsKey(s))
+                    if (_infoMap == null) _infoMap = new Dictionary<object, NamedParam>();
+                    else if (_infoMap.ContainsKey(s))
                     {
                         _infoMap[s].SetValue(value);
                     }

@@ -27,10 +27,12 @@ namespace MushDLR223.Utilities
         private readonly object EventQueueLock = new object();
         private readonly object PingNeverAbortLock = new object();
         private readonly object OneTaskAtATimeLock = new object();
+        private readonly object TaskThreadChangeLockReal = new object();
         private object TaskThreadChangeLock
         {
             get
             {
+                return TaskThreadChangeLockReal;
                 return new object();
             }
         } 
