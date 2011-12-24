@@ -1176,6 +1176,7 @@ namespace OpenMetaverse
             Client.Network.RegisterCallback(PacketType.UpdateCreateInventoryItem, UpdateCreateInventoryItemHandler);
             Client.Network.RegisterCallback(PacketType.SaveAssetIntoInventory, SaveAssetIntoInventoryHandler);
             Client.Network.RegisterCallback(PacketType.BulkUpdateInventory, BulkUpdateInventoryHandler);
+            Client.Network.RegisterEventCallback("BulkUpdateInventory", new Caps.EventQueueCallback(BulkUpdateInventoryCapHandler));
             Client.Network.RegisterCallback(PacketType.MoveInventoryItem, MoveInventoryItemHandler);
             Client.Network.RegisterCallback(PacketType.InventoryDescendents, InventoryDescendentsHandler);
             Client.Network.RegisterCallback(PacketType.FetchInventoryReply, FetchInventoryReplyHandler);
@@ -4356,6 +4357,81 @@ namespace OpenMetaverse
             }
         }
 
+        protected void BulkUpdateInventoryCapHandler(string capsKey, Interfaces.IMessage message, Simulator simulator)
+        {
+            BulkUpdateInventoryMessage msg = (BulkUpdateInventoryMessage)message;
+
+            foreach (BulkUpdateInventoryMessage.FolderDataInfo newFolder in msg.FolderData)
+            {
+                if (newFolder.FolderID == UUID.Zero) continue;
+
+                InventoryFolder folder;
+                if (!_Store.Contains(newFolder.FolderID))
+                {
+                    folder = new InventoryFolder(newFolder.FolderID);
+                }
+                else
+                {
+                    folder = (InventoryFolder)_Store[newFolder.FolderID];
+                }
+
+                folder.Name = newFolder.Name;
+                folder.ParentUUID = newFolder.ParentID;
+                folder.PreferredType = newFolder.Type;
+                _Store[folder.UUID] = folder;
+            }
+
+            foreach (BulkUpdateInventoryMessage.ItemDataInfo newItem in msg.ItemData)
+            {
+                if (newItem.ItemID == UUID.Zero) continue;
+
+                InventoryItem item = SafeCreateInventoryItem(newItem.InvType, newItem.ItemID);
+
+                item.AssetType = newItem.Type;
+                item.AssetUUID = newItem.AssetID;
+                item.CreationDate = newItem.CreationDate;
+                item.CreatorID = newItem.CreatorID;
+                item.Description = newItem.Description;
+                item.Flags = newItem.Flags;
+                item.GroupID = newItem.GroupID;
+                item.GroupOwned = newItem.GroupOwned;
+                item.Name = newItem.Name;
+                item.OwnerID = newItem.OwnerID;
+                item.ParentUUID = newItem.FolderID;
+                item.Permissions.BaseMask = newItem.BaseMask;
+                item.Permissions.EveryoneMask = newItem.EveryoneMask;
+                item.Permissions.GroupMask = newItem.GroupMask;
+                item.Permissions.NextOwnerMask = newItem.NextOwnerMask;
+                item.Permissions.OwnerMask = newItem.OwnerMask;
+                item.SalePrice = newItem.SalePrice;
+                item.SaleType = newItem.SaleType;
+
+                _Store[item.UUID] = item;
+
+                // Look for an "item created" callback
+                ItemCreatedCallback callback;
+                if (_ItemCreatedCallbacks.TryGetValue(newItem.CallbackID, out callback))
+                {
+                    _ItemCreatedCallbacks.Remove(newItem.CallbackID);
+
+                    try { callback(true, item); }
+                    catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, Client, ex); }
+                }
+
+                // Look for an "item copied" callback
+                ItemCopiedCallback copyCallback;
+                if (_ItemCopiedCallbacks.TryGetValue(newItem.CallbackID, out copyCallback))
+                {
+                    _ItemCopiedCallbacks.Remove(newItem.CallbackID);
+
+                    try { copyCallback(item); }
+                    catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, Client, ex); }
+                }
+
+            }
+
+        }
+
         /// <summary>Process an incoming packet and raise the appropriate events</summary>
         /// <param name="sender">The sender</param>
         /// <param name="e">The EventArgs object containing the packet data</param>
@@ -4369,11 +4445,20 @@ namespace OpenMetaverse
             {
                 foreach (BulkUpdateInventoryPacket.FolderDataBlock dataBlock in update.FolderData)
                 {
+                    InventoryFolder folder;
                     if (!_Store.Contains(dataBlock.FolderID))
-                        Logger.Log("Received BulkUpdate for unknown folder: " + dataBlock.FolderID, Helpers.LogLevel.Warning, Client);
+                    {
+                        folder = new InventoryFolder(dataBlock.FolderID);
+                    }
+                    else
+                    {
+                        folder = (InventoryFolder)_Store[dataBlock.FolderID];
+                    }
 
-                    InventoryFolder folder = new InventoryFolder(dataBlock.FolderID);
+                    if (dataBlock.Name != null)
+                    {
                     folder.Name = Utils.BytesToString(dataBlock.Name);
+                    }
                     folder.OwnerID = update.AgentData.AgentID;
                     folder.ParentUUID = dataBlock.ParentID;
                     _Store[folder.UUID] = folder;
@@ -4385,11 +4470,6 @@ namespace OpenMetaverse
                 for (int i = 0; i < update.ItemData.Length; i++)
                 {
                     BulkUpdateInventoryPacket.ItemDataBlock dataBlock = update.ItemData[i];
-
-                    // If we are given a folder of items, the item information might arrive before the folder
-                    // (parent) is in the store
-                    if (!_Store.Contains(dataBlock.ItemID))
-                        Logger.Log("Received BulkUpdate for unknown item: " + dataBlock.ItemID, Helpers.LogLevel.Warning, Client);
 
                     InventoryItem item = SafeCreateInventoryItem((InventoryType)dataBlock.InvType, dataBlock.ItemID);
 

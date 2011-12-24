@@ -1310,6 +1310,144 @@ namespace OpenMetaverse.Messages.Linden
         }
     }
 
+   public class BulkUpdateInventoryMessage : IMessage
+    {
+        public class FolderDataInfo
+        {
+            public UUID FolderID = UUID.Zero;
+            public UUID ParentID = UUID.Zero;
+            public string Name;
+            public AssetType Type;
+
+            public static FolderDataInfo FromOSD(OSD data)
+            {
+                FolderDataInfo ret = new FolderDataInfo();
+
+                if (!(data is OSDMap)) return ret;
+
+                OSDMap map = (OSDMap)data;
+
+                ret.FolderID = map["FolderID"];
+                ret.ParentID = map["ParentID"];
+                ret.Name = map["Name"];
+                ret.Type = (AssetType)map["Type"].AsInteger();
+                return ret;
+            }
+        }
+
+        public class ItemDataInfo
+        {
+            public UUID ItemID = UUID.Zero;
+            public uint CallbackID;
+            public UUID FolderID = UUID.Zero;
+            public UUID CreatorID = UUID.Zero;
+            public UUID OwnerID = UUID.Zero;
+            public UUID GroupID = UUID.Zero;
+            public PermissionMask BaseMask;
+            public PermissionMask OwnerMask;
+            public PermissionMask GroupMask;
+            public PermissionMask EveryoneMask;
+            public PermissionMask NextOwnerMask;
+            public bool GroupOwned;
+            public UUID AssetID = UUID.Zero;
+            public AssetType Type;
+            public InventoryType InvType;
+            public uint Flags;
+            public SaleType SaleType;
+            public int SalePrice;
+            public string Name;
+            public string Description;
+            public DateTime CreationDate;
+            public uint CRC;
+
+            public static ItemDataInfo FromOSD(OSD data)
+            {
+                ItemDataInfo ret = new ItemDataInfo();
+
+                if (!(data is OSDMap)) return ret;
+
+                OSDMap map = (OSDMap)data;
+
+                ret.ItemID = map["ItemID"];
+                ret.CallbackID = map["CallbackID"];
+                ret.FolderID = map["FolderID"];
+                ret.CreatorID = map["CreatorID"];
+                ret.OwnerID = map["OwnerID"];
+                ret.GroupID = map["GroupID"];
+                ret.BaseMask = (PermissionMask)map["BaseMask"].AsUInteger();
+                ret.OwnerMask = (PermissionMask)map["OwnerMask"].AsUInteger();
+                ret.GroupMask = (PermissionMask)map["GroupMask"].AsUInteger();
+                ret.EveryoneMask = (PermissionMask)map["EveryoneMask"].AsUInteger();
+                ret.NextOwnerMask = (PermissionMask)map["NextOwnerMask"].AsUInteger();
+                ret.GroupOwned = map["GroupOwned"];
+                ret.AssetID = map["AssetID"];
+                ret.Type = (AssetType)map["Type"].AsInteger();
+                ret.InvType = (InventoryType)map["InvType"].AsInteger();
+                ret.Flags = map["Flags"];
+                ret.SaleType = (SaleType)map["SaleType"].AsInteger();
+                ret.SalePrice = map["SaleType"];
+                ret.Name = map["Name"];
+                ret.Description = map["Description"];
+                ret.CreationDate = Utils.UnixTimeToDateTime(map["CreationDate"]);
+                ret.CRC = map["CRC"];
+
+                return ret;
+            }
+        }
+
+        public UUID AgentID = UUID.Zero;
+        public UUID TransactionID = UUID.Zero;
+        public FolderDataInfo[] FolderData;
+        public ItemDataInfo[] ItemData;
+
+        public OSDMap Serialize()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Deserialize(OSDMap map)
+        {
+            if (map["AgentData"] is OSDArray)
+            {
+                OSDArray array = (OSDArray)map["AgentData"];
+                if (array.Count > 0)
+                {
+                    OSDMap adata = (OSDMap)array[0];
+                    AgentID = adata["AgentID"];
+                    TransactionID = adata["TransactionID"];
+                }
+            }
+            
+            if (map["FolderData"] is OSDArray)
+            {
+                OSDArray array = (OSDArray)map["FolderData"];
+                FolderData =  new FolderDataInfo[array.Count];
+                for (int i = 0; i < array.Count; i++)
+                {
+                    FolderData[i] = FolderDataInfo.FromOSD(array[i]);
+                }
+            }
+            else
+            {
+                FolderData = new FolderDataInfo[0];
+            }
+
+            if (map["ItemData"] is OSDArray)
+            {
+                OSDArray array = (OSDArray)map["ItemData"];
+                ItemData = new ItemDataInfo[array.Count];
+                for (int i = 0; i < array.Count; i++)
+                {
+                    ItemData[i] = ItemDataInfo.FromOSD(array[i]);
+                }
+            }
+            else
+            {
+                ItemData = new ItemDataInfo[0];
+            }
+        }
+    }
+
     public class WebFetchInventoryDescendentsMessage : IMessage
     {
 
