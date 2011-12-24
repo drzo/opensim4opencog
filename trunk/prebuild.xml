@@ -590,33 +590,6 @@
         </Files>
       </Project>
 
-      <!--
-      <Project name="OpenMetaverse.Http" path="sources/external/LibOpenMetaverse/OpenMetaverse.Http" type="Library" rootNamespace="OpenMetaverse.Http" frameworkVersion="v3_5">
-        <Configuration name="Debug">
-          <Options>
-            <OutputPath>../../../bin/</OutputPath>
-          </Options>
-        </Configuration>
-        <Configuration name="Release">
-          <Options>
-            <OutputPath>../../../bin/</OutputPath>
-            <XmlDocFile>OpenMetaverse.Http.XML</XmlDocFile>
-          </Options>
-        </Configuration>
-
-        <ReferencePath>../../../bin</ReferencePath>
-        <Reference name="System"/>
-        <Reference name="System.Xml"/>
-        <Reference name="OpenMetaverseTypes"/>
-        <Reference name="OpenMetaverse.StructuredData"/>
-        <Reference name="HttpServer"/>
-        <Reference name="log4net"/>
-        <Reference name="Mono.Security"/>
-        <Files>
-          <Match pattern="*.cs" recurse="true"/>
-        </Files>
-      </Project>
--->
       <Project name="OpenMetaverse" path="sources/external/LibOpenMetaverse/OpenMetaverse" type="Library" rootNamespace="OpenMetaverse" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
@@ -640,7 +613,6 @@
         <Reference name="log4net"/>
         <Reference name="OpenMetaverseTypes"/>
         <Reference name="OpenMetaverse.StructuredData"/>
-        <!-- <Reference name="OpenMetaverse.Http"/> -->
         <Reference name="zlib.net.dll" localCopy="false"/>
         <Reference name="PrimMesher.dll" localCopy="false"/>
         <Reference name="XMLRPC" localCopy="false"/>
@@ -1055,7 +1027,7 @@
       <Reference name="OpenMetaverseTypes" localCopy="false"/>      
       <Reference name="System" localCopy="false"/>
       <Reference name="DotLisp" localCopy="false"/>
-      <Reference name="AIMLbot" localCopy="false"/>
+      <Reference name="AIMLbot" localCopy="false"/> 
       <Reference name="System.Core" localCopy="false"/>
       <Reference name="System.Xml" localCopy="false"/>
       <Reference name="OpenCyc.dll" localCopy="false"/>
@@ -1189,7 +1161,7 @@
    <Reference name="OpenMetaverse" localCopy="false"/>
    <Reference name="OpenMetaverseTypes" localCopy="false"/>      
    <Reference name="DotLisp" localCopy="false"/>
-   <Reference name="AIMLbot" localCopy="false"/>
+   <!-- <Reference name="AIMLbot" localCopy="false"/> -->
    <Reference name="SwiPlCs.dll" localCopy="false"/>
    <Reference name="PrologScriptEngine"  localCopy="false"/>
    <Reference name="Radegast.exe" localCopy="false"/>
@@ -2302,11 +2274,9 @@ app -->
   </Configuration>
   <ReferencePath>../../../bin</ReferencePath>
       <!--<Reference name="Mono.Addins.dll" localCopy="false"/>-->
-      <Reference name="AIMLbot" />
-      <Reference name="AIMLBotModule" />
+
       <Reference name="Cogbot.Library" />
         <Reference name="MySql.Data.dll" localCopy="false"/>
-      <Reference name="LAIR.ResourceAPIs.WordNet"/>
       <Reference name="MushDLR223"  localCopy="false"/>
       <Reference name="CogbotRadegastPluginModule" />
       <Reference name="CycWorldModule" />
@@ -2316,8 +2286,6 @@ app -->
       <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
       <Reference name="IrcRegionModule" />
-      <Reference name="Irrlicht.Extensions.dll" localCopy="false"/>
-      <Reference name="Irrlicht.NET.dll" localCopy="false"/>
       <Reference name="jabber-net.dll" localCopy="false"/>
       <Reference name="log4net.dll" localCopy="false"/>
       <Reference name="muzzle.dll" localCopy="false"/>
@@ -2345,7 +2313,12 @@ app -->
       <Reference name="SWIJPL.dll" localCopy="false"/>
       <Reference name="TheSimiansModule" />
       <Reference name="XMLRPC.dll" localCopy="false"/>
-
+<!--
+      <Reference name="LAIR.ResourceAPIs.WordNet"/>
+      <Reference name="AIMLbot" />
+      <Reference name="AIMLBotModule" />
+      <Reference name="Irrlicht.Extensions.dll" localCopy="false"/>
+      <Reference name="Irrlicht.NET.dll" localCopy="false"/>
       <Reference name="LAIR.Collections" localCopy="false"/>
       <Reference name="LAIR.Extensions" localCopy="false"/>
       <Reference name="LAIR.GraphViz" localCopy="false"/>
@@ -2353,7 +2326,7 @@ app -->
       <Reference name="LAIR.MachineLearning" localCopy="false"/>
       <Reference name="LAIR.XML" localCopy="false"/>
       <Reference name="LAIR.CommonPort" localCopy="false"/>
-
+-->
 <!--   
    <Reference name="HttpServer.dll" />
       <Reference name="OpenMetaverse.Http" />

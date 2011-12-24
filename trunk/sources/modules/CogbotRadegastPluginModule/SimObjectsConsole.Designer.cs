@@ -417,7 +417,7 @@ namespace CogbotRadegastPluginModule
             // 
             // txtCreator
             // 
-            this.txtCreator.AgentID = ((OpenMetaverse.UUID)(resources.GetObject("txtCreator.AgentID")));
+            //this.txtCreator.AgentID = ((OpenMetaverse.UUID)(resources.GetObject("txtCreator.AgentID")));
             this.txtCreator.BackColor = System.Drawing.SystemColors.Window;
             this.txtCreator.Location = new System.Drawing.Point(61, 116);
             this.txtCreator.Name = "txtCreator";
@@ -427,7 +427,7 @@ namespace CogbotRadegastPluginModule
             // 
             // txtOwner
             // 
-            this.txtOwner.AgentID = ((OpenMetaverse.UUID)(resources.GetObject("txtOwner.AgentID")));
+            //this.txtOwner.AgentID = ((OpenMetaverse.UUID)(resources.GetObject("txtOwner.AgentID")));
             this.txtOwner.BackColor = System.Drawing.SystemColors.Window;
             this.txtOwner.Location = new System.Drawing.Point(61, 91);
             this.txtOwner.Name = "txtOwner";
