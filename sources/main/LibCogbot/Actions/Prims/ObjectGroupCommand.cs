@@ -135,10 +135,11 @@ namespace cogbot.Actions.Objects
 
                 } else
                 {
-                    lock (CurrentSim.ObjectsPrimitives.Dictionary)
+                    Dictionary<uint, Primitive> primitives = CurrentSim.ObjectsPrimitives.Dictionary;
+                    lock (primitives)
                     {
-                        localIDs.AddRange(CurrentSim.ObjectsPrimitives.Dictionary.Keys);
-                        foreach(var tt in  CurrentSim.ObjectsPrimitives.Dictionary)
+                        localIDs.AddRange(primitives.Keys);
+                        foreach(var tt in  primitives)
                         {
                             Objects.Add(tt.Value.ID,tt.Value);
                         }

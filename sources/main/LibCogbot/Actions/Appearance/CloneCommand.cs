@@ -39,13 +39,12 @@ namespace cogbot.Actions.Appearance
             {
                 //   UUID target = matches[0].AgentID;
                 targetName += String.Format(" ({0})", target);
-
+#if COGBOT_LIBOMV
                 if (Client.Appearances.ContainsKey(target))
                 {
-                    #region AvatarAppearance to AgentSetAppearance
+                #region AvatarAppearance to AgentSetAppearance
 
                     AvatarAppearancePacket appearance = TheBotClient.Appearances[target];
-
                     AgentSetAppearancePacket set = Client.Appearance.MakeAppearancePacket();
                     set.AgentData.AgentID = Client.Self.AgentID;
                     set.AgentData.SessionID = Client.Self.SessionID;
@@ -63,7 +62,7 @@ namespace cogbot.Actions.Appearance
 
                     set.ObjectData.TextureEntry = appearance.ObjectData.TextureEntry;
 
-                    #endregion AvatarAppearance to AgentSetAppearance
+                #endregion AvatarAppearance to AgentSetAppearance
 
                     // Detach everything we are currently wearing
                     if (detatchAll) Client.Appearance.AddAttachments(new List<InventoryItem>(), true);
@@ -92,6 +91,10 @@ namespace cogbot.Actions.Appearance
             {
                 return Failure("Couldn't find avatar " + targetName);
             }
+#else
+            }
+            return Failure("Not COGBOT_LIBOMV! so can't find avatar " + targetName);
+#endif       
         }
     }
 }

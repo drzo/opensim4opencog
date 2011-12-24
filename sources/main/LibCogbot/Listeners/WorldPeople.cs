@@ -1051,5 +1051,19 @@ namespace cogbot.Listeners
             // not known yet
             return GroupPowers.None;
         }
+        public static bool HasValue<T>(T properties)
+        {
+            if (Object.ReferenceEquals(properties, null)) return false;
+            var dt = default(T);
+            return !Equals(dt, properties);
+        }
+    }
+
+    internal static class UUIDFactory
+    {
+        public static UUID GetUUID(byte[] bytes, int pos)
+        {
+            return new UUID(bytes,pos);
+        }
     }
 }

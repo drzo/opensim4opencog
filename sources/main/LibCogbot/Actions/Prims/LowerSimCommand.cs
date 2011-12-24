@@ -28,13 +28,14 @@ namespace cogbot.Actions.Land
             int argsUsed;
             Simulator CurSim = TryGetSim(args, out argsUsed) ?? Client.Network.CurrentSim;
             Simulator sim = CurSim;
+            Dictionary<uint, Primitive> primitives = sim.ObjectsPrimitives.Dictionary;
             if (len==0)
             {
                 //prep
                 List<uint> prep = new List<uint>();
-                lock (sim.ObjectsPrimitives.Dictionary)
+                lock (primitives)
                 {
-                    prep.AddRange(sim.ObjectsPrimitives.Dictionary.Keys);
+                    prep.AddRange(primitives.Keys);
                 }
                 foreach (var u in prep)
                 {
@@ -54,9 +55,9 @@ namespace cogbot.Actions.Land
             }
             WriteLine("about to lower sim: " + sim.Name + " with " + sim.ObjectsPrimitives.Count);
             List<Primitive> prims = new List<Primitive>();
-            lock (sim.ObjectsPrimitives.Dictionary)
+            lock (primitives)
             {
-                prims.AddRange(sim.ObjectsPrimitives.Dictionary.Values);
+                prims.AddRange(primitives.Values);
             }
                                 
             Vector3 offset = new Vector3(0,0,float.Parse(args[len-1]));

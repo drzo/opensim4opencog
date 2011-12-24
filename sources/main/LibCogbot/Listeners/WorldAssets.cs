@@ -1,4 +1,7 @@
-﻿using System;
+﻿#if COGBOT_LIBOMV
+#define GroupChatLeftEventArgs
+#endif
+using System;
 using System.Drawing;
 using System.IO;
 using System.Net.Mime;
@@ -295,7 +298,12 @@ namespace cogbot.Listeners
             SimAsset simAsset = SimAssetStore.FindOrCreateAsset(id, type);
             AssetCache Cache = 
                 (RegionMasterTexturePipeline == null ? null : RegionMasterTexturePipeline.Cache);
-            if (Cache != null && Cache.HasAsset(id, type))
+            if (Cache != null && Cache.HasAsset(id
+
+#if COGBOT_LIBOMV
+            ,type
+#endif
+))
             {
                 ImageDownload dl = Cache.GetCachedImage(id);
                 if (dl != null)
@@ -349,13 +357,28 @@ namespace cogbot.Listeners
 
         private bool EnsureCached(Asset asset, UUID id)
         {
-            if (!RegionMasterTexturePipeline.Cache.HasAsset(id, asset.AssetType))
+            if (!RegionMasterTexturePipeline.Cache.HasAsset(id
+
+#if COGBOT_LIBOMV
+                , asset.AssetType
+#endif
+
+                     ))
             {
                 var image = asset.AssetData;
                 // force into cache
                 if (image == null || image.Length == 0) return false;
-                if (!RegionMasterTexturePipeline.Cache.SaveAssetToCache(id, image, asset.AssetType)) return false;
-                return RegionMasterTexturePipeline.Cache.HasAsset(id, asset.AssetType);
+                if (!RegionMasterTexturePipeline.Cache.SaveAssetToCache(id, image
+
+#if COGBOT_LIBOMV
+                , asset.AssetType
+#endif
+                         )) return false;
+                return RegionMasterTexturePipeline.Cache.HasAsset(id
+#if COGBOT_LIBOMV
+                , asset.AssetType
+#endif
+                    );
             }
             return true;
         }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using OpenMetaverse;
 using textsl.Utilities.XMLInterpreter;
 
 namespace cogbot.Tutorials
@@ -34,7 +35,7 @@ namespace cogbot.Tutorials
                 SetModeTutorial();
 
                 parent.WriteLine("Welcome to your first Tutorial!");
-                parent.groupActions["mute"].acceptInputWrapper("mute", "all", null, parent.WriteLine);
+                parent.groupActions["mute"].acceptInputWrapper("mute", "all", UUID.Zero, parent.WriteLine);
                 
                 SetNextCommand();
                 CommandIdx++;
@@ -55,7 +56,7 @@ namespace cogbot.Tutorials
                             RestoreMode();
                             CommandIdx = 0;
                             parent.WriteLine("Congratulations!! You completed your first Tutorial! ");
-                            parent.groupActions["mute"].acceptInputWrapper("mute", "all", null, parent.WriteLine);
+                            parent.groupActions["mute"].acceptInputWrapper("mute", "all", UUID.Zero, parent.WriteLine);
                         }                     
                     }
                 }

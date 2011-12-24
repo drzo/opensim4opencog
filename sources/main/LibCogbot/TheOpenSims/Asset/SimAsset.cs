@@ -245,7 +245,12 @@ namespace cogbot.TheOpenSims
             {
                 AssetType = download.AssetType;
                 AssetData = download.AssetData;
-                AssetID = UUIDNonZero(AssetID, download.AssetID, download.ID);
+                AssetID = UUIDNonZero(AssetID, 
+#if COGBOT_LIBOMV
+                    download.AssetID, 
+#endif
+                    
+                    download.ID);
             }
         }
 
@@ -490,7 +495,15 @@ namespace cogbot.TheOpenSims
                 {
                     if (AssetID != UUID.Zero)
                     {
-                        _ServerAsset = CreateAssetWrapper(AssetType, AssetID, value);
+                        try
+                        {
+                            _ServerAsset = CreateAssetWrapper(AssetType, AssetID, value);
+                        }
+                        catch (Exception e)
+                        {
+                            string format = "[serverAsset] " + AssetType + ":" + AssetID + " = " + e;
+                            DLRConsole.DebugWriteLine(format);
+                        }
                     }
                     return;
                 }
@@ -537,13 +550,18 @@ namespace cogbot.TheOpenSims
                 case AssetType.Texture:
                     asset = new AssetTexture(uuid, data);
                     break;
-                case AssetType.CallingCard:
+#if COGBOT_LIBOMV
+                    case AssetType.CallingCard:
                     asset = new AssetCallingCard(uuid, data);
                     break;
+#endif
                 default:
+#if COGBOT_LIBOMV
                     asset = new AssetMutable(type, uuid, data);
                     Logger.Log("[OarFile] Not Implemented asset type " + type, Helpers.LogLevel.Error);
-                    //throw new NotImplementedException("Unimplemented asset type: " + type);
+#else
+                    throw new NotImplementedException("Unimplemented asset type: " + type);
+#endif
                     break;
             }
             return asset;
@@ -632,6 +650,17 @@ namespace cogbot.TheOpenSims
         #region ITraceable Members
         public bool IsTraced { get; set; }
 
+        public string CFileName(UUID assetID)
+        {
+            var cache = Store.Client.WorldSystem.RegionMasterTexturePipeline.Cache;
+            if (cache.ComputeAssetCacheFilename != null)
+            {
+                return cache.ComputeAssetCacheFilename(Store.Client.Settings.ASSET_CACHE_DIR, assetID
+                    );
+            }
+            return Store.Client.Settings.ASSET_CACHE_DIR + Path.DirectorySeparatorChar + assetID.ToString();
+        }
+
         public string FileName
         {
             get
@@ -641,7 +670,7 @@ namespace cogbot.TheOpenSims
                 UUID uuid = AssetID;
                 if (uuid == UUID.Zero) return null;
                 var cache = Store.Client.WorldSystem.RegionMasterTexturePipeline.Cache;
-                string named = cache.FileName(uuid, AssetType);
+                string named = CFileName(uuid);
                 if (!string.IsNullOrEmpty(named) && File.Exists(named))
                 {
                     return named;
@@ -688,7 +717,12 @@ namespace cogbot.TheOpenSims
                 }
             }
             var cache = Store.Client.WorldSystem.RegionMasterTexturePipeline.Cache;
-            AssetData = cache.GetCachedAssetBytes(AssetID, AssetType);
+            var cValue = cache.GetCachedAssetBytes(AssetID
+#if COGBOT_LIBOMV
+            ,AssetType
+#endif
+);
+            if (cValue != null) AssetData = cValue;
         }
     }
 }
