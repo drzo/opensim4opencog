@@ -77,7 +77,7 @@
         </Files>
       </Project>
       -->
-      <Project name="LAIR.CommonPort" path="sources/external/LAIR.ResourceAPIs/LAIR.CommonPort" type="Library" rootNamespace="LAIR.CommonPort" frameworkVersion="v3_5">
+      <Project name="LAIR.CommonPort" path="sources/chatbot/LAIR.ResourceAPIs/LAIR.CommonPort" type="Library" rootNamespace="LAIR.CommonPort" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
             <OutputPath>../../../../bin/</OutputPath>
@@ -116,7 +116,7 @@
       </Project>
 
 
-    <Project name="Lucene.Net" path="sources/external/Lucene/src/Lucene.Net" type="Library" frameworkVersion="v3_5">
+    <Project name="Lucene.Net" path="sources/chatbot/Lucene/src/Lucene.Net" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../../../bin/</OutputPath>
@@ -143,7 +143,7 @@
       </Files>
     </Project>
 
-          <Project name="LAIR.ResourceAPIs.PennBank" path="sources/external/LAIR.ResourceAPIs/PennBank/PennBank" type="Library" rootNamespace="LAIR.ResourceAPIs.PennBank" frameworkVersion="v3_5">
+          <Project name="LAIR.ResourceAPIs.PennBank" path="sources/chatbot/LAIR.ResourceAPIs/PennBank/PennBank" type="Library" rootNamespace="LAIR.ResourceAPIs.PennBank" frameworkVersion="v3_5">
            <Configuration name="Debug">
              <Options>
                <OutputPath>../../../../../bin/</OutputPath>
@@ -180,7 +180,7 @@
            </Files>
          </Project>
 
-          <Project name="LAIR.ResourceAPIs.NomBank" path="sources/external/LAIR.ResourceAPIs/NomBank/NomBank" type="Library" rootNamespace="LAIR.ResourceAPIs.NomBank" frameworkVersion="v3_5">
+          <Project name="LAIR.ResourceAPIs.NomBank" path="sources/chatbot/LAIR.ResourceAPIs/NomBank/NomBank" type="Library" rootNamespace="LAIR.ResourceAPIs.NomBank" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
             <OutputPath>../../../../../bin/</OutputPath>
@@ -219,7 +219,7 @@
       </Project>
 
 
-    <Project name="LAIR.ResourceAPIs.WordNet" path="sources/external/LAIR.ResourceAPIs/WordNet/WordNet" type="Library" rootNamespace="LAIR.ResourceAPIs.WordNet" frameworkVersion="v3_5">
+    <Project name="LAIR.ResourceAPIs.WordNet" path="sources/chatbot/LAIR.ResourceAPIs/WordNet/WordNet" type="Library" rootNamespace="LAIR.ResourceAPIs.WordNet" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../../../bin/</OutputPath>
@@ -256,7 +256,7 @@
       </Files>
     </Project>
 
-    <Project name="TreeBankGrapher" path="sources/external/LAIR.ResourceAPIs/PennBank/TreeBankGrapher" type="Exe" rootNamespace="TreeBankGrapher" frameworkVersion="v3_5">
+    <Project name="TreeBankGrapher" path="sources/chatbot/LAIR.ResourceAPIs/PennBank/TreeBankGrapher" type="Exe" rootNamespace="TreeBankGrapher" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../../../bin/</OutputPath>
@@ -301,7 +301,7 @@
       </Files>
     </Project>
 
-    <Project name="LAIR.ResourceAPIs.VerbNet" path="sources/external/LAIR.ResourceAPIs/VerbNet/VerbNet" type="Library" rootNamespace="LAIR.ResourceAPIs.VerbNet" frameworkVersion="v3_5">
+    <Project name="LAIR.ResourceAPIs.VerbNet" path="sources/chatbot/LAIR.ResourceAPIs/VerbNet/VerbNet" type="Library" rootNamespace="LAIR.ResourceAPIs.VerbNet" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../../../bin/</OutputPath>
@@ -341,7 +341,7 @@
       </Files>
     </Project>
 
-    <Project name="LAIR.ResourceAPIs.FrameNet" path="sources/external/LAIR.ResourceAPIs/FrameNet/FrameNet" type="Library" rootNamespace="LAIR.ResourceAPIs.FrameNet" frameworkVersion="v3_5">
+    <Project name="LAIR.ResourceAPIs.FrameNet" path="sources/chatbot/LAIR.ResourceAPIs/FrameNet/FrameNet" type="Library" rootNamespace="LAIR.ResourceAPIs.FrameNet" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../../../bin/</OutputPath>
@@ -380,7 +380,7 @@
     </Project>
 
 
-    <Project name="LAIR.ResourceAPIs.SemLink" path="sources/external/LAIR.ResourceAPIs/SemLink/SemLink" type="Library" rootNamespace="LAIR.ResourceAPIs.SemLink" frameworkVersion="v3_5">
+    <Project name="LAIR.ResourceAPIs.SemLink" path="sources/chatbot/LAIR.ResourceAPIs/SemLink/SemLink" type="Library" rootNamespace="LAIR.ResourceAPIs.SemLink" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../../../bin/</OutputPath>
@@ -417,7 +417,7 @@
       </Files>
     </Project>
 
-    <Project name="LAIR.ResourceAPIs.Wikipedia" path="sources/external/LAIR.ResourceAPIs/Wikipedia/Wikipedia" type="Library" rootNamespace="LAIR.ResourceAPIs.Wikipedia" frameworkVersion="v3_5">
+    <Project name="LAIR.ResourceAPIs.Wikipedia" path="sources/chatbot/LAIR.ResourceAPIs/Wikipedia/Wikipedia" type="Library" rootNamespace="LAIR.ResourceAPIs.Wikipedia" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../../../bin/</OutputPath>
@@ -461,7 +461,7 @@
 
 
      
-    <Project name="MirrorTables" path="sources/external/LAIR.ResourceAPIs/Wikipedia/MirrorTables" type="Exe" rootNamespace="MirrorTables" frameworkVersion="v3_5">
+    <Project name="MirrorTables" path="sources/chatbot/LAIR.ResourceAPIs/Wikipedia/MirrorTables" type="Exe" rootNamespace="MirrorTables" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../../../bin/</OutputPath>
@@ -776,7 +776,7 @@
       </Files>
     </Project>
 
-    <Project name="AIMLbot" path="sources/main/RTParser" type="Library" frameworkVersion="v3_5">
+    <Project name="AIMLbot" path="sources/chatbot/RTParser" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
@@ -1006,7 +1006,7 @@
  </Project>
 
 
- <Project name="AIMLBotModule" path="sources/modules/AIMLBotModule" type="Library" frameworkVersion="v3_5">
+ <Project name="AIMLBotModule" path="sources/chatbot/AIMLBotModule" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
             <OutputPath>../../../bin/</OutputPath>
@@ -1173,7 +1173,7 @@
 </Project>
 
 
- <Project name="CSProlog" path="sources/main/RTParser/Prolog" type="Exe" frameworkVersion="v3_5">
+ <Project name="CSProlog" path="sources/chatbot/RTParser/Prolog" type="Exe" frameworkVersion="v3_5">
      <Configuration name="Debug">
        <Options>
            <OutputPath>../../../../bin/</OutputPath>
@@ -2151,7 +2151,7 @@ app -->
     </Project>
 -->
 
-    <Project name="Cogbot.LAIR" path="sources/external/LAIR.ResourceAPIs/Cogbot.LAIR" type="Exe" rootNamespace="Cogbot.LAIR" frameworkVersion="v3_5">
+    <Project name="Cogbot.LAIR" path="sources/chatbot/LAIR.ResourceAPIs/Cogbot.LAIR" type="Exe" rootNamespace="Cogbot.LAIR" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../../bin/</OutputPath>
@@ -2205,7 +2205,7 @@ app -->
 
 
 
-    <Project name="SharpWordNet" path="sources/external/SharpNLP/OpenNLP/SharpWordNet" type="Library" rootNamespace="SharpWordNet" frameworkVersion="v3_5">
+    <Project name="SharpWordNet" path="sources/chatbot/SharpNLP/OpenNLP/SharpWordNet" type="Library" rootNamespace="SharpWordNet" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../../../bin/</OutputPath>
