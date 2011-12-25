@@ -36,7 +36,9 @@ xcopy /f /y /c /e sources\external\Radegast\openmetaverse_data bin\openmetaverse
 move XML.dll XML.dll.XGLoreWindowsOnly
 move GraphvizDot.dll GraphvizDot.dll.XGLoreWindowsOnly
 
-xcopy /f /y /c sources\external\LAIR.ResourceAPIs\PennBank\TreeBankGrapher\bin\Release\LAIR.Misc.dll bin\
+xcopy /f /y /c sources\chatbot\LAIR.ResourceAPIs\PennBank\TreeBankGrapher\bin\Release\LAIR.Misc.dll bin\
+
+xcopy /f /y /c /e bin-chatbot\*.* bin\
 
 
 bin\Prebuild.exe  prebuild.xml /target %PREBUILDTARGET%
