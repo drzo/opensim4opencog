@@ -1,11 +1,12 @@
 @echo off 
 @rem call runprebuild.bat
 set dobuild="C:\WINDOWS\Microsoft.NET\Framework\v3.5\msbuild"
-%dobuild% "sources\external\LibOpenMetaverse\OpenMetaverse.StructuredData\OpenMetaverse.StructuredData.csproj"
-%dobuild% "sources\external\LibOpenMetaverse\OpenMetaverse\OpenMetaverse.csproj"
+%dobuild% sources\external\LibOpenMetaverse\OpenMetaverse.StructuredData\OpenMetaverse.StructuredData.csproj
+%dobuild% sources\external\LibOpenMetaverse\OpenMetaverse\OpenMetaverse.csproj
+%dobuild% sources\main\MushDLR223\MushDLR223.csproj
 %dobuild% Cogbot_VS9_Pass_01.sln 
-%dobuild% "sources\external\LibOpenMetaverse\OpenMetaverse.Rendering.Meshmerizer\OpenMetaverse.Rendering.Meshmerizer.csproj"
-%dobuild% "sources\external\Radegast\Radegast.csproj"
+%dobuild% sources\external\LibOpenMetaverse\OpenMetaverse.Rendering.Meshmerizer\OpenMetaverse.Rendering.Meshmerizer.csproj
+%dobuild% sources\external\Radegast\Radegast.csproj
 %dobuild% sources\main\PathSystem3D\PathSystem3D.csproj
 %dobuild% sources\external\Radegast.Plugin.Speech\RadSpeech\Radegast.Plugin.Speech.csproj
 %dobuild% sources\main\LibCogbot\Cogbot.Library.csproj
