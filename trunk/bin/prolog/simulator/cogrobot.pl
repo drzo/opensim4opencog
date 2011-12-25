@@ -16,7 +16,8 @@
    botClientCall/1, botClientCall/2,
    botClientCmd/1, botClientCmd/2,
    simObject/1, simAvatar/1, simAvDistance/3,
-   gridClient/1]).
+   gridClient/1,
+   resolveObjectByName/2]).
 
 :- use_module(library(testsupport)).
 :-use_module(library(clipl)).
@@ -267,9 +268,9 @@ listMembs. % so pred doesnt fail
 % coerces anything to avatar object
 resolveAvatar(Name,Name):-cliIsObject(Name),cliIsType(Name,'SimAvatar'),!.
 resolveAvatar(Name,Object):-cliIsObject(Name),cliToString(Name,String),!,resolveAvatar(String,Object).
-resolveAvatar(Name,Object):-cliCall('cogbot.Listeners.WorldObjects','TryGetSimAvatarFromName'(string),[Name],Object).
+resolveAvatar(Name,Object):-cliCall('cogbot.Listeners.WorldObjects','GetSimAvatarFromNameIfKnown'(string),[Name],Object).
 
-resolveObjectByName(Name,Object):-cliCall('cogbot.Listeners.WorldObjects','TryGetSimAvatarFromName'(string),[Name],Object).
+resolveObjectByName(Name,Object):-cliCall('cogbot.Listeners.WorldObjects','GetSimPositionByName'(string),[Name],Object).
 
 sayTo(Speaker,ToWho,What):-resolveAvatar(ToWho,Listener),cliCall(Speaker,talkto('SimAvatar',string),[Listener,What],_O).
 

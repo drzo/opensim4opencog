@@ -4243,7 +4243,7 @@ fresh_line(Strm):-stream_property(Strm,position('$stream_position'(_,_,POS,_))),
 fresh_line(Strm):-trace,nl(Strm),!.
 
 %debugFmt(C,T):- isCycOption(opt_debug=off),!.
-debugFmt(_,F):-F==[-1];F==[[-1]].
+%debugFmt(_,F):-F==[-1];F==[[-1]].
 
 debugFmt(F,A):-
         fresh_line(user_error),
