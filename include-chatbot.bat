@@ -7,4 +7,5 @@ svn co https://opensim4opencog.googlecode.com/svn/trunk-chatbot/sources/chatbot 
 svn co https://opensim4opencog.googlecode.com/svn/trunk-chatbot/bin-chatbot bin-chatbot/
 svn co https://opensim4opencog.googlecode.com/svn/trunk-logicmoo/prolog/programk bin/prolog/programk
 xcopy /y /c /e bin-chatbot\*.* bin\
+runprebuild.bat
 
