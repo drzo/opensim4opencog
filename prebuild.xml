@@ -763,9 +763,9 @@
       <Reference name="ABCL.Net.dll" localCopy="false"/>
       <Reference name="log4net.dll" localCopy="false"/>
        <Reference name="HttpServer.dll" localCopy="false"/>
-      <Reference name="SwiPlCs.dll" localCopy="false"/>
+      <Reference name="SwiPlCs" localCopy="false"/>
       <Reference name="System" localCopy="false"/>
-      <Reference name="DotLisp.dll" localCopy="false"/>
+      <Reference name="DotLisp" localCopy="false"/>
       <Reference name="OpenCyc.dll" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
       <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
