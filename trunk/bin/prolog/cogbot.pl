@@ -88,7 +88,7 @@ directory_of_file(File,Start,Hints,Dir):- member(Dir,Hints),join_pathnames(Dir,F
 :- exists_file('cogbot.pl') -> cd('..') ; true.
 
 
-:-ensure_loaded('cynd/cyc_pl/cyc').
+%%:-ensure_loaded(library('cyc_pl/cyc')).
 
 /*
 :-abolish(cyc:debugFmt/1).
@@ -111,11 +111,17 @@ noaimltrace(X):- X. %% notrace(X).
 
 guitracer:-debug.
 
-:-ensure_loaded('cynd/programk/logicmoo_module_aiml.pl').
+%:-ensure_loaded('prolog/programk/logicmoo_module_aiml.pl').
 %%:-assertz(librar
 %file_search_path(X,Y).
 
 %%:-ensure_loaded(library('programk/logicmoo_module_aiml_testing.pl')).
 
-:-ensure_loaded('startrek/mudreader.pl').
+:-ensure_loaded(library('startrek/mudreader.pl')).
+
+:-ensure_loaded(library('simulator/cogrobot')).
+:-ensure_loaded(test('testsupport')).
+:-ensure_loaded(test('testpathfind')).
+
+:-runSL.
 

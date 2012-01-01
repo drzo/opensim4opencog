@@ -17,10 +17,19 @@
    botClientCmd/1, botClientCmd/2,
    simObject/1, simAvatar/1, simAvDistance/3,
    gridClient/1,
-   resolveObjectByName/2]).
+   resolveObjectByName/2,
+   vectorAdd/3,
+   distanceTo/2,
+   toGlobalVect/2
+   ]).
 
-:- use_module(library(testsupport)).
-:-use_module(library(clipl)).
+
+
+
+%%:- absolute_file_name('.',X),asserta(prev_dir6(X)),listing(prev_dir6).
+
+%%:-source_location(File,_Line),file_directory_name(File, Directory),cd(Directory).
+
 
 assertIfNew(Gaf):-catch(call(Gaf),_,fail),!.
 assertIfNew(Gaf):-assert(Gaf).
@@ -29,9 +38,13 @@ assertIfNew(Gaf):-assert(Gaf).
 :- assertIfNew(user:file_search_path(jpl_examples, 'examples/prolog')).
 :- assertIfNew(user:file_search_path(jar, '.')).
 :- assertIfNew(user:file_search_path(library, '.')).
-:- assertIfNew(user:file_search_path(library, '../test')).
+:- assertIfNew(user:file_search_path(library, '..')).
+:- assertIfNew(user:file_search_path(library, '../..')).
+:- assertIfNew(user:file_search_path(library, '../../test')).
 :- assertIfNew(user:file_search_path(test, '../test')).
 
+%%:- use_module(library(testsupport)).
+:-use_module(library(clipl)).
 
 %------------------------------------------------------------------------------
 
@@ -73,8 +86,6 @@ addLayouts:-
   !.
 
 :-addLayouts.
-
-
 
 
 %------------------------------------------------------------------------------
@@ -184,15 +195,25 @@ botClientCall(Property,Value):-botClient(Obj),cliCall(Obj,Property,Value).
 % botClientCmd(say("hi"))
 %
 botClientCmd(In):-botClientCmd(In,Out),cliWriteln(Out),!.
-botClientCmd([C|Cmd],Out):-!,concat_atom([C|Cmd],' ',Str),botClientCall(executeCommand(Str),Out).
+botClientCmd([C|Cmd],Out):-toStringableArgs([C|Cmd],CCmd),!,concat_atom(CCmd,' ',Str),botClientCall(executeCommand(Str),Out).
 botClientCmd(C,Out):-compound(C),!,C=..[F|A],listifyFlat(A,FL),!,botClientCmd([F|FL],Out).
 % this form expects a term of the form methodname(arg, arg,arg)
 botClientCmd(Str,Out):-botClientCall(executeCommand(Str),Out).
+
+toStringableArgs(Var,Var):-var(Var),!.
+toStringableArgs([C|Cmd],[A|Amd]):-toStringableArg(C,A),toStringableArgs(Cmd,Amd).
+toStringableArgs(CCmd,CCmd).
+
+toStringableArg(Var,Var):-var(Var),!,throw(toStringableArgVar(Var)).
+toStringableArg(v3d(X,Y,Z),A):-concat_atom([X,Y,Z],'/',A).
+toStringableArg(Var,Var).
 
 % helper pred for botClientCmd
 listifyFlat([],[]):-!.
 listifyFlat([H|T],HT):-!,listifyFlat(H,HL),listifyFlat(T,TL),!,append(HL,TL,HT).
 listifyFlat(C,FA):-functor(C,F,1),!,C=..[F,A],!,listifyFlat(A,FA).
+listifyFlat(v3d(X,Y,Z),[v3d(X,Y,Z)]).
+listifyFlat(v3(X,Y,Z),[v3(X,Y,Z)]).
 listifyFlat(C,FA):-compound(C),!,C=..[F|A],!,listifyFlat([F|A],FA).
 listifyFlat(C,[C]).
 
@@ -289,3 +310,30 @@ simObjDistance(A,C,E):-simObject(A),cliGet(A,globalposition,B),simObject(C),A\=C
 %------------------------------------------------------------------------------
 %------------------------------------------------------------------------------
 
+
+%------------------------------------------------------------------------------
+% Position/Vectort calls
+%
+%------------------------------------------------------------------------------
+vectorAdd(A1,A2,R):-cliCall(A1,add(A1,A2),R).
+
+% already global vect!
+toGlobalVect(Vect,Vect):-functor(Vect,v3d,3),!.
+toGlobalVect(v3(A,B,C),Vect):-botClient(['Network','CurrentSim','Handle'],S),cliCall('SimRegion','HandleLocalToGlobal'(S,v3(A,B,C)),Vect),!.
+%% ?- toGlobalVect('annies haven/129.044327/128.206070/81.519630',D).
+toGlobalVect(A,Vect):-atom(A),concat_atom([R,X,Y,Z|_],'/',A),!,gridClient(BC),cliCall('SimRegion','GetRegionByName'(R,BC),Reg),cliCall(Reg,'LocalToGlobal'(v3(X,Y,Z)),Vect).
+%% ?- toGlobalVect('129.044327/128.206070/81.519630',D).
+toGlobalVect(A,Vect):-atom(A),concat_atom([X,Y,Z],'/',A),!,toGlobalVect(v3(X,Y,Z),Vect).
+%% ?- toGlobalVect('CyberPunk Buddha - L',D).
+toGlobalVect(A,Vect):-atom(A),!,resolveObjectByName(A,Obj),cliGet(Obj,globalposition,Vect),!.
+toGlobalVect(Obj,Vect):-cliGet(Obj,globalposition,Vect),!.
+
+%% 
+distanceTo(A,R):-toGlobalVect(A,A2),!,botClient(['Self','GlobalPosition'],A1),cliCall(A2,distance(A1,A2),R).
+
+% ?- moveTo('CyberPunk Buddha - L',4,FD).
+
+moveTo(Dest,Time,FDist):-botClientCmd(moveto(Dest)),botClientCmd(waitpos(Time,Dest)),distanceTo(Dest,FDist).
+
+
+%%:-prev_dir6(X),cd(X).
