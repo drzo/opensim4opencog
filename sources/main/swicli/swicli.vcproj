@@ -7,7 +7,7 @@
 	RootNamespace="DummyLibraryUsage"
 	Keyword="Win32Proj"
 	AssemblyReferenceSearchPaths="&quot;..\..\..\bin&quot;"
-	TargetFrameworkVersion="196613"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform

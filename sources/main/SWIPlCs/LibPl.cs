@@ -34,6 +34,10 @@ namespace SbsSW.SwiPlCs
 {
     public static class swipl_win
     {
+        static swipl_win()
+        {
+            int i = 1 + 1;
+        }
         static public int install()
         {
             try

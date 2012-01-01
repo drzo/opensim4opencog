@@ -35,7 +35,7 @@
 			failure/1, failure/2,
 			current_test/1,
 			apiBotClientCmd/1,
-			onChat/3, std_end/2, std_end/3,
+			onChatTSHook/3, std_end/2, std_end/3,
 			doTest/3 , ppTest/1]).
 :-use_module(library(clipl)).
 
@@ -149,7 +149,7 @@ time_limit(Limit) :-
 % asserts.
 %
 % Then the test can check these facts.
-onChat(_Originator, _Sender, Event) :-
+onChatTSHook(_Originator, _Sender, Event) :-
 	Event = event(
 		      'ChatEventArgs',
 		      _Orig,
@@ -162,12 +162,12 @@ onChat(_Originator, _Sender, Event) :-
 	catch(atom_to_term(Term_As_Atom , Term , _), SyntaxError,(testDebug(SyntaxError),fail)),
 	catch(asserta(Term) , _Assert_error , true).
 
-onChat(_Originator, _Sender, _Event) :-!.
+onChatTSHook(_Originator, _Sender, _Event) :-!.
 
 % make sure the chat hook is installed
 %
 % we assert chat_hook_installed when we've installed the
-% onChat callback so we only do it once
+% onChatTSHook callback so we only do it once
 require_chat_hook :-
 	chat_hook_installed.
 
@@ -175,7 +175,7 @@ require_chat_hook :-
 	asserta(chat_hook_installed),
 	user:gridClient(Obj),
 	cliGet(Obj , 'Self' , S),
-	cliAddEventHandler(S , 'ChatFromSimulator' , onChat(_,_,_)).
+	cliAddEventHandler(S , 'ChatFromSimulator' , onChatTSHook(_,_,_)).
 
 % string_subst(?S , ?T , ?R , ?NS)
 % Substitute all occurances of T with R in S, producing NS
@@ -198,7 +198,7 @@ list_string_subst(S , _ , _ , S).
 
 apiBotClientCmd(A) :- user:botClientCmd(A,_).
 
-user:onChat(X,Y,Z):-testsupport:onChat(X,Y,Z).
+%%user:onChatTSHook(X,Y,Z):-testsupport:onChatTSHook(X,Y,Z).
 
 %
 % results(+Name , -R)

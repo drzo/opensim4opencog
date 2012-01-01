@@ -6,12 +6,12 @@ using MushDLR223.ScriptEngines;
 
 namespace cogbot.Actions.Movement
 {
-    class MovetoCommand : Command, BotPersonalCommand
+    class AutoPilotCommand : Command, BotPersonalCommand
     {
-        public MovetoCommand(BotClient client)
+        public AutoPilotCommand(BotClient client)
         {
-            Name = "moveto";
-            Description = "Moves the avatar to the specified global position using robot turnto and walk. Usage: moveto x y z";
+            Name = "autopilot";
+            Description = "Moves the avatar to the specified global position using simulator autopilot. Usage: autopilot x y z";
             Category = CommandCategory.Movement;
             Parameters = new[] { new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
 

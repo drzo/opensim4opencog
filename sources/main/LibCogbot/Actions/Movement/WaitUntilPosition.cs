@@ -46,14 +46,16 @@ namespace cogbot.Actions.Movement
             }
 
             DateTime waitUntil = DateTime.Now.Add(TimeSpan.FromSeconds(maxSeconds));
-            float maxDistance = 1f;
+            double maxDistance = pos.GetSizeDistance();
 
             bool MadIt = false;
-            while (!MadIt && waitUntil < DateTime.Now)
+            while (waitUntil > DateTime.Now)
             {
-                if (Vector3d.Distance(pos.GlobalPosition, TheSimAvatar.GlobalPosition) < (pos.GetSizeDistance() + 1))
+                double cdist = Vector3d.Distance(pos.GlobalPosition, TheSimAvatar.GlobalPosition);
+                if ( cdist <= maxDistance)
                 {
                     MadIt = true;
+                    break;
                 }
                 else
                 {
@@ -67,7 +69,7 @@ namespace cogbot.Actions.Movement
             }
             else
             {
-                return Success("FAILED " + str);
+                return Failure("FAILED " + str);
             }
         }
     }

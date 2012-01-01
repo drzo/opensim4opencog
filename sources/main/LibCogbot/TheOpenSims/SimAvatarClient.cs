@@ -3,9 +3,16 @@ using System.Collections.Generic;
 using System.Threading;
 using cogbot.Actions.Pathfinder;
 using cogbot.Listeners;
+using java.lang;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
+using Boolean=System.Boolean;
+using Exception=System.Exception;
+using Math=System.Math;
+using Object=System.Object;
+using String=System.String;
+using Thread=System.Threading.Thread;
 
 namespace cogbot.TheOpenSims
 {
@@ -756,7 +763,7 @@ namespace cogbot.TheOpenSims
                 ApproachVector3D = Vector3d.Zero;
             }
             AgentManager ClientSelf = Client.Self;
-            ClientSelf.AutoPilotCancel();
+            
             AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
             ///   ClientMovement. AlwaysRun = false;
             ClientMovement.AtNeg = false;
@@ -795,6 +802,7 @@ namespace cogbot.TheOpenSims
             ClientMovement.YawPos = false;
 
             ClientMovement.SendUpdate();
+            ClientSelf.AutoPilotCancel();
         }
 
 
@@ -819,9 +827,9 @@ namespace cogbot.TheOpenSims
                 if (DebugLevel > 1) IndicateTarget(obj, true);
                 obj.PathFinding.MakeEnterable(this);
                 ///  if (!MoveTo(obj.GlobalPosition(), obj.GetSizeDistance() + 0.5f, 12))
-                GotoTarget(obj);
+                SalientGoto(obj);
                 TurnToward(obj);
-                MoveTo(obj.GlobalPosition, maxDistance, 1);
+                SimpleMoveTo(obj.GlobalPosition, maxDistance, 1);
             }
             finally
             {
@@ -846,9 +854,13 @@ namespace cogbot.TheOpenSims
             //Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = false;
             //Client.Self.Movement.AutoResetControls = true;
             //Client.Self.Movement.UpdateInterval = 10;
-
+            DateTime lastDateTime = DateTime.Now;
+            DateTime currentDateTime = DateTime.Now;
             while (true)
             {
+                lastDateTime = currentDateTime;
+                currentDateTime = DateTime.Now;
+
                 Vector3d targetPosition = ApproachVector3D;
                 lock (TrackerLoopLock)
                 {
@@ -923,7 +935,10 @@ namespace cogbot.TheOpenSims
                     if (lastDistance <= curDist)
                     {
                         if (HasPrim && Prim.Velocity == Vector3.Zero)
-                            IsBlocked = true;
+                        {
+                            var span = currentDateTime.Subtract(lastDateTime);
+                            IsBlocked = true;                            
+                        }
                         if (ApproachPosition != null)
                         {
                             // follower should pass by.. but on way point navigation would be ok
@@ -1016,6 +1031,12 @@ namespace cogbot.TheOpenSims
                     ///  Far away
                     if (curXYDist > ApproachDistance)
                     {
+                        if (SimpleMoveToMovementProceedure == MovementProceedure.AutoPilot)
+                        {
+                            ClientSelf.AutoPilot(targetPosition.X, targetPosition.Y, targetPosition.Z);
+                            SendUpdate(100);
+                            continue;
+                        }
                         ClientMovement.Stop = false;
                         ClientMovement.FinishAnim = false;
                         TurnToward(targetPosition);
@@ -1081,8 +1102,8 @@ namespace cogbot.TheOpenSims
 
 
 
-        public MovementProceedure MoveToMovementProceedure = MovementProceedure.TurnToAndWalk;
-        public MovementProceedure GotoMovementProceedure = MovementProceedure.AStar;
+        public MovementProceedure SimpleMoveToMovementProceedure = MovementProceedure.AutoPilot;
+        public MovementProceedure SalientMovementProceedure = MovementProceedure.AStar;
 
         /// <summary>
         ///  
@@ -1091,7 +1112,7 @@ namespace cogbot.TheOpenSims
         /// <param name="maxDistance"></param>
         /// <param name="maxSeconds"></param>
         /// <returns></returns>
-        public override bool MoveTo(Vector3d finalTarget, double maxDistance, float maxSeconds)
+        public override bool SimpleMoveTo(Vector3d finalTarget, double maxDistance, float maxSeconds)
         {
             if (false)
             {
@@ -1105,7 +1126,7 @@ namespace cogbot.TheOpenSims
             IsBlocked = false;
             double currentDist = Vector3d.Distance(finalTarget, GlobalPosition);
             ///  if (currentDist < maxDistance) return true;
-            switch (MoveToMovementProceedure)
+            switch (SimpleMoveToMovementProceedure)
             {
                 case MovementProceedure.Teleport:
                     if (currentDist < maxDistance) return true;
@@ -1114,13 +1135,21 @@ namespace cogbot.TheOpenSims
                     if (!tp)
                     {
                         Debug("TP failed => MoveToMovementProceedure = MovementProceedure.TurnToAndWalk;");
-                        MoveToMovementProceedure = MovementProceedure.TurnToAndWalk;
+                        SimpleMoveToMovementProceedure = MovementProceedure.TurnToAndWalk;
                     }
                     TurnToward(finalTarget);
+                    lock (TrackerLoopLock)
+                    {
+                        ///   SimWaypoint P = SimWaypointImpl.CreateGlobal(finalTarget);
+                        SetMoveTarget(finalTarget);
+                        ApproachDistance = maxDistance;
+                    }
                     break;
                 case MovementProceedure.AStar:
                     if (currentDist < maxDistance) return true;
-                    GotoTarget(SimRegion.GetWaypoint(finalTarget));
+                    throw new UnsupportedOperationException("SimpleMoveToMovementProceedure=" +
+                                                        SimpleMoveToMovementProceedure);
+                    GotoTargetAStar(SimRegion.GetWaypoint(finalTarget));
                     break;
                 case MovementProceedure.AutoPilot:
                 case MovementProceedure.TurnToAndWalk:
@@ -1165,12 +1194,13 @@ namespace cogbot.TheOpenSims
                             blockCount++;
                             if (blockCount > 2)
                             {
-                                StopMoving();
                                 if (!SimAvatarClient.UseTeleportFallback)
                                 {
                                     Debug("BLOCKED!");
+                                    //return true;
                                     return false;
                                 }
+                                StopMoving();
                                 Debug("Blocked so using TP to " + (finalTarget - GlobalPosition));
                                 return this.TeleportTo(finalTarget);
                             }
@@ -1179,6 +1209,7 @@ namespace cogbot.TheOpenSims
                 }
                 if (currentDist > lastDistance)
                 {
+                    StopMoving();
                     ///  Console.Write("=");
                     if (currentDist < maxDistance) return true;
                     StopMoving();
@@ -1213,22 +1244,21 @@ namespace cogbot.TheOpenSims
             DLRConsole.DebugWrite(s);
         }
 
-        public override bool GotoTarget(SimPosition pos)
+        public override bool SalientGoto(SimPosition pos)
         {
             double maxDistance = pos.GetSizeDistance() + 1;
-            switch (GotoMovementProceedure)
+            switch (SalientMovementProceedure)
             {
                 case MovementProceedure.Teleport:
                     StopMoving();
                     return this.TeleportTo(pos);
                 case MovementProceedure.AutoPilot:
                 case MovementProceedure.TurnToAndWalk:
-                    return MoveTo(pos.UsePosition.GlobalPosition, pos.GetSizeDistance(), 3);
+                    return SimpleMoveTo(pos.UsePosition.GlobalPosition, pos.GetSizeDistance(), 3);
 
                     // TODO 
                 case MovementProceedure.AStar:
-                default:
-                    bool res = base.GotoTarget(pos);
+                    bool res = GotoTargetAStar(pos);
                     if (res) return res;
                     StopMoving();
                     if (maxDistance > this.Distance(pos))
@@ -1241,6 +1271,10 @@ namespace cogbot.TheOpenSims
                     StopMoving();
                     TurnToward(pos);
                     return res;
+                default:
+                    {
+                        throw new UnsupportedOperationException("" + SalientMovementProceedure); 
+                    }
             }
         }
         public override void SendUpdate(int ms)

@@ -42,7 +42,7 @@ namespace cogbot.Actions.Pathfinder
             }
             String str = "GotoTarget(" + pos + ")";
             WriteLine(str);
-            bool MadIt = WorldSystem.TheSimAvatar.GotoTarget(pos);
+            bool MadIt = WorldSystem.TheSimAvatar.SalientGoto(pos);
             if (MadIt)
             {
                 return Success(string.Format("SUCCESS {0}", str));
