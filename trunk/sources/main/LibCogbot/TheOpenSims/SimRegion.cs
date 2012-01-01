@@ -500,7 +500,11 @@ namespace cogbot.TheOpenSims
             return _GridLoc;
         }
 
-        public static SimRegion GetRegion(string simname,GridClient gc)
+        public static SimRegion GetRegionByName(string simname,GridClient gc)
+        {
+            return GetRegion(simname, gc);
+        }
+        public static SimRegion GetRegion(string simname, GridClient gc)
         {
             foreach (SimRegion R in CurrentRegions)
                 if (R.RegionName.Contains(simname)) return R;
@@ -548,6 +552,12 @@ namespace cogbot.TheOpenSims
             return R;
         }
 
+        static public Vector3d HandleLocalToGlobal(ulong handle, Vector3 objectLoc)
+        {
+            uint x, y;
+            Utils.LongToUInts(handle, out x, out y);
+            return new Vector3d(x * 256 + objectLoc.X, y * 256 + objectLoc.Y, objectLoc.Z);
+        }
 
         public void SetRegionOffset(Vector2 v2, SimRegion value)
         {

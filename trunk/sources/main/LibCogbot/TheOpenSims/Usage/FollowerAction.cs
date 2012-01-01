@@ -12,7 +12,7 @@ namespace cogbot.TheOpenSims
         readonly private float maxDistance;
         readonly private Thread FollowThread;
         private bool KeepFollowing = true;
-        public static bool UsePathfinder = true;
+        public static bool UseGotoTarget = true;
         public static bool UseFlight = true;
         public static bool UseTeleport = true;
         public static double UseTeleportSteps = 3;
@@ -50,7 +50,7 @@ namespace cogbot.TheOpenSims
 
         public void FollowLoop()
         {
-            int useSimpleFollow = 2;
+            int simpleGotoTarget = 2;
             int FullPasses = 0;
             while (KeepFollowing)
             {
@@ -73,7 +73,7 @@ namespace cogbot.TheOpenSims
                         {
                             pathStore = TheBot.PathStore;
                             DLRConsole.DebugWriteLine("" + TheBot + " No pathStore attached to self.. might fall!");
-                            if (useSimpleFollow < 1) useSimpleFollow = 2;
+                            if (simpleGotoTarget < 1) simpleGotoTarget = 2;
                         }
                         else
                         {
@@ -82,17 +82,17 @@ namespace cogbot.TheOpenSims
                             if (botpos.Z + 2 > theBotPathStoreGetGroundLevel)
                             {
                                 // avoid faling from heights
-                                useSimpleFollow = 0;
+                                simpleGotoTarget = 0;
                             }
                         }
                     }
                     if (!Target.IsRegionAttached) continue;
                     if (UseSimpleTurnTo)
                     {
-                        if (useSimpleFollow > 0) Debug("UseSimpleTurnTo");
-                        while (useSimpleFollow > 0)
+                        if (simpleGotoTarget > 0) Debug("UseSimpleTurnTo");
+                        while (simpleGotoTarget > 0)
                         {
-                            useSimpleFollow--;
+                            simpleGotoTarget--;
                             // TheBot.TurnToward(Target);
                             dist = TheBot.Distance(Target);
                             TheCBot.SetMoveTarget(Target, maxDistance);
@@ -100,7 +100,7 @@ namespace cogbot.TheOpenSims
                             if (dist > (TheBot.Distance(Target) + 2))
                             {
                                 // Simple Follow might have worked. try again
-                                useSimpleFollow = 2;
+                                simpleGotoTarget = 2;
                                 continue;
                             }
                             TheBot.StopMoving();
@@ -120,18 +120,18 @@ namespace cogbot.TheOpenSims
                         }
                         if (CloseEnough())
                         {
-                            useSimpleFollow++;
+                            simpleGotoTarget++;
                             continue;
                         }
                     }
 
-                    if (UsePathfinder)
+                    if (UseGotoTarget)
                     {
-                        Debug("UsePathfinder");
-                        if (TheCBot.GotoTarget(Target))
+                        Debug("UseGotoTarget");
+                        if (TheCBot.SalientGoto(Target))
                         {
                             UseFlight = false;
-                            useSimpleFollow = 1;
+                            simpleGotoTarget = 1;
                             continue;
                         }
                         UseFlight = !UseFlight;

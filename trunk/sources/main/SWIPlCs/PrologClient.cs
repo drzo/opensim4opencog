@@ -789,7 +789,14 @@ namespace SbsSW.SwiPlCs
         public object Eval(object obj)
         {
             PlTerm termin = PlTerm.PlVar();
-            termin.FromObject(obj);
+            if (obj is PlTerm)
+            {
+                termin.Unify((PlTerm)obj);
+            }
+            else
+            {
+                termin.FromObject(obj);
+            }
             PlTerm termout = PlTerm.PlVar();
             if (!ModuleCall("Eval", termin, termout)) return null;
             return PrologCli.CastTerm(termout, typeof(System.Object));
@@ -1372,6 +1379,7 @@ namespace SbsSW.SwiPlCs
             //PLVOID = PlTerm.PlCompound("@", PlTerm.PlAtom("void"));
             //PLTRUE = PlTerm.PlCompound("@", PlTerm.PlAtom("true"));
             //PLFALSE = PlTerm.PlCompound("@", PlTerm.PlAtom("false"));
+            Console.Error.WriteLine("done RegisterPLCSForeigns"); 
         }
 
         private static Class ResolveClass(string name)

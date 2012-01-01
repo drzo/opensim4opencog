@@ -337,6 +337,12 @@ namespace cogbot.Listeners
                 argsUsed = 1;
                 return offset;
             }
+            if (first.Contains("/"))
+            {
+                argsUsed = 1;
+                int uu;
+                return GetSimV(first.Split(new char[] {'/'}), 0, out uu, offset);
+            }
             bool relative = false;
             for (int st = start; st < tokens.Length; st++)
             {
@@ -439,12 +445,10 @@ namespace cogbot.Listeners
                 argsUsed++;
             }
             string sim = tokens[argsUsed];
-            SimRegion region = SimRegion.GetRegion(sim, client);
-            if (region == null) return null;
 
             //TODO use the GetSimV code 
             argsUsed += 1;
-            float z = region.AverageHieght;
+            float z = -1;
             if (tokens.Length > argsUsed + 1)
             {
                 if (!float.TryParse(tokens[argsUsed], out x) ||
@@ -458,14 +462,22 @@ namespace cogbot.Listeners
                     if (float.TryParse(tokens[argsUsed], out z))
                     {
                         argsUsed += 1;
+                    } else
+                    {
+                        z = -1;
                     }
                 }
                 // test for global
                 if (x > 512 || y > 512)
                 {
+                    float.TryParse(tokens[argsUsed], out z);
                     return SimWaypointImpl.CreateGlobal(x, y, z);
                 }
             }
+            SimRegion region = SimRegion.GetRegion(sim, client);
+            if (region == null) return null;
+            if (z == -1) z = region.AverageHieght;
+            
             Vector3 v3 = new Vector3(x, y, z);
             return SimWaypointImpl.CreateLocal(v3, region.GetPathStore(v3));
         }

@@ -1,13 +1,17 @@
-:-module(testpathfind, [tpf_method/1, tpf/0]).
+:-module(testpathfind, [tpf_method/1, tpf/0, tpf/1]).
 
-:- use_module(library(testsupport)).
+:- use_module(test(testsupport)).
 :-use_module(library(clipl)).
+
+:-discontiguous(test_desc/2).
+:-discontiguous(test/1).
 
 :- dynamic(goMethod/1).
 
 % set the method of movement we're testing
 goMethod('follow*').
-
+%%goMethod('astargoto').
+%%goMethod(autopilot).
 
 
 % using the test method of movement, go to Location
@@ -16,12 +20,24 @@ goByMethod(Location) :-
 	Goal =.. [GM, Location],
 	apiBotClientCmd(Goal).
 
+
+%%  teleportTo('annies haven/129.044327/128.206070/81.519630/')
+%% teleportTo('annies haven/129.044327/128.206070/80')
+%% apiBotClientCmd(autopilot('annies haven/127.044327/128.206070/81.519630/')).
+teleportTo(StartName):-
+        cogrobot:toGlobalVect(StartName,Start),
+        apiBotClientCmd(teleport(Start)),sleep(1),
+        %%cogrobot:botClientCmd(waitpos(2,Start)),
+        cogrobot:distanceTo(Start,Dist),
+        %% if fallthru floor try to get closer
+        (Dist < 3 -> true ; (cogrobot:vectorAdd(Start,v3d(0,0,1),Start2),apiBotClientCmd(teleport(Start2)) )),!.
+
 % convenience method that does the 'normal' thing -
 % tp to Start, move using the standard method to
 move_test(Time , Start , End) :-
-	apiBotClientCmd(teleport(Start)),
+	teleportTo(Start),
 	goByMethod(End),
-	sleep(Time).
+        cogrobot:botClientCmd(waitpos(Time,End)).
 
 
 % this is just to debug the test framework with
@@ -29,6 +45,7 @@ test_desc(easy , 'insanely easy test').
 test(N) :-
 	N = easy,
 	writeq('in easy'),nl.
+
 
 test_desc(clear , 'clear path 10 meters').
 test(N) :-
@@ -164,11 +181,21 @@ tpf_method(GoMethod) :-
 tpf_method(_) :- !.
 
 tpf :-
-	member(Method , ['follow*' , astargoto]),
+	member(Method , ['follow*'/* , astargoto*/]),
 	tpf_method(Method),
 	fail.
 
 tpf :- !.
 
 
+%% example: ?- tpf(clear).
+tpf(Name) :-
+        goMethod(GoMethod),
+	cliSet('SimAvatarImpl' , 'UseTeleportFallback' , '@'(false)),
+	test_desc(Name , Desc),
+	doTest(Name , testpathfind:test(Name) , Results),
+	ppTest([name(Name),
+		desc(Desc) ,
+		results(Results) ,
+		option('goMethod ' , GoMethod)]).
 

@@ -184,7 +184,7 @@ namespace cogbot.TheOpenSims
         /// <param name="maxDistance"></param>
         /// <param name="maxSeconds"></param>
         /// <returns></returns>
-        public virtual bool MoveTo(Vector3d finalTarget, double maxDistance, float maxSeconds)
+        public virtual bool SimpleMoveTo(Vector3d finalTarget, double maxDistance, float maxSeconds)
         {
             double currentDist = Vector3d.Distance(finalTarget, GlobalPosition);
             if (currentDist < maxDistance) return true;
@@ -260,12 +260,17 @@ namespace cogbot.TheOpenSims
             SetObjectPosition(finalPos);
         }
 
+
+        public virtual bool SalientGoto(SimPosition pos)
+        {
+            return GotoTargetAStar(pos);
+        }
         /// <summary>
         /// Used to be 9 now its 4 times
         /// </summary>
         /// <param name="pos"></param>
         /// <returns></returns>
-        public virtual bool GotoTarget(SimPosition pos)
+        public bool GotoTargetAStar(SimPosition pos)
         {
             if (!IsControllable)
             {
@@ -2735,7 +2740,7 @@ namespace cogbot.TheOpenSims
     {
         // for pathfinbder mover
         void Touch(SimObject simObjectImpl);
-        bool GotoTarget(SimPosition pos);
+        bool SalientGoto(SimPosition pos);
         bool FollowPathTo(SimPosition globalEnd, double distance);
         void SendUpdate(int ms);
         void SetMoveTarget(SimPosition target, double maxDist);

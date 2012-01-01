@@ -10,7 +10,7 @@ namespace PathSystem3D.Navigation
     {
         bool TurnToward(Vector3d targetPosition);
         void StopMoving();
-        bool MoveTo(Vector3d end, double maxDistance, float maxSeconds);
+        bool SimpleMoveTo(Vector3d end, double maxDistance, float maxSeconds);
         void Debug(string format, params object[] args);
         //List<SimObject> GetNearByObjects(double maxDistance, bool rootOnly);
         /*
@@ -263,7 +263,7 @@ namespace PathSystem3D.Navigation
         public bool MoveTo(Vector3d finalTarget, double maxDistance, int maxSeconds)
         {
             finalTarget.Z = GetZFor(finalTarget);
-            return Mover.MoveTo(finalTarget, maxDistance, maxSeconds);
+            return Mover.SimpleMoveTo(finalTarget, maxDistance, maxSeconds);
         }
 
         delegate Vector3 MoveToPassable(Vector3 start);
@@ -325,7 +325,7 @@ namespace PathSystem3D.Navigation
                     Vector3d v3d = PathStore.LocalToGlobal(next);
                     Mover.ThreadJump();
                     v3d.Z = Mover.SimPosition.Z;
-                    if (Mover.MoveTo(v3d, 1, 1))
+                    if (Mover.SimpleMoveTo(v3d, 1, 1))
                     {
                         TurnAvoid += angle;  // update for next use
                         if (TurnAvoid > SimPathStore.PI2)

@@ -38,6 +38,7 @@ namespace cogbot.Actions
                     int num = botCommandThreads.Count;
                     foreach (Thread t in botCommandThreads)
                     {
+                        Client.RemoveThread(t);
                         n++;
                         num--;
                         //System.Threading.ThreadStateException: Thread is dead; state cannot be accessed.
@@ -60,7 +61,7 @@ namespace cogbot.Actions
                             }
                             catch (Exception) { }
                         }
-                        Client.RemoveThread(t);
+
                     }
                 }
             }
