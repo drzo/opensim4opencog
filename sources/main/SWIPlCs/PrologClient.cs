@@ -2416,6 +2416,12 @@ typedef struct // define a context structure  { ... } context;
             return ret;
         }
 
+        public static int UnifyAtom(uint TermRef, string s)
+        {
+            uint temp = libpl.PL_new_term_ref();
+            libpl.PL_put_atom(temp, libpl.PL_new_atom_wchars(s.Length, s));
+            return libpl.PL_unify(temp, TermRef);
+        }
     }
 
     [System.Security.SuppressUnmanagedCodeSecurityAttribute]
