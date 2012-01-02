@@ -2246,8 +2246,7 @@ namespace SbsSW.SwiPlCs
                             catch (Exception)
                             {
 
-                                libpl.PL_put_atom(TermRef, libpl.PL_new_atom_wchars(s.Length, s));
-                                return libpl.PL_succeed;
+                                return UnifyAtom(TermRef, s);
                             }
                         }
                     case libpl.CVT_ATOM:
@@ -2258,8 +2257,7 @@ namespace SbsSW.SwiPlCs
                         catch (Exception)
                         {
 
-                            libpl.PL_put_atom(TermRef, libpl.PL_new_atom_wchars(s.Length, s));
-                            return libpl.PL_succeed;
+                            return UnifyAtom(TermRef, s);
                         }
                     case libpl.CVT_LIST:
                         return libpl.PL_unify_list_chars(TermRef, (string) o);
@@ -2326,7 +2324,9 @@ namespace SbsSW.SwiPlCs
                 }
                 if (t.IsEnum)
                 {
-                    return FromEnum(TermRef, o, t);
+                    int res =  FromEnum(TermRef, o, t);
+                    term.ToString();
+                    return res;
                 }
                 if (t.IsPrimitive)
                 {
@@ -2437,10 +2437,11 @@ namespace SbsSW.SwiPlCs
 
         private static int FromEnum(uint TermRef, object o, Type t)
         {
-            libpl.PL_cons_functor_v(TermRef,
+            uint temp = libpl.PL_new_term_ref();
+            libpl.PL_cons_functor_v(temp,
                                     libpl.PL_new_functor(libpl.PL_new_atom("enum"), 2),
                                     new PlTermV(typeToSpec(t), PlTerm.PlAtom(o.ToString())).A0);
-            return libpl.PL_succeed;
+            return libpl.PL_unify(TermRef, temp);
         }
 
         private static bool IsStructRecomposable(Type t)
@@ -2571,10 +2572,11 @@ namespace SbsSW.SwiPlCs
             }
             uint termTermRef = term.TermRef;
 
-            libpl.PL_cons_functor_v(termTermRef,
+            uint temp = libpl.PL_new_term_ref();
+            libpl.PL_cons_functor_v(temp,
                                     libpl.PL_new_functor(libpl.PL_new_atom(named), tv.Size),
                                     tv.A0);
-            return libpl.PL_succeed;
+            return libpl.PL_unify(termTermRef, temp);
         }
 
         private static int ToVMNumber(object o, PlTerm term)
