@@ -39,7 +39,7 @@ namespace cogbot.TheOpenSims
         private string PostureType;
         private SimObjectEvent LastPostureEvent;
         readonly private object postureLock = new object();
-        public static bool UseTeleportFallback = true;
+        public static bool UseTeleportFallback = false;
         public bool IsProfile;
         public Dictionary<UUID, AvatarGroup> GroupRoles { get; set; }
 

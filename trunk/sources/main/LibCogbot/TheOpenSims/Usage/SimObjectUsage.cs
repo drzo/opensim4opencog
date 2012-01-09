@@ -76,7 +76,7 @@ namespace cogbot.TheOpenSims
             {
                 double maximumDistance = TypeUsage.maximumDistance + Target.GetSizeDistance();
                 double howClose = TheBot.Approach(Target, maximumDistance - 0.5);
-                TheBot.ApproachPosition = Target;
+                ((SimAvatarImpl)TheBot).ApproachPosition = Target;
                 TheBot.TurnToward(Target);
                 if (howClose > maximumDistance + 1)
                 {
@@ -87,7 +87,7 @@ namespace cogbot.TheOpenSims
                 closure.Invoke();
                 if (Target == TheBot.ApproachPosition)
                 {
-                    TheBot.ApproachPosition = null;
+                    ((SimAvatarImpl) TheBot).ApproachPosition = null;
                 }
             }
             finally

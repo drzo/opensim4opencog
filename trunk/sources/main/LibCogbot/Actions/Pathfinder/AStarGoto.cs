@@ -3,6 +3,7 @@ using OpenMetaverse;
 using PathSystem3D.Navigation;
 
 using MushDLR223.ScriptEngines;
+using cogbot.TheOpenSims;
 
 namespace cogbot.Actions.Pathfinder
 {
@@ -42,6 +43,7 @@ namespace cogbot.Actions.Pathfinder
             }
             String str = "GotoTarget(" + pos + ")";
             WriteLine(str);
+            ((SimAvatarClient) WorldSystem.TheSimAvatar).SalientMovementProceedure = MovementProceedure.AStar;
             bool MadIt = WorldSystem.TheSimAvatar.SalientGoto(pos);
             if (MadIt)
             {

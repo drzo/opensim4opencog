@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using cogbot.Actions.Pathfinder;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
@@ -13,10 +14,11 @@ namespace cogbot.TheOpenSims
         readonly private Thread FollowThread;
         private bool KeepFollowing = true;
         public static bool UseGotoTarget = true;
-        public static bool UseFlight = true;
+        public static bool UseFlight = false;
         public static bool UseTeleport = true;
         public static double UseTeleportSteps = 3;
         public static bool UseSimpleTurnTo = true;
+        public static bool AvoidFalls = true;
 
         public FollowerAction(SimAvatar impl, SimPosition position)
             : base(impl,position)
@@ -47,8 +49,41 @@ namespace cogbot.TheOpenSims
                 FollowThread.Join();
             }
         }
-
         public void FollowLoop()
+        {
+            MovementProceedure[] proceedure = {
+                                                  MovementProceedure.AStar,
+                                                  MovementProceedure.AStar,
+                                                  MovementProceedure.AutoPilot,
+                                                  MovementProceedure.Teleport,
+                                                  //MovementProceedure.FlyTo,
+                                                  MovementProceedure.TurnToAndWalk,
+                                              };
+            int procnum = 0;
+            while (KeepFollowing)
+            {
+                Thread.Sleep(100);
+                Vector3 lastKnown;
+                if (!Target.TryGetSimPosition(out lastKnown))
+                {
+                    DLRConsole.DebugWriteLine("" + this + " Not regions attached " + Target);
+                    Thread.Sleep(2000);
+                    continue;
+                }
+                
+                double dist = TheBot.Distance(Target);
+
+                if (dist < maxDistance || CloseEnough()) continue;
+
+                if (!TheCBot.SalientGoto(Target))
+                {
+                    if (procnum >= proceedure.Length) procnum = 0;
+                    ((SimAvatarClient)TheCBot).SalientMovementProceedure = proceedure[procnum];
+                }
+                ((SimAvatarClient)TheBot).WaitUntilPosSimple(Target.GlobalPosition, Target.GetSizeDistance(), 3);
+            }
+        }
+        public void FollowLoop1()
         {
             int simpleGotoTarget = 2;
             int FullPasses = 0;
@@ -82,7 +117,12 @@ namespace cogbot.TheOpenSims
                             if (botpos.Z + 2 > theBotPathStoreGetGroundLevel)
                             {
                                 // avoid faling from heights
-                                simpleGotoTarget = 0;
+                                if (AvoidFalls)
+                                {
+                                    Debug("AvoidFalls so wont UseSimpleTurnTo");
+                                    simpleGotoTarget = 0;
+                                    UseSimpleTurnTo = false;
+                                }
                             }
                         }
                     }
@@ -110,7 +150,7 @@ namespace cogbot.TheOpenSims
                     if (CloseEnough()) continue;
 
                     SimObject simO = Target as SimObject;
-                    if (simO != null)
+                    if (simO != null && !UseGotoTarget)
                     {
                         if (UseFlight || (simO.Flying || TheBot.IsFlying))
                         {

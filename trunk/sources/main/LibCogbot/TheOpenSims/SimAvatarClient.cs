@@ -877,6 +877,9 @@ namespace cogbot.TheOpenSims
                     if (ApproachPosition != null)
                     {
                         targetPosition = ApproachPosition.GlobalPosition;
+                    } else
+                    {
+                        targetPosition = ApproachVector3D;
                     }
                 }
                 double realTargetZ = targetPosition.Z;
@@ -1034,7 +1037,13 @@ namespace cogbot.TheOpenSims
                         if (SimpleMoveToMovementProceedure == MovementProceedure.AutoPilot)
                         {
                             ClientSelf.AutoPilot(targetPosition.X, targetPosition.Y, targetPosition.Z);
-                            SendUpdate(100);
+                            SendUpdate(1000);
+                            continue;
+                        }
+                        if (SimpleMoveToMovementProceedure == MovementProceedure.Teleport)
+                        {
+                            //ClientSelf.AutoPilot(targetPosition.X, targetPosition.Y, targetPosition.Z);
+                            SendUpdate(1000);
                             continue;
                         }
                         ClientMovement.Stop = false;
@@ -1051,7 +1060,7 @@ namespace cogbot.TheOpenSims
                             SendUpdate(100);
                             ClientMovement.NudgeAtPos = false;
                             SendUpdate(100);
-                            TurnToward(targetPosition);
+                            //TurnToward(targetPosition);
                             stopNext = true;
                             continue;
                         }
@@ -1102,7 +1111,7 @@ namespace cogbot.TheOpenSims
 
 
 
-        public MovementProceedure SimpleMoveToMovementProceedure = MovementProceedure.AutoPilot;
+        public MovementProceedure SimpleMoveToMovementProceedure = MovementProceedure.TurnToAndWalk;
         public MovementProceedure SalientMovementProceedure = MovementProceedure.AStar;
 
         /// <summary>
@@ -1118,11 +1127,10 @@ namespace cogbot.TheOpenSims
             {
                 Random MyRand = new Random();
                 if (MyRand.Next(5) < 2)
-                    Client.Self.LookAtEffect(ID, UUID.Zero, finalTarget, (LookAtType)MyRand.Next(11), ID);
+                    Client.Self.LookAtEffect(ID, UUID.Zero, finalTarget, (LookAtType) MyRand.Next(11), ID);
             }
             OnlyMoveOnThisThread();
             TurnToward(finalTarget);
-            int blockCount = 0;
             IsBlocked = false;
             double currentDist = Vector3d.Distance(finalTarget, GlobalPosition);
             ///  if (currentDist < maxDistance) return true;
@@ -1148,7 +1156,7 @@ namespace cogbot.TheOpenSims
                 case MovementProceedure.AStar:
                     if (currentDist < maxDistance) return true;
                     throw new UnsupportedOperationException("SimpleMoveToMovementProceedure=" +
-                                                        SimpleMoveToMovementProceedure);
+                                                            SimpleMoveToMovementProceedure);
                     GotoTargetAStar(SimRegion.GetWaypoint(finalTarget));
                     break;
                 case MovementProceedure.AutoPilot:
@@ -1162,10 +1170,17 @@ namespace cogbot.TheOpenSims
                     }
                     break;
             }
+            return WaitUntilPosSimple(finalTarget, maxDistance, maxSeconds);
+        }
 
+        public bool WaitUntilPosSimple(Vector3d finalTarget, double maxDistance, float maxSeconds){
+            int blockCount = 0;
+            double currentDist = Vector3d.Distance(finalTarget, GlobalPosition);
+            if (currentDist < maxDistance) return true;
             bool IsKnownMoving = false;
             double lastDistance = currentDist;
             long endTick = Environment.TickCount + (int)(maxSeconds * 1000);
+            bool waitOnly = false;
             while (Environment.TickCount < endTick)
             {
                 currentDist = Vector3d.Distance(finalTarget, GlobalPosition);
@@ -1186,7 +1201,7 @@ namespace cogbot.TheOpenSims
                 else
                 {
                     if (currentDist < maxDistance) return true;
-                    if (Prim != null && PrimVelocity == Vector3.Zero)
+                    if (!waitOnly) if (Prim != null && PrimVelocity == Vector3.Zero)
                     {
                         Write("!");
                         if (IsBlocked)
@@ -1209,10 +1224,10 @@ namespace cogbot.TheOpenSims
                 }
                 if (currentDist > lastDistance)
                 {
-                    StopMoving();
+                    if (!waitOnly) StopMoving();
                     ///  Console.Write("=");
                     if (currentDist < maxDistance) return true;
-                    StopMoving();
+                    if (!waitOnly) StopMoving();
                     if (IsBlocked)
                     {
                         Write("=");
@@ -1234,7 +1249,7 @@ namespace cogbot.TheOpenSims
                     return true;
                 }
             }
-            StopMoving();
+            if (!waitOnly) StopMoving();
             Write("-");
             return false;
         }
@@ -1677,7 +1692,7 @@ namespace cogbot.TheOpenSims
     }
     public interface SimActor : SimControllableAvatar, SimMover, SimObjectPathMover
     {
-        new SimPosition ApproachPosition { get; set; }
+        //new SimPosition ApproachPosition { get; set; }
         double Approach(SimObject obj, double maxDistance);
         cogbot.TheOpenSims.BotAction CurrentAction { get; set; }
         void Do(SimTypeUsage use, SimObject someObject);

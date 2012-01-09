@@ -28,9 +28,10 @@ namespace cogbot.Actions.Movement
                 return Failure("Coulnd not resolve location: " + string.Join(" ", args));
             }
             Vector3d g = position.GlobalPosition;
-            Client.Self.AutoPilot(g.X, g.Y, g.Z);
+            TheSimAvatar.SetMoveTarget(position, position.GetSizeDistance());
+            //Client.Self.AutoPilot(g.X, g.Y, g.Z);
 
-            return Success(string.Format("Attempting to move to (AutoPilot) <{0},{1},{2}>", g.X, g.Y, g.Z));
+            return Success(string.Format("SetMoveTarget: <{0},{1},{2}>", g.X, g.Y, g.Z));
         }
     }
 }

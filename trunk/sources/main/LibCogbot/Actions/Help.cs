@@ -27,9 +27,20 @@ namespace cogbot.Actions.System
                 mustHave = args.str.ToLower();
             }
             int found = 0;
-            foreach (string action in TheBotClient.Commands.Keys)
+            SortedDictionary<string, Command> dictionary = new SortedDictionary<string, Command>(TheBotClient.ClientManager.groupActions);
+            foreach (KeyValuePair<string, Command> action in TheBotClient.Commands)
             {
-                string s = action + ": " + TheBotClient.Commands[action].Description;
+                if (dictionary.ContainsKey(action.Key))
+                {
+                    dictionary[action.Key] = action.Value;
+                } else
+                {
+                    dictionary.Add(action.Key, action.Value);
+                }
+            }
+            foreach (string action in dictionary.Keys)
+            {
+                string s = action + ": " + dictionary[action].Description;
                 if (!s.ToLower().Contains(mustHave))
                 {
                     continue;
@@ -37,6 +48,8 @@ namespace cogbot.Actions.System
                 found++;
                 WriteLine(s);
             }
+            dictionary = TheBotClient.Commands;            
+
             foreach (string tutorial in TheBotClient.tutorials.Keys)
             {
                 string s = tutorial + ": " + TheBotClient.tutorials[tutorial].makeHelpString();
