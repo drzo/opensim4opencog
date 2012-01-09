@@ -18,6 +18,7 @@ namespace PathSystem3D.Navigation
     {
 
         static int TotalCollisionPlanes = 0;
+        public DateTime LastUsed = DateTime.Now;
         readonly internal SimPathStore PathStore;
         readonly int MaxXPt, MaxYPt;
         private bool _UsePotentialFields = true;
@@ -69,6 +70,7 @@ namespace PathSystem3D.Navigation
             SetDefaultConstraints();
             updateWatcher = new Thread(new ThreadStart(UpdateWatcher));
             Users = 1;
+            LastUsed = DateTime.Now;
         }
 
         public int Users = 0;
@@ -139,7 +141,12 @@ namespace PathSystem3D.Navigation
                 for (int y = starty; y <= endy; y++)
                 {
                     if (y != iy && x != ix)
-                        count += param1(x, y);
+                    {
+                        if(true)
+                        {
+                            count += param1(x, y);
+                        }
+                    }
                 }
             return count;
         }
@@ -163,8 +170,8 @@ namespace PathSystem3D.Navigation
                     for (int y = MaxYPt; y >= 0; y--)
                         for (int x = MaxXPt; x >= 0; x--)
                             _BM[x, y] = SimPathStore.INITIALLY;
+                    AddEdgeBlocking(_BM);
                 }
-                AddEdgeBlocking(_BM);
                 return _BM;
             }
 
@@ -700,6 +707,32 @@ namespace PathSystem3D.Navigation
                 to[x, 0] = SimPathStore.BLOCKED;//to[x, 1];
                 to[x, ysizem1] = SimPathStore.BLOCKED;//to[x,ysizem2];
             }
+        }
+
+        public int SetSurroundings(int PX, int PY,float dist , byte[,] ZMatrix, byte to)
+        {
+            if (PX < 1 || PY < 1 || PX > MaxXPt - 1 || PY > MaxYPt - 1) return 0;
+            int startL =  - (int)dist;
+            int endH =(int)dist;
+            int changes = 0;
+            for (int xx = startL; xx < endH; xx++)
+            {
+                for (int yy = startL; yy < endH; yy++)
+                {
+                    if (Math.Sqrt(xx*xx + yy*yy) < dist)
+                    {
+                        int indexX = xx + PX;
+                        int indexY = yy + PY;
+                        byte old = ZMatrix[indexX, indexY];
+                        if (old != to)
+                        {
+                            ZMatrix[indexX, indexY] = to;
+                            changes++;
+                        }
+                    }
+                }
+            }
+            return changes;
         }
 
         public int SurroundingBlocked(int PX, int PY, byte[,] ZMatrix)

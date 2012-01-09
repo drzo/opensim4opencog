@@ -65,7 +65,7 @@ namespace PathSystem3D.Navigation.Debug
         {
             PathStore = simPathStore;
             IList<CollisionPlane> CPs = simPathStore.Matrixes;
-            if (CPs.Count>0)
+            if (CPs.Count > 0)
                 OnNewCollisionPlane(CPs[0]);
         }
 

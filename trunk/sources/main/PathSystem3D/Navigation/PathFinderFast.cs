@@ -205,6 +205,10 @@ namespace PathSystem3D.Navigation
 
         public List<PathFinderNode> FindPath(Point start, Point end)
         {
+            return FindPath(start, end, SimPathStore.BLOCKED, 9) ?? FindPath(start, end, SimPathStore.BLOCKED_AIR, 0);
+        }
+        public List<PathFinderNode> FindPath(Point start, Point end, byte blocked, int freebies)
+        {
             lock(this)
             {
                 //HighResolutionTime.Start();
@@ -286,7 +290,7 @@ namespace PathSystem3D.Navigation
                             continue;
 
                         // Unbreakeable?
-                        if (mGrid[mNewLocationX, mNewLocationY] == SimPathStore.BLOCKED)
+                        if (mGrid[mNewLocationX, mNewLocationY] == blocked)
                             continue;
 
                         if (mHeavyDiagonals && i>3)

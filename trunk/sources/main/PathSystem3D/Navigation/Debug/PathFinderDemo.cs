@@ -50,7 +50,15 @@ namespace PathSystem3D.Navigation.Debug
         #endregion
 
         #region Constuctors
-        SimPathStore PathStore;
+        public SimPathStore PathStore;
+        public SimMover StartPos
+        {
+            get
+            {
+                if (PathStore == null) return null;
+                return PathStore.LastSimMover;
+            }
+        }
         public PathFinderDemo(SimPathStore pathStore)
         {
             PathStore = pathStore;
@@ -336,6 +344,7 @@ namespace PathSystem3D.Navigation.Debug
 
         private void CboFormula_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (PnlGUI == null) return;
             PnlGUI.Formula = (HeuristicFormula)CboFormula.SelectedIndex + 1;
         }
 
@@ -543,6 +552,7 @@ namespace PathSystem3D.Navigation.Debug
             this.TBarY = new System.Windows.Forms.TrackBar();
             this.LblCompletedTimeValue = new System.Windows.Forms.Label();
             this.LblCompletedTime = new System.Windows.Forms.Label();
+            this.btnSync = new System.Windows.Forms.Button();
             this.ToolStrp.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.TBarSpeed)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.NumUpDownHeuristic)).BeginInit();
@@ -989,6 +999,7 @@ namespace PathSystem3D.Navigation.Debug
             // PnlSettings
             // 
             this.PnlSettings.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.PnlSettings.Controls.Add(this.btnSync);
             this.PnlSettings.Controls.Add(this.BtnShowTile);
             this.PnlSettings.Controls.Add(this.BtnLoosen);
             this.PnlSettings.Controls.Add(this.BtnTighten);
@@ -1249,6 +1260,17 @@ namespace PathSystem3D.Navigation.Debug
             this.LblCompletedTime.TabIndex = 27;
             this.LblCompletedTime.Text = "Completed Time               sec.";
             // 
+            // btnSync
+            // 
+            this.btnSync.Location = new System.Drawing.Point(122, 529);
+            this.btnSync.Name = "btnSync";
+            this.btnSync.Size = new System.Drawing.Size(36, 23);
+            this.btnSync.TabIndex = 29;
+            this.btnSync.Text = "Sync";
+            this.btnSync.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnSync.UseVisualStyleBackColor = true;
+            this.btnSync.Click += new System.EventHandler(this.btnSync_Click);
+            // 
             // PathFinderDemo
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1326,7 +1348,7 @@ namespace PathSystem3D.Navigation.Debug
         private System.Windows.Forms.ToolStripButton BtnX;
         private System.Windows.Forms.ToolStripButton BtnM;
         private System.Windows.Forms.CheckBox ChkTieBraker;
-        private PanelPathFinder PnlGUI;
+        public PanelPathFinder PnlGUI;
         private System.Windows.Forms.Button BtnStartStop;
         private System.Windows.Forms.Button BtnRecomputeMatrix;
         private System.Windows.Forms.Button BtnRebakeTerrain;
@@ -1421,6 +1443,7 @@ namespace PathSystem3D.Navigation.Debug
         private void CollisionPlaneList_SelectedIndexChanged(object sender, EventArgs e)
         {
             CollisionPlane o = (CollisionPlane)CollisionPlaneList.SelectedItem;
+            if (PnlGUI == null) return;
             PnlGUI.CurrentPlane = o;
 
         }
@@ -1487,6 +1510,13 @@ namespace PathSystem3D.Navigation.Debug
             PnlGUI.ShowingTile = true;
             if (PathStore == null) return;
             PnlGUI.ShowRegionImage();
+        }
+
+        private void btnSync_Click(object sender, EventArgs e)
+        {
+            if (PathStore == null) return;
+            var sp = StartPos;
+            PnlGUI.Start = PathStore.ToPoint(sp.SimPosition);
         }
 
 

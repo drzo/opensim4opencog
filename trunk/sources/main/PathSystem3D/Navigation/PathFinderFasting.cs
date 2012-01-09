@@ -205,8 +205,16 @@ namespace PathSystem3D.Navigation
         {
             mStop = true;
         }
-
         public List<PathFinderNode> FindPath(Point start, Point end)
+        {
+            var ret = FindPath(start, end, SimPathStore.BLOCKED, 0);
+            if (ret != null) return ret;
+            ret = FindPath(start, end, SimPathStore.BLOCKED_AIR, 0);
+            if (ret != null) return ret;
+            return null;
+        }
+
+        public List<PathFinderNode> FindPath(Point start, Point end, byte blocked, int freebies)
         {
             lock(this)
             {
@@ -242,6 +250,9 @@ namespace PathSystem3D.Navigation
                 mCalcGrid[mLocation].Status    = mOpenNodeValue;
 
                 mOpen.Push(mLocation);
+
+                int cheats = freebies;
+
                 while(mOpen.Count > 0 && !mStop)
                 {
                     mLocation    = mOpen.Pop();
@@ -273,7 +284,7 @@ namespace PathSystem3D.Navigation
                     }
 
                     if (mPunishChangeDirection)
-                        mHoriz = (mLocationX - mCalcGrid[mLocation].PX); 
+                        mHoriz = (mLocationX - mCalcGrid[mLocation].PX);
 
                     //Lets calculate each successors
                     for (int i=0; i<(mDiagonals ? 8 : 4); i++)
@@ -289,7 +300,7 @@ namespace PathSystem3D.Navigation
                             continue;
 
                         // Unbreakeable?
-                        if (mGrid[mNewLocationX, mNewLocationY] == SimPathStore.BLOCKED)
+                        if (mGrid[mNewLocationX, mNewLocationY] == blocked && cheats-- < 0)
                             continue;
 
                         if (mHeavyDiagonals && i>3)
