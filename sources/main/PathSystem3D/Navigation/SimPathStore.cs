@@ -1543,7 +1543,8 @@ namespace PathSystem3D.Navigation
                 foreach (CollisionPlane P in Matrixes)
                 {
                     if (P.Accepts(Z))
-                    {
+                    {                        
+                        P.LastUsed = DateTime.Now;
                         return P;
                     }
                 }
@@ -1723,7 +1724,7 @@ namespace PathSystem3D.Navigation
                 {
                     case BLOCKED:
                         {
-                            //mMatrix[ix, iy] = MAYBE_BLOCKED;
+                            ByteMatrix[ix, iy] = MAYBE_BLOCKED;
                             continue;
                         }
                     case MAYBE_BLOCKED:
@@ -2101,7 +2102,7 @@ namespace PathSystem3D.Navigation
             }
             if (panel != null)
             {
-                //panel.PnlGUI.CurrentPlane = CP;
+                panel.PnlGUI.CurrentPlane = CP;
             }
             Point S = ToPoint(start);
             Point E = ToPoint(end);
@@ -2110,7 +2111,10 @@ namespace PathSystem3D.Navigation
 
             try
             {
-                PathFinderFasting pff = new PathFinderFasting(CP.ByteMatrix);
+                var bm = CP.ByteMatrix;
+                CP.SetSurroundings(S.X, S.Y, 2, bm, SimPathStore.PASSABLE);
+                CP.SetSurroundings(E.X, E.Y, 2, bm, SimPathStore.PASSABLE);
+                PathFinderFasting pff = new PathFinderFasting(bm);
                 if (panel != null) panel.SetStartEnd(S, E);
                 // pff.Diagonals = false;
                 //pff.ReopenCloseNodes = true;
@@ -2340,6 +2344,7 @@ namespace PathSystem3D.Navigation
         }
 
         internal PathFinderDemo PanelGUI;
+        public SimMover LastSimMover;
 
         public void ShowDebugger()
         {
@@ -2496,6 +2501,7 @@ namespace PathSystem3D.Navigation
         {
             CollisionPlane found = new CollisionPlane(MAPSPACE, MAPSPACE, Z, this);
             Console.WriteLine("Created matrix[{0}] {1} for {2}", Z, found, this);
+            DropOldMatrixes(5);
             lock (Matrixes) Matrixes.Add(found);
             if (PanelGUI != null) (new Thread(()=>     
                 PanelGUI.OnNewCollisionPlane(found))).Start();
@@ -2571,7 +2577,28 @@ namespace PathSystem3D.Navigation
                 list.EnsureUpdated();
             }
         }
-
+        public void DropOldMatrixes(int keep)
+        {
+            int drop = Matrixes.Count - keep;
+            while (drop-- > 0)
+            {
+                CollisionPlane oldest = null;
+                foreach (CollisionPlane list in Matrixes)
+                {
+                    if (oldest == null)
+                    {
+                        oldest = list;
+                        continue;
+                    }
+                    if (oldest.LastUsed > list.LastUsed)
+                    {
+                        oldest = list;
+                        continue;
+                    }
+                }
+                Matrixes.Remove(oldest);
+            }
+        }
 
         internal void Refresh(Box3Fill changed)
         {

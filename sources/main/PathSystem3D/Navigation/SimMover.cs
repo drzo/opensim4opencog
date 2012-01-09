@@ -75,6 +75,7 @@ namespace PathSystem3D.Navigation
             //var vFinalLocation = finalGoal.UsePosition.GlobalPosition;
            // FinalLocation = vFinalLocation;
             FinalPosition = finalGoal;
+            mover.PathStore.LastSimMover = mover;
         }
 
         public event Action<SimMoverState> OnMoverStateChange;
@@ -524,6 +525,7 @@ namespace PathSystem3D.Navigation
 
             int maxTryAgains = 0;
             IList<Vector3d> route = null;
+            MoverPlane.LastUsed = DateTime.Now;
             while (OnlyStart && MadeIt)
             {
                 Vector3d v3d = GetWorldPosition();
@@ -618,9 +620,13 @@ namespace PathSystem3D.Navigation
                 {
                     Debug("Matrix really needed update");
                 }
-
                 CP.EnsureUpdated();
-                DepricateRoute(route);
+                Vector3d v3d = GetWorldPosition();
+                double fd = Vector3d.Distance(v3d, globalEnd.GlobalPosition);
+                if (fd > distance && fd > 2)
+                {
+                    DepricateRoute(route);
+                }
                 STATE = prev;
             }
             return MadeIt;

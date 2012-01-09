@@ -38,6 +38,7 @@ namespace PathSystem3D.Navigation.Debug {
         private System.Windows.Forms.Button BtnLoosen;
         private System.Windows.Forms.Button BtnTighten;
         private System.Windows.Forms.Button BtnShowTile;
+        private System.Windows.Forms.Button btnSync;
         
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
