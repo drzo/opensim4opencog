@@ -895,12 +895,21 @@ namespace SbsSW.SwiPlCs
             return PlTerm.PlCompound(functor, args);
         }
 
-        public static PlTerm PlAtom(string name)
+        public static PlTerm PlAtomOLD(string name)
         {
             uint termRef = libpl.PL_new_term_refs(1);
             PlTerm term = new PlTerm();
             term._termRef = termRef;
             libpl.PL_put_atom(termRef, libpl.PL_new_atom(name));
+            return term;
+        }
+
+        public static PlTerm PlAtom(string name)
+        {
+            uint termRef = libpl.PL_new_term_refs(1);
+            PlTerm term = new PlTerm();
+            term._termRef = termRef;
+            libpl.PL_put_atom_chars(termRef, name);
             return term;
         }
 
