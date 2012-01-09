@@ -418,7 +418,17 @@ namespace SbsSW.SwiPlCs
 
         // PlQuery
         internal static int PL_next_solution(uint qid_t)
-        { return SafeNativeMethods.PL_next_solution(qid_t); }
+        {
+            try
+            {
+                return SafeNativeMethods.PL_next_solution(qid_t);
+            }
+            catch (Exception e)
+            {
+                InternalError("PL_next_solution", e);
+                throw;
+            }
+        }
 
         internal static IntPtr PL_predicate(string name, int arity, string module)
         { return SafeNativeMethods.PL_predicate(name, arity, module); }
@@ -428,13 +438,33 @@ namespace SbsSW.SwiPlCs
 
         internal static void PL_cut_query(uint qid)
         {
-            if (IsValid)
-                SafeNativeMethods.PL_cut_query(qid);
+            try
+            {
+                if (IsValid)
+                    SafeNativeMethods.PL_cut_query(qid);
+            }
+            catch (Exception e)
+            {
+                InternalError("PL_cut_query", e);
+            }
         }
         internal static void PL_close_query(uint qid)
         {
-            if (IsValid)
-                SafeNativeMethods.PL_close_query(qid);
+            try
+            {
+                if (IsValid)
+                    SafeNativeMethods.PL_close_query(qid);
+            }
+            catch (Exception e)
+            {
+                InternalError("PL_close_query", e);
+            }
+        }
+
+        internal static void InternalError(string cause, Exception exception)
+        {
+            Console.WriteLine(cause+" " + exception);
+            throw exception;
         }
 
         // PlTerm

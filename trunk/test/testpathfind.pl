@@ -1,7 +1,8 @@
-:-module(testpathfind, [tpf_method/1, tpf/0, tpf/1]).
+:-module(testpathfind, [tpf_method/1, tpf/0, tpf/1, makePipe/2]).
 
 :- use_module(test(testsupport)).
 :-use_module(library(clipl)).
+:-use_module(library('simulator/cogrobot')).
 
 :-discontiguous(test_desc/2).
 :-discontiguous(test/1).
@@ -9,9 +10,11 @@
 :- dynamic(goMethod/1).
 
 % set the method of movement we're testing
-goMethod('follow*').
-%%goMethod('astargoto').
-%%goMethod(autopilot).
+
+%%goMethod('moveto').  % low level turnTo and move
+%%goMethod(autopilot). % only use autoilot
+goMethod('astargoto').  % only use A*
+%%goMethod('follow*').  % do the best case
 
 
 % using the test method of movement, go to Location
@@ -25,19 +28,28 @@ goByMethod(Location) :-
 %% teleportTo('annies haven/129.044327/128.206070/80')
 %% apiBotClientCmd(autopilot('annies haven/127.044327/128.206070/81.519630/')).
 teleportTo(StartName):-
+        apiBotClientCmd(stopmoving),
         cogrobot:toGlobalVect(StartName,Start),
-        apiBotClientCmd(teleport(Start)),sleep(1),
-        %%cogrobot:botClientCmd(waitpos(2,Start)),
+        cogrobot:vectorAdd(Start,v3d(0,0,0.7),Start2),
+        apiBotClientCmd(teleport(Start2)).
+        /*
+        %%apiBotClientCmd(waitpos(2,Start)),
         cogrobot:distanceTo(Start,Dist),
         %% if fallthru floor try to get closer
-        (Dist < 3 -> true ; (cogrobot:vectorAdd(Start,v3d(0,0,1),Start2),apiBotClientCmd(teleport(Start2)) )),!.
+        (Dist < 3 -> apiBotClientCmd(moveto(Start)) ; ( cogrobot:vectorAdd(Start2,v3d(0,0,1),Start3),apiBotClientCmd(teleport(Start3)) )),!.*/
 
 % convenience method that does the 'normal' thing -
 % tp to Start, move using the standard method to
+%  move_test(10 , start_swim_surface , stop_swim_surface).
+
+move_test(Name):-atom_concat('start_',Name,Start),atom_concat('stop_',Name,Stop),move_test(10,Start,Stop).
+
 move_test(Time , Start , End) :-
+        apiBotClientCmd(stopmoving),
 	teleportTo(Start),
 	goByMethod(End),
-        cogrobot:botClientCmd(waitpos(Time,End)).
+        apiBotClientCmd(waitpos(Time,End)),
+        apiBotClientCmd(stopmoving).
 
 
 % this is just to debug the test framework with
@@ -61,7 +73,7 @@ test_desc(zero , 'Zero Distance').
 test(N) :-
 	N = zero,
 	start_test(N),
-	move_test(1 , start_test_2 , stop_test_2),
+	move_test(3 , start_test_2 , stop_test_2),
         std_end(N , 2 , 0).
 
 
@@ -171,6 +183,7 @@ tpf_method(GoMethod) :-
 	cliSet('SimAvatarImpl' , 'UseTeleportFallback' , '@'(false)),
 %	clause(testpathfind:test(Name) , _),
 	test_desc(Name , Desc),
+        'format'('~n~ndoing test: ~q',[test_desc(Name , Desc)]),
 	doTest(Name , testpathfind:test(Name) , Results),
 	ppTest([name(Name),
 		desc(Desc) ,
@@ -181,7 +194,7 @@ tpf_method(GoMethod) :-
 tpf_method(_) :- !.
 
 tpf :-
-	member(Method , ['follow*'/* , astargoto*/]),
+	member(Method , [astargoto /* 'follow*' astargoto*/]),
 	tpf_method(Method),
 	fail.
 
@@ -198,4 +211,14 @@ tpf(Name) :-
 		desc(Desc) ,
 		results(Results) ,
 		option('goMethod ' , GoMethod)]).
+
+
+ makePipe(S,E):-toLocalVect(S,v3(SX,SY,SZ)),toLocalVect(E,v3(EX,EY,EZ)),
+    sformat(SF,'~w,~w,~w,~w,~w,~w,~w,~w,~w',[255,0,0,SX,SY,SZ,EX,EY,EZ]),
+    botClient(BC),cliCall(BC,talk(SF,100,'Normal'),_).
+
+end_of_file.
+
+ botClient(X),cliCall(X,talk(hi),V)
+
 
