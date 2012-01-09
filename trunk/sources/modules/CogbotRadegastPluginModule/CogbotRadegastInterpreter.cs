@@ -42,6 +42,8 @@ namespace CogbotRadegastPluginModule
         {
             if (cmdline.StartsWith("//")) return false;
             if (cmdline.StartsWith("/")) return true;
+            string cmd = Parser.ParseArguments(cmdline)[0];               
+            if (clientManager.IsValidCommand(cmd)) return true;
             return false;
         }
         public void ExecuteCommand(ConsoleWriteLine WriteLine, string cmdline)
