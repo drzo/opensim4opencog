@@ -124,4 +124,9 @@ guitracer:-debug.
 :-ensure_loaded(test('testpathfind')).
 
 :-runSL.
+:-use_module(clipl).
 
+
+%% simAvatar(X),cliGet(X,'SalientMovementProceedure',Y).
+
+%% apiBotClientCmd(astargoto(stop_test_5)).
