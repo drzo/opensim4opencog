@@ -20,7 +20,11 @@
    resolveObjectByName/2,
    vectorAdd/3,
    distanceTo/2,
-   toGlobalVect/2
+   toGlobalVect/2,
+   toLocalVect/2,
+   onSimEvent/3,
+   obj2Npl/2,
+   npl2Obj/2
    ]).
 
 
@@ -235,11 +239,19 @@ listPrims:-listS(simObject).
 %------------------------------------------------------------------------------
 % event handler functions
 %------------------------------------------------------------------------------
+robotToString(C,C):-var(C).
+robotToString([],[]).
+robotToString([A|B],[AA|BB]):-robotToString(A,AA),robotToString(B,BB).
+robotToString(Obj,list(ArrayS)):-Obj='@'(_O), cliIsType(Obj,'System.Collections.Generic.IList'('cogbot.NamedParam')),cliCall(Obj,'ToArray',[],Array),robotToString(Array,ArrayS).
+robotToString(Obj,array(ArrayS)):-Obj='@'(_O), cliIsType(Obj,'System.Array'),cliArrayToTermList(Obj,Array),robotToString(Array,ArrayS).
+robotToString(Obj,enumr(ArrayS)):-Obj='@'(_O), cliIsType(Obj,'System.Collections.IEnumerable'),cliArrayToTermList(Obj,Array),robotToString(Array,ArrayS).
+robotToString(C,AS):-compound(C),C=..[F|Args],not(member(F,['@'])),robotToString(Args,ArgS),AS=..[F|ArgS].
+robotToString(C,AS):-cliToString(C,AS).
+
 
 %% print some events
-onSimEvent(_A,_B,_C):-!. % comment out this first line to print them
-onSimEvent(A,B,C):-!,assertz(wasSimEvent(A,B,C)).
-onSimEvent(_A,_B,C):-cliToString(onSimEvent(C),AS),writeq(AS),nl.
+%%onSimEvent(_A,_B,_C):-!. % comment out this first line to print them
+onSimEvent(A,B,C):-!,assertz(wasSimEvent(A,B,C)),!.%% robotToString(C,AS),!,writeq(onSimEvent(AS)),nl.
 
 %%:-module_transparent(onFirstBotClient/2).
 
@@ -247,7 +259,7 @@ onSimEvent(_A,_B,C):-cliToString(onSimEvent(C),AS),writeq(AS),nl.
 user:onFirstBotClient(A,B):-
  botClient(Obj),
   % uncomment the next line if you want all commands to run thru the universal event handler
-   %%cliAddEventHandler(Obj,'EachSimEvent',onSimEvent(_,_,_)),
+   cliAddEventHandler(Obj,'EachSimEvent',onSimEvent(_,_,_)),
    cliToString(onFirstBotClient(A-B-Obj),Objs),writeq(Objs),nl.
 
 %% register onFirstBotClient
@@ -272,6 +284,12 @@ runSL:-asserta(ranSL),!,cliCall('ABuildStartup.Program','Main',[],_).
 :-assertIfNew(cliSubProperty('cogbot.TheOpenSims.SimAvatar','FriendshipInfo')).
 :-assertIfNew(cliSubProperty('cogbot.TheOpenSims.SimObject','Prim')).
 :-assertIfNew(cliSubProperty('cogbot.TheOpenSims.SimObject','Properties')).
+
+
+obj2Npl(O,npl(66,O)).
+npl2Obj(npl(66,O),O).
+
+:-cliToFromRecomposer('System.Collections.Generic.IList'('cogbot.NamedParam'),'npl'(_,_),obj2Npl,npl2Obj).
 
 %------------------------------------------------------------------------------
 % CLR Introspection of event handlers
@@ -328,12 +346,14 @@ toGlobalVect(A,Vect):-atom(A),concat_atom([X,Y,Z],'/',A),!,toGlobalVect(v3(X,Y,Z
 toGlobalVect(A,Vect):-atom(A),!,resolveObjectByName(A,Obj),cliGet(Obj,globalposition,Vect),!.
 toGlobalVect(Obj,Vect):-cliGet(Obj,globalposition,Vect),!.
 
+toLocalVect(Obj,LV):-toGlobalVect(Obj,Vect),cliCall('SimRegion','GlobalToLocal'(Vect),LV).
+
 %% 
 distanceTo(A,R):-toGlobalVect(A,A2),!,botClient(['Self','GlobalPosition'],A1),cliCall(A2,distance(A1,A2),R).
 
 % ?- moveTo('CyberPunk Buddha - L',4,FD).
 
-moveTo(Dest,Time,FDist):-botClientCmd(moveto(Dest)),botClientCmd(waitpos(Time,Dest)),distanceTo(Dest,FDist).
+moveTo(Dest,Time,FDist):-botClientCmd(moveto(Dest)),botClientCmd(waitpos(Time,Dest)),botClientCmd(stopMoving),distanceTo(Dest,FDist).
 
 
 %%:-prev_dir6(X),cd(X).
