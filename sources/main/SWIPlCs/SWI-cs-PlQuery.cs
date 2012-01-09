@@ -176,6 +176,9 @@ namespace SbsSW.SwiPlCs
         /// <seealso cref="PlQueryVariables"/>
         public PlQueryVariables Variables { get { return _queryVariables; } }
 
+        //the default
+        public bool DiscardData = true;  
+
         /// <summary>
         /// Gets a <see cref="Collection&lt;T&gt;"/> of the variable names if the query was built by a string.
         /// </summary>
@@ -252,7 +255,7 @@ namespace SbsSW.SwiPlCs
             }
             // Free your own state (unmanaged objects).
             // Set large fields to null.
-            Free(true);
+            Free(DiscardData);
         }
         #endregion
 

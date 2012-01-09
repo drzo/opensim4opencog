@@ -196,7 +196,7 @@ list_string_subst(S , T , R , NS) :-
 
 list_string_subst(S , _ , _ , S).
 
-apiBotClientCmd(A) :- user:botClientCmd(A,_).
+apiBotClientCmd(A) :- user:botClientCmd(A).
 
 %%user:onChatTSHook(X,Y,Z):-testsupport:onChatTSHook(X,Y,Z).
 

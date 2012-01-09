@@ -26,6 +26,7 @@ using Hashtable = java.util.Hashtable;
 using ClassLoader = java.lang.ClassLoader;
 using Class = java.lang.Class;
 using sun.reflect.misc;
+using ArrayList=System.Collections.ArrayList;
 using Util = ikvm.runtime.Util;
 using CycFort = SbsSW.SwiPlCs.PlTerm;
 using PrologCli = SbsSW.SwiPlCs.PrologClient;
@@ -1084,8 +1085,52 @@ namespace SbsSW.SwiPlCs
                 cliArrayToTermList(arrayValue, plvar);
                 return SpecialUnify(valueOut, plvar);
             }
+
             object getInstance = GetInstance(arrayValue);
-            var value = getInstance as Array;
+            Array value;
+            if (getInstance is Array)
+            {
+                value = getInstance as Array;      
+                /*
+            } else if (getInstance is ICollection)
+            {
+                Type t = getInstance.GetType();
+                var pc = t.GetGenericArguments();
+                var collection = (ICollection)getInstance;
+                value = new Array[collection.Count];
+                collection.CopyTo(value, 0);
+                 */
+            }
+            else if (getInstance is ICollection)
+            {
+                var collection = ((ICollection)getInstance);
+                var al = new ArrayList(collection);
+                value = al.ToArray();
+            }
+            else if (getInstance is IEnumerable)
+            {
+                var collection = ((IEnumerable)getInstance).GetEnumerator();
+                var al = new ArrayList();
+                while (collection.MoveNext())
+                {
+                    al.Add(collection.Current);
+                }
+                value = al.ToArray();
+            }
+            else if (getInstance is IEnumerator)
+            {
+                var collection = ((IEnumerator)getInstance);
+                var al = new ArrayList();
+                while (collection.MoveNext())
+                {
+                    al.Add(collection.Current);
+                }
+                value = al.ToArray();
+            }
+            else
+            {
+                value = getInstance as Array;
+            }
             if (value == null)
             {
                 Warn("Cant find array from {0} as {1}", arrayValue, getInstance.GetType());
@@ -1124,6 +1169,20 @@ namespace SbsSW.SwiPlCs
                 argn++;
             }
             return valueOut.FromObject((value));
+        }
+        [PrologVisible(ModuleName = ExportModule)]
+        static public bool cliEnterLock(PlTerm lockObj)
+        {
+            object getInstance = GetInstance(lockObj);
+            Monitor.Enter(getInstance);
+            return true;
+        }
+        [PrologVisible(ModuleName = ExportModule)]
+        static public bool cliExitLock(PlTerm lockObj)
+        {
+            object getInstance = GetInstance(lockObj);
+            Monitor.Exit(getInstance);
+            return true;
         }
         [PrologVisible(ModuleName = ExportModule)]
         static public bool cliFindMethod(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm methodOut)
@@ -1823,6 +1882,35 @@ namespace SbsSW.SwiPlCs
             }
         }
 
+        [PrologVisible(ModuleName = ExportModule)]
+        static public bool cliToFromRecomposer(PlTerm clazzSpec, PlTerm memberSpec, PlTerm obj2r, PlTerm r2obj)
+        {
+            Type type = GetType(clazzSpec);
+            string name = memberSpec.Name;
+            int arity = memberSpec.Arity;
+            AddPrologTermRecomposer(type, "user", obj2r.Name, r2obj.Name, name, arity);
+            return true;
+        }
+
+        readonly private static Dictionary<string, PrologTermRecomposer> FunctorToRecomposer = new Dictionary<string, PrologTermRecomposer>();
+        readonly private static Dictionary<Type, PrologTermRecomposer> TypeToRecomposer = new Dictionary<Type, PrologTermRecomposer>();
+
+        static public void AddPrologTermRecomposer(Type type,string module, string obj2r, string r2obj, string functorWrapper, int arityWrapper)
+        {
+            PrologTermRecomposer layout = new PrologTermRecomposer();
+            layout.obj2r = obj2r;
+            layout.module = module;
+            layout.r2obj = r2obj;
+            layout.Name = functorWrapper;
+            layout.Arity = arityWrapper;
+            layout.ToType = type;
+            lock (FunctorToRecomposer)
+            {
+                FunctorToRecomposer[functorWrapper + "/" + arityWrapper] = layout;
+                TypeToRecomposer[type] = layout;
+            }
+        }
+
         public static object GetInstance(PlTerm classOrInstance)
         {
             if (classOrInstance.IsVar)
@@ -2231,7 +2319,6 @@ namespace SbsSW.SwiPlCs
             }
             if (o is PlTerm) return libpl.PL_unify(TermRef, ((PlTerm) o).TermRef);
             if (o is Term) return UnifyToProlog(ToPLCS((Term) o), term);
-
             if (o is string)
             {
                 string s = (string) o;
@@ -2367,6 +2454,32 @@ namespace SbsSW.SwiPlCs
                     return term.Unify(PlC(layout.Name, tv)) ? libpl.PL_succeed : libpl.PL_fail;
                 }
             }
+            lock (FunctorToRecomposer)
+            {
+                PrologTermRecomposer layout = GetTypeMap(t, TypeToRecomposer);
+                if (layout != null)
+                {
+                    lock (ToFromConvertLock)
+                    {
+                        var tag = object_to_tag(o);
+                        uint newref = libpl.PL_new_term_refs(2);
+                        AddTagged(newref, tag);
+                        PlTerm into = new PlTerm(newref);
+                        PlTerm outto = new PlTerm(newref + 1);
+                        var ret = PlQuery.PlCall(layout.module, layout.obj2r, new PlTermV(into, outto));
+                        if (ret)
+                        {
+                            return term.Unify(outto) ? libpl.PL_succeed
+                                   : libpl.PL_fail;
+
+                        }
+                    }
+                }
+            }
+            if (o is IList)
+            {
+
+            }
             if (IsStructRecomposable(t))
             {
                 return ToFieldLayout("struct", typeToName(t), o, t, term, false, false);
@@ -2430,6 +2543,30 @@ namespace SbsSW.SwiPlCs
             }
         }
 
+        public static T GetTypeMap<T>(Type t, IDictionary<Type, T> mapped)
+        {
+            T layout;
+            if (mapped.TryGetValue(t, out layout))
+            {
+                return layout;
+            }
+
+            Type bestType = null;
+            foreach (KeyValuePair<Type, T> map in mapped)
+            {
+                Type mapKey = map.Key;
+                if (mapKey.IsAssignableFrom(t))
+                {
+                    if (bestType == null || mapKey.IsAssignableFrom(bestType))
+                    {
+                        bestType = mapKey;
+                        layout = map.Value;
+                    }
+                }
+            }
+            return layout;// default(T);
+        }
+
         public static PlTerm C(string collection)
         {
             return PlTerm.PlAtom(collection);
@@ -2439,9 +2576,20 @@ namespace SbsSW.SwiPlCs
         {
             uint temp = libpl.PL_new_term_ref();
             libpl.PL_cons_functor_v(temp,
-                                    libpl.PL_new_functor(libpl.PL_new_atom("enum"), 2),
+                                    ENUM_2,
                                     new PlTermV(typeToSpec(t), PlTerm.PlAtom(o.ToString())).A0);
             return libpl.PL_unify(TermRef, temp);
+        }
+
+        protected static uint ENUM_2
+        {
+            get {
+                if (_enum2==0)
+                {
+                    _enum2 = libpl.PL_new_functor(libpl.PL_new_atom("enum"), 2);
+                }
+                return _enum2;
+            }
         }
 
         private static bool IsStructRecomposable(Type t)
@@ -2472,11 +2620,22 @@ namespace SbsSW.SwiPlCs
             bool ret = t1.Unify(tag); // = t1;*/
             uint nt = libpl.PL_new_term_ref();
             libpl.PL_cons_functor_v(nt,
-                                    libpl.PL_new_functor(libpl.PL_new_atom("@"), 1),
+                                    OBJ_1,
                                     new PlTermV(PlTerm.PlAtom(tag)).A0);
             return libpl.PL_unify(TermRef, nt);
 
 
+        }
+
+        protected static uint OBJ_1
+        {
+            get {
+                if (_obj1 == default(uint))
+                {
+                    _obj1 = libpl.PL_new_functor(libpl.PL_new_atom("@"), 1);
+                }
+                return _obj1;
+            }
         }
 
         private static MemberInfo[] GetStructFormat(Type t)
@@ -2564,6 +2723,10 @@ namespace SbsSW.SwiPlCs
             for (int i = 0; i < len; i++)
             {
                 object v = GetMemberValue(tGetFields[i], o);
+                if (v is IList)
+                {
+                    v.GetType();
+                }
                 tv[tvi++].FromObject((v));
             }
             if (true)
@@ -2627,10 +2790,10 @@ namespace SbsSW.SwiPlCs
          */
         private static object CastCompoundTerm(string name, int arity, PlTerm arg1, PlTerm orig, Type pt)
         {
-            PrologTermLayout pltl;
             string key = name + "/" + arity;
             lock (FunctorToLayout)
             {
+                PrologTermLayout pltl;
                 if (FunctorToLayout.TryGetValue(key, out pltl))
                 {
                     Type type = pltl.ObjectType;
@@ -2641,6 +2804,26 @@ namespace SbsSW.SwiPlCs
                         return GetMemberValue(toType, GetInstance(arg1));
                     }
                     return CreateInstance(type, fis, orig, 1);
+                }
+            }
+            lock (FunctorToRecomposer)
+            {
+                PrologTermRecomposer layout;
+                if (FunctorToRecomposer.TryGetValue(key, out layout))
+                {
+                    Type type = layout.ToType;
+                    uint newref = libpl.PL_new_term_ref();
+                    PlTerm outto = new PlTerm(newref);
+                    var ret = PlQuery.PlCall(layout.module, layout.r2obj, new PlTermV(orig, outto));
+                    if (ret)
+                    {
+                        object o = CastTerm(outto, type);
+                        if (!pt.IsInstanceOfType(o))
+                        {
+                            Warn(type + " (" + o + ") is not " + pt);
+                        }
+                        return o;
+                    }
                 }
             }
             if (key == "static/1")
@@ -2946,6 +3129,10 @@ namespace SbsSW.SwiPlCs
                     if (pt.IsInstanceOfType(value)) return value;
                 }
             }
+            catch (InvalidCastException e)
+            {
+                Debug("conversion " + fr + " to " + pt + " resulted in " + e);
+            }
             catch (Exception e)
             {
                 Debug("conversion " + fr + " to " + pt + " resulted in " + e);
@@ -3131,6 +3318,9 @@ namespace SbsSW.SwiPlCs
         }
 
         private static readonly Type[] arrayOfStringType = new Type[] {typeof (string)};
+        private static uint _enum2;
+        private static uint _obj1;
+
         static object ToBigInteger(string value)
         {
             
@@ -3267,7 +3457,17 @@ namespace SbsSW.SwiPlCs
         public MemberInfo[] FieldInfos;
         public MemberInfo ToType;
     }
-    
+
+    internal class PrologTermRecomposer
+    {
+        public string module;
+        public string Name;
+        public int Arity;
+        public String obj2r;
+        public String r2obj;
+        //public MemberInfo[] FieldInfos;
+        public Type ToType;
+    }
 #if plvar_pins
     public class PlRef
     {
