@@ -30,6 +30,17 @@ namespace cogbot.Actions
                     TheBotClient.XmlTalk(text, WriteLine);
                     return Success("xmlsaid: " + text);
                 }
+                if (text.StartsWith("#"))
+                {
+                    int channel; 
+                    int fi = text.IndexOf(' ');
+                    if (Int32.TryParse(text.Substring(1, fi), out channel))
+                    {
+                        text = text.Substring(fi);
+                        TheBotClient.Talk(text, channel, ChatType.Normal);
+                        return Success("Said channel(" + channel + "): " + text);
+                    }
+                }
                 TheBotClient.Talk(text);
             }
             return Success("said: " + text);

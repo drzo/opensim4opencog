@@ -224,7 +224,12 @@ namespace cogbot.TheOpenSims
             {
                 SimRegion R = GetSimRegion(); //
                 if (R == null) return null;
-                return R.GetPathStore(SimPosition);
+                var ps = R.GetPathStore(SimPosition);
+                if (IsControllable && IsAvatar && (this is SimMover))
+                {
+                    ps.LastSimMover = (SimMover)this;
+                }
+                return ps;
             }
         }
 
@@ -2744,6 +2749,7 @@ namespace cogbot.TheOpenSims
         bool FollowPathTo(SimPosition globalEnd, double distance);
         void SendUpdate(int ms);
         void SetMoveTarget(SimPosition target, double maxDist);
+        bool WaitUntilPosSimple(Vector3d finalTarget, double maxDistance, float maxSeconds);
         bool TeleportTo(SimRegion R, Vector3 local);
         bool TurnToward(SimPosition targetPosition);
         bool TurnToward(Vector3 target);        

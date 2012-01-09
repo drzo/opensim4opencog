@@ -26,6 +26,7 @@ namespace cogbot.TheOpenSims
 
         public override string ToString()
         {
+            if (group == null) return "Group-" + _id;
             if (!string.IsNullOrEmpty(group.Name)) return group.Name;
             return "Group-" + ID;
         }

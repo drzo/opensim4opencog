@@ -99,7 +99,7 @@ namespace cogbot
 
         public List<Type> registrationTypes;
         public List<Type> registeredSystemApplicationCommandTypes = new List<Type>();
-        public Dictionary<string, Actions.Command> groupActions;
+        public SortedDictionary<string, Actions.Command> groupActions;
         public Dictionary<string, Tutorials.Tutorial> tutorials;
 
         public bool describeNext;
@@ -148,7 +148,7 @@ namespace cogbot
             {
                 clientManagerHttpServer = MushDLR223.Utilities.HttpServerUtil.CreateHttpServer(this, 5580, "first_robot");
             }
-            groupActions = new Dictionary<string, cogbot.Actions.Command>();
+            groupActions = new SortedDictionary<string, cogbot.Actions.Command>();
             registrationTypes = new List<Type>();
 
             tutorials = new Dictionary<string, cogbot.Tutorials.Tutorial>();
@@ -1778,6 +1778,15 @@ namespace cogbot
             }
             DebugWriteLine(Helpers.LogLevel.Error, "Radegast has to make a BotClient!");
             return null;
+        }
+
+        public bool IsValidCommand(string cmd)
+        {
+            cmd = Parser.ParseArguments(cmd)[0].ToLower();               
+            if (groupActions.ContainsKey(cmd)) return true;
+            var bc = LastBotClient;
+            if (bc == null) return false;
+            return bc.Commands.ContainsKey(cmd);
         }
     }
 
