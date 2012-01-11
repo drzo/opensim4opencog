@@ -205,16 +205,34 @@ namespace PathSystem3D.Navigation
         {
             mStop = true;
         }
+
+        static bool IsBlocked(byte b)
+        {
+            return b == SimPathStore.BLOCKED;
+        }
+        static bool IsBlockedAir(byte b)
+        {
+            return b == SimPathStore.BLOCKED_AIR;
+        }
+
+        static Random rnd50 = new Random(0);
+        static bool IsBlocked50(byte b)
+        {
+            return b == SimPathStore.BLOCKED && rnd50.Next(2) == 0;
+        }
         public List<PathFinderNode> FindPath(Point start, Point end)
         {
-            var ret = FindPath(start, end, SimPathStore.BLOCKED, 0);
+            var ret = FindPath(start, end, IsBlocked);
             if (ret != null) return ret;
-            ret = FindPath(start, end, SimPathStore.BLOCKED_AIR, 0);
+            ret = FindPath(start, end, IsBlocked50);
+            if (ret != null) return ret;
+            ret = FindPath(start, end, IsBlockedAir);
             if (ret != null) return ret;
             return null;
         }
 
-        public List<PathFinderNode> FindPath(Point start, Point end, byte blocked, int freebies)
+        public delegate bool BytePred(byte blocked);
+        public List<PathFinderNode> FindPath(Point start, Point end, BytePred func)
         {
             lock(this)
             {
@@ -250,8 +268,6 @@ namespace PathSystem3D.Navigation
                 mCalcGrid[mLocation].Status    = mOpenNodeValue;
 
                 mOpen.Push(mLocation);
-
-                int cheats = freebies;
 
                 while(mOpen.Count > 0 && !mStop)
                 {
@@ -300,7 +316,7 @@ namespace PathSystem3D.Navigation
                             continue;
 
                         // Unbreakeable?
-                        if (mGrid[mNewLocationX, mNewLocationY] == blocked && cheats-- < 0)
+                        if (func(mGrid[mNewLocationX, mNewLocationY]))
                             continue;
 
                         if (mHeavyDiagonals && i>3)
