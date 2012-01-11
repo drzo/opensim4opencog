@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -220,6 +221,8 @@ namespace MushDLR223.Utilities
             }
             try
             {
+                if (OverrideHandlers(request, response)) return;
+
                 if (useHtml)
                 {
                     AddToBody(response, "<html>");
@@ -285,6 +288,17 @@ namespace MushDLR223.Utilities
                     LogInfo("Exception sening respose: " + e);
                 }
             }
+        }
+
+        public static List<OverrideHandlerDelegate> OverrideHandlerList = new List<OverrideHandlerDelegate>();
+        public delegate bool OverrideHandlerDelegate(IHttpRequest request, IHttpResponse response);
+        public bool OverrideHandlers(IHttpRequest request, IHttpResponse response)
+        {
+            foreach (OverrideHandlerDelegate hand in OverrideHandlerList)
+            {
+                if (hand(request, response)) return true;
+            }
+            return false;
         }
 
         private void InvokeAsMene(IHttpRequest request, IHttpResponse response, ScriptExecutor _botClient, string pathd, WriteLineToResponse wrresp)
