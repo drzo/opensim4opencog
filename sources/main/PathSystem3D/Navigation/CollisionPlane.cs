@@ -36,16 +36,31 @@ namespace PathSystem3D.Navigation
                 }
             }
         }
-        private bool _AdjacentBlocking = true;
+        private int _AdjacentBlocking = 2;
 
-        public bool AdjacentBlocking
+        public int AdjacentBlocking
         {
             get { return _AdjacentBlocking; }
             set
             {
-                if (!_AdjacentBlocking == value)
+                if (_AdjacentBlocking != value)
                 {
                     _AdjacentBlocking = value;
+                    MatrixNeedsUpdate = true;
+                }
+            }
+        }
+
+        private int _MaybeAdjacentBlocking = 0;
+
+        public int MaybeAdjacentBlocking
+        {
+            get { return _MaybeAdjacentBlocking; }
+            set
+            {
+                if (_MaybeAdjacentBlocking != value)
+                {
+                    _MaybeAdjacentBlocking = value;
                     MatrixNeedsUpdate = true;
                 }
             }
@@ -60,7 +75,7 @@ namespace PathSystem3D.Navigation
             MaxXPt = xsize0 - 1;
             MaxYPt = ysize0 - 1;
             MinZ = minZ;
-            MaxZ = minZ + 3f;
+            MaxZ = minZ + CollisionIndex.CeilingZ;
             OuterBox.MinZ = MinZ;
             OuterBox.MaxZ = MaxZ;
             OuterBox.MinX = 0;
@@ -114,9 +129,9 @@ namespace PathSystem3D.Navigation
 
         internal bool Accepts(float Z)
         {
-            if (Z < MinZ + 3.3f)
+            if (Z < /* MinZ + 3.3f*/ MaxZ + 0.3f)
             {
-                if (Z >= MinZ-0.3f) return true;
+                if (Z >= MinZ - 0.3f) return true;
                 //if (MaxZ - Z > 3) return false;
             }
             return false;
@@ -392,13 +407,17 @@ namespace PathSystem3D.Navigation
             float GLevel = GroundPlane[x, y];
             if (ZLevel < GLevel) ZLevel = GLevel;
 
-            int bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, BumpConstraint, Heights);
+            int bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, BumpConstraint, Heights, cI);
             if (bumps > 0)
                 return SimPathStore.BLOCKED;
+            if (bumps > 0)
+            {
+              //  return SimPathStore.BLOCKED;
+            }
 
             if (BumpConstraintPurple > CollisionIndex.MaxBump)
             {
-                bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, BumpConstraintPurple, Heights);
+                bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, BumpConstraintPurple, Heights, cI);
                 if (bumps > 0)
                     return SimPathStore.BLOCK_PURPLE;
             }
@@ -422,7 +441,7 @@ namespace PathSystem3D.Navigation
                 return SimPathStore.TOO_LOW;
 
 
-            bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, 0.1f, Heights);
+            bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, 0.1f, Heights, cI);
             if (bumps > 0)
                 return SimPathStore.BLOCKED_YELLOW;
 
@@ -470,10 +489,16 @@ namespace PathSystem3D.Navigation
                 {
                     AddPotentialFields(ToMatrix);
                 }
-                if (AdjacentBlocking)
+
+                if (MaybeAdjacentBlocking > 0)
                 {
-                   AddAdjacentBlocking(ToMatrix, SimPathStore.MAYBE_BLOCKED, 4, SimPathStore.BLOCKED);
-                   // 
+                    AddAdjacentBlocking(ToMatrix, SimPathStore.MAYBE_BLOCKED, MaybeAdjacentBlocking, SimPathStore.BLOCKED);
+                }
+                
+                int tAdjacentBlocking = AdjacentBlocking;
+                while (tAdjacentBlocking-- > 0)
+                {
+                    AddAdjacentBlocking(ToMatrix, SimPathStore.BLOCKED, 1, SimPathStore.BLOCKED);
                 }
                 AddEdgeBlocking(ToMatrix);
                 Console.WriteLine("\nEnd UpdateCollisionPlane: {0} for {1}", PathStore, this);
@@ -500,40 +525,105 @@ namespace PathSystem3D.Navigation
             return Math.Abs(A - B) <= D;
         }
 
-        public static byte NeighborBump(int PX, int PY, float low, float high, float originZ, float mostDiff, float[,] heights)
+        public static byte NeighborBump(int PX, int PY, float low, float high, float originZ, float mostDiff, float[,] heights, CollisionIndex[,] cI)
         {
             float O;
-
+            var cci = cI[PX, PY];
+            CollisionObject collisionObject = null;
+            CollisionIndex FO;
+            if (cci != null) collisionObject = cci.GetObjectAt(originZ);
             byte found = 0;
-            O = NeighborLevel(low, high, originZ, PX, PY + 1, heights);
-            if (!DiffLessThan(O, originZ, mostDiff)) found++;
-
-            O = NeighborLevel(low, high, originZ, PX + 1, PY + 1, heights);
-            if (!DiffLessThan(O, originZ, mostDiff)) found++;
-
-            O = NeighborLevel(low, high, originZ, PX + 1, PY, heights);
-            if (!DiffLessThan(O, originZ, mostDiff)) found++;
-
-            O = NeighborLevel(low, high, originZ, PX + 1, PY - 1, heights);
-            if (!DiffLessThan(O, originZ, mostDiff)) found++;
-
-            O = NeighborLevel(low, high, originZ, PX, PY - 1, heights);
-            if (!DiffLessThan(O, originZ, mostDiff)) found++;
-
-            O = NeighborLevel(low, high, originZ, PX - 1, PY - 1, heights);
-            if (!DiffLessThan(O, originZ, mostDiff)) found++;
-
-            O = NeighborLevel(low, high, originZ, PX - 1, PY, heights);
-            if (!DiffLessThan(O, originZ, mostDiff)) found++;
-
-            O = NeighborLevel(low, high, originZ, PX - 1, PY + 1, heights);
-            if (!DiffLessThan(O, originZ, mostDiff)) found++;
-
+            O = NeighborLevel(low, high, originZ, PX, PY + 1, heights, cI, out FO);
+            if (!DiffLessThan(O, originZ, mostDiff))
+            {
+                if (collisionObject != null && FO != null)
+                {
+                    var fO = FO.GetObjectAt(O);
+                    if (fO == collisionObject) found--;
+                }
+                found++;
+            }
+            O = NeighborLevel(low, high, originZ, PX + 1, PY + 1, heights, cI, out FO);
+            if (!DiffLessThan(O, originZ, mostDiff))
+            {
+                if (collisionObject != null && FO != null)
+                {
+                    var fO = FO.GetObjectAt(O);
+                    if (fO == collisionObject) found--;
+                }
+                found++;
+            }
+            O = NeighborLevel(low, high, originZ, PX + 1, PY, heights, cI, out FO);
+            if (!DiffLessThan(O, originZ, mostDiff))
+            {
+                if (collisionObject != null && FO != null)
+                {
+                    var fO = FO.GetObjectAt(O);
+                    if (fO == collisionObject) found--;
+                }
+                found++;
+            }
+            O = NeighborLevel(low, high, originZ, PX + 1, PY - 1, heights, cI, out FO);
+            if (!DiffLessThan(O, originZ, mostDiff))
+            {
+                if (collisionObject != null && FO != null)
+                {
+                    var fO = FO.GetObjectAt(O);
+                    if (fO == collisionObject) found--;
+                }
+                found++;
+            }
+            O = NeighborLevel(low, high, originZ, PX, PY - 1, heights, cI, out FO);
+            if (!DiffLessThan(O, originZ, mostDiff))
+            {
+                if (collisionObject != null && FO != null)
+                {
+                    var fO = FO.GetObjectAt(O);
+                    if (fO == collisionObject) found--;
+                }
+                found++;
+            }
+            O = NeighborLevel(low, high, originZ, PX - 1, PY - 1, heights, cI, out FO);
+            if (!DiffLessThan(O, originZ, mostDiff))
+            {
+                if (collisionObject != null && FO != null)
+                {
+                    var fO = FO.GetObjectAt(O);
+                    if (fO == collisionObject) found--;
+                }
+                found++;
+            }
+            O = NeighborLevel(low, high, originZ, PX - 1, PY, heights, cI, out FO);
+            if (!DiffLessThan(O, originZ, mostDiff))
+            {
+                if (collisionObject != null && FO != null)
+                {
+                    var fO = FO.GetObjectAt(O);
+                    if (fO == collisionObject) found--;
+                }
+                found++;
+            }
+            O = NeighborLevel(low, high, originZ, PX - 1, PY + 1, heights, cI, out FO);
+            if (!DiffLessThan(O, originZ, mostDiff))
+            {
+                if (collisionObject != null && FO != null)
+                {
+                    var fO = FO.GetObjectAt(O);
+                    if (fO == collisionObject) found--;
+                }
+                found++;
+            }
             return found;
         }
 
-        internal static float NeighborLevel(float low, float high,float originZ, int PX, int PY, float[,] heights)
+        private static float GetObjectAt(int PX, int PY, float originZ)
         {
+            throw new NotImplementedException();
+        }
+
+        internal static float NeighborLevel(float low, float high,float originZ, int PX, int PY, float[,] heights,CollisionIndex[,] cI, out CollisionIndex FO)
+        {
+            FO = cI[PX, PY];
             float n = heights[PX, PY];
           //  if (n < originZ) return originZ;
             return n;
