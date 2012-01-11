@@ -47,6 +47,7 @@ namespace cogbot.Actions.Movement
 
             DateTime waitUntil = DateTime.Now.Add(TimeSpan.FromSeconds(maxSeconds));
             double maxDistance = pos.GetSizeDistance();
+            if (maxDistance < 1) maxDistance = 1;
 
             bool MadIt = false;
             while (waitUntil > DateTime.Now)
