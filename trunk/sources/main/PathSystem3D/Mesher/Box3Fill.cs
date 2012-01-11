@@ -65,7 +65,7 @@ namespace PathSystem3D.Mesher
             MaxY += offset.Y;
             MinZ += offset.Z;
             MaxZ += offset.Z;
-            Round();
+            if (RoundBoxes) Round();
         }
 
         private void Round()
@@ -101,6 +101,7 @@ namespace PathSystem3D.Mesher
         public float MaxX;// = float.MinValue;
         public float MinY;// = float.MaxValue;
         public float MaxY;// = float.MinValue;
+        const bool RoundBoxes = true;
         public float MinZ { get; set; }// = float.MaxValue;
         public float MaxZ { get; set; }// = float.MinValue;
 
@@ -410,7 +411,7 @@ namespace PathSystem3D.Mesher
 
         public static List<Box3Fill> Simplify1(List<Box3Fill> simpl)
         {
-            foreach (Box3Fill box3Fill in simpl)
+            if (RoundBoxes) foreach (Box3Fill box3Fill in simpl)
             {
                 box3Fill.Round();
             }
