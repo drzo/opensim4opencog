@@ -19,7 +19,8 @@ namespace PathSystem3D.Navigation
     {
 
         public const float CapsuleZ = 1.99f;
-        public const float MaxBump = 0.30f;
+        public const float CeilingZ = 3.3f;
+        public const float MaxBump = 0.33f;
 
         //public Point Point;
 
@@ -170,14 +171,14 @@ namespace PathSystem3D.Navigation
             maxZ = low;// GetGroundLevel();
             return false;
         }
-
+/*
         public byte NeighborBump(float low, float high, float original, float mostDiff, float[,] hightMap)
         {
             if (PX < 1 || PY < 1 || _LocalPos.X > 254 || _LocalPos.Y > 254)
                 return 0;
             return CollisionPlane.NeighborBump(PX, PY, low, high, original, mostDiff, hightMap);
         }
-
+*/
         float _GroundLevelCache = float.MinValue;
         public float GetGroundLevel()
         {
@@ -226,37 +227,6 @@ namespace PathSystem3D.Navigation
                     below = groundLevel;
                 }
                 return below;
-            }
-            return above;
-            // IsDebugged();
-            {
-                if (//(PX == 566 && PY == 759) || (PX == 373 && PY == 1097) || 
-                    (PX == 615 && PY == 594))
-                {
-                }
-                float newMaxZ;
-                // float above = low;
-                float GL = GetGroundLevel();
-                bool found = false;
-                if (above < GL) above = GL;
-                // IEnumerable<CollisionObject> objs = GetOccupied(above, high);
-                while (above < high)
-                {
-                    if (SomethingBetween(above, above + CapsuleZ, objs, out newMaxZ))
-                    {
-                        if (newMaxZ > above)
-                        {
-                            found = true;
-                            above = newMaxZ;
-                        }
-                        else
-                        {
-                            above += 0.1f;
-                        }
-                    }
-                    else break;
-                }
-                if (!found) return high;
             }
             return above;
         }
@@ -370,6 +340,31 @@ namespace PathSystem3D.Navigation
             }
             return objs;
         }
+
+        private float fsearch = 0;
+        private CollisionObject osearch;
+        public CollisionObject GetObjectAt(float f)
+        {
+            lock (ShadowList)
+            {
+                if (fsearch == f)
+                {
+                    if (osearch == null) return null;
+                    return osearch;
+                }
+                fsearch = f;
+                var list = GetOccupied(f, f);
+                foreach (CollisionObject O in list)
+                {
+                    if (O.MaxZ < f) continue;
+                    if (O.MinZ > f) continue;
+                    osearch = O;
+                    return O;
+                }
+            }
+            return null;
+        }
+
 
         private void IsDebugged()
         {
@@ -632,7 +627,7 @@ namespace PathSystem3D.Navigation
                     {
                         if (s.Contains("stair")) return true;
                         if (s.Contains("ramp")) return true;
-                        if (s.Contains("brigde")) return true;
+                       // if (s.Contains("brigde")) return true;
                         if (s.Contains(" path ")) return true;
                     }
                 }

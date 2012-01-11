@@ -536,8 +536,8 @@ namespace PathSystem3D.Navigation
                 STATE = SimMoverState.THINKING;
                 route = SimPathStore.GetPath(MoverPlane, v3d, globalEnd.UsePosition.GlobalPosition, distance, out OnlyStart);
                 // todo need to look at OnlyStart?
-                PreXp = route.Count < 3 && G < 11f;
-                while (route.Count < 3 && G < 11f)
+                PreXp = route.Count < 3 && G < 9f;
+                while (route.Count < 3 && G < 9f)
                 {
                     if (G < 0.5) G += 0.1f;
                     else
@@ -610,11 +610,15 @@ namespace PathSystem3D.Navigation
                 SimMoverState prev = STATE;
                 STATE = SimMoverState.THINKING;
                 CollisionPlane CP = this.MoverPlane;
+                if (CP.HeightMapNeedsUpdate) CP.MatrixNeedsUpdate = true;
                 if (!CP.MatrixNeedsUpdate || !CP.HeightMapNeedsUpdate)
                 {
-                    CP.MatrixNeedsUpdate = true;
-                    CP.HeightMapNeedsUpdate = true;
-                    Debug("Faking matrix needs update?");
+                    if (false)
+                    {
+                        CP.MatrixNeedsUpdate = true;
+                        CP.HeightMapNeedsUpdate = true;
+                        Debug("Faking matrix needs update?");
+                    }
                 }
                 else
                 {
