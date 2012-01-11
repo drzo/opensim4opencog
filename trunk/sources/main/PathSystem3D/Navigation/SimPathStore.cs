@@ -13,8 +13,11 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Threading;
 using System.Windows.Forms;
+using HttpServer;
 using PathSystem3D.Mesher;
 using PathSystem3D.Navigation.Debug;
 using OpenMetaverse;
@@ -1876,6 +1879,7 @@ namespace PathSystem3D.Navigation
             StepSize = 1f/POINTS_PER_METER;
             _Max256 = XY256 - StepSize;
             MAPSPACE = (int) XY256*((int) POINTS_PER_METER);
+            RegisterHttp();
             if (Size.X != Size.Y) throw new Exception("X and Y must be the same for " + this);
 #if COLLIDER_ODE            
             odeScene = (OdeScene) odePhysics.GetScene(RegionName);
@@ -2089,6 +2093,49 @@ namespace PathSystem3D.Navigation
                 }
             }
             return points;
+        }
+        
+        public bool SendPathImage(IHttpRequest request, IHttpResponse response)
+        {
+            var pq = request.Uri.PathAndQuery;
+            if (pq.StartsWith("/cogpath/path."))
+            {         
+                Bitmap imageToSave = null;
+                imageToSave = imageToSave ?? new Bitmap(1280, 1280);
+                ImageFormat bmp = ImageFormat.Gif;
+                if (pq.Contains("bmp")) bmp = ImageFormat.Bmp;
+                if (pq.Contains("jpg")) bmp = ImageFormat.Jpeg;
+                if (pq.Contains("tif")) bmp = ImageFormat.Tiff;
+                            
+                var CurrentPlane = NewestMatrix();
+                if (CurrentPlane != null)
+                {
+                    var Matrix = CurrentPlane.ByteMatrix;
+                    for (int x = 0; x < 1280; x++)
+                    {
+                        int yy = 1280;
+                        for (int y = 0; y < 1280; y++)
+                        {
+                            yy--;
+                            Color sb = GetColor(CurrentPlane, x, y, Matrix);
+                            imageToSave.SetPixel(x, yy, sb);
+                        }
+                    }
+                }
+
+                MemoryStream ms = new MemoryStream();
+                imageToSave.Save(ms, bmp);
+                response.ContentType = "image/" + bmp.ToString().ToLower();
+                response.Body = ms;
+
+                return true;
+            }
+            return false;
+        }
+
+        private void RegisterHttp()
+        {
+            MushDLR223.Utilities.ClientManagerHttpServer.OverrideHandlerList.Add(SendPathImage);
         }
 
         bool PunishChangeDirection;
@@ -2598,6 +2645,25 @@ namespace PathSystem3D.Navigation
                 }
                 Matrixes.Remove(oldest);
             }
+        }
+
+        public CollisionPlane NewestMatrix()
+        {
+            CollisionPlane newest = null;
+            foreach (CollisionPlane list in Matrixes)
+            {
+                if (newest == null)
+                {
+                    newest = list;
+                    continue;
+                }
+                if (newest.LastUsed < list.LastUsed)
+                {
+                    newest = list;
+                    continue;
+                }
+            }
+            return newest;
         }
 
         internal void Refresh(Box3Fill changed)
