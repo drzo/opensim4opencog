@@ -92,6 +92,10 @@ namespace PathSystem3D.Navigation
             return String.Format("{0:0.0#}m ", Vector3.Distance(SimPosition, loc))
                    + String.Format("{0}/{1:0.0#}/{2:0.0#}/{3:0.0#}", R.RegionName, loc.X, loc.Y, loc.Z);
         }
+        public static double DistanceNoZ(Vector3d a, Vector3d b)
+        {
+            return SimPathStore.DistanceNoZ(a, b);
+        }
 
         public Vector3 SimPosition
         {

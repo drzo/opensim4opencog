@@ -540,7 +540,7 @@ namespace PathSystem3D.Navigation
                     return 0;
             }
             Vector3d Projection = ProjectOnLine(P, _StartNode.Position, _EndNode.Position);
-            return Vector3d.Distance(Projection, P);
+            return SimPathStore.DistanceNoZ(Projection, P);
         }
 
         /// <summary>
