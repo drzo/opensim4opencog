@@ -163,20 +163,29 @@ namespace cogbot.TheOpenSims
 
         #region SimMover Members
 
-        public bool OpenNearbyClosedPassages()
+        public virtual void IndicateRoute(IList<Vector3d> list)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException("not really a mover!");
+        }
+
+        public virtual bool OpenNearbyClosedPassages()
+        {
+            throw new NotImplementedException("not really a mover!");
         }
 
         public virtual void ThreadJump()
         {
+            throw new NotImplementedException("not really a mover!");
         }
 
         public virtual void StopMoving()
         {
-            // not really a mover
+            throw new NotImplementedException("not really a mover!");
         }
-
+        public virtual void StopMovingIsProblem()
+        {
+            throw new NotImplementedException("not really a mover!");
+        }
         /// <summary>
         /// 
         /// </summary>
@@ -186,7 +195,7 @@ namespace cogbot.TheOpenSims
         /// <returns></returns>
         public virtual bool SimpleMoveTo(Vector3d finalTarget, double maxDistance, float maxSeconds)
         {
-            double currentDist = Vector3d.Distance(finalTarget, GlobalPosition);
+            double currentDist = DistanceNoZ(finalTarget, GlobalPosition);
             if (currentDist < maxDistance) return true;
             {
                 SimWaypoint P = SimWaypointImpl.CreateGlobal(finalTarget);
@@ -195,7 +204,7 @@ namespace cogbot.TheOpenSims
             for (int i = 0; i < maxSeconds; i++)
             {
                 Application.DoEvents();
-                currentDist = Vector3d.Distance(finalTarget, GlobalPosition);
+                currentDist = DistanceNoZ(finalTarget, GlobalPosition);
                 if (currentDist > maxDistance)
                 {
                     Thread.Sleep(1000);
@@ -207,7 +216,7 @@ namespace cogbot.TheOpenSims
                     return true;
                 }
             }
-            StopMoving();
+            StopMovingIsProblem();
             return false;
         }
 
@@ -285,6 +294,7 @@ namespace cogbot.TheOpenSims
             float maxDist = pos.GetSizeDistance();
             for (int i = 0; i < 4; i++)
             {
+                IndicateTarget(pos, true);
                 bool result = FollowPathTo(pos, maxDist);
                 if (result)
                 {
@@ -299,7 +309,7 @@ namespace cogbot.TheOpenSims
                     return true;
                 }
             }
-            IndicateTarget(pos, true);
+            ///IndicateTarget(pos, true);
             return false;
         }
 
@@ -853,12 +863,16 @@ namespace cogbot.TheOpenSims
             Vector3d GlobalPosition;
             if (TryGetGlobalPosition(out GlobalPosition))
             {
-                double d = Vector3d.Distance(GlobalPosition, primGlobalPosition);
+                double d = DistanceNoZ(GlobalPosition, primGlobalPosition);
                 Vector3d use = prim.UsePosition.GlobalPosition;
-                double d1 = Vector3d.Distance(use, GlobalPosition);
+                double d1 = DistanceNoZ(use, GlobalPosition);
                 return Math.Min(d, d1);
             }
             return 1200;
+        }
+        public static double DistanceNoZ(Vector3d a, Vector3d b)
+        {
+            return SimPathStore.DistanceNoZ(a, b);
         }
 
         // the prim in Secondlife
@@ -2749,7 +2763,7 @@ namespace cogbot.TheOpenSims
         bool FollowPathTo(SimPosition globalEnd, double distance);
         void SendUpdate(int ms);
         void SetMoveTarget(SimPosition target, double maxDist);
-        bool WaitUntilPosSimple(Vector3d finalTarget, double maxDistance, float maxSeconds);
+        bool WaitUntilPosSimple(Vector3d finalTarget, double maxDistance, float maxSeconds, bool adjustCourse);
         bool TeleportTo(SimRegion R, Vector3 local);
         bool TurnToward(SimPosition targetPosition);
         bool TurnToward(Vector3 target);        
