@@ -29,6 +29,7 @@ namespace PathSystem3D.Navigation
          */
         bool OpenNearbyClosedPassages();
         void ThreadJump();
+        void IndicateRoute(IList<Vector3d> list);
     }
 
     public interface SimDistCalc
@@ -118,9 +119,11 @@ namespace PathSystem3D.Navigation
 
             v3s = GetSimplifedRoute(vstart, v3s);
 
+            Mover.IndicateRoute(v3s);
+
             int maxReverse = 2;
             Debug("FollowPath: {0} -> {1} for {2}", v3s.Count, DistanceVectorString(finalTarget), finalDistance);
-            int CanSkip = UseSkipping ? 0 : 0; //never right now
+            int CanSkip = UseSkipping ? 0 : 1; //never right now
             int Skipped = 0;
             UseSkipping = !UseSkipping;
             int v3sLength = v3s.Count;
@@ -173,7 +176,7 @@ namespace PathSystem3D.Navigation
                 {
                     Skipped = 0;
                 }
-                if (Vector3d.Distance(GetWorldPosition(), finalTarget) < finalDistance) return SimMoverState.COMPLETE;
+                if (DistanceNoZ(GetWorldPosition(), finalTarget) < finalDistance) return SimMoverState.COMPLETE;
                 int best = ClosestAt(v3s);
                 if (best > at)
                 {
@@ -203,7 +206,7 @@ namespace PathSystem3D.Navigation
 
             }
                         
-            double fd = Vector3d.Distance(GetWorldPosition(), finalTarget);
+            double fd = DistanceNoZ(GetWorldPosition(), finalTarget);
             STATE = fd <= finalDistance ? SimMoverState.COMPLETE : SimMoverState.BLOCKED;
             Debug("{0}: {1:0.00}m", STATE, fd);
             return STATE;
@@ -218,11 +221,11 @@ namespace PathSystem3D.Navigation
         {
             Vector3d newPos = GetWorldPosition();
             int v3sLength = v3s.Count - 1;
-            double bestDist = Vector3d.Distance(newPos, v3s[v3sLength]);
+            double bestDist = DistanceNoZ(newPos, v3s[v3sLength]);
             int best = v3sLength;
             while (v3sLength-- > completedAt)
             {
-                double lenNat = Vector3d.Distance(newPos, v3s[v3sLength]);
+                double lenNat = DistanceNoZ(newPos, v3s[v3sLength]);
                 if (lenNat < bestDist)
                 {
                     best = v3sLength;
@@ -236,11 +239,16 @@ namespace PathSystem3D.Navigation
             return best;
         }
 
+        public static double DistanceNoZ(Vector3d a, Vector3d b)
+        {
+            return SimPathStore.DistanceNoZ(a, b);
+        }
+
         public string DistanceVectorString(Vector3d loc3d)
         {
             Vector3 loc = SimPathStore.GlobalToLocal(loc3d);
             SimPathStore R = SimPathStore.GetPathStore(loc3d);
-            return String.Format("{0:0.00}m ", Vector3d.Distance(GetWorldPosition(), loc3d))
+            return String.Format("{0:0.00}m ", DistanceNoZ(GetWorldPosition(), loc3d))
                    + String.Format("{0}/{1:0.00}/{2:0.00}/{3:0.00}", R.RegionName, loc.X, loc.Y, loc.Z);
         }
 
@@ -497,7 +505,9 @@ namespace PathSystem3D.Navigation
             }
         }
 
-        private float BumpConstraint = CollisionIndex.MaxBump;
+        public float BumpConstraint = CollisionIndex.MaxBump;
+        public static float MaxBigZ = 9f;
+
         public override SimMoverState Goto()
         {
             if (Goto(FinalPosition, FinalDistance)) return SimMoverState.COMPLETE;
@@ -514,10 +524,12 @@ namespace PathSystem3D.Navigation
             return STATE;
         }
 
+        // this belongs on C-Plane or PathStore
         static private int UsedBigZ = 0;
-        static private float Orig = 0;
+        private float Orig = 0;
         static private float Works = 0;
         private bool PreXp;
+
         private bool Goto(SimPosition globalEnd, double distance)
         {
             bool OnlyStart = true;
@@ -526,6 +538,7 @@ namespace PathSystem3D.Navigation
             int maxTryAgains = 0;
             IList<Vector3d> route = null;
             MoverPlane.LastUsed = DateTime.Now;
+            bool faked;
             while (OnlyStart && MadeIt)
             {
                 Vector3d v3d = GetWorldPosition();
@@ -534,12 +547,15 @@ namespace PathSystem3D.Navigation
                 if (G < 1f) Orig = G;
                 SimMoverState prev = STATE;
                 STATE = SimMoverState.THINKING;
-                route = SimPathStore.GetPath(MoverPlane, v3d, globalEnd.UsePosition.GlobalPosition, distance, out OnlyStart);
+                route = SimPathStore.GetPath(MoverPlane, v3d, globalEnd.UsePosition.GlobalPosition, distance, out OnlyStart, out faked);
                 // todo need to look at OnlyStart?
-                PreXp = route.Count < 3 && G < 9f;
-                while (route.Count < 3 && G < 9f)
+                PreXp = route.Count < 3 && G < MaxBigZ;
+                while (route.Count < 3 && G < MaxBigZ && faked)
                 {
-                    if (G < 0.5) G += 0.1f;
+                    if (G < 0.5)
+                    {
+                        G += 0.1f;
+                    }
                     else
                     {
                         G += 0.5f;
@@ -547,7 +563,7 @@ namespace PathSystem3D.Navigation
                     }
 
                     MoverPlane.GlobalBumpConstraint = G;
-                    route = SimPathStore.GetPath(MoverPlane, v3d, globalEnd.UsePosition.GlobalPosition, distance, out OnlyStart);
+                    route = SimPathStore.GetPath(MoverPlane, v3d, globalEnd.UsePosition.GlobalPosition, distance, out OnlyStart, out faked);
                 }
                 if (PreXp)
                 {
@@ -626,7 +642,7 @@ namespace PathSystem3D.Navigation
                 }
                 CP.EnsureUpdated();
                 Vector3d v3d = GetWorldPosition();
-                double fd = Vector3d.Distance(v3d, globalEnd.GlobalPosition);
+                double fd = DistanceNoZ(v3d, globalEnd.GlobalPosition);
                 if (fd > distance && fd > 2)
                 {
                     DepricateRoute(route);
@@ -665,58 +681,7 @@ namespace PathSystem3D.Navigation
                              };
             thr.Start();
         }
-
-
-        public bool GotoOld(Vector3d globalEnd, double distance)
-        {
-            bool OnlyStart = true;
-            bool MadeIt = true;
-
-            int maxTryAgains = 1;
-            while (OnlyStart && MadeIt)
-            {
-                Vector3d v3d = GetWorldPosition();
-                if (Vector3d.Distance(v3d, globalEnd) < distance) return true;
-                IList<Vector3d> route = SimPathStore.GetPath(MoverPlane, GetWorldPosition(), globalEnd, distance, out OnlyStart);
-                STATE = FollowPathTo(route, globalEnd, distance);
-                Vector3 newPos = GetSimPosition();
-                switch (STATE)
-                {
-                    case SimMoverState.TRYAGAIN:
-                        {
-                            if (maxTryAgains-- > 0)
-                            {
-                                OnlyStart = true;
-                                continue;
-                            }
-                            MadeIt = false;
-                            continue;
-                        }
-                    case SimMoverState.COMPLETE:
-                        {
-                            MadeIt = true;
-                            continue;
-                        }
-                    case SimMoverState.BLOCKED:
-                        {
-                            OnlyStart = false;
-                            MadeIt = false;
-                            continue;
-                        }
-                    case SimMoverState.PAUSED:
-                    case SimMoverState.MOVING:
-                    default:
-                        {
-                            //MadeIt = true;
-                            OnlyStart = true;
-                            continue;
-                        }
-                }
-
-            }
-            return MadeIt;
-        }
-
+  
     }
 
 
@@ -969,7 +934,7 @@ namespace PathSystem3D.Navigation
         {
             Vector3d vectStart = route.StartNode.GlobalPosition;
             Vector3d vectMover = Mover.GlobalPosition;
-            double currentDistFromStart = Vector3d.Distance(vectMover, vectStart);
+            double currentDistFromStart = DistanceNoZ(vectMover, vectStart);
             if (currentDistFromStart > CloseDistance)
             {
                 Debug("FollowRoute: TRYING for Start " + vectMover + " -> " + vectStart);
@@ -991,7 +956,7 @@ namespace PathSystem3D.Navigation
             }
 
             Vector3d endVectMover = Mover.GlobalPosition;
-            double currentDistFromfinish = Vector3d.Distance(endVectMover, endVect);
+            double currentDistFromfinish = DistanceNoZ(endVectMover, endVect);
             if (currentDistFromfinish > CloseDistance)
             {
                 Debug("FollowRoute: CANNOT FINISH " + endVectMover + " -> " + endVect);
@@ -1017,7 +982,7 @@ namespace PathSystem3D.Navigation
 
     //        int OneCount = 0;
     //        Mover.TurnToward(vector3);
-    //        if (Vector3d.Distance(GlobalPosition(), vector3) < finalDistance) return true;
+    //        if (DistanceNoZ(GlobalPosition(), vector3) < finalDistance) return true;
     //        for (int trial = 0; trial < 25; trial++)
     //        {
     //            Mover.StopMoving();
@@ -1034,7 +999,7 @@ namespace PathSystem3D.Navigation
     //            List<Vector3d> v3s = (List<Vector3d>)Mover.PathStore.GetV3Route(start, end);
     //            if (v3s.Count > 1)
     //            {
-    //                if (Vector3d.Distance(v3s[0], start) > Vector3d.Distance(v3s[v3s.Count - 1], start))
+    //                if (DistanceNoZ(v3s[0], start) > DistanceNoZ(v3s[v3s.Count - 1], start))
     //                    v3s.Reverse();
     //            }
     //            else
@@ -1047,7 +1012,7 @@ namespace PathSystem3D.Navigation
 
     //            Debug("Path {1}: {0} ", v3s.Count, trial);
     //            if (FollowPath(v3s, vector3, finalDistance)) return true;
-    //            if (Vector3d.Distance(GlobalPosition(), vector3) < finalDistance) return true;
+    //            if (DistanceNoZ(GlobalPosition(), vector3) < finalDistance) return true;
 
     //        }
     //        return false;
@@ -1063,11 +1028,11 @@ namespace PathSystem3D.Navigation
     //        foreach (Vector3d v3 in v3s)
     //        {
     //            STATE = SimMoverState.MOVING;
-    //            //  if (Vector3d.Distance(v3, GlobalPosition()) < dist) continue;
+    //            //  if (DistanceNoZ(v3, GlobalPosition()) < dist) continue;
     //            if (!MoveTo(v3))
     //            {
     //                STATE = SimMoverState.TRYAGAIN;
-    //                if (Vector3d.Distance(GlobalPosition(), finalTarget) < finalDistance) return true;
+    //                if (DistanceNoZ(GlobalPosition(), finalTarget) < finalDistance) return true;
     //                if (!Mover.MoveTo(v3,PathStore.LargeScale,4))
     //                {
     //                    if (Skipped++ <= CanSkip)

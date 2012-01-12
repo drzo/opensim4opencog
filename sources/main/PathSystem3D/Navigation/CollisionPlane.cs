@@ -399,6 +399,7 @@ namespace PathSystem3D.Navigation
         private float _globalBumpConstraint = CollisionIndex.MaxBump;
         private float BumpConstraintPurple =  0.2f;
 
+
         public byte DefaultCollisionValue(int x, int y, float BumpConstraint, float[,] GroundPlane, byte b, float[,] Heights, CollisionIndex[,] cI)
         {
             if (x < 1 || y < 1 || x >= MaxXPt || y >= MaxYPt) return SimPathStore.BLOCKED;
@@ -406,8 +407,12 @@ namespace PathSystem3D.Navigation
             float ZLevel = Heights[x, y];
             float GLevel = GroundPlane[x, y];
             if (ZLevel < GLevel) ZLevel = GLevel;
+            var cci = cI[x, y];
+            CollisionObject collisionObject = null;
+            if (cci != null) collisionObject = cci.GetObjectAt(ZLevel);
 
-            int bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, BumpConstraint, Heights, cI);
+            int bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, BumpConstraint, Heights, cI, 
+                collisionObject, false, false);
             if (bumps > 0)
                 return SimPathStore.BLOCKED;
             if (bumps > 0)
@@ -417,33 +422,53 @@ namespace PathSystem3D.Navigation
 
             if (BumpConstraintPurple > CollisionIndex.MaxBump)
             {
-                bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, BumpConstraintPurple, Heights, cI);
+                bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, BumpConstraintPurple, Heights, cI,
+                    collisionObject, true, false);
                 if (bumps > 0)
                     return SimPathStore.BLOCK_PURPLE;
             }
 
-            float Water = PathStore.WaterHeight;
-            if (DiffLessThan(Water, ZLevel, 0.1f))
+            if (collisionObject == null)
             {
-                return SimPathStore.WATER_Z;
-            }
-            if (DiffLessThan(Water, PathStore.GroundPlane[x, y], 0.1f))
-            {
-                return SimPathStore.WATER_G;
-            }
-           
-            float MaxZLevel = MaxZ;
-            if (MaxZLevel <= ZLevel - 2)
-            {
-                return SimPathStore.TOO_HIGH;
-            }
-            if (ZLevel + 20 < MaxZLevel) // needs passable
-                return SimPathStore.TOO_LOW;
+                float Water = PathStore.WaterHeight;
+                if (DiffLessThan(Water, ZLevel, 0.1f))
+                {
+                    return SimPathStore.WATER_Z;
+                }
+                if (DiffLessThan(Water, PathStore.GroundPlane[x, y], 0.1f))
+                {
+                    return SimPathStore.WATER_G;
+                }
 
+                float MaxZLevel = MaxZ;
+                if (MaxZLevel <= ZLevel - 2)
+                {
+                    return SimPathStore.TOO_HIGH;
+                }
+                if (ZLevel + 20 < MaxZLevel) // needs passable
+                    return SimPathStore.TOO_LOW;
+            }
 
-            bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, 0.1f, Heights, cI);
+            if (collisionObject != null)
+            {
+                bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, 0.1f, Heights, cI, collisionObject, false, true);
+                if (bumps > 0)
+                {
+                    return SimPathStore.BRIDGY;
+                }
+            }
+
+            bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, 0.1f, Heights, cI, collisionObject, true, false);
             if (bumps > 0)
-                return SimPathStore.BLOCKED_YELLOW;
+            {
+                if (collisionObject != null) return SimPathStore.MAYBE_BLOCKED;
+                return SimPathStore.MAYBE_BLOCKED;
+            }
+
+            bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, 0.1f, Heights, cI, null, false, false);
+            if (bumps > 0)
+                return SimPathStore.BLOCK_PURPLE;
+
 
             if (b > 200) return --b;
 
@@ -457,7 +482,9 @@ namespace PathSystem3D.Navigation
             return SimPathStore.INITIALLY;
         }
 
-        private DateTime lastUpdate = DateTime.Now - TimeSpan.FromHours(1);
+        public DateTime lastUpdate = DateTime.Now - TimeSpan.FromHours(1);
+        //public DateTime UpdateShown;
+
         internal void EnsureUpdated()
         {
             RenderHeightMap();
@@ -525,105 +552,88 @@ namespace PathSystem3D.Navigation
             return Math.Abs(A - B) <= D;
         }
 
-        public static byte NeighborBump(int PX, int PY, float low, float high, float originZ, float mostDiff, float[,] heights, CollisionIndex[,] cI)
+        public int NeighborBump(int PX, int PY, float low, float high, float originZ, float mostDiff,
+            float[,] heights, CollisionIndex[,] cI, CollisionObject collisionObject, bool objToNothingBump, bool objToSelfBump)
         {
-            float O;
-            var cci = cI[PX, PY];
-            CollisionObject collisionObject = null;
-            CollisionIndex FO;
-            if (cci != null) collisionObject = cci.GetObjectAt(originZ);
-            byte found = 0;
-            O = NeighborLevel(low, high, originZ, PX, PY + 1, heights, cI, out FO);
-            if (!DiffLessThan(O, originZ, mostDiff))
-            {
-                if (collisionObject != null && FO != null)
-                {
-                    var fO = FO.GetObjectAt(O);
-                    if (fO == collisionObject) found--;
-                }
-                found++;
-            }
-            O = NeighborLevel(low, high, originZ, PX + 1, PY + 1, heights, cI, out FO);
-            if (!DiffLessThan(O, originZ, mostDiff))
-            {
-                if (collisionObject != null && FO != null)
-                {
-                    var fO = FO.GetObjectAt(O);
-                    if (fO == collisionObject) found--;
-                }
-                found++;
-            }
-            O = NeighborLevel(low, high, originZ, PX + 1, PY, heights, cI, out FO);
-            if (!DiffLessThan(O, originZ, mostDiff))
-            {
-                if (collisionObject != null && FO != null)
-                {
-                    var fO = FO.GetObjectAt(O);
-                    if (fO == collisionObject) found--;
-                }
-                found++;
-            }
-            O = NeighborLevel(low, high, originZ, PX + 1, PY - 1, heights, cI, out FO);
-            if (!DiffLessThan(O, originZ, mostDiff))
-            {
-                if (collisionObject != null && FO != null)
-                {
-                    var fO = FO.GetObjectAt(O);
-                    if (fO == collisionObject) found--;
-                }
-                found++;
-            }
-            O = NeighborLevel(low, high, originZ, PX, PY - 1, heights, cI, out FO);
-            if (!DiffLessThan(O, originZ, mostDiff))
-            {
-                if (collisionObject != null && FO != null)
-                {
-                    var fO = FO.GetObjectAt(O);
-                    if (fO == collisionObject) found--;
-                }
-                found++;
-            }
-            O = NeighborLevel(low, high, originZ, PX - 1, PY - 1, heights, cI, out FO);
-            if (!DiffLessThan(O, originZ, mostDiff))
-            {
-                if (collisionObject != null && FO != null)
-                {
-                    var fO = FO.GetObjectAt(O);
-                    if (fO == collisionObject) found--;
-                }
-                found++;
-            }
-            O = NeighborLevel(low, high, originZ, PX - 1, PY, heights, cI, out FO);
-            if (!DiffLessThan(O, originZ, mostDiff))
-            {
-                if (collisionObject != null && FO != null)
-                {
-                    var fO = FO.GetObjectAt(O);
-                    if (fO == collisionObject) found--;
-                }
-                found++;
-            }
-            O = NeighborLevel(low, high, originZ, PX - 1, PY + 1, heights, cI, out FO);
-            if (!DiffLessThan(O, originZ, mostDiff))
-            {
-                if (collisionObject != null && FO != null)
-                {
-                    var fO = FO.GetObjectAt(O);
-                    if (fO == collisionObject) found--;
-                }
-                found++;
-            }
+            int found = 0;
+
+            found += NeighborLevelDifLessThan(low, high, originZ, PX, PY + 1, heights, cI,
+                                              collisionObject, mostDiff, objToNothingBump, objToSelfBump);
+            found += NeighborLevelDifLessThan(low, high, originZ, PX + 1, PY + 1, heights, cI,
+                                              collisionObject, mostDiff, objToNothingBump, objToSelfBump);
+            found += NeighborLevelDifLessThan(low, high, originZ, PX + 1, PY, heights, cI,
+                                              collisionObject, mostDiff, objToNothingBump, objToSelfBump);
+            found += NeighborLevelDifLessThan(low, high, originZ, PX, PY - 1, heights, cI,
+                                              collisionObject, mostDiff, objToNothingBump, objToSelfBump);
+            found += NeighborLevelDifLessThan(low, high, originZ, PX - 1, PY - 1, heights, cI,
+                                              collisionObject, mostDiff, objToNothingBump, objToSelfBump);
+            found += NeighborLevelDifLessThan(low, high, originZ, PX - 1, PY, heights, cI,
+                                              collisionObject, mostDiff, objToNothingBump, objToSelfBump);
+            found += NeighborLevelDifLessThan(low, high, originZ, PX + 1, PY - 1, heights, cI,
+                                              collisionObject, mostDiff, objToNothingBump, objToSelfBump);
+            found += NeighborLevelDifLessThan(low, high, originZ, PX - 1, PY + 1, heights, cI,
+                                              collisionObject, mostDiff, objToNothingBump, objToSelfBump);
             return found;
         }
 
-        private static float GetObjectAt(int PX, int PY, float originZ)
+        internal int NeighborLevelDifLessThan(float low, float high, float originZ, int PX, int PY, 
+            float[,] heights, CollisionIndex[,] cI, CollisionObject collisionObject, float mostDiff,
+            bool objToNothingBump, bool objToSelfBump)
         {
-            throw new NotImplementedException();
+            float O = NeighborLevel(low, high, originZ, PX, PY, heights);
+
+            if (objToSelfBump)
+            {
+                if (collisionObject != null)
+                {
+                    var FO = cI[PX, PY];
+                    if (FO != null)
+                    {
+                        var fO = FO.GetObjectAt(O);
+                        if (fO == collisionObject) return 1;
+                    }
+                }
+                return 0;
+            }
+            if (objToNothingBump)
+            {
+                var FO = cI[PX, PY];
+                if (collisionObject != null)
+                {
+                    if (FO == null) return 1;                   
+                    var fO = FO.GetObjectAt(O);
+                    if (fO != collisionObject) return 1;
+                    return 0;
+                }
+                else
+                {                   
+                    if (FO == null) return 0;                   
+                    var fO = FO.GetObjectAt(O);
+                    if (fO != null) return 1;
+                    return 0;
+                }
+                return 0;
+            }
+
+
+            if (!DiffLessThan(O, originZ, mostDiff))
+            {
+                if (collisionObject != null)
+                {
+                    var FO = cI[PX, PY];
+                    if (FO != null)
+                    {
+                        var fO = FO.GetObjectAt(O);
+                        if (fO == collisionObject) return 0;
+                    }
+                }
+                return 1;
+            }
+            return 0;
         }
 
-        internal static float NeighborLevel(float low, float high,float originZ, int PX, int PY, float[,] heights,CollisionIndex[,] cI, out CollisionIndex FO)
+        internal float NeighborLevel(float low, float high,float originZ, int PX, int PY, float[,] heights)
         {
-            FO = cI[PX, PY];
             float n = heights[PX, PY];
           //  if (n < originZ) return originZ;
             return n;

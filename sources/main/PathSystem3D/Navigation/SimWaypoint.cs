@@ -35,7 +35,7 @@ namespace PathSystem3D.Navigation
 
         public double Distance(SimPosition other)
         {
-            return Vector3d.Distance(GlobalPosition, other.GlobalPosition);
+            return SimPathStore.DistanceNoZ(GlobalPosition, other.GlobalPosition);
         }
 
         public bool IsGroundLevel()
@@ -634,7 +634,7 @@ namespace PathSystem3D.Navigation
 
         public static double Distance(SimWaypoint wp1, SimWaypoint wp2)
         {
-            return Vector3d.Distance(wp1.Position, wp2.Position);
+            return SimPathStore.DistanceNoZ(wp1.Position, wp2.Position);
         }
 
         // <summary>
@@ -680,7 +680,7 @@ namespace PathSystem3D.Navigation
 
         public double Distance(Vector3d P)
         {
-            return Vector3d.Distance(P, _GlobalPos);
+            return SimPathStore.DistanceNoZ(P, _GlobalPos);
         }
 
 

@@ -222,13 +222,33 @@ namespace PathSystem3D.Navigation
         }
         public List<PathFinderNode> FindPath(Point start, Point end)
         {
+            //SearchLimit = int.MaxValue;
+            //PunishChangeDirection = true;
             var ret = FindPath(start, end, IsBlocked);
             if (ret != null) return ret;
+            SetSearchBest();
+            ret = FindPath(start, end, IsBlocked);
+            if (ret != null)
+            {
+                return ret;
+            }
             ret = FindPath(start, end, IsBlocked50);
             if (ret != null) return ret;
             ret = FindPath(start, end, IsBlockedAir);
             if (ret != null) return ret;
             return null;
+        }
+
+        private void SetSearchBest()
+        {
+            SearchLimit = 99999999;
+            Formula = HeuristicFormula.Manhattan;
+            ReopenCloseNodes = true;
+            Diagonals = true;
+            HeavyDiagonals = false;
+            HeuristicEstimate = 2;
+            PunishChangeDirection = true;
+            TieBreaker = false;
         }
 
         public delegate bool BytePred(byte blocked);
