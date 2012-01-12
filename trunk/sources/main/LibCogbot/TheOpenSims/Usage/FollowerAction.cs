@@ -80,7 +80,7 @@ namespace cogbot.TheOpenSims
                     if (procnum >= proceedure.Length) procnum = 0;
                     ((SimAvatarClient)TheCBot).SalientMovementProceedure = proceedure[procnum];
                 }
-                ((SimAvatarClient)TheBot).WaitUntilPosSimple(Target.GlobalPosition, Target.GetSizeDistance(), 3);
+                ((SimAvatarClient)TheBot).WaitUntilPosSimple(Target.GlobalPosition, Target.GetSizeDistance(), 3, true);
             }
         }
         public void FollowLoop1()

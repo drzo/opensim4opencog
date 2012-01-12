@@ -442,7 +442,7 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        public static Vector3 GlobalToLocal(Vector3d pos)
+        public static Vector3 GlobalToLocalStatic(Vector3d pos)
         {
             if (pos.X < 0 || pos.Y < 0)
             {
@@ -452,7 +452,21 @@ namespace cogbot.TheOpenSims
             {
                 Debug("GlobalToWaypoint? " + pos);
             }
-            return new Vector3((float) pos.X - Round256(pos.X), (float) pos.Y - Round256(pos.Y), (float) pos.Z);
+            return new Vector3((float)pos.X - Round256(pos.X), (float)pos.Y - Round256(pos.Y), (float)pos.Z);
+        }
+
+        public Vector3 GlobalToLocal(Vector3d pos)
+        {
+            if (pos.X < 0 || pos.Y < 0)
+            {
+                throw new ArgumentException("GlobalToWaypoint? " + pos);
+            }
+            if (pos.X < 256 || pos.Y < 256)
+            {
+                Debug("GlobalToWaypoint? " + pos);
+            }
+            var GridLoc = GetGridLocation();
+            return new Vector3((float) pos.X - 256*GridLoc.X, (float) pos.Y - 256*GridLoc.Y, (float) pos.Z);
         }
 
         public static uint Round256(double global)
@@ -1541,7 +1555,7 @@ namespace cogbot.TheOpenSims
             // if <0,0,0> return;
             if (!InWorld(targetPos)) return;
             SimRegion R = GetRegion(targetPos);
-            Vector3 V = GlobalToLocal(targetPos);
+            Vector3 V = R.GlobalToLocal(targetPos);
             CollisionIndex W = R.GetCollisionIndex(V);
             W.RegionTaintedThis();
         }

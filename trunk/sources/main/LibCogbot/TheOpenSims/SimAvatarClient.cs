@@ -96,7 +96,53 @@ namespace cogbot.TheOpenSims
             return WithAnim(SimAssetStore.FindOrCreateAsset(uUID, AssetType.Animation), threadStart);
         }
 
-        public bool OpenNearbyClosedPassages()
+        private DateTime ThisUpdateShown;
+        public override void IndicateRoute(IList<Vector3d> list)
+        {
+            var PS = GetSimRegion();
+            var llist = new List<Vector3>();
+            foreach (var v3d in list)
+            {
+                llist.Add(PS.GlobalToLocal(v3d));
+            }
+            bool haveFirst = false;
+            bool haveSecond = false;
+            Vector3 prev = Vector3.Zero;
+            double atan = 999;
+
+            var CP = PathStore.GetCollisionPlane((float)list[0].Z);
+            if (CP.lastUpdate!=ThisUpdateShown)
+            {
+                ThisUpdateShown = CP.lastUpdate;
+                Client.Self.Chat("http://logicmoo.dyndns.org:5580/cogpath/path.gif", 100, ChatType.Normal);
+            }
+
+            Client.Self.Chat("die", 100, ChatType.Normal);
+            foreach (var next in llist)
+            {
+                if (!haveFirst)
+                {
+                    haveFirst = true;
+                    prev = next;
+                    continue;
+                }
+
+                Vector3 diff = prev - next;
+                double thisAtan = Math.Atan2(diff.X, diff.Y);
+                if (Math.Abs(atan-thisAtan)<0.10)
+                {
+                    atan = thisAtan;
+                    continue;
+                }
+                Client.Self.Chat(String.Format("255,0,0,{0},{1},{2},{3},{4},{5}",
+                                               prev.X, prev.Y, prev.Z, next.X, next.Y, next.Z),
+                                 100, ChatType.Normal);
+
+                prev = next;
+            }
+        }
+
+        public override bool OpenNearbyClosedPassages()
         {
             bool changed = false;
             foreach (var s in GetNearByObjects(20, false))
@@ -753,8 +799,15 @@ namespace cogbot.TheOpenSims
         ///     }
         ///     return swp;
         /// }
-
         public override void StopMoving()
+        {
+            StopMovingReal();
+        }
+        public override void StopMovingIsProblem()
+        {
+            StopMovingReal();
+        }
+        public void StopMovingReal()
         {
             lock (TrackerLoopLock)
             {
@@ -1132,7 +1185,8 @@ namespace cogbot.TheOpenSims
             OnlyMoveOnThisThread();
             TurnToward(finalTarget);
             IsBlocked = false;
-            double currentDist = Vector3d.Distance(finalTarget, GlobalPosition);
+            double currentDist = DistanceNoZ(finalTarget, GlobalPosition);
+            bool adjustCourse;
             ///  if (currentDist < maxDistance) return true;
             switch (SimpleMoveToMovementProceedure)
             {
@@ -1140,10 +1194,12 @@ namespace cogbot.TheOpenSims
                     if (currentDist < maxDistance) return true;
                     bool tp = this.TeleportTo(SimRegion.GetWaypoint(finalTarget));
                     if (currentDist < maxDistance) return true;
+                    adjustCourse = false;
                     if (!tp)
                     {
                         Debug("TP failed => MoveToMovementProceedure = MovementProceedure.TurnToAndWalk;");
                         SimpleMoveToMovementProceedure = MovementProceedure.TurnToAndWalk;
+                        adjustCourse = true;
                     }
                     TurnToward(finalTarget);
                     lock (TrackerLoopLock)
@@ -1162,6 +1218,7 @@ namespace cogbot.TheOpenSims
                 case MovementProceedure.AutoPilot:
                 case MovementProceedure.TurnToAndWalk:
                 default:
+                    adjustCourse = true;
                     lock (TrackerLoopLock)
                     {
                         ///   SimWaypoint P = SimWaypointImpl.CreateGlobal(finalTarget);
@@ -1170,30 +1227,28 @@ namespace cogbot.TheOpenSims
                     }
                     break;
             }
-            return WaitUntilPosSimple(finalTarget, maxDistance, maxSeconds);
+            return WaitUntilPosSimple(finalTarget, maxDistance, maxSeconds, true);
         }
 
-        public bool WaitUntilPosSimple(Vector3d finalTarget, double maxDistance, float maxSeconds){
+
+        public bool WaitUntilPosSimple(Vector3d finalTarget, double maxDistance, float maxSeconds, bool adjustCourse){
             int blockCount = 0;
-            double currentDist = Vector3d.Distance(finalTarget, GlobalPosition);
+            maxDistance += 0.2;
+            double currentDist = DistanceNoZ(finalTarget, GlobalPosition);
             if (currentDist < maxDistance) return true;
             bool IsKnownMoving = false;
             double lastDistance = currentDist;
             long endTick = Environment.TickCount + (int)(maxSeconds * 1000);
-            bool waitOnly = false;
             while (Environment.TickCount < endTick)
             {
-                currentDist = Vector3d.Distance(finalTarget, GlobalPosition);
-                var PrimVelocity = Vector3.Zero;
+                currentDist = DistanceNoZ(finalTarget, GlobalPosition);
                 if (Prim == null)
                 {
                     Debug("Where is my body? " + ToString());
-                    //return false;
+                    Thread.Sleep(100);
+                    continue;
                 }
-                else
-                {
-                    PrimVelocity = Prim.Velocity;
-                }
+                var PrimVelocity = Prim.Velocity;
                 if (!IsKnownMoving)
                 {
                     if (PrimVelocity != Vector3.Zero) IsKnownMoving = true;
@@ -1201,55 +1256,52 @@ namespace cogbot.TheOpenSims
                 else
                 {
                     if (currentDist < maxDistance) return true;
-                    if (!waitOnly) if (Prim != null && PrimVelocity == Vector3.Zero)
+                    if (adjustCourse) if (Prim != null && PrimVelocity == Vector3.Zero && lastDistance == currentDist)
                     {
                         Write("!");
                         if (IsBlocked)
                         {
                             blockCount++;
-                            if (blockCount > 2)
+                            if (blockCount > 3)
                             {
-                                if (!SimAvatarClient.UseTeleportFallback)
+                                if (SimAvatarClient.UseTeleportFallback)
                                 {
-                                    Debug("BLOCKED!");
-                                    //return true;
-                                    return false;
+                                    StopMoving();
+                                    Debug("Blocked so using TP to " + (finalTarget - GlobalPosition));
+                                    return this.TeleportTo(finalTarget);
                                 }
-                                StopMoving();
-                                Debug("Blocked so using TP to " + (finalTarget - GlobalPosition));
-                                return this.TeleportTo(finalTarget);
+                                Debug("BLOCKED!");
+                                //return true;
+                                return false;
                             }
                         }
                     }
                 }
-                if (currentDist > lastDistance)
+                if (currentDist > lastDistance + 0.1)
                 {
-                    if (!waitOnly) StopMoving();
+                    if (adjustCourse) StopMoving();
                     ///  Console.Write("=");
                     if (currentDist < maxDistance) return true;
-                    if (!waitOnly) StopMoving();
+                    if (adjustCourse) StopMoving();
                     if (IsBlocked)
                     {
                         Write("=");
+                        Debug("SLIPPING!");
                         return false;
                     }
                     return true;
                 }
-                if (currentDist > maxDistance)
-                {
-                    Thread.Sleep(40);
-                    /// Application.DoEvents();
-                    lastDistance = currentDist;
-                    continue;
-                }
-                else
+                if (currentDist <= maxDistance)
                 {
                     Write("+");
                     ///  StopMoving();
                     return true;
                 }
+                Thread.Sleep(40);
+                lastDistance = currentDist;
+                //continue;
             }
-            if (!waitOnly) StopMoving();
+            if (adjustCourse) StopMoving();
             Write("-");
             return false;
         }
