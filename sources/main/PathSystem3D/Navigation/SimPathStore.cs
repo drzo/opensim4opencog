@@ -655,6 +655,7 @@ namespace PathSystem3D.Navigation
             if (!(dif.X == 0 && dif.Y == 0))
             {
                 float dist = Vector3.Distance(LastPosition, nextPosition);
+                if (dist > 2) return;
                 int stepsNeeded = (int)(dist * POINTS_PER_METER) + 1;
               // if (OpenMetaverse.Settings.LOG_LEVEL == OpenMetaverse.Helpers.LogLevel.Debug) 
                 Debug("MakeMovement " + LastPosition + " -> " + stepsNeeded + " -> " + nextPosition + " " + this);
@@ -670,7 +671,7 @@ namespace PathSystem3D.Navigation
             }
         }
 
-        public void SetBlockedTemp(Vector3 cp, Vector3 v3, float time)
+        public void SetBlockedTemp(Vector3 cp, Vector3 v3, float time, byte blockLevel)
         {
             Point P1 = ToPoint(cp);
             Vector3 offset = v3 - cp;
@@ -696,7 +697,7 @@ namespace PathSystem3D.Navigation
 
                           
             List<ThreadStart> undo = new List<ThreadStart>();
-            BlockPointTemp(v3o,undo);
+            BlockPointTemp(v3o, undo, blockLevel);
             double A45 = 45f / RAD2DEG;
             Debug("BlockTowardsVector {0}", Vector3.Distance(cp,v3o));
             Vector3 middle = ZAngleVector(ZAngle) * Dist;
@@ -709,15 +710,15 @@ namespace PathSystem3D.Navigation
             Dist = 0.4f;
             //ZAngle -= (90 / SimPathStore.RAD2DEG);
 
-            BlockPointTemp(ZAngleVector(ZAngle - A45 * 1.5) * Dist + cp, undo);
-            BlockPointTemp(ZAngleVector(ZAngle - A45) * Dist + cp, undo);
-            BlockPointTemp(ZAngleVector(ZAngle - A45 * 0.5) * Dist + cp, undo);
+            BlockPointTemp(ZAngleVector(ZAngle - A45 * 1.5) * Dist + cp, undo, blockLevel);
+            BlockPointTemp(ZAngleVector(ZAngle - A45) * Dist + cp, undo, blockLevel);
+            BlockPointTemp(ZAngleVector(ZAngle - A45 * 0.5) * Dist + cp, undo, blockLevel);
 
-            BlockPointTemp(ZAngleVector(ZAngle) * Dist + cp, undo);
+            BlockPointTemp(ZAngleVector(ZAngle) * Dist + cp, undo, blockLevel);
 
-            BlockPointTemp(ZAngleVector(ZAngle + A45 * 0.5) * Dist + cp, undo);
-            BlockPointTemp(ZAngleVector(ZAngle + A45) * Dist + cp, undo);
-            BlockPointTemp(ZAngleVector(ZAngle + A45 * 1.5) * Dist + cp, undo);
+            BlockPointTemp(ZAngleVector(ZAngle + A45 * 0.5) * Dist + cp, undo, blockLevel);
+            BlockPointTemp(ZAngleVector(ZAngle + A45) * Dist + cp, undo, blockLevel);
+            BlockPointTemp(ZAngleVector(ZAngle + A45 * 1.5) * Dist + cp, undo, blockLevel);
 
             if (undo.Count > 0)
                 new Thread(() =>
@@ -737,7 +738,7 @@ namespace PathSystem3D.Navigation
         /// However! if the point is of questionable quality it will permanently block it
         /// </summary>
         /// <param name="vector3"></param>
-        public void BlockPointTemp(Vector3 vector3, List<ThreadStart> undo)
+        public void BlockPointTemp(Vector3 vector3, List<ThreadStart> undo, byte blockLevel)
         {
             CollisionPlane CP = FindCollisionPlane(vector3.Z);
             if (CP != null)
@@ -746,17 +747,17 @@ namespace PathSystem3D.Navigation
                 int iy = ARRAY_Y(vector3.Y);
 
                 byte b = CP.ByteMatrix[ix, iy];
+                if (b == INITIALLY) return; //nothing to do
+                if (b == BLOCKED) return; //nothing to do
+                // this is for the second time around
                 if (MaybeBlocked(b))
                 {
                     CP.ByteMatrix[ix, iy] = BLOCKED;
                     Debug("Permanently blocking off " + vector3);
-                }
-                else
-                {
-                    // this is for the second time around
-                    CP.ByteMatrix[ix, iy] = BLOCK_PURPLE;
+                    return;
                 }
                 CollisionIndex CI = CreateFirstNode(vector3.X, vector3.Y);
+                CP.ByteMatrix[ix, iy] = MAYBE_BLOCKED;
                 CI.SetNodeQualityTimer(CP, BLOCKED, undo);
             }
             else
@@ -1517,7 +1518,7 @@ namespace PathSystem3D.Navigation
         public const byte TOO_LOW = 209;
         public const byte WATER_G = 210;
         public const byte WATER_Z = 211;
-        public const byte BRIDGY = 40;
+        public const byte BRIDGY = 44;
         public const byte INITIALLY = 20;
         public const byte PASSABLE = 1;
         public const byte STICKY_PASSABLE = 0;
@@ -1670,7 +1671,7 @@ namespace PathSystem3D.Navigation
                 case TOO_HIGH:
                     return OccupiedColor(CP, Color.Firebrick, MeshIndex[x, y]);
                 case BRIDGY:
-                    return OccupiedColor(CP, Color.LightGreen, MeshIndex[x, y]);
+                    return OccupiedColor(CP, Color.DarkTurquoise, MeshIndex[x, y]);
             }
             Color sb = lastColour[p];
             if (sb == Color.Empty)
@@ -1719,6 +1720,7 @@ namespace PathSystem3D.Navigation
         /// <param name="y"></param>
         public void SetTraveled(float x, float y, float z)
         {
+            return;
             int ix = ARRAY_X(x);
             int iy = ARRAY_Y(y);
             foreach (CollisionPlane CP in CollisionPlanesFor(z))
@@ -1730,7 +1732,7 @@ namespace PathSystem3D.Navigation
                 {
                     case BLOCKED:
                         {
-                            ByteMatrix[ix, iy] = MAYBE_BLOCKED;
+                           // ByteMatrix[ix, iy] = MAYBE_BLOCKED;
                             continue;
                         }
                     case MAYBE_BLOCKED:
@@ -1738,6 +1740,8 @@ namespace PathSystem3D.Navigation
                     case STICKY_PASSABLE:
                         continue;
                     case PASSABLE:
+                        continue;
+                    case INITIALLY:
                         continue;
                 }
                 if (b < 3)
@@ -2158,7 +2162,7 @@ namespace PathSystem3D.Navigation
             Point E = ToPoint(end);
             IList<PathFinderNode> pfn = null;
 
-
+            faked = false;
             try
             {
                 var bm = CP.ByteMatrix;
@@ -2171,6 +2175,11 @@ namespace PathSystem3D.Navigation
                 pff.SearchLimit = 100000000;     // took off 2 0s
                 pff.PunishChangeDirection = PunishChangeDirection;
                 pfn = pff.FindPath(S, E);
+                if (pfn == null)
+                {
+                    faked = true;
+                    pfn = pff.FindPathFallback(S, E);
+                }
                 pff = null;
             }
             catch (Exception e)
@@ -2188,7 +2197,7 @@ namespace PathSystem3D.Navigation
             if (panel != null) panel.ShowPath(pfn);
             List<Vector3d> r = (List<Vector3d>)PathfinderNodesToV3s(pfn, Z);
             r.Reverse();
-            faked = false;
+          //  faked = false;
             return r;
         }
 
@@ -2378,7 +2387,7 @@ namespace PathSystem3D.Navigation
 
         public void UpdateTraveled(UUID uUID, Vector3 after, Quaternion rot)
         {
-            //return;
+            return;
             lock (LaskKnownPos) if (!LaskKnownPos.ContainsKey(uUID))
                 {
                     LaskKnownPos[uUID] = new MoverTracking(after, rot, this);
@@ -2553,7 +2562,7 @@ namespace PathSystem3D.Navigation
         {
             CollisionPlane found = new CollisionPlane(MAPSPACE, MAPSPACE, Z, this);
             Console.WriteLine("Created matrix[{0}] {1} for {2}", Z, found, this);
-            DropOldMatrixes(5);
+            DropOldMatrixes(6);
             lock (Matrixes) Matrixes.Add(found);
             if (PanelGUI != null) (new Thread(()=>     
                 PanelGUI.OnNewCollisionPlane(found))).Start();
@@ -2566,6 +2575,7 @@ namespace PathSystem3D.Navigation
             {
                 case STICKY_PASSABLE:
                 case PASSABLE:
+                case BRIDGY:
                 case BLOCKED:
                 case MAYBE_BLOCKED:
                 case BLOCKED_YELLOW:
@@ -2700,7 +2710,7 @@ namespace PathSystem3D.Navigation
         public void Update(Vector3 nextPosition, Quaternion rotation)
         {
             double dist = Vector3.Distance(LastPosition, nextPosition);
-            if (dist > MovedAllot)
+            if (dist > 1)
             {
                 MakeMovement(nextPosition);
             }

@@ -76,7 +76,15 @@ namespace PathSystem3D.Navigation
             //var vFinalLocation = finalGoal.UsePosition.GlobalPosition;
            // FinalLocation = vFinalLocation;
             FinalPosition = finalGoal;
-            mover.PathStore.LastSimMover = mover;
+            var ps = mover.PathStore;
+            if (ps != null)
+            {
+                ps.LastSimMover = mover;
+            } else
+            {
+                Debug("No pathSTore!?!");
+            }
+
         }
 
         public event Action<SimMoverState> OnMoverStateChange;
@@ -396,7 +404,7 @@ namespace PathSystem3D.Navigation
         public void BlockTowardsVector(Vector3 l3)
         {
             OpenNearbyClosedPassages();
-            PathStore.SetBlockedTemp(GetSimPosition(), l3, 45);
+            PathStore.SetBlockedTemp(GetSimPosition(), l3, 45, SimPathStore.BLOCKED);
         }
 
         public virtual bool OpenNearbyClosedPassages()
@@ -662,7 +670,7 @@ namespace PathSystem3D.Navigation
             const int time = 120;
             foreach (Vector3d list in route)
             {
-                PathStore.BlockPointTemp(SimPathStore.GlobalToLocal(list), listUndo);
+                PathStore.BlockPointTemp(SimPathStore.GlobalToLocal(list), listUndo, SimPathStore.BLOCKED);
             }
             if (listUndo.Count == 0) return;
             string tmp = string.Format("Blocking {0} points for {1} seconds", listUndo.Count, time);
