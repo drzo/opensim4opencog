@@ -15,7 +15,7 @@ namespace cogbot.Listeners
 
         private static readonly Dictionary<SimObject, ObjectMovementUpdate> LastObjectUpdate = new Dictionary<SimObject, ObjectMovementUpdate>();
         private static readonly Dictionary<UUID, ObjectMovementUpdate> LastObjectUpdateDiff = new Dictionary<UUID, ObjectMovementUpdate>();
-        private static readonly Dictionary<SimObject, Vector3> primVect = new Dictionary<SimObject, Vector3>();
+        private static readonly Dictionary<SimObject, Vector3> primVect = new Dictionary<SimObject, Vector3>();        
 
 
         public void Objects_OnPrimitiveProperties(object sender, ObjectPropertiesUpdatedEventArgs e)

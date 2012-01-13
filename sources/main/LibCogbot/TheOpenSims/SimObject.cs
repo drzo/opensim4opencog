@@ -692,7 +692,7 @@ namespace cogbot.TheOpenSims
             get
             {
                 if (PathFinding.MadePhantom) return true;
-                if (IsRoot || true)
+                if (IsRoot || WorldObjects.IsOpenSim)
                 {
                     Primitive Prim = this.Prim;
                     if (Prim == null) return true;
@@ -2417,12 +2417,21 @@ namespace cogbot.TheOpenSims
             internal SimMesh _Mesh;
             private bool wasMeshUpdated;
 
+
+            public bool SkipMesh
+            {
+                get { return WorldPathSystem.SkipPassableMeshes && (thiz.IsPassable || thiz.IsPhantom); }
+            }
             public SimMesh Mesh
             {
                 get
                 {
                     if (_Mesh == null)
                     {
+                        if (SkipMesh)
+                        {
+                            return null;
+                        }
                         _Mesh = new SimMesh(thiz, thiz.Prim, thiz.PathStore);
                     }
                     return _Mesh;
@@ -2478,6 +2487,7 @@ namespace cogbot.TheOpenSims
             {
                 get
                 {
+                    if (SkipMesh) return false;
                     if (requestedMeshed.HasValue) return requestedMeshed.Value;
                     if (WorldPathSystem.IsWorthMeshing(thiz))
                     {
@@ -2522,6 +2532,11 @@ namespace cogbot.TheOpenSims
                 }
                 try
                 {
+                    if (SkipMesh)
+                    {
+                        return false;
+                    }
+
                     if (!IsMeshingQueued)
                     {
                         IsMeshingQueued = true;
@@ -2568,6 +2583,8 @@ namespace cogbot.TheOpenSims
                         return false;
                     }
                 }
+
+                if (SkipMesh) return false;
 
                 if (!WorldPathSystem.MaintainMeshes) return false;
 

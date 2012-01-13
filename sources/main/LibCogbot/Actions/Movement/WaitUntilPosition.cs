@@ -52,7 +52,12 @@ namespace cogbot.Actions.Movement
             bool MadIt = false;
             while (waitUntil > DateTime.Now)
             {
-                double cdist = Vector3d.Distance(pos.GlobalPosition, TheSimAvatar.GlobalPosition);
+                var gp1 = pos.GlobalPosition;
+                var gp2 = TheSimAvatar.GlobalPosition;
+                if (Math.Abs(gp1.Z - gp2.Z) < 2) gp1.Z = gp2.Z;
+                // do it antyways
+                gp1.Z = gp2.Z;
+                double cdist = Vector3d.Distance(gp1, gp2);
                 if ( cdist <= maxDistance)
                 {
                     MadIt = true;
