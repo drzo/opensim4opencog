@@ -93,7 +93,7 @@ namespace PathSystem3D.Navigation
         {
             while (true)
             {
-                if (Users>0 && PathStore.AddedCount>0)
+                if (Users > 0 && PathStore.AddedCount > 0)
                 {
                     PathStore.AddedCount = 0;
                     MatrixNeedsUpdate = true;
@@ -410,8 +410,24 @@ namespace PathSystem3D.Navigation
             var cci = cI[x, y];
             CollisionObject collisionObject = null;
             if (cci != null) collisionObject = cci.GetObjectAt(ZLevel);
+            int bumps;
+            if (x==270 && y==1275)
+            {
+                collisionObject = collisionObject;
+            }
 
-            int bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, BumpConstraint, Heights, cI, 
+            // fixed "contiguous objects need to be passable"
+            if (collisionObject != null)
+            {
+                bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, 0.1f, Heights, cI, collisionObject, false, true);
+                if (bumps >= 4)
+                {
+                    return SimPathStore.BRIDGY;
+                }
+            }
+
+            // this tests for hieght differnces
+            bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, BumpConstraint, Heights, cI, 
                 collisionObject, false, false);
             if (bumps > 0)
                 return SimPathStore.BLOCKED;
@@ -422,6 +438,7 @@ namespace PathSystem3D.Navigation
 
             if (BumpConstraintPurple > CollisionIndex.MaxBump)
             {
+                // this looks for transitions between objects
                 bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, BumpConstraintPurple, Heights, cI,
                     collisionObject, true, false);
                 if (bumps > 0)
@@ -449,15 +466,7 @@ namespace PathSystem3D.Navigation
                     return SimPathStore.TOO_LOW;
             }
 
-            if (collisionObject != null)
-            {
-                bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, 0.1f, Heights, cI, collisionObject, false, true);
-                if (bumps > 0)
-                {
-                    return SimPathStore.BRIDGY;
-                }
-            }
-
+            // this looks for transitions between objects
             bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, 0.1f, Heights, cI, collisionObject, true, false);
             if (bumps > 0)
             {
@@ -465,6 +474,7 @@ namespace PathSystem3D.Navigation
                 return SimPathStore.MAYBE_BLOCKED;
             }
 
+            // this looks for little bumps
             bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, 0.1f, Heights, cI, null, false, false);
             if (bumps > 0)
                 return SimPathStore.BLOCK_PURPLE;
@@ -525,9 +535,10 @@ namespace PathSystem3D.Navigation
                 int tAdjacentBlocking = AdjacentBlocking;
                 while (tAdjacentBlocking-- > 0)
                 {
-                    AddAdjacentBlocking(ToMatrix, SimPathStore.BLOCKED, 1, SimPathStore.BLOCKED);
+                    AddAdjacentBlocking(ToMatrix, SimPathStore.BLOCKED, 0, SimPathStore.BLOCKED);
                 }
                 AddEdgeBlocking(ToMatrix);
+                AddAdjacentBlocking(ToMatrix, SimPathStore.BLOCKED, 0, SimPathStore.MAYBE_BLOCKED, SimPathStore.BLOCKED);
                 Console.WriteLine("\nEnd UpdateCollisionPlane: {0} for {1}", PathStore, this);
             }
         }
@@ -591,6 +602,7 @@ namespace PathSystem3D.Navigation
                     {
                         var fO = FO.GetObjectAt(O);
                         if (fO == collisionObject) return 1;
+                        if (FO.Contains(collisionObject)) return 1;
                     }
                 }
                 return 0;
@@ -625,6 +637,8 @@ namespace PathSystem3D.Navigation
                     {
                         var fO = FO.GetObjectAt(O);
                         if (fO == collisionObject) return 0;
+                        // experimental
+                        //if (FO.Contains(collisionObject)) return 0;
                     }
                 }
                 return 1;
@@ -764,7 +778,7 @@ namespace PathSystem3D.Navigation
                         byte b = from[x, y];
                         if (b > 2 && b < fronteer)
                         {
-                            if (SimPathStore.Special(b)) continue;
+                            if (SimPathStore.Special(b) && b != SimPathStore.BRIDGY) continue;
                             if (SurroundingBlocked0(x, y, fronteer, from) > 1)
                                 to[x, y] = self;
                         }
@@ -773,8 +787,11 @@ namespace PathSystem3D.Navigation
                 fronteer -= step;
             }
         }
-
         private void AddAdjacentBlocking(byte[,] to, byte when, int req, byte then)
+        {
+            AddAdjacentBlocking(to, when, req, then, SimPathStore.STICKY_PASSABLE);
+        }
+        private void AddAdjacentBlocking(byte[,] to, byte when, int req, byte then, byte unless)
         {
             byte[,] from =(byte[,]) to.Clone();
             int xsizem1 = MaxXPt - 1;
@@ -783,9 +800,9 @@ namespace PathSystem3D.Navigation
                 for (int x = xsizem1; x > 0; x--)
                 {
                     byte b = from[x, y];
-                    if (b == when)
+                    if (b == when && b != unless)
                         if (SurroundingBlocked0(x, y, then, from) > req)
-                            to[x, y] =  then;                        
+                            to[x, y] = then;
                 }
             }
             from = null;

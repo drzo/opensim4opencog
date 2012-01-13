@@ -206,33 +206,71 @@ namespace PathSystem3D.Navigation
             mStop = true;
         }
 
-        static bool IsBlocked(byte b)
+        public static bool IsBlocked(byte b)
         {
             return b == SimPathStore.BLOCKED;
         }
-        static bool IsBlockedAir(byte b)
+        public static bool IsBlockedOr200(byte b)
+        {
+            return b >= SimPathStore.WATER_G; //210
+        }
+        public static bool IsBlockedOrMaybe(byte b)
+        {
+            return b == SimPathStore.BLOCKED || b == SimPathStore.MAYBE_BLOCKED;
+        }
+        public static bool IsBlockedAir(byte b)
         {
             return b == SimPathStore.BLOCKED_AIR;
         }
 
         static Random rnd50 = new Random(0);
-        static bool IsBlocked50(byte b)
+        public static bool IsBlocked30(byte b)
         {
             return b == SimPathStore.BLOCKED && rnd50.Next(2) == 0;
         }
+        public static bool IsBlocked50(byte b)
+        {
+            return b == SimPathStore.BLOCKED && rnd50.Next(1) == 0;
+        }
         public List<PathFinderNode> FindPath(Point start, Point end)
         {
+            List<PathFinderNode> ret;
             //SearchLimit = int.MaxValue;
             //PunishChangeDirection = true;
-            var ret = FindPath(start, end, IsBlocked);
-            if (ret != null) return ret;
+            ret = FindPath(start, end, IsBlockedOr200);
+            if (ret != null)
+            {
+                return ret;
+            }
+            ret = FindPath(start, end, IsBlockedOrMaybe);
+            if (ret != null)
+            {                
+                return ret;
+            }
             SetSearchBest();
+            ret = FindPath(start, end, IsBlockedOrMaybe);
+            if (ret != null)
+            {
+                return ret;
+            }
+            //ret = FindPath(start, end, IsBlocked);
+            //if (ret != null) return ret;
             ret = FindPath(start, end, IsBlocked);
             if (ret != null)
             {
                 return ret;
             }
+            return null;
+        }
+        public List<PathFinderNode> FindPathFallback(Point start, Point end)
+        {
+            List<PathFinderNode> ret;
             ret = FindPath(start, end, IsBlocked50);
+            if (ret != null)
+            {
+                return ret;
+            }
+            ret = FindPath(start, end, IsBlocked30);
             if (ret != null) return ret;
             ret = FindPath(start, end, IsBlockedAir);
             if (ret != null) return ret;
@@ -241,7 +279,7 @@ namespace PathSystem3D.Navigation
 
         private void SetSearchBest()
         {
-            SearchLimit = 99999999;
+            SearchLimit = 999999900;
             Formula = HeuristicFormula.Manhattan;
             ReopenCloseNodes = true;
             Diagonals = true;

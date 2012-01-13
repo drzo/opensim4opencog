@@ -567,7 +567,10 @@ namespace PathSystem3D.Navigation
                          byte newValue = GetMatrix(CP);
                          if (newValue != value)
                              // its been changed by something else since we set to Zero
+                         {
                              Debug("SetNodeQualityTimer Thread out of date {0} value changed to {1}", this, newValue);
+                            // SetMatrixForced(CP, oldValue);
+                         }
                          else
                          {
                              SetMatrixForced(CP, oldValue);
@@ -647,6 +650,14 @@ namespace PathSystem3D.Navigation
                     }
                 }
             return Color.Empty;
+        }
+
+        public bool Contains(CollisionObject o)
+        {
+            lock (ShadowList)
+            {
+                return ShadowList.Contains(o);
+            }
         }
     }
 
