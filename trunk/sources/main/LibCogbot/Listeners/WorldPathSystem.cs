@@ -25,6 +25,7 @@ namespace cogbot.Listeners
         public static bool MaintainCollisions = true; // keep false so the bot only meshes what it needs
         public static bool MaintainMeshes = true;
         public static int WorthMeshingDistance = 160;
+        public static bool SkipPassableMeshes = true;
 
         public static readonly List<ulong> MaintainSimCollisionsList = new List<ulong>();
         public static GridClient GridClientMaster;

@@ -164,7 +164,13 @@ namespace cogbot.Listeners
                     SetWorldMaster(true);
                     SimMaster[simulator.Handle] = this;
                     //client.Grid.RequestMapRegion(simulator.Name, GridLayerType.Objects);
-                    client.Grid.RequestMapRegion(simulator.Name, GridLayerType.Terrain);
+                    if (simulator.Name.Length > 0)
+                    {
+                        client.Grid.RequestMapRegion(simulator.Name, GridLayerType.Terrain);
+                    } else 
+                    {
+                        Debug("no sim bname "+simulator);
+                    }
                     client.Estate.RequestInfo();
                     //client.Grid.RequestMapRegion(simulator.Name, GridLayerType.LandForSale);
                     //client.Grid.RequestMapItems(simulator.Handle,OpenMetaverse.GridItemType.Classified,GridLayerType.Terrain);

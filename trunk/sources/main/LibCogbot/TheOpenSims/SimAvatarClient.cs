@@ -97,6 +97,8 @@ namespace cogbot.TheOpenSims
         }
 
         private DateTime ThisUpdateShown;
+        public static int PipesAlive = 0;
+        public static int PipesNumberNext = 0;
         public override void IndicateRoute(IList<Vector3d> list)
         {
             var PS = GetSimRegion();
@@ -115,9 +117,10 @@ namespace cogbot.TheOpenSims
             {
                 ThisUpdateShown = CP.lastUpdate;
                 Client.Self.Chat("http://logicmoo.dyndns.org:5580/cogpath/path.gif", 100, ChatType.Normal);
+                //Client.Self.Chat("hi " + Client.Self.SimPosition.Z, 100, ChatType.Normal);
             }
 
-            Client.Self.Chat("die", 100, ChatType.Normal);
+            KillPipes();
             foreach (var next in llist)
             {
                 if (!haveFirst)
@@ -134,12 +137,31 @@ namespace cogbot.TheOpenSims
                     atan = thisAtan;
                     continue;
                 }
-                Client.Self.Chat(String.Format("255,0,0,{0},{1},{2},{3},{4},{5}",
-                                               prev.X, prev.Y, prev.Z, next.X, next.Y, next.Z),
-                                 100, ChatType.Normal);
+                if (true)
+                {
+                    Client.Self.Chat(
+                        String.Format("255,0,0,{0},{1},{2},{3},{4},{5}",
+                                      prev.X, prev.Y, prev.Z, next.X, next.Y, next.Z),
+                        100, ChatType.Normal);
+                }
+                else
+                {
+                    Client.Self.Chat(String.Format("{0},255,0,0,128,{1},{2},{3},{4},{5},{6}",
+                                                   PipesNumberNext, prev.X, prev.Y, prev.Z, next.X, next.Y, next.Z),
+                                     100, ChatType.Normal);
+                }
 
+                PipesNumberNext++;
+                PipesAlive++;
                 prev = next;
             }
+        }
+
+        public void KillPipes()
+        {
+            Client.Self.Chat("die", 100, ChatType.Normal);
+            PipesAlive = 0;
+            PipesNumberNext = 0;
         }
 
         public override bool OpenNearbyClosedPassages()

@@ -12,6 +12,7 @@ namespace cogbot.Listeners
     public partial class WorldObjects : AllEvents
     {
 
+        public static bool IsOpenSim = false;
         public static bool CanPhantomize = false;
         public static bool CanUseSit = true;
         public static bool DoSimulatorsCatchUp = false; //GridMaster will turn this on/off only if it needed
@@ -33,7 +34,17 @@ namespace cogbot.Listeners
                 WorldPathSystem.MaintainCollisions = value;
             }
         }
- 
+        public static bool SkipPassableMeshes
+        {
+            get
+            {
+                return WorldPathSystem.SkipPassableMeshes;
+            }
+            set
+            {
+                WorldPathSystem.SkipPassableMeshes = value;
+            }
+        }
         public static bool MaintainMeshes     
         {
             get
