@@ -14,7 +14,7 @@
    worldSystem/1, worldSystem/2,
    botClient/1, botClient/2,
    botClientCall/1, botClientCall/2,
-   botClientCmd/1, botClientCmd/2,
+   botClientCmd/1, botClientCmd/2, botClientCmd/3,
    simObject/1, simAvatar/1, simAvDistance/3,
    gridClient/1,
    resolveObjectByName/2,
@@ -24,7 +24,13 @@
    toLocalVect/2,
    onSimEvent/3,
    obj2Npl/2,
-   npl2Obj/2
+   npl2Obj/2,
+   chat/1,
+   chat/2,
+   chat/3,
+   %%cliWriteFormat/3,
+   createWritelnDelegate/2,
+   createWritelnDelegate/1   
    ]).
 
 
@@ -202,7 +208,9 @@ botClientCmd(In):-botClientCmd(In,Out),cliWriteln(Out),!.
 botClientCmd([C|Cmd],Out):-toStringableArgs([C|Cmd],CCmd),!,concat_atom(CCmd,' ',Str),botClientCall(executeCommand(Str),Out).
 botClientCmd(C,Out):-compound(C),!,C=..[F|A],listifyFlat(A,FL),!,botClientCmd([F|FL],Out).
 % this form expects a term of the form methodname(arg, arg,arg)
-botClientCmd(Str,Out):-botClientCall(executeCommand(Str),Out).
+%%botClientCmd(Str,Out):-botClientCall(executeCommand(Str),Out).
+botClientCmd(Str,Out):-botClientCmd(Str,cliWriteFormat(botClientCmd),Out).
+botClientCmd(Str,WriteDelegate,Out):-botClient(C),cliCall(C,executeCommand(Str,C,WriteDelegate),Out).
 
 toStringableArgs(Var,Var):-var(Var),!.
 toStringableArgs([C|Cmd],[A|Amd]):-toStringableArg(C,A),toStringableArgs(Cmd,Amd).
@@ -224,6 +232,14 @@ listifyFlat(C,[C]).
 %% get the gridClient Instance
 %  libOMV's version of gridClient, in case you want the direct one
 gridClient(Obj):-botClient(BC),cliGet(BC,'gridClient',Obj).
+
+
+%------------------------------------------------------------------------------
+% create a writeline delegate
+%------------------------------------------------------------------------------
+createWritelnDelegate(WID):-createWritelnDelegate(cliWriteFormat(cogrobot),WID).
+createWritelnDelegate(WriteDelegate,WID):-cliNewDelegate('MushDLR223.ScriptEngines.OutputDelegate',WriteDelegate,WID).
+
 
 %------------------------------------------------------------------------------
 % listing functions
@@ -346,7 +362,7 @@ toGlobalVect(A,Vect):-atom(A),concat_atom([X,Y,Z],'/',A),!,toGlobalVect(v3(X,Y,Z
 toGlobalVect(A,Vect):-atom(A),!,resolveObjectByName(A,Obj),cliGet(Obj,globalposition,Vect),!.
 toGlobalVect(Obj,Vect):-cliGet(Obj,globalposition,Vect),!.
 
-toLocalVect(Obj,LV):-toGlobalVect(Obj,Vect),cliCall('SimRegion','GlobalToLocal'(Vect),LV).
+toLocalVect(Obj,LV):-toGlobalVect(Obj,Vect),cliCall('SimRegion','GlobalToLocalStatic'(Vect),LV).
 
 %% 
 distanceTo(A,R):-toGlobalVect(A,A2),!,botClient(['Self','GlobalPosition'],A1),cliCall(A2,distance(A1,A2),R).
@@ -355,5 +371,8 @@ distanceTo(A,R):-toGlobalVect(A,A2),!,botClient(['Self','GlobalPosition'],A1),cl
 
 moveTo(Dest,Time,FDist):-botClientCmd(moveto(Dest)),botClientCmd(waitpos(Time,Dest)),botClientCmd(stopMoving),distanceTo(Dest,FDist).
 
+chat(Msg):-chat(Msg,0).
+chat(Msg,Ch):-chat(Msg,Ch,'Normal').
+chat(Msg,Ch,Type):-botClient(X),cliCall(X,talk(Msg,Ch,Type),_).
 
 %%:-prev_dir6(X),cd(X).
