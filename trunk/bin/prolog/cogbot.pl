@@ -130,3 +130,9 @@ guitracer:-debug.
 %% simAvatar(X),cliGet(X,'SalientMovementProceedure',Y).
 
 %% apiBotClientCmd(astargoto(stop_test_5)).
+
+%%:- createWritelnDelegate(_X).
+
+%%:-sleep(20),tpf(island_hop),sleep(60),tpf(island_hop).
+tq1:-sleep(20),tpf(clear),sleep(60),tpf(elev_path).
+%%%:-at_initialization((sleep(20),tpf1)).
