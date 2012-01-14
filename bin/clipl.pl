@@ -7,6 +7,8 @@
             cli_IsDefined/2,
             cliAddEventHandler/3,
             cliAddLayout/2,
+            cliArrayToTerm/2,
+            cliArrayToTermList/2,
             cliCall/3,
             cliCall/4,
             cliCol/2,
@@ -39,11 +41,21 @@
             cliToStringRaw/2,
             cliToTagged/2,
             cliTypeSpec/2,
+            cliWrite/1,
             cliWriteln/1,
             cliUnify/2,
+            cliWithLock/2,
+            cliEnterLock/1,
+            cliExitLock/1,
+            cliNewDelegate/3,
             link_swiplcs/1,
-            to_string/2
+            to_string/2,
+            cliToFromRecomposer/4,
+            cliWriteFormat/3,
+            cliWriteFormat/2
           ]).
+
+
 
 :-dynamic(shortTypeName/2).
 :-dynamic(cliSubProperty/2).
@@ -51,7 +63,7 @@
 :-set_prolog_flag(double_quotes,string).
 
 :-module_transparent(shortTypeName/2).
-:-module_transparent(cliGet/3).
+%%:-module_transparent(cliGet/3).
 
 %------------------------------------------------------------------------------
 % Load C++ DLL
@@ -103,8 +115,12 @@ cliCol(X,Y):-cliCollection(X,Y).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %% cliWriteln(+Obj) writes an object out
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cliWriteln(S):-cliToString(S,W),writeq(W),nl.
+cliWrite(S):-cliToString(S,W),writeq(W).
+cliWriteln(S):-cliWrite(S),nl.
 
+
+cliWriteFormat(WID,String,Args):-writeq(WID),write(':'),cliWriteFormat(String,Args),cliFree(WID). %% WID will be made again each call
+cliWriteFormat(String,Args):-cliCall('System.String','Format'(String,Args),Result),cliWriteln(Result).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %% cliToString(+Obj,-String) writes an object out to string
@@ -168,11 +184,11 @@ cliCall(Obj,MethodSpec,Params,Out):-cliCallRaw(Obj,MethodSpec,Params,OutRaw),!,O
 cliGet(Obj,_,_):-cliIsNull(Obj),!,fail.
 cliGet(Obj,[P],Value):-!,cliGet(Obj,P,Value).
 cliGet(Obj,[P|N],Value):-!,cliGet(Obj,P,M),cliGet(M,N,Value),!.
-cliGet(Obj,P,Value):-cliGetOverloaded(Obj,P,Value),!.
+cliGet(Obj,P,ValueOut):-cliGetOverloaded(Obj,P,Value),!,cliUnify(Value,ValueOut).
 
-cliGetOverloaded(Obj,_,_):-cliIsNull(Obj),!,fail.
-cliGetOverloaded(Obj,P,Value):-cliGetHook(Obj,P,ValueOut),!,cliUnify(Value,ValueOut).
-cliGetOverloaded(Obj,P,Value):-cliGetRaw(Obj,P,ValueOut),!,cliUnify(Value,ValueOut).
+cliGetOverloaded(Obj,_,_):-cliIsNull(Obj),!,fail,throw(cliIsNull(Obj)).
+cliGetOverloaded(Obj,P,Value):-cliGetHook(Obj,P,Value),!.
+cliGetOverloaded(Obj,P,Value):-cliGetRaw(Obj,P,Value),!.
 cliGetOverloaded(Obj,P,Value):-not(atom(Obj)),cliGetType(Obj,CType),!,cliGetTypeSubProps(CType,Sub),cliGetRawS(Obj,Sub,SubValue),cliGetOverloaded(SubValue,P,Value),!.
 
 cliGetRawS(Obj,[P],Value):-!,cliGetRawS(Obj,P,Value).
@@ -218,13 +234,13 @@ cliUnify(O1,O2):-O1=..[F|[A1|RGS1]],!,O2=..[F|[A2|RGS2]],cliUnify([A1|RGS1],[A2|
 
 % jpl_iterator_element(+Iterator, -Element) :-
 
-cli_iterator_element(I, E) :- %%cliIsInstance('java.util.Iterator',I),!,
+cli_iterator_element(I, E) :- cliIsType(I,'java.util.Iterator'),!,
 	(   cliCall(I, hasNext, [], @(true))
 	->  (   cliCall(I, next, [], E)        % surely it's steadfast...
 	;   cli_iterator_element(I, E)
 	)
 	).
-cli_enumerator_element(I, E) :- %%cliIsInstance('System.Collections.IEnumerator',I),!,
+cli_enumerator_element(I, E) :- %%cliIsType('System.Collections.IEnumerator',I),!,
 	(   cliCall(I, 'MoveNext', [], @(true))
 	->  (   cliGet(I, 'Current', E)        % surely it's steadfast...
 	;   cli_enumerator_element(I, E)
@@ -255,6 +271,11 @@ cliGetMap(Objs,Term,_,_,_,_,List):- cliIsType(Term,'System.Collections.IEnumerab
 cliGetMap(Objs,Term,Props,Name,Value,NameValue,List):-cliGetMap1(Objs,Term,Props,Name,Value,NameValue,List).
 
 cliGetMap1(Objs,Term,Props,Name,Value,NameValue,List):-findall(NameValue,(member(Name,Props),cliGetRaw(Term,Name,ValueM),cliToData(Objs,ValueM,Value)),List).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%%% cliWithLock(Lock,Call)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cliWithLock(Lock,Call):-setup_call_cleanup(cliEnterLock(Lock),Call,cliExitLock(Lock)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %%% cli_debug/[1,2]
