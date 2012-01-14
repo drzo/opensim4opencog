@@ -1277,7 +1277,8 @@ namespace SbsSW.SwiPlCs
             var Key = new DelegateObjectInPrologKey();
             Key.Name = prologPred.Name;
             Key.Arity = prologPred.Arity;
-            //Key.Origin = prologPred;
+            //uint fid = libpl.PL_open_foreign_frame();
+            //Key.Origin = prologPred.Copy();
             Key.DelegateType = fi;
 
             DelegateObjectInProlog handlerInProlog;
@@ -2384,7 +2385,10 @@ namespace SbsSW.SwiPlCs
                 Warn("Not a allocated term {0}", o);
                 return libpl.PL_fail;
             }
-            if (o is PlTerm) return libpl.PL_unify(TermRef, ((PlTerm) o).TermRef);
+            if (o is PlTerm)
+            {
+                return libpl.PL_unify(TermRef, ((PlTerm) o).TermRef);
+            }
             if (o is Term) return UnifyToProlog(ToPLCS((Term) o), term);
             if (o is string)
             {
