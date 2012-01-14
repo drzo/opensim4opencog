@@ -200,6 +200,12 @@ namespace SbsSW.SwiPlCs.Callback
     [System.Runtime.InteropServices.UnmanagedFunctionPointerAttribute(System.Runtime.InteropServices.CallingConvention.Cdecl)]
     public delegate bool DelegateParameter4(PlTerm term1, PlTerm term2, PlTerm term3, PlTerm term4);
 
+    /// <inheritdoc cref="DelegateParameter2" />
+    /// <param name="term1"></param>
+    /// <param name="term2"></param>
+    /// <param name="term3"></param>
+    [System.Runtime.InteropServices.UnmanagedFunctionPointerAttribute(System.Runtime.InteropServices.CallingConvention.Cdecl)]
+    public delegate bool DelegateParameter5(PlTerm term1, PlTerm term2, PlTerm term3, PlTerm term4, PlTerm term5);
     /// <summary>
     /// <para>With this delegate you can build a call-back predicate with a variable amount of parameters.</para>
     /// </summary>
@@ -2100,6 +2106,12 @@ namespace SbsSW.SwiPlCs
             _size = arity;
             Check.Require(terms.TermRefIntern != 0);
             _a0 = terms.TermRefIntern;
+        }
+
+        public void Resize(int newSize)
+        {
+            int addTo = newSize - _size;
+            _size = newSize;
         }
         /*
 
