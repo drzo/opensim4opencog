@@ -11,7 +11,7 @@ namespace SbsSW.SwiPlCs
         public String Name;
         public int Arity;
         public Type DelegateType;
-       // public PlTerm Origin;
+        //public PlTerm Origin;
         public override string ToString()
         {
             return (Module ?? "user") + ":" + Name + "/" + Arity + " " + DelegateType;
@@ -20,6 +20,7 @@ namespace SbsSW.SwiPlCs
 
     public class DelegateObjectInProlog
     {
+        public static bool UseCallN = false;
         DelegateObjectInPrologKey Key;
         /*
         public String Module = "user";
@@ -186,8 +187,15 @@ namespace SbsSW.SwiPlCs
             {
                 try
                 {
+                    object arg1 =
+                        //Key.Origin; //makes sense for UseCallN
+                        this;
                     PrologEvents++;
-                    return PrologClient.CallProlog(this, Key.Module, Key.Name, Key.Arity, this/*Key.Origin*/, paramz, ReturnType);
+                    if (UseCallN)
+                    {
+                        return PrologClient.CallProlog(this, Key.Module, "call", Key.Arity, arg1, paramz, ReturnType);                        
+                    }
+                    return PrologClient.CallProlog(this, Key.Module, Key.Name, Key.Arity, arg1, paramz, ReturnType);
                 }
                 catch (AccessViolationException e)
                 {
