@@ -328,6 +328,13 @@ namespace SbsSW.SwiPlCs
                                                          (bool)InvokeCaught(list, null, new object[] { p1, p2, p3, p4 })),
                                                      PlForeignSwitches.None);
                             return;
+                        case -5: // use the default please
+                            PlEngine.RegisterForeign(module, pn, paramlen,
+                                                     new DelegateParameter5(
+                                                         (p1, p2, p3, p4, p5) =>
+                                                         (bool)InvokeCaught(list, null, new object[] { p1, p2, p3, p4, p5 })),
+                                                     PlForeignSwitches.None);
+                            return;
                         default:
                             break;
                     }
@@ -340,7 +347,8 @@ namespace SbsSW.SwiPlCs
                                                    {
                                                        if (termVector.Size != plarity)
                                                        {
-                                                           return false;
+                                                           //return false;
+                                                           termVector.Resize(plarity);
                                                        }
                                                        object target = isStatic
                                                                            ? null

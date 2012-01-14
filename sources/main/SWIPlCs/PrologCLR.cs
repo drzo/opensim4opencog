@@ -348,7 +348,15 @@ namespace SbsSW.SwiPlCs
                     return null;
             }
         }
-
+        public static Type GetTypeThrowIfMissing(PlTerm clazzSpec)
+        {
+            Type fi = GetType(clazzSpec);
+            if (fi==null)
+            {
+                throw new PlException("cant find class" + clazzSpec);
+            }
+            return fi;
+        }
         public static Type GetType(PlTerm clazzSpec)
         {
             if (clazzSpec.IsVar)
@@ -1232,6 +1240,62 @@ namespace SbsSW.SwiPlCs
             return valueOut.FromObject(retval ?? VoidOrNull(mi));
         }
 
+        //cliNewDelegate
+        [PrologVisible(ModuleName = ExportModule)]
+        static public bool cliNewDelegate(PlTerm delegateClass, PlTerm prologPred,  PlTerm valueOut)
+        {
+            if (!valueOut.IsVar)
+            {
+                var plvar = PlTerm.PlVar();
+                cliNewDelegate(delegateClass, prologPred, plvar);
+                return SpecialUnify(valueOut, plvar);
+            }
+            object retval = cliDelegateTerm(GetTypeThrowIfMissing(delegateClass), prologPred, true);
+            return valueOut.FromObject(retval);
+        }
+        [PrologVisible(ModuleName = ExportModule)]
+        static public Delegate cliDelegateTerm(Type fi, PlTerm prologPred, bool saveKey)
+        {
+            if (prologPred.IsCompound)
+            {
+                if (prologPred.Name=="delegate")
+                {
+                    if (prologPred.Arity==1)
+                    {
+                        return cliDelegateTerm(fi, prologPred.Arg(0), saveKey);
+                    }
+                    Type dt = GetTypeThrowIfMissing(prologPred.Arg(0));
+                    var obj = cliDelegateTerm(dt, prologPred.Arg(1), saveKey);
+                    return (Delegate) RecastObject(fi, obj, dt);
+                }
+                if (prologPred.Name=="@")
+                {
+                    return (Delegate) RecastObject(fi, tag_to_object((string)prologPred.Arg(0)), null);
+                }
+            }
+
+            var Key = new DelegateObjectInPrologKey();
+            Key.Name = prologPred.Name;
+            Key.Arity = prologPred.Arity;
+            //Key.Origin = prologPred;
+            Key.DelegateType = fi;
+
+            DelegateObjectInProlog handlerInProlog;
+            lock (PrologDelegateHandlers)
+            {
+                if (PrologDelegateHandlers.TryGetValue(Key, out handlerInProlog))
+                {
+                    //   fi.RemoveEventHandler(getInstance, handlerInProlog.Delegate);
+                    PrologDelegateHandlers.Remove(Key);
+                }
+                handlerInProlog = new DelegateObjectInProlog(Key);
+                if (saveKey) PrologDelegateHandlers.Add(Key, handlerInProlog);
+                // fi.AddEventHandler(getInstance, handlerInProlog.Delegate);
+            }
+            return handlerInProlog.Delegate;
+            
+        }
+
         private static int Arglen(PlTerm valueIn)
         {
             if (valueIn.IsList)
@@ -1312,6 +1376,9 @@ namespace SbsSW.SwiPlCs
         {
             return info.ReturnType == typeof (void) ? (object) PLVOID : PLNULL;
         }
+
+        public static Dictionary<DelegateObjectInPrologKey, DelegateObjectInProlog> PrologDelegateHandlers =
+    new Dictionary<DelegateObjectInPrologKey, DelegateObjectInProlog>();
 
         public static Dictionary<EventHandlerInPrologKey, EventHandlerInProlog> PrologEventHandlers =
             new Dictionary<EventHandlerInPrologKey, EventHandlerInProlog>();
@@ -2830,6 +2897,14 @@ namespace SbsSW.SwiPlCs
             {
                 return null;
             }
+            if (key == "delegate/1")
+            {
+                return CastTerm0(arg1, pt);
+            }
+            if (key == "delegate/2")
+            {
+                return cliDelegateTerm(pt, orig, false);
+            }
             if (key == "{}/1")
             {
                 return arg1;
@@ -3351,6 +3426,10 @@ namespace SbsSW.SwiPlCs
             if (pt == typeof(string))
             {
                 return (string)o;
+            }
+            if (pt != null && pt.IsSubclassOf(typeof(Delegate)))
+            {
+                return cliDelegateTerm(pt, o, false);
             }
             switch (o.PlType)
             {
