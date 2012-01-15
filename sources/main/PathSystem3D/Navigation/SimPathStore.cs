@@ -780,6 +780,7 @@ namespace PathSystem3D.Navigation
 
         public static IList<Vector3d> GetPath(CollisionPlane CP, Vector3d globalStart, Vector3d globalEnd, double endFudge, out bool OnlyStart, out bool faked)
         {
+            CP.LastUsed = DateTime.Now;
             SimPathStore regStart = SimPathStore.GetPathStore(globalStart);// posStart.GetPathStore();
             SimPathStore regEnd = GetPathStore(globalEnd);
             Vector3 localStart = GlobalToLocal(globalStart);
