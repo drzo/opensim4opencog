@@ -392,6 +392,32 @@ namespace SbsSW.SwiPlCs
                     Type[] t = GetObjectTypes(os, paramTypes);
                     info = info.MakeGenericMethod(t);
                 }
+                var ps = info.GetParameters();
+                int psLengthM1 = ps.Length-1;
+                bool isVarArg = (info.CallingConvention & CallingConventions.VarArgs) != 0;
+                if (isVarArg)
+                {
+                    int usedUp = 0;
+                    object[] ao = new object[psLengthM1 + 1];
+                    for (int i = 0; i < psLengthM1; i++)
+                    {
+                        ao[i] = RecastObject(ps[i].ParameterType, os[i], null);
+                        usedUp++;
+                    }
+                    int slack = os.Length - usedUp;
+                    object[] lastArray = new object[slack];
+                    int fillAt = 0;
+                    while (slack-->0)
+                    {
+                        lastArray[fillAt++] = os[usedUp++];
+                    }
+                    ao[psLengthM1] = lastArray;
+                    os = ao;
+                }
+                if (ps.Length != os.Length)
+                {
+                    Warn("ArgCount mismatch " + info + ": call count=" + os.Length);
+                }
                 object ret = info.Invoke(o, os);
                 if (ret == null) return VoidOrNull(info);
                 return ret;
