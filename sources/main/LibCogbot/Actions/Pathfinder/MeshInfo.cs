@@ -13,7 +13,7 @@ namespace cogbot.Actions.Pathfinder
         public meshinfo(BotClient client)
         {
             Name = GetType().Name;
-            Description = "Reads the sim prims for improving routes";
+            Description = "Shows meshinfo";
             Category = cogbot.Actions.CommandCategory.Movement;
             Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
