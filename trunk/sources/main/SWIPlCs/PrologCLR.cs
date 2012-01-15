@@ -598,25 +598,178 @@ namespace SbsSW.SwiPlCs
         }
 
         [PrologVisible(ModuleName = ExportModule)]
-        private static object[] PlListToCastedArray(IEnumerable<PlTerm> term, ParameterInfo[] paramInfos)
+        private static bool testOut(int incoming, out int outbound)
         {
+            outbound = incoming;
+            return true;
+        }
+        [PrologVisible(ModuleName = ExportModule)]
+        private static bool testOpt(int incoming, string optionalstr,  out int outbound)
+        {
+            outbound = incoming;
+            return true;
+        }
+        [PrologVisible(ModuleName = ExportModule)]
+        private static bool testRef(int incoming, ref string optionalstr, out int outbound)
+        {
+            outbound = incoming;
+            optionalstr = "" + incoming;
+            return true;
+        }
+        [PrologVisible(ModuleName = ExportModule)]
+        private static bool testVarArg(out int outbound, params int[] incoming)
+        {
+            outbound = 0;
+            foreach (int i in incoming)
+            {
+                outbound += i;
+            }
+            return true;
+        }
+
+        [PrologVisible(ModuleName = ExportModule)]
+        private static object[] PlListToCastedArray(IEnumerable<PlTerm> term, ParameterInfo[] paramInfos, out Action todo)
+        {
+            return PlListToCastedArray(0, term, paramInfos, out todo);
+        }
+        [PrologVisible(ModuleName = ExportModule)]
+        private static object[] PlListToCastedArray(int skip, IEnumerable<PlTerm> term, ParameterInfo[] paramInfos, out Action todo)
+        {
+            todo = Do_NOTHING;
+            int len = paramInfos.Length;
+            if (len == 0) return ARRAY_OBJECT0;
+            MethodInfo methodInfo = (MethodInfo) paramInfos[0].Member;
+            bool isVarArg = (methodInfo.CallingConvention & CallingConventions.VarArgs) != 0;
+            object[] ret = new object[len];
             if (term is PlTerm)
             {
-                PlTerm tlist = (PlTerm)term;
+                PlTerm tlist = (PlTerm) term;
                 if (tlist.IsList)
                 {
                     term = tlist.Copy();
                 }
             }
-            int len = paramInfos.Length;
-            object[] ret = new object[len];
-            int idx = 0;
-            foreach (PlTerm arg in term)
+            PlTerm[] ta = ToTermArray(term);
+            int termLen = ta.Length;
+            int lenNeeded = len;
+            int termN = skip;
+            for (int idx = 0; idx < len; idx++)
             {
-                ret[idx] = CastTerm(arg, paramInfos[idx].ParameterType);
-                if (++idx >= len) break;
+                ParameterInfo paramInfo = paramInfos[idx];
+                PlTerm arg = ta[termN];
+                Type type = GetParameterType(paramInfo);
+                bool isByRef = IsByRef(paramInfo);
+                bool lastArg = (idx + 1 == len);
+                if (lastArg && isVarArg)
+                {
+                    if (arg.IsList)
+                    {
+                        ret[idx] = CastTerm(arg, type);
+                        termN++;
+                        continue;
+                    }
+                    Type arrayElementType = type.GetElementType();
+                    if (termN < termLen)
+                    {
+                        int slack = termLen - termN;
+                        var sa = (object[])Array.CreateInstance(arrayElementType, slack);
+                        ret[idx] = sa;
+                        for (int i = 0; i < slack; i++)
+                        {
+                            sa[i] = CastTerm(ta[termN++], arrayElementType);
+                        }
+                        continue;
+                    }
+                    ret[idx] = Array.CreateInstance(arrayElementType, 0);
+                }
+                if (IsOptionalParam(paramInfo))
+                {
+                    if (termLen < lenNeeded)
+                    {
+                        lenNeeded--;
+                        object paramInfoDefaultValue = paramInfo.DefaultValue;
+                        if (type.IsInstanceOfType(paramInfoDefaultValue))
+                        {
+                            ret[idx] = paramInfoDefaultValue;
+                        }
+                        else
+                        {
+                            //paramInfo.ParameterType.IsValueType
+                            //default()
+                        }
+                        //termN stays the same!
+                        continue;
+                    }
+                }
+                bool wasOut = paramInfo.IsOut || paramInfo.IsRetval;
+                if (wasOut) isByRef = false;
+                if (isByRef && !wasOut)
+                {
+                    ret[idx] = CastTerm(arg, type);
+                    wasOut = true;
+                }
+                if (wasOut)
+                {
+                    var sofar = todo;
+                    int index0 = idx;
+                    int termM = termN;
+                    PlTerm plTerm = arg;
+                    todo = () =>
+                               {
+                                   object ret1 = ret[index0];
+                                   int ii = termM;
+                                   UnifySpecialObject(plTerm, ret1);
+                                   sofar();
+                               };
+                    if (isByRef)
+                    {
+                        termN++;
+                        continue;                        
+                    }
+                }
+                if (paramInfo.IsIn)
+                {
+                    ret[idx] = CastTerm(arg, type);
+                }
+                else
+                {
+                    if (!wasOut)
+                    {
+                        ret[idx] = CastTerm(arg, type);
+                    }
+                    else
+                    {
+                        ret[idx] = null;// CastTerm(arg, paramInfo.ParameterType);                        
+                    }
+                }
+                termN++;
             }
             return ret;
+        }
+        public static Type GetParameterType(ParameterInfo paramInfo)
+        {
+            Type paramType = paramInfo.ParameterType;
+            return paramType.IsByRef ? paramType.GetElementType() : paramType;
+        }
+        public static bool IsByRef(ParameterInfo paramInfo)
+        {
+            Type paramType = paramInfo.ParameterType;
+            return paramType.IsByRef;
+        }
+
+        private static PlTerm[] ToTermArray(IEnumerable<PlTerm> enumerable)
+        {
+            if (enumerable is PlTerm[]) return (PlTerm[]) enumerable;
+            if (enumerable is PlTermV)
+            {
+                PlTermV tv = (PlTermV) enumerable;
+                return tv.ToArray();
+            }
+            return enumerable.ToArray();
+        }
+
+        private static void Do_NOTHING()
+        {          
         }
 
         [PrologVisible(ModuleName = ExportModule)]
@@ -938,8 +1091,11 @@ namespace SbsSW.SwiPlCs
                 Warn("Cant find constructor {0} on {1}", memberSpec, c);
                 return false;
             }
-            object[] values = PlListToCastedArray(valueIn, mi.GetParameters());
-            return valueOut.FromObject((mi.Invoke(values)));
+            Action postCallHook;
+            object[] values = PlListToCastedArray(valueIn, mi.GetParameters(), out postCallHook);
+            var ret = valueOut.FromObject((mi.Invoke(values)));
+            postCallHook();
+            return ret;
         }
 
         /// <summary>
@@ -1234,9 +1390,10 @@ namespace SbsSW.SwiPlCs
                 Warn("Cant find method {0} on {1}", memberSpec, c);
                 return false;
             }
-            object[] value = PlListToCastedArray(valueIn, mi.GetParameters());
+            Action postCallHook;
+            object[] value = PlListToCastedArray(valueIn, mi.GetParameters(), out postCallHook);
             object target = mi.IsStatic ? null : getInstance;
-            object retval = InvokeCaught(mi, target, value);
+            object retval = InvokeCaught(mi, target, value, postCallHook);
             return valueOut.FromObject(retval ?? VoidOrNull(mi));
         }
 
@@ -1340,9 +1497,16 @@ namespace SbsSW.SwiPlCs
                 FieldInfo fi = c.GetField(fn, BindingFlagsALL);
                 if (fi != null)
                 {
-                    Delegate del = (Delegate)fi.GetValue(getInstance);
+                    Delegate del = (Delegate) fi.GetValue(getInstance);
                     if (del != null)
-                        return valueOut.FromObject((del.DynamicInvoke(PlListToCastedArray(valueIn, paramInfos))));
+                    {
+                        Action postCallHook;
+                        var ret = valueOut.FromObject((del.DynamicInvoke(
+                                                          PlListToCastedArray(valueIn, paramInfos,
+                                                                              out postCallHook))));
+                        postCallHook();
+                        return ret;
+                    }
                 }
                 string fn1 = fn.Substring(1);
                 int len = fn.Length;
@@ -1354,7 +1518,14 @@ namespace SbsSW.SwiPlCs
                         {
                             Delegate del = (Delegate)info.GetValue(info.IsStatic ? null : getInstance);
                             if (del != null)
-                                return valueOut.FromObject((del.DynamicInvoke(PlListToCastedArray(valueIn, paramInfos))));
+                            {
+                                Action postCallHook;
+                                var ret = valueOut.FromObject((del.DynamicInvoke(
+                                                                  PlListToCastedArray(valueIn, paramInfos,
+                                                                                      out postCallHook))));
+                                postCallHook();
+                                return ret;
+                            }
                         }
                     }
                 }
@@ -1368,9 +1539,10 @@ namespace SbsSW.SwiPlCs
                 Warn("Cant find event raising for  {0} on {1}", evi, c);
                 return false;
             }
-            object[] value = PlListToCastedArray(valueIn, mi.GetParameters());
+            Action postCallHook0;
+            object[] value = PlListToCastedArray(valueIn, mi.GetParameters(), out postCallHook0);
             object target = mi.IsStatic ? null : getInstance;
-            return valueOut.FromObject(InvokeCaught(mi, target, value) ?? VoidOrNull(mi));
+            return valueOut.FromObject(InvokeCaught(mi, target, value, postCallHook0) ?? VoidOrNull(mi));
         }
 
         private static object VoidOrNull(MethodInfo info)
@@ -1529,9 +1701,10 @@ namespace SbsSW.SwiPlCs
                     found = false;
                     return null;
                 }
-                object[] value = PlListToCastedArray(memberSpec, mi.GetParameters());
+                Action postCallHook;
+                object[] value = PlListToCastedArray(memberSpec, mi.GetParameters(), out postCallHook);
                 object target = mi.IsStatic ? null : getInstance;
-                object retval = InvokeCaught(mi, target, value) ?? VoidOrNull(mi);
+                object retval = InvokeCaught(mi, target, value, postCallHook) ?? VoidOrNull(mi);
                 found = true;
                 return retval;
             }
@@ -1602,9 +1775,10 @@ namespace SbsSW.SwiPlCs
                     WarnMissing("Cant find setter " + memberSpec + " on " + c);
                     return false;
                 }
-                object[] value = PlListToCastedArray(valueIn, mi.GetParameters());
+                Action postCallHook;
+                object[] value = PlListToCastedArray(valueIn, mi.GetParameters(), out postCallHook);
                 object target = mi.IsStatic ? null : getInstance;
-                object retval = InvokeCaught(mi, target, value);
+                object retval = InvokeCaught(mi, target, value, postCallHook);
                 return true;// valueOut.FromObject(retval);
             }
             WarnMissing("Cant find setter " + memberSpec + " on " + c);
@@ -3014,6 +3188,19 @@ namespace SbsSW.SwiPlCs
             }
             if (orig.IsList)
             {
+                if (pt != null && pt.IsArray)
+                {
+                    Type arrayType = pt.GetElementType();
+                    PlTerm[] terms = ToTermArray(orig);
+                    int termsLength = terms.Length;
+                    Array al = Array.CreateInstance(arrayType, termsLength);
+                    for (int i = 0; i < termsLength; i++)
+                    {
+                        PlTerm term = terms[i];
+                        al.SetValue(CastTerm(term, arrayType), i);
+                    }
+                    return al;
+                }
                 if (arg1.IsInteger || arg1.IsAtom)
                 {
                     Debug("maybe this is a string " + orig);
@@ -3030,6 +3217,19 @@ namespace SbsSW.SwiPlCs
                     }
                 }
             }
+            if (pt != null && pt.IsArray)
+            {
+                Type arrayType = pt.GetElementType();
+                PlTerm[] terms = ToTermArray(orig);
+                int termsLength = terms.Length;
+                Array al = Array.CreateInstance(arrayType, termsLength);
+                for (int i = 0; i < termsLength; i++)
+                {
+                    PlTerm term = terms[i];
+                    al.SetValue(CastTerm(term, arrayType), i);
+                }
+                return al;
+            }
             Type t = ResolveType(name);
             if (t == null)
             {
@@ -3044,8 +3244,11 @@ namespace SbsSW.SwiPlCs
                     if (mGetParameters.Length == arity)
                     {
                         Warn("using contructor {0}", m);
-                        var values = PlListToCastedArray(orig, m.GetParameters());
-                        return m.Invoke(values);
+                        Action postCallHook;
+                        var values = PlListToCastedArray(orig, m.GetParameters(), out postCallHook);
+                        var retval =  m.Invoke(values);
+                        postCallHook();
+                        return retval;
                     }
                 }
             }
@@ -3399,6 +3602,7 @@ namespace SbsSW.SwiPlCs
         private static readonly Type[] arrayOfStringType = new Type[] {typeof (string)};
         private static uint _enum2;
         private static uint _obj1;
+        private static readonly object[] ARRAY_OBJECT0 = new object[0];
 
         static object ToBigInteger(string value)
         {
@@ -3484,6 +3688,13 @@ namespace SbsSW.SwiPlCs
                 case PlType.PlAtom:
                 case PlType.PlString:
                     {
+                        if (pt != null && pt.IsArray)
+                        {
+                            if (o.Name == "[]")
+                            {
+                                return Array.CreateInstance(pt.GetElementType(), 0);
+                            }
+                        }
                         string s = (string)o;
                         if (pt == null) return s;
                         var constructor = pt.GetConstructor(new[] { typeof(string) });
@@ -3518,7 +3729,19 @@ namespace SbsSW.SwiPlCs
             }
         }
 
-      }
+        private static bool IsOptionalParam(ParameterInfo info)
+        {
+            if ((info.Attributes & ParameterAttributes.Optional) != 0)
+            {
+                return true;
+            }
+            if ((info.Attributes & ParameterAttributes.HasDefault) != 0)
+            {
+                return true;
+            }
+            return info.IsOptional || info.Name.ToLower().StartsWith("optional");
+        }
+    }
 
     internal class PrologConvert //: OpenMetaverse.UUIDFactory
     {

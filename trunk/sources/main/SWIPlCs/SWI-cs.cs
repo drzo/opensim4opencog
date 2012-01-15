@@ -523,7 +523,7 @@ namespace SbsSW.SwiPlCs
     public class PlTermVEnumerator : IEnumerator<PlTerm>
     {
         PlTermV orig;
-        int index = 0;
+        int index = -1;
         public PlTermVEnumerator(PlTermV compound, int startElement)
         {
             orig = compound;
@@ -534,7 +534,17 @@ namespace SbsSW.SwiPlCs
 
         PlTerm IEnumerator<PlTerm>.Current
         {
-            get { return orig[index]; }
+            get
+            {
+                try
+                {
+                    return orig[index];
+                }
+                catch (IndexOutOfRangeException)
+                {
+                    throw new InvalidOperationException();
+                }
+            }
         }
 
         #endregion
@@ -552,17 +562,27 @@ namespace SbsSW.SwiPlCs
 
         object IEnumerator.Current
         {
-            get { return orig[index]; }
+            get
+            {
+                try
+                {
+                    return orig[index];
+                }
+                catch (IndexOutOfRangeException)
+                {
+                    throw new InvalidOperationException();
+                } 
+            }
         }
 
         bool IEnumerator.MoveNext()
         {
-            return (index++ < orig.Size);
+            return (++index < orig.Size);
         }
 
         void IEnumerator.Reset()
         {
-            index = 0;
+            index = -1;
         }
 
         #endregion
