@@ -113,7 +113,7 @@ namespace cogbot.TheOpenSims
             double atan = 999;
 
             var CP = PathStore.GetCollisionPlane((float)list[0].Z);
-            if (CP.lastUpdate!=ThisUpdateShown)
+            if (CP.lastUpdate != ThisUpdateShown)
             {
                 ThisUpdateShown = CP.lastUpdate;
                 Client.Self.Chat("http://logicmoo.dyndns.org:5580/cogpath/path.gif", 100, ChatType.Normal);
@@ -121,6 +121,7 @@ namespace cogbot.TheOpenSims
             }
 
             KillPipes();
+            bool throttle = llist.Count < 200;
             foreach (var next in llist)
             {
                 if (!haveFirst)
@@ -137,6 +138,7 @@ namespace cogbot.TheOpenSims
                     atan = thisAtan;
                     continue;
                 }
+                if (throttle) Thread.Sleep(3);
                 if (true)
                 {
                     Client.Self.Chat(
@@ -222,35 +224,35 @@ namespace cogbot.TheOpenSims
         }
 
         private SimMoverState old;
+        private readonly static Dictionary<SimMoverState, UUID> State2Anim = new Dictionary<SimMoverState, UUID>();
         protected override void OnMoverStateChange(SimMoverState obj)
         {
-            return; // todo make sure it doesnt mess up turning animations while moving
-            UUID THINK_AMIN = Animations.EXPRESS_TOOTHSMILE;
 
-            if (old == SimMoverState.THINKING)
+            //return; // todo make sure it doesnt mess up turning animations while moving
+            if (State2Anim.Count == 0)
             {
-                Client.Self.AnimationStop(THINK_AMIN, true);
+                State2Anim[SimMoverState.THINKING] = Animations.EXPRESS_TOOTHSMILE;
+                State2Anim[SimMoverState.TRYAGAIN] = Animations.SURPRISE;
+                State2Anim[SimMoverState.BLOCKED] = Animations.WORRY;
             }
-            //Client.Self.AnimationStop(Animations.SHRUG, true);
-            //Client.Self.AnimationStop(Animations.SURPRISE, true);
-            switch (obj)
+
+            if (old != obj)
             {
-                case SimMoverState.PAUSED:
-                    break;
-                case SimMoverState.MOVING:
-                    break;
-                case SimMoverState.BLOCKED:
-                    break;
-                case SimMoverState.COMPLETE:
-                    break;
-                case SimMoverState.TRYAGAIN:
-                    break;
-                case SimMoverState.THINKING:
-                    Client.Self.AnimationStart(THINK_AMIN, true);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException("obj");
+                UUID oldAnim;
+                if (State2Anim.TryGetValue(old, out oldAnim))
+                {
+                    if (oldAnim != UUID.Zero) Client.Self.AnimationStop(oldAnim, true);
+                }
             }
+            UUID newAnim;
+            if (State2Anim.TryGetValue(obj, out newAnim))
+            {
+                if (newAnim != UUID.Zero)
+                {
+                    Client.Self.AnimationStart(newAnim, true);
+                    Thread.Sleep(100);
+                }
+            } 
             old = obj;
         }
 
@@ -1349,17 +1351,23 @@ namespace cogbot.TheOpenSims
                 case MovementProceedure.AStar:
                     bool res = GotoTargetAStar(pos);
                     if (res) return res;
+                    if (SimAvatarImpl.UseTeleportFallback)
+                    {
+                        StopMoving();
+                        Debug("Goto sneaking in TP to " + pos);
+                        res = this.TeleportTo(pos.UsePosition);
+                        StopMoving();
+                        TurnToward(pos);
+                        return res;
+                    }
+                    SetMoveTarget(pos, maxDistance - 1);
+                    Thread.Sleep(1000);
                     StopMoving();
                     if (maxDistance > this.Distance(pos))
                     {
                         return true;
                     }
-                    if (!SimAvatarImpl.UseTeleportFallback) return false;
-                    Debug("Goto sneaking in TP to " + pos);
-                    res = this.TeleportTo(pos.UsePosition);
-                    StopMoving();
-                    TurnToward(pos);
-                    return res;
+                    return false;
                 default:
                     {
                         throw new UnsupportedOperationException("" + SalientMovementProceedure); 
@@ -1381,6 +1389,7 @@ namespace cogbot.TheOpenSims
             }
             SimPosition pos = R.GetWaypointOf(local);
             Vector3d global = pos.GlobalPosition;
+            StopMoving();
             return Client.Self.Teleport(R.RegionHandle, local, local);
 
             //CmdResult s = Client.ExecuteCommand("teleport " + R.RegionName + "/" + local.X + "/" + local.Y + "/" + local.Z, Debug);

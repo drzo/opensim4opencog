@@ -65,6 +65,7 @@ namespace cogbot.Actions.Agent
                 Vector3d global = pos.GlobalPosition;
                 WriteLine("Teleporing to " + pos + "...");
                 float x, y;
+                TheSimAvatar.StopMoving();
                 bool res =
                     Client.Self.Teleport(
                         SimRegion.GlobalPosToRegionHandle((float) global.X, (float) global.Y, out x, out y),

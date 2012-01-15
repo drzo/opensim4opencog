@@ -309,7 +309,7 @@ namespace cogbot.TheOpenSims
                     return true;
                 }
             }
-            ///IndicateTarget(pos, true);
+            IndicateTarget(pos, false);
             return false;
         }
 
@@ -383,6 +383,7 @@ namespace cogbot.TheOpenSims
 
         public virtual bool TeleportTo(SimRegion R, Vector3 local)
         {
+            StopMoving();
             return SetObjectPosition(R.LocalToGlobal(local));
         }
 
@@ -876,7 +877,7 @@ namespace cogbot.TheOpenSims
         }
 
         // the prim in Secondlife
-        protected Primitive _Prim0;
+        public Primitive _Prim0;
 
         public Primitive Prim
         {
@@ -1531,7 +1532,7 @@ namespace cogbot.TheOpenSims
             {
                 {
                     pos = this.LastKnownSimPos;
-                    Primitive thisPrim = this.Prim;
+                    Primitive thisPrim = this._Prim0;
                     if (!HasPrim || thisPrim == null)
                     {
                         return (default(Vector3) != pos);
@@ -2420,7 +2421,11 @@ namespace cogbot.TheOpenSims
 
             public bool SkipMesh
             {
-                get { return WorldPathSystem.SkipPassableMeshes && (thiz.IsPassable || thiz.IsPhantom); }
+                get
+                {
+                    if (thiz._Prim0 == null) return true;
+                    return WorldPathSystem.SkipPassableMeshes && (thiz.IsPassable || thiz.IsPhantom);
+                }
             }
             public SimMesh Mesh
             {
