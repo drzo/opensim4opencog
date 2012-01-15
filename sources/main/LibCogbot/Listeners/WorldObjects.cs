@@ -128,7 +128,7 @@ namespace cogbot.Listeners
         public static int burstSize = 100;
         public DateTime burstStartTime;
         public static float burstTime = 1;
-        public SimActor m_TheSimAvatar;
+        public SimAvatarClient m_TheSimAvatar;
         public List<string> numberedAvatars;
         public List<SimObjectHeuristic> objectHeuristics;
         public Dictionary<UUID, List<Primitive>> primGroups;
@@ -305,7 +305,7 @@ namespace cogbot.Listeners
             
         }
 
-        public SimActor TheSimAvatar
+        public SimAvatarClient TheSimAvatar
         {
             get
             {
@@ -316,11 +316,11 @@ namespace cogbot.Listeners
                     {
                         throw new ArgumentException("" + client);
                     }
-                    TheSimAvatar = (SimActor)GetSimObjectFromUUID(id);
-                    if (m_TheSimAvatar == null)
+                    TheSimAvatar = (SimAvatarClient)GetSimObjectFromUUID(id);
+                    if (m_TheSimAvatar == null) lock (UUIDTypeObject)
                     {
                         Avatar av = GetAvatar(id, client.Network.CurrentSim);
-                        if (av != null) TheSimAvatar = (SimActor)GetSimObject(av, client.Network.CurrentSim);
+                        if (av != null) TheSimAvatar = (SimAvatarClient)GetSimObject(av, client.Network.CurrentSim);
                         if (m_TheSimAvatar == null)
                         {
                             SimAvatarClient impl;
@@ -340,9 +340,15 @@ namespace cogbot.Listeners
             }
             set
             {
-                if (value == null) return;
-                if (value == m_TheSimAvatar) return;                
-            	m_TheSimAvatar = value;
+                lock (UUIDTypeObject)
+                {
+                    if (value == null) return;
+                    if (value == m_TheSimAvatar) return;
+                    var obj0 = m_TheSimAvatar = value;
+                    var uuid = m_TheSimAvatar.ID;
+                    AddAvatar(obj0, uuid);
+                }
+
             }
 
         }
@@ -371,7 +377,7 @@ namespace cogbot.Listeners
 
         public void SetSimAvatar(SimActor simAvatar)
         {
-            m_TheSimAvatar = simAvatar;
+            TheSimAvatar = (SimAvatarClient)simAvatar;
         }
 
         private static void Debug(string p)
@@ -681,16 +687,16 @@ namespace cogbot.Listeners
             {
                 Debug("cant register " + type);
             }
-            if (type is SimObject)
-                lock (UUIDTypeObject) UUIDTypeObjectSetValue(id, type);
-            else
+            //if (type is SimObject)
+            //    lock (UUIDTypeObject) UUIDTypeObjectSetValue(id, type);
+            //else
             {
                 lock (UUIDTypeObject)
                 {
                     object before;
                     if (UUIDTypeObjectTryGetValue(id, out before))
                     {
-                        if (before == type) return;
+                        if (Object.ReferenceEquals(before, type)) return;
                         //todo Master.SendNewEvent("uuid-change",""+id, before, type);
                         Debug("uuid change" + id + " " + before + " -> " + type);
                     }
@@ -805,8 +811,8 @@ namespace cogbot.Listeners
             {
                 if (AV is SimActor)
                 {
-                    m_TheSimAvatar = (SimActor)AV;
-                    m_TheSimAvatar.SetClient(client);
+                    TheSimAvatar = (SimAvatarClient)AV;
+                    TheSimAvatar.SetClient(client);
                 }
             }
             AV.IsKilled = false;
@@ -829,8 +835,8 @@ namespace cogbot.Listeners
                     SimObject AV = (SimObject)GetSimObject(avatar, simulator);
                     if (AV is SimActor)
                     {
-                        m_TheSimAvatar = (SimActor)AV;
-                        m_TheSimAvatar.SetClient(client);
+                        TheSimAvatar = (SimAvatarClient)AV;
+                        TheSimAvatar.SetClient(client);
                     }
                 }
             }
@@ -960,10 +966,25 @@ namespace cogbot.Listeners
 
         public Primitive GetLibOMVHostedPrim(UUID id, Simulator simulator, bool onlyAvatars)
         {
-            if (simulator != null) return GetLibOMVHostedPrim0(id, simulator, onlyAvatars);
+            object found;
+            //lock (uuidTypeObject)
+            if (UUIDTypeObjectTryGetValue(id, out found))
+            {
+                SimObjectImpl O = found as SimObjectImpl;
+                if (O != null)
+                {
+                    var p = O._Prim0;
+                    if (p != null)
+                    {
+                        return p;
+                    }
+                }
+            }
+            if (true) return null;
+            if (simulator != null) return GetLibOMVHostedPrim1(id, simulator, onlyAvatars);
             foreach (Simulator sim in AllSimulators)
             {
-                Primitive p = GetLibOMVHostedPrim0(id, sim, onlyAvatars);
+                Primitive p = GetLibOMVHostedPrim1(id, sim, onlyAvatars);
                 if (p != null)
                 {
                     return p;
@@ -971,7 +992,7 @@ namespace cogbot.Listeners
             }
             return null;
         }
-        public Primitive GetLibOMVHostedPrim0(UUID id, Simulator simulator, bool onlyAvatars)
+        public Primitive GetLibOMVHostedPrim1(UUID id, Simulator simulator, bool onlyAvatars)
         {
             Primitive found;
             ///lock (simulator.ObjectsAvatars.Dictionary)
@@ -982,7 +1003,10 @@ namespace cogbot.Listeners
                         return true;
                     return false;
                 });
-                if (found != null) return found;
+                if (found != null)
+                {
+                    return found;
+                }
             }
             if (!onlyAvatars)
             {
@@ -992,7 +1016,10 @@ namespace cogbot.Listeners
                                                                  //EnsureSelected(prim0.ParentID, simulator);
                                                                  return (prim0.ID == id);
                                                              });
-                if (found != null) return found;
+                if (found != null)
+                {
+                    return found;
+                }
             }
             return null;
         }
@@ -1032,24 +1059,20 @@ namespace cogbot.Listeners
             }
             if (simulator == null)
             {
-                List<Simulator> sims = new List<Simulator>();
+                foreach (Simulator sim in LockInfo.CopyOf(client.Network.Simulators))
                 {
-                    lock (client.Network.Simulators)
-                    {
-                        sims.AddRange(client.Network.Simulators);
-                    }
-
-                    foreach (Simulator sim in sims)
-                    {
-                        Primitive p = GetLibOMVHostedPrim(id, sim, false);
-                        if (p != null) return p;
-                    }
-                    return null;
+                    Primitive p = GetLibOMVHostedPrim(id, sim, false);
+                    if (p != null) return p;
                 }
-            } else
+                return null;
+            }
+            else
             {
                 found = GetLibOMVHostedPrim(id, simulator, false);
-                if (found != null) return found;
+                if (found != null)
+                {
+                    return found;
+                }
                 return null;
             }
         }
@@ -1065,15 +1088,13 @@ namespace cogbot.Listeners
 #endif
         public Primitive GetPrimitive(uint id, Simulator simulator)
         {
+            if (id == 0)
+            {
+                return null;
+            }
             if (simulator == null)
             {
-                List<Simulator> sims = new List<Simulator>();
-                lock (client.Network.Simulators)
-                {
-                    sims.AddRange(client.Network.Simulators);
-                }
-
-                foreach (Simulator sim in sims)
+                foreach (Simulator sim in LockInfo.CopyOf(client.Network.Simulators))
                 {
                     Primitive p = GetPrimitive0(id, sim);
                     if (p != null) return p;
@@ -1462,9 +1483,14 @@ namespace cogbot.Listeners
             }
             // Request all of the packets that make up an avatar profile
             // lock (GetSimObjectLock)
+            if (client.Self.AgentID == uuid)
+            {
+                return TheSimAvatar;
+            }
             SimAvatarImpl obj0 = GetSimObjectFromUUID(uuid) as SimAvatarImpl;
             if (obj0 != null) return (SimAvatarImpl)obj0;
-            lock (GetSimLock(simulator ?? client.Network.CurrentSim))
+            object getSimLock = GetSimLock(simulator ?? client.Network.CurrentSim);
+            lock (getSimLock)
             {
                 lock (UUIDTypeObject)
                     //lock (SimObjects)
@@ -1478,15 +1504,20 @@ namespace cogbot.Listeners
                         Debug("SimObj->SimAvatar!?! " + simObj);
                     }
                     obj0 = new SimAvatarImpl(uuid, objects, simulator);
-                    SimAvatars.Add((SimAvatar) obj0);
-                    //client.Avatars.RequestAvatarPicks(uuid);
-                    SimObjects.AddTo(obj0);
-                    RegisterUUID(uuid, obj0);
+                    AddAvatar(obj0,uuid);
                     obj0.PollForPrim(this, simulator);
-                    RequestAvatarMetadata(uuid);
-                    return (SimAvatarImpl) obj0;
+                    return (SimAvatarImpl)obj0;
                 }
             }
+        }
+
+        private void AddAvatar(SimAvatar obj0, UUID uuid)
+        {
+            SimAvatars.Add((SimAvatar)obj0);
+            //client.Avatars.RequestAvatarPicks(uuid);
+            SimObjects.AddTo(obj0);
+            RegisterUUID(uuid, obj0);
+            RequestAvatarMetadata(uuid);
         }
 
         internal SimObject CreateSimObject(UUID uuid, WorldObjects WO, Simulator simulator)
@@ -1517,29 +1548,30 @@ namespace cogbot.Listeners
         {
 #if COGBOT_LIBOMV
             obj = uuid.ExternalData;
-            return obj != null;
+            if (obj != null) return true;
 #endif
-            return UUIDTypeObjectReal.TryGetValue(uuid, out obj);
+            lock (UUIDTypeObjectReal) return UUIDTypeObjectReal.TryGetValue(uuid, out obj);
         }
         public static bool UUIDTypeObjectContainsKey(UUID uuid)
         {
 #if COGBOT_LIBOMV
             var obj = uuid.ExternalData;
-            return obj != null;
+            if (obj != null) return true;
 #endif
             //return uuid.ExternalData;
             //if (!b) return uuidTypeObject.TryGetValue(uuid, out o);
             //lock (WorldObjects.uuidTypeObject)
-            return UUIDTypeObjectReal.ContainsKey(uuid);
+            lock (UUIDTypeObjectReal) return UUIDTypeObjectReal.ContainsKey(uuid);
         }
         public static object UUIDTypeObjectSetValue(UUID uuid, object value)
         {
             //if (!b) return uuidTypeObject.TryGetValue(uuid, out o);
             //lock (WorldObjects.uuidTypeObject)
+            lock (UUIDTypeObjectReal) UUIDTypeObjectReal[uuid] = value;
 #if COGBOT_LIBOMV
             return uuid.ExternalData = value;
 #endif
-            return UUIDTypeObjectReal[uuid] = value;
+            return value;
         }
     }
 }

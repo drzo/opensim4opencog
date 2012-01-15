@@ -26,14 +26,24 @@ namespace cogbot.Listeners
             SimObject retObj = null;
             dist = double.MaxValue;
             if (here == Vector3d.Zero) return retObj;
+            bool oddCase = false;
             foreach (SimObject obj in GetAllSimObjects())
             {
+                if (!obj.IsRegionAttached)
+                {
+                    continue;
+                    oddCase = true;
+                }
                 Vector3d at;
                 if (obj.TryGetGlobalPosition(out at))
                 {
                     if (at == here)
                     {
                         dist = 0;
+                        if (oddCase)
+                        {
+                            return obj;
+                        }
                         return obj;
                     }
                     double ld = Vector3d.Distance(at, here);
@@ -43,6 +53,11 @@ namespace cogbot.Listeners
                         dist = ld;
                     }
                 }
+            }
+            // odd indeed?!
+            if (oddCase && retObj != null && dist < 0.01 && !retObj.IsRegionAttached)
+            {
+                return retObj;
             }
             return retObj;
         }

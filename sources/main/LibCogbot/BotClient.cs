@@ -1001,6 +1001,7 @@ namespace cogbot
                 case InstantMessageDialog.RequestTeleport:
                     if (IsOwner)
                     {
+                        TheSimAvatar.StopMoving();
                         if (RegionID != UUID.Zero)
                         {
                             DisplayNotificationInChat("TP to Lure from " + FromAgentName);
@@ -1526,15 +1527,15 @@ namespace cogbot
             List<Primitive> prims = WorldSystem.getPrimitives(16);
             if (prims.Count > 1)
             {
-                string str = "$bot sees the objects:\n";
+                WriteLine("$bot sees the objects:");
                 for (int i = 0; i < prims.Count; ++i)
-                    str += WorldSystem.describePrim(prims[i], detailed) + "\n";
+                    WriteLine(WorldSystem.describePrim(prims[i], detailed));
                 //str += "and " + WorldSystem.GetSimObject(prims[prims.Count - 1]) + ".";
-                WriteLine(str);
+                
             }
             else if (prims.Count == 1)
             {
-                WriteLine("$bot sees one object: " + WorldSystem.getObjectName(prims[0]));
+                WriteLine("$bot sees one object: " + WorldSystem.describePrim(prims[0], detailed));
             }
             else
             {
@@ -2240,9 +2241,16 @@ namespace cogbot
             }
         }
 
+        public SimAvatarClient TheSimAvatar
+        {
+            get
+            {
+                return (SimAvatarClient)WorldSystem.TheSimAvatar;
+            }
+        }
         internal object GetAvatar()
         {
-            if (gridClient.Self.AgentID != UUID.Zero) return WorldSystem.TheSimAvatar;
+            if (gridClient.Self.AgentID != UUID.Zero) return TheSimAvatar;
             return this;
         }
 
@@ -2750,7 +2758,7 @@ namespace cogbot
                 WriteLine(";; DEBUG NOT ONLINE! anim: " + animate);
                 return;
             }
-            SimAvatarClient av = WorldSystem.TheSimAvatar as SimAvatarClient;
+            SimAvatarClient av = TheSimAvatar as SimAvatarClient;
             if (av != null)
             {
                 SimAsset asset = GetAnimationOrGesture(animate);

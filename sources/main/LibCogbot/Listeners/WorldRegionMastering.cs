@@ -38,14 +38,7 @@ namespace cogbot.Listeners
         {
             get
             {
-                List<Simulator> sims = null;
-
-                lock (_AllSimulators)
-                {
-                    sims = new List<Simulator>(_AllSimulators);
-                }
-
-                return sims;
+                return LockInfo.CopyOf(_AllSimulators);
             }
         }
 
@@ -677,9 +670,9 @@ namespace cogbot.Listeners
                     if (sim.Handle == handle && sim.Connected) return sim;
                 }
             }
-            lock (client.Network.Simulators)
+           // lock (client.Network.Simulators)
             {
-                foreach (Simulator sim in client.Network.Simulators)
+                foreach (Simulator sim in LockInfo.CopyOf(client.Network.Simulators))
                 {
                     if (sim.Handle == handle && sim.Connected) return sim;
                 }
@@ -812,7 +805,8 @@ namespace cogbot.Listeners
                 s = source;
                 return source;
             }
-            Primitive sp = GetPrimitive(sourceID, null);
+            //TODO can we ever find a Primitive we hadnt yet interned?!
+            Primitive sp = null;// GetPrimitive(sourceID, null);
             if (sp != null)
             {
                 source = GetSimObject(sp);
