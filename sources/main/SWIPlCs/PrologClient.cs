@@ -279,17 +279,22 @@ namespace SbsSW.SwiPlCs
             bool isbool = rt == typeof(bool);
             bool hasReturnValue = nonvoid && !isbool;
             bool isStatic = list.IsStatic;
+            bool isVanilla = true;
+            int maxOptionals = 0;
+            foreach (ParameterInfo info in ps)
+            {
+                if (info.ParameterType != typeof(PlTerm))
+                {
+                    isVanilla = false;
+                }
+                if (IsOptionalParam(info))
+                {
+                    isVanilla = false;
+                    maxOptionals++;
+                }
+            }
             if (isbool && isStatic)
             {
-                bool isVanilla = true;
-                foreach (ParameterInfo info in ps)
-                {
-                    if (info.ParameterType != typeof(PlTerm))
-                    {
-                        isVanilla = false;
-                        break;
-                    }
-                }
                 if (isVanilla)
                 {
                     Delegate d = null;
@@ -342,47 +347,52 @@ namespace SbsSW.SwiPlCs
             }
             int plarity = paramlen + (hasReturnValue ? 1 : 0) + (isStatic ? 0 : 1);
 
-            Delegate del
-                = new DelegateParameterVarArgs((PlTermV termVector) =>
-                                                   {
-                                                       if (termVector.Size != plarity)
-                                                       {
-                                                           //return false;
-                                                           termVector.Resize(plarity);
-                                                       }
-                                                       object target = isStatic
-                                                                           ? null
-                                                                           : CastTerm(termVector[0], type) ??
-                                                                             defaultInstanceWhenMissing;
-                                                       object[] newVariable = new object[paramlen];
-
-                                                       int tvargnum = isStatic ? 0 : 1;
-                                                       for (int argnum = 0; argnum < paramlen; argnum++)
-                                                       {
-                                                           newVariable[argnum] = CastTerm(termVector[tvargnum],
-                                                                                      ps[argnum].ParameterType);
-                                                           tvargnum++;
-                                                       }
-
-                                                       object result = InvokeCaught(list, target, newVariable);
-
-                                                       if (isbool)
-                                                       {
-                                                           return (bool)result;
-                                                       }
-                                                       if (nonvoid)
-                                                       {
-                                                           return termVector[plarity - 1].FromObject((result));
-                                                       }
-                                                       return true;
-
-                                                   });
-
+            DelegateParameterVarArgs del = GetDelV(list, type, nonvoid, isbool, isStatic, plarity, defaultInstanceWhenMissing);
             PlEngine.RegisterForeign(module, pn, plarity, del, PlForeignSwitches.VarArgs);
+            while (maxOptionals > 0)
+            {
+                del = GetDelV(list, type, nonvoid, isbool, isStatic, plarity - maxOptionals, defaultInstanceWhenMissing);
+                PlEngine.RegisterForeign(module, pn, plarity - maxOptionals, del, PlForeignSwitches.VarArgs);
+                maxOptionals--;
+            }
+        }
 
+        private static DelegateParameterVarArgs GetDelV(MethodInfo list, Type type, bool nonvoid, bool isbool, bool isStatic, int plarity, object defaultInstanceWhenMissing)
+        {
+            DelegateParameterVarArgs d;
+            d = (PlTermV termVector) =>
+                    {
+                        if (termVector.Size != plarity)
+                        {
+                            //return false;
+                            termVector.Resize(plarity);
+                        }
+                        object target = isStatic ? null : CastTerm(termVector[0], type) ?? defaultInstanceWhenMissing;
+                        Action postCallHook;
+                        int tvargnum = isStatic ? 0 : 1;
+                        object[] newVariable = PlListToCastedArray(tvargnum, termVector, list.GetParameters(),
+                                                                   out postCallHook);
+                        object result = InvokeCaught(list, target, newVariable, postCallHook);
+
+                        if (isbool)
+                        {
+                            return (bool) result;
+                        }
+                        if (nonvoid)
+                        {
+                            return termVector[plarity - 1].FromObject(result);
+                        }
+                        return true;
+
+                    };
+            return d;
         }
 
         private static object InvokeCaught(MethodInfo info, object o, object[] os)
+        {
+            return InvokeCaught(info, o, os, Do_NOTHING);
+        }
+        private static object InvokeCaught(MethodInfo info, object o, object[] os, Action todo)
         {
             try
             {
@@ -419,6 +429,7 @@ namespace SbsSW.SwiPlCs
                     Warn("ArgCount mismatch " + info + ": call count=" + os.Length);
                 }
                 object ret = info.Invoke(o, os);
+                todo();
                 if (ret == null) return VoidOrNull(info);
                 return ret;
             }
@@ -2455,6 +2466,19 @@ typedef struct // define a context structure  { ... } context;
             uint temp = libpl.PL_new_term_ref();
             libpl.PL_put_atom(temp, libpl.PL_new_atom_wchars(s.Length, s));
             return libpl.PL_unify(temp, TermRef);
+        }
+
+        private static bool UnifySpecialObject(PlTerm plTerm, object ret1)
+        {
+            if (plTerm.IsVar)
+            {
+                return plTerm.FromObject(ret1);
+            } else
+            {
+                var plvar = PlTerm.PlVar();
+                plvar.FromObject(ret1);
+                return SpecialUnify(plTerm, plvar);
+            }
         }
     }
 
