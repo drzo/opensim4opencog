@@ -30,6 +30,7 @@ namespace cogbot.Actions.Movement
             if (position == null) return Failure( "Teleport - Cannot resolve to a location: " + string.Join(" ", args));
             SimPathStore ps = position.PathStore;
             ulong handle = SimRegion.GetRegionHandle(ps);
+            TheSimAvatar.StopMoving();
             if (Client.Self.Teleport(handle, position.SimPosition))
                 return Success("Teleported to " + Client.Network.CurrentSim);
             else
