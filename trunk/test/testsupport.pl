@@ -139,7 +139,7 @@ time_limit(Limit) :-
 	    Taken > Limit
 	->
 	    assert(time_limit_exceeded(Limit , Taken)),
-	    !,fail
+	    true %%!,fail
 	;
 	    true
 	).
