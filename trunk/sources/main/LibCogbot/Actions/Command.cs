@@ -263,7 +263,7 @@ namespace cogbot.Actions
         {
             get
             {
-                return WorldSystem.TheSimAvatar;
+                return _mClient.TheSimAvatar;
             }
         }
 
