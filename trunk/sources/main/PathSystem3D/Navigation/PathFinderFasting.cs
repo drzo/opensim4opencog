@@ -237,6 +237,7 @@ namespace PathSystem3D.Navigation
             List<PathFinderNode> ret;
             //SearchLimit = int.MaxValue;
             //PunishChangeDirection = true;
+            SetSearchBest();
             ret = FindPath(start, end, IsBlockedOr200);
             if (ret != null)
             {
@@ -247,14 +248,6 @@ namespace PathSystem3D.Navigation
             {                
                 return ret;
             }
-            SetSearchBest();
-            ret = FindPath(start, end, IsBlockedOrMaybe);
-            if (ret != null)
-            {
-                return ret;
-            }
-            //ret = FindPath(start, end, IsBlocked);
-            //if (ret != null) return ret;
             ret = FindPath(start, end, IsBlocked);
             if (ret != null)
             {
