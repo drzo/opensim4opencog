@@ -120,7 +120,7 @@ cliWriteln(S):-cliWrite(S),nl.
 
 
 cliWriteFormat(WID,String,Args):-writeq(WID),write(':'),cliWriteFormat(String,Args),cliFree(WID). %% WID will be made again each call
-cliWriteFormat(String,Args):-cliCall('System.String','Format'(String,Args),Result),cliWriteln(Result).
+cliWriteFormat(String,Args):-cliCall('System.String','Format'('string','object[]'),[String,Args],Result),cliWriteln(Result).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %% cliToString(+Obj,-String) writes an object out to string
