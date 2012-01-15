@@ -1,4 +1,5 @@
-:-module(testpathfind, [tpf_method/1, tpf/0, tpf/1, makePipe/2]).
+:-module(testpathfind, [tpf_method/1, tpf/0, tpf/1, tpf1/0,tpf2/0,tpfi/0, makePipe/2]).
+
 
 :- use_module(test(testsupport)).
 :-use_module(library(clipl)).
@@ -47,6 +48,7 @@ move_test(Name):-atom_concat('start_',Name,Start),atom_concat('stop_',Name,Stop)
 move_test(Time , Start , End) :-
         apiBotClientCmd(stopmoving),
 	teleportTo(Start),
+        apiBotClientCmd('remeshprim'),
 	goByMethod(End),
         apiBotClientCmd(waitpos(Time,End)),
         apiBotClientCmd(stopmoving).
@@ -100,14 +102,34 @@ test(N) :-
 		  'annies haven/156.894470/137.385620/85.394775/'),
 	std_end(N , 17 , 0).
 
-test_desc(spiral , 'Spiral Tube').
+test_desc(ridge , 'On Elevated land Path').
 test(N) :-
-	N = spiral,
+	N = ridge,
 	start_test(N),
-	move_test(60,
-		  'annies haven/188.477066/142.809982/81.559509/',
-		  'annies haven/181.878403/140.768723/101.555061/'),
-	std_end(N , 65 , 1).
+	move_test(34 ,
+		  'start_ridge',
+		  'stop_ridge'),
+	std_end(N , 40 , 0).
+
+test_desc(ahill , 'Arround Elevated hill').
+test(N) :-
+	N = ahill,
+	start_test(N),
+	move_test(34 ,
+		  'start_ahill',
+		  'stop_ahill'),
+	std_end(N , 40 , 0).
+
+
+test_desc(swim_surface , 'Swim arround the island').
+test(N) :-
+	N = swim_surface,
+	start_test(N),
+	move_test(34 ,
+		  'start_swim_surface',
+		  'stop_swim_surface'),
+	std_end(N , 40 , 0).
+
 
 test_desc(grnd_maze , 'Ground maze simple').
 test(N) :-
@@ -122,18 +144,26 @@ test_desc(island_hop , 'Island hop').
 test(N) :-
 	N = island_hop,
 	start_test(N),
-	move_test(10 , start_island_hop , stop_island_hop),
-	std_end(N , 12 , 2).
+	move_test(45 , start_island_hop , stop_island_hop),
+	std_end(N , 45 , 2).
 
 test_desc(hill_walk , 'Hill Walk').
 test(N) :-
 	N = hill_walk,
 	start_test(N),
 	move_test(60 , start_hill_walk , stop_hill_walk),
+	std_end(N , 72 , 1).
+
+
+
+test_desc1(spiral , 'Spiral Tube').
+test1(N) :-
+	N = spiral,
+	start_test(N),
+	move_test(60,
+		  'annies haven/188.477066/142.809982/81.559509/',
+		  'annies haven/181.878403/140.768723/101.555061/'),
 	std_end(N , 65 , 1).
-
-
-
 
 
 /*
@@ -199,6 +229,10 @@ tpf :-
 	fail.
 
 tpf :- !.
+
+tpfi :- tpf(island_hop).
+tpf1 :- repeat,once(tpf(island_hop)),sleep(10),fail.
+tpf2 :- repeat,once(tpf),sleep(10),fail.
 
 
 %% example: ?- tpf(clear).
