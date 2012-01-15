@@ -1439,6 +1439,51 @@ namespace MushDLR223.Utilities
 
         private static void CALL_SYSTEM_ERR_WRITELINE(string format, params object[] args)
         {
+            ExecWithMaxTime(() => CALL_SYSTEM_ERR_WRITELINE_REAL(format, args), 1000);
+        }
+
+        private static Thread MainThread = Thread.CurrentThread;
+        private static void ExecWithMaxTime(Action action, int i)
+        {
+            AutoResetEvent are = new AutoResetEvent(false);
+            Thread orig = Thread.CurrentThread;
+            Thread doIt = new Thread(() =>
+                                         {
+                                             try
+                                             {
+                                                 action();
+                                                 are.Set();
+                                             }
+                                             catch (Exception abouirt)
+                                             {
+                                                 return;
+                                             }
+                                         });
+            try
+            {
+                doIt.Start();
+                if (are.WaitOne(i))
+                {
+                    doIt.Join();
+                    return;
+                }
+                if (orig != MainThread)
+                {
+                    doIt.Abort();
+                }
+                else
+                {
+                    doIt.Abort();
+                }
+            }
+            finally
+            {
+            }
+
+        }
+
+        private static void CALL_SYSTEM_ERR_WRITELINE_REAL(string format, params object[] args)
+        {
             SystemFlush();
             format = SafeFormat(format, args);
             //%%%PauseIfTraced(format);
@@ -1652,6 +1697,11 @@ namespace MushDLR223.Utilities
 
         internal static void SystemWrite00(string format)
         {
+            ExecWithMaxTime(() => SystemWrite000(format), 2000);            
+        }
+
+        internal static void SystemWrite000(string format)
+        {
             format = GetFormat(format);
             PauseIfTraced("SystemWrite00- " + format); // keep
             foreach (TextWriter o in Outputs)
@@ -1810,8 +1860,11 @@ namespace MushDLR223.Utilities
 
         public static void SystemFlush()
         {
-            SystemConsole.Error.Flush();
-            SystemConsole.Out.Flush();
+            ExecWithMaxTime(() =>
+                                {
+                                    SystemConsole.Error.Flush();
+                                    SystemConsole.Out.Flush();
+                                }, 1000);
         }
 
         public static string SafeFormat(string fmt, params object[] args)

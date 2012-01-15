@@ -9,6 +9,40 @@ namespace MushDLR223.Utilities
 {
     public class LockInfo
     {
+        public static IList<T> CopyOf<T>(List<T> list)
+        {
+            if (list == null) return new List<T>();
+            lock (list)
+            {
+                return list.ToArray();
+            }
+        }
+
+        public static IList<T> CopyOf<T>(IEnumerable<T> list)
+        {
+            var copy = new List<T>();
+            if (list == null) return copy;
+            lock (list)
+            {
+                copy.AddRange(list);
+            }
+            return copy;
+        }
+
+        public static IDictionary<K, V> CopyOf<K, V>(IDictionary<K, V> list)
+        {
+            var copy = new Dictionary<K, V>();
+            if (list == null) return copy;
+            lock (list)
+            {
+                foreach (var kv in list)
+                {
+                    copy.Add(kv.Key, kv.Value);
+                }
+            }
+            return copy;
+        }
+
         public static bool DontRealyLock = true;
         public static R WeaklyLock<R>(object lockObject, TimeSpan maxWaitTryEnter, Func<R> action, Func<string> operationType, OutputDelegate output)
         {
