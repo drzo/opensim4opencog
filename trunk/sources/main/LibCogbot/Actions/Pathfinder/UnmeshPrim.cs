@@ -11,7 +11,7 @@ namespace cogbot.Actions.Pathfinder
         public UnmeshPrim(BotClient client)
         {
             Name = GetType().Name;
-            Description = "Unmeshes all prims(was called srprim). Usage: remeshprim [prims] ";
+            Description = "Unmeshes all prims and removes collision planes. Usage: UnmeshPrim [prims] ";
             Category = cogbot.Actions.CommandCategory.Movement;
             Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
