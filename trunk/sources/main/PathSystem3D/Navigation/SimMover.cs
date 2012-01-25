@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Threading;
 using OpenMetaverse;
 using PathSystem3D.Mesher;
@@ -29,7 +30,7 @@ namespace PathSystem3D.Navigation
          */
         bool OpenNearbyClosedPassages();
         void ThreadJump();
-        void IndicateRoute(IList<Vector3d> list);
+        void IndicateRoute(IEnumerable<Vector3d> list, Color color4);
     }
 
     public interface SimDistCalc
@@ -72,6 +73,7 @@ namespace PathSystem3D.Navigation
         public SimAbstractMover(SimMover mover, SimPosition finalGoal, double finalDistance)
         {
             Mover = mover;
+            SimPathStore.DebugDelegate = mover.Debug;
             FinalDistance = finalDistance;
             //var vFinalLocation = finalGoal.UsePosition.GlobalPosition;
            // FinalLocation = vFinalLocation;
@@ -127,7 +129,7 @@ namespace PathSystem3D.Navigation
 
             v3s = GetSimplifedRoute(vstart, v3s);
 
-            Mover.IndicateRoute(v3s);
+            Mover.IndicateRoute(v3s, Color.Red);
 
             int maxReverse = 2;
             Debug("FollowPath: {0} -> {1} for {2}", v3s.Count, DistanceVectorString(finalTarget), finalDistance);
@@ -387,9 +389,9 @@ namespace PathSystem3D.Navigation
 
         public void Debug(string p, params object[] args)
         {
-            string s = String.Format(String.Format("{0} for {1}", p, this.ToString()), args);
-            Console.WriteLine(Mover+ "> " +s);
-            //Mover.Debug(s);
+            string s = String.Format(String.Format("[MOVER] {0} for {1}", p, this.ToString()), args);
+            //Console.WriteLine(Mover+ "> " +s);            
+            Mover.Debug(s);
         }
 
         public Vector3d GetWorldPosition()
@@ -404,6 +406,7 @@ namespace PathSystem3D.Navigation
         public void BlockTowardsVector(Vector3 l3)
         {
             OpenNearbyClosedPassages();
+            Mover.IndicateRoute(new List<Vector3d>() {GetWorldPosition(),PathStore.LocalToGlobal(l3)}, Color.Olive);
             PathStore.SetBlockedTemp(GetSimPosition(), l3, 45, SimPathStore.BLOCKED);
         }
 
@@ -466,7 +469,7 @@ namespace PathSystem3D.Navigation
             base(mover, finalGoal, finalDistance)
         {
             CollisionPlane MoverPlane = MoverPlaneZ;
-            float startZ = CalcStartZ(mover.SimPosition.Z, finalGoal.SimPosition.Z);
+            float startZ = (float)SimPathStore.CalcStartZ(mover.SimPosition.Z, finalGoal.SimPosition.Z);
             double diff = MoverPlane.MinZ - startZ;
 
             MoverPlane.MinZ = startZ;
@@ -477,13 +480,7 @@ namespace PathSystem3D.Navigation
             }
         }
 
-        static float CalcStartZ(float start, float end)
-        {
-            if (start <= end) return start;
-            float dlower = start - end;
-            if (dlower<=3) return end;
-            return start - 2;
-        }
+
         public static Dictionary<SimMover, CollisionPlane> MoverPlanes = new Dictionary<SimMover, CollisionPlane>();
 
         public CollisionPlane MoverPlaneZ
@@ -664,16 +661,63 @@ namespace PathSystem3D.Navigation
                 {
                     Debug("Matrix really needed update");
                 }
-                CP.EnsureUpdated();
                 Vector3d v3d = GetWorldPosition();
                 double fd = DistanceNoZ(v3d, globalEnd.GlobalPosition);
+                if (fd < distance)
+                {
+                    STATE = SimMoverState.COMPLETE;
+                    return true;
+                }
+                CP.EnsureUpdated();
+                int index = ClosetPointOnRoute(route, v3d);
+                if (index > 0)
+                {
+                    var blockMe = new List<Vector3d>();
+                    if (index + 2 < route.Count)
+                    {
+                        Vector3d firstBad = route[index + 1];
+                        var np = v3d + ((firstBad - v3d)/2);
+                        blockMe.Add(np);
+                        blockMe.Add(firstBad);
+                        DepricateRoute(blockMe, fd);
+                        STATE = prev;
+                        return MadeIt;
+                    }
+                }
+
                 if (fd > distance && fd > 2)
                 {
-                    DepricateRoute(route, fd);
+                    if (false) DepricateRoute(route, fd);
                 }
+                Debug("Too far away " + fd + " wanted " + distance);
                 STATE = prev;
             }
             return MadeIt;
+        }
+
+        static public int ClosetPointOnRoute(IList<Vector3d> route, Vector3d closeTo)
+        {
+            int thisPoint = 0;
+            int bestPoint = -1;
+            double bestPointDist = 9999999;
+            foreach (Vector3d vector3D in route)
+            {
+                double thisPointDist = DistanceNoZ(vector3D, closeTo);
+                if (thisPointDist < bestPointDist)
+                {
+                    bestPoint = thisPoint;
+                    bestPointDist = thisPointDist;
+                }
+                else
+                {
+                    if (thisPointDist > bestPointDist && bestPoint != -1)
+                    {
+                        return bestPoint;
+                    }
+                }
+                thisPoint++;
+            }
+            return bestPoint;
         }
 
         /// <summary>
@@ -682,19 +726,26 @@ namespace PathSystem3D.Navigation
         /// <param name="route"></param>
         private void DepricateRoute(IEnumerable<Vector3d> route, double finalDist)
         {
+            List<Vector3d> reallyDepricate = new List<Vector3d>();
             List<ThreadStart> listUndo = new List<ThreadStart>();
             const int time = 120;
             Vector3d first = default(Vector3d);
             foreach (Vector3d list in route)
             {
-                if (first==default(Vector3d))
+                if (first == default(Vector3d))
                 {
                     first = list;
                     continue;
                 }
-                if (Vector3d.Distance(first, list) > finalDist) break;                
+                if (Vector3d.Distance(first, list) > finalDist) break;
+                reallyDepricate.Add(list);
+            }
+            Mover.IndicateRoute(reallyDepricate, Color.Orchid);
+            foreach (Vector3d list in reallyDepricate)
+            {
                 PathStore.BlockPointTemp(SimPathStore.GlobalToLocal(list), listUndo, SimPathStore.BLOCKED);
             }
+
             if (listUndo.Count == 0) return;
             string tmp = string.Format("Blocking {0} points for {1} seconds", listUndo.Count, time);
             Thread thr = new Thread(() =>
