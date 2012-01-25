@@ -1443,7 +1443,7 @@ namespace MushDLR223.Utilities
         }
 
         private static Thread MainThread = Thread.CurrentThread;
-        private static void ExecWithMaxTime(Action action, int i)
+        public static void ExecWithMaxTime(Action action, int i)
         {
             AutoResetEvent are = new AutoResetEvent(false);
             Thread orig = Thread.CurrentThread;
