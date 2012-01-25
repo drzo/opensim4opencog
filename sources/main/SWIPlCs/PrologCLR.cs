@@ -641,14 +641,6 @@ namespace SbsSW.SwiPlCs
             MethodInfo methodInfo = (MethodInfo) paramInfos[0].Member;
             bool isVarArg = (methodInfo.CallingConvention & CallingConventions.VarArgs) != 0;
             object[] ret = new object[len];
-            if (term is PlTerm)
-            {
-                PlTerm tlist = (PlTerm) term;
-                if (tlist.IsList)
-                {
-                    term = tlist.Copy();
-                }
-            }
             PlTerm[] ta = ToTermArray(term);
             int termLen = ta.Length;
             int lenNeeded = len;
@@ -765,6 +757,15 @@ namespace SbsSW.SwiPlCs
                 PlTermV tv = (PlTermV) enumerable;
                 return tv.ToArray();
             }
+            if (false && enumerable is PlTerm)
+            {
+                // I guess IsList makes a copy
+                PlTerm tlist = (PlTerm)enumerable;
+                if (tlist.IsList)
+                {
+                    enumerable = tlist.Copy();
+                }
+            } 
             return enumerable.ToArray();
         }
 
@@ -1225,7 +1226,8 @@ namespace SbsSW.SwiPlCs
                 return SpecialUnify(valueOut, plvar);
             }
             object getInstance = GetInstance(arrayValue);
-            var value = getInstance as Array;
+            if (getInstance == null) return valueOut.Unify(PLNULL);
+            Array value = GetArrayValue(getInstance);
             if (value == null)
             {
                 Warn("Cant find array from {0} as {1}", arrayValue, getInstance.GetType());
@@ -1251,50 +1253,8 @@ namespace SbsSW.SwiPlCs
             }
 
             object getInstance = GetInstance(arrayValue);
-            Array value;
-            if (getInstance is Array)
-            {
-                value = getInstance as Array;      
-                /*
-            } else if (getInstance is ICollection)
-            {
-                Type t = getInstance.GetType();
-                var pc = t.GetGenericArguments();
-                var collection = (ICollection)getInstance;
-                value = new Array[collection.Count];
-                collection.CopyTo(value, 0);
-                 */
-            }
-            else if (getInstance is ICollection)
-            {
-                var collection = ((ICollection)getInstance);
-                var al = new ArrayList(collection);
-                value = al.ToArray();
-            }
-            else if (getInstance is IEnumerable)
-            {
-                var collection = ((IEnumerable)getInstance).GetEnumerator();
-                var al = new ArrayList();
-                while (collection.MoveNext())
-                {
-                    al.Add(collection.Current);
-                }
-                value = al.ToArray();
-            }
-            else if (getInstance is IEnumerator)
-            {
-                var collection = ((IEnumerator)getInstance);
-                var al = new ArrayList();
-                while (collection.MoveNext())
-                {
-                    al.Add(collection.Current);
-                }
-                value = al.ToArray();
-            }
-            else
-            {
-                value = getInstance as Array;
-            }
+            if (getInstance == null) return valueOut.Unify(PLNULL);
+            Array value = GetArrayValue(getInstance);
             if (value == null)
             {
                 Warn("Cant find array from {0} as {1}", arrayValue, getInstance.GetType());
@@ -1334,6 +1294,63 @@ namespace SbsSW.SwiPlCs
             }
             return valueOut.FromObject((value));
         }
+
+        private static Array GetArrayValue(object getInstance)
+        {
+            if (getInstance == null) return null;
+            if (getInstance is Array)
+            {
+                return (Array) getInstance;
+            }
+            Type t = getInstance.GetType();
+            Type et = typeof (object);
+            if (t.IsGenericType)
+            {
+                Type[] typeArguments = t.GetGenericArguments();
+                if (typeArguments.Length == 1)
+                {
+                    et = typeArguments[1];
+                }
+            }
+            if (getInstance is ArrayList)
+            {
+                return ((ArrayList)getInstance).ToArray(et);
+            }
+            if (getInstance is ICollection)
+            {
+                var collection = ((ICollection)getInstance);
+                int count = collection.Count;
+                var al = Array.CreateInstance(et, count);
+                collection.CopyTo(al,count);
+                return al;
+            }
+            if (getInstance is IEnumerable)
+            {
+                var collection = ((IEnumerable) getInstance).GetEnumerator();
+                var al = new ArrayList();
+                while (collection.MoveNext())
+                {
+                    al.Add(collection.Current);
+                }
+                return al.ToArray(et);
+            }
+            else if (getInstance is IEnumerator)
+            {
+                var collection = ((IEnumerator) getInstance);
+                var al = new ArrayList();
+                while (collection.MoveNext())
+                {
+                    al.Add(collection.Current);
+                }
+                return al.ToArray(et);
+            }
+            else
+            {
+                // this one is probly null
+                return getInstance as Array;
+            }
+        }
+
         [PrologVisible(ModuleName = ExportModule)]
         static public bool cliEnterLock(PlTerm lockObj)
         {
@@ -3033,6 +3050,19 @@ namespace SbsSW.SwiPlCs
 	Y \== true.     % not a ref
          
          */
+
+        private static object CreateArrayOfType(PlTerm orig, Type arrayType)
+        {
+            PlTerm[] terms = ToTermArray(orig);
+            int termsLength = terms.Length;
+            Array al = Array.CreateInstance(arrayType, termsLength);
+            for (int i = 0; i < termsLength; i++)
+            {
+                PlTerm term = terms[i];
+                al.SetValue(CastTerm(term, arrayType), i);
+            }
+            return al;
+        }
         private static object CastCompoundTerm(string name, int arity, PlTerm arg1, PlTerm orig, Type pt)
         {
             string key = name + "/" + arity;
@@ -3046,7 +3076,7 @@ namespace SbsSW.SwiPlCs
                     MemberInfo toType = pltl.ToType;
                     if (toType != null)
                     {
-                        return GetMemberValue(toType, GetInstance(arg1));
+                        return GetMemberValue(toType, CastTerm(arg1,argOneType(toType)));
                     }
                     return CreateInstance(type, fis, orig, 1);
                 }
@@ -3190,16 +3220,7 @@ namespace SbsSW.SwiPlCs
             {
                 if (pt != null && pt.IsArray)
                 {
-                    Type arrayType = pt.GetElementType();
-                    PlTerm[] terms = ToTermArray(orig);
-                    int termsLength = terms.Length;
-                    Array al = Array.CreateInstance(arrayType, termsLength);
-                    for (int i = 0; i < termsLength; i++)
-                    {
-                        PlTerm term = terms[i];
-                        al.SetValue(CastTerm(term, arrayType), i);
-                    }
-                    return al;
+                    return CreateArrayOfType(orig, pt.GetElementType());
                 }
                 if (arg1.IsInteger || arg1.IsAtom)
                 {
@@ -3219,16 +3240,7 @@ namespace SbsSW.SwiPlCs
             }
             if (pt != null && pt.IsArray)
             {
-                Type arrayType = pt.GetElementType();
-                PlTerm[] terms = ToTermArray(orig);
-                int termsLength = terms.Length;
-                Array al = Array.CreateInstance(arrayType, termsLength);
-                for (int i = 0; i < termsLength; i++)
-                {
-                    PlTerm term = terms[i];
-                    al.SetValue(CastTerm(term, arrayType), i);
-                }
-                return al;
+                return CreateArrayOfType(orig, pt.GetElementType());
             }
             Type t = ResolveType(name);
             if (t == null)
@@ -3255,6 +3267,40 @@ namespace SbsSW.SwiPlCs
             // Debug("Get Instance fallthru");
             MemberInfo[] ofs = GetStructFormat(t);
             return CreateInstance(t, ofs, orig, 1);
+        }
+
+        private static Type argOneType(MemberInfo info)
+        {
+            {
+                var mi = info as MethodInfo;
+                if (mi != null)
+                {
+
+                    ParameterInfo[] miGetParameters = mi.GetParameters();
+                    if (miGetParameters.Length > 0)
+                    {
+                        return miGetParameters[0].ParameterType;
+                    }
+                }
+            }
+            {
+                var mi = info as ConstructorInfo;
+                if (mi != null)
+                {
+
+                    ParameterInfo[] miGetParameters = mi.GetParameters();
+                    if (miGetParameters.Length > 0)
+                    {
+                        return miGetParameters[0].ParameterType;
+                    }
+                }
+            }
+            var fi = info as FieldInfo;
+            if (fi != null)
+            {
+                return fi.FieldType;
+            }
+            return typeof(object);
         }
 
         private static object CreateInstance(Type type, MemberInfo[] fis, PlTerm orig, int plarg)
@@ -3710,7 +3756,14 @@ namespace SbsSW.SwiPlCs
                                 mGetParameters[0].ParameterType.IsAssignableFrom(typeof(string)))
                             {
                                 WarnMissing("using " + m);
-                                return m.Invoke(null, new object[] { s });
+                                try
+                                {
+                                    return m.Invoke(null, new object[] { s });
+                                }
+                                catch (Exception)
+                                {                
+                                    continue;
+                                }
                             }
                         }
                         return s;
