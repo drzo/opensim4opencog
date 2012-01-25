@@ -15,7 +15,7 @@
    botClient/1, botClient/2,
    botClientCall/1, botClientCall/2,
    botClientCmd/1, botClientCmd/2, botClientCmd/3,
-   simObject/1, simAvatar/1, simAvDistance/3,
+   simObject/1, simAvatar/1, simAvDistance/3, simAsset/1,
    gridClient/1,
    resolveObjectByName/2,
    vectorAdd/3,
@@ -30,7 +30,11 @@
    chat/3,
    %%cliWriteFormat/3,
    createWritelnDelegate/2,
-   createWritelnDelegate/1   
+   createWritelnDelegate/1,
+   textureIDToImage/2,
+   textureIDToImageParts/2,
+   requestTexture/1,
+   simObjectColor/2
    ]).
 
 
@@ -56,6 +60,9 @@ assertIfNew(Gaf):-assert(Gaf).
 %%:- use_module(library(testsupport)).
 :-use_module(library(clipl)).
 
+
+:-cliLoadAssembly('AForge.Imaging.dll').
+:-cliLoadAssembly('AForge.Imaging.Formats.dll').
 %------------------------------------------------------------------------------
 
 %% load needed modules
@@ -310,6 +317,8 @@ npl2Obj(npl(66,O),O).
 %------------------------------------------------------------------------------
 % CLR Introspection of event handlers
 %------------------------------------------------------------------------------
+simAsset(Asset):-  cliGet('cogbot.TheOpenSims.SimAssetStore','SimAssets',Assets),cliCol(Assets,Asset).
+
 
 gridClientEvents(E):-cliMemb('OpenMetaverse.GridClient',f,M),arg(3,M,Type),cliMemb(Type,e,E).
 
@@ -324,6 +333,33 @@ listMembs. % so pred doesnt fail
 resolveAvatar(Name,Name):-cliIsObject(Name),cliIsType(Name,'SimAvatar'),!.
 resolveAvatar(Name,Object):-cliIsObject(Name),cliToString(Name,String),!,resolveAvatar(String,Object).
 resolveAvatar(Name,Object):-cliCall('cogbot.Listeners.WorldObjects','GetSimAvatarFromNameIfKnown'(string),[Name],Object).
+
+%% cliCall(static('cogbot.TheOpenSims.SimImageUtils'),'ToNamedColors'('OpenMetaverse.Color4'),[struct('Color4',1,0,1,0)],Named),cliCol(Named,NamedE),cliWriteln(NamedE).
+simObjectColor(A,NamedE):-simObject(A),cliGet(A,textures,B),cliGet(B,faceTextures,C),cliCol(C,E),E\=='@'(null),cliGet(E,rgba,CC),
+  cliCall(static('cogbot.TheOpenSims.SimImageUtils'),'ToNamedColors'('OpenMetaverse.Color4'),[CC],Named),cliCol(Named,NamedE).
+
+/*
+
+38 ?- simAsset(A),cliGet(A,assetType, enum('AssetType', 'Texture')),cliGet(A,id,UUID),cliGet(A,assetData,Data),Data\=='@'(null), cliCall('OpenMetaverse.Imaging.OpenJPEG','DecodeToImage'(Data,O1,O2),_),cliGetType(O2,T),cliWriteln(T).
+"System.Drawing.Bitmap"
+A = @'C#664147632',
+UUID = uuid("38b86f85-2575-52a9-a531-23108d8da837"),
+Data = @'C#664150288',
+O1 = @'C#664150368',
+O2 = @'C#664150128',
+T = @'C#664150520' .
+
+*/
+
+%%b2img('@'(null),'@'(null)):-!.
+b2img(Data,Image):-Data\=='@'(null),cliCall('OpenMetaverse.Imaging.OpenJPEG','DecodeToImage'(Data,_O1,Image),_).
+
+textureIDToImage(UUID,Image):-nonvar(UUID),!,cliCall('cogbot.Listeners.WorldObjects',['GridMaster','TextureBytesForUUID'(UUID)],Bytes),b2img(Bytes,Image).
+textureIDToImage(UUID,Image):-var(UUID),!,simAsset(A),cliGet(A,assetType, enum('AssetType', 'Texture')),cliGet(A,id,UUID),cliGet(A,assetData,Data),b2img(Data,Image).
+textureIDToImageParts(UUID,Part):-simAsset(A),cliGet(A,assetType, enum('AssetType', 'Texture')),cliGet(A,id,UUID),cliGet(A,imageStats,Parts),cliArrayToTermList(Parts,List),List=[_|_],member(Part,List).
+
+
+requestTexture(UUID):-worldSystem(Sys),cliCall(Sys,'StartTextureDownload'(UUID),_O).
 
 resolveObjectByName(Name,Object):-cliCall('cogbot.Listeners.WorldObjects','GetSimPositionByName'(string),[Name],Object).
 

@@ -133,6 +133,6 @@ guitracer:-debug.
 
 %%:- createWritelnDelegate(_X).
 
-%%:-sleep(20),tpf(island_hop),sleep(60),tpf(island_hop).
-tq1:-sleep(20),tpf(clear),sleep(60),tpf(elev_path).
+%:-sleep(20),tpf(clear),tpf(elev_path).
 %%%:-at_initialization((sleep(20),tpf1)).
+%:-tpf.
