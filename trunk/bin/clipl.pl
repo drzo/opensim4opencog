@@ -20,6 +20,7 @@
             cliGetRaw/3,
             cliGetType/2,
             cliIsNull/1,
+            cliNonNull/1,
             cliIsObject/1,
             cliIsType/2,            
             cliLoadAssembly/1,
@@ -105,9 +106,13 @@ cliSubclass(Sub,Sup):-cliFindType(Sub,RealSub),cliFindType(Sup,RealSup),cliCall(
 %% cliCol(+Col,-Elem) iterates out Elems for Collection
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 % old version:s cliCollection(Obj,Ele):-cliCall(Obj,'ToArray',[],Array),cliArrayToTerm(Array,Vect),!,arg(_,Vect,Ele).
-cliCollection(Obj,Ele):-  
-      cliCall(Obj,'GetEnumerator',[],Enum),
+cliCollection(Obj,Ele):-
+      cliMemb(Obj,m(_, 'GetEnumerator', _, [], [], _, _)),
+      cliCall(Obj,'GetEnumerator',[],Enum),!,
       call_cleanup(cli_enumerator_element(Enum,Ele),cliFree(Enum)).
+cliCollection(Obj,Ele):-cliArrayToTerm(Obj,Vect),!,arg(_,Vect,Ele).
+cliCollection(Obj,Ele):-cliMemb(Obj,m(_, 'ToArray', _, [], [], _, _)),cliCall(Obj,'ToArray',[],Array),cliArrayToTerm(Array,Vect),!,arg(_,Vect,Ele).
+cliCollection(Obj,Ele):-cliArrayToTermList(Obj,Vect),!,member(Ele,Vect).
 
 cliCol(X,Y):-cliCollection(X,Y).
 
@@ -135,6 +140,7 @@ cliToString(Term,String):-Term=..[F|A],cliToString(A,AS),String=..[F|AS],!.
 %% cliIsNull(+Obj) is Object null or void or variable
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 cliIsNull(Obj):-notrace(var(Obj);Obj='@'(null);Obj='@'(void)),!.
+cliNonNull(Obj):-not(cliIsNull(Obj)).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
@@ -174,7 +180,9 @@ cliNew(Clazz,ConstArgs,Out):-Clazz=..[BasicType|ParmSpc],cliNew(BasicType,ParmSp
 %%% cliCall(+Obj, +CallTerm, -Out).
 %%% cliCall(+Obj, +MethodSpec, +Params, -Out).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cliCall(Obj,[Prop|CallTerm],Out):-cliGet(Obj,Prop,Mid),!,cliCall(Mid,CallTerm,Out).
 cliCall(Obj,CallTerm,Out):-CallTerm=..[MethodName|Args],cliCall(Obj,MethodName,Args,Out).
+cliCall(Obj,[Prop|CallTerm],Params,Out):-cliGet(Obj,Prop,Mid),!,cliCall(Mid,CallTerm,Params,Out).
 cliCall(Obj,MethodSpec,Params,Out):-cliCallRaw(Obj,MethodSpec,Params,OutRaw),!,Out=OutRaw.
 
 
