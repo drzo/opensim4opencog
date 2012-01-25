@@ -163,7 +163,7 @@ namespace cogbot.TheOpenSims
 
         #region SimMover Members
 
-        public virtual void IndicateRoute(IList<Vector3d> list)
+        public virtual void IndicateRoute(IEnumerable<Vector3d> list, Color color)
         {
             throw new NotImplementedException("not really a mover!");
         }
@@ -315,7 +315,7 @@ namespace cogbot.TheOpenSims
 
         protected void IndicateTarget(SimPosition pos, bool tf)
         {
-            //return;
+            return;
             BotClient Client = WorldSystem.client;
             if (tf)
             {

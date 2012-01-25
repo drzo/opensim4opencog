@@ -13,6 +13,7 @@ using Math=System.Math;
 using Object=System.Object;
 using String=System.String;
 using Thread=System.Threading.Thread;
+using System.Drawing;
 
 namespace cogbot.TheOpenSims
 {
@@ -99,12 +100,14 @@ namespace cogbot.TheOpenSims
         private DateTime ThisUpdateShown;
         public static int PipesAlive = 0;
         public static int PipesNumberNext = 0;
-        public override void IndicateRoute(IList<Vector3d> list)
+        public override void IndicateRoute(IEnumerable<Vector3d> list, Color color)
         {
             var PS = GetSimRegion();
             var llist = new List<Vector3>();
+            double Z = GlobalPosition.Z;
             foreach (var v3d in list)
             {
+                Z = v3d.Z;
                 llist.Add(PS.GlobalToLocal(v3d));
             }
             bool haveFirst = false;
@@ -112,15 +115,14 @@ namespace cogbot.TheOpenSims
             Vector3 prev = Vector3.Zero;
             double atan = 999;
 
-            var CP = PathStore.GetCollisionPlane((float)list[0].Z);
+            var CP = PathStore.GetCollisionPlane((float) Z);
             if (CP.lastUpdate != ThisUpdateShown)
             {
                 ThisUpdateShown = CP.lastUpdate;
                 Client.Self.Chat("http://logicmoo.dyndns.org:5580/cogpath/path.gif", 100, ChatType.Normal);
                 //Client.Self.Chat("hi " + Client.Self.SimPosition.Z, 100, ChatType.Normal);
             }
-
-            KillPipes();
+            
             bool throttle = llist.Count < 200;
             foreach (var next in llist)
             {
@@ -142,7 +144,7 @@ namespace cogbot.TheOpenSims
                 if (true)
                 {
                     Client.Self.Chat(
-                        String.Format("255,0,0,{0},{1},{2},{3},{4},{5}",
+                        String.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8}", color.R, color.G, color.B,
                                       prev.X, prev.Y, prev.Z, next.X, next.Y, next.Z),
                         100, ChatType.Normal);
                 }
