@@ -24,6 +24,7 @@ using OpenMetaverse;
 using THIRDPARTY.OpenSim.Framework;
 using THIRDPARTY.OpenSim.Region.Physics.Manager;
 using THIRDPARTY.OpenSim.Region.Physics.Meshing;
+using MushDLR223.ScriptEngines;
 #if COLLIDER_ODE
 using NUnit.Framework;
 using THIRDPARTY.OpenSim.Region.Physics.OdePlugin;
@@ -780,6 +781,24 @@ namespace PathSystem3D.Navigation
 
         public static IList<Vector3d> GetPath(CollisionPlane CP, Vector3d globalStart, Vector3d globalEnd, double endFudge, out bool OnlyStart, out bool faked)
         {
+            if (CP == null)
+            {
+                var PS = GetPathStore(globalStart);
+                CP = PS.GetCollisionPlane(globalEnd.Z);
+                var ret = GetPath(CP, globalStart, globalEnd, endFudge, out OnlyStart, out faked);
+                if (!OnlyStart && !faked)
+                {
+                    if (IsRealPath(ret)) return ret;
+                }
+                var CP2 = PS.GetCollisionPlane(globalStart.Z);
+                if (CP2 == CP)
+                {
+                    return ret;
+                }
+                CP = CP2;
+                //ret = GetPath(CP, globalEnd, globalStart, endFudge, out OnlyStart, out faked);
+                //if (IsRealPath(ret)) return ret;
+            }
             CP.LastUsed = DateTime.Now;
             SimPathStore regStart = SimPathStore.GetPathStore(globalStart);// posStart.GetPathStore();
             SimPathStore regEnd = GetPathStore(globalEnd);
@@ -799,6 +818,11 @@ namespace PathSystem3D.Navigation
             Vector3 enterEdge = EnterEdge(localLast, nextRegion.GetGridLocation() - regStart.GetGridLocation());
             route.Add(nextRegion.LocalToGlobal(enterEdge));
             return route;
+        }
+
+        private static bool IsRealPath(IList<Vector3d> list)
+        {
+            return list != null && list.Count > 2;
         }
 
 
@@ -1109,7 +1133,7 @@ namespace PathSystem3D.Navigation
         }
 
         public void SetNodeQualityTimer(Vector3 vector3, int value, int seconds)
-        {
+        {           
             SimPathStore PathStore = GetPathStore3D(vector3);
             Point P = PathStore.ToPoint(vector3);
             CollisionIndex WP = PathStore.GetCollisionIndex(P.X, P.Y);
@@ -1538,9 +1562,9 @@ namespace PathSystem3D.Navigation
         /// </summary>
         /// <param name="Z"></param>
         /// <returns></returns>
-        public CollisionPlane GetCollisionPlane(float Z)
+        public CollisionPlane GetCollisionPlane(double Z)
         {
-            lock (Matrixes) return GetCollisionPlane0(Z);
+            lock (Matrixes) return GetCollisionPlane0((float) Z);
         }
         internal CollisionPlane GetCollisionPlane0(float Z)
         {
@@ -1859,10 +1883,10 @@ namespace PathSystem3D.Navigation
         }
 
         public readonly Vector2 RegionLocation;
-        readonly Vector3d GlobalStart;
-        readonly Vector3d GlobalEnd;
-        readonly Vector3 Start;
-        readonly Vector3 Size;
+        public readonly Vector3d GlobalStart;
+        public readonly Vector3d GlobalEnd;
+        public readonly Vector3 Start;
+        public readonly Vector3 Size;
 
 #if COLLIDER_ODE  
         readonly static Meshmerizer meshMerizer = new Meshmerizer();
@@ -2319,9 +2343,15 @@ namespace PathSystem3D.Navigation
             }
             return NewBitmap;
         }
+
+        public static OutputDelegate DebugDelegate;
         public static void Debug(string format, params object[] arg)
         {
-            if (DebugLevel > 0) 
+            if (DebugDelegate != null)
+            {
+                DebugDelegate(String.Format("[SimPathStore] {0}", format), arg);
+            }
+            if (DebugLevel > 0)
                 Console.WriteLine(String.Format("[SimPathStore] {0}", format), arg);
         }
 
@@ -2693,6 +2723,18 @@ namespace PathSystem3D.Navigation
             return Vector3d.Distance(target, position);
         }
 
+        public static double CalcStartZ(double start, double end)
+        {
+            if (start <= end) return start;
+            double dlower = start - end;
+            if (dlower <= 3) return end;
+            return start - 2;
+        }
+
+        public CollisionPlane GetCollisionPlane(double start, double end)
+        {
+            return GetCollisionPlane(CalcStartZ(start, end));
+        }
     }
 
     public class MoverTracking

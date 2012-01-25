@@ -129,7 +129,7 @@ namespace PathSystem3D.Navigation
 
         internal bool Accepts(float Z)
         {
-            if (Z < /* MinZ + 3.3f*/ MaxZ + 0.3f)
+            if (Z < /* MinZ + 3.3f*/ MaxZ + 0.3f && Z < MinZ + 1f)
             {
                 if (Z >= MinZ - 0.3f) return true;
                 //if (MaxZ - Z > 3) return false;
