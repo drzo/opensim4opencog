@@ -23,6 +23,7 @@ using Hashtable = java.util.Hashtable;
 using ClassLoader = java.lang.ClassLoader;
 using Class = java.lang.Class;
 using sun.reflect.misc;
+using ArrayList=System.Collections.ArrayList;
 using Util = ikvm.runtime.Util;
 using CycFort = SbsSW.SwiPlCs.PlTerm;
 using PrologCli = SbsSW.SwiPlCs.PrologClient;
@@ -66,7 +67,7 @@ namespace SbsSW.SwiPlCs
 
         private static void OnThreadExit(object sender, EventArgs e)
         {
-          
+
         }
 
         public static bool OneToOneEnginesPeThread = true;
@@ -99,10 +100,10 @@ namespace SbsSW.SwiPlCs
                         return; //maybe mnot fine       
                     }
                     return; // all was fine;
-                  //  if (thread == CreatorThread || true) return;
+                    //  if (thread == CreatorThread || true) return;
 
                     int iRet = CheckEngine();
-                   
+
                     return; // all was fine;
                 }
                 else
@@ -113,7 +114,7 @@ namespace SbsSW.SwiPlCs
                     if (ret == self0)
                     {
                         SafeThreads.Add(thread, IntPtr.Zero);
-                        engineToThread[self0] = thread;                       
+                        engineToThread[self0] = thread;
                         RegisterThread(thread);
                         return;
                     }
@@ -135,7 +136,8 @@ namespace SbsSW.SwiPlCs
                             {
                                 throw (new PlException("PL_create_engine : " + ex.Message));
                             }
-                        } else
+                        }
+                        else
                         {
                             //int ret = libpl.PL_thread_attach_engine(_iEngineNumber);
                             IntPtr pNullPointer = IntPtr.Zero;
@@ -191,7 +193,7 @@ namespace SbsSW.SwiPlCs
 
         private static void Debug(object plthreadhasdifferntthread)
         {
-           
+
         }
 
         public static int CheckEngine()
@@ -376,7 +378,7 @@ namespace SbsSW.SwiPlCs
 
                         if (isbool)
                         {
-                            return (bool) result;
+                            return (bool)result;
                         }
                         if (nonvoid)
                         {
@@ -403,7 +405,7 @@ namespace SbsSW.SwiPlCs
                     info = info.MakeGenericMethod(t);
                 }
                 var ps = info.GetParameters();
-                int psLengthM1 = ps.Length-1;
+                int psLengthM1 = ps.Length - 1;
                 bool isVarArg = (info.CallingConvention & CallingConventions.VarArgs) != 0;
                 if (isVarArg)
                 {
@@ -417,7 +419,7 @@ namespace SbsSW.SwiPlCs
                     int slack = os.Length - usedUp;
                     object[] lastArray = new object[slack];
                     int fillAt = 0;
-                    while (slack-->0)
+                    while (slack-- > 0)
                     {
                         lastArray[fillAt++] = os[usedUp++];
                     }
@@ -429,7 +431,7 @@ namespace SbsSW.SwiPlCs
                     Warn("ArgCount mismatch " + info + ": call count=" + os.Length);
                 }
                 object ret = info.Invoke(o, os);
-                todo();
+                if (todo != null) todo();
                 if (ret == null) return VoidOrNull(info);
                 return ret;
             }
@@ -437,7 +439,7 @@ namespace SbsSW.SwiPlCs
             {
                 var pe = ToPlException(ex);
                 string s = ex.ToString() + "\n" + ex.StackTrace;
-                Warn("ex: {0}" , s);
+                Warn("ex: {0}", s);
                 //throw pe;
                 return false;// pe;
             }
@@ -467,10 +469,9 @@ namespace SbsSW.SwiPlCs
         {
             if (ex is PlException) return (PlException)ex;
             var ie = ex.InnerException;
-            if (ie != null)
+            if (ie != null && ie != ex)
             {
-                if (ie is PlException) return (PlException)ie;
-                ex = ie;
+                return ToPlException(ie);
             }
             return new PlException(ex.Message, ex);
         }
@@ -642,7 +643,7 @@ namespace SbsSW.SwiPlCs
             //return jpl.fli.Prolog.object_to_tag(o);
         }
 
-           internal static Term[] ToJPL(PlTermV args)
+        internal static Term[] ToJPL(PlTermV args)
         {
             int UPPER = args.Size;
             Term[] target = new Term[UPPER];
@@ -890,7 +891,7 @@ namespace SbsSW.SwiPlCs
             }
         }
         public static void SetupProlog0()
-        {            
+        {
             Console.WriteLine("SetupProlog");
             SafelyRun(SetupIKVM);
             if (!IsUseableSwiProlog(SwiHomeDir))
@@ -902,7 +903,8 @@ namespace SbsSW.SwiPlCs
                     {
                         SwiHomeDir = null;
                     }
-                } catch(Exception)
+                }
+                catch (Exception)
                 {
                 }
             }
@@ -988,7 +990,7 @@ namespace SbsSW.SwiPlCs
                 CLASSPATH = IKVMHome + "\\SWIJPL.dll" + ";" + IKVMHome + "\\SWIJPL.jar;" + CLASSPATH0;
 
             Console.Error.WriteLine("CLASSPATH=" + CLASSPATH);
-            if (CLASSPATH!=null)
+            if (CLASSPATH != null)
             {
                 Environment.SetEnvironmentVariable("CLASSPATH", CLASSPATH);
                 java.lang.System.setProperty("java.class.path", CLASSPATH);
@@ -1413,7 +1415,7 @@ namespace SbsSW.SwiPlCs
             PlEngine.RegisterForeign(null, "foo2", 2, new DelegateParameterBacktrack2(FooTwo), Nondeterministic);
             //PlEngine.RegisterForeign(null, "cliFindClass", 2, new DelegateParameter2(PrologCli.cliFindClass), PlForeignSwitches.None);
             PlEngine.RegisterForeign(ExportModule, "cliLoadAssembly", 1, new DelegateParameter1(PrologCli.cliLoadAssembly), PlForeignSwitches.None);
-            Console.Error.WriteLine("RegisterPLCSForeigns"); 
+            Console.Error.WriteLine("RegisterPLCSForeigns");
             PlEngine.RegisterForeign(null, "foo3", 3, new DelegateParameterBacktrackVarArgs(FooThree), Nondeterministic | PlForeignSwitches.VarArgs);
 
             InternMethod(ExportModule, "loadAssembly", typeof(PrologClient).GetMethod("LoadAssembly"));
@@ -1424,7 +1426,7 @@ namespace SbsSW.SwiPlCs
             //PLVOID = PlTerm.PlCompound("@", PlTerm.PlAtom("void"));
             //PLTRUE = PlTerm.PlCompound("@", PlTerm.PlAtom("true"));
             //PLFALSE = PlTerm.PlCompound("@", PlTerm.PlAtom("false"));
-            Console.Error.WriteLine("done RegisterPLCSForeigns"); 
+            Console.Error.WriteLine("done RegisterPLCSForeigns");
         }
 
         private static Class ResolveClass(string name)
@@ -1682,10 +1684,10 @@ namespace SbsSW.SwiPlCs
                 TypesLoading.Add(t);
                 foreach (var m in t.GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static))
                 {
-                    object[] f = m.GetCustomAttributes(typeof (PrologVisible), false);
+                    object[] f = m.GetCustomAttributes(typeof(PrologVisible), false);
                     if (f != null && f.Length > 0)
                     {
-                        LoadMethod(m, (PrologVisible) f[0]);
+                        LoadMethod(m, (PrologVisible)f[0]);
                     }
                 }
                 TypesLoaded.Add(t);
@@ -2374,7 +2376,7 @@ typedef struct // define a context structure  { ... } context;
                     }
                     break;
             }
-            redo:
+        redo:
             unsafe
             {
                 NonDetTest* o = (NonDetTest*)0;
@@ -2473,7 +2475,8 @@ typedef struct // define a context structure  { ... } context;
             if (plTerm.IsVar)
             {
                 return plTerm.FromObject(ret1);
-            } else
+            }
+            else
             {
                 var plvar = PlTerm.PlVar();
                 plvar.FromObject(ret1);
