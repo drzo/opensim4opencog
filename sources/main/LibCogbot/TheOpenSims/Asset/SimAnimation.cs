@@ -237,18 +237,12 @@ namespace cogbot.TheOpenSims
 
         public override bool SameAsset(SimAsset asset)
         {
-            if (asset==null) return false;
-            if (asset.AssetType!=AssetType) return false;
-            if (HasData())
-            {
-                
-            }
-            if (asset is SimAnimation)
-            {
-//                r = animation.Reader;
-                
-            }
-            return false;
+            if (asset == null) return false;
+            if (asset.AssetType != AssetType) return false;
+            if (SameAssetBytes(asset)) return true;
+            SimAnimation anim2 = asset as SimAnimation;
+            if (anim2 == null) return false;
+            return anim2.Reader.Equals(Reader);
         }
 
         public override string DebugInfo()

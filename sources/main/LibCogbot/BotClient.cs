@@ -917,7 +917,7 @@ namespace cogbot
                 IsOwner = true;
             }
 
-
+            bool displayedMessage = false;
             if (origin is ChatEventArgs && Message.Length > 0 && Dialog == InstantMessageDialog.MessageFromAgent)
             {
                 WriteLine(String.Format("{0} says, \"{1}\".", FromAgentName, Message));
@@ -934,14 +934,6 @@ namespace cogbot
 
             bool groupIM = GroupIM && GroupMembers != null && GroupMembers.ContainsKey(FromAgentID) ? true : false;
 
-            if (Dialog != InstantMessageDialog.MessageFromAgent)
-            {
-                string debug = String.Format("{0} {1} {2} {3} {4}: {5}",
-                                             IsOwner ? "IsOwner" : "NonOwner",
-                                             groupIM ? "GroupIM" : "IM", Dialog, Type, perms,
-                                             Helpers.StructToString(origin));
-                DisplayNotificationInChat(debug);
-            }
 
             switch (Dialog)
             {
@@ -1004,7 +996,11 @@ namespace cogbot
                         TheSimAvatar.StopMoving();
                         if (RegionID != UUID.Zero)
                         {
-                            DisplayNotificationInChat("TP to Lure from " + FromAgentName);
+                            if (!displayedMessage)
+                            {
+                                DisplayNotificationInChat("TP to Lure from " + FromAgentName);
+                                displayedMessage = true;
+                            }
                             SimRegion R = SimRegion.GetRegion(RegionID, gridClient);
                             if (R != null)
                             {
@@ -1013,6 +1009,7 @@ namespace cogbot
                             }
                         }
                         DisplayNotificationInChat("Accepting TP Lure from " + FromAgentName);
+                        displayedMessage = true;
                         Self.TeleportLureRespond(FromAgentID, IMSessionID, true);
                     }
                     break;
@@ -1047,6 +1044,7 @@ namespace cogbot
                     {
                         DisplayNotificationInChat("Accepting Friendship from " + FromAgentName);
                         Friends.AcceptFriendship(FromAgentID, IMSessionID);
+                        displayedMessage = true;
                     }
                     break;
                 case InstantMessageDialog.FriendshipAccepted:
@@ -1114,6 +1112,18 @@ namespace cogbot
                     break;
                 default:
                     break;
+            }
+            if (Dialog != InstantMessageDialog.MessageFromAgent && Dialog != InstantMessageDialog.MessageFromObject)
+            {
+                string debug = String.Format("{0} {1} {2} {3} {4}: {5}",
+                                             IsOwner ? "IsOwner" : "NonOwner",
+                                             groupIM ? "GroupIM" : "IM", Dialog, Type, perms,
+                                             Helpers.StructToString(origin));
+                if (!displayedMessage)
+                {
+                    DisplayNotificationInChat(debug);
+                    displayedMessage = true;
+                }
             }
         }
 

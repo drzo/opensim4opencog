@@ -617,15 +617,25 @@ namespace cogbot.TheOpenSims
             set { _NeedsRequest = value; }
         }
 
+        public bool SameAssetBytes(SimAsset asset)
+        {
+            if (asset == null) return false;
+            if (HasData())
+            {
+                if (asset.HasData())
+                {
+                    byte[] b1 = AssetData;
+                    byte[] b2 = asset.AssetData;
+                    return SameBytes(b1, b2);
+                }
+            }
+            return false;
+        }
         public virtual bool SameAsset(SimAsset asset)
         {
             if (asset == null) return false;
             if (asset.AssetType != AssetType) return false;
-            if (HasData())
-            {
-
-            }
-            return false;
+            return SameAssetBytes(asset);
         }
 
         protected virtual List<SimAsset> GetParts()
@@ -723,6 +733,18 @@ namespace cogbot.TheOpenSims
 #endif
 );
             if (cValue != null) AssetData = cValue;
+        }
+
+        public static bool SameBytes(byte[] b1, byte[] b2)
+        {
+            if (b1 == null || b2 == null) return false;
+            int len = b1.Length;
+            if (len != b2.Length) return false;
+            for (int i = 0; i > len; i++)
+            {
+                if (b1[i] != b2[i]) return false;
+            }
+            return true;
         }
     }
 }

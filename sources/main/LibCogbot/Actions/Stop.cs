@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
@@ -24,7 +25,7 @@ namespace cogbot.Actions
             //base.acceptInput(verb, args);
 
             BotClient Client = TheBotClient;
-            int aborted = 0;
+            int[] aborted = {0};
             if (args.objectPhrase.Length == 0)
             {
                 foreach (string action in Client.Commands.Keys)
@@ -49,31 +50,37 @@ namespace cogbot.Actions
                         }
                         else
                         {
-                            WriteLine("Killing/Removing {0}: {1} IsAlive={2}", num, t.Name, t.IsAlive);
-                            try
-                            {
-                                if (t.IsAlive)
-                                {
-                                    aborted++;
-                                    t.Abort();
-                                }
-                                t.Join();
-                            }
-                            catch (Exception) { }
+                            Thread thread = t;
+                            DLRConsole.ExecWithMaxTime(() =>
+                                                           {
+                                                               WriteLine("Killing/Removing {0}: {1} IsAlive={2}", num,
+                                                                         thread.Name, thread.IsAlive);
+                                                               try
+                                                               {
+                                                                   if (thread.IsAlive)
+                                                                   {
+                                                                       aborted[0]++;
+                                                                       thread.Abort();
+                                                                   }
+                                                                   thread.Join();
+                                                               }
+                                                               catch (Exception)
+                                                               {
+                                                               }
+                                                           }, 2000);
                         }
-
                     }
                 }
             }
             if (WorldSystem.TheSimAvatar.CurrentAction!=null)
             {
                 WorldSystem.TheSimAvatar.CurrentAction = null;
-                aborted++;
+                aborted[0]++;
             }
             WorldSystem.TheSimAvatar.StopMoving();
             Client.ExecuteCommand("pointat", this, WriteLine);
             Client.describeNext = false;
-            return Success("Stopped " + aborted);
+            return Success("Stopped " + aborted[0]);
         }
     }
 }

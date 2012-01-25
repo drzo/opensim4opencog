@@ -65,18 +65,18 @@ namespace cogbot.TheOpenSims
 
         public override bool SameAsset(SimAsset asset)
         {
-            if (asset==null) return false;
-            if (asset.AssetType!=AssetType) return false;
-            if (HasData())
-            {
-                
-            }
-            if (asset is SimAnimation)
-            {
-//                r = animation.Reader;
-                
-            }
-            return false;
+            if (asset == null) return false;
+            if (asset.AssetType != AssetType) return false;
+            if (SameAssetBytes(asset)) return true;
+            var anim2 = asset as SimSound;
+            if (anim2 == null) return false;
+            return anim2.Sound.Equals(Sound);
+        }
+
+        protected object Sound
+        {
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
         }
     }
 }
