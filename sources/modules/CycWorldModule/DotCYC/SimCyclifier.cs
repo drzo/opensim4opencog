@@ -2021,7 +2021,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
 
         public object FindOrCreateCycFort(WorldObjects client)
         {
-            return FindOrCreateCycFort(client.TheSimAvatar);
+            return FindOrCreateCycFort((SimActor)client.TheSimAvatar);
         }
 
 
@@ -2378,7 +2378,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
         {
             SimRegion r = SimRegion.GetRegion(simObjectEvent);
             CycObject findOrCreateCycFort = FindOrCreateCycFort(r);
-            return FindOrCreateCycFort(SimRegion.GlobalToLocal(simObjectEvent), r.RegionName);
+            return FindOrCreateCycFort(r.GlobalToLocal(simObjectEvent), r.RegionName);
         }
 
         public object FindOrCreateCycFort(uint b)
