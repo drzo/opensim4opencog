@@ -37,7 +37,8 @@ using Exception=System.Exception;
 using Object=System.Object;
 using String=System.String;
 using System.Collections.Generic;
-using CONTEXT = SbsSW.SwiPlCs.PrologEngine;
+using PrologEngine = SbsSW.SwiPlCs.PrologClient;
+using CONTEXT = SbsSW.SwiPlCs.PrologClient;//SbsSW.SwiPlCs.PrologEngine;
 using Term = SbsSW.SwiPlCs.PlTerm;
 public class A
 {
