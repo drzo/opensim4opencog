@@ -12,6 +12,7 @@
             cliCall/3,
             cliCall/4,
             cliCol/2,
+            cliCast/3,
             cliCollection/2,
             cliFindClass/2,
             cliFindMethod/3,
@@ -106,6 +107,8 @@ cliSubclass(Sub,Sup):-cliFindType(Sub,RealSub),cliFindType(Sup,RealSup),cliCall(
 %% cliCol(+Col,-Elem) iterates out Elems for Collection
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 % old version:s cliCollection(Obj,Ele):-cliCall(Obj,'ToArray',[],Array),cliArrayToTerm(Array,Vect),!,arg(_,Vect,Ele).
+cliCollection(Error,_Ele):-cliIsNull(Error),!,fail.
+cliCollection([S|Obj],Ele):-!,member(Ele,[S|Obj]).
 cliCollection(Obj,Ele):-
       cliMemb(Obj,m(_, 'GetEnumerator', _, [], [], _, _)),
       cliCall(Obj,'GetEnumerator',[],Enum),!,
@@ -147,7 +150,7 @@ cliNonNull(Obj):-not(cliIsNull(Obj)).
 %% cliIsObject(+Obj) is Object a CLR object and not null or void
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 cliIsObject([_|_]):-!,fail.
-cliIsObject('@'(O)):-!, O\=void,O\=null.
+cliIsObject('@'(O)):-!,O\=void,O\=null.
 cliIsObject(enum(_,_)):-!.
 cliIsObject(O):-functor(O,F,_),memberchk(F,[struct,object]).
 
@@ -163,6 +166,20 @@ cliIsTaggedObject('@'(O)):-!, O\=void,O\=null.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 cliMemb(O,X):-cliMembers(O,Y),member(X,Y).
 cliMemb(O,F,X):-cliMemb(O,X),member(F,[f,p, c,m ,e]),functor(X,F,_).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%%% cliPreserve(TF,Calls)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cliPreserve(TF,Calls):-
+   cliGet('SbsSW.SwiPlCs.PrologClient','PreserveObjectType',O),
+   call_cleanup((cliSet('SbsSW.SwiPlCs.PrologClient','PreserveObjectType',TF),Calls),
+   cliSet('SbsSW.SwiPlCs.PrologClient','PreserveObjectType',O)).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%%% cliObjectCollect(Calls).  
+%%%%%% as tagged objects are created they are tracked .. when the call is complete any new object tags are released
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cliObjectCollect(Calls):-cliTrackerBegin(O),call_cleanup(Calls,cliTrackerFree(O)).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
@@ -187,6 +204,11 @@ cliCall(Obj,MethodSpec,Params,Out):-cliCallRaw(Obj,MethodSpec,Params,OutRaw),!,O
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%%% cliLibCall(+CallTerm, -Out).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cliLibCall(CallTerm,Out):-cliCall('SbsSW.SwiPlCs.PrologClient',CallTerm,Out).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %%% cliGet(+Obj, +PropTerm, -Out).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 cliGet(Obj,_,_):-cliIsNull(Obj),!,fail.
@@ -208,7 +230,6 @@ cliGetTypeSubProps(CType,Sub):-cliSubProperty(Type,Sub),cliSubclass(CType,Type).
 
 :-dynamic(cliGetHook/3).
 :-multifile(cliGetHook/3).
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %%% cliSet(+Obj, +PropTerm, +NewValue).
@@ -343,6 +364,12 @@ cli_GetSymbol(Engine,Name,Value):- (cli_Interned(Engine,Name,Value);Value=cli_Un
 %:-use_module(library(pce)).
 
 %%:-interactor.
+
+ensureExported:-current_predicate(clipl:F/A),atom_concat(cli,_,F),export(F/A),fail.
+ensureExported.
+
+:-ensureExported.
+
 
 end_of_file.
 
