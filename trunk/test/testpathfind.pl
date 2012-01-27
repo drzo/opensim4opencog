@@ -49,6 +49,7 @@ move_test(Time , Start , End) :-
         apiBotClientCmd(stopmoving),
 	teleportTo(Start),
         apiBotClientCmd('remeshprim'),
+        botClient(['TheSimAvatar','KillPipes'],_),
 	goByMethod(End),
         apiBotClientCmd(waitpos(Time,End)),
         apiBotClientCmd(stopmoving).
