@@ -334,8 +334,10 @@ resolveAvatar(Name,Name):-cliIsObject(Name),cliIsType(Name,'SimAvatar'),!.
 resolveAvatar(Name,Object):-cliIsObject(Name),cliToString(Name,String),!,resolveAvatar(String,Object).
 resolveAvatar(Name,Object):-cliCall('cogbot.Listeners.WorldObjects','GetSimAvatarFromNameIfKnown'(string),[Name],Object).
 
+%% resolveObjectByName(stop_hill_walk,O),simObjectColor(O,C),cliWriteln(C).
 %% cliCall(static('cogbot.TheOpenSims.SimImageUtils'),'ToNamedColors'('OpenMetaverse.Color4'),[struct('Color4',1,0,1,0)],Named),cliCol(Named,NamedE),cliWriteln(NamedE).
-simObjectColor(A,NamedE):-simObject(A),cliGet(A,textures,B),cliGet(B,faceTextures,C),cliCol(C,E),E\=='@'(null),cliGet(E,rgba,CC),
+simObjectColor(A,NamedE):-simObject(A),cliCall(static('cogbot.TheOpenSims.SimImageUtils'),'ToNamedColors'('cogbot.TheOpenSims.SimObject'),[A],Named),cliCol(Named,NamedE).
+simObjectColor(A,NamedE):-fail,simObject(A),cliGet(A,textures,B),cliGet(B,faceTextures,C),cliCol(C,E),E\=='@'(null),cliGet(E,rgba,CC),
   cliCall(static('cogbot.TheOpenSims.SimImageUtils'),'ToNamedColors'('OpenMetaverse.Color4'),[CC],Named),cliCol(Named,NamedE).
 
 /*
