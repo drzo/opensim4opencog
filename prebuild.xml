@@ -839,6 +839,8 @@
       <Reference name="System.Data" localCopy="false"/>
       <Reference name="System.Xml" localCopy="false"/>
       <Reference name="System.Web" localCopy="false"/>
+      <Reference name="MushDLR223" localCopy="false"/>
+      <Reference name="HttpServer" localCopy="false"/>
       <Files>
           <Match path="Navigation/Debug" pattern="*.cs" recurse="false" subType="Form"/>
           <Match path="." pattern="*.cs" recurse="true" subType="Code"/>
