@@ -169,6 +169,41 @@ namespace SbsSW.SwiPlCs
             return ret;
         }
 
+        private static int AddTagged(uint TermRef, string tag)
+        {
+            /*
+            PlTerm term2 = new PlTerm(TermRef);
+            var t1 = term2;
+            if (t1.IsCompound)
+            {
+                t1 = t1[1];
+            }
+            else if (t1.IsVar)
+            {
+            }
+            //var t2 = new PlTerm(t1.TermRef + 1);
+
+            //libpl.PL_put_atom_chars(t1.TermRef + 1, tag);
+            bool ret = t1.Unify(tag); // = t1;*/
+            uint nt = libpl.PL_new_term_ref();
+            libpl.PL_cons_functor_v(nt,
+                                    OBJ_1,
+                                    new PlTermV(PlTerm.PlAtom(tag)).A0);
+            return libpl.PL_unify(TermRef, nt);
+        }
+
+        protected static uint OBJ_1
+        {
+            get
+            {
+                if (_obj1 == default(uint))
+                {
+                    _obj1 = libpl.PL_new_functor(libpl.PL_new_atom("@"), 1);
+                }
+                return _obj1;
+            }
+        }
+
         [PrologVisible(ModuleName = ExportModule)]
         static public bool cliTrackerBegin(PlTerm tracker)
         {
