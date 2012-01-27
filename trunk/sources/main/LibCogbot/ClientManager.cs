@@ -992,7 +992,7 @@ namespace cogbot
                     client.SetLoginAcct(account);
                     lock (BotByName) BotByName[account.BotLName] = client;
                     LastRefBotClient = client;
-                    if (BotClientCreated == null) BotClientCreated(client);
+                    if (BotClientCreated != null) BotClientCreated(client);
                 }
                 account.Client = client;
                 //if (inst != null)
