@@ -92,7 +92,7 @@ namespace cogbot.TheOpenSims
                                {"a_green", scaleC2.G},
                            };
 
-                SimImageUtils.CatchNamedColors(average, dict);
+                SimImageUtils.CatchNamedColors(average, dict, true);
                 return dict;
             }
         }
