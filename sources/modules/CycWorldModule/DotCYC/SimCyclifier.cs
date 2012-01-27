@@ -2021,7 +2021,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
 
         public object FindOrCreateCycFort(WorldObjects client)
         {
-            return FindOrCreateCycFort((SimActor)client.TheSimAvatar);
+            return FindOrCreateCycFort((SimObject)client.TheSimAvatar);
         }
 
 

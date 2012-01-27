@@ -22,7 +22,8 @@ assertIfNew(Gaf):-assert(Gaf).
 :- assertIfNew(user:file_search_path(library, '.')).
 :- assertIfNew(user:file_search_path(library, '../test')).
 :- assertIfNew(user:file_search_path(test, '../test')).
-:- assertIfNew(user:file_search_path(cogbot, './cynd/simulator')).
+:- assertIfNew(user:file_search_path(test, '../../test')).
+:- assertIfNew(user:file_search_path(cogbot, './prolog/simulator')).
 
 :- use_module(cogbot(cogrobot)).
 :- use_module(test(testpathfind)).
