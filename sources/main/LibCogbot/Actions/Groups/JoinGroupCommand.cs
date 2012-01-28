@@ -99,7 +99,7 @@ namespace cogbot.Actions.Groups
                 }
                 else
                 {
-                    if (e.MatchedGroups.Count > 1)
+                    if (e.MatchedGroups.Count > 0)
                     {
                         /* A.Biondi 
                          * The Group search doesn't work as someone could expect...
