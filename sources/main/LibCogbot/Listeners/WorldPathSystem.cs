@@ -92,6 +92,7 @@ namespace cogbot.Listeners
                 if (thisCount == lastCount)
                 {
                     Thread.Sleep(20000);
+                    lastCount--;
                     
                     continue;
                 }
@@ -128,6 +129,8 @@ namespace cogbot.Listeners
                         {
                             if (MaintainCollisionsForeground)
                             {
+                                if (O.IsPhantom || O.IsPassable) continue;
+                                continue;
                                 var p = O.PathFinding;
                                 WorldPathSystem.MeshingQueue.Enqueue(() => p.AddCollisionsNow());
                             }
