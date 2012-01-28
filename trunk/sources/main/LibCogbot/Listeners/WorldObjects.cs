@@ -1045,6 +1045,10 @@ namespace cogbot.Listeners
         }
         public Primitive GetPrimitive(UUID id, Simulator simulator)
         {
+            if (id == null || id == UUID.Zero)
+            {
+                return null;
+            }
             //lock (uuidTypeObject)                        
             Primitive found = null;
             {
