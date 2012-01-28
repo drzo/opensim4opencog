@@ -141,7 +141,15 @@ namespace cogbot.TheOpenSims
                     continue;
                 }
                 if (throttle) Thread.Sleep(3);
+                                
                 if (true)
+                {
+                    Client.Self.Chat(
+                        String.Format("{0},{1},{2},{3},{4},{5}", //color.R, color.G, color.B,
+                                      prev.X, prev.Y, prev.Z, next.X, next.Y, next.Z),
+                        100, ChatType.Normal);
+                }
+                else if (true)
                 {
                     Client.Self.Chat(
                         String.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8}", color.R, color.G, color.B,
@@ -151,7 +159,8 @@ namespace cogbot.TheOpenSims
                 else
                 {
                     Client.Self.Chat(String.Format("{0},255,0,0,128,{1},{2},{3},{4},{5},{6}",
-                                                   PipesNumberNext, prev.X, prev.Y, prev.Z, next.X, next.Y, next.Z),
+                                                   PipesNumberNext, prev.X, prev.Y, prev.Z, next.X,
+                                                   next.Y, next.Z),
                                      100, ChatType.Normal);
                 }
 
