@@ -496,7 +496,7 @@ namespace cogbot.TheOpenSims
 
             lock (_primRefs)
             {
-               // _primRefs.Remove(primitive);
+                _primRefs.Remove(primitive);
                 IsKilled = _primRefs.Count < 1;
                 if (ReferenceEquals(_Prim0, primitive))
                 {
@@ -513,6 +513,8 @@ namespace cogbot.TheOpenSims
         {
             lock (FILock)
             {
+                if (!WorldObjects.MaintainSimObjectInfoMap) return null;
+                if (_infoMap==null) _infoMap = new Dictionary<object, NamedParam>();
                 return new List<NamedParam>(_infoMap.Values);
             }
         }
