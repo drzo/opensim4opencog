@@ -158,6 +158,11 @@ namespace OpenMetaverse
     [Serializable]
     public class UUIDFactory
     {
+        public static bool IsNullOrZero(UUID uUID)
+        {
+            return uUID == null || uUID == UUID.Zero;
+        }
+
         public static UUID GetUUID(byte[] data, int pos)
         {
 #if INTERNABLE_UUIDS
