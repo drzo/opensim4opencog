@@ -65,22 +65,34 @@ namespace PathSystem3D.Mesher
             MaxY += offset.Y;
             MinZ += offset.Z;
             MaxZ += offset.Z;
+            NeedsRounding = true;
             if (RoundBoxes) Round();
         }
 
         private void Round()
         {
+            if (!NeedsRounding) return;
+            NeedsRounding = false;
             MinX = MinRound(MinX);
             MinY = MinRound(MinY);
-            MinZ = MinRound(MinZ);
             MaxX = MinRound(MaxX);
             MaxY = MinRound(MaxY);
-            MaxZ = MinRound(MaxZ);
+            RoundZ();
+        }
+
+        private void RoundZ()
+        {
+            MinZ = MinRound(MinZ, 1);
+            MaxZ = MinRound(MaxZ, 1);
         }
 
         private static float MinRound(float t)
         {
             return (float) (Math.Round(t*5)/5);
+        }
+        private static float MinRound(float t, int by)
+        {
+            return (float) Math.Round(t, by);
         }
 
         public static bool operator ==(Box3Fill o1, Box3Fill o2)
@@ -102,6 +114,7 @@ namespace PathSystem3D.Mesher
         public float MinY;// = float.MaxValue;
         public float MaxY;// = float.MinValue;
         const bool RoundBoxes = true;
+        public bool NeedsRounding = RoundBoxes;
         public float MinZ { get; set; }// = float.MaxValue;
         public float MaxZ { get; set; }// = float.MinValue;
 
@@ -254,6 +267,7 @@ namespace PathSystem3D.Mesher
 
         internal void AddPoint(float x, float y, float z, Vector3 padXYZ)
         {
+            NeedsRounding = true;
             // bool changed = false;
             if (x < MinX)
             {

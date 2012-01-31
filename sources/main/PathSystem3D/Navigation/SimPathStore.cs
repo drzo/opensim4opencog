@@ -55,6 +55,8 @@ namespace PathSystem3D.Navigation
         public static int DebugLevel = 0;
         [ConfigSetting]
         public static bool DisableTravelPoints = false;
+        [ConfigSetting]
+        public static bool DebugSetTraveled = false;
 
         public string RegionName { get; set; }
         // util
@@ -656,16 +658,17 @@ namespace PathSystem3D.Navigation
             Vector3 dif = LastPosition - nextPosition;
             if (Math.Abs(dif.Z) > 0.5)
             {
-                Debug("BIGZ " + LastPosition + " ->" + nextPosition + " " + this);
+                if (DebugSetTraveled) Debug("BIGZ " + LastPosition + " ->" + nextPosition + " " + this);
                 return;
             }
             if (!(dif.X == 0 && dif.Y == 0))
             {
                 float dist = Vector3.Distance(LastPosition, nextPosition);
-                if (dist > 2) return;
+                SetPassable(LastPosition.X, LastPosition.Y, LastPosition.Z);
+                if (dist > 3) return;
                 int stepsNeeded = (int)(dist * POINTS_PER_METER) + 1;
               // if (OpenMetaverse.Settings.LOG_LEVEL == OpenMetaverse.Helpers.LogLevel.Debug) 
-                Debug("MakeMovement " + LastPosition + " -> " + stepsNeeded + " -> " + nextPosition + " " + this);
+                if (DebugSetTraveled) Debug("MakeMovement " + LastPosition + " -> " + stepsNeeded + " -> " + nextPosition + " " + this);
                 Vector3 vstep = dif / stepsNeeded;
                 Vector3 traveled = nextPosition;
                 SetTraveled(nextPosition.X, nextPosition.Y, nextPosition.Z);
@@ -1771,10 +1774,12 @@ namespace PathSystem3D.Navigation
                 {
                     case BLOCKED:
                         {
-                            ByteMatrix[ix, iy] = MAYBE_BLOCKED;
+//                            ByteMatrix[ix, iy] = MAYBE_BLOCKED;
+                            ByteMatrix[ix, iy] = STICKY_PASSABLE;
                             continue;
                         }
                     case MAYBE_BLOCKED:
+                        ByteMatrix[ix, iy] = STICKY_PASSABLE;
                         continue;
                     case STICKY_PASSABLE:
                         continue;
@@ -1814,7 +1819,7 @@ namespace PathSystem3D.Navigation
                 ///Debug("SetBlocked: {0} {1}", x, y);
                 if (ByteMatrix[ix, iy] > 100)
                 {
-                    continue;
+                    //continue;
                 }
                 ByteMatrix[ix, iy] = STICKY_PASSABLE;           
             }
@@ -1849,7 +1854,8 @@ namespace PathSystem3D.Navigation
                 // if was set Passable dont re-block
                 if (ByteMatrix[ix, iy] == STICKY_PASSABLE)
                 {
-                    //  return;
+                    ByteMatrix[ix, iy] = MAYBE_BLOCKED;
+                    return;
                 }
                 ByteMatrix[ix, iy] = BLOCKED;
             }
@@ -2786,7 +2792,7 @@ namespace PathSystem3D.Navigation
         public void Update(Vector3 nextPosition, Quaternion rotation)
         {
             double dist = Vector3.Distance(LastPosition, nextPosition);
-            if (dist > 1)
+            if (dist > 0.5)
             {
                 MakeMovement(nextPosition);
             }
