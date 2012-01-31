@@ -649,7 +649,7 @@ namespace cogbot.TheOpenSims
         private bool _Passable;
         private bool _PassableKnown = false;
 
-        public bool IsPassable
+        virtual public bool IsPassable
         {
             get
             {
@@ -690,7 +690,7 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        public bool IsPhantom
+        virtual public bool IsPhantom
         {
             get
             {
@@ -2395,7 +2395,7 @@ namespace cogbot.TheOpenSims
 
         private bool IsSolidCachedKnown, IsSolidCachedTrue;
 
-        public bool IsSolid
+        virtual public bool IsSolid
         {
             get
             {
