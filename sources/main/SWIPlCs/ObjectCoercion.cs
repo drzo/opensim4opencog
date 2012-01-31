@@ -1,33 +1,16 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
 using System.Runtime.InteropServices;
-using System.Threading;
 using System.Xml.Serialization;
-using ikvm.extensions;
-using IKVM.Internal;
-using ikvm.runtime;
-using java.net;
-using java.util;
-//using jpl;
 using jpl;
 #if USE_MUSHDLR
 using MushDLR223.Utilities;
 #endif
-using SbsSW.SwiPlCs.Callback;
-using SbsSW.SwiPlCs.Exceptions;
-using SbsSW.SwiPlCs.Streams;
-using System.Windows.Forms;
-using Hashtable = java.util.Hashtable;
-using ClassLoader = java.lang.ClassLoader;
 using Class = java.lang.Class;
-using sun.reflect.misc;
 using ArrayList=System.Collections.ArrayList;
-using Util = ikvm.runtime.Util;
 using CycFort = SbsSW.SwiPlCs.PlTerm;
 using PrologCli = SbsSW.SwiPlCs.PrologClient;
 
@@ -630,7 +613,7 @@ namespace SbsSW.SwiPlCs
         }
         static object ToBigDecimal(string value)
         {
-            Type[] arrayOfStringType = new Type[] { typeof(string) };
+            //Type[] arrayOfStringType = new Type[] { typeof(string) };
             // .net 4.0 and Mono
             Type t = ResolveType("System.Numerics.BigDecimal");
             if (t != null) return t.GetMethod("Parse", arrayOfStringType).Invoke(null, new object[] { value });
@@ -645,6 +628,10 @@ namespace SbsSW.SwiPlCs
             if (pt == typeof(PlTerm)) return o;
             if (pt == typeof(string))
             {
+                if (IsTaggedObject(o))
+                {
+                    return "" + GetInstance(o);
+                }
                 return (string)o;
             }
             if (pt != null && pt.IsSubclassOf(typeof(Delegate)))

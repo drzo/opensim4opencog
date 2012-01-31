@@ -1,33 +1,13 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Xml.Serialization;
-using ikvm.extensions;
-using IKVM.Internal;
-using ikvm.runtime;
-using java.net;
-using java.util;
-//using jpl;
-using jpl;
 #if USE_MUSHDLR
 using MushDLR223.Utilities;
 #endif
-using SbsSW.SwiPlCs.Callback;
-using SbsSW.SwiPlCs.Exceptions;
-using SbsSW.SwiPlCs.Streams;
-using System.Windows.Forms;
-using Hashtable = java.util.Hashtable;
-using ClassLoader = java.lang.ClassLoader;
 using Class = java.lang.Class;
-using sun.reflect.misc;
-using ArrayList=System.Collections.ArrayList;
-using Util = ikvm.runtime.Util;
 using CycFort = SbsSW.SwiPlCs.PlTerm;
 using PrologCli = SbsSW.SwiPlCs.PrologClient;
 
@@ -876,12 +856,14 @@ namespace SbsSW.SwiPlCs
                 }
             }
 
-            var Key = new DelegateObjectInPrologKey();
-            Key.Name = prologPred.Name;
-            Key.Arity = prologPred.Arity;
+            var Key = new DelegateObjectInPrologKey
+                          {
+                              Name = prologPred.Name,
+                              Arity = prologPred.Arity,
+                              DelegateType = fi
+                          };
             //uint fid = libpl.PL_open_foreign_frame();
             //Key.Origin = prologPred.Copy();
-            Key.DelegateType = fi;
 
             DelegateObjectInProlog handlerInProlog;
             lock (PrologDelegateHandlers)
@@ -933,7 +915,6 @@ namespace SbsSW.SwiPlCs
             {
                 return Warn("Cant find event {0} on {1}", memberSpec, c);
             }
-            MethodInfo eventHandlerMethodProto = evi.EventHandlerType.GetMethod("Invoke");
             ParameterInfo[] paramInfos = GetParmeters(evi);
             MethodInfo mi = evi.GetRaiseMethod();
             string fn = evi.Name;
@@ -977,7 +958,8 @@ namespace SbsSW.SwiPlCs
             }
             if (mi == null)
             {
-                mi = eventHandlerMethodProto;
+                Type eviEventHandlerType = evi.EventHandlerType;
+                if (eviEventHandlerType != null) mi = eviEventHandlerType.GetMethod("Invoke");
             }
             if (mi == null)
             {
@@ -1015,11 +997,13 @@ namespace SbsSW.SwiPlCs
             {
                 return Warn("Cant find event {0} on {1}", memberSpec, c);
             }
-            var Key = new EventHandlerInPrologKey();
-            Key.Name = prologPred.Name;
-            Key.Arity = prologPred.Arity;
-            Key.Origin = getInstance;
-            Key.Event = fi;
+            var Key = new EventHandlerInPrologKey
+                          {
+                              Name = prologPred.Name,
+                              Arity = prologPred.Arity,
+                              Origin = getInstance,
+                              Event = fi
+                          };
 
             lock (PrologEventHandlers)
             {
@@ -1045,11 +1029,13 @@ namespace SbsSW.SwiPlCs
             {
                 return Warn("Cant find event {0} on {1}", memberSpec, c);
             }
-            var Key = new EventHandlerInPrologKey();
-            Key.Name = prologPred.Name;
-            Key.Arity = prologPred.Arity;
-            Key.Origin = getInstance;
-            Key.Event = fi;
+            var Key = new EventHandlerInPrologKey
+                          {
+                              Name = prologPred.Name,
+                              Arity = prologPred.Arity,
+                              Origin = getInstance,
+                              Event = fi
+                          };
             EventHandlerInProlog handlerInProlog;
             lock (PrologEventHandlers) if (PrologEventHandlers.TryGetValue(Key, out handlerInProlog))
                 {
