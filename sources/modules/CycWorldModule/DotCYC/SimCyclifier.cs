@@ -674,7 +674,10 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
 
         public void assertCycLExpression(string s, CycObject mt)
         {
-            cycAccessQueueHandler.Enqueue(() => assertCycLExpressionNow(s, mt));
+            string asert = string.Format("(fi-assert '{0} {1})", s, mt.cyclifyWithEscapeChars());
+            if (IsAssertDuped(asert)) return;
+            RememberAsserted(asert);
+            cycAccessQueueHandler.Enqueue(asert,() => assertCycLExpressionNowNoCheck(asert, s, mt));
         }
 
         static bool IsAssertDuped(string s)
@@ -683,31 +686,41 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
             {
                 if (DuplicateCheck.Contains(s))
                 {
-                    Debug("DUPED: " + s);
+               //     Debug("DUPED: " + s);
                     return true;
                 }
-                else
+                return false;
+            }
+        }
+
+        static void RememberAsserted(string s)
+        {
+            lock (DuplicateCheck)
+            {
+                DuplicateCheck.Add(s);
+                int cnt = DuplicateCheck.Count;
+                if (cnt % 1000 == 0)
                 {
-                    DuplicateCheck.Add(s);
-                    int cnt = DuplicateCheck.Count;
-                    if (cnt % 1000 == 0)
+                    if (cnt > 6000)
                     {
-                        if (cnt > 6000)
-                        {
-                            DuplicateCheck.RemoveRange(0, cnt - 6000);
-                        }
+                        DuplicateCheck.RemoveRange(0, cnt - 6000);
                     }
-                    return false;
                 }
             }
         }
 
         static void assertCycLExpressionNow(string s, CycObject mt)
         {
+            string asert = string.Format("(fi-assert '{0} {1})", s, mt.cyclifyWithEscapeChars());
+            if (IsAssertDuped(asert)) return;
+            RememberAsserted(asert);
+            assertCycLExpressionNowNoCheck(asert, s, mt);
+        }
+
+        static void assertCycLExpressionNowNoCheck(string asert, string s, CycObject mt)
+        {
             try
             {
-                string asert = string.Format("(fi-assert '{0} {1})", s, mt.cyclifyWithEscapeChars());
-                if (IsAssertDuped(asert)) return;
                 if (!cycAccess.converseBoolean(asert))
                 {
                     Debug("Assertion failed: " + asert);
