@@ -5,13 +5,15 @@
 using System;
 using System.Windows.Forms;
 using cogbot;
+using java.net;
+using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 
 namespace CycWorldModule.DotCYC
 {
     using org.opencyc.api;
     using System.Reflection;
-    public partial class CycConnectionForm : Form
+    public partial class CycConnectionForm //: Form
     {
         //  WinformREPL.REPLForm replForm = null;
         static private CycAccess m_cycAccess = null;
@@ -22,10 +24,18 @@ namespace CycWorldModule.DotCYC
                 return getCycAccess();
             }
         }
+
+        public bool IsDisposed
+        {
+            get { return false; }
+        }
+
         public bool wasConnected = false;
         public CycConnectionForm()
         {
+#if GUI
             InitializeComponent();
+#endif
 #if MICROSOFT
             // add this line to the form's constructor after InitializeComponent() 
           hMenu = GetSystemMenu(this.Handle, false);
@@ -36,25 +46,31 @@ namespace CycWorldModule.DotCYC
 
         private void btnConnect_Click(object sender, EventArgs e)
         {
-            try { btnConnect.Enabled = false; }
+#if GUI
+    try { btnConnect.Enabled = false; }
             catch (Exception) { }
+#endif
             if (!IsConnected())
                 connect();
             else
                 disconnect();
+#if GUI
             try { btnConnect.Enabled = true; }
             catch (Exception) { }
+#endif
         }
 
         private bool IsConnected()
         {
             if (m_cycAccess != null) wasConnected = !m_cycAccess.isClosed();
             else wasConnected = false;
+#if GUI
             if (wasConnected) btnConnect.Text = "Disconnect";
             else btnConnect.Text = "Connect";
+#endif
             return wasConnected;
         }
-
+#if GUI
         private void btnEval_Click(object sender, EventArgs e)
         {
             try
@@ -66,19 +82,27 @@ namespace CycWorldModule.DotCYC
                 txtCycOutput.Text = ee.ToString();
             }
         }
+#endif
 
         public CycAccess getCycAccess()
         {
             if (!IsConnected()) connect();
             return m_cycAccess;
         }
-
+        object cycConnectLock = new object();
         private void connect()
+        {
+            lock (cycConnectLock)
+            {
+                connect0();
+            }
+        }
+        private void connect0()
         {
             if (IsConnected()) return;
             try
             {
-                m_cycAccess = new CycAccess(cycServerAddress.Text, Int16.Parse(cycBasePort.Text));
+                m_cycAccess = new CycAccess(cycServerAddress, Int16.Parse(cycBasePort));
                 m_cycAccess.getCycConnection().traceOn();
                 m_cycAccess.find("isa");
                 //   m_cycAccess.getCycConnection().converse("()");
@@ -89,7 +113,9 @@ namespace CycWorldModule.DotCYC
             {
                 DLRConsole.DebugWriteLine("" + ee);
                 SimCyclifier.Trace();
+#if GUI
                 txtCycOutput.Text = ee.ToString();
+#endif
             }
             if (m_cycAccess != null)
             {
@@ -98,6 +124,12 @@ namespace CycWorldModule.DotCYC
             }
             wasConnected = IsConnected();
         }
+
+        [ConfigSetting]
+        public static string cycBasePort = "3600";
+        [ConfigSetting]
+        public static string cycServerAddress = "CycServer";
+
         private void disconnect()
         {
             if (m_cycAccess != null)
@@ -134,11 +166,13 @@ namespace CycWorldModule.DotCYC
 
         public void Reactivate()
         {
+#if GUI
             this.Show();
             //if (this.WindowState == FormWindowState.Minimized)              
             this.WindowState = FormWindowState.Normal;
             this.Visible = true;
             this.Activate();
+#endif
         }
 
         private void txtCycOutput_TextChanged(object sender, EventArgs e)

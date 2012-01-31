@@ -23,6 +23,8 @@ using PathSystem3D.Navigation;
 using Exception=System.Exception;
 using Object=System.Object;
 using UUID=OpenMetaverse.UUID;
+using System.Drawing;
+using MushDLR223.ScriptEngines;
 
 namespace CycWorldModule.DotCYC
 {
@@ -30,10 +32,19 @@ namespace CycWorldModule.DotCYC
     {
         // ReSharper disable InconsistentNaming
 
+        [ConfigSetting(SkipSaveOnExit = true)]
         public static bool UseCyc = true;
+        [ConfigSetting]
         public static bool ClearGridDataBetweenSessions = false;
+        [ConfigSetting]
         public static bool ClearRegionDataBetweenSessions = false;
+        [ConfigSetting]
         public static bool ClearHistoryBetweenSessions = true;
+        [ConfigSetting]
+        public static bool StoreInfrastructureEvents = false;
+        [ConfigSetting]
+        public static bool StorePersonalEvents = false;
+
         static public CycAccess cycAccess
         {
             get
@@ -49,6 +60,7 @@ namespace CycWorldModule.DotCYC
         static public CycFort queryMt;
         static public CycFort staticStateMt;
         static public int KBTick = 0;
+        [ConfigSetting(SkipSaveOnExit = true)]
         static public bool ProcessEvents = true;
         private bool IsDisposing;
 
@@ -74,12 +86,11 @@ namespace CycWorldModule.DotCYC
         private CycFort cycIsa;
         //static readonly List<String> SkipVerbs = new List<string>() { "on-log-message", "on-login", "on-event-queue-running", "on-sim-connecting" };
         public static SimCyclifier Master;
-        static object SimCyclifierLock = new object();
+        static readonly object SimCyclifierLock = new object();
         static bool IsCycDead;
         // ReSharper restore InconsistentNaming
         public void OnEvent(SimObjectEvent evt)
         {
-            return;
             if (cycAccess == null)
             {
                 //Console.WriteLine("No Cyc connection");
@@ -91,9 +102,12 @@ namespace CycWorldModule.DotCYC
                 IsCycDead = false;
             }
             if (IsCycDead) return;
-            if (evt.EventType == SimEventType.UNKNOWN) return;
-            if (evt.EventType == SimEventType.NETWORK) return;
-            if (evt.EventClass == SimEventClass.PERSONAL) return;
+            if (evt.EventType == SimEventType.UNKNOWN)
+            {
+                return;
+            }
+            if (evt.EventType == SimEventType.NETWORK && !StoreInfrastructureEvents) return;
+            if (evt.EventClass == SimEventClass.PERSONAL && !StorePersonalEvents) return;
             //if (SkipVerbs.Contains(evt.Verb.ToLower())) return;
             if (!UseQueue)
             {
@@ -121,6 +135,7 @@ namespace CycWorldModule.DotCYC
                 {
                     if (evt.Verb == "LookAtType-Idle") return;
                     if (evt.Verb == "LookAtType-FreeLook") return;
+                    if (!StorePersonalEvents) return;
                 }
                 CycFort fort = Master.FindOrCreateCycFort(evt);
                 // Debug("to fort -> " + fort);
@@ -390,7 +405,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
             assertVocabGaf(C("arg3Isa"), simFort["PointInRegionFn"], C("NumericInterval"));
             assertVocabGaf(C("arg4Isa"), simFort["PointInRegionFn"], C("NumericInterval"));
             assertVocabGaf(C("resultIsa"), simFort["PointInRegionFn"], C("Point"));
-            if (false) cycAssert("(#$expansion #$PointInRegionFn "
+            if (false) assertCycLExpression("(#$expansion #$PointInRegionFn "
                 + " (#$PointIn3DCoordinateSystemFn (#$SimRegionCoordinateSystemFn"
                 + " (#$SimRegionFn :ARG1)) :ARG2 :ARG3 :ARG4 ))", vocabMt);
 
@@ -405,9 +420,9 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
 
             if (false)
             {
-                cycAssert(
+                assertCycLExpression(
                     "(#$pointInSystem (#$PointInRegionFn ?STR ?X ?Y ?Z) (#$SimRegionCoordinateSystemFn (#$SimRegionFn ?STR)))", vocabMt);
-                cycAssert(
+                assertCycLExpression(
                     "(#$pointInSystem (#$PointInRegionFn \"Daxlandia\" 128 120 27) (#$SimRegionCoordinateSystemFn (#$SimRegionFn \"Daxlandia\")))", vocabMt);
             }
             WorldObjects.OnConnectedQueue.Enqueue(ProbeNewAssets);
@@ -608,78 +623,31 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
         {
             return createTerm(term, comment, mt, type, out newlyCreated);
         }
+
+        // Happens "Now"
         public void assertGenls(CycFort a, CycFort b)
         {
-            //cycAccessQueueHandler.Enqueue(() =>
-            {
-                try
-                {
-                    cycAccess.assertGenls(a, b, vocabMt);
-                }
-                catch (Exception e)
-                {
-                    WhyFailed(CycList.list(CycAccess.genls, a, b), vocabMt);
-                    Exception(e);
-                }
-            }//);
+            assertCycListNow(CycList.list(CycAccess.genls, a, b), vocabMt);
         }
 
+        // Happens "Now"
         public void assertIsa(CycFort a, CycFort b)
         {
             if (true)
             {
-                try
-                {
-                    cycAccess.assertIsa(a, b, vocabMt);
-                }
-                catch (Exception e)
-                {
-                    WhyFailed(CycList.list(cycIsa, a, b), vocabMt);
-                    Exception(e);
-                }
+                assertCycListNow(CycList.list(cycIsa, a, b), vocabMt);
                 return;
             }
-            cycAccessQueueHandler.Enqueue(() =>
-            {
-                try
-                {
-                    cycAccess.assertIsa(a, b, vocabMt);
-                }
-                catch (Exception e)
-                {
-                    WhyFailed(CycList.list(cycIsa, a, b), vocabMt);
-                    Exception(e);
-                }
-            });
+            cycAccessQueueHandler.Enqueue(() => assertCycListNow(CycList.list(cycIsa, a, b), vocabMt));
         }
 
-        public void assertVocabGafNow(CycFort a, CycFort b, CycFort c)
+        public static void assertVocabGafNow(CycFort a, CycFort b, CycFort c)
         {
-            {
-                try
-                {
-                    cycAccess.assertGaf(vocabMt, a, b, c);
-                }
-                catch (Exception e)
-                {
-                    WhyFailed(CycList.list(a, b, c), vocabMt);
-                    Exception(e);
-                }
-            };
+            assertCycListNow(CycList.list(a, b, c), vocabMt);
         }
-        public void assertGafNow(CycObject mt, CycFort a, CycFort b, CycFort c)
+        public static void assertGafNow(CycObject mt, CycFort a, CycFort b, CycFort c)
         {
-            {
-                try
-                {
-                    cycAccess.assertGaf(mt, a, b, c);
-                }
-                catch (Exception e)
-                {
-                    WhyFailed(CycList.list(a, b, c), mt);
-                    Exception(e);
-                }
-            };
+            assertCycListNow(CycList.list(a, b, c),(CycObject) mt);
         }
         public void assertVocabGaf(CycFort a, CycFort b, CycFort c)
         {
@@ -690,65 +658,77 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
         public void assertVocabGaf(CycFort a, CycFort b, string c)
         {
             if (c == null) return;
-            cycAccessQueueHandler.Enqueue(() =>
-                               {
-                                   try
-                                   {
-                                       cycAccess.assertGaf(vocabMt, a, b, c);
-                                   }
-                                   catch (Exception e)
-                                   {
-                                       WhyFailed(CycList.list(a, b, c), vocabMt);
-                                       Exception(e);
-                                   }
-                               }
-             );
+            cycAccessQueueHandler.Enqueue(() => assertCycListNow(CycList.list(a, b, c), vocabMt));
         }
 
 
-        private void CycListAssert(CycList list, CycObject mt)
+        public static void assertCycListNow(CycList list, CycObject mt)
+        {
+            assertCycLExpressionNow(list.cyclifyWithEscapeChars(), mt);
+        }
+
+        private void assertCycList(CycList list, CycObject mt)
+        {
+            assertCycLExpression(list.cyclifyWithEscapeChars(), mt);
+        }
+
+        public void assertCycLExpression(string s, CycObject mt)
+        {
+            cycAccessQueueHandler.Enqueue(() => assertCycLExpressionNow(s, mt));
+        }
+
+        static bool IsAssertDuped(string s)
+        {
+            lock (DuplicateCheck)
+            {
+                if (DuplicateCheck.Contains(s))
+                {
+                    Debug("DUPED: " + s);
+                    return true;
+                }
+                else
+                {
+                    DuplicateCheck.Add(s);
+                    int cnt = DuplicateCheck.Count;
+                    if (cnt % 1000 == 0)
+                    {
+                        if (cnt > 6000)
+                        {
+                            DuplicateCheck.RemoveRange(0, cnt - 6000);
+                        }
+                    }
+                    return false;
+                }
+            }
+        }
+
+        static void assertCycLExpressionNow(string s, CycObject mt)
         {
             try
             {
-                string ast = list.cyclifyWithEscapeChars();
-                cycAssert(ast, mt);
-            }
-            catch (Exception re)
-            {
-                //re.printStackTrace();
-                Exception(re);
-            }
-        }
-
-        public void cycAssert(string s, CycObject mt)
-        {
-            string asert = string.Format("(fi-assert '{0} {1})", s, mt.cyclifyWithEscapeChars());
-            cycAccessQueueHandler.Enqueue(() =>
-            {
-                try
+                string asert = string.Format("(fi-assert '{0} {1})", s, mt.cyclifyWithEscapeChars());
+                if (IsAssertDuped(asert)) return;
+                if (!cycAccess.converseBoolean(asert))
                 {
-                    if (!cycAccess.converseBoolean(asert))
-                    {
-                        Debug("Assertion failed: " + asert);
-                        WhyFailed(s, mt);
-                        if (!asert.Contains("icode"))
-                            Trace();
-                    }
-                }
-                catch (Exception e)
-                {
+                    Debug("Assertion failed: " + asert);
                     WhyFailed(s, mt);
-                    Exception(e);
-                    return;
+                    if (!asert.Contains("icode"))
+                        Trace();
                 }
-            });
+            }
+            catch (Exception e)
+            {
+                WhyFailed(s, mt);
+                Exception(e);
+                return;
+            }
         }
 
         private void WhyFailed(CycList objects, CycObject mt)
         {
             WhyFailed(objects.cyclifyWithEscapeChars(), mt);
         }
-        private void WhyFailed(string s, CycObject mt)
+        private static void WhyFailed(string s, CycObject mt)
         {
             Debug("HL-EXPLANATION-OF-WHY-NOT-WFF: " + cycAccess.converseObject(string.Format("(HL-EXPLANATION-OF-WHY-NOT-WFF '{0} {1})", s, mt.cyclifyWithEscapeChars())));
             Debug("WHY-NOT-WFF: " + cycAccess.converseObject(string.Format("(WHY-NOT-WFF '{0} {1})", s, mt.cyclifyWithEscapeChars())));
@@ -1559,18 +1539,29 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
             if (IsCycString(o) ||
                 (o is CycNart && ((CycNart)o).getFunctor() != C("TheList")))
             {
-                CycListAssert(CycList.makeCycList(fort, constant, o), mt);
+                assertCycList(CycList.makeCycList(fort, constant, o), mt);
                 return;
             }
             if (o is CycVariable)
             {
                 return;
             }
+            
+            string os = o.ToString();
+
             if (o is float || o is java.lang.Float || o is double || o is java.lang.Double)
             {
-                if (o.ToString() != "0.0" && o.ToString() != "1.0")
+                if (os != "0.0" && os != "1.0")
                 {
-                    CycListAssert(CycList.makeCycList(fort, constant, o), mt);
+                    assertCycList(CycList.makeCycList(fort, constant, o), mt);
+                    return;
+                }
+            }
+            if (o is int || o is java.lang.Integer || o is long || o is java.lang.Long)
+            {
+                if (os != "0" && os != "1" && os != "255")
+                {
+                    assertCycList(CycList.makeCycList(fort, constant, o), mt);
                     return;
                 }
             }
@@ -1589,7 +1580,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
             }
             if (added)
             {
-                CycListAssert(CycList.makeCycList(fort, DefaultInstance, o), mt);
+                assertCycList(CycList.makeCycList(fort, DefaultInstance, o), mt);
                 return;
             }
             if (temp.Equals(o))
@@ -1598,7 +1589,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
             }
             else
             {
-                CycListAssert(CycList.makeCycList(fort, constant, o), mt);
+                assertCycList(CycList.makeCycList(fort, constant, o), mt);
             }
             return;
 
@@ -1788,6 +1779,26 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
             return cycAccess.converseInt("(length (term-assertions '" + indv.cyclifyWithEscapeChars() + "))") > 1;
         }
 
+        public bool IsAlreadyFort(object b)
+        {
+            if (b is CycFort) return true;
+            if (b is CycObject) return true;
+            if (b is string) return true;
+            if (b is java.lang.Object)
+            {
+                if (b is java.lang.Number)
+                {
+                    if (b is java.lang.Float) return true;
+                    if (b is java.lang.Double) return true;
+                    if (b is java.lang.String) return true;
+                    if (b is java.lang.Integer) return true;
+                    if (b is java.lang.Long) return true;
+                    if (b is java.math.BigInteger) return true;
+                    if (b is java.math.BigDecimal) return true;
+                }
+            }
+            return false;
+        }
 
         public object[] ToForts(object[] parameters)
         {
@@ -1805,7 +1816,8 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
             {
                 return CYC_NULL;
             }
-            if (parameter is string) return parameter;
+
+            if (IsAlreadyFort(parameter)) return parameter;
 
             CycFort indv;
             //lock (simFort)
@@ -1940,10 +1952,14 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
         private CycFort CreateCycNartEnumerable(String header, IEnumerable args)
         {
             CycList lst = new CycList(C(header));
-            IEnumerator enumer = args.GetEnumerator();
-            while (enumer.MoveNext())
+            foreach(var e in args)
             {
-                lst.add(ToFort(enumer.Current));
+                var v = ToFort(e);
+                if (v is CycVariable)
+                {
+                    
+                }
+                lst.add(v);                
             }
             return new CycNart(lst);
         }
@@ -1960,7 +1976,9 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
             {
                 foreach (var key in b.Keys)
                 {
-                    lst.add(CreateCycNart("TheList", ToFort(key), ToFort(b[key])));
+                    object b1 = b[key];
+                    var kv = ToFort(b1);
+                    lst.add(CreateCycNart("TheList", ToFort(key), kv));
                 }
             }
             return new CycNart(lst);
@@ -1994,6 +2012,24 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
         public CycFort FindOrCreateCycFort(Color4 b)
         {
             return new CycNart(makeCycList(C("TheList"),
+                new java.lang.Float(b.R),
+                new java.lang.Float(b.G),
+                new java.lang.Float(b.B),
+                new java.lang.Float(b.A)));
+        }
+        public CycFort FindOrCreateCycFort(Color b)
+        {
+            string name = b.Name;
+            if (!b.IsNamedColor)
+            {
+                KnownColor kc = b.ToKnownColor();
+                if (kc != 0)
+                {
+                    name = kc.ToString();
+                }
+            }
+            return new CycNart(makeCycList(C("TheList"),
+                name,
                 new java.lang.Float(b.R),
                 new java.lang.Float(b.G),
                 new java.lang.Float(b.B),
@@ -2463,6 +2499,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
         public TaskQueueHandler DocQueue = new TaskQueueHandler("Cyc Doc Queue", TimeSpan.FromSeconds(1), true);
         readonly public SimEventSubscriber eventFilter;
         public static double Dist100 = 100;
+        static private readonly List<string> DuplicateCheck =  new List<string>();
 
         public static XElement GetXmlDocMembers(Assembly typeAssembly)
         {
@@ -2586,6 +2623,11 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
         static internal void Exception(Exception e)
         {
             Debug("" + e);
+            var ie = e.InnerException;
+            if (ie != null && ie != e)
+            {
+                Exception(ie);
+            }
             Trace();
         }
 
