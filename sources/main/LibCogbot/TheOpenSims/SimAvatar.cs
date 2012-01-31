@@ -94,7 +94,29 @@ namespace cogbot.TheOpenSims
         /// </summary>
         internal ListAsSet<SimTypeUsage> _knownTypeUsages;
 
+        public override bool IsPassable
+        {
+            get
+            {
+                return true || base.IsPassable;
+            }
+            set
+            {
+                base.IsPassable = value;
+            }
+        }
 
+        public override bool IsPhantom
+        {
+            get
+            {
+                return true || base.IsPhantom;
+            }
+            set
+            {
+                base.IsPhantom = value;
+            }
+        }
         public override bool IsRoot
         {
             get { Avatar theAvatar = this.theAvatar; return theAvatar == null || theAvatar.ParentID == 0; }

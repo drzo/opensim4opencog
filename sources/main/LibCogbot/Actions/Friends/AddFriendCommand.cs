@@ -50,7 +50,9 @@ namespace cogbot.Actions.Friends
                     continue;
                 }
                 WriteLine("Adding friend: " + o);
-                Client.Friends.OfferFriendship(o.ID);                
+                UUID oID = o.ID;
+                if (UUIDFactory.IsNullOrZero(oID)) Failure("cant find " + o + " id ");
+                else Client.Friends.OfferFriendship(oID);
             }
             return Success("Ran " + Name);           
         }

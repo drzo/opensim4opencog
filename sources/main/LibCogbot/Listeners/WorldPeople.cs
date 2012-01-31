@@ -720,6 +720,7 @@ namespace cogbot.Listeners
             string clientMasterNameToLower = client.MasterName;
             foreach (KeyValuePair<UUID, string> kvp in names)
             {
+                if (UUIDFactory.IsNullOrZero(kvp.Key)) continue;
                 string kvpValueToLower = kvp.Value;
                 AddName2Key(kvpValueToLower, kvp.Key);
                 if (clientMasterNameToLower == kvpValueToLower)
@@ -727,7 +728,7 @@ namespace cogbot.Listeners
                     MasterIsFriendYet = true;
                     client.MasterKey = kvp.Key;
                 }
-                else if (kvp.Key == client.MasterKey)
+                else if (kvp.Key == client.MasterKey && UUIDFactory.IsNullOrZero(client.MasterKey))
                 {
                     client.MasterName = kvp.Value;
                     MasterIsFriendYet = true;
@@ -742,8 +743,12 @@ namespace cogbot.Listeners
                         {
                             if (Name2Key.ContainsKey(clientMasterNameToLower))
                             {
-                                client.Friends.OfferFriendship(Name2Key[clientMasterNameToLower]);
-                                MasterIsFriendYet = true;
+                                var clientMasterKey = Name2Key[clientMasterNameToLower];
+                                if (!MasterIsFriendYet && !UUIDFactory.IsNullOrZero(clientMasterKey))
+                                {
+                                    client.Friends.OfferFriendship(clientMasterKey);
+                                    MasterIsFriendYet = true;
+                                }
                             }
                         }
                     }
@@ -751,9 +756,10 @@ namespace cogbot.Listeners
             }
             if (!MasterIsFriendYet)
             {
-                if (client.MasterKey != UUID.Zero)
+                var clientMasterKey = client.MasterKey;
+                if (!UUIDFactory.IsNullOrZero(clientMasterKey))
                 {
-                    client.Friends.OfferFriendship(client.MasterKey);
+                    client.Friends.OfferFriendship(clientMasterKey);
                     MasterIsFriendYet = true;
                 }
             }
@@ -761,7 +767,12 @@ namespace cogbot.Listeners
             {
                 if (!string.IsNullOrEmpty(clientMasterNameToLower))
                 {
-                    client.Friends.OfferFriendship(GetUserID(client.MasterName));
+                    UUID clientMasterKey = GetUserID(client.MasterName);
+                    if (!UUIDFactory.IsNullOrZero(clientMasterKey))
+                    {
+                        client.Friends.OfferFriendship(clientMasterKey);
+                        MasterIsFriendYet = true;
+                    }
                 }
             }
         }
@@ -1064,6 +1075,11 @@ namespace cogbot.Listeners
         public static UUID GetUUID(byte[] bytes, int pos)
         {
             return new UUID(bytes,pos);
+        }
+
+        internal static bool IsNullOrZero(UUID uUID)
+        {
+            return uUID == null || uUID == UUID.Zero;
         }
     }
 }
