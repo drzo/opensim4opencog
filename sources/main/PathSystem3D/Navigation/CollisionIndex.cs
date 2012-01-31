@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Threading;
+using MushDLR223.Utilities;
 using PathSystem3D.Mesher;
 using OpenMetaverse;
 
@@ -18,9 +19,12 @@ namespace PathSystem3D.Navigation
     public class CollisionIndex
     {
 
-        public const float CapsuleZ = 1.99f;
-        public const float CeilingZ = 3.3f;
-        public const float MaxBump = 0.33f;
+        [ConfigSetting]
+        public static float AvatarCapsuleZ = 1.79f;
+        [ConfigSetting]
+        public static float SearchAboveCeilingZ = 3.3f;
+        [ConfigSetting]
+        public static float MaxBumpInOpenPath = 0.33f;
 
         //public Point Point;
 
@@ -109,7 +113,7 @@ namespace PathSystem3D.Navigation
 #if USE_MINIAABB
         private List<Box3Fill> InnerBoxes = new List<Box3Fill>();
         private bool InnerBoxesSimplified = false;
-        public bool SomethingMaxZ(float low, float high, out float maxZ)
+        public bool SomethingMaxZ(float low, float high, out float maxZ, bool returnFirst)
         {
             bool found = false;
             maxZ = low;
@@ -119,22 +123,7 @@ namespace PathSystem3D.Navigation
             {
                 lock (InnerBoxes)
                 {
-                    if (!InnerBoxesSimplified)
-                    {
-                        int b = InnerBoxes.Count;
-                        if (b < 100)
-                        {
-                            InnerBoxes = Box3Fill.Simplify(InnerBoxes);
-                        }
-                        else
-                        {
-                            InnerBoxes = Box3Fill.Simplify(InnerBoxes);                            
-                        }
-                        if (b > 100 || InnerBoxes.Count * 4 < b)
-                            Console.Error.WriteLine("Simplfy CI {0} -> {1} ", b,
-                                                    InnerBoxes.Count + " " + this);
-                        InnerBoxesSimplified = true;
-                    }
+                    EsureInnerBoxesSimplied();
                     // this second lock is because we may have replaced the reference during simplification
                     lock (InnerBoxes)
                         foreach (CollisionObject B in InnerBoxes)
@@ -143,10 +132,31 @@ namespace PathSystem3D.Navigation
                             {
                                 found = true;
                                 if (B.MaxZ > maxZ) maxZ = B.MaxZ;
+                                if (returnFirst) return true; //return the first
                             }
                         }
                 }
                 return found;
+            }
+        }
+
+        private void EsureInnerBoxesSimplied()
+        {
+            if (!InnerBoxesSimplified)
+            {
+                int b = InnerBoxes.Count;
+                if (b < 100)
+                {
+                    InnerBoxes = Box3Fill.Simplify(InnerBoxes);
+                }
+                else
+                {
+                    InnerBoxes = Box3Fill.Simplify(InnerBoxes);                            
+                }
+                if (b > 100 || InnerBoxes.Count * 4 < b)
+                    Console.Error.WriteLine("Simplfy CI {0} -> {1} ", b,
+                                            InnerBoxes.Count + " " + this);
+                InnerBoxesSimplified = true;
             }
         }
 #endif
@@ -159,7 +169,7 @@ namespace PathSystem3D.Navigation
             }
 
 #if USE_MINIAABB
-            return SomethingMaxZ(low, high, out maxZ);
+            return SomethingMaxZ(low, high, out maxZ, false);
 #endif
             lock (OccupiedListObject) foreach (CollisionObject O in OccupiedListObject)
                 {
@@ -182,7 +192,7 @@ namespace PathSystem3D.Navigation
         float _GroundLevelCache = float.MinValue;
         public float GetGroundLevel()
         {
-            //if (_GroundLevelCache > 0) return _GroundLevelCache;
+            if (_GroundLevelCache > 0) return _GroundLevelCache;
             _GroundLevelCache = PathStore.GetGroundLevel(_LocalPos.X, _LocalPos.Y);
             return _GroundLevelCache;
         }
@@ -194,7 +204,7 @@ namespace PathSystem3D.Navigation
 
         public float GetZLevel(float low, float high)
         {
-            return GetZLevel(low, high, CollisionIndex.CapsuleZ);
+            return GetZLevel(low, high, CollisionIndex.AvatarCapsuleZ);
         }
 
         public float GetZLevel(float low, float high, float capsuleSize)
@@ -202,6 +212,7 @@ namespace PathSystem3D.Navigation
             float groundLevel = GetGroundLevel();
             if (high < groundLevel) return groundLevel;
             float above = low;
+            if (above < groundLevel) above = groundLevel;
             IEnumerable<CollisionObject> objs = GetOccupied(low, high);
             while (above < high)
             {
@@ -241,12 +252,18 @@ namespace PathSystem3D.Navigation
                 if (!SomethingBetween(above, above + capsuleSize, objs, out newMaxZ))
                 {
                     //above = 
-                    IsDebugged();
+                    if (IsDebugged())
+                    {
+                        return true;
+                    }
                     return true;
                 }
-                IsDebugged();
+           
                 if (newMaxZ > above)
                 {
+                    if (IsDebugged())
+                    {
+                    }
                     above = newMaxZ;
                 }
                 else
@@ -366,11 +383,13 @@ namespace PathSystem3D.Navigation
         }
 
 
-        private void IsDebugged()
+        private bool IsDebugged()
         {
-            if (PX == 402 && PY == 403)
+            if (PX == 584 && PY == 539)
             {
+                return true;
             }
+            return false;
         }
         //string OcString = null;
         //public IList<Vector2> OccupiedListMinMaxZ = new List<Vector2>();
