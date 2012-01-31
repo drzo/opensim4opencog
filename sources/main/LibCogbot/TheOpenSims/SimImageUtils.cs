@@ -9,7 +9,7 @@ namespace cogbot.TheOpenSims
     public static class SimImageUtils
     {
 
-        public static Dictionary<string, int> ToNamedColors(SimObject av)
+        public static Dictionary<string, float> ToNamedColors(SimObject av)
         {
             Primitive p = av.Prim;
             if (p==null) return null;
@@ -42,18 +42,18 @@ namespace cogbot.TheOpenSims
                     }
                 }
             }
-            Dictionary<string, int> dict = new Dictionary<string, int>();
+            Dictionary<string, float> dict = new Dictionary<string, float>();
             CatchNamedColors(ToColor(fnd), dict, false);
             return dict;
-        } 
+        }
 
-        public static Dictionary<string, int> ToNamedColors(Color av)
+        public static Dictionary<string, float> ToNamedColors(Color av)
         {
-            Dictionary<string, int> dict = new Dictionary<string, int>();
+            Dictionary<string, float> dict = new Dictionary<string, float>();
             CatchNamedColors(av, dict, true);
             return dict;
         }
-        public static Dictionary<string, int> ToNamedColors(Color4 av)
+        public static Dictionary<string, float> ToNamedColors(Color4 av)
         {
             return ToNamedColors(ToColor(av));
         }
@@ -64,12 +64,12 @@ namespace cogbot.TheOpenSims
         }
 
         public static Color[] namedColors = new Color[] { Color.Red, Color.Blue, Color.Yellow, Color.Green, Color.Purple, Color.Orange, Color.White, Color.Black };
-        public static void CatchNamedColors(Color av, IDictionary<string, int> dict, bool addZeros)
+        public static void CatchNamedColors(Color av, IDictionary<string, float> dict, bool addZeros)
         {
             int fnd = 1;
             foreach (var c in SortColorMatch(av, AllKnownColors(), 4))
             {
-                dict.Add(c.Name.ToLower(), fnd++);
+                dict[c.Name.ToLower()] = ColorDist(av, c);
             }
         }
 

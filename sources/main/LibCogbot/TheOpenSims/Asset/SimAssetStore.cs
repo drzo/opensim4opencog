@@ -9,6 +9,7 @@ using cogbot.Utilities;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
+using MushDLR223.ScriptEngines;
 
 namespace cogbot.TheOpenSims
 {
@@ -138,13 +139,14 @@ namespace cogbot.TheOpenSims
             Enqueue(() => LoadItemOrFolder(e.Item));
         }
 
-        private bool downloadedAssetFolders = false;
+        private bool downloadAssetFoldersComplete = false;
+        [ConfigSetting(SkipSaveOnExit = true)]
         public static bool downloadedAssetFoldersComplete = false;
         private void Ensure_Downloaded(object sender, SimConnectedEventArgs e)
         {
             if (!WorldObjects.GleanAssetsFromInventory) return;
-            if (downloadedAssetFolders) return;
-            downloadedAssetFolders = true;
+            if (downloadAssetFoldersComplete) return;
+            downloadAssetFoldersComplete = true;
             Inventory = Manager.Store;
             Inventory.InventoryObjectAdded += Store_OnInventoryObjectAdded;
             Inventory.InventoryObjectUpdated += Store_OnInventoryObjectUpdated;

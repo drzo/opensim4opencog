@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using cogbot.TheOpenSims;
+using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
+using System.Configuration;
 
 namespace cogbot.Listeners
 {
@@ -13,16 +15,35 @@ namespace cogbot.Listeners
     {
 
         public static bool IsOpenSim = false;
+        
+        [ConfigSetting]
         public static bool CanPhantomize = false;
+
+        [ConfigSetting]
         public static bool CanUseSit = true;
-        public static bool DoSimulatorsCatchUp = false; //GridMaster will turn this on/off only if it needed
+
+        [ConfigSetting(SkipSaveOnExit = true, Description = "GridMaster will turn this on/off only if it needed")]
+        public static bool DoSimulatorsCatchUp = false;
+        
+        [ConfigSetting]
         public static bool MaintainAnims = true;
+        
+        [ConfigSetting]
         public static bool MaintainAssetsInFolders = true;
+        
+        [ConfigSetting]
         public static bool GleanAssetsFromInventory = true;
+        
+        [ConfigSetting]
         public static bool MaintainAnimsInFolders = true;
+        
+        [ConfigSetting]
         public static bool GleanAssetsFromFolders = true;
+        
+        [ConfigSetting]
         public static bool MaintainAttachments = true;
-        /// keep false so the bot only meshes what it needs
+
+        [ConfigSetting(Description = "keep false so the bot only meshes what it needs")]
         public static bool MaintainCollisions
         {
             get
@@ -34,6 +55,8 @@ namespace cogbot.Listeners
                 WorldPathSystem.MaintainCollisions = value;
             }
         }
+
+        [ConfigSetting]
         public static bool SkipPassableMeshes
         {
             get
@@ -45,6 +68,8 @@ namespace cogbot.Listeners
                 WorldPathSystem.SkipPassableMeshes = value;
             }
         }
+
+        [ConfigSetting]
         public static bool MaintainMeshes     
         {
             get
@@ -56,6 +81,7 @@ namespace cogbot.Listeners
                 WorldPathSystem.MaintainMeshes = value;
             }
         }
+        [ConfigSetting]
         public static int WorthMeshingDistance
         {
             get
@@ -67,28 +93,62 @@ namespace cogbot.Listeners
                 WorldPathSystem.WorthMeshingDistance = value;
             }
         }
+
+        [ConfigSetting]
         public static bool MaintainEffects = true;
+
+        [ConfigSetting]
         public static bool MaintainOnlyMasterEffects = false;
+
+        [ConfigSetting]
         public static float MaintainEffectsDistance = 80;
+
+        [ConfigSetting]
         public static bool MaintainActions = true;
+        
+        [ConfigSetting]
         public static bool MaintainPropertiesFromQueue = true;
+        
+        [ConfigSetting]
         public static bool MaintainObjectUpdates = true;
+        
+        [ConfigSetting]
         public static bool MaintainObjectProperties = true;
+        
+        [ConfigSetting]
         public static bool MaintainSounds = true;
+        
+        [ConfigSetting]
         static public bool MaintainAvatarMetaData = true;
+        
+        [ConfigSetting]
         static public bool MaintainGroupMetaData = true;
+        
+        [ConfigSetting]
         static public bool RequestGroupMetaData = false;
+        
+        [ConfigSetting]
         public static bool MaintainSimObjectInfoMap = true;
-		public static bool SendSimObjectInfoMap = true;
+        
+        [ConfigSetting]
+        public static bool SendSimObjectInfoMap = true;
+        
+        [ConfigSetting]
         public static bool SendOnDataAspectUpdate = true;
+        
+        [ConfigSetting]
         public static bool ZeroOutUselessUUIDs = true;
-        /// <summary>
-        /// False since currently broken this is where FromTaskIDs are guessed as to being object or Avatars
-        /// </summary>
-        public static bool DiscoverTaskUUIDs = false; 
-		
+
+        [ConfigSetting(Description = "False since currently broken this is where FromTaskIDs are guessed as to being object or Avatars")]
+        public static bool DiscoverTaskUUIDs = false;
+
+        [ConfigSetting(ReadOnly = true)]
         public static bool UseNewEventSystem = true;
-        public static bool SimplifyBoxes = true; // true takes longer startup but speeds up runtime path finding
+
+        [ConfigSetting(Description = "True takes longer startup but speeds up runtime path finding")]
+        public static bool SimplifyBoxes = true;
+        
+        [ConfigSetting]
         public static bool SendAllEvents = MaintainObjectUpdates;
 
 
@@ -125,8 +185,10 @@ namespace cogbot.Listeners
         private static bool inTimer = false;
         public static float buildingSize = 5;
         public static TimeSpan burstInterval;
+        [ConfigSetting]
         public static int burstSize = 100;
         public DateTime burstStartTime;
+        [ConfigSetting]
         public static float burstTime = 1;
         public SimAvatarClient m_TheSimAvatar;
         public List<string> numberedAvatars;

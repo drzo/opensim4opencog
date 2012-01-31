@@ -39,6 +39,7 @@ namespace cogbot.TheOpenSims
         private string PostureType;
         private SimObjectEvent LastPostureEvent;
         readonly private object postureLock = new object();
+        [ConfigSetting]
         public static bool UseTeleportFallback = false;
         public bool IsProfile;
         public Dictionary<UUID, AvatarGroup> GroupRoles { get; set; }
@@ -562,7 +563,7 @@ namespace cogbot.TheOpenSims
                     AvatarGroup prev;
                     if (GroupRoles.TryGetValue(id, out prev))
                     {
-                        if (prev.GroupPowers != avatarGroup.GroupPowers)
+                        if (false && prev.GroupPowers != avatarGroup.GroupPowers)
                         {
                             Debug("GroupPowers changed = " + prev + " -> " + avatarGroup);
                         }

@@ -113,6 +113,7 @@ namespace cogbot
 
         public Configuration config;
         //Utilities.BotTcpServer UtilitiesTcpServer;
+        [ConfigSetting]
         public String taskInterperterType = "DotLispInterpreter";// DotLispInterpreter,CycInterpreter or ABCLInterpreter
         //static List<LoginDetails> accounts = new List<LoginDetails>();
         ///public static ClientManager this = new ClientManager(accounts, false);
@@ -154,6 +155,8 @@ namespace cogbot
             tutorials = new Dictionary<string, cogbot.Tutorials.Tutorial>();
             describeNext = true;
             RegisterAssembly(Assembly.GetExecutingAssembly());
+            RegisterAssembly(GetType().Assembly);
+            RegisterAssembly(typeof(DLRConsole).Assembly);
         }
 
 
@@ -314,11 +317,11 @@ namespace cogbot
                     if (string.IsNullOrEmpty(text)) return null;
 
                     string verb = Parser.ParseArguments(text)[0];
-                    verb = verb.ToLower();
-                    if (groupActions.ContainsKey(verb))
+                    var cmd = GetCommand(verb, false);
+                    if (cmd!=null)
                     {
                         string pargs = (text.Length > verb.Length) ? text.Substring(verb.Length + 1) : "";
-                        return BotClient.DoCmdAct(groupActions[verb], verb, pargs, BotClient.SessionToCallerId(session),
+                        return BotClient.DoCmdAct(cmd, verb, pargs, BotClient.SessionToCallerId(session),
                                                   WriteLine);
                     }
                     return null;
@@ -1561,6 +1564,7 @@ namespace cogbot
                 }
             }
             if (newType) ScriptManager.AddType(t);
+            if (newType) ScriptManager.LoadSysVars(t);
             if (typeof(SystemApplicationCommand).IsAssignableFrom(t))
             {
                 if (!registeredSystemApplicationCommandTypes.Contains(t))
@@ -1782,11 +1786,32 @@ namespace cogbot
 
         public bool IsValidCommand(string cmd)
         {
-            cmd = Parser.ParseArguments(cmd)[0].ToLower();               
-            if (groupActions.ContainsKey(cmd)) return true;
-            var bc = LastBotClient;
-            if (bc == null) return false;
-            return bc.Commands.ContainsKey(cmd);
+            return GetCommand(cmd, true) != null;
+        }
+
+        public Command GetCommand(string text, bool clientCmds)
+        {
+            if (string.IsNullOrEmpty(text)) return null;
+            text = text.Trim();
+            while (text.StartsWith("/"))
+            {
+                text = text.Substring(1).TrimStart();
+            }
+            if (string.IsNullOrEmpty(text)) return null;
+            text = Parser.ParseArguments(text)[0].ToLower();
+            Command fnd;
+
+            if (groupActions.TryGetValue(text, out fnd)) return fnd;
+            if (clientCmds)
+            {
+                var bc = LastBotClient;
+                if (bc != null)
+                {
+                    if (bc.Commands.TryGetValue(text, out fnd)) return fnd;
+                }
+            }
+            if (text.EndsWith("s")) return GetCommand(text.Substring(0, text.Length - 1), clientCmds);
+            return null;
         }
     }
 

@@ -496,6 +496,7 @@ namespace cogbot.TheOpenSims
                  //   return null;  
                 }
                 R = new SimRegion(id, bc);
+                R.PathStore.SetGroundLevel(R.GetGroundLevel);
                 _CurrentRegions[id] = R;
                 return R;
             }
