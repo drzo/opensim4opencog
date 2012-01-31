@@ -512,7 +512,7 @@ namespace PathSystem3D.Navigation
             }
         }
 
-        public float BumpConstraint = CollisionIndex.MaxBump;
+        public float BumpConstraint = CollisionIndex.MaxBumpInOpenPath;
         public static float MaxBigZ = 9f;
 
         public override SimMoverState Goto()

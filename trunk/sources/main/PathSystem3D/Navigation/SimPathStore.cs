@@ -18,6 +18,7 @@ using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 using HttpServer;
+using MushDLR223.Utilities;
 using PathSystem3D.Mesher;
 using PathSystem3D.Navigation.Debug;
 using OpenMetaverse;
@@ -50,7 +51,11 @@ namespace PathSystem3D.Navigation
         public OdePlugin odePhysics = new OdePlugin();
         public OdeScene odeScene;
 #endif
+        [ConfigSetting]
         public static int DebugLevel = 0;
+        [ConfigSetting]
+        public static bool DisableTravelPoints = false;
+
         public string RegionName { get; set; }
         // util
         static public void TrianglesToBoxes(IList<Triangle> tl, Box3Fill OuterBox, Vector3 padXYZ, IList<Box3Fill> InnerBoxes)
@@ -647,6 +652,7 @@ namespace PathSystem3D.Navigation
         // Updates
         public void SetTraveled(Vector3 LastPosition, Vector3 nextPosition)
         {
+            if (DisableTravelPoints) return;
             Vector3 dif = LastPosition - nextPosition;
             if (Math.Abs(dif.Z) > 0.5)
             {
@@ -813,7 +819,9 @@ namespace PathSystem3D.Navigation
             SimPathStore nextRegion;
             Vector3 localLast = regStart.LocalOuterEdge(localStart, globalEnd, out nextRegion);
             // needs to go to edge
-            IList<Vector3d> route = regStart.GetLocalPath(CP, localStart, localLast, out faked);
+            bool partialOnly;
+            IList<Vector3d> route = regStart.GetLocalPath(CP, localStart, localLast, out partialOnly, out faked);
+            if (partialOnly) OnlyStart = true;
             // at edge so make a crossing
             Vector3 enterEdge = EnterEdge(localLast, nextRegion.GetGridLocation() - regStart.GetGridLocation());
             route.Add(nextRegion.LocalToGlobal(enterEdge));
@@ -829,19 +837,21 @@ namespace PathSystem3D.Navigation
         internal IList<Vector3d> GetAtLeastPartial(CollisionPlane CP, Vector3 localStart, Vector3 localEnd, float endFudge, out bool OnlyStart, out bool faked)
         {
             Vector3 newEnd = localEnd;
-            IList<Vector3d> route = GetLocalPath(CP, localStart, newEnd, out faked);
+            bool partialOnly;
+            IList<Vector3d> route = GetLocalPath(CP, localStart, newEnd, out partialOnly, out faked);
             if (route.Count > 1)
             {
-                OnlyStart = false;
+                OnlyStart = partialOnly;               
                 return route;
             }
-            OnlyStart = true;
+            OnlyStart = false;
             Vector3 diff = localEnd - localStart;
             while (diff.Length() > 10)
             {
                 diff = diff * 0.8f;
                 newEnd = localStart + diff;
-                route = GetLocalPath(CP,localStart, newEnd, out faked);
+                route = GetLocalPath(CP, localStart, newEnd, out partialOnly, out faked);
+                if (partialOnly) OnlyStart = true;
                 if (route.Count > 1) return route;
             }
             OnlyStart = false; // Since this will be the best
@@ -850,7 +860,8 @@ namespace PathSystem3D.Navigation
             for (double angle = 0; angle < PI2; angle += step)
             {
                 newEnd = localEnd + ZAngleVector(angle) * endFudge;
-                route = GetLocalPath(CP,localStart, newEnd, out faked);
+                route = GetLocalPath(CP, localStart, newEnd, out partialOnly, out faked);
+                if (partialOnly) OnlyStart = true;
                 if (route.Count > 1) return route;
             }
             route = new List<Vector3d>();
@@ -1287,7 +1298,7 @@ namespace PathSystem3D.Navigation
 
 
 
-        public IList<Vector3d> GetLocalPath(CollisionPlane CP, Vector3 start, Vector3 end, out bool faked)
+        public IList<Vector3d> GetLocalPath(CollisionPlane CP, Vector3 start, Vector3 end, out bool partialOnly, out bool faked)
         {
 
             CP.EnsureUpdated();
@@ -1313,7 +1324,7 @@ namespace PathSystem3D.Navigation
             {
                 Debug("end is not passable: " + end);
             }
-            return (IList<Vector3d>)GetLocalPath0(start, GetUsableLocalPositionOf(CP,end, 2), CP, Z, out faked);
+            return (IList<Vector3d>)GetLocalPath0(start, GetUsableLocalPositionOf(CP,end, 2), CP, Z,out partialOnly, out faked);
         }
 
         float[,] _GroundPlane;
@@ -1419,7 +1430,10 @@ namespace PathSystem3D.Navigation
 
         public float GetGroundLevel(float x, float y)
         {
-            if (GroundLevelDelegate == null) return 10f;
+            if (GroundLevelDelegate == null)
+            {
+                return 10f;
+            }
 
 #if COLLIDER_ODE
 
@@ -1745,7 +1759,7 @@ namespace PathSystem3D.Navigation
         /// <param name="y"></param>
         public void SetTraveled(float x, float y, float z)
         {
-            return;
+            if (DisableTravelPoints) return;
             int ix = ARRAY_X(x);
             int iy = ARRAY_Y(y);
             foreach (CollisionPlane CP in CollisionPlanesFor(z))
@@ -1757,7 +1771,7 @@ namespace PathSystem3D.Navigation
                 {
                     case BLOCKED:
                         {
-                           // ByteMatrix[ix, iy] = MAYBE_BLOCKED;
+                            ByteMatrix[ix, iy] = MAYBE_BLOCKED;
                             continue;
                         }
                     case MAYBE_BLOCKED:
@@ -2171,7 +2185,7 @@ namespace PathSystem3D.Navigation
         }
 
         bool PunishChangeDirection;
-        private IList<Vector3d> GetLocalPath0(Vector3 start, Vector3 end, CollisionPlane CP, float Z, out bool faked)
+        private IList<Vector3d> GetLocalPath0(Vector3 start, Vector3 end, CollisionPlane CP, float Z,out bool partialOnly, out bool faked)
         {
             PathFinderDemo panel = PanelGUI;
             PunishChangeDirection = !PunishChangeDirection;    //toggle each time
@@ -2186,7 +2200,7 @@ namespace PathSystem3D.Navigation
             Point S = ToPoint(start);
             Point E = ToPoint(end);
             IList<PathFinderNode> pfn = null;
-
+            partialOnly = false;
             faked = false;
             try
             {
@@ -2202,8 +2216,19 @@ namespace PathSystem3D.Navigation
                 pfn = pff.FindPath(S, E);
                 if (pfn == null)
                 {
-                    faked = true;
-                    pfn = pff.FindPathFallback(S, E);
+                    Point NE = PartWay(S, E, 0.3f);
+                    {
+                        if (NE != E)
+                        {
+                            pfn = pff.FindPath(S, NE);
+                            if (pfn != null) partialOnly = true;
+                        }
+                    }
+                    if (pfn == null)
+                    {
+                        faked = true;
+                        pfn = pff.FindPathFallback(S, E);
+                    }
                 }
                 pff = null;
             }
@@ -2224,6 +2249,14 @@ namespace PathSystem3D.Navigation
             r.Reverse();
           //  faked = false;
             return r;
+        }
+
+        static private Point PartWay(Point S, Point E, float howMuch)
+        {
+            int dx = S.X + (int) ((E.X - S.X)*howMuch);
+            int dy = S.Y + (int) ((E.Y - S.Y)*howMuch);
+            return new Point(dx, dy);
+
         }
 
         public bool IsPassable(Vector3 end, CollisionPlane CP)
@@ -2418,7 +2451,7 @@ namespace PathSystem3D.Navigation
 
         public void UpdateTraveled(UUID uUID, Vector3 after, Quaternion rot)
         {
-            return;
+            if (DisableTravelPoints) return; 
             lock (LaskKnownPos) if (!LaskKnownPos.ContainsKey(uUID))
                 {
                     LaskKnownPos[uUID] = new MoverTracking(after, rot, this);
@@ -2714,7 +2747,7 @@ namespace PathSystem3D.Navigation
 
         internal void Refresh(Box3Fill changed)
         {
-           Refresh(changed,CollisionIndex.MaxBump);
+           Refresh(changed,CollisionIndex.MaxBumpInOpenPath);
         }
 
         public static double DistanceNoZ(Vector3d target, Vector3d position)

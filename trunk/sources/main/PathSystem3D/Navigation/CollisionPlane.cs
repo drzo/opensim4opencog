@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using OpenMetaverse;
 using PathSystem3D.Mesher;
+using MushDLR223.ScriptEngines;
 
 #if COLLIDER_ODE
 using THIRDPARTY.OpenSim.Framework;
@@ -75,7 +76,7 @@ namespace PathSystem3D.Navigation
             MaxXPt = xsize0 - 1;
             MaxYPt = ysize0 - 1;
             MinZ = minZ;
-            MaxZ = minZ + CollisionIndex.CeilingZ;
+            MaxZ = minZ + CollisionIndex.SearchAboveCeilingZ;
             OuterBox.MinZ = MinZ;
             OuterBox.MaxZ = MaxZ;
             OuterBox.MinX = 0;
@@ -396,7 +397,7 @@ namespace PathSystem3D.Navigation
         //    set { ByteMatrix[x, y] = value; }
         //}
 
-        private float _globalBumpConstraint = CollisionIndex.MaxBump;
+        private float _globalBumpConstraint = CollisionIndex.MaxBumpInOpenPath;
         private float BumpConstraintPurple =  0.2f;
 
 
@@ -436,7 +437,7 @@ namespace PathSystem3D.Navigation
               //  return SimPathStore.BLOCKED;
             }
 
-            if (BumpConstraintPurple > CollisionIndex.MaxBump)
+            if (BumpConstraintPurple > CollisionIndex.MaxBumpInOpenPath)
             {
                 // this looks for transitions between objects
                 bumps = NeighborBump(x, y, ZLevel, MaxZ, ZLevel, BumpConstraintPurple, Heights, cI,
@@ -528,17 +529,17 @@ namespace PathSystem3D.Navigation
                 }
 
                 if (MaybeAdjacentBlocking > 0)
-                {
+                {                   
                     AddAdjacentBlocking(ToMatrix, SimPathStore.MAYBE_BLOCKED, MaybeAdjacentBlocking, SimPathStore.BLOCKED);
                 }
                 
                 int tAdjacentBlocking = AdjacentBlocking;
                 while (tAdjacentBlocking-- > 0)
                 {
-                    AddAdjacentBlocking(ToMatrix, SimPathStore.BLOCKED, 0, SimPathStore.BLOCKED);
+                    AddAdjacentBlocking(ToMatrix, SimPathStore.BLOCKED, 1, SimPathStore.BLOCKED);
                 }
                 AddEdgeBlocking(ToMatrix);
-                AddAdjacentBlocking(ToMatrix, SimPathStore.BLOCKED, 0, SimPathStore.MAYBE_BLOCKED, SimPathStore.BLOCKED);
+                AddAdjacentBlocking(ToMatrix, SimPathStore.BLOCKED, 1, SimPathStore.MAYBE_BLOCKED, SimPathStore.BLOCKED);
                 Console.WriteLine("\nEnd UpdateCollisionPlane: {0} for {1}", PathStore, this);
             }
         }
@@ -715,7 +716,7 @@ namespace PathSystem3D.Navigation
 
 
             float level;
-            if (W.OpenCapsuleAbove(testPlane, testPlane + 16f, CollisionIndex.CapsuleZ, out level))
+            if (W.OpenCapsuleAbove(testPlane, testPlane + 16f, CollisionIndex.AvatarCapsuleZ, out level))
             {
                 if (level < testPlane)
                 {
@@ -724,7 +725,7 @@ namespace PathSystem3D.Navigation
                 return level;
             }
             float nd;
-            if (W.OpenCapsuleBelow(gp, testPlane, CollisionIndex.CapsuleZ, out nd))
+            if (W.OpenCapsuleBelow(gp, testPlane, CollisionIndex.AvatarCapsuleZ, out nd))
             {
                 if (nd < gp)
                 {
@@ -801,7 +802,7 @@ namespace PathSystem3D.Navigation
                 {
                     byte b = from[x, y];
                     if (b == when && b != unless)
-                        if (SurroundingBlocked0(x, y, then, from) > req)
+                        if (SurroundingBlocked0(x, y, then, from) >= req)
                             to[x, y] = then;
                 }
             }
@@ -809,20 +810,30 @@ namespace PathSystem3D.Navigation
         }
         private void AddEdgeBlocking(byte[,] to)
         {
-            
+
             int xsizem1 = MaxXPt - 0;
-            int xsizem2 = MaxXPt - 1;
+            //   int xsizem2 = MaxXPt - 1;
             int ysizem1 = MaxYPt - 0;
-            int ysizem2 = MaxYPt - 1;
+            //  int ysizem2 = MaxYPt - 1;
+            const byte BLOCKED = SimPathStore.BLOCKED;
+            bool sameSize = (ysizem1 == xsizem1);
+            if (sameSize)
+            {
+                for (int y = ysizem1; y >= 0; y--)
+                {
+                    to[y, ysizem1] = to[y, 0] = to[xsizem1, y] = to[0, y] = BLOCKED;
+                }
+                return;
+            }
             for (int y = ysizem1; y >= 0; y--)
             {
-                to[0, y] = SimPathStore.BLOCKED;//to[1, y];
-                to[xsizem1, y] = SimPathStore.BLOCKED;//to[xsizem2, y];
+                to[0, y] = BLOCKED; //to[1, y];
+                to[xsizem1, y] = BLOCKED; //to[xsizem2, y];
             }
             for (int x = xsizem1; x >= 0; x--)
             {
-                to[x, 0] = SimPathStore.BLOCKED;//to[x, 1];
-                to[x, ysizem1] = SimPathStore.BLOCKED;//to[x,ysizem2];
+                to[x, 0] = BLOCKED; //to[x, 1];
+                to[x, ysizem1] = BLOCKED; //to[x,ysizem2];
             }
         }
 
@@ -898,7 +909,7 @@ namespace PathSystem3D.Navigation
 
         internal void SetDefaultConstraints()
         {
-            GlobalBumpConstraint = CollisionIndex.MaxBump;// 0.6f; //0.3f
+            GlobalBumpConstraint = CollisionIndex.MaxBumpInOpenPath;// 0.6f; //0.3f
         }
 
 
@@ -955,7 +966,7 @@ namespace PathSystem3D.Navigation
                                                            Heights, MeshIndex);
         }
 
-        internal void RefreshMatrix(Box3Fill changed, float BumpConstraint)
+        private void RefreshMatrix(Box3Fill changed, float BumpConstraint)
         {
             changed.Constrain(OuterBox);
             byte[,] ToMatrix = ByteMatrix;
