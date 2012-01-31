@@ -293,7 +293,11 @@ namespace OpenMetaverse.Voice
 
         internal string GetVoiceDaemonPath()
         {
-            string myDir = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
+            System.Reflection.Assembly assemblyGetEntryAssembly = System.Reflection.Assembly.GetEntryAssembly();
+            string assemblyGetEntryAssemblyLocation = ".";
+            if (assemblyGetEntryAssembly != null)
+                assemblyGetEntryAssemblyLocation = assemblyGetEntryAssembly.Location;
+            string myDir = Path.GetDirectoryName(assemblyGetEntryAssemblyLocation);
 
             if (Environment.OSVersion.Platform != PlatformID.MacOSX &&
                 Environment.OSVersion.Platform != PlatformID.Unix)
