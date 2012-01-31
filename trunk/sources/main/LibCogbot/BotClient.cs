@@ -2042,9 +2042,10 @@ namespace cogbot
                 //text = text.Replace("\"", "");
                 string verb = Parser.ParseArgs(text)[0];
                 verb = verb.ToLower();
-                if (Commands != null && Commands.ContainsKey(verb))
+
+                Command act = GetCommand(verb, false);
+                if (act != null)
                 {
-                    Command act = Commands[verb];
                     if (act is GridMasterCommand)
                     {
                         if (!WorldSystem.IsGridMaster)
@@ -2102,6 +2103,36 @@ namespace cogbot
             }
             return command.acceptInputWrapper(verb, args, callerID, del);
             //robot.OneAtATimeQueue.Enqueue(cmdStr, () => command.acceptInputWrapper(verb, args, callerID, del));
+        }
+
+        public bool IsValidCommand(string cmd)
+        {
+            return GetCommand(cmd, true) != null;
+        }
+
+        public Command GetCommand(string text, bool clientCmds)
+        {
+            if (string.IsNullOrEmpty(text)) return null;
+            text = text.Trim();
+            while (text.StartsWith("/"))
+            {
+                text = text.Substring(1).TrimStart();
+            }
+            if (string.IsNullOrEmpty(text)) return null;
+            text = Parser.ParseArguments(text)[0].ToLower();
+            Command fnd;
+
+            if (Commands.TryGetValue(text, out fnd)) return fnd;
+            if (clientCmds)
+            {
+                var bc = ClientManager;
+                if (bc != null)
+                {
+                    if (bc.groupActions.TryGetValue(text, out fnd)) return fnd;
+                }
+            }
+            if (text.EndsWith("s")) return GetCommand(text.Substring(0, text.Length - 1), clientCmds);
+            return null;
         }
 
         public readonly static UUID OWNERLEVEL = UUID.Parse("ffffffff-ffff-ffff-ffff-ffffffffffff");

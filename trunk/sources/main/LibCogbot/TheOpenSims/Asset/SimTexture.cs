@@ -53,44 +53,37 @@ namespace cogbot.TheOpenSims
                     {
                         pc++;
                         var pixel = bm.GetPixel(xx, yy);
-                        int tp = pixel.R + pixel.G + pixel.B;
+                        //int tp = pixel.R + pixel.G + pixel.B;
                         red += pixel.R;
                         blue += pixel.B;
                         green += pixel.G;
                     }
                 }
-                area = x * y / 4;
-                if (area != pc)
-                {
-                }
+                _area = x * y / 4;
                 red = red / pc;
                 blue = blue / pc;
                 green = green / pc;
                 return Color.FromArgb((int)red, (int)green, (int)blue);
             }
         }
-        private int area;
+        private int _area;
 
-        public Dictionary<string, int> ImageStats
+        public Dictionary<string, float> ImageStats
         {
             get
             {
                 Bitmap bm = BitmapImage;
                 if (bm == null) return null;
                 Color average = MeanColor;
-                Color scaleC = SimImageUtils.GetScaledColor(average);
-                Color scaleC2 = SimImageUtils.GetScaledColor(scaleC);
-                var dict = new Dictionary<string, int>()
-                           {
-                               {"area", area},
-                               {"m_blue", average.B},
-                               {"m_red", average.R},
-                               {"m_green", average.G},
-                                                      
-                               {"a_blue", scaleC2.B},
-                               {"a_red", scaleC2.R},
-                               {"a_green", scaleC2.G},
-                           };
+               // Color scaleC = SimImageUtils.GetScaledColor(average);
+               // Color scaleC2 = SimImageUtils.GetScaledColor(scaleC);
+                var dict = new Dictionary<string, float>()
+                               {
+                                   {"area", _area},
+                                   {"m_red", average.R},
+                                   {"m_green", average.G},
+                                   {"m_blue", average.B},
+                               };
 
                 SimImageUtils.CatchNamedColors(average, dict, true);
                 return dict;
