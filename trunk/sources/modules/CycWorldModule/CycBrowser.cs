@@ -67,10 +67,11 @@ namespace CycWorldModule
                 {
                     string s = v.getHostName();
                     int bp = v.getBasePort();
-                    if (bp>0)
+                    if (bp > 0)
                     {
-                        s += ":" + bp + 2;
-                    } else
+                        s += ":" + (bp + 2);
+                    }
+                    else
                     {
                         s += ":3602";
                     }

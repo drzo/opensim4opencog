@@ -1,3 +1,4 @@
+#if false 
 #if MONO
 #else
 // #define MICROSOFT
@@ -128,3 +129,4 @@ namespace CycWorldModule.DotCYC
         private System.Windows.Forms.TextBox cycBasePort;
     }
 }
+#endif
