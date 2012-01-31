@@ -398,6 +398,8 @@ namespace MushDLR223.Utilities
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public static bool AllocedConsole = false;
+        public static bool NoConsoleVisible = false;
+        //public static bool PrintToSystemConsole = true;
         public static bool HasWinforms = false;
         public static bool IsOnMonoUnix = false;
         public static bool SafelyRun(MethodInvoker call)
@@ -502,7 +504,7 @@ namespace MushDLR223.Utilities
             if (!AllocedConsole)
             {
                 var ConsoleError = Console.Error;
-
+                if (NoConsoleVisible) return false;
                 AllocedConsole = true;
                 try
                 {
@@ -530,7 +532,6 @@ namespace MushDLR223.Utilities
                                                           };
 
         static private readonly object m_syncRoot = new object();
-        public static bool PrintToSystemConsole = true;
         static private int y = -1;
         private int cp = 0;
         private int h = 1;
@@ -559,12 +560,13 @@ namespace MushDLR223.Utilities
             get { return m_defaultPrompt; }
         }
         protected string m_defaultPrompt;
-
-        static DLRConsole()
+        public static DLRConsole SingleInstance = new DLRConsole();
+        public DLRConsole()
         {
+            SingleInstance = this;
             //Application.VisualStyleState
-            var v0 = InitialConsoleOut;
-            AddOutput(v0);
+            //var v0 = InitialConsoleOut;
+            //AddOutput(v0);
             ///SystemConsole.SetOut(ConsoleOut);
         }
 
@@ -977,7 +979,11 @@ namespace MushDLR223.Utilities
             if (y != -1)
                 y = CursorTop;
             WritePrefixLine(senderColor, sender);
-            if (IsOnMonoUnix) SystemConsole.WriteLine(trimmed);
+            if (IsOnMonoUnix)
+            {
+                if (!NoConsoleVisible) SystemConsole.WriteLine(trimmed);
+
+            }
             else WriteConsoleLine(color, "{0}", trimmed);
             omittedPrefix = "";
             if (y != -1)
@@ -1439,6 +1445,7 @@ namespace MushDLR223.Utilities
 
         private static void CALL_SYSTEM_ERR_WRITELINE(string format, params object[] args)
         {
+            if (NoConsoleVisible) return;
             ExecWithMaxTime(() => CALL_SYSTEM_ERR_WRITELINE_REAL(format, args), 1000);
         }
 
@@ -1500,6 +1507,7 @@ namespace MushDLR223.Utilities
             {
                 var sformat = SafeFormat(format, args);
                 if (String.IsNullOrEmpty(sformat)) return;
+                if (NoConsoleVisible) return;
                 SystemWriteLine00(sformat.Trim());
                 return;
             }
@@ -1520,13 +1528,22 @@ namespace MushDLR223.Utilities
                 catch (Exception e)
                 {
                     CALL_SYSTEM_ERR_WRITELINE("" + e);
-                    o.WriteLine(SafeFormat(format, args));
+                    try
+                    {
+                        o.WriteLine(SafeFormat(format, args));
+                    } catch (Exception e2)
+                    {
+                        CALL_SYSTEM_ERR_WRITELINE("" + e2);
+                    }
                 }
             }
         }
         private static void SystemWriteLine00(string format)
         {
-            if (IsOnMonoUnix) CALL_SYSTEM_ERR_WRITELINE("SystemWriteLine00: " + format);
+            if (IsOnMonoUnix)
+            {
+                CALL_SYSTEM_ERR_WRITELINE("SystemWriteLine00: " + format);
+            }
             format = GetFormat(format).TrimEnd();
             PauseIfTraced(format);
             foreach (TextWriter o in Outputs)
@@ -1780,6 +1797,7 @@ namespace MushDLR223.Utilities
                                                               {
                                                               };
 
+        [ConfigSetting]
         public static bool SkipStackTraces = true;
 
         protected static List<TextWriter> Outputs
@@ -1791,12 +1809,21 @@ namespace MushDLR223.Utilities
                 {
                     if (_outputs.Count == 0)
                     {
+
                         var use = InitialConsoleOut;
-                        if (use != null) list.Add(use);
+                        if (use != null && !NoConsoleVisible) list.Add(use);
                     }
                     else
                     {
                         list.AddRange(_outputs);
+                    }
+                }
+                if (AllocedConsole && !NoConsoleVisible)
+                {
+                    var use = InitialConsoleOut;
+                    if (!list.Contains(use))
+                    {
+                        list.Add(use);
                     }
                 }
                 return list;
@@ -1961,7 +1988,7 @@ namespace MushDLR223.Utilities
             }
             // on uunix try this workarraund
             if (InvokeWithNoErrors(() => InvokeControlAfterCreated(rtb, invoke))) return;
-            Console.WriteLine("WARN: InvokeControl on " + rtb + " before IsHandleCreated from " + invoke.Method.ReflectedType + ":" + invoke.Method);
+            DebugWriteLine("WARN: InvokeControl on " + rtb + " before IsHandleCreated from " + invoke.Method.ReflectedType + ":" + invoke.Method);
             // make the handler object
             var once = new OnEventOnce(() => InvokeControlAfterCreated(rtb, invoke));
             // add the post invoke call
@@ -2007,7 +2034,7 @@ namespace MushDLR223.Utilities
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine(ex);
+                DebugWriteLine(ex);
                /// Logger.Log("Failure in event handler: " + ex.Message, Helpers.LogLevel.Warning, ex);
                 return false;
             }

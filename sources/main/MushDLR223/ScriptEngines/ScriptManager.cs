@@ -73,6 +73,35 @@ namespace MushDLR223.ScriptEngines
             }
         }
 
+        public readonly static Dictionary<MemberInfo, ConfigSettingAttribute> SysVars = new Dictionary<MemberInfo, ConfigSettingAttribute>();
+        public static void LoadSysVars(Type t)
+        {
+            lock (SysVars)
+            {
+                foreach (
+                    var s in
+                        t.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
+                                     BindingFlags.Static))
+                {
+                    ConfigSettingAttribute cs0;
+                    if (!s.IsDefined(typeof(ConfigSettingAttribute), false))
+                    {
+                        if (!ConfigSettingAttribute.IsGoodForConfig(s)) continue;
+                        cs0 = ConfigSettingAttribute.CreateSetting(s);                        
+                    }
+                    else
+                    {
+                        var cs = s.GetCustomAttributes(typeof(ConfigSettingAttribute), false);
+                        if (cs == null) continue;
+                        if (cs.Length == 0) continue;
+                        cs0 = (ConfigSettingAttribute)cs[0];
+                        cs0.SetMember(s);
+                    }
+                    SysVars[s] = cs0;
+                    WriteLine("Setting: " + cs0.Description);
+                }
+            }
+        }
 
         private static bool ScanType(Type type)
         {
