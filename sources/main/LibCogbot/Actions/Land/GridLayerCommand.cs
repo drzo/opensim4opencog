@@ -32,6 +32,8 @@ namespace cogbot.Actions.Land
             GridLayer layer = e.Layer;
             WriteLine(String.Format("Layer({0}) Bottom: {1} Left: {2} Top: {3} Right: {4}",
                 layer.ImageID.ToString(), layer.Bottom, layer.Left, layer.Top, layer.Right));
+            //string filename = layer.
+            //Client.ExecuteCommand("download " + layer.ImageID.ToString() + " " + AssetType.ImageTGA + " " + filename);
         }
     }
 }
