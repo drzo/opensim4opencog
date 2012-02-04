@@ -463,6 +463,7 @@ namespace OpenMetaverse
             private uint agentControls;
             private int duplicateCount;
             private AgentState lastState;
+            private uint lastAgentControls;
             /// <summary>Timer for sending AgentUpdate packets</summary>
             private Timer updateTimer;
             private int updateInterval;
@@ -599,7 +600,7 @@ namespace OpenMetaverse
                 Vector3 zAxis = Camera.UpAxis;
 
                 // Attempted to sort these in a rough order of how often they might change
-                if (agentControls == 0 &&
+                if ((agentControls == 0   || lastAgentControls==agentControls) &&
                     yAxis == LastCameraYAxis &&
                     origin == LastCameraCenter &&
                     State == lastState &&
@@ -627,6 +628,7 @@ namespace OpenMetaverse
                     LastCameraZAxis = zAxis;
                     LastFar = Camera.Far;
                     lastState = State;
+                    lastAgentControls = agentControls;
 
                     // Build the AgentUpdate packet and send it
                     AgentUpdatePacket update = new AgentUpdatePacket();
@@ -650,6 +652,9 @@ namespace OpenMetaverse
                     if (autoResetControls) {
                         ResetControlFlags();
                     }
+                } else
+                {
+                    
                 }
             }
 

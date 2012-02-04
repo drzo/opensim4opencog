@@ -1885,8 +1885,7 @@ namespace OpenMetaverse
 
                 // The calculation for the HeadSize scalar may be incorrect, but it seems to work
                 double agentHeight = agentSizeBase + (agentSizeVPLegLength*.1918) + (agentSizeVPHipLength*.0375) +
-                                     (agentSizeVPHeight*.12022) + (agentSizeVPHeadSize*.01117) +
-                                     (agentSizeVPNeckLength*.038) +
+                    (agentSizeVPHeight * .12022) + (agentSizeVPHeadSize * .01117) + (agentSizeVPNeckLength * .038) +
                                      (agentSizeVPHeelHeight*.08) + (agentSizeVPPlatformHeight*.07);
 
                 set.AgentData.Size = new Vector3(0.45f, 0.6f, (float) agentHeight);

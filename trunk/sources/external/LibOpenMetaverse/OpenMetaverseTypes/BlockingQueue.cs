@@ -150,7 +150,7 @@ namespace OpenMetaverse
             {
                 while (open && (base.Count == 0))
                 {
-                    if (!Monitor.Wait(SyncRoot, -1))
+                    if (!Monitor.Wait(SyncRoot, timeout))
                         return false;
                 }
                 if (open)
