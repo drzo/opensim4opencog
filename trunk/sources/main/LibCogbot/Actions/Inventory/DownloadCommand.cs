@@ -8,6 +8,7 @@ using OpenMetaverse;
 using OpenMetaverse.Assets;
 
 using MushDLR223.ScriptEngines;
+using OpenMetaverse.Imaging;
 
 namespace cogbot.Actions.SimExport
 {
@@ -17,7 +18,7 @@ namespace cogbot.Actions.SimExport
         public DownloadCommand(BotClient testClient)
         {
             Name = "download";
-            Description = "Downloads the specified asset. Usage: download [uuid] [assetType]";
+            Description = "Downloads the specified asset. Usage: download [uuid] [assetType] [filename]";
             Category = CommandCategory.Inventory;
         }
 
@@ -55,17 +56,17 @@ namespace cogbot.Actions.SimExport
 
                 if (transfer.Success) try
                     {
-                        File.WriteAllBytes(String.Format("{0}.{1}", AssetID,
-                            assetType.ToString().ToLower()), asset.AssetData);
-                        try
+                        string filename = String.Format("{0}.{1}", AssetID, assetType.ToString().ToLower());
+                        string decodeType = "none";
+                        if (args.Length > 2)
                         {
-                            asset.Decode();
-                            WriteLine("Asset decoded as " + asset.AssetType);
+                            filename = args[2];
                         }
-                        catch (Exception ex)
+                        if (args.Length > 3)
                         {
-                            WriteLine("Asset not decoded: " + ex);
+                            decodeType = args[3];
                         }
+                        DecodeFile(filename, decodeType, asset);
                     }
                     catch (Exception ex)
                     {
@@ -75,6 +76,59 @@ namespace cogbot.Actions.SimExport
             });
             DownloadHandle.WaitOne(30000);
             return Success("Done RequestAsset " + AssetID);
+        }
+
+        private void DecodeFile(string filename, string decodeType, Asset asset)
+        {
+            try
+            {
+                asset.Decode();
+                WriteLine("Asset decoded as " + asset.AssetType);
+            }
+            catch (Exception ex)
+            {
+                WriteLine("Asset not decoded: " + ex);
+            }
+            MemberInfo[] getTypeGetMember = GetType().GetMember("Decode_" + decodeType);
+            MethodInfo mi = null;
+            if (getTypeGetMember != null && getTypeGetMember.Length > 0)
+            {
+                mi = getTypeGetMember[0] as MethodInfo;
+            }
+            if (mi != null)
+            {
+                mi.Invoke(this, new object[] { filename, decodeType, asset });
+            }
+            else
+            {
+                Decode_none(filename, decodeType, asset);
+            }
+        }
+        public void Decode_none(string filename, string decodeType, Asset asset)
+        {
+            var data = asset.AssetData;
+            File.WriteAllBytes(filename, data);
+        }
+        public void Decode_jp2k(string filename, string decodeType, Asset asset)
+        {
+            var img = (AssetTexture)asset;
+            OpenMetaverse.Imaging.ManagedImage imgImage = img.Image;
+            if (imgImage == null)
+            {
+                OpenJPEG.DecodeToImage(asset.AssetData, out imgImage);
+            }
+            if (imgImage != null)
+            {
+                if (filename.ToLower().EndsWith("tga"))
+                {
+                    File.WriteAllBytes(filename, imgImage.ExportTGA());
+                }
+                else
+                {
+                    File.WriteAllBytes(filename, imgImage.ExportRaw());
+                }
+
+            }
         }
     }
 }
