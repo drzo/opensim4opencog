@@ -20,6 +20,8 @@ namespace cogbot.TheOpenSims
     public partial class SimAvatarClient : SimAvatarImpl, SimMover, SimAvatar, SimActor, SimControllableAvatar
     {
 
+        public static SimAvatarClient SingleInstance;
+
         ListAsSet<EffectBeamInfo> BeamInfos = new ListAsSet<EffectBeamInfo>();
         ListAsSet<SimPosition> SelectedObjects = new ListAsSet<SimPosition>();
         private bool _SelectedBeam;
@@ -100,6 +102,8 @@ namespace cogbot.TheOpenSims
         private DateTime ThisUpdateShown;
         public static int PipesAlive = 0;
         public static int PipesNumberNext = 0;
+        public static string PipeMaker = "";//"SEC";
+        public static bool UseSimpleTurnToward = true;
         public override void IndicateRoute(IEnumerable<Vector3d> list, Color color)
         {
             var PS = GetSimRegion();
@@ -122,7 +126,7 @@ namespace cogbot.TheOpenSims
                 Client.Self.Chat("http://logicmoo.dyndns.org:5580/cogpath/path.gif", 100, ChatType.Normal);
                 //Client.Self.Chat("hi " + Client.Self.SimPosition.Z, 100, ChatType.Normal);
             }
-            
+            if (string.IsNullOrEmpty(PipeMaker)) return;
             bool throttle = llist.Count < 200;
             foreach (var next in llist)
             {
@@ -141,39 +145,47 @@ namespace cogbot.TheOpenSims
                     continue;
                 }
                 if (throttle) Thread.Sleep(3);
+                string send = "";
+                foreach (char s in PipeMaker)
+                {
+                    switch(char.ToUpper(s))
+                    {
+                        case 'S':
+                            {
+                                send += String.Format(",{0},{1},{2}", prev.X, prev.Y, prev.Z);
+                                continue;
 
-                if (true)
-                {
-                    Client.Self.Chat(
-                        String.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8}", //
-                                      prev.X, prev.Y, prev.Z, next.X, next.Y, next.Z,
-                                      color.R, color.G, color.B),
-                        100, ChatType.Normal);
+                            }
+                        case 'E':
+                            {
+                                send += String.Format(",{0},{1},{2}", next.X, next.Y, next.Z);
+                                continue;
+                            }
+                        case 'C':
+                            {
+                                send += String.Format(",{0},{1},{2}", color.R, color.G, color.B);
+                                continue;
+                            }
+                        case 'A':
+                            {
+                                send += String.Format(",{0}", color.A);
+                                continue;
+                            }
+                        case 'P':
+                            {
+                                send += String.Format(",{0}", PipesNumberNext);
+                                continue;
+                            }
+                        default:
+                            break;
+                    }
                 }
-                else if (true)
+                if (send.Length>1)
                 {
-                    Client.Self.Chat(
-                        String.Format("{0},{1},{2},{3},{4},{5}", //color.R, color.G, color.B,
-                                      prev.X, prev.Y, prev.Z, next.X, next.Y, next.Z),
-                        100, ChatType.Normal);
+                    Client.Self.Chat(String.Format(send.Substring(1)), 100, ChatType.Normal);
+                    PipesNumberNext++;
+                    PipesAlive++;
                 }
-                else if (true)
-                {
-                    Client.Self.Chat(
-                        String.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8}", color.R, color.G, color.B,
-                                      prev.X, prev.Y, prev.Z, next.X, next.Y, next.Z),
-                        100, ChatType.Normal);
-                }
-                else
-                {
-                    Client.Self.Chat(String.Format("{0},255,0,0,128,{1},{2},{3},{4},{5},{6}",
-                                                   PipesNumberNext, prev.X, prev.Y, prev.Z, next.X,
-                                                   next.Y, next.Z),
-                                     100, ChatType.Normal);
-                }
-
-                PipesNumberNext++;
-                PipesAlive++;
                 prev = next;
             }
         }
@@ -388,8 +400,8 @@ namespace cogbot.TheOpenSims
         public SimAvatarClient(UUID id, WorldObjects objectSystem, Simulator reg)
             : base(id, objectSystem, reg)
         {
-            WorldObjects.SimAvatars.Add(this);
-            Affordances.ObjectType.SuperType.Add(SimTypeSystem.GetObjectType("Avatar"));
+            SingleInstance = this;
+            Affordances.ObjectType.SuperType.Add(SimTypeSystem.GetObjectType("PlayerAvatar"));
             //try
             //{
             //    AspectName = slAvatar.Name;
@@ -753,7 +765,11 @@ namespace cogbot.TheOpenSims
             {
                 if (Flying != value)
                 {
-                    if (IsControllable) Client.Self.Fly(value);
+                    if (IsControllable)
+                    {
+                        ConsumerSetFight = value;
+                        Client.Self.Fly(value);
+                    }
                 }
             }
         }
@@ -842,7 +858,7 @@ namespace cogbot.TheOpenSims
         ///     }
         ///     return swp;
         /// }
-        public override void StopMoving()
+        public override void StopMoving(bool fullStop)
         {
             StopMovingReal();
         }
@@ -858,6 +874,17 @@ namespace cogbot.TheOpenSims
                 lastDistance = float.MaxValue;
                 ApproachVector3D = Vector3d.Zero;
             }
+            ResetMoveContols();
+            AgentManager ClientSelf = Client.Self;
+            AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
+            //ClientMovement.FinishAnim = true;
+            ClientMovement.Stop = true;
+            //AtoPilotCancle sends update ClientMovement.SendUpdate();
+            Client.Self.AutoPilotCancel();
+        }
+
+        private void ResetMoveContols()
+        {
             AgentManager ClientSelf = Client.Self;
             
             AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
@@ -869,7 +896,7 @@ namespace cogbot.TheOpenSims
             ClientMovement.FastAt = false;
             ClientMovement.FastLeft = false;
             ClientMovement.FastUp = false;
-            ClientMovement.FinishAnim = true;
+
             ///   ClientMovement. Fly = false;
             ClientMovement.LButtonDown = false;
             ClientMovement.LButtonUp = false;
@@ -888,7 +915,6 @@ namespace cogbot.TheOpenSims
             ClientMovement.PitchPos = false;
             /// ClientMovement. SitOnGround = false;
             /// ClientMovement. StandUp = false;
-            ClientMovement.Stop = true;
             ClientMovement.TurnLeft = false;
             ClientMovement.TurnRight = false;
             //ClientMovement.UpdateInterval = 0;
@@ -896,9 +922,6 @@ namespace cogbot.TheOpenSims
             ClientMovement.UpPos = false;
             ClientMovement.YawNeg = false;
             ClientMovement.YawPos = false;
-
-            ClientMovement.SendUpdate();
-            ClientSelf.AutoPilotCancel();
         }
 
 
@@ -983,8 +1006,24 @@ namespace cogbot.TheOpenSims
                 /// ApproachDistance = ApproachPosition.GetSizeDistance();
                 try
                 {
+                    Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
                     AgentManager ClientSelf = Client.Self;
                     AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
+
+                    if (SimpleMoveToMovementProceedure == MovementProceedure.AutoPilot)
+                    {
+                        ClientSelf.AutoPilot(targetPosition.X, targetPosition.Y, targetPosition.Z);
+                        Thread.Sleep(1000);
+                        continue;
+                    }
+                    if (SimpleMoveToMovementProceedure == MovementProceedure.Teleport)
+                    {
+                        //ClientSelf.AutoPilot(targetPosition.X, targetPosition.Y, targetPosition.Z);
+                        Thread.Sleep(1000);
+                        continue;
+                    }
+
+
                     //ClientMovement.AutoResetControls = false;
                     //ClientMovement.UpdateInterval = 0; /// 100
                     SimRegion R = GetSimRegion();
@@ -994,7 +1033,7 @@ namespace cogbot.TheOpenSims
 
                     double ZDist = Math.Abs(UpDown);
                     ///  Like water areas
-                    bool swimming = WaterHeight > selfZ;
+                    bool swimming = WaterHeight > selfZ || MovementByFlight;
 
                     if (UpDown > 5f)
                     {
@@ -1014,7 +1053,7 @@ namespace cogbot.TheOpenSims
                     }
                     else
                     {
-                        ClientMovement.Fly = false;
+                        if (!MovementByFlight && !ConsumerSetFight) ClientMovement.Fly = false;
                         targetPosition.Z = selfZ;
                     }
 
@@ -1038,14 +1077,16 @@ namespace cogbot.TheOpenSims
                             var span = currentDateTime.Subtract(lastDateTime);
                             IsBlocked = true;                            
                         }
-                        if (ApproachPosition != null)
+                        if (true || ApproachPosition != null)
                         {
                             // follower should pass by.. but on way point navigation would be ok
-                            ClientMovement.Stop = true;
-                            ClientMovement.FinishAnim = true;
-                            SendUpdate(100);
-                            ClientMovement.Stop = false;
-                            lastDistance = curDist;
+                            //TurnToward(targetPosition);
+                            //ClientMovement.Stop = true;
+                            //ClientMovement.FinishAnim = true;
+                            ClientMovement.AtPos = false;
+                            SendUpdate(1);
+                            //ClientMovement.Stop = false;
+                            lastDistance = curDist + 1;
                             continue;
                         }
                     }
@@ -1054,15 +1095,21 @@ namespace cogbot.TheOpenSims
 
                     if (swimming)
                     {
-                        ///  WaterHeight = WaterHeight - 1f;
-                        /// if (!ClientMovement.Fly)
-                        /// {
-                        ///     ClientMovement.Fly = false;
-                        /// }
+                        double TargetHeight = WaterHeight;
+                        if (MovementByFlight)
+                        {
+                            TargetHeight = realTargetZ;
+                        }
+                        if (!ClientMovement.Fly)
+                        {
+                            Debug("Starting to swim MovementByFlight=" + MovementByFlight);
+                            ClientMovement.Fly = true;
+                            SendUpdate(10);
+                        }
 
                         bool nudgeUpDownMoves = true;
 
-                        if (selfZ > WaterHeight - 0.5)
+                        if (selfZ > TargetHeight - 0.5)
                         {
                             ///  Bob downward
                             if (nudgeUpDownMoves)
@@ -1076,7 +1123,7 @@ namespace cogbot.TheOpenSims
                         else
                         {
                             ///   nudge = !nudge;
-                            if (selfZ < WaterHeight - 2.5)
+                            if (selfZ < TargetHeight - 2.5)
                             {
                                 ///  Bob upward
                                 if (nudgeUpDownMoves)
@@ -1087,14 +1134,18 @@ namespace cogbot.TheOpenSims
                                 ///    continue; /// to keep going up
                             }
                         }
-                        targetPosition.Z = WaterHeight - 0.25f;
+                        targetPosition.Z = TargetHeight - 0.25f;
                     }
 
                     /// if ()/// ClientMovement.Fly = swimming;///  todo ||  GetPathStore().IsFlyZone(SimPathStore.GlobalToLocal(worldPosition));
 
                     if (swimming)
                     {
-                        ClientMovement.Fly = true;
+                        if (!ClientMovement.Fly)
+                        {
+                            Debug("Starting to swim again");
+                            ClientMovement.Fly = true;
+                        }
                         ///  Reset previous Z 
                         ClientMovement.FastUp = false;
                         ClientMovement.UpPos = false;
@@ -1127,76 +1178,40 @@ namespace cogbot.TheOpenSims
                     ///     }
                     /// }
 
+                    TurnToward(targetPosition);
+                    ClientMovement.AtPos = false;
+
+                    if (curDist < ApproachDistance)
+                    {
+                        ResetMoveContols();
+                        //ClientMovement.FinishAnim = true;
+                        ClientMovement.Stop = true;
+                        SendUpdate(1);
+                        continue;
+                    }
+
+                    ///  getting close though
+                    if (curXYDist < (ApproachDistance + 3) || curDist < (ApproachDistance + 3))
+                    {
+                        ClientMovement.NudgeAtPos = true;
+                        SendUpdate(10);
+                        ClientMovement.NudgeAtPos = false;
+                        SendUpdate(1);
+                        //stopNext = true;
+                        continue;
+                    }
+
+                    if (ZDist > curXYDist)
+                    {
+                        // avoid circling while not changing ones altitude!
+                        continue;
+                    }
+
                     ///  Far away
-                    if (curXYDist > ApproachDistance)
-                    {
-                        if (SimpleMoveToMovementProceedure == MovementProceedure.AutoPilot)
-                        {
-                            ClientSelf.AutoPilot(targetPosition.X, targetPosition.Y, targetPosition.Z);
-                            SendUpdate(1000);
-                            continue;
-                        }
-                        if (SimpleMoveToMovementProceedure == MovementProceedure.Teleport)
-                        {
-                            //ClientSelf.AutoPilot(targetPosition.X, targetPosition.Y, targetPosition.Z);
-                            SendUpdate(1000);
-                            continue;
-                        }
-                        ClientMovement.Stop = false;
-                        ClientMovement.FinishAnim = false;
-                        TurnToward(targetPosition);
-                        ///  getting close though
-                        if (curDist < (ApproachDistance * 1.25))
-                        {
-                            /// ClientMovement.AtPos = true;
-                            /// SendUpdate(125);
-                            /// ClientMovement.Stop = true;
-                            ClientMovement.AtPos = false;
-                            ClientMovement.NudgeAtPos = true;
-                            SendUpdate(100);
-                            ClientMovement.NudgeAtPos = false;
-                            SendUpdate(100);
-                            //TurnToward(targetPosition);
-                            stopNext = true;
-                            continue;
-                        }
-                        else
-                        {
-                            TurnToward(targetPosition);
-                            ClientMovement.AtPos = true;
-                            // ClientMovement.UpdateInterval = 0;
-                            SendUpdate(MyRandom.Next(25, 100));
-                            ///   TurnToward(targetPosition);
-                            /// (int)(25 * (1 + (curDist / followDist)))
-                            ///    MoveFast(ApproachPosition);
-                            ///     if (ApproachPosition!=null) MoveSlow(ApproachPosition);
-                            stopNext = true;
-                            continue;
-                        }
-                    }
-                    else
-                    {
-                        if (stopNext)
-                        {
-                            ///                             TurnToward(targetPosition);
-                            ///  ClientMovement.ResetControlFlags();
-                            ClientMovement.AtPos = false;
-                            //ClientMovement.UpdateInterval = 0;
-                            /// ClientMovement.StandUp = true;
-                            /// ClientMovement.SendUpdate();
-                            ClientMovement.FinishAnim = true;
-                            ClientMovement.Stop = true;
-                            SendUpdate(25);
-                            ///  WorldSystem.TheSimAvatar.StopMoving();
-                            stopNext = false;
-                            continue;
-                        }
-                        else
-                        {
-                            Thread.Sleep(100);
-                            continue;
-                        }
-                    }
+                    ClientMovement.AtPos = true;
+                    // ClientMovement.UpdateInterval = 0;
+                    SendUpdate(MyRandom.Next(25, 90));
+                    continue;
                 }
                 catch (Exception e)
                 {
@@ -1206,10 +1221,19 @@ namespace cogbot.TheOpenSims
         }
 
 
-
+        [ConfigSetting]
+        public static bool MoveUseTeleportFallback = true;
+        public static bool GotoUseTeleportFallback = !MoveUseTeleportFallback && false;
         public MovementProceedure SimpleMoveToMovementProceedure = MovementProceedure.TurnToAndWalk;
         public MovementProceedure SalientMovementProceedure = MovementProceedure.AStar;
-
+        public bool MovementByFlight
+        {
+            get
+            {
+                return SimpleMoveToMovementProceedure == MovementProceedure.FlyTo ||
+                       SalientMovementProceedure == MovementProceedure.FlyTo;
+            }
+        }
         /// <summary>
         ///  
         /// </summary>
@@ -1226,7 +1250,7 @@ namespace cogbot.TheOpenSims
                     Client.Self.LookAtEffect(ID, UUID.Zero, finalTarget, (LookAtType) MyRand.Next(11), ID);
             }
             OnlyMoveOnThisThread();
-            TurnToward(finalTarget);
+            ///TurnToward(finalTarget);
             IsBlocked = false;
             double currentDist = DistanceNoZ(finalTarget, GlobalPosition);
             bool adjustCourse;
@@ -1234,9 +1258,9 @@ namespace cogbot.TheOpenSims
             switch (SimpleMoveToMovementProceedure)
             {
                 case MovementProceedure.Teleport:
+                    TurnToward(finalTarget);
                     if (currentDist < maxDistance) return true;
                     bool tp = this.TeleportTo(SimRegion.GetWaypoint(finalTarget));
-                    if (currentDist < maxDistance) return true;
                     adjustCourse = false;
                     if (!tp)
                     {
@@ -1251,6 +1275,7 @@ namespace cogbot.TheOpenSims
                         SetMoveTarget(finalTarget);
                         ApproachDistance = maxDistance;
                     }
+                    if (currentDist < maxDistance) return true;
                     break;
                 case MovementProceedure.AStar:
                     if (currentDist < maxDistance) return true;
@@ -1258,6 +1283,7 @@ namespace cogbot.TheOpenSims
                                                             SimpleMoveToMovementProceedure);
                     GotoTargetAStar(SimRegion.GetWaypoint(finalTarget));
                     break;
+                case MovementProceedure.FlyTo:
                 case MovementProceedure.AutoPilot:
                 case MovementProceedure.TurnToAndWalk:
                 default:
@@ -1307,11 +1333,14 @@ namespace cogbot.TheOpenSims
                             blockCount++;
                             if (blockCount > 3)
                             {
-                                if (SimAvatarClient.UseTeleportFallback)
+                                if (MoveUseTeleportFallback)
                                 {
-                                    StopMoving();
+                                    StopMoving(true);
                                     Debug("Blocked so using TP to " + (finalTarget - GlobalPosition));
-                                    return this.TeleportTo(finalTarget);
+                                    var res = this.TeleportTo(finalTarget);
+                                    StopMoving(true);
+                                    TurnToward(finalTarget);
+                                    return res;
                                 }
                                 Debug("BLOCKED!");
                                 //return true;
@@ -1357,12 +1386,14 @@ namespace cogbot.TheOpenSims
         public override bool SalientGoto(SimPosition pos)
         {
             double maxDistance = pos.GetSizeDistance() + 1;
+            Debug("SalientMovementProceedure = " + SalientMovementProceedure + " for " + pos);
             switch (SalientMovementProceedure)
             {
                 case MovementProceedure.Teleport:
-                    StopMoving();
+                    StopMoving(true);
                     return this.TeleportTo(pos);
                 case MovementProceedure.AutoPilot:
+                case MovementProceedure.FlyTo:
                 case MovementProceedure.TurnToAndWalk:
                     return SimpleMoveTo(pos.UsePosition.GlobalPosition, pos.GetSizeDistance(), 3);
 
@@ -1370,18 +1401,18 @@ namespace cogbot.TheOpenSims
                 case MovementProceedure.AStar:
                     bool res = GotoTargetAStar(pos);
                     if (res) return res;
-                    if (SimAvatarImpl.UseTeleportFallback)
+                    if (GotoUseTeleportFallback)
                     {
-                        StopMoving();
+                        StopMoving(true);
                         Debug("Goto sneaking in TP to " + pos);
                         res = this.TeleportTo(pos.UsePosition);
-                        StopMoving();
+                        StopMoving(true);
                         TurnToward(pos);
                         return res;
                     }
                     SetMoveTarget(pos, maxDistance - 1);
                     Thread.Sleep(1000);
-                    StopMoving();
+                    StopMoving(true);
                     if (maxDistance > this.Distance(pos))
                     {
                         return true;
@@ -1393,11 +1424,15 @@ namespace cogbot.TheOpenSims
                     }
             }
         }
+
+        public static int SendUpdateLagMultiplier = 5;
         public override void SendUpdate(int ms)
         {
-            /// Client.Self.Movement.AutoResetControls = true;
-            Client.Self.Movement.SendUpdate(true);
-            if (ms > 0) Thread.Sleep(ms);
+            Client.Self.Movement.FinishAnim = false;
+            Client.Self.Movement.TurnToward(LastTTV);
+            int ms0 = ms * SendUpdateLagMultiplier;
+            if (ms0 > 300) ms0 = 300;
+            if (ms0 > 0) Thread.Sleep(ms0);
         }
 
         public override bool TeleportTo(SimRegion R, Vector3 local)
@@ -1408,7 +1443,7 @@ namespace cogbot.TheOpenSims
             }
             SimPosition pos = R.GetWaypointOf(local);
             Vector3d global = pos.GlobalPosition;
-            StopMoving();
+            StopMoving(true);
             return Client.Self.Teleport(R.RegionHandle, local, local);
 
             //CmdResult s = Client.ExecuteCommand("teleport " + R.RegionName + "/" + local.X + "/" + local.Y + "/" + local.Z, Debug);
@@ -1458,7 +1493,7 @@ namespace cogbot.TheOpenSims
             {
                 if (target != ApproachVector3D)
                 {
-                    /// ApproachPosition = target;
+                    ApproachPosition = null;
                     ApproachVector3D = target;
                     if (target != Vector3d.Zero)
                     {
@@ -1466,7 +1501,7 @@ namespace cogbot.TheOpenSims
                     }
                     else
                     {
-                        StopMoving();
+                        StopMoving(true);
                     }
                 }
             }
@@ -1593,8 +1628,39 @@ namespace cogbot.TheOpenSims
         }
 
         private static int InTurn = 0;
+
+        private Quaternion LastTT = Quaternion.Identity;
+        private Vector3 LastTTV = Vector3.Zero;
+        private bool ConsumerSetFight;
+
         public override bool TurnToward(Vector3 target)
         {
+            if (UseSimpleTurnToward)
+            {
+                Quaternion parentRot = Quaternion.Identity;
+                Quaternion between = Vector3.RotationBetween(Vector3.UnitX, Vector3.Normalize(target - Client.Self.SimPosition));
+                Quaternion rot = between * (Quaternion.Identity / parentRot);
+                rot.Normalize();
+                if (rot == LastTT)
+                {
+                    //return true;
+                }
+                LastTTV = target;
+                LastTT = rot;
+                return true;
+                var relDiff =this.SimPosition - target;
+                Client.Self.Movement.UpdateInterval = 0;
+                Client.Self.Movement.AutoResetControls = false;
+  //              Client.Self.Movement.Stop = true;
+                Client.Self.Movement.TurnToward(target);
+               // Client.Self.Movement.SendUpdate(false);
+
+//                Client.Self.Movement.AtPos = true;
+      //          SendUpdate(200);
+    //            Client.Self.Movement.Stop = true;
+        //        Client.Self.Movement.SendUpdate(false);
+                return true;
+            }
             bool prev = Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK;
             int time = Client.Self.Movement.UpdateInterval;
             bool uen = Client.Self.Movement.AutoResetControls;

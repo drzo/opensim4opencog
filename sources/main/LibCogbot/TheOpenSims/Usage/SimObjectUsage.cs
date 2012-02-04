@@ -88,6 +88,7 @@ namespace cogbot.TheOpenSims
                 if (Target == TheBot.ApproachPosition)
                 {
                     ((SimAvatarImpl) TheBot).ApproachPosition = null;
+                    TheBot.StopMoving();
                 }
             }
             finally

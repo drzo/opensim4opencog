@@ -37,7 +37,7 @@ namespace cogbot.TheOpenSims
 
         public override void Abort()
         {
-            TheBot.StopMoving();
+            TheBot.StopMoving(true);
         }
     }
 }

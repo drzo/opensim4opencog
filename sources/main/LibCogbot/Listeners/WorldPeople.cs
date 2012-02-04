@@ -800,17 +800,23 @@ namespace cogbot.Listeners
             base.Friends_OnFriendRights(sender, e);
         }
 
+        internal UUID FindUUIDForName(string groupName)
+        {
+            UUID fnd = GetUserID(groupName);
+            if (!UUIDFactory.IsNullOrZero(fnd)) return fnd;
+            return UUID.Zero;
+        }
         public UUID GetUserID(string ToAvatarName)
         {
             if (ToAvatarName.StartsWith("$"))
             {
                 int usedArgs;
                 var col = ResolveCollection(ToAvatarName.ToLower(), out usedArgs, null);
-                if (col.Count>0)
+                if (col.Count > 0)
                 {
                     foreach (var prim in col)
                     {
-                        if (prim is SimObject) return ((SimObject)prim).ID;
+                        if (prim is SimObject) return ((SimObject) prim).ID;
                         if (prim is string)
                         {
                             string s = (string) prim;

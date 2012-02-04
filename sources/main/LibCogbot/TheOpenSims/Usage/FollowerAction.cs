@@ -7,18 +7,45 @@ using PathSystem3D.Navigation;
 
 namespace cogbot.TheOpenSims
 {
+
+    public class TrialProc
+    {
+        public MovementProceedure Proc;
+        public int Times;
+    }
+
     public class FollowerAction : MoveToLocation
     {
 
         readonly private float maxDistance;
         readonly private Thread FollowThread;
         private bool KeepFollowing = true;
+        private TrialProc proposed = proceedure[0];
+        private int procnum = 0;
+        private int successes = 0;
+        private bool setFlight = false;
         public static bool UseGotoTarget = true;
-        public static bool UseFlight = false;
+        public static bool UseAutoPilot = true;
+        public static bool UseFlight = true;
         public static bool UseTeleport = true;
-        public static double UseTeleportSteps = 3;
         public static bool UseSimpleTurnTo = true;
+        [ConfigSetting(Description = "Use No Walking System")]
         public static bool AvoidFalls = true;
+        public static bool AvoidFallsWithFlight = true;
+        private static readonly TrialProc[] proceedure = {
+                                                              UseTimes(MovementProceedure.AStar, 1),
+                                                              UseTimes(MovementProceedure.AStar, 3),
+                                                              UseTimes(MovementProceedure.TurnToAndWalk, 3),
+                                                              UseTimes(MovementProceedure.FlyTo, 1),
+                                                              UseTimes(MovementProceedure.Teleport, 1),
+                                                              UseTimes(MovementProceedure.AutoPilot, 3),
+                                                              UseTimes(MovementProceedure.FlyTo, 3),
+                                                              UseTimes(MovementProceedure.TurnToAndWalk, 2),
+                                                          };
+        private static TrialProc UseTimes(MovementProceedure proc, int numTimes)
+        {
+            return new TrialProc { Proc = proc, Times = numTimes };
+        }
 
         public FollowerAction(SimAvatar impl, SimPosition position)
             : base(impl,position)
@@ -27,12 +54,17 @@ namespace cogbot.TheOpenSims
             maxDistance = 3;// position.GetSizeDistance();
             Target = position;
             FollowThread = new Thread(FollowLoop);
-            FollowThread.Name = ToString();
+            FollowThread.Name = DebugName;
         }
 
         public override string ToString()
         {
-            return "" + TheBot.GetName() + ": Follow " + Target + " -> " + TheBot.DistanceVectorString(Target);
+            return DebugName;
+        }
+
+        protected string DebugName
+        {
+            get { return TheBot.GetName() + ": Follow " + Target + " -> " + TheBot.DistanceVectorString(Target); }
         }
 
         public override BotNeeds ProposedChange()
@@ -51,15 +83,6 @@ namespace cogbot.TheOpenSims
         }
         public void FollowLoop()
         {
-            MovementProceedure[] proceedure = {
-                                                  MovementProceedure.AStar,
-                                                  MovementProceedure.AStar,
-                                                  MovementProceedure.AutoPilot,
-                                                  MovementProceedure.Teleport,
-                                                  //MovementProceedure.FlyTo,
-                                                  MovementProceedure.TurnToAndWalk,
-                                              };
-            int procnum = 0;
             while (KeepFollowing)
             {
                 Thread.Sleep(100);
@@ -77,143 +100,94 @@ namespace cogbot.TheOpenSims
 
                 if (!TheCBot.SalientGoto(Target))
                 {
-                    if (procnum >= proceedure.Length) procnum = 0;
-                    ((SimAvatarClient)TheCBot).SalientMovementProceedure = proceedure[procnum];
-                }
-                ((SimAvatarClient)TheBot).WaitUntilPosSimple(Target.GlobalPosition, Target.GetSizeDistance(), 3, true);
-            }
-        }
-        public void FollowLoop1()
-        {
-            int simpleGotoTarget = 2;
-            int FullPasses = 0;
-            while (KeepFollowing)
-            {
-                Vector3 lastKnown;
-                if (!Target.TryGetSimPosition(out lastKnown))
-                {
-                    DLRConsole.DebugWriteLine("" + this + " Not regions attached " + Target);
-                    Thread.Sleep(2000);
+                    SwitchSalientProc();
                     continue;
                 }
-                double dist = TheBot.Distance(Target);
-
-                if (dist > maxDistance || !CloseEnough())
+                if (!TheCBot.WaitUntilPosSimple(Target.GlobalPosition, Target.GetSizeDistance(), 3, true))
                 {
-                    if (!TheBot.Flying)
-                    {
-                        Vector3 botpos = TheBot.SimPosition;
-                        var pathStore = TheBot.PathStore;
-                        if (pathStore == null)
-                        {
-                            pathStore = TheBot.PathStore;
-                            DLRConsole.DebugWriteLine("" + TheBot + " No pathStore attached to self.. might fall!");
-                            if (simpleGotoTarget < 1) simpleGotoTarget = 2;
-                        }
-                        else
-                        {
-
-                            float theBotPathStoreGetGroundLevel = pathStore.GetGroundLevel(botpos.X, botpos.Y);
-                            if (botpos.Z + 2 > theBotPathStoreGetGroundLevel)
-                            {
-                                // avoid faling from heights
-                                if (AvoidFalls)
-                                {
-                                    Debug("AvoidFalls so wont UseSimpleTurnTo");
-                                    simpleGotoTarget = 0;
-                                    UseSimpleTurnTo = false;
-                                }
-                            }
-                        }
-                    }
-                    if (!Target.IsRegionAttached) continue;
-                    if (UseSimpleTurnTo)
-                    {
-                        if (simpleGotoTarget > 0) Debug("UseSimpleTurnTo");
-                        while (simpleGotoTarget > 0)
-                        {
-                            simpleGotoTarget--;
-                            // TheBot.TurnToward(Target);
-                            dist = TheBot.Distance(Target);
-                            TheCBot.SetMoveTarget(Target, maxDistance);
-                            Thread.Sleep(3000);
-                            if (dist > (TheBot.Distance(Target) + 2))
-                            {
-                                // Simple Follow might have worked. try again
-                                simpleGotoTarget = 2;
-                                continue;
-                            }
-                            TheBot.StopMoving();
-                        }
-                    }
-                    //if (UsePathfinder)
-                    if (CloseEnough()) continue;
-
-                    SimObject simO = Target as SimObject;
-                    if (simO != null && !UseGotoTarget)
-                    {
-                        if (UseFlight || (simO.Flying || TheBot.IsFlying))
-                        {
-                            Debug("UseFlight");
-                            TheBot.Flying = true;
-                            GetBotClient().ExecuteBotCommand("flyto " + simO.ID, TheBot, Debug);
-                        }
-                        if (CloseEnough())
-                        {
-                            simpleGotoTarget++;
-                            continue;
-                        }
-                    }
-
-                    if (UseGotoTarget)
-                    {
-                        Debug("UseGotoTarget");
-                        if (TheCBot.SalientGoto(Target))
-                        {
-                            UseFlight = false;
-                            simpleGotoTarget = 1;
-                            continue;
-                        }
-                        UseFlight = !UseFlight;
-                    }
-
-                    if (CloseEnough())
-                    {
-                        FullPasses = 0;
-                        continue;
-                    }
-
-                    FullPasses++;
-                    if (FullPasses > 1)
-                    {
-                        if (UseTeleport)
-                        {
-                            Debug("UseTeleport");
-                            Vector3d vto = Target.UsePosition.GlobalPosition - TheBot.GlobalPosition;
-                            vto /= UseTeleportSteps;
-                            vto += TheBot.GlobalPosition;
-                            vto.Z = Target.GlobalPosition.Z;
-                            var res =
-                                GetBotClient().ExecuteBotCommand(
-                                    string.Format("teleport {0}", vto.ToRawString()), TheBot, Debug);
-                            if (!res.Success) UseTeleport = false; // cant teleport
-                            TheBot.TurnToward(Target.GlobalPosition);
-                            FullPasses = 0;
-                        }
-                    }
-                    Debug("FullPasses=" + FullPasses);
-                }  
-                else
+                    SwitchSalientProc();
+                } else
                 {
-                    TheBot.TurnToward(Target.GlobalPosition);
-                    Thread.Sleep(1000); // total 3 seconds
+                    SucceedSalientProc();
                 }
             }
         }
 
-        private void Debug(string p, params object[] args)
+        private void SucceedSalientProc()
         {
-            TheBot.Debug(p, args);
+            successes++;
+            if (successes >= proposed.Times)
+            {
+                SwitchSalientProc();
+                successes = 0;
+            }
+        }
+
+        private void SwitchSalientProc()
+        {
+            procnum++;
+            if (procnum >= proceedure.Length) procnum = 0;
+            proposed = proceedure[procnum];
+            SimAvatarClient TheCBot = (SimAvatarClient)this.TheCBot;
+            if (setFlight)
+            {
+                setFlight = false;
+                TheCBot.Flying = false;
+            }
+            switch (proposed.Proc)
+            {
+                case MovementProceedure.AutoPilot:
+                    if (!UseAutoPilot)
+                    {
+                        SwitchSalientProc();
+                        break;
+                    }
+                    CheckAvoidFalls(TheCBot);
+                    break;
+                case MovementProceedure.AStar:
+                    if (!UseGotoTarget)
+                    {
+                        SwitchSalientProc();
+                    }
+                    break;
+                case MovementProceedure.TurnToAndWalk:
+                    if (!UseSimpleTurnTo)
+                    {
+                        SwitchSalientProc();
+                        break;
+                    }
+                    CheckAvoidFalls(TheCBot);
+                    break;
+                case MovementProceedure.FlyTo:
+                    if (!UseFlight)
+                    {
+                        SwitchSalientProc();
+                    }
+                    break;
+                case MovementProceedure.Teleport:
+                    if (!UseTeleport /*|| SimAvatarClient.GotoUseTeleportFallback || SimAvatarClient.MoveUseTeleportFallback*/)
+                    {
+                        SwitchSalientProc();
+                    }
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException("proposed.Proc=" + proposed.Proc);
+            }
+            TheCBot.SalientMovementProceedure = proposed.Proc;
+        }
+
+        private void CheckAvoidFalls(SimAvatarClient TheCBot)
+        {
+            if (AvoidFalls && !TheCBot.Flying)
+            {
+                if (!AvoidFallsWithFlight)
+                {
+                    SwitchSalientProc();
+                    return;
+                }
+                TheCBot.Flying = true;
+                setFlight = true;
+            }
         }
 
         private bool CloseEnough()

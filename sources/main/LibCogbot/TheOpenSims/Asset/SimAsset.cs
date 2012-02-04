@@ -344,7 +344,7 @@ namespace cogbot.TheOpenSims
         public string Name
         {
             get
-            {
+            {                
                 if (_NamesList.Count == 0)
                 {
                     // InventoryFolder AF = (InventoryFolder) Client.Inventory.Store[Client.AnimationFolder];
@@ -373,6 +373,7 @@ namespace cogbot.TheOpenSims
             }
             set
             {
+                value = SimAssetStore.ToAssetName(value);
                 if (string.IsNullOrEmpty(value)) return;
                 string intern = string.Intern(value);
                 if (!_NamesList.Contains(value))

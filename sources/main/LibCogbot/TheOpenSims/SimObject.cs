@@ -177,8 +177,11 @@ namespace cogbot.TheOpenSims
         {
             throw new NotImplementedException("not really a mover!");
         }
-
         public virtual void StopMoving()
+        {
+            StopMoving(false);
+        }
+        public virtual void StopMoving(bool fullStop)
         {
             throw new NotImplementedException("not really a mover!");
         }
@@ -383,7 +386,7 @@ namespace cogbot.TheOpenSims
 
         public virtual bool TeleportTo(SimRegion R, Vector3 local)
         {
-            StopMoving();
+            StopMoving(true);
             return SetObjectPosition(R.LocalToGlobal(local));
         }
 
@@ -417,7 +420,8 @@ namespace cogbot.TheOpenSims
         {
             Vector3d Current = GlobalPosition;
             Vector3d diff = targetPosition - Current;
-            while (diff.Length() > 10)
+            int maxReduce = 10;
+            while (diff.Length() > 10 && maxReduce-- > 0)
             {
                 diff.X *= 0.75f;
                 diff.Y *= 0.75f;
@@ -2403,6 +2407,7 @@ namespace cogbot.TheOpenSims
                 if (!IsSolidCachedKnown)
                 {
                     IsSolidCachedKnown = true;
+                    if (IsPhantom) return false;
                     IsSolidCachedTrue = !(IsPhantom || Affordances.IsTypeOf(SimTypeSystem.PASSABLE) != null);
                 }
                 return IsSolidCachedTrue;

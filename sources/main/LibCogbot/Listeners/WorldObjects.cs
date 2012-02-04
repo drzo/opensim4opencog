@@ -168,7 +168,7 @@ namespace cogbot.Listeners
         private static readonly TaskQueueHandler EventQueue = new TaskQueueHandler("World EventQueue");
         private static readonly TaskQueueHandler CatchUpQueue = new TaskQueueHandler("Simulator catchup", TimeSpan.FromSeconds(60), false);
         private static readonly TaskQueueHandler MetaDataQueue = PropertyQueue;//new TaskQueueHandler("MetaData Getter", TimeSpan.FromSeconds(0), false);
-        public static readonly TaskQueueHandler OnConnectedQueue = new TaskQueueHandler("OnConnectedQueue", TimeSpan.FromMilliseconds(20), false);
+        public readonly TaskQueueHandler OnConnectedQueue = new TaskQueueHandler("OnConnectedQueue", TimeSpan.FromMilliseconds(20), false);
         public static readonly TaskQueueHandler SlowConnectedQueue = SimAssetStore.SlowConnectedQueue;
         internal static readonly Dictionary<UUID, object> UUIDTypeObjectReal = new Dictionary<UUID, object>();
         internal static readonly object UUIDTypeObject = UUIDTypeObjectReal;

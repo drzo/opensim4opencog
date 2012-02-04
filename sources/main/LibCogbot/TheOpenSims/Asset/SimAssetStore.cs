@@ -214,7 +214,7 @@ namespace cogbot.TheOpenSims
 
         static void AddSound(string fName, string id)
         {
-            fName = fName.ToLower();
+            fName = ToAssetName(fName);
             UUID uid = UUID.Parse(id);
             SimAsset sound = FindOrCreateAsset(uid, AssetType.Sound);
             sound.Name = fName;
@@ -234,6 +234,18 @@ namespace cogbot.TheOpenSims
                 }
             }
             InternAsset(sound);
+        }
+
+        public static string ToAssetName(string fName)
+        {
+            //money_increase_cash_register_bell
+            fName = fName.ToLower().
+                Replace("(", "").Replace(")", "").
+                Replace(".csv", "CSV").
+                Replace(".", "").Replace(",", "").Replace("?", "").
+                Replace("/", " ").Replace("_", " ").Trim().Replace(" ", "_").
+                Replace("CSV", ".csv");
+            return fName;
         }
 
         static internal void FillAssetNames()
@@ -829,6 +841,10 @@ namespace cogbot.TheOpenSims
                 AddSound("window close", "2c346eda-b60c-ab33-1119-b8941916a499");
                 AddSound("window open (same as above)", "c80260ba-41fd-8a46-768a-6bf236360e3a");
                 AddSound("zipper? (Floor squeek)", "6cf2be26-90cb-2669-a599-f5ab7698225f");
+                foreach (KeyValuePair<UUID, string> valuePair in Sounds.ToDictionary())
+                {
+                    AddSound(valuePair.Value.ToLower().Replace("_"," "), valuePair.Key.ToString());
+                }
 
                 if (WorldObjects.MaintainAssetsInFolders && Directory.Exists("sound_files/"))
                 {
@@ -1306,7 +1322,7 @@ namespace cogbot.TheOpenSims
 
         static SimAsset AddTexture(string fName, string id)
         {
-            fName = fName.ToLower();
+            fName = ToAssetName(fName);
             UUID uid = UUID.Parse(id);
             SimAsset texture = FindOrCreateAsset(uid, AssetType.Texture);
             texture.NeedsRequest = false;
@@ -1344,7 +1360,7 @@ namespace cogbot.TheOpenSims
 
         static SimAsset AnimUUID(string fName, string id)
         {
-            fName = fName.ToLower();
+            fName = ToAssetName(fName);
             UUID uid = UUID.Parse(id);
             SimAsset anim = FindOrCreateAsset(uid, AssetType.Animation);
             anim.NeedsRequest = false;
@@ -1370,6 +1386,7 @@ namespace cogbot.TheOpenSims
 
         public static bool BytesFromFile(string fName, out byte[] bytes, out string usedName)
         {
+            fName = ToAssetName(fName);
             usedName = fName;
             if (File.Exists("bvh_files/" + usedName + ".animation"))
             {
@@ -1408,11 +1425,13 @@ namespace cogbot.TheOpenSims
 
         static void AddAssetAlias(string alias, string onto, AssetType type)
         {
+            alias = ToAssetName(alias);
+            onto = ToAssetName(onto);
             UUID prev = TheStore.GetAssetUUID(onto, type, false);
             if (prev != UUID.Zero)
             {
                 SimAsset A = FindAsset(prev);
-                string key = string.Intern(alias.ToLower());
+                string key = string.Intern(alias);
                 if (A != null) A.Name = alias;
                 nameNameMap[key] = string.Intern(onto.ToLower());
             }
@@ -1464,16 +1483,16 @@ namespace cogbot.TheOpenSims
 
         public UUID GetAssetUUID(string a, AssetType type, bool partialMatching)
         {
-            a = a.ToLower();
+            a = ToAssetName(a);
             FillAssetNames();
             UUID partial = UUID.Zero;// = default(UUID);
-            if (UUID.TryParse(a,out partial))
+            if (UUID.TryParse(a, out partial))
             {
                 return partial;
             }
             foreach (String name in nameAsset.Keys)
             {
-                String sname = name.ToLower();
+                String sname = ToAssetName(name);
                 SimAsset aset = nameAsset[name];
                 if (sname.Equals(a))
                 {
@@ -1482,7 +1501,7 @@ namespace cogbot.TheOpenSims
                 }
                 if (partialMatching && sname.Contains(a))
                 {
-                    if (partial==UUID.Zero) partial = aset.AssetID;
+                    if (partial == UUID.Zero) partial = aset.AssetID;
                 }
             }
             return partial;
@@ -1492,7 +1511,7 @@ namespace cogbot.TheOpenSims
         {
             FillAssetNames();
             SimAsset anim = FindOrCreateAsset(uUID, type);
-            anim.Name = s;
+            anim.Name = ToAssetName(s);
             InternAsset(anim);
             return anim;
         }
@@ -1526,6 +1545,7 @@ namespace cogbot.TheOpenSims
 
         public static List<UUID> Matches(String name)
         {
+            name = ToAssetName(name);
             List<UUID> matches = new List<UUID>();
             //lock (SimAssets) 
                 foreach (var A in SimAssets)
