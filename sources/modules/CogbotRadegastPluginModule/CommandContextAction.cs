@@ -190,7 +190,7 @@ namespace CogbotRadegastPluginModule
 
             TryCatch(() =>
                          {
-                             instance.CommandsManager.ExecuteCommand("//thread " + ActName + " " + obj);
+                             instance.CommandsManager.ExecuteCommand("/thread " + ActName + " " + obj);
                          });
 
         }
