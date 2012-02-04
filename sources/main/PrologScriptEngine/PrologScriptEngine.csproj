@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{A94E1AF0-C10A-4B74-8A58-8EEC4B8D2075}</ProjectGuid>
+    <ProjectGuid>{302E1D02-E108-43BC-93B2-8EF0E910747C}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon></ApplicationIcon>
@@ -94,37 +94,37 @@
   <ItemGroup>
     <ProjectReference Include="..\LibCogbot\Cogbot.Library.csproj">
       <Name>Cogbot.Library</Name>
-      <Project>{C5404EA5-A365-40CF-B335-9C3CD2C7F5FB}</Project>
+      <Project>{E77D1256-A356-4A94-BF9A-49B59095887F}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\MushDLR223\MushDLR223.csproj">
       <Name>MushDLR223</Name>
-      <Project>{C1167694-8EF3-4539-A5C0-14F61AAB088A}</Project>
+      <Project>{B83CB4AE-0B03-4C91-826C-786CF3B54A00}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\PathSystem3D\PathSystem3D.csproj">
       <Name>PathSystem3D</Name>
-      <Project>{79EF351C-8E1B-4DC3-8D69-1CCFD074C0CA}</Project>
+      <Project>{1CD11B67-E435-4300-9C18-5BEE27E2B8A9}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse\OpenMetaverse.csproj">
       <Name>OpenMetaverse</Name>
-      <Project>{19575429-4721-4D88-AE58-B0C80092344D}</Project>
+      <Project>{FFC869A1-42DE-4C43-AC1B-1832E66CE97C}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverseTypes\OpenMetaverseTypes.csproj">
       <Name>OpenMetaverseTypes</Name>
-      <Project>{E35F8C50-6EFE-4462-9866-2F28B038D414}</Project>
+      <Project>{A96E6223-DB55-48BB-B2A8-F0B2A5C3869E}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\DotLisp\DotLisp.csproj">
       <Name>DotLisp</Name>
-      <Project>{C16E33E9-9845-4325-95A1-F535DDC726A0}</Project>
+      <Project>{71C6F274-AA87-489D-A738-4BC7FC6D0926}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\Radegast\Radegast.csproj">
       <Name>Radegast</Name>
-      <Project>{18287A04-D665-4DE0-B3C0-EB4F032B90D7}</Project>
+      <Project>{6718FFFC-4DBF-4747-8C17-B77B537A596B}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
