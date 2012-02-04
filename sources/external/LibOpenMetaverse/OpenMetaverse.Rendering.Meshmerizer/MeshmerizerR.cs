@@ -277,7 +277,8 @@ namespace OpenMetaverse.Rendering
                 case OMVR.DetailLevel.Low:
                     mesherLod /= 4;
                     break;
-            }PrimMesher.SculptMesh newMesh =
+            }
+            PrimMesher.SculptMesh newMesh =
                 new PrimMesher.SculptMesh(scupltTexture, smSculptType, mesherLod, true, prim.Sculpt.Mirror, prim.Sculpt.Invert);
 
             int numPrimFaces = 1;       // a scuplty has only one face

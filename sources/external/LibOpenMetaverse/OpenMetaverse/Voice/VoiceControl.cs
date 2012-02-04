@@ -186,6 +186,7 @@ namespace OpenMetaverse.Voice
             // If voice provisioning capability is already available,
             // proceed with voice startup.   Otherwise the EventQueueRunning
             // event will do it.
+            if (Client.Network.CurrentSim==null) return;
             System.Uri vCap =
                  Client.Network.CurrentSim.Caps.CapabilityURI("ProvisionVoiceAccountRequest");
             if (vCap != null)
