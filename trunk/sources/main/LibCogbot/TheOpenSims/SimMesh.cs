@@ -177,16 +177,19 @@ namespace cogbot.TheOpenSims
             bool verySmall = OuterBox.EdgeSize < WorldPathSystem.MinEdgeSizeOfSimplify;
             if (verySmall)
             {
+                int b = InnerBoxes.Count;
                 InnerBoxes.Clear();
                 AddPos(Position);
                 InnerBoxes.Add(OuterBox);
+                DLRConsole.DebugWriteLine("Simplfy EdgeSize {0} -> 1 ", b,
+                          InnerBoxes.Count + " " + OuterBox.EdgeSize + " " + this.GetObjectName());
             }
             else
             {
                 if (WorldObjects.SimplifyBoxes)
                 {
                     int b = InnerBoxes.Count;
-                    InnerBoxes = Box3Fill.Simplify((List<Box3Fill>) InnerBoxes);
+                    InnerBoxes = Box3Fill.Simplify((List<Box3Fill>)InnerBoxes);
                     if (b > 2000 || InnerBoxes.Count * 4 < b)
                         DLRConsole.DebugWriteLine("Simplfy mesh {0} -> {1} ", b,
                                                   InnerBoxes.Count + " " + OuterBox.Mass + " " + this.GetObjectName());

@@ -398,7 +398,7 @@ namespace cogbot
 
         public event InstantMessageSentArgs OnInstantMessageSent; 
 
-        public VoiceManager VoiceManager;
+        readonly public VoiceManager VoiceManager;
         // Shell-like inventory commands need to be aware of the 'current' inventory folder.
         public InventoryFolder CurrentDirectory = null;
 
@@ -409,7 +409,10 @@ namespace cogbot
         readonly private System.Timers.Timer updateTimer;
 
         public Listeners.WorldObjects WorldSystem;
-        //   static public ClientManager SingleInstance = null;
+        static public BotClient SingleInstance
+        {
+            get { return cogbot.ClientManager.SingleInstance.LastBotClient; }
+        }
         public static int debugLevel = 2;
         public bool GetTextures = cogbot.ClientManager.DownloadTextures;
 
@@ -829,7 +832,7 @@ namespace cogbot
                             return currentGroup.ID;
                 }
             }
-            return UUID.Zero;
+            return WorldSystem.FindUUIDForName(groupName);
         }
 
         private void Groups_OnCurrentGroups(object sender, CurrentGroupsEventArgs e)

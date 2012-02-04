@@ -39,8 +39,7 @@ namespace cogbot.TheOpenSims
         private string PostureType;
         private SimObjectEvent LastPostureEvent;
         readonly private object postureLock = new object();
-        [ConfigSetting]
-        public static bool UseTeleportFallback = false;
+
         public bool IsProfile;
         public Dictionary<UUID, AvatarGroup> GroupRoles { get; set; }
 
@@ -117,6 +116,18 @@ namespace cogbot.TheOpenSims
                 base.IsPhantom = value;
             }
         }
+        public override bool IsSolid
+        {
+            get
+            {
+                return false && base.IsSolid;
+            }
+            set
+            {
+                base.IsSolid = value;
+            }
+        }
+
         public override bool IsRoot
         {
             get { Avatar theAvatar = this.theAvatar; return theAvatar == null || theAvatar.ParentID == 0; }
@@ -289,7 +300,9 @@ namespace cogbot.TheOpenSims
         public SimAvatarImpl(UUID id, WorldObjects objectSystem, Simulator sim)
             : base(id, objectSystem, sim)
         {
+            Affordances.ObjectType.SuperType.Add(SimTypeSystem.GetObjectType("Avatar"));
             _knownTypeUsages = new ListAsSet<SimTypeUsage>();
+            WorldObjects.SimAvatars.Add(this);
         }
 
         public FriendInfo FriendshipInfo

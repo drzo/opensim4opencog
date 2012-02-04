@@ -26,7 +26,7 @@ namespace cogbot
 
     public class ClientManager : IDisposable,ScriptExecutorGetter
     {
-        private static readonly TaskQueueHandler OneAtATimeQueue = new TaskQueueHandler("ClientManager OneAtATime", new TimeSpan(0, 0, 0, 0, 10), true, false);
+        public static readonly TaskQueueHandler OneAtATimeQueue = new TaskQueueHandler("ClientManager OneAtATime", new TimeSpan(0, 0, 0, 0, 10), true, false);
         public static readonly TaskQueueHandler PostAutoExec = new TaskQueueHandler("PostExec", new TimeSpan(0, 0, 0, 0, 10), false, false);
         public static object SingleInstanceLock = new object();
         public static event Action<BotClient> BotClientCreated;
@@ -157,6 +157,7 @@ namespace cogbot
             RegisterAssembly(Assembly.GetExecutingAssembly());
             RegisterAssembly(GetType().Assembly);
             RegisterAssembly(typeof(DLRConsole).Assembly);
+            RegisterAssembly(typeof(PathSystem3D.Navigation.SimPathStore).Assembly);
         }
 
 
