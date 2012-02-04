@@ -60,6 +60,7 @@ namespace CycWorldModule.DotCYC
         static public CycFort queryMt;
         static public CycFort staticStateMt;
         static public int KBTick = 0;
+        private CycWorldModule cycWorldModule;
         [ConfigSetting(SkipSaveOnExit = true)]
         static public bool ProcessEvents = true;
         private bool IsDisposing;
@@ -201,12 +202,19 @@ namespace CycWorldModule.DotCYC
 
         public bool EventsEnabled
         {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
+            get
+            {
+                return ProcessEvents;
+            }
+            set
+            {
+                ProcessEvents = value;
+            }
         }
 
         public SimCyclifier(CycWorldModule tf)
         {
+            cycWorldModule = tf;
             eventFilter = new SimEventFilterSubscriber(this, false);
             lock (SimCyclifierLock)
             {
@@ -425,7 +433,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
                 assertCycLExpression(
                     "(#$pointInSystem (#$PointInRegionFn \"Daxlandia\" 128 120 27) (#$SimRegionCoordinateSystemFn (#$SimRegionFn \"Daxlandia\")))", vocabMt);
             }
-            WorldObjects.OnConnectedQueue.Enqueue(ProbeNewAssets);
+            cycWorldModule.client.WorldSystem.OnConnectedQueue.Enqueue(ProbeNewAssets);
             // This will be the runtime state
             cycAccessQueueHandler.NoQueue = false;
         }
