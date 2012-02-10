@@ -1,0 +1,48 @@
+#labels Phase-Support
+#Roadmap of Cogbot
+
+= The ongoing roadmap =
+
+Please edit this only after some concensus on roadmap
+
+
+= Direction =
+
+== Annie == 
+# learn C#, 
+# get latest compiling from Doug,  
+# make the afghan village,
+
+# Hunt for bounties
+# documentation
+# Add 'not' to the adjectives
+# Look for other improvements to the command language
+# Integrate talespin to take a goal and rule set and make a list of actions.
+
+
+== dmiles ==
+
+# Help Annie get compiling again
+# get low level cogobt movement to use prim pusher
+# Make a publically downloadable version of opecog (small version ) 
+then an overlay pack that has all the chatbot stuff in it
+# simexport
+# revisit RTParser and see if there is a salvable chatbot in there somewhere
+# Progress to ProgramK Prolog IAML bot
+
+
+needed for Afghan village:
+* multiple AV's
+* easy deployment
+* pathfinding (to level we've seen)
+* some aiml or aiml-ish implementation integrated
+* some tale-spinnish thing
+* headless mode
+
+dmiles leaving March 28th for a month to Israel
+
+
+
+
+
+
