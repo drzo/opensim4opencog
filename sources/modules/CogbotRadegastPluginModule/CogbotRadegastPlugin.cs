@@ -98,6 +98,7 @@ namespace CogbotRadegastPluginModule
         public void StartPlugin0(RadegastInstance inst)
         {
             RadegastInstance = inst;
+            Control.CheckForIllegalCrossThreadCalls = false;
             AddRadegastEvents();
             CogbotContextMenuListener = new CogbotContextMenuListener();
             CogbotNoticeuListener = new CogbotNotificationListener();
