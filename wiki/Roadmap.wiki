@@ -9,15 +9,16 @@ Please edit this only after some concensus on roadmap
 = Direction =
 
 == Annie == 
-# learn C#, 
-# get latest compiling from Doug,  
-# make the afghan village,
+=== first ===
+ # learn C#, 
+ # get latest compiling from Doug,  
+ # make the afghan village,
 
-# Hunt for bounties
-# documentation
-# Add 'not' to the adjectives
-# Look for other improvements to the command language
-# Integrate talespin to take a goal and rule set and make a list of actions.
+=== later ===
+ # documentation
+ # Add 'not' to the adjectives
+ # Look for other improvements to the command language
+ # Integrate talespin to take a goal and rule set and make a list of actions.
 
 
 == dmiles ==
@@ -31,7 +32,8 @@ then an overlay pack that has all the chatbot stuff in it
 # Progress to ProgramK Prolog IAML bot
 
 
-needed for Afghan village:
+== needed for Afghan village ==
+
 * multiple AV's
 * easy deployment
 * pathfinding (to level we've seen)
@@ -40,8 +42,6 @@ needed for Afghan village:
 * headless mode
 
 dmiles leaving March 28th for a month to Israel
-
-
 
 
 
