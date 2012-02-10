@@ -185,16 +185,24 @@ namespace SbsSW.SwiPlCs
         {
             lock (TypesLoaded)
             {
-                if (TypesLoaded.Contains(t)) return;
+                if (TypesLoaded.Contains(t) || TypesLoading.Contains(t)) return;
                 TypesLoading.Add(t);
                 foreach (var m in t.GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static))
                 {
                     object[] f = m.GetCustomAttributes(typeof(PrologVisible), false);
                     if (f != null && f.Length > 0)
                     {
-                        LoadMethod(m, (PrologVisible)f[0]);
+                        try
+                        {
+                            LoadMethod(m, (PrologVisible) f[0]);
+                        }
+                        catch (Exception e)
+                        {
+                            Warn(m + " caused " + e);
+                        }
                     }
                 }
+                TypesLoading.Remove(t);
                 TypesLoaded.Add(t);
             }
         }

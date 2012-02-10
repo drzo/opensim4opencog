@@ -145,6 +145,21 @@ namespace SbsSW.SwiPlCs
         private static Array GetArrayValue(object getInstance)
         {
             if (getInstance == null) return null;
+            lock (getInstance)
+            {
+                try
+                {
+                    return GetArrayValue0(getInstance);
+                }
+                catch (Exception ex)
+                {
+                    WriteException(ex);
+                    throw;
+                }
+            }
+        }
+        private static Array GetArrayValue0(object getInstance)
+        {
             if (getInstance is Array)
             {
                 return (Array)getInstance;
@@ -156,7 +171,7 @@ namespace SbsSW.SwiPlCs
                 Type[] typeArguments = t.GetGenericArguments();
                 if (typeArguments.Length == 1)
                 {
-                    et = typeArguments[1];
+                    et = typeArguments[0];
                 }
             }
             if (getInstance is ArrayList)
@@ -165,11 +180,31 @@ namespace SbsSW.SwiPlCs
             }
             if (getInstance is ICollection)
             {
-                var collection = ((ICollection)getInstance);
+                var collection = ((ICollection) getInstance);
                 int count = collection.Count;
                 var al = Array.CreateInstance(et, count);
-                collection.CopyTo(al, count);
-                return al;
+                try
+                {
+                    collection.CopyTo(al, 0);
+                    return al;
+                }
+                catch (Exception ex)
+                {
+                    string warn = "CopyTo " + ex;
+                    Warn(warn);
+                    int count2 = collection.Count;
+                    if (count2 != count)
+                    {
+                        ConsoleWriteLine("Collection Modified while in CopyTo! " + count + "->" + count2 + " of " + collection);
+                        throw;
+                    }
+                    int index = 0;
+                    foreach (var e in collection)
+                    {
+                        al.SetValue(e, index++);
+                    }
+                    return al;
+                }
             }
             if (getInstance is IEnumerable)
             {

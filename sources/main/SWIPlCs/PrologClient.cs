@@ -42,11 +42,11 @@ namespace SbsSW.SwiPlCs
         {
             lock (SafeThreads)
             {
+                Application.ThreadExit += new EventHandler(OnThreadExit);
                 var t = Thread.CurrentThread;
                 SafeThreads.Add(t, IntPtr.Zero);
                 int self = libpl.PL_thread_self();
                 engineToThread.Add(self, t);
-                Application.ThreadExit += new EventHandler(OnThreadExit);
             }
         }
 
@@ -60,7 +60,7 @@ namespace SbsSW.SwiPlCs
         {
             lock (SafeThreads)
             {
-
+                lock (unregisteredThreads) unregisteredThreads.Remove(thread);
                 int self = libpl.PL_thread_self();
                 IntPtr _iEngineNumber;
                 IntPtr _oiEngineNumber;
@@ -142,6 +142,7 @@ namespace SbsSW.SwiPlCs
                             int self3 = libpl.PL_thread_self();
                             engineToThread.Add(self3, thread);
                         }
+                        return;
                     }
 
                     engineToThread.Add(self2, thread);
@@ -205,8 +206,13 @@ namespace SbsSW.SwiPlCs
             return iRet;
         }
 
-
+        static readonly List<Thread> unregisteredThreads = new List<Thread>();
         public static void DeregisterThread(Thread thread)
+        {
+            lock (unregisteredThreads) unregisteredThreads.Add(thread);
+        }
+
+        public static void ExitThread(Thread thread)
         {
             return;
             lock (SafeThreads)
@@ -230,6 +236,11 @@ namespace SbsSW.SwiPlCs
                     }
                 }
             }
+        }
+
+        private static void Thread_Exit(object sender, EventArgs e)
+        {
+            
         }
 
         /// <summary>
@@ -588,7 +599,7 @@ namespace SbsSW.SwiPlCs
             if (!JplDisabled)
                 CLASSPATH = IKVMHome + "\\SWIJPL.dll" + ";" + IKVMHome + "\\SWIJPL.jar;" + CLASSPATH0;
 
-            Console.Error.WriteLine("CLASSPATH=" + CLASSPATH);
+            ConsoleWriteLine("CLASSPATH=" + CLASSPATH);
             if (CLASSPATH != null)
             {
                 Environment.SetEnvironmentVariable("CLASSPATH", CLASSPATH);
@@ -695,7 +706,7 @@ namespace SbsSW.SwiPlCs
                 {
                     if (!overwrite)
                     {
-                        System.Console.Error.WriteLine("file: " + file + " copy to " + destName + " " + e0);
+                        ConsoleWriteLine("file: " + file + " copy to " + destName + " " + e0);
                     }
                     else
                     {
@@ -710,7 +721,7 @@ namespace SbsSW.SwiPlCs
                         }
                         catch (Exception e)
                         {
-                            System.Console.Error.WriteLine("file: " + file + " copy to " + destName + " " + e);
+                            ConsoleWriteLine("file: " + file + " copy to " + destName + " " + e);
                         }
                     }
                 }
@@ -727,7 +738,7 @@ namespace SbsSW.SwiPlCs
                     }
                     catch (Exception e)
                     {
-                        System.Console.Error.WriteLine("file: " + info + " copy to " + destName + " " + e);
+                        ConsoleWriteLine("file: " + info + " copy to " + destName + " " + e);
                     }
                 }
             }
@@ -1014,7 +1025,7 @@ namespace SbsSW.SwiPlCs
             PlEngine.RegisterForeign(null, "foo2", 2, new DelegateParameterBacktrack2(FooTwo), Nondeterministic);
             //PlEngine.RegisterForeign(null, "cliFindClass", 2, new DelegateParameter2(PrologCli.cliFindClass), PlForeignSwitches.None);
             PlEngine.RegisterForeign(ExportModule, "cliLoadAssembly", 1, new DelegateParameter1(PrologCli.cliLoadAssembly), PlForeignSwitches.None);
-            Console.Error.WriteLine("RegisterPLCSForeigns");
+            ConsoleWriteLine("RegisterPLCSForeigns");
             PlEngine.RegisterForeign(null, "foo3", 3, new DelegateParameterBacktrackVarArgs(FooThree), Nondeterministic | PlForeignSwitches.VarArgs);
 
             InternMethod(ExportModule, "loadAssembly", typeof(PrologClient).GetMethod("LoadAssembly"));
@@ -1025,7 +1036,7 @@ namespace SbsSW.SwiPlCs
             //PLVOID = PlTerm.PlCompound("@", PlTerm.PlAtom("void"));
             //PLTRUE = PlTerm.PlCompound("@", PlTerm.PlAtom("true"));
             //PLFALSE = PlTerm.PlCompound("@", PlTerm.PlAtom("false"));
-            Console.Error.WriteLine("done RegisterPLCSForeigns");
+            ConsoleWriteLine("done RegisterPLCSForeigns");
         }
 
 
@@ -1212,6 +1223,11 @@ jpl_jlist_demo :-
 
         }
 
+        public static void ConsoleWriteLine(string text)
+        {
+            Console.Error.WriteLine(text);
+        }
+
         public static void WriteException(Exception exception)
         {
             java.lang.Exception ex = exception as java.lang.Exception;
@@ -1227,10 +1243,10 @@ jpl_jlist_demo :-
                 {
                     WriteException(inner);
                 }
-                Console.WriteLine("ST: " + exception.StackTrace);
+                ConsoleWriteLine("ST: " + exception.StackTrace);
             }
 
-            Console.WriteLine("PrologClient: " + exception);
+            ConsoleWriteLine("PrologClient: " + exception);
         }
 
         private static IEnumerable ToEnumer(java.util.Enumeration enumeration)
