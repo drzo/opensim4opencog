@@ -164,7 +164,7 @@ namespace MushDLR223.Utilities
                     var inf = m as FieldInfo;
                     if (inf.IsStatic || HasSingleton)
                     {
-                        object tvalue = Convert.ChangeType(value, inf.FieldType);
+                        object tvalue = ChangeType(value, inf.FieldType);
                         inf.SetValue(target, tvalue);
                         return;
                     }
@@ -179,7 +179,7 @@ namespace MushDLR223.Utilities
                     var inf = m as MethodInfo;
                     if (inf.IsStatic || HasSingleton)
                     {
-                        object tvalue = Convert.ChangeType(value, inf.GetParameters()[0].ParameterType);
+                        object tvalue = ChangeType(value, inf.GetParameters()[0].ParameterType);
                         inf.Invoke(target, new object[] { tvalue });
                         return;
                     }
@@ -187,6 +187,30 @@ namespace MushDLR223.Utilities
                 if (Value == value) return;
                 throw new InvalidOperationException("cannot find how to set " + ToString() + " to " + value);
             }
+        }
+
+        private static object ChangeType(object value, Type type)
+        {
+            if (type.IsInstanceOfType(value)) return value;
+            if (type.IsEnum)
+            {
+                if (value is String)
+                {
+                    string vs = (String) value;
+                    try
+                    {
+                        var e = Enum.Parse(type, vs, false);
+                        if (e != null) return e;
+                        e = Enum.Parse(type, vs, true);
+                        if (e != null) return e;
+                    }
+                    catch (ArgumentException)
+                    {
+
+                    }
+                }
+            }
+            return Convert.ChangeType(value, type);
         }
 
         static object FindValue(MemberInfo m, object target)
