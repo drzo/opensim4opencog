@@ -391,6 +391,13 @@ namespace PathSystem3D.Mesher
             return true;
         }
 
+        public bool IsCompletelyZInside(CollisionObject inner)
+        {
+            if ((inner.MaxZ > MaxZ) ||
+             (inner.MinZ < MinZ)) return false;
+            return true;
+        }
+
         #region IComparable<Box3Fill> Members
 
         public int CompareTo(Box3Fill other)
@@ -423,13 +430,53 @@ namespace PathSystem3D.Mesher
             return s0;
         }
 
+        public static List<CollisionObject> SimplifyZ(List<CollisionObject> simpl)
+        {
+            if (RoundBoxes) foreach (Box3Fill box3Fill in simpl)
+            {
+                box3Fill.Round();
+            }
+            int simplCount = simpl.Count;
+            if (simplCount < 2) return simpl;
+            int c = simplCount * 3 / 4;
+            simpl.Sort(BiggerZ);
+            List<CollisionObject> retval = new List<CollisionObject>(c);
+            int len = simpl.Count;
+            int len1 = len - 1;
+            for (int i = 0; i < len; i++)
+            {
+                var bi = simpl[i];
+                if (bi == null) continue;
+                //bi.MakeAtLeast(0.2f);
+                bool foundInside = false;
+                for (int ii = len1; ii > i; ii--)
+                {
+                    var bii = simpl[ii];
+                    if (bii == null) continue;
+
+                    if (((Box3Fill)bii).IsCompletelyZInside(bi))
+                    {
+                        foundInside = true;
+                        break;
+                    }
+                }
+                if (!foundInside)
+                {
+                    retval.Add(bi);
+                }
+            }
+            return retval;
+        }
+
         public static List<Box3Fill> Simplify1(List<Box3Fill> simpl)
         {
             if (RoundBoxes) foreach (Box3Fill box3Fill in simpl)
             {
                 box3Fill.Round();
             }
-            int c = simpl.Count * 3 / 4;
+            int simplCount = simpl.Count;
+            if (simplCount < 2) return simpl;
+            int c = simplCount * 3 / 4;
             simpl.Sort(Bigger1);
             List<Box3Fill> retval = new List<Box3Fill>(c);
             int len = simpl.Count;
@@ -487,6 +534,14 @@ namespace PathSystem3D.Mesher
             return f1 < f2 ? -1 : 1;
         }
 
+        static int BiggerZ(CollisionObject b1, CollisionObject b2)
+        {
+            float f1 = b1.MaxZ - b1.MinZ;
+            float f2 = b2.MaxZ - b2.MinZ;
+            if (f1 == f2)
+                return 0;
+            return f1 < f2 ? -1 : 1;
+        }
 
         public static List<Box3Fill> Simplify0(List<Box3Fill> simpl)
         {

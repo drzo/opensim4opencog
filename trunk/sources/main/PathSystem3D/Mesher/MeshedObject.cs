@@ -128,7 +128,7 @@ namespace PathSystem3D.Mesher
         //}
 
         protected SimPathStore PathStore { get; set; }// = new List<SimPathStore>();
-        public static bool MeshOnlySolids = false;
+        public static bool MeshOnlySolids = true;
 
         public virtual bool UpdateOccupied(SimPathStore pathStore)
         {

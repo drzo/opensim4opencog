@@ -10,6 +10,7 @@ namespace PathSystem3D.Navigation
     public interface SimMover : PathSystem3D.Navigation.SimPosition, SimDistCalc
     {
         bool TurnToward(Vector3d targetPosition);
+        void StopMoving(bool fullStop);
         void StopMoving();
         bool SimpleMoveTo(Vector3d end, double maxDistance, float maxSeconds);
         void Debug(string format, params object[] args);
@@ -55,14 +56,19 @@ namespace PathSystem3D.Navigation
         public SimMover Mover;
         //public Vector3d FinalLocation;
         public double FinalDistance;
-        public double CloseDistance = 1f;// SimPathStore.LargeScale-SimPathStore.StepSize;
+        static public double CloseDistance = 1f;// SimPathStore.LargeScale-SimPathStore.StepSize;
         static public double TurnAvoid = 0f;
         public bool UseTurnAvoid = false;  // this toggles each time
         public SimPosition FinalPosition;
-        public bool UseSkipping = false;
-        public bool UseReverse = false;
+        static public bool UseSkippingToggle = true;
+        static public bool UseSkippingIntially = false;
+        public bool UseSkipping = UseSkippingIntially;
+        static public bool UseReverse = false;
         public abstract SimMoverState Goto();
         public int completedAt = 0;
+        public static bool UseStarJumpBreakaway = true;
+        public static bool UseStarBreakaway = !UseStarJumpBreakaway;
+        public static bool UseOpenNearbyClosedPassages = true;
 
         // just return v3.Z if unsure
         public virtual double GetZFor(Vector3d v3)
@@ -135,7 +141,7 @@ namespace PathSystem3D.Navigation
             Debug("FollowPath: {0} -> {1} for {2}", v3s.Count, DistanceVectorString(finalTarget), finalDistance);
             int CanSkip = UseSkipping ? 0 : 1; //never right now
             int Skipped = 0;
-            UseSkipping = !UseSkipping;
+            if (UseSkippingToggle) UseSkipping = !UseSkipping;
             int v3sLength = v3s.Count;
             int at = 0;
             int MoveToFailed = 0;
@@ -144,7 +150,7 @@ namespace PathSystem3D.Navigation
                 Vector3d v3 = v3s[at];
                 // try to get there first w/in StepSize 0.2f 
                 v3.Z = GetSimPosition().Z;
-                if (!MoveTo(v3, PathStore.StepSize, 3))
+                if (!MoveTo(v3, PathStore.StepSize, 2))
                 {
                     // didn't make it but are we close enough for govt work?
                     if (Mover.Distance(FinalPosition) < finalDistance)
@@ -173,7 +179,7 @@ namespace PathSystem3D.Navigation
                             continue;
                         }
                         {
-                         Mover.ThreadJump();
+                         if (UseStarJumpBreakaway)  Mover.ThreadJump();
                         }
                         Vector3 l3 = SimPathStore.GlobalToLocal(v3);
                         BlockTowardsVector(l3);
@@ -298,18 +304,29 @@ namespace PathSystem3D.Navigation
             }
             UseTurnAvoid = !UseTurnAvoid;
 
-          
-            if (PathBreakAways.Count == 0)
+            lock (PathBreakAways)
             {
-                PathBreakAways.Add(StarBreakaway);
-                PathBreakAways.Add(StarJumpBreakaway);
+                if (PathBreakAways.Count == 0)
+                {
+                    if (UseStarBreakaway) PathBreakAways.Add(StarBreakaway);
+                    if (UseStarJumpBreakaway) PathBreakAways.Add(StarJumpBreakaway);
+                }
+                if (PathBreakAways.Count == 0)
+                {
+                    return start;
+                }
             }
             PathBreakAwayNumber++;
             if (PathBreakAwayNumber >= PathBreakAways.Count)
             {
                 PathBreakAwayNumber = 0;
             }
-            return PathBreakAways[PathBreakAwayNumber](start);
+            MoveToPassable pathBreakAway = null;
+            lock(PathBreakAways)
+            {
+                pathBreakAway = PathBreakAways[PathBreakAwayNumber];
+            }
+            return pathBreakAway(start);
         }
 
         private Vector3 StarBreakaway(Vector3 start)
@@ -412,7 +429,7 @@ namespace PathSystem3D.Navigation
 
         public virtual bool OpenNearbyClosedPassages()
         {
-            return Mover.OpenNearbyClosedPassages();
+            return UseOpenNearbyClosedPassages && Mover.OpenNearbyClosedPassages();
         }
 
         public static Vector3 ZAngleVector(double ZAngle)
