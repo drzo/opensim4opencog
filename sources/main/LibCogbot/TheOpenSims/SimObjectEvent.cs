@@ -465,5 +465,21 @@ namespace cogbot.TheOpenSims
         {
             Parameters.Add(new NamedParam(name, value));
         }
+
+        public object this[string target]
+        {
+            get
+            {
+                foreach (NamedParam param in Parameters)
+                {
+                    if (param.Key == target) return param.ObjectValue;
+                }
+                foreach (NamedParam param in Parameters)
+                {
+                    if (param.Key.ToLower().Contains(target.ToLower())) return param.ObjectValue;
+                }
+                throw new ArgumentOutOfRangeException(target);
+            }
+        }
     }
 }

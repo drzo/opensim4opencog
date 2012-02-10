@@ -102,7 +102,7 @@ namespace cogbot.TheOpenSims
         private DateTime ThisUpdateShown;
         public static int PipesAlive = 0;
         public static int PipesNumberNext = 0;
-        public static string PipeMaker = "";//"SEC";
+        public static string PipeMaker = "SEC";
         public static bool UseSimpleTurnToward = true;
         public override void IndicateRoute(IEnumerable<Vector3d> list, Color color)
         {
@@ -775,12 +775,12 @@ namespace cogbot.TheOpenSims
         }
 
 
-        private BotClient Client0;
-        private GridClient Client
+        //private BotClient Client0;
+        public override BotClient Client
         {
             get
             {
-                return Client0;
+                return Client0 ?? base.Client;
             }
         }
 

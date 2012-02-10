@@ -249,6 +249,8 @@ namespace cogbot.Listeners
             SimAssetStore.TaskQueueStart();
             SlowConnectedQueue.Enqueue(() => SlowConnectedQueue.DebugQueue = false);
             SlowConnectedQueue.Start();
+            TaskInvGrabber.Start();
+
         }
 
         public override void Network_OnCurrentSimChanged(object sender, SimChangedEventArgs e)

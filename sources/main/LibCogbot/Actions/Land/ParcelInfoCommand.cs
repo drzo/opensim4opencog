@@ -51,24 +51,30 @@ namespace cogbot.Actions.Land
                     Success(string.Format("Downloaded {0} Parcels in {1} " + Environment.NewLine,CurSim.Parcels.Count, CurSim.Name));
 
                     CurSim.Parcels.ForEach(delegate(Parcel parcel)
-                                                                  {
-                                                                      Success(string.Format(
-                                                                          "Parcel[{0}]: Name: \"{1}\", Description: \"{2}\" ACLBlacklist Count: {3}, ACLWhiteList Count: {5} Traffic: {4}" +
-                                                                          Environment.NewLine,
-                                                                          parcel.LocalID, parcel.Name, parcel.Desc,
-                                                                          parcel.AccessBlackList.Count, parcel.Dwell,
-                                                                          parcel.AccessWhiteList.Count));
-                                                                      //foreach (ParcelManager.ParcelAccessEntry white in parcel.AccessWhiteList)
-                                                                      //{
-                                                                      //    if(white.AgentID != UUID.Zero)
-                                                                      //        sb.AppendFormat("\tAllowed Avatar {0}" + System.Environment.NewLine, white.AgentID);
-                                                                      //}
-                                                                      //foreach (ParcelManager.ParcelAccessEntry black in parcel.AccessBlackList)
-                                                                      //{
-                                                                      //    if(black.AgentID != UUID.Zero)
-                                                                      //        sb.AppendFormat("\t Banned Avatar {0}" + System.Environment.NewLine, black.AgentID);
-                                                                      //}
-                                                                  });
+                                               {
+                                                   Success(string.Format(
+                                                               "Parcel[{0}]: Name: \"{1}\", Description: \"{2}\" ACLBlacklist Count: {3}, ACLWhiteList Count: {5} Traffic: {4}" +
+                                                               Environment.NewLine,
+                                                               parcel.LocalID, parcel.Name, parcel.Desc,
+                                                               parcel.AccessBlackList.Count, parcel.Dwell,
+                                                               parcel.AccessWhiteList.Count));
+                                                   Success(Helpers.StructToString(parcel));
+                                                   foreach (
+                                                       ParcelManager.ParcelAccessEntry white in parcel.AccessWhiteList)
+                                                   {
+                                                       if (white.AgentID != UUID.Zero)
+                                                           sb.AppendFormat(
+                                                               "\tAllowed Avatar {0}" + Environment.NewLine,
+                                                               white.AgentID);
+                                                   }
+                                                   foreach (
+                                                       ParcelManager.ParcelAccessEntry black in parcel.AccessBlackList)
+                                                   {
+                                                       //    if(black.AgentID != UUID.Zero)
+                                                       sb.AppendFormat("\t Banned Avatar {0}" + Environment.NewLine,
+                                                                       black.AgentID);
+                                                   }
+                                               });
 
                 }
                 else

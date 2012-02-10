@@ -7,6 +7,7 @@ using cogbot.Listeners;
 using cogbot.Utilities;
 using MushDLR223.Utilities;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using PathSystem3D.Mesher;
 using PathSystem3D.Navigation;
 using System.Reflection;
@@ -223,9 +224,24 @@ namespace cogbot.TheOpenSims
             return false;
         }
 
+        protected BotClient Client0;
+        public virtual BotClient Client
+        {
+            get
+            {
+                if (Client0 == null)
+                {
+                    if (RegionHandle != 0)
+                    {
+                        Client0 = ClientManager.GetBotByGridClient(GetSimulator().Client);
+                    }
+                }
+                return Client0 ?? WorldSystem.client;
+            }
+        }
         public virtual void Touch(SimObject simObject)
         {
-            WorldSystem.client.Self.Touch(simObject.Prim.LocalID);
+            Client.Self.Touch(simObject.Prim.LocalID);
         }
 
         #endregion
@@ -1052,6 +1068,7 @@ namespace cogbot.TheOpenSims
                     {
                         WorldSystem.StartTextureDownload(prim.Sculpt.SculptTexture);
                     }
+                    TaskInvGrabber.Enqueue(StartGetTaskInventory);
                 }
         }
 
@@ -1734,6 +1751,10 @@ namespace cogbot.TheOpenSims
             }
         }
 
+        protected TaskQueueHandler TaskInvGrabber
+        {
+            get { return WorldObjects.TaskInvGrabber; }
+        }
         protected TaskQueueHandler ParentGrabber
         {
             get { return WorldObjects.ParentGrabber; }
@@ -2243,7 +2264,109 @@ namespace cogbot.TheOpenSims
             }
         }
 
+        private static readonly List<InventoryBase> EMPTY_TASK_INV = new List<InventoryBase>();
 
+		/// <summary>
+        /// Retrieve a listing of the items contained in a task (Primitive)
+        /// </summary>
+        /// <param name="objectID">The tasks <seealso cref="UUID"/></param>
+        /// <param name="objectLocalID">The tasks simulator local ID</param>
+        /// <param name="timeoutMS">milliseconds to wait for reply from simulator</param>
+        /// <returns>A list containing the inventory items inside the task or null
+        /// if a timeout occurs</returns>
+        /// <remarks>This request blocks until the response from the simulator arrives 
+        /// or timeoutMS is exceeded</remarks>
+        public void StartGetTaskInventory()
+        {
+            InventoryManager man = Client.Inventory;
+            man.TaskInventoryReply += ti_callback;
+            man.RequestTaskInventory(LocalID);
+        }
+
+        private ulong xferID;
+        private void ti_callback(object sender, TaskInventoryReplyEventArgs e)
+        {
+            if (e.ItemID == ID)
+            {
+                InventoryManager man = Client.Inventory;
+                String filename = e.AssetFilename;
+                man.TaskInventoryReply -= ti_callback;
+
+                if (!String.IsNullOrEmpty(filename))
+                {
+                    Client.Assets.XferReceived += xferCallback;
+
+                    // Start the actual asset xfer
+                    xferID = Client.Assets.RequestAssetXfer(filename, true, false, UUID.Zero, AssetType.Unknown, true);
+                }
+                else
+                {
+                    Logger.DebugLog("Task is empty for " + ID, Client);
+                    objectinventory = EMPTY_TASK_INV;
+                }
+            }
+        }
+
+        private void xferCallback(object sender, XferReceivedEventArgs e)
+        {
+            if (e.Xfer.XferID == xferID)
+            {
+                Client.Assets.XferReceived -= xferCallback;
+                String taskList = Utils.BytesToString(e.Xfer.AssetData);
+                objectinventory = InventoryManager.ParseTaskInventory(taskList);
+            }
+        }
+
+        public string Missing
+        {
+            get
+            {
+                string missing = "";
+                if (objectinventory == null)
+                {
+                    missing += " TaskInv";
+                }
+                if (_Prim0 == null)
+                {
+                    missing += " Prim";
+                }
+                if (_Parent == null)
+                {
+                    missing += " Parent";
+                }
+                if (Properties == null)
+                {
+                    missing += " Props";
+                }
+                if (RegionHandle == 0)
+                {
+                    missing += " RHandle";
+                }
+                if (IsKilled)
+                {
+                    missing += " Killed";
+                }
+                return missing.TrimStart();
+            }
+        }
+        private List<InventoryBase> objectinventory;
+        // might take 10 secoinds the first time
+        public virtual List<InventoryBase> TaskInventory
+        {
+            get
+            {
+                if (objectinventory == null)
+                {
+                    if (InventoryEmpty)
+                    {
+                        return EMPTY_TASK_INV;
+                    }
+                    List<InventoryBase> ibs = Client.Inventory.GetTaskInventory(ID, LocalID, 10000);
+                    if (ibs != null) objectinventory = ibs;
+                }
+                return objectinventory;
+            }
+        }
         public virtual bool OnEffect(string effectType, object t, object p, float duration, UUID id)
         {
             SimObjectEvent newSimObjectEvent = new SimObjectEvent(SimEventStatus.Once, effectType, SimEventType.EFFECT, SimEventClass.REGIONAL,
@@ -2840,6 +2963,7 @@ namespace cogbot.TheOpenSims
         Vector3 GetSimScale();
         Simulator GetSimulator();
         bool Flying { get; set; }
+        bool InventoryEmpty { get; }
         bool IsInside(Vector3 L);
         bool IsKilled { set; }
         bool IsControllable { get; }
@@ -2912,6 +3036,7 @@ namespace cogbot.TheOpenSims
         bool TryGetGlobalPosition(out Vector3d pos);
         void UpdatePosition(ulong handle, Vector3 pos);
         Queue<SimObjectEvent> ActionEventQueue { get; set; }
-
+        List<InventoryBase> TaskInventory { get;  }
+        string Missing { get; }
     }
 }

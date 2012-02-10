@@ -30,6 +30,7 @@ using Settings=OpenMetaverse.Settings;
 using cogbot.Actions.Agent;
 using System.Text;
 using Type=System.Type;
+using UUIDFactory=cogbot.Listeners.UUIDFactory;
 
 //using RadegastTab = Radegast.SleekTab;
 
@@ -772,8 +773,7 @@ namespace cogbot
             {
                 //TODO MAKE DEBUG MESSAGE  WriteLine(String.Format("Got the group ID for {0}, requesting group members...", sim.Client));
                 GroupID = p.AgentData.ActiveGroupID;
-
-                sim.Client.Groups.RequestGroupMembers(GroupID);
+                if (!UUIDFactory.IsNullOrZero(GroupID)) sim.Client.Groups.RequestGroupMembers(GroupID);
             }
         }
 

@@ -162,6 +162,7 @@ namespace cogbot.Listeners
         private static readonly TaskQueueHandler PropertyQueue = new TaskQueueHandler("NewObjectQueue", TimeSpan.Zero, true);
         public static readonly TaskQueueHandler UpdateObjectData = new TaskQueueHandler("UpdateObjectData");
         public static readonly TaskQueueHandler ParentGrabber = new TaskQueueHandler("ParentGrabber", TimeSpan.FromSeconds(1), false);
+        public static readonly TaskQueueHandler TaskInvGrabber = new TaskQueueHandler("TaskInvGrabber", TimeSpan.FromMilliseconds(100), false);
 
         private static readonly object SelectObjectsTimerLock = new object();
         private static readonly List<ThreadStart> ShutdownHooks = new List<ThreadStart>();
