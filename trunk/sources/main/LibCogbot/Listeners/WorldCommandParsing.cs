@@ -420,6 +420,13 @@ namespace cogbot.Listeners
             }
         }
 
+        public void AddGroupProvider(GetGroupFunc bot)
+        {
+            lock (simGroupProviders)
+            {
+                simGroupProviders.Add(new GetGroupFuncHolder(bot));
+            }
+        }
         public ICollection ResolveCollection(string arg0Lower, out int argsUsed, ICollectionProvider skip)
         {
             if (arg0Lower.StartsWith("$")) arg0Lower = arg0Lower.Substring(1);

@@ -208,6 +208,17 @@ namespace cogbot
             set { SetValue(value); }
         }
 
+        public object ObjectValue
+        {
+            get
+            {
+                var val = Value;
+                if (val is NullType) return null;
+                return val;
+            }
+            set { SetValue(value); }
+        }
+
         internal void SetValue(object value)
         {
             _value = value;

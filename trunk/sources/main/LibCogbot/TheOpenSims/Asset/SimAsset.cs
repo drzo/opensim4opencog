@@ -661,15 +661,16 @@ namespace cogbot.TheOpenSims
         #region ITraceable Members
         public bool IsTraced { get; set; }
 
-        public string CFileName(UUID assetID)
+        static public string CFileName(UUID assetID, AssetType type)
         {
+            var Store = SimAssetStore.TheStore;
             var cache = Store.Client.WorldSystem.RegionMasterTexturePipeline.Cache;
             if (cache.ComputeAssetCacheFilename != null)
             {
                 return cache.ComputeAssetCacheFilename(Store.Client.Settings.ASSET_CACHE_DIR, assetID
                     );
             }
-            return Store.Client.Settings.ASSET_CACHE_DIR + Path.DirectorySeparatorChar + assetID.ToString();
+            return Store.Client.Settings.ASSET_CACHE_DIR + cache.FileName(assetID, type);
         }
 
         public string FileName
@@ -681,7 +682,7 @@ namespace cogbot.TheOpenSims
                 UUID uuid = AssetID;
                 if (uuid == UUID.Zero) return null;
                 var cache = Store.Client.WorldSystem.RegionMasterTexturePipeline.Cache;
-                string named = CFileName(uuid);
+                string named = CFileName(uuid, AssetType);
                 if (!string.IsNullOrEmpty(named) && File.Exists(named))
                 {
                     return named;
