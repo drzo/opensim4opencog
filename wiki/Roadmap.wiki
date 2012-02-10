@@ -34,13 +34,11 @@ then an overlay pack that has all the chatbot stuff in it
 
 == needed for Afghan village ==
 
-* multiple AV's
-* easy deployment
-* pathfinding (to level we've seen)
-* some aiml or aiml-ish implementation integrated
-* some tale-spinnish thing
-* headless mode
+ * multiple AV's
+ * easy deployment
+ * pathfinding (to level we've seen)
+ * some aiml or aiml-ish implementation integrated
+ * some tale-spinnish thing
+ * headless mode
 
 dmiles leaving March 28th for a month to Israel
-
-
