@@ -36,7 +36,7 @@ namespace PathSystem3D.Navigation.Debug
 
             CurrentButtons.Clear();
 
-            foreach (IMeshedObject O in WP.GetOccupied(p.MinZ, p.MaxZ))
+            foreach (IMeshedObject O in WP.GetOccupiedObjects(p.MinZ, p.MaxZ))
             {
                 i++;
                 Button B = new Button();
@@ -61,7 +61,7 @@ namespace PathSystem3D.Navigation.Debug
 
         private void object_click(object sender, EventArgs e)
         {
-            IList<CollisionObject> occs = (IList<CollisionObject>)Current.GetOccupied(LastPlane.MinZ, LastPlane.MaxZ);
+            IList<CollisionObject> occs = (IList<CollisionObject>)Current.GetOccupiedObjects(LastPlane.MinZ, LastPlane.MaxZ);
             try
             {
                 if (sender is Button)

@@ -70,7 +70,7 @@ namespace PathSystem3D.Navigation
 
         public string OccupiedString(CollisionPlane cp)
         {
-            IEnumerable<CollisionObject> OccupiedListObject = GetOccupied();
+            IEnumerable<CollisionObject> OccupiedListObject = GetOccupiedObjects();
             string S = "";
             lock (OccupiedListObject)
             {
@@ -83,9 +83,9 @@ namespace PathSystem3D.Navigation
             return S + this.ToString() + " " + ExtraInfoString(cp);
         }
 
-        private IEnumerable<CollisionObject> GetOccupied()
+        private IEnumerable<CollisionObject> GetOccupiedObjects()
         {
-            return CIndex.GetOccupied(MinZ, MaxZ);
+            return CIndex.GetOccupiedObjects(MinZ, MaxZ);
         }
 
         public string ExtraInfoString(CollisionPlane cp)

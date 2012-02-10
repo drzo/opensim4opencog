@@ -111,7 +111,7 @@ namespace PathSystem3D.Navigation
 
 
 #if USE_MINIAABB
-        private List<Box3Fill> InnerBoxes = new List<Box3Fill>();
+        private List<CollisionObject> InnerBoxes = new List<CollisionObject>();
         private bool InnerBoxesSimplified = false;
         public bool SomethingMaxZ(float low, float high, out float maxZ, bool returnFirst)
         {
@@ -123,7 +123,7 @@ namespace PathSystem3D.Navigation
             {
                 lock (InnerBoxes)
                 {
-                    EsureInnerBoxesSimplied();
+                    EnsureInnerBoxesSimplied();
                     // this second lock is because we may have replaced the reference during simplification
                     lock (InnerBoxes)
                         foreach (CollisionObject B in InnerBoxes)
@@ -140,20 +140,25 @@ namespace PathSystem3D.Navigation
             }
         }
 
-        private void EsureInnerBoxesSimplied()
+        private void EnsureInnerBoxesSimplied()
         {
             if (!InnerBoxesSimplified)
             {
                 int b = InnerBoxes.Count;
+                if (b < 2)
+                {
+                    InnerBoxesSimplified = true;
+                    return;
+                }
                 if (b < 100)
                 {
-                    InnerBoxes = Box3Fill.Simplify(InnerBoxes);
+                    InnerBoxes = Box3Fill.SimplifyZ(InnerBoxes);
                 }
                 else
                 {
-                    InnerBoxes = Box3Fill.Simplify(InnerBoxes);                            
+                    InnerBoxes = Box3Fill.SimplifyZ(InnerBoxes);
                 }
-                if (b > 100 || InnerBoxes.Count * 4 < b)
+                if (false) if (b > 100 || InnerBoxes.Count * 4 < b)
                     Console.Error.WriteLine("Simplfy CI {0} -> {1} ", b,
                                             InnerBoxes.Count + " " + this);
                 InnerBoxesSimplified = true;
@@ -211,9 +216,21 @@ namespace PathSystem3D.Navigation
         {
             float groundLevel = GetGroundLevel();
             if (high < groundLevel) return groundLevel;
+            if (low < groundLevel)
+            {
+                low = groundLevel;
+                if (high < low + 15f)
+                {
+                    high = low + 15f;
+                }
+            }
             float above = low;
             if (above < groundLevel) above = groundLevel;
-            IEnumerable<CollisionObject> objs = GetOccupied(low, high);
+            var objs = GetOccupied(low, high);
+            if (objs.Count == 0)
+            {
+                return above;
+            }
             while (above < high)
             {
                 float newMaxZ;
@@ -230,6 +247,8 @@ namespace PathSystem3D.Navigation
                     above += 0.1f;
                 }
             }
+            if (low <= groundLevel) return above;
+
             float below;
             if (OpenCapsuleBelow(low, groundLevel, capsuleSize, out below))
             {
@@ -242,10 +261,17 @@ namespace PathSystem3D.Navigation
             return above;
         }
 
-        public bool OpenCapsuleAbove(float low, float high, float capsuleSize, out float above)
+        private bool OpenCapsuleAbove(float low, float high, float capsuleSize, out float above)
         {
+            float groundLevel = GetGroundLevel();
             above = low;
-            IEnumerable<CollisionObject> objs = GetOccupied(low, high);
+            if (above < groundLevel) above = groundLevel;
+            if (high < groundLevel) return false;
+            var objs = GetOccupied(low, high);
+            if (objs.Count == 0)
+            {
+                return true;
+            }
             while (above < high)
             {
                 float newMaxZ;
@@ -342,9 +368,24 @@ namespace PathSystem3D.Navigation
         }
 
         public List<CollisionObject> ShadowList = new List<CollisionObject>();
-        public IEnumerable<CollisionObject> GetOccupied(float low, float high)
+        public List<CollisionObject> GetOccupied(float low, float high)
         {
-            if (true) return ShadowList;
+            EnsureInnerBoxesSimplied();
+            if (true) return InnerBoxes;
+            List<CollisionObject> objs = new List<CollisionObject>();
+            lock (InnerBoxes)
+            {
+                foreach (CollisionObject O in InnerBoxes)
+                {
+                    if (O.MaxZ < low) continue;
+                    if (O.MinZ > high) continue;
+                    objs.Add(O);
+                }
+            }
+            return objs;
+        }
+        public IEnumerable<CollisionObject> GetOccupiedObjects(float low, float high)
+        {
             List<CollisionObject> objs = new List<CollisionObject>();
             lock (ShadowList)
             {
@@ -370,7 +411,7 @@ namespace PathSystem3D.Navigation
                     return osearch;
                 }
                 fsearch = f;
-                var list = GetOccupied(f, f);
+                var list = GetOccupiedObjects(f - 0.1f, f + 0.1f);
                 foreach (CollisionObject O in list)
                 {
                     if (O.MaxZ < f) continue;
@@ -403,7 +444,7 @@ namespace PathSystem3D.Navigation
 
             if (OccupiedCount > 0)
             {
-                IEnumerable<CollisionObject> objs = GetOccupied(low, high);
+                IEnumerable<CollisionObject> objs = GetOccupiedObjects(low, high);
                 lock (objs)
                 {
                     foreach (CollisionObject O in objs)
@@ -641,7 +682,7 @@ namespace PathSystem3D.Navigation
 
         internal bool IsPortal(CollisionPlane collisionPlane)
         {
-            IEnumerable<CollisionObject> mis = GetOccupied(collisionPlane.MinZ, collisionPlane.MaxZ);
+            IEnumerable<CollisionObject> mis = GetOccupiedObjects(collisionPlane.MinZ, collisionPlane.MaxZ);
             lock (mis)
                 foreach (object o in mis)
                 {
@@ -658,7 +699,7 @@ namespace PathSystem3D.Navigation
 
         internal System.Drawing.Color DebugColor(CollisionPlane collisionPlane)
         {
-            IEnumerable<CollisionObject> mis = GetOccupied(collisionPlane.MinZ, collisionPlane.MaxZ);
+            IEnumerable<CollisionObject> mis = GetOccupiedObjects(collisionPlane.MinZ, collisionPlane.MaxZ);
             lock (mis)
                 foreach (object O in mis)
                 {

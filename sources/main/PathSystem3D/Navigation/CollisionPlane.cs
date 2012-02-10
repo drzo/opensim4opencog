@@ -713,31 +713,7 @@ namespace PathSystem3D.Navigation
                 testPlane = MinZ - 2;
             }
             //Heights[x, y] = testPlane;
-
-
-            float level;
-            if (W.OpenCapsuleAbove(testPlane, testPlane + 16f, CollisionIndex.AvatarCapsuleZ, out level))
-            {
-                if (level < testPlane)
-                {
-                    level = testPlane;
-                }
-                return level;
-            }
-            float nd;
-            if (W.OpenCapsuleBelow(gp, testPlane, CollisionIndex.AvatarCapsuleZ, out nd))
-            {
-                if (nd < gp)
-                {
-                    nd = gp;
-                }
-                return nd;
-            }
-            return level;
-            //else
-            //{
-            //    Heights[x, y] = W.GetZLevel(testPlane, testPlane + 16f);
-            //}
+            return W.GetZLevel(testPlane, testPlane + 16f, CollisionIndex.AvatarCapsuleZ);
         }
 
 
