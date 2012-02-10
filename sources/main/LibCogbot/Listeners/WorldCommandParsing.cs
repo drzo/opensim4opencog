@@ -591,14 +591,17 @@ namespace cogbot.Listeners
             }
             else
             {
-                var v = ResolveCollection(arg0Lower, out argsUsed, null);
-
-                if (v != null)
+                if (arg0Lower.StartsWith("$"))
                 {
-                    argsUsed = 1;
-                    prims.Clear();
-                    AsPrimitives(prims, v);
-                    return prims;
+                    var v = ResolveCollection(arg0Lower, out argsUsed, null);
+
+                    if (v != null)
+                    {
+                        ///argsUsed = 1;
+                        prims.Clear();
+                        AsPrimitives(prims, v);
+                        return prims;
+                    }
                 }
                 SimObject prim;
                 if (tryGetPrim(args, out prim, out argsUsed))
