@@ -100,6 +100,11 @@ namespace MushDLR223.ScriptEngines
                     SysVars[s] = cs0;
                     WriteLine("Setting: " + cs0.Description);
                 }
+                var st = t.BaseType;
+                if (st != null && st != typeof(object))
+                {
+                    LoadSysVars(st);
+                }
             }
         }
 

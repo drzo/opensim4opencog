@@ -399,7 +399,7 @@ namespace MushDLR223.Utilities
 
         private void TestLock(object busyTrackingLock)
         {
-            return;
+           // return;
             if (Monitor.TryEnter(busyTrackingLock, TimeSpan.FromSeconds(10)))
             {
                 Monitor.Exit(busyTrackingLock);
@@ -1964,7 +1964,7 @@ namespace MushDLR223.Utilities
 
         public void DestroyAllCurrentTasks(bool clearQueue)
         {
-            throw new NotImplementedException();
+                if(clearQueue) Clear();
         }
 
         public TASK CreateTask(TASK action, string name,EventWaitHandle isStarted, EventWaitHandle isComplete)
@@ -2051,7 +2051,7 @@ namespace MushDLR223.Utilities
             }
         }
 
-        private T NoExceptions<T>(Func<T> func)
+        public T NoExceptions<T>(Func<T> func)
         {
             try
             {
@@ -2069,9 +2069,9 @@ namespace MushDLR223.Utilities
             }
         }
 
-        private void NoException(ThreadStart func)
+        public bool NoExceptionsV(ThreadStart func)
         {
-            if (func == null) return;
+            if (func == null) return false;
             try
             {
                 if (IsDisposing)
@@ -2079,10 +2079,12 @@ namespace MushDLR223.Utilities
                     WriteLine("IsDisposing");
                 }
                 func.Invoke();
+                return true;
             }
             catch (Exception e)
             {
                 VeryBad("" + e);
+                return false;
             }
         }
 
@@ -2123,6 +2125,14 @@ namespace MushDLR223.Utilities
                 }
             }
             return used;
+        }
+
+        public void Clear()
+        {
+            lock (EventQueue)
+            {
+                EventQueue.Clear();
+            }
         }
     }
 

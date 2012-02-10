@@ -399,6 +399,9 @@ namespace MushDLR223.Utilities
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public static bool AllocedConsole = false;
         public static bool NoConsoleVisible = false;
+        [ConfigSetting]
+        public static bool SkipStackTraces = true;
+        private static readonly object[] NOARGS = new object[0];
         //public static bool PrintToSystemConsole = true;
         public static bool HasWinforms = false;
         public static bool IsOnMonoUnix = false;
@@ -539,7 +542,7 @@ namespace MushDLR223.Utilities
         static private StringBuilder cmdline = new StringBuilder();
         private static readonly TextWriter InitialConsoleOut = SystemConsole.Out;
         private static readonly TextWriter InitialConsoleERR = SystemConsole.Error;
-        public static readonly OutputDelegate SYSTEM_ERR_WRITELINE_REAL = InitialConsoleERR.WriteLine;
+        public static readonly OutputDelegate SYSTEM_ERR_WRITELINE_REAL = CALL_SYSTEM_ERR_WRITELINE;
         public static readonly OutputDelegate SYSTEM_ERR_WRITELINE = CALL_SYSTEM_ERR_WRITELINE;
         private static readonly TextWriter ConsoleOut = new OutputDelegateWriter(SystemWriteLine);
         private static readonly TextWriter ConsoleError = new OutputDelegateWriter(SYSTEM_ERR_WRITELINE);
@@ -603,7 +606,8 @@ namespace MushDLR223.Utilities
         {
             get
             {
-                TextWriter ret = SystemConsole.Out ?? ConsoleOut ?? InitialConsoleOut ?? InitialConsoleERR;
+                TextWriter first = null;
+                TextWriter ret = /*SystemConsole.Out ??*/ ConsoleOut ?? InitialConsoleOut ?? InitialConsoleERR;
                 return ret;
             }
         }
@@ -611,7 +615,7 @@ namespace MushDLR223.Utilities
         {
             get
             {
-                TextWriter ret = SystemConsole.Error ?? ConsoleError ?? InitialConsoleERR ?? InitialConsoleOut;
+                TextWriter ret = /*SystemConsole.Error ??*/ ConsoleError ?? InitialConsoleERR ?? InitialConsoleOut;
                 return ret;
             }
         }
@@ -1461,8 +1465,13 @@ namespace MushDLR223.Utilities
                                                  action();
                                                  are.Set();
                                              }
+                                             catch (ThreadAbortException abouirt)
+                                             {
+                                                 return;
+                                             }
                                              catch (Exception abouirt)
                                              {
+                                                 SystemConsole.WriteLine(abouirt);
                                                  return;
                                              }
                                          });
@@ -1491,12 +1500,13 @@ namespace MushDLR223.Utilities
 
         private static void CALL_SYSTEM_ERR_WRITELINE_REAL(string format, params object[] args)
         {
+            if (NoConsoleVisible) return;
             SystemFlush();
             format = SafeFormat(format, args);
             //%%%PauseIfTraced(format);
 
             //if (IsOnMonoUnix) WriteColorText(ConsoleColor.White, "CALL_SYSTEM_ERR_WRITELINE-001 " + format);
-            SYSTEM_ERR_WRITELINE_REAL(format);
+            InitialConsoleERR.WriteLine(format, NOARGS);
             SystemFlush();
         }
 
@@ -1796,9 +1806,6 @@ namespace MushDLR223.Utilities
         public static readonly HashSet<MemberInfo> OpacheCallers = new HashSet<MemberInfo>()
                                                               {
                                                               };
-
-        [ConfigSetting]
-        public static bool SkipStackTraces = true;
 
         protected static List<TextWriter> Outputs
         {
