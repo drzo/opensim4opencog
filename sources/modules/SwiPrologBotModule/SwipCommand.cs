@@ -43,12 +43,15 @@ namespace cogbot.Actions.System
                 ManualResetEvent mre = new ManualResetEvent(false);
                 Client.InvokeGUI(() =>
                                      {
-                                         PrologClient.RegisterThread(Thread.CurrentThread);
-                                         cmd = pse.prologClient.Read(text, null) as Nullable<PlTerm>;
-                                         o = pse.prologClient.Eval(cmd);
-                                         mre.Set();
+                                         o = PrologClient.InvokeFromC(() =>
+                                                                      {
+                                                                          cmd = pse.prologClient.Read(text, null) as Nullable<PlTerm>;
+                                                                          o = pse.prologClient.Eval(cmd);
+                                                                          mre.Set();
+                                                                          return o;
+                                                                      });
                                      });
-                mre.WaitOne(2000);
+                mre.WaitOne();
                 if (o == null) return Success("swip: " + cmd.Value);
                 PrologClient.RegisterThread(Thread.CurrentThread);
                 return Success("swip: " + cmd.Value + " " + o);
