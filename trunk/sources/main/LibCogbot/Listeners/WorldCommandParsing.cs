@@ -427,9 +427,11 @@ namespace cogbot.Listeners
                 simGroupProviders.Add(new GetGroupFuncHolder(bot));
             }
         }
+        static readonly char[] TrimCollectionStart = new []{' ','\n','$'};
         public ICollection ResolveCollection(string arg0Lower, out int argsUsed, ICollectionProvider skip)
         {
-            if (arg0Lower.StartsWith("$")) arg0Lower = arg0Lower.Substring(1);
+
+            arg0Lower = arg0Lower.TrimStart(TrimCollectionStart);
             lock (simGroupProviders)
             {
                 foreach (ICollectionProvider provider in simGroupProviders)
@@ -593,7 +595,7 @@ namespace cogbot.Listeners
             {
                 if (arg0Lower.StartsWith("$"))
                 {
-                    var v = ResolveCollection(arg0Lower, out argsUsed, null);
+                    var v = ResolveCollection(arg0Lower.Substring(1), out argsUsed, null);
 
                     if (v != null)
                     {
