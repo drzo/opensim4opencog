@@ -670,6 +670,23 @@ typedef struct // define a context structure  { ... } context;
             }
 
         }
+
+        public static T InvokeFromC<T>(Func<T> action)
+        {
+            Thread threadCurrentThread = Thread.CurrentThread;
+            RegisterThread(threadCurrentThread);
+            uint fid = libpl.PL_open_foreign_frame();
+
+            try
+            {
+                return action();
+            }
+            finally 
+            {
+                libpl.PL_discard_foreign_frame(fid);
+                DeregisterThread(threadCurrentThread);
+            }
+        }
     }
     public class ForNext : AbstractNondetMethod
     {

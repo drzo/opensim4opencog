@@ -157,34 +157,32 @@ namespace SbsSW.SwiPlCs
 
         public static object CallProlog(object target, string module, string name, int arity, object origin, object[] paramz, Type returnType)
         {
-            Thread threadCurrentThread = Thread.CurrentThread;
-            RegisterThread(threadCurrentThread);
-            uint fid = libpl.PL_open_foreign_frame();
-            PlTermV args = NewPlTermV(arity);
-            int fillAt = 0;
-            if (origin != null)
+            return InvokeFromC(()=>
             {
-                args[fillAt++].FromObject((origin));
-            }
-            for (int i = 0; i < paramz.Length; i++)
-            {
-                args[fillAt++].FromObject((paramz[i]));
-            }
-            bool IsVoid = returnType == typeof(void);
-            if (!IsVoid)
-            {
-                //args[fillAt] = PlTerm.PlVar();
-            }
-            if (!PlQuery.PlCall(module, name, args))
-            {
-                if (!IsVoid) Warn("Failed Event Handler {0} failed", target);
-            }
-            if (IsVoid) return null;
-            object ret = PrologClient.CastTerm(args[fillAt], returnType);
-            libpl.PL_discard_foreign_frame(fid);
-            ///libpl.PL_close_foreign_frame(fid);
-            DeregisterThread(threadCurrentThread);
-            return ret;
+
+                PlTermV args = NewPlTermV(arity);
+                int fillAt = 0;
+                if (origin != null)
+                {
+                    args[fillAt++].FromObject((origin));
+                }
+                for (int i = 0; i < paramz.Length; i++)
+                {
+                    args[fillAt++].FromObject((paramz[i]));
+                }
+                bool IsVoid = returnType == typeof (void);
+                if (!IsVoid)
+                {
+                    //args[fillAt] = PlTerm.PlVar();
+                }
+                if (!PlQuery.PlCall(module, name, args))
+                {
+                    if (!IsVoid) Warn("Failed Event Handler {0} failed", target);
+                }
+                if (IsVoid) return null;
+                object ret = PrologClient.CastTerm(args[fillAt], returnType);
+                return ret;
+            });
         }
 
         public static int UnifyAtom(uint TermRef, string s)

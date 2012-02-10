@@ -45,12 +45,12 @@ namespace SbsSW.SwiPlCs
                 PrologClient.IsPLWin = true;
                 PrologClient.RedirectStreams = false;
                 PrologClient.SetupProlog();
-                System.Console.Error.WriteLine("swipl_win.install suceeded");
+                PrologClient.ConsoleWriteLine("swipl_win.install suceeded");
                 return libpl.PL_succeed;
             } catch(Exception e)
             {
                 PrologClient.WriteException(e);
-                System.Console.Error.WriteLine("swipl_win.install error");
+                PrologClient.ConsoleWriteLine("swipl_win.install error");
                 return libpl.PL_fail;
             }
         }
