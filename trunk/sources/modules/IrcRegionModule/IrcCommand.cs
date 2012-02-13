@@ -99,7 +99,7 @@ namespace IrcRegionModule
                     WorldObjects.DeclareGeneric(nick, id, "IrcUser");                    
                 }
             }
-            Client.Self.Chat(string.Format("{0}: {1}", nick, data.Message), 0, ChatType.Normal);
+            RelayToSim(nick, data.Message);
             try
             {
                 Client.FakeEvent(Client.Self, "m_Chat", this,
@@ -114,6 +114,13 @@ namespace IrcRegionModule
             {
                 Console.WriteLine("ChatFromSimulator: " + exception);
             }
+        }
+
+        private void RelayToSim(string nick, string data)
+        {
+            Client.Self.Chat(string.Format("{0}: {1}", nick, data), 0, ChatType.Normal);
+            if (!CogbotHelpers.IsNullOrZero(groupToRelayTo))
+                Client.Self.InstantMessageGroup(nick, groupToRelayTo, data);
         }
 
         public bool IsFromIRC(string nick)
@@ -153,6 +160,31 @@ namespace IrcRegionModule
         private static Meebey.SmartIrc4net.IrcClient ircClient = new IrcClient();
         private Thread ListenerThreaThread;
         private BotClient TheBC = null;
+        private UUID _groupID = UUID.Zero;
+
+        public UUID groupToRelayTo
+        {
+            get
+            {
+                if (CogbotHelpers.IsNullOrZero(_groupID))
+                {
+                    _groupID = Client.WorldSystem.GetUserID(_groupName);
+                }
+                return _groupID;
+            }
+        }
+
+        private string _groupName = "MOSES";
+        public string GroupName
+        {
+            get { return _groupName; }
+            set
+            {
+                if (_groupName == value) return;
+                _groupID = UUID.Zero;
+                _groupName = value;
+            }
+        }
 
         public IrcCommand(BotClient bc) 
         {

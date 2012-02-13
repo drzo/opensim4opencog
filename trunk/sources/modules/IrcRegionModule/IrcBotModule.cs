@@ -22,23 +22,51 @@ namespace IrcRegionModule
         public override void StartupListener()
         {
             client.Self.ChatFromSimulator += IrcBot_OnChat;
-            //throw new NotImplementedException();
+            client.Self.IM += IrcBot_IM;
+        }
+
+        private void IrcBot_IM(object sender, InstantMessageEventArgs im)
+        {
+            if (!client.IsRegionMaster)
+            {
+                return;
+            }
+            var e = im.IM;
+            var type = e.Dialog;
+            if (type == InstantMessageDialog.StartTyping || type == InstantMessageDialog.StopTyping) return;
+            var message = e.Message;
+            var id = e.FromAgentID;
+            var fromname = e.FromAgentName;
+            if (IrcCommand.IsChannelAgent(fromname)) return;
+            if ((type == InstantMessageDialog.MessageFromAgent))
+            {
+                IrcCommand.IrcSend("" + fromname + ": " + message);
+                return;
+            }
+            IrcCommand.IrcSend(fromname + " " + type + ": " + message);     
         }
 
         private void IrcBot_OnChat(object sender, ChatEventArgs e)
         {
             var type = e.Type;
+            if (type == ChatType.StartTyping || type == ChatType.StopTyping) return;
             var message = e.Message;
             var id = e.SourceID;
             var fromname = e.FromName;
+            System.Action<int> selfChat = (oo) =>
+                                  {
+                                      client.Self.OnChat(new ChatEventArgs(e.Simulator, message, e.AudibleLevel, e.Type,
+                                                                           e.SourceType,
+                                                                           fromname,
+                                                                           id, e.OwnerID, e.Position));
+                                  };
             //string message, ChatAudibleLevel audible, ChatType type, ChatSourceType sourcetype, string fromname, UUID id, UUID ownerid, Vector3 position
             if (!client.IsRegionMaster)
             {
                 return;
             }
             if (IrcCommand == null) return;
-            if (type == ChatType.StartTyping || type == ChatType.StopTyping) return;
-            if (client.Self.AgentID == id || e.FromName == client.Self.Name)
+            if (client.Self.AgentID == id || fromname == client.Self.Name)
             {
                 int hash = message.IndexOf(" ");
                 int colon = message.IndexOf(":");
@@ -54,9 +82,7 @@ namespace IrcRegionModule
                     {
                         return;
                     }
-                    client.Self.OnChat(new ChatEventArgs(e.Simulator, message, e.AudibleLevel, e.Type, e.SourceType,
-                                                         fromname,
-                                                         id, e.OwnerID, e.Position));
+                    selfChat(0);
                     return;
                 } else
                 {
@@ -80,8 +106,7 @@ namespace IrcRegionModule
                 IrcCommand.IrcSend(fromname + " Whispers: " + message);
                 return;
             }
-            IrcCommand.IrcSend(fromname + " " + type + ": " + message);
-           
+            IrcCommand.IrcSend(fromname + " " + type + ": " + message);           
         }
 
         public override void Dispose()
