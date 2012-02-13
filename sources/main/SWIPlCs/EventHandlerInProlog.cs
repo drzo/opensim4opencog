@@ -47,7 +47,7 @@ namespace SbsSW.SwiPlCs
                 {
                     PrologEvents++;
                     return PrologClient.CallProlog(this, Key.Module ?? "user", Key.Name, PrologArity, Key.Origin, paramz,
-                                                   ReturnType);
+                                                   ReturnType, true);
                 }
                 catch (AccessViolationException e)
                 {

@@ -23,8 +23,19 @@ namespace SbsSW.SwiPlCs
             set { if (value != "user") _clientModule = value; }
         }
 
+        private static PrologClient _singleInstance;
+        public static PrologClient SingleInstance
+        {
+            get
+            {
+                if (_singleInstance == null) _singleInstance = new PrologClient();
+                return _singleInstance;
+            }
+        }
+
         public PrologClient()
         {
+            _singleInstance = this;
             ClientModule = null;
             ClientPrefix = "cli_";
             SetupProlog();
@@ -34,12 +45,14 @@ namespace SbsSW.SwiPlCs
 
         public readonly static Object[] ZERO_OBJECTS = new Object[0];
 
+        public static readonly Type[] ONE_STRING = new[] {typeof (string)};
+
         public static BindingFlags BindingFlagsJustStatic = BindingFlags.Public | BindingFlags.NonPublic |
                                                             BindingFlags.Static;
         public static BindingFlags BindingFlagsInstance = BindingFlags.Public | BindingFlags.NonPublic |
-                                                            BindingFlags.Static;
+                                                            BindingFlags.Instance;
         public static BindingFlags BindingFlagsALL = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static |
-                                                     BindingFlags.Instance | BindingFlags.IgnoreCase;
+                                                     BindingFlags.Instance | BindingFlags.IgnoreCase | BindingFlags.IgnoreReturn;
         public static BindingFlags InstanceFields = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.IgnoreCase;
 
 
@@ -155,9 +168,9 @@ namespace SbsSW.SwiPlCs
         public static PlTerm PLTRUE { get { return PlTerm.PlCompound("@", PlTerm.PlAtom("true")); } }
         public static PlTerm PLFALSE { get { return PlTerm.PlCompound("@", PlTerm.PlAtom("false")); } }
 
-        public static object CallProlog(object target, string module, string name, int arity, object origin, object[] paramz, Type returnType)
+        public static object CallProlog(object target, string module, string name, int arity, object origin, object[] paramz, Type returnType, bool discard)
         {
-            return InvokeFromC(()=>
+            return InvokeFromC(() =>
             {
 
                 PlTermV args = NewPlTermV(arity);
@@ -182,7 +195,7 @@ namespace SbsSW.SwiPlCs
                 if (IsVoid) return null;
                 object ret = PrologClient.CastTerm(args[fillAt], returnType);
                 return ret;
-            });
+            }, discard);
         }
 
         public static int UnifyAtom(uint TermRef, string s)
@@ -287,8 +300,9 @@ namespace SbsSW.SwiPlCs
             }
             return findField(memberSpec, c) ??
                    (MemberInfo)
-                   findProperty(memberSpec, c) ??
-                   findMethod(memberSpec, -1, c);
+                   findProperty(memberSpec, c, true, true) ??
+                   (MemberInfo) findMethod(memberSpec, -1, c) ??
+                   findProperty(memberSpec, c, false, false);
             //findConstructor(memberSpec, c));
         }
         private static FieldInfo findField(PlTerm memberSpec, Type c)
@@ -324,10 +338,19 @@ namespace SbsSW.SwiPlCs
                 return findField(memberSpec.Arg(0), c);
             }
             string fn = memberSpec.Name;
+            if (fn == "[]") fn = "Get";
             FieldInfo fi = c.GetField(fn, BindingFlagsALL);
             return fi;
         }
-        private static PropertyInfo findProperty(PlTerm memberSpec, Type c)
+
+        readonly static Dictionary<int, string> indexTest = new Dictionary<int, string>() { { 1, "one" }, { 2, "two" }, };
+        public string this[int v]
+        {
+            get { return indexTest[v]; }
+            set { indexTest[v] = value; }
+        }
+
+        private static PropertyInfo findProperty(PlTerm memberSpec, Type c, bool mustHaveP, bool assumeParamTypes)
         {
             if (c == null)
             {
@@ -351,16 +374,71 @@ namespace SbsSW.SwiPlCs
                 var r = tag_to_object(memberSpec[1].Name) as PropertyInfo;
                 if (r != null) return r;
             }
+            Type[] paramz = GetParamSpec(memberSpec);
             if (memberSpec.IsCompound)
             {
-                if (memberSpec.Name != "p")
+                if (memberSpec.Name == "p")
                 {
-                    return null;
+                    return findProperty(memberSpec.Arg(0), c, false, assumeParamTypes);
                 }
-                return findProperty(memberSpec.Arg(0), c);
+                if (mustHaveP) return null;
             }
             string fn = memberSpec.Name;
-            return c.GetProperty(fn, BindingFlagsALL) ?? c.GetProperty("Is" + fn, BindingFlagsALL);
+            if (fn == "[]") fn = "Item";
+            if (paramz == null || paramz.Length == 0)
+                return c.GetProperty(fn, BindingFlagsALL) ?? c.GetProperty("Is" + fn, BindingFlagsALL);
+            var ps = c.GetProperties(BindingFlagsALL);
+            int len = paramz.Length;
+            PropertyInfo nameMatched = null;
+            foreach (PropertyInfo info in ps)
+            {
+                if (info.Name.ToLower() == fn.ToLower())
+                {
+                    nameMatched = nameMatched ?? info;
+                    ParameterInfo[] indexParameters = info.GetIndexParameters();
+                    if (assumeParamTypes)
+                    {
+                        if (len == indexParameters.Length)
+                        {
+                            if (IsCompatTypes(paramz, GetObjectTypes(indexParameters)))
+                            {
+                                return info;
+                            }
+                            // incompat but ok
+                            nameMatched = info;
+                        }
+                    }
+                }
+            }
+            return c.GetProperty(fn, BindingFlagsALL) ?? c.GetProperty("Is" + fn, BindingFlagsALL) ?? nameMatched;
+        }
+
+        private static bool IsCompatTypes(Type[] supplied, Type[] required)
+        {
+            int len = supplied.Length;
+            if (required.Length != len) return false;
+            int considered = 0;
+            foreach (Type type in required)
+            {
+                Type consider = supplied[considered];
+                if (!IsCompatType(consider,type))
+                {                    
+                    return false;
+                }
+                considered++;               
+            }
+            return true;
+        }
+
+        private static bool IsCompatType(Type consider, Type type)
+        {
+            if (consider == null || type == null) return true;
+            if (consider == typeof(object) || type == typeof(object)) return true;
+            if (type.IsAssignableFrom(consider)) return true;
+            if (typeof(IConvertible).IsAssignableFrom(type)
+                && typeof(IConvertible).IsAssignableFrom(consider))
+                return true;
+            return false;
         }
 
         private static MethodInfo findMethod(PlTerm memberSpec, int arity, Type c)
@@ -382,8 +460,11 @@ namespace SbsSW.SwiPlCs
             }
             if (IsTaggedObject(memberSpec))
             {
-                var r = tag_to_object(memberSpec[1].Name) as MethodInfo;
+                object o = tag_to_object(memberSpec[1].Name);
+                var r = o as MethodInfo;
                 if (r != null) return r;
+                var d = o as Delegate;
+                if (d != null) return d.Method ?? d.GetType().GetMethod("Invoke");
             }
             string fn = memberSpec.Name;
             var mi = GetMethod(c, fn, BindingFlagsALL);
@@ -782,7 +863,7 @@ namespace SbsSW.SwiPlCs
             }
             object getInstance = GetInstance(clazzOrInstance);
             Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
-            MethodInfo mi = findMethod(memberSpec, -1, c);
+            var mi = findMethod(memberSpec, -1, c);
             if (mi != null)
             {
                 return methodOut.FromObject((mi));
@@ -804,7 +885,7 @@ namespace SbsSW.SwiPlCs
             object getInstance = GetInstance(clazzOrInstance);
             Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
             int arity = Arglen(valueIn);
-            MethodInfo mi = findMethod(memberSpec, arity, c);
+            var mi = findMethod(memberSpec, arity, c);
             if (mi == null)
             {
                 var ei = findEventInfo(memberSpec, c);
@@ -1078,7 +1159,7 @@ namespace SbsSW.SwiPlCs
                 found = true;
                 return (fiGetValue);
             }
-            var pi = findProperty(memberSpec, c);
+            var pi = findProperty(memberSpec, c, false, true);
             if (pi != null)
             {
                 var mi = pi.GetGetMethod();
@@ -1119,6 +1200,47 @@ namespace SbsSW.SwiPlCs
                 found = true;
                 return retval;
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clazzOrInstance"></param>
+        /// <param name="memberSpec">[] = 'Item'</param>
+        /// <param name="indexValues"></param>
+        /// <param name="valueOut"></param>
+        /// <returns></returns>
+        [PrologVisible(ModuleName = ExportModule)]
+        static public bool cliGetProperty(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm indexValues, PlTerm valueOut)
+        {
+            if (clazzOrInstance.IsVar)
+            {
+                return Warn("Cant find instance {0}", clazzOrInstance);
+            }
+            if (!valueOut.IsVar)
+            {
+                var plvar = PlTerm.PlVar();
+                cliGetProperty(clazzOrInstance, memberSpec, indexValues, plvar);
+                return SpecialUnify(valueOut, plvar);
+            }
+            object getInstance = GetInstance(clazzOrInstance);
+            Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
+            if (getInstance == null && c == null)
+            {
+                Warn("Cant find instance {0}", clazzOrInstance);
+                return false;
+            }
+            var pi = findProperty(memberSpec, c, false, true);
+            if (pi == null)
+            {
+                Warn("Cant find property {0} on {1}", memberSpec, c);
+                return false;
+            }
+            Action postCallHook;
+            var ps = PlListToCastedArray(indexValues, pi.GetIndexParameters(), out postCallHook);
+            object cliGet01 = pi.GetValue(getInstance, ps);
+            if (postCallHook != null) postCallHook();
+            return valueOut.FromObject(cliGet01);
         }
 
         private static bool WarnMissing(string s)
@@ -1162,7 +1284,7 @@ namespace SbsSW.SwiPlCs
                 fi.SetValue(target, value);
                 return true;
             }
-            var pi = findProperty(memberSpec, c);
+            var pi = findProperty(memberSpec, c, false, true);
             if (pi != null)
             {
                 var mi = pi.GetSetMethod();

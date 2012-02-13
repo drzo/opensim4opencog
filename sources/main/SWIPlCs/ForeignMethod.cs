@@ -220,7 +220,7 @@ typedef struct // define a context structure  { ... } context;
         {
             try
             {
-                if (info.IsGenericMethod)
+                if (info.IsGenericMethodDefinition)
                 {
                     Type[] paramTypes = GetObjectTypes(info.GetParameters());
                     Type[] t = GetObjectTypes(os, paramTypes);
@@ -252,9 +252,14 @@ typedef struct // define a context structure  { ... } context;
                 {
                     Warn("ArgCount mismatch " + info + ": call count=" + os.Length);
                 }
-                object ret = info.Invoke(o, os);
+                object to = o;
+                if (!info.DeclaringType.IsInstanceOfType(o)) to = null;
+                object ret = info.Invoke(to, os);
                 if (todo != null) todo();
-                if (ret == null) return VoidOrNull(info);
+                if (ret == null)
+                {
+                    //return VoidOrNull(info);
+                }
                 return ret;
             }
             catch (Exception ex)
@@ -671,7 +676,7 @@ typedef struct // define a context structure  { ... } context;
 
         }
 
-        public static T InvokeFromC<T>(Func<T> action)
+        public static T InvokeFromC<T>(Func<T> action, bool discard)
         {
             Thread threadCurrentThread = Thread.CurrentThread;
             RegisterThread(threadCurrentThread);
@@ -683,7 +688,7 @@ typedef struct // define a context structure  { ... } context;
             }
             finally 
             {
-                libpl.PL_discard_foreign_frame(fid);
+                if (discard) libpl.PL_discard_foreign_frame(fid);
                 DeregisterThread(threadCurrentThread);
             }
         }

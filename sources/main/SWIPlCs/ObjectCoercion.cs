@@ -280,8 +280,8 @@ namespace SbsSW.SwiPlCs
             todo = Do_NOTHING;
             int len = paramInfos.Length;
             if (len == 0) return ARRAY_OBJECT0;
-            MethodInfo methodInfo = (MethodInfo)paramInfos[0].Member;
-            bool isVarArg = (methodInfo.CallingConvention & CallingConventions.VarArgs) != 0;
+            MethodInfo methodInfo = paramInfos[0].Member as MethodInfo;
+            bool isVarArg = methodInfo != null && (methodInfo.CallingConvention & CallingConventions.VarArgs) != 0;
             object[] ret = new object[len];
             PlTerm[] ta = ToTermArray(term);
             int termLen = ta.Length;
@@ -339,7 +339,12 @@ namespace SbsSW.SwiPlCs
                 if (wasOut) isByRef = false;
                 if (isByRef && !wasOut)
                 {
-                    ret[idx] = CastTerm(arg, type);
+                    var ooo = CastTerm(arg, type);
+                    if (ooo == null)
+                    {
+                        Debug("idx " + idx + " (" + type + ") for " + arg + " is null");
+                    }
+                    ret[idx] = ooo;
                     wasOut = true;
                 }
                 if (wasOut)
@@ -363,13 +368,23 @@ namespace SbsSW.SwiPlCs
                 }
                 if (paramInfo.IsIn)
                 {
-                    ret[idx] = CastTerm(arg, type);
+                    var ooo1 = CastTerm(arg, type);
+                    if (ooo1 == null)
+                    {
+                        Debug("idx " + idx + " (" + type + ") for " + arg + " is null");
+                    }
+                    ret[idx] = ooo1;
                 }
                 else
                 {
                     if (!wasOut)
                     {
-                        ret[idx] = CastTerm(arg, type);
+                        var ooo1 = CastTerm(arg, type);
+                        if (ooo1 == null)
+                        {
+                            Debug("idx " + idx + " (" + type + ") for " + arg + " is null");
+                        }
+                        ret[idx] = ooo1;                        
                     }
                     else
                     {
@@ -673,6 +688,10 @@ namespace SbsSW.SwiPlCs
             {
                 return cliDelegateTerm(pt, o, false);
             }
+            if (pt == typeof(Type))
+            {
+                return GetType(o);
+            }
             switch (o.PlType)
             {
                 case PlType.PlUnknown:
@@ -780,7 +799,7 @@ namespace SbsSW.SwiPlCs
             {
                 return true;
             }
-            return info.IsOptional || info.Name.ToLower().StartsWith("optional");
+            return info.IsOptional || (info.Name != null && info.Name.ToLower().StartsWith("optional"));
         }
 
         private static MemberInfo[] GetStructFormat(Type t)
