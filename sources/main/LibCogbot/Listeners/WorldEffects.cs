@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
@@ -623,8 +623,8 @@ namespace cogbot.Listeners
                 EffectType type = (EffectType) block.Type;
 
                 // most effect types have at least these properties
-                UUID sourceAvatar = UUIDFactory.GetUUID(block.TypeData, 0);
-                UUID targetObject = UUIDFactory.GetUUID(block.TypeData, 16);
+                UUID sourceAvatar = CogbotHelpers.GetUUID(block.TypeData, 0);
+                UUID targetObject = CogbotHelpers.GetUUID(block.TypeData, 16);
                 Vector3d targetPos = new Vector3d(block.TypeData, 32);
                 //Color4 color;
                 //if (block.Color.Length == 4)

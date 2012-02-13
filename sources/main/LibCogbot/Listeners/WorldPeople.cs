@@ -396,7 +396,7 @@ namespace cogbot.Listeners
                 {
                     i[index] ^= 0xff;
                 }
-                key = UUIDFactory.GetUUID(i, 0);
+                key = CogbotHelpers.GetUUID(i, 0);
             }
             return DeclareGeneric("GroupRole", key, "DeclareGroupRole" );
         }
@@ -415,7 +415,7 @@ namespace cogbot.Listeners
                                                   if (list.Value != UUID.Zero)
                                                   {
                                                       SimAvatarImpl a = DeclareAvatarProfile(list.Value);
-
+                                                      a.AddGroupRole(groupID, list.Key);
                                                       a.AddInfoMapItem(new NamedParam("simMemberRole",
                                                                                   declareGeneric));
                                                       SendOnUpdateDataAspect(a, "MemberRole", null, null);
@@ -720,7 +720,7 @@ namespace cogbot.Listeners
             string clientMasterNameToLower = client.MasterName;
             foreach (KeyValuePair<UUID, string> kvp in names)
             {
-                if (UUIDFactory.IsNullOrZero(kvp.Key)) continue;
+                if (CogbotHelpers.IsNullOrZero(kvp.Key)) continue;
                 string kvpValueToLower = kvp.Value;
                 AddName2Key(kvpValueToLower, kvp.Key);
                 if (clientMasterNameToLower == kvpValueToLower)
@@ -728,7 +728,7 @@ namespace cogbot.Listeners
                     MasterIsFriendYet = true;
                     client.MasterKey = kvp.Key;
                 }
-                else if (kvp.Key == client.MasterKey && UUIDFactory.IsNullOrZero(client.MasterKey))
+                else if (kvp.Key == client.MasterKey && CogbotHelpers.IsNullOrZero(client.MasterKey))
                 {
                     client.MasterName = kvp.Value;
                     MasterIsFriendYet = true;
@@ -744,7 +744,7 @@ namespace cogbot.Listeners
                             if (Name2Key.ContainsKey(clientMasterNameToLower))
                             {
                                 var clientMasterKey = Name2Key[clientMasterNameToLower];
-                                if (!MasterIsFriendYet && !UUIDFactory.IsNullOrZero(clientMasterKey))
+                                if (!MasterIsFriendYet && !CogbotHelpers.IsNullOrZero(clientMasterKey))
                                 {
                                     client.Friends.OfferFriendship(clientMasterKey);
                                     MasterIsFriendYet = true;
@@ -757,7 +757,7 @@ namespace cogbot.Listeners
             if (!MasterIsFriendYet)
             {
                 var clientMasterKey = client.MasterKey;
-                if (!UUIDFactory.IsNullOrZero(clientMasterKey))
+                if (!CogbotHelpers.IsNullOrZero(clientMasterKey))
                 {
                     client.Friends.OfferFriendship(clientMasterKey);
                     MasterIsFriendYet = true;
@@ -768,7 +768,7 @@ namespace cogbot.Listeners
                 if (!string.IsNullOrEmpty(clientMasterNameToLower))
                 {
                     UUID clientMasterKey = GetUserID(client.MasterName);
-                    if (!UUIDFactory.IsNullOrZero(clientMasterKey))
+                    if (!CogbotHelpers.IsNullOrZero(clientMasterKey))
                     {
                         client.Friends.OfferFriendship(clientMasterKey);
                         MasterIsFriendYet = true;
@@ -800,10 +800,10 @@ namespace cogbot.Listeners
             base.Friends_OnFriendRights(sender, e);
         }
 
-        internal UUID FindUUIDForName(string groupName)
+        public UUID FindUUIDForName(string groupName)
         {
             UUID fnd = GetUserID(groupName);
-            if (!UUIDFactory.IsNullOrZero(fnd)) return fnd;
+            if (!CogbotHelpers.IsNullOrZero(fnd)) return fnd;
             return UUID.Zero;
         }
         public UUID GetUserID(string ToAvatarName)
@@ -1076,16 +1076,42 @@ namespace cogbot.Listeners
         }
     }
 
-    internal static class UUIDFactory
+    public static class CogbotHelpers
     {
         public static UUID GetUUID(byte[] bytes, int pos)
         {
             return new UUID(bytes,pos);
         }
 
-        internal static bool IsNullOrZero(UUID uUID)
+        public static bool IsNullOrZero(UUID uUID)
         {
             return uUID == null || uUID == UUID.Zero;
+        }
+        public static PermissionMask PermMaskForWho(PermissionWho who, Permissions perms)
+        {
+            switch (who)
+            {
+                case PermissionWho.Base:
+                    return perms.BaseMask;
+                    break;
+                case PermissionWho.Owner:
+                    return perms.OwnerMask;
+                    break;
+                case PermissionWho.Group:
+                    return perms.GroupMask;
+                    break;
+                case PermissionWho.Everyone:
+                    return perms.EveryoneMask;
+                    break;
+                case PermissionWho.NextOwner:
+                    return perms.NextOwnerMask;
+                    break;
+                case PermissionWho.All:
+                    return perms.EveryoneMask;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
     }
 }

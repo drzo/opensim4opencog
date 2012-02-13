@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -179,14 +180,14 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                if (base.HasPrim) return true;
+                if (base.HasPrim && theAvatar != null) return true;
                 if (RegionHandle != 0)
                 {
                     Simulator S = WorldSystem.GetSimulator(RegionHandle);
                     var _Prim0 = WorldSystem.GetLibOMVHostedPrim(ID, S, true);
                     if (_Prim0 == null) return false;
                     SetFirstPrim(_Prim0);
-                    return true;
+                    return theAvatar != null;
                 }
                 return false;
                 return LastKnownSimPos != Vector3.Zero;
@@ -324,7 +325,8 @@ namespace cogbot.TheOpenSims
             {
                 lock (HasPrimLock) if (HasPrim)
                     {
-                        if (WorldObjects.HasValue(theAvatar.ProfileProperties)  && !string.IsNullOrEmpty(theAvatar.ProfileProperties.BornOn))
+                        var theAvatar = this.theAvatar;
+                        if (theAvatar != null && WorldObjects.HasValue(theAvatar.ProfileProperties) && !string.IsNullOrEmpty(theAvatar.ProfileProperties.BornOn))
                         {
                             _profileProperties = theAvatar.ProfileProperties;
                         }
@@ -335,7 +337,8 @@ namespace cogbot.TheOpenSims
             {
                 lock (HasPrimLock) if (HasPrim)
                     {
-                        if (!WorldObjects.HasValue(theAvatar.ProfileProperties) || string.IsNullOrEmpty(theAvatar.ProfileProperties.BornOn))
+                        var theAvatar = this.theAvatar;
+                        if (theAvatar != null && !WorldObjects.HasValue(theAvatar.ProfileProperties) || string.IsNullOrEmpty(theAvatar.ProfileProperties.BornOn))
                         {
                             theAvatar.ProfileProperties = value;
                         }
@@ -352,7 +355,8 @@ namespace cogbot.TheOpenSims
             {
                 lock (HasPrimLock) if (HasPrim)
                     {
-                        if (!string.IsNullOrEmpty(theAvatar.ProfileInterests.LanguagesText))
+                        var theAvatar = this.theAvatar;
+                        if (theAvatar != null && !string.IsNullOrEmpty(theAvatar.ProfileInterests.LanguagesText))
                         {
                             _AvatarInterests = theAvatar.ProfileInterests;
                         }
@@ -363,7 +367,8 @@ namespace cogbot.TheOpenSims
             {
                 lock (HasPrimLock) if (HasPrim)
                     {
-                        if (string.IsNullOrEmpty(theAvatar.ProfileInterests.LanguagesText))
+                        var theAvatar = this.theAvatar;
+                        if (theAvatar != null && string.IsNullOrEmpty(theAvatar.ProfileInterests.LanguagesText))
                         {
                             theAvatar.ProfileInterests = value;
                         }
@@ -590,6 +595,13 @@ namespace cogbot.TheOpenSims
         }
         public void AddGoupRoles(List<AvatarGroup> groups)
         {
+            if (theAvatar != null)
+            {
+                foreach (AvatarGroup avatarGroup in groups)
+                {
+                    AddGroup(avatarGroup.GroupID);
+                }
+            }
             GroupRoles = GroupRoles ?? new Dictionary<UUID, AvatarGroup>();
             lock (GroupRoles)
                 foreach (var avatarGroup in groups)
@@ -606,7 +618,62 @@ namespace cogbot.TheOpenSims
                     GroupRoles[avatarGroup.GroupID] = avatarGroup;
                 }
         }
+        public bool InGroup(UUID uuid)
+        {
+            if (CogbotHelpers.IsNullOrZero(uuid)) return false;
+            if (GroupRoles != null) if (GroupRoles.ContainsKey(uuid)) return true;
+            var ag = AvatarGroups;
+            return ag != null && ag.Contains(uuid);
+        }
+        public void AddGroup(UUID groupID)
+        {
+            if (theAvatar != null)
+            {
+                List<UUID> agroups = theAvatar.Groups;
+                if (agroups == null)
+                {
+                    agroups = theAvatar.Groups = new List<UUID>();
+                }
+                if (!agroups.Contains(groupID)) agroups.Add(groupID);
+            }
+        }
 
+        public void AddGroupRole(UUID group, UUID role)
+        {
+            AddGroup(group);
+        }
+
+        public PermissionWho EffectivePermissionWho(SimObject exportPrim)
+        {
+            Primitive.ObjectProperties permProps = exportPrim.Properties;
+            UUID objectGroupID = permProps.GroupID;
+            UUID ownerID = permProps.OwnerID;
+            PrimFlags flag = exportPrim.Prim.Flags;
+            bool groupOwned = (flag & PrimFlags.ObjectGroupOwned) != 0;
+            return EffectivePermissionWho(ownerID, objectGroupID, groupOwned);
+        }
+
+        public PermissionWho EffectivePermissionWho(UUID ownerID, UUID objectGroupID, bool groupOwned)
+        {
+            if (ownerID == ID) return PermissionWho.Owner;
+            if (!CogbotHelpers.IsNullOrZero(objectGroupID) && InGroup(objectGroupID))
+            {
+                if (groupOwned) return PermissionWho.Owner;
+                return PermissionWho.Group;
+            }
+            return PermissionWho.Everyone;
+        }
+
+        public PermissionMask EffectivePermissionsMask(SimObject exportPrim)
+        {
+            Permissions perms = exportPrim.Properties.Permissions;
+            return NonEffectivePermissionsMask(exportPrim) & perms.BaseMask;
+        }
+        public PermissionMask NonEffectivePermissionsMask(SimObject exportPrim)
+        {
+            Permissions perms = exportPrim.Properties.Permissions;
+            return CogbotHelpers.PermMaskForWho(EffectivePermissionWho(exportPrim), perms);
+        }
 
         public override bool KilledPrim(Primitive prim, Simulator simulator)
         {

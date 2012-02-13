@@ -40,6 +40,7 @@ namespace cogbot.Listeners
             int missingParams = paramNames.Length - parameters.Length;
             //if (missingParams != 0)
             {
+               return true;
                 object[] old = parameters;
                 parameters = new object[paramNames.Length];
                 foreach (var o in old)
