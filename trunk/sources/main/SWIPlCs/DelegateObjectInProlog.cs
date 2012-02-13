@@ -52,10 +52,11 @@ namespace SbsSW.SwiPlCs
                     PrologEvents++;
                     if (UseCallN)
                     {
-                        return PrologClient.CallProlog(this, Key.Module, "call", PrologArity, arg1, paramz, ReturnType);
+                        return PrologClient.CallProlog(this, Key.Module, "call", PrologArity, arg1, paramz, ReturnType,
+                                                       false);
                     }
                     return PrologClient.CallProlog(this, Key.Module ?? "user", Key.Name, PrologArity, arg1, paramz,
-                                                   ReturnType);
+                                                   ReturnType, false);
                 }
                 catch (AccessViolationException e)
                 {

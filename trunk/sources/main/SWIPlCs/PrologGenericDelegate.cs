@@ -27,10 +27,14 @@ namespace SbsSW.SwiPlCs
                 if (_handlerMethod != null) return _handlerMethod;
                 if (ParamTypes == null) throw new InvalidOperationException("First set instance of DelegateType!");
                 Type c = GetType();
-                if (IsVoid) return c.GetMethod("GenericFun" + ParamArity).MakeGenericMethod(ParamTypes);
+                if (IsVoid)
+                {
+                    if (ParamArity == 0) return c.GetMethod("GenericFun0");
+                    return c.GetMethod("GenericFun" + ParamArity).MakeGenericMethod(ParamTypes);
+                }
                 Type[] typesPlusReturn = new Type[ParamArity + 1];
                 Array.Copy(ParamTypes, typesPlusReturn, ParamArity);
-                typesPlusReturn[PrologArity] = ReturnType;
+                typesPlusReturn[ParamArity] = ReturnType;
                 return _handlerMethod = c.GetMethod("GenericFunR" + ParamArity).MakeGenericMethod(typesPlusReturn);
             }
         }
