@@ -121,6 +121,15 @@ namespace cogbot.Listeners
             return ID.AssetData;
         }
 
+        public override void Assets_OnImageReceiveProgress(object sender, ImageReceiveProgressEventArgs e)
+        {
+            return;           
+            if (e.Total == e.Received)
+            {
+                OnEvent("On-Image-Receive-Progress", paramNamesOnImageReceiveProgress, paramTypesOnImageReceiveProgress,
+                        e.ImageID, e.Received, e.Total);                
+            }
+        }
 
         //public override void Assets_OnXferReceived(XferDownload xfer)
         //{
@@ -139,7 +148,10 @@ namespace cogbot.Listeners
                 return sa;
             }
             sa.NeedsRequest = false;
-            if (assetType == AssetType.SoundWAV) return sa;
+            if (assetType == AssetType.SoundWAV)
+            {
+                return sa;
+            }
             //if (assetType == AssetType.Sound) return sa;
             lock (AssetRequestType)
             {
