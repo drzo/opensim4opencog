@@ -1855,7 +1855,7 @@ namespace cogbot
         /// </summary>
         /// <param name="login">The status of the login</param>
         /// <param name="message">Error message on failure, MOTD on success.</param>
-        private void RegisterCommand(string name, cogbot.Actions.Command command)
+        public void RegisterCommand(string name, cogbot.Actions.Command command)
         {
             string orginalName = name;
             name = name.Replace(" ", "").ToLower();
