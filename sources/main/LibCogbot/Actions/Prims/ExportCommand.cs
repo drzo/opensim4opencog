@@ -22,7 +22,7 @@ namespace cogbot.Actions.SimExport
         public SimObject O;
         public override string ToString()
         {
-            return I.Name + "(" + I.AssetType + " " + I.AssetUUID + ")@" + ExportCommand.named(O);
+            return ExportCommand.ItemDesc(I,O);
         }
     }
     public class TIOBJ
@@ -75,7 +75,6 @@ namespace cogbot.Actions.SimExport
         private static TaskQueueHandler slowlyExport = new TaskQueueHandler("slowlyExport", TimeSpan.FromMilliseconds(100),
                                                                             true);
 
-        public static readonly Dictionary<uint, ulong> OnExitKill = new Dictionary<uint, ulong>();
         public static readonly List<UUID> ToDownloadAssets = new List<UUID>();
         public static readonly Dictionary<UUID, AssetType> AllRelatedAssets = new Dictionary<UUID, AssetType>();
         public static readonly List<UUID> PrimDepsAssets = new List<UUID>();
@@ -83,13 +82,14 @@ namespace cogbot.Actions.SimExport
         public static readonly Dictionary<InventoryItem, IHO> TaskAssetWaiting = new Dictionary<InventoryItem, IHO>();
         public static readonly Dictionary<InventoryItem, TIOBJ> TasksRezed = new Dictionary<InventoryItem, TIOBJ>();
         public static readonly List<InventoryBase> CompletedTaskItem = new List<InventoryBase>();
+        public static readonly Dictionary<UUID, InventoryItem> UUID2ITEM = new Dictionary<UUID, InventoryItem>();
         public static string dumpDir = "cog_export/objects/";
         public static string assetDumpDir = "cog_export/assets/";
         public static bool IsExporting = false;
         static private List<SimObject> exportedPrims = new List<SimObject>();
-        static Dictionary<string, UUID> inventoryHolder = new Dictionary<string, UUID>();
+        static readonly Dictionary<string, UUID> inventoryHolder = new Dictionary<string, UUID>();
         public static bool Incremental = true;
-        static InventoryItem linkSpeaker = null;
+        private static readonly Dictionary<string, InventoryItem> lslScripts = new Dictionary<string, InventoryItem>();
         private int LocalFailures;
         static readonly object fileWriterLock = new object();
         private static BotClient SClient;
@@ -101,6 +101,11 @@ namespace cogbot.Actions.SimExport
         static private bool verbosely;
         private static bool taskobj;
         private static int needFiles;
+        private static int TaskInvFailures = 0;
+        private static InventoryObject WaitingFolderObjects;
+        private static bool WaitingFolderObjectBool;
+        private static SimObject WaitingFolderSimObject;
+        private static List<string> arglist;
 
         static public UUID inventoryHolderUUID
         {
@@ -146,6 +151,9 @@ namespace cogbot.Actions.SimExport
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
+            inventoryHolder.Clear();
+            lslScripts.Clear();
+            exportedPrims.Clear();
             const string hlp = @"
             
             Toplevel Directives
@@ -164,7 +172,7 @@ namespace cogbot.Actions.SimExport
             // quietly = terser output
             // verbose = more verbose
 
-            // llsd - save llsd files
+            // llsd - save llsd files 
             // tasks - save task files
             // deps - operate on dependant assets
             // links - operate on linset
@@ -176,7 +184,7 @@ namespace cogbot.Actions.SimExport
             ";
             if (args == null || args.Length == 0) return Failure(hlp);
             string[] nargs = { "$region" };
-            List<string> arglist = new List<string>(args);
+            arglist = new List<string>(args);
             if (arglist.Contains("help")) return Success(hlp);
             if (args.Length > 1)
             {
@@ -204,6 +212,7 @@ namespace cogbot.Actions.SimExport
             {
                 if (arglist.Contains("clear"))
                 {
+                    KillAllUnpacked(WriteLine);
                     PurgeExport();
                     arglist.Add("reset");
                 }
@@ -232,6 +241,10 @@ namespace cogbot.Actions.SimExport
 
             if (fileOnly) return Success("Manipulated filesystem");
 
+            if (arglist.Contains("cleanup"))
+            {
+                return CleanupAfterExport(fromAgentID, WriteLine);
+            }
             IsExporting = true;
             FolderCalled("TaskInvHolder");
             //string file = args[args.Length - 1];
@@ -250,9 +263,8 @@ namespace cogbot.Actions.SimExport
             int objects = 0;
             foreach (var P in PS)
             {
-                if (P is SimAvatar) continue;
-                // skip attachments
-                if (P.Parent is SimAvatar) continue;
+                // skip attachments and avatars
+                if (IsSkipped(P)) continue;
                 if (!P.HasPrim)
                 {
                     Failure("Missing Prim: " + named(P));
@@ -293,7 +305,7 @@ namespace cogbot.Actions.SimExport
                 ExportPrim(Client, P, LocalFailure, arglist);
                 if (LocalFailures == 0)
                 {
-                    exportedPrims.Add(P);
+                    if (!exportedPrims.Contains(P)) exportedPrims.Add(P);
                 }
             }
             if (showsStatus)
@@ -307,14 +319,14 @@ namespace cogbot.Actions.SimExport
             {
                 // lock (PrimWaitingLinkset)
                 {
-                    InventoryItem found = GetLinkSpeaker(Client);
+                    InventoryItem found = GetInvItem(Client, "LinksetSpeaker");
                     foreach (var pa in LockInfo.CopyOf(PrimWaitingLinkset))
                     {
                         var exportPrim = pa.Value.O;
                         if (verbosely) Failure("Awaiting Linkset " + named(exportPrim));
                         if (arglist.Contains("request"))
                         {
-                            PutLinkSpeaker(Client, exportPrim);
+                            PutItemToTaskInv(Client, exportPrim, "LinksetSpeaker");
                         }
                     }
                 }
@@ -372,6 +384,26 @@ namespace cogbot.Actions.SimExport
             return res;
         }
 
+        private CmdResult CleanupAfterExport(UUID agent, OutputDelegate outputDelegate)
+        {
+            KillAllUnpacked(outputDelegate);
+            return Execute(new[] {"reset"}, agent, outputDelegate);
+        }
+
+        private static bool IsSkipped(SimObject P)
+        {
+            if (P is SimAvatar) return true;
+            if (P == null) return true;
+            if (P.IsKilled) return true;
+            if (P.Parent is SimAvatar) return true;
+            // yes SL really does have links two deep! (called attachment linksets)
+            if (P.Parent.Parent is SimAvatar)
+            {
+                return true;
+            }
+            return false;
+        }
+
         public static void PurgeCache()
         {
             string sfile = Path.GetDirectoryName(SimAsset.CFileName(UUID.Zero, AssetType.Texture));
@@ -382,7 +414,7 @@ namespace cogbot.Actions.SimExport
             }
         }
 
-        private void PurgeExport()
+        public static void PurgeExport()
         {
             if (Directory.Exists(dumpDir)) Directory.Delete(dumpDir, true);
             if (Directory.Exists(assetDumpDir)) Directory.Delete(assetDumpDir, true);
@@ -483,14 +515,63 @@ namespace cogbot.Actions.SimExport
                 if (PrimWaitingLinkset.ContainsKey(exportPrim.ID)) return;
                 PrimWaitingLinkset.Add(exportPrim.ID, new SO { S = "", O = exportPrim, F = pathStem });
             }
-            PutLinkSpeaker(Client, exportPrim);
+            PutItemToTaskInv(Client, exportPrim, "LinksetSpeaker");
         }
 
         private static void listen_forLinkset(object sender, ChatEventArgs e)
         {
             if (e.Type != ChatType.OwnerSay) return;
             UUID sourceId = e.SourceID;
+            string fromWho = e.FromName;
             string eMessage = e.Message;
+            if (fromWho == "RegionSay4200")
+            {
+                int findC = eMessage.IndexOf(":");
+                string fu = eMessage.Substring(0, findC);
+                UUID.TryParse(fu, out sourceId);
+                eMessage = eMessage.Substring(findC + 1).TrimStart();
+            }
+            if (eMessage.StartsWith("INV-"))
+            {
+                return;
+            }
+            if (eMessage.StartsWith("MYKEY"))
+            {
+                return;
+            }
+            if (eMessage.StartsWith("RTI:"))
+            {
+                int popTo = eMessage.IndexOf("RTI:");
+                eMessage = eMessage.Substring(4 + popTo).Trim();
+                string[] lr = eMessage.Split(new[] {','});
+                var objid = UUIDFactory.GetUUID(lr[0]);
+                var assetID = UUIDFactory.GetUUID(lr[1]);
+                var exportPrimID = UUIDFactory.GetUUID(lr[2]);
+                string exportFile = assetDumpDir + assetID + ".object";
+                lock (fileWriterLock) File.WriteAllText(exportFile, eMessage);
+
+                var taskInv = WaitingFolderObjects;
+                if (taskInv == null)
+                {
+                    //Error("cant find taskinv item");
+                    return;
+                }
+                var itemID = taskInv.UUID;
+                eMessage += "," + itemID;
+
+                string exportFile2 = dumpDir + itemID + ".repack";
+                lock (fileWriterLock) File.WriteAllText(exportFile2, eMessage);
+                lock (TaskAssetWaiting)
+                {
+                    IHO ho;
+                    TaskAssetWaiting.TryGetValue(taskInv, out ho);
+                    TaskAssetWaiting.Remove(taskInv);
+                    lock (CompletedTaskItem) CompletedTaskItem.Add(taskInv);
+                }
+                WaitingFolderSimObject = GetSimObjectFromUUID(objid);
+                WaitingFolderObjectBool = false;
+                return;
+            }
             lock (PrimWaitingLinkset)
             {
                 SO so;
@@ -534,29 +615,73 @@ namespace cogbot.Actions.SimExport
             }
         }
 
-        private static void PutLinkSpeaker(BotClient Client, SimObject exportPrim)
+        public static void Error(string s)
         {
-            InventoryItem found = GetLinkSpeaker(Client);
-            Client.Inventory.CopyScriptToTask(exportPrim.LocalID, (InventoryItem)found, true);
-            Client.Inventory.RequestSetScriptRunning(exportPrim.ID, found.AssetUUID, true);
+            throw new NotImplementedException();
         }
 
-        public static InventoryItem GetLinkSpeaker(GridClient Client)
+        internal static SimObject GetSimObjectFromUUID(UUID objid)
         {
-            if (linkSpeaker != null) return linkSpeaker;
+            DateTime timeOut = DateTime.Now + TimeSpan.FromSeconds(5);
+            SimObject O = null;
+            while (DateTime.Now < timeOut)
+            {
+                O = WorldObjects.GetSimObjectFromUUID(objid);
+                if (O == null) continue;
+            }
+            if (O != null) return O;
+            return null;
+        }
+
+        private static InventoryItem itemFor(UUID itemid)
+        {
+            InventoryItem item;
+            if (UUID2ITEM.TryGetValue(itemid, out item)) return item;
+            return null;
+        }
+
+        private static void PutItemToTaskInv(BotClient Client, SimObject exportPrim, string name)
+        {
+            InventoryItem found = GetInvItem(Client, name);
+            if (found.InventoryType == InventoryType.LSL)
+            {
+                Client.Inventory.CopyScriptToTask(exportPrim.LocalID, (InventoryItem) found, true);
+                Client.Inventory.RequestSetScriptRunning(exportPrim.ID, found.AssetUUID, true);
+            }
+        }
+
+        public static InventoryItem GetInvItem(GridClient Client, string name)
+        {
+            if (lslScripts.ContainsKey(name)) return lslScripts[name];
             Client.Inventory.FolderContents(Client.Inventory.FindFolderForType(AssetType.LSLText), Client.Self.AgentID,
                                             false, true, InventorySortOrder.ByName, 10000);
             foreach (var item in Client.Inventory.Store.GetContents(Client.Inventory.FindFolderForType(AssetType.LSLText)))
             {
-                if (item.Name == "LinksetSpeaker")
+                if (item.Name == name)
                 {
-                    linkSpeaker = item as InventoryItem;
+                    lslScripts[name] = item as InventoryItem;
                     break;
                 }
             }
-            return linkSpeaker;
+            return lslScripts[name];
         }
 
+        private static bool checkTaskPerm(SimObject exportPrim, InventoryItem item, BotClient Client, OutputDelegate Failure)
+        {
+            SimAvatarClient theAvatar = Client.TheSimAvatar;
+            PermissionWho pw = theAvatar.EffectivePermissionWho(item.OwnerID, item.GroupID, item.GroupOwned);
+            PermissionMask pm = CogbotHelpers.PermMaskForWho(pw, item.Permissions);
+            bool cmt = Permissions.HasPermissions(pm, PermissionMask.Copy) ||
+                       Permissions.HasPermissions(pm, PermissionMask.Modify) ||
+                       Permissions.HasPermissions(pm, PermissionMask.Transfer);
+
+            if (!cmt)
+            {
+                Failure("ItemPerms " + pm + " for " + pw + " on " + ItemDesc(item, exportPrim));
+                return false;
+            }
+            return true;
+        }
 
         static private bool checkPerms(BotClient Client, SimObject exportPrim, OutputDelegate Failure)
         {
@@ -692,12 +817,70 @@ namespace cogbot.Actions.SimExport
             string contents = "";
             List<SimObject> foundObject = new List<SimObject>();
             List<InventoryObject> folderObject = new List<InventoryObject>();
+
+            TaskInvFailures = 0;
             foreach (InventoryBase b in ib)
             {
-                string was = SaveTaskItems(Client, exportPrim, b, Failure, foundObject, folderObject);
+                string was = SaveTaskItems(Client, exportPrim, b, Failure, folderObject);
                 contents += was;
             }
-            if (folderObject.Count == 0)
+            if (folderObject.Count > 0 && !taskobj)
+            {
+                // dont save it since we are skipping task objects
+                TaskInvFailures++;
+                Failure("Run with 'taskobj' for:\n" + contents + " for " +
+                        named(exportPrim));
+                return;
+            }
+            if (taskobj && folderObject.Count > 0)
+            {
+                UUID into = FolderCalled("TaskInvKilled") ?? Client.Inventory.FindFolderForType(AssetType.TrashFolder);
+                bool placed = false;
+                foreach (var oi in folderObject)
+                {
+                    WaitingFolderObjectBool = true;
+                    WaitingFolderObjects = oi;
+                    if (!placed)
+                    {
+                        placed = true;
+                        PutItemToTaskInv(Client, exportPrim, "ObjectUnpacker");
+                    }
+                    else
+                    {
+                        Client.Self.Chat("" + exportPrim.ID.ToString().ToLower() + " RezNext ", 4201, ChatType.Normal);
+                    }
+
+                    SimObject folderSimObject = null;
+                    try
+                    {
+                        DateTime until = DateTime.Now + TimeSpan.FromSeconds(6);
+                        while (DateTime.Now < until && WaitingFolderObjectBool)
+                        {
+                            Thread.Sleep(500);
+                        }
+                        if (WaitingFolderObjectBool)
+                        {
+                            TaskInvFailures++;
+                            break;
+                        }
+                        folderSimObject = WaitingFolderSimObject;
+                        ExportPrim(Client, folderSimObject, Failure, ExportCommand.arglist);
+                    }
+                    finally
+                    {
+                        if (folderSimObject != null)
+                        {
+                            Client.Inventory.RequestDeRezToInventory(folderSimObject.LocalID,
+                                                                     DeRezDestination.TrashFolder, into,
+                                                                     UUID.Random());
+                        }
+                        string exportFile2 = dumpDir + oi.UUID + ".repack";
+                        File.Delete(exportFile2);                        
+                    }
+                }
+                Client.Self.Chat("" + exportPrim.ID.ToString().ToLower() + " KillScript ", 4201, ChatType.Normal);
+            }
+            if (TaskInvFailures == 0)
             {
                 lock (fileWriterLock) File.WriteAllText(exportFile, contents);
             }
@@ -708,7 +891,7 @@ namespace cogbot.Actions.SimExport
             }
         }
 
-        static string SaveTaskItems(BotClient Client, SimObject exportPrim, InventoryBase b, OutputDelegate Failure, List<SimObject> foundObject, List<InventoryObject> folderObject)
+        static string SaveTaskItems(BotClient Client, SimObject exportPrim, InventoryBase b, OutputDelegate Failure, List<InventoryObject> folderObject)
         {
             string primName = " from " + named(exportPrim);
             //primName = "";
@@ -726,21 +909,29 @@ namespace cogbot.Actions.SimExport
                 return "Folder," + UUID.Zero + "," + fldr.Name + "\n";
             }
             InventoryItem item = b as InventoryItem;
+
+            if (item == null)
+            {
+                string errorMsg = "" + b.UUID + ",ERROR," + b.UUID + "," + b.Name;
+                TaskInvFailures++;
+                Failure("No an Item");
+                return errorMsg;
+            }
+            string itemEntry = b.UUID + ","+ item.AssetType + "," + item.AssetUUID + "," + item.Name + "\n";
+            UUID2ITEM[b.UUID] = item;
+            UUID2ITEM[item.AssetUUID] = item;
+            bool exportable = checkTaskPerm(exportPrim, item, Client, Failure);
+            lock (TaskAssetWaiting) lock (CompletedTaskItem)
+            {
+                if (TaskAssetWaiting.ContainsKey(item) || CompletedTaskItem.Contains(item))
+                {
+                    return itemEntry;
+                }
+            }
             if (item.InventoryType == InventoryType.Object)
             {
-                UnpackTaskObject(exportPrim, item as InventoryObject, folderObject, Client, Failure, primName, foundObject);
-
-                //foundObject = true;
-                return item.AssetType + "," + item.AssetUUID + "," + item.Name + "\n";
-                //todo
-                //
-            }
-            lock (TaskAssetWaiting)
-            {
-                if (TaskAssetWaiting.ContainsKey(item))
-                {
-                    return item.AssetType + "," + item.AssetUUID + "," + item.Name + "\n";
-                }
+                UnpackTaskObject(exportPrim, item as InventoryObject, folderObject, Client, Failure, primName);
+                return itemEntry;
             }
             AssetManager.AssetReceivedCallback rec = (trans, asset) =>
                                                          {
@@ -768,41 +959,42 @@ namespace cogbot.Actions.SimExport
                                                              lock (CompletedTaskItem) CompletedTaskItem.Add(b);
                                                          };
             IHO ho = new IHO { I = item, H = rec, O = exportPrim };
+
             lock (TaskAssetWaiting)
                 TaskAssetWaiting.Add(item, ho);
-
-
-            SimAvatarClient theAvatar = Client.TheSimAvatar;
-            PermissionWho pw = theAvatar.EffectivePermissionWho(item.OwnerID, item.GroupID, item.GroupOwned);
-            PermissionMask pm = CogbotHelpers.PermMaskForWho(pw, item.Permissions);
-            bool cmt = Permissions.HasPermissions(pm, PermissionMask.Copy) ||
-                       Permissions.HasPermissions(pm, PermissionMask.Modify) ||
-                       Permissions.HasPermissions(pm, PermissionMask.Transfer);
-
-            if (!cmt)
-            {
-                Failure("ItemPerms " + pm + " for " + pw + " on " + ho);
-            }
-
 
             SlowlyDo(() =>
                      Client.Assets.RequestInventoryAsset(item.AssetUUID, item.UUID, exportPrim.ID, item.OwnerID,
                                                          item.AssetType, true, rec));
             FindOrCreateAsset(item.AssetUUID, item.AssetType);
-            return item.AssetType + "," + item.AssetUUID + "," + item.Name + "\n";
-            /*if (!are.WaitOne(10000))
-            {
-                Failure("Cant get taskinv " + item.InventoryType + " " + item.Name + primName);
-            }  else
-            {
-                // Success("Received taskinv " + item.InventoryType + " " + item.Name + primName);
-            }*/
+
+            return itemEntry;
         }
 
-        private static void UnpackTaskObject(SimObject exportPrim, InventoryObject taskInv, List<InventoryObject> folderObject, BotClient Client, OutputDelegate Failure, string primName, List<SimObject> foundObject)
+        private static void UnpackTaskObject(SimObject exportPrim, InventoryObject taskInv, List<InventoryObject> folderObject, BotClient Client, OutputDelegate Failure, string primName)
         {
             folderObject.Add(taskInv);
             if (!taskobj) return;
+            string exportFile = assetDumpDir + taskInv.AssetUUID + ".object";
+            string exportFile2 = dumpDir + taskInv.UUID + ".repack";
+            //if (Incremental || showsMissingOnly) lock (fileWriterLock) if (File.Exists(exportFile) || File.Exists(exportFile2)) return;
+            needFiles++;
+            if (showsMissingOnly)
+            {
+                Failure("NEED OBJ for " + named(exportPrim));
+                return;
+            }
+            IHO ho = new IHO { I = taskInv, H = null, O = exportPrim };
+
+            lock (TaskAssetWaiting)
+                TaskAssetWaiting.Add(taskInv, ho);
+        }
+
+        private static void UnpackTaskObjectP2(SimObject exportPrim, InventoryObject taskInv, List<InventoryObject> folderObject, BotClient Client, OutputDelegate Failure, string primName, List<SimObject> foundObject)
+        {
+            throw new NotImplementedException("UnpackTaskObjectP2");
+
+            string exportFile = assetDumpDir + taskInv.AssetUUID + ".object";
             AutoResetEvent are0 = new AutoResetEvent(false);
             AutoResetEvent are2 = new AutoResetEvent(false);
             uint localID = 0;
@@ -821,7 +1013,7 @@ namespace cogbot.Actions.SimExport
             EventHandler<ObjectPropertiesEventArgs> created2 = (o, e) =>
                                                                    {
                                                                        if (e.Properties.ItemID != newItemID) return;
-                                                                       objectID = e.Properties.ObjectID;                                                                      
+                                                                       objectID = e.Properties.ObjectID;
                                                                        are2.Set();
                                                                    };
             Client.Inventory.TaskItemReceived += created0;
@@ -847,23 +1039,18 @@ namespace cogbot.Actions.SimExport
                 return;
             }
 
-            DateTime timeOut = DateTime.Now + TimeSpan.FromSeconds(5);
-            SimObject O = null;
-            while (DateTime.Now < timeOut)
-            {
-                O = WorldObjects.GetSimObjectFromUUID(objectID);
-                if (O == null) continue;
-                foundObject.Add(O);
-            }
+            SimObject O = GetSimObjectFromUUID(objectID);
             if (O == null)
             {
                 Failure("Cant FIND taskinv object " + taskInv.Name + primName);
                 return;
             }
+            foundObject.Add(O);
             Primitive prim = O.Prim;
             localID = localID > 0 ? localID : O.LocalID;
-            lock (OnExitKill) OnExitKill.Add(localID, exportPrim.GetSimulator().Handle);
-            Client.Objects.DropObject(O.GetSimulator(), localID);
+            Simulator simulator = O.GetSimulator();
+            Client.Objects.DropObject(simulator, localID);
+            lock (fileWriterLock) File.WriteAllText(exportFile, "" + localID + "," + simulator.Handle + "," + objectID);
             var tiobj = new TIOBJ()
             {
                 Task = taskInv,
@@ -876,17 +1063,33 @@ namespace cogbot.Actions.SimExport
             TasksRezed[taskInv] = tiobj;
         }
 
-        public void KillAllUnpacked()
+        public void KillAllUnpacked(OutputDelegate Failures)
         {
-            UUID into = FolderCalled("TaskInvKilled");
-            foreach (var exitKill in OnExitKill)
+
+            UUID into = FolderCalled("TaskInvKilled") ?? Client.Inventory.FindFolderForType(AssetType.TrashFolder);
+            lock (fileWriterLock)
             {
-                Client.Inventory.RequestDeRezToInventory(exitKill.Key, DeRezDestination.AgentInventoryTake,
-                                                         into, UUID.Random());
+                foreach (var file in Directory.GetFiles(dumpDir, "*.repack"))
+                {
+                    string[] csv = File.ReadAllText(file).Split(new[] {','});
+                    var O = GetSimObjectFromUUID(UUIDFactory.GetUUID(csv[0]));
+                    if (O == null)
+                    {
+                        Failure("Cant find object for file: " + file + " " + string.Join(",", csv));
+                    }
+                    else
+                    {
+                        Client.Inventory.RequestDeRezToInventory(O.LocalID, DeRezDestination.TrashFolder, into,
+                                                                 UUID.Random());
+                    }
+                    File.Delete(file);
+
+                }
             }
         }
         private static void UnpackTaskObject2(SimObject exportPrim, InventoryItem item, List<InventoryObject> folderObject, BotClient Client, OutputDelegate Failure, string primName, List<SimObject> foundObject)
         {
+            throw new NotImplementedException("UnpackTaskObjectP2");
             InventoryObject io = item as InventoryObject;
             folderObject.Add(io);
             Vector3 pos = new Vector3(66, 66, 66);
@@ -1114,11 +1317,11 @@ namespace cogbot.Actions.SimExport
                 if (!AllRelatedAssets.ContainsKey(assetID))
                 {
                     AllRelatedAssets.Add(assetID, assetType);
-                    lock (ToDownloadAssets)
-                        if (!ToDownloadAssets.Contains(assetID))
-                        {
-                            ToDownloadAssets.Add(assetID);
-                        }
+                }
+            lock (ToDownloadAssets)
+                if (!ToDownloadAssets.Contains(assetID))
+                {
+                    ToDownloadAssets.Add(assetID);
                 }
         }
 
@@ -1246,5 +1449,10 @@ namespace cogbot.Actions.SimExport
                     AllPropertiesReceived.Set();
             }
         }*/
+
+        static public string ItemDesc(InventoryItem I, SimObject O)
+        {
+            return I.Name + "(" + I.AssetType + " " + I.AssetUUID + ")@" + named(O);
+        }
     }
 }
