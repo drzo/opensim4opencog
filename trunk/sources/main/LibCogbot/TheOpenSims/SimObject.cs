@@ -2332,7 +2332,10 @@ namespace cogbot.TheOpenSims
                 }
                 if (_Parent == null)
                 {
-                    missing += " Parent";
+                    if (_Prim0!=null)
+                    {
+                        if (_Prim0.ParentID != 0) missing += " Parent";
+                    }
                 }
                 if (Properties == null)
                 {
@@ -2965,7 +2968,7 @@ namespace cogbot.TheOpenSims
         bool Flying { get; set; }
         bool InventoryEmpty { get; }
         bool IsInside(Vector3 L);
-        bool IsKilled { set; }
+        bool IsKilled { set; get;  }
         bool IsControllable { get; }
         //inherited from SimPosition: bool IsPassable { get; set; }
         bool IsPhantom { get; set; }
