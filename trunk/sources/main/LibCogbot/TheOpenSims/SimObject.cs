@@ -715,15 +715,18 @@ namespace cogbot.TheOpenSims
             get
             {
                 if (PathFinding.MadePhantom) return true;
+                Primitive Prim = this.Prim;
+                if (Prim == null) return true;
+
                 if (IsRoot || WorldObjects.IsOpenSim)
-                {
-                    Primitive Prim = this.Prim;
-                    if (Prim == null) return true;
+                {                 
                     return (Prim.Flags & PrimFlags.Phantom) == PrimFlags.Phantom;
                 }
-                if (!IsRoot && IsRegionAttached) return Parent.IsPhantom;
-                if (_Parent == null) return true;
-                return Parent.IsPhantom;
+                if (!IsRoot && IsRegionAttached && Parent != this)
+                {
+                    return Parent.IsPhantom;
+                }
+                return (Prim.Flags & PrimFlags.Phantom) == PrimFlags.Phantom;
             }
             set
             {
