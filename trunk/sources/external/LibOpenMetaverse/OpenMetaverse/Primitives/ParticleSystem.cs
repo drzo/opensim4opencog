@@ -41,7 +41,7 @@ namespace OpenMetaverse
         /// <summary>
         /// Complete structure for the particle system
         /// </summary>
-        public class ParticleSystem : WasAStruct
+        public class ParticleSystem : WasAStruct, ICloneable
         {
             /// <summary>
             /// Particle source pattern
@@ -307,7 +307,7 @@ namespace OpenMetaverse
 
             public ParticleSystem()
             {
-                throw new NotImplementedException();
+              //  throw new NotImplementedException();
             }
             public static ParticleSystem FromOSD(OSD osd)
             {
@@ -336,14 +336,41 @@ namespace OpenMetaverse
 
                 return partSys;
             }
+
+            public object Clone()
+            {
+                return new ParticleSystem(this.GetBytes(), 0);
+            }
         }
 
         #endregion Subclasses
 
         #region Public Members
 
+        private ParticleSystem _particalSys;
         /// <summary></summary>
-        public ParticleSystem ParticleSys;
+        public ParticleSystem ParticleSys
+        {
+            get
+            {
+                if (_particalSys == null)
+                {
+                    _particalSys = new ParticleSystem();
+                }
+                return _particalSys;
+            }
+            set
+            {
+                {
+                    if (_particalSys != null)
+                    {
+                        //@todo merge these!
+                        _particalSys = (ParticleSystem) _particalSys.Clone();
+                    }
+                    _particalSys = value;
+                }
+            }
+        }
 
         #endregion Public Members
     }
