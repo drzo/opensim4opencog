@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse.Packets;
 using System.Reflection;
+using OpenMetaverse.StructuredData;
 
 namespace OpenMetaverse
 {
@@ -554,6 +555,404 @@ namespace OpenMetaverse
         public static string StructToString(object t)
         {
             return WasAStruct.StructToString(t);
+        }
+
+        public static void AddObjectOSD(object primitive, OSDMap map, Type from)
+        {
+            from = from ?? primitive.GetType();
+            map.Add("typeosd", from.FullName);
+            foreach (var v in from.GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                string n = v.Name.ToLower();
+                if (n.StartsWith("_")) continue;
+                if (v is MethodBase)
+                {
+                    continue;
+                }
+                var p = v as PropertyInfo;
+                if (p != null && p.CanRead && p.CanWrite && p.GetIndexParameters().Length == 0)
+                {
+                    AddOSDMember(map, n, p.GetValue(primitive, null), p.PropertyType);
+                    continue;
+                }
+                var f = v as FieldInfo;
+                if (f != null && !f.IsStatic && !f.IsLiteral)
+                {
+                    AddOSDMember(map, n, f.GetValue(primitive), f.FieldType);
+                    continue;
+                }
+            }
+        }
+        public static void SetObjectOSD(object primitive, OSDMap map)
+        {
+            Type from = primitive.GetType();
+            string From = map["typeosd"].AsString();//, primitive.GetType().FullName);
+            from = Type.GetType(From) ?? from;
+            int mapManips = 0;
+            foreach (var v in from.GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                string n = v.Name.ToLower();
+                if (n.StartsWith("_")) continue;
+                if (v is MethodBase)
+                {
+                    continue;
+                }
+                var p = v as PropertyInfo;
+                if (p != null && p.CanRead && p.CanWrite && p.GetIndexParameters().Length == 0)
+                {
+                    bool found;
+                    object setOSDMember = SetOSDMember(map, n, p.PropertyType,out found);
+                    if (found)
+                    {
+                        p.SetValue(primitive, setOSDMember, null);
+                        mapManips++;
+                        continue;
+                    }
+                    continue;
+                }
+                var f = v as FieldInfo;
+                if (f != null && !f.IsStatic && !f.IsLiteral)
+                {
+                    bool found;
+                    object setOSDMember = SetOSDMember(map, n, f.FieldType, out found);
+                    if (found)
+                    {
+                        f.SetValue(primitive, setOSDMember);
+                        mapManips++;
+                        continue;
+                    }
+                    continue;
+                }
+            }
+        }
+
+        private static object SetOSDMember(OSDMap map, string s,  Type type, out bool found)
+        {
+            var v = map[s];
+            if (v == null)
+            {
+                found = false;
+                return null;
+            }
+            found = true;
+            if (type == typeof(string)) return v.AsString();
+            if (type == typeof(Vector3)) return v.AsVector3();
+            if (type == typeof(UUID)) return v.AsUUID();
+            found = false;
+            var oo = ConvertOP(v, new[] { typeof(OSD) }, type, typeof(OSD), out found);
+            if (found)
+            {
+                return oo;
+            }
+            oo = ConvertOP(v, new[] { typeof(OSD) }, type, type, out found);
+            if (found)
+            {
+                return oo;
+            }
+            return oo;
+            //return v;
+        }
+
+        private const BindingFlags basePropertyFlags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+        public static object ConvertOP(object StartObject, Type[] fromTypes, Type toType, Type operatorType, out bool found)
+        {
+            found = true;
+            toType = toType ?? operatorType;
+            object retval = null;
+            if (fromTypes == null)
+                fromTypes = (StartObject != null) ? new Type[] { StartObject.GetType() } : new Type[0];
+
+            MethodInfo mi = null;
+            try
+            {
+                mi = operatorType.GetMethod("op_Explicit", (BindingFlags.Public | BindingFlags.Static), null,
+                                                  fromTypes, new ParameterModifier[0]);
+            }
+            catch (AmbiguousMatchException)
+            {
+                mi = null;
+            }
+
+            if (mi != null && !toType.IsAssignableFrom(mi.ReturnType)) mi = null;
+
+            try
+            {
+                if (mi == null)
+                    mi = operatorType.GetMethod("op_Implicit", (BindingFlags.Public | BindingFlags.Static), null, fromTypes,
+                                           new ParameterModifier[0]);
+            }
+            catch (AmbiguousMatchException)
+            {
+                mi = null;
+            }
+
+            if (mi != null && !toType.IsAssignableFrom(mi.ReturnType)) mi = null;
+
+            var objects = new object[] {StartObject};
+            if (mi != null) //there is a conversion operator!
+            {
+                try
+                {
+                    return operatorType.InvokeMember(mi.Name,
+                                                  BindingFlags.InvokeMethod | (BindingFlags.Public | BindingFlags.Static),
+                                                  null, null, objects);
+                }
+                catch (AmbiguousMatchException)
+                {
+                    return mi.Invoke(null, objects);
+                }
+            }
+            foreach (var m in operatorType.GetMethods(BindingFlags.InvokeMethod | (BindingFlags.Public | BindingFlags.Static| BindingFlags.NonPublic)))
+            {
+                if (!toType.IsAssignableFrom(m.ReturnType)) continue;
+                ParameterInfo[] pts = m.GetParameters();
+                if (pts.Length != 1) continue;
+                foreach (var searchType in fromTypes)
+                {
+                    if (pts[0].ParameterType.IsAssignableFrom(searchType))
+                    {
+                        return m.Invoke(null, objects);
+                    }
+                }
+            }
+
+            found = false;
+            return retval;
+        }
+        private static void AddOSDMember(OSDMap map, string s, object value, Type type)
+        {
+            if (type == typeof(UUID))
+            {
+                var uuid = (UUID)value;
+                if (!UUIDFactory.IsNullOrZero(uuid))
+                {
+                    map[s] = uuid;
+                    return;
+                }
+            }
+            if (map.ContainsKey(s)) return;
+            bool added = AddOSDMember0(map, s, value, type);
+            if (added) return;
+            if (value == null) return;
+            MethodInfo toOSD = type.GetMethod("GetOSD");
+            if (toOSD != null)
+            {
+                var osdv = toOSD.Invoke(value, new object[0]) as OSD;
+                if (osdv != null)
+                {
+                    map.Add(s, osdv);
+                    return;
+                }
+            }
+            toOSD = type.GetMethod("Serialize");
+            if (toOSD != null)
+            {
+                var osdv = toOSD.Invoke(value, new object[0]) as OSD;
+                if (osdv != null)
+                {
+                    map.Add(s, osdv);
+                    return;
+                }
+            }
+
+            if (type.IsEnum)
+            {
+                type = Enum.GetUnderlyingType(type);
+                if (type == typeof(int))
+                {
+                    map.Add(s, (int)value);
+                    return;
+                }
+                if (type == typeof(uint))
+                {
+                    map.Add(s, (uint)value);
+                    return;
+                }
+                if (type == typeof(byte))
+                {
+                    map.Add(s, (byte)value);
+                    return;
+                }
+                if (type == typeof(sbyte))
+                {
+                    map.Add(s, (sbyte)value);
+                    return;
+                }
+
+                if (type == typeof(long))
+                {
+                    map.Add(s, (long)value);
+                    return;
+                }
+                if (type == typeof(ulong))
+                {
+                    map.Add(s, (ulong)value);
+                    return;
+                }
+                if (type == typeof(short))
+                {
+                    map.Add(s, (short)value);
+                    return;
+                }
+                if (type == typeof(ushort))
+                {
+                    map.Add(s, (ushort)value);
+                    return;
+                }
+
+                try
+                {
+                    var i = (char)value;
+                    map.Add(s, i);
+                    return;
+                }
+                catch (Exception)
+                {
+                    try
+                    {
+                        var i = (uint)value;
+                        map.Add(s, i);
+                        return;
+                    }
+                    catch (Exception)
+                    {
+                        try
+                        {
+                            var i = (int)value;
+                            map.Add(s, i);
+                            return;
+                        }
+                        catch (Exception)
+                        {
+                            try
+                            {
+                                var i = (ulong)value;
+                                map.Add(s, i);
+                                return;
+                            }
+                            catch (Exception)
+                            {
+                                throw;
+                            }
+                        }
+                    }
+                }
+            }
+            if (value is object[])
+            {
+                object[] obj = (object[])value;
+                OSDArray osda = new OSDArray(obj.Length);
+                for (int i = 0; i < obj.Length; i++)
+                {
+                    object a = obj[i];
+                    osda[i] = GetOSD(a, type.GetElementType());
+                }
+                map.Add(s, osda);
+                return;
+            }
+            if (value is Array)
+            {
+                Array obj = (Array)value;
+                OSDArray osda = new OSDArray(obj.Length);
+                for (int i = 0; i < obj.Length; i++)
+                {
+                    object a = obj.GetValue(i);
+                    osda[i] = GetOSD(a, type.GetElementType());
+                }
+                map.Add(s, osda);
+                return;
+            }
+            var submap = new OSDMap();
+            AddObjectOSD(value, submap, type);
+            if (submap.Count > 1)
+            {
+                map.Add(s, submap);
+                return;
+            }
+            return;
+        }
+
+        private static OSD GetOSD(object o, Type type)
+        {
+            if (o == null) return null;
+            OSDMap map = new OSDMap();
+            AddOSDMember(map, "value", o, type ?? o.GetType());
+            return map["value"];
+        }
+
+        private static bool AddOSDMember0(OSDMap map, string s, object value, Type type)
+        {
+            if (value == null) return false;
+            if (type == typeof(UUID))
+            {
+                var uuid = (UUID)value;
+                if (!UUIDFactory.IsNullOrZero(uuid))
+                {
+                    map[s] = uuid;
+                    return true;
+                }
+                map[s] = uuid;
+                return true;
+            }
+            var searchTypes = new HashSet<Type>() { type };
+            foreach (Type t in type.GetInterfaces())
+            {
+                searchTypes.Add(t);
+            }
+            Type st = type.BaseType;
+            if (st != null) searchTypes.Add(st);
+            Type valueGetType = value.GetType();
+            if (type != valueGetType)
+            {
+                searchTypes.Add(valueGetType);
+                foreach (Type t in valueGetType.GetInterfaces())
+                {
+                    searchTypes.Add(t);
+                }
+                st = valueGetType.BaseType;
+                if (st != null) searchTypes.Add(st);
+            }
+            foreach (Type t in searchTypes)
+            {
+                bool found;
+                var osd = ConvertOP(value, new Type[] { t }, typeof(OSD), typeof(OSD), out found);
+                if (found)
+                {
+                    map.Add(s, (OSD)osd);
+                    return true;
+                }
+            }
+            return false;
+        }
+        public static object Convert0(object StartObject, Type EndType)
+        {
+            object retval = null;
+
+            Type StartType = StartObject.GetType();
+            retval = EndType.InvokeMember("", BindingFlags.CreateInstance, null, null, new object[0]);
+            PropertyInfo[] pis = EndType.GetProperties(basePropertyFlags);
+            foreach (PropertyInfo oI in pis)//you should probably use getFields, in case there is no setter, but in my case this is -safe-(ish)
+            {
+                PropertyInfo thisFIs = StartType.GetProperty(oI.Name, basePropertyFlags);
+                if ((thisFIs != null))
+                {
+                    object cVal = StartType.InvokeMember(thisFIs.Name, basePropertyFlags | BindingFlags.GetProperty, null, StartObject, new object[0]);
+                    if (thisFIs.PropertyType == oI.PropertyType)
+                    { EndType.InvokeMember(thisFIs.Name, basePropertyFlags | BindingFlags.SetProperty, null, retval, new object[] { cVal }); }
+                    else
+                    {
+
+                        //check for operator for it?
+                        bool found;
+                        object o = ConvertOP(cVal, null, oI.PropertyType, null, out found);
+                        if (o != null)
+                            EndType.InvokeMember(thisFIs.Name, basePropertyFlags | BindingFlags.SetProperty, null,
+                                                 retval, new object[] { o });
+                    }
+                }
+            }
+
+            return retval;
         }
     }
 }
