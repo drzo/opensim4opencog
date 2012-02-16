@@ -4180,6 +4180,7 @@ namespace OpenMetaverse
                 });
 
 
+                if (update_member == null) return;
                 update_member.MuteText = msg.Updates[i].MuteText;
                 update_member.MuteVoice = msg.Updates[i].MuteVoice;
 
