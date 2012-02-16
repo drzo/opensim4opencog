@@ -137,7 +137,7 @@ namespace cogbot.Listeners
         public static bool SendOnDataAspectUpdate = true;
         
         [ConfigSetting]
-        public static bool ZeroOutUselessUUIDs = true;
+        public static bool ZeroOutUselessUUIDs = false;
 
         [ConfigSetting(Description = "False since currently broken this is where FromTaskIDs are guessed as to being object or Avatars")]
         public static bool DiscoverTaskUUIDs = false;
