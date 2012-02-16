@@ -304,12 +304,13 @@ namespace OpenMetaverse
         #region Public Members
 
         /// <summary>Groups that this avatar is a member of</summary>
-        public List<UUID> Groups = new List<UUID>();
+        public List<UUID> Groups = null;// new List<UUID>();
         /// <summary>Positive and negative ratings</summary>
         public Statistics ProfileStatistics;
+
         /// <summary>Avatar properties including about text, profile URL, image IDs and 
         /// publishing settings</summary>
-        public AvatarProperties ProfileProperties;
+        public AvatarProperties ProfileProperties = new AvatarProperties();
         /// <summary>Avatar interests including spoken languages, skills, and "want to"
         /// choices</summary>
         public Interests ProfileInterests;
@@ -440,7 +441,7 @@ namespace OpenMetaverse
             OSDMap Avi = (OSDMap)base.GetOSD();
 
             OSDArray grp = new OSDArray();
-            Groups.ForEach(delegate(UUID u) { grp.Add(OSD.FromUUID(u)); });
+            if (Groups != null) Groups.ForEach(delegate(UUID u) { grp.Add(OSD.FromUUID(u)); });
 
             OSDArray vp = new OSDArray();
 
