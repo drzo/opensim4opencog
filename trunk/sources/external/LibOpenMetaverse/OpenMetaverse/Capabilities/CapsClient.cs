@@ -113,6 +113,7 @@ namespace OpenMetaverse.Http
             {
                 // POST
                 //Logger.Log.Debug("[CapsClient] POST (" + postData.Length + " bytes) " + _Address);
+                if (_Address == null) throw new Exception("Missing address");
                 _Request = CapsBase.UploadDataAsync(_Address, _ClientCert, contentType, postData, millisecondsTimeout, null,
                     DownloadProgressHandler, RequestCompletedHandler);
             }
