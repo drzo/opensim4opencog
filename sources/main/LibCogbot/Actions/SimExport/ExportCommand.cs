@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using cogbot.Listeners;
@@ -106,6 +107,7 @@ namespace cogbot.Actions.SimExport
         private static bool WaitingFolderObjectBool;
         private static SimObject WaitingFolderSimObject;
         private static List<string> arglist;
+        public static bool UseBinarySerialization = false;
 
         static public UUID inventoryHolderUUID
         {
@@ -184,11 +186,15 @@ namespace cogbot.Actions.SimExport
             ";
             if (args == null || args.Length == 0) return Failure(hlp);
             string[] nargs = { "$region" };
-            arglist = new List<string>(args);
+            arglist = new List<string>();
+            foreach (string s in args)
+            {
+                arglist.Add(s.TrimEnd(new[] { 's' }).ToLower());
+            }
             if (arglist.Contains("help")) return Success(hlp);
             if (args.Length > 1)
             {
-                if (args[0] == "prims")
+                if (args[0] == "prim")
                 {
                     nargs = Parser.SplitOff(args, 1);
                 }
@@ -198,9 +204,9 @@ namespace cogbot.Actions.SimExport
             if (arglist.Contains("all"))
             {
                 arglist.Add("llsd");
-                arglist.Add("tasks");
-                arglist.Add("deps");
-                arglist.Add("links");
+                arglist.Add("task");
+                arglist.Add("dep");
+                arglist.Add("link");
             }
 
             needFiles = 0;
@@ -251,9 +257,9 @@ namespace cogbot.Actions.SimExport
             int used;
             List<SimObject> PS = WorldSystem.GetPrimitives(nargs, out used);
             if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
-            showsStatus = arglist.Contains("status");
-            showPermsOnly = arglist.Contains("perms");
-            skipPerms = !arglist.Contains("noperms");
+            showsStatus = arglist.Contains("statu");
+            showPermsOnly = arglist.Contains("perm");
+            skipPerms = !arglist.Contains("noperm");
             showsMissingOnly = arglist.Contains("todo");
             if (showsMissingOnly) quietly = true;
             verbosely = arglist.Contains("verbose");
@@ -310,12 +316,12 @@ namespace cogbot.Actions.SimExport
             }
             if (showsStatus)
             {
-                arglist.Add("links");
-                arglist.Add("tasks");
+                arglist.Add("link");
+                arglist.Add("task");
                 arglist.Add("llsd");
             }
 
-            if (arglist.Contains("links"))
+            if (arglist.Contains("link"))
             {
                 // lock (PrimWaitingLinkset)
                 {
@@ -333,7 +339,7 @@ namespace cogbot.Actions.SimExport
             }
 
             List<UUID> xferStarted = new List<UUID>();
-            if (arglist.Contains("tasks"))
+            if (arglist.Contains("task"))
             {
                 // lock (TaskAssetWaiting)
                 {
@@ -443,7 +449,8 @@ namespace cogbot.Actions.SimExport
 
         public static void ExportPrim(BotClient Client, SimObject exportPrim, OutputDelegate Failure, List<string> arglist)
         {
-            WorldObjects.EnsureSelected(exportPrim.LocalID, exportPrim.GetSimulator());
+            Simulator CurSim = exportPrim.GetSimulator();
+            WorldObjects.EnsureSelected(exportPrim.LocalID, CurSim);
             string pathStem = Path.Combine(dumpDir, exportPrim.ID.ToString());
 
             string issues = exportPrim.Missing;
@@ -453,12 +460,20 @@ namespace cogbot.Actions.SimExport
                 return;
             }
             if (arglist.Contains("llsd")) SaveLLSD(Client, pathStem, exportPrim, Failure);
-            if (exportPrim.IsRoot && exportPrim.Children.Count > 1)
+            if (exportPrim.IsRoot && (true || exportPrim.Children.Count > 0))
             {
-                if (arglist.Contains("links")) SaveLinksetInfo(Client, pathStem, exportPrim, Failure);
+                if (arglist.Contains("link")) SaveLinksetInfo(Client, pathStem, exportPrim, Failure);
+                string exportFile = pathStem + ".link";
+                //lock (fileWriterLock) if (File.Exists(exportFile))
+                {
+                    foreach (var c in exportPrim.Children)
+                    {
+                        ExportPrim(Client, c, Failure, arglist);
+                    }
+                }
             }
-            if (arglist.Contains("tasks")) SaveTaskInv(Client, pathStem, exportPrim, Failure);
-            if (!arglist.Contains("deps")) return;                
+            if (arglist.Contains("task")) SaveTaskInv(Client, pathStem, exportPrim, Failure);
+            if (!arglist.Contains("dep")) return;                
             AddRelatedTextures(exportPrim);
             SaveRelatedAssets(pathStem, exportPrim, Failure);
         }
@@ -497,7 +512,7 @@ namespace cogbot.Actions.SimExport
         {
             string exportFile = pathStem + ".link";
             if (Incremental || true) lock (fileWriterLock) if (File.Exists(exportFile)) return;
-            if (exportPrim.Children.Count < 2)
+            if (false && exportPrim.Children.Count < 2)
             {
                 // so we dont do it again
                 if (Incremental) lock (fileWriterLock) File.WriteAllText(exportFile, "");
@@ -610,14 +625,46 @@ namespace cogbot.Actions.SimExport
                     {
                         PrimWaitingLinkset.Remove(sourceId);
                     }
-                    lock (fileWriterLock) File.WriteAllText(so.F + ".link", so.S);
+                    var mustHave = so.S.Substring(2);
+                    if (mustHave.StartsWith("1,"))
+                    {
+                        lock (fileWriterLock) File.WriteAllText(so.F + ".link", "");
+                        return;
+                    }
+                    // get past count
+                    int fc = mustHave.IndexOf(',');
+                    mustHave = mustHave.Substring(fc+1);
+                    // remove off ,Z
+                    mustHave = mustHave.Substring(0, mustHave.Length - 2);
+                    var childs = GetUUIDs(mustHave);
+                    foreach (UUID list in childs)
+                    {
+                        if (GetSimObjectFromUUID(list) == null)
+                        {
+                            throw new InvalidOperationException("new message came to " + so + " was " + eMessage);
+                        }
+                    }
+                    lock (fileWriterLock) File.WriteAllText(so.F + ".link", mustHave);
                 }
             }
         }
 
+        public static UUID[] GetUUIDs(string mustHave)
+        {
+            mustHave = mustHave.TrimEnd();
+            if (string.IsNullOrEmpty(mustHave)) return new UUID[0];
+            string[] mh = mustHave.Split(',');
+            UUID[] childs = new UUID[mh.Length];
+            for (int i = 0; i < mh.Length; i++)
+            {
+                childs[i]= UUIDFactory.GetUUID(mh[i]);
+            }
+            return childs;
+        }
+
         public static void Error(string s)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(s);
         }
 
         internal static SimObject GetSimObjectFromUUID(UUID objid)
@@ -755,15 +802,22 @@ namespace cogbot.Actions.SimExport
                     return;
                 }
 
-                OSD primOSD = exportPrim.Prim.GetOSD();
-                string output = OSDParser.SerializeLLSDXmlString(primOSD);
                 try
                 {
-                    lock (fileWriterLock) File.WriteAllText(exportFile, output);
+                    Primitive prim = exportPrim.Prim;
+                    ToFile(prim, exportFile);
+                    Primitive prim2 = FromFile(exportFile) as Primitive;
+                    string memberwiseCompare = MemberwiseCompare(prim, prim2);
+                    if (!string.IsNullOrEmpty(memberwiseCompare))
+                    {
+                        Error("prims not equal " + memberwiseCompare);
+                    }
+
                 }
                 catch (Exception e)
                 {
-                    Failure("Writing file " + exportFile);
+                    File.Delete(exportFile);
+                    Failure("Writing file " + exportFile + " caused " + e);
                 }
             }
         }
@@ -849,7 +903,7 @@ namespace cogbot.Actions.SimExport
                     {
                         Client.Self.Chat("" + exportPrim.ID.ToString().ToLower() + " RezNext ", 4201, ChatType.Normal);
                     }
-
+                    WaitingFolderSimObject = null;
                     SimObject folderSimObject = null;
                     try
                     {
@@ -858,12 +912,23 @@ namespace cogbot.Actions.SimExport
                         {
                             Thread.Sleep(500);
                         }
-                        if (WaitingFolderObjectBool)
+                        if (WaitingFolderObjectBool || WaitingFolderSimObject == null)
                         {
                             TaskInvFailures++;
                             break;
                         }
                         folderSimObject = WaitingFolderSimObject;
+                        Simulator CurSim = folderSimObject.GetSimulator();
+                        PutItemToTaskInv(Client, folderSimObject, "LinksetSpeaker");
+                        uint localID = exportPrim.LocalID;
+                        var posChilds = new List<uint>();
+                        for (int i = 1; i < 64; i++)
+                        {
+                            posChilds.Add((uint)(localID + i));
+                        }
+                        Client.Objects.RequestObjects(CurSim, posChilds);
+                        Thread.Sleep(1000);
+                        Client.WorldSystem.CatchUp(CurSim);
                         ExportPrim(Client, folderSimObject, Failure, ExportCommand.arglist);
                     }
                     finally
@@ -1454,5 +1519,127 @@ namespace cogbot.Actions.SimExport
         {
             return I.Name + "(" + I.AssetType + " " + I.AssetUUID + ")@" + named(O);
         }
+
+        internal static object FromFile(string filename)
+        {
+            if (ExportCommand.UseBinarySerialization)
+            {
+                lock (fileWriterLock)
+                {
+                    try
+                    {
+                        if (!File.Exists(filename))
+                            return null;
+
+                        using (Stream stream = File.Open(filename, FileMode.Open))
+                        {
+                            BinaryFormatter bformatter = new BinaryFormatter();
+
+                            while (stream.Position < stream.Length)
+                            {
+                                return bformatter.Deserialize(stream);
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Log("Error accessing object cache file :" + e.Message, Helpers.LogLevel.Error);
+                        return null;
+                    }
+                }
+            }
+            return Primitive.FromOSD(OSDParser.DeserializeLLSDXml(File.ReadAllText(filename)));
+        }
+
+        public static void ToFile(Primitive prim, string exportFile)
+        {
+
+            if (UseBinarySerialization)
+            {
+                SaveToDisk(exportFile, prim);
+                return;
+            }
+            OSD primOSD = prim.GetOSD();
+            string output = OSDParser.SerializeLLSDXmlString(primOSD);
+            {
+                lock (fileWriterLock) File.WriteAllText(exportFile, output);
+            }
+        }
+
+
+        public static string MemberwiseCompare(object left, object right)
+        {
+            if (Object.ReferenceEquals(left, right))
+                return "";
+
+            if (left == null || right == null)
+                return "One is Null";
+
+            Type type = left.GetType();
+            if (type != right.GetType())
+                return "Different Types";
+
+            if (left as ValueType != null)
+            {
+                // do a field comparison, or use the override if Equals is implemented:
+                return left.Equals(right) ? "" : "VTNotEqual";
+            }
+
+            // check for override:
+            if (false && type != typeof(object)
+                && type == type.GetMethod("Equals").DeclaringType)
+            {
+                // the Equals method is overridden, use it:
+                return left.Equals(right) ? "" : "NTNotEqual";
+            }
+
+            // all Arrays, Lists, IEnumerable<> etc implement IEnumerable
+            if (left as IEnumerable != null)
+            {
+                IEnumerator rightEnumerator = (right as IEnumerable).GetEnumerator();
+                rightEnumerator.Reset();
+                foreach (object leftItem in left as IEnumerable)
+                {
+                    // unequal amount of items
+                    if (!rightEnumerator.MoveNext())
+                        return "differnt size enumerations";
+                    else
+                    {
+                        string memberwiseCompare = MemberwiseCompare(leftItem, rightEnumerator.Current);
+                        if (!string.IsNullOrEmpty(memberwiseCompare))
+                            return "enumers=" + memberwiseCompare;
+                    }
+                }
+            }
+            else
+            {
+                // compare each property
+                foreach (PropertyInfo info in type.GetProperties(
+                    BindingFlags.Public |
+                    BindingFlags.NonPublic |
+                    BindingFlags.Instance |
+                    BindingFlags.GetProperty))
+                {
+                    // TODO: need to special-case indexable properties
+                    string memberwiseCompare1 = MemberwiseCompare(info.GetValue(left, null), info.GetValue(right, null));
+                    if (!string.IsNullOrEmpty(memberwiseCompare1))
+                        return info.Name + "=" + memberwiseCompare1;
+                }
+
+                // compare each field
+                foreach (FieldInfo info in type.GetFields(
+                    BindingFlags.GetField |
+                    BindingFlags.NonPublic |
+                    BindingFlags.Public |
+                    BindingFlags.Instance))
+                {
+                    string memberwiseCompare2 = MemberwiseCompare(info.GetValue(left), info.GetValue(right));
+                    if (!string.IsNullOrEmpty(memberwiseCompare2))
+                        return info.Name + "=" + memberwiseCompare2;
+                }
+            }
+            return "";
+        }
+
     }
 }
