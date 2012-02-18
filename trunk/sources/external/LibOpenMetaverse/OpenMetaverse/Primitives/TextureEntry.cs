@@ -520,8 +520,10 @@ namespace OpenMetaverse
                 if (TextureID != Primitive.TextureEntry.WHITE_TEXTURE)
                     tex["imageid"] = OSD.FromUUID(TextureID);
                 else
-                    tex["imageid"] = OSD.FromUUID(UUID.Zero);
+                    tex["imageid"] = OSD.FromUUID(Primitive.TextureEntry.WHITE_TEXTURE);
+                //UUID.Zero;
 
+                tex["hasAttribute"] = OSD.FromUInteger((uint)hasAttribute);
                 return tex;
             }
 
@@ -546,7 +548,7 @@ namespace OpenMetaverse
                 face.TexMapType = (MappingType)map["mapping"].AsInteger();
                 face.Glow = (float)map["glow"].AsReal();
                 face.TextureID = map["imageid"].AsUUID();
-
+                face.hasAttribute = (TextureAttributes)(uint)map["hasAttribute"].AsUInteger();// = OSD.FromUInteger((uint)hasAttribute);
                 return face;
             }
 
@@ -745,7 +747,7 @@ namespace OpenMetaverse
                     }
                 }
 
-                return new TextureEntry(UUID.Zero);
+                return new TextureEntry(Primitive.TextureEntry.WHITE_TEXTURE);
             }
 
             private void FromBytes(byte[] data, int pos, int length)
