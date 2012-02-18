@@ -1504,6 +1504,8 @@ namespace OpenMetaverse.Messages.Linden
             /// <summary>The aggregate permissions the agent has in the group for all roles the agent
             /// is assigned</summary>
             public GroupPowers GroupPowers;
+
+            public string GroupTitle;
         }
 
         /// <summary>An optional block containing additional agent specific information</summary>
@@ -1588,11 +1590,12 @@ namespace OpenMetaverse.Messages.Linden
                 GroupData groupData = new GroupData();
 
                 groupData.GroupID = groupMap["GroupID"].AsUUID();
-                groupData.Contribution = groupMap["Contribution"].AsInteger();
+                groupData.Contribution = groupMap["Contribution"].AsIntegerD();
                 groupData.GroupInsigniaID = groupMap["GroupInsigniaID"].AsUUID();
                 groupData.GroupName = groupMap["GroupName"].AsString();
                 groupData.GroupPowers = (GroupPowers)groupMap["GroupPowers"].AsLong();
                 groupData.AcceptNotices = groupMap["AcceptNotices"].AsBoolean();
+                groupData.GroupTitle = groupMap["GroupTitle"].AsString();
                 GroupDataBlock[i] = groupData;
             }
 
