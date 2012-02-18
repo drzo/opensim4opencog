@@ -1630,7 +1630,7 @@ namespace cogbot.Actions.SimExport
                     }
                 }
             }
-            return Primitive.FromOSD(OSDParser.DeserializeLLSDXml(File.ReadAllText(filename)));
+            return Primitive.FromTotalOSD(OSDParser.DeserializeLLSDXml(File.ReadAllText(filename)));
         }
 
         public static void ToFile(Primitive prim, string exportFile)
@@ -1641,7 +1641,7 @@ namespace cogbot.Actions.SimExport
                 SaveToDisk(exportFile, prim);
                 return;
             }
-            OSD primOSD = prim.GetOSD();
+            OSD primOSD = prim.GetTotalOSD();
             string output = OSDParser.SerializeLLSDXmlString(primOSD);
             {
                 lock (fileWriterLock) File.WriteAllText(exportFile, output);
