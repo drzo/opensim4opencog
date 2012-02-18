@@ -142,6 +142,8 @@ namespace OpenMetaverse
         public int GroupRolesCount;
         /// <summary>Show this group in agent's profile</summary>
         public bool ListInProfile;
+        // dmiles found in  llsd
+        public string GroupTitle;
 
         /// <summary>Returns the name of the group</summary>
         /// <returns>A string containing the name of the group</returns>
@@ -1433,6 +1435,7 @@ namespace OpenMetaverse
                     group.Contribution = msg.GroupDataBlock[i].Contribution;
                     group.AcceptNotices = msg.GroupDataBlock[i].AcceptNotices;
                     group.Powers = msg.GroupDataBlock[i].GroupPowers;
+                    group.GroupTitle = msg.GroupDataBlock[i].GroupTitle;
                     group.ListInProfile = msg.NewGroupDataBlock[i].ListInProfile;
 
                     currentGroups.Add(group.ID, group);
