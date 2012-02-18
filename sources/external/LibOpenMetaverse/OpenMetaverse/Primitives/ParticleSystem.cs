@@ -347,17 +347,18 @@ namespace OpenMetaverse
 
         #region Public Members
 
+        [NonSerialized]
         private ParticleSystem _particalSys;
         /// <summary></summary>
         public ParticleSystem ParticleSys
         {
             get
             {
-                if (_particalSys == null)
+                if (_particalSys==null)
                 {
-                    _particalSys = new ParticleSystem();
+                    return null;
                 }
-                return _particalSys;
+                return (ParticleSystem) _particalSys;
             }
             set
             {
