@@ -271,13 +271,13 @@ namespace OpenMetaverse
         {
             if (String.IsNullOrEmpty(val))
             {
-                toStringCache = ZeroString;
+                _toStringCache = ZeroString;
                 _Guid = new Guid();
             }
             else
             {
                 _Guid = new Guid(val);
-                toStringCache = val;
+                _toStringCache = val;
             }
         }
 
@@ -295,7 +295,7 @@ namespace OpenMetaverse
         public UUID(Guid val)
         {
             _Guid = val;
-            toStringCache = null;
+            _toStringCache = null;
         }
 #endif
 
@@ -312,7 +312,7 @@ namespace OpenMetaverse
 #endif
         {
             //_Guid = Zero.GetGuid();
-            toStringCache = null;
+            _toStringCache = null;
             _Guid = GuidFromBytes(source, pos);
         }
 
@@ -331,7 +331,7 @@ namespace OpenMetaverse
             if (!BitConverter.IsLittleEndian)
                 Array.Reverse(end);
 
-            toStringCache = null;
+            _toStringCache = null;
             _Guid = new Guid(0, 0, 0, end);
         }
 
@@ -353,7 +353,7 @@ namespace OpenMetaverse
 #endif
         {
             _Guid = val._Guid;
-            toStringCache = null;
+            _toStringCache = null;
         }
 //#endif //USE_REAL_FACTORY
         #endregion Constructors
@@ -600,7 +600,8 @@ namespace OpenMetaverse
             return _Guid == uuid.GetGuid();
         }
 
-        private string toStringCache;
+        [NonSerialized]
+        private string _toStringCache;
 
         /// <summary>
         /// Get a hyphenated string representation of this UUID
@@ -613,9 +614,9 @@ namespace OpenMetaverse
             if (_Guid == Guid.Empty)
                 return ZeroString;
             else
-                if (toStringCache != null) return toStringCache;
-            toStringCache = string.Intern(_Guid.ToString());
-            return toStringCache;
+                if (_toStringCache != null) return _toStringCache;
+            _toStringCache = string.Intern(_Guid.ToString());
+            return _toStringCache;
         }
 
         #endregion Overrides
