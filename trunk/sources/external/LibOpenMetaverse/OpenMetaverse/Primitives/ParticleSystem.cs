@@ -348,27 +348,27 @@ namespace OpenMetaverse
         #region Public Members
 
         [NonSerialized]
-        private ParticleSystem _particalSys;
+        private ParticleSystem _particleSys;
         /// <summary></summary>
         public ParticleSystem ParticleSys
         {
             get
             {
-                if (_particalSys==null)
+                if (_particleSys==null)
                 {
                     return null;
                 }
-                return (ParticleSystem) _particalSys;
+                return (ParticleSystem) _particleSys;
             }
             set
             {
                 {
-                    if (_particalSys != null)
+                    if (_particleSys != null)
                     {
                         //@todo merge these!
-                        _particalSys = (ParticleSystem) _particalSys.Clone();
+                        _particleSys = (ParticleSystem) _particleSys.Clone();
                     }
-                    _particalSys = value;
+                    _particleSys = value;
                 }
             }
         }
