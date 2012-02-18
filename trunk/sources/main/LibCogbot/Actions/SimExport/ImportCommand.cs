@@ -5,12 +5,13 @@ using System.IO;
 using cogbot.Actions.SimExport;
 using cogbot.Listeners;
 using cogbot.TheOpenSims;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Objects
+namespace cogbot.Actions.SimExport
 {
     public class ImportCommand : Command, RegionMasterCommand
     {
@@ -44,7 +45,39 @@ namespace cogbot.Actions.Objects
                 Prim = prim;
             }
             public Primitive Prim;
-            public SimObject Rezed;
+            private SimObject _rezed;
+            public UUID NewID = UUID.Zero;
+            public uint NewLocalID;
+            public Primitive NewPrim
+            {
+                get
+                {
+                    var r = Rezed;
+                    if (r == null) return null;
+                    return r.Prim;
+                }
+            }
+
+            public bool RezRequested = false;
+            public SimObject Rezed
+            {
+                get
+                {
+                    if (_rezed == null)
+                    {
+                        _rezed = ExportCommand.GetSimObjectFromUUID(NewID);
+                    }
+                    return _rezed;
+                }
+                set
+                {
+                    if (value == null) return;
+                    RezRequested = true;
+                    _rezed = value;
+                    NewID = value.ID;
+                    NewLocalID = value.LocalID;
+                }
+            }
 
         }
 
@@ -54,9 +87,14 @@ namespace cogbot.Actions.Objects
         List<Primitive> primsCreated;
         List<uint> linkQueue;
         uint rootLocalID;
+        private static readonly object WorkFlowLock = new object();
         ImporterState state = ImporterState.Idle;
         EventHandler<PrimEventArgs> callback;
-        public static readonly Dictionary<UUID,PrimToCreate> UUID2OBJECT = new Dictionary<UUID, PrimToCreate>();
+        public static readonly Dictionary<UUID, PrimToCreate> UUID2OBJECT = new Dictionary<UUID, PrimToCreate>();
+        public static readonly Dictionary<uint, PrimToCreate> UINT2OBJECT = new Dictionary<uint, PrimToCreate>();
+
+        public static readonly Dictionary<UUID, PrimToCreate> NewUUID2OBJECT = new Dictionary<UUID, PrimToCreate>();
+        public static readonly Dictionary<uint, PrimToCreate> NewUINT2OBJECT = new Dictionary<uint, PrimToCreate>();
 
         public ImportCommand(BotClient testClient)
         {
@@ -66,7 +104,7 @@ namespace cogbot.Actions.Objects
         }
 
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate writeLine)
         {
             UUID GroupID = (args.Length > 1) ? TheBotClient.GroupID : UUID.Zero;
             var CurSim = Client.Network.CurrentSim;
@@ -77,13 +115,13 @@ namespace cogbot.Actions.Objects
             foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.llsd"))
             {
 
-                Primitive prim = (Primitive) ExportCommand.FromFile(file);
+                Primitive prim = (Primitive)ExportCommand.FromFile(file);
                 if (prim.ParentID != 0)
                 {
                     childs.Add(APrimToCreate(prim));
                     continue;
                 }
-                parents.Add(APrimToCreate(prim));                
+                parents.Add(APrimToCreate(prim));
             }
             foreach (PrimToCreate ptc in parents)
             {
@@ -93,94 +131,238 @@ namespace cogbot.Actions.Objects
             {
                 CreatePrim(CurSim, ptc, GroupID);
             }
+            List<string> skipCompare = new List<string>() { "LocalID", "ID", "ParentID", "ObjectID", "Tag" };
             foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.link"))
             {
                 var uuids = ExportCommand.GetUUIDs(File.ReadAllText(file));
-                if (uuids.Length<1) continue;
+                if (uuids.Length < 1) continue;
                 var linkset = new List<uint>(uuids.Length);
                 for (int i = uuids.Length - 1; i >= 0; i--)
                 {
-                    linkset.Add(UUID2OBJECT[uuids[i]].Rezed.LocalID);
+                    UUID id = uuids[i];
+                    PrimToCreate ptc = GetOldPrim(id);
+                    if (ptc == null)
+                    {
+                        Failure("Relink cant find PTC=" + id);
+                        continue;
+                    }
+                    SimObject ptcRezed = ptc.Rezed;
+                    if (ptcRezed == null)
+                    {
+                        Failure("Relink cant find ptcRezed=" + ptc);
+                        continue;
+                    }
+                    uint newLocalID = ptcRezed.LocalID;
+                    if (newLocalID == 0)
+                    {
+                        Failure("Relink cant find linked prim ID=" + id);
+                        continue;
+                    }
+                    linkset.Add(newLocalID);
                 }
                 //linkset.Add(UUID2OBJECT[uuids[0]].Rezed.LocalID);
                 Client.Objects.LinkPrims(CurSim, linkset);
+                if (false) SetPrimsPostLink(CurSim, GroupID, linkset, skipCompare);
             }
-            return Success("Imported P=" + parents.Count + " C=" + childs.Count);
+            WriteLine("Imported P=" + parents.Count + " C=" + childs.Count);
+            return SuccessOrFailure();
         }
 
-        private static PrimToCreate APrimToCreate(Primitive primitive)
+        private void SetPrimsPostLink(Simulator CurSim, UUID GroupID, IEnumerable<uint> linkset, ICollection<string> skipCompare)
         {
-            var ptc = new PrimToCreate(primitive);
-            UUID2OBJECT.Add(primitive.ID, ptc);
-            return ptc;
+            foreach (uint u in linkset)
+            {
+                var ptc = GetNewPrim(u);
+                if (ptc == null)
+                {
+                    Failure("Missing New LocalID " + u);
+                    continue;
+                }
+                var prim = ptc.Prim;
+                if (prim == null)
+                {
+                    Failure("Missing Old Prim " + u);
+                    continue;
+                }
+                SetPrimInfo(CurSim, u, prim, GroupID, true);
+                string diff = ExportCommand.MemberwiseCompare(prim, ptc.NewPrim, skipCompare);
+                if (string.IsNullOrEmpty(diff)) Failure("after rez: " + diff);
+                    
+                //Client.Objects.SetPosition(CurSim, u, prim.Position);
+                //Client.Objects.SetRotation(CurSim, u, prim.Rotation);
+            }
         }
 
+        public static PrimToCreate APrimToCreate(Primitive primitive)
+        {
+            lock (WorkFlowLock)
+            {
+                PrimToCreate ptc;
+                if (UINT2OBJECT.TryGetValue(primitive.LocalID, out ptc)) return ptc;
+                if (UUID2OBJECT.TryGetValue(primitive.ID, out ptc)) return ptc;
+                ptc = new PrimToCreate(primitive);
+                UUID2OBJECT.Add(primitive.ID, ptc);
+                UINT2OBJECT.Add(primitive.LocalID, ptc);
+                return ptc;
+            }
+        }
+        private PrimToCreate GetOldPrim(uint localID)
+        {
+            lock (WorkFlowLock)
+            {
+                PrimToCreate ptc;
+                if (UINT2OBJECT.TryGetValue(localID, out ptc))
+                {
+                    return ptc;
+                }
+                Failure("cant find LocalID=" + localID);
+            }
+            return null;
+        }
+        private PrimToCreate GetOldPrim(UUID id)
+        {
+            lock (WorkFlowLock)
+            {
+                PrimToCreate ptc;
+                if (UUID2OBJECT.TryGetValue(id, out ptc))
+                {
+                    return ptc;
+                }
+                Failure("cant find ID=" + id);
+            }
+            return null;
+        }
+        private PrimToCreate GetNewPrim(uint localID)
+        {
+            lock (WorkFlowLock)
+            {
+                PrimToCreate ptc;
+                if (NewUINT2OBJECT.TryGetValue(localID, out ptc))
+                {
+                    return ptc;
+                }
+                WriteLine("cant find LocalID=" + localID);
+            }
+            return null;
+        }
+        private PrimToCreate GetNewPrim(UUID id)
+        {
+            lock (WorkFlowLock)
+            {
+                PrimToCreate ptc;
+                if (NewUUID2OBJECT.TryGetValue(id, out ptc))
+                {
+                    return ptc;
+                }
+                WriteLine("cant find ID=" + id);
+            }
+            return null;
+        }
         private void CreatePrim(Simulator CurSim, PrimToCreate ptc, UUID GroupID)
         {
+            if (ptc.RezRequested) return;
             Primitive prim = ptc.Prim;
             Primitive newPrim = null;
+            UUID found = UUID.Zero;
+            InventoryItem invItem = ExportCommand.GetInvItem(Client, "BlankPrim", AssetType.Object);
+            UUID queryID = UUID.Random();
             // Register a handler for the creation event
             AutoResetEvent creationEvent = new AutoResetEvent(false);
-            var loc = prim.Position;
-            Quaternion rot = Quaternion.Identity;
-            EventHandler<PrimEventArgs> callback =
-                (s, e) =>//delegate(Simulator simulator0, Primitive prim, ulong regionHandle, ushort timeDilation)
+            EventHandler<ChatEventArgs> callback =
+                (s, e) => //delegate(Simulator simulator0, Primitive prim, ulong regionHandle, ushort timeDilation)
+                {
+                    var regionHandle = e.Simulator.Handle;
+                    if (regionHandle != CurSim.Handle) return;
+                    if (e.Type != ChatType.OwnerSay) return;
+                    UUID sourceId = e.SourceID;
+                    string fromWho = e.FromName;
+                    string eMessage = e.Message;
+                    if (fromWho == "RegionSay4200")
                     {
-                        var regionHandle = e.Simulator.Handle;
-                        var ePrim = e.Prim;
-                        if (regionHandle != CurSim.Handle) return;
-                        if ((loc - ePrim.Position).Length() > 3)
-                        {
-                            Debug("Not the prim " + (loc - ePrim.Position).Length());
-                            return;
-                        }
-                        if (ePrim.PrimData.ProfileHole != prim.PrimData.ProfileHole)
-                        {
-                            Debug("Not the prim?  PrimData.ProfileHole: {0}!={1}", ePrim.PrimData.ProfileHole,
-                                  prim.PrimData.ProfileHole);
-                            // return;       //
-                        }
-                        if (prim.PrimData.Material != ePrim.PrimData.Material)
-                        {
-                            Debug("Not the prim? PrimData.Material: {0}!={1}", prim.PrimData.ProfileHole,
-                                  ePrim.PrimData.Material);
-                            // return;
-                        }
-                        if ((ePrim.Flags & PrimFlags.CreateSelected) == 0)
-                        {
-                            Debug("Not the prim? (prim.Flags & PrimFlags.CreateSelected) == 0) was {0}", ePrim.Flags);
-                            // return;
-                        }
-                        if (prim.Type != ePrim.Type)
-                        {
-                            Debug("Not the prim? Material.Light != prim.PrimData.Material: {0}!={1}", ePrim.Type,
-                                  prim.Type);
-                            // return;
-                        }
-                        //if (prim.Scale != scale) return;
-                        //     if (prim.Rotation != rot) return;
-
-                        //  if (Material.Light != prim.PrimData.Material) return;
-                        //if (CD != prim.PrimData) return;
-                        newPrim = ePrim;
+                        int findC = eMessage.IndexOf(":");
+                        string fu = eMessage.Substring(0, findC);
+                        UUID.TryParse(fu, out sourceId);
+                        eMessage = eMessage.Substring(findC + 1).TrimStart();
+                    }
+                    const string listenFor = "REZBLANK:";
+                    if (!eMessage.StartsWith(listenFor))
+                    {
+                        return;
+                    }
+                    eMessage = eMessage.Substring(listenFor.Length).TrimStart();
+                    UUID id;
+                    if (!UUID.TryParse(eMessage, out id))
+                    {
                         creationEvent.Set();
-                    };
+                        Error("cant get UUID from " + eMessage);
+                        return;
+                    }
+                    found = id;
+                    creationEvent.Set();
+                };
 
-            Client.Objects.ObjectUpdate += callback;
-            Client.Objects.AddPrim(CurSim, prim.PrimData, GroupID, prim.Position, prim.Scale, prim.Rotation, PrimFlags.CreateSelected | PrimFlags.Phantom | PrimFlags.Temporary);
-            if (!creationEvent.WaitOne(10000) || newPrim == null)
+            Vector3 pp = prim.Position;
+            Quaternion pr = prim.Rotation;
+            if (prim.ParentID != 0)
             {
-                Debug("Error - no prim");
+                var parent = GetOldPrim(prim.ParentID);
+                pp = prim.Position * Matrix4.CreateFromQuaternion(parent.Prim.Rotation) + parent.Prim.Position;
+                pr = parent.Prim.Rotation * pr;
+            }
+
+            Client.Self.ChatFromSimulator += callback;
+            Client.Inventory.RequestRezFromInventory(CurSim, pr, pp, invItem, GroupID, queryID, true);
+            ptc.RezRequested = true;
+            //AddPrim(CurSim, prim.PrimData, GroupID, prim.Position, prim.Scale, prim.Rotation, PrimFlags.CreateSelected | PrimFlags.Phantom | PrimFlags.Temporary);
+            if (!creationEvent.WaitOne(10000))
+            {
+                Client.Self.ChatFromSimulator -= callback;
+                Error("Error - no uuid of prim ");
                 return;
             }
-            ptc.Rezed = WorldSystem.GetSimObject(newPrim);
-            Primitive.ObjectProperties props = prim.Properties;
+            Client.Self.ChatFromSimulator -= callback;
+            ptc.NewID = found;
+            var O = ExportCommand.GetSimObjectFromUUID(found);
+            if (O == null)
+            {
+                Error("Error - no SimObject");
+                return;
+            }
+            newPrim = O.Prim;
+            if (newPrim == null)
+            {
+                Error("Error - no newPrim");
+                return;
+            }
+            ptc.Rezed = O;
+            lock (WorkFlowLock)
+            {
+                NewUUID2OBJECT.Add(found, ptc); 
+                NewUINT2OBJECT.Add(O.LocalID, ptc);
+            }
             uint localID = newPrim.LocalID;
+            SetPrimInfo(CurSim, localID, ptc.Prim, GroupID, false);
+        }
+
+        public void SetPrimInfo(Simulator CurSim, uint localID, Primitive prim, UUID GroupID, bool postLinked)
+        {
+
+            Vector3 pp = prim.Position;
+            Quaternion pr = prim.Rotation;
+            if (!postLinked && prim.ParentID != 0)
+            {
+                var parent = GetOldPrim(prim.ParentID);
+                pp = prim.Position * Matrix4.CreateFromQuaternion(parent.Prim.Rotation) + parent.Prim.Position;
+                pr = parent.Prim.Rotation * pr;
+            }
+
+            Primitive.ObjectProperties props = prim.Properties;
             List<uint> prims = new List<uint> { localID };
             Client.Objects.SetName(CurSim, localID, props.Name);
             Client.Objects.SetDescription(CurSim, localID, props.Description);
+            Client.Objects.SetShape(CurSim, localID, prim.PrimData);
             //Client.Objects.SetExtraParamOff(CurSim, localID, prim.);
-            var flags = prim.Flags;                
+            var flags = prim.Flags;
             Primitive.PhysicsProperties physics = prim.PhysicsProps;
             if (physics != null)
             {
@@ -190,18 +372,18 @@ namespace cogbot.Actions.Objects
                                         physics.Density, physics.Friction, physics.Restitution,
                                         physics.GravityMultiplier);
             }
-            if (prim.Textures != null) Client.Objects.SetTextures(CurSim, localID, prim.Textures);
+            if (prim.Textures != null) Client.Objects.SetTextures(CurSim, localID, prim.Textures, prim.MediaURL);
             if (prim.Light != null) Client.Objects.SetLight(CurSim, localID, prim.Light);
 
             if (!CogbotHelpers.IsNullOrZero(prim.GroupID))
             {
                 if (!CogbotHelpers.IsNullOrZero(GroupID)) Client.Objects.SetObjectsGroup(CurSim, prims, GroupID);
             }
-            Client.Objects.SetPermissions(CurSim, new List<uint>() { ptc.Rezed.LocalID },
+            Client.Objects.SetPermissions(CurSim, new List<uint>() { localID },
                                           PermissionWho.Everyone | PermissionWho.Group | PermissionWho.NextOwner,
                                           PermissionMask.All, true);
-            Client.Objects.SetPosition(CurSim, localID, prim.Position);
-            Client.Objects.SetRotation(CurSim, localID, prim.Rotation);
+            Client.Objects.SetPosition(CurSim, localID, pp, true);
+            Client.Objects.SetRotation(CurSim, localID, pr, true);
             Client.Objects.SetSaleInfo(CurSim, localID, props.SaleType, props.SalePrice);
             if (prim.Flexible != null) Client.Objects.SetFlexible(CurSim, localID, prim.Flexible);
             if (prim.Sculpt != null) Client.Objects.SetSculpt(CurSim, localID, prim.Sculpt);
@@ -209,14 +391,21 @@ namespace cogbot.Actions.Objects
             Client.Objects.SetScale(CurSim, localID, prim.Scale, true, false);
         }
 
-        static private bool FlagSet(PrimFlags flags, PrimFlags set)
+        private static bool FlagSet(PrimFlags flags, PrimFlags set)
         {
             return (flags & set) == set;
         }
 
         private void Debug(string s, params object[] ps)
         {
-            //throw new NotImplementedException();
+            Client.DisplayNotificationInChat(DLRConsole.SafeFormat(s, ps));
+        }
+        private void Error(string s, params object[] ps)
+        {
+            string msg = DLRConsole.SafeFormat(s, ps);
+            Client.DisplayNotificationInChat(msg);
+            Failure(msg);
+            throw new NotImplementedException(msg);
         }
 
         public CmdResult Execute2(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
