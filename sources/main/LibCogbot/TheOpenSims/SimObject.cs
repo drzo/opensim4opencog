@@ -135,10 +135,13 @@ namespace cogbot.TheOpenSims
             set
             {
                 UpdateProperties(value);
-                lock (HasPrimLock) if (HasPrim)
+                lock (HasPrimLock)
+                {
+                    if (_Prim0 != null)
                     {
-                        Prim.Properties = value;
+                        _Prim0.Properties = value;
                     }
+                }
             }
         }
 
@@ -2284,6 +2287,12 @@ namespace cogbot.TheOpenSims
             InventoryManager man = Client.Inventory;
             man.TaskInventoryReply += ti_callback;
             man.RequestTaskInventory(LocalID);
+		    Client.Objects.RequestObjectMedia(ID, GetSimulator(), med_entry);
+        }
+
+        private void med_entry(bool success, string version, MediaEntry[] facemedia)
+        {         
+            //prim is now updated   
         }
 
         private ulong xferID;
@@ -2320,7 +2329,7 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        public string Missing
+        public string MissingData
         {
             get
             {
@@ -2333,6 +2342,21 @@ namespace cogbot.TheOpenSims
                 {
                     missing += " Prim";
                 }
+                else
+                {
+                    if (_Prim0.Textures == null)
+                    {
+                        missing += " PrimTextures";
+                    }
+                    if (_Prim0.ParticleSys == null)
+                    {
+                        missing += " PrimParticleSys";
+                    }
+                    if (_Prim0.Type==PrimType.Sculpt && _Prim0.Sculpt == null)
+                    {
+                        missing += " PrimSculpt";
+                    }
+                }
                 if (_Parent == null)
                 {
                     if (_Prim0!=null)
@@ -2343,6 +2367,9 @@ namespace cogbot.TheOpenSims
                 if (Properties == null)
                 {
                     missing += " Props";
+                } else
+                {
+                    if (Properties.TextureIDs == null) missing += " PropData";
                 }
                 if (RegionHandle == 0)
                 {
@@ -2837,7 +2864,7 @@ namespace cogbot.TheOpenSims
 
         #region SimObject Members
 
-        private Dictionary<string, object> dict;
+        private Dictionary<string, object> _infoMapDictBackup;
         readonly object FILock = new object();
         protected bool toStringNeedsUpdate = true;
         public bool IsDebugging { get; set; }
@@ -2855,11 +2882,11 @@ namespace cogbot.TheOpenSims
                         if (val is NullType) return null;
                         return val;
                     }
-                    if (dict==null || !dict.ContainsKey(s))
+                    if (_infoMapDictBackup==null || !_infoMapDictBackup.ContainsKey(s))
                     {
                         return null;
                     }
-                    return dict[s];
+                    return _infoMapDictBackup[s];
                 }
             }
             set
@@ -2871,23 +2898,26 @@ namespace cogbot.TheOpenSims
                     {
                         _infoMap[s].SetValue(value);
                     }
-                    if (dict == null) dict = new Dictionary<string, object>(); 
-                    dict[s] = value;
+                    if (_infoMapDictBackup == null) _infoMapDictBackup = new Dictionary<string, object>(); 
+                    _infoMapDictBackup[s] = value;
                 }
             }
         }
 
-        private Dictionary<Type, object> typedObjects;
+        private Dictionary<Type, object> _AsObjectType;
         public T AsObject<T>()
         {
             lock (FILock)
             {
-                if (typedObjects == null) return default(T);
+                if (_AsObjectType == null)
+                {
+                    return default(T);
+                }
                 Type tt = typeof(T);
                 object obj;
-                if (!typedObjects.TryGetValue(tt, out obj))
+                if (!_AsObjectType.TryGetValue(tt, out obj))
                 {
-                    obj = typedObjects[tt] = default(T);
+                    obj = _AsObjectType[tt] = default(T);
                 }
                 return (T)obj;
             }
@@ -3043,6 +3073,6 @@ namespace cogbot.TheOpenSims
         void UpdatePosition(ulong handle, Vector3 pos);
         Queue<SimObjectEvent> ActionEventQueue { get; set; }
         List<InventoryBase> TaskInventory { get;  }
-        string Missing { get; }
+        string MissingData { get; }
     }
 }
