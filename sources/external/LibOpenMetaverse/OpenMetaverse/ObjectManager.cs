@@ -1719,7 +1719,7 @@ namespace OpenMetaverse
                         }
 
                         ObjectMediaMessage msg = new ObjectMediaMessage();
-                        msg.Deserialize((OSDMap)result);
+                        if (result is OSDMap) msg.Deserialize((OSDMap)result);
 
                         if (msg.Request is ObjectMediaResponse)
                         {
