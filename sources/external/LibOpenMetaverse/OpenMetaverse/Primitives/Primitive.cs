@@ -878,7 +878,7 @@ namespace OpenMetaverse
         /// </summary>
         public Primitive()
         {
-            _particalSys = new ParticleSystem();
+            _particleSys = new ParticleSystem();
             // Default a few null property values to String.Empty
             Text = String.Empty;
             MediaURL = String.Empty;
@@ -886,7 +886,7 @@ namespace OpenMetaverse
 
         public Primitive(Primitive prim)
         {
-            _particalSys = new ParticleSystem();
+            _particleSys = new ParticleSystem();
             ID = prim.ID;
             GroupID = prim.GroupID;
             LocalID = prim.LocalID;
