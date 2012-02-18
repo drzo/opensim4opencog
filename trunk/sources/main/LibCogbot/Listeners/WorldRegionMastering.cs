@@ -827,7 +827,10 @@ namespace cogbot.Listeners
                     case PCode.Grass:
                     case PCode.NewTree:
                     case PCode.Prim:
-                        source = CreateSimObject(sourceID, this, null);
+                        if (!CogbotHelpers.IsNullOrZero(sourceID))
+                        {
+                            source = CreateSimObject(sourceID, this, null);
+                        }
                         break;
                     case PCode.Avatar:
                         DeclareAvatar(sourceID);
