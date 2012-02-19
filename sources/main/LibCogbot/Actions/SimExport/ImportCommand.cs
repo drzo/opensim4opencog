@@ -284,6 +284,11 @@ namespace cogbot.Actions.SimExport
                     SetPrimsPostLink(CurSim, GroupID, linkset, skipCompare);
                 }
             }
+            // hopefully unset some phantoms here
+            foreach (PrimToCreate ptc in parents)
+            {
+                SetFlagsAndPhysics(CurSim, ptc.NewLocalID, ptc.Prim);
+            }
             WriteLine("Imported P=" + parents.Count + " C=" + childs.Count);
             return SuccessOrFailure();
         }
@@ -384,6 +389,11 @@ namespace cogbot.Actions.SimExport
             Primitive prim = ptc.Prim;
             Primitive newPrim = null;
             UUID found = UUID.Zero;
+            if (prim.PrimData.PCode != PCode.Prim)
+            {
+                CreateTree(CurSim, ptc, GroupID);
+                return;
+            }
             InventoryItem invItem = ExportCommand.GetInvItem(Client, "BlankPrim", AssetType.Object);
             UUID queryID = UUID.Random();
             // Register a handler for the creation event
@@ -464,6 +474,51 @@ namespace cogbot.Actions.SimExport
             SetPrimInfo(CurSim, localID, ptc.Prim, GroupID, false, true);
         }
 
+        private void CreateTree(Simulator CurSim, PrimToCreate ptc, UUID GroupID)
+        {
+            AutoResetEvent foundObj = new AutoResetEvent(false);
+            var prim = ptc.Prim;
+            PCode pcode = prim.PrimData.PCode;
+            Primitive newPrim = null;
+            // need time for previous rezes to come thru?
+            Thread.Sleep(100);
+            EventHandler<PrimEventArgs> folliage = new EventHandler<PrimEventArgs>((s, e) =>
+                                                                                       {
+                                                                                           if (e.Prim.PrimData.PCode != pcode)
+                                                                                               return;
+                                                                                           //if (e.Prim.TreeSpecies == prim.TreeSpecies)                                                                                               return;
+                                                                                           newPrim = e.Prim;
+                                                                                           foundObj.Set();
+                                                                                       }
+                );
+            Client.Objects.ObjectUpdate += folliage;
+            if (pcode == PCode.Grass)
+            {
+                Client.Objects.AddGrass(CurSim, prim.Scale, prim.Rotation, prim.Position, (Grass)prim.TreeSpecies, GroupID);
+            }
+            else
+            {
+                Client.Objects.AddTree(CurSim, prim.Scale, prim.Rotation, prim.Position, prim.TreeSpecies, GroupID,
+                                       pcode == PCode.NewTree);
+            }
+            if (!foundObj.WaitOne(5000))
+            {
+                Client.Objects.ObjectUpdate += folliage;
+                Failure("Tree not created!");
+                return;
+            }
+            Client.Objects.ObjectUpdate += folliage;
+            var O = ptc.Rezed = WorldSystem.GetSimObject(newPrim, CurSim);
+            uint localID = O.LocalID;
+            lock (WorkFlowLock)
+            {
+                NewUUID2OBJECT.Add(O.ID, ptc);
+                NewUINT2OBJECT.Add(localID, ptc);
+            }
+            SetPrimInfo(CurSim, localID, ptc.Prim, GroupID, false, true);
+            
+        }
+
         public void SetPrimInfo(Simulator CurSim, uint localID, Primitive prim, UUID GroupID, bool postLinked, bool nonPosOnly)
         {
 
@@ -482,22 +537,7 @@ namespace cogbot.Actions.SimExport
             Client.Objects.SetDescription(CurSim, localID, props.Description);
             Client.Objects.SetShape(CurSim, localID, prim.PrimData);
             //Client.Objects.SetExtraParamOff(CurSim, localID, prim.);
-            var flags = prim.Flags;
-            Primitive.PhysicsProperties physics = prim.PhysicsProps;
-            if (physics != null)
-            {
-                Client.Objects.SetFlags(CurSim, localID, FlagSet(flags, PrimFlags.Physics),
-                                        FlagSet(flags, PrimFlags.Temporary), FlagSet(flags, PrimFlags.Phantom),
-                                        FlagSet(flags, PrimFlags.CastShadows), physics.PhysicsShapeType,
-                                        physics.Density, physics.Friction, physics.Restitution,
-                                        physics.GravityMultiplier);
-            }
-            else
-            {
-                Client.Objects.SetFlagsOnly(CurSim, localID, FlagSet(flags, PrimFlags.Physics),
-                                            FlagSet(flags, PrimFlags.Temporary), FlagSet(flags, PrimFlags.Phantom),
-                                            FlagSet(flags, PrimFlags.CastShadows));
-            }
+            SetFlagsAndPhysics(CurSim, localID, prim);
             if (prim.Textures != null) Client.Objects.SetTextures(CurSim, localID, prim.Textures, prim.MediaURL);
             if (prim.Light != null) Client.Objects.SetLight(CurSim, localID, prim.Light);
 
@@ -515,6 +555,26 @@ namespace cogbot.Actions.SimExport
             if (prim.Sculpt != null) Client.Objects.SetSculpt(CurSim, localID, prim.Sculpt);
             Client.Objects.SetMaterial(CurSim, localID, prim.PrimData.Material);
             Client.Objects.SetScale(CurSim, localID, prim.Scale, true, false);
+        }
+
+        private void SetFlagsAndPhysics(Simulator CurSim, uint localID, Primitive prim)
+        {
+            var flags = prim.Flags;
+            Primitive.PhysicsProperties physics = prim.PhysicsProps;
+            if (physics != null)
+            {
+                Client.Objects.SetFlags(CurSim, localID, FlagSet(flags, PrimFlags.Physics),
+                                        FlagSet(flags, PrimFlags.Temporary), FlagSet(flags, PrimFlags.Phantom),
+                                        FlagSet(flags, PrimFlags.CastShadows), physics.PhysicsShapeType,
+                                        physics.Density, physics.Friction, physics.Restitution,
+                                        physics.GravityMultiplier);
+            }
+            else
+            {
+                Client.Objects.SetFlagsOnly(CurSim, localID, FlagSet(flags, PrimFlags.Physics),
+                                            FlagSet(flags, PrimFlags.Temporary), FlagSet(flags, PrimFlags.Phantom),
+                                            FlagSet(flags, PrimFlags.CastShadows));
+            }
         }
 
         private static bool FlagSet(PrimFlags flags, PrimFlags set)
