@@ -267,7 +267,7 @@ namespace cogbot.Actions.SimExport
             showsMissingOnly = arglist.Contains("todo");
             if (showsMissingOnly) quietly = true;
             verbosely = arglist.Contains("verbose");
-            if (verbosely) quietly = false;
+            if (verbosely && !arglist.Contains("quietly")) quietly = false;
             int missing = 0;
             var canExport =  new List<SimObject>();
             int objects = 0;
@@ -277,7 +277,7 @@ namespace cogbot.Actions.SimExport
                 if (IsSkipped(P)) continue;
                 if (!P.HasPrim)
                 {
-                    Failure("Missing Prim: " + named(P));
+                    if (!quietly) Failure("Missing Prim: " + named(P));
                     continue;
                 }
                 objects++;
@@ -416,9 +416,10 @@ namespace cogbot.Actions.SimExport
             if (P is SimAvatar) return true;
             if (P == null) return true;
             if (P.IsKilled) return true;
-            if (P.Parent is SimAvatar) return true;
+            SimObject parent = P.Parent;
+            if (parent is SimAvatar) return true;
             // yes SL really does have links two deep! (called attachment linksets)
-            if (P.Parent.Parent is SimAvatar)
+            if (parent != null && parent.Parent is SimAvatar)
             {
                 return true;
             }
@@ -459,7 +460,7 @@ namespace cogbot.Actions.SimExport
         private void LocalFailure(string s, object[] args)
         {
             LocalFailures++;
-            if (!quietly) Failure(DLRConsole.SafeFormat(s, args));
+            if (!quietly || verbosely) Failure(DLRConsole.SafeFormat(s, args));
         }
 
         public static void ExportPrim(BotClient Client, SimObject exportPrim, OutputDelegate Failure, HashSet<string> arglist)
@@ -633,13 +634,17 @@ namespace cogbot.Actions.SimExport
                         throw new InvalidOperationException("new message came to " + so + " was " + eMessage);
                     }
                 }
-                so.S = so.S + eMessage;
+                string soS = so.S;
+                if (string.IsNullOrEmpty(soS))
+                {
+                    so.S = eMessage;
+                }else
+                {
+                    so.S = soS + "," + eMessage;
+                }
                 if (eMessage.EndsWith(",Z"))
                 {
-                    lock (PrimWaitingLinkset)
-                    {
-                        PrimWaitingLinkset.Remove(sourceId);
-                    }
+
                     var mustHave = so.S.Substring(2);
                     if (mustHave.StartsWith("1,"))
                     {
@@ -660,6 +665,10 @@ namespace cogbot.Actions.SimExport
                         }
                     }
                     lock (fileWriterLock) File.WriteAllText(so.F + ".link", mustHave);
+                    lock (PrimWaitingLinkset)
+                    {
+                        PrimWaitingLinkset.Remove(sourceId);
+                    }
                 }
             }
         }
@@ -668,11 +677,20 @@ namespace cogbot.Actions.SimExport
         {
             mustHave = mustHave.TrimEnd();
             if (string.IsNullOrEmpty(mustHave)) return new UUID[0];
-            string[] mh = mustHave.Split(',');
+            string[] mh = mustHave.Split(new[]{','},StringSplitOptions.RemoveEmptyEntries);
             UUID[] childs = new UUID[mh.Length];
             for (int i = 0; i < mh.Length; i++)
             {
-                childs[i]= UUIDFactory.GetUUID(mh[i]);
+                string mh1 = mh[i];
+                try
+                {
+                    childs[i] = UUIDFactory.GetUUID(mh1);
+                }
+                catch (Exception)
+                {
+                    
+                    throw;
+                }
             }
             return childs;
         }
