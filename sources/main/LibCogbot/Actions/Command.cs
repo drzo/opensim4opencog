@@ -422,15 +422,7 @@ namespace cogbot.Actions
         }
         protected CmdResult SuccessOrFailure()
         {
-            if (success==0)
-            {
-                return Result(Name + " " + failure + " failures ", false);
-            }
-            if (failure>0)
-            {
-                return Result(Name + " " + failure + " failures and " + success + " successes", false);
-            }
-            return Result(Name + " " + success + " successes", true);
+            return Result(Name + " " + failure + " failures and " + success + " successes", failure == 0);
         }
 
 
