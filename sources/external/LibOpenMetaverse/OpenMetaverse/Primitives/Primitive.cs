@@ -566,7 +566,7 @@ namespace OpenMetaverse
             public byte AggregatePermTexturesOwner;
             /// <summary></summary>
             public ObjectCategory Category;
-            /// <summary></summary>
+            /// <summary></summary>           
             public short InventorySerial;
             /// <summary></summary>
             public UUID ItemID = UUID.Zero;
@@ -1114,10 +1114,17 @@ namespace OpenMetaverse
                 map["TextureIDs"] = OSD.FromArray(Properties.TextureIDs);
             }
             map["PrimFlags"] = (uint)Flags;
+            map["TreeSpecies"] = (byte)TreeSpecies;
             if (NameValues != null)
             {
                 string nvs = NameValue.NameValuesToString(NameValues);
                 map["NameValues"] = nvs;
+            }
+            if (Textures != null)
+            {
+                var data1 = Textures.GetBytes();
+                map["TexturesBytesLen"] = data1.Length;
+                map["TexturesBytes"] = OSD.FromBinary(data1);
             }
             return map;
         }
@@ -1446,10 +1453,27 @@ namespace OpenMetaverse
             {
                 throw new NotImplementedException("particalSysBytes");
             }
+            if (map["TexturesBytesLen"].AsBoolean())
+            {
+                int len = map["TexturesBytesLen"].AsInteger();
+                byte[] data1 = map["TexturesBytes"].AsBinary();
+                if (prim.Textures == null)
+                {
+                    prim.Textures = new TextureEntry(data1, 0, len);
+                }
+                else
+                {
+                    prim.Textures.FromBytes(data1, 0, len);
+                }
+            }
+            else
+            {
+                // throw new NotImplementedException("TexturesBytesLen");
+            }
             if (map["PhysicsProps"]) prim.PhysicsProps = PhysicsProperties.FromOSD(map["PhysicsProps"]);
             if (map["properties"])
             {
-                OSD.SetObjectOSD(prim.Properties, (OSDMap)map["properties"]);
+              //  OSD.SetObjectOSD(prim.Properties, (OSDMap)map["properties"]);
             }
             if (map["TextureIDs"])
             {
@@ -1479,6 +1503,8 @@ namespace OpenMetaverse
 
             if (!map["PhysicsProps"])
                 prim.PhysicsProps = null;
+
+            prim.TreeSpecies = (Tree)(byte)map["TreeSpecies"].AsInteger();
 
             return prim;
         }
