@@ -750,7 +750,7 @@ namespace OpenMetaverse
                 return new TextureEntry(Primitive.TextureEntry.WHITE_TEXTURE);
             }
 
-            private void FromBytes(byte[] data, int pos, int length)
+            public void FromBytes(byte[] data, int pos, int length)
             {
                 if (length < 16)
                 {
