@@ -22,7 +22,21 @@ namespace cogbot.Actions.SimExport
             Linking,
             Idle
         }
-
+        public enum PrimImportState : uint
+        {
+            Unloaded,
+            LoadedLLSD,
+            RezRequested,
+            NewPrimFound,
+            PrimPropertiesSet,
+            Linking,
+            PostLinkProperiesSet,
+            DependantTexturesConfirmed,
+            DependantTaskAssetsUploaded,
+            TaskInventoryCreated,
+            TaskInventoryConfirmed,
+            RepackagingComplete
+        }
         private class Linkset
         {
             public Primitive RootPrim;
@@ -40,13 +54,58 @@ namespace cogbot.Actions.SimExport
         }
         public class PrimToCreate
         {
+            public override string ToString()
+            {
+                return Prim + " -> " + _rezed;
+            }
+            public override int GetHashCode()
+            {
+                return Prim.ID.GetHashCode();
+            }
+            public override bool Equals(object obj)
+            {
+                var ptc = obj as PrimToCreate;
+                return ptc != null && Prim.ID == ptc.Prim.ID;
+            }
             public PrimToCreate(Primitive prim)
             {
                 Prim = prim;
+                OldID = prim.ID;
+                LoadProgressFile();
             }
-            public Primitive Prim;
+            public PrimToCreate(UUID oldID)
+            {
+                OldID = oldID;
+                LoadProgressFile();
+            }
+            public Primitive Prim
+            {
+                get
+                {
+                    if (_prim == null)
+                    {
+                        _prim = (Primitive)ExportCommand.FromFile(LLSDFilename);
+                    }
+                    return _prim;
+                }
+                set
+                {
+                    _prim = value;
+                }
+            }
+
+            public string LLSDFilename
+            {
+                get
+                {
+                    return ExportCommand.dumpDir + OldID + ".llsd";
+                }
+            }
+
             private SimObject _rezed;
+            private PrimImportState State = PrimImportState.Unloaded;
             public UUID NewID = UUID.Zero;
+            readonly public UUID OldID;
             public uint NewLocalID;
             public Primitive NewPrim
             {
@@ -59,12 +118,27 @@ namespace cogbot.Actions.SimExport
             }
 
             public bool RezRequested = false;
+            private Primitive _prim;
+            private string _progressFile;
+
+            public string ProgressFile
+            {
+                get
+                {
+                    if (_progressFile == null)
+                    {
+                        _progressFile = ExportCommand.dumpDir + OldID + ".ptc";
+                    }
+                    return _progressFile;
+                }
+            }
             public SimObject Rezed
             {
                 get
                 {
                     if (_rezed == null)
                     {
+                        LoadProgressFile();
                         _rezed = ExportCommand.GetSimObjectFromUUID(NewID);
                     }
                     return _rezed;
@@ -76,9 +150,26 @@ namespace cogbot.Actions.SimExport
                     _rezed = value;
                     NewID = value.ID;
                     NewLocalID = value.LocalID;
+                    File.WriteAllText(ProgressFile, NewID + "," + NewLocalID + "," + value.RegionHandle);
                 }
             }
 
+            private void LoadProgressFile()
+            {
+                if (CogbotHelpers.IsNullOrZero(NewID))
+                {
+                    string importProgress = ProgressFile;
+                    if (File.Exists(importProgress))
+                    {
+                        string data = File.ReadAllText(importProgress);
+                        var sdata = data.Split(',');
+                        NewID = UUIDFactory.GetUUID(sdata[0]);
+                        NewLocalID = uint.Parse(sdata[1]);
+                        RezRequested = true;
+                    }
+
+                }
+            }
         }
 
         Primitive currentPrim;
@@ -95,6 +186,10 @@ namespace cogbot.Actions.SimExport
 
         public static readonly Dictionary<UUID, PrimToCreate> NewUUID2OBJECT = new Dictionary<UUID, PrimToCreate>();
         public static readonly Dictionary<uint, PrimToCreate> NewUINT2OBJECT = new Dictionary<uint, PrimToCreate>();
+        private List<PrimToCreate> parents;
+        private List<PrimToCreate> childs;
+        static List<Primitive> diskPrims = new List<Primitive>();
+
 
         public ImportCommand(BotClient testClient)
         {
@@ -108,20 +203,40 @@ namespace cogbot.Actions.SimExport
         {
             UUID GroupID = (args.Length > 1) ? TheBotClient.GroupID : UUID.Zero;
             var CurSim = Client.Network.CurrentSim;
-            var parents = new List<PrimToCreate>();
-            var childs = new List<PrimToCreate>();
+            parents = new List<PrimToCreate>();
+            childs = new List<PrimToCreate>();
             var taskobjs = new List<PrimToCreate>();
 
-            foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.llsd"))
+            if (diskPrims.Count == 0)
             {
-
-                Primitive prim = (Primitive)ExportCommand.FromFile(file);
-                if (prim.ParentID != 0)
+                foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.llsd"))
                 {
-                    childs.Add(APrimToCreate(prim));
-                    continue;
+
+                    Primitive prim = (Primitive)ExportCommand.FromFile(file);
+                    diskPrims.Add(prim);
+                    PrimToCreate ptc = APrimToCreate(prim);
+                    if (prim.ParentID != 0)
+                    {
+                        childs.Add(ptc);
+                        continue;
+                    }
+                    parents.Add(ptc);
+                    CreatePrim(CurSim, ptc, GroupID);
                 }
-                parents.Add(APrimToCreate(prim));
+            }
+            else
+            {
+                foreach (Primitive prim in diskPrims)
+                {
+                    PrimToCreate ptc = APrimToCreate(prim);
+                    if (prim.ParentID != 0)
+                    {
+                        childs.Add(ptc);
+                        CreatePrim(CurSim, ptc, GroupID);
+                        continue;
+                    }
+                    parents.Add(ptc);
+                }
             }
             foreach (PrimToCreate ptc in parents)
             {
@@ -160,9 +275,14 @@ namespace cogbot.Actions.SimExport
                     }
                     linkset.Add(newLocalID);
                 }
+                linkset.Reverse();
                 //linkset.Add(UUID2OBJECT[uuids[0]].Rezed.LocalID);
                 Client.Objects.LinkPrims(CurSim, linkset);
-                if (false) SetPrimsPostLink(CurSim, GroupID, linkset, skipCompare);
+                if (false)
+                {
+                    linkset.Reverse();
+                    SetPrimsPostLink(CurSim, GroupID, linkset, skipCompare);
+                }
             }
             WriteLine("Imported P=" + parents.Count + " C=" + childs.Count);
             return SuccessOrFailure();
@@ -184,10 +304,10 @@ namespace cogbot.Actions.SimExport
                     Failure("Missing Old Prim " + u);
                     continue;
                 }
-                SetPrimInfo(CurSim, u, prim, GroupID, true);
+                SetPrimInfo(CurSim, u, prim, GroupID, true, false);
                 string diff = ExportCommand.MemberwiseCompare(prim, ptc.NewPrim, skipCompare);
                 if (string.IsNullOrEmpty(diff)) Failure("after rez: " + diff);
-                    
+
                 //Client.Objects.SetPosition(CurSim, u, prim.Position);
                 //Client.Objects.SetRotation(CurSim, u, prim.Rotation);
             }
@@ -317,7 +437,7 @@ namespace cogbot.Actions.SimExport
             if (!creationEvent.WaitOne(10000))
             {
                 Client.Self.ChatFromSimulator -= callback;
-                Error("Error - no uuid of prim ");
+                Debug("Error - no uuid of prim ");
                 return;
             }
             Client.Self.ChatFromSimulator -= callback;
@@ -337,14 +457,14 @@ namespace cogbot.Actions.SimExport
             ptc.Rezed = O;
             lock (WorkFlowLock)
             {
-                NewUUID2OBJECT.Add(found, ptc); 
+                NewUUID2OBJECT.Add(found, ptc);
                 NewUINT2OBJECT.Add(O.LocalID, ptc);
             }
             uint localID = newPrim.LocalID;
-            SetPrimInfo(CurSim, localID, ptc.Prim, GroupID, false);
+            SetPrimInfo(CurSim, localID, ptc.Prim, GroupID, false, true);
         }
 
-        public void SetPrimInfo(Simulator CurSim, uint localID, Primitive prim, UUID GroupID, bool postLinked)
+        public void SetPrimInfo(Simulator CurSim, uint localID, Primitive prim, UUID GroupID, bool postLinked, bool nonPosOnly)
         {
 
             Vector3 pp = prim.Position;
@@ -371,6 +491,12 @@ namespace cogbot.Actions.SimExport
                                         FlagSet(flags, PrimFlags.CastShadows), physics.PhysicsShapeType,
                                         physics.Density, physics.Friction, physics.Restitution,
                                         physics.GravityMultiplier);
+            }
+            else
+            {
+                Client.Objects.SetFlagsOnly(CurSim, localID, FlagSet(flags, PrimFlags.Physics),
+                                            FlagSet(flags, PrimFlags.Temporary), FlagSet(flags, PrimFlags.Phantom),
+                                            FlagSet(flags, PrimFlags.CastShadows));
             }
             if (prim.Textures != null) Client.Objects.SetTextures(CurSim, localID, prim.Textures, prim.MediaURL);
             if (prim.Light != null) Client.Objects.SetLight(CurSim, localID, prim.Light);
@@ -405,6 +531,7 @@ namespace cogbot.Actions.SimExport
             string msg = DLRConsole.SafeFormat(s, ps);
             Client.DisplayNotificationInChat(msg);
             Failure(msg);
+            return;
             throw new NotImplementedException(msg);
         }
 
