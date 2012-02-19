@@ -446,21 +446,24 @@ namespace OpenMetaverse.StructuredData
             map.Add("typeosd", from.FullName);
             foreach (var v in from.GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
-                string n = v.Name.ToLower();
+                string n = v.Name;
                 if (n.StartsWith("_")) continue;
                 if (v is MethodBase)
                 {
                     continue;
                 }
+                if (v.IsDefined(typeof(NonSerializedAttribute), true)) continue;
                 var p = v as PropertyInfo;
                 if (p != null && p.CanRead && p.CanWrite && p.GetIndexParameters().Length == 0)
                 {
+                    n = "p_" + n;
                     AddOSDMember(map, n, p.GetValue(primitive, null), p.PropertyType);
                     continue;
                 }
                 var f = v as FieldInfo;
                 if (f != null && !f.IsStatic && !f.IsLiteral)
                 {
+                    n = "f_" + n;
                     AddOSDMember(map, n, f.GetValue(primitive), f.FieldType);
                     continue;
                 }
@@ -474,17 +477,20 @@ namespace OpenMetaverse.StructuredData
             int mapManips = 0;
             foreach (var v in from.GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
-                string n = v.Name.ToLower();
-                if (n.StartsWith("_")) continue;
                 if (v is MethodBase)
                 {
                     continue;
                 }
+                if (v.IsDefined(typeof(NonSerializedAttribute), true)) continue;
+                string n = v.Name;
+                if (n.StartsWith("_")) continue;
                 var p = v as PropertyInfo;
                 if (p != null && p.CanRead && p.CanWrite && p.GetIndexParameters().Length == 0)
                 {
                     bool found;
-                    object setOSDMember = GetOSDMember(map, n, p.PropertyType, out found);
+                    n = "p_" + n;
+                    var suggest = p.GetValue(primitive, null);
+                    object setOSDMember = GetOSDMember(suggest,map, n, p.PropertyType, out found);
                     if (found)
                     {
                         p.SetValue(primitive, setOSDMember, null);
@@ -497,7 +503,9 @@ namespace OpenMetaverse.StructuredData
                 if (f != null && !f.IsStatic && !f.IsLiteral)
                 {
                     bool found;
-                    object setOSDMember = GetOSDMember(map, n, f.FieldType, out found);
+                    n = "f_" + n;
+                    var suggest = f.GetValue(primitive);
+                    object setOSDMember = GetOSDMember(suggest, map, n, f.FieldType, out found);
                     if (found)
                     {
                         f.SetValue(primitive, setOSDMember);
@@ -509,7 +517,7 @@ namespace OpenMetaverse.StructuredData
             }
         }
 
-        private static object GetOSDMember(OSDMap map, string s, Type type, out bool found)
+        private static object GetOSDMember(object suggest, OSDMap map, string s, Type type, out bool found)
         {
             var v = map[s];
             if (v == null)
@@ -536,6 +544,46 @@ namespace OpenMetaverse.StructuredData
             if (found)
             {
                 return oo;
+            }
+            if (!(v is OSDMap))
+            {
+                return oo;
+            }
+            map = v as OSDMap;
+            if (suggest != null)
+            {
+                SetObjectOSD(suggest,map);
+                found = true;
+                return suggest;
+            }
+            if (map["typeosd"])
+            {
+                string sntype = map["typeosd"];
+                System.Type ntype = System.Type.GetType(sntype);
+                if (ntype == null)
+                {
+                    if (!type.IsAbstract && !type.IsInterface)
+                        ntype = type;
+                }
+                if (ntype != null && type.IsAssignableFrom(ntype))
+                {
+                    var ci = ntype.GetConstructor(new Type[0]);
+                    if (ci != null)
+                    {
+                        oo = ci.Invoke(new object[0]);
+                        SetObjectOSD(oo, map);
+                        found = true;
+                    }
+                    else
+                    {
+                        ci = ntype.GetConstructor(new Type[] { typeof(OSD) });
+                        if (ci != null)
+                        {
+                            oo = ci.Invoke(new object[] { v });
+                            found = true;
+                        }
+                    }
+                }
             }
             return oo;
             //return v;
