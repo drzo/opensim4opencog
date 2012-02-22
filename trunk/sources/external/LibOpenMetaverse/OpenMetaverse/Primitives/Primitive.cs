@@ -1111,7 +1111,7 @@ namespace OpenMetaverse
             map["extraParamBytes"] = OSD.FromBinary(GetExtraParamsBytes());
             if (Properties != null)
             {
-                map["TextureIDs"] = OSD.FromArray(Properties.TextureIDs);
+                map["TextureIDs"] = OSD.FromArray(Properties.TextureIDs, new HashSet<object>());
             }
             map["PrimFlags"] = (uint)Flags;
             map["TreeSpecies"] = (byte)TreeSpecies;
