@@ -7,6 +7,7 @@ using cogbot.Listeners;
 using cogbot.TheOpenSims;
 using MushDLR223.Utilities;
 using OpenMetaverse;
+using OpenMetaverse.Assets;
 using OpenMetaverse.StructuredData;
 
 using MushDLR223.ScriptEngines;
@@ -52,7 +53,144 @@ namespace cogbot.Actions.SimExport
                 RootPrim = rootPrim;
             }
         }
-        public class PrimToCreate
+        public class UUIDChange
+        {
+            public UUID NewID { get; set; }
+            public UUID OldID { get; set; }
+
+        }
+
+        public class ItemToCreate : UUIDChange 
+        {
+            public override string ToString()
+            {
+                return Item + " -> " + _rezed;
+            }
+            public override int GetHashCode()
+            {
+                return Item.AssetID.GetHashCode();
+            }
+            public override bool Equals(object obj)
+            {
+                var ptc = obj as ItemToCreate;
+                return ptc != null && Item.AssetID == ptc.Item.AssetID;
+            }
+            public ItemToCreate(Asset item)
+            {
+                Item = item;
+                OldID = item.AssetID;
+                LoadProgressFile();
+            }
+            public ItemToCreate(UUID oldID)
+            {
+                OldID = oldID;
+                LoadProgressFile();
+            }
+            public Asset Item
+            {
+                get
+                {                    
+                    return _item;
+                }
+                set
+                {
+                    _item = value;
+                }
+            }
+
+            public string LLSDFilename
+            {
+                get
+                {
+                    string sfile = SimAsset.CFileName(OldID, assetType);
+                    _afiler = ExportCommand.assetDumpDir + Path.GetFileName(sfile);
+                    return _afiler;
+                }
+                set
+                {
+                    _afiler = value;
+                }
+            }
+
+            private SimAsset _rezed;
+            private AssetType assetType;
+            //public uint NewLocalID;
+            public Asset NewItem
+            {
+                get
+                {
+                    var r = Rezed;
+                    if (r == null) return null;
+                    return r.ServerAsset;
+                }
+            }
+
+            public bool RezRequested = false;
+            private Asset _item;
+            private string _progressFile;
+            public bool IsLinkParent;
+            private string _afiler;
+
+            public string ProgressFile
+            {
+                get
+                {
+                    if (_progressFile == null)
+                    {
+                        _progressFile = ExportCommand.dumpDir + OldID + ".simasset";
+                    }
+                    return _progressFile;
+                }
+            }
+            public SimAsset Rezed
+            {
+                get
+                {
+                    if (_rezed == null)
+                    {
+                        LoadProgressFile();
+                        _rezed = SimAssetStore.FindAsset(NewID);
+                    }
+                    return _rezed;
+                }
+                set
+                {
+                    if (value == null) return;
+                    RezRequested = true;
+                    _rezed = value;
+                    NewID = value.ID;
+                    //NewLocalID = value.LocalID;
+                    File.WriteAllText(ProgressFile, "" + NewID);
+                }
+            }
+
+            private void LoadProgressFile()
+            {
+                if (CogbotHelpers.IsNullOrZero(NewID))
+                {
+                    string importProgress = ProgressFile;
+                    if (File.Exists(importProgress))
+                    {
+                        string data = File.ReadAllText(importProgress);
+                        var sdata = data.Split(',');
+                        NewID = UUIDFactory.GetUUID(sdata[0]);
+                       // NewLocalID = uint.Parse(sdata[1]);
+                        RezRequested = true;
+                    }
+
+                }
+            }
+
+            public void OnDownloaded(AssetDownload transfer, Asset asset)
+            {
+                if (!transfer.Success)
+                {
+                    ImportCommand.Running.Error("bad transfer");
+                }
+            }
+        }
+
+        public class PrimToCreate : UUIDChange
         {
             public override string ToString()
             {
@@ -104,8 +242,6 @@ namespace cogbot.Actions.SimExport
 
             private SimObject _rezed;
             private PrimImportState State = PrimImportState.Unloaded;
-            public UUID NewID = UUID.Zero;
-            readonly public UUID OldID;
             public uint NewLocalID;
             public Primitive NewPrim
             {
@@ -120,6 +256,7 @@ namespace cogbot.Actions.SimExport
             public bool RezRequested = false;
             private Primitive _prim;
             private string _progressFile;
+            public bool IsLinkParent;
 
             public string ProgressFile
             {
@@ -181,14 +318,14 @@ namespace cogbot.Actions.SimExport
         private static readonly object WorkFlowLock = new object();
         ImporterState state = ImporterState.Idle;
         EventHandler<PrimEventArgs> callback;
-        public static readonly Dictionary<UUID, PrimToCreate> UUID2OBJECT = new Dictionary<UUID, PrimToCreate>();
+        public static readonly Dictionary<UUID, UUIDChange> UUID2OBJECT = new Dictionary<UUID, UUIDChange>();
         public static readonly Dictionary<uint, PrimToCreate> UINT2OBJECT = new Dictionary<uint, PrimToCreate>();
 
-        public static readonly Dictionary<UUID, PrimToCreate> NewUUID2OBJECT = new Dictionary<UUID, PrimToCreate>();
+        public static readonly Dictionary<UUID, UUIDChange> NewUUID2OBJECT = new Dictionary<UUID, UUIDChange>();
         public static readonly Dictionary<uint, PrimToCreate> NewUINT2OBJECT = new Dictionary<uint, PrimToCreate>();
         private List<PrimToCreate> parents;
         private List<PrimToCreate> childs;
-        static List<Primitive> diskPrims = new List<Primitive>();
+        static readonly List<Primitive> diskPrims = new List<Primitive>();
 
 
         public ImportCommand(BotClient testClient)
@@ -196,13 +333,52 @@ namespace cogbot.Actions.SimExport
             Name = "simimport";
             Description = "Import prims from an exported xml file. Usage: import inputfile.xml [usegroup]";
             Category = CommandCategory.Objects;
+            ImportCommand.Running = this;
         }
 
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate writeLine)
         {
+            const string hlp = @"
+            
+            Toplevel Directives
+
+            // todo  = shows what must be done for import to be complete (suggest adding verbose)
+            // perms  = shows what perms are going to be a problem (suggest adding verbose)
+            // clear - clear the export dir
+            // reset - reset the exporter state
+            // cache - blow away asset cache
+
+            // prims [spec] - do only prims meeting spec (default is prims $region) 
+            // incr - do only do what is 'todo'
+            // nonincr - do things 'todo' but also 'redo' things already done
+
+            // noperms = dont skip things when perms might be a problem
+            // quietly = terser output
+            // verbose = more verbose
+            // request = will rerequest missing things like textures
+            // force = will allow unequal LLSD files - this should only be used as last resort
+
+            // users - load users files 
+            // prims - load llsd files 
+            // trees - load trees files 
+            // terrain - load terrain files 
+            // links - operate on linkset
+            // deps - operate on dependant assets
+            // dl - operate on dependant downloads
+            // tasks - save task files
+            // taskobj - task objects
+            // all = llsd tasks deps links (dl and taskobj not included)           
+            ";
+            if (args == null || args.Length == 0) return Failure(hlp);
             UUID GroupID = (args.Length > 1) ? TheBotClient.GroupID : UUID.Zero;
             var CurSim = Client.Network.CurrentSim;
+            HashSet<string> arglist = new HashSet<string>(args);
+            if (arglist.Contains("assets"))
+            {
+                UploadAllAssets(arglist.Contains("sameid"));
+                
+            }
             parents = new List<PrimToCreate>();
             childs = new List<PrimToCreate>();
             var taskobjs = new List<PrimToCreate>();
@@ -251,8 +427,11 @@ namespace cogbot.Actions.SimExport
             {
                 var uuids = ExportCommand.GetUUIDs(File.ReadAllText(file));
                 if (uuids.Length < 1) continue;
-                var linkset = new List<uint>(uuids.Length);
-                for (int i = uuids.Length - 1; i >= 0; i--)
+                UUID idp = uuids[0];
+                var parent = GetOldPrim(idp);
+                parent.IsLinkParent = true;
+                var linkset = new List<uint>(uuids.Length) {parent.NewLocalID};
+                for (int i = 1; i < uuids.Length; i++)
                 {
                     UUID id = uuids[i];
                     PrimToCreate ptc = GetOldPrim(id);
@@ -261,13 +440,7 @@ namespace cogbot.Actions.SimExport
                         Failure("Relink cant find PTC=" + id);
                         continue;
                     }
-                    SimObject ptcRezed = ptc.Rezed;
-                    if (ptcRezed == null)
-                    {
-                        Failure("Relink cant find ptcRezed=" + ptc);
-                        continue;
-                    }
-                    uint newLocalID = ptcRezed.LocalID;
+                    uint newLocalID = ptc.NewLocalID;
                     if (newLocalID == 0)
                     {
                         Failure("Relink cant find linked prim ID=" + id);
@@ -275,13 +448,14 @@ namespace cogbot.Actions.SimExport
                     }
                     linkset.Add(newLocalID);
                 }
-                linkset.Reverse();
                 //linkset.Add(UUID2OBJECT[uuids[0]].Rezed.LocalID);
                 Client.Objects.LinkPrims(CurSim, linkset);
+                linkset.RemoveAt(0);
+
                 if (false)
                 {
                     linkset.Reverse();
-                    SetPrimsPostLink(CurSim, GroupID, linkset, skipCompare);
+                    SetPrimsPostLink(CurSim, GroupID, parent, linkset, skipCompare);
                 }
             }
             // hopefully unset some phantoms here
@@ -293,7 +467,49 @@ namespace cogbot.Actions.SimExport
             return SuccessOrFailure();
         }
 
-        private void SetPrimsPostLink(Simulator CurSim, UUID GroupID, IEnumerable<uint> linkset, ICollection<string> skipCompare)
+        private void UploadAllAssets(bool sameIds)
+        {
+            foreach (var file in Directory.GetFiles(ExportCommand.assetDumpDir, "*.*"))
+            {
+                if (file.EndsWith(".object"))
+                {
+                    continue;
+                }
+                string sid = file;
+                AssetType assetType = AssetType.Unknown;
+                foreach (var ate in ArchiveConstants.ASSET_TYPE_TO_EXTENSION)
+                {
+                    string ateValue = ate.Value;
+                    if (file.EndsWith(ateValue))
+                    {
+                        assetType = ate.Key;
+                        sid = file.Substring(0, file.Length - ateValue.Length);
+                        break;
+                    }
+                }
+                if (assetType==AssetType.Unknown)
+                {
+                    Failure("Cant guess assetyype for " + file);
+                    continue;
+                }
+                UUID oldID = UUID.Parse(sid);
+                ItemToCreate itc = FindItemToCreate(oldID, assetType, sameIds);
+                itc.LLSDFilename = file;
+            }
+        }
+
+        private ItemToCreate FindItemToCreate(UUID uuid, AssetType assetType, bool sameIds)
+        {
+            var itc = GetOld(uuid) as ItemToCreate;
+            if (itc == null)
+            {
+                itc = new ItemToCreate(uuid);
+                Client.Assets.RequestAsset(uuid, assetType, true, itc.OnDownloaded);
+            }
+            return itc;
+        }
+
+        private void SetPrimsPostLink(Simulator CurSim, UUID GroupID, PrimToCreate parent, IEnumerable<uint> linkset, ICollection<string> skipCompare)
         {
             foreach (uint u in linkset)
             {
@@ -309,7 +525,7 @@ namespace cogbot.Actions.SimExport
                     Failure("Missing Old Prim " + u);
                     continue;
                 }
-                SetPrimInfo(CurSim, u, prim, GroupID, true, false);
+                SetPrimInfo(CurSim, u, prim, GroupID, true, false, false);
                 string diff = ExportCommand.MemberwiseCompare(prim, ptc.NewPrim, skipCompare);
                 if (string.IsNullOrEmpty(diff)) Failure("after rez: " + diff);
 
@@ -318,13 +534,18 @@ namespace cogbot.Actions.SimExport
             }
         }
 
-        public static PrimToCreate APrimToCreate(Primitive primitive)
+        public PrimToCreate APrimToCreate(Primitive primitive)
         {
             lock (WorkFlowLock)
             {
                 PrimToCreate ptc;
                 if (UINT2OBJECT.TryGetValue(primitive.LocalID, out ptc)) return ptc;
-                if (UUID2OBJECT.TryGetValue(primitive.ID, out ptc)) return ptc;
+                UUIDChange utc;
+                if (UUID2OBJECT.TryGetValue(primitive.ID, out utc))
+                {
+                    return (PrimToCreate)utc;
+                }
+                if (ptc != null) return ptc;
                 ptc = new PrimToCreate(primitive);
                 UUID2OBJECT.Add(primitive.ID, ptc);
                 UINT2OBJECT.Add(primitive.LocalID, ptc);
@@ -346,14 +567,19 @@ namespace cogbot.Actions.SimExport
         }
         private PrimToCreate GetOldPrim(UUID id)
         {
+            PrimToCreate getOld = (PrimToCreate)GetOld(id);
+            if (getOld == null) Failure("cant find ID=" + id);
+            return getOld;
+        }
+        private UUIDChange GetOld(UUID id)
+        {
             lock (WorkFlowLock)
             {
-                PrimToCreate ptc;
+                UUIDChange ptc;
                 if (UUID2OBJECT.TryGetValue(id, out ptc))
                 {
-                    return ptc;
+                    return (UUIDChange)ptc;
                 }
-                Failure("cant find ID=" + id);
             }
             return null;
         }
@@ -370,11 +596,11 @@ namespace cogbot.Actions.SimExport
             }
             return null;
         }
-        private PrimToCreate GetNewPrim(UUID id)
+        private UUIDChange GetNew(UUID id)
         {
             lock (WorkFlowLock)
             {
-                PrimToCreate ptc;
+                UUIDChange ptc;
                 if (NewUUID2OBJECT.TryGetValue(id, out ptc))
                 {
                     return ptc;
@@ -436,8 +662,16 @@ namespace cogbot.Actions.SimExport
             if (prim.ParentID != 0)
             {
                 var parent = GetOldPrim(prim.ParentID);
-                pp = prim.Position * Matrix4.CreateFromQuaternion(parent.Prim.Rotation) + parent.Prim.Position;
-                pr = parent.Prim.Rotation * pr;
+                if (parent == null)
+                {
+                    pp += new Vector3(128, 128, Client.Self.SimPosition.Z + 20);
+                    Failure("Cant GET parent of " + prim);
+                }
+                else
+                {
+                    pp = prim.Position*Matrix4.CreateFromQuaternion(parent.Prim.Rotation) + parent.Prim.Position;
+                    pr = parent.Prim.Rotation*pr;
+                }
             }
 
             Client.Self.ChatFromSimulator += callback;
@@ -465,14 +699,13 @@ namespace cogbot.Actions.SimExport
                 return;
             }
             ptc.Rezed = O;
-            lock (WorkFlowLock)
-            {
-                NewUUID2OBJECT.Add(found, ptc);
-                NewUINT2OBJECT.Add(O.LocalID, ptc);
-            }
+            SavePTC(ptc);
             uint localID = newPrim.LocalID;
-            SetPrimInfo(CurSim, localID, ptc.Prim, GroupID, false, true);
+            SetPrimInfo(CurSim, localID, ptc.Prim, GroupID, false, false, true);
         }
+
+        private PrimToCreate prev = null;
+        private static ImportCommand Running;
 
         private void CreateTree(Simulator CurSim, PrimToCreate ptc, UUID GroupID)
         {
@@ -503,23 +736,43 @@ namespace cogbot.Actions.SimExport
             }
             if (!foundObj.WaitOne(5000))
             {
-                Client.Objects.ObjectUpdate += folliage;
-                Failure("Tree not created!");
+                Client.Objects.ObjectUpdate -= folliage;
+                Failure(pcode + " not created! " + ptc + " " + prim.TreeSpecies);
                 return;
             }
-            Client.Objects.ObjectUpdate += folliage;
+            Client.Objects.ObjectUpdate -= folliage;
             var O = ptc.Rezed = WorldSystem.GetSimObject(newPrim, CurSim);
             uint localID = O.LocalID;
-            lock (WorkFlowLock)
+            SavePTC(ptc);
+            SetPrimInfo(CurSim, localID, ptc.Prim, GroupID, false, false, true);
+            if (prev == null)
             {
-                NewUUID2OBJECT.Add(O.ID, ptc);
-                NewUINT2OBJECT.Add(localID, ptc);
+                prev = ptc;
             }
-            SetPrimInfo(CurSim, localID, ptc.Prim, GroupID, false, true);
-            
+            else
+            {
+                if (prev.Rezed.Prim.Scale.X > 30)
+                {
+                    Client.Inventory.RequestDeRezToInventory(prev.NewLocalID);
+                    prev.RezRequested = false;
+                    prev.NewLocalID = 0;
+                    prev.NewID = UUID.Zero;
+                    File.Delete(prev.ProgressFile);
+                }
+                prev = ptc;
+            }
         }
 
-        public void SetPrimInfo(Simulator CurSim, uint localID, Primitive prim, UUID GroupID, bool postLinked, bool nonPosOnly)
+        private void SavePTC(PrimToCreate ptc)
+        {
+            lock (WorkFlowLock)
+            {
+                NewUUID2OBJECT[ptc.NewID] = ptc;
+                NewUINT2OBJECT[ptc.NewLocalID] = ptc;
+            }
+        }
+
+        public void SetPrimInfo(Simulator CurSim, uint localID, Primitive prim, UUID GroupID, bool postLinked, bool nonPosOnly, bool setScale)
         {
 
             Vector3 pp = prim.Position;
@@ -527,9 +780,21 @@ namespace cogbot.Actions.SimExport
             if (!postLinked && prim.ParentID != 0)
             {
                 var parent = GetOldPrim(prim.ParentID);
-                pp = prim.Position * Matrix4.CreateFromQuaternion(parent.Prim.Rotation) + parent.Prim.Position;
-                pr = parent.Prim.Rotation * pr;
+                if (parent == null)
+                {
+                    pp += new Vector3(128, 128, Client.Self.SimPosition.Z + 20);
+                    Failure("Cant GET parent of " + prim);
+                }
+                else
+                {
+                    pp = prim.Position * Matrix4.CreateFromQuaternion(parent.Prim.Rotation) + parent.Prim.Position;
+                    pr = parent.Prim.Rotation * pr;
+                }
+            } else
+            {
+                //nonPosOnly = true;
             }
+            
 
             Primitive.ObjectProperties props = prim.Properties;
             List<uint> prims = new List<uint> { localID };
@@ -548,13 +813,19 @@ namespace cogbot.Actions.SimExport
             Client.Objects.SetPermissions(CurSim, new List<uint>() { localID },
                                           PermissionWho.Everyone | PermissionWho.Group | PermissionWho.NextOwner,
                                           PermissionMask.All, true);
-            Client.Objects.SetPosition(CurSim, localID, pp, true);
-            Client.Objects.SetRotation(CurSim, localID, pr, true);
+            if (!nonPosOnly)
+            {
+                Client.Objects.SetPosition(CurSim, localID, pp, true);
+                Client.Objects.SetRotation(CurSim, localID, pr, true);
+            }
             Client.Objects.SetSaleInfo(CurSim, localID, props.SaleType, props.SalePrice);
             if (prim.Flexible != null) Client.Objects.SetFlexible(CurSim, localID, prim.Flexible);
             if (prim.Sculpt != null) Client.Objects.SetSculpt(CurSim, localID, prim.Sculpt);
             Client.Objects.SetMaterial(CurSim, localID, prim.PrimData.Material);
-            Client.Objects.SetScale(CurSim, localID, prim.Scale, true, false);
+            if (setScale)
+            {
+                Client.Objects.SetScale(CurSim, localID, prim.Scale, true, false);
+            }
         }
 
         private void SetFlagsAndPhysics(Simulator CurSim, uint localID, Primitive prim)
