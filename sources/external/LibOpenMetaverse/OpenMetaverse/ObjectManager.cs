@@ -2456,8 +2456,8 @@ namespace OpenMetaverse
                         prim.TreeSpecies = (Tree)0;
 
                         int size = block.Data[i++];
-                        //prim.ScratchPad = new byte[size];
-                        //Buffer.BlockCopy(block.Data, i, prim.ScratchPad, 0, size);
+                        prim.ScratchPad = new byte[size];
+                        Buffer.BlockCopy(block.Data, i, prim.ScratchPad, 0, size);
                         i += size;
                     }
                     prim.ScratchPad = Utils.EmptyBytes;
@@ -2640,16 +2640,25 @@ namespace OpenMetaverse
             Packet packet = e.Packet;
             Simulator simulator = e.Simulator;
 
-            KillObjectPacket kill = (KillObjectPacket)packet;
+            KillObjectPacket kill = (KillObjectPacket) packet;
+
+            bool reallyDead = false;
+
+            List<uint> killData = new List<uint>();
 
             // Notify first, so that handler has a chance to get a
             // reference from the ObjectTracker to the object being killed
             for (int i = 0; i < kill.ObjectData.Length; i++)
             {
-                OnKillObject(new KillObjectEventArgs(simulator, kill.ObjectData[i].ID));
+                uint localID = kill.ObjectData[i].ID;
+                killData.Add(localID);
+                OnKillObject(new KillObjectEventArgs(simulator, localID, reallyDead));
             }
+            ReallyKillObject(sender, killData, simulator, reallyDead);
+        }
 
-
+        protected void ReallyKillObject(object sender, IEnumerable<uint> kill, Simulator simulator, bool reallyDead)
+        {
             lock (simulator.ObjectsPrimitives.Dictionary)
             {
                 List<uint> removeAvatars = new List<uint>();
@@ -2657,11 +2666,8 @@ namespace OpenMetaverse
 
                 if (Client.Settings.OBJECT_TRACKING)
                 {
-                    uint localID;
-                    for (int i = 0; i < kill.ObjectData.Length; i++)
+                    foreach (uint localID in kill)
                     {
-                        localID = kill.ObjectData[i].ID;
-
                         if (simulator.ObjectsPrimitives.Dictionary.ContainsKey(localID))
                             removePrims.Add(localID);
 
@@ -2669,7 +2675,7 @@ namespace OpenMetaverse
                         {
                             if (prim.Value.ParentID == localID)
                             {
-                                OnKillObject(new KillObjectEventArgs(simulator, prim.Key));
+                                OnKillObject(new KillObjectEventArgs(simulator, prim.Key, reallyDead));
                                 removePrims.Add(prim.Key);
                             }
                         }
@@ -2680,11 +2686,8 @@ namespace OpenMetaverse
                 {
                     lock (simulator.ObjectsAvatars.Dictionary)
                     {
-                        uint localID;
-                        for (int i = 0; i < kill.ObjectData.Length; i++)
+                        foreach (uint localID in kill)
                         {
-                            localID = kill.ObjectData[i].ID;
-
                             if (simulator.ObjectsAvatars.Dictionary.ContainsKey(localID))
                                 removeAvatars.Add(localID);
 
@@ -2694,7 +2697,7 @@ namespace OpenMetaverse
                             {
                                 if (prim.Value.ParentID == localID)
                                 {
-                                    OnKillObject(new KillObjectEventArgs(simulator, prim.Key));
+                                    OnKillObject(new KillObjectEventArgs(simulator, prim.Key, reallyDead));
                                     removePrims.Add(prim.Key);
                                     rootPrims.Add(prim.Key);
                                 }
@@ -2704,7 +2707,7 @@ namespace OpenMetaverse
                             {
                                 if (rootPrims.Contains(prim.Value.ParentID))
                                 {
-                                    OnKillObject(new KillObjectEventArgs(simulator, prim.Key));
+                                    OnKillObject(new KillObjectEventArgs(simulator, prim.Key, reallyDead));
                                     removePrims.Add(prim.Key);
                                 }
                             }
@@ -2713,12 +2716,41 @@ namespace OpenMetaverse
                         //Do the actual removing outside of the loops but still inside the lock.
                         //This safely prevents the collection from being modified during a loop.
                         foreach (uint removeID in removeAvatars)
+                        {
+                            Avatar av;
+                            if (simulator.ObjectsAvatars.TryGetValue(removeID, out av))
+                            {
+                                if (!reallyDead)
+                                {
+                                    simulator.KilledObjects[removeID] = av;
+                                }
+                                else
+                                {
+                                    simulator.KilledObjects.Remove(removeID);
+                                }
+                            }
                             simulator.ObjectsAvatars.Dictionary.Remove(removeID);
+
+                        }
                     }
                 }
 
                 foreach (uint removeID in removePrims)
-                    simulator.ObjectsPrimitives.Dictionary.Remove(removeID);
+                {
+                    Primitive av;
+                    if (simulator.ObjectsPrimitives.TryGetValue(removeID, out av))
+                    {
+                        if (!reallyDead)
+                        {
+                            simulator.KilledObjects[removeID] = av;
+                        }
+                        else
+                        {
+                            simulator.KilledObjects.Remove(removeID);
+                        }
+                        simulator.ObjectsPrimitives.Dictionary.Remove(removeID);
+                    }
+                }
             }
         }
 
@@ -3126,18 +3158,51 @@ namespace OpenMetaverse
                                 }
                                 else
                                 {
-                                    throw new ArgumentException("fullID is changinging for prim: " + localID + " from " +
-                                                                prim.ID + " to " + fullID + " on sim: " + simulator);
+                                    if (simulator.KilledObjects.TryGetValue(localID, out prim))
+                                    {
+                                        // was really a dead localID!
+                                        OnKillObject(new KillObjectEventArgs(simulator, localID, true));
+                                        ReallyKillObject(this, new[] {localID}, simulator, true);
+                                        prim = new Primitive();
+                                        prim.ID = fullID;
+                                        prim.LocalID = localID;
+                                        prim.RegionHandle = simulator.Handle;
+                                        simulator.ObjectsPrimitives.Dictionary[localID] = prim;
+                                        return prim;
+                                    }
+                                    else
+                                    {
+                                        throw new ArgumentException("fullID is changinging for prim: " + localID +
+                                                                    " from " +
+                                                                    prim.ID + " to " + fullID + " on sim: " + simulator);
+                                    }
                                 }
                             }
                             prim.LocalID = localID;
                             prim.RegionHandle = simulator.Handle;
+                            simulator.KilledObjects.Remove(localID);
                         }
                         return prim;
                     }
                     else
                     {
-                        prim = new Primitive();
+                        if (simulator.KilledObjects.TryGetValue(localID, out prim))
+                        {
+                            if (prim.ID != fullID && fullID != UUID.Zero)
+                            {
+                                OnKillObject(new KillObjectEventArgs(simulator, localID, true));
+                                ReallyKillObject(this, new[] {localID}, simulator, true);
+                                prim = new Primitive();
+                            }
+                            else
+                            {
+                                simulator.KilledObjects.Remove(localID);
+                            }
+                        }
+                        else
+                        {
+                            prim = new Primitive();
+                        }
                         prim.LocalID = localID;
                         prim.ID = fullID;
                         prim.RegionHandle = simulator.Handle;
@@ -3168,25 +3233,86 @@ namespace OpenMetaverse
         {
             if (Client.Settings.AVATAR_TRACKING)
             {
-                lock (simulator.ObjectsAvatars.Dictionary)
+                if (localID == 0)
+                {
+                    throw new ArgumentException("localID is Zero! for Avatar: " + fullID + " on sim: " + simulator);
+                }
+                lock (simulator.ObjectsPrimitives.Dictionary)
                 {
 
-                    Avatar avatar;
+                    Avatar prim;
 
-                    if (simulator.ObjectsAvatars.Dictionary.TryGetValue(localID, out avatar))
+                    if (simulator.ObjectsAvatars.Dictionary.TryGetValue(localID, out prim))
                     {
-                        return avatar;
+                        if (fullID != UUID.Zero)
+                        {
+                            if (prim.ID != fullID)
+                            {
+                                if (prim.ID == UUID.Zero)
+                                {
+                                    prim.ID = fullID;
+                                }
+                                else
+                                {
+                                    Primitive prim0 = null;
+                                    if (simulator.KilledObjects.TryGetValue(localID, out prim0) && prim0 is Avatar)
+                                    {
+                                        prim = (Avatar) prim0;
+                                        // was really a dead localID!
+                                        OnKillObject(new KillObjectEventArgs(simulator, localID, true));
+                                        ReallyKillObject(this, new[] {localID}, simulator, true);
+                                        prim = new Avatar();
+                                        prim.ID = fullID;
+                                        prim.LocalID = localID;
+                                        prim.RegionHandle = simulator.Handle;
+                                        simulator.ObjectsPrimitives.Dictionary[localID] = prim;
+                                        return prim;
+                                    }
+                                    else
+                                    {
+                                        throw new ArgumentException("fullID is changinging for Avatar: " + localID +
+                                                                    " from " +
+                                                                    prim.ID + " to " + fullID + " on sim: " + simulator);
+                                    }
+                                }
+                            }
+                            prim.LocalID = localID;
+                            prim.RegionHandle = simulator.Handle;
+                        }
+                        simulator.KilledObjects.Remove(localID);
+                        return prim;
                     }
                     else
                     {
-                        avatar = new Avatar();
-                        avatar.LocalID = localID;
-                        avatar.ID = fullID;
-                        avatar.RegionHandle = simulator.Handle;
+                        Primitive prim0 = null;
+                        if (simulator.KilledObjects.TryGetValue(localID, out prim0) && prim0 is Avatar)
+                        {
+                            prim = (Avatar) prim0;
+                            if (prim.ID != fullID && fullID != UUID.Zero)
+                            {
+                                OnKillObject(new KillObjectEventArgs(simulator, localID, true));
+                                ReallyKillObject(this, new[] {localID}, simulator, true);
+                                prim = new Avatar();
+                            }
+                            else
+                            {
+                                simulator.KilledObjects.Remove(localID);
+                            }
+                        }
+                        else
+                        {
+                            prim = new Avatar();
+                        }
+                        prim.LocalID = localID;
+                        prim.ID = fullID;
+                        prim.RegionHandle = simulator.Handle;
+                        if (fullID == UUID.Zero)
+                        {
+                            if (false) throw new ArgumentException("fullID is Zero! for Avatar: " + localID + " on sim: " + simulator);
+                        }
+                        simulator.ObjectsAvatars.Dictionary[localID] = prim;
 
-                        simulator.ObjectsAvatars.Dictionary[localID] = avatar;
-
-                        return avatar;
+                        return prim;
                     }
                 }
             }
@@ -3615,16 +3741,20 @@ namespace OpenMetaverse
     {
         private readonly Simulator m_Simulator;
         private readonly uint m_ObjectLocalID;
+        private bool m_ReallyDead;
 
         /// <summary>Get the simulator the object is located</summary>
         public Simulator Simulator { get { return m_Simulator; } }
         /// <summary>The LocalID of the object</summary>
         public uint ObjectLocalID { get { return m_ObjectLocalID; } }
+        /// <summary>The LocalID of the object</summary>
+        public bool ReallyDead { get { return m_ReallyDead; } }
 
-        public KillObjectEventArgs(Simulator simulator, uint objectID)
+        public KillObjectEventArgs(Simulator simulator, uint objectID, bool reallyDead)
         {
             this.m_Simulator = simulator;
             this.m_ObjectLocalID = objectID;
+            this.m_ReallyDead = reallyDead;
         }
     }
 

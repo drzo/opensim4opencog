@@ -372,6 +372,8 @@ namespace OpenMetaverse
         /// A thread-safe dictionary containing primitives in a simulator
         /// </summary>
         public InternalDictionary<uint, Primitive> ObjectsPrimitives = new InternalDictionary<uint, Primitive>();
+        
+        public Dictionary<uint, Primitive> DeadObjects = new Dictionary<uint, Primitive>();
 
         public readonly TerrainPatch[] Terrain;
 
@@ -534,6 +536,8 @@ namespace OpenMetaverse
         /// A thread-safe dictionary containing primitives in a simulator
         /// </summary>
         public InternalDictionary<uint, Primitive> ObjectsPrimitives { get { return SharedData.ObjectsPrimitives; } }
+
+        public Dictionary<uint, Primitive> KilledObjects { get { return SharedData.DeadObjects; } }
 
         public TerrainPatch[] Terrain { get { return SharedData.Terrain; } }
 
