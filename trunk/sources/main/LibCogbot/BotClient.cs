@@ -2238,12 +2238,13 @@ namespace cogbot
         {
             // listeners[listener.GetModuleName()] = listener;
 
-            OneAtATimeQueue.Enqueue(() =>
+            string mname = listener.GetModuleName();
+            string taskName = "LISTENER STARTUP: " + mname;
+            OneAtATimeQueue.Enqueue(taskName, () =>
                                         {
-                                            string mname = listener.GetModuleName();
                                             try
                                             {
-                                                WriteLine("LISTENER STARTUP: " + mname);
+                                                WriteLine(taskName);
                                                 listener.StartupListener();
                                                 WriteLine("LISTENER STARTUP COMPLETE: " + listener.GetModuleName());
                                             }

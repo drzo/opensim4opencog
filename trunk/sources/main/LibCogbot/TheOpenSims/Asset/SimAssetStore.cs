@@ -196,7 +196,7 @@ namespace cogbot.TheOpenSims
 
         internal static void InternAsset(SimAsset asset)
         {
-            taskQueue.Enqueue(() =>
+            taskQueue.Enqueue("InternAsset: " + asset, () =>
                               asset.InternOnRegion(WorldObjects.GridMaster));
         }
 

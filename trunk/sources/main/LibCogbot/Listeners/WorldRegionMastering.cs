@@ -973,13 +973,13 @@ namespace cogbot.Listeners
             if (UUID.Zero != props.FolderID)
             {
                 if (ZeroOutUselessUUIDs) props.FolderID = UUID.Zero;
-                DeclareGeneric("Folder", props.FolderID, debugInfo);
+                //DeclareGeneric("Folder", props.FolderID, debugInfo);
             }
 
             if (UUID.Zero != props.ItemID)
             {
                 if (ZeroOutUselessUUIDs) props.ItemID = UUID.Zero;
-                DeclareGeneric("Item", props.ItemID, debugInfo);
+                //DeclareGeneric("Item", props.ItemID, debugInfo);
             }
 
 
@@ -987,7 +987,7 @@ namespace cogbot.Listeners
             {
                 if (DeclareTask(props.FromTaskID, simulator) == null)
                 {
-                    props.FromTaskID = UUID.Zero;
+                    if (ZeroOutUselessUUIDs) props.FromTaskID = UUID.Zero;
                 }
             }
 
