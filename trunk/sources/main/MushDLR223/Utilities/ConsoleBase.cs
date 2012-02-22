@@ -1456,6 +1456,8 @@ namespace MushDLR223.Utilities
         private static Thread MainThread = Thread.CurrentThread;
         public static void ExecWithMaxTime(Action action, int i)
         {
+            action();
+            return;
             AutoResetEvent are = new AutoResetEvent(false);
             Thread orig = Thread.CurrentThread;
             Thread doIt = new Thread(() =>
@@ -1480,7 +1482,7 @@ namespace MushDLR223.Utilities
                 doIt.Start();
                 if (are.WaitOne(i))
                 {
-                    doIt.Join();
+                    if (false) doIt.Join();
                     return;
                 }
                 if (orig != MainThread)
@@ -1642,11 +1644,18 @@ namespace MushDLR223.Utilities
             get { return FindCallerInStack(TransparentCallers, OpacheCallers, false); }
         }
 
+        private static bool SkipStackTracesBusy = false;
         public static string FindCallerInStack(HashSet<MemberInfo> transparentCallers, HashSet<MemberInfo> opacheCallers, bool useMethodName)
         {
             if (SkipStackTraces) return "FindCallerInStack";
+            if (SkipStackTracesBusy) return "FindCallerInStackBusy";
+            SkipStackTracesBusy = true;
             var st = new System.Diagnostics.StackTrace(true).GetFrames();
-            if (st == null) return "NULL";
+            if (st == null)
+            {
+                SkipStackTracesBusy = false;
+                return "NULL";
+            }
             {
                 for (int i = 0; i < st.Length; i++)
                 {
@@ -1665,9 +1674,11 @@ namespace MushDLR223.Utilities
                             lock (opacheCallers) if (opacheCallers.Contains(caller))
                                     return CallerName(s, useMethodName);
                     }
+                    SkipStackTracesBusy = false;
                     return CallerName(s, useMethodName);
                 }
             }
+            SkipStackTracesBusy = false;
             return CallerName(st[st.Length - 1], useMethodName);
         }
 
@@ -1722,9 +1733,16 @@ namespace MushDLR223.Utilities
             SystemWrite00(format);
         }
 
+        private static bool InSystemWrite00 = false;
         internal static void SystemWrite00(string format)
         {
-            ExecWithMaxTime(() => SystemWrite000(format), 2000);            
+            if (InSystemWrite00)
+            {
+                return;
+            }
+            InSystemWrite00 = true;
+            ExecWithMaxTime(() => SystemWrite000(format), 2000);
+            InSystemWrite00 = false;
         }
 
         internal static void SystemWrite000(string format)

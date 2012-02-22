@@ -674,15 +674,23 @@ namespace MushDLR223.Utilities
                 {
                     NoExceptions(() => DoNow(evt));
                     SinceLastTaskStarted.Busy = false;
-                    if (evtCount > 1)
+                    //if (evtCount > 1)
                     {
                         //if (WaitingForPong) 
 
                         // dont bother sleeping
-                        if (evtCount > 1000 && PauseBetweenOperations < TimeSpan.FromMilliseconds(500)) continue;
+                        //if (evtCount > 1000 && PauseBetweenOperations < TimeSpan.FromMilliseconds(500)) continue;
 
                         Sleep(PauseBetweenOperations);
                         // avoid reset/set semantics ?
+                        continue;
+                    }
+                }
+                lock (EventQueueLock)
+                {
+                    evtCount = EventQueue.Count;
+                    if (evtCount > 0)
+                    {
                         continue;
                     }
                 }
@@ -754,6 +762,7 @@ namespace MushDLR223.Utilities
                     }
                     //var len = DateTime.Now.Subtract(BusyStart);
                 }
+                if (this.RealTodo > 0) return true; ////r = true;
                 if (!TurnOffDebugMessages) errOutput(CreateMessage("Moving on with TIMEOUT {0} was {1} ", INFO,
                                         GetTimeString(ThisMaxOperationTimespan)));
                 if (this.RealTodo > 0) return true; ////r = true;
@@ -1630,7 +1639,7 @@ namespace MushDLR223.Utilities
 
         public void Enqueue(TASK evt)
         {
-            string str = null;
+            string str = "EnqueueTask";
             if (DebugQueue) str = DLRConsole.FindCallerInStack(null, null, true);
             Enqueue(str, evt);
         }
@@ -1669,7 +1678,7 @@ namespace MushDLR223.Utilities
 
         public void AddFirst(TASK evt)
         {
-            string str = null;
+            string str = "AddFirstTask";
             if (DebugQueue) str = DLRConsole.FindCallerInStack(null, null, true);
             AddFirst(str, evt);
         }
