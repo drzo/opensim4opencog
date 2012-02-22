@@ -190,7 +190,7 @@ namespace cogbot.TheOpenSims
                 {
                     int b = InnerBoxes.Count;
                     InnerBoxes = Box3Fill.Simplify((List<Box3Fill>)InnerBoxes);
-                    if (b > 2000 || InnerBoxes.Count * 4 < b)
+                    if (DebugMesh) if (b > 2000 || InnerBoxes.Count * 4 < b)
                         DLRConsole.DebugWriteLine("Simplfy mesh {0} -> {1} ", b,
                                                   InnerBoxes.Count + " " + OuterBox.Mass + " " + this.GetObjectName());
                 }
@@ -285,10 +285,11 @@ namespace cogbot.TheOpenSims
 
 
         static Dictionary<UUID, SculptMesh> SculptedMeshes = new Dictionary<UUID, SculptMesh>();
-        private static bool MaintainSculptPool = false;
+        public static bool MaintainSculptPool = false;
         private int sides;
         private LevelOfDetail detail;
         private int hollowsides;
+        public static bool DebugMesh = false;
 #if COLLIDER_ODE
         private PrimitiveBaseShape pbs;
 #endif
