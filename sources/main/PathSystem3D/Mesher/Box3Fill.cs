@@ -622,7 +622,7 @@ namespace PathSystem3D.Mesher
             AddPoint(B.MinEdge);
         }
 
-        private void AddPoint(Vector3 vector3)
+        public void AddPoint(Vector3 vector3)
         {
             AddPoint(vector3.X, vector3.Y, vector3.Z, Vector3.Zero);
         }
