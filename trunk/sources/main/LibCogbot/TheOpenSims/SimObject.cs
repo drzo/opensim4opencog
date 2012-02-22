@@ -1074,7 +1074,7 @@ namespace cogbot.TheOpenSims
                     {
                         WorldSystem.StartTextureDownload(prim.Sculpt.SculptTexture);
                     }
-                    TaskInvGrabber.Enqueue(StartGetTaskInventory);
+                    //TaskInvGrabber.Enqueue(StartGetTaskInventory);
                 }
         }
 
@@ -2284,10 +2284,11 @@ namespace cogbot.TheOpenSims
         /// or timeoutMS is exceeded</remarks>
         public void StartGetTaskInventory()
         {
+            _StartedGetTaskInventory = true;
             InventoryManager man = Client.Inventory;
             man.TaskInventoryReply += ti_callback;
             man.RequestTaskInventory(LocalID);
-		    Client.Objects.RequestObjectMedia(ID, GetSimulator(), med_entry);
+		    //Client.Objects.RequestObjectMedia(ID, GetSimulator(), med_entry);
         }
 
         private void med_entry(bool success, string version, MediaEntry[] facemedia)
@@ -2295,7 +2296,8 @@ namespace cogbot.TheOpenSims
             //prim is now updated   
         }
 
-        private ulong xferID;
+        private bool _StartedGetTaskInventory;
+        private ulong _xferID;
         private void ti_callback(object sender, TaskInventoryReplyEventArgs e)
         {
             if (e.ItemID == ID)
@@ -2309,7 +2311,7 @@ namespace cogbot.TheOpenSims
                     Client.Assets.XferReceived += xferCallback;
 
                     // Start the actual asset xfer
-                    xferID = Client.Assets.RequestAssetXfer(filename, true, false, UUID.Zero, AssetType.Unknown, true);
+                    _xferID = Client.Assets.RequestAssetXfer(filename, true, false, UUID.Zero, AssetType.Unknown, true);
                 }
                 else
                 {
@@ -2321,7 +2323,7 @@ namespace cogbot.TheOpenSims
 
         private void xferCallback(object sender, XferReceivedEventArgs e)
         {
-            if (e.Xfer.XferID == xferID)
+            if (e.Xfer.XferID == _xferID)
             {
                 Client.Assets.XferReceived -= xferCallback;
                 String taskList = Utils.BytesToString(e.Xfer.AssetData);
@@ -2334,7 +2336,7 @@ namespace cogbot.TheOpenSims
             get
             {
                 string missing = "";
-                if (objectinventory == null)
+                if (objectinventory == null  && _StartedGetTaskInventory)
                 {
                     missing += " TaskInv";
                 }
@@ -2369,6 +2371,7 @@ namespace cogbot.TheOpenSims
                     missing += " Props";
                 } else
                 {
+                    if (_Prim0 != null && _Prim0.Properties == null) missing += " PrimProp";
                     if (Properties.TextureIDs == null) missing += " PropData";
                 }
                 if (RegionHandle == 0)
@@ -2510,7 +2513,7 @@ namespace cogbot.TheOpenSims
             {
                 if (!string.IsNullOrEmpty(objectProperties.SitName)) ObjectType.SitName = objectProperties.SitName;
                 if (!string.IsNullOrEmpty(objectProperties.TouchName)) ObjectType.TouchName = objectProperties.TouchName;
-                SimTypeSystem.GuessSimObjectTypes(objectProperties, thiz);
+                if (SimObjectImpl.AffordinancesGuessSimObjectTypes) SimTypeSystem.GuessSimObjectTypes(objectProperties, thiz);
             }
 
             public BotNeeds GetActualUpdate(string pUse)
@@ -2905,6 +2908,8 @@ namespace cogbot.TheOpenSims
         }
 
         private Dictionary<Type, object> _AsObjectType;
+        public static bool AffordinancesGuessSimObjectTypes = false;
+
         public T AsObject<T>()
         {
             lock (FILock)

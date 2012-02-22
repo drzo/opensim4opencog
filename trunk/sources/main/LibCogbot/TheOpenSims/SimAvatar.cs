@@ -180,14 +180,14 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                if (base.HasPrim && theAvatar != null) return true;
+                if (base.HasPrim && _Prim0 is Avatar) return true;
                 if (RegionHandle != 0)
                 {
                     Simulator S = WorldSystem.GetSimulator(RegionHandle);
-                    var _Prim0 = WorldSystem.GetLibOMVHostedPrim(ID, S, true);
-                    if (_Prim0 == null) return false;
-                    SetFirstPrim(_Prim0);
-                    return theAvatar != null;
+                    Primitive prim = WorldSystem.GetLibOMVHostedPrim(ID, S, true);
+                    if (prim == null) return false;
+                    SetFirstPrim(prim);
+                    return _Prim0 is Avatar;
                 }
                 return false;
                 return LastKnownSimPos != Vector3.Zero;
@@ -615,7 +615,7 @@ namespace cogbot.TheOpenSims
                             Debug("GroupPowers changed = " + prev + " -> " + avatarGroup);
                         }
                     }
-                    GroupRoles[avatarGroup.GroupID] = avatarGroup;
+                    GroupRoles[id] = avatarGroup;
                 }
         }
         public bool InGroup(UUID uuid)
