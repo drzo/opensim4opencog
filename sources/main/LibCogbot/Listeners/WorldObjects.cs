@@ -43,6 +43,8 @@ namespace cogbot.Listeners
         [ConfigSetting]
         public static bool MaintainAttachments = true;
 
+        public static bool IgnoreKillObjects = false;
+
         [ConfigSetting(Description = "keep false so the bot only meshes what it needs")]
         public static bool MaintainCollisions
         {
@@ -677,6 +679,7 @@ namespace cogbot.Listeners
 
         public override void Objects_OnObjectKilled(object sender, KillObjectEventArgs e)
         {
+            if (!e.ReallyDead) if (IgnoreKillObjects) return;
             Simulator simulator = e.Simulator;
             // had to move this out of the closure because the Primitive is gone later
             Primitive p = GetPrimitive(e.ObjectLocalID, simulator);
@@ -1104,6 +1107,14 @@ namespace cogbot.Listeners
                 {
                     return prim;
                 }
+
+            lock (simulator.ObjectsPrimitives.Dictionary)
+            {
+                if (simulator.KilledObjects.TryGetValue(id, out prim))
+                {
+                    return prim;
+                }
+            }
             return null;
         }
         public Primitive GetPrimitive(UUID id, Simulator simulator)

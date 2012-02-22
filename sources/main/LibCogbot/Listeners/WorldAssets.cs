@@ -330,8 +330,8 @@ namespace cogbot.Listeners
                 if (AssetRequestType.ContainsKey(id)) return null;
                 AssetRequestType[id] = AssetType.Texture;
             }
-            TextureRequested++;            
-            SlowConnectedQueue.Enqueue(()=>client.Assets.RequestImage(id, ImageType.Normal, RegionMasterTexturePipeline_OnDownloadFinished));
+            TextureRequested++;
+            SlowConnectedQueue.Enqueue(() => client.Assets.RequestImage(id, ImageType.Normal, RegionMasterTexturePipeline_OnDownloadFinished));
             return null;
         }
 
