@@ -30,7 +30,8 @@ namespace cogbot.Actions
             {
                 return ShowUsage();
             }
-            string[] newArgs = Parser.SplitOff(args, 1);
+            // remove the time
+            args = Parser.SplitOff(args, 1);
             String cmd = String.Join(" ", args);
             ThreadStart thread = () =>
                                            {
