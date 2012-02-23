@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
@@ -30,10 +31,10 @@ namespace cogbot.Actions
                 int n = 0;
                 var botCommandThreads = Client.GetBotCommandThreads();
                 List<string> list = new List<string>();
-                lock (botCommandThreads)
+                //lock (botCommandThreads)
                 {
                     int num = botCommandThreads.Count;
-                    foreach (Thread t in botCommandThreads)
+                    foreach (Thread t in LockInfo.CopyOf(botCommandThreads))
                     {
                         n++;
                         num--;
