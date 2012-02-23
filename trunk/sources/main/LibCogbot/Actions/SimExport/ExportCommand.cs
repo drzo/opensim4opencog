@@ -90,11 +90,12 @@ namespace cogbot.Actions.SimExport
         public readonly Dictionary<InventoryItem, TIOBJ> TasksRezed = new Dictionary<InventoryItem, TIOBJ>();
         public readonly HashSet<InventoryBase> CompletedTaskItem = new HashSet<InventoryBase>();
         public readonly Dictionary<UUID, InventoryItem> UUID2ITEM = new Dictionary<UUID, InventoryItem>();
+        public readonly HashSet<SimObject> SIPrims = new HashSet<SimObject>();
         static public string dumpDir = "cog_export/objects/";
         static public string assetDumpDir = "cog_export/assets/";
         static public string terrainDir = "cog_export/terrain/";
         static public string siminfoDir = "cog_export/siminfo/";
-        static public string terrainFileName = terrainDir + "terrain.r32";        
+        static public string terrainFileName = terrainDir + "terrain.raw";        
 
         public bool IsExporting = false;
         private readonly HashSet<SimObject> exportedPrims = new HashSet<SimObject>();
@@ -160,8 +161,15 @@ namespace cogbot.Actions.SimExport
             //testClient.Objects.ObjectProperties += new EventHandler<ObjectPropertiesEventArgs>(Objects_OnObjectProperties);
             //testClient.Avatars.ViewerEffectPointAt += new EventHandler<ViewerEffectPointAtEventArgs>(Avatars_ViewerEffectPointAt);
             //SClient = SClient ?? testClient;
+            if (!Directory.Exists(dumpDir)) Directory.CreateDirectory(dumpDir);
+            if (!Directory.Exists(assetDumpDir)) Directory.CreateDirectory(assetDumpDir);
+            if (!Directory.Exists(terrainDir)) Directory.CreateDirectory(terrainDir);
+            if (!Directory.Exists(siminfoDir)) Directory.CreateDirectory(siminfoDir);
+
             testClient.Self.ChatFromSimulator += listen_forLinkset;
             testClient.Assets.XferReceived += Asset_Xfer;
+            testClient.Groups.GroupNamesReply += GroupNames;
+            testClient.Avatars.UUIDNameReply += UserNames;
             Name = "simexport";
             Description = "Exports an object to an xml file. Usage: simexport exportPrim-spec directory";
             Category = CommandCategory.Objects;
@@ -502,10 +510,49 @@ namespace cogbot.Actions.SimExport
                     }
                 }
             }
+            if (arglist.Contains("user"))
+            {
+                RequestUsersAndGroups();
+            }
+            if (arglist.Contains("siprim"))
+            {
+                foreach (SimObject o in LockInfo.CopyOf(SIPrims))
+                {
+                    if (o.Prim.ParentID == 0)
+                    {
+                        Client.Inventory.RequestDeRezToInventory(o.LocalID, DeRezDestination.AgentInventoryCopy,
+                        FolderCalled("UseSIForCompleteness"), UUID.Random());
+                    } else
+                    {
+                        Failure("Child SIPrim " + o);
+                    }
+                }
+            }
             Success("Missing PrimData: " + missing);
             Success("Started XFERS " + xferStarted.Count + " assets");
             GiveStatus();
             return res;
+        }
+
+        private void RequestUsersAndGroups()
+        {
+            Client.Avatars.RequestAvatarNames(new List<UUID>(ExportUsers));
+            Client.Groups.RequestGroupNames(new List<UUID>(ExportGroup));
+        }
+
+        private void GroupNames(object sender, GroupNamesEventArgs e)
+        {
+            foreach (KeyValuePair<UUID, string> name in e.GroupNames)
+            {
+                File.WriteAllText(siminfoDir + "" + name.Key + ".group", name.Value);
+            }
+        }
+        private void UserNames(object sender, UUIDNameReplyEventArgs e)
+        {
+            foreach (KeyValuePair<UUID, string> name in e.Names )
+            {
+                File.WriteAllText(siminfoDir + "" + name.Key + ".avatar", name.Value);
+            }
         }
 
         private void GiveStatus()
@@ -792,6 +839,8 @@ namespace cogbot.Actions.SimExport
             simInfoMap["f_Client"] = true;
             simInfoMap["f_SharedData"] = true;
             simInfoMap["f_Caps"] = true;
+            simInfoMap["f_DeadObjects"] = true;
+            simInfoMap["p_KilledObjects"] = true;
             var exceptFor = new HashSet<object>() {typeof (IList), typeof (IDictionary), typeof (object)};
             OSD.AddObjectOSD0(CurSim.Stats, simInfoMap, typeof(Simulator.SimStats), exceptFor, true);
             OSD.AddObjectOSD0(CurSim.SharedData, simInfoMap, typeof(Simulator.SimPooledData), exceptFor, true);
@@ -1230,6 +1279,11 @@ namespace cogbot.Actions.SimExport
         private void PutItemToTaskInv(BotClient Client, SimObject exportPrim, string name)
         {
             InventoryItem found = GetInvItem(Client, name);
+            if (found == null)
+            {
+                Failure("Cant find InvItem " + name);
+                return;
+            }
             if (found.InventoryType == InventoryType.LSL)
             {
                 Client.Inventory.CopyScriptToTask(exportPrim.LocalID, (InventoryItem) found, true);
@@ -1280,6 +1334,12 @@ namespace cogbot.Actions.SimExport
             if (!cmt)
             {
                 Failure("ItemPerms " + pm + " for " + pw + " on " + ItemDesc(item, exportPrim));
+                var p = exportPrim.Parent;
+                if (p != null && p != exportPrim)
+                {
+                    exportPrim = p;
+                }
+                lock (SIPrims) SIPrims.Add(exportPrim);
                 return false;
             }
             return true;
@@ -1375,7 +1435,7 @@ namespace cogbot.Actions.SimExport
                     //prim = prim.Clone(); 
                     ToFile(prim, exportFile);
                     if (forced && !verbosely) return;
-                    Primitive prim2 = FromFile(exportFile) as Primitive;
+                    Primitive prim2 = FromFile(exportFile, ExportCommand.UseBinarySerialization) as Primitive;
                     string memberwiseCompare = MemberwiseCompare(prim, prim2, skipTag);
                     if (!string.IsNullOrEmpty(memberwiseCompare))
                     {
@@ -2156,9 +2216,9 @@ namespace cogbot.Actions.SimExport
             return I.Name + "(" + I.AssetType + " " + I.AssetUUID + ")@" + named(O);
         }
 
-        static internal object FromFile(string filename)
+        static internal object FromFile(string filename, bool binary)
         {
-            if (ExportCommand.UseBinarySerialization)
+            if (binary)
             {
                 lock (fileWriterLock)
                 {
