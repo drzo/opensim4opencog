@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
 using System.IO;
 using cogbot.Actions.SimExport;
@@ -64,11 +66,11 @@ namespace cogbot.Actions.SimExport
         {
             public override string ToString()
             {
-                return Item + " -> " + _rezed;
+                return assetType + " " + OldID + " -> " + NewID;
             }
             public override int GetHashCode()
             {
-                return Item.AssetID.GetHashCode();
+                return OldID.GetHashCode();
             }
             public override bool Equals(object obj)
             {
@@ -79,12 +81,15 @@ namespace cogbot.Actions.SimExport
             {
                 Item = item;
                 OldID = item.AssetID;
+                assetType = item.AssetType;
                 LoadProgressFile();
             }
-            public ItemToCreate(UUID oldID)
+            public ItemToCreate(UUID oldID, AssetType type)
             {
                 OldID = oldID;
+                assetType = type;
                 LoadProgressFile();
+
             }
             public Asset Item
             {
@@ -128,7 +133,6 @@ namespace cogbot.Actions.SimExport
             public bool RezRequested = false;
             private Asset _item;
             private string _progressFile;
-            public bool IsLinkParent;
             private string _afiler;
 
             public string ProgressFile
@@ -137,7 +141,7 @@ namespace cogbot.Actions.SimExport
                 {
                     if (_progressFile == null)
                     {
-                        _progressFile = ExportCommand.dumpDir + OldID + ".simasset";
+                        _progressFile = ExportCommand.assetDumpDir + OldID + ".simasset";
                     }
                     return _progressFile;
                 }
@@ -177,7 +181,33 @@ namespace cogbot.Actions.SimExport
                        // NewLocalID = uint.Parse(sdata[1]);
                         RezRequested = true;
                     }
+                }
+            }
 
+            public void UploadAssetData()
+            {
+                if (CogbotHelpers.IsNullOrZero(NewID))
+                {
+                    string importProgress = LLSDFilename;                    
+                    UUID newID;
+                    Running.Client.Assets.RequestUpload(out newID, assetType, AssetData, false);
+                    RezRequested = true; 
+                    NewID = newID;
+                }
+            }
+
+            public void WriteComplete()
+            {
+                File.WriteAllText(ProgressFile, NewID + "," + OldID + "," + assetType);
+            }
+
+            private byte[] assetData;
+            public byte[] AssetData
+            {
+                get
+                {
+                    if (assetData == null) assetData = File.ReadAllBytes(LLSDFilename);
+                    return assetData;
                 }
             }
 
@@ -187,6 +217,11 @@ namespace cogbot.Actions.SimExport
                 {
                     ImportCommand.Running.Error("bad transfer");
                 }
+            }
+
+            public void ConfirmAsset(byte[] data)
+            {
+                Running.Client.Assets.RequestUploadKnown(NewID, assetType, data, false, UUID.Zero);
             }
         }
 
@@ -307,6 +342,20 @@ namespace cogbot.Actions.SimExport
 
                 }
             }
+
+            public void ReplaceAll(Dictionary<UUID, UUID> dictionary)
+            {
+                ReplaceAllMembers(Prim, typeof (UUID), UUIDReplacer);
+            }
+        }
+        static object UUIDReplacer(object arg)
+        {
+            UUID other;
+            if (ChangeList.TryGetValue((UUID)arg, out other))
+            {
+                return other;
+            }
+            return arg;
         }
 
         Primitive currentPrim;
@@ -333,7 +382,24 @@ namespace cogbot.Actions.SimExport
             Name = "simimport";
             Description = "Import prims from an exported xml file. Usage: import inputfile.xml [usegroup]";
             Category = CommandCategory.Objects;
+            Client.Assets.AssetUploaded += new EventHandler<AssetUploadEventArgs>(Assets_AssetUploaded);
             ImportCommand.Running = this;
+        }
+
+        private void Assets_AssetUploaded(object sender, AssetUploadEventArgs e)
+        {
+            if (UUID2OBJECT!=null)
+            {
+                var u = e.Upload;
+                if (u.Success)
+                {
+                    var itc = GetNew(u.AssetID) as ItemToCreate;
+                    if (itc != null)
+                    {
+                        itc.WriteComplete();
+                    }
+                }
+            }
         }
 
 
@@ -373,12 +439,14 @@ namespace cogbot.Actions.SimExport
             if (args == null || args.Length == 0) return Failure(hlp);
             UUID GroupID = (args.Length > 1) ? TheBotClient.GroupID : UUID.Zero;
             var CurSim = Client.Network.CurrentSim;
-            HashSet<string> arglist = new HashSet<string>(args);
-            if (arglist.Contains("assets"))
+            this.arglist = new HashSet<string>(args);
+            if (!arglist.Contains("noassets"))
             {
-                UploadAllAssets(arglist.Contains("sameid"));
-                
+                UploadAllAssets(arglist.Contains("sameid"));                
             }
+            ChangeList = GetChangeList();
+            WriteLine("ChangeList Size is " + ChangeList.Count);
+
             parents = new List<PrimToCreate>();
             childs = new List<PrimToCreate>();
             var taskobjs = new List<PrimToCreate>();
@@ -414,15 +482,18 @@ namespace cogbot.Actions.SimExport
                     parents.Add(ptc);
                 }
             }
+            WriteLine("Imported parents " + parents.Count);
             foreach (PrimToCreate ptc in parents)
             {
                 CreatePrim(CurSim, ptc, GroupID);
             }
+            WriteLine("Importing children " + childs.Count);
             foreach (PrimToCreate ptc in childs)
             {
                 CreatePrim(CurSim, ptc, GroupID);
             }
             List<string> skipCompare = new List<string>() { "LocalID", "ID", "ParentID", "ObjectID", "Tag" };
+            WriteLine("Linking imports"); 
             foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.link"))
             {
                 var uuids = ExportCommand.GetUUIDs(File.ReadAllText(file));
@@ -469,9 +540,12 @@ namespace cogbot.Actions.SimExport
 
         private void UploadAllAssets(bool sameIds)
         {
+            int uploaded = 0;
+            bool alwayReupload = arglist.Contains("reup");
+            Success("Uploading assets... sameIds=" + sameIds);
             foreach (var file in Directory.GetFiles(ExportCommand.assetDumpDir, "*.*"))
             {
-                if (file.EndsWith(".object"))
+                if (file.EndsWith(".object") || file.EndsWith(".simasset"))
                 {
                     continue;
                 }
@@ -483,8 +557,16 @@ namespace cogbot.Actions.SimExport
                     if (file.EndsWith(ateValue))
                     {
                         assetType = ate.Key;
-                        sid = file.Substring(0, file.Length - ateValue.Length);
+                        sid = Path.GetFileName(file.Substring(0, file.Length - ateValue.Length));
                         break;
+                    }
+                }
+                if (assetType == AssetType.Unknown)
+                {
+                    if (file.EndsWith(".jp2"))
+                    {
+                        assetType = AssetType.Texture;
+                        sid = Path.GetFileName(file.Substring(0, file.Length - ".jp2".Length));
                     }
                 }
                 if (assetType==AssetType.Unknown)
@@ -495,7 +577,22 @@ namespace cogbot.Actions.SimExport
                 UUID oldID = UUID.Parse(sid);
                 ItemToCreate itc = FindItemToCreate(oldID, assetType, sameIds);
                 itc.LLSDFilename = file;
+                if (!itc.RezRequested)
+                {
+                    itc.UploadAssetData();
+                    NewUUID2OBJECT[itc.NewID] = itc;
+                    uploaded++;
+                }
+                else if (alwayReupload)
+                {
+                    itc.ConfirmAsset(itc.AssetData);
+                }
+                if (!CogbotHelpers.IsNullOrZero(itc.NewID))
+                {
+                    NewUUID2OBJECT[itc.NewID] = itc;
+                }
             }
+            Success("Uploaded assets: " + uploaded);
         }
 
         private ItemToCreate FindItemToCreate(UUID uuid, AssetType assetType, bool sameIds)
@@ -503,8 +600,12 @@ namespace cogbot.Actions.SimExport
             var itc = GetOld(uuid) as ItemToCreate;
             if (itc == null)
             {
-                itc = new ItemToCreate(uuid);
-                Client.Assets.RequestAsset(uuid, assetType, true, itc.OnDownloaded);
+                itc = new ItemToCreate(uuid, assetType);
+                UUID2OBJECT[uuid] = itc;
+                if (!CogbotHelpers.IsNullOrZero(itc.NewID))
+                {
+                    NewUUID2OBJECT[itc.NewID] = itc;
+                }
             }
             return itc;
         }
@@ -547,7 +648,8 @@ namespace cogbot.Actions.SimExport
                 }
                 if (ptc != null) return ptc;
                 ptc = new PrimToCreate(primitive);
-                UUID2OBJECT.Add(primitive.ID, ptc);
+                ptc.ReplaceAll(ChangeList);
+                UUID2OBJECT.Add(ptc.OldID, ptc);
                 UINT2OBJECT.Add(primitive.LocalID, ptc);
                 return ptc;
             }
@@ -582,6 +684,30 @@ namespace cogbot.Actions.SimExport
                 }
             }
             return null;
+        }
+        private UUID GetChange(UUID id)
+        {
+            lock (WorkFlowLock)
+            {
+                UUIDChange ptc;
+                if (UUID2OBJECT.TryGetValue(id, out ptc))
+                {
+                    return ptc.NewID;
+                }
+            }
+            return null;
+        }
+        private Dictionary<UUID,UUID> GetChangeList()
+        {
+            Dictionary<UUID, UUID> cl = new Dictionary<UUID, UUID>();
+            lock (WorkFlowLock)
+            {
+                foreach (KeyValuePair<UUID, UUIDChange> o in UUID2OBJECT)
+                {
+                    cl.Add(o.Key, o.Value.NewID);
+                }
+            }
+            return cl;
         }
         private PrimToCreate GetNewPrim(uint localID)
         {
@@ -700,12 +826,14 @@ namespace cogbot.Actions.SimExport
             }
             ptc.Rezed = O;
             SavePTC(ptc);
-            uint localID = newPrim.LocalID;
+            uint localID = newPrim.LocalID;            
             SetPrimInfo(CurSim, localID, ptc.Prim, GroupID, false, false, true);
         }
 
         private PrimToCreate prev = null;
-        private static ImportCommand Running;
+        public static ImportCommand Running;
+        static private Dictionary<UUID, UUID> ChangeList;
+        private HashSet<string> arglist;
 
         private void CreateTree(Simulator CurSim, PrimToCreate ptc, UUID GroupID)
         {
@@ -772,6 +900,52 @@ namespace cogbot.Actions.SimExport
             }
         }
 
+        public static object ReplaceAllMembers(object from, Type ofType, Func<object,object > replacerFunc)
+        {
+            return ReplaceAllMembers(from, ofType, replacerFunc, new HashSet<object>());
+        }
+        public static object ReplaceAllMembers(object from, Type ofType, Func<object, object> replacerFunc, HashSet<object> exceptFor)
+        {
+            if (from == null) return from;
+            var fromType = from.GetType();
+            if (fromType == ofType)
+            {
+                var oo = replacerFunc(from);
+                return oo;
+            }
+            if (fromType == typeof(string) || typeof(IConvertible).IsAssignableFrom(fromType)) return from;
+            if (from is IList)
+            {
+                var ic = from as IList;
+                for (int i = 0; i < ic.Count; i++)
+                {
+                    object o = ic[i];
+                    var oo = ReplaceAllMembers(o, ofType, replacerFunc, exceptFor);
+                    if (ReferenceEquals(oo, o)) continue;
+                    ic[i] = oo;
+                }
+                return from;
+            }
+            if (exceptFor.Contains(from)) return from;
+            exceptFor.Add(from);
+
+            BindingFlags bf = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+            foreach (var info in fromType.GetFields(bf))
+            {
+                object o = info.GetValue(from);
+                var oo = ReplaceAllMembers(o, ofType, replacerFunc, exceptFor);
+                if (ReferenceEquals(oo, o)) continue;
+                info.SetValue(from, oo);
+            }
+            foreach (var info in fromType.GetProperties(bf))
+            {
+                object o = info.GetValue(from, null);
+                var oo = ReplaceAllMembers(o, ofType, replacerFunc, exceptFor);
+                if (ReferenceEquals(oo, o)) continue;
+                info.SetValue(from, oo, null);
+            }
+            return from;
+        }
         public void SetPrimInfo(Simulator CurSim, uint localID, Primitive prim, UUID GroupID, bool postLinked, bool nonPosOnly, bool setScale)
         {
 
@@ -820,12 +994,25 @@ namespace cogbot.Actions.SimExport
             }
             Client.Objects.SetSaleInfo(CurSim, localID, props.SaleType, props.SalePrice);
             if (prim.Flexible != null) Client.Objects.SetFlexible(CurSim, localID, prim.Flexible);
-            if (prim.Sculpt != null) Client.Objects.SetSculpt(CurSim, localID, prim.Sculpt);
+            if (prim.Sculpt != null)
+            {
+                CheckTexture(prim.Sculpt.SculptTexture);                
+                Client.Objects.SetSculpt(CurSim, localID, prim.Sculpt);
+            }
             Client.Objects.SetMaterial(CurSim, localID, prim.PrimData.Material);
             if (setScale)
             {
                 Client.Objects.SetScale(CurSim, localID, prim.Scale, true, false);
             }
+        }
+
+        private void CheckTexture(UUID texture)
+        {
+            var newt = GetNew(texture);
+            var oldt = GetOld(texture);
+            if (newt != null && oldt == null)
+                return;
+            return;
         }
 
         private void SetFlagsAndPhysics(Simulator CurSim, uint localID, Primitive prim)
