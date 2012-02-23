@@ -1694,6 +1694,13 @@ namespace OpenMetaverse
                         "Got an AssetUploadComplete on an unrecognized asset, AssetID: {0}, Type: {1}, Success: {2}",
                         complete.AssetBlock.UUID, (AssetType)complete.AssetBlock.Type, complete.AssetBlock.Success),
                         Helpers.LogLevel.Warning);
+                    AssetUpload upload = new AssetUpload();
+                    upload.Success = complete.AssetBlock.Success;
+                    upload.Type = (AssetType)complete.AssetBlock.Type;
+                    upload.AssetID = complete.AssetBlock.UUID;
+                    try { OnAssetUploaded(new AssetUploadEventArgs(upload)); }
+                    catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error, Client, ex); }
+
                 }
             }
         }
