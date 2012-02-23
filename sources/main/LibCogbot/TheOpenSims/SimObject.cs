@@ -1284,6 +1284,8 @@ namespace cogbot.TheOpenSims
 
         public override string ToString()
         {
+            string _TOSRTING = this._TOSRTING;
+
             if (needUpdate || _TOSRTING == null || toStringNeedsUpdate)
             {
                 Primitive Prim = null;
@@ -1293,7 +1295,7 @@ namespace cogbot.TheOpenSims
                     if (!HasPrim || Prim == null) return "UNATTACHED_PRIM " + ID;
                 }
                 toStringNeedsUpdate = false;
-                _TOSRTING = "";
+                this._TOSRTING = "";
                 if (_propertiesCache != null)
                 {
                     if (!String.IsNullOrEmpty(_propertiesCache.Name))
