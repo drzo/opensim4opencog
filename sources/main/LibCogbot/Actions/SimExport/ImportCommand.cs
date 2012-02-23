@@ -61,7 +61,19 @@ namespace cogbot.Actions.SimExport
             public UUID OldID { get; set; }
 
         }
+        public class UserOrGroupMapping : UUIDChange
+        {
+            public bool IsGroup = false;
+            public string OldName;
+            public string NewName;
+            public UserOrGroupMapping(UUID id, String name, bool isGroup)
+            {
+                OldID = id;
+                IsGroup = isGroup;
+                OldName = name;
+            }
 
+        }
         public class ItemToCreate : UUIDChange 
         {
             public override string ToString()
@@ -188,17 +200,16 @@ namespace cogbot.Actions.SimExport
             {
                 if (CogbotHelpers.IsNullOrZero(NewID))
                 {
-                    string importProgress = LLSDFilename;                    
-                    UUID newID;
-                    Running.Client.Assets.RequestUpload(out newID, assetType, AssetData, false);
+                    NewID = UUID.Combine(OldID, Running.Client.Self.SecureSessionID);
+                    NewUUID2OBJECT[NewID] = this;
+                    Running.Client.Assets.RequestUploadKnown(NewID, assetType, AssetData, false, OldID);
                     RezRequested = true; 
-                    NewID = newID;
                 }
             }
 
             public void WriteComplete()
             {
-                File.WriteAllText(ProgressFile, NewID + "," + OldID + "," + assetType);
+                File.WriteAllText(ProgressFile, NewID + "," + OldID + "," + assetType + "," + Running.Client.Self.SecureSessionID);
             }
 
             private byte[] assetData;
@@ -221,7 +232,7 @@ namespace cogbot.Actions.SimExport
 
             public void ConfirmAsset(byte[] data)
             {
-                Running.Client.Assets.RequestUploadKnown(NewID, assetType, data, false, UUID.Zero);
+                Running.Client.Assets.RequestUploadKnown(NewID, assetType, data, false, OldID);
             }
         }
 
@@ -257,7 +268,7 @@ namespace cogbot.Actions.SimExport
                 {
                     if (_prim == null)
                     {
-                        _prim = (Primitive)ExportCommand.FromFile(LLSDFilename);
+                        _prim = (Primitive)ExportCommand.FromFile(LLSDFilename, ExportCommand.UseBinarySerialization);
                     }
                     return _prim;
                 }
@@ -311,7 +322,10 @@ namespace cogbot.Actions.SimExport
                     if (_rezed == null)
                     {
                         LoadProgressFile();
-                        _rezed = ExportCommand.GetSimObjectFromUUID(NewID);
+                        if (!CogbotHelpers.IsNullOrZero(NewID))
+                        {
+                            Rezed = ExportCommand.GetSimObjectFromUUID(NewID);
+                        }
                     }
                     return _rezed;
                 }
@@ -350,12 +364,15 @@ namespace cogbot.Actions.SimExport
         }
         static object UUIDReplacer(object arg)
         {
+            UUID before = (UUID) arg;
+            if (UnresolvedUUIDs.Contains(before)) return before;
             UUID other;
-            if (ChangeList.TryGetValue((UUID)arg, out other))
+            if (ChangeList.TryGetValue(before, out other))
             {
                 return other;
             }
-            return arg;
+            UnresolvedUUIDs.Add(before);
+            return before;
         }
 
         Primitive currentPrim;
@@ -434,17 +451,33 @@ namespace cogbot.Actions.SimExport
             // dl - operate on dependant downloads
             // tasks - save task files
             // taskobj - task objects
-            // all = llsd tasks deps links (dl and taskobj not included)           
+            // all = users llsd tasks deps links (dl and taskobj not included)           
             ";
             if (args == null || args.Length == 0) return Failure(hlp);
             UUID GroupID = (args.Length > 1) ? TheBotClient.GroupID : UUID.Zero;
             var CurSim = Client.Network.CurrentSim;
-            this.arglist = new HashSet<string>(args);
-            if (!arglist.Contains("noassets"))
+            arglist = new HashSet<string>();
+            foreach (string s in args)
+            {
+                arglist.Add(s.TrimEnd(new[] { 's' }).ToLower().TrimStart(new[] { '-' }));
+            }
+            if (arglist.Contains("all"))
+            {
+                arglist.Add("terrain");
+                arglist.Add("user");
+                arglist.Add("group");
+                arglist.Add("prim");
+            }
+            if (arglist.Contains("prim"))
+            {
+                arglist.Add("asset");
+            }
+            if (!arglist.Contains("noasset") && arglist.Contains("asset"))
             {
                 UploadAllAssets(arglist.Contains("sameid"));                
             }
-            ChangeList = GetChangeList();
+            ScanForChangeList();
+            if (arglist.Contains("terrain")) UploadTerrain();
             WriteLine("ChangeList Size is " + ChangeList.Count);
 
             parents = new List<PrimToCreate>();
@@ -456,7 +489,7 @@ namespace cogbot.Actions.SimExport
                 foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.llsd"))
                 {
 
-                    Primitive prim = (Primitive)ExportCommand.FromFile(file);
+                    Primitive prim = (Primitive) ExportCommand.FromFile(file, ExportCommand.UseBinarySerialization);
                     diskPrims.Add(prim);
                     PrimToCreate ptc = APrimToCreate(prim);
                     if (prim.ParentID != 0)
@@ -476,10 +509,10 @@ namespace cogbot.Actions.SimExport
                     if (prim.ParentID != 0)
                     {
                         childs.Add(ptc);
-                        CreatePrim(CurSim, ptc, GroupID);
                         continue;
                     }
                     parents.Add(ptc);
+                    CreatePrim(CurSim, ptc, GroupID);
                 }
             }
             WriteLine("Imported parents " + parents.Count);
@@ -538,9 +571,86 @@ namespace cogbot.Actions.SimExport
             return SuccessOrFailure();
         }
 
+        private void UploadTerrain()
+        {
+            string fn = ExportCommand.terrainFileName;
+
+            if (!File.Exists(fn))
+            {
+                // upload patches
+                var fn2 = ExportCommand.terrainDir + "terrain.patches";
+                if (File.Exists(fn2))
+                {
+                    TerrainPatch[] loaded = (TerrainPatch[]) ExportCommand.FromFile(fn2, true);
+                    // TerrainCompressor.CreateLayerDataPacket(loaded, TerrainPatch.LayerType.Land);
+                    float[,] hm = GetHeightMap(loaded);
+                    hm = SmoothHM(hm);
+                    byte[] raw = ToRaw32File(hm);
+                    File.WriteAllBytes(fn, raw);
+                }
+            }
+            if (File.Exists(fn))
+            {
+                Client.Estate.UploadTerrain(File.ReadAllBytes(fn), Path.GetFileName(fn));
+                Success("Terrain file uploading");
+            }
+            else
+            {
+                Failure("unable to find any terrain files");
+            }
+
+        }
+
+        private float[,] SmoothHM(float[,] doubles)
+        {
+            return doubles;
+        }
+
+        private byte[] ToRaw32File(float[,] doubles)
+        {
+            int o = 0;
+            byte[] b = new byte[256*256];
+            for (int y = 0; y < 256; y++)
+            {
+                for (int x = 0; x < 256; x++)
+                {
+                    b[o++] = (byte) doubles[x, y];
+                }
+            }
+            return b;
+        }
+
+        static float[,] GetHeightMap(TerrainPatch[] Terrain)
+        {
+            float average = 23;
+            float[,] height = new float[256,256];
+            for (int x = 0; x < 256; x++)
+            {
+                for (int y = 0; y < 256; y++)
+                {
+                    int patchX = x/16;
+                    int patchY = y/16;
+
+                    TerrainPatch patch = Terrain[patchY*16 + patchX];
+                    if (patch != null)
+                    {
+                        height[x, y] = average = patch.Data[(y % 16) * 16 + (x % 16)];
+                    } else
+                    {
+                        height[x, y] = average;
+                    }
+                }
+            }
+            return height;
+        }
+    
+
         private void UploadAllAssets(bool sameIds)
         {
             int uploaded = 0;
+            int reuploaded = 0;
+            int seenAsset = 0;
+
             bool alwayReupload = arglist.Contains("reup");
             Success("Uploading assets... sameIds=" + sameIds);
             foreach (var file in Directory.GetFiles(ExportCommand.assetDumpDir, "*.*"))
@@ -568,12 +678,18 @@ namespace cogbot.Actions.SimExport
                         assetType = AssetType.Texture;
                         sid = Path.GetFileName(file.Substring(0, file.Length - ".jp2".Length));
                     }
+                    if (file.EndsWith(".ogg"))
+                    {
+                        assetType = AssetType.Sound;
+                        sid = Path.GetFileName(file.Substring(0, file.Length - ".jp2".Length));
+                    }
                 }
-                if (assetType==AssetType.Unknown)
+                if (assetType == AssetType.Unknown)
                 {
                     Failure("Cant guess assetyype for " + file);
                     continue;
                 }
+                seenAsset++;
                 UUID oldID = UUID.Parse(sid);
                 ItemToCreate itc = FindItemToCreate(oldID, assetType, sameIds);
                 itc.LLSDFilename = file;
@@ -586,13 +702,14 @@ namespace cogbot.Actions.SimExport
                 else if (alwayReupload)
                 {
                     itc.ConfirmAsset(itc.AssetData);
+                    reuploaded++;
                 }
                 if (!CogbotHelpers.IsNullOrZero(itc.NewID))
                 {
                     NewUUID2OBJECT[itc.NewID] = itc;
                 }
             }
-            Success("Uploaded assets: " + uploaded);
+            Success("Uploaded assets=" + uploaded + " seenAssets=" + seenAsset + " reuploaded=" + reuploaded);
         }
 
         private ItemToCreate FindItemToCreate(UUID uuid, AssetType assetType, bool sameIds)
@@ -697,18 +814,19 @@ namespace cogbot.Actions.SimExport
             }
             return null;
         }
-        private Dictionary<UUID,UUID> GetChangeList()
+
+        private void ScanForChangeList()
         {
             Dictionary<UUID, UUID> cl = new Dictionary<UUID, UUID>();
             lock (WorkFlowLock)
             {
                 foreach (KeyValuePair<UUID, UUIDChange> o in UUID2OBJECT)
                 {
-                    cl.Add(o.Key, o.Value.NewID);
+                    ChangeList[o.Key] = o.Value.NewID;
                 }
             }
-            return cl;
         }
+
         private PrimToCreate GetNewPrim(uint localID)
         {
             lock (WorkFlowLock)
@@ -832,7 +950,8 @@ namespace cogbot.Actions.SimExport
 
         private PrimToCreate prev = null;
         public static ImportCommand Running;
-        static private Dictionary<UUID, UUID> ChangeList;
+        static private readonly Dictionary<UUID, UUID> ChangeList = new Dictionary<UUID, UUID>();
+        private static readonly HashSet<UUID> UnresolvedUUIDs = new HashSet<UUID>();
         private HashSet<string> arglist;
 
         private void CreateTree(Simulator CurSim, PrimToCreate ptc, UUID GroupID)
@@ -929,7 +1048,7 @@ namespace cogbot.Actions.SimExport
             if (exceptFor.Contains(from)) return from;
             exceptFor.Add(from);
 
-            BindingFlags bf = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+            const BindingFlags bf = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
             foreach (var info in fromType.GetFields(bf))
             {
                 object o = info.GetValue(from);
@@ -996,7 +1115,10 @@ namespace cogbot.Actions.SimExport
             if (prim.Flexible != null) Client.Objects.SetFlexible(CurSim, localID, prim.Flexible);
             if (prim.Sculpt != null)
             {
-                CheckTexture(prim.Sculpt.SculptTexture);                
+                if (CheckTexture(prim.Sculpt.SculptTexture))
+                {
+                    Failure("Missing Scupt texture on " + prim);
+                }
                 Client.Objects.SetSculpt(CurSim, localID, prim.Sculpt);
             }
             Client.Objects.SetMaterial(CurSim, localID, prim.PrimData.Material);
@@ -1006,13 +1128,13 @@ namespace cogbot.Actions.SimExport
             }
         }
 
-        private void CheckTexture(UUID texture)
+        private bool CheckTexture(UUID texture)
         {
             var newt = GetNew(texture);
             var oldt = GetOld(texture);
             if (newt != null && oldt == null)
-                return;
-            return;
+                return true;
+            return false;
         }
 
         private void SetFlagsAndPhysics(Simulator CurSim, uint localID, Primitive prim)
