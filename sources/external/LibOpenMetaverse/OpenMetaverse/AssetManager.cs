@@ -798,10 +798,16 @@ namespace OpenMetaverse
         /// <returns>The transaction ID of this transfer</returns>
         public UUID RequestUpload(out UUID assetID, AssetType type, byte[] data, bool storeLocal, UUID transactionID)
         {
+            assetID = UUID.Combine(transactionID, Client.Self.SecureSessionID);
+            return RequestUploadKnown(assetID, type, data, storeLocal, transactionID);           
+        }
+
+        public UUID RequestUploadKnown(UUID assetID, AssetType type, byte[] data, bool storeLocal, UUID transactionID)
+        {
             AssetUpload upload = new AssetUpload();
             upload.AssetData = data;
             upload.AssetType = type;
-            assetID = UUID.Combine(transactionID, Client.Self.SecureSessionID);
+            // assetID = UUID.Combine(transactionID, Client.Self.SecureSessionID);
             upload.AssetID = assetID;
             upload.Size = data.Length;
             upload.XferID = 0;
@@ -822,7 +828,7 @@ namespace OpenMetaverse
                     String.Format("Beginning asset upload [Single Packet], ID: {0}, AssetID: {1}, Size: {2}",
                     upload.ID.ToString(), upload.AssetID.ToString(), upload.Size), Helpers.LogLevel.Info, Client);
 
-                Transfers[upload.ID] = upload;
+                lock (Transfers) Transfers[upload.ID] = upload;
 
                 // The whole asset will fit in this packet, makes things easy
                 request.AssetBlock.AssetData = data;
@@ -1343,8 +1349,13 @@ namespace OpenMetaverse
                 // The first packet reserves the first four bytes of the data for the
                 // total length of the asset and appends 1000 bytes of data after that
                 send.DataPacket.Data = new byte[1004];
+                int uploadSize = 1000;
+                if (upload.AssetData.Length < 1000)
+                {
+                    uploadSize = upload.AssetData.Length;
+                }
                 Buffer.BlockCopy(Utils.IntToBytes(upload.Size), 0, send.DataPacket.Data, 0, 4);
-                Buffer.BlockCopy(upload.AssetData, 0, send.DataPacket.Data, 4, 1000);
+                Buffer.BlockCopy(upload.AssetData, 0, send.DataPacket.Data, 4, uploadSize);
                 upload.Transferred += 1000;
 
                 lock (Transfers)
@@ -1396,7 +1407,12 @@ namespace OpenMetaverse
             Transfer transfer;
             AssetDownload download;
 
-            if (Transfers.TryGetValue(info.TransferInfo.TransferID, out transfer))
+            lock(Transfers) if (!Transfers.TryGetValue(info.TransferInfo.TransferID, out transfer))
+            {
+                Logger.Log("Received a TransferInfo packet for an asset we didn't request, TransferID: " +
+                           info.TransferInfo.TransferID, Helpers.LogLevel.Warning, Client);
+                return;
+            }
             {
                 download = (AssetDownload)transfer;
 
@@ -1459,11 +1475,6 @@ namespace OpenMetaverse
                 }
                 download.HeaderReceivedEvent.Set();
             }
-            else
-            {
-                Logger.Log("Received a TransferInfo packet for an asset we didn't request, TransferID: " +
-                    info.TransferInfo.TransferID, Helpers.LogLevel.Warning, Client);
-            }
         }
 
         /// <summary>Process an incoming packet and raise the appropriate events</summary>
@@ -1475,7 +1486,7 @@ namespace OpenMetaverse
             Transfer transfer;
             AssetDownload download;
 
-            if (Transfers.TryGetValue(asset.TransferData.TransferID, out transfer))
+            lock (Transfers) if (!Transfers.TryGetValue(asset.TransferData.TransferID, out transfer)) return;
             {
                 download = (AssetDownload)transfer;
 
@@ -1588,7 +1599,7 @@ namespace OpenMetaverse
                 upload.Type = (AssetType)request.XferID.VFileType;
 
                 UUID transferID = UUIDFactory.GetUUID(upload.XferID);
-                Transfers[transferID] = upload;
+                lock (Transfers) Transfers[transferID] = upload;
 
                 // Send the first packet containing actual asset data
                 SendNextUploadPacket(upload);
@@ -1608,7 +1619,7 @@ namespace OpenMetaverse
             Transfer transfer;
             AssetUpload upload = null;
 
-            if (Transfers.TryGetValue(transferID, out transfer))
+            lock (Transfers) if (!Transfers.TryGetValue(transferID, out transfer)) return;
             {
                 upload = (AssetUpload)transfer;
 
@@ -1640,9 +1651,18 @@ namespace OpenMetaverse
                 KeyValuePair<UUID, Transfer> foundTransfer = new KeyValuePair<UUID, Transfer>();
 
                 // Xfer system sucks really really bad. Where is the damn XferID?
+                var Transfers0 = new Dictionary<UUID, Transfer>();
                 lock (Transfers)
                 {
-                    foreach (KeyValuePair<UUID, Transfer> transfer in Transfers)
+                    foreach (KeyValuePair<UUID, Transfer> pair in Transfers)
+                    {
+                        Transfers0.Add(pair.Key, pair.Value);
+                    }
+                }
+                
+                lock (Transfers)
+                {
+                    foreach (KeyValuePair<UUID, Transfer> transfer in Transfers0)
                     {
                         if (transfer.Value.GetType() == typeof(AssetUpload))
                         {
@@ -1690,7 +1710,7 @@ namespace OpenMetaverse
             Transfer transfer;
             XferDownload download = null;
 
-            if (Transfers.TryGetValue(transferID, out transfer))
+            lock (Transfers) if (!Transfers.TryGetValue(transferID, out transfer)) return;
             {
                 download = (XferDownload)transfer;
 
