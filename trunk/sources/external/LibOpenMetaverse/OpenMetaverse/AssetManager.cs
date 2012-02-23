@@ -1660,7 +1660,7 @@ namespace OpenMetaverse
                     }
                 }
                 
-                lock (Transfers)
+                //lock (Transfers)
                 {
                     foreach (KeyValuePair<UUID, Transfer> transfer in Transfers0)
                     {
