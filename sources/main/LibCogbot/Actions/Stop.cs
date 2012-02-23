@@ -34,10 +34,10 @@ namespace cogbot.Actions
                 }
                 int n = 0;
                 var botCommandThreads = Client.GetBotCommandThreads();
-                lock (botCommandThreads)
+                //lock (botCommandThreads)
                 {
                     int num = botCommandThreads.Count;
-                    foreach (Thread t in botCommandThreads)
+                    foreach (Thread t in LockInfo.CopyOf(botCommandThreads))
                     {
                         Client.RemoveThread(t);
                         n++;
