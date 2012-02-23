@@ -13,8 +13,8 @@ namespace cogbot.Actions
     {
         public RepeatCommand(BotClient testClient)
         {
-            Name = "thread";
-            Description = "Repeats a command in its own thread. Usage: thread 30 jump";
+            Name = "repeat";
+            Description = "Repeats a command in its own thread. Usage: repeat 30 jump";
             Category = CommandCategory.BotClient;
         }
 
