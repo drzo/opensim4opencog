@@ -146,6 +146,12 @@ namespace cogbot.Actions.SimExport
             private Asset _item;
             private string _progressFile;
             private string _afiler;
+            private byte[] assetData;
+            public UUID NewItemID = UUID.Zero;
+            public UUID OldItemID = UUID.Zero;
+            public UUID NewTaskID = UUID.Zero;
+            public UUID OldTaskID = UUID.Zero;
+
 
             public string ProgressFile
             {
@@ -176,7 +182,7 @@ namespace cogbot.Actions.SimExport
                     _rezed = value;
                     NewID = value.ID;
                     //NewLocalID = value.LocalID;
-                    File.WriteAllText(ProgressFile, "" + NewID);
+                    WriteProgress();
                 }
             }
 
@@ -185,34 +191,163 @@ namespace cogbot.Actions.SimExport
                 if (CogbotHelpers.IsNullOrZero(NewID))
                 {
                     string importProgress = ProgressFile;
+                    var item = ExportCommand.Running.GetInvItem(Running.Client, "" + OldID, GetAssetUploadsFolder());
+                    if (item != null)
+                    {
+                        NewID = item.AssetUUID;
+                        RezRequested = true;
+                        NewItemID = item.UUID;
+                        NewTaskID = Running.Client.Self.AgentID;
+                        lock (ExportCommand.fileWriterLock) if (File.Exists(importProgress)) return;
+                        WriteProgress();
+                        return;
+                    }
                     if (File.Exists(importProgress))
                     {
                         string data = File.ReadAllText(importProgress);
                         var sdata = data.Split(',');
-                        NewID = UUIDFactory.GetUUID(sdata[0]);
-                       // NewLocalID = uint.Parse(sdata[1]);
+                        NewID = UUIDFactory.GetUUID(sdata[1]);
+                        // NewLocalID = uint.Parse(sdata[1]);
                         RezRequested = true;
                     }
                 }
             }
 
-            public void UploadAssetData()
+            public InventoryType inventoryType
+            {
+                get
+                {
+                    return AssetTypeToInventoryType(assetType);
+                }
+            }
+
+            static InventoryType AssetTypeToInventoryType(AssetType assetType)
+            {
+                var ret = Utils.StringToInventoryType(Utils.AssetTypeToString(assetType));
+                if (ret != InventoryType.Unknown)
+                {
+                    return ret;
+                }
+                switch (assetType)
+                {
+                    case AssetType.Unknown:
+                        break;
+                    case AssetType.Sound:
+                    case AssetType.SoundWAV:
+                        return InventoryType.Sound;
+                    case AssetType.ImageTGA:
+                    case AssetType.ImageJPEG:
+                    case AssetType.TextureTGA:
+                    case AssetType.Texture:
+                        return InventoryType.Texture;
+                    case AssetType.Bodypart:
+                    case AssetType.Clothing:
+                        return InventoryType.Wearable;
+                    case AssetType.TrashFolder:
+                    case AssetType.SnapshotFolder:
+                    case AssetType.LostAndFoundFolder:
+                    case AssetType.Folder:
+                    case AssetType.RootFolder:
+                    case AssetType.FavoriteFolder:
+                    case AssetType.CurrentOutfitFolder:
+                    case AssetType.OutfitFolder:
+                    case AssetType.MyOutfitsFolder:
+                        return InventoryType.Folder;
+                    case AssetType.Animation:
+                        return InventoryType.Animation;
+                    case AssetType.CallingCard:
+                        return InventoryType.CallingCard;
+                    case AssetType.Landmark:
+                        return InventoryType.Landmark;
+                    case AssetType.Object:
+                        return InventoryType.Object;
+                    case AssetType.Notecard:
+                        return InventoryType.Notecard;
+                    case AssetType.LSLText:
+                        return InventoryType.LSL;
+                    case AssetType.LSLBytecode:
+                        return InventoryType.LSL;
+                    case AssetType.Gesture:
+                        return InventoryType.Gesture;
+                    case AssetType.Mesh:
+                        return InventoryType.Mesh;
+                    case AssetType.Simstate:
+                    case AssetType.Link:
+                    case AssetType.LinkFolder:
+                    case AssetType.EnsembleStart:
+                    case AssetType.EnsembleEnd:
+                    default:
+                        throw new ArgumentOutOfRangeException("assetType");
+                }
+                return InventoryType.Texture;
+            }
+
+            public bool UploadAssetData(bool storeLocal)
             {
                 if (CogbotHelpers.IsNullOrZero(NewID))
                 {
+                    if (ImportCommand.UseUploadKnown)
+                    {
+                        AssetUploaded.Reset();
+                        Running.Client.Inventory.RequestCreateItemFromAsset(AssetData, "" + OldID, ProgressString,
+                                                                            assetType, inventoryType, GetAssetUploadsFolder(),
+                                                                            Permissions.FullPermissions, InvItemCreated);
+                        if (!AssetUploaded.WaitOne(10000))
+                        {
+                            return false;
+                        }
+                        return true;
+                    }
                     NewID = UUID.Combine(OldID, Running.Client.Self.SecureSessionID);
                     NewUUID2OBJECT[NewID] = this;
-                    Running.Client.Assets.RequestUploadKnown(NewID, assetType, AssetData, false, OldID);
-                    RezRequested = true; 
+                    Running.Client.Assets.RequestUploadKnown(NewID, assetType, AssetData, storeLocal, OldID);
+                    RezRequested = true;
+                }
+                return true;
+            }
+
+            private void InvItemCreated(bool success1, string status, UUID itemid, UUID assetid)
+            {
+                if (!success1)
+                {
+                    Running.Failure("!SUCCESS " + status + " ON " + this);
+                    return;
+                }
+                NewID = assetid;
+                this.NewItemID = itemid;
+                this.NewTaskID = UUID.Zero;
+                NewUUID2OBJECT[NewID] = this;
+                ConfirmDLable();
+            }
+
+            public void WriteProgress()
+            {
+                lock (ExportCommand.fileWriterLock) File.WriteAllText(ProgressFile, ProgressString);
+            }
+
+            protected string ProgressString
+            {
+                get
+                {
+                    return "assetid," + uuidString(NewID) + "," + uuidString(OldID) +
+                           "," + assetType + "," + uuidString(Running.Client.Self.SecureSessionID) +
+                           ",itemid," + uuidString(NewItemID) + "," + uuidString(OldItemID) +
+                           ",taskid," + uuidString(NewTaskID) + "," + uuidString(OldTaskID);
                 }
             }
 
             public void WriteComplete()
             {
-                File.WriteAllText(ProgressFile, NewID + "," + OldID + "," + assetType + "," + Running.Client.Self.SecureSessionID);
+                ConfirmDLable();
             }
 
-            private byte[] assetData;
+            private void ConfirmDLable()
+            {
+                Running.Client.Assets.RequestAsset(NewID, assetType, true, OnDownloaded);
+
+            }
+
+
             public byte[] AssetData
             {
                 get
@@ -224,16 +359,29 @@ namespace cogbot.Actions.SimExport
 
             public void OnDownloaded(AssetDownload transfer, Asset asset)
             {
+                if (transfer.AssetID != NewID) return;
                 if (!transfer.Success)
                 {
-                    ImportCommand.Running.Error("bad transfer");
+                    ImportCommand.Running.Error("bad transfer on " + this);
                 }
+                else
+                {
+                    WriteProgress();
+                }
+                Item = asset;
+                ImportCommand.AssetUploaded.Set();
             }
 
-            public void ConfirmAsset(byte[] data)
+            public void UpdateAsset(byte[] data)
             {
                 Running.Client.Assets.RequestUploadKnown(NewID, assetType, data, false, OldID);
             }
+        }
+
+        public static string uuidString(UUID uuid)
+        {
+            if (CogbotHelpers.IsNullOrZero(uuid)) return "Zero";
+            return uuid.ToString();
         }
 
         public class PrimToCreate : UUIDChange
@@ -336,7 +484,7 @@ namespace cogbot.Actions.SimExport
                     _rezed = value;
                     NewID = value.ID;
                     NewLocalID = value.LocalID;
-                    File.WriteAllText(ProgressFile, NewID + "," + NewLocalID + "," + value.RegionHandle);
+                    lock (ExportCommand.fileWriterLock) File.WriteAllText(ProgressFile, NewID + "," + NewLocalID + "," + value.RegionHandle);
                 }
             }
 
@@ -345,7 +493,7 @@ namespace cogbot.Actions.SimExport
                 if (CogbotHelpers.IsNullOrZero(NewID))
                 {
                     string importProgress = ProgressFile;
-                    if (File.Exists(importProgress))
+                    lock (ExportCommand.fileWriterLock) if (!File.Exists(importProgress)) return;
                     {
                         string data = File.ReadAllText(importProgress);
                         var sdata = data.Split(',');
@@ -359,12 +507,12 @@ namespace cogbot.Actions.SimExport
 
             public void ReplaceAll(Dictionary<UUID, UUID> dictionary)
             {
-                ReplaceAllMembers(Prim, typeof (UUID), UUIDReplacer);
+                ReplaceAllMembers(Prim, typeof(UUID), UUIDReplacer);
             }
         }
         static object UUIDReplacer(object arg)
         {
-            UUID before = (UUID) arg;
+            UUID before = (UUID)arg;
             if (UnresolvedUUIDs.Contains(before)) return before;
             UUID other;
             if (ChangeList.TryGetValue(before, out other))
@@ -393,14 +541,45 @@ namespace cogbot.Actions.SimExport
         private List<PrimToCreate> childs;
         static readonly List<Primitive> diskPrims = new List<Primitive>();
 
-
+        public static UUID GetAssetUploadsFolder()
+        {
+            UUID assetUploadsFolder = ExportCommand.Running.FolderCalled("AssetUploads");
+            return assetUploadsFolder;
+        }
         public ImportCommand(BotClient testClient)
         {
             Name = "simimport";
             Description = "Import prims from an exported xml file. Usage: import inputfile.xml [usegroup]";
             Category = CommandCategory.Objects;
             Client.Assets.AssetUploaded += new EventHandler<AssetUploadEventArgs>(Assets_AssetUploaded);
+            Client.Network.EventQueueRunning += logged_in;
             ImportCommand.Running = this;
+        }
+
+        private void logged_in(object sender, EventQueueRunningEventArgs e)
+        {
+            Client.Network.EventQueueRunning -= logged_in;
+            UUID id = GetAssetUploadsFolder();
+            GleanUUIDsFrom(id);
+        }
+
+        private void GleanUUIDsFrom(UUID uuid)
+        {
+            if (CogbotHelpers.IsNullOrZero(uuid)) return;
+            foreach (var item0 in Client.Inventory.Store.GetContents(uuid))
+            {
+                UUID oldID;
+                if (UUID.TryParse(item0.Name, out oldID))
+                {
+                    var item = item0 as InventoryItem;
+                    if (item == null) continue;
+                    ItemToCreate itc = FindItemToCreate(oldID, item.AssetType, true);
+                    if (itc.RezRequested)
+                    {
+                        
+                    }
+                }                
+            }            
         }
 
         private void Assets_AssetUploaded(object sender, AssetUploadEventArgs e)
@@ -476,6 +655,7 @@ namespace cogbot.Actions.SimExport
             {
                 UploadAllAssets(arglist.Contains("sameid"));                
             }
+            GleanUUIDsFrom(GetAssetUploadsFolder());
             ScanForChangeList();
             if (arglist.Contains("terrain")) UploadTerrain();
             WriteLine("ChangeList Size is " + ChangeList.Count);
@@ -491,6 +671,7 @@ namespace cogbot.Actions.SimExport
 
                     Primitive prim = (Primitive) ExportCommand.FromFile(file, ExportCommand.UseBinarySerialization);
                     diskPrims.Add(prim);
+                    //if (sculptOnly && (prim.Sculpt == null || CogbotHelpers.IsNullOrZero(prim.Sculpt.SculptTexture))) continue;
                     PrimToCreate ptc = APrimToCreate(prim);
                     if (prim.ParentID != 0)
                     {
@@ -505,6 +686,7 @@ namespace cogbot.Actions.SimExport
             {
                 foreach (Primitive prim in diskPrims)
                 {
+                    //if (sculptOnly && (prim.Sculpt == null || CogbotHelpers.IsNullOrZero(prim.Sculpt.SculptTexture))) continue;
                     PrimToCreate ptc = APrimToCreate(prim);
                     if (prim.ParentID != 0)
                     {
@@ -521,6 +703,7 @@ namespace cogbot.Actions.SimExport
                 CreatePrim(CurSim, ptc, GroupID);
             }
             WriteLine("Importing children " + childs.Count);
+            //if (sculptOnly) return Success("Sculpt Only");
             foreach (PrimToCreate ptc in childs)
             {
                 CreatePrim(CurSim, ptc, GroupID);
@@ -575,18 +758,24 @@ namespace cogbot.Actions.SimExport
         {
             string fn = ExportCommand.terrainFileName;
 
-            if (!File.Exists(fn))
+            lock (ExportCommand.fileWriterLock)
             {
-                // upload patches
-                var fn2 = ExportCommand.terrainDir + "terrain.patches";
-                if (File.Exists(fn2))
+                if (!File.Exists(fn))
                 {
-                    TerrainPatch[] loaded = (TerrainPatch[]) ExportCommand.FromFile(fn2, true);
-                    // TerrainCompressor.CreateLayerDataPacket(loaded, TerrainPatch.LayerType.Land);
-                    float[,] hm = GetHeightMap(loaded);
-                    hm = SmoothHM(hm);
-                    byte[] raw = ToRaw32File(hm);
-                    File.WriteAllBytes(fn, raw);
+                    // upload patches
+                    var fn2 = ExportCommand.terrainDir + "terrain.patches";
+                    lock (ExportCommand.fileWriterLock)
+                    {
+                        if (File.Exists(fn2))
+                        {
+                            TerrainPatch[] loaded = (TerrainPatch[]) ExportCommand.FromFile(fn2, true);
+                            // TerrainCompressor.CreateLayerDataPacket(loaded, TerrainPatch.LayerType.Land);
+                            float[,] hm = GetHeightMap(loaded);
+                            hm = SmoothHM(hm);
+                            byte[] raw = ToRaw32File(hm);
+                            lock (ExportCommand.fileWriterLock) File.WriteAllBytes(fn, raw);
+                        }
+                    }
                 }
             }
             if (File.Exists(fn))
@@ -655,7 +844,7 @@ namespace cogbot.Actions.SimExport
             Success("Uploading assets... sameIds=" + sameIds);
             foreach (var file in Directory.GetFiles(ExportCommand.assetDumpDir, "*.*"))
             {
-                if (file.EndsWith(".object") || file.EndsWith(".simasset"))
+                if (file.EndsWith(".object") || file.EndsWith(".simasset") || file.EndsWith(".rzi"))
                 {
                     continue;
                 }
@@ -695,13 +884,16 @@ namespace cogbot.Actions.SimExport
                 itc.LLSDFilename = file;
                 if (!itc.RezRequested)
                 {
-                    itc.UploadAssetData();
-                    NewUUID2OBJECT[itc.NewID] = itc;
+                    itc.UploadAssetData(false);
+                    if (!CogbotHelpers.IsNullOrZero(itc.NewID))
+                    {
+                        NewUUID2OBJECT[itc.NewID] = itc;
+                    }
                     uploaded++;
                 }
                 else if (alwayReupload)
                 {
-                    itc.ConfirmAsset(itc.AssetData);
+                    itc.UpdateAsset(itc.AssetData);
                     reuploaded++;
                 }
                 if (!CogbotHelpers.IsNullOrZero(itc.NewID))
@@ -761,16 +953,29 @@ namespace cogbot.Actions.SimExport
                 UUIDChange utc;
                 if (UUID2OBJECT.TryGetValue(primitive.ID, out utc))
                 {
-                    return (PrimToCreate)utc;
+                    return (PrimToCreate) utc;
                 }
                 if (ptc != null) return ptc;
                 ptc = new PrimToCreate(primitive);
+                if (primitive.Sculpt != null)
+                {
+                    var texture = primitive.Sculpt.SculptTexture;
+                    if (texture != null)
+                    {
+                        var t2c = (ItemToCreate) (GetOld(texture) ?? GetNew(texture));
+                        if (t2c != null)
+                        {
+                            t2c.UploadAssetData(true);
+                        }
+                    }
+                }
                 ptc.ReplaceAll(ChangeList);
                 UUID2OBJECT.Add(ptc.OldID, ptc);
                 UINT2OBJECT.Add(primitive.LocalID, ptc);
                 return ptc;
             }
         }
+
         private PrimToCreate GetOldPrim(uint localID)
         {
             lock (WorkFlowLock)
@@ -953,6 +1158,9 @@ namespace cogbot.Actions.SimExport
         static private readonly Dictionary<UUID, UUID> ChangeList = new Dictionary<UUID, UUID>();
         private static readonly HashSet<UUID> UnresolvedUUIDs = new HashSet<UUID>();
         private HashSet<string> arglist;
+        //private bool sculptOnly = true;
+        public static bool UseUploadKnown = true;
+        public static ManualResetEvent AssetUploaded = new ManualResetEvent(false);
 
         private void CreateTree(Simulator CurSim, PrimToCreate ptc, UUID GroupID)
         {
@@ -1115,7 +1323,7 @@ namespace cogbot.Actions.SimExport
             if (prim.Flexible != null) Client.Objects.SetFlexible(CurSim, localID, prim.Flexible);
             if (prim.Sculpt != null)
             {
-                if (CheckTexture(prim.Sculpt.SculptTexture))
+                if (!CheckTexture(prim.Sculpt.SculptTexture))
                 {
                     Failure("Missing Scupt texture on " + prim);
                 }
