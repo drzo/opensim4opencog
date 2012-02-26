@@ -78,18 +78,7 @@ namespace cogbot.Actions.SimExport
                     Thread.Sleep(1000);
                     continue;
                 }
-                if (!TheSimAvatar.IsSitting)
-                {
-                    UUID sm = WorldSystem.FindUUIDForName("SitMover4200");
-                    if (!CogbotHelpers.IsNullOrZero(sm))
-                    {
-                        SimObject SitMover = WorldObjects.GetSimObjectFromUUID(sm);
-                        if (SitMover != null)
-                        {
-                            Client.Self.RequestSit(sm, Vector3.Zero);
-                        }
-                    }
-                }
+                AttemptSitMover();
                 currentLoc = rnd.Next(0, MaxGotos - 1);
                 var moveto = moveToPoints[currentLoc];
                 if (moveto == Vector3.Zero || Math.Abs(moveto.Z - Client.Self.SimPosition.Z) > 512 || moveto.Z > maxHeigth || !onlyObjectAt.IsInside(moveto.X, moveto.Y, moveto.Z))
@@ -98,36 +87,34 @@ namespace cogbot.Actions.SimExport
                     continue;
                 }
                 var v3d = Client.Self.GlobalPosition;
-                uint globalX, globalY;
-                Utils.LongToUInts(RegionHandle, out globalX, out globalY);
                 Vector3 pos = moveToPoints[currentLoc];
 
-                ExpectedGotoV3D =
-                    new Vector3d(
-                        (double)globalX + (double)pos.X,
-                        (double)globalY + (double)pos.Y,
-                        (double)pos.Z);
-                //Client.Self
-                Success("Trying to get to " + pos);
-                Client.Self.Movement.Camera.Position = pos;
-                Client.Self.Movement.SendUpdate(true);
-                if (TheSimAvatar.IsSitting)
-                {
-                    Client.Self.Chat(string.Format("tptp,{0},{1},{2}", pos.X, pos.Y, pos.Z), 4201, ChatType.Normal);
-                }
-                else
-                {
-                    Client.Self.Teleport(RegionHandle, pos, pos);
-                    Thread.Sleep(4000);
-                    Client.Self.AutoPilot(ExpectedGotoV3D.X, ExpectedGotoV3D.Y, ExpectedGotoV3D.Z);
-                    Success("AutoPilot to get to " + pos);
-                }
+                //Client.Self   
+                AttemptMoveTo(pos);
                 Thread.Sleep(moveSleep * 1000);
                 haveBeenTo.AddPoint(Client.Self.SimPosition);
                 var at3d = Client.Self.GlobalPosition;
                 if (Vector3d.Distance(new Vector3d(ExpectedGotoV3D.X, ExpectedGotoV3D.Y, ExpectedGotoV3D.Z), new Vector3d(at3d.X, at3d.Y, at3d.Z)) < 30)
                 {
                     moveToPoints[currentLoc] = Vector3.Zero;
+                }
+            }
+        }
+
+        private void AttemptSitMover()
+        {
+            if (!TheSimAvatar.IsSitting)
+            {
+                var smo = WorldSystem.GetObject("SitMover4200");
+                if (smo == null) return;
+                var sm = smo.ID;
+                if (!CogbotHelpers.IsNullOrZero(sm))
+                {
+                    //SimObject SitMover = WorldObjects.GetSimObjectFromUUID(sm);
+                    //if (SitMover != null)
+                    {
+                        Client.Self.RequestSit(sm, Vector3.Zero);
+                    }
                 }
             }
         }
@@ -144,5 +131,56 @@ namespace cogbot.Actions.SimExport
             shouldBeMoving = true;
         }
 
+        private void AttemptMoveTo(Vector3 pos)
+        {
+            AttemptSitMover();
+            if (pos.X < 1 || pos.Y < 1 || pos.Z < 10)
+            {
+                return;
+            }
+            Success("Trying to get to " + pos);
+            Client.Self.Movement.Camera.Position = pos;
+            Client.Self.Movement.SendUpdate(true);
+            if (TheSimAvatar.IsSitting)
+            {
+                Client.Self.Chat(string.Format("tptp,{0},{1},{2}", pos.X, pos.Y, pos.Z), 4201, ChatType.Normal);
+            }
+            else
+            {
+                uint globalX, globalY;
+                Utils.LongToUInts(RegionHandle, out globalX, out globalY);
+                ExpectedGotoV3D =
+                    new Vector3d(
+                        (double) globalX + (double) pos.X,
+                        (double) globalY + (double) pos.Y,
+                        (double) pos.Z);
+                Client.Self.AutoPilotCancel();
+                Client.Self.Teleport(RegionHandle, pos, pos);
+                Thread.Sleep(4000);
+                var at3d = Client.Self.GlobalPosition;
+                if (Vector3d.Distance(new Vector3d(ExpectedGotoV3D.X, ExpectedGotoV3D.Y, ExpectedGotoV3D.Z), new Vector3d(at3d.X, at3d.Y, at3d.Z)) < 16)
+                {
+                   return;
+                }
+                Success("AutoPilot to get to " + pos);
+                Client.Self.AutoPilot(ExpectedGotoV3D.X, ExpectedGotoV3D.Y, ExpectedGotoV3D.Z);
+                Thread.Sleep(4000);
+                Client.Self.AutoPilotCancel();
+            }
+        }
+
+        private void MoveCloseTo(SimObject exportPrim)
+        {
+            Vector3 up = exportPrim.UsePosition.SimPosition;
+            if (up.X < 1)
+            {
+                return;
+            }
+            var dist = Vector3.Distance(Client.Self.SimPosition, up);
+            if (dist > 10)
+            {
+                AttemptMoveTo(up);
+            }
+        }
     }
 }
