@@ -569,6 +569,7 @@ namespace cogbot.Listeners
                 string ownedBy = args[1].ToLower();
 
                 var owners = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, SimObjects);
+                argsUsed++;
                 List<SimObject> keep = new List<SimObject>();
                 foreach (var owner in owners)
                 {
@@ -589,6 +590,21 @@ namespace cogbot.Listeners
                 List<SimObject> objs = new List<SimObject>();
                 AsPrimitives(objs, prims);
                 objs.Sort(TheSimAvatar.CompareDistance);
+                prims = objs;
+            }
+            else if (arg0Lower == "not")
+            {
+                var notprims = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, prims);
+                argsUsed++;
+                foreach (SimObject o in LockInfo.CopyOf(prims))
+                {
+                    if (notprims.Contains(o))
+                    {
+                        prims.Remove(o);
+                    }                    
+                }
+                List<SimObject> objs = new List<SimObject>();
+                AsPrimitives(objs, prims);
                 prims = objs;
             }
             else
@@ -612,7 +628,7 @@ namespace cogbot.Listeners
                 }
                 else
                 {
-                    return new List<SimObject>();
+                    //return new List<SimObject>();
                     prims = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, prims);
                     argsUsed += 1;
                     prims.RemoveAll(p => !SMatches(p, arg0Lower));
