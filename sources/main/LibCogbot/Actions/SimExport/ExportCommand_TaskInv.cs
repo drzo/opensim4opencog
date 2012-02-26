@@ -559,8 +559,22 @@ namespace cogbot.Actions.SimExport
             {
                 Failure("Cant Drop! " + ItemDesc(taskInv, exportPrim) + " Obj=" + O);
             }
-            Client.Objects.SetPosition(simulator, localID, exportPrim.SimPosition + (Vector3.UnitZ*0.5f));
+            Vector3 pos = O.SimPosition;
+            Client.Objects.SetPosition(simulator, localID, exportPrim.SimPosition + (Vector3.UnitZ * 0.5f));
             Client.Objects.RequestObject(simulator, O.LocalID);
+            waitUntil = DateTime.Now.AddSeconds(10);
+            while (O.SimPosition == pos && DateTime.Now < waitUntil)
+            {
+                Thread.Sleep(250);
+            }
+            if (O.SimPosition == pos)
+            {
+                Failure("Cant Move! " + ItemDesc(taskInv, exportPrim) + " Obj=" + O);
+            }
+            if (IsSkipped(O))
+            {
+                Failure("IsSkipped " + O);
+            }
             int saved = LocalFailures;
             LocalFailures = 0;
             var pda = PrimDepsAssets;
@@ -569,6 +583,7 @@ namespace cogbot.Actions.SimExport
             {
                 arglist.Add("wait");
             }
+            //SaveLLSD(Client, dumpDir + O.ID, O, Failure);
             ExportPrim(Client, O, Failure, arglist);
             string subLLSD = dumpDir + O.ID.ToString() + ".llsd";
             if (!usedWait)

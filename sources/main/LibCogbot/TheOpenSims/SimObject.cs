@@ -1110,6 +1110,7 @@ namespace cogbot.TheOpenSims
         {
             get
             {
+                var Prim = this.Prim;
                 if (_Parent == null)
                 {
                     if (Prim == null) return _Parent;
@@ -1132,6 +1133,10 @@ namespace cogbot.TheOpenSims
                         }
                         Parent = WorldSystem.GetSimObject(prim, simu);
                     }
+                }
+                if (Prim != null && Prim.ParentID == 0)
+                {
+                    _Parent = this;
                 }
                 return _Parent;
             }
