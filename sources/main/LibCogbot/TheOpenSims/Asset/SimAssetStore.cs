@@ -1657,6 +1657,10 @@ namespace cogbot.TheOpenSims
                         case AssetType.Link:
                             anim = new SimLandmark(uUID, noname);
                             break;
+                        case AssetType.LinkFolder:
+                            anim = new SimLandmark(uUID, noname);
+                           // anim = new Sim(uUID, noname);
+                            break;
                         //case AssetType.Object:
                            // anim = new SimObjectImpl(uUID, null, null);
                             break;
