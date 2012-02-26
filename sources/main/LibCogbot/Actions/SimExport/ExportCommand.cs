@@ -132,12 +132,15 @@ namespace cogbot.Actions.SimExport
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
+            Client.Self.Movement.Camera.Far = 1023;
+            Client.Self.Movement.SendUpdate(true);
             Running = this;
             CurSim = Client.Network.CurrentSim;
             RegionHandle = CurSim.Handle;
             onlyObjectAt.AddPoint(new Vector3(104, 98, 30));
             onlyObjectAt.AddPoint(new Vector3(255, 0, 152));
             haveBeenTo.AddPoint(TheSimAvatar.SimPosition);
+            AttemptSitMover();
             WorldObjects.MaintainSimObjectInfoMap = false;
             SimObjectImpl.AffordinancesGuessSimObjectTypes = false;
             WorldObjects.IgnoreKillObjects = true;
@@ -325,7 +328,11 @@ namespace cogbot.Actions.SimExport
             }
             bool primsAtAll = arglist.Contains("link") || arglist.Contains("task") || arglist.Contains("llsd") ||
                               arglist.Contains("taskobj") || arglist.Contains("all");
-
+            bool wasShouldBeMoving = shouldBeMoving;
+            if (primsAtAll)
+            {
+                shouldBeMoving = false;
+            }
             foreach (var P in PS)
             {
                 if (!primsAtAll) break;
@@ -501,6 +508,10 @@ namespace cogbot.Actions.SimExport
             Success("Missing PrimData: " + missing);
             Success("Started XFERS " + xferStarted.Count + " assets");
             GiveStatus();
+            if (primsAtAll)
+            {
+                shouldBeMoving = wasShouldBeMoving;
+            }
             return res;
         }
 

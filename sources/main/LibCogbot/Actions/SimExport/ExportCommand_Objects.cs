@@ -71,6 +71,7 @@ namespace cogbot.Actions.SimExport
 
         public void ExportPrim(BotClient Client, SimObject exportPrim, OutputDelegate Failure, HashSet<string> arglist)
         {
+            if (IsSkipped(exportPrim)) return;
             Simulator CurSim = exportPrim.GetSimulator();
             WorldObjects.EnsureSelected(exportPrim.LocalID, CurSim);
             string pathStem = Path.Combine(dumpDir, exportPrim.ID.ToString());

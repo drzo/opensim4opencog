@@ -248,6 +248,18 @@ namespace cogbot.Actions.SimExport
             List<InventoryObject> folderObject = new List<InventoryObject>();
 
             string TaskInvFailures = "";
+            bool hasObjects = false;
+            foreach (InventoryBase b in ib)
+            {
+                if (b is InventoryObject)
+                {
+                    hasObjects = true;
+                    break;                    
+                }
+            }
+            bool wasShouldBeMoving = shouldBeMoving;
+            shouldBeMoving = false;
+            if (hasObjects || true) MoveCloseTo(exportPrim);
             foreach (InventoryBase b in ib)
             {
                 bool missing;
@@ -277,6 +289,7 @@ namespace cogbot.Actions.SimExport
                     }
                 }
             }
+            shouldBeMoving = wasShouldBeMoving;
             // TaskInvFailures = GetTaskInvFailures(Failure, exportPrim, Client, folderObject, contents, TaskInvFailures);
             if (showsMissingOnly)
             {
@@ -536,7 +549,18 @@ namespace cogbot.Actions.SimExport
                 File.WriteAllText(repackFile, taskInfo);               
             }
             Client.Objects.DropObject(simulator, localID);
+            // wait for drop
+            DateTime waitUntil = DateTime.Now.AddSeconds(10);
+            while (O.Prim.ParentID != 0 && DateTime.Now < waitUntil)
+            {
+                Thread.Sleep(250);
+            }
+            if (O.Prim.ParentID != 0)
+            {
+                Failure("Cant Drop! " + ItemDesc(taskInv, exportPrim) + " Obj=" + O);
+            }
             Client.Objects.SetPosition(simulator, localID, exportPrim.SimPosition + (Vector3.UnitZ*0.5f));
+            Client.Objects.RequestObject(simulator, O.LocalID);
             int saved = LocalFailures;
             LocalFailures = 0;
             var pda = PrimDepsAssets;
@@ -546,9 +570,16 @@ namespace cogbot.Actions.SimExport
                 arglist.Add("wait");
             }
             ExportPrim(Client, O, Failure, arglist);
+            string subLLSD = dumpDir + O.ID.ToString() + ".llsd";
             if (!usedWait)
             {
                 arglist.Remove("wait");
+            }
+            if (!File.Exists(subLLSD))
+            {
+                ExportPrim(Client, O, Failure, arglist);
+                Failure("No LLSD file " + ItemDesc(taskInv, exportPrim) + " Obj=" + O);
+                missing = true;
             }
             AutoResetEvent areKilled = new AutoResetEvent(false);
             EventHandler<KillObjectEventArgs> onKill = (s, e) =>
