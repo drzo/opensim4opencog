@@ -746,9 +746,13 @@ namespace cogbot.Actions.SimExport
                 }
             }
             // hopefully unset some phantoms here
+            foreach (PrimToCreate ptc in childs)
+            {
+                SetFlagsAndPhysics(CurSim, ptc.NewLocalID, ptc.Prim, true);
+            }
             foreach (PrimToCreate ptc in parents)
             {
-                SetFlagsAndPhysics(CurSim, ptc.NewLocalID, ptc.Prim);
+                SetFlagsAndPhysics(CurSim, ptc.NewLocalID, ptc.Prim, true);
             }
             WriteLine("Imported P=" + parents.Count + " C=" + childs.Count);
             return SuccessOrFailure();
@@ -1303,7 +1307,7 @@ namespace cogbot.Actions.SimExport
             Client.Objects.SetDescription(CurSim, localID, props.Description);
             Client.Objects.SetShape(CurSim, localID, prim.PrimData);
             //Client.Objects.SetExtraParamOff(CurSim, localID, prim.);
-            SetFlagsAndPhysics(CurSim, localID, prim);
+            SetFlagsAndPhysics(CurSim, localID, prim, false);
             if (prim.Textures != null) Client.Objects.SetTextures(CurSim, localID, prim.Textures, prim.MediaURL);
             if (prim.Light != null) Client.Objects.SetLight(CurSim, localID, prim.Light);
 
@@ -1345,22 +1349,22 @@ namespace cogbot.Actions.SimExport
             return false;
         }
 
-        private void SetFlagsAndPhysics(Simulator CurSim, uint localID, Primitive prim)
+        private void SetFlagsAndPhysics(Simulator CurSim, uint localID, Primitive prim, bool canUsePhysics)
         {
             var flags = prim.Flags;
             Primitive.PhysicsProperties physics = prim.PhysicsProps;
             if (physics != null)
             {
-                Client.Objects.SetFlags(CurSim, localID, FlagSet(flags, PrimFlags.Physics),
-                                        FlagSet(flags, PrimFlags.Temporary), FlagSet(flags, PrimFlags.Phantom),
+                Client.Objects.SetFlags(CurSim, localID, FlagSet(flags, PrimFlags.Physics) && canUsePhysics,
+                                        FlagSet(flags, PrimFlags.Temporary), FlagSet(flags, PrimFlags.Phantom) || !canUsePhysics,
                                         FlagSet(flags, PrimFlags.CastShadows), physics.PhysicsShapeType,
                                         physics.Density, physics.Friction, physics.Restitution,
                                         physics.GravityMultiplier);
             }
             else
             {
-                Client.Objects.SetFlagsOnly(CurSim, localID, FlagSet(flags, PrimFlags.Physics),
-                                            FlagSet(flags, PrimFlags.Temporary), FlagSet(flags, PrimFlags.Phantom),
+                Client.Objects.SetFlagsOnly(CurSim, localID, FlagSet(flags, PrimFlags.Physics) && canUsePhysics,
+                                            FlagSet(flags, PrimFlags.Temporary), FlagSet(flags, PrimFlags.Phantom) || !canUsePhysics,
                                             FlagSet(flags, PrimFlags.CastShadows));
             }
         }
