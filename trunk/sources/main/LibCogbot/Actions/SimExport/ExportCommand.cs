@@ -81,6 +81,29 @@ namespace cogbot.Actions.SimExport
             }
             return inventoryHolder[name] = Client.Inventory.CreateFolder(rid, name);
         }
+        public UUID FolderCalled(string name, UUID parent)
+        {
+            UUID uuid;
+            if (inventoryHolder.TryGetValue(name, out uuid)) return uuid;
+            var rid = parent;
+            List<InventoryBase> cnt = null;
+            while (cnt == null)
+            {
+                cnt = Client.Inventory.FolderContents(rid, Client.Self.AgentID, true, false, InventorySortOrder.ByDate,
+                                                      10000);
+            }
+
+            foreach (var c in cnt)
+            {
+                if (c.Name == name)
+                {
+                    Client.Inventory.RequestFolderContents(c.UUID, Client.Self.AgentID, true, false, InventorySortOrder.ByDate);
+                    return inventoryHolder[name] = c.UUID;
+
+                }
+            }
+            return inventoryHolder[name] = Client.Inventory.CreateFolder(rid, name);
+        }
 
         public ExportCommand(BotClient testClient)
         {
@@ -112,8 +135,9 @@ namespace cogbot.Actions.SimExport
             Running = this;
             CurSim = Client.Network.CurrentSim;
             RegionHandle = CurSim.Handle;
-            onlyObjectAt.AddPoint(new Vector3(104, 98, 32));
+            onlyObjectAt.AddPoint(new Vector3(104, 98, 30));
             onlyObjectAt.AddPoint(new Vector3(255, 0, 152));
+            haveBeenTo.AddPoint(TheSimAvatar.SimPosition);
             WorldObjects.MaintainSimObjectInfoMap = false;
             SimObjectImpl.AffordinancesGuessSimObjectTypes = false;
             WorldObjects.IgnoreKillObjects = true;
@@ -168,10 +192,12 @@ namespace cogbot.Actions.SimExport
             if (arglist.Contains("help")) return Success(hlp);
             if (args.Length > 1)
             {
-                if (args[0] == "spec")
+                int specIndex = Array.IndexOf(args, "spec");
+                if (specIndex > 0)
                 {
-                    nargs = Parser.SplitOff(args, 1);
+                    nargs = Parser.SplitOff(args, specIndex + 1);
                 }
+
                 int fnd = Array.IndexOf(args, "move");
                 if (fnd > -1 && (fnd + 1 < args.Length))
                 {
@@ -184,11 +210,6 @@ namespace cogbot.Actions.SimExport
                             maxHeigth = mv;
                         }
                     }
-                }
-
-                if (args[0] == "spec")
-                {
-                    nargs = Parser.SplitOff(args, 1);
                 }
             }
             if (arglist.Contains("move"))
@@ -220,7 +241,7 @@ namespace cogbot.Actions.SimExport
 
             needFiles = 0;
             taskobj = arglist.Contains("taskobj");
-            forced = arglist.Contains("force");
+            forced = arglist.Contains("force") || arglist.Contains("forced");
             if (arglist.Contains("nonincr")) Incremental = false;
             if (arglist.Contains("incr")) Incremental = true;
             bool fileOnly = false;
@@ -254,7 +275,9 @@ namespace cogbot.Actions.SimExport
                 lock (PrimDepsAssets) PrimDepsAssets.Clear();
                 lock (TaskAssetWaiting) TaskAssetWaiting.Clear();
                 lock (CompletedTaskItem) CompletedTaskItem.Clear();
+#if OBJECTUNPACKER
                 lock (TasksRezed) TasksRezed.Clear();
+#endif
                 GiveStatus();
                 return Success("Reset SimExport State");
             }
@@ -581,19 +604,23 @@ namespace cogbot.Actions.SimExport
             throw new NotImplementedException(s);
         }
 
-        private void PutItemToTaskInv(BotClient Client, SimObject exportPrim, string name)
+        private bool PutItemToTaskInv(BotClient Client, SimObject exportPrim, string name)
         {
             InventoryItem found = GetInvItem(Client, name);
             if (found == null)
             {
                 Failure("Cant find InvItem " + name);
-                return;
+                return false;
             }
             if (found.InventoryType == InventoryType.LSL)
             {
                 Client.Inventory.CopyScriptToTask(exportPrim.LocalID, (InventoryItem)found, true);
                 Client.Inventory.RequestSetScriptRunning(exportPrim.ID, found.AssetUUID, true);
+            } else
+            {
+                Client.Inventory.UpdateTaskInventory(exportPrim.LocalID, (InventoryItem)found);
             }
+            return true;
         }
 
         public InventoryItem GetInvItem(GridClient Client, string name)

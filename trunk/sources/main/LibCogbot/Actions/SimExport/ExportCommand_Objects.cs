@@ -74,11 +74,47 @@ namespace cogbot.Actions.SimExport
             Simulator CurSim = exportPrim.GetSimulator();
             WorldObjects.EnsureSelected(exportPrim.LocalID, CurSim);
             string pathStem = Path.Combine(dumpDir, exportPrim.ID.ToString());
-            if (arglist.Contains("task")) exportPrim.StartGetTaskInventory();
+            if (arglist.Contains("task") || showsMissingOnly)
+            {
+                exportPrim.StartGetTaskInventory();
+            }
+            if (arglist.Contains("wait"))
+            {
+                var waitUntil = DateTime.Now.AddSeconds(10);
+                bool needsLoop = true;
+                while (needsLoop && waitUntil > DateTime.Now)
+                {
+                    needsLoop = false;
+                    if (exportPrim.Properties == null || CogbotHelpers.IsNullOrZero(exportPrim.Properties.OwnerID))
+                    {
+                        needsLoop = true;
+                    }
+                    if (arglist.Contains("task"))
+                    {
+                        var ti = exportPrim.TaskInventory;
+                        if (ti == null)
+                        {
+                            needsLoop = true;
+                        }
+                    }
+                }
+                if (needsLoop)
+                {
+                    Success("needs loop " + named(exportPrim));
+                    string bissues = exportPrim.MissingData;
+                    if (!string.IsNullOrEmpty(bissues))
+                    {
+                        Failure("Cant wait out the Issues " + bissues + ": " + named(exportPrim));
+                        if (LocalFailures == 0) LocalFailures++;
+                        return;
+                    }
+                }
+            }
             string issues = exportPrim.MissingData;
             if (!string.IsNullOrEmpty(issues))
             {
                 Failure("Issues " + issues + " " + named(exportPrim));
+                if (LocalFailures == 0) LocalFailures++;
                 return;
             }
             if (arglist.Contains("llsd")) SaveLLSD(Client, pathStem, exportPrim, Failure);
@@ -324,6 +360,7 @@ namespace cogbot.Actions.SimExport
                     //prim = prim.Clone(); 
                     ToFile(prim, exportFile);
                     if (forced && !verbosely) return;
+                    return;
                     Primitive prim2 = FromFile(exportFile, ExportCommand.UseBinarySerialization) as Primitive;
                     string memberwiseCompare = MemberwiseCompare(prim, prim2, skipTag);
                     if (!string.IsNullOrEmpty(memberwiseCompare))
