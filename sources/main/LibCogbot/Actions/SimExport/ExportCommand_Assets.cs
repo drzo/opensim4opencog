@@ -252,6 +252,11 @@ namespace cogbot.Actions.SimExport
         {
             var assetID = e.Xfer.AssetID;
             var assetType = e.Xfer.AssetType;
+            if (assetType==AssetType.Unknown)
+            {
+                // probly an taskinv so ingnore
+                return;
+            }
             lock (ToDownloadAssets) if (e.Xfer.Success)
                 {
                     AssetComplete(assetID);

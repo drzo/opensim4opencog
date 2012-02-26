@@ -788,7 +788,33 @@ namespace cogbot.TheOpenSims
                 lock (HasPrimLock) return (HasPrim && (Prim.Flags & PrimFlags.InventoryEmpty) != 0);
             }
         }
+        public bool TaskInventoryLikely
+        {
+            get
+            {
+                bool mightHaveTaskInv = false;
+                if (objectinventory != null && objectinventory.Count > 0)
+                {
+                    if (objectinventory[0].Name != "Contents") return true;
+                    if (objectinventory.Count > 1) return true;
+                }
+                if ((Prim.Flags & PrimFlags.InventoryEmpty) != 0) return false;
+                const PrimFlags maybeScriptsInside = PrimFlags.AllowInventoryDrop | PrimFlags.Scripted | PrimFlags.Touch;
+                if ((maybeScriptsInside & Prim.Flags) != 0)
+                {
+                    mightHaveTaskInv = true;
+                }
+                else
+                {
+                    var props = Properties;
 
+                    mightHaveTaskInv = (Prim.ClickAction == ClickAction.Sit)
+                                       || !string.IsNullOrEmpty(props.SitName)
+                                       || !string.IsNullOrEmpty(props.TouchName);
+                }
+                return mightHaveTaskInv;
+            }
+        }
         public bool Sandbox
         {
             get
@@ -1074,7 +1100,7 @@ namespace cogbot.TheOpenSims
                     {
                         WorldSystem.StartTextureDownload(prim.Sculpt.SculptTexture);
                     }
-                    //TaskInvGrabber.Enqueue(StartGetTaskInventory);
+                    TaskInvGrabber.Enqueue(StartGetTaskInventory);
                 }
         }
 
@@ -1284,7 +1310,7 @@ namespace cogbot.TheOpenSims
 
         public override string ToString()
         {
-            string _TOSRTING = this._TOSRTING;
+          //  string _TOSRTING = this._TOSRTING;
 
             if (needUpdate || _TOSRTING == null || toStringNeedsUpdate)
             {
@@ -1408,8 +1434,9 @@ namespace cogbot.TheOpenSims
                 _TOSRTING = _TOSRTING.Replace("  ", " ").Replace(") (", ")(");
             }
             string _TOSRTINGR = _TOSRTING;
+            this._TOSRTING = _TOSRTING;
             toStringNeedsUpdate = false;
-            _TOSRTING = null;
+            //_TOSRTING = null;
             return _TOSRTINGR;
         }
 
@@ -2286,6 +2313,7 @@ namespace cogbot.TheOpenSims
         /// or timeoutMS is exceeded</remarks>
         public void StartGetTaskInventory()
         {
+            if (_StartedGetTaskInventory) return;
             _StartedGetTaskInventory = true;
             InventoryManager man = Client.Inventory;
             man.TaskInventoryReply += ti_callback;
@@ -2338,7 +2366,7 @@ namespace cogbot.TheOpenSims
             get
             {
                 string missing = "";
-                if (objectinventory == null  && _StartedGetTaskInventory)
+                if (objectinventory == null && _StartedGetTaskInventory && !InventoryEmpty)
                 {
                     missing += " TaskInv";
                 }
@@ -3081,5 +3109,8 @@ namespace cogbot.TheOpenSims
         Queue<SimObjectEvent> ActionEventQueue { get; set; }
         List<InventoryBase> TaskInventory { get;  }
         string MissingData { get; }
+        bool TaskInventoryLikely { get; }
+
+        void StartGetTaskInventory();
     }
 }
