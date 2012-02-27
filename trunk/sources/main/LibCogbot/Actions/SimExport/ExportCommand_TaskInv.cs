@@ -335,7 +335,7 @@ namespace cogbot.Actions.SimExport
                 missing = true;
                 return errorMsg;
             }
-            string itemEntry = b.UUID + "," + item.AssetType + "," + item.AssetUUID + "," + item.Name + "\n";
+            string itemEntry = ToItemString(item);
             bool exportable = checkTaskPerm(exportPrim, item, Client, Failure, false);
             lock (TaskAssetWaiting)
                 lock (CompletedTaskItem)
@@ -354,6 +354,12 @@ namespace cogbot.Actions.SimExport
             }
             return UnpackTaskItem(Client, exportPrim, (InventoryItem)b, Failure, itemEntry, out missing);
         }
+
+        public static string ToItemString(InventoryItem item)
+        {
+            return item.UUID + "," + item.AssetType + "," + item.AssetUUID + "," + item.OwnerID + "," + item.GroupID + "," + item.GroupOwned + "," + item.Permissions.ToHexString() + "," + item.Name + "\n";
+        }
+
         string UnpackTaskItem(BotClient Client, SimObject exportPrim, InventoryItem item, OutputDelegate Failure, string itemEntry, out bool missing)
         {
             UUID itemID = item.UUID;
@@ -386,7 +392,7 @@ namespace cogbot.Actions.SimExport
             }
             SlowlyDo(ho.Request);
             missing = waitUntilDL == null || !waitUntilDL.WaitOne(4000);
-            itemEntry = itemID + "," + item.AssetType + "," + item.AssetUUID + "," + item.Name + "\n";
+            itemEntry = ToItemString(item);
             AddRelated(item.AssetUUID, item.AssetType);
             FindOrCreateAsset(item.AssetUUID, item.AssetType);
             return itemEntry;

@@ -221,7 +221,7 @@ namespace cogbot.Actions.SimExport
                 }
             }
 
-            static InventoryType AssetTypeToInventoryType(AssetType assetType)
+            public static InventoryType AssetTypeToInventoryType(AssetType assetType)
             {
                 var ret = Utils.StringToInventoryType(Utils.AssetTypeToString(assetType));
                 if (ret != InventoryType.Unknown)
@@ -362,7 +362,7 @@ namespace cogbot.Actions.SimExport
                 if (transfer.AssetID != NewID) return;
                 if (!transfer.Success)
                 {
-                    ImportCommand.Running.Error("bad transfer on " + this);
+                    ImportCommand.Running.Error(ExportCommand.Running.LocalFailure, "bad transfer on " + this);
                 }
                 else
                 {
@@ -435,6 +435,7 @@ namespace cogbot.Actions.SimExport
             }
 
             private SimObject _rezed;
+            public bool NeedsPositioning = true;
             private PrimImportState State = PrimImportState.Unloaded;
             public uint NewLocalID;
             public Primitive NewPrim
@@ -451,6 +452,7 @@ namespace cogbot.Actions.SimExport
             private Primitive _prim;
             private string _progressFile;
             public bool IsLinkParent;
+            public bool TaskInvComplete;
 
             public string ProgressFile
             {
@@ -500,6 +502,7 @@ namespace cogbot.Actions.SimExport
                         NewID = UUIDFactory.GetUUID(sdata[0]);
                         NewLocalID = uint.Parse(sdata[1]);
                         RezRequested = true;
+                        NeedsPositioning = false;
                     }
 
                 }
@@ -754,8 +757,113 @@ namespace cogbot.Actions.SimExport
             {
                 SetFlagsAndPhysics(CurSim, ptc.NewLocalID, ptc.Prim, true);
             }
+            foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.task"))
+            {
+                string fileUUID = Path.GetFileNameWithoutExtension(Path.GetFileName(file));
+                var ptc = GetOldPrim(UUID.Parse(fileUUID));                
+                string taskData = File.ReadAllText(file);
+                if (string.IsNullOrEmpty(taskData))
+                {
+                    ptc.TaskInvComplete = true;
+                    continue;
+                }
+                int created = 0;
+                int failed = 0;
+                int skipped = 0;
+                foreach (string item in taskData.Split('\n'))
+                {
+                    if (string.IsNullOrEmpty(item)) continue;
+                    string[] fields = item.Split(',');
+                    // From 
+                    //  item.UUID + "," + item.AssetType + "," + item.AssetUUID + "," + item.OwnerID + "," + item.GroupID + "," + item.GroupOwned + "," + item.Permissions.ToHexString() + "," + item.Name + "\n";
+                    AssetType assetType = (AssetType)Enum.Parse(typeof(AssetType), fields[1]);
+                    UUID itemID = UUID.Parse(fields[0]);
+                    UUID assetID = UUID.Parse(fields[2]);
+                    Permissions perms = Permissions.FromHexString(fields[6]);
+                    string itemName = fields[7];
+                    if (CogbotHelpers.IsNullOrZero(assetID))
+                    {
+                        WriteLine("Cant create Item: " + item);
+                        skipped++;
+                        continue;
+                    }
+                    string sfile = ExportCommand.assetDumpDir + Path.GetFileName(SimAsset.CFileName(assetID, assetType));
+                    if (!File.Exists(sfile))
+                    {
+                        WriteLine("Cant find asset: " + item);
+                        skipped++;
+                        continue;                        
+                    }
+                    if (assetType == AssetType.Object)
+                    {
+                        WriteLine("Cant create Object asset: " + item);
+                        skipped++;
+                        continue;
+                    }
+                    byte[] data = File.ReadAllBytes(sfile);
+                    var tihh = ExportCommand.Running.FolderCalled("TaskInvHolder");
+                    var tih = ExportCommand.Running.FolderCalled(ptc.OldID.ToString(), tihh);
+
+                    ItemToCreate itc = FindItemToCreate(assetID, assetType, false);
+                    UUID newAssetID;
+                    UUID newItemID = null;
+                    string ErrorMsg = "";
+                    AutoResetEvent areItem = new AutoResetEvent(false);
+                    InventoryManager.ItemCreatedFromAssetCallback CreatedAsset0 =
+                        (suc, st, itemid, assetid) =>
+                            {
+                                if (!suc) ErrorMsg = st;
+                                newItemID = itemid;
+                                newAssetID = assetid;
+                                areItem.Set();
+                            };
+                    /*                     
+                    Client.Inventory.RequestCreateItemFromAsset(data, itemName, item, assetType,
+                                                                ItemToCreate.AssetTypeToInventoryType(assetType),
+                                                                tih, perms, CreatedAsset0);
+                     */
+                    InventoryBase copy = null;
+                    InventoryManager.ItemCopiedCallback IBHUPdate = (newItem) =>
+                                                                        {
+                                                                            newItemID = newItem.UUID;
+                                                                            copy = newItem;
+                                                                            areItem.Set();
+                                                                        };
+                    Client.Inventory.RequestCopyItem(itc.NewItemID, tih, itemName, IBHUPdate);
+                    //UUID itcNewItemID = itc.NewItemID;
+                    if (!areItem.WaitOne(TimeSpan.FromSeconds(10)))
+                    {
+                        WriteLine("Cant copy inventory asset: " + item);
+                        failed++;
+                        continue;
+                    }
+                    var invItem = copy as InventoryItem;
+                    if (invItem == null)
+                    {
+                        WriteLine("NULL inventory asset: " + item);
+                        failed++;
+                        continue;
+                    }
+                    //Client.Inventory.TaskItemReceived += tir;
+                    if (invItem.InventoryType == InventoryType.LSL)
+                    {
+                        Client.Inventory.CopyScriptToTask(ptc.NewLocalID, (InventoryItem)invItem, true);
+                        Client.Inventory.RequestSetScriptRunning(ptc.NewID, invItem.AssetUUID, true);
+                    }
+                    else
+                    {
+                        Client.Inventory.UpdateTaskInventory(ptc.NewLocalID, (InventoryItem)invItem);
+                    }
+                    created++;
+                }
+            }
             WriteLine("Imported P=" + parents.Count + " C=" + childs.Count);
             return SuccessOrFailure();
+        }
+
+        private void CreatedAsset(bool success1, string status, UUID itemid, UUID assetid)
+        {
+            throw new NotImplementedException();
         }
 
         private void UploadTerrain()
@@ -1064,14 +1172,23 @@ namespace cogbot.Actions.SimExport
         }
         private void CreatePrim(Simulator CurSim, PrimToCreate ptc, UUID GroupID)
         {
-            if (ptc.RezRequested) return;
+           if (!CreatePrim0(CurSim, ptc, GroupID, ExportCommand.Running.LocalFailure))
+           {
+               Failure("Unable to create Prim " + ptc);
+               //try again!
+               CreatePrim0(CurSim, ptc, GroupID, ExportCommand.Running.LocalFailure);
+           }
+        }
+        private bool CreatePrim0(Simulator CurSim, PrimToCreate ptc, UUID GroupID, OutputDelegate Failure)
+        {
+            if (ptc.RezRequested) return true;
             Primitive prim = ptc.Prim;
             Primitive newPrim = null;
             UUID found = UUID.Zero;
             if (prim.PrimData.PCode != PCode.Prim)
             {
                 CreateTree(CurSim, ptc, GroupID);
-                return;
+                return true;
             }
             InventoryItem invItem = ExportCommand.GetInvItem(Client, "BlankPrim", AssetType.Object);
             UUID queryID = UUID.Random();
@@ -1103,7 +1220,7 @@ namespace cogbot.Actions.SimExport
                     if (!UUID.TryParse(eMessage, out id))
                     {
                         creationEvent.Set();
-                        Error("cant get UUID from " + eMessage);
+                        Error(Failure, "cant get UUID from " + eMessage);
                         return;
                     }
                     found = id;
@@ -1135,26 +1252,28 @@ namespace cogbot.Actions.SimExport
             {
                 Client.Self.ChatFromSimulator -= callback;
                 Debug("Error - no uuid of prim ");
-                return;
+                return false;
             }
             Client.Self.ChatFromSimulator -= callback;
             ptc.NewID = found;
             var O = ExportCommand.GetSimObjectFromUUID(found);
             if (O == null)
             {
-                Error("Error - no SimObject");
-                return;
+                Error(Failure, "Error - no SimObject");
+                return false;
             }
             newPrim = O.Prim;
             if (newPrim == null)
             {
-                Error("Error - no newPrim");
-                return;
+                Error(Failure, "Error - no newPrim");
+                return false;
             }
             ptc.Rezed = O;
             SavePTC(ptc);
             uint localID = newPrim.LocalID;            
             SetPrimInfo(CurSim, localID, ptc.Prim, GroupID, false, false, true);
+            ptc.NeedsPositioning = false;
+            return true;
         }
 
         private PrimToCreate prev = null;
@@ -1204,6 +1323,7 @@ namespace cogbot.Actions.SimExport
             uint localID = O.LocalID;
             SavePTC(ptc);
             SetPrimInfo(CurSim, localID, ptc.Prim, GroupID, false, false, true);
+            ptc.NeedsPositioning = false;
             if (prev == null)
             {
                 prev = ptc;
@@ -1378,7 +1498,7 @@ namespace cogbot.Actions.SimExport
         {
             Client.DisplayNotificationInChat(DLRConsole.SafeFormat(s, ps));
         }
-        private void Error(string s, params object[] ps)
+        private void Error(OutputDelegate Failure, string s, params object[] ps)
         {
             string msg = DLRConsole.SafeFormat(s, ps);
             Client.DisplayNotificationInChat(msg);
