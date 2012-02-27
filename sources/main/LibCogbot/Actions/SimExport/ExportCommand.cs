@@ -567,7 +567,7 @@ namespace cogbot.Actions.SimExport
             //Failure(DLRConsole.SafeFormat(s, args));
         }
 
-        private void LocalFailure(string s, object[] args)
+        public void LocalFailure(string s, object[] args)
         {
             LocalFailures++;
             if (!quietly || verbosely) Failure(DLRConsole.SafeFormat(s, args));
@@ -615,7 +615,7 @@ namespace cogbot.Actions.SimExport
             throw new NotImplementedException(s);
         }
 
-        private bool PutItemToTaskInv(BotClient Client, SimObject exportPrim, string name)
+        public bool PutItemToTaskInv(BotClient Client, SimObject exportPrim, string name)
         {
             InventoryItem found = GetInvItem(Client, name);
             if (found == null)
