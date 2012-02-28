@@ -49,7 +49,7 @@ namespace cogbot.Actions.System
                                                                           o = pse.prologClient.Eval(cmd);
                                                                           mre.Set();
                                                                           return o;
-                                                                      });
+                                                                      }, false);
                                      });
                 mre.WaitOne();
                 if (o == null) return Success("swip: " + cmd.Value);
