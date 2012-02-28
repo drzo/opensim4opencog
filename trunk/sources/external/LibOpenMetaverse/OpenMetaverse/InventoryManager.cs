@@ -3875,6 +3875,18 @@ namespace OpenMetaverse
                 return;
             }
 
+            if (result.Type == OSDType.Unknown)
+            {
+                try
+                {
+                    callback(false, "Failed to parse asset and item UUIDs", UUID.Zero, UUID.Zero);
+                }
+                catch (Exception e)
+                {
+                    Logger.Log(e.Message, Helpers.LogLevel.Error, Client, e);
+                }
+            }
+
             OSDMap contents = (OSDMap)result;
 
             string status = contents["state"].AsString().ToLower();
