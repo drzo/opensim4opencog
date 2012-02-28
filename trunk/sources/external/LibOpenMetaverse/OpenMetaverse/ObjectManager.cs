@@ -32,8 +32,8 @@ using OpenMetaverse.Http;
 using OpenMetaverse.StructuredData;
 using OpenMetaverse.Interfaces;
 using OpenMetaverse.Messages.Linden;
-//was using UINTLIST = System.Collections.Generic.List<uint>;
-using UINTLIST = System.Collections.Generic.IList<uint>;
+using UINTLIST = System.Collections.Generic.List<uint>;
+//using UINTLIST = System.Collections.Generic.IList<uint>;
 
 namespace OpenMetaverse
 {
@@ -2622,7 +2622,7 @@ namespace OpenMetaverse
                 Simulator simulator = e.Simulator;
 
                 ObjectUpdateCachedPacket update = (ObjectUpdateCachedPacket)packet;
-                UINTLIST ids = new uint[(update.ObjectData.Length)];
+                UINTLIST ids = new List<uint>(update.ObjectData.Length);
 
                 // No object caching implemented yet, so request updates for all of these objects
                 for (int i = 0; i < update.ObjectData.Length; i++)
