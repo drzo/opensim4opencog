@@ -792,6 +792,8 @@ namespace cogbot.TheOpenSims
         {
             get
             {
+                var Prim = this._Prim0;
+                if (Prim == null) return false;
                 bool mightHaveTaskInv = false;
                 if (objectinventory != null && objectinventory.Count > 0)
                 {
