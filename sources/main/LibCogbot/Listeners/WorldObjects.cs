@@ -512,7 +512,8 @@ namespace cogbot.Listeners
             {
                 return null;
             }
-            //if (prim.ID == null) return null;
+            // even though it has a localID.. we cant intern it yet!
+            if (CogbotHelpers.IsNullOrZero(prim.ID)) return null;
             SimObject obj0 = GetSimObjectFromUUID(prim.ID);
             if (obj0 != null)
             {
