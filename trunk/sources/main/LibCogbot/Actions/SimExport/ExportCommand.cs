@@ -26,7 +26,7 @@ namespace cogbot.Actions.SimExport
         static public string assetDumpDir = "cog_export/assets/";
         static public string terrainDir = "cog_export/terrain/";
         static public string siminfoDir = "cog_export/siminfo/";
-        public bool IsExporting = false;
+        static public bool IsExporting = false;
         static readonly Dictionary<string, UUID> inventoryHolder = new Dictionary<string, UUID>();
         public bool Incremental = true;
         static private readonly Dictionary<string, InventoryItem> lslScripts = new Dictionary<string, InventoryItem>();
@@ -135,6 +135,7 @@ namespace cogbot.Actions.SimExport
             Client.Self.Movement.Camera.Far = 1023;
             Client.Self.Movement.SendUpdate(true);
             Running = this;
+            IsExporting = true;
             CurSim = Client.Network.CurrentSim;
             RegionHandle = CurSim.Handle;
             onlyObjectAt.AddPoint(new Vector3(104, 98, 30));
@@ -399,6 +400,7 @@ namespace cogbot.Actions.SimExport
                     if (!successfullyExportedPrims.Contains(P)) successfullyExportedPrims.Add(P);
                 }
             }
+            ExportRelatedAssets();
             if (showsStatus)
             {
                 arglist.Add("link");
@@ -423,7 +425,6 @@ namespace cogbot.Actions.SimExport
                 }
             }
 
-            List<UUID> xferStarted = new List<UUID>();
             if (arglist.Contains("task"))
             {
                 lock (TaskAssetWaiting)
@@ -451,38 +452,21 @@ namespace cogbot.Actions.SimExport
                     }
                 }
             }
-
-            var res = ExportRelatedAssets();
+            ExportRelatedAssets();
             foreach (var assetID in LockInfo.CopyOf(ToDownloadAssets))
             {
-                AssetType assetType = assetTypeOf(assetID);
-                byte[] b = Client.Assets.Cache.GetCachedAssetBytes(assetID, assetType);
-                if (b != null)
-                {
-                    string file = Path.GetFileName(Client.Assets.Cache.FileName(assetID, assetType));
-                    lock (fileWriterLock) File.WriteAllBytes(assetDumpDir + file, b);
-                    AssetComplete(assetID);
-                }
+                PingAssetCache(assetID);
             }
+
             if (arglist.Contains("dl"))
             {
                 foreach (var assetID in LockInfo.CopyOf(ToDownloadAssets))
                 {
                     AssetType assetType = assetTypeOf(assetID);
                     if (verbosely) Failure("Awaiting DL " + assetID + " " + assetType);
-                    byte[] b = Client.Assets.Cache.GetCachedAssetBytes(assetID, assetType);
-                    if (b != null)
+                    if (arglist.Contains("request"))
                     {
-                        string file = Path.GetFileName(Client.Assets.Cache.FileName(assetID, assetType));
-                        lock (fileWriterLock) File.WriteAllBytes(assetDumpDir + file, b);
-                        AssetComplete(assetID);
-                    }
-                    else
-                    {
-                        if (arglist.Contains("request"))
-                        {
-                            StartAssetDownload(xferStarted, assetID, assetType);
-                        }
+                        StartAssetDownload(null, assetID, assetType);
                     }
                 }
             }
@@ -506,13 +490,13 @@ namespace cogbot.Actions.SimExport
                 }
             }
             Success("Missing PrimData: " + missing);
-            Success("Started XFERS " + xferStarted.Count + " assets");
+            Success("Started XFERS " + ToDownloadCalledAssets.Count + " assets");
             GiveStatus();
             if (primsAtAll)
             {
                 shouldBeMoving = wasShouldBeMoving;
             }
-            return res;
+            return Success("Done");
         }
 
 
@@ -801,7 +785,11 @@ namespace cogbot.Actions.SimExport
                 SaveToDisk(exportFile, prim);
                 return;
             }
-            OSD primOSD = prim.GetTotalOSD();
+            OSDMap primOSD = prim.GetTotalOSD();
+            AddExportUser(primOSD["CreatorID"]);
+            AddExportGroup(primOSD["GroupID"]);
+            AddExportUser(primOSD["OwnerID"]);
+            AddExportUser(primOSD["LastOwnerID"]);
             string output = OSDParser.SerializeLLSDXmlString(primOSD);
             {
                 lock (fileWriterLock) File.WriteAllText(exportFile, output);

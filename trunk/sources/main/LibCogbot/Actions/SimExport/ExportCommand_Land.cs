@@ -151,19 +151,20 @@ namespace cogbot.Actions.SimExport
 
         public void SaveTerrainHeight()
         {
+            bool prefixFP = false;
             OSDMap simInfoMap = new OSDMap();
             // leave these out of serialization
-            simInfoMap["f_ObjectsPrimitives"] = true;
-            simInfoMap["f_ObjectsAvatars"] = true;
-            simInfoMap["f_Client"] = true;
-            simInfoMap["f_SharedData"] = true;
-            simInfoMap["f_Caps"] = true;
-            simInfoMap["f_DeadObjects"] = true;
-            simInfoMap["p_KilledObjects"] = true;
+            simInfoMap["ObjectsPrimitives"] = true;
+            simInfoMap["ObjectsAvatars"] = true;
+            simInfoMap["Client"] = true;
+            simInfoMap["SharedData"] = true;
+            simInfoMap["Caps"] = true;
+            simInfoMap["DeadObjects"] = true;
+            simInfoMap["KilledObjects"] = true;
             var exceptFor = new HashSet<object>() { typeof(IList), typeof(IDictionary), typeof(object) };
-            OSD.AddObjectOSD0(CurSim.Stats, simInfoMap, typeof(Simulator.SimStats), exceptFor, true);
-            OSD.AddObjectOSD0(CurSim.SharedData, simInfoMap, typeof(Simulator.SimPooledData), exceptFor, true);
-            OSD.AddObjectOSD0(CurSim, simInfoMap, typeof(Simulator), exceptFor, true);
+            OSD.AddObjectOSD0(CurSim.Stats, simInfoMap, typeof(Simulator.SimStats), exceptFor, true, prefixFP);
+            OSD.AddObjectOSD0(CurSim.SharedData, simInfoMap, typeof(Simulator.SimPooledData), exceptFor, true, prefixFP);
+            OSD.AddObjectOSD0(CurSim, simInfoMap, typeof(Simulator), exceptFor, true, prefixFP);
             string output = OSDParser.SerializeLLSDXmlString(simInfoMap);
             {
                 lock (fileWriterLock) File.WriteAllText(terrainDir + "simInfoMap.llsd", output);
