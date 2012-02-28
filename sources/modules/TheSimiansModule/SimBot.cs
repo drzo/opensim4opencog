@@ -14,6 +14,10 @@ namespace TheSimiansModule
 
         public SimBot(BotClient Client)
         {
+            if (!SimObjectImpl.AffordinancesGuessSimObjectTypes)
+            {
+                Client.DisplayNotificationInChat("SimBot: make sure you set SimObjectImpl:AffordinancesGuessSimObjectTypes = true;");
+            }
             Name = "simbot";
             Description = "Start theOpenSims type AI.";
             Usage = "simbot [on|start|stop|off|think|needs|info|load]";
