@@ -32,6 +32,8 @@ using OpenMetaverse.Http;
 using OpenMetaverse.StructuredData;
 using OpenMetaverse.Interfaces;
 using OpenMetaverse.Messages.Linden;
+//was using UINTLIST = System.Collections.Generic.List<uint>;
+using UINTLIST = System.Collections.Generic.IList<uint>;
 
 namespace OpenMetaverse
 {
@@ -520,7 +522,7 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="simulator">The <see cref="Simulator"/> the objects are located</param>
         /// <param name="localIDs">An array containing the Local IDs of the objects</param>
-        public void RequestObjects(Simulator simulator, List<uint> localIDs)
+        public void RequestObjects(Simulator simulator, UINTLIST localIDs)
         {
             RequestMultipleObjectsPacket request = new RequestMultipleObjectsPacket();
             request.AgentData.AgentID = Client.Self.AgentID;
@@ -773,7 +775,7 @@ namespace OpenMetaverse
         /// <param name="localIDs">An array containing the Local IDs of the objects</param>
         /// <param name="saleType">One of the options from the <see cref="SaleType"/> enum</param>
         /// <param name="price">The price of the object</param>
-        public void SetSaleInfo(Simulator simulator, List<uint> localIDs, SaleType saleType, int price)
+        public void SetSaleInfo(Simulator simulator, UINTLIST localIDs, SaleType saleType, int price)
         {
             ObjectSaleInfoPacket sale = new ObjectSaleInfoPacket();
             sale.AgentData.AgentID = Client.Self.AgentID;
@@ -1199,7 +1201,7 @@ namespace OpenMetaverse
         /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object where the objects reside</param>
         /// <param name="localIDs">An array which contains the IDs of the objects to link</param>
         /// <remarks>The last object in the array will be the root object of the linkset TODO: Is this true?</remarks>
-        public void LinkPrims(Simulator simulator, List<uint> localIDs)
+        public void LinkPrims(Simulator simulator, UINTLIST localIDs)
         {
             ObjectLinkPacket packet = new ObjectLinkPacket();
 
@@ -1222,7 +1224,7 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object where the objects reside</param>
         /// <param name="localIDs">An array which contains the IDs of the objects to delink</param>
-        public void DelinkPrims(Simulator simulator, List<uint> localIDs)
+        public void DelinkPrims(Simulator simulator, UINTLIST localIDs)
         {
             ObjectDelinkPacket packet = new ObjectDelinkPacket();
 
@@ -1383,7 +1385,7 @@ namespace OpenMetaverse
         /// This will always be the simulator the avatar is currently in
         /// </param>
         /// <param name="localIDs">An array which contains the IDs of the objects to detach</param>
-        public void DetachObjects(Simulator simulator, List<uint> localIDs)
+        public void DetachObjects(Simulator simulator, UINTLIST localIDs)
         {
             ObjectDetachPacket detach = new ObjectDetachPacket();
             detach.AgentData.AgentID = Client.Self.AgentID;
@@ -1532,7 +1534,7 @@ namespace OpenMetaverse
         /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object where the object resides</param>
         /// <param name="localIDs">An array which contains the IDs of the objects to deed</param>
         /// <param name="groupOwner">The <seealso cref="UUID"/> of the group to deed the object to</param>
-        public void DeedObjects(Simulator simulator, List<uint> localIDs, UUID groupOwner)
+        public void DeedObjects(Simulator simulator, UINTLIST localIDs, UUID groupOwner)
         {
             ObjectOwnerPacket packet = new ObjectOwnerPacket();
             packet.AgentData.AgentID = Client.Self.AgentID;
@@ -1561,7 +1563,7 @@ namespace OpenMetaverse
         /// <param name="who">The new Who mask to set</param>
         /// <param name="permissions">Which permission to modify</param>
         /// <param name="set">The new state of permission</param>
-        public void SetPermissions(Simulator simulator, List<uint> localIDs, PermissionWho who,
+        public void SetPermissions(Simulator simulator, UINTLIST localIDs, PermissionWho who,
             PermissionMask permissions, bool set)
         {
             ObjectPermissionsPacket packet = new ObjectPermissionsPacket();
@@ -1624,7 +1626,7 @@ namespace OpenMetaverse
         /// <param name="simulator">A reference to the <seealso cref="OpenMetaverse.Simulator"/> object where the objects reside</param>
         /// <param name="localIds">An array which contains the IDs of the objects to set the group id on</param>
         /// <param name="groupID">The Groups ID</param>
-        public void SetObjectsGroup(Simulator simulator, List<uint> localIds, UUID groupID)
+        public void SetObjectsGroup(Simulator simulator, UINTLIST localIds, UUID groupID)
         {
             ObjectGroupPacket packet = new ObjectGroupPacket();
             packet.AgentData.AgentID = Client.Self.AgentID;
@@ -2620,7 +2622,7 @@ namespace OpenMetaverse
                 Simulator simulator = e.Simulator;
 
                 ObjectUpdateCachedPacket update = (ObjectUpdateCachedPacket)packet;
-                List<uint> ids = new List<uint>(update.ObjectData.Length);
+                UINTLIST ids = new uint[(update.ObjectData.Length)];
 
                 // No object caching implemented yet, so request updates for all of these objects
                 for (int i = 0; i < update.ObjectData.Length; i++)
@@ -2644,7 +2646,7 @@ namespace OpenMetaverse
 
             bool reallyDead = false;
 
-            List<uint> killData = new List<uint>();
+            UINTLIST killData = new List<uint>();
 
             // Notify first, so that handler has a chance to get a
             // reference from the ObjectTracker to the object being killed
@@ -2661,8 +2663,8 @@ namespace OpenMetaverse
         {
             lock (simulator.ObjectsPrimitives.Dictionary)
             {
-                List<uint> removeAvatars = new List<uint>();
-                List<uint> removePrims = new List<uint>();
+                UINTLIST removeAvatars = new List<uint>();
+                UINTLIST removePrims = new List<uint>();
 
                 if (Client.Settings.OBJECT_TRACKING)
                 {
@@ -2691,7 +2693,7 @@ namespace OpenMetaverse
                             if (simulator.ObjectsAvatars.Dictionary.ContainsKey(localID))
                                 removeAvatars.Add(localID);
 
-                            List<uint> rootPrims = new List<uint>();
+                            UINTLIST rootPrims = new List<uint>();
 
                             foreach (KeyValuePair<uint, Primitive> prim in simulator.ObjectsPrimitives.Dictionary)
                             {
