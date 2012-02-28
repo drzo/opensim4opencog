@@ -247,7 +247,12 @@ namespace OpenMetaverse
 
         public static Guid GuidFromString(string val)
         {
-            return new Guid(val.Trim());
+            val = val.Trim();
+            if (val == "Zero")
+            {
+                return Guid.Empty;
+            }
+            return new Guid(val);
         }
 
         public static UUID UUIDFromString(string val)
@@ -269,7 +274,7 @@ namespace OpenMetaverse
         public UUID(string val)
 #endif
         {
-            if (String.IsNullOrEmpty(val))
+            if (String.IsNullOrEmpty(val) || val == "Zero")
             {
                 _toStringCache = ZeroString;
                 _Guid = new Guid();
