@@ -676,7 +676,7 @@ namespace OpenMetaverse
             transfer.Callback = callback;
 
             // Check asset cache first
-            if (callback != null && Cache.HasAsset(assetID, type))
+            if (!UUIDFactory.IsNullOrZero(assetID) && callback != null && Cache.HasAsset(assetID, type))
             {
                 byte[] data = Cache.GetCachedAssetBytes(assetID, type);
                 transfer.AssetData = data;
@@ -702,6 +702,7 @@ namespace OpenMetaverse
             request.TransferInfo.Priority = transfer.Priority;
             request.TransferInfo.SourceType = (int)transfer.Source;
             request.TransferInfo.TransferID = transfer.ID;
+
 
             byte[] paramField = new byte[100];
             Buffer.BlockCopy(Client.Self.AgentID.GetBytes(), 0, paramField, 0, 16);
@@ -1353,10 +1354,11 @@ namespace OpenMetaverse
                 if (upload.AssetData.Length < 1000)
                 {
                     uploadSize = upload.AssetData.Length;
+                    send.XferID.Packet |= (uint)0x80000000; // This signals the final packet
                 }
                 Buffer.BlockCopy(Utils.IntToBytes(upload.Size), 0, send.DataPacket.Data, 0, 4);
                 Buffer.BlockCopy(upload.AssetData, 0, send.DataPacket.Data, 4, uploadSize);
-                upload.Transferred += 1000;
+                upload.Transferred += uploadSize;
 
                 lock (Transfers)
                 {
@@ -1409,6 +1411,7 @@ namespace OpenMetaverse
 
             lock(Transfers) if (!Transfers.TryGetValue(info.TransferInfo.TransferID, out transfer))
             {
+                // transfer = new AssetDownload();
                 Logger.Log("Received a TransferInfo packet for an asset we didn't request, TransferID: " +
                            info.TransferInfo.TransferID, Helpers.LogLevel.Warning, Client);
                 return;
@@ -1486,7 +1489,12 @@ namespace OpenMetaverse
             Transfer transfer;
             AssetDownload download;
 
-            lock (Transfers) if (!Transfers.TryGetValue(asset.TransferData.TransferID, out transfer)) return;
+            lock (Transfers) if (!Transfers.TryGetValue(asset.TransferData.TransferID, out transfer))
+            {
+                Logger.Log("Received a TransferData packet for an asset we didn't request, TransferID: " +
+                           asset.TransferData.TransferID, Helpers.LogLevel.Warning, Client);
+                return;
+            }
             {
                 download = (AssetDownload)transfer;
 
