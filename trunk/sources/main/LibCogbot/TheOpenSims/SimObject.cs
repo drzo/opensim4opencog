@@ -798,19 +798,24 @@ namespace cogbot.TheOpenSims
                     if (objectinventory[0].Name != "Contents") return true;
                     if (objectinventory.Count > 1) return true;
                 }
-                if ((Prim.Flags & PrimFlags.InventoryEmpty) != 0) return false;
                 const PrimFlags maybeScriptsInside = PrimFlags.AllowInventoryDrop | PrimFlags.Scripted | PrimFlags.Touch;
                 if ((maybeScriptsInside & Prim.Flags) != 0)
                 {
                     mightHaveTaskInv = true;
                 }
-                else
+                if ((Prim.ClickAction == ClickAction.Sit))
                 {
-                    var props = Properties;
-
-                    mightHaveTaskInv = (Prim.ClickAction == ClickAction.Sit)
-                                       || !string.IsNullOrEmpty(props.SitName)
-                                       || !string.IsNullOrEmpty(props.TouchName);
+                    mightHaveTaskInv = true;
+                }
+                var props = Properties;
+                if (props != null && (!string.IsNullOrEmpty(props.SitName) || !string.IsNullOrEmpty(props.TouchName)))
+                {
+                    mightHaveTaskInv = true;
+                }
+                if ((Prim.Flags & PrimFlags.InventoryEmpty) != 0)
+                {
+                    if (!mightHaveTaskInv) return false;
+                    return false;
                 }
                 return mightHaveTaskInv;
             }
@@ -2304,7 +2309,8 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        private static readonly List<InventoryBase> EMPTY_TASK_INV = new List<InventoryBase>();
+        public static readonly List<InventoryBase> EMPTY_TASK_INV = new List<InventoryBase>();
+        public static readonly List<InventoryBase> ERROR_TASK_INV = new List<InventoryBase>();
 
 		/// <summary>
         /// Retrieve a listing of the items contained in a task (Primitive)
@@ -2351,7 +2357,13 @@ namespace cogbot.TheOpenSims
                 else
                 {
                     Logger.DebugLog("Task is empty for " + ID, Client);
-                    objectinventory = EMPTY_TASK_INV;
+                    if (TaskInventoryLikely)
+                    {
+                        objectinventory = ERROR_TASK_INV;
+                    } else
+                    {
+                        objectinventory = EMPTY_TASK_INV;
+                    }
                 }
             }
         }
@@ -2361,6 +2373,11 @@ namespace cogbot.TheOpenSims
             if (e.Xfer.XferID == _xferID)
             {
                 Client.Assets.XferReceived -= xferCallback;
+                if (e.Xfer.Error != TransferError.None)
+                {
+                    objectinventory = ERROR_TASK_INV;
+                    return;
+                }
                 String taskList = Utils.BytesToString(e.Xfer.AssetData);
                 objectinventory = InventoryManager.ParseTaskInventory(taskList);
             }
