@@ -31,6 +31,7 @@ namespace cogbot.Actions.SimExport
 
         private void GroupNames(object sender, GroupNamesEventArgs e)
         {
+            if (!IsExporting) return;
             foreach (KeyValuePair<UUID, string> name in e.GroupNames)
             {
                 lock (fileWriterLock) File.WriteAllText(siminfoDir + "" + name.Key + ".group", name.Value);
@@ -38,7 +39,8 @@ namespace cogbot.Actions.SimExport
         }
         private void UserNames(object sender, UUIDNameReplyEventArgs e)
         {
-            foreach (KeyValuePair<UUID, string> name in e.Names )
+            if (!IsExporting) return;
+            foreach (KeyValuePair<UUID, string> name in e.Names)
             {
                 lock (fileWriterLock) File.WriteAllText(siminfoDir + "" + name.Key + ".avatar", name.Value);
             }
@@ -70,5 +72,15 @@ namespace cogbot.Actions.SimExport
             ExportUsers.Add(userID);
         }
 
+        private OSDMap OSDSerializeMembers(object inv)
+        {
+            var osd = new OSDMap();
+            OSD.AddObjectOSD(inv, osd, inv.GetType(), false);
+            AddExportUser(osd["CreatorID"]);
+            AddExportGroup(osd["GroupID"]);
+            AddExportUser(osd["OwnerID"]);
+            AddExportUser(osd["LastOwnerID"]);
+            return osd;
+        }
     }
 }

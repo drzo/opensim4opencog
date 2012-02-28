@@ -22,22 +22,21 @@ namespace cogbot.Actions.SimExport
     {
 
         public readonly HashSet<UUID> ToDownloadAssets = new HashSet<UUID>();
+        public readonly HashSet<UUID> ToDownloadCalledAssets = new HashSet<UUID>();
         public readonly HashSet<UUID> CompletedAssets = new HashSet<UUID>();
         public readonly Dictionary<UUID, AssetType> AllRelatedAssets = new Dictionary<UUID, AssetType>();
         public readonly HashSet<UUID> PrimDepsAssets = new HashSet<UUID>();
 
         private void StartAssetDownload(List<UUID> xferStarted, UUID assetID, AssetType assetType)
         {
-            if (xferStarted.Contains(assetID)) return;
-            xferStarted.Add(assetID);
+            if (xferStarted != null)
+            {
+                if (xferStarted.Contains(assetID)) return;
+                xferStarted.Add(assetID);
+            }
             // string filename = assetID + ".asset";
             // ulong xferID = Client.Assets.RequestAssetXfer(filename, false, true, assetID, assetType, false);
-            Client.Assets.RequestAsset(assetID, assetType, true, Assets_OnReceived);
-            if (assetType == AssetType.Texture)
-            {
-                // Client.Assets.RequestImage(assetID, ImageType.Normal, Assets_OnImageReceived);
-                WorldSystem.TextureBytesForUUID(assetID);
-            }
+            DownloadAssets0(new [] {assetID});
         }
 
         private void SaveRelatedAssets(string pathStem, SimObject exportPrim, OutputDelegate Failure)
@@ -68,19 +67,50 @@ namespace cogbot.Actions.SimExport
         private AssetType assetTypeOf(UUID uuid)
         {
             AssetType assetType;
-            AllRelatedAssets.TryGetValue(uuid, out assetType);
-            return assetType;
+            if (AllRelatedAssets.TryGetValue(uuid, out assetType)) return assetType;
+            return AssetType.Unknown;
         }
 
-        public CmdResult ExportRelatedAssets()
+
+        private bool PingAssetCache(UUID assetID)
+        {
+            AssetType assetType = assetTypeOf(assetID);
+            string file = Path.GetFileName(Client.Assets.Cache.FileName(assetID, assetType));
+            lock (fileWriterLock) if (File.Exists(assetDumpDir + file))
+            {
+                AssetComplete(assetID);
+                return true;
+            }
+            byte[] b = Client.Assets.Cache.GetCachedAssetBytes(assetID, assetType);
+            if (b != null)
+            {
+                lock (fileWriterLock) File.WriteAllBytes(assetDumpDir + file, b);
+                AssetComplete(assetID);
+                return true;
+            }
+            return false;
+        }
+
+        public void ExportRelatedAssets()
         {
             // Create a list of all of the textures to download
             DownloadAssets(ToDownloadAssets);
 
-            return Success("XML exported, downloading " + ToDownloadAssets.Count + " assets for " + successfullyExportedPrims.Count);
+            Success("XML exported, downloading " + ToDownloadAssets.Count + " assets for " + successfullyExportedPrims.Count);
         }
 
-        void DownloadAssets(IEnumerable<UUID> downloadList)
+        void DownloadAssets(IEnumerable<UUID> list)
+        {
+            List<UUID> todo =  new List<UUID>();
+            foreach (UUID asset in list)
+            {
+                if (ToDownloadCalledAssets.Contains(asset)) continue;
+                ToDownloadCalledAssets.Add(asset);                
+                todo.Add(asset);
+            }
+            DownloadAssets0(todo);
+        }
+        void DownloadAssets0(IEnumerable<UUID> downloadList)
         {
             List<ImageRequest> textureRequests = new List<ImageRequest>();
             Dictionary<UUID, AssetType> otherRequests = new Dictionary<UUID, AssetType>();
@@ -91,6 +121,7 @@ namespace cogbot.Actions.SimExport
             {
                 foreach (var asset in downloadList)
                 {
+                    if (PingAssetCache(asset)) continue;
                     if (assetTypeOf(asset) == AssetType.Texture)
                     {
                         textureRequests.Add(new ImageRequest(asset, ImageType.Normal, 1013000.0f, 0));
@@ -215,7 +246,7 @@ namespace cogbot.Actions.SimExport
         */
         private void Assets_OnImageReceived(TextureRequestState state, AssetTexture asset)
         {
-
+            if (!IsExporting) return;
             lock (ToDownloadAssets) if (state == TextureRequestState.Finished)
                 {
                     AssetComplete(asset.AssetID);
@@ -250,6 +281,7 @@ namespace cogbot.Actions.SimExport
 
         private void Asset_Xfer(object sender, XferReceivedEventArgs e)
         {
+            if (!IsExporting) return;
             var assetID = e.Xfer.AssetID;
             var assetType = e.Xfer.AssetType;
             if (assetType==AssetType.Unknown)
@@ -275,6 +307,7 @@ namespace cogbot.Actions.SimExport
 
         public void Assets_OnReceived(AssetDownload transfer, Asset asset)
         {
+            if (!IsExporting) return;
             if (transfer.Success)
                 {
                     AssetComplete(asset.AssetID);
