@@ -191,6 +191,7 @@ namespace cogbot.Actions.SimExport
             foreach (PrimToCreate ptc in parents)
             {
                 CreatePrim(CurSim, ptc, GroupID);
+                SetPermissionsAll(CurSim, new List<uint>() {ptc.NewLocalID});
             }
             WriteLine("Importing children " + childs.Count);
             //if (sculptOnly) return Success("Sculpt Only");
@@ -225,6 +226,8 @@ namespace cogbot.Actions.SimExport
                     }
                     linkset.Add(newLocalID);
                 }
+                // set perms for linking!?
+                SetPermissionsAll(CurSim, linkset);
                 //linkset.Add(UUID2OBJECT[uuids[0]].Rezed.LocalID);
                 Client.Objects.LinkPrims(CurSim, linkset);
                 linkset.RemoveAt(0);
@@ -245,6 +248,18 @@ namespace cogbot.Actions.SimExport
                 SetFlagsAndPhysics(CurSim, ptc.NewLocalID, ptc.Prim, true);
             }
             WriteLine("Imported P=" + parents.Count + " C=" + childs.Count);
+        }
+
+        private void SetPermissionsAll(Simulator CurSim, List<uint> linkset)
+        {
+            Client.Objects.SetPermissions(CurSim, linkset, PermissionWho.All, PermissionMask.All, true);
+            Client.Objects.SetPermissions(CurSim, linkset,
+                                          PermissionWho.Group | PermissionWho.NextOwner | PermissionWho.Owner |
+                                          PermissionWho.Base,
+                                          PermissionMask.Move | PermissionMask.Copy | PermissionMask.Transfer |
+                                          PermissionMask.Modify, true);
+            Client.Objects.SetPermissions(CurSim, linkset,
+                                          PermissionWho.Everyone, PermissionMask.Move | PermissionMask.Copy, true);
         }
 
         private void SetPrimsPostLink(Simulator CurSim, UUID GroupID, PrimToCreate parent, IEnumerable<uint> linkset, ICollection<string> skipCompare)
@@ -549,8 +564,9 @@ namespace cogbot.Actions.SimExport
             {
                 if (!CogbotHelpers.IsNullOrZero(GroupID)) Client.Objects.SetObjectsGroup(CurSim, prims, GroupID);
             }
-            Client.Objects.SetPermissions(CurSim, new List<uint>() { localID },
-                                          PermissionWho.Everyone | PermissionWho.Group | PermissionWho.NextOwner,
+            Client.Objects.SetPermissions(CurSim, new List<uint>() {localID},
+                                          PermissionWho.Everyone | PermissionWho.Group | PermissionWho.NextOwner |
+                                          PermissionWho.Owner | PermissionWho.Base,
                                           PermissionMask.All, true);
             if (!nonPosOnly)
             {
