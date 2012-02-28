@@ -440,11 +440,11 @@ namespace OpenMetaverse.StructuredData
             }
         }
 
-        public static bool AddObjectOSD(object primitive, OSDMap map, Type from)
+        public static bool AddObjectOSD(object primitive, OSDMap map, Type from , bool prefixFP)
         {
-            return AddObjectOSD0(primitive, map, from, new HashSet<object>(), true);
+            return AddObjectOSD0(primitive, map, from, new HashSet<object>(), true, prefixFP);
         }
-        public static bool AddObjectOSD0(object primitive, OSDMap map, Type from, HashSet<object> exceptFor, bool firstCall)
+        public static bool AddObjectOSD0(object primitive, OSDMap map, Type from, HashSet<object> exceptFor, bool firstCall, bool prefixFP)
         {
             from = from ?? primitive.GetType();
             if (!firstCall && exceptFor != null)
@@ -475,20 +475,20 @@ namespace OpenMetaverse.StructuredData
                     continue;
                 }
                 if (v.IsDefined(typeof(NonSerializedAttribute), true)) continue;
-                string pn = "p_" + n;
-                string fn = "f_" + n;
+                string pn = prefixFP ? "p_" : "" + n;
+                string fn = prefixFP ? "f_" : "" + n;
                 if (map[fn] || map[pn]) continue;
                 var p = v as PropertyInfo;
                 if (p != null && p.CanRead && p.CanWrite && p.GetIndexParameters().Length == 0)
                 {
-                    var ad = AddOSDMember(map, pn, p.GetValue(primitive, null), p.PropertyType, exceptFor);
+                    var ad = AddOSDMember(map, pn, p.GetValue(primitive, null), p.PropertyType, exceptFor, prefixFP);
                     if (ad) added = true; else skipped = true;
                     continue;
                 }
                 var f = v as FieldInfo;
                 if (f != null && !f.IsStatic && !f.IsLiteral)
                 {
-                    var ad = AddOSDMember(map, fn, f.GetValue(primitive), f.FieldType, exceptFor);
+                    var ad = AddOSDMember(map, fn, f.GetValue(primitive), f.FieldType, exceptFor, prefixFP);
                     if (ad) added = true; else skipped = true;
                     continue;
                 }
@@ -725,7 +725,7 @@ namespace OpenMetaverse.StructuredData
             return retval;
         }
 
-        public static bool AddOSDMember(OSDMap map, string s, object value, Type type, HashSet<object> exceptFor)
+        public static bool AddOSDMember(OSDMap map, string s, object value, Type type, HashSet<object> exceptFor, bool prefixFP)
         {
             if (type == typeof(UUID))
             {
@@ -848,7 +848,7 @@ namespace OpenMetaverse.StructuredData
             if (value is object[])
             {                
                 var obj = (object[])value;
-                OSD osda = FromArray(obj, exceptFor);
+                OSD osda = FromArray(obj, exceptFor, prefixFP);
                 map.Add(s, osda);
                 return true;
             }
@@ -857,9 +857,9 @@ namespace OpenMetaverse.StructuredData
                 var obj = (IEnumerable)value;
 
                 var osda = new OSDArray();
-                foreach(object a in obj)
+                lock (obj) foreach (object a in obj)
                 {
-                    osda.Add(GetOSD(a, type.GetElementType(), exceptFor));
+                    osda.Add(GetOSD(a, type.GetElementType(), exceptFor, prefixFP));
                 }
                 map.Add(s, osda);
                 return true;
@@ -872,13 +872,13 @@ namespace OpenMetaverse.StructuredData
                 for (int i = 0; i < obj.Length; i++)
                 {
                     object a = obj.GetValue(i);
-                    osda.Add(GetOSD(a, type.GetElementType(), exceptFor));
+                    osda.Add(GetOSD(a, type.GetElementType(), exceptFor, prefixFP));
                 }
                 map.Add(s, osda);
                 return true;
             }
             var submap = new OSDMap();
-            AddObjectOSD0(value, submap, type, exceptFor, false);
+            AddObjectOSD0(value, submap, type, exceptFor, false, prefixFP);
             if (submap.Count > 1)
             {
                 map.Add(s, submap);
@@ -905,11 +905,11 @@ namespace OpenMetaverse.StructuredData
             return false;
         }
 
-        private static OSD GetOSD(object o, Type type, HashSet<object> exceptFor)
+        private static OSD GetOSD(object o, Type type, HashSet<object> exceptFor, bool prefixFP)
         {
             if (o == null) return null;
             OSDMap map = new OSDMap();
-            AddOSDMember(map, "value", o, type ?? o.GetType(), exceptFor);
+            AddOSDMember(map, "value", o, type ?? o.GetType(), exceptFor, prefixFP);
             return map["value"];
         }
 
@@ -994,7 +994,7 @@ namespace OpenMetaverse.StructuredData
             return (map[helper]) ? map[helper].AsString() : empty;
         }
 
-        public static OSD FromArray(object[] uuids, HashSet<object> exceptFor)
+        public static OSD FromArray(object[] uuids, HashSet<object> exceptFor, bool prefixFP)
         {
             if (uuids == null)
             {
@@ -1014,7 +1014,7 @@ namespace OpenMetaverse.StructuredData
                 OSD osd0 = null;
                 if (a != null)
                 {
-                    osd0 = GetOSD(a, elemType, exceptFor);
+                    osd0 = GetOSD(a, elemType, exceptFor, prefixFP);
                 }
                 else
                 {

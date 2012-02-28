@@ -1030,7 +1030,8 @@ namespace OpenMetaverse
             return prim;
         }
 
-        public virtual OSD GetTotalOSD()
+        public static bool prefixFP = true;
+        public virtual OSDMap GetTotalOSD()
         {
             if (Properties != null) Properties.ApplyProperties(this);
             OSDMap path = new OSDMap(14);
@@ -1111,7 +1112,7 @@ namespace OpenMetaverse
             map["extraParamBytes"] = OSD.FromBinary(GetExtraParamsBytes());
             if (Properties != null)
             {
-                map["TextureIDs"] = OSD.FromArray(Properties.TextureIDs, new HashSet<object>());
+                map["TextureIDs"] = OSD.FromArray(Properties.TextureIDs, new HashSet<object>(), prefixFP);
             }
             map["PrimFlags"] = (uint)Flags;
             map["TreeSpecies"] = (byte)TreeSpecies;
@@ -1133,7 +1134,7 @@ namespace OpenMetaverse
             map = map ?? new OSDMap();            
             Properties = Properties ?? new ObjectProperties();
             Properties.ApplyProperties(this);
-            OSD.AddObjectOSD(this, map, GetType());
+            OSD.AddObjectOSD(this, map, GetType(), true);
             map["assetprimoid"] = OSD.FromBoolean(true);
             map["id"] = OSD.FromUUID(ID);
             //@TODO map["attachment_position"] = OSD.FromVector3(AttachmentPosition);
