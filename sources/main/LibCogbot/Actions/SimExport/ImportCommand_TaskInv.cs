@@ -30,12 +30,42 @@ namespace cogbot.Actions.SimExport
                     ptc.TaskInvComplete = true;
                     continue;
                 }
+                var tihh = ExportCommand.Running.FolderCalled("TaskInvHolder");
+                var tih = ExportCommand.Running.FolderCalled(fileUUID, tihh);
+                List<InventoryBase> contents = Client.Inventory.FolderContents(tih, Client.Self.AgentID, false, true,
+                                                               InventorySortOrder.ByDate, 10000);
+
                 var taskData = OSDParser.DeserializeLLSDXml(taskDataS) as OSDArray;
+                if (taskData == null)
+                {
+                    WriteLine("Cant read taskData: " + taskDataS); 
+                    continue;
+                }
                 int created = 0;
                 int failed = 0;
                 int skipped = 0;
+                List<TaskItemToCreate> taskItemsToCreate = new List<TaskItemToCreate>();
                 foreach (OSDMap item in taskData)
                 {
+                    string itemName = item["Name"];
+                    taskItemsToCreate.Add(new TaskItemToCreate()
+                                              {
+                                                  TaskOSD = item
+                                              });
+                    InventoryItem found = null;
+                    foreach (InventoryBase content in contents)
+                    {
+                        if (content.Name == itemName)
+                        {
+                            found = content as InventoryItem;
+                            break;
+                        }
+                    }
+                }
+#if FALSE
+                foreach (var item in taskItemsToCreate)
+                {
+    
                     //if (string.IsNullOrEmpty(item)) continue;
                     //string[] fields = item.Split(',');
                     // From 
@@ -44,7 +74,6 @@ namespace cogbot.Actions.SimExport
                     UUID itemID = item["UUID"];
                     UUID assetID = item["AssetUUID"];
                     Permissions perms = Permissions.FromOSD(item["Permissions"]);
-                    string itemName = item["Name"];
                     string itemDebug = itemName + " " + assetType + " " + itemID + " " + assetID; 
                     if (CogbotHelpers.IsNullOrZero(assetID))
                     {
@@ -66,8 +95,6 @@ namespace cogbot.Actions.SimExport
                         continue;
                     }
                     byte[] data = File.ReadAllBytes(sfile);
-                    var tihh = ExportCommand.Running.FolderCalled("TaskInvHolder");
-                    var tih = ExportCommand.Running.FolderCalled(ptc.OldID.ToString(), tihh);
 
                     ItemToCreate itc = FindItemToCreate(assetID, assetType, false);
                     UUID newAssetID;
@@ -121,7 +148,13 @@ namespace cogbot.Actions.SimExport
                     }
                     created++;
                 }
+#endif
             }
+        }
+
+        private class TaskItemToCreate
+        {
+            public OSDMap TaskOSD;
         }
     }
 }
