@@ -129,6 +129,10 @@ namespace OpenMetaverse.Assets
                                     if (fields[0] != "-0")
                                         id = Int32.Parse(fields[0]);
 
+                                    if (fields.Length == 1)
+                                    {
+                                        break;
+                                    }
                                     if (fields[1] == ",")
                                         fields[1] = "0";
                                     else
