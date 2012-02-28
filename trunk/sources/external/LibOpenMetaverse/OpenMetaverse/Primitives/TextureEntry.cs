@@ -584,7 +584,7 @@ namespace OpenMetaverse
                     Fullbright.GetHashCode() ^
                     MediaFlags.GetHashCode() ^
                     TexMapType.GetHashCode() ^
-                    TextureID.GetHashCode();
+                    (TextureID == null ? 0 : TextureID.GetHashCode());
             }
 
             /// <summary>
@@ -1013,13 +1013,23 @@ namespace OpenMetaverse
                         #endregion Bitfield Setup
 
                         #region Texture
-                        binWriter.Write(DefaultTexture.TextureID.GetBytes());
+                        UUID defaultTextureTextureID = DefaultTexture.TextureID ?? UUID.Zero;
+                        binWriter.Write(defaultTextureTextureID.GetBytes());
                         for (int i = 0; i < textures.Length; i++)
                         {
                             if (textures[i] != UInt32.MaxValue)
                             {
                                 binWriter.Write(GetFaceBitfieldBytes(textures[i]));
-                                binWriter.Write(FaceTextures[i].TextureID.GetBytes());
+                                var ft = FaceTextures[i];
+                                if (ft != null)
+                                {
+                                    binWriter.Write(ft.TextureID.GetBytes());
+                                }
+                                else
+                                {
+                                    binWriter.Write(UUID.Zero.GetBytes()); 
+                                    FaceTextures[i] = new TextureEntryFace(DefaultTexture);
+                                }
                             }
                         }
                         binWriter.Write((byte)0);
