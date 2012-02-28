@@ -791,7 +791,7 @@ namespace CogbotRadegastPluginModule
             {
                 DLRConsole.SYSTEM_ERR_WRITELINE_REAL("early " + str);
             }
-            writeLock.Enqueue(() => DLRConsole.InvokeControl(rtbChat, new MethodInvoker(() =>
+            writeLock.Enqueue(str, () => DLRConsole.InvokeControl(rtbChat, new MethodInvoker(() =>
                                                                          {
                                                                              try
                                                                              {
