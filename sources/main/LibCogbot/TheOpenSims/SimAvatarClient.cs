@@ -1021,6 +1021,44 @@ namespace cogbot.TheOpenSims
                         //ClientSelf.AutoPilot(targetPosition.X, targetPosition.Y, targetPosition.Z);
                         Thread.Sleep(1000);
                         continue;
+                    }                    
+                    if (SimpleMoveToMovementProceedure == MovementProceedure.CogPusher)
+                    {
+                        double curDist00 = Vector3d.Distance(worldPosition, targetPosition);
+                        if (curDist00 < 1)
+                        {
+                            Thread.Sleep(500);
+                            continue;
+                        }
+                        var cp = WorldSystem.GetObject("CogPusher");
+                        //if (cp != null)
+                        {
+                            TurnToward(targetPosition);
+                            SendUpdate(10);
+                            var gloffset = targetPosition - worldPosition;
+                            Vector3 g3offset = new Vector3((float)gloffset.X, (float)gloffset.Y, (float)gloffset.Z);
+                            if (g3offset.Length() < 1) g3offset = g3offset*2;
+                            Vector3 goffset = ClientSelf.SimPosition + g3offset;
+                            Client.DisplayNotificationInChat("gloffset = " + g3offset);
+                            Client.Self.Chat(
+                                string.Format("push {0:0.0},{1:0.0},{2:0.0},{3:0.0},{4:0}", goffset.X, goffset.Y, goffset.Z, 2, 0),
+                                100,
+                                ChatType.Normal);
+                            bool pusherFound = false;
+                            foreach (SimObject o in Children)
+                            {
+                                if (o.Matches("CogPusher"))
+                                {
+                                    pusherFound = true;
+                                }
+                            }
+                            if (pusherFound)
+                            {
+                                Thread.Sleep(2000);
+                                continue;
+                            }
+                           // continue;
+                        }
                     }
 
 
@@ -1224,7 +1262,7 @@ namespace cogbot.TheOpenSims
         [ConfigSetting]
         public static bool MoveUseTeleportFallback = true;
         public static bool GotoUseTeleportFallback = !MoveUseTeleportFallback && false;
-        public MovementProceedure SimpleMoveToMovementProceedure = MovementProceedure.TurnToAndWalk;
+        static public MovementProceedure SimpleMoveToMovementProceedure = MovementProceedure.CogPusher;
         public MovementProceedure SalientMovementProceedure = MovementProceedure.AStar;
         public bool MovementByFlight
         {

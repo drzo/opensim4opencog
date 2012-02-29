@@ -14,7 +14,8 @@ namespace cogbot.Actions.Pathfinder
         AStar,
         TurnToAndWalk,
         FlyTo,
-        Teleport
+        Teleport,
+        CogPusher
     }
 
     public class AStarGoto : cogbot.Actions.Command, BotPersonalCommand

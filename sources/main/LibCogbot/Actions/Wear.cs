@@ -49,11 +49,33 @@ namespace cogbot.Actions
                 {
                     WriteLine("wearing folder: " + wear + " " + (bake ? " (baked)" : " (not baked)"));
                     List<InventoryItem> outfit = Client.GetFolderItems(wear);
-                    Client.Appearance.ReplaceOutfit(outfit);
-                  //  if (!are.WaitOne(WEARABLE_TIMEOUT * 2))
+                    if (outfit != null)
+                    {
+                        Client.Appearance.ReplaceOutfit(outfit);
+                        return Success(wear);
+                    }
+                    WriteLine("no folder found attaching item: " + wear);
+                    string lwear = wear;
+                    BotInventoryEval searcher = new BotInventoryEval(Client);
+                          InventoryFolder rootFolder = Client.Inventory.Store.RootFolder;
+                    bool found = searcher.findInFolders(rootFolder, (ib)=>
+                                                           {
+                                                               InventoryItem item = ib as InventoryItem;
+                                                               if (item != null && item.Name.ToLower() == lwear)
+                                                               {
+
+                                                                   Client.Appearance.Attach(item,
+                                                                                            AttachmentPoint.Default);
+                                                                   return true;
+                                                               }
+                                                               return false;
+                                                           });
+                    if (found) return Success("attaching " + wear);
+                    return Failure("did not find " + wear);
+                    //  if (!are.WaitOne(WEARABLE_TIMEOUT * 2))
                    //     return Success("Timeout wearing " + wear + " " + (bake ? " (baked)" : " (not baked)");
                    // else
-                        return Success(wear);
+
                 }
                 catch (Exception ex)
                 {
