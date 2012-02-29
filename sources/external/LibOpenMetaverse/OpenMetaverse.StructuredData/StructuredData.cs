@@ -464,6 +464,7 @@ namespace OpenMetaverse.StructuredData
                 }
             }
             map["typeosd"] = from.FullName;
+            map["prefixfp"] = prefixFP;
             bool added = false;
             bool skipped = false;
             foreach (var v in from.GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
@@ -511,6 +512,7 @@ namespace OpenMetaverse.StructuredData
         {
             Type from = primitive.GetType();
             string From = map["typeosd"].AsString();//, primitive.GetType().FullName);
+            bool prefixFP = map["prefixfp"];
             from = System.Type.GetType(From) ?? from;
             int mapManips = 0;
             foreach (var v in from.GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
@@ -526,7 +528,15 @@ namespace OpenMetaverse.StructuredData
                 if (p != null && p.CanRead && p.CanWrite && p.GetIndexParameters().Length == 0)
                 {
                     bool found;
-                    n = "p_" + n;
+                    string pn = "p_" + n;
+                    if (map[pn].Type != OSDType.Unknown)
+                    {
+                        n = pn;
+                    }
+                    else
+                    {
+                        if (prefixFP) continue;
+                    }
                     var suggest = p.GetValue(primitive, null);
                     object setOSDMember = GetOSDMember(suggest,map, n, p.PropertyType, out found);
                     if (found)
@@ -541,7 +551,15 @@ namespace OpenMetaverse.StructuredData
                 if (f != null && !f.IsStatic && !f.IsLiteral)
                 {
                     bool found;
-                    n = "f_" + n;
+                    string pn = "f_" + n;
+                    if (map[pn].Type != OSDType.Unknown)
+                    {
+                        n = pn;
+                    }
+                    else
+                    {
+                        if (prefixFP) continue;
+                    }
                     var suggest = f.GetValue(primitive);
                     object setOSDMember = GetOSDMember(suggest, map, n, f.FieldType, out found);
                     if (found)
