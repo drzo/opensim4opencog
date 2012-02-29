@@ -26,7 +26,7 @@ namespace cogbot.TheOpenSims
         public string AspectName { get; set; }
         protected double ApproachDistance = 2f;
 
-        public SimPosition ApproachPosition { get; set; }
+        //public SimPosition ApproachPosition { get; set; }
         public Vector3d ApproachVector3D { get; set; }
 
         /// <summary>

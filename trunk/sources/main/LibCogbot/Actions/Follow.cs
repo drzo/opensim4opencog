@@ -37,7 +37,7 @@ namespace cogbot.Actions.Movement
             if (verb == "stop-following")
             {
 
-                SimPosition ap = TheSimAvatar.ApproachPosition;
+               // SimPosition ap = TheSimAvatar.ApproachPosition;
                 if (TheSimAvatar.CurrentAction is MoveToLocation)
                 {
                     TheSimAvatar.CurrentAction = null;
@@ -68,7 +68,7 @@ namespace cogbot.Actions.Movement
                 }
             }
             {
-                return Success("$bot ApproachPosition: " + TheSimAvatar.ApproachPosition);
+                return Success("$bot ApproachPosition: " + TheSimAvatar.CurrentAction);
             }
 
         }
