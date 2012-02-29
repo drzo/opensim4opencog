@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using cogbot.TheOpenSims;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
@@ -30,10 +31,10 @@ namespace cogbot.Actions.Inventory.Shell
             int argsUsed = 0;
             string lowerMatch = args[0].ToLower();
             SimPosition dest = null;
-            if (lowerMatch == "avatar5")
+            if (lowerMatch == "avatar")
             {
                 argsUsed++;
-                dest = TheSimAvatar.ApproachPosition;
+                dest = SimRegion.GetWaypoint(TheSimAvatar.ApproachVector3D);
 
             }
             else if (lowerMatch == "prev")

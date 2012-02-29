@@ -72,7 +72,7 @@ namespace cogbot.Listeners
                                                  v.Add(a.Target);
                                                  return v;
                                              }
-                                             SimPosition p = avatar.ApproachPosition;
+                                             SimPosition p = null;// avatar.ApproachPosition;
                                              if (p != null)
                                              {
                                                  v.Add(p);

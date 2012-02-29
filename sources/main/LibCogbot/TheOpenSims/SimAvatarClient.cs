@@ -877,7 +877,7 @@ namespace cogbot.TheOpenSims
         {
             lock (TrackerLoopLock)
             {
-                ApproachPosition = null;
+                //ApproachPosition = null;
                 lastDistance = float.MaxValue;
                 ApproachVector3D = Vector3d.Zero;
             }
@@ -993,17 +993,17 @@ namespace cogbot.TheOpenSims
                     ///  Debug("TrackerLoop: " + Thread.CurrentThread);
                     if (ApproachVector3D == Vector3d.Zero)
                     {
-                        if (ApproachPosition == null)
+                        //if (ApproachPosition == null)
                         {
                             lastDistance = float.MaxValue;
                             Thread.Sleep(100);
                             continue;
                         }
                     }
-                    if (ApproachPosition != null)
-                    {
-                        targetPosition = ApproachPosition.GlobalPosition;
-                    } else
+                    //if (ApproachPosition != null)
+                    //{
+                    //    targetPosition = ApproachPosition.GlobalPosition;
+                    //} else
                     {
                         targetPosition = ApproachVector3D;
                     }
@@ -1020,7 +1020,8 @@ namespace cogbot.TheOpenSims
                         if (SimAvatarClient.ResetOnDestination)
                         {
                             SetMoveTarget(null, ApproachDistance);
-                            Thread.Sleep(500);
+                            //Thread.Sleep(500);
+                            //StopMoving(true);
                             continue;
                         }
                     }
@@ -1125,7 +1126,7 @@ namespace cogbot.TheOpenSims
                             var span = currentDateTime.Subtract(lastDateTime);
                             IsBlocked = true;                            
                         }
-                        if (true || ApproachPosition != null)
+                        if (true /* || ApproachPosition != null*/)
                         {
                             // follower should pass by.. but on way point navigation would be ok
                             //TurnToward(targetPosition);
@@ -1520,11 +1521,11 @@ namespace cogbot.TheOpenSims
             if (target == null)
             {
                 ApproachVector3D = Vector3d.Zero;
-                ApproachPosition = null;
+                //ApproachPosition = null;
                 lastDistance = float.MaxValue;
                 return;
             }
-            if (ApproachPosition != target)
+           // if (ApproachPosition != target)
             {
                 lastDistance = float.MaxValue;
                 SetMoveTarget(target.GlobalPosition);
@@ -1535,6 +1536,7 @@ namespace cogbot.TheOpenSims
         public Thread MovementConsumer;
         public void OnlyMoveOnThisThread()
         {
+            return;
             if (MovementConsumer != null)
             {
                 if (MovementConsumer != Thread.CurrentThread && MovementConsumer.IsAlive)
@@ -1556,7 +1558,7 @@ namespace cogbot.TheOpenSims
             {
                 if (target != ApproachVector3D)
                 {
-                    ApproachPosition = null;
+                   // ApproachPosition = null;
                     ApproachVector3D = target;
                     if (target != Vector3d.Zero)
                     {
@@ -1946,6 +1948,7 @@ namespace cogbot.TheOpenSims
         new bool IsSitting { get; set; }
         BotAction LastAction { get; set; }
         bool SelectedBeam { get; set; }
+        Vector3d ApproachVector3D { get; set; }
         //IEnumerable<SimTypeUsage> KnownTypeUsages { get; }
         bool SitOn(SimObject o);
 
@@ -1963,6 +1966,6 @@ namespace cogbot.TheOpenSims
         GridClient GetGridClient();
         BotClient GetBotClient();
 
-        SimPosition ApproachPosition { get; }
+      //  SimPosition ApproachPosition { get; }
     }
 }
