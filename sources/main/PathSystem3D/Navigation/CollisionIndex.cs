@@ -370,7 +370,7 @@ namespace PathSystem3D.Navigation
         public List<CollisionObject> ShadowList = new List<CollisionObject>();
         public List<CollisionObject> GetOccupied(float low, float high)
         {
-            EnsureInnerBoxesSimplied();
+            lock (InnerBoxes) EnsureInnerBoxesSimplied();
             if (true) return InnerBoxes;
             List<CollisionObject> objs = new List<CollisionObject>();
             lock (InnerBoxes)
