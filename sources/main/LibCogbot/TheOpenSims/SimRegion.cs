@@ -1496,6 +1496,11 @@ namespace cogbot.TheOpenSims
             get { return TheSimulator.Client.Parcels; }
         }
 
+        public bool CanTeleportLocally
+        {
+            get { return true; }
+        }
+
         private Parcel RequestedParcel(Simulator sim, int local)
         {
             Parcel parcel;

@@ -2983,6 +2983,22 @@ namespace cogbot.TheOpenSims
         }
 
         #endregion
+
+        public Parcel GetParcel()
+        {
+            var R = GetSimRegion();
+            if (R==null) return null;
+            var pos = SimPosition;
+            return R.GetParcel(pos.X, pos.Y);
+        }
+        public bool CanFly
+        {
+            get
+            {
+                var p = GetParcel();
+                return p == null || ((p.Flags & ParcelFlags.AllowFly) != ParcelFlags.AllowFly);
+            }
+        }
     }
 
     public interface SimObjectAffordance {

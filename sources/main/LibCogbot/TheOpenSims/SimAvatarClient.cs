@@ -105,6 +105,7 @@ namespace cogbot.TheOpenSims
         public static int PipesNumberNext = 0;
         public static string PipeMaker = "SEC";
         public static bool UseSimpleTurnToward = true;
+        public static bool ResetOnDestination = true;
         public override void IndicateRoute(IEnumerable<Vector3d> list, Color color)
         {
             var PS = GetSimRegion();
@@ -124,8 +125,8 @@ namespace cogbot.TheOpenSims
             if (CP.lastUpdate != ThisUpdateShown)
             {
                 ThisUpdateShown = CP.lastUpdate;
-                Client.Self.Chat("http://logicmoo.dyndns.org:5580/cogpath/path.gif", 100, ChatType.Normal);
-                //Client.Self.Chat("hi " + Client.Self.SimPosition.Z, 100, ChatType.Normal);
+                ChatCogPrim("http://logicmoo.dyndns.org:5580/cogpath/path.gif");
+                //ChatCogPrim("hi " + Client.Self.SimPosition.Z);
             }
             if (string.IsNullOrEmpty(PipeMaker)) return;
             bool throttle = llist.Count < 200;
@@ -183,7 +184,7 @@ namespace cogbot.TheOpenSims
                 }
                 if (send.Length>1)
                 {
-                    Client.Self.Chat(String.Format(send.Substring(1)), 100, ChatType.Normal);
+                    ChatCogPrim(String.Format(send.Substring(1)));
                     PipesNumberNext++;
                     PipesAlive++;
                 }
@@ -191,9 +192,14 @@ namespace cogbot.TheOpenSims
             }
         }
 
+        private void ChatCogPrim(string s)
+        {
+           Client.Self.Chat(s, 100, ChatType.Normal);
+        }
+
         public void KillPipes()
         {
-            Client.Self.Chat("die", 100, ChatType.Normal);
+            ChatCogPrim("die");
             PipesAlive = 0;
             PipesNumberNext = 0;
         }
@@ -1007,6 +1013,20 @@ namespace cogbot.TheOpenSims
                 /// ApproachDistance = ApproachPosition.GetSizeDistance();
                 try
                 {
+
+                    double curDist001 = Vector3d.Distance(worldPosition, targetPosition);
+                    if (curDist001 < ApproachDistance)
+                    {
+                        if (SimAvatarClient.ResetOnDestination)
+                        {
+                            SetMoveTarget(null, ApproachDistance);
+                            Thread.Sleep(500);
+                            continue;
+                        }
+                    }
+
+
+
                     Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
                     AgentManager ClientSelf = Client.Self;
                     AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
@@ -1031,7 +1051,7 @@ namespace cogbot.TheOpenSims
                             Thread.Sleep(500);
                             continue;
                         }
-                        var cp = WorldSystem.GetObject("CogPusher");
+                        ///var cp = WorldSystem.GetObject("CogPusher");
                         //if (cp != null)
                         {
                             TurnToward(targetPosition);
@@ -1040,10 +1060,12 @@ namespace cogbot.TheOpenSims
                             Vector3 g3offset = new Vector3((float)gloffset.X, (float)gloffset.Y, (float)gloffset.Z);
                             if (g3offset.Length() < 1) g3offset = g3offset + g3offset;
                             bool pusherFound = CogPush(g3offset);
-                            if (pusherFound)
+                            Parcel parcel = GetParcel();
+                            bool noPush = ((parcel.Flags & ParcelFlags.RestrictPushObject) != ParcelFlags.RestrictPushObject);
+                            if (pusherFound && !noPush)
                             {
                                 Thread.Sleep(2000);
-                                continue;
+                                //continue;
                             }
                            // continue;
                         }
@@ -1061,7 +1083,7 @@ namespace cogbot.TheOpenSims
                     ///  Like water areas
                     bool swimming = WaterHeight > selfZ || MovementByFlight;
 
-                    if (UpDown > 5f)
+                    if (UpDown > 5f && CanFly)
                     {
                         targetPosition.Z = realTargetZ; ///  selfZ + 0.2f; ///  incline upward
                         if (!ClientMovement.Fly)
@@ -1248,12 +1270,9 @@ namespace cogbot.TheOpenSims
 
         private bool CogPush(Vector3 goffset)
         {
-            Client.DisplayNotificationInChat("gloffset = " + goffset);
+            //Client.DisplayNotificationInChat("gloffset = " + goffset);
             goffset = SimPosition + goffset;
-            Client.Self.Chat(
-                string.Format("push {0:0.0},{1:0.0},{2:0.0},{3:0.0},{4:0}", goffset.X, goffset.Y, goffset.Z, 1, 0),
-                100,
-                ChatType.Normal);
+            ChatCogPrim(string.Format("push {0:0.0},{1:0.0},{2:0.0},{3:0.0},{4:0}", goffset.X, goffset.Y, goffset.Z, 1, 0));
             foreach (SimObject o in Children)
             {
                 if (o.Matches("CogPusher"))
@@ -1693,7 +1712,7 @@ namespace cogbot.TheOpenSims
                 LastTT = rot;
                 return true;
                 var relDiff =this.SimPosition - target;
-                Client.Self.Movement.UpdateInterval = 0;
+                //Client.Self.Movement.UpdateInterval = 0;
                 Client.Self.Movement.AutoResetControls = false;
   //              Client.Self.Movement.Stop = true;
                 Client.Self.Movement.TurnToward(target);
@@ -1718,7 +1737,7 @@ namespace cogbot.TheOpenSims
                 Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
                 Client.Self.Movement.TurnToward(target);
                 Client.Self.Movement.UpdateInterval = 10;
-                Client.Self.Movement.AutoResetControls = true;
+                //Client.Self.Movement.AutoResetControls = true;
                 InTurn++;
                 return TurnToward0(target);
             }
