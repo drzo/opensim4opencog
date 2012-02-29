@@ -293,22 +293,16 @@ namespace cogbot
             {
 
                 List<InventoryBase> folderContents = botclient.Inventory.FolderContents(folder.UUID, botclient.Self.AgentID,
-                                                                                        true, true, InventorySortOrder.ByName, 3000);
+                                                                                        true, true, InventorySortOrder.ByName, 6000);
                 //if (folder.IsStale)
                 //    folder.DownloadContentsOpenSim(TimeSpan.FromSeconds(10));
                 // first scan this folder for text
                 if (folderContents != null)
                 {
-                    foreach (InventoryBase ib in folderContents)
-                    {
-                        if (ib is InventoryItem)
-                        {
-                            if (itemTest(ib)) return true;
-                        }
-                    }
                     // now run any subfolders
                     foreach (InventoryBase ib in folderContents)
                     {
+                        if (itemTest(ib)) return true;
                         if (ib is InventoryFolder)
                         {
                             var ANS = findInFolders(ib as InventoryFolder, itemTest);
