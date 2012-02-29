@@ -35,8 +35,7 @@ namespace cogbot.Actions.SimExport
             }
             public PrimToCreate(Primitive prim)
             {
-                Prim = prim;
-                OldID = prim.ID;
+                SetOldPrim(prim);
                 LoadProgressFile();
             }
             public PrimToCreate(UUID oldID)
@@ -50,14 +49,19 @@ namespace cogbot.Actions.SimExport
                 {
                     if (_prim == null)
                     {
-                        _prim = (Primitive)ExportCommand.FromFile(LLSDFilename, ExportCommand.UseBinarySerialization);
+                        SetOldPrim((Primitive)ExportCommand.FromFile(LLSDFilename, ExportCommand.UseBinarySerialization));
                     }
                     return _prim;
                 }
-                set
-                {
-                    _prim = value;
-                }
+            }
+
+            private void SetOldPrim(Primitive value)
+            {
+                _prim = value;
+                OldID = value.ID;
+                _OldLocalID = value.LocalID;
+                UUID2OBJECT[OldID] = this;
+                UINT2OBJECT[_OldLocalID] = this;
             }
 
             public string LLSDFilename
@@ -87,6 +91,23 @@ namespace cogbot.Actions.SimExport
             private string _progressFile;
             public bool IsLinkParent;
             public bool TaskInvComplete;
+            public uint _OldLocalID;
+
+            public uint OldLocalID
+            {
+                get
+                {
+
+                    if (_OldLocalID == 0)
+                    {
+                        var map = OSDParser.DeserializeLLSDXml(File.ReadAllText(LLSDFilename)) as OSDMap;
+                        if (map != null) return map["LocalID"];
+                        return Prim.LocalID;
+                    }
+                    return _OldLocalID;
+                }
+                set { _OldLocalID = value; }
+            }
 
             public string ProgressFile
             {
@@ -120,7 +141,9 @@ namespace cogbot.Actions.SimExport
                     _rezed = value;
                     NewID = value.ID;
                     NewLocalID = value.LocalID;
-                    lock (ExportCommand.fileWriterLock) File.WriteAllText(ProgressFile, NewID + "," + NewLocalID + "," + value.RegionHandle);
+                    lock (ExportCommand.fileWriterLock)
+                        File.WriteAllText(ProgressFile,
+                                          NewID + "," + NewLocalID + "," + value.RegionHandle + "," + OldLocalID);
                 }
             }
 
@@ -135,16 +158,25 @@ namespace cogbot.Actions.SimExport
                         var sdata = data.Split(',');
                         NewID = UUIDFactory.GetUUID(sdata[0]);
                         NewLocalID = uint.Parse(sdata[1]);
+                        if (sdata.Length > 3)
+                        {
+                            _OldLocalID = uint.Parse(sdata[3]);
+                            UINT2OBJECT[_OldLocalID] = this;
+                        }
+                        UUID2OBJECT[OldID] = this;
+                        NewUUID2OBJECT[NewID] = this;
+                        NewUINT2OBJECT[NewLocalID] = this;
                         RezRequested = true;
                         NeedsPositioning = false;
                     }
-
                 }
             }
 
             public void ReplaceAll(Dictionary<UUID, UUID> dictionary)
-            {
+            {               
                 ReplaceAllMembers(Prim, typeof(UUID), UUIDReplacer);
+                Prim.ID = OldID;
+                Prim.LocalID = OldLocalID;
             }
         }
 
@@ -313,12 +345,26 @@ namespace cogbot.Actions.SimExport
                     }
                 }
                 ptc.ReplaceAll(ChangeList);
-                UUID2OBJECT.Add(ptc.OldID, ptc);
-                UINT2OBJECT.Add(primitive.LocalID, ptc);
+                UUID2OBJECT[ptc.OldID] = ptc;
+                UINT2OBJECT[ptc.OldLocalID] = ptc;
                 return ptc;
             }
         }
-
+        public PrimToCreate APrimToCreate(UUID oldObjectID)
+        {
+            lock (WorkFlowLock)
+            {
+                UUIDChange utc;
+                if (UUID2OBJECT.TryGetValue(oldObjectID, out utc))
+                {
+                    return (PrimToCreate)utc;
+                }
+                PrimToCreate ptc = new PrimToCreate(oldObjectID);
+                UUID2OBJECT[ptc.OldID] = ptc;
+                UINT2OBJECT[ptc.OldLocalID] = ptc;
+                return ptc;
+            }
+        }
         private PrimToCreate GetOldPrim(uint localID)
         {
             lock (WorkFlowLock)
@@ -335,7 +381,10 @@ namespace cogbot.Actions.SimExport
         private PrimToCreate GetOldPrim(UUID id)
         {
             PrimToCreate getOld = (PrimToCreate)GetOld(id);
-            if (getOld == null) Failure("cant find ID=" + id);
+            if (getOld == null)
+            {
+                Failure("cant find ID=" + id);
+            }
             return getOld;
         }
 
@@ -564,10 +613,7 @@ namespace cogbot.Actions.SimExport
             {
                 if (!CogbotHelpers.IsNullOrZero(GroupID)) Client.Objects.SetObjectsGroup(CurSim, prims, GroupID);
             }
-            Client.Objects.SetPermissions(CurSim, new List<uint>() {localID},
-                                          PermissionWho.Everyone | PermissionWho.Group | PermissionWho.NextOwner |
-                                          PermissionWho.Owner | PermissionWho.Base,
-                                          PermissionMask.All, true);
+            SetPermissionsAll(CurSim, new List<uint>() { localID });
             if (!nonPosOnly)
             {
                 Client.Objects.SetPosition(CurSim, localID, pp, true);
