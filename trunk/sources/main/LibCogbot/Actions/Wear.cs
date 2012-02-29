@@ -48,9 +48,9 @@ namespace cogbot.Actions
                 try
                 {
                     WriteLine("wearing folder: " + wear + " " + (bake ? " (baked)" : " (not baked)"));
-                    List<InventoryItem> outfit = Client.GetFolderItems(wear);
                     if (false)
                     {
+                        List<InventoryItem> outfit = Client.GetFolderItems(wear);
                         if (outfit != null)
                         {
                             Client.Appearance.ReplaceOutfit(outfit);
@@ -59,8 +59,9 @@ namespace cogbot.Actions
                         WriteLine("no folder found attaching item: " + wear);
                     }
                     string lwear = wear.ToLower();
-                    BotInventoryEval searcher = new BotInventoryEval(Client);
-                          InventoryFolder rootFolder = Client.Inventory.Store.RootFolder;
+                    BotInventoryEval searcher = new BotInventoryEval(Client);                          
+                    InventoryFolder rootFolder = Client.Inventory.Store.RootFolder;
+                    if (rootFolder.UUID == UUID.Zero) return Success("Cant get roiot folder yet");
                     bool found = searcher.findInFolders(rootFolder, (ib)=>
                                                            {
                                                                
@@ -70,7 +71,8 @@ namespace cogbot.Actions
                                                                    {
                                                                        Client.Appearance.Attach(ib as InventoryItem, AttachmentPoint.Default);
                                                                        return true;
-                                                                   } else
+                                                                   }
+                                                                   else
                                                                    {
                                                                        var fldr = ib as InventoryFolder;
                                                                        List<InventoryBase> clientInventoryFolderContents = Client.Inventory.FolderContents(ib.UUID, Client.Self.AgentID, false, true, InventorySortOrder.ByName, 40000);
@@ -82,8 +84,11 @@ namespace cogbot.Actions
                                                                            var it = content as InventoryItem;
                                                                            if (it != null) items.Add(it);
                                                                        }
-                                                                       Client.Appearance.ReplaceOutfit(items);
-                                                                       return true;
+                                                                       if (items.Count > 0)
+                                                                       {
+                                                                           Client.Appearance.ReplaceOutfit(items);
+                                                                           return true;
+                                                                       }
                                                                    }
 
                                                                }

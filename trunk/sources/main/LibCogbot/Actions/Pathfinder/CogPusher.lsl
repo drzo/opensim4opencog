@@ -88,7 +88,7 @@ default
     
     at_target(integer tnum , vector tpos , vector ourpos)
     {
-        if(speakAt=1)llOwnerSay("at_target(" + (string)tpos.x + "," + (string)tpos.y + "," + (string)tpos.z + 
+        if(speakAt==1)llOwnerSay("at_target(" + (string)tpos.x + "," + (string)tpos.y + "," + (string)tpos.z + 
         "," + (string)ourpos.x + "," + (string)ourpos.y + "," + (string)ourpos.z + ")");
         llStopMoveToTarget();
         llTargetRemove(tgtid);
@@ -99,7 +99,7 @@ default
     {
         vector ourpos = llGetPos();
        // if (time!=0) return;
-        if (speakAt=1)llOwnerSay("abort_target(" + (string)tgt.x + "," + (string)tgt.y + "," + (string)tgt.z + 
+        if (speakAt==1)llOwnerSay("abort_target(" + (string)tgt.x + "," + (string)tgt.y + "," + (string)tgt.z + 
         "," + (string)ourpos.x + "," + (string)ourpos.y + "," + (string)ourpos.z + ")");
         llStopMoveToTarget();
         llTargetRemove(tgtid);        

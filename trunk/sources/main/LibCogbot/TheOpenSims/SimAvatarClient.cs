@@ -91,6 +91,7 @@ namespace cogbot.TheOpenSims
                                                             Client.Self.Jump(true);
                                                             Thread.Sleep(500);
                                                             Client.Self.Jump(false);
+                                                            CogPush(SimPosition + Vector3.UnitZ);
                                                         })))).Start();
         }
 
@@ -1040,10 +1041,7 @@ namespace cogbot.TheOpenSims
                             if (g3offset.Length() < 1) g3offset = g3offset*2;
                             Vector3 goffset = ClientSelf.SimPosition + g3offset;
                             Client.DisplayNotificationInChat("gloffset = " + g3offset);
-                            Client.Self.Chat(
-                                string.Format("push {0:0.0},{1:0.0},{2:0.0},{3:0.0},{4:0}", goffset.X, goffset.Y, goffset.Z, 2, 0),
-                                100,
-                                ChatType.Normal);
+                            CogPush(goffset);
                             bool pusherFound = false;
                             foreach (SimObject o in Children)
                             {
@@ -1256,6 +1254,14 @@ namespace cogbot.TheOpenSims
                     Debug("" + e);
                 }
             }
+        }
+
+        private void CogPush(Vector3 goffset)
+        {
+            Client.Self.Chat(
+                string.Format("push {0:0.0},{1:0.0},{2:0.0},{3:0.0},{4:0}", goffset.X, goffset.Y, goffset.Z, 2, 0),
+                100,
+                ChatType.Normal);
         }
 
 
