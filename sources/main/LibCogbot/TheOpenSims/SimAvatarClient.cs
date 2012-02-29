@@ -91,7 +91,7 @@ namespace cogbot.TheOpenSims
                                                             Client.Self.Jump(true);
                                                             Thread.Sleep(500);
                                                             Client.Self.Jump(false);
-                                                            CogPush(SimPosition + Vector3.UnitZ);
+                                                            CogPush(Vector3.UnitZ);
                                                         })))).Start();
         }
 
@@ -1038,18 +1038,8 @@ namespace cogbot.TheOpenSims
                             SendUpdate(10);
                             var gloffset = targetPosition - worldPosition;
                             Vector3 g3offset = new Vector3((float)gloffset.X, (float)gloffset.Y, (float)gloffset.Z);
-                            if (g3offset.Length() < 1) g3offset = g3offset*2;
-                            Vector3 goffset = ClientSelf.SimPosition + g3offset;
-                            Client.DisplayNotificationInChat("gloffset = " + g3offset);
-                            CogPush(goffset);
-                            bool pusherFound = false;
-                            foreach (SimObject o in Children)
-                            {
-                                if (o.Matches("CogPusher"))
-                                {
-                                    pusherFound = true;
-                                }
-                            }
+                            if (g3offset.Length() < 1) g3offset = g3offset + g3offset;
+                            bool pusherFound = CogPush(g3offset);
                             if (pusherFound)
                             {
                                 Thread.Sleep(2000);
@@ -1256,12 +1246,22 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        private void CogPush(Vector3 goffset)
+        private bool CogPush(Vector3 goffset)
         {
+            Client.DisplayNotificationInChat("gloffset = " + goffset);
+            goffset = SimPosition + goffset;
             Client.Self.Chat(
-                string.Format("push {0:0.0},{1:0.0},{2:0.0},{3:0.0},{4:0}", goffset.X, goffset.Y, goffset.Z, 2, 0),
+                string.Format("push {0:0.0},{1:0.0},{2:0.0},{3:0.0},{4:0}", goffset.X, goffset.Y, goffset.Z, 1, 0),
                 100,
                 ChatType.Normal);
+            foreach (SimObject o in Children)
+            {
+                if (o.Matches("CogPusher"))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
 

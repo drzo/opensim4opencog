@@ -1,6 +1,4 @@
-﻿// Place this into an object attached to the cogbot
-
-integer PIPE_CHANNEL = 1000000;  // pipe rezzer
+﻿integer PIPE_CHANNEL = 1000000;  // pipe rezzer
 integer REPEATER_CHANNEL  = 100;  // bot talks on this
 integer PIPE_KILL_CHANNEL = 1000001; // what pipes listen to to die
 float time=0;
@@ -75,6 +73,11 @@ default
             time = (float)llList2String(c,3); 
             speakAt = (integer)llList2String(c,4);
             llSetStatus(STATUS_PHYSICS , TRUE);
+            if(tgtid!=0) {
+                   llStopMoveToTarget();
+                   llTargetRemove(tgtid);
+                   tgtid=0;
+             }
              llMoveToTarget(tgt , 2.0);
             tgtid = llTarget(tgt , 1.0);
              if (time!=0)llSetTimerEvent(time);
@@ -90,8 +93,11 @@ default
     {
         if(speakAt==1)llOwnerSay("at_target(" + (string)tpos.x + "," + (string)tpos.y + "," + (string)tpos.z + 
         "," + (string)ourpos.x + "," + (string)ourpos.y + "," + (string)ourpos.z + ")");
-        llStopMoveToTarget();
-        llTargetRemove(tgtid);
+            if(tgtid!=0) {
+                   llStopMoveToTarget();
+                   llTargetRemove(tgtid);
+                   tgtid=0;
+             }
         llSetTimerEvent(0.0);
     }
     
@@ -101,7 +107,10 @@ default
        // if (time!=0) return;
         if (speakAt==1)llOwnerSay("abort_target(" + (string)tgt.x + "," + (string)tgt.y + "," + (string)tgt.z + 
         "," + (string)ourpos.x + "," + (string)ourpos.y + "," + (string)ourpos.z + ")");
-        llStopMoveToTarget();
-        llTargetRemove(tgtid);        
+            if(tgtid!=0) {
+                   llStopMoveToTarget();
+                   llTargetRemove(tgtid);
+                   tgtid=0;
+             }    
     }
 }
