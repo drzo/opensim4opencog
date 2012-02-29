@@ -2921,16 +2921,16 @@ namespace cogbot
 
         #region SimEventSubscriber Members
 
-
+        private bool _EventsEnabled = true;
         public bool EventsEnabled
         {
             get
             {
-                throw new NotImplementedException();
+                return _EventsEnabled;// throw new NotImplementedException();
             }
             set
             {
-                throw new NotImplementedException();
+                _EventsEnabled = value;
             }
         }
 
