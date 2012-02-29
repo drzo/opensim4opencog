@@ -23,7 +23,7 @@ namespace cogbot.Actions.SimExport
             foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.task"))
             {
                 string fileUUID = Path.GetFileNameWithoutExtension(Path.GetFileName(file));
-                var ptc = GetOldPrim(UUID.Parse(fileUUID));
+                var ptc = APrimToCreate(UUID.Parse(fileUUID));
                 string taskDataS = File.ReadAllText(file);
                 if (string.IsNullOrEmpty(taskDataS))
                 {
@@ -34,6 +34,8 @@ namespace cogbot.Actions.SimExport
                 var tih = ExportCommand.Running.FolderCalled(fileUUID, tihh);
                 List<InventoryBase> contents = Client.Inventory.FolderContents(tih, Client.Self.AgentID, false, true,
                                                                                InventorySortOrder.ByDate, 10000);
+
+                if (contents == null) contents = new List<InventoryBase>();
 
                 var taskData = OSDParser.DeserializeLLSDXml(taskDataS) as OSDArray;
                 if (taskData == null)
@@ -128,6 +130,7 @@ namespace cogbot.Actions.SimExport
                     var fid = invItem.ParentUUID;
                     var iid = invItem.UUID;
                     OSD.SetObjectOSD(invItem,item);
+                    ReplaceAllMembers(invItem, typeof(UUID), UUIDReplacer);
                     invItem.ParentUUID = fid;
                     invItem.UUID = iid;
 

@@ -57,9 +57,25 @@ namespace cogbot.Actions.SimExport
         }
         public class UUIDChange
         {
-            public UUID NewID { get; set; }
-            public UUID OldID { get; set; }
+            protected UUIDChange()
+            {
+                _newId = UUID.Zero;
+                _oldId = UUID.Zero;
+            }
 
+            private UUID _newId;
+            virtual public UUID NewID
+            {
+                get { return _newId; }
+                set { _newId = value; }
+            }
+
+            private UUID _oldId;
+            virtual public UUID OldID
+            {
+                get { return _oldId; }
+                set { _oldId = value; }
+            }
         }
 
         public static string uuidString(UUID uuid)
@@ -68,14 +84,32 @@ namespace cogbot.Actions.SimExport
             return uuid.ToString();
         }
 
-        static object UUIDReplacer(object arg)
+        static object UUIDReplacer(MemberInfo memberName, object arg)
         {
+            if (typeof(Primitive) == memberName.DeclaringType)
+            {
+                string n = memberName.Name;
+                if (n == "ID") return arg;
+                if (n == "LocalID") return arg;
+            }
+            if (typeof(Primitive.ObjectProperties) == memberName.DeclaringType)
+            {
+                string n = memberName.Name;
+                if (n == "ObjectID") return arg;
+            }
             UUID before = (UUID)arg;
             if (UnresolvedUUIDs.Contains(before)) return before;
             UUID other;
             if (ChangeList.TryGetValue(before, out other))
             {
                 return other;
+            }
+            UUIDChange utc;
+            if (UUID2OBJECT.TryGetValue(before, out utc))
+            {
+                UUID utcNewID = utc.NewID;
+                if (!CogbotHelpers.IsNullOrZero(utcNewID)) return utcNewID;
+                return utcNewID ?? UUID.Zero;
             }
             UnresolvedUUIDs.Add(before);
             return before;
@@ -164,6 +198,10 @@ namespace cogbot.Actions.SimExport
             {
                 arglist.Add(s.TrimEnd(new[] { 's' }).ToLower().TrimStart(new[] { '-' }));
             }
+            if (arglist.Contains("user") || arglist.Contains("group") || true)
+            {
+                LoadUsersAndGroups();
+            }
             if (arglist.Contains("all"))
             {
                 //  arglist.Add("terrain");
@@ -187,6 +225,7 @@ namespace cogbot.Actions.SimExport
 
             if (arglist.Contains("prim")) ImportPrims(CurSim,GroupID);
             if (arglist.Contains("task")) ImportTaskFiles();
+
             return SuccessOrFailure();
         }
 
@@ -217,12 +256,14 @@ namespace cogbot.Actions.SimExport
 
         private void ScanForChangeList()
         {
+            return;
             Dictionary<UUID, UUID> cl = new Dictionary<UUID, UUID>();
             lock (WorkFlowLock)
             {
                 foreach (KeyValuePair<UUID, UUIDChange> o in UUID2OBJECT)
                 {
-                    ChangeList[o.Key] = o.Value.NewID;
+                    UUID oValueNewID = o.Value.NewID;
+                    if (!(o.Value is UserOrGroupMapping)) ChangeList[o.Key] = oValueNewID;
                 }
             }
         }
@@ -249,18 +290,18 @@ namespace cogbot.Actions.SimExport
         //private bool sculptOnly = true;
         public static bool UseUploadKnown = true;
         public static ManualResetEvent AssetUploaded = new ManualResetEvent(false);
-
-        public static object ReplaceAllMembers(object from, Type ofType, Func<object, object> replacerFunc)
+        public delegate object ObjectMemberReplacer(MemberInfo name, object before);
+        public static object ReplaceAllMembers(object from, Type ofType, ObjectMemberReplacer replacerFunc)
         {
-            return ReplaceAllMembers(from, ofType, replacerFunc, new HashSet<object>());
+            return ReplaceAllMembers(from, ofType, ofType, replacerFunc, new HashSet<object>());
         }
-        public static object ReplaceAllMembers(object from, Type ofType, Func<object, object> replacerFunc, HashSet<object> exceptFor)
+        public static object ReplaceAllMembers(object from, Type ofType, MemberInfo name, ObjectMemberReplacer replacerFunc, HashSet<object> exceptFor)
         {
             if (from == null) return from;
             var fromType = from.GetType();
             if (fromType == ofType)
             {
-                var oo = replacerFunc(from);
+                var oo = replacerFunc(name, from);
                 return oo;
             }
             if (fromType == typeof(string) || typeof(IConvertible).IsAssignableFrom(fromType)) return from;
@@ -270,7 +311,7 @@ namespace cogbot.Actions.SimExport
                 for (int i = 0; i < ic.Count; i++)
                 {
                     object o = ic[i];
-                    var oo = ReplaceAllMembers(o, ofType, replacerFunc, exceptFor);
+                    var oo = ReplaceAllMembers(o, ofType, o == null ? null : o.GetType(), replacerFunc, exceptFor);
                     if (ReferenceEquals(oo, o)) continue;
                     ic[i] = oo;
                 }
@@ -283,14 +324,14 @@ namespace cogbot.Actions.SimExport
             foreach (var info in fromType.GetFields(bf))
             {
                 object o = info.GetValue(from);
-                var oo = ReplaceAllMembers(o, ofType, replacerFunc, exceptFor);
+                var oo = ReplaceAllMembers(o, ofType, info, replacerFunc, exceptFor);
                 if (ReferenceEquals(oo, o)) continue;
                 info.SetValue(from, oo);
             }
             foreach (var info in fromType.GetProperties(bf))
             {
                 object o = info.GetValue(from, null);
-                var oo = ReplaceAllMembers(o, ofType, replacerFunc, exceptFor);
+                var oo = ReplaceAllMembers(o, ofType, info, replacerFunc, exceptFor);
                 if (ReferenceEquals(oo, o)) continue;
                 info.SetValue(from, oo, null);
             }
