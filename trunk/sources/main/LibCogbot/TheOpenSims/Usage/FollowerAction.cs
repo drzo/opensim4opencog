@@ -159,13 +159,13 @@ namespace cogbot.TheOpenSims
                     CheckAvoidFalls(TheCBot);
                     break;
                 case MovementProceedure.FlyTo:
-                    if (!UseFlight)
+                    if (!UseFlight || !TheCBot.CanFly)
                     {
                         SwitchSalientProc();
                     }
                     break;
                 case MovementProceedure.Teleport:
-                    if (!UseTeleport /*|| SimAvatarClient.GotoUseTeleportFallback || SimAvatarClient.MoveUseTeleportFallback*/)
+                    if (!UseTeleport || !TheCBot.GetSimRegion().CanTeleportLocally/*|| SimAvatarClient.GotoUseTeleportFallback || SimAvatarClient.MoveUseTeleportFallback*/)
                     {
                         SwitchSalientProc();
                     }
