@@ -750,6 +750,7 @@ namespace PathSystem3D.Navigation
         /// <param name="vector3"></param>
         public void BlockPointTemp(Vector3 vector3, List<ThreadStart> undo, byte blockLevel)
         {
+            return;
             CollisionPlane CP = FindCollisionPlane(vector3.Z);
             if (CP != null)
             {

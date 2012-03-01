@@ -39,7 +39,7 @@ namespace cogbot.Actions.Pathfinder
                 }
             }
             WriteLine("WalkTo {0} {1}", simObject, distance);
-            WorldSystem.TheSimAvatar.SimpleMoveTo(simObject.GlobalPosition, distance, 10);
+            WorldSystem.TheSimAvatar.SimpleMoveTo(simObject.GlobalPosition, distance, 10, false);
             WorldSystem.TheSimAvatar.StopMoving();
             return Success(WorldSystem.TheSimAvatar.DistanceVectorString(simObject));
         }

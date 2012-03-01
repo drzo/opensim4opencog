@@ -12,7 +12,7 @@ namespace PathSystem3D.Navigation
         bool TurnToward(Vector3d targetPosition);
         void StopMoving(bool fullStop);
         void StopMoving();
-        bool SimpleMoveTo(Vector3d end, double maxDistance, float maxSeconds);
+        bool SimpleMoveTo(Vector3d end, double maxDistance, float maxSeconds, bool stop);
         void Debug(string format, params object[] args);
         //List<SimObject> GetNearByObjects(double maxDistance, bool rootOnly);
         /*
@@ -139,7 +139,7 @@ namespace PathSystem3D.Navigation
 
             int maxReverse = 2;
             Debug("FollowPath: {0} -> {1} for {2}", v3s.Count, DistanceVectorString(finalTarget), finalDistance);
-            int CanSkip = UseSkipping ? 0 : 1; //never right now
+            int CanSkip = UseSkipping ? 0 : 2; //never right now
             int Skipped = 0;
             if (UseSkippingToggle) UseSkipping = !UseSkipping;
             int v3sLength = v3s.Count;
@@ -288,14 +288,21 @@ namespace PathSystem3D.Navigation
         public bool MoveTo(Vector3d finalTarget, double maxDistance, int maxSeconds)
         {
             finalTarget.Z = GetZFor(finalTarget);
-            return Mover.SimpleMoveTo(finalTarget, maxDistance, maxSeconds);
+            return Mover.SimpleMoveTo(finalTarget, maxDistance, maxSeconds, false);
         }
 
         delegate Vector3 MoveToPassable(Vector3 start);
         static int PathBreakAwayNumber = 0;
         readonly static List<MoveToPassable> PathBreakAways = new List<MoveToPassable>();
+
+        private DateTime lastBreakAweayMoving = DateTime.Now;
         public Vector3 MoveToPassableArround(Vector3 start)
         {
+            if (lastBreakAweayMoving.AddSeconds(3) < DateTime.Now)
+            {
+                return start;
+            }
+            lastBreakAweayMoving = DateTime.Now;
             OpenNearbyClosedPassages();
             if (!UseTurnAvoid)
             {
@@ -361,7 +368,7 @@ namespace PathSystem3D.Navigation
                     Vector3d v3d = PathStore.LocalToGlobal(next);
                     Mover.ThreadJump();
                     v3d.Z = Mover.SimPosition.Z;
-                    if (Mover.SimpleMoveTo(v3d, 1, 1))
+                    if (Mover.SimpleMoveTo(v3d, 1, 1, false))
                     {
                         TurnAvoid += angle;  // update for next use
                         if (TurnAvoid > SimPathStore.PI2)

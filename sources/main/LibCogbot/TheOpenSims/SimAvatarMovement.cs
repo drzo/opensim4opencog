@@ -359,7 +359,7 @@ namespace cogbot.TheOpenSims
                 ///  if (!MoveTo(obj.GlobalPosition(), obj.GetSizeDistance() + 0.5f, 12))
                 SalientGoto(obj);
                 TurnToward(obj);
-                SimpleMoveTo(obj.GlobalPosition, maxDistance, 1);
+                SimpleMoveTo(obj.GlobalPosition, maxDistance, 1, true);
             }
             finally
             {
@@ -726,7 +726,7 @@ namespace cogbot.TheOpenSims
         /// <param name="maxDistance"></param>
         /// <param name="maxSeconds"></param>
         /// <returns></returns>
-        public override bool SimpleMoveTo(Vector3d finalTarget, double maxDistance, float maxSeconds)
+        public override bool SimpleMoveTo(Vector3d finalTarget, double maxDistance, float maxSeconds, bool stopAtEnd)
         {
             if (false)
             {
@@ -873,7 +873,7 @@ namespace cogbot.TheOpenSims
                 case MovementProceedure.AutoPilot:
                 case MovementProceedure.FlyTo:
                 case MovementProceedure.TurnToAndWalk:
-                    return SimpleMoveTo(pos.UsePosition.GlobalPosition, pos.GetSizeDistance(), 3);
+                    return SimpleMoveTo(pos.UsePosition.GlobalPosition, pos.GetSizeDistance(), 3, true);
 
                 // TODO 
                 case MovementProceedure.AStar:
