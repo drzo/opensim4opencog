@@ -200,7 +200,7 @@ namespace cogbot.TheOpenSims
         /// <param name="maxDistance"></param>
         /// <param name="maxSeconds"></param>
         /// <returns></returns>
-        public virtual bool SimpleMoveTo(Vector3d finalTarget, double maxDistance, float maxSeconds)
+        public virtual bool SimpleMoveTo(Vector3d finalTarget, double maxDistance, float maxSeconds, bool stopAtEnd)
         {
             double currentDist = DistanceNoZ(finalTarget, GlobalPosition);
             if (currentDist < maxDistance) return true;
