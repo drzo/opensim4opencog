@@ -149,8 +149,11 @@ namespace OpenMetaverse
         /// TerrainManager</summary>
         public bool STORE_LAND_PATCHES = false;
 
-        /// <summary>Enable/disable sending periodic camera updates</summary>
+        /// <summary>Enable/disable sending agent updates</summary>
         public bool SEND_AGENT_UPDATES = true;
+
+        /// <summary>Enable/disable sending periodic camera updates</summary>
+        public bool SEND_AGENT_UPDATES_THREAD = false;
 
         /// <summary>Enable/disable automatically setting agent appearance at
         /// login and after sim crossing</summary>

@@ -25,6 +25,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
@@ -528,7 +529,12 @@ namespace OpenMetaverse
             /// <param name="target">Region coordinates to turn toward</param>
             public bool TurnToward(Vector3 target)
             {
-                if (Client.Settings.SEND_AGENT_UPDATES)
+                return TurnToward(target, true);
+            }
+
+            public bool TurnToward(Vector3 target, bool sendUpdate)
+            {
+                //
                 {
                     Quaternion parentRot = Quaternion.Identity;
 
@@ -536,21 +542,27 @@ namespace OpenMetaverse
                     {
                         if (!Client.Network.CurrentSim.ObjectsPrimitives.ContainsKey(Client.Self.SittingOn))
                         {
-                            Logger.Log("Attempted TurnToward but parent prim is not in dictionary", Helpers.LogLevel.Warning, Client);
+                            Logger.Log("Attempted TurnToward but parent prim is not in dictionary",
+                                       Helpers.LogLevel.Warning, Client);
                             return false;
                         }
                         else parentRot = Client.Network.CurrentSim.ObjectsPrimitives[Client.Self.SittingOn].Rotation;
                     }
 
-                    Quaternion between = Vector3.RotationBetween(Vector3.UnitX, Vector3.Normalize(target - Client.Self.SimPosition));
-                    Quaternion rot = between * (Quaternion.Identity / parentRot);
+                    Quaternion between = Vector3.RotationBetween(Vector3.UnitX,
+                                                                 Vector3.Normalize(target - Client.Self.SimPosition));
+                    Quaternion rot = between*(Quaternion.Identity/parentRot);
 
                     BodyRotation = rot;
                     HeadRotation = rot;
                     Camera.LookAt(Client.Self.SimPosition, target);
-
+                }
+                if (sendUpdate)
+                {
                     SendUpdate();
-
+                }
+                if (Client.Settings.SEND_AGENT_UPDATES || sendUpdate)
+                {
                     return true;
                 }
                 else
@@ -580,6 +592,9 @@ namespace OpenMetaverse
                 SendUpdate(reliable, Client.Network.CurrentSim);
             }
 
+            Thread UpdateThread;
+            private Thread UpdateTimerThread;
+            public List<Thread> UseOnlyThreads = new List<Thread>();
             /// <summary>
             /// Send new AgentUpdate packet to update our current camera 
             /// position and rotation
@@ -598,6 +613,31 @@ namespace OpenMetaverse
                 Vector3 xAxis = Camera.LeftAxis;
                 Vector3 yAxis = Camera.AtAxis;
                 Vector3 zAxis = Camera.UpAxis;
+                bool disableDupeCheck = Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK;
+                Thread threadCurrentThread = Thread.CurrentThread;
+                if (threadCurrentThread != UpdateTimerThread && UpdateTimerThread != null)
+                {
+                    if (UseOnlyThreads.Count > 0)
+                    {
+                        if (!UseOnlyThreads.Contains(threadCurrentThread))
+                        {
+                            Console.Error.WriteLine("UseOnlyThreads ignoring " + threadCurrentThread.Name);
+                            return;
+                        }
+                        reliable = true;
+                        disableDupeCheck = true;
+                    }
+                    if (UpdateThread == null)
+                    {
+                        UpdateThread = threadCurrentThread;
+                    }
+                    else if (UpdateThread != threadCurrentThread)
+                    {
+                        Console.Error.WriteLine("Thread switch " + UpdateThread.Name + " -> " + threadCurrentThread.Name);
+                        UpdateThread = threadCurrentThread;
+                    }
+                }
+
 
                 // Attempted to sort these in a rough order of how often they might change
                 if ((agentControls == 0   || lastAgentControls==agentControls) &&
@@ -617,7 +657,7 @@ namespace OpenMetaverse
                     duplicateCount = 0;
                 }
 
-                if (Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK || duplicateCount < 10)
+                if (disableDupeCheck || duplicateCount < 10)
                 {
                     // Store the current state to do duplicate checking
                     LastHeadRotation = HeadRotation;
@@ -714,7 +754,7 @@ namespace OpenMetaverse
                 else agentControls &= ~((uint)flag);
             }
 
-            private void ResetControlFlags()
+            public void ResetControlFlags()
             {
                 // Reset all of the flags except for persistent settings like
                 // away, fly, mouselook, and crouching
@@ -727,7 +767,8 @@ namespace OpenMetaverse
 
             private void UpdateTimer_Elapsed(object obj)
             {
-                if (Client.Network.Connected && Client.Settings.SEND_AGENT_UPDATES)
+                UpdateTimerThread = Thread.CurrentThread;
+                if (Client.Network.Connected && Client.Settings.SEND_AGENT_UPDATES_THREAD)
                 {
                     //Send an AgentUpdate packet
                     SendUpdate(false, Client.Network.CurrentSim);
