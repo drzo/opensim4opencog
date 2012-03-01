@@ -308,6 +308,7 @@ namespace cogbot.Listeners
                 client.Settings.AVATAR_TRACKING = true;
                 client.Settings.THROTTLE_OUTGOING_PACKETS = false;
                 client.Settings.MULTIPLE_SIMS = true;
+                client.Settings.SEND_AGENT_THROTTLE = false;
                 client.Settings.SIMULATOR_TIMEOUT = int.MaxValue;
                 client.Settings.LOGIN_TIMEOUT = 120 * 1000;
 

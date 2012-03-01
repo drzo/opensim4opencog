@@ -437,6 +437,12 @@ namespace cogbot.TheOpenSims
 
         public virtual bool TurnToward(Vector3d targetPosition)
         {
+            Vector3 local = GetLocalTo(targetPosition);
+            return TurnToward(local);
+        }
+
+        protected Vector3 GetLocalTo(Vector3d targetPosition)
+        {
             Vector3d Current = GlobalPosition;
             Vector3d diff = targetPosition - Current;
             int maxReduce = 10;
@@ -446,7 +452,7 @@ namespace cogbot.TheOpenSims
                 diff.Y *= 0.75f;
                 diff.Z *= 0.75f;
             }
-            return TurnToward(SimPosition + new Vector3((float)diff.X, (float)diff.Y, 0));
+            return SimPosition + new Vector3((float)diff.X, (float)diff.Y, (float)diff.Z);
         }
 
         #endregion
@@ -2987,16 +2993,66 @@ namespace cogbot.TheOpenSims
         public Parcel GetParcel()
         {
             var R = GetSimRegion();
-            if (R==null) return null;
+            if (R == null) return null;
             var pos = SimPosition;
             return R.GetParcel(pos.X, pos.Y);
         }
+
         public bool CanFly
         {
             get
             {
                 var p = GetParcel();
-                return p == null || ((p.Flags & ParcelFlags.AllowFly) != ParcelFlags.AllowFly);
+                if (p != null)
+                {
+                    if ((p.Flags & ParcelFlags.AllowFly) != 0) return true;
+                }
+                var s = GetSimulator();
+                if (s != null)
+                {
+                    RegionFlags rf = s.Flags;
+                    if ((rf & RegionFlags.NoFly) != 0) return false;
+                }
+                return true;
+            }
+        }
+        public bool CanPush
+        {
+            get
+            {
+                var p = GetParcel();
+                if (p != null)
+                {
+                    if ((p.Flags & ParcelFlags.RestrictPushObject) != 0) return false;
+                }
+                var s = GetSimulator();
+                if (s != null)
+                {
+                    RegionFlags rf = s.Flags;
+                    if ((rf & RegionFlags.SkipPhysics) != 0) return false;
+                    if ((rf & RegionFlags.RestrictPushObject) != 0) return false;
+                }
+                return true;
+            }
+        }
+        public bool CanUseVehical
+        {
+            get
+            {
+                var p = GetParcel();
+                if (p != null)
+                {
+                    ParcelFlags pf = p.Flags;
+                    if ((pf & ParcelFlags.AllowAPrimitiveEntry) == 0) return false;
+                    if ((pf & ParcelFlags.AllowOtherScripts) == 0) return false;
+                }
+                var s = GetSimulator();
+                if (s != null)
+                {
+                    RegionFlags rf = s.Flags;
+                    if ((rf & RegionFlags.SkipScripts) != 0) return false;
+                }
+                return true;
             }
         }
     }
