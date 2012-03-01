@@ -145,7 +145,7 @@ namespace CogbotRadegastPluginModule
             //} catch (Exception ex) {
             //    System.Console.WriteLine("Failed loading ALICE: " + ex.Message);
             //}
-
+            instance.Client.Self.Movement.UseOnlyThreads.Add(Thread.CurrentThread);
            // ApplyConfig(this.instance.Config.CurrentConfig);
             //ClientManager.SingleInstance.Clients[]
             //BotClien.OnlyOneCurrentBotClient
