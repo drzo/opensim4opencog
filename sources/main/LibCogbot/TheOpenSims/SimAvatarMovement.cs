@@ -23,7 +23,6 @@ namespace cogbot.TheOpenSims
     {
         public override void ThreadJump()
         {
-            return;
             ///  all the anims here are mainly so we can see what the bot is doing
             (new Thread(
                 WithAnim(Animations.SHRUG,
@@ -421,6 +420,8 @@ namespace cogbot.TheOpenSims
                     double curDist001 = Vector3d.Distance(worldPosition, targetPosition);
                     if (curDist001 < ApproachDistance)
                     {
+                        ResetMoveContols();
+                        SendUpdate(1);
                         if (SimAvatarClient.ResetOnDestination)
                         {
                             ApproachVector3D = Vector3d.Zero;
@@ -731,7 +732,7 @@ namespace cogbot.TheOpenSims
             if (false)
             {
                 Random MyRand = new Random();
-                if (MyRand.Next(5) < 2)
+                if (MyRand.Next(5) < 2) 
                     Client.Self.LookAtEffect(ID, UUID.Zero, finalTarget, (LookAtType)MyRand.Next(11), ID);
             }
             OnlyMoveOnThisThread();
@@ -878,6 +879,9 @@ namespace cogbot.TheOpenSims
                 // TODO 
                 case MovementProceedure.AStar:
                     bool res = GotoTargetAStar(pos);
+                    SetMoveTarget(pos, maxDistance - 1);
+                    Thread.Sleep(1000);
+                    StopMoving(true);
                     if (res) return res;
                     if (GotoUseTeleportFallback)
                     {
@@ -887,8 +891,8 @@ namespace cogbot.TheOpenSims
                         return res;
                     }
                     SetMoveTarget(pos, maxDistance - 1);
-                    //Thread.Sleep(1000);
-                    //StopMoving(true);
+                    Thread.Sleep(1000);
+                    StopMoving(true);
                     if (maxDistance > this.Distance(pos))
                     {
                         return true;
@@ -963,6 +967,7 @@ namespace cogbot.TheOpenSims
                 {
                     if (!MovementConsumer.IsBackground)
                     {
+                        Client.DisplayNotificationInChat("Aborting movement thread " + MovementConsumer);
                         MovementConsumer.Abort();
                     }
                 }
