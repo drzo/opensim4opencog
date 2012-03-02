@@ -277,7 +277,7 @@ namespace cogbot.Listeners
             //lock (uuidTypeObject)
             if (UUIDTypeObjectTryGetValue(av.ID, out Obj))
                 {
-                    AV = (SimObject)Obj;
+                    AV = Obj as SimObject;
                 }
                 else
                 {
