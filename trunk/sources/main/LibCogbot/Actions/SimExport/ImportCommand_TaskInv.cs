@@ -16,142 +16,465 @@ using MushDLR223.ScriptEngines;
 
 namespace cogbot.Actions.SimExport
 {
+
     public partial class ImportCommand
     {
-        private void ImportTaskFiles()
+        private void ImportTaskFiles(ImportSettings importSettings, bool createObjects)
         {
+            int incomplete = 1;
+            int maxRetries = 10;
+            while (incomplete > 0 && maxRetries-- > 0)
+            {
+                incomplete = ImportTaskFiles0(importSettings, createObjects);
+                WriteLine("ImportTaskFiles Incomplete=" + incomplete);
+            }
+        }
+        private int ImportTaskFiles0(ImportSettings importSettings, bool createObjects)
+        {
+            int incomplete = 0;
+            var agentSyncFolderHolder = ExportCommand.Running.FolderCalled("TaskInvHolder");
             foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.task"))
             {
                 string fileUUID = Path.GetFileNameWithoutExtension(Path.GetFileName(file));
                 var ptc = APrimToCreate(UUID.Parse(fileUUID));
+                if (ptc.TaskInvComplete) continue;
                 string taskDataS = File.ReadAllText(file);
                 if (string.IsNullOrEmpty(taskDataS))
                 {
                     ptc.TaskInvComplete = true;
                     continue;
                 }
-                var tihh = ExportCommand.Running.FolderCalled("TaskInvHolder");
-                var tih = ExportCommand.Running.FolderCalled(fileUUID, tihh);
-                List<InventoryBase> contents = Client.Inventory.FolderContents(tih, Client.Self.AgentID, false, true,
-                                                                               InventorySortOrder.ByDate, 10000);
+                ptc.CreateWorkflow(agentSyncFolderHolder);
+                if (!ptc.LoadOSD(taskDataS, WriteLine))
+                {
+                    Failure("FAILED: LoadOSD " + ptc);
+                }
+                if (!ptc.SyncToAgentFolder(WriteLine, createObjects))
+                {
+                    Failure("FAILED: SyncToAgentFolder " + ptc);
+                }
+                if (!ptc.SyncToObject(WriteLine, createObjects))
+                {
+                    Failure("FAILED: SyncToObject " + ptc);
+                }
+                if (!ptc.Complete)
+                {
+                    Failure("INComplete: " + ptc);
+                    incomplete++;
+                }
+            }
+            return incomplete;
+        }
 
-                if (contents == null) contents = new List<InventoryBase>();
+        public partial class PrimToCreate
+        {
+            internal List<InventoryBase> objectinventory;
+            private ManualResetEvent taskInvRequestRelpy = null;
+            private ulong _xferID;
+            public List<InventoryBase> TaskInventory
+            {
+                get
+                {
+                    if (objectinventory == null)
+                    {
+                        if (!RequestNewTaskInventory().WaitOne(TimeSpan.FromSeconds(10)))
+                        {
+                            Running.WriteLine("Unable to retrieve TaskInv for " + ToString());
+                        }
+                    }
+                    return objectinventory;
+                }
+            }
 
+            public ManualResetEvent RequestNewTaskInventory()
+            {
+                objectinventory = null;
+                taskInvRequestRelpy = taskInvRequestRelpy ?? new ManualResetEvent(false);
+                taskInvRequestRelpy.Reset();
+                var man = this.Inventory;
+                man.TaskInventoryReply += ti_callback;
+                man.RequestTaskInventory(NewLocalID);
+                return taskInvRequestRelpy;
+
+            }
+
+            internal InventoryManager Inventory
+            {
+                get { return Client.Inventory; }
+            }
+
+            private void ti_callback(object sender, TaskInventoryReplyEventArgs e)
+            {
+                if (e.ItemID == NewID)
+                {
+                    InventoryManager man = Inventory;
+                    String filename = e.AssetFilename;
+                    man.TaskInventoryReply -= ti_callback;
+
+                    if (!String.IsNullOrEmpty(filename))
+                    {
+                        Running.Client.Assets.XferReceived += xferCallback;
+
+                        // Start the actual asset xfer
+                        _xferID = Running.Client.Assets.RequestAssetXfer(filename, true, false, UUID.Zero, AssetType.Unknown,
+                                                                 true);
+                    }
+                    else
+                    {
+                        Logger.DebugLog("Task is empty for " + NewID, Running.Client);
+                        if (TaskInventoryLikely)
+                        {
+                            objectinventory = SimObjectImpl.ERROR_TASK_INV;
+                        }
+                        else
+                        {
+                            objectinventory = SimObjectImpl.EMPTY_TASK_INV;
+                        }
+                    }
+                }
+            }
+
+            protected bool TaskInventoryLikely
+            {
+                get { return true; }
+            }
+
+            private void xferCallback(object sender, XferReceivedEventArgs e)
+            {
+                if (e.Xfer.XferID == _xferID)
+                {
+                    Running.Client.Assets.XferReceived -= xferCallback;
+                    if (e.Xfer.Error != TransferError.None)
+                    {
+                        objectinventory = SimObjectImpl.ERROR_TASK_INV;
+                        taskInvRequestRelpy.Set();
+                        return;
+                    }
+                    String taskList = Utils.BytesToString(e.Xfer.AssetData);
+                    objectinventory = InventoryManager.ParseTaskInventory(taskList);
+                    taskInvRequestRelpy.Set();
+                }
+            }
+
+            private int failed = 0;
+
+            public BotClient Client
+            {
+                get { return Running.Client; }
+            }
+
+            public UUID AgentSyncFolder { get; set; }
+
+            internal List<InventoryBase> _contents;
+            public List<InventoryBase> AgentContents
+            {
+                get
+                {
+                    if (_contents == null)
+                    {
+                        _contents = Inventory.FolderContents(AgentSyncFolder, Client.Self.AgentID, false, true,
+                                                                    InventorySortOrder.ByDate, 10000);
+
+                        if (_contents == null) _contents = new List<InventoryBase>();
+                    }
+                    return _contents;
+                }
+            }
+
+            public bool TaskInvComplete;
+            public bool Complete
+            {
+                get
+                {
+                    if (TaskInvComplete) return true;
+                    if (TaskItemsToCreate == null) return false;
+                    foreach (var itemTask in TaskItemsToCreate)
+                    {
+                        if (!itemTask.FindTaskItem())
+                        {
+                            return false;
+                        }
+                    }
+                    TaskInvComplete = true;
+                    return true;
+                }
+            }
+
+            public List<TaskItemToCreate> TaskItemsToCreate;
+            public void CreateWorkflow(UUID agentSyncFolderHolder)
+            {
+                TaskItemsToCreate = new List<TaskItemToCreate>();
+                AgentSyncFolder = ExportCommand.Running.FolderCalled(OldID.ToString(), agentSyncFolderHolder);
+            }
+
+            public bool LoadOSD(string taskDataS, OutputDelegate WriteLine)
+            {
+                failed = 0;
                 var taskData = OSDParser.DeserializeLLSDXml(taskDataS) as OSDArray;
                 if (taskData == null)
                 {
                     WriteLine("Cant read taskData: " + taskDataS);
-                    continue;
+                    return false;
                 }
-                int created = 0;
-                int failed = 0;
-                int skipped = 0;
-                List<TaskItemToCreate> taskItemsToCreate = new List<TaskItemToCreate>();
+
+                if (taskData.Count == TaskItemsToCreate.Count) return true;
                 // scan for existing source nodes
                 foreach (OSDMap item in taskData)
                 {
-                    string itemName = item["Name"];
-                    TaskItemToCreate newTaskItemToCreate = new TaskItemToCreate()
-                                                               {
-                                                                   TaskOSD = item
-                                                               };
-                    taskItemsToCreate.Add(newTaskItemToCreate);
-
-                    foreach (InventoryBase content in contents)
-                    {
-                        if (content.Name == itemName)
-                        {
-                            newTaskItemToCreate.Item = content as InventoryItem;
-                            break;
-                        }
-                    }
+                    TaskItemsToCreate.Add(new TaskItemToCreate(this, item));
                 }
+                return failed == 0;
+            }
+
+            public bool SyncToAgentFolder(OutputDelegate WriteLine, bool createObjects)
+            {
+                failed = 0;
                 // create missing source nodes
-                foreach (var itemTask in taskItemsToCreate)
+                foreach (var itemTask in TaskItemsToCreate)
                 {
-                    if (itemTask.Item != null) continue;
-                    var item = itemTask.TaskOSD;
-                    string itemName = item["Name"];
-                    //if (string.IsNullOrEmpty(item)) continue;
-                    //string[] fields = item.Split(',');
-                    // From 
-                    //  item.UUID + "," + item.AssetType + "," + item.AssetUUID + "," + item.OwnerID + "," + item.GroupID + "," + item.GroupOwned + "," + item.Permissions.ToHexString() + "," + item.Name + "\n";
-                    AssetType assetType = (AssetType) item["AssetType"].AsInteger();
-                    UUID itemID = item["UUID"];
-                    UUID assetID = item["AssetUUID"];
-                    //  Permissions perms = Permissions.FromOSD(item["Permissions"]);
-                    //  string itemDebug = itemName + " " + assetType + " " + itemID + " " + assetID;
-                    if (CogbotHelpers.IsNullOrZero(assetID))
+                    if (!itemTask.CreateAgentItem(WriteLine, createObjects))
                     {
-                        WriteLine("Cant create Item: " + itemTask);
-                        skipped++;
+                        failed++;
+                        TaskInvComplete = false;
+                    }
+                }
+                return failed == 0;
+            }
+
+            public bool SyncToObject(OutputDelegate WriteLine, bool createObjects)
+            {
+                failed = 0;
+                foreach (var itemTask in TaskItemsToCreate)
+                {
+                    if (!itemTask.FindAgentItem())
+                    {
+                        WriteLine("FAILED FindAgentItem: " + itemTask);
+                        failed++;
+                        TaskInvComplete = false;
                         continue;
                     }
-
-                    if (assetType == AssetType.Object)
+                    if (!itemTask.CreateTaskItem(WriteLine, createObjects))
                     {
-                        WriteLine("Cant create Object asset: " + itemTask);
-                        skipped++;
-                        continue;
-                    }
-
-                    ItemToCreate itc = FindItemToCreate(assetID, assetType, false);
-                    UUID newAssetID;
-                    UUID newItemID = null;
-                    string ErrorMsg = "";
-                    AutoResetEvent areItem = new AutoResetEvent(false);
-
-                    TaskItemToCreate create = itemTask;
-                    InventoryManager.ItemCopiedCallback IBHUPdate = (newItem) =>
-                                                                        {
-                                                                            newItemID = newItem.UUID;
-                                                                            create.Item = newItem as InventoryItem;
-                                                                            areItem.Set();
-                                                                        };
-                    Client.Inventory.RequestCopyItem(itc.NewItemID, tih, itemName, IBHUPdate);
-                    //UUID itcNewItemID = itc.NewItemID;
-                    if (!areItem.WaitOne(TimeSpan.FromSeconds(10)))
-                    {
-                        WriteLine("Cant copy inventory asset: " + itemTask);
+                        WriteLine("FAILED CreateTaskItem: " + itemTask);
+                        TaskInvComplete = false;
                         failed++;
                         continue;
                     }
                 }
-                foreach (var itemTask in taskItemsToCreate)
-                {
-                    var item = itemTask.TaskOSD;
-                    var invItem = itemTask.Item;
-                    if (invItem == null)
-                    {
-                        WriteLine("NULL inventory asset: " + itemTask);
-                        failed++;
-                        continue;
-                    }
-                    var fid = invItem.ParentUUID;
-                    var iid = invItem.UUID;
-                    OSD.SetObjectOSD(invItem,item);
-                    ReplaceAllMembers(invItem, typeof(UUID), UUIDReplacer);
-                    invItem.ParentUUID = fid;
-                    invItem.UUID = iid;
-
-                    if (invItem.InventoryType == InventoryType.LSL)
-                    {
-                        Client.Inventory.CopyScriptToTask(ptc.NewLocalID, (InventoryItem) invItem, true);
-                        Client.Inventory.RequestSetScriptRunning(ptc.NewID, invItem.AssetUUID, true);
-                    }
-                    else
-                    {
-                        Client.Inventory.UpdateTaskInventory(ptc.NewLocalID, (InventoryItem) invItem);
-                    }
-                    created++;
-                }
+                return failed == 0;
             }
         }
 
-        private class TaskItemToCreate
+        public class TaskItemToCreate
         {
-            public OSDMap TaskOSD;
+            public override string ToString()
+            {
+                return AssetType + " " + OldAssetID + "  " + ItemName + "@" + CreatedPrim;
+            }
+            public readonly string ItemName;
+            private UUID NewAgentItemID;
+            public readonly OSDMap TaskOSD;
             public InventoryItem Item;
+            public InventoryItem TaskItem;
+            private readonly PrimToCreate CreatedPrim;
+            public readonly AssetType AssetType;
+            public UUID OldAssetID;
+            private readonly UUID OldItemID;
+
+            protected InventoryManager Inventory
+            {
+                get { return CreatedPrim.Inventory; }
+            }
+
+            public TaskItemToCreate(PrimToCreate ptc, OSDMap taskOSD)
+            {
+                CreatedPrim = ptc;
+                TaskOSD = taskOSD;
+                ItemName = taskOSD["Name"];
+                AssetType = (AssetType)taskOSD["AssetType"].AsInteger();
+                OldAssetID = taskOSD["AssetUUID"].AsUUID();
+                OldItemID = taskOSD["UUID"].AsUUID();
+            }
+            public bool FindAgentItem()
+            {
+                if (Item != null) return true;
+                foreach (InventoryBase content in CreatedPrim.AgentContents)
+                {
+                    if (content.Name == ItemName)
+                    {
+                        Item = content as InventoryItem;
+                        return true;
+                    }
+                }
+                return false;
+            }
+            public bool FindTaskItem()
+            {
+                if (TaskItem != null) return true;
+                foreach (InventoryBase content in CreatedPrim.TaskInventory)
+                {
+                    if (content.Name == ItemName)
+                    {
+                        TaskItem = content as InventoryItem;
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+
+            private AutoResetEvent areItem;
+            
+            public bool CreateAgentItem(OutputDelegate WriteLine, bool createObjects)
+            {
+                if (FindAgentItem()) return true;
+
+                if (AssetType == AssetType.Object)
+                {
+                    string taskFileName = ExportCommand.dumpDir + OldItemID + ".taskobj";
+                    if (!File.Exists(taskFileName))
+                    {
+                        WriteLine("Cant restore Object asset: " + ToString());
+                        return false;
+                    }
+                    if (!createObjects)
+                    {
+                        WriteLine("Skipping for now Object asset: " + ToString());
+                        return true;
+                    }
+                    else
+                    {
+                        string taskFileContents = File.ReadAllText(taskFileName);
+                        PrimToCreate innerObject = FindObject(taskFileContents, WriteLine);
+                        if (innerObject.Complete)
+                        {
+                            // null for a refresh
+                            CreatedPrim._contents = null;
+                            // Remove World Object and PUT in AgentInvenory
+                            areItem = areItem ?? new AutoResetEvent(false);
+                            areItem.Reset();
+                            Inventory.ItemReceived += IBHUPdate;
+                            Inventory.RequestDeRezToInventory(innerObject.NewLocalID, DeRezDestination.AgentInventoryTake,
+                                                                     CreatedPrim.AgentSyncFolder, OldItemID);
+                            Inventory.ItemReceived -= IBHUPdate;
+                            SetItemFromOSD(Item);
+                            this.Inventory.RequestUpdateItem(Item);
+                            if (!areItem.WaitOne(TimeSpan.FromSeconds(10)))
+                            {
+                                WriteLine("Cant derez inventory object: " + ToString());
+                                return false;                                
+                            }
+                            return FindAgentItem();
+                        } else
+                        {
+                            WriteLine("Inner object not ready: " + innerObject);
+                        }
+                        return false;
+                    }
+
+                }
+
+                if (CogbotHelpers.IsNullOrZero(OldAssetID))
+                {
+                    WriteLine("FAILED NO AssetID: " + this);
+                    //skipped++;
+                    return false;
+                }
+                ItemToCreate itc = Running.FindItemToCreate(OldAssetID, AssetType, false);
+                string ErrorMsg = "";
+
+                areItem = areItem ?? new AutoResetEvent(false);
+                areItem.Reset();
+                Inventory.ItemReceived += IBHUPdate;
+                Inventory.RequestCopyItem(itc.NewItemID, CreatedPrim.AgentSyncFolder, ItemName, IBHUPdate);
+                if (!areItem.WaitOne(TimeSpan.FromSeconds(10)))
+                {
+                    WriteLine("Cant copy inventory asset: " + this);
+                    return false;
+                }
+                SetItemFromOSD(Item);
+                this.Inventory.RequestUpdateItem(Item);
+                return true;
+            }
+
+            private void IBHUPdate(object sender, ItemReceivedEventArgs e)
+            {
+                var item = e.Item;
+                if (item.ParentUUID != CreatedPrim.AgentSyncFolder) return;
+                if (item.Name != ItemName) return;
+                IBHUPdate(e.Item);
+            }
+
+            private void IBHUPdate(InventoryBase item)
+            {
+                if (item.Name != ItemName) return;
+                NewAgentItemID = item.UUID;
+                Item = item as InventoryItem;
+                areItem.Set();
+            }
+
+            public bool CreateTaskItem(OutputDelegate WriteLine, bool createObjects)
+            {
+                if (FindTaskItem()) return true;
+
+                if (!FindAgentItem())
+                {
+                    WriteLine("NULL FindAgentItem: " + this);
+                    return false;
+                }
+
+                if (Item.InventoryType == InventoryType.Object)
+                {
+                    if (!createObjects) return true;
+                    // Copy to Task
+                    SetItemFromOSD(Item);
+                    Inventory.UpdateTaskInventory(CreatedPrim.NewLocalID, (InventoryItem)Item);
+                    var revent = CreatedPrim.RequestNewTaskInventory();
+                    if (!revent.WaitOne(TimeSpan.FromSeconds(10)))
+                    {
+                        WriteLine("TIMEOUT: CreateTaskItem in " + ToString());
+                    }
+                    bool findTaskItem = FindTaskItem();
+                    if (findTaskItem)
+                    {
+                        //SetItemFromOSD(TaskItem);
+                        //Inventory.UpdateTaskInventory(CreatedPrim.NewLocalID, TaskItem);
+                    }
+                    return findTaskItem;
+                }
+                if (Item.InventoryType == InventoryType.LSL)
+                {
+                    Inventory.CopyScriptToTask(CreatedPrim.NewLocalID, (InventoryItem)Item, true);
+                    Inventory.RequestSetScriptRunning(CreatedPrim.NewID, Item.AssetUUID, true);
+                }
+                else
+                {
+                    Inventory.UpdateTaskInventory(CreatedPrim.NewLocalID, (InventoryItem)Item);
+                }
+                return true;
+            }
+
+            private void SetItemFromOSD(InventoryItem item)
+            {
+                var fid = item.ParentUUID;
+                var iid = item.UUID;
+                OSD.SetObjectOSD(item, TaskOSD);
+                ReplaceAllMembers(item, typeof(UUID), UUIDReplacer);
+                item.ParentUUID = fid;
+                item.UUID = iid;
+            }
+
+            protected BotClient Client
+            {
+                get { return CreatedPrim.Client; }
+            }
+
+            public PrimToCreate FindObject(string contents, OutputDelegate WriteLine)
+            {
+                var splt = contents.Split(',');
+                var oldID = UUID.Parse(splt[3]);
+                return Running.GetOldPrim(oldID);
+            }
         }
     }
 }

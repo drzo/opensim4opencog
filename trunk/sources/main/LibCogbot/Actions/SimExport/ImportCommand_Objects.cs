@@ -18,7 +18,7 @@ namespace cogbot.Actions.SimExport
 {
     public partial class ImportCommand 
     {
-        public class PrimToCreate : UUIDChange
+        public partial class PrimToCreate : UUIDChange
         {
             public override string ToString()
             {
@@ -90,8 +90,8 @@ namespace cogbot.Actions.SimExport
             private Primitive _prim;
             private string _progressFile;
             public bool IsLinkParent;
-            public bool TaskInvComplete;
             public uint _OldLocalID;
+
 
             public uint OldLocalID
             {
@@ -173,14 +173,14 @@ namespace cogbot.Actions.SimExport
             }
 
             public void ReplaceAll(Dictionary<UUID, UUID> dictionary)
-            {               
+            {
                 ReplaceAllMembers(Prim, typeof(UUID), UUIDReplacer);
                 Prim.ID = OldID;
                 Prim.LocalID = OldLocalID;
             }
         }
 
-        private void ImportPrims(Simulator CurSim, UUID GroupID)
+        private void ImportPrims(ImportSettings importSettings)
         {
             parents = new List<PrimToCreate>();
             childs = new List<PrimToCreate>();
@@ -201,7 +201,7 @@ namespace cogbot.Actions.SimExport
                         continue;
                     }
                     parents.Add(ptc);
-                    CreatePrim(CurSim, ptc, GroupID);
+                    CreatePrim(importSettings, ptc);
                 }
             }
             else
@@ -216,23 +216,30 @@ namespace cogbot.Actions.SimExport
                         continue;
                     }
                     parents.Add(ptc);
-                    CreatePrim(CurSim, ptc, GroupID);
+                    CreatePrim(importSettings, ptc);
                 }
             }
             WriteLine("Imported parents " + parents.Count);
             foreach (PrimToCreate ptc in parents)
             {
-                CreatePrim(CurSim, ptc, GroupID);
-                SetPermissionsAll(CurSim, new List<uint>() {ptc.NewLocalID});
+                CreatePrim(importSettings, ptc);
+                SetPermissionsAll(importSettings.CurSim, new List<uint>() {ptc.NewLocalID});
             }
             WriteLine("Importing children " + childs.Count);
             //if (sculptOnly) return Success("Sculpt Only");
             foreach (PrimToCreate ptc in childs)
             {
-                CreatePrim(CurSim, ptc, GroupID);
+                CreatePrim(importSettings, ptc);
             }
             List<string> skipCompare = new List<string>() { "LocalID", "ID", "ParentID", "ObjectID", "Tag" };
+            WriteLine("Imported P=" + parents.Count + " C=" + childs.Count);
+        }
+
+        private void ImportLinks(ImportSettings importSettings)
+        {
+            var CurSim = importSettings.CurSim;
             WriteLine("Linking imports");
+            List<string> skipCompare;
             foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.link"))
             {
                 var uuids = ExportCommand.GetUUIDs(File.ReadAllText(file));
@@ -267,9 +274,10 @@ namespace cogbot.Actions.SimExport
                 if (false)
                 {
                     linkset.Reverse();
-                    SetPrimsPostLink(CurSim, GroupID, parent, linkset, skipCompare);
+                    SetPrimsPostLink(CurSim, importSettings.GroupID, parent, linkset, skipCompare);
                 }
             }
+            if (arglist.Contains("link")) ImportLinks(importSettings);
             // hopefully unset some phantoms here
             foreach (PrimToCreate ptc in childs)
             {
@@ -279,8 +287,9 @@ namespace cogbot.Actions.SimExport
             {
                 SetFlagsAndPhysics(CurSim, ptc.NewLocalID, ptc.Prim, true);
             }
-            WriteLine("Imported P=" + parents.Count + " C=" + childs.Count);
+
         }
+
 
         private void SetPermissionsAll(Simulator CurSim, List<uint> linkset)
         {
@@ -402,13 +411,13 @@ namespace cogbot.Actions.SimExport
             return null;
         }
 
-        private void CreatePrim(Simulator CurSim, PrimToCreate ptc, UUID GroupID)
+        private void CreatePrim(ImportSettings importSettings, PrimToCreate ptc)
         {
-            if (!CreatePrim0(CurSim, ptc, GroupID, ExportCommand.Running.LocalFailure))
+            if (!CreatePrim0(importSettings.CurSim, ptc, importSettings.GroupID, ExportCommand.Running.LocalFailure))
             {
                 Failure("Unable to create Prim " + ptc);
                 //try again!
-                CreatePrim0(CurSim, ptc, GroupID, ExportCommand.Running.LocalFailure);
+                CreatePrim0(importSettings.CurSim, ptc, importSettings.GroupID, ExportCommand.Running.LocalFailure);
             }
         }
         private bool CreatePrim0(Simulator CurSim, PrimToCreate ptc, UUID GroupID, OutputDelegate Failure)
