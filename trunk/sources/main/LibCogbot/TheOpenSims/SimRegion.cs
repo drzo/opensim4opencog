@@ -484,7 +484,7 @@ namespace cogbot.TheOpenSims
         {
             if (id == 0)
             {
-                throw new ArgumentException("GetRegion: region handle cant be zero");
+                //throw new ArgumentException("GetRegion: region handle cant be zero");
             }
             lock (_CurrentRegions)
             {
