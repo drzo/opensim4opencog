@@ -18,6 +18,15 @@ namespace cogbot.Actions.SimExport
 {
     public partial class ImportCommand : Command, RegionMasterCommand
     {
+
+        internal class ImportSettings
+        {
+            public UUID GroupID;
+            public bool MakeEverythingGroupOwned;
+            public HashSet<string> arglist;
+            public Simulator CurSim;
+        }
+
         private enum ImporterState
         {
             RezzingParent,
@@ -40,21 +49,7 @@ namespace cogbot.Actions.SimExport
             TaskInventoryConfirmed,
             RepackagingComplete
         }
-        private class Linkset
-        {
-            public Primitive RootPrim;
-            public List<Primitive> Children = new List<Primitive>();
 
-            public Linkset()
-            {
-                RootPrim = new Primitive();
-            }
-
-            public Linkset(Primitive rootPrim)
-            {
-                RootPrim = rootPrim;
-            }
-        }
         public class UUIDChange
         {
             protected UUIDChange()
@@ -184,16 +179,15 @@ namespace cogbot.Actions.SimExport
             // trees - load trees files 
             // terrain - load terrain files 
             // links - operate on linkset
-            // deps - operate on dependant assets
-            // dl - operate on dependant downloads
             // tasks - save task files
-            // taskobj - task objects
+            // taskobjs - task objects
             // all = users llsd tasks deps links (dl and taskobj not included)           
             ";
             if (args == null || args.Length == 0) return Failure(hlp);
-            UUID GroupID = (args.Length > 1) ? TheBotClient.GroupID : UUID.Zero;
-            var CurSim = Client.Network.CurrentSim;
-            arglist = new HashSet<string>();
+            ImportSettings importSettings = new ImportSettings();
+            importSettings.GroupID = (args.Length > 1) ? TheBotClient.GroupID : UUID.Zero;
+            importSettings.CurSim = Client.Network.CurrentSim;
+            arglist = importSettings.arglist = new HashSet<string>();
             foreach (string s in args)
             {
                 arglist.Add(s.TrimEnd(new[] { 's' }).ToLower().TrimStart(new[] { '-' }));
@@ -208,10 +202,17 @@ namespace cogbot.Actions.SimExport
                 arglist.Add("user");
                 arglist.Add("group");
                 arglist.Add("prim");
+                arglist.Add("task");
+                arglist.Add("taskobj");
             }
+
             if (arglist.Contains("prim"))
             {
                 arglist.Add("asset");
+            }
+            if (arglist.Contains("prim"))
+            {
+                if (!arglist.Contains("nolink")) arglist.Add("link");
             }
             if (!arglist.Contains("noasset") && arglist.Contains("asset"))
             {
@@ -220,11 +221,11 @@ namespace cogbot.Actions.SimExport
 
             GleanUUIDsFrom(GetAssetUploadsFolder());
             ScanForChangeList();
-            if (arglist.Contains("terrain")) UploadTerrain();
+            if (arglist.Contains("terrain")) UploadTerrain(importSettings);
             WriteLine("ChangeList Size is " + ChangeList.Count);
 
-            if (arglist.Contains("prim")) ImportPrims(CurSim,GroupID);
-            if (arglist.Contains("task")) ImportTaskFiles();
+            if (arglist.Contains("prim")) ImportPrims(importSettings);
+            if (arglist.Contains("task")) ImportTaskFiles(importSettings,arglist.Contains("taskobj"));
 
             return SuccessOrFailure();
         }

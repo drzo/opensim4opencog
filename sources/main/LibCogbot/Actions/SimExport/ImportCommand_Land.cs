@@ -19,7 +19,7 @@ namespace cogbot.Actions.SimExport
     public partial class ImportCommand 
     {
 
-        private void UploadTerrain()
+        private void UploadTerrain(ImportSettings importSettings)
         {
             string fn = ExportCommand.terrainFileName;
 
