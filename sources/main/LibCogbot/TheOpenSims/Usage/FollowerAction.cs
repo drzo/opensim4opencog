@@ -33,13 +33,13 @@ namespace cogbot.TheOpenSims
         public static bool AvoidFalls = true;
         public static bool AvoidFallsWithFlight = true;
         private static readonly TrialProc[] proceedure = {
-                                                              UseTimes(MovementProceedure.AStar, 1),
                                                               UseTimes(MovementProceedure.AStar, 3),
                                                               UseTimes(MovementProceedure.TurnToAndWalk, 3),
-                                                              UseTimes(MovementProceedure.FlyTo, 1),
-                                                              UseTimes(MovementProceedure.Teleport, 1),
-                                                              UseTimes(MovementProceedure.AutoPilot, 3),
-                                                              UseTimes(MovementProceedure.FlyTo, 3),
+                                                             /// UseTimes(MovementProceedure.FlyTo, 1),
+                                                             // UseTimes(MovementProceedure.Teleport, 1),
+                                                               UseTimes(MovementProceedure.AStar, 3),
+                                                           //   UseTimes(MovementProceedure.AutoPilot, 3),
+                                                            //  UseTimes(MovementProceedure.FlyTo, 3),
                                                               UseTimes(MovementProceedure.TurnToAndWalk, 2),
                                                           };
         private static TrialProc UseTimes(MovementProceedure proc, int numTimes)
