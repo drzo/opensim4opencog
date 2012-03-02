@@ -62,6 +62,10 @@ namespace cogbot.Actions.SimExport
                     Failure("INComplete: " + ptc);
                     incomplete++;
                 }
+                else
+                {
+                    Success("COMPLETE: " + ptc);
+                }
             }
             return incomplete;
         }
@@ -201,10 +205,29 @@ namespace cogbot.Actions.SimExport
             }
 
             public List<TaskItemToCreate> TaskItemsToCreate;
+            public event Action TaskInvChanged;
+            public short TaskSerial = -1;
+            private void TaskInventoryItemReceived(object sender, ObjectPropertiesEventArgs e)
+            {
+                if (e.Properties.ObjectID != NewID) return;
+                short newSerial = e.Properties.InventorySerial;
+                if (TaskSerial < newSerial)
+                {
+                    objectinventory = null;
+                    if (TaskInvChanged != null)
+                    {
+                        TaskInvChanged();
+                    }
+                }
+                TaskSerial = newSerial;
+            }
+
             public void CreateWorkflow(UUID agentSyncFolderHolder)
             {
+                if (TaskItemsToCreate != null) return;
                 TaskItemsToCreate = new List<TaskItemToCreate>();
                 AgentSyncFolder = ExportCommand.Running.FolderCalled(OldID.ToString(), agentSyncFolderHolder);
+                Client.Objects.ObjectProperties += TaskInventoryItemReceived;
             }
 
             public bool LoadOSD(string taskDataS, OutputDelegate WriteLine)
@@ -303,7 +326,7 @@ namespace cogbot.Actions.SimExport
                     if (content.Name == ItemName)
                     {
                         Item = content as InventoryItem;
-                        return true;
+                        if (Item != null) return true;
                     }
                 }
                 return false;
@@ -311,20 +334,23 @@ namespace cogbot.Actions.SimExport
             public bool FindTaskItem()
             {
                 if (TaskItem != null) return true;
-                foreach (InventoryBase content in CreatedPrim.TaskInventory)
+                List<InventoryBase> taskInv = CreatedPrim.TaskInventory;
+                if (taskInv == null) return false;
+                foreach (InventoryBase content in taskInv)
                 {
                     if (content.Name == ItemName)
                     {
                         TaskItem = content as InventoryItem;
-                        return true;
+                        if (TaskItem != null) return true;
                     }
                 }
                 return false;
             }
 
 
-            private AutoResetEvent areItem;
-            
+            private ManualResetEvent areItem;
+            private short oldTaskSerial;
+
             public bool CreateAgentItem(OutputDelegate WriteLine, bool createObjects)
             {
                 if (FindAgentItem()) return true;
@@ -351,19 +377,21 @@ namespace cogbot.Actions.SimExport
                             // null for a refresh
                             CreatedPrim._contents = null;
                             // Remove World Object and PUT in AgentInvenory
-                            areItem = areItem ?? new AutoResetEvent(false);
+                            areItem = areItem ?? new ManualResetEvent(false);
                             areItem.Reset();
-                            Inventory.ItemReceived += IBHUPdate;
+                            Inventory.ItemReceived += AgentInventoryOnItemReceived;
                             Inventory.RequestDeRezToInventory(innerObject.NewLocalID, DeRezDestination.AgentInventoryTake,
                                                                      CreatedPrim.AgentSyncFolder, OldItemID);
-                            Inventory.ItemReceived -= IBHUPdate;
-                            SetItemFromOSD(Item);
-                            this.Inventory.RequestUpdateItem(Item);
-                            if (!areItem.WaitOne(TimeSpan.FromSeconds(10)))
+                            if (!areItem.WaitOne(TimeSpan.FromSeconds(5)))
                             {
+                                Inventory.ItemReceived -= AgentInventoryOnItemReceived;
                                 WriteLine("Cant derez inventory object: " + ToString());
                                 return false;                                
                             }
+                            Inventory.ItemReceived -= AgentInventoryOnItemReceived;
+                            SetItemFromOSD(Item);
+                            this.Inventory.RequestUpdateItem(Item);
+
                             return FindAgentItem();
                         } else
                         {
@@ -381,13 +409,12 @@ namespace cogbot.Actions.SimExport
                     return false;
                 }
                 ItemToCreate itc = Running.FindItemToCreate(OldAssetID, AssetType, false);
-                string ErrorMsg = "";
 
-                areItem = areItem ?? new AutoResetEvent(false);
+                areItem = areItem ?? new ManualResetEvent(false);
                 areItem.Reset();
-                Inventory.ItemReceived += IBHUPdate;
-                Inventory.RequestCopyItem(itc.NewItemID, CreatedPrim.AgentSyncFolder, ItemName, IBHUPdate);
-                if (!areItem.WaitOne(TimeSpan.FromSeconds(10)))
+                Inventory.ItemReceived += AgentInventoryOnItemReceived;
+                Inventory.RequestCopyItem(itc.NewItemID, CreatedPrim.AgentSyncFolder, ItemName, AgentInventoryOnItemReceived);
+                if (!areItem.WaitOne(TimeSpan.FromSeconds(5)))
                 {
                     WriteLine("Cant copy inventory asset: " + this);
                     return false;
@@ -397,15 +424,15 @@ namespace cogbot.Actions.SimExport
                 return true;
             }
 
-            private void IBHUPdate(object sender, ItemReceivedEventArgs e)
+            private void AgentInventoryOnItemReceived(object sender, ItemReceivedEventArgs e)
             {
                 var item = e.Item;
                 if (item.ParentUUID != CreatedPrim.AgentSyncFolder) return;
                 if (item.Name != ItemName) return;
-                IBHUPdate(e.Item);
+                AgentInventoryOnItemReceived(e.Item);
             }
 
-            private void IBHUPdate(InventoryBase item)
+            private void AgentInventoryOnItemReceived(InventoryBase item)
             {
                 if (item.Name != ItemName) return;
                 NewAgentItemID = item.UUID;
@@ -426,32 +453,50 @@ namespace cogbot.Actions.SimExport
                 if (Item.InventoryType == InventoryType.Object)
                 {
                     if (!createObjects) return true;
-                    // Copy to Task
-                    SetItemFromOSD(Item);
-                    Inventory.UpdateTaskInventory(CreatedPrim.NewLocalID, (InventoryItem)Item);
-                    var revent = CreatedPrim.RequestNewTaskInventory();
-                    if (!revent.WaitOne(TimeSpan.FromSeconds(10)))
-                    {
-                        WriteLine("TIMEOUT: CreateTaskItem in " + ToString());
-                    }
-                    bool findTaskItem = FindTaskItem();
-                    if (findTaskItem)
-                    {
-                        //SetItemFromOSD(TaskItem);
-                        //Inventory.UpdateTaskInventory(CreatedPrim.NewLocalID, TaskItem);
-                    }
-                    return findTaskItem;
                 }
+
+                // Copy to Task
+                SetItemFromOSD(Item);
+                areItem = areItem ?? new ManualResetEvent(false);
+                areItem.Reset();
+                oldTaskSerial = CreatedPrim.TaskSerial;
+                if (oldTaskSerial == -1)
+                {
+                    oldTaskSerial = CreatedPrim.Rezed.Properties.InventorySerial;
+                }
+                Client.Objects.ObjectProperties += TaskInventoryItemReceived;
+
                 if (Item.InventoryType == InventoryType.LSL)
                 {
-                    Inventory.CopyScriptToTask(CreatedPrim.NewLocalID, (InventoryItem)Item, true);
+                    Inventory.CopyScriptToTask(CreatedPrim.NewLocalID, (InventoryItem) Item, true);
                     Inventory.RequestSetScriptRunning(CreatedPrim.NewID, Item.AssetUUID, true);
                 }
                 else
                 {
-                    Inventory.UpdateTaskInventory(CreatedPrim.NewLocalID, (InventoryItem)Item);
+                    Inventory.UpdateTaskInventory(CreatedPrim.NewLocalID, (InventoryItem) Item);
                 }
-                return true;
+                if (areItem.WaitOne(TimeSpan.FromSeconds(5)))
+                {
+                    WriteLine("TIMEOUT: UpdateTask in " + ToString());
+                }
+                Client.Objects.ObjectProperties -= TaskInventoryItemReceived;
+                var revent = CreatedPrim.RequestNewTaskInventory();
+                if (!revent.WaitOne(TimeSpan.FromSeconds(10)))
+                {
+                    WriteLine("TIMEOUT: RequestNewTaskInventory in " + ToString());
+                }
+                return FindTaskItem();
+            }
+
+            private void TaskInventoryItemReceived(object sender, ObjectPropertiesEventArgs e)
+            {
+                if (e.Properties.ObjectID == CreatedPrim.NewID)
+                {
+                    if (oldTaskSerial + 1 == e.Properties.InventorySerial)
+                    {
+                        areItem.Set();
+                    }
+                }
             }
 
             private void SetItemFromOSD(InventoryItem item)
