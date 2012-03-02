@@ -270,7 +270,7 @@ namespace OpenMetaverse
                 get { return _Handle; }
                 set
                 {
-                    if (value == 0) throw new ArgumentException("Should not set Region handle to 0 on " + Name);
+                    //if (value == 0) throw new ArgumentException("Should not set Region handle to 0 on " + Name);
                     _Handle = value;
                 }
             }
@@ -670,7 +670,7 @@ namespace OpenMetaverse
 #if POOLED_SIMDATA
         static public SimPooledData GetSharedData(ulong handle, bool createIfMissing)
         {
-            if (handle == 0) throw new ArgumentException("Should not search for Region handle 0!");
+            ///if (handle == 0) throw new ArgumentException("Should not search for Region handle 0!");
             lock (SimGlobalData)
             {
                 SimPooledData simPooledData;
