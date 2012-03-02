@@ -486,11 +486,16 @@ namespace cogbot.TheOpenSims
                     SimRegion R = GetSimRegion();
                     float WaterHeight = R.WaterHeight();
                     double selfZ = worldPosition.Z;
+                    bool swimming = WaterHeight > selfZ;
+                    if (swimming)
+                    {
+                        realTargetZ = WaterHeight;
+                    }
                     double UpDown = realTargetZ - selfZ;
 
                     double ZDist = Math.Abs(UpDown);
                     ///  Like water areas
-                    bool swimming = WaterHeight > selfZ || MovementByFlight;
+                    bool airborne =  MovementByFlight && CanFly;
 
                     if (UpDown > 5f && CanFly)
                     {
@@ -550,7 +555,7 @@ namespace cogbot.TheOpenSims
                     lastDistance = curDist;
 
 
-                    if (swimming)
+                    if (swimming || airborne)
                     {
                         double TargetHeight = WaterHeight;
                         if (MovementByFlight)
@@ -596,9 +601,9 @@ namespace cogbot.TheOpenSims
 
                     /// if ()/// ClientMovement.Fly = swimming;///  todo ||  GetPathStore().IsFlyZone(SimPathStore.GlobalToLocal(worldPosition));
 
-                    if (swimming)
+                    if (swimming || airborne)
                     {
-                        if (!ClientMovement.Fly)
+                        if (!ClientMovement.Fly && CanFly)
                         {
                             Debug("Starting to swim again");
                             ClientMovement.Fly = true;
@@ -660,7 +665,7 @@ namespace cogbot.TheOpenSims
                         continue;
                     }
 
-                    if (ZDist > curXYDist + 2)
+                    if (UpDown > curXYDist)
                     {
                         // avoid circling while not changing ones altitude!
                        if (IsFlying) continue;
