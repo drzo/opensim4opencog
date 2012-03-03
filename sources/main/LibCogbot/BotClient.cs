@@ -679,7 +679,7 @@ namespace cogbot
                     if (_LispTaskInterperter != null) return;
                     //WriteLine("Start Loading TaskInterperter ... '" + TaskInterperterType + "' \n");
                     _LispTaskInterperter = ScriptManager.LoadScriptInterpreter(taskInterperterType, this);
-                    _LispTaskInterperter.LoadFile("cogbot.lisp", WriteLine);
+                    _LispTaskInterperter.LoadFile("cogbot.lisp", DebugWriteLine);
                     Intern("clientManager", ClientManager);
                     Intern("client", this);
                     if (scriptEventListener == null)
@@ -849,6 +849,7 @@ namespace cogbot
             var status = e.Status;
             if (status == TeleportStatus.Finished || status == TeleportStatus.Failed || status == TeleportStatus.Cancelled)
             {
+                OutputDelegate WriteLine = DisplayNotificationInChat;
                 WriteLine("Teleport " + status);
                 describeSituation(WriteLine);
             }
@@ -1133,13 +1134,20 @@ namespace cogbot
         {
             get { return Self.AgentID; }
         }
-
         public void DisplayNotificationInChat(string str)
+        {
+            DisplayNotificationInChatReal(str);
+        }
+        public void DisplayNotificationInChat(string str, params object[] args)
+        {
+            DisplayNotificationInChatReal(DLRConsole.SafeFormat(str, args));
+        }
+        public void DisplayNotificationInChatReal(string str)
         {
             InvokeGUI(
                 () =>
                     {
-                        WriteLine(str);
+                        ClientManager.WriteLine(str);
                         ChatConsole cc = (ChatConsole) TheRadegastInstance.TabConsole.Tabs["chat"].Control;
                         RichTextBoxPrinter tp = (RichTextBoxPrinter) cc.ChatManager.TextPrinter;
                         InvokeGUI(cc.rtbChat, () =>
@@ -1433,7 +1441,7 @@ namespace cogbot
                 Network.Logout();
         }
 
-        public void WriteLine(string str)
+        public void WriteLineReal(string str)
         {
             try
             {
@@ -1449,7 +1457,7 @@ namespace cogbot
             }
             catch (Exception ex)
             {
-                Logger.Log(GetName() + " exeption " + ex, Helpers.LogLevel.Error, ex);
+                Logger.Log(GetName() + " WriteLineReal Exception " + ex, Helpers.LogLevel.Error, ex);
             }
 
         }
@@ -1471,8 +1479,20 @@ namespace cogbot
             }
             catch (Exception ex)
             {
-                Logger.Log(GetName() + " exeption " + ex, Helpers.LogLevel.Error, ex);
+                Logger.Log(GetName() + " DebugWriteLine Exception " + ex, Helpers.LogLevel.Error, ex);
             }            
+        }
+        public void WriteLine(string str)
+        {
+            try
+            {
+                if (str == null) return;
+                WriteLineReal(str);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(GetName() + " WriteLine Exception " + ex, Helpers.LogLevel.Error, ex);
+            }
         }
         public void WriteLine(string str, params object[] args)
         {
@@ -1480,11 +1500,11 @@ namespace cogbot
             {
                 if (str == null) return;
                 if (args != null && args.Length > 0) str = String.Format(str, args);
-                WriteLine(str);
+                WriteLineReal(str);
             }
             catch (Exception ex)
             {
-                Logger.Log(GetName() + " exeption " + ex, Helpers.LogLevel.Error, ex);
+                Logger.Log(GetName() + " WriteLine Exception " + ex, Helpers.LogLevel.Error, ex);
             }
         }
         // for lisp to call
@@ -1785,6 +1805,7 @@ namespace cogbot
                         }
                         catch (Exception e)
                         {
+                            e = InnerMostException(e);
                             LogException("ERROR!  " + name + " " + t + " " + e + "\n In " + t.Name, e);
                         }
                     }
@@ -1826,14 +1847,24 @@ namespace cogbot
                             found = true;
                             InvokeNext("LoadAssembly " + assembly, () =>
                                        {
-                                           Listener command = (Listener)info.Invoke(new object[] { this });
-                                           RegisterListener(command);
-                                           items.Add(command);
+
+                                           try
+                                           {
+                                               Listener command = (Listener)info.Invoke(new object[] { this });
+                                               RegisterListener(command);
+                                               items.Add(command);
+                                           }
+                                           catch (Exception e1)
+                                           {
+                                               e1 = InnerMostException(e1);
+                                               LogException("ERROR! RegisterListener: " + e1 + "\n In " + Thread.CurrentThread.Name, e1);   
+                                           }
                                        });
 
                         }
                         catch (Exception e)
                         {
+                            e = InnerMostException(e);
                             LogException("ERROR! RegisterListener: " + e + "\n In " + t.Name, e);
                         }
                     }
@@ -1849,6 +1880,13 @@ namespace cogbot
             }
             return items;
         }
+        public static Exception InnerMostException(Exception exception)
+        {
+            Exception inner = exception.InnerException;
+            if (inner != null && inner != exception)
+                return InnerMostException(inner);
+            return exception;
+        }
 
         /// <summary>
         /// Initialize everything that needs to be initialized once we're logged in.
@@ -1861,7 +1899,8 @@ namespace cogbot
             name = name.Replace(" ", "").ToLower();
             while (name.EndsWith(".")) name = name.Substring(0, name.Length - 1);
             Monitor.Enter(Commands);
-            if (!Commands.ContainsKey(name))
+            Command prev;
+            if (!Commands.TryGetValue(name, out prev))
             {
                 Commands.Add(name, command);
                 command.Name = orginalName;
@@ -1869,7 +1908,7 @@ namespace cogbot
             }
             else
             {
-                RegisterCommand("!" + orginalName, command);
+                if (prev != command) RegisterCommand("!" + orginalName, command);
             }
             Monitor.Exit(Commands);
         }
@@ -1978,6 +2017,7 @@ namespace cogbot
         public CmdResult ExecuteCommand(string text)
         {
             // done inside the callee InvokeJoin("ExecuteCommand " + text);
+            OutputDelegate WriteLine = DisplayNotificationInChat;
             return ExecuteCommand(text, this, WriteLine);
         }
 
