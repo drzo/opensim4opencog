@@ -12,6 +12,8 @@ namespace IrcRegionModule
         public IrcBotModule(BotClient parent)
             : base(parent)
         {
+            IrcCommand = IrcCommand ?? new IrcCommand(client);
+            client.RegisterCommand("irc", IrcCommand);
             //parent.Commands.Add();
         }
 
@@ -20,7 +22,7 @@ namespace IrcRegionModule
             return GetType().Name;
         }
 
-        public override void StartupListener()
+        public override sealed void StartupListener()
         {
             IrcCommand = IrcCommand ?? new IrcCommand(client);
             client.RegisterCommand("irc", IrcCommand);
