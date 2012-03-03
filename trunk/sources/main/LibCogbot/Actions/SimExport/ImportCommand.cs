@@ -188,6 +188,7 @@ namespace cogbot.Actions.SimExport
             importSettings.GroupID = (args.Length > 1) ? TheBotClient.GroupID : UUID.Zero;
             importSettings.CurSim = Client.Network.CurrentSim;
             arglist = importSettings.arglist = new HashSet<string>();
+            writeLine("Starting SimImport...");
             foreach (string s in args)
             {
                 arglist.Add(s.TrimEnd(new[] { 's' }).ToLower().TrimStart(new[] { '-' }));
@@ -202,6 +203,8 @@ namespace cogbot.Actions.SimExport
                 arglist.Add("user");
                 arglist.Add("group");
                 arglist.Add("prim");
+                arglist.Add("ptc");                
+                arglist.Add("link");
                 arglist.Add("task");
                 arglist.Add("taskobj");
             }
@@ -222,11 +225,14 @@ namespace cogbot.Actions.SimExport
             GleanUUIDsFrom(GetAssetUploadsFolder());
             ScanForChangeList();
             if (arglist.Contains("terrain")) UploadTerrain(importSettings);
-            WriteLine("ChangeList Size is " + ChangeList.Count);
+            WriteLine("NewAsset ChangeList Size is " + ChangeList.Count);
 
             if (arglist.Contains("prim")) ImportPrims(importSettings);
-            if (arglist.Contains("task")) ImportTaskFiles(importSettings,arglist.Contains("taskobj"));
-
+            ConfirmLocalIDs(importSettings);
+            if (arglist.Contains("link")) ImportLinks(importSettings);
+            bool tasksObjs = arglist.Contains("taskobj");
+            if (arglist.Contains("task") || tasksObjs) ImportTaskFiles(importSettings, tasksObjs);
+            writeLine("Completed SimImport");
             return SuccessOrFailure();
         }
 

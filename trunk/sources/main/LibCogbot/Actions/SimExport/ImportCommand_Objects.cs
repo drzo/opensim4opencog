@@ -22,16 +22,22 @@ namespace cogbot.Actions.SimExport
         {
             public override string ToString()
             {
-                return Prim + " -> " + _rezed;
+                string rezString = "" + _rezed;
+                if (string.IsNullOrEmpty(rezString))
+                {
+                    rezString = NewID + " (lid=" + NewLocalID + ")";
+                }
+                if (_prim != null) return _prim + " -> " + rezString;
+                return OldID + " -> " + rezString;
             }
             public override int GetHashCode()
             {
-                return Prim.ID.GetHashCode();
+                return OldID.GetHashCode();
             }
             public override bool Equals(object obj)
             {
                 var ptc = obj as PrimToCreate;
-                return ptc != null && Prim.ID == ptc.Prim.ID;
+                return ptc != null && OldID == ptc.OldID;
             }
             public PrimToCreate(Primitive prim)
             {
@@ -89,8 +95,15 @@ namespace cogbot.Actions.SimExport
             public bool RezRequested = false;
             private Primitive _prim;
             private string _progressFile;
-            public bool IsLinkParent;
+            public bool IsLinkParent
+            {
+               get
+               {
+                   return Childs != null;
+               }
+            }
             public uint _OldLocalID;
+            public List<PrimToCreate> Childs;
 
 
             public uint OldLocalID
@@ -141,10 +154,15 @@ namespace cogbot.Actions.SimExport
                     _rezed = value;
                     NewID = value.ID;
                     NewLocalID = value.LocalID;
-                    lock (ExportCommand.fileWriterLock)
-                        File.WriteAllText(ProgressFile,
-                                          NewID + "," + NewLocalID + "," + value.RegionHandle + "," + OldLocalID);
+                    SaveProgressFile();
                 }
+            }
+            private void SaveProgressFile()
+            {
+                lock (ExportCommand.fileWriterLock)
+                    File.WriteAllText(ProgressFile,
+                                      NewID + "," + NewLocalID + "," + _rezed.RegionHandle + ","
+                                      + OldLocalID + "," + TaskInvComplete);
             }
 
             private void LoadProgressFile()
@@ -162,6 +180,10 @@ namespace cogbot.Actions.SimExport
                         {
                             _OldLocalID = uint.Parse(sdata[3]);
                             UINT2OBJECT[_OldLocalID] = this;
+                            if (sdata.Length > 4)
+                            {
+                                _taskInvComplete = bool.Parse(sdata[4]);
+                            }
                         }
                         UUID2OBJECT[OldID] = this;
                         NewUUID2OBJECT[NewID] = this;
@@ -185,16 +207,25 @@ namespace cogbot.Actions.SimExport
             parents = new List<PrimToCreate>();
             childs = new List<PrimToCreate>();
             var taskobjs = new List<PrimToCreate>();
-
             if (diskPrims.Count == 0)
             {
+                bool ptcOnly = importSettings.arglist.Contains("ptc");
+                WriteLine("Loading Prims from LLSD Files");
+                int loaded = 0;
                 foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.llsd"))
                 {
-
+                    string fileUUID = Path.GetFileNameWithoutExtension(Path.GetFileName(file));
+                    var ptc = APrimToCreate(UUID.Parse(fileUUID));
+                    string ptcFile = ExportCommand.dumpDir + fileUUID + ".ptc";
+                    if (++loaded % 25 == 0) WriteLine("Prims loaded " + loaded + "...");
+                    if (File.Exists(ptcFile))
+                    {
+                        if (ptcOnly) continue;
+                    }
                     Primitive prim = (Primitive)ExportCommand.FromFile(file, ExportCommand.UseBinarySerialization);
                     diskPrims.Add(prim);
                     //if (sculptOnly && (prim.Sculpt == null || CogbotHelpers.IsNullOrZero(prim.Sculpt.SculptTexture))) continue;
-                    PrimToCreate ptc = APrimToCreate(prim);
+                    //PrimToCreate ptc = APrimToCreate(prim);
                     if (prim.ParentID != 0)
                     {
                         childs.Add(ptc);
@@ -206,10 +237,13 @@ namespace cogbot.Actions.SimExport
             }
             else
             {
+                WriteLine("Loading Prims from Preloaded Files Count = " + diskPrims.Count);
+                int loaded = 0; 
                 foreach (Primitive prim in diskPrims)
                 {
                     //if (sculptOnly && (prim.Sculpt == null || CogbotHelpers.IsNullOrZero(prim.Sculpt.SculptTexture))) continue;
                     PrimToCreate ptc = APrimToCreate(prim);
+                    if (++loaded % 25 == 0) WriteLine("Prims loaded " + loaded + "...");
                     if (prim.ParentID != 0)
                     {
                         childs.Add(ptc);
@@ -220,19 +254,22 @@ namespace cogbot.Actions.SimExport
                 }
             }
             WriteLine("Imported parents " + parents.Count);
+            int created = 0; 
             foreach (PrimToCreate ptc in parents)
             {
                 CreatePrim(importSettings, ptc);
-                SetPermissionsAll(importSettings.CurSim, new List<uint>() {ptc.NewLocalID});
+                if (++created % 25 == 0) WriteLine("Roots created " + created + "...");
+                SetPermissionsAll(importSettings.CurSim, new List<uint>() { ptc.NewLocalID });
             }
             WriteLine("Importing children " + childs.Count);
             //if (sculptOnly) return Success("Sculpt Only");
             foreach (PrimToCreate ptc in childs)
             {
                 CreatePrim(importSettings, ptc);
+                if (++created % 25 == 0) WriteLine("Childs created " + created + "...");
             }
             List<string> skipCompare = new List<string>() { "LocalID", "ID", "ParentID", "ObjectID", "Tag" };
-            WriteLine("Imported P=" + parents.Count + " C=" + childs.Count);
+            WriteLine("COMPLETE: Imported P=" + parents.Count + " C=" + childs.Count);
         }
 
         private void ImportLinks(ImportSettings importSettings)
@@ -246,7 +283,7 @@ namespace cogbot.Actions.SimExport
                 if (uuids.Length < 1) continue;
                 UUID idp = uuids[0];
                 var parent = GetOldPrim(idp);
-                parent.IsLinkParent = true;
+                var Childs = parent.Childs = new List<PrimToCreate>();
                 var linkset = new List<uint>(uuids.Length) { parent.NewLocalID };
                 for (int i = 1; i < uuids.Length; i++)
                 {
@@ -254,13 +291,14 @@ namespace cogbot.Actions.SimExport
                     PrimToCreate ptc = GetOldPrim(id);
                     if (ptc == null)
                     {
-                        Failure("Relink cant find PTC=" + id);
+                        Failure("FAILED: Relink cant find PTC=" + id);
                         continue;
                     }
+                    Childs.Add(ptc);
                     uint newLocalID = ptc.NewLocalID;
                     if (newLocalID == 0)
                     {
-                        Failure("Relink cant find linked prim ID=" + id);
+                        Failure("FAILED: Relink cant find linked prim ID=" + id);
                         continue;
                     }
                     linkset.Add(newLocalID);
@@ -277,7 +315,7 @@ namespace cogbot.Actions.SimExport
                     SetPrimsPostLink(CurSim, importSettings.GroupID, parent, linkset, skipCompare);
                 }
             }
-            if (arglist.Contains("link")) ImportLinks(importSettings);
+
             // hopefully unset some phantoms here
             foreach (PrimToCreate ptc in childs)
             {
@@ -677,6 +715,30 @@ namespace cogbot.Actions.SimExport
         private static bool FlagSet(PrimFlags flags, PrimFlags set)
         {
             return (flags & set) == set;
+        }
+
+        private void ConfirmLocalIDs(ImportSettings settings)
+        {
+            foreach (var i in UUID2OBJECT)
+            {
+                var o = i.Value as PrimToCreate;
+                if (o == null) continue;
+                var found = o.Rezed;
+                if (found == null)
+                {
+                    Failure("UNCONFIRMED: " + o);
+                }
+                else
+                {
+                    uint fid = found.LocalID;
+                    if (o.NewLocalID == fid)
+                    {
+                        continue;
+                    }
+                    o.NewLocalID = fid;
+                    o.Rezed = found;
+                }
+            }
         }
     }
 }

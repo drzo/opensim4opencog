@@ -146,13 +146,13 @@ namespace cogbot.Actions
         /// </summary>
         /// <param name="verb"></param>
         /// <param name="args"></param>
-        public virtual CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public virtual CmdResult acceptInput(string verb, Parser args, OutputDelegate writeLine)
         {
             success = failure = 0;
-            this.WriteLine = WriteLine;
+            WriteLine = writeLine;
             try
             {
-                return Execute(args.tokens, CallerID, WriteLine);
+                return Execute(args.tokens, CallerID, writeLine);
             }
             catch (Exception e)
             {
@@ -267,24 +267,24 @@ namespace cogbot.Actions
             }
         }
 
-        public CmdResult acceptInputWrapper(string verb, string args,UUID callerID, OutputDelegate WriteLine)
+        public CmdResult acceptInputWrapper(string verb, string args,UUID callerID, OutputDelegate writeLine)
         {
             CallerID = callerID;
             success = failure = 0;
-            this.WriteLine = WriteLine;
-            return acceptInput(verb, Parser.ParseArgs(args), WriteLine);
+            this.WriteLine = writeLine;
+            return acceptInput(verb, Parser.ParseArgs(args), writeLine);
         }
 
-        public virtual CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public virtual CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate writeLine)
         {
             CallerID = fromAgentID;
             success = failure = 0;
-            this.WriteLine = WriteLine;
+            this.WriteLine = writeLine;
             Parser p = Parser.ParseArgs(String.Join(" ", args));
             p.tokens = args;
             try
             {
-                return acceptInput(Name, p, WriteLine);
+                return acceptInput(Name, p, writeLine);
             }
             finally
             {
@@ -292,16 +292,16 @@ namespace cogbot.Actions
             }
         }
 
-        public virtual CmdResult ExecuteCmd(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public virtual CmdResult ExecuteCmd(string[] args, UUID fromAgentID, OutputDelegate writeLine)
         {
             CallerID = fromAgentID;
             success = failure = 0;
-            this.WriteLine = WriteLine;
+            this.WriteLine = writeLine;
             Parser p = Parser.ParseArgs(String.Join(" ", args));
             p.tokens = args;
             try
             {
-                return acceptInput(Name, p, WriteLine);
+                return acceptInput(Name, p, writeLine);
             }
             finally
             {

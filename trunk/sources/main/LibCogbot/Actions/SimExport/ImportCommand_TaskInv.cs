@@ -33,10 +33,12 @@ namespace cogbot.Actions.SimExport
         {
             int incomplete = 0;
             var agentSyncFolderHolder = ExportCommand.Running.FolderCalled("TaskInvHolder");
+            int created = 0;
             foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.task"))
             {
                 string fileUUID = Path.GetFileNameWithoutExtension(Path.GetFileName(file));
                 var ptc = APrimToCreate(UUID.Parse(fileUUID));
+                if (++created % 25 == 0) WriteLine("tasked " + created);
                 if (ptc.TaskInvComplete) continue;
                 string taskDataS = File.ReadAllText(file);
                 if (string.IsNullOrEmpty(taskDataS))
@@ -47,25 +49,30 @@ namespace cogbot.Actions.SimExport
                 ptc.CreateWorkflow(agentSyncFolderHolder);
                 if (!ptc.LoadOSD(taskDataS, WriteLine))
                 {
-                    Failure("FAILED: LoadOSD " + ptc);
+                    //Failure("FAILED: LoadOSD " + ptc);
+                    incomplete++;
+                    continue;
                 }
                 if (!ptc.SyncToAgentFolder(WriteLine, createObjects))
                 {
-                    Failure("FAILED: SyncToAgentFolder " + ptc);
+                    //Failure("FAILED: SyncToAgentFolder " + ptc);
+                    if (ptc.succeeded == 0) continue;
                 }
                 if (!ptc.SyncToObject(WriteLine, createObjects))
                 {
-                    Failure("FAILED: SyncToObject " + ptc);
+                    //Failure("FAILED: SyncToObject " + ptc);
+                    if (ptc.succeeded == 0) continue;
                 }
                 if (!ptc.Complete)
                 {
-                    Failure("INComplete: " + ptc);
+                    Failure("INCOMPLETE: " + ptc);
                     incomplete++;
                 }
                 else
                 {
                     Success("COMPLETE: " + ptc);
                 }
+                Success("............");
             }
             return incomplete;
         }
@@ -160,7 +167,8 @@ namespace cogbot.Actions.SimExport
                 }
             }
 
-            private int failed = 0;
+            public int succeeded = 0;
+            public int failed = 0;
 
             public BotClient Client
             {
@@ -185,7 +193,18 @@ namespace cogbot.Actions.SimExport
                 }
             }
 
-            public bool TaskInvComplete;
+            public bool TaskInvComplete
+            {
+                get
+                {
+                    return _taskInvComplete;
+                }
+                set
+                {
+                    _taskInvComplete = value;
+                    SaveProgressFile();
+                }
+            }
             public bool Complete
             {
                 get
@@ -207,6 +226,8 @@ namespace cogbot.Actions.SimExport
             public List<TaskItemToCreate> TaskItemsToCreate;
             public event Action TaskInvChanged;
             public short TaskSerial = -1;
+            private bool _taskInvComplete;
+
             private void TaskInventoryItemReceived(object sender, ObjectPropertiesEventArgs e)
             {
                 if (e.Properties.ObjectID != NewID) return;
@@ -233,18 +254,24 @@ namespace cogbot.Actions.SimExport
             public bool LoadOSD(string taskDataS, OutputDelegate WriteLine)
             {
                 failed = 0;
+                succeeded = 0;
                 var taskData = OSDParser.DeserializeLLSDXml(taskDataS) as OSDArray;
                 if (taskData == null)
                 {
-                    WriteLine("Cant read taskData: " + taskDataS);
+                    WriteLine("ERROR: Cant read taskData: " + taskDataS);
                     return false;
                 }
 
-                if (taskData.Count == TaskItemsToCreate.Count) return true;
+                if (taskData.Count == TaskItemsToCreate.Count)
+                {
+                    succeeded = taskData.Count;
+                    return true;
+                }
                 // scan for existing source nodes
                 foreach (OSDMap item in taskData)
                 {
                     TaskItemsToCreate.Add(new TaskItemToCreate(this, item));
+                    succeeded++;
                 }
                 return failed == 0;
             }
@@ -252,6 +279,7 @@ namespace cogbot.Actions.SimExport
             public bool SyncToAgentFolder(OutputDelegate WriteLine, bool createObjects)
             {
                 failed = 0;
+                succeeded = 0;
                 // create missing source nodes
                 foreach (var itemTask in TaskItemsToCreate)
                 {
@@ -260,6 +288,10 @@ namespace cogbot.Actions.SimExport
                         failed++;
                         TaskInvComplete = false;
                     }
+                    else
+                    {
+                        succeeded++;
+                    }
                 }
                 return failed == 0;
             }
@@ -267,6 +299,7 @@ namespace cogbot.Actions.SimExport
             public bool SyncToObject(OutputDelegate WriteLine, bool createObjects)
             {
                 failed = 0;
+                TaskInvComplete = true;
                 foreach (var itemTask in TaskItemsToCreate)
                 {
                     if (!itemTask.FindAgentItem())
@@ -275,7 +308,7 @@ namespace cogbot.Actions.SimExport
                         failed++;
                         TaskInvComplete = false;
                         continue;
-                    }
+                    }                    
                     if (!itemTask.CreateTaskItem(WriteLine, createObjects))
                     {
                         WriteLine("FAILED CreateTaskItem: " + itemTask);
@@ -283,6 +316,7 @@ namespace cogbot.Actions.SimExport
                         failed++;
                         continue;
                     }
+                    succeeded++;
                 }
                 return failed == 0;
             }
@@ -301,6 +335,7 @@ namespace cogbot.Actions.SimExport
             public InventoryItem TaskItem;
             private readonly PrimToCreate CreatedPrim;
             public readonly AssetType AssetType;
+            public bool AlreadyMovedToTask = false;
             public UUID OldAssetID;
             private readonly UUID OldItemID;
 
@@ -320,6 +355,7 @@ namespace cogbot.Actions.SimExport
             }
             public bool FindAgentItem()
             {
+                if (AlreadyMovedToTask) return true;
                 if (Item != null) return true;
                 foreach (InventoryBase content in CreatedPrim.AgentContents)
                 {
@@ -350,6 +386,7 @@ namespace cogbot.Actions.SimExport
 
             private ManualResetEvent areItem;
             private short oldTaskSerial;
+            private UUID NewAssetID;
 
             public bool CreateAgentItem(OutputDelegate WriteLine, bool createObjects)
             {
@@ -360,7 +397,7 @@ namespace cogbot.Actions.SimExport
                     string taskFileName = ExportCommand.dumpDir + OldItemID + ".taskobj";
                     if (!File.Exists(taskFileName))
                     {
-                        WriteLine("Cant restore Object asset: " + ToString());
+                        WriteLine("ERROR: Cant restore Object asset: " + ToString());
                         return false;
                     }
                     if (!createObjects)
@@ -385,7 +422,7 @@ namespace cogbot.Actions.SimExport
                             if (!areItem.WaitOne(TimeSpan.FromSeconds(5)))
                             {
                                 Inventory.ItemReceived -= AgentInventoryOnItemReceived;
-                                WriteLine("Cant derez inventory object: " + ToString());
+                                WriteLine("ERROR: Cant derez inventory object: " + ToString());
                                 return false;                                
                             }
                             Inventory.ItemReceived -= AgentInventoryOnItemReceived;
@@ -395,30 +432,40 @@ namespace cogbot.Actions.SimExport
                             return FindAgentItem();
                         } else
                         {
-                            WriteLine("Inner object not ready: " + innerObject);
+                            WriteLine("ERROR: Inner object not ready: " + innerObject);
                         }
                         return false;
                     }
 
                 }
 
+                UUID NewItemID;
                 if (CogbotHelpers.IsNullOrZero(OldAssetID))
                 {
-                    WriteLine("FAILED NO AssetID: " + this);
+                    WriteLine("FAILED: NO AssetID: " + ToString());
                     //skipped++;
-                    return false;
+                    var scriptsUUID = ExportCommand.Running.FolderCalled("Scripts");
+                    InventoryItem missingItem = ExportCommand.Running.GetInvItem(Client, "MissingItemScript", scriptsUUID);
+                    NewItemID = missingItem.UUID;
+                    NewAssetID = missingItem.AssetUUID;
                 }
-                ItemToCreate itc = Running.FindItemToCreate(OldAssetID, AssetType, false);
-
+                else
+                {
+                    ItemToCreate itc = Running.FindItemToCreate(OldAssetID, AssetType, false);
+                    NewItemID = itc.NewItemID;
+                }
                 areItem = areItem ?? new ManualResetEvent(false);
                 areItem.Reset();
-                Inventory.ItemReceived += AgentInventoryOnItemReceived;
-                Inventory.RequestCopyItem(itc.NewItemID, CreatedPrim.AgentSyncFolder, ItemName, AgentInventoryOnItemReceived);
+                //Inventory.ItemReceived += AgentInventoryOnItemReceived;
+                Inventory.RequestCopyItem(NewItemID, CreatedPrim.AgentSyncFolder, ItemName, AgentInventoryOnItemReceived);
                 if (!areItem.WaitOne(TimeSpan.FromSeconds(5)))
                 {
-                    WriteLine("Cant copy inventory asset: " + this);
+                    //Inventory.ItemReceived -= AgentInventoryOnItemReceived;
+                    WriteLine("FAILED: Cant copy inventory asset: " + this);
                     return false;
                 }
+                //Inventory.ItemReceived -= AgentInventoryOnItemReceived;
+                NewAssetID = Item.AssetUUID;
                 SetItemFromOSD(Item);
                 this.Inventory.RequestUpdateItem(Item);
                 return true;
@@ -446,7 +493,7 @@ namespace cogbot.Actions.SimExport
 
                 if (!FindAgentItem())
                 {
-                    WriteLine("NULL FindAgentItem: " + this);
+                    WriteLine("NULL: FindAgentItem: " + ToString());
                     return false;
                 }
 
@@ -462,7 +509,15 @@ namespace cogbot.Actions.SimExport
                 oldTaskSerial = CreatedPrim.TaskSerial;
                 if (oldTaskSerial == -1)
                 {
-                    oldTaskSerial = CreatedPrim.Rezed.Properties.InventorySerial;
+                    SimObject createdPrimRezed = CreatedPrim.Rezed;
+                    if (createdPrimRezed == null)
+                    {
+                        WriteLine("TIMEOUT: TaskSerial in " + ToString());
+                    }
+                    else
+                    {
+                        oldTaskSerial = createdPrimRezed.Properties.InventorySerial;
+                    }
                 }
                 Client.Objects.ObjectProperties += TaskInventoryItemReceived;
 
@@ -473,26 +528,40 @@ namespace cogbot.Actions.SimExport
                 }
                 else
                 {
-                    Inventory.UpdateTaskInventory(CreatedPrim.NewLocalID, (InventoryItem) Item);
+                    Inventory.UpdateTaskInventory(CreatedPrim.NewLocalID, (InventoryItem) Item);                   
                 }
-                if (areItem.WaitOne(TimeSpan.FromSeconds(5)))
+                if (!areItem.WaitOne(TimeSpan.FromSeconds(5)))
                 {
                     WriteLine("TIMEOUT: UpdateTask in " + ToString());
                 }
                 Client.Objects.ObjectProperties -= TaskInventoryItemReceived;
                 var revent = CreatedPrim.RequestNewTaskInventory();
+                bool timedOut = false;
                 if (!revent.WaitOne(TimeSpan.FromSeconds(10)))
                 {
-                    WriteLine("TIMEOUT: RequestNewTaskInventory in " + ToString());
+                    timedOut = true;
                 }
-                return FindTaskItem();
+                bool found = FindTaskItem();;
+                if (AssetType == AssetType.Object)
+                {
+                    AlreadyMovedToTask = found;
+                }
+                if (!found)
+                {
+                    if (timedOut) WriteLine("TIMEOUT: RequestNewTaskInventory in " + ToString());
+                }
+                else
+                {
+                    WriteLine("SUCCESS: Found " + ToString());
+                }
+                return found;
             }
 
             private void TaskInventoryItemReceived(object sender, ObjectPropertiesEventArgs e)
             {
                 if (e.Properties.ObjectID == CreatedPrim.NewID)
                 {
-                    if (oldTaskSerial + 1 == e.Properties.InventorySerial)
+                    if (oldTaskSerial < e.Properties.InventorySerial)
                     {
                         areItem.Set();
                     }
@@ -503,10 +572,14 @@ namespace cogbot.Actions.SimExport
             {
                 var fid = item.ParentUUID;
                 var iid = item.UUID;
+                var aid = item.AssetUUID;
+                var ast = item.AssetType;
                 OSD.SetObjectOSD(item, TaskOSD);
                 ReplaceAllMembers(item, typeof(UUID), UUIDReplacer);
                 item.ParentUUID = fid;
                 item.UUID = iid;
+                item.AssetUUID = aid;
+                item.AssetType = ast;
             }
 
             protected BotClient Client
