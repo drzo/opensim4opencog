@@ -39,6 +39,7 @@ namespace cogbot.Actions.SimExport
                 string fileUUID = Path.GetFileNameWithoutExtension(Path.GetFileName(file));
                 var ptc = APrimToCreate(UUID.Parse(fileUUID));
                 if (++created % 25 == 0) WriteLine("tasked " + created);
+                if (ptc.PackedInsideNow) continue;
                 if (ptc.TaskInvComplete) continue;
                 string taskDataS = File.ReadAllText(file);
                 if (string.IsNullOrEmpty(taskDataS))
@@ -409,6 +410,7 @@ namespace cogbot.Actions.SimExport
                     {
                         string taskFileContents = File.ReadAllText(taskFileName);
                         PrimToCreate innerObject = FindObject(taskFileContents, WriteLine);
+                        if (innerObject.PackedInsideNow) return true;
                         if (innerObject.Complete)
                         {
                             // null for a refresh
@@ -428,7 +430,8 @@ namespace cogbot.Actions.SimExport
                             Inventory.ItemReceived -= AgentInventoryOnItemReceived;
                             SetItemFromOSD(Item);
                             this.Inventory.RequestUpdateItem(Item);
-
+                            innerObject.PackedInsideNow = true;
+                            innerObject.SaveProgressFile();
                             return FindAgentItem();
                         } else
                         {

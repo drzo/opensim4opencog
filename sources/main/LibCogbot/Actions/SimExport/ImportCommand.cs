@@ -19,35 +19,28 @@ namespace cogbot.Actions.SimExport
     public partial class ImportCommand : Command, RegionMasterCommand
     {
 
+        private static readonly object WorkFlowLock = new object();
+
+        public static ImportCommand Running;
+        private HashSet<string> arglist;
+
+        private static readonly HashSet<UUID> UnresolvedUUIDs = new HashSet<UUID>();
+        static private readonly Dictionary<UUID, UUID> ChangeList = new Dictionary<UUID, UUID>();
+
+        public static readonly Dictionary<UUID, UUIDChange> UUID2OBJECT = new Dictionary<UUID, UUIDChange>();
+        public static readonly Dictionary<uint, PrimToCreate> UINT2OBJECT = new Dictionary<uint, PrimToCreate>();
+
+        public static readonly Dictionary<UUID, UUIDChange> NewUUID2OBJECT = new Dictionary<UUID, UUIDChange>();
+        public static readonly Dictionary<uint, PrimToCreate> NewUINT2OBJECT = new Dictionary<uint, PrimToCreate>();
+
+        public delegate object ObjectMemberReplacer(MemberInfo name, object before);
+
         internal class ImportSettings
         {
             public UUID GroupID;
             public bool MakeEverythingGroupOwned;
             public HashSet<string> arglist;
             public Simulator CurSim;
-        }
-
-        private enum ImporterState
-        {
-            RezzingParent,
-            RezzingChildren,
-            Linking,
-            Idle
-        }
-        public enum PrimImportState : uint
-        {
-            Unloaded,
-            LoadedLLSD,
-            RezRequested,
-            NewPrimFound,
-            PrimPropertiesSet,
-            Linking,
-            PostLinkProperiesSet,
-            DependantTexturesConfirmed,
-            DependantTaskAssetsUploaded,
-            TaskInventoryCreated,
-            TaskInventoryConfirmed,
-            RepackagingComplete
         }
 
         public class UUIDChange
@@ -109,24 +102,6 @@ namespace cogbot.Actions.SimExport
             UnresolvedUUIDs.Add(before);
             return before;
         }
-
-        Primitive currentPrim;
-        Vector3 currentPosition;
-        AutoResetEvent primDone = new AutoResetEvent(false);
-        List<Primitive> primsCreated;
-        List<uint> linkQueue;
-        uint rootLocalID;
-        private static readonly object WorkFlowLock = new object();
-        ImporterState state = ImporterState.Idle;
-        EventHandler<PrimEventArgs> callback;
-        public static readonly Dictionary<UUID, UUIDChange> UUID2OBJECT = new Dictionary<UUID, UUIDChange>();
-        public static readonly Dictionary<uint, PrimToCreate> UINT2OBJECT = new Dictionary<uint, PrimToCreate>();
-
-        public static readonly Dictionary<UUID, UUIDChange> NewUUID2OBJECT = new Dictionary<UUID, UUIDChange>();
-        public static readonly Dictionary<uint, PrimToCreate> NewUINT2OBJECT = new Dictionary<uint, PrimToCreate>();
-        private List<PrimToCreate> parents;
-        private List<PrimToCreate> childs;
-        static readonly List<Primitive> diskPrims = new List<Primitive>();
 
         public static UUID GetAssetUploadsFolder()
         {
@@ -197,13 +172,14 @@ namespace cogbot.Actions.SimExport
             {
                 LoadUsersAndGroups();
             }
+            bool doRez = false;
             if (arglist.Contains("all"))
             {
                 //  arglist.Add("terrain");
                 arglist.Add("user");
                 arglist.Add("group");
                 arglist.Add("prim");
-                arglist.Add("ptc");                
+                arglist.Add("confirm");                
                 arglist.Add("link");
                 arglist.Add("task");
                 arglist.Add("taskobj");
@@ -211,6 +187,7 @@ namespace cogbot.Actions.SimExport
 
             if (arglist.Contains("prim"))
             {
+                doRez = true;
                 arglist.Add("asset");
             }
             if (arglist.Contains("prim"))
@@ -227,8 +204,9 @@ namespace cogbot.Actions.SimExport
             if (arglist.Contains("terrain")) UploadTerrain(importSettings);
             WriteLine("NewAsset ChangeList Size is " + ChangeList.Count);
 
-            if (arglist.Contains("prim")) ImportPrims(importSettings);
-            ConfirmLocalIDs(importSettings);
+            if (arglist.Contains("prim")) ImportPrims(importSettings, doRez);
+            if (doRez) RezPrims(importSettings);
+            if (arglist.Contains("confirm")) ConfirmLocalIDs(importSettings);
             if (arglist.Contains("link")) ImportLinks(importSettings);
             bool tasksObjs = arglist.Contains("taskobj");
             if (arglist.Contains("task") || tasksObjs) ImportTaskFiles(importSettings, tasksObjs);
@@ -289,15 +267,6 @@ namespace cogbot.Actions.SimExport
             return null;
         }
 
-        private PrimToCreate prev = null;
-        public static ImportCommand Running;
-        static private readonly Dictionary<UUID, UUID> ChangeList = new Dictionary<UUID, UUID>();
-        private static readonly HashSet<UUID> UnresolvedUUIDs = new HashSet<UUID>();
-        private HashSet<string> arglist;
-        //private bool sculptOnly = true;
-        public static bool UseUploadKnown = true;
-        public static ManualResetEvent AssetUploaded = new ManualResetEvent(false);
-        public delegate object ObjectMemberReplacer(MemberInfo name, object before);
         public static object ReplaceAllMembers(object from, Type ofType, ObjectMemberReplacer replacerFunc)
         {
             return ReplaceAllMembers(from, ofType, ofType, replacerFunc, new HashSet<object>());

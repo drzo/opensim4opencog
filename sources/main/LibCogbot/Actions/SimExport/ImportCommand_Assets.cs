@@ -18,6 +18,9 @@ namespace cogbot.Actions.SimExport
 {
     public partial class ImportCommand 
     {
+        public static bool UseUploadKnown = true;
+        public static ManualResetEvent AssetUploaded = new ManualResetEvent(false);
+
         public class ItemToCreate : UUIDChange
         {
             public override string ToString()
