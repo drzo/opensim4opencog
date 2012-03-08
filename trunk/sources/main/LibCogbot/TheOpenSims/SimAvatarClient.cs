@@ -623,8 +623,8 @@ namespace cogbot.TheOpenSims
         //        List<BotAction> ScanNewPossibleActions(double maxXYDistance, double maxZDist);
         void SetClient(BotClient Client);
         //BotClient GetGridClient();
-        new bool IsSitting { get; set; }
-        BotAction LastAction { get; set; }
+        //new bool IsSitting { get; set; }
+        //BotAction LastAction { get; set; }
         bool SelectedBeam { get; set; }
         Vector3d ApproachVector3D { get; set; }
         //IEnumerable<SimTypeUsage> KnownTypeUsages { get; }
