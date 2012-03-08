@@ -18,8 +18,34 @@ namespace cogbot.Actions.SimExport
 {
     public partial class ImportCommand 
     {
+        public class MissingItemInfo
+        {
+            public MemberInfo MemberName;
+            public UUID MissingID;
+            public MissingItemInfo(MemberInfo name,UUID id)
+            {
+                MemberName = name;
+                MissingID = id;
+                Running.Failure("Missing UUID replacement: " + ToString());
+            }
+            public override int GetHashCode()
+            {
+                return ToString().GetHashCode();
+            }
+            public override bool Equals(object obj)
+            {
+                var other = obj as MissingItemInfo;
+                return other != null && MemberName == other.MemberName && MissingID == other.MissingID;
+            }
+            public override sealed string ToString()
+            {
+                return MemberName + "=" + MissingID;
+            }
+        }
+
         public static bool UseUploadKnown = true;
         public static ManualResetEvent AssetUploaded = new ManualResetEvent(false);
+        public static HashSet<MissingItemInfo> MissingFromExport = new HashSet<MissingItemInfo>();
 
         public class ItemToCreate : UUIDChange
         {
@@ -34,31 +60,36 @@ namespace cogbot.Actions.SimExport
             public override bool Equals(object obj)
             {
                 var ptc = obj as ItemToCreate;
-                return ptc != null && Item.AssetID == ptc.Item.AssetID;
+                return ptc != null && OldID == ptc.OldID;
             }
             public ItemToCreate(Asset item)
             {
-                Item = item;
+                _OldItem = item;
                 OldID = item.AssetID;
                 assetType = item.AssetType;
+                inventoryType = AssetTypeToInventoryType(assetType);
+                if (PassNumber == 1) CompletedReplaceAll = true;
                 LoadProgressFile();
             }
             public ItemToCreate(UUID oldID, AssetType type)
             {
                 OldID = oldID;
                 assetType = type;
+                inventoryType = AssetTypeToInventoryType(assetType);
+                if (PassNumber == 1) CompletedReplaceAll = true;
                 LoadProgressFile();
 
             }
-            public Asset Item
+            public Asset OldItem
             {
                 get
                 {
-                    return _item;
-                }
-                set
-                {
-                    _item = value;
+                    if (_OldItem == null)
+                    {
+                        _OldItem = AssetManager.CreateAssetWrapper(assetType);
+                        _OldItem.AssetData = AssetData;
+                    }
+                    return _OldItem;
                 }
             }
 
@@ -78,19 +109,22 @@ namespace cogbot.Actions.SimExport
 
             private SimAsset _rezed;
             private AssetType assetType;
+            private bool CompletedReplaceAll = false;
             //public uint NewLocalID;
             public Asset NewItem
             {
                 get
                 {
+                    if (_NewItem != null) return _NewItem;
                     var r = Rezed;
                     if (r == null) return null;
-                    return r.ServerAsset;
+                    return _NewItem = r.ServerAsset;
                 }
             }
 
             public bool RezRequested = false;
-            private Asset _item;
+            private Asset _OldItem;
+            private Asset _NewItem;
             private string _progressFile;
             private string _afiler;
             private byte[] assetData;
@@ -169,35 +203,33 @@ namespace cogbot.Actions.SimExport
                 }
             }
 
-            public InventoryType inventoryType
+            readonly public InventoryType inventoryType;
+            public int PassNumber;
+            public InventoryType AssetTypeToInventoryType(AssetType type)
             {
-                get
-                {
-                    return AssetTypeToInventoryType(assetType);
-                }
-            }
-
-            public static InventoryType AssetTypeToInventoryType(AssetType assetType)
-            {
-                var ret = Utils.StringToInventoryType(Utils.AssetTypeToString(assetType));
+                var ret = Utils.StringToInventoryType(Utils.AssetTypeToString(type));
                 if (ret != InventoryType.Unknown)
                 {
+                    PassNumber = 2;
                     return ret;
                 }
-                switch (assetType)
+                switch (type)
                 {
                     case AssetType.Unknown:
                         break;
                     case AssetType.Sound:
                     case AssetType.SoundWAV:
+                        PassNumber = 1;
                         return InventoryType.Sound;
                     case AssetType.ImageTGA:
                     case AssetType.ImageJPEG:
                     case AssetType.TextureTGA:
                     case AssetType.Texture:
+                        PassNumber = 1;
                         return InventoryType.Texture;
                     case AssetType.Bodypart:
                     case AssetType.Clothing:
+                        PassNumber = 2;
                         return InventoryType.Wearable;
                     case AssetType.TrashFolder:
                     case AssetType.SnapshotFolder:
@@ -208,24 +240,34 @@ namespace cogbot.Actions.SimExport
                     case AssetType.CurrentOutfitFolder:
                     case AssetType.OutfitFolder:
                     case AssetType.MyOutfitsFolder:
+                        PassNumber = 2;
                         return InventoryType.Folder;
                     case AssetType.Animation:
+                        PassNumber = 1;
                         return InventoryType.Animation;
                     case AssetType.CallingCard:
+                        PassNumber = 2;
                         return InventoryType.CallingCard;
                     case AssetType.Landmark:
+                        PassNumber = 2;
                         return InventoryType.Landmark;
                     case AssetType.Object:
+                        PassNumber = 2;
                         return InventoryType.Object;
                     case AssetType.Notecard:
+                        PassNumber = 1;
                         return InventoryType.Notecard;
                     case AssetType.LSLText:
+                        PassNumber = 1;
                         return InventoryType.LSL;
                     case AssetType.LSLBytecode:
+                        PassNumber = 1;
                         return InventoryType.LSL;
                     case AssetType.Gesture:
+                        PassNumber = 2;
                         return InventoryType.Gesture;
                     case AssetType.Mesh:
+                        PassNumber = 2;
                         return InventoryType.Mesh;
                     case AssetType.Simstate:
                     case AssetType.Link:
@@ -233,8 +275,9 @@ namespace cogbot.Actions.SimExport
                     case AssetType.EnsembleStart:
                     case AssetType.EnsembleEnd:
                     default:
-                        throw new ArgumentOutOfRangeException("assetType");
+                        throw new ArgumentOutOfRangeException("type");
                 }
+                PassNumber = 2;
                 return InventoryType.Texture;
             }
 
@@ -266,6 +309,7 @@ namespace cogbot.Actions.SimExport
                                                                        Description, assetType, UUID.Zero,
                                                                        OpenMetaverse.InventoryType.Gesture,
                                                                        PermissionMask.All, UpdateInvItem);
+                           // (gesture.Sequence)
                         }
                         else if (assetType == AssetType.LSLText)
                         {
@@ -402,7 +446,11 @@ namespace cogbot.Actions.SimExport
             {
                 get
                 {
-                    if (assetData == null) assetData = File.ReadAllBytes(LLSDFilename);
+                    if (assetData == null)
+                    {
+                        assetData = File.ReadAllBytes(LLSDFilename);
+                        ReplaceAll();
+                    }
                     return assetData;
                 }
             }
@@ -437,7 +485,7 @@ namespace cogbot.Actions.SimExport
                 {
                     WriteProgress();
                 }
-                Item = asset;
+                _NewItem = asset;
                 NewUUID2OBJECT[NewID] = this;
                 UUID2OBJECT[OldID] = this;
                 AssetUploaded.Set();
@@ -466,6 +514,18 @@ namespace cogbot.Actions.SimExport
             public void UpdateAsset(byte[] data)
             {
                 Running.Client.Assets.RequestUploadKnown(NewID, assetType, data, false, OldID);
+            }
+
+            public void ReplaceAll()
+            {
+                if (CompletedReplaceAll || PassNumber == 1) return;
+                _OldItem = null;
+                assetData = File.ReadAllBytes(LLSDFilename);
+                var item = OldItem;
+                ReplaceAllMembers(item, item.GetType(), UUIDReplacer, MissingFromExport);
+                item.Encode0();
+                CompletedReplaceAll = true;
+                assetData = item.AssetData;
             }
         }
 
@@ -509,7 +569,7 @@ namespace cogbot.Actions.SimExport
             int uploaded = 0;
             int reuploaded = 0;
             int seenAsset = 0;
-
+            HashSet<ItemToCreate> ItemsToCreate = new HashSet<ItemToCreate>();
             bool alwayReupload = arglist.Contains("reup");
             Success("Uploading assets... sameIds=" + sameIds);
             foreach (var file in Directory.GetFiles(ExportCommand.assetDumpDir, "*.*"))
@@ -552,26 +612,46 @@ namespace cogbot.Actions.SimExport
                 UUID oldID = UUID.Parse(sid);
                 ItemToCreate itc = FindItemToCreate(oldID, assetType, sameIds);
                 itc.LLSDFilename = file;
-                if (!itc.RezRequested)
+                ItemsToCreate.Add(itc);
+            }
+            foreach (ItemToCreate itc in ItemsToCreate)
+            {
+                if (itc.PassNumber == 1)
                 {
-                    itc.UploadAssetData(false);
-                    if (!CogbotHelpers.IsNullOrZero(itc.NewID))
-                    {
-                        NewUUID2OBJECT[itc.NewID] = itc;
-                    }
-                    uploaded++;
+                    EnsureUploaded(itc, alwayReupload, ref uploaded, ref reuploaded);
                 }
-                else if (alwayReupload)
+            }
+            foreach (ItemToCreate itc in ItemsToCreate)
+            {
+                if (itc.PassNumber == 2)
                 {
-                    itc.UpdateAsset(itc.AssetData);
-                    reuploaded++;
+                    itc.ReplaceAll();
+                    EnsureUploaded(itc, alwayReupload, ref uploaded, ref reuploaded);
                 }
+            }
+            Success("Uploaded assets=" + uploaded + " seenAssets=" + seenAsset + " reuploaded=" + reuploaded);
+        }
+
+        private void EnsureUploaded(ItemToCreate itc, bool alwayReupload, ref int uploaded, ref int reuploaded)
+        {
+            if (!itc.RezRequested)
+            {
+                itc.UploadAssetData(false);
                 if (!CogbotHelpers.IsNullOrZero(itc.NewID))
                 {
                     NewUUID2OBJECT[itc.NewID] = itc;
                 }
+                uploaded++;
             }
-            Success("Uploaded assets=" + uploaded + " seenAssets=" + seenAsset + " reuploaded=" + reuploaded);
+            else if (alwayReupload)
+            {
+                itc.UpdateAsset(itc.AssetData);
+                reuploaded++;
+            }
+            if (!CogbotHelpers.IsNullOrZero(itc.NewID))
+            {
+                NewUUID2OBJECT[itc.NewID] = itc;
+            }
         }
 
         private ItemToCreate FindItemToCreate(UUID uuid, AssetType assetType, bool sameIds)
