@@ -138,8 +138,8 @@ namespace cogbot.Actions.SimExport
             IsExporting = true;
             CurSim = Client.Network.CurrentSim;
             RegionHandle = CurSim.Handle;
-            onlyObjectAt.AddPoint(new Vector3(104, 98, 30));
-            onlyObjectAt.AddPoint(new Vector3(255, 0, 152));
+            onlyObjectAt.AddPoint(new Vector3(-256, -256, -256));
+            onlyObjectAt.AddPoint(new Vector3(1024, 1024, 9024));
             haveBeenTo.AddPoint(TheSimAvatar.SimPosition);
             AttemptSitMover();
             WorldObjects.MaintainSimObjectInfoMap = false;
