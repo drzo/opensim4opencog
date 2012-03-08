@@ -22,7 +22,27 @@ namespace cogbot.Actions.SimExport
         {
             public bool IsGroup = false;
             public string OldName;
-            public string NewName;
+            public string _newName;
+            public string NewName
+            {
+                get
+                {
+                    if (_newName != null) return _newName;
+                    lock (RenamedWhosit)
+                    {
+                        string newName;
+                        if (RenamedWhosit.TryGetValue(OldName, out newName))
+                        {
+                            return _newName = newName;
+                        }
+                    }
+                    return OldName;
+                }
+                set
+                {
+                    _newName = value;
+                }
+            }
             public string ErrorMessage;
             private ManualResetEvent WaitOnCreate;
 
@@ -32,7 +52,6 @@ namespace cogbot.Actions.SimExport
                 UUID2OBJECT[id] = this;
                 IsGroup = isGroup;
                 OldName = name;
-                NewName = name;
             }
             public override UUID NewID
             {
@@ -65,7 +84,10 @@ namespace cogbot.Actions.SimExport
                 WaitOnCreate.Reset();
                 Running.Client.Directory.DirGroupsReply += GroupSearchReply;
                 Running.Client.Directory.StartGroupSearch(name, 0, OldID);
-                WaitOnCreate.WaitOne(3000);
+                if (!WaitOnCreate.WaitOne(3000))
+                {
+                    return Running.Client.Self.ActiveGroup;
+                } 
                 return base.NewID;
             }
 
@@ -91,7 +113,10 @@ namespace cogbot.Actions.SimExport
                 WaitOnCreate.Reset();
                 Running.Client.Groups.GroupCreatedReply += GroupCreateReply;
                 Running.Client.Groups.RequestCreateGroup(newGroup);
-                WaitOnCreate.WaitOne(5000);
+                if (!WaitOnCreate.WaitOne(5000))
+                {
+                    return Running.Client.Self.ActiveGroup;
+                }
                 return base.NewID;
             }
 
@@ -117,6 +142,11 @@ namespace cogbot.Actions.SimExport
             private UUID CreatePerson(string name)
             {
                 if (!CogbotHelpers.IsNullOrZero(base.NewID)) return base.NewID;
+                if (name == "MISSINGPERSON" && !CogbotHelpers.IsNullOrZero(Running.MISSINGPERSON))
+                    return Running.MISSINGPERSON;
+                if (name == "LINDENZERO" && !CogbotHelpers.IsNullOrZero(Running.LINDENZERO))
+                    return Running.LINDENZERO;
+                if (IsGroup) return Running.Client.Self.ActiveGroup;
                 return base.NewID = Running.Client.Self.AgentID;
             }
 
@@ -163,8 +193,37 @@ namespace cogbot.Actions.SimExport
             }
         }
 
+        public static readonly Dictionary<string, string> RenamedWhosit = new Dictionary<string, string>();
+        private UUID LINDENZERO = UUID.Zero;
+        private UUID MISSINGPERSON = UUID.Zero;
         public void LoadUsersAndGroups()
         {
+            string nameChangesFile = ExportCommand.siminfoDir + "..\\nameChanges.txt";
+            if (File.Exists(nameChangesFile))
+            {
+                string[] nameChanges = File.ReadAllLines(nameChangesFile);
+                foreach (var entry in nameChanges)
+                {
+                    string[] entrySplit = entry.Split(',');
+                    string n1 = entrySplit[0];
+                    string n2 = n1;
+                    if (entrySplit.Length > 1)
+                    {
+                        n2 = entrySplit[1];
+                    }
+                    RenamedWhosit[n1] = n2;                    
+                }
+            }
+            string found;
+            if (RenamedWhosit.TryGetValue("LINDENZERO", out found))
+            {
+                LINDENZERO = WorldSystem.FindUUIDForName(found);
+            }
+            if (RenamedWhosit.TryGetValue("MISSINGPERSON", out found))
+            {
+                MISSINGPERSON = WorldSystem.FindUUIDForName(found);
+            }
+
             foreach (string file in Directory.GetFiles(ExportCommand.siminfoDir, "*.avatar"))
             {
                 string[] content = File.ReadAllText(file).Split(',');
@@ -174,6 +233,10 @@ namespace cogbot.Actions.SimExport
                 if (content.Length > 1)
                 {
                     mapping.NewName = content[1];
+                }
+                else
+                {
+                    mapping.NewName = "MISSINGPERSON";
                 }
             }
             foreach (string file in Directory.GetFiles(ExportCommand.siminfoDir, "*.group"))
@@ -185,6 +248,10 @@ namespace cogbot.Actions.SimExport
                 if (content.Length > 1)
                 {
                     mapping.NewName = content[1];
+                }
+                else
+                {
+                    mapping.NewName = content[0];
                 }
             }
         }
