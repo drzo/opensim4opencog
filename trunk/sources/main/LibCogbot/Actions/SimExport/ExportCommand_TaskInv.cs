@@ -69,6 +69,10 @@ namespace cogbot.Actions.SimExport
             var Running = ExportCommand.Running;
             InventoryItem item = I;
             UUID itemID = item.UUID;
+            if (item.AssetType == AssetType.LSLText || item.AssetType == AssetType.Notecard)
+            {
+                //Perhaps copy to AgentInventory first
+            }
             Running.Client.Assets.RequestInventoryAsset(item.AssetUUID, itemID, O.ID, item.OwnerID,
                                                         item.AssetType, true, Asset_Received);
             NumRequests++;
