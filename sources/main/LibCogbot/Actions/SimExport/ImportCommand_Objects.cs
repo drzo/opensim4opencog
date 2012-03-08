@@ -22,7 +22,7 @@ namespace cogbot.Actions.SimExport
         private readonly HashSet<PrimToCreate> parents = new HashSet<PrimToCreate>();
         private readonly HashSet<PrimToCreate> childs = new HashSet<PrimToCreate>();
         static readonly HashSet<PrimToCreate> diskPrims = new HashSet<PrimToCreate>();
-        public String rezblankFIle = File.ReadAllText(ExportCommand.dumpDir + "..\\rezbankkill.txt");
+        public String rezblankMissing = "";//"File.ReadAllText(ExportCommand.dumpDir + "..\\rezbankkill.txt");
 
         public enum PrimImportState : uint
         {
@@ -437,7 +437,7 @@ namespace cogbot.Actions.SimExport
                     var p = ptc.Prim;
                     CreatePrim(importSettings, ptc);
                 }
-                if (rezblankFIle.Contains("REZBLANK:" + ptc.NewID))
+                if (rezblankMissing.Contains("REZBLANK:" + ptc.NewID))
                 {
                     var newPrim = ptc.Rezed.Prim;
                     SavePTC(ptc);
