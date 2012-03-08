@@ -31,6 +31,7 @@ namespace cogbot.Actions.SimExport
         }
         private int ImportTaskFiles0(ImportSettings importSettings, bool createObjects)
         {
+            DateTime lastProgressNotice = DateTime.Now;
             int incomplete = 0;
             var agentSyncFolderHolder = ExportCommand.Running.FolderCalled("TaskInvHolder");
             int created = 0;
@@ -74,6 +75,11 @@ namespace cogbot.Actions.SimExport
                     Success("COMPLETE: " + ptc);
                 }
                 Success("............");
+                if (lastProgressNotice.AddSeconds(30) < DateTime.Now)
+                {
+                    lastProgressNotice = DateTime.Now;
+                    WriteLine("Task created " + created + " incomplete=" + incomplete);
+                }
             }
             return incomplete;
         }
@@ -300,25 +306,26 @@ namespace cogbot.Actions.SimExport
             public bool SyncToObject(OutputDelegate WriteLine, bool createObjects)
             {
                 failed = 0;
-                TaskInvComplete = true;
+                bool invComplete = true;
                 foreach (var itemTask in TaskItemsToCreate)
                 {
                     if (!itemTask.FindAgentItem())
                     {
                         WriteLine("FAILED FindAgentItem: " + itemTask);
                         failed++;
-                        TaskInvComplete = false;
+                        invComplete = false;
                         continue;
                     }                    
                     if (!itemTask.CreateTaskItem(WriteLine, createObjects))
                     {
                         WriteLine("FAILED CreateTaskItem: " + itemTask);
-                        TaskInvComplete = false;
+                        invComplete = false;
                         failed++;
                         continue;
                     }
                     succeeded++;
                 }
+                if (invComplete) TaskInvComplete = true;
                 return failed == 0;
             }
         }
