@@ -4141,7 +4141,7 @@ namespace OpenMetaverse
                 {
                     if (msg.Updates[i].Transition.Equals("ENTER"))
                     {
-                        if (fndMbr.AvatarKey == UUID.Zero)
+                        if (fndMbr == null || fndMbr.AvatarKey == UUID.Zero)
                         {
                             fndMbr = new ChatSessionMember();
                             fndMbr.AvatarKey = msg.Updates[i].AgentID;
@@ -4157,7 +4157,7 @@ namespace OpenMetaverse
                     }
                     else if (msg.Updates[i].Transition.Equals("LEAVE"))
                     {
-                        if (fndMbr.AvatarKey != UUID.Zero)
+                        if (fndMbr != null && fndMbr.AvatarKey != UUID.Zero)
                             lock (GroupChatSessions.Dictionary)
                                 GroupChatSessions[msg.SessionID].Remove(fndMbr);
 
@@ -4168,7 +4168,7 @@ namespace OpenMetaverse
 
                         if (msg.Updates[i].AgentID == Client.Self.AgentID)
                         {
-                            OnGroupChatLeft(new GroupChatLeftEventArgs(msg.SessionID));                            
+                            OnGroupChatLeft(new GroupChatLeftEventArgs(msg.SessionID));
                         }
                     }
                 }
