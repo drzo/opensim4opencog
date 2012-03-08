@@ -432,7 +432,7 @@ namespace cogbot.Actions.SimExport
                 if (importSettings.arglist.Contains("ptc")) continue;
                 if (!ptc.WaitUntilFound(TimeSpan.FromSeconds(10)))
                 {
-                    Failure("Missing Prim witha  PTC file! " + ptc);
+                    Failure("Missing Prim with PTC file! " + ptc);
                     if (++missing % 10 == 0) WriteLine("Missing " + missing + "...");
                     if (!rezMissing) continue;
                     var p = ptc.Prim;
