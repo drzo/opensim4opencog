@@ -80,7 +80,7 @@ namespace cogbot.Actions.Search
                 }
             }
 
-            Client.Objects.SelectObjects(Client.Network.CurrentSim, localids);
+            Client.Objects.SelectObjects(Client.Network.CurrentSim, localids, true);
 
             return AllPropertiesReceived.WaitOne(2000 + msPerRequest * objects.Count, false);
         }
