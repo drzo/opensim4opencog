@@ -59,7 +59,10 @@ namespace cogbot.Actions.SimExport
             if (P is SimAvatar) return true;
             if (P == null) return true;
             if (P.IsKilled) return true;
-            if (P.Prim.ParentID == 0) return false;
+            if (!P.HasPrim) return true;
+            var pp = P.Prim;
+            if (pp == null) return true;
+            if (pp.ParentID == 0) return false;
             SimObject parent = P.Parent;
             if (parent is SimAvatar) return true;
             // yes SL really does have links two deep! (called attachment linksets)
