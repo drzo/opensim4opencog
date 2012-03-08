@@ -41,7 +41,7 @@ namespace cogbot.Actions.Agent
                         {
                             if (string.IsNullOrEmpty(av.Name))
                             {
-                                Client.Objects.SelectObjects(Client.Network.Simulators[i], new uint[] { av.LocalID });
+                                Client.Objects.SelectObjects(Client.Network.Simulators[i], new uint[] { av.LocalID }, true);
                             }
                             result.AppendLine();
                             result.AppendFormat(" {0} (Group: {1}, Location: {2}, UUID: {3})",
