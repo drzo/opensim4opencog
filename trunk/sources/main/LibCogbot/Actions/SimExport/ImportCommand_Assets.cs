@@ -22,20 +22,22 @@ namespace cogbot.Actions.SimExport
         {
             public MemberInfo MemberName;
             public UUID MissingID;
+            public string key;
             public MissingItemInfo(MemberInfo name,UUID id)
             {
                 MemberName = name;
                 MissingID = id;
+                key = MemberName.Name + "=" + MissingID;
                 Running.Failure("Missing UUID replacement: " + ToString());
             }
             public override int GetHashCode()
             {
-                return ToString().GetHashCode();
+                return key.GetHashCode();
             }
             public override bool Equals(object obj)
             {
                 var other = obj as MissingItemInfo;
-                return other != null && MemberName == other.MemberName && MissingID == other.MissingID;
+                return other != null && key == other.key;
             }
             public override sealed string ToString()
             {
@@ -47,7 +49,7 @@ namespace cogbot.Actions.SimExport
         public static ManualResetEvent AssetUploaded = new ManualResetEvent(false);
         public static HashSet<MissingItemInfo> MissingFromExport = new HashSet<MissingItemInfo>();
 
-        public class ItemToCreate : UUIDChange
+        public sealed class ItemToCreate : UUIDChange
         {
             public override string ToString()
             {
@@ -419,7 +421,7 @@ namespace cogbot.Actions.SimExport
                 // lock (ExportCommand.fileWriterLock) File.WriteAllText(ProgressFile, ProgressString);
             }
 
-            protected string ProgressString
+            private string ProgressString
             {
                 get
                 {
