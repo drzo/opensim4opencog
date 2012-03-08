@@ -1316,7 +1316,7 @@ namespace OpenMetaverse
                 default:
                     asset = new AssetMutable(type);
                     asset.locked = true;
-                    Logger.Log("Unimplemented asset type: " + type, Helpers.LogLevel.Error, Client);
+                    Logger.Log("Unimplemented asset type: " + type, Helpers.LogLevel.Error);
                     break;
             }
 
