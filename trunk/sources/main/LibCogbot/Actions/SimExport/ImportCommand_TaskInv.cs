@@ -585,7 +585,7 @@ namespace cogbot.Actions.SimExport
                 var aid = item.AssetUUID;
                 var ast = item.AssetType;
                 OSD.SetObjectOSD(item, TaskOSD);
-                ReplaceAllMembers(item, typeof(UUID), UUIDReplacer);
+                ReplaceAllMembers(item, typeof(UUID), UUIDReplacer, MissingFromExport);
                 item.ParentUUID = fid;
                 item.UUID = iid;
                 item.AssetUUID = aid;
