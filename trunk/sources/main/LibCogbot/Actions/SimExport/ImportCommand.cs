@@ -33,7 +33,7 @@ namespace cogbot.Actions.SimExport
         public static readonly Dictionary<UUID, UUIDChange> NewUUID2OBJECT = new Dictionary<UUID, UUIDChange>();
         public static readonly Dictionary<uint, PrimToCreate> NewUINT2OBJECT = new Dictionary<uint, PrimToCreate>();
 
-        public delegate object ObjectMemberReplacer(MemberInfo name, object before);
+        public delegate object ObjectMemberReplacer(MemberInfo name, object before, HashSet<MissingItemInfo> missing);
 
         internal class ImportSettings
         {
@@ -72,7 +72,7 @@ namespace cogbot.Actions.SimExport
             return uuid.ToString();
         }
 
-        static object UUIDReplacer(MemberInfo memberName, object arg)
+        static object UUIDReplacer(MemberInfo memberName, object arg, HashSet<MissingItemInfo> missing)
         {
             if (typeof(Primitive) == memberName.DeclaringType)
             {
@@ -86,7 +86,12 @@ namespace cogbot.Actions.SimExport
                 if (n == "ObjectID") return arg;
             }
             UUID before = (UUID)arg;
-            if (UnresolvedUUIDs.Contains(before)) return before;
+            if (CogbotHelpers.IsNullOrZero(before)) return before;
+            if (UnresolvedUUIDs.Contains(before))
+            {
+                if (missing != null) missing.Add(new MissingItemInfo(memberName, before));
+                return before;
+            }
             UUID other;
             if (ChangeList.TryGetValue(before, out other))
             {
@@ -99,6 +104,7 @@ namespace cogbot.Actions.SimExport
                 if (!CogbotHelpers.IsNullOrZero(utcNewID)) return utcNewID;
                 return utcNewID ?? UUID.Zero;
             }
+            if (missing != null) missing.Add(new MissingItemInfo(memberName, before));
             UnresolvedUUIDs.Add(before);
             return before;
         }
@@ -114,7 +120,9 @@ namespace cogbot.Actions.SimExport
             Description = "Import prims from an exported xml file. Usage: import inputfile.xml [usegroup]";
             Category = CommandCategory.Objects;
             Client.Assets.AssetUploaded += new EventHandler<AssetUploadEventArgs>(Assets_AssetUploaded);
+            Client.Objects.ObjectPropertiesFamily += OnObjectPropertiesFamily;
             Client.Network.EventQueueRunning += logged_in;
+            ImportPTCFiles(new ImportSettings(), true, false);
             Running = this;
         }
 
@@ -168,14 +176,11 @@ namespace cogbot.Actions.SimExport
             {
                 arglist.Add(s.TrimEnd(new[] { 's' }).ToLower().TrimStart(new[] { '-' }));
             }
-            if (arglist.Contains("user") || arglist.Contains("group") || true)
-            {
-                LoadUsersAndGroups();
-            }
             bool doRez = false;
             if (arglist.Contains("all"))
             {
                 //  arglist.Add("terrain");
+                arglist.Add("asset");
                 arglist.Add("user");
                 arglist.Add("group");
                 arglist.Add("prim");
@@ -184,32 +189,47 @@ namespace cogbot.Actions.SimExport
                 arglist.Add("task");
                 arglist.Add("taskobj");
             }
-
             if (arglist.Contains("prim"))
             {
                 doRez = true;
                 arglist.Add("asset");
+                arglist.Add("link");
             }
-            if (arglist.Contains("prim"))
+            if (arglist.Contains("nolink"))
             {
-                if (!arglist.Contains("nolink")) arglist.Add("link");
+                arglist.Remove("link");
             }
-            if (!arglist.Contains("noasset") && arglist.Contains("asset"))
+            if (arglist.Contains("noasset"))
+            {
+                arglist.Remove("asset");
+            }
+            if (arglist.Contains("user") || arglist.Contains("group") || true)
+            {
+                LoadUsersAndGroups();
+            }
+            if (arglist.Contains("asset") || true)
             {
                 UploadAllAssets(arglist.Contains("sameid"));
             }
-
             GleanUUIDsFrom(GetAssetUploadsFolder());
             ScanForChangeList();
             if (arglist.Contains("terrain")) UploadTerrain(importSettings);
             WriteLine("NewAsset ChangeList Size is " + ChangeList.Count);
 
+            if (arglist.Contains("confirm")) ImportPTCFiles(importSettings, false, doRez);
             if (arglist.Contains("prim")) ImportPrims(importSettings, doRez);
             if (doRez) RezPrims(importSettings);
             if (arglist.Contains("confirm")) ConfirmLocalIDs(importSettings);
             if (arglist.Contains("link")) ImportLinks(importSettings);
             bool tasksObjs = arglist.Contains("taskobj");
             if (arglist.Contains("task") || tasksObjs) ImportTaskFiles(importSettings, tasksObjs);
+            FileStream saveTo = File.Open("MissingFromExport.txt", FileMode.Create);
+            var fw = new StreamWriter(saveTo);
+            foreach (MissingItemInfo itemInfo in MissingFromExport)
+            {
+                fw.WriteLine(";; " + itemInfo.MemberName + "\n" + itemInfo.MissingID);
+            }
+            fw.Close();
             writeLine("Completed SimImport");
             return SuccessOrFailure();
         }
@@ -267,27 +287,48 @@ namespace cogbot.Actions.SimExport
             return null;
         }
 
-        public static object ReplaceAllMembers(object from, Type ofType, ObjectMemberReplacer replacerFunc)
+        public static object ReplaceAllMembers(object from, Type ofType, ObjectMemberReplacer replacerFunc, HashSet<MissingItemInfo> missing)
         {
-            return ReplaceAllMembers(from, ofType, ofType, replacerFunc, new HashSet<object>());
+            return ReplaceAllMembers(from, ofType, ofType, replacerFunc, new HashSet<object>(), missing);
         }
-        public static object ReplaceAllMembers(object from, Type ofType, MemberInfo name, ObjectMemberReplacer replacerFunc, HashSet<object> exceptFor)
+        public static object ReplaceAllMembers(object from, Type ofType, MemberInfo name, ObjectMemberReplacer replacerFunc, HashSet<object> exceptFor, HashSet<MissingItemInfo> missing)
         {
             if (from == null) return from;
             var fromType = from.GetType();
             if (fromType == ofType)
             {
-                var oo = replacerFunc(name, from);
+                var oo = replacerFunc(name, from, missing);
                 return oo;
             }
             if (fromType == typeof(string) || typeof(IConvertible).IsAssignableFrom(fromType)) return from;
+            if (from is IDictionary)
+            {
+                var ic = from as IDictionary;
+                foreach (var k0 in ic.Keys)
+                {
+                    var k = k0;
+                    var ko = ReplaceAllMembers(k, ofType, k == null ? null : k.GetType(), replacerFunc, exceptFor, missing);                   
+                    object o = ic[k];
+                    var oo = ReplaceAllMembers(o, ofType, o == null ? null : o.GetType(), replacerFunc, exceptFor, missing);
+                    bool keyChanged = false;
+                    if (!ReferenceEquals(k, ko))
+                    {
+                        keyChanged = true;
+                        ic.Remove(k);
+                        k = ko;
+                    }
+                    if (ReferenceEquals(oo, o) && !keyChanged) continue;
+                    ic[k] = oo;
+                }
+                return from;
+            }
             if (from is IList)
             {
                 var ic = from as IList;
                 for (int i = 0; i < ic.Count; i++)
                 {
                     object o = ic[i];
-                    var oo = ReplaceAllMembers(o, ofType, o == null ? null : o.GetType(), replacerFunc, exceptFor);
+                    var oo = ReplaceAllMembers(o, ofType, o == null ? null : o.GetType(), replacerFunc, exceptFor, missing);
                     if (ReferenceEquals(oo, o)) continue;
                     ic[i] = oo;
                 }
@@ -295,19 +336,18 @@ namespace cogbot.Actions.SimExport
             }
             if (exceptFor.Contains(from)) return from;
             exceptFor.Add(from);
-
             const BindingFlags bf = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
             foreach (var info in fromType.GetFields(bf))
             {
                 object o = info.GetValue(from);
-                var oo = ReplaceAllMembers(o, ofType, info, replacerFunc, exceptFor);
+                var oo = ReplaceAllMembers(o, ofType, info, replacerFunc, exceptFor, missing);
                 if (ReferenceEquals(oo, o)) continue;
                 info.SetValue(from, oo);
             }
             foreach (var info in fromType.GetProperties(bf))
             {
                 object o = info.GetValue(from, null);
-                var oo = ReplaceAllMembers(o, ofType, info, replacerFunc, exceptFor);
+                var oo = ReplaceAllMembers(o, ofType, info, replacerFunc, exceptFor, missing);
                 if (ReferenceEquals(oo, o)) continue;
                 info.SetValue(from, oo, null);
             }
