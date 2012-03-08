@@ -1271,7 +1271,7 @@ namespace OpenMetaverse
 
         #region Helpers
 
-        private Asset CreateAssetWrapper(AssetType type)
+        public static Asset CreateAssetWrapper(AssetType type)
         {
             Asset asset;
 
