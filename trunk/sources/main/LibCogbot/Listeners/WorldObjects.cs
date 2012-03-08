@@ -1501,7 +1501,7 @@ namespace cogbot.Listeners
                             continue;
                         }
                     }
-                    S.Client.Objects.SelectObjects(S, askFor);
+                    S.Client.Objects.SelectObjects(S, askFor, true);
                 }
             }
             lock (SelectObjectsTimerLock)
@@ -1549,10 +1549,10 @@ namespace cogbot.Listeners
             Simulator sim = GetSimulator(P);
             if (P.ParentID != 0)
             {
-                client.Objects.SelectObjects(sim, new uint[] { P.LocalID, P.ParentID });
+                client.Objects.SelectObjects(sim, new uint[] { P.LocalID, P.ParentID }, true);
                 return;
             }
-            client.Objects.SelectObject(sim, P.LocalID);
+			client.Objects.SelectObject(sim, P.LocalID, true);
         }
 
         internal SimAvatarImpl CreateSimAvatar(UUID uuid, WorldObjects objects, Simulator simulator)
