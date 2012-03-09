@@ -118,6 +118,7 @@ namespace cogbot.Actions.SimExport
             {
                 get
                 {
+                    if (IsLocalScene) return OldLocalID;
                     if (_rezed == null)
                     {
                         _rezed = WorldObjects.GetSimObjectFromUUID(NewID);
@@ -201,6 +202,7 @@ namespace cogbot.Actions.SimExport
             {
                 get
                 {
+                    if (IsLocalScene) throw new NotSupportedException("rezed " + this);
                     if (_rezed == null)
                     {
                         LoadProgressFile();
@@ -287,6 +289,7 @@ namespace cogbot.Actions.SimExport
 
             private void LoadProgressFile()
             {
+                if (IsLocalScene) return;
                 if (CogbotHelpers.IsNullOrZero(NewID))
                 {
                     string importProgress = ProgressFile;
@@ -316,7 +319,7 @@ namespace cogbot.Actions.SimExport
                 }
             }
 
-            public void ReplaceAll()
+            public override void ReplaceAll()
             {
                 ReplaceAllMembers(Prim, typeof(UUID), UUIDReplacer, MissingFromExport);
                 Prim.ID = OldID;
@@ -325,6 +328,7 @@ namespace cogbot.Actions.SimExport
 
             public void RequestExists()
             {
+                if (IsLocalScene) return;
                 var CurSim = Client.Network.CurrentSim;
                 //Client.Objects.RequestObject(CurSim, NewLocalID);
                 Client.Objects.RequestObjectPropertiesFamily(CurSim, NewID, true);
@@ -369,6 +373,8 @@ namespace cogbot.Actions.SimExport
 
             public bool WaitUntilFound(TimeSpan span)
             {
+                if (IsLocalScene) return true;
+
                 LoadProgressFile();
                 RequestExists();
                 var until = DateTime.Now.Add(span);
@@ -390,6 +396,7 @@ namespace cogbot.Actions.SimExport
 
             public bool FastCheckRezed()
             {
+                if (IsLocalScene) return true;
                 if (_onfirmed) return true;
                 if (this.PackedInsideNow) return true;
                 if (_rezed != null) return true;
@@ -402,6 +409,14 @@ namespace cogbot.Actions.SimExport
                 }
                 return false;
             }
+
+            public void SetStoreLocal()
+            {
+                NewID = OldID;
+                NeedsPositioning = false;
+                RezRequested = true;
+                _onfirmed = true;               
+            }
         }
 
         public bool MissingLLSD(UUID id)
@@ -411,6 +426,7 @@ namespace cogbot.Actions.SimExport
 
         private void ImportPTCFiles(ImportSettings importSettings, bool lloadOnly, bool rezMissing)
         {
+            if (IsLocalScene) return;
             WriteLine("Loading Prims from PTC Files...");
             int loaded = 0;
             int missing = 0;
@@ -456,10 +472,10 @@ namespace cogbot.Actions.SimExport
 
         private void ImportPrims(ImportSettings importSettings, bool rezParents)
         {
-            var taskobjs = new List<PrimToCreate>();
+            if (IsLocalScene) rezParents = false;            
             if (childs.Count == 0)
             {
-                bool ptcOnly = importSettings.arglist.Contains("ptc");
+                bool ptcOnly = importSettings.arglist.Contains("ptc") && !IsLocalScene;
                 WriteLine("Loading Prims from LLSD Files");
                 int loaded = 0;
                 foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.llsd"))
@@ -469,7 +485,7 @@ namespace cogbot.Actions.SimExport
                     string ptcFile = ExportCommand.dumpDir + fileUUID + ".ptc";
                     if (++loaded % 25 == 0) WriteLine("Prims loaded " + loaded + "...");
                     PrimToCreate ptc = null;
-                    if (File.Exists(ptcFile))
+                    if (File.Exists(ptcFile) && !IsLocalScene)
                     {
                         ptc = APrimToCreate(oldId);
                         if (!ptc.PackedInsideNow)
@@ -580,6 +596,7 @@ namespace cogbot.Actions.SimExport
                     }
                     linkset.Add(newLocalID);
                 }
+                if (IsLocalScene) continue;
                 // set perms for linking!?
                 SetPermissionsAll(CurSim, linkset);
                 //linkset.Add(UUID2OBJECT[uuids[0]].Rezed.LocalID);
@@ -744,6 +761,12 @@ namespace cogbot.Actions.SimExport
         private void CreatePrim(ImportSettings importSettings, PrimToCreate ptc)
         {
             if (ptc.PackedInsideNow) return;
+            if (IsLocalScene)
+            {
+                LocalScene.Objects.Add(ptc);
+                ptc.SetStoreLocal();
+                return;
+            }
             if (!CreatePrim0(importSettings.CurSim, ptc, importSettings.GroupID, ExportCommand.Running.LocalFailure))
             {
                 Failure("Unable to create Prim " + ptc);

@@ -20,6 +20,20 @@ namespace cogbot.Actions.SimExport
     {
         public sealed class UserOrGroupMapping : UUIDChange
         {
+            public override bool Equals(object obj)
+            {
+                var other = obj as UserOrGroupMapping;
+                return (other != null) && (other.OldID == OldID);
+            }
+            public override int GetHashCode()
+            {
+                return OldID.GetHashCode();
+            }
+            public override string ToString()
+            {
+                return OldName + " " + OldID + " -> " + NewName + " " + base.NewID;
+            }
+
             public bool IsGroup = false;
             public string OldName;
             public string _newName;
@@ -76,10 +90,23 @@ namespace cogbot.Actions.SimExport
                 }
             }
 
+            public override void ReplaceAll()
+            {
+                var v = this.NewID;
+            }
+
             private UUID FindGroup(string name)
             {
                 if (!IsGroup) return FindUser(name);
                 if (!CogbotHelpers.IsNullOrZero(base.NewID)) return base.NewID;
+                if (IsLocalScene)
+                {
+                    if (OldName == name)
+                    {
+                        return base.NewID = OldID;
+                    }
+                    return base.NewID = UUID.Random();
+                }
                 WaitOnCreate = WaitOnCreate ?? new ManualResetEvent(false);
                 WaitOnCreate.Reset();
                 Running.Client.Directory.DirGroupsReply += GroupSearchReply;
@@ -95,6 +122,14 @@ namespace cogbot.Actions.SimExport
             {
                 if (IsGroup) return FindGroup(name);
                 if (!CogbotHelpers.IsNullOrZero(base.NewID)) return base.NewID;
+                if (IsLocalScene)
+                {
+                    if (OldName == name)
+                    {
+                        return base.NewID = OldID;
+                    }
+                    return base.NewID = UUID.Random();
+                }
                 WaitOnCreate = WaitOnCreate ?? new ManualResetEvent(false);
                 WaitOnCreate.Reset();
                 // should we use this instead??
@@ -111,6 +146,14 @@ namespace cogbot.Actions.SimExport
                 if (!IsGroup) return CreatePerson(name);
                 Group newGroup = GetNewGroup();
                 WaitOnCreate.Reset();
+                if (IsLocalScene)
+                {
+                    if (OldName == name)
+                    {
+                        return base.NewID = OldID;
+                    }
+                    return base.NewID = UUID.Random();
+                }
                 Running.Client.Groups.GroupCreatedReply += GroupCreateReply;
                 Running.Client.Groups.RequestCreateGroup(newGroup);
                 if (!WaitOnCreate.WaitOne(5000))
@@ -146,6 +189,14 @@ namespace cogbot.Actions.SimExport
                     return Running.MISSINGPERSON;
                 if (name == "LINDENZERO" && !CogbotHelpers.IsNullOrZero(Running.LINDENZERO))
                     return Running.LINDENZERO;
+                if (IsLocalScene)
+                {
+                    if (OldName == name)
+                    {
+                        return base.NewID = OldID;
+                    }
+                    return base.NewID = UUID.Random();
+                }
                 if (IsGroup) return Running.Client.Self.ActiveGroup;
                 return base.NewID = Running.Client.Self.AgentID;
             }
@@ -238,6 +289,10 @@ namespace cogbot.Actions.SimExport
                 {
                     mapping.NewName = "MISSINGPERSON";
                 }
+                if (IsLocalScene)
+                {
+                    LocalScene.Users.Add(mapping);
+                }
             }
             foreach (string file in Directory.GetFiles(ExportCommand.siminfoDir, "*.group"))
             {
@@ -252,6 +307,10 @@ namespace cogbot.Actions.SimExport
                 else
                 {
                     mapping.NewName = content[0];
+                }
+                if (IsLocalScene)
+                {
+                    LocalScene.Groups.Add(mapping);
                 }
             }
         }

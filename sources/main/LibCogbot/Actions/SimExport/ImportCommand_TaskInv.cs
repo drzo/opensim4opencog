@@ -95,6 +95,15 @@ namespace cogbot.Actions.SimExport
                 {
                     if (objectinventory == null)
                     {
+                        if (IsLocalScene)
+                        {
+                            objectinventory = new List<InventoryBase>();
+                            foreach (var toCreate in TaskItemsToCreate)
+                            {
+                                objectinventory.Add(toCreate.ToInventoryBase());
+                            }
+                            return objectinventory;
+                        }
                         if (!RequestNewTaskInventory().WaitOne(TimeSpan.FromSeconds(10)))
                         {
                             Running.WriteLine("Unable to retrieve TaskInv for " + ToString());
@@ -364,6 +373,11 @@ namespace cogbot.Actions.SimExport
             public bool FindAgentItem()
             {
                 if (AlreadyMovedToTask) return true;
+                if (IsLocalScene)
+                {
+                    NewAssetID = OldAssetID;                    
+                    return true;
+                }
                 if (Item != null) return true;
                 foreach (InventoryBase content in CreatedPrim.AgentContents)
                 {
@@ -399,7 +413,12 @@ namespace cogbot.Actions.SimExport
             public bool CreateAgentItem(OutputDelegate WriteLine, bool createObjects)
             {
                 if (FindAgentItem()) return true;
-
+                if (IsLocalScene)
+                {
+                    NewAssetID = OldAssetID;
+                    CreatedPrim.TaskItemsToCreate.Add(this);
+                    return true;
+                }
                 if (AssetType == AssetType.Object)
                 {
                     string taskFileName = ExportCommand.dumpDir + OldItemID + ".taskobj";
@@ -512,6 +531,12 @@ namespace cogbot.Actions.SimExport
                     if (!createObjects) return true;
                 }
 
+                if (IsLocalScene)
+                {
+                    NewAssetID = OldAssetID;
+                    CreatedPrim.TaskItemsToCreate.Add(this);
+                    return true;
+                }
                 // Copy to Task
                 SetItemFromOSD(Item);
                 areItem = areItem ?? new ManualResetEvent(false);
@@ -602,6 +627,18 @@ namespace cogbot.Actions.SimExport
                 var splt = contents.Split(',');
                 var oldID = UUID.Parse(splt[3]);
                 return Running.GetOldPrim(oldID);
+            }
+
+            private InventoryItem _item;
+            public InventoryItem ToInventoryBase()
+            {
+                if (_item == null)
+                {
+                    _item = new InventoryItem(OldItemID);
+                    SetItemFromOSD(_item);
+                    _item.AssetUUID = OldAssetID;
+                }
+                return _item;
             }
         }
     }
