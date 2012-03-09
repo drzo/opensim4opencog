@@ -131,7 +131,7 @@ namespace cogbot.Actions.SimExport
             shouldBeMoving = true;
         }
 
-        private void AttemptMoveTo(Vector3 pos)
+        public void AttemptMoveTo(Vector3 pos)
         {
             AttemptSitMover();
             if (pos.X < 1 || pos.Y < 1 || pos.Z < 10)

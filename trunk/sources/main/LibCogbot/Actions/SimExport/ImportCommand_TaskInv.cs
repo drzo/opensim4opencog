@@ -31,6 +31,7 @@ namespace cogbot.Actions.SimExport
         }
         private int ImportTaskFiles0(ImportSettings importSettings, bool createObjects)
         {
+            if (IsLocalScene) return 0;
             DateTime lastProgressNotice = DateTime.Now;
             int incomplete = 0;
             var agentSyncFolderHolder = ExportCommand.Running.FolderCalled("TaskInvHolder");

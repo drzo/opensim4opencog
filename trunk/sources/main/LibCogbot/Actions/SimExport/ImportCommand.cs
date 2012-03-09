@@ -98,11 +98,12 @@ namespace cogbot.Actions.SimExport
             {
                 string n = memberName.Name;
                 if (n == "ObjectID") return arg;
+                if (n == "FolderID") return arg;
             }
             if (typeof(Asset) == memberName.DeclaringType)
             {
                 string n = memberName.Name;
-                if (n == "AssetID") return arg;
+                //if (n == "AssetID") return arg;
             }
             {
                 // skip identities such as FolderUUID AssetUUID Item.UUID
@@ -232,6 +233,10 @@ namespace cogbot.Actions.SimExport
             {
                 arglist.Remove("asset");
             }
+            if (arglist.Contains("link"))
+            {
+                arglist.Add("confirm");
+            }
             if (arglist.Contains("user") || arglist.Contains("group") || true)
             {
                 LoadUsersAndGroups();
@@ -250,17 +255,56 @@ namespace cogbot.Actions.SimExport
             if (doRez) RezPrims(importSettings);
             if (arglist.Contains("confirm")) ConfirmLocalIDs(importSettings);
             if (arglist.Contains("link")) ImportLinks(importSettings);
-            bool tasksObjs = arglist.Contains("taskobj");
+            bool tasksObjs = arglist.Contains("taskobj") && !IsLocalScene;
             if (arglist.Contains("task") || tasksObjs) ImportTaskFiles(importSettings, tasksObjs);
-            FileStream saveTo = File.Open("MissingFromExport.txt", FileMode.Create);
+            GleanUUIDsFrom(GetAssetUploadsFolder());
+            SaveMissingIDs();
+            if (arglist.Contains("request")) RequestMissingIDs();
+            writeLine("Completed SimImport");
+            return SuccessOrFailure();
+        }
+
+        private static void SaveMissingIDs()
+        {
+            FileStream saveTo = File.Open(ExportCommand.dumpDir + "../MissingFromExport.txt", FileMode.Create);
             var fw = new StreamWriter(saveTo);
             foreach (MissingItemInfo itemInfo in MissingFromExport)
             {
-                fw.WriteLine(";; " + itemInfo.MemberName + "\n" + itemInfo.MissingID);
+                fw.WriteLine(";; " + itemInfo.key + "\n" + itemInfo.MissingID);
             }
             fw.Close();
-            writeLine("Completed SimImport");
-            return SuccessOrFailure();
+        }
+
+
+        private void RequestMissingIDs()
+        {
+            ExportCommand.IsExporting = true;
+            foreach (MissingItemInfo itemInfo in MissingFromExport)
+            {
+                var ex = ExportCommand.Running;
+                if (itemInfo.AssetType == AssetType.Unknown)
+                {
+                    Failure("MISSING STILL: " + itemInfo);
+                    continue;
+                }
+                Success("Requesting: " + itemInfo);
+                if (itemInfo.AssetType == AssetType.Landmark)
+                {
+                    Client.Grid.RequestRegionHandle(itemInfo.MissingID);
+                    continue;
+                }
+                if (itemInfo.AssetType == AssetType.EnsembleStart)
+                {
+                    Client.Groups.RequestGroupName(itemInfo.MissingID);
+                    continue;
+                }
+                if (itemInfo.AssetType == AssetType.CallingCard)
+                {
+                    Client.Avatars.RequestAvatarName(itemInfo.MissingID);
+                    continue;
+                }
+                ex.AddRelated(itemInfo.MissingID, itemInfo.AssetType);                
+            }
         }
 
         private UUIDChange GetOld(UUID id)

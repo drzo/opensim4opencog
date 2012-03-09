@@ -124,87 +124,87 @@ namespace cogbot.Actions.SimExport
             writer.WriteEndElement();
         }
 
-        static void SOPToXml(XmlTextWriter writer, Primitive prim, Primitive parent)
+        static void SOPToXml(XmlTextWriter writer, Primitive sop, Primitive parent)
         {
             writer.WriteStartElement("SceneObjectPart");
             writer.WriteAttributeString("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
             writer.WriteAttributeString("xmlns:xsd", "http://www.w3.org/2001/XMLSchema");
 
-            WriteUUID(writer, "CreatorID", prim.Properties.CreatorID);
-            WriteUUID(writer, "FolderID", prim.Properties.FolderID);
-            writer.WriteElementString("InventorySerial", prim.Properties.InventorySerial.ToString());
+            WriteUUID(writer, "CreatorID", sop.Properties.CreatorID);
+            WriteUUID(writer, "FolderID", sop.Properties.FolderID);
+            writer.WriteElementString("InventorySerial", sop.Properties.InventorySerial.ToString());
             writer.WriteStartElement("TaskInventory"); writer.WriteEndElement();
-            writer.WriteElementString("ObjectFlags", ((int)prim.Flags).ToString());
-            WriteUUID(writer, "UUID", prim.ID);
-            writer.WriteElementString("LocalId", prim.LocalID.ToString());
-            writer.WriteElementString("Name", prim.Properties.Name);
-            writer.WriteElementString("Material", ((int)prim.PrimData.Material).ToString());
-            writer.WriteElementString("RegionHandle", prim.RegionHandle.ToString());
+            writer.WriteElementString("ObjectFlags", ((int)sop.Flags).ToString());
+            WriteUUID(writer, "UUID", sop.ID);
+            writer.WriteElementString("LocalId", sop.LocalID.ToString());
+            writer.WriteElementString("Name", sop.Properties.Name);
+            writer.WriteElementString("Material", ((int)sop.PrimData.Material).ToString());
+            writer.WriteElementString("RegionHandle", sop.RegionHandle.ToString());
             writer.WriteElementString("ScriptAccessPin", "0");
 
             Vector3 groupPosition;
             if (parent == null)
-                groupPosition = prim.Position;
+                groupPosition = sop.Position;
             else
                 groupPosition = parent.Position;
 
             WriteVector(writer, "GroupPosition", groupPosition);
-            WriteVector(writer, "OffsetPosition", groupPosition - prim.Position);
-            WriteQuaternion(writer, "RotationOffset", prim.Rotation);
+            WriteVector(writer, "OffsetPosition", groupPosition - sop.Position);
+            WriteQuaternion(writer, "RotationOffset", sop.Rotation);
             WriteVector(writer, "Velocity", Vector3.Zero);
             WriteVector(writer, "RotationalVelocity", Vector3.Zero);
-            WriteVector(writer, "AngularVelocity", prim.AngularVelocity);
+            WriteVector(writer, "AngularVelocity", sop.AngularVelocity);
             WriteVector(writer, "Acceleration", Vector3.Zero);
-            writer.WriteElementString("Description", prim.Properties.Description);
+            writer.WriteElementString("Description", sop.Properties.Description);
             writer.WriteStartElement("Color");
-            writer.WriteElementString("R", prim.TextColor.R.ToString());
-            writer.WriteElementString("G", prim.TextColor.G.ToString());
-            writer.WriteElementString("B", prim.TextColor.B.ToString());
-            writer.WriteElementString("A", prim.TextColor.G.ToString());
+            writer.WriteElementString("R", sop.TextColor.R.ToString());
+            writer.WriteElementString("G", sop.TextColor.G.ToString());
+            writer.WriteElementString("B", sop.TextColor.B.ToString());
+            writer.WriteElementString("A", sop.TextColor.G.ToString());
             writer.WriteEndElement();
-            writer.WriteElementString("Text", prim.Text);
-            writer.WriteElementString("SitName", prim.Properties.SitName);
-            writer.WriteElementString("TouchName", prim.Properties.TouchName);
+            writer.WriteElementString("Text", sop.Text);
+            writer.WriteElementString("SitName", sop.Properties.SitName);
+            writer.WriteElementString("TouchName", sop.Properties.TouchName);
 
             uint linknum = 0;
             //if (parent != null)
             //    linknum = prim.LocalID - parent.LocalID;
 
             writer.WriteElementString("LinkNum", linknum.ToString());
-            writer.WriteElementString("ClickAction", ((int)prim.ClickAction).ToString());
+            writer.WriteElementString("ClickAction", ((int)sop.ClickAction).ToString());
             writer.WriteStartElement("Shape");
 
-            writer.WriteElementString("PathBegin", Primitive.PackBeginCut(prim.PrimData.PathBegin).ToString());
-            writer.WriteElementString("PathCurve", ((byte)prim.PrimData.PathCurve).ToString());
-            writer.WriteElementString("PathEnd", Primitive.PackEndCut(prim.PrimData.PathEnd).ToString());
-            writer.WriteElementString("PathRadiusOffset", Primitive.PackPathTwist(prim.PrimData.PathRadiusOffset).ToString());
-            writer.WriteElementString("PathRevolutions", Primitive.PackPathRevolutions(prim.PrimData.PathRevolutions).ToString());
-            writer.WriteElementString("PathScaleX", Primitive.PackPathScale(prim.PrimData.PathScaleX).ToString());
-            writer.WriteElementString("PathScaleY", Primitive.PackPathScale(prim.PrimData.PathScaleY).ToString());
-            writer.WriteElementString("PathShearX", ((byte)Primitive.PackPathShear(prim.PrimData.PathShearX)).ToString());
-            writer.WriteElementString("PathShearY", ((byte)Primitive.PackPathShear(prim.PrimData.PathShearY)).ToString());
-            writer.WriteElementString("PathSkew", Primitive.PackPathTwist(prim.PrimData.PathSkew).ToString());
-            writer.WriteElementString("PathTaperX", Primitive.PackPathTaper(prim.PrimData.PathTaperX).ToString());
-            writer.WriteElementString("PathTaperY", Primitive.PackPathTaper(prim.PrimData.PathTaperY).ToString());
-            writer.WriteElementString("PathTwist", Primitive.PackPathTwist(prim.PrimData.PathTwist).ToString());
-            writer.WriteElementString("PathTwistBegin", Primitive.PackPathTwist(prim.PrimData.PathTwistBegin).ToString());
-            writer.WriteElementString("PCode", ((byte)prim.PrimData.PCode).ToString());
-            writer.WriteElementString("ProfileBegin", Primitive.PackBeginCut(prim.PrimData.ProfileBegin).ToString());
-            writer.WriteElementString("ProfileEnd", Primitive.PackEndCut(prim.PrimData.ProfileEnd).ToString());
-            writer.WriteElementString("ProfileHollow", Primitive.PackProfileHollow(prim.PrimData.ProfileHollow).ToString());
-            WriteVector(writer, "Scale", prim.Scale);
-            writer.WriteElementString("State", prim.PrimData.State.ToString());
+            writer.WriteElementString("PathBegin", Primitive.PackBeginCut(sop.PrimData.PathBegin).ToString());
+            writer.WriteElementString("PathCurve", ((byte)sop.PrimData.PathCurve).ToString());
+            writer.WriteElementString("PathEnd", Primitive.PackEndCut(sop.PrimData.PathEnd).ToString());
+            writer.WriteElementString("PathRadiusOffset", Primitive.PackPathTwist(sop.PrimData.PathRadiusOffset).ToString());
+            writer.WriteElementString("PathRevolutions", Primitive.PackPathRevolutions(sop.PrimData.PathRevolutions).ToString());
+            writer.WriteElementString("PathScaleX", Primitive.PackPathScale(sop.PrimData.PathScaleX).ToString());
+            writer.WriteElementString("PathScaleY", Primitive.PackPathScale(sop.PrimData.PathScaleY).ToString());
+            writer.WriteElementString("PathShearX", ((byte)Primitive.PackPathShear(sop.PrimData.PathShearX)).ToString());
+            writer.WriteElementString("PathShearY", ((byte)Primitive.PackPathShear(sop.PrimData.PathShearY)).ToString());
+            writer.WriteElementString("PathSkew", Primitive.PackPathTwist(sop.PrimData.PathSkew).ToString());
+            writer.WriteElementString("PathTaperX", Primitive.PackPathTaper(sop.PrimData.PathTaperX).ToString());
+            writer.WriteElementString("PathTaperY", Primitive.PackPathTaper(sop.PrimData.PathTaperY).ToString());
+            writer.WriteElementString("PathTwist", Primitive.PackPathTwist(sop.PrimData.PathTwist).ToString());
+            writer.WriteElementString("PathTwistBegin", Primitive.PackPathTwist(sop.PrimData.PathTwistBegin).ToString());
+            writer.WriteElementString("PCode", ((byte)sop.PrimData.PCode).ToString());
+            writer.WriteElementString("ProfileBegin", Primitive.PackBeginCut(sop.PrimData.ProfileBegin).ToString());
+            writer.WriteElementString("ProfileEnd", Primitive.PackEndCut(sop.PrimData.ProfileEnd).ToString());
+            writer.WriteElementString("ProfileHollow", Primitive.PackProfileHollow(sop.PrimData.ProfileHollow).ToString());
+            WriteVector(writer, "Scale", sop.Scale);
+            writer.WriteElementString("State", sop.PrimData.State.ToString());
 
-            ProfileShape shape = (ProfileShape)prim.PrimData.ProfileCurve;
+            ProfileShape shape = (ProfileShape)sop.PrimData.ProfileCurve;
             writer.WriteElementString("ProfileShape", shape.ToString());
-            writer.WriteElementString("HollowShape", prim.PrimData.ProfileHole.ToString());
-            writer.WriteElementString("ProfileCurve", prim.PrimData.profileCurve.ToString());
+            writer.WriteElementString("HollowShape", sop.PrimData.ProfileHole.ToString());
+            writer.WriteElementString("ProfileCurve", sop.PrimData.profileCurve.ToString());
 
             writer.WriteStartElement("TextureEntry");
 
             byte[] te;
-            if (prim.Textures != null)
-                te = prim.Textures.GetBytes();
+            if (sop.Textures != null)
+                te = sop.Textures.GetBytes();
             else
                 te = Utils.EmptyBytes;
 
@@ -216,27 +216,27 @@ namespace cogbot.Actions.SimExport
 
             writer.WriteEndElement();
 
-            WriteVector(writer, "Scale", prim.Scale);
+            WriteVector(writer, "Scale", sop.Scale);
             writer.WriteElementString("UpdateFlag", "0");
             WriteVector(writer, "SitTargetOrientation", Vector3.UnitZ);
             WriteVector(writer, "SitTargetPosition", Vector3.Zero);
             WriteVector(writer, "SitTargetPositionLL", Vector3.Zero);
             WriteQuaternion(writer, "SitTargetOrientationLL", new Quaternion(0f, 0f, 1f, 0f));
-            writer.WriteElementString("ParentID", prim.ParentID.ToString());
-            writer.WriteElementString("CreationDate", ((int)Utils.DateTimeToUnixTime(prim.Properties.CreationDate)).ToString());
-            writer.WriteElementString("Category", ((int)prim.Properties.Category).ToString());
-            writer.WriteElementString("SalePrice", prim.Properties.SalePrice.ToString());
-            writer.WriteElementString("ObjectSaleType", ((int)prim.Properties.SaleType).ToString());
-            writer.WriteElementString("OwnershipCost", prim.Properties.OwnershipCost.ToString());
-            WriteUUID(writer, "GroupID", prim.GroupID);
-            WriteUUID(writer, "OwnerID", prim.OwnerID);
-            WriteUUID(writer, "LastOwnerID", prim.Properties.LastOwnerID);
+            writer.WriteElementString("ParentID", sop.ParentID.ToString());
+            writer.WriteElementString("CreationDate", ((int)Utils.DateTimeToUnixTime(sop.Properties.CreationDate)).ToString());
+            writer.WriteElementString("Category", ((int)sop.Properties.Category).ToString());
+            writer.WriteElementString("SalePrice", sop.Properties.SalePrice.ToString());
+            writer.WriteElementString("ObjectSaleType", ((int)sop.Properties.SaleType).ToString());
+            writer.WriteElementString("OwnershipCost", sop.Properties.OwnershipCost.ToString());
+            WriteUUID(writer, "GroupID", sop.GroupID);
+            WriteUUID(writer, "OwnerID", sop.OwnerID);
+            WriteUUID(writer, "LastOwnerID", sop.Properties.LastOwnerID);
             writer.WriteElementString("BaseMask", ((uint)PermissionMask.All).ToString());
             writer.WriteElementString("OwnerMask", ((uint)PermissionMask.All).ToString());
             writer.WriteElementString("GroupMask", ((uint)PermissionMask.All).ToString());
             writer.WriteElementString("EveryoneMask", ((uint)PermissionMask.All).ToString());
             writer.WriteElementString("NextOwnerMask", ((uint)PermissionMask.All).ToString());
-            writer.WriteElementString("Flags", "None");
+            writer.WriteElementString("Flags", sop.Flags.ToString());
             WriteUUID(writer, "SitTargetAvatar", UUID.Zero);
 
             writer.WriteEndElement();

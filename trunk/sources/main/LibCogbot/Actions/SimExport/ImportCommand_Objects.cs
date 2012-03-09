@@ -23,6 +23,9 @@ namespace cogbot.Actions.SimExport
         private readonly HashSet<PrimToCreate> childs = new HashSet<PrimToCreate>();
         static readonly HashSet<PrimToCreate> diskPrims = new HashSet<PrimToCreate>();
         public String ResetPropertiesString = "";//"File.ReadAllText(ExportCommand.dumpDir + "..\\rezbankkill.txt");
+        private HashSet<PrimToCreate> ORPHANS;
+        private PrimToCreate CurrentOrphan = null;
+        private HashSet<PrimToCreate> EXCUSED_ORPHANS = new HashSet<PrimToCreate>();
 
         public enum PrimImportState : uint
         {
@@ -67,6 +70,10 @@ namespace cogbot.Actions.SimExport
             }
             public PrimToCreate(Primitive prim)
             {
+                if (CogbotHelpers.IsNullOrZero(prim.ID))
+                {
+                    throw new NullReferenceException("PrimToCreate!");
+                }
                 State = PrimImportState.LoadedLLSD;
                 SetOldPrim(prim);
                 LoadProgressFile();
@@ -74,6 +81,11 @@ namespace cogbot.Actions.SimExport
             }
             public PrimToCreate(UUID oldID)
             {
+                if (CogbotHelpers.IsNullOrZero(oldID))
+                {
+                    throw new NullReferenceException("PrimToCreate!");
+                }
+                UUID2OBJECT[oldID] = this;
                 State = PrimImportState.Unloaded;
                 OldID = oldID;
                 LoadProgressFile();
@@ -159,8 +171,24 @@ namespace cogbot.Actions.SimExport
             public uint _OldLocalID;
             public List<PrimToCreate> Childs;
 
-
             public uint OldLocalID
+            {
+                get
+                {
+                    var i = OldLocalID0;
+                    if (i == 0)
+                    {
+                        i = Prim.LocalID;
+                        if (i == 0)
+                        {
+                            Running.Failure("Failed to return LocalID");
+                            i = OldLocalID0;                           
+                        }
+                    }
+                    return i;
+                }
+            }
+            public uint OldLocalID0
             {
                 get
                 {
@@ -178,6 +206,7 @@ namespace cogbot.Actions.SimExport
                         }
                         else
                         {
+                            LoadOSD();
                             if (PrimOSD != null) return PrimOSD["LocalID"];
                             return Prim.LocalID;
                         }
@@ -264,6 +293,7 @@ namespace cogbot.Actions.SimExport
                 }
             }
 
+            public PrimToCreate ParentPrim;
             public uint ParentID
             {
                 get
@@ -413,9 +443,11 @@ namespace cogbot.Actions.SimExport
             public void SetStoreLocal()
             {
                 NewID = OldID;
+                NewUINT2OBJECT[NewLocalID] = this;
+                ReplaceAll();
                 NeedsPositioning = false;
                 RezRequested = true;
-                _onfirmed = true;               
+                _onfirmed = true;
             }
         }
 
@@ -473,7 +505,7 @@ namespace cogbot.Actions.SimExport
         private void ImportPrims(ImportSettings importSettings, bool rezParents)
         {
             if (IsLocalScene) rezParents = false;            
-            if (childs.Count == 0)
+            if (childs.Count == 0 || IsLocalScene)
             {
                 bool ptcOnly = importSettings.arglist.Contains("ptc") && !IsLocalScene;
                 WriteLine("Loading Prims from LLSD Files");
@@ -565,6 +597,36 @@ namespace cogbot.Actions.SimExport
             WriteLine("COMPLETE: Imported P=" + parents.Count + " C=" + childs.Count);
         }
 
+        private PrimToCreate GetFromWorld(ImportSettings importSettings, UUID idp, SimObject O)
+        {
+            PrimToCreate parent = null;
+            if (ExportCommand.IsSkipped(O))
+            {
+                Failure("Normally Skipped Parent=" + O);
+            }
+            var arglist = importSettings.arglist;
+            arglist.Add("wait");
+            arglist.Add("llsd");
+            arglist.Add("task");
+            arglist.Add("dep");
+            arglist.Add("link");
+            ExportCommand exp = ExportCommand.Running;
+
+            exp.ExportPrim(Client, O, WriteLine, arglist);
+            string subLLSD = ExportCommand.dumpDir + O.ID.ToString() + ".llsd";
+            if (!File.Exists(subLLSD))
+            {
+                exp.ExportPrim(Client, O, WriteLine, arglist);
+                Failure("No LLSD file Obj=" + O);
+                return parent;
+                // missing = true;
+            }
+            parent = APrimToCreate(idp);
+            var p = parent.Prim;
+            parent.SetStoreLocal();
+            return parent;
+        }
+
         private void ImportLinks(ImportSettings importSettings)
         {
             var CurSim = importSettings.CurSim;
@@ -576,6 +638,31 @@ namespace cogbot.Actions.SimExport
                 if (uuids.Length < 1) continue;
                 UUID idp = uuids[0];
                 var parent = GetOldPrim(idp);
+                if (parent == null)
+                {
+                    if (IsLocalScene)
+                    {
+                        SimObject O = WorldObjects.GetSimObjectFromUUID(idp);
+                        if (O == null)
+                        {
+                            if (idp.ExternalData != null)
+                            {
+                                Failure("MISOBJ: ExternalData " + idp.ExternalData + " " + idp);
+                            } else
+                            {
+                                Failure("MISOBJ: " + idp);
+                            }
+                            continue;
+                        }
+                        parent = GetFromWorld(importSettings, idp, O);
+                        if (parent == null) continue;
+                        parents.Add(parent);
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
                 parent.LoadChildren();
                 var linkset = new List<uint>(uuids.Length) { parent.NewLocalID };
                 for (int i = 1; i < uuids.Length; i++)
@@ -588,6 +675,7 @@ namespace cogbot.Actions.SimExport
                         Failure("FAILED: Relink cant find PTC=" + id);
                         continue;
                     }
+                    if (ptc.ParentPrim == null) ptc.ParentPrim = parent;
                     uint newLocalID = ptc.NewLocalID;
                     if (newLocalID == 0)
                     {
@@ -609,7 +697,55 @@ namespace cogbot.Actions.SimExport
                     SetPrimsPostLink(CurSim, importSettings.GroupID, parent, linkset, skipCompare);
                 }
             }
-
+            if (IsLocalScene)
+            {
+                ORPHANS = new HashSet<PrimToCreate>();
+                foreach (var child in childs)
+                {
+                    if (child.ParentPrim != null) continue;                   
+                    uint p = child.ParentID;
+                    var parent = GetOldPrim(p) ?? GetNewPrim(p);
+                    if (parent == null)
+                    {
+                        if (!EXCUSED_ORPHANS.Contains(child))
+                        {
+                            ORPHANS.Add(child);
+                            if (CurrentOrphan == null) CurrentOrphan = child;
+                        } 
+                        Failure("ORPHAN: " + child);
+                        continue;
+                    }
+                    child.ParentPrim = parent;
+                    parent.Childs = parent.Childs ?? new List<PrimToCreate>();
+                    if (parent.Childs.Contains(child)) continue;
+                    parent.Childs.Add(child);
+                }
+                if (arglist.Contains("adopt"))
+                {
+                    if (CurrentOrphan != null)
+                    {
+                        EXCUSED_ORPHANS.Add(CurrentOrphan);
+                        CurrentOrphan = null;
+                    }
+                    if (ORPHANS.Count>0)
+                    {
+                        foreach (PrimToCreate toCreate in ORPHANS)
+                        {
+                            CurrentOrphan = toCreate;
+                            break;                            
+                        }
+                    }
+                }
+                if (arglist.Contains("orphan"))
+                {
+                    if (CurrentOrphan != null)
+                    {
+                        Client.Self.Chat("" + CurrentOrphan.OldID, 4201, ChatType.Normal);
+                    }
+                }
+                Success("ORPHAN nonexcused=" + ORPHANS.Count + " excused=" + EXCUSED_ORPHANS.Count);
+                return;
+            }
             // hopefully unset some phantoms here
             foreach (PrimToCreate ptc in childs)
             {
@@ -732,7 +868,7 @@ namespace cogbot.Actions.SimExport
         }
         private PrimToCreate GetOldPrim(UUID id)
         {
-            PrimToCreate getOld = (PrimToCreate)GetOld(id);
+            PrimToCreate getOld = GetOld(id) as PrimToCreate;
             if (getOld == null)
             {
                 Failure("cant find ID=" + id);
@@ -1054,6 +1190,22 @@ namespace cogbot.Actions.SimExport
                     }
                     continue;
                 }
+                uint parentID = o.Prim.ParentID;
+                if (parentID != 0)
+                {
+                    lock (NewUINT2OBJECT)
+                    {
+                        PrimToCreate parent;
+                        if (!NewUINT2OBJECT.TryGetValue(parentID, out parent))
+                        {
+                            Failure("UNCONFIRMED PARENT: " + o);  
+                        }
+                    }
+                }
+                if (IsLocalScene)
+                {
+                    continue;
+                }
                 var found = o.Rezed;
                 if (found == null)
                 {
@@ -1093,8 +1245,8 @@ namespace cogbot.Actions.SimExport
                 }
                 else
                 {
-                    var ptc = APrimToCreate(id);
-                    ptc.IsConfirmed = true;
+                   // var ptc = APrimToCreate(id);
+                   // ptc.IsConfirmed = true;
                 }
             }
         }
