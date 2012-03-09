@@ -18,10 +18,22 @@ namespace cogbot.Actions.SimExport
 {
     public partial class ImportCommand : Command, RegionMasterCommand
     {
+        public class LocalSimScene
+        {
+            public HashSet<ItemToCreate> Assets = new HashSet<ItemToCreate>();
+            public HashSet<PrimToCreate> Objects = new HashSet<PrimToCreate>();
+            public HashSet<UserOrGroupMapping> Users = new HashSet<UserOrGroupMapping>();
+            public HashSet<UserOrGroupMapping> Groups = new HashSet<UserOrGroupMapping>();
+            public LocalSimScene()
+            {
 
+            }
+        }
         private static readonly object WorkFlowLock = new object();
 
         public static ImportCommand Running;
+        public static bool IsLocalScene = true;
+        public static LocalSimScene LocalScene = new LocalSimScene();
         private HashSet<string> arglist;
 
         private static readonly HashSet<UUID> UnresolvedUUIDs = new HashSet<UUID>();
@@ -43,7 +55,7 @@ namespace cogbot.Actions.SimExport
             public Simulator CurSim;
         }
 
-        public class UUIDChange
+        abstract public class UUIDChange
         {
             protected UUIDChange()
             {
@@ -64,6 +76,8 @@ namespace cogbot.Actions.SimExport
                 get { return _oldId; }
                 set { _oldId = value; }
             }
+
+            public abstract void ReplaceAll();
         }
 
         public static string uuidString(UUID uuid)
@@ -85,11 +99,20 @@ namespace cogbot.Actions.SimExport
                 string n = memberName.Name;
                 if (n == "ObjectID") return arg;
             }
+            if (typeof(Asset) == memberName.DeclaringType)
+            {
+                string n = memberName.Name;
+                if (n == "AssetID") return arg;
+            }
+            {
+                // skip identities such as FolderUUID AssetUUID Item.UUID
+                string n = memberName.Name;
+                if (n.Contains("UUID")) return arg;
+            }
             UUID before = (UUID)arg;
             if (CogbotHelpers.IsNullOrZero(before)) return before;
             if (UnresolvedUUIDs.Contains(before))
             {
-                if (missing != null) missing.Add(new MissingItemInfo(memberName, before));
                 return before;
             }
             UUID other;
@@ -101,10 +124,16 @@ namespace cogbot.Actions.SimExport
             if (UUID2OBJECT.TryGetValue(before, out utc))
             {
                 UUID utcNewID = utc.NewID;
-                if (!CogbotHelpers.IsNullOrZero(utcNewID)) return utcNewID;
+                if (!CogbotHelpers.IsNullOrZero(utcNewID))
+                {
+                    ChangeList.Add(before, utcNewID);
+                    return utcNewID;
+                }
                 return utcNewID ?? UUID.Zero;
             }
-            if (missing != null) missing.Add(new MissingItemInfo(memberName, before));
+            MissingItemInfo mis = new MissingItemInfo(memberName, before);
+            if (missing != null) missing.Add(mis);
+            Running.Failure("Missing: " + mis);
             UnresolvedUUIDs.Add(before);
             return before;
         }
@@ -300,11 +329,14 @@ namespace cogbot.Actions.SimExport
                 var oo = replacerFunc(name, from, missing);
                 return oo;
             }
-            if (fromType == typeof(string) || typeof(IConvertible).IsAssignableFrom(fromType)) return from;
+            Type fromType0 = fromType;
+            while (fromType0.IsArray) fromType0 = fromType0.GetElementType();
+            if (fromType0 == typeof(string) || fromType0 == typeof(byte[]) || typeof(IConvertible).IsAssignableFrom(fromType0))
+                return from;
             if (from is IDictionary)
             {
                 var ic = from as IDictionary;
-                foreach (var k0 in ic.Keys)
+                foreach (var k0 in LockInfo.CopyOf<object>(ic.Keys))
                 {
                     var k = k0;
                     var ko = ReplaceAllMembers(k, ofType, k == null ? null : k.GetType(), replacerFunc, exceptFor, missing);                   
@@ -325,10 +357,10 @@ namespace cogbot.Actions.SimExport
             if (from is IList)
             {
                 var ic = from as IList;
-                for (int i = 0; i < ic.Count; i++)
+                lock (ic) for (int i = 0; i < ic.Count; i++)
                 {
                     object o = ic[i];
-                    var oo = ReplaceAllMembers(o, ofType, o == null ? null : o.GetType(), replacerFunc, exceptFor, missing);
+                    var oo = ReplaceAllMembers(o, ofType, name, replacerFunc, exceptFor, missing);
                     if (ReferenceEquals(oo, o)) continue;
                     ic[i] = oo;
                 }

@@ -27,8 +27,7 @@ namespace cogbot.Actions.SimExport
             {
                 MemberName = name;
                 MissingID = id;
-                key = MemberName.Name + "=" + MissingID;
-                Running.Failure("Missing UUID replacement: " + ToString());
+                key = MemberName.DeclaringType.Name + "." + MemberName.Name + "=" + MissingID;
             }
             public override int GetHashCode()
             {
@@ -41,7 +40,7 @@ namespace cogbot.Actions.SimExport
             }
             public override sealed string ToString()
             {
-                return MemberName + "=" + MissingID;
+                return key;
             }
         }
 
@@ -209,11 +208,14 @@ namespace cogbot.Actions.SimExport
             public int PassNumber;
             public InventoryType AssetTypeToInventoryType(AssetType type)
             {
-                var ret = Utils.StringToInventoryType(Utils.AssetTypeToString(type));
-                if (ret != InventoryType.Unknown)
+                if (false)
                 {
-                    PassNumber = 2;
-                    return ret;
+                    var ret = Utils.StringToInventoryType(Utils.AssetTypeToString(type));
+                    if (ret != InventoryType.Unknown)
+                    {
+                        PassNumber = 2;
+                        return ret;
+                    }                    
                 }
                 switch (type)
                 {
@@ -293,6 +295,14 @@ namespace cogbot.Actions.SimExport
 
             public bool UploadAssetData(bool storeLocal)
             {
+                if (IsLocalScene)
+                {
+                    ReplaceAll();
+                    RezRequested = true;
+                    NewID = OldID;
+                    _NewItem = OldItem;
+                    return true;
+                }
                 if (CogbotHelpers.IsNullOrZero(NewID))
                 {
                     if (UseUploadKnown)
@@ -518,14 +528,27 @@ namespace cogbot.Actions.SimExport
                 Running.Client.Assets.RequestUploadKnown(NewID, assetType, data, false, OldID);
             }
 
-            public void ReplaceAll()
+            public override void ReplaceAll()
             {
                 if (CompletedReplaceAll || PassNumber == 1) return;
                 _OldItem = null;
                 assetData = File.ReadAllBytes(LLSDFilename);
                 var item = OldItem;
-                ReplaceAllMembers(item, item.GetType(), UUIDReplacer, MissingFromExport);
-                item.Encode0();
+                try
+                {
+                    item.Decode0();
+                }
+                catch (Exception)
+                {
+                }
+                ReplaceAllMembers(item, typeof(UUID), UUIDReplacer, MissingFromExport);
+                try
+                {
+                    item.Encode0();
+                }
+                catch (Exception)
+                {
+                }
                 CompletedReplaceAll = true;
                 assetData = item.AssetData;
             }
