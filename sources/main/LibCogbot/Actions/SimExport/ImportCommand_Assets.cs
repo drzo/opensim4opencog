@@ -23,12 +23,33 @@ namespace cogbot.Actions.SimExport
             public MemberInfo MemberName;
             public UUID MissingID;
             public string key;
+            public AssetType AssetType = OpenMetaverse.AssetType.Unknown;
+
             public MissingItemInfo(MemberInfo name,UUID id)
             {
                 MemberName = name;
                 MissingID = id;
                 key = MemberName.DeclaringType.Name + "." + MemberName.Name + "=" + MissingID;
+                AssetType = GuessType(name);
             }
+
+            private static AssetType GuessType(MemberInfo info)
+            {
+                string guess = info.DeclaringType.Name + "." + info.Name;
+                guess = guess.Replace(".ID", "ID").Replace("GuestureStep", "").ToLower();
+                if (guess.Contains("animationid")) return AssetType.Animation;
+                if (guess.Contains("soundid")) return AssetType.Sound;
+                if (guess.Contains("textureid")) return AssetType.Texture;
+                if (guess.Contains("texture")) return AssetType.Texture;
+                // synthetic assetTytpes for downloading
+                if (guess.Contains("creatorin")) return AssetType.CallingCard;
+                if (guess.Contains("creator")) return AssetType.CallingCard;
+                if (guess.Contains("ownerid")) return AssetType.CallingCard;
+                if (guess.Contains("groupid")) return AssetType.EnsembleStart;
+                if (guess.Contains("AssetLandmark")) return AssetType.Landmark;
+                return AssetType.Unknown;
+            }
+
             public override int GetHashCode()
             {
                 return key.GetHashCode();
@@ -568,6 +589,17 @@ namespace cogbot.Actions.SimExport
                     if (itc.RezRequested)
                     {
 
+                    }
+                }
+            }
+            lock (UUID2OBJECT) lock (MissingFromExport)
+            {
+                foreach (MissingItemInfo ur in LockInfo.CopyOf(MissingFromExport))
+                {
+                    if (UUID2OBJECT.ContainsKey(ur.MissingID))
+                    {
+                        Success("Not Missing anymore: " + ur);
+                        MissingFromExport.Remove(ur);
                     }
                 }
             }

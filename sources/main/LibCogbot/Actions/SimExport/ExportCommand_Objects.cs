@@ -54,7 +54,7 @@ namespace cogbot.Actions.SimExport
             lock (fileWriterLock) File.WriteAllText(dumpDir + O.ID + ".link", contents);
         }
 
-        private bool IsSkipped(SimObject P)
+        public static bool IsSkipped(SimObject P)
         {
             if (P is SimAvatar) return true;
             if (P == null) return true;
@@ -197,7 +197,9 @@ namespace cogbot.Actions.SimExport
                 LinkSetBuffer linkSetBuffer;
                 if (!PrimWaitingLinkset.TryGetValue(sourceId, out linkSetBuffer))
                 {
-                    return;
+                    linkSetBuffer = new LinkSetBuffer
+                                        {S = "", O = GetSimObjectFromUUID(sourceId), F = Path.Combine(dumpDir, sourceId.ToString())};
+                    PrimWaitingLinkset.Add(sourceId, linkSetBuffer);
                 }
                 if (linkSetBuffer.S == "")
                 {

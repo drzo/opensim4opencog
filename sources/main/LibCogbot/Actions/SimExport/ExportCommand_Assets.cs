@@ -133,10 +133,17 @@ namespace cogbot.Actions.SimExport
                 }
             }
 
+            Client.Settings.USE_HTTP_TEXTURES = true;
             // Download all of the textures in the export list
             foreach (ImageRequest request in textureRequests)
             {
-                SlowlyDo(() => Client.Assets.RequestImage(request.ImageID, request.Type, Assets_OnImageReceived));
+                SlowlyDo(
+                    () => {
+                              Client.Assets.RequestImage(request.ImageID, ImageType.Normal, 101300.0f, 0, 0,
+                                                         Assets_OnImageReceived, false);
+                              Thread.Sleep(TimeSpan.FromSeconds(2));
+                    });
+                //SlowlyDo(() => Client.Assets.RequestImage(request.ImageID, request.Type, Assets_OnImageReceived));
                 //SlowlyDo(() => Client.Assets.RequestAsset(request.ImageID, AssetType.Texture, true, Assets_OnReceived));
             }
 

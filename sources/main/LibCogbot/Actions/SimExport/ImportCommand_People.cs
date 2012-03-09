@@ -249,7 +249,7 @@ namespace cogbot.Actions.SimExport
         private UUID MISSINGPERSON = UUID.Zero;
         public void LoadUsersAndGroups()
         {
-            string nameChangesFile = ExportCommand.siminfoDir + "..\\nameChanges.txt";
+            string nameChangesFile = ExportCommand.siminfoDir + "../nameChanges.txt";
             if (File.Exists(nameChangesFile))
             {
                 string[] nameChanges = File.ReadAllLines(nameChangesFile);
