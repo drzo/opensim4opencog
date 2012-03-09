@@ -233,8 +233,11 @@ namespace cogbot.Actions
         {
             get
             {
-                if (_mClient != null) return _mClient;
-                return cogbot.Listeners.WorldObjects.GridMaster.client;
+                if (_mClient == null)
+                {
+                    _mClient = cogbot.Listeners.WorldObjects.GridMaster.client;
+                }
+                return _mClient;
             }
             set
             {
@@ -263,6 +266,7 @@ namespace cogbot.Actions
         {
             get
             {
+                _mClient = _mClient ?? Client;
                 return _mClient.TheSimAvatar;
             }
         }
