@@ -17,6 +17,19 @@ namespace MushDLR223.Utilities
                 return list.ToArray();
             }
         }
+        public static IEnumerable<object> CopyOf<T>(System.Collections.ICollection list)
+        {
+            var copy = new List<object>();
+            if (list == null) return copy;
+            lock (list)
+            {
+                foreach (var o in copy)
+                {
+                    copy.Add(o);
+                }
+            }
+            return copy;
+        }
 
         public static IList<T> CopyOf<T>(IEnumerable<T> list)
         {
