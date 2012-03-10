@@ -45,6 +45,11 @@ namespace cogbot.Actions.SimExport
             ExportCommand.Running.Success("Allowing: " + issues + " with " + allowed);
             return true;
         }
+
+        public bool ContainsKey(string task)
+        {
+            return arglist.Contains(task);
+        }
     }
 
 
