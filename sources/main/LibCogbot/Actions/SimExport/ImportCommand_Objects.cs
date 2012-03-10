@@ -293,6 +293,21 @@ namespace cogbot.Actions.SimExport
                 }
             }
 
+            private UUID _ParentUUID;
+            public UUID ParentUUID
+            {
+                get
+                {
+                    if (ParentID == 0) return null;
+                    if (_ParentUUID != null) return _ParentUUID;
+                    if (ParentPrim != null) return _ParentUUID = ParentPrim.OldID;
+                    return _ParentUUID = LoadOSD()["ParentUUID"];
+                }
+                set
+                {
+                    _ParentUUID = value;
+                }
+            }
             public PrimToCreate ParentPrim;
             public uint ParentID
             {
@@ -698,6 +713,13 @@ namespace cogbot.Actions.SimExport
             }
             if (IsLocalScene)
             {
+                foreach (var child in childs)
+                {
+                    if (child.ParentPrim != null) continue;
+                    var uui = child.ParentUUID;
+                    var parent = GetOldPrim(uui);
+                    if (parent != null) child.ParentPrim = parent;
+                }
                 ORPHANS = new HashSet<PrimToCreate>();
                 foreach (var child in childs)
                 {
