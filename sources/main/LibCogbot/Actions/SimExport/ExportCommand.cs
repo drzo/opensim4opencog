@@ -24,7 +24,7 @@ namespace cogbot.Actions.SimExport
         public readonly HashSet<SimObject> SIPrims = new HashSet<SimObject>();
         static public string dumpDir = "cog_export/objects/";
         static public string assetDumpDir = "cog_export/assets/";
-        static public string terrainDir = "cog_export/terrain/";
+        static public string terrainDir = "cog_export/terrains/";
         static public string siminfoDir = "cog_export/siminfo/";
         static public bool IsExporting = false;
         static readonly Dictionary<string, UUID> inventoryHolder = new Dictionary<string, UUID>();
