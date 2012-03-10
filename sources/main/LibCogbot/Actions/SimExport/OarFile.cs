@@ -15,6 +15,18 @@ namespace cogbot.Actions.SimExport
     public partial class OarFile
     {
 
+        public static void PrepareDir(string directoryname)
+        {
+            try
+            {
+                if (!Directory.Exists(directoryname)) Directory.CreateDirectory(directoryname);
+                if (!Directory.Exists(directoryname + "/assets")) Directory.CreateDirectory(directoryname + "/assets");
+                if (!Directory.Exists(directoryname + "/objects")) Directory.CreateDirectory(directoryname + "/objects");
+                if (!Directory.Exists(directoryname + "/terrains")) Directory.CreateDirectory(directoryname + "/terrains");
+            }
+            catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error); return; }
+        }
+
         public static void PackageArchive(string directoryName, string filename)
         {
             const string ARCHIVE_XML = "<?xml version=\"1.0\" encoding=\"utf-16\"?>\n<archive major_version=\"0\" minor_version=\"1\" />";
@@ -40,24 +52,6 @@ namespace cogbot.Actions.SimExport
                 archive.AddFile("terrains/" + Path.GetFileName(file), File.ReadAllBytes(file));
 
             archive.WriteTar(new GZipStream(new FileStream(filename, FileMode.Create), CompressionMode.Compress));
-        }
-
-        public const int PERMISSION_DEBIT = 2;
-        public const int PERMISSION_TAKE_CONTROLS = 4;
-        public const int PERMISSION_REMAP_CONTROLS = 8;
-        public const int PERMISSION_TRIGGER_ANIMATION = 16;
-        public const int PERMISSION_ATTACH = 32;
-        public const int PERMISSION_RELEASE_OWNERSHIP = 64;
-        public const int PERMISSION_CHANGE_LINKS = 128;
-        public const int PERMISSION_CHANGE_JOINTS = 256;
-        public const int PERMISSION_CHANGE_PERMISSIONS = 512;
-        public const int PERMISSION_TRACK_CAMERA = 1024;
-        public const int PERMISSION_CONTROL_CAMERA = 2048;
-
-
-        private static IEnumerable GetItems(InventoryFolder folder)
-        {
-            throw new global::System.NotImplementedException();
         }
 
         static void WriteBytes(XmlTextWriter writer, string name, byte[] data)
