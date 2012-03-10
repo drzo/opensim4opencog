@@ -62,9 +62,9 @@ namespace cogbot.Actions.SimExport
             if (!P.HasPrim) return true;
             var pp = P.Prim;
             if (pp == null) return true;
-            if (pp.ParentID == 0) return false;
             SimObject parent = P.Parent;
             if (parent is SimAvatar) return true;
+            if (pp.ParentID == 0) return false;
             // yes SL really does have links two deep! (called attachment linksets)
             if (parent != null && parent.Parent is SimAvatar)
             {
@@ -72,8 +72,14 @@ namespace cogbot.Actions.SimExport
             }
             return false;
         }
-
-        public void ExportPrim(BotClient Client, SimObject exportPrim, OutputDelegate Failure, HashSet<string> arglist)
+        public void ExportPrim(BotClient Client, SimObject exportPrim, OutputDelegate Failure, ImportSettings arglist)
+        {
+            uint localID = exportPrim.LocalID;
+            Client.Objects.SelectObject(arglist.CurSim, localID);
+            ExportPrim0(Client, exportPrim, Failure, arglist);
+            Client.Objects.DeselectObject(arglist.CurSim, localID);
+        }
+        public void ExportPrim0(BotClient Client, SimObject exportPrim, OutputDelegate Failure, ImportSettings arglist)
         {
             if (IsSkipped(exportPrim)) return;
             Simulator CurSim = exportPrim.GetSimulator();
@@ -135,7 +141,7 @@ namespace cogbot.Actions.SimExport
                     }
                 }
             }
-            if (arglist.Contains("task")) SaveTaskInv(Client, pathStem, exportPrim, Failure);
+            if (arglist.Contains("task")) SaveTaskInv(arglist, Client, pathStem, exportPrim, Failure);
             if (!arglist.Contains("dep")) return;
             AddRelatedTextures(exportPrim);
             SaveRelatedAssets(pathStem, exportPrim, Failure);
@@ -364,8 +370,37 @@ namespace cogbot.Actions.SimExport
                 {
                     List<string> skipTag = new List<string>() { "Tag" };
                     Primitive prim = exportPrim.Prim;
+
+                    Vector3 pp = prim.Position;
+                    Quaternion pr = prim.Rotation;
                     //prim = prim.Clone(); 
-                    ToFile(prim, exportFile);
+                    OSDMap primOSD = prim.GetTotalOSD();
+                    if (prim.ParentID != 0)
+                    {
+                        var parent = WorldSystem.GetLibOMVHostedPrim(prim.ParentID, CurSim, false);
+                        if (parent == null)
+                        {
+                            pp += new Vector3(128, 128, Client.Self.SimPosition.Z + 20);
+                            Failure("YET FAILED: Cant GET parent of " + prim);
+                            return;
+                        }
+                        else
+                        {
+                            pp = prim.Position * Matrix4.CreateFromQuaternion(parent.Rotation) + parent.Position;
+                            pr = parent.Rotation * pr;
+                            primOSD["ParentUUID"] = parent.ID;
+                        }
+                    }
+                    primOSD["RegionPosition"] = pp;
+                    primOSD["RegionRotation"] = pr;
+                    AddExportUser(primOSD["CreatorID"]);
+                    AddExportGroup(primOSD["GroupID"]);
+                    AddExportUser(primOSD["OwnerID"]);
+                    AddExportUser(primOSD["LastOwnerID"]);
+                    string output = OSDParser.SerializeLLSDXmlString(primOSD);
+                    {
+                        lock (fileWriterLock) File.WriteAllText(exportFile, output);
+                    }
                     if (forced && !verbosely) return;
                     return;
                     Primitive prim2 = FromFile(exportFile, ExportCommand.UseBinarySerialization) as Primitive;
