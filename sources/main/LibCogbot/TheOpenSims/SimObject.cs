@@ -139,6 +139,17 @@ namespace cogbot.TheOpenSims
                 {
                     if (_Prim0 != null)
                     {
+                        if (value.family)
+                        {
+                            if (_Prim0.Properties != null)
+                            {
+                                _Prim0.Properties.SetFamilyProperties(value);
+                                return;
+                            }
+                            _Prim0.Properties = new Primitive.ObjectProperties();
+                            _Prim0.Properties.SetFamilyProperties(value);
+                            return;
+                        }
                         _Prim0.Properties = value;
                     }
                 }
@@ -1258,7 +1269,17 @@ namespace cogbot.TheOpenSims
             }
             lock (MostRecentPropertyUpdateLock)
             {
-                MostRecentPropertyUpdate = objectProperties;
+                if (objectProperties.family)
+                {
+                    if (MostRecentPropertyUpdate == null)
+                    {
+                        MostRecentPropertyUpdate = new Primitive.ObjectProperties();
+                    } MostRecentPropertyUpdate.SetFamilyProperties(objectProperties);
+                }
+                else
+                {
+                    MostRecentPropertyUpdate = objectProperties;
+                }
             }
             WorldObjects.UpdateObjectData.Enqueue(UpdateProperties0);
         }

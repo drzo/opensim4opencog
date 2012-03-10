@@ -789,7 +789,9 @@ namespace cogbot.Listeners
         {
             var simulator = e.Simulator;
             base.Objects_OnObjectPropertiesFamily(sender, e);
-            Objects_OnObjectProperties(sender, new ObjectPropertiesEventArgs(e.Simulator,e.Properties));
+            var ep = e.Properties;
+            ep.family = true;
+            Objects_OnObjectProperties(sender, new ObjectPropertiesEventArgs(e.Simulator, ep));
             // Properties = new Primitive.ObjectProperties();
             //Properties.SetFamilyProperties(props);
             // GotPermissions = true;
@@ -1117,6 +1119,7 @@ namespace cogbot.Listeners
                     return prim;
                 }
             }
+            simulator.Client.Objects.RequestObject(simulator, id);
             return null;
         }
         public Primitive GetPrimitive(UUID id, Simulator simulator)
