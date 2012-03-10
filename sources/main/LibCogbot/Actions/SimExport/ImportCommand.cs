@@ -16,6 +16,30 @@ using MushDLR223.ScriptEngines;
 
 namespace cogbot.Actions.SimExport
 {
+    public class ImportSettings
+    {
+        public UUID GroupID;
+        public bool MakeEverythingGroupOwned;
+        public HashSet<string> arglist = new HashSet<string>();
+        public Simulator CurSim;
+
+        public bool Contains(string task)
+        {
+            return arglist.Contains(task);
+        }
+
+        public void Add(string start)
+        {
+            arglist.Add(start);
+        }
+
+        public void Remove(string wait)
+        {
+            arglist.Remove(wait);
+        }
+    }
+
+
     public partial class ImportCommand : Command, RegionMasterCommand
     {
         public class LocalSimScene
@@ -46,14 +70,6 @@ namespace cogbot.Actions.SimExport
         public static readonly Dictionary<uint, PrimToCreate> NewUINT2OBJECT = new Dictionary<uint, PrimToCreate>();
 
         public delegate object ObjectMemberReplacer(MemberInfo name, object before, HashSet<MissingItemInfo> missing);
-
-        internal class ImportSettings
-        {
-            public UUID GroupID;
-            public bool MakeEverythingGroupOwned;
-            public HashSet<string> arglist;
-            public Simulator CurSim;
-        }
 
         abstract public class UUIDChange
         {
