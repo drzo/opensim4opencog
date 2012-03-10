@@ -2832,6 +2832,7 @@ namespace OpenMetaverse
 
             ObjectPropertiesFamilyPacket op = (ObjectPropertiesFamilyPacket)packet;
             Primitive.ObjectProperties props = new Primitive.ObjectProperties();
+            props.family = true;
 
             ReportType requestType = (ReportType)op.ObjectData.RequestFlags;
 
@@ -2862,9 +2863,10 @@ namespace OpenMetaverse
                     {
                         if (simulator.ObjectsPrimitives.Dictionary.ContainsKey(findPrim.LocalID))
                         {
-                            if (simulator.ObjectsPrimitives.Dictionary[findPrim.LocalID].Properties == null)
-                                simulator.ObjectsPrimitives.Dictionary[findPrim.LocalID].Properties = new Primitive.ObjectProperties();
-                            simulator.ObjectsPrimitives.Dictionary[findPrim.LocalID].Properties.SetFamilyProperties(props);
+                            Primitive prim = simulator.ObjectsPrimitives.Dictionary[findPrim.LocalID];
+                            if (prim.Properties == null)
+                                prim.Properties = new Primitive.ObjectProperties();
+                            prim.Properties.SetFamilyProperties(props);
                         }
                     }
                 }
