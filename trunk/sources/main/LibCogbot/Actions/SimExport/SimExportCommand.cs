@@ -4,80 +4,48 @@ using System.IO;
 using System.Threading;
 using System.Xml;
 using OpenMetaverse;
-// older LibOMV
-//using TeleportFlags = OpenMetaverse.AgentManager.TeleportFlags;
-//using TeleportStatus = OpenMetaverse.AgentManager.TeleportStatus;
-//using AgentFlags = OpenMetaverse.AgentManager.AgentFlags;
-//using AgentState = OpenMetaverse.AgentManager.AgentState;
+using OpenMetaverse.Assets;
 // taken initially from http://openmetaverse.org/svn/omf/libopenmetaverse/trunk/Programs/SimExport -r2392
-using MushDLR223.ScriptEngines;
-
 namespace cogbot.Actions.SimExport
 {
-#if PORTIT
-    public class SimExportCommand : cogbot.Actions.Command
+    public class SimExport
     {
-        public SimExportCommand(BotClient Client)
-        {
 
-            Name = "simexport";
-            Description = "Exports parts of the Sim to TGZ file.";
-            Category = CommandCategory.TestClient;
-            helpString = "Exports parts of the Sim to TGZ file.";
-            usageString = "simexport help";
-            //SetUp();
-        }
-
-        void Network_OnLogin(LoginStatus login, string message)
-        {
-            WriteLine("SimExportCommand Logging In [" + login.ToString() + "] for MonitorPrimsAwaitingSelect");
-            if (login == LoginStatus.Success)
-            {
-                try
-                {
-                    //throw new NotImplementedException();
-                    Thread thread = new Thread(new ThreadStart(MonitorPrimsAwaitingSelect));
-                    thread.Name = "SimExportCommand Thread";
-                    thread.Start();
-                   // SetUpSimExportCommand(Client);
-                }
-                catch (Exception e)
-                {
-                }
-            }
-          
-        }
-
-        //GridClient CurrentClient;
+        GridClient client;
         TexturePipeline texturePipeline;
-        volatile bool running = false;
-
+        volatile bool running;
+        ImportSettings importSettings = new ImportSettings();
         int totalPrims = -1;
         object totalPrimsLock = new object();
         DoubleDictionary<uint, UUID, Primitive> prims = new DoubleDictionary<uint, UUID, Primitive>();
         Dictionary<uint, uint> selectedPrims = new Dictionary<uint, uint>();
         Dictionary<UUID, UUID> texturesFinished = new Dictionary<UUID, UUID>();
         BlockingQueue<Primitive> primsAwaitingSelect = new BlockingQueue<Primitive>();
-        string filename = "simexport.tgz";
-        string directoryname = "simexport";
+        string filename;
+        string directoryname = "./oarfile/";
 
-
-        public void SetUp() {
-            if (running) return;
-            Client.Network.OnLogin += new NetworkManager.LoginCallback(Network_OnLogin);
-            SetUpSimExportCommand(Client);
-        }
-        public void SetUpSimExportCommand(GridClient client)
-            //string firstName, string lastName, string password, string loginServer, string regionName, string filename)
+        public SimExport(string firstName, string lastName, string password, string loginServer, string regionName, string filename)
         {
-            //CurrentClient = CurrentClient;
-      
+            this.filename = filename;
+            directoryname = Path.GetFileNameWithoutExtension(filename);
+
+            try
+            {
+                if (!Directory.Exists(directoryname)) Directory.CreateDirectory(filename);
+                if (!Directory.Exists(directoryname + "/assets")) Directory.CreateDirectory(directoryname + "/assets");
+                if (!Directory.Exists(directoryname + "/objects")) Directory.CreateDirectory(directoryname + "/objects");
+                if (!Directory.Exists(directoryname + "/terrains")) Directory.CreateDirectory(directoryname + "/terrains");
+
+                CheckTextures();
+            }
+            catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error); return; }
+
             running = true;
 
-            //CurrentClient = new GridClient();
+            client = new GridClient();
             texturePipeline = new TexturePipeline(client);
-            texturePipeline.OnDownloadFinished += new TexturePipeline.DownloadFinishedCallback(texturePipeline_OnDownloadFinished);
-            
+            //texturePipeline.OnDownloadFinished += new TexturePipeline.DownloadFinishedCallback(texturePipeline_OnDownloadFinished);
+
             //Settings.LOG_LEVEL = Helpers.LogLevel.Info;
             client.Settings.MULTIPLE_SIMS = false;
             client.Settings.PARCEL_TRACKING = true;
@@ -86,36 +54,31 @@ namespace cogbot.Actions.SimExport
             client.Settings.ALWAYS_REQUEST_OBJECTS = true;
             client.Settings.STORE_LAND_PATCHES = true;
             client.Settings.SEND_AGENT_UPDATES = true;
-            client.Settings.OBJECT_TRACKING = true;
             client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
-
+            /*
+            //todo
             client.Network.OnCurrentSimChanged += Network_OnCurrentSimChanged;
             client.Objects.OnNewPrim += Objects_OnNewPrim;
             client.Objects.OnObjectKilled += Objects_OnObjectKilled;
             client.Objects.OnObjectProperties += Objects_OnObjectProperties;
             client.Objects.OnObjectUpdated += Objects_OnObjectUpdated;
             client.Parcels.OnSimParcelsDownloaded += new ParcelManager.SimParcelsDownloaded(Parcels_OnSimParcelsDownloaded);
-            client.Parcels.OnParcelProperties += new ParcelManager.ParcelPropertiesCallback( On_ParcelProperties);
-              //CurrentClient.Parcels.OnParcelProperties 
+            */
+            LoginParams loginParams = client.Network.DefaultLoginParams(firstName, lastName, password, "SimExport", "0.0.1");
+            loginParams.URI = loginServer;
+            loginParams.Start = NetworkManager.StartLocation(regionName, 128, 128, 40);
 
-            //LoginParams loginParams = CurrentClient.Network.DefaultLoginParams(firstName, lastName, password, "SimExport", "0.0.1");
-            //loginParams.URI = loginServer;
-            //loginParams.Start = NetworkManager.StartLocation(regionName, 128, 128, 40);
-
-            //if (CurrentClient.Network.Login(loginParams))
-           // {
-                //Run();
-           // }
-            //else
-            //{
-              //  WriteLine(String.Format("Login failed ({0}: {1}", CurrentClient.Network.LoginErrorKey, CurrentClient.Network.LoginMessage),
-                //    Helpers.LogLevel.Error);
-            //}
+            if (client.Network.Login(loginParams))
+            {
+                Run();
+            }
+            else
+            {
+                Logger.Log(String.Format("Login failed ({0}: {1}", client.Network.LoginErrorKey, client.Network.LoginMessage),
+                    Helpers.LogLevel.Error);
+            }
         }
 
-       public void On_ParcelProperties(Simulator simulator, Parcel parcel, ParcelResult result, int selectedPrims,
-            int sequenceID, bool snapSelection) {
-                }
         void CheckTextures()
         {
             lock (texturesFinished)
@@ -125,16 +88,16 @@ namespace cogbot.Actions.SimExport
                 foreach (string file in files)
                 {
                     // Parse the UUID out of the filename
-                    UUID id = UUID.Zero;
-                    if (UUIDTryParse(Path.GetFileNameWithoutExtension(file).Substring(0, 36), out id))
+                    UUID id;
+                    if (UUID.TryParse(Path.GetFileNameWithoutExtension(file).Substring(0, 36), out id))
                         texturesFinished[id] = id;
                 }
             }
 
-            WriteLine(String.Format("Found {0} previously downloaded texture assets", texturesFinished.Count),
+            Logger.Log(String.Format("Found {0} previously downloaded texture assets", texturesFinished.Count),
                 Helpers.LogLevel.Info);
         }
-
+        /*
         void texturePipeline_OnDownloadFinished(UUID id, bool success)
         {
             if (success)
@@ -148,71 +111,62 @@ namespace cogbot.Actions.SimExport
                 }
                 catch (Exception ex)
                 {
-                    WriteLine("Failed to save texture: " + ex.Message, Helpers.LogLevel.Error);
+                    Logger.Log("Failed to save texture: " + ex.Message, Helpers.LogLevel.Error);
                 }
             }
             else
             {
-                WriteLine("Texture failed to download: " + id.ToString(), Helpers.LogLevel.Warning);
+                Logger.Log("Texture failed to download: " + id.ToString(), Helpers.LogLevel.Warning);
             }
         }
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
-        {
-            if (args.Length > 1)
-            {
-                filename = args[1];
-            }
-            SetFilename(filename);
-            return DoCommand(args[0]);
-        }
-        //void Run()
-        public string DoCommand(string command)
+        */
+        void Run()
         {
             // Start the thread that monitors the queue of prims that need ObjectSelect packets sent
-//            Thread thread = new Thread(new ThreadStart(MonitorPrimsAwaitingSelect));
-  //          thread.Start();
-         //   while (running)
+            Thread thread = new Thread(new ThreadStart(MonitorPrimsAwaitingSelect));
+            thread.Start();
+
+            while (running)
             {
-                GridClient client = Client;
+                string command = Console.ReadLine();
+
                 switch (command)
                 {
-                    case "camera":
-                        Thread cameraThread = new Thread(new ThreadStart(MoveCamera));
-                        cameraThread.Start();
-                        return ("Started random camera movement thread");
-                    case "movement":
-                    case "move":
-                        Vector3 destination = RandomPosition();
-                        WriteLine("Teleporting to " + destination.ToString());
-                        client.Self.Teleport(CurSim.Handle, destination, RandomPosition());
-                        return ("Done " + "Teleporting to " + destination.ToString());
-                    case "info":
-                        DoCommand("prims");
-                        DoCommand("textures");
-                        DoCommand("queue");
-                        return DoCommand("terrain");
                     case "queue":
-                        return (String.Format("Client Outbox contains {0} packets, ObjectSelect queue contains {1} prims",
-                            client.Network.OutboxCount, primsAwaitingSelect.Count));
+                        Logger.Log(String.Format("Client Outbox contains {0} packets, ObjectSelect queue contains {1} prims",
+                            client.Network.OutboxCount, primsAwaitingSelect.Count), Helpers.LogLevel.Info);
+                        break;
                     case "prims":
-                        return (String.Format("Prims captured: {0}, Total: {1}", prims.Count, totalPrims));
-                    case "textures":
-                        return (String.Format("Current texture requests: {0}, queued texture requests: {1}, completed textures: {2}",
-                            texturePipeline.CurrentCount, texturePipeline.QueuedCount, texturesFinished.Count));
+                        Logger.Log(String.Format("Prims captured: {0}, Total: {1}", prims.Count, totalPrims), Helpers.LogLevel.Info);
+                        break;
                     case "parcels":
-                        if (!CurSim.IsParcelMapFull())
+                        if (!client.Network.CurrentSim.IsParcelMapFull())
                         {
-                            WriteLine("Downloading sim parcel information and prim totals");
-                            client.Parcels.RequestAllSimParcels(CurSim, false, 10);
-                            return ("Done RequestAllSimParcels");
+                            Logger.Log("Downloading sim parcel information and prim totals", Helpers.LogLevel.Info);
+                            client.Parcels.RequestAllSimParcels(client.Network.CurrentSim, false, 10);
                         }
                         else
                         {
-                            return ("Sim parcel information has been retrieved");
+                            Logger.Log("Sim parcel information has been retrieved", Helpers.LogLevel.Info);
                         }
+                        break;
+                    case "camera":
+                        Thread cameraThread = new Thread(new ThreadStart(MoveCamera));
+                        cameraThread.Start();
+                        Logger.Log("Started random camera movement thread", Helpers.LogLevel.Info);
+                        break;
+                    case "movement":
+                        Vector3 destination = RandomPosition();
+                        Logger.Log("Teleporting to " + destination.ToString(), Helpers.LogLevel.Info);
+                        client.Self.Teleport(client.Network.CurrentSim.Handle, destination, RandomPosition());
+                        break;
+                    case "textures":
+                        Logger.Log(String.Format("Current texture requests: {0}, queued texture requests: {1}, completed textures: {2}",
+                            texturePipeline.TransferCount, /*texturePipeline.QueuedCount*/ float.NaN, /*texturesFinished.Count*/ float.NaN), Helpers.LogLevel.Info);
+                        break;
                     case "terrain":
-                        TerrainPatch[] patches;
-                        if (client.Terrain.SimPatches.TryGetValue(CurSim.Handle, out patches))
+                        TerrainPatch[] patches = client.Network.CurrentSim.SharedData.Terrain;
+                        if (patches != null)
                         {
                             int count = 0;
                             for (int i = 0; i < patches.Length; i++)
@@ -221,14 +175,16 @@ namespace cogbot.Actions.SimExport
                                     ++count;
                             }
 
-                            return (count + " terrain patches have been received for the current simulator");
+                            Logger.Log(count + " terrain patches have been received for the current simulator", Helpers.LogLevel.Info);
                         }
                         else
                         {
-                            return ("No terrain information received for the current simulator");
+                            Logger.Log("No terrain information received for the current simulator", Helpers.LogLevel.Info);
                         }
+                        break;
                     case "saveterrain":
-                        if (client.Terrain.SimPatches.TryGetValue(CurSim.Handle, out patches))
+                        patches = client.Network.CurrentSim.SharedData.Terrain;
+                        if (patches != null)
                         {
                             try
                             {
@@ -249,7 +205,7 @@ namespace cogbot.Actions.SimExport
                                             if (patch != null)
                                                 t = patch.Data[yOff * 16 + xOff];
                                             else
-                                                WriteLine(String.Format("Skipping missing patch at {0},{1}", xBlock, yBlock),
+                                                Logger.Log(String.Format("Skipping missing patch at {0},{1}", xBlock, yBlock),
                                                     Helpers.LogLevel.Warning);
 
                                             stream.Write(BitConverter.GetBytes(t), 0, 4);
@@ -259,59 +215,26 @@ namespace cogbot.Actions.SimExport
                             }
                             catch (Exception ex)
                             {
-                                WriteLine("Failed saving terrain: " + ex.Message, Helpers.LogLevel.Error);
+                                Logger.Log("Failed saving terrain: " + ex.Message, Helpers.LogLevel.Error);
                             }
                         }
                         else
                         {
-                            return ("No terrain information received for the current simulator");
+                            Logger.Log("No terrain information received for the current simulator", Helpers.LogLevel.Info);
                         }
-                        return ("Done with saveterrain " + filename);
-                    case "save":
-                        WriteLine(String.Format("Preparing to serialize {0} objects", prims.Count));
-                        OarFile.SavePrims(prims, directoryname + "/objects");
-                        WriteLine("Saving " + directoryname);
-                        OarFile.PackageArchive(directoryname, filename);
-                        return ("Done with save " + filename);
-                    case "all":
-                        DoCommand("terrain");
-                    //    DoCommand("parcels");
-                        DoCommand("saveterrain");
-                        return DoCommand("save");
-                    case "help":
-                    default:
                         break;
-                 
-//                    case "quit":
-  //                      End();
-    //                    break;
+                    case "save":
+                        Logger.Log(String.Format("Preparing to serialize {0} objects", prims.Count), Helpers.LogLevel.Info);
+                        OarFile.SavePrims(prims, directoryname + "/objects", importSettings);
+                        Logger.Log("Saving " + directoryname, Helpers.LogLevel.Info);
+                        OarFile.PackageArchive(directoryname, filename);
+                        Logger.Log("Done", Helpers.LogLevel.Info);
+                        break;
+                    case "quit":
+                        End();
+                        break;
                 }
             }
-            WriteLine("simexport camera - starts random camera movement thread");
-            WriteLine("simexport movement - random movement");
-            WriteLine("simexport saveterrain [filename] - saves terrain info");
-            WriteLine("simexport save [filename] - saves all info except for terrain");
-            return Success("simexport [queue|prims|parcels|textures|terrain|info] - displays information about items";
-        }
-
-        private void SetFilename(string path)
-        {
-            if (!path.Contains("."))
-            {
-                path = path + ".tgz";
-            }
-            this.filename = path;
-            directoryname = Path.GetFileNameWithoutExtension(filename);
-            try
-            {
-                if (!Directory.Exists(directoryname)) Directory.CreateDirectory(directoryname);
-                if (!Directory.Exists(directoryname + "/assets")) Directory.CreateDirectory(directoryname + "/assets");
-                if (!Directory.Exists(directoryname + "/objects")) Directory.CreateDirectory(directoryname + "/objects");
-                if (!Directory.Exists(directoryname + "/terrains")) Directory.CreateDirectory(directoryname + "/terrains");
-
-                CheckTextures();
-            }
-            catch (Exception ex) { WriteLine(ex.Message, Helpers.LogLevel.Error); return; }
         }
 
 
@@ -330,8 +253,6 @@ namespace cogbot.Actions.SimExport
         {
             while (running)
             {
-                GridClient client = Client;
-
                 if (client.Network.Connected)
                 {
                     // TWEAK: Randomize far distance to force an interest list recomputation
@@ -350,7 +271,6 @@ namespace cogbot.Actions.SimExport
 
                     // Randomly change the camera position
                     Vector3 pos = RandomPosition();
-         
 
                     client.Self.Movement.SendManualUpdate(
                         flags, pos, Vector3.UnitZ, Vector3.UnitX, Vector3.UnitY, Quaternion.Identity, Quaternion.Identity, far,
@@ -361,41 +281,37 @@ namespace cogbot.Actions.SimExport
             }
         }
 
-/*        void End()
+        void End()
         {
             texturePipeline.Shutdown();
 
-            if (CurrentClient.Network.Connected)
+            if (client.Network.Connected)
             {
                 if (Program.Verbosity > 0)
-                    WriteLine("Logging out");
+                    Logger.Log("Logging out", Helpers.LogLevel.Info);
 
-                CurrentClient.Network.Logout();
+                client.Network.Logout();
             }
 
             running = false;
         }
-        */
+
         void MonitorPrimsAwaitingSelect()
         {
             while (running)
             {
                 try
                 {
-                    if (primsAwaitingSelect.Count > 0)
-                    {
-                        Primitive prim = primsAwaitingSelect.Dequeue(250);
+                    Primitive prim = primsAwaitingSelect.Dequeue(250);
 
-                        if (!prims.ContainsKey(prim.LocalID) && prim != null)
-                        {
-                            Client.Objects.SelectObject(CurSim, prim.LocalID);
-                            Thread.Sleep(20); // Hacky rate limiting
-                        }
+                    if (!prims.ContainsKey(prim.LocalID) && prim != null)
+                    {
+                        client.Objects.SelectObject(client.Network.CurrentSim, prim.LocalID);
+                        Thread.Sleep(20); // Hacky rate limiting
                     }
                 }
                 catch (InvalidOperationException)
                 {
-                    Thread.Sleep(20); // Hacky rate limiting
                 }
             }
         }
@@ -403,7 +319,7 @@ namespace cogbot.Actions.SimExport
         void Network_OnCurrentSimChanged(Simulator PreviousSimulator)
         {
             if (Program.Verbosity > 0)
-                WriteLine("Moved into simulator " + CurSim.ToString());
+                Logger.Log("Moved into simulator " + client.Network.CurrentSim.ToString(), Helpers.LogLevel.Info);
         }
 
         void Parcels_OnSimParcelsDownloaded(Simulator simulator, InternalDictionary<int, Parcel> simParcels, int[,] parcelMap)
@@ -415,7 +331,7 @@ namespace cogbot.Actions.SimExport
                     delegate(Parcel parcel) { totalPrims += parcel.TotalPrims; });
 
                 if (Program.Verbosity > 0)
-                    WriteLine(String.Format("Counted {0} total prims in this simulator", totalPrims));
+                    Logger.Log(String.Format("Counted {0} total prims in this simulator", totalPrims), Helpers.LogLevel.Info);
             }
         }
 
@@ -433,12 +349,23 @@ namespace cogbot.Actions.SimExport
                 for (int i = 0; i < te.FaceTextures.Length; i++)
                 {
                     if (te.FaceTextures[i] != null && !texturesFinished.ContainsKey(te.FaceTextures[i].TextureID))
-                        texturePipeline.RequestTexture(te.FaceTextures[i].TextureID, ImageType.Normal);
+                    {
+                        client.Assets.RequestImage(te.FaceTextures[i].TextureID, ImageType.Normal, 101300.0f, 0, 0,
+                                                         OnComplete, false);
+                    }
                 }
             }
         }
 
-        void Objects_OnObjectUpdated(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
+        void OnComplete(TextureRequestState state, AssetTexture image)
+        {
+            if (state == TextureRequestState.Finished)
+            {
+                File.WriteAllBytes(directoryname + "/assets/" + image.AssetID.ToString() + "_texture.jp2", image.AssetData);
+            }
+        }
+
+        void Objects_OnObjectUpdated(Simulator simulator, ObjectMovementUpdate update, ulong regionHandle, ushort timeDilation)
         {
             if (!update.Avatar)
             {
@@ -449,7 +376,7 @@ namespace cogbot.Actions.SimExport
                     lock (prim)
                     {
                         if (Program.Verbosity > 1)
-                            WriteLine("Updating state for " + prim.ID.ToString());
+                            Logger.Log("Updating state for " + prim.ID.ToString(), Helpers.LogLevel.Info);
 
                         prim.Acceleration = update.Acceleration;
                         prim.AngularVelocity = update.AngularVelocity;
@@ -466,7 +393,6 @@ namespace cogbot.Actions.SimExport
             }
         }
 
-
         void Objects_OnObjectProperties(Simulator simulator, Primitive.ObjectProperties props)
         {
             Primitive prim;
@@ -474,14 +400,14 @@ namespace cogbot.Actions.SimExport
             if (prims.TryGetValue(props.ObjectID, out prim))
             {
                 if (Program.Verbosity > 2)
-                    WriteLine("Received properties for " + props.ObjectID.ToString());
+                    Logger.Log("Received properties for " + props.ObjectID.ToString(), Helpers.LogLevel.Info);
 
                 lock (prim)
                     prim.Properties = props;
             }
             else
             {
-                WriteLine("Received object properties for untracked object " + props.ObjectID.ToString(),
+                Logger.Log("Received object properties for untracked object " + props.ObjectID.ToString(),
                     Helpers.LogLevel.Warning);
             }
         }
@@ -509,7 +435,7 @@ namespace cogbot.Actions.SimExport
                 .Add("f|firstname=", "first name of the bot to log in", delegate(string v) { firstName = v; })
                 .Add("l|lastname=", "last name of the bot to log in", delegate(string v) { lastName = v; })
                 .Add("p|password=", "password of the bot to log in", delegate(string v) { password = v; })
-                .Add("o|WriteLine=", "filename of the OAR to write (default is 'simexport.tgz')", delegate(string v) { filename = v; })
+                .Add("o|output=", "filename of the OAR to write (default is 'simexport.tgz')", delegate(string v) { filename = v; })
                 .Add("h|?|help", delegate(string v) { showhelp = (v != null); })
                 .Add("v|verbose", delegate(string v) { if (v != null) ++Verbosity; });
             argParser.Parse(args);
@@ -517,16 +443,20 @@ namespace cogbot.Actions.SimExport
             if (!showhelp && !String.IsNullOrEmpty(regionName) &&
                 !String.IsNullOrEmpty(firstName) && !String.IsNullOrEmpty(lastName) && !String.IsNullOrEmpty(password))
             {
-                //SimExport exporter = new SimExport(firstName, lastName, password, loginServer, regionName, filename);
+                SimExport exporter = new SimExport(firstName, lastName, password, loginServer, regionName, filename);
             }
             else
             {
-                DLRConsole.WriteLine("Usage: SimExport.exe [OPTION]...");
-                DLRConsole.WriteLine("An interactive CurrentClient for exporting assets");
-                DLRConsole.WriteLine("Options:");
+                WriteLine("Usage: SimExport.exe [OPTION]...");
+                WriteLine("An interactive client for exporting assets");
+                WriteLine("Options:");
                 argParser.WriteOptionDescriptions(Console.Out);
             }
         }
+
+        private static void WriteLine(string p)
+        {
+            throw new NotImplementedException();
+        }
     }
-#endif
 }
