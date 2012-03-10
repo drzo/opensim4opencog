@@ -113,7 +113,7 @@ namespace cogbot.Actions.SimExport
                 {
                     Success("needs loop " + named(exportPrim));
                     string bissues = exportPrim.MissingData;
-                    if (!string.IsNullOrEmpty(bissues))
+                    if (!string.IsNullOrEmpty(bissues) && !arglist.Allows(bissues ,exportPrim))
                     {
                         Failure("Cant wait out the Issues " + bissues + ": " + named(exportPrim));
                         if (LocalFailures == 0) LocalFailures++;
@@ -122,7 +122,7 @@ namespace cogbot.Actions.SimExport
                 }
             }
             string issues = exportPrim.MissingData;
-            if (!string.IsNullOrEmpty(issues))
+            if (!string.IsNullOrEmpty(issues) && !arglist.Allows(issues, exportPrim))
             {
                 Failure("Issues " + issues + " " + named(exportPrim));
                 if (LocalFailures == 0) LocalFailures++;

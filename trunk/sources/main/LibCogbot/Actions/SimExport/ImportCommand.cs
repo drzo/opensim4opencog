@@ -37,6 +37,13 @@ namespace cogbot.Actions.SimExport
         {
             arglist.Remove(wait);
         }
+
+        public bool Allows(string issues, object allowed)
+        {
+            if (!(arglist.Contains(issues) || arglist.Contains("issues"))) return false;
+            ExportCommand.Running.Success("Allowing: " + issues + " with " + allowed);
+            return true;
+        }
     }
 
 

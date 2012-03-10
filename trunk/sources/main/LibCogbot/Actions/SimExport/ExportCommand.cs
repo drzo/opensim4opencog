@@ -356,7 +356,7 @@ namespace cogbot.Actions.SimExport
 
                 objects++;
                 string issues = P.MissingData;
-                if (!string.IsNullOrEmpty(issues))
+                if (!string.IsNullOrEmpty(issues) && !arglist.Allows(issues, P))
                 {
                     missing++;
                     if (!quietly) Failure("Issues " + issues + " " + named(P));
@@ -382,7 +382,7 @@ namespace cogbot.Actions.SimExport
                 // skip attachments
                 if (P.Parent is SimAvatar) continue;
                 string issues = P.MissingData;
-                if (!string.IsNullOrEmpty(issues))
+                if (!string.IsNullOrEmpty(issues) && !arglist.Allows(issues, P))
                 {
                     continue;
                 }
