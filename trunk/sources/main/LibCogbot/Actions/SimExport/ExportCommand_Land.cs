@@ -203,7 +203,7 @@ namespace cogbot.Actions.SimExport
             if (terrainReady || forced)
             {
                 SaveToDisk(terrainDir + "terrain.patches", Terrain);
-                SaveTerrainRaw32();
+                SaveTerrainRaw32(dumpDir + "../terrains/heightmap.r32");
                 if (!terrainReady)
                 {
                     Failure("SaveTerrainHeight Saved but not ready");
@@ -270,7 +270,7 @@ namespace cogbot.Actions.SimExport
                 terrainXferTimeout.Set();
             }
         }
-        public void SaveTerrainRaw32()
+        public void SaveTerrainRaw32(string path)
         {
             var patches = Client.Network.CurrentSim.SharedData.Terrain;
             if (patches != null)
@@ -292,7 +292,7 @@ namespace cogbot.Actions.SimExport
             try
             {
                 using (
-                    FileStream stream = new FileStream(dumpDir + "../terrains/heightmap.r32", FileMode.Create,
+                    FileStream stream = new FileStream(path, FileMode.Create,
                                                        FileAccess.Write))
                 {
                     for (int y = 0; y < 256; y++)

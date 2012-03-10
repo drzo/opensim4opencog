@@ -309,6 +309,8 @@ namespace cogbot.Actions.SimExport
                 }
             }
             public PrimToCreate ParentPrim;
+            public Linkset Link;
+
             public uint ParentID
             {
                 get

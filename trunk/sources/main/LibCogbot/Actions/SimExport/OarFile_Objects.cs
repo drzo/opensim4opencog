@@ -68,7 +68,7 @@ namespace cogbot.Actions.SimExport
             }
         }
 
-        static void SaveLinkset(Linkset linkset, string filename, ImportSettings options)
+        static public void SaveLinkset(Linkset linkset, string filename, ImportSettings options)
         {
             try
             {

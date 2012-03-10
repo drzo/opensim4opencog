@@ -129,8 +129,13 @@ namespace cogbot.Actions.SimExport
                 }
             }
 
+            public AssetType AssetType
+            {
+                get { return assetType; }
+            }
+
             private SimAsset _rezed;
-            private AssetType assetType;
+            private readonly AssetType assetType;
             private bool CompletedReplaceAll = false;
             //public uint NewLocalID;
             public Asset NewItem

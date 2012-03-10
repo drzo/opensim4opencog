@@ -80,7 +80,7 @@ namespace cogbot.Actions.SimExport
         public static readonly Dictionary<uint, PrimToCreate> UINT2OBJECT = new Dictionary<uint, PrimToCreate>();
 
         public static readonly Dictionary<UUID, UUIDChange> NewUUID2OBJECT = new Dictionary<UUID, UUIDChange>();
-        public static readonly Dictionary<uint, PrimToCreate> NewUINT2OBJECT = new Dictionary<uint, PrimToCreate>();
+        public static readonly Dictionary<uint, PrimToCreate> NewUINT2OBJECT = new Dictionary<uint, PrimToCreate>();        
 
         public delegate object ObjectMemberReplacer(MemberInfo name, object before, HashSet<MissingItemInfo> missing);
 
@@ -289,8 +289,57 @@ namespace cogbot.Actions.SimExport
             GleanUUIDsFrom(GetAssetUploadsFolder());
             SaveMissingIDs();
             if (arglist.Contains("request")) RequestMissingIDs();
+            if (arglist.Contains("oar")) CreateOARFile(importSettings);
             writeLine("Completed SimImport");
             return SuccessOrFailure();
+        }
+
+        private void CreateOARFile(ImportSettings settings)
+        {
+            OarFile.PrepareDir("oardir");
+
+            // Objects
+            List<Linkset> linkSets = new List<Linkset>();
+            foreach (PrimToCreate parent in parents)
+            {
+               var ls =  new Linkset()
+                    {
+                        Parent = parent.Prim
+                    };
+                parent.Link = ls;
+                linkSets.Add(ls);
+            }
+            foreach (PrimToCreate ch in childs)
+            {
+                ch.ParentPrim.Link.Children.Add(ch.Prim);
+            }
+            foreach (var ls in linkSets)
+            {
+                ls.Children.Sort(compareLocalIDs);
+                OarFile.SaveLinkset(ls, "oarfile/objects/Primitive_" + ls.Parent.ID + ".xml", settings);
+            }
+            // Assets
+            foreach (ItemToCreate asset in LocalScene.Assets)
+            {
+                File.WriteAllBytes("oarfile/assets/" + asset.OldID.ToString() + "_" + ArchiveConstants.ASSET_TYPE_TO_EXTENSION[asset.AssetType], asset.AssetData);
+            }
+            // Terrain
+            ExportCommand.Running.SaveTerrainRaw32("oarfile/terrains/heightmap.r32");
+            string parcelDirs = "oarfile/landdata/";
+            Directory.CreateDirectory(parcelDirs);
+                
+            SimRegion r = SimRegion.GetRegion(settings.CurSim);
+            foreach (var p in r.ParcelMap)
+            {
+                string fname = parcelDirs + "Parcel_" + p.Key + ".xml";
+                Parcel parcel = p.Value;
+                File.WriteAllText(fname, OarFile.Serialize(parcel, null));
+            }
+        }
+
+        private static int compareLocalIDs(Primitive x, Primitive y)
+        {
+            return (int)((long)x.LocalID - (long)y.LocalID);
         }
 
         private static void SaveMissingIDs()
