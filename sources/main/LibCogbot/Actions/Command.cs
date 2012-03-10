@@ -389,7 +389,7 @@ namespace cogbot.Actions
             return false;
         }
 
-        protected CmdResult Failure(string usage)
+        public CmdResult Failure(string usage)
         {
             failure++;
             WriteLine(usage);
@@ -397,7 +397,7 @@ namespace cogbot.Actions
             return Result(usage, false);
         }
 
-        protected CmdResult Success(string usage)
+        public CmdResult Success(string usage)
         {
             success++;
 
