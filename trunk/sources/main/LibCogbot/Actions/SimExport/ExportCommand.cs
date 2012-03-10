@@ -48,7 +48,7 @@ namespace cogbot.Actions.SimExport
         /// </summary>
         public event Action<String,UUID> ListenForRelay;
 
-        private HashSet<string> arglist;
+        //private HashSet<string> arglist;
         static public bool UseBinarySerialization = false;
 
         Box3Fill seenObjectsAt = new Box3Fill(true);
@@ -188,7 +188,11 @@ namespace cogbot.Actions.SimExport
             ";
             if (args == null || args.Length == 0) return Failure(hlp);
             string[] nargs = { "$region" };
-            arglist = new HashSet<string>();
+            ImportSettings arglist = new ImportSettings
+                                         {
+                                             CurSim = Client.Network.CurrentSim,
+                                             GroupID = Client.Self.ActiveGroup
+                                         };
             foreach (string s in args)
             {
                 arglist.Add(s.TrimEnd(new[] { 's' }).ToLower().TrimStart(new[] { '-' }));

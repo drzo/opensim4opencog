@@ -201,7 +201,7 @@ namespace cogbot.Actions.SimExport
             return true;
         }
 
-        void SaveTaskInv(BotClient Client, string pathStem, SimObject exportPrim, OutputDelegate Failure)
+        void SaveTaskInv(ImportSettings arglist, BotClient Client, string pathStem, SimObject exportPrim, OutputDelegate Failure)
         {
             string exportFile = pathStem + ".task";
             if (Incremental || showsMissingOnly) lock (fileWriterLock) if (File.Exists(exportFile)) return;
@@ -267,7 +267,7 @@ namespace cogbot.Actions.SimExport
             foreach (InventoryBase b in ib)
             {
                 bool missing;
-                OSDMap was = SaveEachTaskItem(Client, exportPrim, b, Failure, folderObject, out missing);
+                OSDMap was = SaveEachTaskItem(arglist, Client, exportPrim, b, Failure, folderObject, out missing);
                 if (was != null) contents.Add(was);
                 if (missing)
                 {
@@ -311,7 +311,7 @@ namespace cogbot.Actions.SimExport
             }
         }
 
-        OSDMap SaveEachTaskItem(BotClient Client, SimObject exportPrim, InventoryBase b, OutputDelegate Failure, List<InventoryObject> folderObject, out bool missing)
+        OSDMap SaveEachTaskItem(ImportSettings arglist, BotClient Client, SimObject exportPrim, InventoryBase b, OutputDelegate Failure, List<InventoryObject> folderObject, out bool missing)
         {
             //string primName = " from " + named(exportPrim);
             //primName = "";
@@ -353,7 +353,7 @@ namespace cogbot.Actions.SimExport
                 }
             if (item.InventoryType == InventoryType.Object)
             {
-                return UnpackTaskObject(exportPrim, item as InventoryObject, folderObject, Client, Failure, "", out missing);
+                return UnpackTaskObject(arglist, exportPrim, item as InventoryObject, folderObject, Client, Failure, "", out missing);
             }
             return UnpackTaskItem(Client, exportPrim, item, Failure, out missing);
         }
@@ -395,7 +395,7 @@ namespace cogbot.Actions.SimExport
             return OSDSerializeMembers(item);
         }
 
-        private OSDMap UnpackTaskObject(SimObject exportPrim, InventoryObject taskInv, List<InventoryObject> folderObject, BotClient Client, OutputDelegate Failure, string primName, out bool missing)
+        private OSDMap UnpackTaskObject(ImportSettings arglist, SimObject exportPrim, InventoryObject taskInv, List<InventoryObject> folderObject, BotClient Client, OutputDelegate Failure, string primName, out bool missing)
         {
             missing = true;
             var itemID = taskInv.UUID; 
@@ -797,7 +797,7 @@ namespace cogbot.Actions.SimExport
                 }
         }
 
-        private string GetTaskInvFailures(OutputDelegate Failure, SimObject exportPrim, BotClient Client, List<InventoryObject> folderObject, string contents, string TaskInvFailures)
+        private string GetTaskInvFailures(ImportSettings arglist, OutputDelegate Failure, SimObject exportPrim, BotClient Client, List<InventoryObject> folderObject, string contents, string TaskInvFailures)
         {
             if (folderObject.Count > 0 && !taskobj)
             {

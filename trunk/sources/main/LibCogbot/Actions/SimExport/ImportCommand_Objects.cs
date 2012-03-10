@@ -456,7 +456,7 @@ namespace cogbot.Actions.SimExport
             return !File.Exists(ExportCommand.dumpDir + id + ".llsd");
         }
 
-        private void ImportPTCFiles(ImportSettings importSettings, bool lloadOnly, bool rezMissing)
+        private void ImportPTCFiles(ImportSettings arglist, bool lloadOnly, bool rezMissing)
         {
             if (IsLocalScene) return;
             WriteLine("Loading Prims from PTC Files...");
@@ -477,21 +477,21 @@ namespace cogbot.Actions.SimExport
                 {
                     ptc.RequestExists();
                 }
-                if (importSettings.arglist.Contains("ptc")) continue;
+                if (arglist.arglist.Contains("ptc")) continue;
                 if (!ptc.WaitUntilFound(TimeSpan.FromSeconds(10)))
                 {
                     Failure("Missing Prim with PTC file! " + ptc);
                     if (++missing % 10 == 0) WriteLine("Missing " + missing + "...");
                     if (!rezMissing) continue;
                     var p = ptc.Prim;
-                    CreatePrim(importSettings, ptc);
+                    CreatePrim(arglist, ptc);
                 }
                 if (doBlankMissing && ResetPropertiesString.Contains("REZBLANK:" + ptc.NewID))
                 {
                     var newPrim = ptc.Rezed.Prim;
                     SavePTC(ptc);
                     uint localID = newPrim.LocalID;
-                    SetPrimInfo(importSettings.CurSim, localID, ptc.Prim, importSettings.GroupID, false, true, false);                    
+                    SetPrimInfo(arglist.CurSim, localID, ptc.Prim, arglist.GroupID, false, true, false);                    
                     ptc.NeedsPositioning = false;
                     if (++corrected % 5 == 0) WriteLine("corrected " + corrected + "...");
                 }
@@ -502,12 +502,12 @@ namespace cogbot.Actions.SimExport
             WriteLine("TOTAL corrected " + corrected + ".");
         }
 
-        private void ImportPrims(ImportSettings importSettings, bool rezParents)
+        private void ImportPrims(ImportSettings arglist, bool rezParents)
         {
             if (IsLocalScene) rezParents = false;            
             if (childs.Count == 0 || IsLocalScene)
             {
-                bool ptcOnly = importSettings.arglist.Contains("ptc") && !IsLocalScene;
+                bool ptcOnly = arglist.arglist.Contains("ptc") && !IsLocalScene;
                 WriteLine("Loading Prims from LLSD Files");
                 int loaded = 0;
                 foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.llsd"))
@@ -528,7 +528,7 @@ namespace cogbot.Actions.SimExport
                         {
                             Failure("Missing Prim witha  PTC file! " + ptc);
                             var p = ptc.Prim;
-                            CreatePrim(importSettings, ptc);
+                            CreatePrim(arglist, ptc);
                             parents.Add(ptc);
                         } else
                         {
@@ -550,7 +550,7 @@ namespace cogbot.Actions.SimExport
                     //PrimToCreate ptc = APrimToCreate(prim);
 
                     if (ptcOnly) continue;
-                    if (rezParents) CreatePrim(importSettings, ptc);
+                    if (rezParents) CreatePrim(arglist, ptc);
                 }
             }
             else
@@ -568,43 +568,42 @@ namespace cogbot.Actions.SimExport
                         continue;
                     }
                     parents.Add(ptc);
-                    if (rezParents) CreatePrim(importSettings, ptc);
+                    if (rezParents) CreatePrim(arglist, ptc);
                 }
             }
         }
 
-        private void RezPrims(ImportSettings importSettings)
+        private void RezPrims(ImportSettings arglist)
         {
             WriteLine("Imported parents " + parents.Count);
             int created = 0; 
             foreach (PrimToCreate ptc in parents)
             {
-                CreatePrim(importSettings, ptc);
+                CreatePrim(arglist, ptc);
                 if (++created % 25 == 0) WriteLine("Roots created " + created + "...");
                 if (ptc.HasLID)
                 {
-                    SetPermissionsAll(importSettings.CurSim, new List<uint>() { ptc.NewLocalID });
+                    SetPermissionsAll(arglist.CurSim, new List<uint>() { ptc.NewLocalID });
                 }
             }
             WriteLine("Importing children " + childs.Count);
             //if (sculptOnly) return Success("Sculpt Only");
             foreach (PrimToCreate ptc in childs)
             {
-                CreatePrim(importSettings, ptc);
+                CreatePrim(arglist, ptc);
                 if (++created % 25 == 0) WriteLine("Childs created " + created + "...");
             }
             List<string> skipCompare = new List<string>() { "LocalID", "ID", "ParentID", "ObjectID", "Tag" };
             WriteLine("COMPLETE: Imported P=" + parents.Count + " C=" + childs.Count);
         }
 
-        private PrimToCreate GetFromWorld(ImportSettings importSettings, UUID idp, SimObject O)
+        private PrimToCreate GetFromWorld(ImportSettings arglist, UUID idp, SimObject O)
         {
             PrimToCreate parent = null;
             if (ExportCommand.IsSkipped(O))
             {
                 Failure("Normally Skipped Parent=" + O);
             }
-            var arglist = importSettings.arglist;
             arglist.Add("wait");
             arglist.Add("llsd");
             arglist.Add("task");
@@ -627,9 +626,9 @@ namespace cogbot.Actions.SimExport
             return parent;
         }
 
-        private void ImportLinks(ImportSettings importSettings)
+        private void ImportLinks(ImportSettings arglist)
         {
-            var CurSim = importSettings.CurSim;
+            var CurSim = arglist.CurSim;
             WriteLine("Linking imports");
             List<string> skipCompare;
             foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.link"))
@@ -654,7 +653,7 @@ namespace cogbot.Actions.SimExport
                             }
                             continue;
                         }
-                        parent = GetFromWorld(importSettings, idp, O);
+                        parent = GetFromWorld(arglist, idp, O);
                         if (parent == null) continue;
                         parents.Add(parent);
                     }
@@ -694,7 +693,7 @@ namespace cogbot.Actions.SimExport
                 if (false)
                 {
                     linkset.Reverse();
-                    SetPrimsPostLink(CurSim, importSettings.GroupID, parent, linkset, skipCompare);
+                    SetPrimsPostLink(CurSim, arglist.GroupID, parent, linkset, skipCompare);
                 }
             }
             if (IsLocalScene)
@@ -894,7 +893,7 @@ namespace cogbot.Actions.SimExport
             return null;
         }
 
-        private void CreatePrim(ImportSettings importSettings, PrimToCreate ptc)
+        private void CreatePrim(ImportSettings arglist, PrimToCreate ptc)
         {
             if (ptc.PackedInsideNow) return;
             if (IsLocalScene)
@@ -903,11 +902,11 @@ namespace cogbot.Actions.SimExport
                 ptc.SetStoreLocal();
                 return;
             }
-            if (!CreatePrim0(importSettings.CurSim, ptc, importSettings.GroupID, ExportCommand.Running.LocalFailure))
+            if (!CreatePrim0(arglist.CurSim, ptc, arglist.GroupID, ExportCommand.Running.LocalFailure))
             {
                 Failure("Unable to create Prim " + ptc);
                 //try again!
-                CreatePrim0(importSettings.CurSim, ptc, importSettings.GroupID, ExportCommand.Running.LocalFailure);
+                CreatePrim0(arglist.CurSim, ptc, arglist.GroupID, ExportCommand.Running.LocalFailure);
             }
         }
         private bool CreatePrim0(Simulator CurSim, PrimToCreate ptc, UUID GroupID, OutputDelegate Failure)
