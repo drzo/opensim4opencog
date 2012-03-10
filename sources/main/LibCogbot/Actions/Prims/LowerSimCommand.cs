@@ -40,7 +40,7 @@ namespace cogbot.Actions.Land
                 foreach (var u in prep)
                 {
                     Client.Objects.RequestObject(sim,u);
-                    Client.Objects.SelectObject(sim,u);
+                    Client.Objects.SelectObject(sim, u, true);
                 }
                 return ShowUsage();
 
