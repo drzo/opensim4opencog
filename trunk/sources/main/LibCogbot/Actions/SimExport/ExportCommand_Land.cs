@@ -203,6 +203,7 @@ namespace cogbot.Actions.SimExport
             if (terrainReady || forced)
             {
                 SaveToDisk(terrainDir + "terrain.patches", Terrain);
+                SaveTerrainRaw32();
                 if (!terrainReady)
                 {
                     Failure("SaveTerrainHeight Saved but not ready");
@@ -269,6 +270,59 @@ namespace cogbot.Actions.SimExport
                 terrainXferTimeout.Set();
             }
         }
- 
+        public void SaveTerrainRaw32()
+        {
+            var patches = Client.Network.CurrentSim.SharedData.Terrain;
+            if (patches != null)
+            {
+                int count = 0;
+                for (int i = 0; i < patches.Length; i++)
+                {
+                    if (patches[i] != null)
+                        ++count;
+                }
+
+                Logger.Log(count + " terrain patches have been received for the current simulator", Helpers.LogLevel.Info);
+            }
+            else
+            {
+                Logger.Log("No terrain information received for the current simulator", Helpers.LogLevel.Info);
+                return;
+            }
+            try
+            {
+                using (
+                    FileStream stream = new FileStream(dumpDir + "../terrains/heightmap.r32", FileMode.Create,
+                                                       FileAccess.Write))
+                {
+                    for (int y = 0; y < 256; y++)
+                    {
+                        for (int x = 0; x < 256; x++)
+                        {
+                            int xBlock = x / 16;
+                            int yBlock = y / 16;
+                            int xOff = x - (xBlock * 16);
+                            int yOff = y - (yBlock * 16);
+
+                            TerrainPatch patch = patches[yBlock * 16 + xBlock];
+                            float t = 0f;
+
+                            if (patch != null)
+                                t = patch.Data[yOff * 16 + xOff];
+                            else
+                                Logger.Log(String.Format("Skipping missing patch at {0},{1}", xBlock, yBlock),
+                                           Helpers.LogLevel.Warning);
+
+                            stream.Write(BitConverter.GetBytes(t), 0, 4);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log("Failed saving terrain: " + ex.Message, Helpers.LogLevel.Error);
+            }
+        }
+
     }
 }
