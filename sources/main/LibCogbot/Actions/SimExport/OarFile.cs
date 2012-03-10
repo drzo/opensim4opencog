@@ -300,9 +300,9 @@ namespace cogbot.Actions.SimExport
                     * WriteUUID(writer, "ParentPartID", item.ParentPartID, options);
                     WriteUUID(writer, "PermsGranter", item.PermsGranter, options);
                     */
-                    writer.WriteElementString("PermsMask", "4094");//item.PermsMask.ToString());
-                    
-                    writer.WriteElementString("Type", item.AssetType.ToString());
+                    writer.WriteElementString("PermsMask", perms.BaseMask.ToString());//item.PermsMask.ToString());
+
+                    writer.WriteElementString("Type", ((uint) item.AssetType).ToString());
                     //todo writer.WriteElementString("OwnerChanged", item.OwnerChanged.ToString().ToLower());
 
                     writer.WriteEndElement(); // TaskInventoryItem
