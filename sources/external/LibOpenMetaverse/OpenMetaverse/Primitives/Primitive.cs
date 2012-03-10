@@ -540,6 +540,7 @@ namespace OpenMetaverse
         [Serializable]
         public class ObjectProperties
         {
+            public bool family = false;
             /// <summary></summary>
             public UUID ObjectID = UUID.Zero;
             /// <summary></summary>
@@ -592,6 +593,7 @@ namespace OpenMetaverse
             /// </summary>
             public ObjectProperties()
             {
+                family = false;
                 Name = String.Empty;
                 Description = String.Empty;
                 TouchName = String.Empty;
