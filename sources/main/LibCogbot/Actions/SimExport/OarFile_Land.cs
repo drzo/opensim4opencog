@@ -73,7 +73,7 @@ namespace cogbot.Actions.SimExport
 
             return sw.ToString();
         }
-        public static string Serialize(Parcel landData, ParcelInfo info)
+        public static string Serialize(Parcel landData)
         {
             StringWriter sw = new StringWriter();
             XmlTextWriter xtw = new XmlTextWriter(sw);
@@ -88,7 +88,7 @@ namespace cogbot.Actions.SimExport
             xtw.WriteElementString("Category", Convert.ToString((sbyte)landData.Category));
             xtw.WriteElementString("ClaimDate", Convert.ToString(landData.ClaimDate));
             xtw.WriteElementString("ClaimPrice", Convert.ToString(landData.ClaimPrice));
-            xtw.WriteElementString("GlobalID", info.ID.ToString());
+            xtw.WriteElementString("GlobalID", landData.GlobalID.ToString());
             xtw.WriteElementString("GroupID", landData.GroupID.ToString());
             xtw.WriteElementString("IsGroupOwned", Convert.ToString(landData.IsGroupOwned));
             xtw.WriteElementString("Bitmap", Convert.ToBase64String(landData.Bitmap));
@@ -130,7 +130,8 @@ namespace cogbot.Actions.SimExport
             xtw.WriteElementString("SnapshotID", landData.SnapshotID.ToString());
             xtw.WriteElementString("UserLocation", landData.UserLocation.ToString());
             xtw.WriteElementString("UserLookAt", landData.UserLookAt.ToString());
-            xtw.WriteElementString("Dwell", info.Dwell.ToString());
+            //todo xtw.WriteElementString("Dwell", landData.info.Dwell.ToString());
+            xtw.WriteElementString("Dwell", 0.ToString());
             xtw.WriteElementString("OtherCleanTime", Convert.ToString(landData.OtherCleanTime));
 
             xtw.WriteEndElement();

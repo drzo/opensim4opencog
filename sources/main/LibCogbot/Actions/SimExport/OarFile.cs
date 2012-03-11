@@ -8,6 +8,7 @@ using System.Xml;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
+using OpenMetaverse.StructuredData;
 using NotImplementedException=sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 namespace cogbot.Actions.SimExport
@@ -27,7 +28,7 @@ namespace cogbot.Actions.SimExport
             catch (Exception ex) { Logger.Log(ex.Message, Helpers.LogLevel.Error); return; }
         }
 
-        public static void PackageArchive(string directoryName, string filename)
+        public static void PackageArchive(string directoryName, string filename, bool includeTerrain, bool includeLandData)
         {
             const string ARCHIVE_XML = "<?xml version=\"1.0\" encoding=\"utf-16\"?>\n<archive major_version=\"0\" minor_version=\"1\" />";
 
@@ -48,7 +49,7 @@ namespace cogbot.Actions.SimExport
 
             // Add the terrain(s)
             files = Directory.GetFiles(directoryName + "/terrains");
-            foreach (string file in files)
+            if (false) foreach (string file in files)
                 archive.AddFile("terrains/" + Path.GetFileName(file), File.ReadAllBytes(file));
 
             archive.WriteTar(new GZipStream(new FileStream(filename, FileMode.Create), CompressionMode.Compress));
@@ -67,10 +68,15 @@ namespace cogbot.Actions.SimExport
 
         }
 
-        static void WriteFlags(XmlTextWriter writer, string name, string flagsStr, ImportSettings options)
+        static void WriteFlags0(XmlTextWriter writer, string name, string flagsStr, ImportSettings options)
         {
             // Older versions of serialization can't cope with commas, so we eliminate the commas
-            writer.WriteElementString(name, flagsStr.Replace(",", ""));
+            writer.WriteElementString(name, flagsStr.Replace(",", " ").Replace("  ", " "));
+        }
+        static void WriteFlags(XmlTextWriter writer, string name, Enum flagsStr, ImportSettings options)
+        {
+            // Older versions of serialization can't cope with commas, so we eliminate the commas
+            WriteEnum(writer, name, flagsStr);
         }
 
 
@@ -109,6 +115,32 @@ namespace cogbot.Actions.SimExport
             writer.WriteElementString("Z", quat.Z.ToString());
             writer.WriteElementString("W", quat.W.ToString());
             writer.WriteEndElement();
+        }
+
+        private static void WriteEnum(XmlWriter writer, string name, Enum mask)
+        {
+            Type t = Enum.GetUnderlyingType(mask.GetType());
+            writer.WriteElementString(name, OSD.InvokeCast(mask, t).ToString());
+        }
+        private static void WriteValue(XmlTextWriter writer, string name, IComparable<string> value)
+        {
+            writer.WriteElementString(name, value.ToString());
+        }
+        private static void WriteUInt(XmlTextWriter writer, string name, ulong value)
+        {
+            writer.WriteElementString(name, value.ToString());
+        }
+        private static void WriteFloat(XmlTextWriter writer, string name, IComparable<float> value)
+        {
+            writer.WriteElementString(name, value.ToString());
+        }
+        private static void WriteInt(XmlTextWriter writer, string name, long value)
+        {
+            writer.WriteElementString(name, value.ToString());
+        }
+        private static void WriteDate(XmlTextWriter writer, string name, DateTime time)
+        {
+            WriteValue(writer, name, ((int)Utils.DateTimeToUnixTime(time)).ToString());
         }
     }
 }

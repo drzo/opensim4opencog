@@ -50,3 +50,31 @@ default
         llRemoveInventory(llGetScriptName());   //uncomment this to make script auto remove
     }
 }
+
+
+
+default
+{
+    on_rez(integer skey) {
+        llListen(-4202,"",NULL_KEY,"");        
+    }
+    state_entry() {   
+        llListen(-4202,"",NULL_KEY,"");        
+    }    
+        
+    listen(integer channel, string name, key id, string message)
+    {
+      integer index = llSubStringIndex( message, "bto," );
+      if (index==0) 
+       {
+           list lst = llCSV2List(message);
+           if (llGetKey()!=(key)llList2String(lst,1)) return;
+            message =  llList2String(lst,2);
+       }
+        if (llToLower(message) == "saymissing")
+        {
+            llRegionSay(-4200,"TaskMissing:" + llGetKey() + " " + llGetScriptName());
+        }
+    }
+    
+}
