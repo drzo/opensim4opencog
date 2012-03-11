@@ -586,7 +586,7 @@ namespace cogbot
             Follow follow = new Follow(this);
             Commands["follow"] = follow;
             Commands["wear"] = new Actions.Wear(this);
-            Commands["simexport"] = new cogbot.Actions.SimExport.ExportCommand(this);
+            //Commands["simexport"] = new cogbot.Actions.SimExport.ExportCommand(this);
             Commands["stop following"] = follow;
             Commands["stop-following"] = follow;
 

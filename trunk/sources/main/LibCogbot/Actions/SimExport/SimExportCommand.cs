@@ -227,7 +227,7 @@ namespace cogbot.Actions.SimExport
                         Logger.Log(String.Format("Preparing to serialize {0} objects", prims.Count), Helpers.LogLevel.Info);
                         OarFile.SavePrims(prims, directoryname + "/objects", importSettings);
                         Logger.Log("Saving " + directoryname, Helpers.LogLevel.Info);
-                        OarFile.PackageArchive(directoryname, filename);
+                        OarFile.PackageArchive(directoryname, filename, true, false);
                         Logger.Log("Done", Helpers.LogLevel.Info);
                         break;
                     case "quit":

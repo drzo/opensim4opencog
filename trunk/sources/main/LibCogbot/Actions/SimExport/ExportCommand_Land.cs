@@ -324,5 +324,9 @@ namespace cogbot.Actions.SimExport
             }
         }
 
+        internal void SaveTerrainRaw(string filename)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

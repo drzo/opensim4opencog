@@ -56,9 +56,12 @@ namespace cogbot.Actions.SimExport
                 {
                     rezString = "DEREZZED " + rezString;
                 }
-                if (_prim != null) return _prim + " -> " + rezString;
-                return OldID + " -> " + rezString;
+                if (IsLocalScene) rezString = "";
+                else rezString = " -> " + rezString;
+                if (_prim != null) return _prim + rezString;
+                return OldID + rezString;
             }
+
             public override int GetHashCode()
             {
                 return OldID.GetHashCode();

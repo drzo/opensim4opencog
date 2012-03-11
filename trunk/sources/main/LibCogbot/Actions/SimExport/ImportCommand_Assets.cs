@@ -89,7 +89,9 @@ namespace cogbot.Actions.SimExport
                 _OldItem = item;
                 OldID = item.AssetID;
                 assetType = item.AssetType;
-                inventoryType = AssetTypeToInventoryType(assetType);
+                int pn;
+                inventoryType = AssetTypeToInventoryType(assetType, out pn);
+                PassNumber = pn;
                 if (PassNumber == 1) CompletedReplaceAll = true;
                 LoadProgressFile();
             }
@@ -97,7 +99,9 @@ namespace cogbot.Actions.SimExport
             {
                 OldID = oldID;
                 assetType = type;
-                inventoryType = AssetTypeToInventoryType(assetType);
+                int pn;
+                inventoryType = AssetTypeToInventoryType(assetType, out pn);
+                PassNumber = pn;
                 if (PassNumber == 1) CompletedReplaceAll = true;
                 LoadProgressFile();
 
@@ -232,7 +236,7 @@ namespace cogbot.Actions.SimExport
 
             readonly public InventoryType inventoryType;
             public int PassNumber;
-            public InventoryType AssetTypeToInventoryType(AssetType type)
+            static public InventoryType AssetTypeToInventoryType(AssetType type, out int PassNumber)
             {
                 if (false)
                 {
@@ -631,7 +635,7 @@ namespace cogbot.Actions.SimExport
             int uploaded = 0;
             int reuploaded = 0;
             int seenAsset = 0;
-            HashSet<ItemToCreate> ItemsToCreate = new HashSet<ItemToCreate>();
+            HashSet<ItemToCreate> ItemsToCreate = LocalScene.Assets;
             bool alwayReupload = arglist.Contains("reup");
             Success("Uploading assets... sameIds=" + sameIds);
             foreach (var file in Directory.GetFiles(ExportCommand.assetDumpDir, "*.*"))
@@ -729,6 +733,11 @@ namespace cogbot.Actions.SimExport
                 }
             }
             return itc;
+        }
+
+        public UUID GetMissingFiller(AssetType type)
+        {
+            return UUID.GetUUID(UUID.GuidFromLong((ulong) type));
         }
     }
 }

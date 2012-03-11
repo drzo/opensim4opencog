@@ -59,8 +59,12 @@ namespace cogbot.Actions.SimExport
         {
             public HashSet<ItemToCreate> Assets = new HashSet<ItemToCreate>();
             public HashSet<PrimToCreate> Objects = new HashSet<PrimToCreate>();
+            public HashSet<Linkset> Links = new HashSet<Linkset>();
+            public HashSet<Linkset> AssetLinks = new HashSet<Linkset>();
             public HashSet<UserOrGroupMapping> Users = new HashSet<UserOrGroupMapping>();
             public HashSet<UserOrGroupMapping> Groups = new HashSet<UserOrGroupMapping>();
+            public HashSet<TaskObject> TaskObjects = new HashSet<TaskObject>();
+
             public LocalSimScene()
             {
 
@@ -235,6 +239,11 @@ namespace cogbot.Actions.SimExport
             {
                 arglist.Add(s.TrimEnd(new[] { 's' }).ToLower().TrimStart(new[] { '-' }));
             }
+            if (arglist.Contains("repack"))
+            {
+                OarFile.PackageArchive("cog_export/oarfile/", "repack.oar", true, true);
+                return SuccessOrFailure();
+            }
             bool doRez = false;
             if (arglist.Contains("all"))
             {
@@ -289,57 +298,74 @@ namespace cogbot.Actions.SimExport
             GleanUUIDsFrom(GetAssetUploadsFolder());
             SaveMissingIDs();
             if (arglist.Contains("request")) RequestMissingIDs();
-            if (arglist.Contains("oar")) CreateOARFile(importSettings);
+            if (arglist.Contains("taskobj")) ImportTaskObjects(importSettings);
+            DivideTaskObjects(importSettings);
+            if (arglist.Contains("oar")) CreateOARFile(importSettings, "exported.oar");
             writeLine("Completed SimImport");
             return SuccessOrFailure();
         }
 
-        private void CreateOARFile(ImportSettings settings)
+        private void CreateOARFile(ImportSettings settings, string filename)
         {
-            OarFile.PrepareDir("oardir");
+            string rootDir = ExportCommand.dumpDir + "../oarfile/";
+
+            OarFile.PrepareDir(rootDir);
 
             // Objects
-            List<Linkset> linkSets = new List<Linkset>();
             foreach (PrimToCreate parent in parents)
             {
-               var ls =  new Linkset()
-                    {
-                        Parent = parent.Prim
-                    };
+                var ls = new Linkset()
+                             {
+                                 Parent = parent
+                             };
                 parent.Link = ls;
-                linkSets.Add(ls);
+                LocalScene.Links.Add(ls);
             }
             foreach (PrimToCreate ch in childs)
             {
-                ch.ParentPrim.Link.Children.Add(ch.Prim);
+                ch.ParentPrim.Link.Children.Add(ch);
             }
-            foreach (var ls in linkSets)
+            foreach (var ls in LockInfo.CopyOf(LocalScene.Links))
             {
                 ls.Children.Sort(compareLocalIDs);
-                OarFile.SaveLinkset(ls, "oarfile/objects/Primitive_" + ls.Parent.ID + ".xml", settings);
+                if (ls.Parent.IsAsset)
+                {
+                    LocalScene.AssetLinks.Add(ls);
+                    LocalScene.Links.Remove(ls);
+                }
+            }
+            foreach (var ls in LocalScene.Links)
+            {
+                OarFile.SaveLinkset(ls, rootDir + "objects/Primitive_" + ls.Parent.NewID + ".xml", settings);
             }
             // Assets
             foreach (ItemToCreate asset in LocalScene.Assets)
             {
-                File.WriteAllBytes("oarfile/assets/" + asset.OldID.ToString() + "_" + ArchiveConstants.ASSET_TYPE_TO_EXTENSION[asset.AssetType], asset.AssetData);
+                File.WriteAllBytes(rootDir + "assets/" + asset.OldID + ArchiveConstants.ASSET_TYPE_TO_EXTENSION[asset.AssetType], asset.AssetData);
+            }
+            foreach (var ls in LocalScene.AssetLinks)
+            {
+                OarFile.SaveLinkset(ls, rootDir + "assets/" + ls.Parent.NewID + ArchiveConstants.ASSET_TYPE_TO_EXTENSION[AssetType.Object], settings);
             }
             // Terrain
-            ExportCommand.Running.SaveTerrainRaw32("oarfile/terrains/heightmap.r32");
-            string parcelDirs = "oarfile/landdata/";
+            ExportCommand.Running.SaveTerrainRaw32(rootDir + "terrains/heightmap.raw");
+
+            string parcelDirs = rootDir + "landdata/";
             Directory.CreateDirectory(parcelDirs);
                 
             SimRegion r = SimRegion.GetRegion(settings.CurSim);
             foreach (var p in r.ParcelMap)
             {
-                string fname = parcelDirs + "Parcel_" + p.Key + ".xml";
                 Parcel parcel = p.Value;
-                File.WriteAllText(fname, OarFile.Serialize(parcel, null));
+                if (CogbotHelpers.IsNullOrZero(parcel.GlobalID)) parcel.GlobalID = UUID.Random();
+                File.WriteAllText(parcelDirs + "" + parcel.GlobalID + ".xml", OarFile.Serialize(parcel));
             }
+            OarFile.PackageArchive(rootDir, filename, true, true);
         }
 
-        private static int compareLocalIDs(Primitive x, Primitive y)
+        private static int compareLocalIDs(PrimToCreate x, PrimToCreate y)
         {
-            return (int)((long)x.LocalID - (long)y.LocalID);
+            return (int)((long)x.OldLocalID - (long)y.OldLocalID);
         }
 
         private static void SaveMissingIDs()
