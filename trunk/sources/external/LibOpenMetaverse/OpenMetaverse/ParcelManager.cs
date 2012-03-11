@@ -570,6 +570,10 @@ namespace OpenMetaverse
         /// <summary>A struct containing media details</summary>
         public ParcelMedia Media;
 
+
+        public UUID GlobalID = UUID.Zero;
+        public ParcelInfo Info = new ParcelInfo();
+
         /// <summary>
         /// Displays a parcel object in string format
         /// </summary>
