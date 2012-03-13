@@ -758,7 +758,7 @@ namespace cogbot.Actions.SimExport
                     int pn;
                     _item = InventoryManager.CreateInventoryItem(
                         ItemToCreate.AssetTypeToInventoryType(this.AssetType, out pn), OldItemID);
-                    if (_item != null)
+                    if (_item == null)
                     {
                         _item = new InventoryItem(OldItemID);
                     }
@@ -767,7 +767,7 @@ namespace cogbot.Actions.SimExport
                     {
                         if (_item.AssetType != AssetType.Object)
                         {
-                            OldAssetID = Running.GetMissingFiller(_item.AssetType);
+                            OldAssetID = GetMissingFiller(_item.AssetType);
                         }
                     }
                     _item.AssetUUID = OldAssetID;

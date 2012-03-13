@@ -225,7 +225,7 @@ namespace cogbot.Actions.SimExport
                         break;
                     case "save":
                         Logger.Log(String.Format("Preparing to serialize {0} objects", prims.Count), Helpers.LogLevel.Info);
-                        OarFile.SavePrims(prims, directoryname + "/objects", importSettings);
+                        SavePrims(prims, directoryname + "/objects", importSettings);
                         Logger.Log("Saving " + directoryname, Helpers.LogLevel.Info);
                         OarFile.PackageArchive(directoryname, filename, true, false);
                         Logger.Log("Done", Helpers.LogLevel.Info);
@@ -233,6 +233,46 @@ namespace cogbot.Actions.SimExport
                     case "quit":
                         End();
                         break;
+                }
+            }
+        }
+
+        public static void SavePrims(DoubleDictionary<uint, UUID, Primitive> prims, string path, ImportSettings options)
+        {
+            // Delete all of the old linkset files
+            try
+            {
+                Directory.Delete(path, true);
+                Directory.CreateDirectory(path);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log("Failed saving prims: " + ex.Message, Helpers.LogLevel.Error);
+                return;
+            }
+
+            // Copy the double dictionary to a temporary list for iterating
+            List<Primitive> primList = new List<Primitive>();
+            prims.ForEach(delegate(Primitive prim)
+            {
+                primList.Add(prim);
+            });
+
+            foreach (Primitive p in primList)
+            {
+                if (p.ParentID == 0)
+                {
+                    Linkset linkset = new Linkset();
+                    linkset.Parent = ImportCommand.Running.APrimToCreate(p);
+
+                    prims.ForEach(delegate(Primitive q)
+                    {
+                        if (q.ParentID == p.LocalID)
+                            linkset.Children.Add(ImportCommand.Running.APrimToCreate(q));
+                    });
+
+                    OarFile.SaveLinkset(linkset, path + "/Primitive_" + linkset.Parent.NewID.ToString() + ".xml", false,
+                                        options);
                 }
             }
         }

@@ -574,7 +574,7 @@ namespace cogbot.Actions.SimExport
                 ReplaceAllMembers(item, typeof(UUID), UUIDReplacer, MissingFromExport);
                 try
                 {
-                    item.Encode0();
+                    if (AssetType != AssetType.Object) item.Encode0();
                 }
                 catch (Exception)
                 {
@@ -630,8 +630,9 @@ namespace cogbot.Actions.SimExport
             }
         }
 
-        private void UploadAllAssets(bool sameIds)
+        private void UploadAllAssets(ImportSettings arglist)
         {
+            bool sameIds = arglist.Contains("sameid");
             int uploaded = 0;
             int reuploaded = 0;
             int seenAsset = 0;
@@ -666,7 +667,7 @@ namespace cogbot.Actions.SimExport
                     if (file.EndsWith(".ogg"))
                     {
                         assetType = AssetType.Sound;
-                        sid = Path.GetFileName(file.Substring(0, file.Length - ".jp2".Length));
+                        sid = Path.GetFileName(file.Substring(0, file.Length - ".ogg".Length));
                     }
                 }
                 if (assetType == AssetType.Unknown)
@@ -735,9 +736,10 @@ namespace cogbot.Actions.SimExport
             return itc;
         }
 
-        public UUID GetMissingFiller(AssetType type)
+        static public UUID GetMissingFiller(AssetType type)
         {
-            return UUID.GetUUID(UUID.GuidFromLong((ulong) type));
+            string id = "40400000-0404-0404-0404-0000000000" + String.Format("{0:X2}", (sbyte)type);
+            return UUIDFactory.GetUUID(id);
         }
     }
 }
