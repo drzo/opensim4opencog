@@ -26,8 +26,20 @@ namespace cogbot.Actions.SimExport
         private readonly AutoResetEvent terrainXferTimeout = new AutoResetEvent(false);
         static public string terrainFileName = terrainDir + "terrain.raw";
         private readonly AutoResetEvent ParcelsDownloaded = new AutoResetEvent(false);
-        private void SaveParcelInfo()
+        private Thread SaveParcelInfoThread;
+        private Thread DownloadTerrainThread;
+
+        private void SaveParcelInfoCommand(ImportSettings arglist)
         {
+            if (SaveParcelInfoThread != null) return;
+            SaveParcelInfoThread = new Thread(() => SaveParcelInfo(arglist));
+            SaveParcelInfoThread.Name = "SimExport SaveParcelInfo";
+            SaveParcelInfoThread.Start();
+        }
+
+        private void SaveParcelInfo(ImportSettings settings)
+        {
+            var CurSim = settings.CurSim;
             Client.Parcels.RequestAllSimParcels(CurSim);
 
             if (CurSim.IsParcelMapFull())
@@ -147,11 +159,24 @@ namespace cogbot.Actions.SimExport
             }
             else
                 Failure("Failed to retrieve information on all the simulator parcels");
+
+            string parcelDirs = settings.OarDir + "landdata/";
+            Directory.CreateDirectory(parcelDirs);
+
+
+            SimRegion r = SimRegion.GetRegion(CurSim);
+            foreach (var p in r.ParcelMap)
+            {
+                Parcel parcel = p.Value;
+                if (CogbotHelpers.IsNullOrZero(parcel.GlobalID)) parcel.GlobalID = UUID.Random();
+                File.WriteAllText(parcelDirs + "" + parcel.GlobalID + ".xml", OarFile.Serialize(parcel));
+            }
         }
 
-        public void SaveTerrainHeight()
+        public void SaveTerrainHeight(ImportSettings settings)
         {
             bool prefixFP = false;
+            var CurSim = settings.CurSim;
             OSDMap simInfoMap = new OSDMap();
             // leave these out of serialization
             simInfoMap["ObjectsPrimitives"] = true;
@@ -216,6 +241,17 @@ namespace cogbot.Actions.SimExport
             }
             Failure("Unable to SaveTerrainHeight (use --force)");
         }
+
+        private void StartTerrainDownload(ImportSettings settings)
+        {
+            // Create a delegate which will be fired when the simulator receives our download request
+            // Starts the actual transfer request
+            if (DownloadTerrainThread != null) return;
+            DownloadTerrainThread = new Thread(DownloadTerrain);
+            DownloadTerrainThread.Name = "SimExport DownloadTerrain";
+            DownloadTerrainThread.Start();
+        }
+
         private void DownloadTerrain()
         {
             if (DownloadingTerrain) return;

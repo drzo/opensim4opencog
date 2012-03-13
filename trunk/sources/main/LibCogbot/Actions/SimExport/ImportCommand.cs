@@ -22,20 +22,26 @@ namespace cogbot.Actions.SimExport
         public bool MakeEverythingGroupOwned;
         public HashSet<string> arglist = new HashSet<string>();
         public Simulator CurSim;
+        public string OarDir = "cog_export/oarfile/";
 
         public bool Contains(string task)
         {
-            return arglist.Contains(task);
+            return arglist.Contains(ToKey(task));
         }
 
-        public void Add(string start)
+        static string ToKey(string task)
         {
-            arglist.Add(start);
+            return task.TrimEnd('s').ToLower().TrimStart('-');
         }
 
-        public void Remove(string wait)
+        public void Add(string task)
         {
-            arglist.Remove(wait);
+            arglist.Add(ToKey(task));
+        }
+
+        public void Remove(string task)
+        {
+            arglist.Remove(ToKey(task));
         }
 
         public bool Allows(string issues, object allowed)
@@ -48,7 +54,12 @@ namespace cogbot.Actions.SimExport
 
         public bool ContainsKey(string task)
         {
-            return arglist.Contains(task);
+            return arglist.Contains(ToKey(task));
+        }
+
+        public void Failure(string s, params object[] args)
+        {
+            ImportCommand.Running.Failure(DLRConsole.SafeFormat(s, args));
         }
     }
 
@@ -75,7 +86,7 @@ namespace cogbot.Actions.SimExport
         public static ImportCommand Running;
         public static bool IsLocalScene = true;
         public static LocalSimScene LocalScene = new LocalSimScene();
-        private HashSet<string> arglist;
+        //private HashSet<string> arglist;
 
         private static readonly HashSet<UUID> UnresolvedUUIDs = new HashSet<UUID>();
         static private readonly Dictionary<UUID, UUID> ChangeList = new Dictionary<UUID, UUID>();
@@ -233,16 +244,23 @@ namespace cogbot.Actions.SimExport
             ImportSettings importSettings = new ImportSettings();
             importSettings.GroupID = (args.Length > 1) ? TheBotClient.GroupID : UUID.Zero;
             importSettings.CurSim = Client.Network.CurrentSim;
-            arglist = importSettings.arglist = new HashSet<string>();
+            var arglist = importSettings;
             writeLine("Starting SimImport...");
             foreach (string s in args)
             {
-                arglist.Add(s.TrimEnd(new[] { 's' }).ToLower().TrimStart(new[] { '-' }));
+                arglist.Add(s);
             }
             if (arglist.Contains("repack"))
             {
-                OarFile.PackageArchive("cog_export/oarfile/", "repack.oar", true, true);
+                OarFile.PackageArchive("cog_export/oarfile/", "repack.oar", false, false);
                 return SuccessOrFailure();
+            }
+            if (arglist.Contains("hhp"))
+            {
+                arglist.Add("keepmissing");
+                arglist.Add("all");
+                arglist.Add("oar");
+                arglist.Add("fullperms");
             }
             bool doRez = false;
             if (arglist.Contains("all"))
@@ -277,11 +295,11 @@ namespace cogbot.Actions.SimExport
             }
             if (arglist.Contains("user") || arglist.Contains("group") || true)
             {
-                LoadUsersAndGroups();
+                LoadUsersAndGroups(arglist);
             }
             if (arglist.Contains("asset") || true)
             {
-                UploadAllAssets(arglist.Contains("sameid"));
+                UploadAllAssets(arglist);
             }
             GleanUUIDsFrom(GetAssetUploadsFolder());
             ScanForChangeList();
@@ -336,7 +354,7 @@ namespace cogbot.Actions.SimExport
             }
             foreach (var ls in LocalScene.Links)
             {
-                OarFile.SaveLinkset(ls, rootDir + "objects/Primitive_" + ls.Parent.NewID + ".xml", settings);
+                OarFile.SaveLinkset(ls, rootDir + "objects/" + ls.Parent.NewID + ArchiveConstants.ASSET_TYPE_TO_EXTENSION[AssetType.Object], false, settings);
             }
             // Assets
             foreach (ItemToCreate asset in LocalScene.Assets)
@@ -345,22 +363,15 @@ namespace cogbot.Actions.SimExport
             }
             foreach (var ls in LocalScene.AssetLinks)
             {
-                OarFile.SaveLinkset(ls, rootDir + "assets/" + ls.Parent.NewID + ArchiveConstants.ASSET_TYPE_TO_EXTENSION[AssetType.Object], settings);
+                OarFile.SaveLinkset(ls, rootDir + "assets/" + ls.Parent.NewID + ArchiveConstants.ASSET_TYPE_TO_EXTENSION[AssetType.Object], true, settings);
             }
             // Terrain
-            ExportCommand.Running.SaveTerrainRaw32(rootDir + "terrains/heightmap.raw");
+            if (settings.ContainsKey("terrain")) ExportCommand.Running.SaveTerrainRaw32(rootDir + "terrains/heightmap.raw");
 
             string parcelDirs = rootDir + "landdata/";
             Directory.CreateDirectory(parcelDirs);
-                
-            SimRegion r = SimRegion.GetRegion(settings.CurSim);
-            foreach (var p in r.ParcelMap)
-            {
-                Parcel parcel = p.Value;
-                if (CogbotHelpers.IsNullOrZero(parcel.GlobalID)) parcel.GlobalID = UUID.Random();
-                File.WriteAllText(parcelDirs + "" + parcel.GlobalID + ".xml", OarFile.Serialize(parcel));
-            }
-            OarFile.PackageArchive(rootDir, filename, true, true);
+
+            OarFile.PackageArchive(rootDir, filename, settings.ContainsKey("terrain"), settings.ContainsKey("land"));
         }
 
         private static int compareLocalIDs(PrimToCreate x, PrimToCreate y)

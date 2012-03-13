@@ -49,9 +49,15 @@ namespace cogbot.Actions.SimExport
 
             // Add the terrain(s)
             files = Directory.GetFiles(directoryName + "/terrains");
-            if (false) foreach (string file in files)
-                archive.AddFile("terrains/" + Path.GetFileName(file), File.ReadAllBytes(file));
+            if (includeTerrain) foreach (string file in files)
+                    archive.AddFile("terrains/" + Path.GetFileName(file), File.ReadAllBytes(file));
 
+            // Add the terrain(s)
+            files = Directory.GetFiles(directoryName + "/landdata");
+            if (includeLandData) foreach (string file in files)
+                    archive.AddFile("landdata/" + Path.GetFileName(file), File.ReadAllBytes(file));
+
+            File.Delete(filename);
             archive.WriteTar(new GZipStream(new FileStream(filename, FileMode.Create), CompressionMode.Compress));
         }
 
@@ -141,6 +147,16 @@ namespace cogbot.Actions.SimExport
         private static void WriteDate(XmlTextWriter writer, string name, DateTime time)
         {
             WriteValue(writer, name, ((int)Utils.DateTimeToUnixTime(time)).ToString());
+        }
+        private static Enum Reperm(PermissionMask mask, ImportSettings settings)
+        {
+            if (settings.Contains("sameperms")) return mask;
+            if (settings.Contains("+xfer+copy")) return mask | PermissionMask.Copy | PermissionMask.Transfer;
+            return PermissionMask.All;
+        }
+        private static void WriteUserUUID(XmlTextWriter writer, string name, UUID uuid, ImportSettings settings)
+        {
+            WriteUUID(writer, name, uuid, settings);
         }
     }
 }

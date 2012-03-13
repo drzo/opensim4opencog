@@ -72,24 +72,24 @@ namespace cogbot.Actions.SimExport
             }
             return false;
         }
-        public void ExportPrim(BotClient Client, SimObject exportPrim, OutputDelegate Failure, ImportSettings arglist)
+        public void ExportPrim(BotClient Client, SimObject exportPrim, OutputDelegate Failure, ImportSettings settings)
         {
             uint localID = exportPrim.LocalID;
-            Client.Objects.SelectObject(arglist.CurSim, localID);
-            ExportPrim0(Client, exportPrim, Failure, arglist);
-            Client.Objects.DeselectObject(arglist.CurSim, localID);
+            Client.Objects.SelectObject(settings.CurSim, localID);
+            ExportPrim0(Client, exportPrim, Failure, settings);
+            Client.Objects.DeselectObject(settings.CurSim, localID);
         }
-        public void ExportPrim0(BotClient Client, SimObject exportPrim, OutputDelegate Failure, ImportSettings arglist)
+        public void ExportPrim0(BotClient Client, SimObject exportPrim, OutputDelegate Failure, ImportSettings settings)
         {
             if (IsSkipped(exportPrim)) return;
             Simulator CurSim = exportPrim.GetSimulator();
             WorldObjects.EnsureSelected(exportPrim.LocalID, CurSim);
             string pathStem = Path.Combine(dumpDir, exportPrim.ID.ToString());
-            if (arglist.Contains("task") || showsMissingOnly)
+            if (settings.Contains("task") || showsMissingOnly)
             {
                 exportPrim.StartGetTaskInventory();
             }
-            if (arglist.Contains("wait"))
+            if (settings.Contains("wait"))
             {
                 var waitUntil = DateTime.Now.AddSeconds(10);
                 bool needsLoop = true;
@@ -100,7 +100,7 @@ namespace cogbot.Actions.SimExport
                     {
                         needsLoop = true;
                     }
-                    if (arglist.Contains("task"))
+                    if (settings.Contains("task"))
                     {
                         var ti = exportPrim.TaskInventory;
                         if (ti == null)
@@ -113,7 +113,7 @@ namespace cogbot.Actions.SimExport
                 {
                     Success("needs loop " + named(exportPrim));
                     string bissues = exportPrim.MissingData;
-                    if (!string.IsNullOrEmpty(bissues) && !arglist.Allows(bissues ,exportPrim))
+                    if (!string.IsNullOrEmpty(bissues) && !settings.Allows(bissues ,exportPrim))
                     {
                         Failure("Cant wait out the Issues " + bissues + ": " + named(exportPrim));
                         if (LocalFailures == 0) LocalFailures++;
@@ -122,32 +122,32 @@ namespace cogbot.Actions.SimExport
                 }
             }
             string issues = exportPrim.MissingData;
-            if (!string.IsNullOrEmpty(issues) && !arglist.Allows(issues, exportPrim))
+            if (!string.IsNullOrEmpty(issues) && !settings.Allows(issues, exportPrim))
             {
                 Failure("Issues " + issues + " " + named(exportPrim));
                 if (LocalFailures == 0) LocalFailures++;
                 return;
             }
-            if (arglist.Contains("llsd")) SaveLLSD(Client, pathStem, exportPrim, Failure);
+            if (settings.Contains("llsd")) SaveLLSD(Client, pathStem, exportPrim, Failure, settings);
             if (exportPrim.IsRoot && (true || exportPrim.Children.Count > 0))
             {
-                if (arglist.Contains("link")) SaveLinksetInfo(Client, pathStem, exportPrim, Failure);
+                if (settings.Contains("link")) SaveLinksetInfo(Client, pathStem, exportPrim, Failure, settings);
                 string exportFile = pathStem + ".link";
                 //lock (fileWriterLock) if (File.Exists(exportFile))
                 {
                     foreach (var c in exportPrim.Children)
                     {
-                        ExportPrim(Client, c, Failure, arglist);
+                        ExportPrim(Client, c, Failure, settings);
                     }
                 }
             }
-            if (arglist.Contains("task")) SaveTaskInv(arglist, Client, pathStem, exportPrim, Failure);
-            if (!arglist.Contains("dep")) return;
+            if (settings.Contains("task")) SaveTaskInv(settings, Client, pathStem, exportPrim, Failure);
+            if (!settings.Contains("dep")) return;
             AddRelatedTextures(exportPrim);
             SaveRelatedAssets(pathStem, exportPrim, Failure);
         }
 
-        void SaveLinksetInfo(BotClient Client, string pathStem, SimObject exportPrim, OutputDelegate Failure)
+        void SaveLinksetInfo(BotClient Client, string pathStem, SimObject exportPrim, OutputDelegate Failure, ImportSettings settings)
         {
             string exportFile = pathStem + ".link";
             if (Incremental || true) lock (fileWriterLock) if (File.Exists(exportFile)) return;
@@ -164,10 +164,10 @@ namespace cogbot.Actions.SimExport
                 Failure("NEED LINK for " + named(exportPrim));
                 return;
             }
-            RequestLinksetInfo(Client, pathStem, exportPrim, Failure);
+            RequestLinksetInfo(Client, pathStem, exportPrim, Failure, settings);
         }
 
-        void RequestLinksetInfo(BotClient Client, string pathStem, SimObject exportPrim, OutputDelegate Failure)
+        void RequestLinksetInfo(BotClient Client, string pathStem, SimObject exportPrim, OutputDelegate Failure, ImportSettings settings)
         {
             bool canScript = checkPerms(Client, exportPrim, SilientFailure, true);
             InventoryItem found = GetInvItem(Client, "LinksetSpeaker");
@@ -353,7 +353,7 @@ namespace cogbot.Actions.SimExport
             return true;
         }
 
-        public void SaveLLSD(BotClient Client, string pathStem, SimObject exportPrim, OutputDelegate Failure)
+        public void SaveLLSD(BotClient Client, string pathStem, SimObject exportPrim, OutputDelegate Failure, ImportSettings settings)
         {
             if (exportPrim != null)
             {
@@ -377,7 +377,7 @@ namespace cogbot.Actions.SimExport
                     OSDMap primOSD = prim.GetTotalOSD();
                     if (prim.ParentID != 0)
                     {
-                        var parent = WorldSystem.GetLibOMVHostedPrim(prim.ParentID, CurSim, false);
+                        var parent = WorldSystem.GetLibOMVHostedPrim(prim.ParentID, settings.CurSim, false);
                         if (parent == null)
                         {
                             pp += new Vector3(128, 128, Client.Self.SimPosition.Z + 20);

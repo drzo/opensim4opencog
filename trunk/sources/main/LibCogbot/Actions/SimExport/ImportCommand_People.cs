@@ -247,7 +247,7 @@ namespace cogbot.Actions.SimExport
         public static readonly Dictionary<string, string> RenamedWhosit = new Dictionary<string, string>();
         private UUID LINDENZERO = UUID.Zero;
         private UUID MISSINGPERSON = UUID.Zero;
-        public void LoadUsersAndGroups()
+        public void LoadUsersAndGroups(ImportSettings settings)
         {
             string nameChangesFile = ExportCommand.siminfoDir + "../nameChanges.txt";
             if (File.Exists(nameChangesFile))

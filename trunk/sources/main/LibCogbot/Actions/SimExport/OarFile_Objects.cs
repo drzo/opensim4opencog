@@ -30,53 +30,14 @@ namespace cogbot.Actions.SimExport
             HalfCircle = 5
         }
 
-        public static void SavePrims(DoubleDictionary<uint, UUID, Primitive> prims, string path, ImportSettings options)
-        {
-            // Delete all of the old linkset files
-            try
-            {
-                Directory.Delete(path, true);
-                Directory.CreateDirectory(path);
-            }
-            catch (Exception ex)
-            {
-                Logger.Log("Failed saving prims: " + ex.Message, Helpers.LogLevel.Error);
-                return;
-            }
-
-            // Copy the double dictionary to a temporary list for iterating
-            List<Primitive> primList = new List<Primitive>();
-            prims.ForEach(delegate(Primitive prim)
-            {
-                primList.Add(prim);
-            });
-
-            foreach (Primitive p in primList)
-            {
-                if (p.ParentID == 0)
-                {
-                    Linkset linkset = new Linkset();
-                    linkset.Parent = ImportCommand.Running.APrimToCreate(p);
-
-                    prims.ForEach(delegate(Primitive q)
-                    {
-                        if (q.ParentID == p.LocalID)
-                            linkset.Children.Add(ImportCommand.Running.APrimToCreate(q));
-                    });
-
-                    SaveLinkset(linkset, path + "/Primitive_" + linkset.Parent.NewID.ToString() + ".xml", options);
-                }
-            }
-        }
-
-        static public void SaveLinkset(Linkset linkset, string filename, ImportSettings options)
+        static public void SaveLinkset(Linkset linkset, string filename, bool oldFormat, ImportSettings options)
         {
             try
             {
                 using (StreamWriter stream = new StreamWriter(filename))
                 {
                     XmlTextWriter writer = new XmlTextWriter(stream);
-                    SOGToXml2(writer, linkset, options);
+                    SOGToXml2(writer, linkset, oldFormat, options);
                     writer.Flush();
                 }
             }
@@ -86,17 +47,21 @@ namespace cogbot.Actions.SimExport
             }
         }
 
-        static void SOGToXml2(XmlTextWriter writer, Linkset linkset, ImportSettings options)
+        static void SOGToXml2(XmlTextWriter writer, Linkset linkset, bool oldFormat, ImportSettings options)
         {
             writer.WriteStartElement(String.Empty, "SceneObjectGroup", String.Empty);
+            if (oldFormat) writer.WriteStartElement(String.Empty, "RootPart", String.Empty);
             SOPToXml(writer, linkset.Parent.Prim, 0, null, GetTaskInv(linkset.Parent), options);
+            if (oldFormat) writer.WriteEndElement();
             writer.WriteStartElement(String.Empty, "OtherParts", String.Empty);
 
             //uint linkNum = sop.LocalID - parent.LocalID;
             int linkNum = 1;
             foreach (var child in linkset.Children)
             {
+                if (oldFormat) writer.WriteStartElement(String.Empty, "Part", String.Empty);
                 SOPToXml(writer, child.Prim, linkNum++, linkset.Parent.Prim, GetTaskInv(child), options);
+                if (oldFormat) writer.WriteEndElement();                
             }
 
             writer.WriteEndElement();
@@ -109,7 +74,6 @@ namespace cogbot.Actions.SimExport
             return primitive.TaskInventory;
         }
 
-        // public static void SOPToXml2(XmlTextWriter writer, Primitive sop, ImportSettings options)
         static void SOPToXml(XmlTextWriter writer, Primitive sop, int linkNum, Primitive parent, ICollection<InventoryBase> taskInventory, ImportSettings options)
         {
             // Primitive parent = null; throw new NotImplementedException();//"GETPArent"
@@ -118,10 +82,16 @@ namespace cogbot.Actions.SimExport
             writer.WriteAttributeString("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
             writer.WriteAttributeString("xmlns:xsd", "http://www.w3.org/2001/XMLSchema");
 
+            WriteUUID(writer, "UUID", sop.ID, options);
+            if (CogbotHelpers.IsNullOrZero(sop.ID))
+            {
+                throw new NullReferenceException("ID " + sop);
+            }
+
             WriteValue(writer,"AllowedDrop",
                                       ((sop.Flags & PrimFlags.AllowInventoryDrop) != 0).ToString().ToLower());
 
-            WriteUUID(writer, "CreatorID", prop.CreatorID, options);
+            WriteUserUUID(writer, "CreatorID", prop.CreatorID, options);
             /*
             if (sop.CreatorData != null && sop.CreatorData != string.Empty)
                 WES(writer,"CreatorData", sop.CreatorData);
@@ -138,7 +108,6 @@ namespace cogbot.Actions.SimExport
 
             WriteTaskInventory(writer, taskInventory, options);
 
-            WriteUUID(writer, "UUID", sop.ID, options);
             WriteFlags(writer, "ObjectFlags", sop.Flags, options);
             WriteInt(writer,"LocalId", sop.LocalID);
             WriteValue(writer,"Name", prop.Name);
@@ -196,17 +165,21 @@ namespace cogbot.Actions.SimExport
             WriteUUID(writer, "GroupID", sop.GroupID, options);
 
             UUID ownerID = options.ContainsKey("wipe-owners") ? UUID.Zero : sop.OwnerID;
-            WriteUUID(writer, "OwnerID", ownerID, options);
+            WriteUserUUID(writer, "OwnerID", ownerID, options);
 
             UUID lastOwnerID = options.ContainsKey("wipe-owners") ? UUID.Zero : prop.LastOwnerID;
-            WriteUUID(writer, "LastOwnerID", lastOwnerID, options);
+            WriteUserUUID(writer, "LastOwnerID", lastOwnerID, options);
 
             var perms = prop.Permissions;
-            WriteEnum(writer, "BaseMask", perms.BaseMask);
-            WriteEnum(writer, "OwnerMask", perms.OwnerMask);
-            WriteEnum(writer, "GroupMask", perms.GroupMask);
-            WriteEnum(writer, "EveryoneMask", perms.EveryoneMask);
-            WriteEnum(writer, "NextOwnerMask", perms.NextOwnerMask);
+            if (!options.Contains("sameperm") || options.Contains("fullperm"))
+            {
+                perms = Permissions.FullPermissions;
+            }
+            WriteEnum(writer, "BaseMask", Reperm(perms.BaseMask, options));
+            WriteEnum(writer, "OwnerMask", Reperm(perms.OwnerMask, options));
+            WriteEnum(writer, "GroupMask", Reperm(perms.GroupMask, options));
+            WriteEnum(writer, "EveryoneMask", Reperm(perms.EveryoneMask, options));
+            WriteEnum(writer, "NextOwnerMask", Reperm(perms.NextOwnerMask, options));
             WriteFlags(writer, "Flags", sop.Flags, options);
             WriteUUID(writer, "CollisionSound", sop.Sound, options);
             WriteFloat(writer,"CollisionSoundVolume", sop.SoundGain);
@@ -234,13 +207,24 @@ namespace cogbot.Actions.SimExport
                 foreach (InventoryBase item2c in tinv)
                 {
                     InventoryItem item = item2c as InventoryItem;
-                    if (item == null) continue;                   
-                    writer.WriteStartElement("TaskInventoryItem");
-                    Permissions perms = item.Permissions;
-
+                    if (item == null) continue;
+                    string itemName = item.Name;
                     if (CogbotHelpers.IsNullOrZero(item.AssetUUID))
                     {
+                        if (!options.ContainsKey("keepmissing")) continue;
+                        item.AssetUUID = ImportCommand.GetMissingFiller(item.AssetType);
+                        if (!itemName.Contains("ERROR404")) itemName += "ERROR404";
                         ImportCommand.Running.Failure("Zero AssetID " + item.Name);
+                    }
+                    writer.WriteStartElement("TaskInventoryItem");
+                    Permissions perms = item.Permissions;
+                    if (!options.Contains("sameperm"))
+                    {
+                        perms = Permissions.FullPermissions;
+                    }
+                    if (CogbotHelpers.IsNullOrZero(item.AssetUUID))
+                    {
+                        continue;
                     }
                     WriteUUID(writer, "AssetID", item.AssetUUID, options);
                     WriteEnum(writer, "BasePermissions", perms.BaseMask);
@@ -259,25 +243,25 @@ namespace cogbot.Actions.SimExport
                         WES(writer,"CreatorData", (string)options["home"] + ";" + name);
                     }
                     */
-                    WriteValue(writer,"Description", item.Description);
-                    WriteEnum(writer, "EveryonePermissions", perms.EveryoneMask);
-                    WriteInt(writer,"Flags", item.Flags);
+                    WriteValue(writer, "Description", item.Description);
+                    WriteEnum(writer, "EveryonePermissions", Reperm(perms.EveryoneMask, options));
+                    WriteUInt(writer, "Flags", item.Flags);
                     WriteUUID(writer, "GroupID", item.GroupID, options);
-                    WriteEnum(writer, "GroupPermissions", perms.GroupMask);
+                    WriteEnum(writer, "GroupPermissions", Reperm(perms.GroupMask, options));
                     WriteEnum(writer, "InvType", item.InventoryType);
                     WriteUUID(writer, "ItemID", item.UUID, options);
                     //todo WriteUUID(writer, "OldItemID", item.OldItemID, options);
 
                     UUID lastOwnerID = options.ContainsKey("wipe-owners") ? UUID.Zero : item.LastOwnerID;
-                    WriteUUID(writer, "LastOwnerID", lastOwnerID, options);
+                    WriteUserUUID(writer, "LastOwnerID", lastOwnerID, options);
 
-                    WriteValue(writer,"Name", item.Name);
-                    WriteEnum(writer, "NextPermissions", perms.NextOwnerMask);
+                    WriteValue(writer, "Name", itemName);
+                    WriteEnum(writer, "NextPermissions", Reperm(perms.NextOwnerMask, options));
 
                     UUID ownerID = options.ContainsKey("wipe-owners") ? UUID.Zero : item.OwnerID;
                     WriteUUID(writer, "OwnerID", ownerID, options);
 
-                    WriteEnum(writer, "CurrentPermissions", perms.OwnerMask);
+                    WriteEnum(writer, "CurrentPermissions", Reperm(perms.OwnerMask, options));
                     WriteUUID(writer, "ParentID", item.ParentUUID, options);
                     /*todo
                      * WriteUUID(writer, "ParentPartID", item.ParentPartID, options);

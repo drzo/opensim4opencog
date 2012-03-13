@@ -136,10 +136,10 @@ namespace cogbot.Actions.SimExport
             Client.Self.Movement.SendUpdate(true);
             Running = this;
             IsExporting = true;
-            CurSim = Client.Network.CurrentSim;
+            var CurSim = Client.Network.CurrentSim;
             RegionHandle = CurSim.Handle;
             onlyObjectAt.AddPoint(new Vector3(-256, -256, -256));
-            onlyObjectAt.AddPoint(new Vector3(1024, 1024, 9024));
+            onlyObjectAt.AddPoint(new Vector3(512, 512, 9024));
             haveBeenTo.AddPoint(TheSimAvatar.SimPosition);
             AttemptSitMover();
             WorldObjects.MaintainSimObjectInfoMap = false;
@@ -195,7 +195,7 @@ namespace cogbot.Actions.SimExport
                                          };
             foreach (string s in args)
             {
-                arglist.Add(s.TrimEnd(new[] { 's' }).ToLower().TrimStart(new[] { '-' }));
+                arglist.Add(s);
             }
             if (arglist.Contains("help")) return Success(hlp);
             if (args.Length > 1)
@@ -318,18 +318,12 @@ namespace cogbot.Actions.SimExport
             int objects = 0;
             if (arglist.Contains("terrain"))
             {
-                SaveTerrainHeight();
-                // Create a delegate which will be fired when the simulator receives our download request
-                // Starts the actual transfer request
-                var dt = new Thread(DownloadTerrain);
-                dt.Name = "SimExport DownloadTerrain";
-                dt.Start();
+                SaveTerrainHeight(arglist);
+                StartTerrainDownload(arglist);
             }
             if (arglist.Contains("parcel"))
             {
-                var dt = new Thread(SaveParcelInfo);
-                dt.Name = "SimExport SaveParcelInfo";
-                dt.Start();
+                SaveParcelInfoCommand(arglist);
             }
             bool primsAtAll = arglist.Contains("link") || arglist.Contains("task") || arglist.Contains("llsd") ||
                               arglist.Contains("taskobj") || arglist.Contains("all");
@@ -423,7 +417,7 @@ namespace cogbot.Actions.SimExport
                         if (arglist.Contains("request"))
                         {
                             RequestLinksetInfo(Client, Path.Combine(dumpDir, exportPrim.ID.ToString()), exportPrim,
-                                               WriteLine);
+                                               WriteLine, arglist);
                         }
                     }
                 }
@@ -522,7 +516,7 @@ namespace cogbot.Actions.SimExport
         private readonly HashSet<uint> RequiredForExportLocalIDs = new HashSet<uint>();
         public static ExportCommand Running;
         private ulong RegionHandle;
-        private Simulator CurSim;
+        //private Simulator CurSim;
 
 
         private CmdResult CleanupAfterExport(UUID agent, OutputDelegate outputDelegate)
