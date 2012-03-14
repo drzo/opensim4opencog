@@ -670,7 +670,7 @@ namespace cogbot.TheOpenSims
                 return cache.ComputeAssetCacheFilename(Store.Client.Settings.ASSET_CACHE_DIR, assetID
                     );
             }
-            return Store.Client.Settings.ASSET_CACHE_DIR + cache.FileName(assetID, type);
+            return cache.FileName(assetID, type);
         }
 
         public string FileName
