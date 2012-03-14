@@ -1,3 +1,4 @@
+#define OBJECTUNPACKER
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -248,7 +249,6 @@ namespace cogbot.Actions.SimExport
             }
 
             OSDArray contents = new OSDArray();
-            List<SimObject> foundObject = new List<SimObject>();
             List<InventoryObject> folderObject = new List<InventoryObject>();
 
             string TaskInvFailures = "";
@@ -263,11 +263,11 @@ namespace cogbot.Actions.SimExport
             }
             bool wasShouldBeMoving = shouldBeMoving;
             shouldBeMoving = false;
-            if (hasObjects || true) MoveCloseTo(exportPrim);
+            if (hasObjects && taskobj) MoveCloseTo(exportPrim);
             foreach (InventoryBase b in ib)
             {
                 bool missing;
-                OSDMap was = SaveEachTaskItem(arglist, Client, exportPrim, b, Failure, folderObject, out missing);
+                OSDMap was = SaveEachTaskItem(arglist, Client, exportPrim, b, Failure, out missing);
                 if (was != null) contents.Add(was);
                 if (missing)
                 {
@@ -311,7 +311,7 @@ namespace cogbot.Actions.SimExport
             }
         }
 
-        OSDMap SaveEachTaskItem(ImportSettings arglist, BotClient Client, SimObject exportPrim, InventoryBase b, OutputDelegate Failure, List<InventoryObject> folderObject, out bool missing)
+        OSDMap SaveEachTaskItem(ImportSettings arglist, BotClient Client, SimObject exportPrim, InventoryBase b, OutputDelegate Failure, out bool missing)
         {
             //string primName = " from " + named(exportPrim);
             //primName = "";
@@ -353,7 +353,7 @@ namespace cogbot.Actions.SimExport
                 }
             if (item.InventoryType == InventoryType.Object)
             {
-                return UnpackTaskObject(arglist, exportPrim, item as InventoryObject, folderObject, Client, Failure, "", out missing);
+                return UnpackTaskObject(arglist, exportPrim, item as InventoryObject, Client, Failure, "", out missing);
             }
             return UnpackTaskItem(Client, exportPrim, item, Failure, out missing);
         }
@@ -395,7 +395,7 @@ namespace cogbot.Actions.SimExport
             return OSDSerializeMembers(item);
         }
 
-        private OSDMap UnpackTaskObject(ImportSettings arglist, SimObject exportPrim, InventoryObject taskInv, List<InventoryObject> folderObject, BotClient Client, OutputDelegate Failure, string primName, out bool missing)
+        private OSDMap UnpackTaskObject(ImportSettings arglist, SimObject exportPrim, InventoryObject taskInv, BotClient Client, OutputDelegate Failure, string primName, out bool missing)
         {
             missing = true;
             var itemID = taskInv.UUID; 
@@ -424,7 +424,7 @@ namespace cogbot.Actions.SimExport
             }
 
             string repackFile = dumpDir + itemID + ".repack";
-            if (showsMissingOnly)
+            if (showsMissingOnly || !arglist.Contains("taskobj"))
             {
                 needFiles++;
                 Failure("NEED TASKOBJ: " + ItemDesc(taskInv, exportPrim));
@@ -542,6 +542,7 @@ namespace cogbot.Actions.SimExport
                 return OSDSerializeMembers(taskInv);
             }
             //folderObject.Add(O);
+
             Primitive prim = O.Prim;
             localID = localID > 0 ? localID : O.LocalID;
             Simulator simulator = O.GetSimulator();
@@ -702,179 +703,10 @@ namespace cogbot.Actions.SimExport
                 }
             }
         }
-        private void UnpackTaskObjectP2(SimObject exportPrim, InventoryObject io, List<InventoryObject> folderObject, BotClient Client, OutputDelegate Failure, string primName)
-        {
-            throw new NotImplementedException("UnpackTaskObjectP2");
-            InventoryObject item = io;
-            folderObject.Add(io);
-            Vector3 pos = new Vector3(66, 66, 66);
-            Quaternion quat = Quaternion.Identity;
-            UUID queryID = UUID.Random();
-            InventoryItemFlags f = io.ItemFlags;
-            AutoResetEvent are0 = new AutoResetEvent(false);
-            AutoResetEvent are1 = new AutoResetEvent(false);
-            AutoResetEvent are2 = new AutoResetEvent(false);
-            UUID found = UUID.Zero;
-            UUID newfound = UUID.Zero;
-
-            EventHandler<TaskItemReceivedEventArgs> created0 = (o, e) =>
-            {
-                if (e.AssetID != item.AssetUUID) return;
-                if (inventoryHolderUUID != e.FolderID) return;
-                newfound = e.ItemID;
-                are0.Set();
-            };
-            EventHandler<ObjectDataBlockUpdateEventArgs> created1 = (o, e) =>
-            {
-                Primitive prim = e.Prim;
-                if (false && prim.OwnerID != io.OwnerID)
-                {
-                    return;
-                }
-                float dist = Vector3.Distance(prim.Position, pos);
-                if (dist > 1) return;
-                //e.Properties.Description == io.Description;
-                found = prim.ID;
-                are1.Set();
-            };
-
-            EventHandler<ObjectPropertiesEventArgs> created2 = (o, e) =>
-            {
-                if (e.Properties.ObjectID != found) return;
-                are2.Set();
-            };
-            Client.Objects.ObjectProperties += created2;
-            Client.Objects.ObjectDataBlockUpdate += created1;
-            Client.Inventory.TaskItemReceived += created0;
-            UUID itemID = item.UUID;
-            Client.Inventory.MoveTaskInventory(exportPrim.LocalID, itemID, inventoryHolderUUID, exportPrim.GetSimulator());
-            if (!are0.WaitOne(5000))
-            {
-                Failure("Cant MOVE taskinv object " + item.Name + primName);
-            }
-            var newItem = Client.Inventory.Store[newfound] as InventoryObject;
-
-            Client.Appearance.Attach(newItem, AttachmentPoint.Mouth, true);
-            //Client.Inventory.RequestRezFromInventory(exportPrim.GetSimulator(), exportPrim.ID, quat, pos, io, io.GroupID, queryID, true);
-            if (!are1.WaitOne(5000))
-            {
-                Failure("Cant get taskinv object " + item.Name + primName);
-            }
-            Client.Objects.ObjectDataBlockUpdate -= created1;
-            if (!are2.WaitOne(5000))
-            {
-                Failure("Cant get taskinv object " + item.Name + primName);
-            }
-            Client.Objects.ObjectProperties -= created2;
-            var O = WorldObjects.GetSimObjectFromUUID(found);
-            //foundObject.Add(O);
-        }
         static public string ItemDesc(InventoryItem I, SimObject O)
         {
             return I.Name + "(" + I.AssetType + " " + I.AssetUUID + ")@" + named(O);
         }
 
-        private void UnpackTaskObject0(SimObject exportPrim, InventoryObject taskInv, List<InventoryObject> folderObject, BotClient Client, OutputDelegate Failure, string primName)
-        {
-            throw new NotImplementedException("UnpackTaskObjectP2");
-            folderObject.Add(taskInv);
-
-            var itemID = taskInv.UUID;
-            string exportFile = assetDumpDir + taskInv.AssetUUID + ".object";
-            string repack = dumpDir + itemID + ".repack";
-            if (Incremental || showsMissingOnly) lock (fileWriterLock) if (File.Exists(exportFile) || File.Exists(repack)) return;
-            needFiles++;
-            if (showsMissingOnly)
-            {
-                Failure("NEED OBJ for " + named(exportPrim));
-                return;
-            }
-            ExportTaskAsset ho;
-            lock (TaskAssetWaiting)
-                if (!TaskAssetWaiting.TryGetValue(itemID, out ho))
-                {
-                    TaskAssetWaiting[itemID] = ho = new ExportTaskAsset { I = taskInv, O = exportPrim };
-                }
-        }
-
-        private string GetTaskInvFailures(ImportSettings arglist, OutputDelegate Failure, SimObject exportPrim, BotClient Client, List<InventoryObject> folderObject, string contents, string TaskInvFailures)
-        {
-            if (folderObject.Count > 0 && !taskobj)
-            {
-                // dont save it since we are skipping task objects
-                string ObjectFailures = "Run with 'taskobj' for:\n" + contents + " for " + named(exportPrim) + "\n";
-                TaskInvFailures += ObjectFailures;
-                Failure(ObjectFailures);
-                return TaskInvFailures;
-            }
-            if (taskobj && folderObject.Count > 0)
-            {
-                UUID into = FolderCalled("TaskInvKilled") ?? Client.Inventory.FindFolderForType(AssetType.TrashFolder);
-                bool placed = false;
-                foreach (var oi in folderObject)
-                {
-                    WaitingFolderObjectBool = true;
-                    WaitingFolderObjects = oi;
-                    if (!placed)
-                    {
-                        placed = true;
-                        PutItemToTaskInv(Client, exportPrim, "ObjectUnpacker");
-                    }
-                    else
-                    {
-                        Client.Self.Chat("" + exportPrim.ID.ToString().ToLower() + " RezNext ", 4201, ChatType.Normal);
-                    }
-                    WaitingFolderSimObject = null;
-                    SimObject folderSimObject = null;
-                    try
-                    {
-                        DateTime until = DateTime.Now + TimeSpan.FromSeconds(6);
-                        while (DateTime.Now < until && WaitingFolderObjectBool)
-                        {
-                            Thread.Sleep(500);
-                        }
-                        if (WaitingFolderObjectBool || WaitingFolderSimObject == null)
-                        {
-                            string was = "!WaitingFolderObjectBool\n";
-                            if (forced)
-                            {
-                                Failure("Missing but forced: " + was);
-                            }
-                            else
-                            {
-                                TaskInvFailures += was;
-                            }
-                            break;
-                        }
-                        folderSimObject = WaitingFolderSimObject;
-                        Simulator CurSim = folderSimObject.GetSimulator();
-                        PutItemToTaskInv(Client, folderSimObject, "LinksetSpeaker");
-                        uint localID = exportPrim.LocalID;
-                        var posChilds = new List<uint>();
-                        for (int i = 1; i < 64; i++)
-                        {
-                            posChilds.Add((uint)(localID + i));
-                        }
-                        Client.Objects.RequestObjects(CurSim, posChilds);
-                        Thread.Sleep(1000);
-                        Client.WorldSystem.CatchUp(CurSim);
-                        ExportPrim(Client, folderSimObject, Failure, arglist);
-                    }
-                    finally
-                    {
-                        if (folderSimObject != null)
-                        {
-                            Client.Inventory.RequestDeRezToInventory(folderSimObject.LocalID,
-                                                                     DeRezDestination.TrashFolder, into,
-                                                                     UUID.Random());
-                        }
-                        string exportFile2 = dumpDir + oi.UUID + ".repack";
-                        File.Delete(exportFile2);
-                    }
-                }
-                Client.Self.Chat("" + exportPrim.ID.ToString().ToLower() + " KillScript ", 4201, ChatType.Normal);
-            }
-            return TaskInvFailures;
-        }
     }
 }

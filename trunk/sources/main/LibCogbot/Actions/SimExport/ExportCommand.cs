@@ -22,7 +22,7 @@ namespace cogbot.Actions.SimExport
         private readonly TaskQueueHandler slowlyExport = new TaskQueueHandler("slowlyExport", TimeSpan.FromMilliseconds(100),
                                                                     true);
         public readonly HashSet<SimObject> SIPrims = new HashSet<SimObject>();
-        static public string dumpDir = "cog_export/objects/";
+        static public string dumpDir = "cog_export/workflow/";
         static public string assetDumpDir = "cog_export/assets/";
         static public string terrainDir = "cog_export/terrains/";
         static public string siminfoDir = "cog_export/siminfo/";

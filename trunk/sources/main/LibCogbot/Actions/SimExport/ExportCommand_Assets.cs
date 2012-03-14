@@ -137,12 +137,15 @@ namespace cogbot.Actions.SimExport
             // Download all of the textures in the export list
             foreach (ImageRequest request in textureRequests)
             {
+                UUID requestImageID = request.ImageID;
                 SlowlyDo(
-                    () => {
-                              Client.Assets.RequestImage(request.ImageID, ImageType.Normal, 101300.0f, 0, 0,
-                                                         Assets_OnImageReceived, false);
-                              Thread.Sleep(TimeSpan.FromSeconds(2));
-                    });
+                    () =>
+                        {
+                            if (CompletedAssets.Contains(requestImageID)) return;
+                            Client.Assets.RequestImage(requestImageID, ImageType.Normal, 101300.0f, 0, 0,
+                                                       Assets_OnImageReceived, false);
+                            Thread.Sleep(TimeSpan.FromSeconds(0.5));
+                        });
                 //SlowlyDo(() => Client.Assets.RequestImage(request.ImageID, request.Type, Assets_OnImageReceived));
                 //SlowlyDo(() => Client.Assets.RequestAsset(request.ImageID, AssetType.Texture, true, Assets_OnReceived));
             }
@@ -225,7 +228,7 @@ namespace cogbot.Actions.SimExport
         private void FindOrCreateAsset(UUID uuid, AssetType type)
         {
             if (!CogbotHelpers.IsNullOrZero(uuid)) return;
-            if (type != AssetType.Object) SimAssetStore.FindOrCreateAsset(uuid, type);
+            //if (type != AssetType.Object) SimAssetStore.FindOrCreateAsset(uuid, type);
         }
 
         /*
