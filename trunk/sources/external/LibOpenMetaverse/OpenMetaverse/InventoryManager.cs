@@ -211,6 +211,10 @@ namespace OpenMetaverse
     [Serializable()]
     public class InventoryItem : InventoryBase
     {
+        public override string ToString()
+        {
+            return AssetType + " " + AssetUUID + " (" + InventoryType + " " + UUID + ") " + Permissions;
+        }
         /// <summary>The <seealso cref="OpenMetaverse.UUID"/> of this item</summary>
         public UUID AssetUUID = UUID.Zero;
         /// <summary>The combined <seealso cref="OpenMetaverse.Permissions"/> of this item</summary>
