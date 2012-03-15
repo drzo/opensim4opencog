@@ -368,6 +368,10 @@ namespace OpenMetaverse.StructuredData
         public static implicit operator bool(OSD value) { return value.AsBoolean(); }
         public static implicit operator int(OSD value) { return value.AsInteger(); }
         public static implicit operator uint(OSD value) { return value.AsUInteger(); }
+        public static implicit operator byte(OSD value) { return (byte)value.AsUInteger(); }
+        public static implicit operator sbyte(OSD value) { return (sbyte)value.AsInteger(); }
+        public static implicit operator short(OSD value) { return (short)value.AsInteger(); }
+        public static implicit operator ushort(OSD value) { return (ushort)value.AsUInteger(); }
         public static implicit operator long(OSD value) { return value.AsLong(); }
         public static implicit operator ulong(OSD value) { return value.AsULong(); }
         public static implicit operator double(OSD value) { return value.AsReal(); }
@@ -654,6 +658,8 @@ namespace OpenMetaverse.StructuredData
         }
 
         private const BindingFlags basePropertyFlags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+        const BindingFlags publicStatic = (BindingFlags.Public | BindingFlags.Static);
+        static ParameterModifier[] MODIFIERS_ZERO = new ParameterModifier[0];
         public static object ConvertOP(object StartObject, Type[] fromTypes, Type toType, Type operatorType, out bool found)
         {
             found = true;
@@ -665,8 +671,7 @@ namespace OpenMetaverse.StructuredData
             MethodInfo mi = null;
             try
             {
-                mi = operatorType.GetMethod("op_Explicit", (BindingFlags.Public | BindingFlags.Static), null,
-                                                  fromTypes, new ParameterModifier[0]);
+                mi = operatorType.GetMethod("op_Explicit", publicStatic, null, fromTypes, MODIFIERS_ZERO);
             }
             catch (AmbiguousMatchException)
             {
@@ -678,8 +683,7 @@ namespace OpenMetaverse.StructuredData
             try
             {
                 if (mi == null)
-                    mi = operatorType.GetMethod("op_Implicit", (BindingFlags.Public | BindingFlags.Static), null, fromTypes,
-                                           new ParameterModifier[0]);
+                    mi = operatorType.GetMethod("op_Implicit", publicStatic, null, fromTypes, MODIFIERS_ZERO);
             }
             catch (AmbiguousMatchException)
             {
@@ -694,7 +698,7 @@ namespace OpenMetaverse.StructuredData
                 try
                 {
                     return operatorType.InvokeMember(mi.Name,
-                                                  BindingFlags.InvokeMethod | (BindingFlags.Public | BindingFlags.Static),
+                                                  BindingFlags.InvokeMethod | publicStatic,
                                                   null, null, objects);
                 }
                 catch (AmbiguousMatchException)
@@ -738,9 +742,31 @@ namespace OpenMetaverse.StructuredData
                     }
                 }
             }
-
+            if (toType.IsEnum)
+            {
+                var ust = Enum.GetUnderlyingType(toType);
+                if (ust != toType)
+                {
+                    retval = ConvertOP(StartObject, fromTypes, ust, operatorType, out found);
+                    if (found)
+                    {
+                        return InvokeCast(retval, toType);
+                    }
+                }
+            }
             found = false;
             return retval;
+        }
+
+        public static T Cast<T>(object o)
+        {
+            return (T)o;
+        }
+        public static object InvokeCast(Object obj, Type t)
+        {
+            MethodInfo castMethod = typeof(OSD).GetMethod("Cast").MakeGenericMethod(t);
+            object castedObject = castMethod.Invoke(null, new object[] {obj});
+            return castedObject;
         }
 
         public static bool AddOSDMember(OSDMap map, string s, object value, Type type, HashSet<object> exceptFor, bool prefixFP)
