@@ -22,6 +22,7 @@ namespace cogbot.Actions.SimExport
         private readonly TaskQueueHandler slowlyExport = new TaskQueueHandler("slowlyExport", TimeSpan.FromMilliseconds(100),
                                                                     true);
         public readonly HashSet<SimObject> SIPrims = new HashSet<SimObject>();
+        public static Dictionary<UUID, ErrorInfo> Errors = new Dictionary<UUID, ErrorInfo>();
         static public string dumpDir = "cog_export/workflow/";
         static public string assetDumpDir = "cog_export/assets/";
         static public string terrainDir = "cog_export/terrains/";
@@ -197,6 +198,7 @@ namespace cogbot.Actions.SimExport
             {
                 arglist.Add(s);
             }
+            if (arglist.Contains("error")) return WriteErrors(args);
             if (arglist.Contains("help")) return Success(hlp);
             if (args.Length > 1)
             {
@@ -222,6 +224,11 @@ namespace cogbot.Actions.SimExport
             }
             if (arglist.Contains("move"))
             {
+                if (arglist.Contains("wps"))
+                {
+                    AddRegionWaypoints();
+                }
+
                 BeginMoving();
                 GiveStatus();
                 return Success("Began moving");
@@ -336,7 +343,7 @@ namespace cogbot.Actions.SimExport
             {
                 if (!primsAtAll) break;
                 // skip attachments and avatars
-                if (IsSkipped(P)) continue;
+                if (IsSkipped(P ,arglist)) continue;
                 if (!P.HasPrim)
                 {
                     if (!quietly) Failure("Missing Prim: " + named(P));
@@ -436,7 +443,7 @@ namespace cogbot.Actions.SimExport
                             {
                                 int count = TaskAssetWaiting.Count;
                                 TaskAssetWaiting.Remove(pa.Key);
-                                if (TaskAssetWaiting.Count!=count-1)
+                                if (TaskAssetWaiting.Count != count - 1)
                                 {
                                     Failure("VERY BAD!");
                                 }
@@ -888,5 +895,89 @@ namespace cogbot.Actions.SimExport
             return "";
         }
 
+        public static void LogError(SimObject o, string error)
+        {
+            lock(Errors)
+            {
+                var id = o.ID;
+                ErrorInfo err;
+                if (!Errors.TryGetValue(o.ID, out err))
+                {
+                    err = Errors[id] = new ErrorInfo(id) {Obj = o};
+                }
+                err.Add(error);
+            }
+        }
+        public static void LogError(UUID id, string error)
+        {
+            lock (Errors)
+            {
+                //var id = o.ID;
+                ErrorInfo err;
+                if (!Errors.TryGetValue(id, out err))
+                {
+                    err = Errors[id] = new ErrorInfo(id) {};
+                }
+                err.Add(error);
+            }
+        }
+        public CmdResult WriteErrors(string[] strings)
+        {
+            lock (Errors)
+            {
+                foreach (KeyValuePair<UUID, ErrorInfo> info in Errors)
+                {
+                    info.Value.AppendFile("ErrorLog.txt");
+                }                
+            }
+            return SuccessOrFailure();
+        }
+    }
+
+    public class ErrorInfo
+    {
+        public UUID ObjectID;
+        SimObject o;
+        public ErrorInfo(UUID id)
+        {
+            ObjectID = id;
+        }
+
+        public SimObject Obj
+        {
+            get
+            {
+                if (o == null)
+                {
+                    o = ExportCommand.GetSimObjectFromUUID(ObjectID);
+                }
+                return o;
+            }
+            set
+            {
+                o = value;
+            }
+        }
+       public List<string> errors = new List<string>();
+
+       internal void Add(string error)
+       {
+           if (errors.Contains(error)) errors.Add(error);
+       }
+
+       internal void AppendFile(string fileName)
+       {
+           if (errors.Count == 0) return;
+           lock (ExportCommand.fileWriterLock)
+           {
+               var append = new StreamWriter(File.OpenWrite(fileName));
+               append.WriteLine("OBJ: " + Obj);
+               append.WriteLine("LOC: " + Obj.SimPosition);
+               foreach (string error in errors)
+               {
+                   append.WriteLine(error);
+               }
+           }
+       }
     }
 }

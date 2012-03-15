@@ -1683,6 +1683,7 @@ namespace cogbot.TheOpenSims
         internal readonly static Dictionary<string, string> nameNameMap = new Dictionary<string, string>();
         static private bool FilledInAssets;
         public static bool EnableDownloadAssetDefault = true;
+        public static bool DisableQueue = false;
 
         public static ICollection<SimAsset> GetAssets(AssetType assetType)
         {
@@ -1713,6 +1714,7 @@ namespace cogbot.TheOpenSims
 
         public void Enqueue(Action action)
         {
+            if (SimAssetStore.DisableQueue) return;
             taskQueue.Enqueue(new ThreadStart(action));
         }
     }

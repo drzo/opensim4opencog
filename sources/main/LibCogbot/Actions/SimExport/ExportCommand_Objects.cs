@@ -54,7 +54,7 @@ namespace cogbot.Actions.SimExport
             lock (fileWriterLock) File.WriteAllText(dumpDir + O.ID + ".link", contents);
         }
 
-        public static bool IsSkipped(SimObject P)
+        public static bool IsSkipped(SimObject P, ImportSettings settings)
         {
             if (P is SimAvatar) return true;
             if (P == null) return true;
@@ -82,13 +82,21 @@ namespace cogbot.Actions.SimExport
         public void ExportPrim(BotClient Client, SimObject exportPrim, OutputDelegate Failure, ImportSettings settings)
         {
             uint localID = exportPrim.LocalID;
-            Client.Objects.SelectObject(settings.CurSim, localID);
-            ExportPrim0(Client, exportPrim, Failure, settings);
-            Client.Objects.DeselectObject(settings.CurSim, localID);
+            WorldObjects.EnsureRequested(settings.CurSim, localID + 1);
+            try
+            {
+                Client.Objects.SelectObject(settings.CurSim, localID);
+                WorldObjects.EnsureRequested(settings.CurSim, localID);
+                ExportPrim0(Client, exportPrim, Failure, settings);
+            }
+            finally
+            {
+                Client.Objects.DeselectObject(settings.CurSim, localID);                
+            }
         }
         public void ExportPrim0(BotClient Client, SimObject exportPrim, OutputDelegate Failure, ImportSettings settings)
         {
-            if (IsSkipped(exportPrim)) return;
+            if (IsSkipped(exportPrim, settings)) return;
             Simulator CurSim = exportPrim.GetSimulator();
             WorldObjects.EnsureSelected(exportPrim.LocalID, CurSim);
             string pathStem = Path.Combine(dumpDir, exportPrim.ID.ToString());
@@ -128,14 +136,23 @@ namespace cogbot.Actions.SimExport
                     }
                 }
             }
-            string issues = exportPrim.MissingData;
+            string issues = exportPrim.MissingData;           
             if (!string.IsNullOrEmpty(issues) && !settings.Allows(issues, exportPrim))
             {
                 Failure("Issues " + issues + " " + named(exportPrim));
                 if (LocalFailures == 0) LocalFailures++;
                 return;
             }
-            if (settings.Contains("llsd")) SaveLLSD(Client, pathStem, exportPrim, Failure, settings);
+            //ImportCommand.PrimToCreate ptc = ImportCommand.Running.APrimToCreate(exportPrim.ID);
+            //ptc._prim = exportPrim.Prim;
+            if (settings.Contains("llsd"))
+            {
+                SaveLLSD(Client, pathStem, exportPrim, Failure, settings);
+              //  if (ptc.OldLocalID == exportPrim.LocalID)
+                {
+                    
+                }
+            }
             if (exportPrim.IsRoot && (true || exportPrim.Children.Count > 0))
             {
                 if (settings.Contains("link")) SaveLinksetInfo(Client, pathStem, exportPrim, Failure, settings);
@@ -171,11 +188,13 @@ namespace cogbot.Actions.SimExport
                 Failure("NEED LINK for " + named(exportPrim));
                 return;
             }
-            RequestLinksetInfo(Client, pathStem, exportPrim, Failure, settings);
+            SlowlyDo(() => RequestLinksetInfo(Client, pathStem, exportPrim, Failure, settings));
         }
 
         void RequestLinksetInfo(BotClient Client, string pathStem, SimObject exportPrim, OutputDelegate Failure, ImportSettings settings)
         {
+            string exportFile = pathStem + ".link";
+            lock (fileWriterLock) if (File.Exists(exportFile)) return;
             bool canScript = checkPerms(Client, exportPrim, SilientFailure, true);
             InventoryItem found = GetInvItem(Client, "LinksetSpeaker");
             if (!canScript || found == null)
@@ -370,6 +389,7 @@ namespace cogbot.Actions.SimExport
                 if (showsMissingOnly)
                 {
                     Failure("NEED LLSD for " + named(exportPrim));
+                    AddMoveTo(exportPrim.SimPosition);
                     return;
                 }
 

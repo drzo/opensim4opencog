@@ -162,7 +162,7 @@ namespace cogbot.Actions.SimExport
             }
 
             public bool RezRequested = false;
-            private Primitive _prim;
+            public Primitive _prim;
             private string _progressFile;
             public bool IsLinkParent
             {
@@ -327,7 +327,7 @@ namespace cogbot.Actions.SimExport
                 }
             }
 
-            private OSDMap LoadOSD()
+            public OSDMap LoadOSD()
             {
                 if (PrimOSD == null)
                 {
@@ -620,7 +620,7 @@ namespace cogbot.Actions.SimExport
         private PrimToCreate GetFromWorld(ImportSettings arglist, UUID idp, SimObject O)
         {
             PrimToCreate parent = null;
-            if (ExportCommand.IsSkipped(O))
+            if (ExportCommand.IsSkipped(O, arglist))
             {
                 Failure("Normally Skipped Parent=" + O);
             }
@@ -644,6 +644,56 @@ namespace cogbot.Actions.SimExport
             var p = parent.Prim;
             parent.SetStoreLocal();
             return parent;
+        }
+        public void KillID(PrimToCreate id)
+        {
+            RemoveFrom(ORPHANS, id);
+            RemoveFrom(EXCUSED_ORPHANS, id);
+            RemoveFrom(parents, id);
+            RemoveFrom(childs, id);
+            var uid = ExportCommand.dumpDir + id.OldID;
+            File.Delete(uid + ".llsd");
+            File.Delete(uid + ".task");
+            File.Delete(uid + ".link");
+            File.Delete(uid + ".ptc");
+            RemoveFrom(UUID2OBJECT, id.OldID);
+        }
+        public void KillID(UUID id)
+        {
+            RemoveFrom(ORPHANS, id);
+            RemoveFrom(EXCUSED_ORPHANS, id);
+            RemoveFrom(parents, id);
+            RemoveFrom(childs, id);
+            var uid = ExportCommand.dumpDir + id;
+            File.Delete(uid + ".llsd");
+            File.Delete(uid + ".task");
+            File.Delete(uid + ".link");
+            File.Delete(uid + ".ptc");
+            RemoveFrom(UUID2OBJECT, id);
+        }
+
+        private void RemoveFrom<T>(HashSet<T> set, T id)
+        {
+            if (set != null) lock (set) set.Remove(id);
+        }
+        private void RemoveFrom<T>(HashSet<T> set, UUID id)
+        {
+            if (set != null) lock (set)
+            {
+                foreach (var h in LockInfo.CopyOf(set))
+                {
+                    UUIDChange t = h as UUIDChange;
+                    if (t.OldID == id)
+                    {
+                        set.Remove(h);
+                        return;
+                    }
+                }
+            }
+        }
+        private void RemoveFrom<T,Y>(Dictionary<T,Y> set, T id)
+        {
+            if (set != null) lock (set) set.Remove(id);
         }
 
         private void ImportLinks(ImportSettings arglist)
@@ -753,12 +803,12 @@ namespace cogbot.Actions.SimExport
                         EXCUSED_ORPHANS.Add(CurrentOrphan);
                         CurrentOrphan = null;
                     }
-                    if (ORPHANS.Count>0)
+                    if (ORPHANS.Count > 0)
                     {
                         foreach (PrimToCreate toCreate in ORPHANS)
                         {
                             CurrentOrphan = toCreate;
-                            break;                            
+                            break;
                         }
                     }
                 }
@@ -767,6 +817,17 @@ namespace cogbot.Actions.SimExport
                     if (CurrentOrphan != null)
                     {
                         Client.Self.Chat("" + CurrentOrphan.OldID, 4201, ChatType.Normal);
+                    }
+                }
+                if (arglist.Contains("kill"))
+                {
+                    foreach (PrimToCreate toCreate in LockInfo.CopyOf(ORPHANS))
+                    {
+                        KillID(toCreate);
+                    }
+                    foreach (PrimToCreate toCreate in LockInfo.CopyOf(EXCUSED_ORPHANS))
+                    {
+                        KillID(toCreate);
                     }
                 }
                 Success("ORPHAN nonexcused=" + ORPHANS.Count + " excused=" + EXCUSED_ORPHANS.Count);

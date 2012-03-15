@@ -23,6 +23,8 @@ namespace cogbot.Actions.SimExport
         public HashSet<string> arglist = new HashSet<string>();
         public Simulator CurSim;
         public string OarDir = "cog_export/oarfile/";
+        public Linkset CurLink;
+        public ImportCommand.PrimToCreate CurPrim;
 
         public bool Contains(string task)
         {
@@ -210,7 +212,10 @@ namespace cogbot.Actions.SimExport
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate writeLine)
         {
-            ExportCommand.IsExporting = false;
+            if (!IsLocalScene)
+            {
+                ExportCommand.IsExporting = false;
+            }
             const string hlp = @"
             
             Toplevel Directives
@@ -311,6 +316,11 @@ namespace cogbot.Actions.SimExport
             if (doRez) RezPrims(importSettings);
             if (arglist.Contains("confirm")) ConfirmLocalIDs(importSettings);
             if (arglist.Contains("link")) ImportLinks(importSettings);
+            if (arglist.Contains("move"))
+            {
+                MoveToKnownObjects();
+                return Success("Moving to " + parents.Count);
+            }
             bool tasksObjs = arglist.Contains("taskobj") && !IsLocalScene;
             if (arglist.Contains("task") || tasksObjs) ImportTaskFiles(importSettings, tasksObjs);
             GleanUUIDsFrom(GetAssetUploadsFolder());
