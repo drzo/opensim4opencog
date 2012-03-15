@@ -852,7 +852,7 @@ namespace cogbot
             {
                 OutputDelegate WriteLine = DisplayNotificationInChat;
                 WriteLine("Teleport " + status);
-                describeSituation(WriteLine);
+                if (!cogbot.Actions.SimExport.ExportCommand.IsExporting) describeSituation(WriteLine);
             }
         }
 

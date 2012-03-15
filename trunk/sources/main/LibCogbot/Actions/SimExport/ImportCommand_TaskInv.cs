@@ -152,7 +152,7 @@ namespace cogbot.Actions.SimExport
                     continue;
                 }
                 ptc.CreateWorkflow(agentSyncFolderHolder);
-                if (!ptc.LoadOSD(taskDataS, WriteLine))
+                if (!ptc.LoadTaskOSD(taskDataS, WriteLine))
                 {
                     //Failure("FAILED: LoadOSD " + ptc);
                     incomplete++;
@@ -372,7 +372,7 @@ namespace cogbot.Actions.SimExport
                 Client.Objects.ObjectProperties += TaskInventoryItemReceived;
             }
 
-            public bool LoadOSD(string taskDataS, OutputDelegate WriteLine)
+            public bool LoadTaskOSD(string taskDataS, OutputDelegate WriteLine)
             {
                 failed = 0;
                 succeeded = 0;

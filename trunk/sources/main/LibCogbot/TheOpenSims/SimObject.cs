@@ -164,7 +164,11 @@ namespace cogbot.TheOpenSims
 
         public SimObject GetGroupLeader()
         {
-            if (!IsRoot) return Parent.GetGroupLeader();
+            if (!IsRoot)
+            {
+                var Parent = this.Parent;
+                if (Parent != this && Parent != null) return Parent.GetGroupLeader();
+            }
             List<SimObject> e = GetNearByObjects(GetSizeDistance() + 1, false);
             e.Add(this);
             e.Sort(CompareSize);
@@ -2416,10 +2420,21 @@ namespace cogbot.TheOpenSims
         {
             get
             {
+                bool selectObject = false;
+                bool requestObject = false;
+                bool requestMedia = false;
+
                 string missing = "";
-                if (objectinventory == null && _StartedGetTaskInventory && !InventoryEmpty)
+                if (objectinventory == null)
                 {
-                    missing += " TaskInv";
+                    if (_StartedGetTaskInventory && !InventoryEmpty)
+                    {
+                        missing += " TaskInv";
+                    } else
+                    {
+                        StartGetTaskInventory();
+                        missing += " WTaskInv";
+                    }
                 }
                 if (_Prim0 == null)
                 {
@@ -2430,39 +2445,65 @@ namespace cogbot.TheOpenSims
                     if (_Prim0.Textures == null)
                     {
                         missing += " PrimTextures";
+                        requestMedia = true;
                     }
                     if (_Prim0.ParticleSys == null)
                     {
                         missing += " PrimParticleSys";
+                        requestMedia = true;
                     }
                     if (_Prim0.Type==PrimType.Sculpt && _Prim0.Sculpt == null)
                     {
                         missing += " PrimSculpt";
+                        requestMedia = true;
                     }
                 }
                 if (_Parent == null)
                 {
                     if (_Prim0!=null)
                     {
-                        if (_Prim0.ParentID != 0) missing += " Parent";
+                        if (_Prim0.ParentID != 0)
+                        {
+                            Client.Objects.RequestObject(GetSimulator(), _Prim0.ParentID);
+                            missing += " Parent";
+                        }
                     }
                 }
                 if (Properties == null)
                 {
                     missing += " Props";
-                } else
+                    selectObject = true;
+                }
+                else
                 {
-                    if (_Prim0 != null && _Prim0.Properties == null) missing += " PrimProp";
-                    if (Properties.TextureIDs == null) missing += " PropData";
+                    if (_Prim0 != null && _Prim0.Properties == null)
+                    {
+                        selectObject = true;
+                        missing += " PrimProp";
+                    }
+                    if (Properties.TextureIDs == null)
+                    {
+                        selectObject = true;
+                        missing += " PropData";
+                    }
+                }
+                if (requestMedia)
+                {
+                    requestObject = true;
                 }
                 if (RegionHandle == 0)
                 {
+                    requestObject = true;
                     missing += " RHandle";
                 }
                 if (IsKilled)
                 {
+                    requestObject = true;
                     missing += " Killed";
                 }
+                if (selectObject) Client.Objects.SelectObject(GetSimulator(), LocalID, true);
+                if (requestObject) Client.Objects.RequestObject(GetSimulator(), LocalID);
+               // if (requestMedia) Client.Objects.RequestObjectMedia(ID, GetSimulator(), med_entry);
                 return missing.TrimStart();
             }
         }

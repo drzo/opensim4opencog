@@ -49,8 +49,10 @@ namespace cogbot.Actions.SimExport
 
         static void SOGToXml2(XmlTextWriter writer, Linkset linkset, bool oldFormat, ImportSettings options)
         {
+            options.CurLink = linkset;
             writer.WriteStartElement(String.Empty, "SceneObjectGroup", String.Empty);
             if (oldFormat) writer.WriteStartElement(String.Empty, "RootPart", String.Empty);
+            options.CurPrim = linkset.Parent;
             SOPToXml(writer, linkset.Parent.Prim, 0, null, GetTaskInv(linkset.Parent), options);
             if (oldFormat) writer.WriteEndElement();
             writer.WriteStartElement(String.Empty, "OtherParts", String.Empty);
@@ -59,6 +61,7 @@ namespace cogbot.Actions.SimExport
             int linkNum = 1;
             foreach (var child in linkset.Children)
             {
+                options.CurPrim = child;
                 if (oldFormat) writer.WriteStartElement(String.Empty, "Part", String.Empty);
                 SOPToXml(writer, child.Prim, linkNum++, linkset.Parent.Prim, GetTaskInv(child), options);
                 if (oldFormat) writer.WriteEndElement();                
@@ -106,7 +109,7 @@ namespace cogbot.Actions.SimExport
             WriteUUID(writer, "FolderID", prop.FolderID, options);
             WriteInt(writer,"InventorySerial", prop.InventorySerial);
 
-            WriteTaskInventory(writer, taskInventory, options);
+            WriteTaskInventory(sop, writer, taskInventory, options);
 
             WriteFlags(writer, "ObjectFlags", sop.Flags, options);
             WriteInt(writer,"LocalId", sop.LocalID);
@@ -197,7 +200,7 @@ namespace cogbot.Actions.SimExport
 
             writer.WriteEndElement();
         }
-        public static void WriteTaskInventory(XmlTextWriter writer, ICollection<InventoryBase> tinv, ImportSettings options)
+        public static void WriteTaskInventory(Primitive sop, XmlTextWriter writer, ICollection<InventoryBase> tinv, ImportSettings options)
         {
             if (tinv == null) return;
             if (tinv.Count > 0) // otherwise skip this
@@ -211,9 +214,16 @@ namespace cogbot.Actions.SimExport
                     string itemName = item.Name;
                     if (CogbotHelpers.IsNullOrZero(item.AssetUUID))
                     {
+                        if (item.AssetType != AssetType.Object)
+                        {
+                            ExportCommand.LogError(sop.ID, "AssetZERO: " + item);
+                        } else
+                        {
+                            ExportCommand.LogError(sop.ID, "AssetZERO: " + item);
+                        }
                         if (!options.ContainsKey("keepmissing")) continue;
                         item.AssetUUID = ImportCommand.GetMissingFiller(item.AssetType);
-                        if (!itemName.Contains("ERROR404")) itemName += "ERROR404";
+                        if (options.ContainsKey("error404") && !itemName.Contains("ERROR404")) itemName += "ERROR404";
                         ImportCommand.Running.Failure("Zero AssetID " + item.Name);
                     }
                     writer.WriteStartElement("TaskInventoryItem");
