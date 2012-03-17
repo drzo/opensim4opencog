@@ -262,7 +262,7 @@ namespace cogbot.Actions.SimExport
             }
             if (arglist.Contains("hhp"))
             {
-                arglist.Add("keepmissing");
+                //arglist.Add("keepmissing");
                 arglist.Add("all");
                 arglist.Add("oar");
                 arglist.Add("fullperms");

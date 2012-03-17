@@ -222,7 +222,7 @@ namespace cogbot.Actions.SimExport
                             ExportCommand.LogError(sop.ID, "AssetZERO: " + item);
                         }
                         if (!options.ContainsKey("keepmissing")) continue;
-                        item.AssetUUID = ImportCommand.GetMissingFiller(item.AssetType);
+                        if (options.ContainsKey("use404")) item.AssetUUID = ImportCommand.GetMissingFiller(item.AssetType);
                         if (options.ContainsKey("error404") && !itemName.Contains("ERROR404")) itemName += "ERROR404";
                         ImportCommand.Running.Failure("Zero AssetID " + item.Name);
                     }
