@@ -79,7 +79,14 @@ namespace cogbot.Actions
         public UUID CallerID = UUID.Zero;
         protected OutputDelegate WriteLine
         {
-            get { return _writeLine; }
+            get
+            {
+                if (_writeLine == null)
+                {
+                    return StaticWriteLine;
+                }
+                return _writeLine;
+            }
             set
             {
                 if (value == null)
@@ -392,15 +399,19 @@ namespace cogbot.Actions
         public CmdResult Failure(string usage)
         {
             failure++;
-            WriteLine(usage);
-            DLRConsole.DebugWriteLine(usage);
+            LocalWL(usage);
             return Result(usage, false);
         }
 
         public CmdResult Success(string usage)
         {
             success++;
+            LocalWL(usage);
+            return Result("Success " + Name, true);
+        }
 
+        public void LocalWL(string usage)
+        {
             try
             {
                 WriteLine(usage);
@@ -417,7 +428,6 @@ namespace cogbot.Actions
             {
                 DLRConsole.DebugWriteLine(e);
             }
-            return Result("Success " + Name, true);
         }
 
         protected CmdResult Result(string usage, bool tf)
