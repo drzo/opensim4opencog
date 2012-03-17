@@ -339,11 +339,17 @@ namespace cogbot.Actions.SimExport
             {
                 shouldBeMoving = false;
             }
-            foreach (var P in PS)
+            if (arglist.Contains("nobuf"))
+            {
+                PSBuf.Clear();
+            }
+            PSBuf.AddRange(PS);
+
+            foreach (var P in PSBuf)
             {
                 if (!primsAtAll) break;
                 // skip attachments and avatars
-                if (IsSkipped(P ,arglist)) continue;
+                if (IsSkipped(P, arglist)) continue;
                 if (!P.HasPrim)
                 {
                     if (!quietly) Failure("Missing Prim: " + named(P));
@@ -516,13 +522,27 @@ namespace cogbot.Actions.SimExport
             Success("seenObjectsAt = " + seenObjectsAt);
             Success("haveBeenTo = " + haveBeenTo);
             Success("maxHeigth = " + maxHeigth);
-            Success("moveSleep = " + (!shouldBeMoving ? 0 : moveSleep));
+            Success("moveSleep = " + moveSleep);
+            Success("shouldBeMoving = " + shouldBeMoving);
+            Success("moveToPoints = " + moveToPoints.Count);
+            Success("llsd = " + FileCount("*.llsd"));
+            Success("task = " + FileCount("*.task"));
+            Success("link = " + FileCount("*.link"));
+            Success("repack = " + FileCount("*.repack"));
+            Success("taskobj = " + FileCount("*.taskobj"));
+            Success("PSBuf = " + PSBuf.Count);
+        }
+
+        static int FileCount(string mask)
+        {
+            return Directory.GetFiles(dumpDir, mask).Length;
         }
 
 
         private readonly HashSet<uint> RequiredForExportLocalIDs = new HashSet<uint>();
         public static ExportCommand Running;
         private ulong RegionHandle;
+        private ListAsSet<SimObject> PSBuf = new ListAsSet<SimObject>();
         //private Simulator CurSim;
 
 
@@ -906,6 +926,7 @@ namespace cogbot.Actions.SimExport
                     err = Errors[id] = new ErrorInfo(id) {Obj = o};
                 }
                 err.Add(error);
+                Running.Failure(error);
             }
         }
         public static void LogError(UUID id, string error)
@@ -919,16 +940,20 @@ namespace cogbot.Actions.SimExport
                     err = Errors[id] = new ErrorInfo(id) {};
                 }
                 err.Add(error);
+                Running.Failure(error);
             }
         }
         public CmdResult WriteErrors(string[] strings)
         {
             lock (Errors)
             {
+                File.WriteAllText("ErrorLog.txt", "");
+                var append = new StreamWriter(File.OpenWrite("ErrorLog.txt"));
                 foreach (KeyValuePair<UUID, ErrorInfo> info in Errors)
                 {
-                    info.Value.AppendFile("ErrorLog.txt");
+                    info.Value.AppendFile(append);
                 }                
+                append.Close();
             }
             return SuccessOrFailure();
         }
@@ -949,7 +974,7 @@ namespace cogbot.Actions.SimExport
             {
                 if (o == null)
                 {
-                    o = ExportCommand.GetSimObjectFromUUID(ObjectID);
+                    o = WorldObjects.GetSimObjectFromUUID(ObjectID);
                 }
                 return o;
             }
@@ -962,7 +987,7 @@ namespace cogbot.Actions.SimExport
 
        internal void Add(string error)
        {
-           if (errors.Contains(error)) errors.Add(error);
+           if (!errors.Contains(error)) errors.Add(error);
        }
 
        internal void AppendFile(string fileName)
@@ -971,11 +996,33 @@ namespace cogbot.Actions.SimExport
            lock (ExportCommand.fileWriterLock)
            {
                var append = new StreamWriter(File.OpenWrite(fileName));
-               append.WriteLine("OBJ: " + Obj);
-               append.WriteLine("LOC: " + Obj.SimPosition);
+               AppendFile(append);
+               append.Close();
+           }
+       }
+       internal void AppendFile(TextWriter append)
+       {
+           if (errors.Count == 0) return;
+           lock (ExportCommand.fileWriterLock)
+           {
+               if (!ImportCommand.Running.MissingLLSD(ObjectID))
+               {
+                   var ptc = ImportCommand.Running.GetOldPrim(ObjectID);
+                   append.WriteLine("OBJ: " + ptc + " " + Obj);
+                   append.WriteLine("LOC: " + ptc.SimPosition);
+               }
+               else
+               {
+                   var o = Obj;
+                   if (o != null)
+                   {
+                       append.WriteLine("OBJ: " + o);
+                       append.WriteLine("LOC: " + o.SimPosition);
+                   }
+               }
                foreach (string error in errors)
                {
-                   append.WriteLine(error);
+                   append.WriteLine("  " + error);
                }
            }
        }

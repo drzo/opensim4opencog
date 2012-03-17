@@ -19,7 +19,7 @@ using PathSystem3D.Mesher;
 namespace cogbot.Actions.SimExport
 {
 
-    public class ExportTaskAsset
+    public partial class ExportTaskAsset
     {
         public InventoryItem I;
         public int NumRequests = 0;
@@ -398,7 +398,7 @@ namespace cogbot.Actions.SimExport
             return UnpackTaskItem(Client, exportPrim, item, Failure, out missing);
         }
 
-        OSDMap UnpackTaskItem(BotClient Client, SimObject exportPrim, InventoryItem item, OutputDelegate Failure, out bool missing)
+        public OSDMap UnpackTaskItem(BotClient Client, SimObject exportPrim, InventoryItem item, OutputDelegate Failure, out bool missing)
         {
             UUID itemID = item.UUID;
             lock (CompletedTaskItem) if (CompletedTaskItem.Contains(itemID))

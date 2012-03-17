@@ -203,8 +203,7 @@ namespace cogbot.Actions.SimExport
             {
                 return;
             }
-            Client.Self.Movement.Camera.Position = pos;
-            Client.Self.Movement.SendUpdate(true);
+            SetCamera(pos);
             if (Vector3.Distance(Client.Self.SimPosition, pos) < 8)
             {
                 BeenTo(Client.Self.SimPosition);
@@ -224,23 +223,32 @@ namespace cogbot.Actions.SimExport
                 var at3d = Client.Self.GlobalPosition;
                 if (Vector3d.Distance(new Vector3d(ExpectedGotoV3D.X, ExpectedGotoV3D.Y, ExpectedGotoV3D.Z), new Vector3d(at3d.X, at3d.Y, at3d.Z)) < 32)
                 {
+                    SetCamera(pos);
                     return;
                 }
                 Client.Self.AutoPilotCancel();
                 Client.Self.Teleport(RegionHandle, pos, pos);
-                Client.Self.Movement.Fly = true;
-                Client.Self.Movement.SendUpdate(true);
+                SetCamera(pos);
                 Thread.Sleep(4000);
                 at3d = Client.Self.GlobalPosition;
                 if (Vector3d.Distance(new Vector3d(ExpectedGotoV3D.X, ExpectedGotoV3D.Y, ExpectedGotoV3D.Z), new Vector3d(at3d.X, at3d.Y, at3d.Z)) < 16)
                 {
+                    SetCamera(pos);
                     return;
                 }
                 Success("AutoPilot to get to " + pos);
                 Client.Self.AutoPilot(ExpectedGotoV3D.X, ExpectedGotoV3D.Y, ExpectedGotoV3D.Z);
+                SetCamera(pos);
                 Thread.Sleep(4000);
                 Client.Self.AutoPilotCancel();
             }
+        }
+
+        private void SetCamera(Vector3 pos)
+        {
+            Client.Self.Movement.Fly = true;
+            Client.Self.Movement.Camera.Position = pos;
+            Client.Self.Movement.SendUpdate(true);
         }
 
         private void MoveCloseTo(SimObject exportPrim)

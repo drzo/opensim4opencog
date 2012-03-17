@@ -216,7 +216,7 @@ namespace cogbot.Actions.SimExport
                     {
                         if (item.AssetType != AssetType.Object)
                         {
-                            ExportCommand.LogError(sop.ID, "AssetZERO: " + item);
+                            ExportCommand.LogError(sop.ID, "Asset ZERO: " + item);
                         } else
                         {
                             ExportCommand.LogError(sop.ID, "AssetZERO: " + item);

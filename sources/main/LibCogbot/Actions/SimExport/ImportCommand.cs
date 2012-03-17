@@ -266,6 +266,8 @@ namespace cogbot.Actions.SimExport
                 arglist.Add("all");
                 arglist.Add("oar");
                 arglist.Add("fullperms");
+                arglist.Add("lslprims");
+                //arglist.Add("KillMissing");
             }
             bool doRez = false;
             if (arglist.Contains("all"))
@@ -328,9 +330,42 @@ namespace cogbot.Actions.SimExport
             if (arglist.Contains("request")) RequestMissingIDs();
             if (arglist.Contains("taskobj")) ImportTaskObjects(importSettings);
             DivideTaskObjects(importSettings);
+            if (arglist.Contains("killmissing")) KillMissing(importSettings);
+            if (arglist.Contains("lslprims")) ConfirmLSLPrims(importSettings);
             if (arglist.Contains("oar")) CreateOARFile(importSettings, "exported.oar");
             writeLine("Completed SimImport");
             return SuccessOrFailure();
+        }
+
+        private void ConfirmLSLPrims(ImportSettings settings)
+        {
+            ;
+            foreach (var o in File.ReadAllLines(ExportCommand.dumpDir + "../required.txt"))
+            {
+                string[] ss = o.Split(',');
+                UUID confirmID = UUID.Parse(ss[2]);
+                int childc = int.Parse(ss[6]);
+                bool problems = false;
+                if (MissingLINK(confirmID))
+                {
+                    Failure("MissingLINK: " + o);
+                    problems = true;
+                }
+                if (MissingTASK(confirmID))
+                {
+                    Failure("MissingTASK: " + o);
+                    problems = true;
+                }
+                if (MissingLLSD(confirmID))
+                {
+                    Failure("MissingLLSD: " + o);
+                    continue;
+                }
+                if (problems)
+                {
+                    var p = GetOldPrim(confirmID);
+                }
+            }
         }
 
         private void CreateOARFile(ImportSettings settings, string filename)
@@ -351,7 +386,12 @@ namespace cogbot.Actions.SimExport
             }
             foreach (PrimToCreate ch in childs)
             {
-                ch.ParentPrim.Link.Children.Add(ch);
+                var pp = ch.ParentPrim;
+                if (pp == null)
+                {
+                    continue;
+                }
+                pp.Link.Children.Add(ch);
             }
             foreach (var ls in LockInfo.CopyOf(LocalScene.Links))
             {

@@ -13,6 +13,7 @@ using OpenMetaverse.Assets;
 using OpenMetaverse.StructuredData;
 
 using MushDLR223.ScriptEngines;
+using PathSystem3D.Navigation;
 
 namespace cogbot.Actions.SimExport
 {
@@ -58,8 +59,8 @@ namespace cogbot.Actions.SimExport
                 }
                 if (IsLocalScene) rezString = "";
                 else rezString = " -> " + rezString;
-                if (_prim != null) return _prim + rezString;
-                return OldID + rezString;
+                if (_prim != null) return _prim + rezString + " @ " + SimPosition;
+                return OldID + rezString + " @ " + SimPosition;
             }
 
             public override int GetHashCode()
@@ -313,6 +314,7 @@ namespace cogbot.Actions.SimExport
             }
             public PrimToCreate ParentPrim;
             public Linkset Link;
+            public int MissingChildern;
 
             public uint ParentID
             {
@@ -404,9 +406,12 @@ namespace cogbot.Actions.SimExport
                 for (int i = 1; i < uuids.Length; i++)
                 {
                     UUID id = uuids[i];
+                        
                     if (Running.MissingLLSD(id))
                     {
-                        Running.Failure("Warning missing link child " + id);
+                        Running.Failure("Warning missing link child " + id + " on parent " + this.ToString());
+                        ExportCommand.Running.AddMoveTo(SimPosition);
+                        MissingChildern++;
                         continue;
                     }
                     PrimToCreate ptc = Running.APrimToCreate(id);
@@ -419,6 +424,41 @@ namespace cogbot.Actions.SimExport
                     Childs.Add(ptc);
                 }
                 State = PrimImportState.Linking;
+            }
+
+            public Vector3 SimPosition
+            {
+                get
+                {
+                    if (_prim != null) 
+                    {
+                        bool fnd;
+                        var V3 = PrimPos(_prim, out fnd);
+                        if (fnd) return V3;
+                    }
+                    return LoadOSD()["RegionPosition"].AsVector3();
+                }
+            }
+
+            public static Vector3 PrimPos(Primitive prim, out bool found)
+            {
+                found = true;
+                Vector3 pp = prim.Position;
+                if (prim.ParentID != 0)
+                {
+                    var parent = Running.GetOldPrim(prim.ParentID);
+                    if (parent == null)
+                    {
+                        found = false;
+                        return Vector3.Zero;
+                       // throw new AbandonedMutexException("no parent for " + prim);
+                    }
+                    else
+                    {
+                        return prim.Position*Matrix4.CreateFromQuaternion(parent.Prim.Rotation) + parent.SimPosition;
+                    }
+                }
+                return pp;
             }
 
             public bool WaitUntilFound(TimeSpan span)
@@ -474,6 +514,16 @@ namespace cogbot.Actions.SimExport
         public bool MissingLLSD(UUID id)
         {
             return !File.Exists(ExportCommand.dumpDir + id + ".llsd");
+        }
+
+        public bool MissingLINK(UUID id)
+        {
+            return !File.Exists(ExportCommand.dumpDir + id + ".link");
+        }
+
+        public bool MissingTASK(UUID id)
+        {
+            return !File.Exists(ExportCommand.dumpDir + id + ".task");
         }
 
         private void ImportPTCFiles(ImportSettings arglist, bool lloadOnly, bool rezMissing)
@@ -564,6 +614,13 @@ namespace cogbot.Actions.SimExport
                             continue;
                         }
                         parents.Add(ptc);
+                    } else
+                    {
+                        if (ptc.Prim.RegionHandle != 1249045209445888)
+                        {
+                            KillID(ptc.OldID);
+                            continue;
+                        }
                     }
                     //diskPrims.Add(prim);
                     //if (sculptOnly && (prim.Sculpt == null || CogbotHelpers.IsNullOrZero(prim.Sculpt.SculptTexture))) continue;
@@ -953,7 +1010,7 @@ namespace cogbot.Actions.SimExport
             }
             return null;
         }
-        private PrimToCreate GetOldPrim(UUID id)
+        public PrimToCreate GetOldPrim(UUID id)
         {
             PrimToCreate getOld = GetOld(id) as PrimToCreate;
             if (getOld == null)
@@ -1334,6 +1391,18 @@ namespace cogbot.Actions.SimExport
                 {
                    // var ptc = APrimToCreate(id);
                    // ptc.IsConfirmed = true;
+                }
+            }
+        }
+
+        private void KillMissing(ImportSettings settings)
+        {
+
+            foreach (PrimToCreate parent in LockInfo.CopyOf(parents))
+            {
+                if (parent.MissingChildern > 0)
+                {
+                    KillID(parent);
                 }
             }
         }
