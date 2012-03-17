@@ -734,6 +734,15 @@ namespace cogbot.TheOpenSims
             }
         }
 
+        virtual public bool IsTemporary
+        {
+            get
+            {
+                Primitive p = _Prim0;
+                return (p != null && ((p.Flags & PrimFlags.Temporary) != 0 || (p.Flags & PrimFlags.TemporaryOnRez) != 0));
+            }
+        }
+
         virtual public bool IsPhantom
         {
             get
@@ -960,6 +969,13 @@ namespace cogbot.TheOpenSims
 
         // the prim in Secondlife
         public Primitive _Prim0;
+        public Primitive Prim0
+        {
+            get
+            {
+                return _Prim0;
+            }
+        }
 
         public Primitive Prim
         {
@@ -3268,6 +3284,8 @@ namespace cogbot.TheOpenSims
         List<InventoryBase> TaskInventory { get;  }
         string MissingData { get; }
         bool TaskInventoryLikely { get; }
+        Primitive Prim0 { get; }
+        bool IsTemporary { get; }
 
         void StartGetTaskInventory();
     }
