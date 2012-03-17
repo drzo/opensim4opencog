@@ -144,7 +144,7 @@ namespace cogbot.Actions.SimExport
                 var ptc = APrimToCreate(UUID.Parse(fileUUID));
                 if (++created % 25 == 0) WriteLine("tasked " + created);
                 if (ptc.PackedInsideNow) continue;
-                if (ptc.TaskInvComplete) continue;
+              //  if (ptc.TaskInvComplete) continue;
                 if (ptc.Prim.RegionHandle != 1249045209445888)
                 {
                     KillID(ptc.OldID);
@@ -201,25 +201,40 @@ namespace cogbot.Actions.SimExport
             {
                 get
                 {
-                    var regenObjInv = this.objectinventory;
+                    List<InventoryBase> regenObjInv = null;// this.objectinventory;
                     if (regenObjInv == null)
                     {
                         if (IsLocalScene)
                         {
                             if (TaskItemsToCreate == null) return null;
-                            regenObjInv = new List<InventoryBase>();
-                            lock (TaskItemsToCreate) foreach (var toCreate in TaskItemsToCreate)
+                            bool improvementM = false;
+                            if (objectinventory != null)
                             {
-                                regenObjInv.Add(toCreate.ToInventoryBase());
+                                //return objectinventory;
                             }
-                            return regenObjInv;
+                            regenObjInv = new List<InventoryBase>();
+                            lock (TaskItemsToCreate)
+                            {
+                                foreach (var toCreate in TaskItemsToCreate)
+                                {
+                                    bool improvement;
+                                    var item = toCreate.ToInventoryBase(out improvement);
+                                    if (improvement) improvementM = true;
+                                    regenObjInv.Add(item);
+                                }
+                            }
+                            if (improvementM)
+                            {
+                                ExportCommand.Running.SaveTaskOSD(OldID, regenObjInv);
+                            }
+                            return objectinventory = regenObjInv;
                         }
                         if (!RequestNewTaskInventory().WaitOne(TimeSpan.FromSeconds(10)))
                         {
                             Running.WriteLine("Unable to retrieve TaskInv for " + ToString());
                         }
                     }
-                    return regenObjInv;
+                    return objectinventory = regenObjInv;
                 }
             }
 
@@ -395,14 +410,32 @@ namespace cogbot.Actions.SimExport
                     return true;
                 }
                 // scan for existing source nodes
-                lock (TaskItemsToCreate) foreach (OSDMap item in taskData)
+                lock (TaskItemsToCreate)
                 {
-                    if (item["AssetType"].Type == OSDType.Unknown)
+                    foreach (OSDMap item in taskData)
                     {
-                        continue;
+                        if (item["AssetType"].Type == OSDType.Unknown)
+                        {
+                            continue;
+                        }
+                        var itemID = item["UUID"].AsUUID();
+                        TaskItemToCreate titc = null;
+
+                        foreach (TaskItemToCreate itemToCreate in TaskItemsToCreate)
+                        {
+                            if (itemToCreate.OldItemID == itemID)
+                            {
+                                titc = itemToCreate;
+                                break;
+                            }
+                        }
+                        if (titc == null)
+                        {
+                            titc = new TaskItemToCreate(this, item);
+                            TaskItemsToCreate.Add(titc);
+                        }
+                        succeeded++;
                     }
-                    TaskItemsToCreate.Add(new TaskItemToCreate(this, item));
-                    succeeded++;
                 }
                 return failed == 0;
             }
@@ -470,20 +503,31 @@ namespace cogbot.Actions.SimExport
         {
             public override string ToString()
             {
-                return AssetType + " " + OldAssetID + "  " + ItemName + "@" + CreatedPrim;
+                return AssetType + " " + OldAssetID + (string.IsNullOrEmpty(Error) ? " " : " " + Error + " ") + ItemName +
+                       "@" + CreatedPrim;
             }
-
+            public override bool Equals(object obj)
+            {
+                var other = obj as TaskItemToCreate;
+                return other != null && other.OldItemID == OldItemID;
+            }
+            public override int GetHashCode()
+            {
+                return OldItemID.GetHashCode();
+            } 
             private ExportTaskAsset Exporter;
             public readonly string ItemName;
             private UUID NewAgentItemID;
             public OSDMap TaskOSD;
-            public InventoryItem Item;
+            public InventoryItem AgentItem;
             public InventoryItem TaskItem;
+            public InventoryItem SourceItem;
+
             private readonly PrimToCreate CreatedPrim;
             public readonly AssetType AssetType;
             public bool AlreadyMovedToTask = false;
             public UUID OldAssetID;
-            private readonly UUID OldItemID;
+            public readonly UUID OldItemID;
 
             protected InventoryManager Inventory
             {
@@ -512,13 +556,13 @@ namespace cogbot.Actions.SimExport
                     NewAssetID = OldAssetID;                    
                     return true;
                 }
-                if (Item != null) return true;
+                if (AgentItem != null) return true;
                 foreach (InventoryBase content in CreatedPrim.AgentContents)
                 {
                     if (content.Name == ItemName)
                     {
-                        Item = content as InventoryItem;
-                        if (Item != null) return true;
+                        AgentItem = content as InventoryItem;
+                        if (AgentItem != null) return true;
                     }
                 }
                 return false;
@@ -526,7 +570,7 @@ namespace cogbot.Actions.SimExport
             public bool FindTaskItem()
             {
                 if (TaskItem != null) return true;
-                List<InventoryBase> taskInv = CreatedPrim.TaskInventory;
+                List<InventoryBase> taskInv = CreatedPrim.objectinventory;
                 if (taskInv == null) return false;
                 foreach (InventoryBase content in taskInv)
                 {
@@ -536,6 +580,7 @@ namespace cogbot.Actions.SimExport
                         if (item == null) continue;
                         if (item.AssetType != AssetType) continue;
                         TaskItem = item;
+                        return true;
                     }
                 }
                 return false;
@@ -547,7 +592,7 @@ namespace cogbot.Actions.SimExport
             private UUID NewAssetID;
             public int NumRequests = 0;
             public String Error = "";
-            public AutoResetEvent waiting;
+            public ManualResetEvent waiting;
 
             public bool CreateAgentItem(OutputDelegate WriteLine, bool createObjects)
             {
@@ -592,8 +637,8 @@ namespace cogbot.Actions.SimExport
                                 return false;                                
                             }
                             Inventory.ItemReceived -= AgentInventoryOnItemReceived;
-                            SetItemFromOSD(Item, true);
-                            this.Inventory.RequestUpdateItem(Item);
+                            SetItemFromOSD(AgentItem, true);
+                            this.Inventory.RequestUpdateItem(AgentItem);
                             innerObject.PackedInsideNow = true;
                             innerObject.SaveProgressFile();
                             return FindAgentItem();
@@ -632,9 +677,9 @@ namespace cogbot.Actions.SimExport
                     return false;
                 }
                 //Inventory.ItemReceived -= AgentInventoryOnItemReceived;
-                NewAssetID = Item.AssetUUID;
-                SetItemFromOSD(Item, true);
-                this.Inventory.RequestUpdateItem(Item);
+                NewAssetID = AgentItem.AssetUUID;
+                SetItemFromOSD(AgentItem, true);
+                this.Inventory.RequestUpdateItem(AgentItem);
                 return true;
             }
 
@@ -650,7 +695,7 @@ namespace cogbot.Actions.SimExport
             {
                 if (item.Name != ItemName) return;
                 NewAgentItemID = item.UUID;
-                Item = item as InventoryItem;
+                AgentItem = item as InventoryItem;
                 areItem.Set();
             }
 
@@ -678,7 +723,7 @@ namespace cogbot.Actions.SimExport
                     return true;
                 }
                 // Copy to Task
-                SetItemFromOSD(Item, true);
+                SetItemFromOSD(AgentItem, true);
                 areItem = areItem ?? new ManualResetEvent(false);
                 areItem.Reset();
                 oldTaskSerial = CreatedPrim.TaskSerial;
@@ -696,14 +741,14 @@ namespace cogbot.Actions.SimExport
                 }
                 Client.Objects.ObjectProperties += TaskInventoryItemReceived;
 
-                if (Item.InventoryType == InventoryType.LSL)
+                if (AgentItem.InventoryType == InventoryType.LSL)
                 {
-                    Inventory.CopyScriptToTask(CreatedPrim.NewLocalID, (InventoryItem) Item, true);
-                    Inventory.RequestSetScriptRunning(CreatedPrim.NewID, Item.AssetUUID, true);
+                    Inventory.CopyScriptToTask(CreatedPrim.NewLocalID, (InventoryItem) AgentItem, true);
+                    Inventory.RequestSetScriptRunning(CreatedPrim.NewID, AgentItem.AssetUUID, true);
                 }
                 else
                 {
-                    Inventory.UpdateTaskInventory(CreatedPrim.NewLocalID, (InventoryItem) Item);                   
+                    Inventory.UpdateTaskInventory(CreatedPrim.NewLocalID, (InventoryItem) AgentItem);                   
                 }
                 if (!areItem.WaitOne(TimeSpan.FromSeconds(5)))
                 {
@@ -774,52 +819,82 @@ namespace cogbot.Actions.SimExport
                 return Running.GetOldPrim(oldID);
             }
 
-            private InventoryItem _item;
-            public InventoryItem ToInventoryBase()
+            public InventoryItem ToInventoryBase(out bool improvement)
             {
+                improvement = false;
                 //OSDMap UnpackTaskItem(BotClient Client, SimObject exportPrim, InventoryItem item, OutputDelegate Failure, out bool missing)
-                if (_item == null)
+                if (SourceItem == null || CogbotHelpers.IsNullOrZero(SourceItem.AssetUUID))
                 {
-                    int pn;
-                    _item = InventoryManager.CreateInventoryItem(
-                        ItemToCreate.AssetTypeToInventoryType(this.AssetType, out pn), OldItemID);
-                    if (_item == null)
+                    if (SourceItem == null)
                     {
-                        _item = new InventoryItem(OldItemID);
+                        int pn;
+                        SourceItem = InventoryManager.CreateInventoryItem(
+                            ItemToCreate.AssetTypeToInventoryType(this.AssetType, out pn), OldItemID);
+                        if (SourceItem == null)
+                        {
+                            SourceItem = new InventoryItem(OldItemID);
+                        }
+                        SetItemFromOSD(SourceItem, false);
                     }
-                    SetItemFromOSD(_item, false);
                     if (CogbotHelpers.IsNullOrZero(OldAssetID))
                     {
-                        if (_item.AssetType != AssetType.Object)
+                        if (SourceItem.AssetType == AssetType.Object)
                         {
-                            ExportCommand.LogError(CreatedPrim.OldID,
-                                                   "ASSET ZERO " + ToString() + " " + _item.Name + "/" +
-                                                   _item.Description);
-                            if (NumRequests == 0)
+                            //SourceItem.AssetUUID = OldAssetID;
+                            return SourceItem;
+                        }
+                        if (SourceItem.AssetType != AssetType.Object)
+                        {
+                            if (false)ExportCommand.LogError(CreatedPrim.OldID,
+                                                   "ASSET ZERO " + ToString() + " " + SourceItem.Name + "/" +
+                                                   SourceItem.Description);
+                            if (NumRequests < 3 && string.IsNullOrEmpty(Error))
                             {
+                                waiting = new ManualResetEvent(false);
                                 Request();
-                            } else
+                                if (!waiting.WaitOne(TimeSpan.FromSeconds(1)))
+                                {
+                                    ExportCommand.LogError(CreatedPrim.OldID,
+                                                           "ASSET ZERO1 " + ToString() + " " + SourceItem.Name + "/" +
+                                                           SourceItem.Description);
+                                }
+                                else
+                                {
+                                    if (!string.IsNullOrEmpty(Error))
+                                    {
+                                        ExportCommand.LogError(CreatedPrim.OldID,
+                                                               "ASSET ERROR " + ToString() + " " + SourceItem.Name + "/" +
+                                                               SourceItem.Description);
+                                        CreatedPrim.TaskInvComplete = false;
+                                    }
+                                    else
+                                    {
+                                        improvement = string.IsNullOrEmpty(Error);
+                                    }
+                                }
+                            }
+                            else
                             {
                                 ExportCommand.LogError(CreatedPrim.OldID,
-                                                       "ASSET ZERO2 " + ToString() + " " + _item.Name + "/" +
-                                                       _item.Description);   
+                                                       "ASSET ZERO2 " + ToString() + " " + SourceItem.Name + "/" +
+                                                       SourceItem.Description);
                             }
-                           /* Running.Client.Assets.RequestInventoryAsset(_item.AssetUUID, _item.UUID, _item.ParentUUID, _item.OwnerID,
+                            /* Running.Client.Assets.RequestInventoryAsset(_item.AssetUUID, _item.UUID, _item.ParentUUID, _item.OwnerID,
                                                                         _item.AssetType, true, Asset_Received);*/
 
 
                         //    OldAssetID = GetMissingFiller(_item.AssetType);
                         }
                     }
-                    _item.AssetUUID = OldAssetID;
+                    SourceItem.AssetUUID = OldAssetID;
                 }
-                return _item;
+                return SourceItem;
             }
 
             public void Asset_Received(AssetDownload trans, Asset asset)
             {
                 var Running = ExportCommand.Running;
-                var item = _item;
+                var item = SourceItem;
                 UUID itemID = item.UUID;
                 //if (trans.AssetID != item.AssetUUID) return;
                 if (!trans.Success)
@@ -835,10 +910,17 @@ namespace cogbot.Actions.SimExport
                             return;
                         }
                     }
+                    return;
                 }
-                Running.Assets_OnReceived(trans, asset);
+                Error = "";
+                OldAssetID = asset.AssetID;
+                if (SourceItem != null) SourceItem.AssetUUID = asset.AssetID;
                 //AddRelated(item.AssetUUID, item.AssetType);
-                Running.TaskItemComplete(CreatedPrim.OldID, itemID, asset.AssetID, asset.AssetType);
+                if (false)
+                {
+                    Running.Assets_OnReceived(trans, asset);
+                    Running.TaskItemComplete(CreatedPrim.OldID, itemID, asset.AssetID, asset.AssetType);
+                }
                 if (waiting != null) waiting.Set();
             }
 
@@ -846,11 +928,18 @@ namespace cogbot.Actions.SimExport
             {
                 if (!string.IsNullOrEmpty(Error))
                 {
+                    if (waiting != null) waiting.Set();
                     return;
                 }
                 var Running = ExportCommand.Running;
-                InventoryItem item = _item;
+                InventoryItem item = SourceItem;
                 UUID itemID = item.UUID;
+                if (AssetType == AssetType.Object)
+                {
+                    RequestRezObject();
+                    return;
+                    //UnpackTaskObject
+                }
                 if (item.AssetType == AssetType.LSLText || item.AssetType == AssetType.Notecard)
                 {
                     //Perhaps copy to AgentInventory first
@@ -858,6 +947,11 @@ namespace cogbot.Actions.SimExport
                 Running.Client.Assets.RequestInventoryAsset(item.AssetUUID, itemID, CreatedPrim.OldID, item.OwnerID,
                                                             item.AssetType, true, Asset_Received);
                 NumRequests++;
+            }
+
+            private void RequestRezObject()
+            {
+               // throw new NotImplementedException();
             }
         }
     }

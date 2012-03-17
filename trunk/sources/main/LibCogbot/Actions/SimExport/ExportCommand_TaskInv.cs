@@ -21,20 +21,20 @@ namespace cogbot.Actions.SimExport
 
     public partial class ExportTaskAsset
     {
-        public InventoryItem I;
+        public InventoryItem SourceItem;
         public int NumRequests = 0;
         public String Error = "";
         public SimObject O;
         public AutoResetEvent waiting;
         public override string ToString()
         {
-            return ExportCommand.ItemDesc(I, O);
+            return ExportCommand.ItemDesc(SourceItem, O);
         }
 
         public void Asset_Received(AssetDownload trans, Asset asset)
         {
             var Running = ExportCommand.Running;
-            var item = I;
+            var item = SourceItem;
             UUID itemID = item.UUID;
             //if (trans.AssetID != item.AssetUUID) return;
             if (!trans.Success)
@@ -64,7 +64,7 @@ namespace cogbot.Actions.SimExport
                 return;
             }
             var Running = ExportCommand.Running;
-            InventoryItem item = I;
+            InventoryItem item = SourceItem;
             UUID itemID = item.UUID;
             if (item.AssetType == AssetType.LSLText || item.AssetType == AssetType.Notecard)
             {
@@ -206,7 +206,7 @@ namespace cogbot.Actions.SimExport
             }
         }
 
-        private void SaveTaskOSD(UUID uuid, IEnumerable<InventoryBase> bases)
+        public void SaveTaskOSD(UUID uuid, IEnumerable<InventoryBase> bases)
         {
             string exportFile = dumpDir + "" + uuid + ".task";
             OSDArray all = new OSDArray();
@@ -422,7 +422,7 @@ namespace cogbot.Actions.SimExport
             AutoResetEvent waitUntilDL = new AutoResetEvent(false);
             lock (TaskAssetWaiting) if (!TaskAssetWaiting.TryGetValue(itemID, out ho))
             {
-                TaskAssetWaiting[itemID] = ho = new ExportTaskAsset { I = item, O = exportPrim };
+                TaskAssetWaiting[itemID] = ho = new ExportTaskAsset { SourceItem = item, O = exportPrim };
                 ho.waiting = waitUntilDL;
 
             }

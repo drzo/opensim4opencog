@@ -442,7 +442,7 @@ namespace cogbot.Actions.SimExport
                 {
                     foreach (var pa in LockInfo.CopyOf(TaskAssetWaiting))
                     {
-                        UUID assetID = pa.Value.I.AssetUUID;
+                        UUID assetID = pa.Value.SourceItem.AssetUUID;
                         if (!CogbotHelpers.IsNullOrZero(assetID))
                         {
                             if (CompletedAssets.Contains(assetID))
@@ -954,6 +954,7 @@ namespace cogbot.Actions.SimExport
                     info.Value.AppendFile(append);
                 }                
                 append.Close();
+                Errors.Clear();
             }
             return SuccessOrFailure();
         }
