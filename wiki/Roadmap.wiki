@@ -12,7 +12,7 @@ Please edit this only after some concensus on roadmap
 === first ===
  # learn C#, 
  # get latest compiling from Doug,  
- # make the afghan village,
+ # make a demo project, probably an area populated by some bots
 
 === later ===
  # documentation
