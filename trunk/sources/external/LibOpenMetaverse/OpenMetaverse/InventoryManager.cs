@@ -213,7 +213,7 @@ namespace OpenMetaverse
     {
         public override string ToString()
         {
-            return AssetType + " " + AssetUUID + " (" + InventoryType + " " + UUID + ") " + Permissions;
+            return AssetType + " " + AssetUUID + " (" + InventoryType + " " + UUID + ") '" + Name + "'/'" + Description + "' " + Permissions;
         }
         /// <summary>The <seealso cref="OpenMetaverse.UUID"/> of this item</summary>
         public UUID AssetUUID = UUID.Zero;
