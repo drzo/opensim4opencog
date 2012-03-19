@@ -90,7 +90,8 @@ namespace cogbot.Actions.SimExport
             }
             foreach (TaskObject o in tos)
             {
-                o.Rezzed.SetIsAsset();
+                var r = o.Rezzed;
+                if (r != null) r.SetIsAsset();
             }
             foreach (TaskObject o in tos)
             {
@@ -158,7 +159,7 @@ namespace cogbot.Actions.SimExport
                 if (++created % 25 == 0) WriteLine("tasked " + created);
                 if (ptc.PackedInsideNow) continue;
               //  if (ptc.TaskInvComplete) continue;
-                if (ptc.Prim.RegionHandle != 1249045209445888)
+                if ((ptc.Prim.RegionHandle != importSettings.CurSim.Handle) && importSettings.Contains("CheckRegion"))
                 {
                     KillID(ptc.OldID);
                     continue;
