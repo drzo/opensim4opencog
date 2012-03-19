@@ -633,9 +633,11 @@ namespace cogbot.Actions.SimExport
             Simulator simulator = O.GetSimulator();
             string taskInfo = "" + unpackedLocalID + "," + simulator.Handle + "," + objectID + "," + exportPrim.ID + "," +
                           taskInv.AssetUUID + "," + itemID;
+            string objectAssetFile = dumpDir + O.ID.ToString() + ".objectAsset";
             lock (fileWriterLock)
             {
-                File.WriteAllText(repackFile, taskInfo);               
+                File.WriteAllText(repackFile, taskInfo);
+                File.WriteAllText(objectAssetFile, taskInfo);   
             }
             //taskInvAssetUUID = taskInv.AssetUUID = objectID;
             bool needsDrop = prim.ParentID != 0;
@@ -679,6 +681,8 @@ namespace cogbot.Actions.SimExport
             }
             //SaveLLSD(Client, dumpDir + O.ID, O, Failure);
             ExportPrim(Client, O, Failure, arglist);
+            Thread.Sleep(3000);
+            ExportPrim(Client, O, Failure, arglist);
             string subLLSD = dumpDir + O.ID.ToString() + ".llsd";
             if (!usedWait)
             {
@@ -687,8 +691,11 @@ namespace cogbot.Actions.SimExport
             if (!File.Exists(subLLSD))
             {
                 ExportPrim(Client, O, Failure, arglist);
-                Failure("No LLSD file " + ItemDesc(taskInv, exportPrim) + " Obj=" + O);
-                missing = true;
+                if (!File.Exists(subLLSD))
+                {
+                    Failure("No LLSD file " + ItemDesc(taskInv, exportPrim) + " Obj=" + O);
+                    missing = true;
+                }
             }
             var areKilled = new ManualResetEvent(false);
             EventHandler<KillObjectEventArgs> onKill = (s, e) =>

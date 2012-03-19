@@ -1007,7 +1007,7 @@ namespace cogbot.Actions.SimExport
            if (errors.Count == 0) return;
            lock (ExportCommand.fileWriterLock)
            {
-               if (!ImportCommand.Running.MissingLLSD(ObjectID))
+               if (!ImportCommand.MissingLLSD(ObjectID))
                {
                    var ptc = ImportCommand.Running.GetOldPrim(ObjectID);
                    append.WriteLine("OBJ: " + ptc + " " + Obj);
