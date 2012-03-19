@@ -51,15 +51,24 @@ namespace cogbot.Actions.SimExport
                 string rezString = "" + _rezed;
                 if (string.IsNullOrEmpty(rezString))
                 {
-                    rezString = NewID + " (UNKNOWN)";
+                    if (_prim != null && _prim.Properties != null)
+                    {
+                        rezString = "name='" + _prim.Properties.Name + " " + _prim.Properties.Description + "' ";
+                    }
+                }
+                if (NewID != OldID && !IsLocalScene)
+                {
+                    rezString = rezString + " newID=" + NewID;
                 }
                 if (PackedInsideNow)
                 {
                     rezString = "DEREZZED " + rezString;
                 }
-                if (IsLocalScene) rezString = "";
-                else rezString = " -> " + rezString;
-                if (_prim != null) return _prim + rezString + " @ " + SimPosition;
+                if (!IsLocalScene) rezString = " -> " + rezString;
+                if (_prim != null)
+                {
+                    return _prim + rezString + " @ " + SimPosition;
+                }
                 return OldID + rezString + " @ " + SimPosition;
             }
 
@@ -259,6 +268,10 @@ namespace cogbot.Actions.SimExport
                             }
                         }
                     }
+                    if (_rezed==null)
+                    {
+                        
+                    }
                     return _rezed;
                 }
                 set
@@ -296,19 +309,20 @@ namespace cogbot.Actions.SimExport
                 get { return _rezed != null && _rezed.LocalID > 0; }
             }
 
-            private bool _onfirmed = false;
+            private bool _target_confirmed = false;
+            private bool _source_confirmed = false;
             private OSDMap PrimOSD;
 
             public bool IsConfirmed
             {
-                get { return _onfirmed;  }
+                get { return _target_confirmed;  }
                 set
                 {
                     if (HasLID)
                     {
                     }
                     RezRequested = value;
-                    _onfirmed = value;
+                    _target_confirmed = value;
                 }
             }
 
@@ -492,17 +506,32 @@ namespace cogbot.Actions.SimExport
                     }
                     if (!CogbotHelpers.IsNullOrZero(NewID))
                     {
-                        FastCheckRezed();
+                        FastCheckTargetRezed();
                     }
                     if (IsConfirmed) return true;
                 }
                 return false;
             }
 
-            public bool FastCheckRezed()
+            public bool FastCheckTargetRezed()
             {
                 if (IsLocalScene) return true;
-                if (_onfirmed) return true;
+                if (_target_confirmed) return true;
+                if (this.PackedInsideNow) return true;
+                if (_rezed != null) return true;
+                var O = WorldObjects.GetSimObjectFromUUID(NewID);
+                if (O != null)
+                {
+                    Rezed = O;
+                    IsConfirmed = true;
+                    return true;
+                }
+                return false;
+            }
+
+            public bool FastCheckSourceRezed()
+            {
+                if (_target_confirmed) return true;
                 if (this.PackedInsideNow) return true;
                 if (_rezed != null) return true;
                 var O = WorldObjects.GetSimObjectFromUUID(NewID);
@@ -522,7 +551,7 @@ namespace cogbot.Actions.SimExport
                 ReplaceAll();
                 NeedsPositioning = false;
                 RezRequested = true;
-                _onfirmed = true;
+                _target_confirmed = true;
             }
         }
 
@@ -1342,7 +1371,7 @@ namespace cogbot.Actions.SimExport
                 if (++nchecked % 25 == 0) WriteLine("nchecked " + nchecked + "...");
                 if (settings.arglist.Contains("ptc"))
                 {
-                    if (!o.FastCheckRezed())
+                    if (!o.FastCheckTargetRezed())
                     {
                         Failure("UNCONFIRMED YET: " + o);
                         if (++unconfirmed % 10 == 0) WriteLine("unconfirmed " + unconfirmed + "...");

@@ -171,7 +171,7 @@ namespace cogbot.Actions.SimExport
         {
             if (!TheSimAvatar.IsSitting)
             {
-                var smo = WorldSystem.GetObject("SitMover4200");
+                var smo = WorldSystem.GetObject("cogbotscanchairRideForTwo");
                 if (smo == null) return;
                 var sm = smo.ID;
                 if (!CogbotHelpers.IsNullOrZero(sm))
@@ -198,7 +198,7 @@ namespace cogbot.Actions.SimExport
 
         public void AttemptMoveTo(Vector3 pos)
         {
-            //AttemptSitMover();
+            AttemptSitMover();
             if (pos.X < 1 || pos.Y < 1 || pos.Z < 10 || pos.X > 254 || pos.Y > 254 || pos.Z > 5000)
             {
                 return;
@@ -263,6 +263,13 @@ namespace cogbot.Actions.SimExport
             {
                 AttemptMoveTo(up);
             }
+        }
+
+        public void MoveCloseTo(UUID exportPrim)
+        {
+            AttemptSitMover();
+            Success("Trying to get to " + exportPrim);
+            Client.Self.Chat(string.Format("" + exportPrim), 4201, ChatType.Normal);
         }
     }
 }
