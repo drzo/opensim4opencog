@@ -74,7 +74,7 @@ namespace cogbot.Actions.SimExport
         private static ICollection<InventoryBase> GetTaskInv(ImportCommand.PrimToCreate primitive)
         {
             //todo
-            return primitive.TaskInventory;
+            return primitive.SourceTaskInventory(true);
         }
 
         static void SOPToXml(XmlTextWriter writer, Primitive sop, int linkNum, Primitive parent, ICollection<InventoryBase> taskInventory, ImportSettings options)

@@ -646,10 +646,22 @@ namespace cogbot.TheOpenSims
         public PermissionWho EffectivePermissionWho(SimObject exportPrim)
         {
             Primitive.ObjectProperties permProps = exportPrim.Properties;
-            UUID objectGroupID = permProps.GroupID;
-            UUID ownerID = permProps.OwnerID;
-            PrimFlags flag = exportPrim.Prim.Flags;
+            Primitive prim = exportPrim.Prim;
+            UUID objectGroupID = UUID.Zero;
+            UUID ownerID = UUID.Zero;
+            PrimFlags flag = PrimFlags.None;
+            if (prim != null)
+            {
+                objectGroupID = prim.GroupID;
+                ownerID = prim.OwnerID;
+                flag = prim.Flags;
+            } else if (permProps != null)
+            {
+                objectGroupID = permProps.GroupID;
+                ownerID = permProps.OwnerID;
+            }
             bool groupOwned = (flag & PrimFlags.ObjectGroupOwned) != 0;
+          //  bool groupOwned = (flag & PrimFlags.) != 0;
             return EffectivePermissionWho(ownerID, objectGroupID, groupOwned);
         }
 
