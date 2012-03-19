@@ -147,6 +147,7 @@ namespace OpenMetaverse
         }
         private byte[] GetCachedAssetBytes0(UUID assetID, AssetType assetType)
         {
+            if (UUID.IsNullOrZero(assetID)) return null;
             if (!Operational())
             {
                 return null;
@@ -192,6 +193,7 @@ namespace OpenMetaverse
         /// <returns>ImageDownload object containing the image, or null on failure</returns>
         public ImageDownload GetCachedImage(UUID imageID)
         {
+            if (UUID.IsNullOrZero(imageID)) return null;
             if (!Operational())
                 return null;
 
@@ -360,6 +362,7 @@ namespace OpenMetaverse
         /// <returns>Null if we don't have that UUID cached on disk, file name if found in the cache folder</returns>
         public string AssetFileName(UUID assetID, AssetType assetType)
         {
+            if (UUID.IsNullOrZero(assetID)) return null;
             if (!Operational())
             {
                 return null;
@@ -384,6 +387,7 @@ namespace OpenMetaverse
         }
         public bool HasAsset(UUID assetID, AssetType assetType)
         {
+            if (UUID.IsNullOrZero(assetID)) return false;
             if (!Operational())
                 return false;
             else if (File.Exists(FileName(assetID, assetType)))
