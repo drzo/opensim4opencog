@@ -270,7 +270,7 @@ namespace cogbot.Actions.SimExport
             {
                 //arglist.Add("keepmissing");
                 arglist.Add("all");
-                arglist.Add("oar");
+                //arglist.Add("oar");
                 arglist.Add("fullperms");
                 arglist.Add("lslprims");
                 arglist.Add("request");

@@ -497,13 +497,14 @@ namespace cogbot.Actions.SimExport
             SimAvatarClient theAvatar = Client.TheSimAvatar;
             PermissionWho pw = theAvatar.EffectivePermissionWho(taskInv.OwnerID, taskInv.GroupID, taskInv.GroupOwned);
             PermissionMask pm = CogbotHelpers.PermMaskForWho(pw, taskInv.Permissions);
-            PermissionMask pmo = CogbotHelpers.PermMaskForWho(theAvatar.EffectivePermissionWho(exportPrim), exportPrim.Properties.Permissions);
             bool canModify = Permissions.HasPermissions(pm, PermissionMask.Modify);
             bool canCopy = Permissions.HasPermissions(pm, PermissionMask.Copy);
             bool noCopyItem = !canCopy;
-            bool canModifyObject = Permissions.HasPermissions(pmo, PermissionMask.Modify);
             if (noCopyItem)
             {
+                PermissionWho pwo = theAvatar.EffectivePermissionWho(exportPrim);
+                PermissionMask pmo = CogbotHelpers.PermMaskForWho(pwo, exportPrim.Properties.Permissions);
+                bool canModifyObject = Permissions.HasPermissions(pmo, PermissionMask.Modify);
                 if (!canModifyObject)
                 {
                     missing = true;

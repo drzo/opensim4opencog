@@ -868,7 +868,7 @@ namespace cogbot.Actions.SimExport
                         }
                         if (SourceTaskItem.AssetType == AssetType.LSLText && !Exporting.settings.Contains("tasklsl"))
                         {
-                            Exporting.Failure("Use tasklsl for " + this);
+                            //Exporting.Failure("Use tasklsl for " + this);
                             return SourceTaskItem;
                         }
                         //if (SourceItem.AssetType != AssetType.Object)
@@ -964,11 +964,6 @@ namespace cogbot.Actions.SimExport
                 UUID itemID = item.UUID;
                 if (AssetType == AssetType.Object)
                 {
-                    if (!Exporting.settings.Contains("taskobjs") /*|| CreatedPrim.OldID.ToString() != "8a11c67d-edd3-d0b9-b4ec-c4e8f13f6875"*/)
-                    {
-                        Exporting.Failure("Use taskobjs for " + this);
-                        return;
-                    }
                     RequestRezObject();
                     if (waiting != null) waiting.Set();
                     return;
@@ -976,7 +971,7 @@ namespace cogbot.Actions.SimExport
                 }
                 if (!Exporting.settings.Contains("tasklsl"))
                 {
-                    Exporting.Failure("Use tasklsl for " + this);
+                  //  Exporting.Failure("Use tasklsl for " + this);
                     return;
                 }
                 if (item.AssetType == AssetType.LSLText || item.AssetType == AssetType.Notecard)
@@ -992,7 +987,6 @@ namespace cogbot.Actions.SimExport
             {
                 if (!string.IsNullOrEmpty(Error))
                 {
-                    if (waiting != null) waiting.Set();
                     return;
                 }
                 var Running = Exporting;
@@ -1002,33 +996,17 @@ namespace cogbot.Actions.SimExport
                 if (File.Exists(tof))
                 {
                     OldAssetID = SourceTaskItem.AssetUUID = UUID.Parse(File.ReadAllText(tof).Split(',')[2]);
-                    if (waiting != null) waiting.Set();
                     return;
                 }
                 SimAvatarClient theAvatar = Client.TheSimAvatar;
-                var exportPrim = CreatedPrim.Rezed;
                 var taskInv = item;
                 PermissionWho pw = theAvatar.EffectivePermissionWho(taskInv.OwnerID, taskInv.GroupID, taskInv.GroupOwned);
                 PermissionMask pm = CogbotHelpers.PermMaskForWho(pw, taskInv.Permissions);
-                if (exportPrim == null)
-                {
-                    uint exportLocalID = CreatedPrim.Prim.LocalID;
-                    Client.Objects.RequestObject(Running.settings.CurSim, exportLocalID);
-                    exportPrim = ExportCommand.GetSimObjectFromUUID(CreatedPrim.OldID);
-                }
-                if (exportPrim == null)
-                {
-                    Running.AttemptMoveTo(CreatedPrim.SimPosition);
-                    if (waiting != null) waiting.Set();
-                    return;
-                }
+
                 bool canModify = Permissions.HasPermissions(pm, PermissionMask.Modify);
                 bool canCopy = Permissions.HasPermissions(pm, PermissionMask.Copy);
                 bool noCopyItem = !canCopy;
 
-                PermissionWho pwo = theAvatar.EffectivePermissionWho(exportPrim);
-                PermissionMask pmo = CogbotHelpers.PermMaskForWho(pwo, exportPrim.Properties.Permissions);
-                bool canModifyObject = Permissions.HasPermissions(pmo, PermissionMask.Modify);
                 if (noCopyItem)
                 {
                     if (!Running.settings.Contains("nctaskobjs"))
@@ -1037,8 +1015,26 @@ namespace cogbot.Actions.SimExport
                         return;
                     }
                 }
+                if (!Exporting.settings.Contains("reztaskobjs") /*|| CreatedPrim.OldID.ToString() != "8a11c67d-edd3-d0b9-b4ec-c4e8f13f6875"*/)
+                {
+                    Exporting.Failure("Use reztaskobjs for " + this);
+                    return;
+                }
                 StringWriter sw = new StringWriter();
                 bool missing;
+                var exportPrim = CreatedPrim.Rezed;
+                if (exportPrim == null)
+                {
+                    uint exportLocalID = CreatedPrim.Prim.LocalID;
+                    Client.Objects.RequestObject(Running.settings.CurSim, exportLocalID);
+                    exportPrim = ExportCommand.GetSimObjectFromUUID(CreatedPrim.OldID);
+                }
+                if (exportPrim == null)
+                {
+                    //Running.AttemptMoveTo(CreatedPrim.SimPosition);
+                    Exporting.Failure("Cant get to export prim for " + this);
+                    return;
+                } 
                 uint localID = exportPrim.LocalID;
                 var sim = exportPrim.GetSimulator();
                 Client.Objects.SelectObject(sim, localID);
@@ -1063,9 +1059,6 @@ namespace cogbot.Actions.SimExport
                 UUID AssetID = osdMap["AssetUUID"] = newObjID;
                 OldAssetID = AssetID;
                 if (SourceTaskItem != null) SourceTaskItem.AssetUUID = AssetID;
-
-
-                if (waiting != null) waiting.Set();
             }
         }
     }
