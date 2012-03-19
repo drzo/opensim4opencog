@@ -204,7 +204,7 @@ namespace cogbot.Actions.SimExport
                 if (CogbotHelpers.IsNullOrZero(NewID))
                 {
                     string importProgress = ProgressFile;
-                    var item = ExportCommand.Running.GetInvItem(Running.Client, "" + OldID, GetAssetUploadsFolder());
+                    var item = ExportCommand.Exporting.GetInvItem(Running.Client, "" + OldID, GetAssetUploadsFolder());
                     if (item != null)
                     {
                         NewID = item.AssetUUID;
@@ -521,7 +521,7 @@ namespace cogbot.Actions.SimExport
                 }
                 if (!transfer.Success)
                 {
-                    Running.Error(ExportCommand.Running.LocalFailure, "bad transfer on " + this);
+                    Running.Error(ExportCommand.Exporting.LocalFailure, "bad transfer on " + this);
                 }
                 else
                 {

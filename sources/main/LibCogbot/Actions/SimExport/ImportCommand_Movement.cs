@@ -26,7 +26,7 @@ namespace cogbot.Actions.SimExport
                 {
                     foreach (PrimToCreate orphan in ORPHANS)
                     {
-                        ExportCommand.Running.AddMoveTo(orphan.SimPosition);
+                        Exporting.AddMoveTo(orphan.SimPosition);
                     }
                     return;
                 }
@@ -34,7 +34,7 @@ namespace cogbot.Actions.SimExport
             }
             foreach (PrimToCreate parent in parents)
             {
-                ExportCommand.Running.AddMoveTo(parent.SimPosition);
+                Exporting.AddMoveTo(parent.SimPosition);
             }
         }
     }

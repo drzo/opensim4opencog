@@ -73,7 +73,7 @@ namespace cogbot.Actions.SimExport
             SimObject parent = P.Parent;
             if (parent is SimAvatar)
             {
-                if (Running.TasksRezed.ContainsKey(P.ID))
+                if (Exporting.TasksRezed.ContainsKey(P.ID))
                 {
                     return false;
                 }
@@ -101,7 +101,7 @@ namespace cogbot.Actions.SimExport
                 Client.Objects.DeselectObject(settings.CurSim, localID);                
             }
         }
-        public void ExportPrim0(BotClient Client, SimObject exportPrim, OutputDelegate Failure, ImportSettings settings)
+        internal void ExportPrim0(BotClient Client, SimObject exportPrim, OutputDelegate Failure, ImportSettings settings)
         {
             if (IsSkipped(exportPrim, settings)) return;
             Simulator CurSim = exportPrim.GetSimulator();
@@ -198,7 +198,7 @@ namespace cogbot.Actions.SimExport
             SlowlyDo(() => RequestLinksetInfo(Client, pathStem, exportPrim, Failure, settings));
         }
 
-        void RequestLinksetInfo(BotClient Client, string pathStem, SimObject exportPrim, OutputDelegate Failure, ImportSettings settings)
+        public void RequestLinksetInfo(BotClient Client, string pathStem, SimObject exportPrim, OutputDelegate Failure, ImportSettings settings)
         {
             string exportFile = pathStem + ".link";
             lock (fileWriterLock) if (File.Exists(exportFile)) return;

@@ -235,13 +235,28 @@ namespace cogbot.Actions.SimExport
             {
                 get
                 {
-                    if (IsLocalScene) throw new NotSupportedException("rezed " + this);
+                  //  if (IsLocalScene) throw new NotSupportedException("rezed " + this);
                     if (_rezed == null)
                     {
                         LoadProgressFile();
                         if (!CogbotHelpers.IsNullOrZero(NewID))
                         {
-                            Rezed = ExportCommand.GetSimObjectFromUUID(NewID);
+                            _rezed = WorldObjects.GetSimObjectFromUUID(NewID);
+                        }
+                        if (!CogbotHelpers.IsNullOrZero(OldID))
+                        {
+                            _rezed = WorldObjects.GetSimObjectFromUUID(OldID);
+                        }
+                        if (_rezed == null)
+                        {
+                            var l = OldLocalID;
+                            if (l != 0)
+                            {
+                                var s = CurSim;
+                                Client.Objects.SelectObject(s, l, false);
+                                Client.Objects.RequestObject(s, l);
+                                Client.Objects.DeselectObject(s, l);
+                            }
                         }
                     }
                     return _rezed;
@@ -410,7 +425,7 @@ namespace cogbot.Actions.SimExport
                     if (Running.MissingLLSD(id))
                     {
                         Running.Failure("Warning missing link child " + id + " on parent " + this.ToString());
-                        ExportCommand.Running.AddMoveTo(SimPosition);
+                        ExportCommand.Exporting.AddMoveTo(SimPosition);
                         MissingChildern++;
                         continue;
                     }
@@ -686,7 +701,7 @@ namespace cogbot.Actions.SimExport
             arglist.Add("task");
             arglist.Add("dep");
             arglist.Add("link");
-            ExportCommand exp = ExportCommand.Running;
+            ExportCommand exp = ExportCommand.Exporting;
 
             exp.ExportPrim(Client, O, WriteLine, arglist);
             string subLLSD = ExportCommand.dumpDir + O.ID.ToString() + ".llsd";
@@ -1047,11 +1062,11 @@ namespace cogbot.Actions.SimExport
                 ptc.SetStoreLocal();
                 return;
             }
-            if (!CreatePrim0(arglist.CurSim, ptc, arglist.GroupID, ExportCommand.Running.LocalFailure))
+            if (!CreatePrim0(arglist.CurSim, ptc, arglist.GroupID, ExportCommand.Exporting.LocalFailure))
             {
                 Failure("Unable to create Prim " + ptc);
                 //try again!
-                CreatePrim0(arglist.CurSim, ptc, arglist.GroupID, ExportCommand.Running.LocalFailure);
+                CreatePrim0(arglist.CurSim, ptc, arglist.GroupID, ExportCommand.Exporting.LocalFailure);
             }
         }
         private bool CreatePrim0(Simulator CurSim, PrimToCreate ptc, UUID GroupID, OutputDelegate Failure)
@@ -1403,6 +1418,18 @@ namespace cogbot.Actions.SimExport
                 if (parent.MissingChildern > 0)
                 {
                     KillID(parent);
+                }
+            }
+        }
+
+        private void LocatePrims(ImportSettings settings)
+        {
+            foreach (PrimToCreate toCreate in parents)
+            {
+                SimObject Rezed = toCreate.Rezed;
+                if (Rezed == null)
+                {
+                    Exporting.AttemptMoveTo(toCreate.SimPosition);
                 }
             }
         }

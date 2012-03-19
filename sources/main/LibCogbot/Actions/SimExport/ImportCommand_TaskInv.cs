@@ -71,7 +71,7 @@ namespace cogbot.Actions.SimExport
         {
             DateTime lastProgressNotice = DateTime.Now;
             int incomplete = 0;
-            var agentSyncFolderHolder = ExportCommand.Running.FolderCalled("TaskInvHolder");
+            var agentSyncFolderHolder = Exporting.FolderCalled("TaskInvHolder");
             int created = 0;
             var tos = LocalScene.TaskObjects;
             foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.taskobj"))
@@ -94,7 +94,7 @@ namespace cogbot.Actions.SimExport
             }
             foreach (TaskObject o in tos)
             {
-                foreach(var b in o.InsideOf.TaskInventory)
+                foreach(var b in o.InsideOf.SourceTaskInventory(true))
                 {
                     InventoryItem i = b as InventoryItem;
                     if (i == null) continue;
@@ -130,13 +130,21 @@ namespace cogbot.Actions.SimExport
                 incomplete = ImportTaskFiles0(importSettings, createObjects);
                 WriteLine("ImportTaskFiles Incomplete=" + incomplete);
             }
+            foreach (PrimToCreate toCreate in parents)
+            {
+                toCreate.EnsureTaskInv();
+            }
+            foreach (PrimToCreate toCreate in childs)
+            {
+                toCreate.EnsureTaskInv();                
+            }
         }
         private int ImportTaskFiles0(ImportSettings importSettings, bool createObjects)
         {
             //if (IsLocalScene) return 0;
             DateTime lastProgressNotice = DateTime.Now;
             int incomplete = 0;
-            var agentSyncFolderHolder = ExportCommand.Running.FolderCalled("TaskInvHolder");
+            var agentSyncFolderHolder = Exporting.FolderCalled("TaskInvHolder");
             int created = 0;
             foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.task"))
             {
@@ -194,21 +202,22 @@ namespace cogbot.Actions.SimExport
 
         public partial class PrimToCreate
         {
-            internal List<InventoryBase> objectinventory;
+            internal List<InventoryBase> sourceObjectinventory;
             private ManualResetEvent taskInvRequestRelpy = null;
             private ulong _xferID;
-            public List<InventoryBase> TaskInventory
+            public List<InventoryBase> SourceTaskInventory(bool useCache)
             {
-                get
+               // get
                 {
-                    List<InventoryBase> regenObjInv = null;// this.objectinventory;
+                    List<InventoryBase> regenObjInv = useCache ? this.sourceObjectinventory : null;
+                    bool improve = !useCache;
                     if (regenObjInv == null)
                     {
                         if (IsLocalScene)
                         {
                             if (TaskItemsToCreate == null) return null;
                             bool improvementM = false;
-                            if (objectinventory != null)
+                            if (sourceObjectinventory != null)
                             {
                                 //return objectinventory;
                             }
@@ -218,29 +227,32 @@ namespace cogbot.Actions.SimExport
                                 foreach (var toCreate in TaskItemsToCreate)
                                 {
                                     bool improvement;
-                                    var item = toCreate.ToInventoryBase(out improvement);
-                                    if (improvement) improvementM = true;
+                                    var item = toCreate.ToInventoryBase(out improvement, improve);
+                                    if (improvement)
+                                    {
+                                        improvementM = true;
+                                    }
                                     regenObjInv.Add(item);
                                 }
                             }
                             if (improvementM)
                             {
-                                ExportCommand.Running.SaveTaskOSD(OldID, regenObjInv);
+                                Exporting.SaveTaskOSD(OldID, regenObjInv);
                             }
-                            return objectinventory = regenObjInv;
+                            return sourceObjectinventory = regenObjInv;
                         }
                         if (!RequestNewTaskInventory().WaitOne(TimeSpan.FromSeconds(10)))
                         {
                             Running.WriteLine("Unable to retrieve TaskInv for " + ToString());
                         }
                     }
-                    return objectinventory = regenObjInv;
+                    return sourceObjectinventory = regenObjInv;
                 }
             }
 
             public ManualResetEvent RequestNewTaskInventory()
             {
-                objectinventory = null;
+                sourceObjectinventory = null;
                 taskInvRequestRelpy = taskInvRequestRelpy ?? new ManualResetEvent(false);
                 taskInvRequestRelpy.Reset();
                 var man = this.Inventory;
@@ -276,11 +288,11 @@ namespace cogbot.Actions.SimExport
                         Logger.DebugLog("Task is empty for " + NewID, Running.Client);
                         if (TaskInventoryLikely)
                         {
-                            objectinventory = SimObjectImpl.ERROR_TASK_INV;
+                            sourceObjectinventory = SimObjectImpl.ERROR_TASK_INV;
                         }
                         else
                         {
-                            objectinventory = SimObjectImpl.EMPTY_TASK_INV;
+                            sourceObjectinventory = SimObjectImpl.EMPTY_TASK_INV;
                         }
                     }
                 }
@@ -298,12 +310,12 @@ namespace cogbot.Actions.SimExport
                     Running.Client.Assets.XferReceived -= xferCallback;
                     if (e.Xfer.Error != TransferError.None)
                     {
-                        objectinventory = SimObjectImpl.ERROR_TASK_INV;
+                        sourceObjectinventory = SimObjectImpl.ERROR_TASK_INV;
                         taskInvRequestRelpy.Set();
                         return;
                     }
                     String taskList = Utils.BytesToString(e.Xfer.AssetData);
-                    objectinventory = InventoryManager.ParseTaskInventory(taskList);
+                    sourceObjectinventory = InventoryManager.ParseTaskInventory(taskList);
                     taskInvRequestRelpy.Set();
                 }
             }
@@ -364,6 +376,11 @@ namespace cogbot.Actions.SimExport
                 }
             }
 
+            protected Simulator CurSim
+            {
+                get { return Exporting.settings.CurSim; }
+            }
+
             public List<TaskItemToCreate> TaskItemsToCreate;
             public event Action TaskInvChanged;
             public short TaskSerial = -1;
@@ -375,7 +392,7 @@ namespace cogbot.Actions.SimExport
                 short newSerial = e.Properties.InventorySerial;
                 if (TaskSerial < newSerial)
                 {
-                    objectinventory = null;
+                    sourceObjectinventory = null;
                     if (TaskInvChanged != null)
                     {
                         TaskInvChanged();
@@ -389,7 +406,7 @@ namespace cogbot.Actions.SimExport
                 if (TaskItemsToCreate != null) return;
                 TaskItemsToCreate = new List<TaskItemToCreate>();
                 if (IsLocalScene) return;
-                AgentSyncFolder = ExportCommand.Running.FolderCalled(OldID.ToString(), agentSyncFolderHolder);
+                AgentSyncFolder = Exporting.FolderCalled(OldID.ToString(), agentSyncFolderHolder);
                 Client.Objects.ObjectProperties += TaskInventoryItemReceived;
             }
 
@@ -497,6 +514,11 @@ namespace cogbot.Actions.SimExport
                     c.SetIsAsset();
                 }
             }
+
+            public void EnsureTaskInv()
+            {
+                var ti = SourceTaskInventory(false);
+            }
         }
 
         public class TaskItemToCreate
@@ -520,8 +542,8 @@ namespace cogbot.Actions.SimExport
             private UUID NewAgentItemID;
             public OSDMap TaskOSD;
             public InventoryItem AgentItem;
-            public InventoryItem TaskItem;
-            public InventoryItem SourceItem;
+            public InventoryItem TargetTaskItem;
+            public InventoryItem SourceTaskItem;
 
             private readonly PrimToCreate CreatedPrim;
             public readonly AssetType AssetType;
@@ -569,8 +591,8 @@ namespace cogbot.Actions.SimExport
             }
             public bool FindTaskItem()
             {
-                if (TaskItem != null) return true;
-                List<InventoryBase> taskInv = CreatedPrim.objectinventory;
+                if (TargetTaskItem != null) return true;
+                List<InventoryBase> taskInv = CreatedPrim.sourceObjectinventory;
                 if (taskInv == null) return false;
                 foreach (InventoryBase content in taskInv)
                 {
@@ -579,7 +601,7 @@ namespace cogbot.Actions.SimExport
                         var item = content as InventoryItem;
                         if (item == null) continue;
                         if (item.AssetType != AssetType) continue;
-                        TaskItem = item;
+                        TargetTaskItem = item;
                         return true;
                     }
                 }
@@ -656,8 +678,8 @@ namespace cogbot.Actions.SimExport
                 {
                     WriteLine("FAILED: NO AssetID: " + ToString());
                     //skipped++;
-                    var scriptsUUID = ExportCommand.Running.FolderCalled("Scripts");
-                    InventoryItem missingItem = ExportCommand.Running.GetInvItem(Client, "MissingItemScript", scriptsUUID);
+                    var scriptsUUID = Exporting.FolderCalled("Scripts");
+                    InventoryItem missingItem = Exporting.GetInvItem(Client, "MissingItemScript", scriptsUUID);
                     NewItemID = missingItem.UUID;
                     NewAssetID = missingItem.AssetUUID;
                 }
@@ -819,35 +841,41 @@ namespace cogbot.Actions.SimExport
                 return Running.GetOldPrim(oldID);
             }
 
-            public InventoryItem ToInventoryBase(out bool improvement)
+            public InventoryItem ToInventoryBase(out bool improvement, bool improve)
             {
                 improvement = false;
                 //OSDMap UnpackTaskItem(BotClient Client, SimObject exportPrim, InventoryItem item, OutputDelegate Failure, out bool missing)
-                if (SourceItem == null || CogbotHelpers.IsNullOrZero(SourceItem.AssetUUID))
+                if (SourceTaskItem == null || CogbotHelpers.IsNullOrZero(SourceTaskItem.AssetUUID))
                 {
-                    if (SourceItem == null)
+                    if (SourceTaskItem == null)
                     {
                         int pn;
-                        SourceItem = InventoryManager.CreateInventoryItem(
+                        SourceTaskItem = InventoryManager.CreateInventoryItem(
                             ItemToCreate.AssetTypeToInventoryType(this.AssetType, out pn), OldItemID);
-                        if (SourceItem == null)
+                        if (SourceTaskItem == null)
                         {
-                            SourceItem = new InventoryItem(OldItemID);
+                            SourceTaskItem = new InventoryItem(OldItemID);
                         }
-                        SetItemFromOSD(SourceItem, false);
+                        SetItemFromOSD(SourceTaskItem, false);
                     }
+                    if (!improve) return SourceTaskItem;
                     if (CogbotHelpers.IsNullOrZero(OldAssetID))
                     {
-                        if (SourceItem.AssetType == AssetType.Object)
+                        //if (SourceItem.AssetType == AssetType.Object)
                         {
                             //SourceItem.AssetUUID = OldAssetID;
-                            return SourceItem;
+                         //   return SourceItem;
                         }
-                        if (SourceItem.AssetType != AssetType.Object)
+                        if (SourceTaskItem.AssetType == AssetType.LSLText && !Exporting.settings.Contains("tasklsl"))
+                        {
+                            Exporting.Failure("Use tasklsl for " + this);
+                            return SourceTaskItem;
+                        }
+                        //if (SourceItem.AssetType != AssetType.Object)
                         {
                             if (false)ExportCommand.LogError(CreatedPrim.OldID,
-                                                   "ASSET ZERO " + ToString() + " " + SourceItem.Name + "/" +
-                                                   SourceItem.Description);
+                                                   "ASSET ZERO " + ToString() + " " + SourceTaskItem.Name + "/" +
+                                                   SourceTaskItem.Description);
                             if (NumRequests < 3 && string.IsNullOrEmpty(Error))
                             {
                                 waiting = new ManualResetEvent(false);
@@ -855,29 +883,29 @@ namespace cogbot.Actions.SimExport
                                 if (!waiting.WaitOne(TimeSpan.FromSeconds(1)))
                                 {
                                     ExportCommand.LogError(CreatedPrim.OldID,
-                                                           "ASSET ZERO1 " + ToString() + " " + SourceItem.Name + "/" +
-                                                           SourceItem.Description);
+                                                           "ASSET ZERO1 " + ToString() + " " + SourceTaskItem.Name + "/" +
+                                                           SourceTaskItem.Description);
                                 }
                                 else
                                 {
                                     if (!string.IsNullOrEmpty(Error))
                                     {
                                         ExportCommand.LogError(CreatedPrim.OldID,
-                                                               "ASSET ERROR " + ToString() + " " + SourceItem.Name + "/" +
-                                                               SourceItem.Description);
+                                                               "ASSET ERROR " + ToString() + " " + SourceTaskItem.Name + "/" +
+                                                               SourceTaskItem.Description);
                                         CreatedPrim.TaskInvComplete = false;
                                     }
                                     else
                                     {
-                                        improvement = string.IsNullOrEmpty(Error);
+                                        improvement = string.IsNullOrEmpty(Error) && !CogbotHelpers.IsNullOrZero(OldAssetID);
                                     }
                                 }
                             }
                             else
                             {
                                 ExportCommand.LogError(CreatedPrim.OldID,
-                                                       "ASSET ZERO2 " + ToString() + " " + SourceItem.Name + "/" +
-                                                       SourceItem.Description);
+                                                       "ASSET ZERO2 " + ToString() + " " + SourceTaskItem.Name + "/" +
+                                                       SourceTaskItem.Description);
                             }
                             /* Running.Client.Assets.RequestInventoryAsset(_item.AssetUUID, _item.UUID, _item.ParentUUID, _item.OwnerID,
                                                                         _item.AssetType, true, Asset_Received);*/
@@ -886,15 +914,15 @@ namespace cogbot.Actions.SimExport
                         //    OldAssetID = GetMissingFiller(_item.AssetType);
                         }
                     }
-                    SourceItem.AssetUUID = OldAssetID;
+                    SourceTaskItem.AssetUUID = OldAssetID;
                 }
-                return SourceItem;
+                return SourceTaskItem;
             }
 
             public void Asset_Received(AssetDownload trans, Asset asset)
             {
-                var Running = ExportCommand.Running;
-                var item = SourceItem;
+                var Running = Exporting;
+                var item = SourceTaskItem;
                 UUID itemID = item.UUID;
                 //if (trans.AssetID != item.AssetUUID) return;
                 if (!trans.Success)
@@ -914,7 +942,7 @@ namespace cogbot.Actions.SimExport
                 }
                 Error = "";
                 OldAssetID = asset.AssetID;
-                if (SourceItem != null) SourceItem.AssetUUID = asset.AssetID;
+                if (SourceTaskItem != null) SourceTaskItem.AssetUUID = asset.AssetID;
                 //AddRelated(item.AssetUUID, item.AssetType);
                 if (false)
                 {
@@ -931,14 +959,25 @@ namespace cogbot.Actions.SimExport
                     if (waiting != null) waiting.Set();
                     return;
                 }
-                var Running = ExportCommand.Running;
-                InventoryItem item = SourceItem;
+                var Running = Exporting;
+                InventoryItem item = SourceTaskItem;
                 UUID itemID = item.UUID;
                 if (AssetType == AssetType.Object)
                 {
+                    if (!Exporting.settings.Contains("taskobjs") /*|| CreatedPrim.OldID.ToString() != "8a11c67d-edd3-d0b9-b4ec-c4e8f13f6875"*/)
+                    {
+                        Exporting.Failure("Use taskobjs for " + this);
+                        return;
+                    }
                     RequestRezObject();
+                    if (waiting != null) waiting.Set();
                     return;
                     //UnpackTaskObject
+                }
+                if (!Exporting.settings.Contains("tasklsl"))
+                {
+                    Exporting.Failure("Use tasklsl for " + this);
+                    return;
                 }
                 if (item.AssetType == AssetType.LSLText || item.AssetType == AssetType.Notecard)
                 {
@@ -951,7 +990,82 @@ namespace cogbot.Actions.SimExport
 
             private void RequestRezObject()
             {
-               // throw new NotImplementedException();
+                if (!string.IsNullOrEmpty(Error))
+                {
+                    if (waiting != null) waiting.Set();
+                    return;
+                }
+                var Running = Exporting;
+                InventoryItem item = SourceTaskItem;
+                UUID itemID = item.UUID;
+                var tof = ExportCommand.dumpDir + itemID + ".taskobj";
+                if (File.Exists(tof))
+                {
+                    OldAssetID = SourceTaskItem.AssetUUID = UUID.Parse(File.ReadAllText(tof).Split(',')[2]);
+                    if (waiting != null) waiting.Set();
+                    return;
+                }
+                SimAvatarClient theAvatar = Client.TheSimAvatar;
+                var exportPrim = CreatedPrim.Rezed;
+                var taskInv = item;
+                PermissionWho pw = theAvatar.EffectivePermissionWho(taskInv.OwnerID, taskInv.GroupID, taskInv.GroupOwned);
+                PermissionMask pm = CogbotHelpers.PermMaskForWho(pw, taskInv.Permissions);
+                if (exportPrim == null)
+                {
+                    uint exportLocalID = CreatedPrim.Prim.LocalID;
+                    Client.Objects.RequestObject(Running.settings.CurSim, exportLocalID);
+                    exportPrim = ExportCommand.GetSimObjectFromUUID(CreatedPrim.OldID);
+                }
+                if (exportPrim == null)
+                {
+                    Running.AttemptMoveTo(CreatedPrim.SimPosition);
+                    if (waiting != null) waiting.Set();
+                    return;
+                }
+                bool canModify = Permissions.HasPermissions(pm, PermissionMask.Modify);
+                bool canCopy = Permissions.HasPermissions(pm, PermissionMask.Copy);
+                bool noCopyItem = !canCopy;
+
+                PermissionWho pwo = theAvatar.EffectivePermissionWho(exportPrim);
+                PermissionMask pmo = CogbotHelpers.PermMaskForWho(pwo, exportPrim.Properties.Permissions);
+                bool canModifyObject = Permissions.HasPermissions(pmo, PermissionMask.Modify);
+                if (noCopyItem)
+                {
+                    if (!Running.settings.Contains("nctaskobjs"))
+                    {
+                        ExportCommand.LogError(CreatedPrim.OldID, "NoCopy TaskObj: " + this);
+                        return;
+                    }
+                }
+                StringWriter sw = new StringWriter();
+                bool missing;
+                uint localID = exportPrim.LocalID;
+                var sim = exportPrim.GetSimulator();
+                Client.Objects.SelectObject(sim, localID);
+                Running.MoveCloseTo(exportPrim);
+                UUID newObjID;
+                var settings = Running.settings;
+                settings.Add("llsd");
+                settings.Add("task");
+                settings.Add("dep");
+                settings.Add("links");
+                bool tlsls = settings.Contains("tasklsl");
+                ExportCommand.IsExporting = true;
+                if (!tlsls) settings.Add("tasklsl");
+                var osdMap = Running.UnpackTaskObject(settings, exportPrim, item as InventoryObject, Client,
+                                                      sw.WriteLine, out missing, true, out newObjID);
+                if (!tlsls) settings.Remove("tasklsl");
+                if (missing)
+                {
+                    ExportCommand.LogError(CreatedPrim.OldID, "OBJMISSING: " + this + " " + sw.ToString().Replace('\n', ' '));
+                }
+                Client.Objects.DeselectObject(sim, localID);
+                UUID AssetID = osdMap["AssetUUID"] = newObjID;
+                OldAssetID = AssetID;
+                if (SourceTaskItem != null) SourceTaskItem.AssetUUID = AssetID;
+
+
+                if (waiting != null) waiting.Set();
             }
         }
     }

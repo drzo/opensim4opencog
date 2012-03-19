@@ -77,7 +77,7 @@ namespace cogbot.Actions
     {
         private OutputDelegate _writeLine;
         public UUID CallerID = UUID.Zero;
-        protected OutputDelegate WriteLine
+        public OutputDelegate WriteLine
         {
             get
             {

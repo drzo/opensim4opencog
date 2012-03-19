@@ -108,7 +108,7 @@ namespace cogbot.Actions.SimExport
 
         public ExportCommand(BotClient testClient)
         {
-            Running = this;
+            Exporting = this;
             // testClient.Objects.ObjectPropertiesFamily += new EventHandler<ObjectPropertiesFamilyEventArgs>(Objects_OnObjectPropertiesFamily);
 
             //testClient.Objects.ObjectProperties += new EventHandler<ObjectPropertiesEventArgs>(Objects_OnObjectProperties);
@@ -135,7 +135,7 @@ namespace cogbot.Actions.SimExport
         {
             Client.Self.Movement.Camera.Far = 1023;
             Client.Self.Movement.SendUpdate(true);
-            Running = this;
+            Exporting = this;
             IsExporting = true;
             var CurSim = Client.Network.CurrentSim;
             RegionHandle = CurSim.Handle;
@@ -540,9 +540,10 @@ namespace cogbot.Actions.SimExport
 
 
         private readonly HashSet<uint> RequiredForExportLocalIDs = new HashSet<uint>();
-        public static ExportCommand Running;
+        public static ExportCommand Exporting;
         private ulong RegionHandle;
         private ListAsSet<SimObject> PSBuf = new ListAsSet<SimObject>();
+        public ImportSettings settings;
         //private Simulator CurSim;
 
 
@@ -926,7 +927,7 @@ namespace cogbot.Actions.SimExport
                     err = Errors[id] = new ErrorInfo(id) {Obj = o};
                 }
                 err.Add(error);
-                Running.Failure(error);
+                Exporting.Failure(error);
             }
         }
         public static void LogError(UUID id, string error)
@@ -940,7 +941,7 @@ namespace cogbot.Actions.SimExport
                     err = Errors[id] = new ErrorInfo(id) {};
                 }
                 err.Add(error);
-                Running.Failure(error);
+                Exporting.Failure(error);
             }
         }
         public CmdResult WriteErrors(string[] strings)

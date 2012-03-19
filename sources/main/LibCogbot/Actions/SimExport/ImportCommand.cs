@@ -50,7 +50,7 @@ namespace cogbot.Actions.SimExport
         {
             if (string.IsNullOrEmpty(issues)) return true;
             if (!(arglist.Contains(issues.TrimEnd('s').ToLower()) || arglist.Contains("issue"))) return false;
-            ExportCommand.Running.Success("Allowing: " + issues + " with " + allowed);
+            ExportCommand.Exporting.Success("Allowing: " + issues + " with " + allowed);
             return true;
         }
 
@@ -126,6 +126,11 @@ namespace cogbot.Actions.SimExport
             public abstract void ReplaceAll();
         }
 
+        static public ExportCommand Exporting
+        {
+            get { return ExportCommand.Exporting; }
+        }
+
         public static string uuidString(UUID uuid)
         {
             if (CogbotHelpers.IsNullOrZero(uuid)) return "Zero";
@@ -187,7 +192,7 @@ namespace cogbot.Actions.SimExport
 
         public static UUID GetAssetUploadsFolder()
         {
-            UUID assetUploadsFolder = ExportCommand.Running.FolderCalled("AssetUploads");
+            UUID assetUploadsFolder = ExportCommand.Exporting.FolderCalled("AssetUploads");
             return assetUploadsFolder;
         }
         public ImportCommand(BotClient testClient)
@@ -247,6 +252,7 @@ namespace cogbot.Actions.SimExport
             ";
             if (args == null || args.Length == 0) return Failure(hlp);
             ImportSettings importSettings = new ImportSettings();
+            ExportCommand.Exporting.settings = importSettings;
             importSettings.GroupID = (args.Length > 1) ? TheBotClient.GroupID : UUID.Zero;
             importSettings.CurSim = Client.Network.CurrentSim;
             var arglist = importSettings;
@@ -267,6 +273,7 @@ namespace cogbot.Actions.SimExport
                 arglist.Add("oar");
                 arglist.Add("fullperms");
                 arglist.Add("lslprims");
+                arglist.Add("request");
                 //arglist.Add("KillMissing");
             }
             bool doRez = false;
@@ -327,8 +334,12 @@ namespace cogbot.Actions.SimExport
             if (arglist.Contains("task") || tasksObjs) ImportTaskFiles(importSettings, tasksObjs);
             GleanUUIDsFrom(GetAssetUploadsFolder());
             SaveMissingIDs();
-            if (arglist.Contains("request")) RequestMissingIDs();
+            if (arglist.Contains("request")) RequestMissingIDs(importSettings);
             if (arglist.Contains("taskobj")) ImportTaskObjects(importSettings);
+            if (arglist.Contains("locate"))
+            {
+                LocatePrims(importSettings);
+            }
             DivideTaskObjects(importSettings);
             if (arglist.Contains("killmissing")) KillMissing(importSettings);
             if (arglist.Contains("lslprims")) ConfirmLSLPrims(importSettings);
@@ -416,7 +427,7 @@ namespace cogbot.Actions.SimExport
                 OarFile.SaveLinkset(ls, rootDir + "assets/" + ls.Parent.NewID + ArchiveConstants.ASSET_TYPE_TO_EXTENSION[AssetType.Object], true, settings);
             }
             // Terrain
-            if (settings.ContainsKey("terrain")) ExportCommand.Running.SaveTerrainRaw32(rootDir + "terrains/heightmap.raw");
+            if (settings.ContainsKey("terrain")) ExportCommand.Exporting.SaveTerrainRaw32(rootDir + "terrains/heightmap.raw");
 
             string parcelDirs = rootDir + "landdata/";
             Directory.CreateDirectory(parcelDirs);
@@ -441,12 +452,12 @@ namespace cogbot.Actions.SimExport
         }
 
 
-        private void RequestMissingIDs()
+        private void RequestMissingIDs(ImportSettings settings)
         {
             ExportCommand.IsExporting = true;
             foreach (MissingItemInfo itemInfo in MissingFromExport)
             {
-                var ex = ExportCommand.Running;
+                var ex = ExportCommand.Exporting;
                 if (itemInfo.AssetType == AssetType.Unknown)
                 {
                     Failure("MISSING STILL: " + itemInfo);
@@ -460,12 +471,12 @@ namespace cogbot.Actions.SimExport
                 }
                 if (itemInfo.AssetType == AssetType.EnsembleStart)
                 {
-                    Client.Groups.RequestGroupName(itemInfo.MissingID);
+                    if (settings.Contains("requestaccts")) Client.Groups.RequestGroupName(itemInfo.MissingID);
                     continue;
                 }
                 if (itemInfo.AssetType == AssetType.CallingCard)
                 {
-                    Client.Avatars.RequestAvatarName(itemInfo.MissingID);
+                    if (settings.Contains("requestaccts")) Client.Avatars.RequestAvatarName(itemInfo.MissingID);
                     continue;
                 }
                 ex.AddRelated(itemInfo.MissingID, itemInfo.AssetType);                

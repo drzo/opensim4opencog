@@ -251,7 +251,7 @@ namespace cogbot.Actions.SimExport
             Client.Self.Movement.SendUpdate(true);
         }
 
-        private void MoveCloseTo(SimObject exportPrim)
+        public void MoveCloseTo(SimObject exportPrim)
         {
             Vector3 up = exportPrim.UsePosition.SimPosition;
             if (up.X < 1)
