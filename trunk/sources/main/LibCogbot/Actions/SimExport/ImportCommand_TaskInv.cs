@@ -116,6 +116,11 @@ namespace cogbot.Actions.SimExport
                     Failure("UNPLACED: " + o);
                 }
             }
+            // this makes sure we know that late found childs are assets
+            foreach (PrimToCreate parent in parents)
+            {
+                if (parent.IsAsset) parent.SetIsAsset();
+            }
         }
         public void DivideTaskObjects(ImportSettings importSettings)
         {
@@ -1027,10 +1032,14 @@ namespace cogbot.Actions.SimExport
                 {
                     uint exportLocalID = CreatedPrim.Prim.LocalID;
                     Client.Objects.RequestObject(Running.settings.CurSim, exportLocalID);
-                    exportPrim = ExportCommand.GetSimObjectFromUUID(CreatedPrim.OldID);
+                    exportPrim = WorldObjects.GetSimObjectFromUUID(CreatedPrim.OldID);
                 }
                 if (exportPrim == null)
                 {
+                    if (CreatedPrim.IsAsset)
+                    {
+                        return;
+                    }
                     //Running.AttemptMoveTo(CreatedPrim.SimPosition);
                     Exporting.Failure("Cant get to export prim for " + this);
                     return;
@@ -1054,6 +1063,10 @@ namespace cogbot.Actions.SimExport
                 if (missing)
                 {
                     ExportCommand.LogError(CreatedPrim.OldID, "OBJMISSING: " + this + " " + sw.ToString().Replace('\n', ' '));
+                }
+                if (MissingLLSD(newObjID) || MissingTASK(newObjID) || MissingLINK(newObjID))
+                {
+                    
                 }
                 Client.Objects.DeselectObject(sim, localID);
                 UUID AssetID = osdMap["AssetUUID"] = newObjID;

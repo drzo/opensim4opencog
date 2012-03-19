@@ -370,6 +370,10 @@ namespace cogbot.Actions.SimExport
 
             private void LoadProgressFile()
             {
+                if (File.Exists(ExportCommand.dumpDir + OldID + ".objectAsset"))
+                {
+                    IsAsset = true;
+                }
                 if (IsLocalScene) return;
                 if (CogbotHelpers.IsNullOrZero(NewID))
                 {
@@ -436,7 +440,7 @@ namespace cogbot.Actions.SimExport
                 {
                     UUID id = uuids[i];
                         
-                    if (Running.MissingLLSD(id))
+                    if (MissingLLSD(id))
                     {
                         Running.Failure("Warning missing link child " + id + " on parent " + this.ToString());
                         ExportCommand.Exporting.AddMoveTo(SimPosition);
@@ -555,17 +559,17 @@ namespace cogbot.Actions.SimExport
             }
         }
 
-        public bool MissingLLSD(UUID id)
+        static public bool MissingLLSD(UUID id)
         {
             return !File.Exists(ExportCommand.dumpDir + id + ".llsd");
         }
 
-        public bool MissingLINK(UUID id)
+        static public bool MissingLINK(UUID id)
         {
             return !File.Exists(ExportCommand.dumpDir + id + ".link");
         }
 
-        public bool MissingTASK(UUID id)
+        static public bool MissingTASK(UUID id)
         {
             return !File.Exists(ExportCommand.dumpDir + id + ".task");
         }

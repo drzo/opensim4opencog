@@ -671,6 +671,7 @@ namespace cogbot.TheOpenSims
             if (!CogbotHelpers.IsNullOrZero(objectGroupID) && InGroup(objectGroupID))
             {
                 if (groupOwned) return PermissionWho.Owner;
+                return PermissionWho.Owner;
                 return PermissionWho.Group;
             }
             return PermissionWho.Everyone;
