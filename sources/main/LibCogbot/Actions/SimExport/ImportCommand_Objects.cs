@@ -557,6 +557,11 @@ namespace cogbot.Actions.SimExport
                 RezRequested = true;
                 _target_confirmed = true;
             }
+
+            public Simulator GetSimulator()
+            {
+                return Rezed.GetSimulator();
+            }
         }
 
         static public bool MissingLLSD(UUID id)
@@ -656,6 +661,7 @@ namespace cogbot.Actions.SimExport
                     if (ptc == null)
                     {
                         ptc = APrimToCreate(oldId);
+                        ///Exporting.ExportPrim(Client, ptc.Rezed, this.WriteLine, arglist);
                         if (ptc.ParentID != 0)
                         {
                             childs.Add(ptc);
@@ -1368,7 +1374,7 @@ namespace cogbot.Actions.SimExport
         {
             int nchecked = 0;
             int unconfirmed = 0;
-            foreach (var i in UUID2OBJECT)
+            foreach (var i in LockInfo.CopyOf(UUID2OBJECT))
             {
                 var o = i.Value as PrimToCreate;
                 if (o == null) continue;
@@ -1383,6 +1389,7 @@ namespace cogbot.Actions.SimExport
                     continue;
                 }
                 uint parentID = o.Prim.ParentID;
+                bool uncomp = false;
                 if (parentID != 0)
                 {
                     lock (NewUINT2OBJECT)
@@ -1390,12 +1397,17 @@ namespace cogbot.Actions.SimExport
                         PrimToCreate parent;
                         if (!NewUINT2OBJECT.TryGetValue(parentID, out parent))
                         {
-                            Failure("UNCONFIRMED PARENT: " + o);  
+                            Failure("UNCONFIRMED PARENT: " + o);
+                            uncomp = true;
                         }
                     }
                 }
                 if (IsLocalScene)
                 {
+                    if (uncomp && settings.Contains("kill"))
+                    {
+                        KillID(i.Key);
+                    }
                     continue;
                 }
                 var found = o.Rezed;

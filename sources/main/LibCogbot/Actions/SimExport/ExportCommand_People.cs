@@ -14,14 +14,15 @@ using OpenMetaverse.Assets;
 
 using MushDLR223.ScriptEngines;
 using PathSystem3D.Mesher;
+using ExportCommand = cogbot.Actions.SimExport.ImportCommand;
 
 namespace cogbot.Actions.SimExport
 {
     public partial class ExportCommand : Command, RegionMasterCommand
     {
 
-        private readonly HashSet<UUID> ExportUsers = new HashSet<UUID>();
-        private readonly HashSet<UUID> ExportGroup = new HashSet<UUID>();
+        static private readonly HashSet<UUID> ExportUsers = new HashSet<UUID>();
+        static private readonly HashSet<UUID> ExportGroup = new HashSet<UUID>();
 
         private void RequestUsersAndGroups()
         {
@@ -60,19 +61,19 @@ namespace cogbot.Actions.SimExport
             }
         }
 
-        private void AddExportGroup(UUID groupID)
+        static private void AddExportGroup(UUID groupID)
         {
             if (CogbotHelpers.IsNullOrZero(groupID)) return;
             ExportGroup.Add(groupID);
         }
 
-        private void AddExportUser(UUID userID)
+        static private void AddExportUser(UUID userID)
         {
             if (CogbotHelpers.IsNullOrZero(userID)) return;
             ExportUsers.Add(userID);
         }
 
-        private OSDMap OSDSerializeMembers(object inv)
+        static private OSDMap OSDSerializeMembers(object inv)
         {
             var osd = new OSDMap();
             OSD.AddObjectOSD(inv, osd, inv.GetType(), false);

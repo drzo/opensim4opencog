@@ -14,6 +14,7 @@ using OpenMetaverse.Assets;
 
 using MushDLR223.ScriptEngines;
 using PathSystem3D.Mesher;
+using ExportCommand = cogbot.Actions.SimExport.ImportCommand;
 
 namespace cogbot.Actions.SimExport
 {
@@ -40,7 +41,20 @@ namespace cogbot.Actions.SimExport
         }
         private void RecomputeGotos()
         {
+           // moveToPoints.Clear();
             int lowZ = 23;// (int)Client.Self.SimPosition.Z;
+            for (int z = lowZ; z < lowZ + 1000; z += 256)
+            {
+                for (int x = 16; x < 256; x += 64)
+                {
+                    for (int y = 16; y < 256; y += 64)
+                    {
+                        Vector3 moveto = new Vector3(x, y, z);
+                        if (onlyObjectAt.IsInside(moveto.X, moveto.Y, moveto.Z))
+                            if (!moveToPoints.Contains(moveto)) moveToPoints.Add(moveto);
+                    }
+                }
+            }
             for (int z = lowZ; z < lowZ + 1000; z += 256)
             {
                 for (int x = 16; x < 256; x += 16)
@@ -49,7 +63,7 @@ namespace cogbot.Actions.SimExport
                     {
                         Vector3 moveto = new Vector3(x, y, z);
                         if (onlyObjectAt.IsInside(moveto.X, moveto.Y, moveto.Z))
-                            moveToPoints.Add(moveto);
+                            if (!moveToPoints.Contains(moveto)) moveToPoints.Add(moveto);
                     }
                 }
             }
@@ -61,7 +75,7 @@ namespace cogbot.Actions.SimExport
                     {
                         Vector3 moveto = new Vector3(x, y, z);
                         if (onlyObjectAt.IsInside(moveto.X, moveto.Y, moveto.Z))
-                            moveToPoints.Add(moveto);
+                            if (!moveToPoints.Contains(moveto)) moveToPoints.Add(moveto);
                     }
                 }
             }
@@ -123,7 +137,7 @@ namespace cogbot.Actions.SimExport
                     }
                 }
                 if (moveto == Vector3.Zero 
-                    || (Math.Abs(moveto.Z - Client.Self.SimPosition.Z) > 512 && moveToPoints.Count > 30) 
+                    || (Math.Abs(moveto.Z - Client.Self.SimPosition.Z) > 512 && moveToPoints.Count > 3000) 
                     || moveto.Z > maxHeigth 
                     || !onlyObjectAt.IsInside(moveto.X, moveto.Y, moveto.Z))
                 {
@@ -169,6 +183,7 @@ namespace cogbot.Actions.SimExport
 
         private void AttemptSitMover()
         {
+            if (LureMover) return;
             if (!TheSimAvatar.IsSitting)
             {
                 var smo = WorldSystem.GetObject("cogbotscanchairRideForTwo");
@@ -195,7 +210,7 @@ namespace cogbot.Actions.SimExport
             }
             shouldBeMoving = true;
         }
-
+        public static bool LureMover = true;
         public void AttemptMoveTo(Vector3 pos)
         {
             AttemptSitMover();
@@ -213,6 +228,18 @@ namespace cogbot.Actions.SimExport
             Client.Self.Chat(string.Format("tptp,{0},{1},{2}", pos.X, pos.Y, pos.Z), 4201, ChatType.Normal);
             if (!TheSimAvatar.IsSitting)
             {
+                SetCamera(pos);
+                if (LureMover)
+                {
+                    Client.Self.InstantMessage(WorldSystem.GetUserID("BinaBot Daxeline"), "/lure " + TheSimAvatar.ID);
+                    Thread.Sleep(4000);
+                   // return;
+                }
+                if (Vector3.Distance(Client.Self.SimPosition, pos) < 8)
+                {
+                    SetCamera(pos);
+                    return;
+                }
                 uint globalX, globalY;
                 Utils.LongToUInts(RegionHandle, out globalX, out globalY);
                 ExpectedGotoV3D =
@@ -220,7 +247,7 @@ namespace cogbot.Actions.SimExport
                         (double) globalX + (double) pos.X,
                         (double) globalY + (double) pos.Y,
                         (double) pos.Z);
-                var at3d = Client.Self.GlobalPosition;
+                Vector3d at3d = Client.Self.GlobalPosition;
                 if (Vector3d.Distance(new Vector3d(ExpectedGotoV3D.X, ExpectedGotoV3D.Y, ExpectedGotoV3D.Z), new Vector3d(at3d.X, at3d.Y, at3d.Z)) < 32)
                 {
                     SetCamera(pos);
