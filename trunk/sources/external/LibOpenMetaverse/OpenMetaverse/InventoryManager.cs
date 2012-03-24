@@ -213,10 +213,13 @@ namespace OpenMetaverse
     {
         public override string ToString()
         {
-            return AssetType + " " + AssetUUID + " (" + InventoryType + " " + UUID + ") '" + Name + "'/'" + Description + "' " + Permissions;
+            return AssetType + " " + AssetUUID + " (rezid " + RezzID + ")(" + InventoryType + " " + UUID + ") '" + Name + "'/'" +
+                   Description + "' " + Permissions;
         }
         /// <summary>The <seealso cref="OpenMetaverse.UUID"/> of this item</summary>
-        public UUID AssetUUID = UUID.Zero;
+        public UUID AssetUUID { get; set; }
+        /// <summary>The RezzID is the Rezzed UUID of the object (for client use only)<seealso cref="OpenMetaverse.UUID"/> of this item</summary>
+        public UUID RezzID = UUID.Zero;
         /// <summary>The combined <seealso cref="OpenMetaverse.Permissions"/> of this item</summary>
         public Permissions Permissions;
         /// <summary>The type of item from <seealso cref="OpenMetaverse.AssetType"/></summary>
@@ -250,14 +253,24 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="itemID">The <seealso cref="OpenMetaverse.UUID"/> of the item</param>
         public InventoryItem(UUID itemID)
-            : base(itemID) { }
+            : base(itemID)
+        {
+            AssetUUID = UUID.Zero;
+            RezzID = UUID.Zero;
+        }
 
         /// <summary>
         /// Construct a new InventoryItem object of a specific Type
         /// </summary>
         /// <param name="type">The type of item from <seealso cref="OpenMetaverse.InventoryType"/></param>
         /// <param name="itemID"><seealso cref="OpenMetaverse.UUID"/> of the item</param>
-        public InventoryItem(InventoryType type, UUID itemID) : base(itemID) { InventoryType = type; }
+        public InventoryItem(InventoryType type, UUID itemID)
+            : base(itemID)
+        {
+            InventoryType = type;
+            AssetUUID = UUID.Zero;
+            RezzID = UUID.Zero;
+        }
 
         /// <summary>
         /// Indicates inventory item is a link
@@ -298,6 +311,7 @@ namespace OpenMetaverse
             : base(info, ctxt)
         {
             AssetUUID = (UUID)info.GetValue("AssetUUID", typeof(UUID));
+            RezzID = OpenMetaverse.UUID.Zero;// (UUID)info.GetValue("RezzID", typeof(UUID));
             Permissions = (Permissions)info.GetValue("Permissions", typeof(Permissions));
             AssetType = (AssetType)info.GetValue("AssetType", typeof(AssetType));
             InventoryType = (InventoryType)info.GetValue("InventoryType", typeof(InventoryType));
