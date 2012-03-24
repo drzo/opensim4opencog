@@ -471,7 +471,7 @@ namespace OpenMetaverse.StructuredData
             map["prefixfp"] = prefixFP;
             bool added = false;
             bool skipped = false;
-            foreach (var v in from.GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            foreach (var v in from.GetMembers(ipf))
             {
                 string n = v.Name;
                 if (n.StartsWith("_")) continue;
@@ -512,6 +512,8 @@ namespace OpenMetaverse.StructuredData
             return TypeInSet(from.BaseType, exceptFor);
         }
 
+        const BindingFlags ipf = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic |
+                                            BindingFlags.FlattenHierarchy;
         public static void SetObjectOSD(object primitive, OSDMap map)
         {
             Type from = primitive.GetType();
@@ -519,7 +521,7 @@ namespace OpenMetaverse.StructuredData
             bool prefixFP = map["prefixfp"];
             from = System.Type.GetType(From) ?? from;
             int mapManips = 0;
-            foreach (var v in from.GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            foreach (var v in from.GetMembers(ipf))
             {
                 if (v is MethodBase)
                 {
