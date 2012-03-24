@@ -14,6 +14,7 @@ using OpenMetaverse.Assets;
 
 using MushDLR223.ScriptEngines;
 using PathSystem3D.Mesher;
+using ExportCommand = cogbot.Actions.SimExport.ImportCommand;
 
 namespace cogbot.Actions.SimExport
 {
@@ -31,17 +32,17 @@ namespace cogbot.Actions.SimExport
         static readonly Dictionary<string, UUID> inventoryHolder = new Dictionary<string, UUID>();
         public bool Incremental = true;
         static private readonly Dictionary<string, InventoryItem> lslScripts = new Dictionary<string, InventoryItem>();
-        private int LocalFailures;
+        public int LocalFailures;
         public static readonly object fileWriterLock = new object();
         public bool showsStatus;
         public bool showPermsOnly;
         public bool skipPerms;
         public bool quietly = false;
-        private bool showsMissingOnly;
+        public bool showsMissingOnly;
         private bool verbosely;
         private bool taskobj;
         private bool forced;
-        private int needFiles;
+        public int needFiles;
         private readonly HashSet<SimObject> successfullyExportedPrims = new HashSet<SimObject>();
 
         /// <summary>
@@ -64,12 +65,14 @@ namespace cogbot.Actions.SimExport
             UUID uuid;
             if (inventoryHolder.TryGetValue(name, out uuid)) return uuid;
             var rid = Client.Inventory.Store.RootFolder.UUID;
-            List<InventoryBase> cnt = null;
-            while (cnt == null)
+            List<InventoryBase> cnt = Client.Inventory.FolderContents(rid, Client.Self.AgentID, true, false, InventorySortOrder.ByDate,
+                                                      5000);
+            if (cnt == null)
             {
                 cnt = Client.Inventory.FolderContents(rid, Client.Self.AgentID, true, false, InventorySortOrder.ByDate,
-                                                      10000);
+                                                      5000);
             }
+            if (cnt == null) return UUID.Zero;
 
             foreach (var c in cnt)
             {
@@ -194,6 +197,10 @@ namespace cogbot.Actions.SimExport
                                              CurSim = Client.Network.CurrentSim,
                                              GroupID = Client.Self.ActiveGroup
                                          };
+            if (args[0]=="hhp")
+            {
+                args = new string[] { "taskobjs", "nobuf", "all", "spec", "f0a89a9f-3f33-b2aa-2829-eaeec3d08b82" };
+            }
             foreach (string s in args)
             {
                 arglist.Add(s);
@@ -264,7 +271,7 @@ namespace cogbot.Actions.SimExport
             {
                 if (arglist.Contains("clear"))
                 {
-                    KillAllUnpacked(WriteLine);
+                    KillAllUnpacked(WriteLine, true);
                     PurgeExport();
                     arglist.Add("reset");
                 }
@@ -307,6 +314,11 @@ namespace cogbot.Actions.SimExport
             {
                 return CleanupAfterExport(fromAgentID, WriteLine);
             }
+            if (arglist.Contains("killtasks"))
+            {
+                KillAllUnpacked(WriteLine, true);
+                return SuccessOrFailure();
+            }
             IsExporting = true;
             FolderCalled("TaskInvHolder");
             //string file = args[args.Length - 1];
@@ -344,10 +356,19 @@ namespace cogbot.Actions.SimExport
                 PSBuf.Clear();
             }
             PSBuf.AddRange(PS);
+            lock (ImportCommand.Running.MustExport)
+            {
+                foreach (UUID id in LockInfo.CopyOf(ImportCommand.Running.MustExport))
+                {
+                    var o = WorldObjects.GetSimObjectFromUUID(id);
+                    if (o != null) PSBuf.Add(o);
+                }
+            }
 
             foreach (var P in PSBuf)
             {
                 if (!primsAtAll) break;
+                if (IsComplete(P.ID, false)) continue;
                 // skip attachments and avatars
                 if (IsSkipped(P, arglist)) continue;
                 if (!P.HasPrim)
@@ -502,6 +523,7 @@ namespace cogbot.Actions.SimExport
             }
             Success("Missing PrimData: " + missing);
             Success("Started XFERS " + ToDownloadCalledAssets.Count + " assets");
+            shouldBeMoving = wasShouldBeMoving;
             GiveStatus();
             if (primsAtAll)
             {
@@ -549,7 +571,7 @@ namespace cogbot.Actions.SimExport
 
         private CmdResult CleanupAfterExport(UUID agent, OutputDelegate outputDelegate)
         {
-            KillAllUnpacked(outputDelegate);
+            KillAllUnpacked(outputDelegate, false);
             return Execute(new[] { "reset" }, agent, outputDelegate);
         }
 

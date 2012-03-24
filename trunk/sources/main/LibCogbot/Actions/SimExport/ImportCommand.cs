@@ -13,6 +13,7 @@ using OpenMetaverse.Assets;
 using OpenMetaverse.StructuredData;
 
 using MushDLR223.ScriptEngines;
+using ExportCommand = cogbot.Actions.SimExport.ImportCommand;
 
 namespace cogbot.Actions.SimExport
 {
@@ -66,6 +67,32 @@ namespace cogbot.Actions.SimExport
     }
 
 
+    abstract public class UUIDChange
+    {
+        protected UUIDChange()
+        {
+            _newId = UUID.Zero;
+            _oldId = UUID.Zero;
+        }
+
+        private UUID _newId;
+        virtual public UUID NewID
+        {
+            get { return _newId; }
+            set { _newId = value; }
+        }
+
+        private UUID _oldId;
+        virtual public UUID OldID
+        {
+            get { return _oldId; }
+            set { _oldId = value; }
+        }
+
+        public abstract void ReplaceAll();
+    }
+
+
     public partial class ImportCommand : Command, RegionMasterCommand
     {
         public class LocalSimScene
@@ -100,31 +127,6 @@ namespace cogbot.Actions.SimExport
         public static readonly Dictionary<uint, PrimToCreate> NewUINT2OBJECT = new Dictionary<uint, PrimToCreate>();        
 
         public delegate object ObjectMemberReplacer(MemberInfo name, object before, HashSet<MissingItemInfo> missing);
-
-        abstract public class UUIDChange
-        {
-            protected UUIDChange()
-            {
-                _newId = UUID.Zero;
-                _oldId = UUID.Zero;
-            }
-
-            private UUID _newId;
-            virtual public UUID NewID
-            {
-                get { return _newId; }
-                set { _newId = value; }
-            }
-
-            private UUID _oldId;
-            virtual public UUID OldID
-            {
-                get { return _oldId; }
-                set { _oldId = value; }
-            }
-
-            public abstract void ReplaceAll();
-        }
 
         static public ExportCommand Exporting
         {
@@ -202,6 +204,7 @@ namespace cogbot.Actions.SimExport
             Category = CommandCategory.Objects;
             Client.Assets.AssetUploaded += new EventHandler<AssetUploadEventArgs>(Assets_AssetUploaded);
             Client.Objects.ObjectPropertiesFamily += OnObjectPropertiesFamily;
+            Client.Objects.ObjectUpdate += OnObjectPropertiesNewesh;
             Client.Network.EventQueueRunning += logged_in;
             ImportPTCFiles(new ImportSettings(), true, false);
             Running = this;
@@ -272,9 +275,10 @@ namespace cogbot.Actions.SimExport
                 arglist.Add("all");
                 //arglist.Add("oar");
                 arglist.Add("fullperms");
-                arglist.Add("lslprims");
+               // arglist.Add("lslprims");
                 arglist.Add("request");
                 //arglist.Add("KillMissing");
+                arglist.Add("reztaskobj");
             }
             bool doRez = false;
             if (arglist.Contains("all"))
@@ -331,11 +335,11 @@ namespace cogbot.Actions.SimExport
                 return Success("Moving to " + parents.Count);
             }
             bool tasksObjs = arglist.Contains("taskobj") && !IsLocalScene;
+            if (tasksObjs) ImportTaskObjects(importSettings);
             if (arglist.Contains("task") || tasksObjs) ImportTaskFiles(importSettings, tasksObjs);
             GleanUUIDsFrom(GetAssetUploadsFolder());
             SaveMissingIDs();
             if (arglist.Contains("request")) RequestMissingIDs(importSettings);
-            if (arglist.Contains("taskobj")) ImportTaskObjects(importSettings);
             if (arglist.Contains("locate"))
             {
                 LocatePrims(importSettings);
@@ -343,7 +347,9 @@ namespace cogbot.Actions.SimExport
             DivideTaskObjects(importSettings);
             if (arglist.Contains("killmissing")) KillMissing(importSettings);
             if (arglist.Contains("lslprims")) ConfirmLSLPrims(importSettings);
+            if (arglist.Contains("todo")) DoTodo(importSettings);
             if (arglist.Contains("oar")) CreateOARFile(importSettings, "exported.oar");
+            if (arglist.Contains("cleanup")) CleanupPrims(importSettings);
             writeLine("Completed SimImport");
             return SuccessOrFailure();
         }

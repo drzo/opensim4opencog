@@ -14,6 +14,7 @@ using OpenMetaverse.Assets;
 
 using MushDLR223.ScriptEngines;
 using PathSystem3D.Mesher;
+using ExportCommand = cogbot.Actions.SimExport.ImportCommand;
 
 namespace cogbot.Actions.SimExport
 {
@@ -86,7 +87,7 @@ namespace cogbot.Actions.SimExport
             }
             return false;
         }
-        public void ExportPrim(BotClient Client, SimObject exportPrim, OutputDelegate Failure, ImportSettings settings)
+        public bool ExportPrim(BotClient Client, SimObject exportPrim, OutputDelegate Failure, ImportSettings settings)
         {
             uint localID = exportPrim.LocalID;
             WorldObjects.EnsureRequested(settings.CurSim, localID + 1);
@@ -94,16 +95,16 @@ namespace cogbot.Actions.SimExport
             {
                 Client.Objects.SelectObject(settings.CurSim, localID);
                 WorldObjects.EnsureRequested(settings.CurSim, localID);
-                ExportPrim0(Client, exportPrim, Failure, settings);
+                return ExportPrim0(Client, exportPrim, Failure, settings);
             }
             finally
             {
                 Client.Objects.DeselectObject(settings.CurSim, localID);                
             }
         }
-        internal void ExportPrim0(BotClient Client, SimObject exportPrim, OutputDelegate Failure, ImportSettings settings)
+        internal bool ExportPrim0(BotClient Client, SimObject exportPrim, OutputDelegate Failure, ImportSettings settings)
         {
-            if (IsSkipped(exportPrim, settings)) return;
+            if (IsSkipped(exportPrim, settings)) return false;
             Simulator CurSim = exportPrim.GetSimulator();
             WorldObjects.EnsureSelected(exportPrim.LocalID, CurSim);
             string pathStem = Path.Combine(dumpDir, exportPrim.ID.ToString());
@@ -139,7 +140,7 @@ namespace cogbot.Actions.SimExport
                     {
                         Failure("Cant wait out the Issues " + bissues + ": " + named(exportPrim));
                         if (LocalFailures == 0) LocalFailures++;
-                        return;
+                      //  return;
                     }
                 }
             }
@@ -148,17 +149,14 @@ namespace cogbot.Actions.SimExport
             {
                 Failure("Issues " + issues + " " + named(exportPrim));
                 if (LocalFailures == 0) LocalFailures++;
-                return;
+                //return false;
             }
             //ImportCommand.PrimToCreate ptc = ImportCommand.Running.APrimToCreate(exportPrim.ID);
             //ptc._prim = exportPrim.Prim;
+            bool passedOK = true;
             if (settings.Contains("llsd"))
             {
                 SaveLLSD(Client, pathStem, exportPrim, Failure, settings);
-              //  if (ptc.OldLocalID == exportPrim.LocalID)
-                {
-                    
-                }
             }
             if (exportPrim.IsRoot && (true || exportPrim.Children.Count > 0))
             {
@@ -168,14 +166,21 @@ namespace cogbot.Actions.SimExport
                 {
                     foreach (var c in exportPrim.Children)
                     {
-                        ExportPrim(Client, c, Failure, settings);
+                        var ch = ExportPrim(Client, c, Failure, settings);
+                        if (!ch) passedOK = false;
                     }
                 }
             }
-            if (settings.Contains("task")) SaveTaskInv(settings, Client, pathStem, exportPrim, Failure);
-            if (!settings.Contains("dep")) return;
+            if (settings.Contains("task"))
+            {
+                if (!SaveTaskInv(settings, Client, pathStem, exportPrim, Failure)) passedOK = false;
+                // ImportCommand.PrimToCreate ptc = ImportCommand.Running.APrimToCreate(exportPrim.ID);
+                //  if (!ptc.EnsureTaskInv()) return false;
+            }
+            if (!settings.Contains("dep")) return passedOK;
             AddRelatedTextures(exportPrim);
             SaveRelatedAssets(pathStem, exportPrim, Failure);
+            return passedOK;
         }
 
         void SaveLinksetInfo(BotClient Client, string pathStem, SimObject exportPrim, OutputDelegate Failure, ImportSettings settings)
@@ -228,6 +233,10 @@ namespace cogbot.Actions.SimExport
                 return;
             }
             if (eMessage.Contains(":"))
+            {
+                return;
+            }
+            if (eMessage.Contains("zimfo"))
             {
                 return;
             }
@@ -435,6 +444,9 @@ namespace cogbot.Actions.SimExport
                     {
                         lock (fileWriterLock) File.WriteAllText(exportFile, output);
                     }
+                    var ptc = ImportCommand.Running.APrimToCreate(prim);
+                    ptc.Rezed = exportPrim;
+                   
                     if (forced && !verbosely) return;
                     return;
                     Primitive prim2 = FromFile(exportFile, ExportCommand.UseBinarySerialization) as Primitive;
@@ -457,6 +469,15 @@ namespace cogbot.Actions.SimExport
                     Failure("Writing file " + exportFile + " caused " + e);
                 }
             }
+        }
+
+        static public bool IsComplete(UUID uuid, bool includeLink)
+        {
+            if (!PerfectTaskOSD(uuid)) return false;
+            if (ImportCommand.MissingLLSD(uuid)) return false;
+            if (includeLink && ImportCommand.MissingLINK(uuid)) return false;
+            if (ImportCommand.MissingTASK(uuid)) return false;
+            return true;
         }
 
         public static string named(SimObject prim)
