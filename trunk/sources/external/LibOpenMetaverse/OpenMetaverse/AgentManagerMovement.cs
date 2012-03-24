@@ -622,7 +622,7 @@ namespace OpenMetaverse
                         if (!UseOnlyThreads.Contains(threadCurrentThread))
                         {
                             Console.Error.WriteLine("UseOnlyThreads ignoring " + threadCurrentThread.Name);
-                            return;
+                        //    return;
                         }
                         reliable = true;
                         disableDupeCheck = true;
