@@ -52,7 +52,7 @@ namespace cogbot.TheOpenSims
                 _SelectedBeam = value;
             }
         }
-        ListAsSet<SimPosition> SimActor.GetSelectedObjects()
+        public virtual ListAsSet<SimPosition> GetSelectedObjects()
         {
             return SelectedObjects;
         }
