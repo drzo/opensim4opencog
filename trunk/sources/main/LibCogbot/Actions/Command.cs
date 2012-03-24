@@ -269,7 +269,7 @@ namespace cogbot.Actions
             }
         }
 
-        public SimActor TheSimAvatar
+        public SimAvatarClient TheSimAvatar
         {
             get
             {
@@ -290,6 +290,7 @@ namespace cogbot.Actions
         {
             CallerID = fromAgentID;
             success = failure = 0;
+            var wlpre = this.WriteLine;
             this.WriteLine = writeLine;
             Parser p = Parser.ParseArgs(String.Join(" ", args));
             p.tokens = args;
@@ -299,7 +300,7 @@ namespace cogbot.Actions
             }
             finally
             {
-                //??  WriteLine = StaticWriteLine;
+                WriteLine = wlpre;
             }
         }
 

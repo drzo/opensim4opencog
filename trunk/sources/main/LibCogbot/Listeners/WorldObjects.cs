@@ -13,6 +13,7 @@ namespace cogbot.Listeners
 
     public partial class WorldObjects : AllEvents
     {
+        public static bool AssumeOwner = false;
 
         public static bool IsOpenSim = false;
         
