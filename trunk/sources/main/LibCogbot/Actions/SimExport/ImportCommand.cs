@@ -357,30 +357,54 @@ namespace cogbot.Actions.SimExport
         private void ConfirmLSLPrims(ImportSettings settings)
         {
             ;
-            foreach (var o in File.ReadAllLines(ExportCommand.dumpDir + "../required.txt"))
+            foreach (var o0 in File.ReadAllLines(ExportCommand.dumpDir + "../required.txt"))
             {
+                if (o0==null) continue;
+                var o = o0.Trim();
+                if (o.Contains("TOO DENSE AT") || o.Contains("1000.187000>,1,0,rod")) continue;
                 string[] ss = o.Split(',');
-                UUID confirmID = UUID.Parse(ss[2]);
-                int childc = int.Parse(ss[6]);
-                bool problems = false;
-                if (MissingLINK(confirmID))
+                try
                 {
-                    Failure("MissingLINK: " + o);
-                    problems = true;
-                }
-                if (MissingTASK(confirmID))
+                    UUID confirmID = UUID.Parse(ss[1]);
+                    // int childc = int.Parse(ss[6]);
+                    //bool problems = false;
+                    /* if (MissingLINK(confirmID))
+                     {
+                         Failure("MissingLINK: " + o);
+                         problems = true;
+                     }
+                     if (MissingTASK(confirmID))
+                     {
+                         Failure("MissingTASK: " + o);
+                         problems = true;
+                     }
+                     if (MissingLLSD(confirmID))
+                     {
+                         Failure("MissingLLSD: " + o);
+                         continue;
+                     }
+                     * */
+                    // if (problems)
+                    {
+                        if (!MissingLLSD(confirmID))
+                        {
+                           // Failure("MissingLLSD: " + o);
+                            continue;
+                        }
+                        var p = GetOldPrim(confirmID);
+                        if (p == null)
+                        {
+                            o = o.Replace("<", "").Replace(">", "");
+                            ss = o.Split(',');
+                            Vector3 to = new Vector3(float.Parse(ss[2]), float.Parse(ss[3]), float.Parse(ss[4]));
+                            Exporting.AddMoveTo(to);
+                            Failure("cant find " + o);
+                        }
+                    }
+                } catch(Exception e)
                 {
-                    Failure("MissingTASK: " + o);
-                    problems = true;
-                }
-                if (MissingLLSD(confirmID))
-                {
-                    Failure("MissingLLSD: " + o);
-                    continue;
-                }
-                if (problems)
-                {
-                    var p = GetOldPrim(confirmID);
+                    Failure("cant parse " + o);
+                    
                 }
             }
         }

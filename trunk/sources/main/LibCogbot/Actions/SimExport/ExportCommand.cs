@@ -368,7 +368,7 @@ namespace cogbot.Actions.SimExport
             foreach (var P in PSBuf)
             {
                 if (!primsAtAll) break;
-                if (IsComplete(P.ID, false)) continue;
+                if (IsComplete(P.ID, false, arglist)) continue;
                 // skip attachments and avatars
                 if (IsSkipped(P, arglist)) continue;
                 if (!P.HasPrim)

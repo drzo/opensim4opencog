@@ -1408,6 +1408,7 @@ namespace cogbot.Actions.SimExport
                     {
                         KillID(i.Key);
                     }
+                    ExportCommand.PerfectTaskOSD(i.Key, settings);
                     continue;
                 }
                 var found = o.Rezed;

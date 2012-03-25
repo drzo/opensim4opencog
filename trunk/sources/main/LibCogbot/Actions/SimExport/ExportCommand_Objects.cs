@@ -471,9 +471,12 @@ namespace cogbot.Actions.SimExport
             }
         }
 
-        static public bool IsComplete(UUID uuid, bool includeLink)
+        static public bool IsComplete(UUID uuid, bool includeLink, ImportSettings settings)
         {
-            if (!PerfectTaskOSD(uuid)) return false;
+            if (!PerfectTaskOSD(uuid, settings))
+            {
+                return false;
+            }
             if (ImportCommand.MissingLLSD(uuid)) return false;
             if (includeLink && ImportCommand.MissingLINK(uuid)) return false;
             if (ImportCommand.MissingTASK(uuid)) return false;

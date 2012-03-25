@@ -537,6 +537,7 @@ namespace cogbot.Actions.SimExport
                 if (MissingTASK(OldID) && o != null)
                 {
                     var taskinv = o.TaskInventory;
+                    if (taskinv == null) return false;
                     Exporting.SaveTaskOSD(OldID, taskinv);
                 }
                 var agentSyncFolderHolder = Exporting.FolderCalled("TaskInvHolder");
