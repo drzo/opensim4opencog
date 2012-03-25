@@ -171,7 +171,7 @@ namespace cogbot.Actions.SimExport
             {
                 if (somethingBroke)
                 {
-                    return;
+                  //  return;
                 }
                 SaveTaskOSD(o.ID, ti);
             }
@@ -188,7 +188,7 @@ namespace cogbot.Actions.SimExport
             lock (fileWriterLock) File.WriteAllText(exportFile, OSDParser.SerializeLLSDXmlString(all));
         }
 
-        static public bool PerfectTaskOSD(UUID uuid)
+        static public bool PerfectTaskOSD(UUID uuid, ImportSettings sets)
         {
             string exportFile = dumpDir + "" + uuid + ".task";
             if (!File.Exists(exportFile)) return false;
@@ -208,6 +208,11 @@ namespace cogbot.Actions.SimExport
                     }
                     var ri = r.AsUUID();
                     if (CogbotHelpers.IsNullOrZero(ri)) return false;
+                    if (sets.Contains("killrezids"))
+                    {
+                        File.Delete(exportFile);
+                        return false;
+                    }
                 }
                 var o = array["AssetUUID"].AsUUID();
                 if (CogbotHelpers.IsNullOrZero(o)) return false;

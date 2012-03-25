@@ -191,6 +191,7 @@ namespace cogbot.Actions.SimExport
 
         void AddRelatedTexturesFromProps(SimObject simObject)
         {
+            if (simObject.Properties==null) return;
             UUID[] textureIDs = simObject.Properties.TextureIDs;
             if (textureIDs == null || textureIDs.Length == 0) return;
             foreach (var c in textureIDs)
