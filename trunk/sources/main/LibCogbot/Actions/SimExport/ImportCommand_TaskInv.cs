@@ -138,11 +138,11 @@ namespace cogbot.Actions.SimExport
             }
             foreach (PrimToCreate toCreate in parents)
             {
-                toCreate.EnsureTaskInv();
+                toCreate.EnsureTaskInv(false);
             }
             foreach (PrimToCreate toCreate in childs)
             {
-                toCreate.EnsureTaskInv();                
+                toCreate.EnsureTaskInv(false);                
             }
         }
         private int ImportTaskFiles0(ImportSettings importSettings, bool createObjects)
@@ -540,7 +540,7 @@ namespace cogbot.Actions.SimExport
                 }
             }
 
-            public bool EnsureTaskInv()
+            public bool EnsureTaskInv(bool useCache)
             {
                 if (File.Exists(ExportCommand.assetDumpDir + OldID + ".object")) return true;
 
@@ -563,7 +563,7 @@ namespace cogbot.Actions.SimExport
                     return true;
                 }
                 LoadTaskOSD(Running.WriteLine);
-                var ti = SourceTaskInventory(false);
+                var ti = SourceTaskInventory(useCache);
                 foreach (InventoryBase i in ti)
                 {
                     InventoryItem item = i as InventoryItem;

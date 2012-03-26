@@ -207,7 +207,10 @@ namespace cogbot.Actions.SimExport
                         return false;
                     }
                     var ri = r.AsUUID();
-                    if (CogbotHelpers.IsNullOrZero(ri)) return false;
+                    if (CogbotHelpers.IsNullOrZero(ri))
+                    {
+                        return false;
+                    }
                     if (sets.Contains("killrezids"))
                     {
                         File.Delete(exportFile);
@@ -363,7 +366,7 @@ namespace cogbot.Actions.SimExport
                                       named(exportPrim), TaskInvFailures));
             }
             var ptc = ImportCommand.Running.APrimToCreate(exportPrim.ID);
-            return ptc.EnsureTaskInv();
+            return ptc.EnsureTaskInv(false);
         }
 
         void IBToTaskFile(UUID filename, List<InventoryBase> ib)
