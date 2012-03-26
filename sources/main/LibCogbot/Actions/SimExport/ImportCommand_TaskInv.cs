@@ -165,13 +165,13 @@ namespace cogbot.Actions.SimExport
                     continue;
                 }
                 string taskDataS = File.ReadAllText(file);
-                if (string.IsNullOrEmpty(taskDataS))
+                if (string.IsNullOrEmpty(taskDataS) || taskDataS.Length < 30)
                 {
                     ptc.TaskInvComplete = true;
                     continue;
                 }
                 ptc.CreateWorkflow(agentSyncFolderHolder);
-                if (!ptc.LoadTaskOSD(taskDataS, WriteLine))
+                if (!ptc.LoadTaskOSD(WriteLine))
                 {
                     //Failure("FAILED: LoadOSD " + ptc);
                     incomplete++;
@@ -234,7 +234,7 @@ namespace cogbot.Actions.SimExport
                             regenObjInv = new List<InventoryBase>();
                             lock (TaskItemsToCreate)
                             {
-                                foreach (var toCreate in TaskItemsToCreate)
+                                foreach (var toCreate in LockInfo.CopyOf(TaskItemsToCreate))
                                 {
                                     bool improvement;
                                     var item = toCreate.ToInventoryBase(out improvement, improve);
@@ -424,10 +424,17 @@ namespace cogbot.Actions.SimExport
                 Client.Objects.ObjectProperties += TaskInventoryItemReceived;
             }
 
-            public bool LoadTaskOSD(string taskDataS, OutputDelegate WriteLine)
+            public bool LoadTaskOSD(OutputDelegate WriteLine)
             {
                 failed = 0;
                 succeeded = 0;
+                string taskFile = ExportCommand.dumpDir + OldID + ".task";
+                string taskDataS = File.ReadAllText(taskFile);
+                if (string.IsNullOrEmpty(taskDataS) || taskDataS.Length < 30)
+                {
+                    TaskInvComplete = true;
+                    return true;
+                }
                 var taskData = OSDParser.DeserializeLLSDXml(taskDataS) as OSDArray;
                 if (taskData == null)
                 {
@@ -464,6 +471,10 @@ namespace cogbot.Actions.SimExport
                         {
                             titc = new TaskItemToCreate(this, item);
                             TaskItemsToCreate.Add(titc);
+                        }
+                        else
+                        {
+                            titc.TaskItemOSD = item;
                         }
                         succeeded++;
                     }
@@ -546,12 +557,12 @@ namespace cogbot.Actions.SimExport
                 string taskFile = ExportCommand.dumpDir + OldID + ".task";
                 if (!File.Exists(taskFile)) return false;
                 string taskDataS = File.ReadAllText(taskFile);
-                if (string.IsNullOrEmpty(taskDataS))
+                if (string.IsNullOrEmpty(taskDataS) || taskDataS.Length < 30)
                 {
                     TaskInvComplete = true;
                     return true;
                 }
-                LoadTaskOSD(taskDataS, Running.WriteLine);
+                LoadTaskOSD(Running.WriteLine);
                 var ti = SourceTaskInventory(false);
                 foreach (InventoryBase i in ti)
                 {

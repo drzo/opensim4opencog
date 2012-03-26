@@ -684,6 +684,10 @@ namespace cogbot.Actions.SimExport
         public InventoryItem GetInvItem(GridClient Client, string name, UUID folderID)
         {
             if (lslScripts.ContainsKey(name)) return lslScripts[name];
+            if (CogbotHelpers.IsNullOrZero(folderID))
+            {
+                return null;
+            }
             foreach (var item in Client.Inventory.Store.GetContents(folderID))
             {
                 if (!(item is InventoryItem)) continue;

@@ -40,14 +40,43 @@ namespace cogbot.Actions.SimExport
                 return OldItemID.GetHashCode();
             } 
             //private ExportTaskAsset Exporter;
-            public readonly string ItemName;
+            public string ItemName;
             private UUID NewAgentItemID;
-            public OSDMap TaskItemOSD;
+            public OSDMap TaskItemOSD
+            {
+                get
+                {
+                    if (_taskOSD == null)
+                    {
+                        CreatedPrim.LoadTaskOSD(Running.WriteLine);
+                    }
+                    return _taskOSD;
+                    
+                }
+                set
+                {
+                    _taskOSD = value;
+                    if (value == null) return;
+                    var taskOSD = value;
+                    ItemName = taskOSD["Name"];
+                    OSD assType = taskOSD["AssetType"];
+                    if (assType.Type == OSDType.Unknown)
+                    {
+                        throw new NullReferenceException("" + taskOSD);
+                    }
+                    AssetType = (AssetType) assType.AsInteger();
+                    oneAssetID = taskOSD["AssetUUID"].AsUUID();
+                    OldItemID = taskOSD["UUID"].AsUUID();
+                }
+            }
+            private OSDMap _taskOSD;
+            private int _taskOSDNumber;
+
             public InventoryItem AgentItem;
             public InventoryItem SourceTaskItem;
 
             private readonly PrimToCreate CreatedPrim;
-            public readonly AssetType AssetType;
+            public AssetType AssetType;
             public bool AlreadyMovedToTask = false;
             private UUID oneAssetID = UUID.Zero;
             public UUID OldAssetID
@@ -59,10 +88,11 @@ namespace cogbot.Actions.SimExport
                 set
                 {
                     if (CogbotHelpers.IsNullOrZero(value)) return;
+                    TaskItemOSD = null;
                     oneAssetID = value;
                 }
             }
-            public readonly UUID OldItemID;
+            public UUID OldItemID;
 
             protected InventoryManager Inventory
             {
@@ -73,15 +103,6 @@ namespace cogbot.Actions.SimExport
             {
                 CreatedPrim = ptc;
                 TaskItemOSD = taskOSD;
-                ItemName = taskOSD["Name"];
-                OSD assType = taskOSD["AssetType"];
-                if (assType.Type == OSDType.Unknown)
-                {
-                    throw new NullReferenceException("" + taskOSD);
-                }
-                AssetType = (AssetType)assType.AsInteger();
-                OldAssetID = taskOSD["AssetUUID"].AsUUID();
-                OldItemID = taskOSD["UUID"].AsUUID();
             }
             public bool FindAgentItem()
             {
@@ -425,7 +446,7 @@ namespace cogbot.Actions.SimExport
                             //    OldAssetID = GetMissingFiller(_item.AssetType);
                         }
                     }
-                    SourceTaskItem.AssetUUID = OldAssetID;
+                    if (!CogbotHelpers.IsNullOrZero(OldAssetID)) SourceTaskItem.AssetUUID = OldAssetID;
                     if (CogbotHelpers.IsNullOrZero(SourceTaskItem.RezzID))
                     {
                         if (SourceTaskItem.AssetType != AssetType.Object)
@@ -470,6 +491,7 @@ namespace cogbot.Actions.SimExport
                     return;
                 }
                 Error = "";
+                TaskItemOSD = null;
                 OldAssetID = asset.AssetID;
                 if (SourceTaskItem != null) SourceTaskItem.AssetUUID = asset.AssetID;
                 //AddRelated(item.AssetUUID, item.AssetType);
@@ -593,9 +615,12 @@ namespace cogbot.Actions.SimExport
                     ExportCommand.LogError(CreatedPrim.OldID, "OBJMISSING: " + this + " " + Error.ToString().Replace('\n', ' '));
                 }
                 Client.Objects.DeselectObject(sim, localID);
-                TaskItemOSD["RezzID"] = newObjID;
-                OldAssetID = newObjID;
-                if (SourceTaskItem != null) SourceTaskItem.RezzID = newObjID;
+                if (!CogbotHelpers.IsNullOrZero(newObjID))
+                {
+                    //TaskItemOSD["RezzID"] = newObjID;
+                    OldAssetID = newObjID;
+                    if (SourceTaskItem != null) SourceTaskItem.RezzID = newObjID;
+                }
                 if (waiting != null) waiting.Set();
             }
 
@@ -905,7 +930,7 @@ namespace cogbot.Actions.SimExport
 
                     Inventory.MoveTaskInventory(CreatedPrim.OldLocalID, invObject.UUID, AgentSyncFolder,
                                                 CreatedPrim.GetSimulator());
-                    bool successTC = takeCopyEvent.WaitOne(TimeSpan.FromSeconds(10));
+                    bool successTC = takeCopyEvent.WaitOne(TimeSpan.FromSeconds(30));
                     Client.Inventory.TaskItemReceived -= copiedToInventory;
                     if (!successTC)
                     {
