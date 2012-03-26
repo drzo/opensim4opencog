@@ -163,6 +163,13 @@ namespace cogbot.Actions.SimExport
                 string n = memberName.Name;
                 if (n.Contains("UUID")) return arg;
             }
+            if (typeof(InventoryItem) == memberName.DeclaringType)
+            {
+                // skip identities such as FolderUUID AssetUUID Item.UUID
+                string n = memberName.Name;
+                if (n.Contains("Creator")) return arg;
+                if (n.Contains("Owner")) return arg;
+            }
             UUID before = (UUID)arg;
             if (CogbotHelpers.IsNullOrZero(before)) return before;
             if (UnresolvedUUIDs.Contains(before))
@@ -272,14 +279,18 @@ namespace cogbot.Actions.SimExport
             if (arglist.Contains("hhp"))
             {
                 //arglist.Add("keepmissing");
-                arglist.Add("all");
+                //arglist.Add("all");
                 //arglist.Add("oar");
                 arglist.Add("fullperms");
                // arglist.Add("lslprims");
                 //arglist.Add("request");
                 //arglist.Add("KillMissing");
                 //arglist.Add("reztaskobj");
-                arglist.Add("tasklsl");
+                arglist.Add("prim");
+                arglist.Add("confirm");
+                arglist.Add("link");
+                arglist.Add("checktasks");
+                //arglist.Add("tasklsl");
             }
             bool doRez = false;
             if (arglist.Contains("all"))
@@ -336,7 +347,7 @@ namespace cogbot.Actions.SimExport
                 return Success("Moving to " + parents.Count);
             }
             bool tasksObjs = arglist.Contains("taskobj") && !IsLocalScene;
-            if (tasksObjs) ImportTaskObjects(importSettings);
+            if (tasksObjs || arglist.Contains("checktasks")) ImportTaskObjects(importSettings);
             if (arglist.Contains("task") || tasksObjs) ImportTaskFiles(importSettings, tasksObjs);
             GleanUUIDsFrom(GetAssetUploadsFolder());
             SaveMissingIDs();
@@ -349,6 +360,7 @@ namespace cogbot.Actions.SimExport
             if (arglist.Contains("killmissing")) KillMissing(importSettings);
             if (arglist.Contains("lslprims")) ConfirmLSLPrims(importSettings);
             if (arglist.Contains("todo")) DoTodo(importSettings);
+            if (arglist.Contains("checktasks")) CheckTasks(importSettings);
             if (arglist.Contains("oar")) CreateOARFile(importSettings, "exported.oar");
             if (arglist.Contains("cleanup")) CleanupPrims(importSettings);
             writeLine("Completed SimImport");

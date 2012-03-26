@@ -72,7 +72,15 @@ namespace cogbot.Actions.SimExport
                 cnt = Client.Inventory.FolderContents(rid, Client.Self.AgentID, true, false, InventorySortOrder.ByDate,
                                                       5000);
             }
-            if (cnt == null) return UUID.Zero;
+            if (cnt == null)
+            {
+                cnt = Client.Inventory.FolderContents(rid, Client.Self.AgentID, true, false, InventorySortOrder.ByDate,
+                                                      5000);
+            }
+            if (cnt == null)
+            {
+                return UUID.Zero;
+            }
 
             foreach (var c in cnt)
             {

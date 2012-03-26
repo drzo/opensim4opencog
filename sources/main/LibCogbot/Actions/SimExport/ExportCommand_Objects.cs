@@ -208,7 +208,7 @@ namespace cogbot.Actions.SimExport
             string exportFile = pathStem + ".link";
             lock (fileWriterLock) if (File.Exists(exportFile)) return;
             bool canScript = checkPerms(Client, exportPrim, SilientFailure, true);
-            InventoryItem found = GetInvItem(Client, "LinksetSpeaker");
+            InventoryItem found = null;// GetInvItem(Client, "LinksetSpeaker");
             if (!canScript || found == null)
             {
                 ScanForLinksets(exportPrim);
