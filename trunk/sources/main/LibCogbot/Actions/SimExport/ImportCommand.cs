@@ -264,7 +264,7 @@ namespace cogbot.Actions.SimExport
             {
                 arglist.Add(s);
             }
-            if (arglist.Contains("repack"))
+            if (arglist.Contains("reoar"))
             {
                 OarFile.PackageArchive("cog_export/oarfile/", "repack.oar", false, false);
                 return SuccessOrFailure();
@@ -276,9 +276,10 @@ namespace cogbot.Actions.SimExport
                 //arglist.Add("oar");
                 arglist.Add("fullperms");
                // arglist.Add("lslprims");
-                arglist.Add("request");
+                //arglist.Add("request");
                 //arglist.Add("KillMissing");
-                arglist.Add("reztaskobj");
+                //arglist.Add("reztaskobj");
+                arglist.Add("tasklsl");
             }
             bool doRez = false;
             if (arglist.Contains("all"))
