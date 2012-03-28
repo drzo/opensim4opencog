@@ -402,6 +402,16 @@ namespace cogbot.Listeners
                     {
                         m_TheSimAvatar.SetClient(client);                        
                     }
+                } else
+                {
+                    UUID id = client.Self.AgentID;
+                    if (id != UUID.Zero)
+                    {
+                        if (m_TheSimAvatar.ID != id)
+                        {
+                            TheSimAvatar = (SimAvatarClient)GetSimObjectFromUUID(id);
+                        }
+                    }
                 }
                 return m_TheSimAvatar;
             }
@@ -920,6 +930,15 @@ namespace cogbot.Listeners
 
         public SimObject GetSimObject(uint sittingOn, Simulator simulator)
         {
+            if (simulator == null)
+            {
+                foreach (var sim in AllSimulators)
+                {
+                    var ro = GetSimObject(sittingOn, sim);
+                    if (ro != null) return ro;
+                }
+                return null;
+            }
             if (sittingOn == 0) return null;
             if (sittingOn == 13720000)
             {
@@ -1419,6 +1438,14 @@ namespace cogbot.Listeners
         public static void EnsureSelected(uint LocalID, Simulator simulator)
         {
             if (LocalID == 0) return;
+            if (simulator == null)
+            {
+                foreach (var sim in AllSimulators)
+                {
+                    EnsureSelected(LocalID, sim);
+                }
+                return;
+            }
             if (NeverSelect(LocalID, simulator))
                 ReallyEnsureSelected(simulator, LocalID);
         }
