@@ -246,7 +246,7 @@ namespace ABuildStartup
             {
                 string[] newArgs = oArgs;
                 AllocConsole();
-                RunType("RTParser.RTPBot", args);
+                RunType("AIMLbot:RTParser.RTPBot", args);
                 return;
             }
             if (ClientManager.arguments.GetAfter("--plwin", out oArgs))
@@ -469,7 +469,14 @@ namespace ABuildStartup
             {
                 Type t = Type.GetType(c, false, false);
                 if (t == null) t = Type.GetType(c, false, true);
-
+                if (t==null && c.Contains(":"))
+                {
+                    var ds = c.Split(':');
+                    c = ds[1];
+                    Assembly asem = AppDomain.CurrentDomain.Load(ds[0]);
+                    t = asem.GetType(c, false, false);
+                    if (t == null) t = asem.GetType(c, false, true);
+                }
                 if (t != null)
                 {
                     RunType(t, newArgs);
