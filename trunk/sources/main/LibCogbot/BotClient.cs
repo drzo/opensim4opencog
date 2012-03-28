@@ -112,7 +112,7 @@ namespace cogbot
         }
 
 
-        readonly TaskQueueHandler OneAtATimeQueue;
+        readonly public TaskQueueHandler OneAtATimeQueue;
         readonly public GridClient gridClient;
         // TODO's
         // Play Animations
