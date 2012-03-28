@@ -476,7 +476,7 @@ namespace ABuildStartup
                 }
                 else
                 {
-                    throw new Exception(c);
+                    throw new Exception("Class not found: " + c);
                 }
             });
         }
