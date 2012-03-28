@@ -1088,9 +1088,5 @@ namespace cogbot.Actions.SimExport
             }
         }
 
-        private void CheckTasks(ImportSettings settings)
-        {
-            
-        }
     }
 }

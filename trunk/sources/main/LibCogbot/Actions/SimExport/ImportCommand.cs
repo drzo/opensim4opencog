@@ -103,7 +103,7 @@ namespace cogbot.Actions.SimExport
             public HashSet<Linkset> AssetLinks = new HashSet<Linkset>();
             public HashSet<UserOrGroupMapping> Users = new HashSet<UserOrGroupMapping>();
             public HashSet<UserOrGroupMapping> Groups = new HashSet<UserOrGroupMapping>();
-            public HashSet<TaskObject> TaskObjects = new HashSet<TaskObject>();
+            public HashSet<TaskFileInfo> TaskObjects = new HashSet<TaskFileInfo>();
 
             public LocalSimScene()
             {
@@ -369,7 +369,7 @@ namespace cogbot.Actions.SimExport
 
         private void ConfirmLSLPrims(ImportSettings settings)
         {
-            ;
+            ;// <44, 143, 340 > to <154, 241, 360>
             foreach (var o0 in File.ReadAllLines(ExportCommand.dumpDir + "../required.txt"))
             {
                 if (o0==null) continue;
@@ -445,7 +445,7 @@ namespace cogbot.Actions.SimExport
                 {
                     continue;
                 }
-                pp.Link.Children.Add(ch);
+                pp.Link.ChildAdd(ch);
             }
             foreach (var ls in LockInfo.CopyOf(LocalScene.Links))
             {
