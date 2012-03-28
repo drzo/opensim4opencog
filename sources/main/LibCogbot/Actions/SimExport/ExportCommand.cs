@@ -45,6 +45,12 @@ namespace cogbot.Actions.SimExport
         public int needFiles;
         private readonly HashSet<SimObject> successfullyExportedPrims = new HashSet<SimObject>();
 
+        private ICollection<string> ignoredRegex = new []
+                                                       {
+                                                           "^ left $", "^ right $", " leaf ", " gull ", " bird ",
+                                                           " rabbit ", " duck ", " egg ", " acorn ", "marvelous moving"
+                                                       };
+
         /// <summary>
         /// (string eMessage, UUID sourceId)
         /// </summary>
@@ -205,6 +211,7 @@ namespace cogbot.Actions.SimExport
                                              CurSim = Client.Network.CurrentSim,
                                              GroupID = Client.Self.ActiveGroup
                                          };
+            settings = arglist;
             if (args[0]=="hhp")
             {
                 args = new string[] { "taskobjs", "nobuf", "all", "spec", "f0a89a9f-3f33-b2aa-2829-eaeec3d08b82" };

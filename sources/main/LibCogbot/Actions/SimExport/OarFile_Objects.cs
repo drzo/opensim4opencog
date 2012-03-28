@@ -16,6 +16,11 @@ namespace cogbot.Actions.SimExport
     {
         public ImportCommand.PrimToCreate Parent;
         public List<ImportCommand.PrimToCreate> Children = new List<ImportCommand.PrimToCreate>();
+
+        public void ChildAdd(ImportCommand.PrimToCreate create)
+        {
+            if (!Children.Contains(create)) Children.Add(create);
+        }
     }
 
     public partial class OarFile
@@ -158,7 +163,7 @@ namespace cogbot.Actions.SimExport
             WriteVector(writer, "SitTargetOrientation", Vector3.UnitZ);
             WriteVector(writer, "SitTargetPosition", Vector3.Zero);
             WriteVector(writer, "SitTargetPositionLL", Vector3.Zero);
-            WriteQuaternion(writer, "SitTargetOrientationLL", new Quaternion(0f, 0f, 1f, 0f));
+            WriteQuaternion(writer, "SitTargetOrientationLL", Quaternion.Identity);
             WriteInt(writer,"ParentID", sop.ParentID);
             WriteDate(writer, "CreationDate", sop.Properties.CreationDate);
             WriteEnum(writer, "Category", sop.Properties.Category);

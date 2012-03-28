@@ -464,11 +464,18 @@ namespace cogbot.Actions.SimExport
         public void KillAllUnpacked(OutputDelegate Failures, bool artifacts)
         {
 
-            UUID into = FolderCalled("TaskInvKilled") ?? Client.Inventory.FindFolderForType(AssetType.TrashFolder);
+            UUID into = null;
+            if (!settings.Contains("info"))
+            {
+                into = FolderCalled("TaskInvKilled") ?? Client.Inventory.FindFolderForType(AssetType.TrashFolder);
+            }
+            int count = 0;
             lock (fileWriterLock)
             {
                 foreach (var file in Directory.GetFiles(dumpDir, "*.repack"))
                 {
+                    count++;
+                    if (count > 1) if (settings.Contains("once")) return;
                     string filetext = File.ReadAllText(file);
                     string[] csv = filetext.Split(new[] { ',' });
                     UUID assetID = UUIDFactory.GetUUID(csv[2]);
@@ -482,6 +489,11 @@ namespace cogbot.Actions.SimExport
                     if (O == null)
                     {
                         Failure("Cant find object for file: " + file + " " + filetext);
+                        if (settings.Contains("info"))
+                        {
+                            Success("INFO: " + localID + " " + assetID);
+                            continue;
+                        }
                         Client.Inventory.RequestDeRezToInventory(localID, DeRezDestination.TrashFolder, into,
                                          UUID.Random());
                         File.Delete(file);
@@ -489,9 +501,15 @@ namespace cogbot.Actions.SimExport
                         {
                             ImportCommand.Running.KillID(assetID);
                         }
+                        if (settings.Contains("once")) return;
                     }
                     else
                     {
+                        if (!settings.Contains("info"))
+                        {
+                            Success("INFO: " + localID + " " + assetID + " text=" + filetext);
+                            continue;
+                        }
                         Client.Inventory.RequestDeRezToInventory(O.LocalID, DeRezDestination.TrashFolder, into,
                                                                  UUID.Random());
                         File.Delete(file);
@@ -499,6 +517,7 @@ namespace cogbot.Actions.SimExport
                         {
                             ImportCommand.Running.KillID(assetID);
                         }
+                        if (settings.Contains("once")) return;
                     }
                 }
                 if (artifacts)
