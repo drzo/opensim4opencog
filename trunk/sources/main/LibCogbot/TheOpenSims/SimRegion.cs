@@ -800,6 +800,17 @@ namespace cogbot.TheOpenSims
            // base.Parcels_OnParcelInfo(parcel);
         }
 
+        public void Parcels_OnAccessList(ParcelAccessListReplyEventArgs info)
+        {
+            lock (parcelsI)
+            {
+                //if (parcelsI.ContainsKey(parcel.ID)) return;
+                //parcelsI[parcel.ID] = parcel;
+            }
+            // Client.Parcels.GetParcelLocalID()
+            // base.Parcels_OnParcelInfo(parcel);
+        }
+
         public ICollection<ParcelInfo> ParcelInfos
         {
             get
