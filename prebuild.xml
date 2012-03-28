@@ -584,6 +584,7 @@
         <ReferencePath>../../../../bin</ReferencePath>
         <Reference name="System"/>
         <Reference name="System.Xml"/>
+       <Reference name="System.Core"/>
         <Reference name="OpenMetaverseTypes"/>
         <Files>
           <Match pattern="*.cs" recurse="true"/>
