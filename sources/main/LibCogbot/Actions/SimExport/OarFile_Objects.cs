@@ -353,7 +353,10 @@ namespace cogbot.Actions.SimExport
                 writer.WriteElementString("ProfileHollow", Primitive.PackProfileHollow(shp.ProfileHollow).ToString()); 
                 
                 WriteEnum(writer, "PCode", shp.PCode);
-                WriteInt(writer,"State", shp.State);
+
+                // this is Attachment in a way?
+                WriteInt(writer, "State", shp.State);
+                //WriteEnum(writer, "State", shp.AttachmentPoint);
 
                 WriteFlags(writer, "ProfileShape", shp.ProfileCurve, options);
                 WriteFlags(writer, "HollowShape", shp.ProfileHole, options);

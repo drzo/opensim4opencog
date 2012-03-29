@@ -136,8 +136,35 @@ namespace cogbot.Actions.SimExport
                 }
             }
 
+            public bool ExcludeFromExport
+            {
+                set
+                {
+                    _ExcludeFromExport = value;
+                    if (Childs != null)
+                    {
+                        lock (Childs)
+                        {
+                            foreach (PrimToCreate child in Childs)
+                            {
+                                child.ExcludeFromExport = value;
+                            }
+                        }
+                    }
+                    if (ParentPrim != null && ParentPrim != this)
+                    {
+                        if (ParentPrim._ExcludeFromExport != value)
+                        {
+                            ParentPrim.ExcludeFromExport = value;
+                        }
+                    }
+                }
+                get { return _ExcludeFromExport; }
+            }
+
             private SimObject _rezed;
             public bool NeedsPositioning = true;
+            public bool _ExcludeFromExport = false;
             public PrimImportState State = PrimImportState.Unloaded;
             public uint NewLocalID
             {
@@ -762,25 +789,37 @@ namespace cogbot.Actions.SimExport
             RemoveFrom(EXCUSED_ORPHANS, id);
             RemoveFrom(parents, id);
             RemoveFrom(childs, id);
-            var uid = ExportCommand.dumpDir + id.OldID;
-            File.Delete(uid + ".llsd");
-            File.Delete(uid + ".task");
-            File.Delete(uid + ".link");
-            File.Delete(uid + ".ptc");
+            RemoveFrom(MustExportUINT, id.OldLocalID);
+            RemoveFrom(MustExportUINT, id.ParentID);
+            RemoveFrom(MustExport, id.OldID);
+            KillFileID(id.OldID);
             RemoveFrom(UUID2OBJECT, id.OldID);
         }
         public void KillID(UUID id)
         {
+            var ptc = GetOld(id) as PrimToCreate;
+            if (ptc != null)
+            {
+                KillID(ptc);
+                return;
+            }
             RemoveFrom(ORPHANS, id);
             RemoveFrom(EXCUSED_ORPHANS, id);
             RemoveFrom(parents, id);
             RemoveFrom(childs, id);
+            RemoveFrom(MustExport, id);
+            var uid = ExportCommand.dumpDir + id;
+            KillFileID(id);
+            RemoveFrom(UUID2OBJECT, id);
+        }
+
+        private void KillFileID(UUID id)
+        {
             var uid = ExportCommand.dumpDir + id;
             File.Delete(uid + ".llsd");
             File.Delete(uid + ".task");
             File.Delete(uid + ".link");
             File.Delete(uid + ".ptc");
-            RemoveFrom(UUID2OBJECT, id);
         }
 
         private void RemoveFrom<T>(HashSet<T> set, T id)
@@ -884,7 +923,13 @@ namespace cogbot.Actions.SimExport
                     if (child.ParentPrim != null) continue;
                     var uui = child.ParentUUID;
                     var parent = GetOldPrim(uui);
-                    if (parent != null) child.ParentPrim = parent;
+                    if (parent != null)
+                    {
+                        child.ParentPrim = parent;
+                    } else
+                    {
+                        MustExport.Add(uui);
+                    }
                 }
                 ORPHANS = new HashSet<PrimToCreate>();
                 foreach (var child in childs)
@@ -897,6 +942,8 @@ namespace cogbot.Actions.SimExport
                         if (!EXCUSED_ORPHANS.Contains(child))
                         {
                             ORPHANS.Add(child);
+                            MustExport.Add(child.OldID);
+                            if (p != 0) MustExportUINT.Add(p);
                             if (CurrentOrphan == null) CurrentOrphan = child;
                         } 
                         Failure("ORPHAN: " + child);
@@ -912,6 +959,7 @@ namespace cogbot.Actions.SimExport
                     if (CurrentOrphan != null)
                     {
                         EXCUSED_ORPHANS.Add(CurrentOrphan);
+                        MustExport.Remove(CurrentOrphan.OldID);
                         CurrentOrphan = null;
                     }
                     if (ORPHANS.Count > 0)
@@ -928,6 +976,32 @@ namespace cogbot.Actions.SimExport
                     if (CurrentOrphan != null)
                     {
                         Client.Self.Chat("" + CurrentOrphan.OldID, 4201, ChatType.Normal);
+                    }
+                }
+                bool killExclude = arglist.Contains("killexcludes");
+                if (arglist.Contains("excludes") || killExclude)
+                {
+                    foreach (PrimToCreate ptc in LockInfo.CopyOf(parents))
+                    {
+                        if (!ptc.ExcludeFromExport && ExportCommand.IsSkippedPTC(ptc))
+                        {
+                            ptc.ExcludeFromExport = true;
+                        }
+                        if (ptc.ExcludeFromExport)
+                        {
+                            KillID(ptc);
+                        }
+                    }
+                    foreach (PrimToCreate ptc in LockInfo.CopyOf(childs))
+                    {
+                        if (!ptc.ExcludeFromExport && ExportCommand.IsSkippedPTC(ptc))
+                        {
+                            ptc.ExcludeFromExport = true;
+                        }
+                        if (ptc.ExcludeFromExport)
+                        {
+                            KillID(ptc);
+                        }
                     }
                 }
                 if (arglist.Contains("kill"))
@@ -1028,6 +1102,10 @@ namespace cogbot.Actions.SimExport
         }
         public PrimToCreate APrimToCreate(UUID oldObjectID)
         {
+            if (CogbotHelpers.IsNullOrZero(oldObjectID))
+            {
+                throw new NullReferenceException("APrimToCreate");
+            }
             lock (WorkFlowLock)
             {
                 PrimToCreate ptc = null;
@@ -1036,7 +1114,10 @@ namespace cogbot.Actions.SimExport
                 {
                     ptc = utc as PrimToCreate;
                 }
-                if (ptc != null) return ptc;
+                if (ptc != null)
+                {
+                    return ptc;
+                }
                 ptc = new PrimToCreate(oldObjectID);
                 UUID2OBJECT[ptc.OldID] = ptc;
                 uint oldLocalId = ptc.OldLocalID;
@@ -1051,8 +1132,14 @@ namespace cogbot.Actions.SimExport
                 return ptc;
             }
         }
-        private PrimToCreate GetOldPrim(uint localID)
+        public PrimToCreate GetOldPrim(uint localID)
         {
+            if (localID == 0)
+            {
+                return null;
+               // throw new NullReferenceException("GetOldPRim");
+            }
+
             lock (WorkFlowLock)
             {
                 PrimToCreate ptc;
@@ -1060,7 +1147,7 @@ namespace cogbot.Actions.SimExport
                 {
                     return ptc;
                 }
-                Failure("cant find LocalID=" + localID);
+               // Failure("cant find LocalID=" + localID);
             }
             return null;
         }
@@ -1398,6 +1485,7 @@ namespace cogbot.Actions.SimExport
                         if (!NewUINT2OBJECT.TryGetValue(parentID, out parent))
                         {
                             Failure("UNCONFIRMED PARENT: " + o);
+                            Client.Objects.RequestObject(settings.CurSim, parentID);
                             uncomp = true;
                         }
                     }

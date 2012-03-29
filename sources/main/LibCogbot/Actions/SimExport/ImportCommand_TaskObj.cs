@@ -300,17 +300,18 @@ namespace cogbot.Actions.SimExport
 
                 if (AgentItem.InventoryType == InventoryType.LSL)
                 {
-                    Inventory.CopyScriptToTask(CreatedPrim.NewLocalID, (InventoryItem)AgentItem, true);
-                    Inventory.RequestSetScriptRunning(CreatedPrim.NewID, AgentItem.AssetUUID, true);
+                   // Inventory.CopyScriptToTask(CreatedPrim.NewLocalID, (InventoryItem)AgentItem, oldRunning);
+                   // Inventory.RequestSetScriptRunning(CreatedPrim.NewID, TargetTaskItem.UUID, oldRunning);
                 }
                 else
                 {
                     Inventory.UpdateTaskInventory(CreatedPrim.NewLocalID, (InventoryItem)AgentItem);
+                    if (!areItem.WaitOne(TimeSpan.FromSeconds(5)))
+                    {
+                        WriteLine("TIMEOUT: UpdateTask in " + ToString());
+                    }
                 }
-                if (!areItem.WaitOne(TimeSpan.FromSeconds(5)))
-                {
-                    WriteLine("TIMEOUT: UpdateTask in " + ToString());
-                }
+
                 Client.Objects.ObjectProperties -= TaskInventoryItemReceived;
                 var revent = CreatedPrim.RequestNewTaskInventory();
                 bool timedOut = false;
@@ -1003,6 +1004,7 @@ namespace cogbot.Actions.SimExport
             ManualResetEvent rezedEvent = new ManualResetEvent(false);
             private SimObject RezzedO;
             private bool missing;
+            private bool oldRunning;
 
             private void rezedInWorld(object o, ObjectPropertiesEventArgs e)
             {
