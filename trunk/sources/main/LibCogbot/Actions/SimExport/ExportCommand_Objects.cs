@@ -59,6 +59,9 @@ namespace cogbot.Actions.SimExport
         {
             if (P is SimAvatar) return true;
             if (P == null) return true;
+            if (IsIncluded(P.ID, P.LocalID)) return false;
+            if (IsIncluded(P.Parent.ID, P.ParentID)) return false;
+
             Primitive pp = P.Prim0;
             if (P.IsKilled)
             {
@@ -67,26 +70,63 @@ namespace cogbot.Actions.SimExport
                     if (P.IsTemporary) return true;
                 }
             }
-            if (P.IsTemporary) return true;
+            if (P.IsTemporary) return true;           
             if (!P.HasPrim) return true;
             if (pp == null) return true;
+            Primitive.ObjectProperties props = pp.Properties;
+            if (props != null)
+            {
+                if (IsSkippedName(props.Name))
+                {
+                    return true;
+                }
+            }
             if (pp.ParentID == 0) return false;
             SimObject parent = P.Parent;
-            if (parent is SimAvatar)
-            {
-                if (Exporting.TasksRezed.ContainsKey(P.ID))
-                {
-                    return false;
-                }
-                return true;
-            }
             // yes SL really does have links two deep! (called attachment linksets)
-            if (parent != null && parent.Parent is SimAvatar)
+            if (parent == null) return true;
+            if (parent == P) return false;
+            if (!IsSkipped(parent, settings)) return false;
+            return true;
+        }
+
+        public static bool IsSkippedName(string name)
+        {
+            string primName = "^ " + name.ToLower() + " $";
+            foreach (string s in ignoredRegex)
+            {
+                if (primName.Contains(s)) return true;
+            }
+            return false;
+        }
+
+        public static bool IsIncluded(UUID id, UUID pid, uint lid, uint plid)
+        {
+            return IsIncluded(id, lid) || IsIncluded(pid, plid);
+        }
+        private static bool IsIncluded(UUID id, uint lid)
+        {
+            ImportCommand importing = ImportCommand.Running;
+            if (!CogbotHelpers.IsNullOrZero(id)) if (Exporting.TasksRezed.ContainsKey(id) || importing.MustExport.Contains(id))
+                return true;
+            if (lid != 0) if (importing.MustExportUINT.Contains(lid) || importing.GetOldPrim(lid) != null)
+                return true;
+            return false;
+        }
+
+        public static bool IsSkippedPTC(ImportCommand.PrimToCreate P)
+        {
+            if (IsIncluded(P.OldID, P.OldLocalID)) return false;
+            if (IsIncluded(P.ParentUUID, P.ParentID)) return false;
+            Primitive pp = P.Prim;
+            uint pid = pp.ParentID;
+            if (IsSkippedName(pp.Properties.Name))
             {
                 return true;
             }
             return false;
         }
+
         public bool ExportPrim(BotClient Client, SimObject exportPrim, OutputDelegate Failure, ImportSettings settings)
         {
             uint localID = exportPrim.LocalID;
@@ -208,7 +248,7 @@ namespace cogbot.Actions.SimExport
             string exportFile = pathStem + ".link";
             lock (fileWriterLock) if (File.Exists(exportFile)) return;
             bool canScript = checkPerms(Client, exportPrim, SilientFailure, true);
-            InventoryItem found = null;// GetInvItem(Client, "LinksetSpeaker");
+            InventoryItem found = GetInvItem(Client, "LinksetSpeaker");
             if (!canScript || found == null)
             {
                 ScanForLinksets(exportPrim);

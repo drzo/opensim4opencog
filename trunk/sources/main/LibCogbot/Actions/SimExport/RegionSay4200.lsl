@@ -21,6 +21,52 @@ default{
 
 
 
+
+
+
+
+
+
+integer region_channel = -4200;
+integer repeat_channel = 4201;
+
+describeObject(string message) {
+       key k = (key)message;
+       list info = llGetObjectDetails(k , [OBJECT_POS , OBJECT_NAME, OBJECT_OWNER]);
+      vector vv = llList2Vector(info , 0);
+       if (k==(key)llList2String(info,3)) {  //IS AV
+        }
+       llOwnerSay( (string)llGetKey() + ": oDO,"+(string)k+","+ (string)vv.x+","+(string)vv.y+","+(string)vv.z+","+llList2String(info,1));
+}
+
+default{
+  state_entry(){
+    llListen( region_channel, "", "", "" );
+    llListen( repeat_channel, "", "", "" );
+  }
+
+  listen( integer vIntChannel, string vStrName, key vKeySpeaker, string vStrHeard ){    
+    //-- your filter wil probably be different
+    if (vIntChannel == region_channel){
+        llOwnerSay( (string)vKeySpeaker + ": "+ vStrHeard );
+    }else{
+       if (vKeySpeaker==llGetOwner())  {
+           list args = llCSV2List(vStrHeard);
+           string cmd = llList2String(args , 0);
+            if (cmd=="lfnd") {
+               describeObject(vStrHeard);
+            }
+           llRegionSay( -4202, vStrHeard );
+        }
+    }
+  }
+}
+
+
+
+
+
+
 integer CMD_CHANNEL = -4202; // positive channel, bot says on this
 
 //  protocol

@@ -528,6 +528,10 @@ namespace cogbot.Actions.SimExport
 
         private UUIDChange GetOld(UUID id)
         {
+            if (CogbotHelpers.IsNullOrZero(id))
+            {
+                throw new NullReferenceException("GetOldPRim");
+            }
             lock (WorkFlowLock)
             {
                 UUIDChange ptc;
@@ -540,6 +544,10 @@ namespace cogbot.Actions.SimExport
         }
         private UUID GetChange(UUID id)
         {
+            if (CogbotHelpers.IsNullOrZero(id))
+            {
+                throw new NullReferenceException("GetOldPRim");
+            }
             lock (WorkFlowLock)
             {
                 UUIDChange ptc;

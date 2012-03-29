@@ -45,10 +45,12 @@ namespace cogbot.Actions.SimExport
         public int needFiles;
         private readonly HashSet<SimObject> successfullyExportedPrims = new HashSet<SimObject>();
 
-        private ICollection<string> ignoredRegex = new []
+        static private readonly ICollection<string> ignoredRegex = new[]
                                                        {
-                                                           "^ left $", "^ right $", " leaf ", " gull ", " bird ",
-                                                           " rabbit ", " duck ", " egg ", " acorn ", "marvelous moving"
+                                                           "^ rbc $","^ left $", "^ right $", //,"^ HHP visitor scanner $",
+                                                           "squirrel",
+                                                           " leaf ", "gull", "bird ","pigeon",
+                                                           " rabbit ", " duck", " egg ", " acorn ", "marvelous moving",// "receptor quiz"
                                                        };
 
         /// <summary>
@@ -673,7 +675,7 @@ namespace cogbot.Actions.SimExport
             if (found.InventoryType == InventoryType.LSL)
             {
                 Client.Inventory.CopyScriptToTask(exportPrim.LocalID, (InventoryItem)found, true);
-                Client.Inventory.RequestSetScriptRunning(exportPrim.ID, found.AssetUUID, true);
+                //Client.Inventory.RequestSetScriptRunning(exportPrim.ID, found.UUID, true);
             } else
             {
                 Client.Inventory.UpdateTaskInventory(exportPrim.LocalID, (InventoryItem)found);
