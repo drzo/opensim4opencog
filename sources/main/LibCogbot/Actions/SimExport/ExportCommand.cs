@@ -626,13 +626,14 @@ namespace cogbot.Actions.SimExport
         {
             if (e.Type != ChatType.OwnerSay) return;
             UUID sourceId = e.SourceID;
-            string fromWho = e.FromName;
-            string eMessage = e.Message;
-            if (fromWho == "RegionSay4200")
+            string fromWho = e.FromName ?? "";
+            string eMessage = e.Message ?? "";
+            if (fromWho.StartsWith("RegionSay4200"))
             {
                 int findC = eMessage.IndexOf(":");
                 string fu = eMessage.Substring(0, findC);
-                UUID.TryParse(fu, out sourceId);
+                UUID sourceId2;
+                if (UUID.TryParse(fu, out sourceId2)) sourceId = sourceId2;
                 eMessage = eMessage.Substring(findC + 1).TrimStart();
             }
             ListenForRelay(eMessage, sourceId);
