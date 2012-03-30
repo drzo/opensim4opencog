@@ -478,7 +478,8 @@ namespace cogbot.Actions.SimExport
                 //if (trans.AssetID != item.AssetUUID) return;
                 if (!trans.Success)
                 {
-                    Error = "" + trans.Status;
+                    StatusCode transStatus = trans.Status;
+                    if (transStatus != StatusCode.OK && transStatus != StatusCode.Done) Error = "" + transStatus;
                     lock (Running.TaskAssetWaiting)
                     {
                         ExportTaskAsset exportTaskAsset;
@@ -535,7 +536,7 @@ namespace cogbot.Actions.SimExport
                                                             item.AssetType, true, Asset_Received);
                 if (NumRequests > 1) if (!NoCopyItem)
                 {
-                    Running.Client.Inventory.MoveTaskInventory(CreatedPrim.OldLocalID, itemID, CreatedPrim.OldID,
+                   if (false) Running.Client.Inventory.MoveTaskInventory(CreatedPrim.OldLocalID, itemID, CreatedPrim.OldID,
                                                                Client.Network.CurrentSim);
                 }
                 NumRequests++;
@@ -548,7 +549,38 @@ namespace cogbot.Actions.SimExport
             }
             private void RequestRezObject0()
             {
-                if (ExportCommand.UseObjectUnpacker && !CreatedPrim.MustUseAgentCopy) return;
+                if (ExportCommand.UseObjectUnpacker)
+                {
+                    if (!CreatedPrim.MustUseAgentCopy)
+                    {
+                        // should be the way?!
+                        //CreatedPrim.UnpackRTI();
+                        return;
+                    }
+                }
+
+                string rtiStatus = ExportCommand.dumpDir + CreatedPrim.OldID + "." + ObjectNum + ".rti";
+                lock(ExportCommand.fileWriterLock)
+                {
+                    if (File.Exists(rtiStatus))
+                    {
+                        string[] conts = File.ReadAllText(rtiStatus).Split(',');
+                        if (conts.Length > 2)
+                        {
+                            UUID objID = UUID.Parse(conts[0]);
+                            if (!CogbotHelpers.IsNullOrZero(objID))
+                            {
+                                //TaskItemOSD["RezzID"] = newObjID;
+                                OldAssetID = objID;
+                                if (SourceTaskItem != null) SourceTaskItem.RezzID = objID;
+                                missing = false;
+                                return;
+                            }
+                        }
+
+                    }
+                }
+
                 var Running = Exporting;
                 InventoryItem item = SourceTaskItem;
                 UUID itemID = item.UUID;
@@ -1019,6 +1051,7 @@ namespace cogbot.Actions.SimExport
             private SimObject RezzedO;
             private bool missing;
             private bool oldRunning;
+            public int ObjectNum = -1;
 
             private void rezedInWorld(object o, ObjectPropertiesEventArgs e)
             {
@@ -1120,10 +1153,7 @@ namespace cogbot.Actions.SimExport
             {
                 if (ptc.TaskObjectCount > 0)
                 {
-                    Exporting.AttemptMoveTo(ptc.SimPosition);
-                    Thread.Sleep(3000);
                     ptc.UnpackRTI();
-                    Thread.Sleep(3000);
                 }
             }
         }

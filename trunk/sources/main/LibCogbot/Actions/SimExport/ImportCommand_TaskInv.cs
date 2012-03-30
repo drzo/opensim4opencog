@@ -127,11 +127,9 @@ namespace cogbot.Actions.SimExport
                             regenObjInv = new List<InventoryBase>();
                             lock (TaskItemsToCreate)
                             {
-                                TaskObjectCount = 0;
                                 foreach (var toCreate in LockInfo.CopyOf(TaskItemsToCreate))
                                 {
                                     bool improvement;
-                                    if (toCreate.AssetType == AssetType.Object) TaskObjectCount++;
                                     var item = toCreate.ToInventoryBase(out improvement, improve);
                                     if (improvement)
                                     {
@@ -139,6 +137,7 @@ namespace cogbot.Actions.SimExport
                                     }
                                     regenObjInv.Add(item);
                                 }
+                                AssignObjectNums();
                             }
                             if (improvementM)
                             {
@@ -343,7 +342,6 @@ namespace cogbot.Actions.SimExport
                     succeeded = taskData.Count;
                     return true;
                 }
-                TaskObjectCount = 0;
                 // scan for existing source nodes
                 lock (TaskItemsToCreate)
                 {
@@ -368,16 +366,30 @@ namespace cogbot.Actions.SimExport
                         {
                             titc = new TaskItemToCreate(this, item);
                             TaskItemsToCreate.Add(titc);
-                            if (titc.AssetType == AssetType.Object) TaskObjectCount++;
                         }
                         else
                         {
                             titc.TaskItemOSD = item;
                         }
+                        AssignObjectNums();
                         succeeded++;
                     }
                 }
                 return failed == 0;
+            }
+
+            private void AssignObjectNums()
+            {
+                TaskObjectCount = 0;
+                foreach (TaskItemToCreate toCreate in TaskItemsToCreate)
+                {
+                    if (toCreate.AssetType == AssetType.Object)
+                    {
+                        toCreate.ObjectNum = TaskObjectCount;
+                        TaskObjectCount++;
+                    }
+                    
+                }
             }
 
             public void UnpackRTI()
@@ -386,12 +398,22 @@ namespace cogbot.Actions.SimExport
                 if (!MissingRTI(OldID)) return;
                 if (RTIRequested) return;
                 RTIRequested = true;
-                File.WriteAllText(ExportCommand.dumpDir + OldID + ".0.rti", "");
-                if (!Exporting.PutItemToTaskInv(Client, Rezed, "SimExportUnpackAll"))
+                lock (ExportCommand.fileWriterLock) File.WriteAllText(ExportCommand.dumpDir + OldID + ".0.rti", "requested");
+                Exporting.AttemptMoveTo(SimPosition);
+                Thread.Sleep(3000);
+                if (!Exporting.PutItemToTaskInv(Client, OldLocalID, _rezed , "SimExportUnpackCopy"))
                 {
-                    File.WriteAllText(ExportCommand.dumpDir + OldID + ".0.rti", "!mod");
-                    this.MustUseAgentCopy = true;
+                    lock (ExportCommand.fileWriterLock)
+                    {
+                        string nomod = ExportCommand.dumpDir + OldID + ".rti_status"; 
+                        if (!File.Exists(nomod))
+                        {
+                            File.WriteAllText(nomod, "nomod");
+                            this.MustUseAgentCopy = true;
+                        }
+                    }
                 }
+                Thread.Sleep(3000);
             }
             public bool SyncToAgentFolder(OutputDelegate WriteLine, bool createObjects)
             {

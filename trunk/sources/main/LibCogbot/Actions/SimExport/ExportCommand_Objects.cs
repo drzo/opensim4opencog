@@ -260,7 +260,7 @@ namespace cogbot.Actions.SimExport
                 if (PrimWaitingLinkset.ContainsKey(exportPrim.ID)) return;
                 PrimWaitingLinkset.Add(exportPrim.ID, new LinkSetBuffer {S = "", O = exportPrim, F = pathStem});
             }
-            PutItemToTaskInv(Client, exportPrim, "LinksetSpeaker");
+            PutItemToTaskInv(Client,exportPrim.LocalID, exportPrim, "LinksetSpeaker");
         }
 
         private void listen_forLinkset(string eMessage, UUID sourceId)
@@ -534,6 +534,66 @@ namespace cogbot.Actions.SimExport
             if (s.Length < 100) return s;
             return s.Substring(0, 100);
 
+        }
+
+        private TaskQueueHandler KillInWorldTask = new TaskQueueHandler("KillInWorldAndDisk");
+        private void KillInWorldAndDisk(UUID oldobjid)
+        {
+            if (CogbotHelpers.IsNullOrZero(oldobjid)) return;
+            Importing.KillID(oldobjid);
+            KillInWorldAndDisk0(oldobjid);
+        }
+        private void KillInWorldAndDisk0(UUID oldobjid)
+        {
+            Vector3 at;
+            if (!IsExisting(oldobjid, out at)) return;
+            KillInWorldTask.Enqueue(() =>
+            {
+                SimObject O = GetSimObjectFromUUID(oldobjid);
+                if (O != null)
+                {
+                    UUID into = FolderCalled("TaskInvKilled") ?? Client.Inventory.FindFolderForType(AssetType.TrashFolder);
+                    Client.Inventory.RequestDeRezToInventory(O.LocalID, DeRezDestination.TrashFolder, into,
+                                     UUID.Random());
+                    return;
+                }
+                else
+                {
+                    KillInWorldAndDisk0(oldobjid);
+                }
+            });
+        }
+
+        public bool IsExisting(UUID id, out Vector3 loc)
+        {
+            if (CogbotHelpers.IsNullOrZero(id))
+            {
+                loc = Vector3.Zero;
+                return false;
+            }
+            string fnd = null;
+            string idstr = id.ToString().ToLower();
+            AutoResetEvent are = new AutoResetEvent(false);
+            EventHandler<ChatEventArgs> fff = (o,e) =>
+            {
+                string eM = e.Message;
+                int f = eM.IndexOf("oDO,lfnd");
+                if (f<0) return;
+                if (!eM.Contains(idstr)) return;
+                fnd = eM.Substring(f);
+                are.Set();
+            };
+            Client.Self.ChatFromSimulator += fff;
+            Client.Self.Chat("lfnd," + id, 4201, ChatType.Normal);
+            if (!are.WaitOne(TimeSpan.FromSeconds(10)))
+            {
+                loc = Vector3.Zero;
+                return false;
+            }
+            Client.Self.ChatFromSimulator -= fff;
+            string[] sp = fnd.Split(',');
+            loc = new Vector3(float.Parse(sp[3]), float.Parse(sp[4]), float.Parse(sp[5]));
+            return loc != Vector3.Zero;
         }
     }
 }

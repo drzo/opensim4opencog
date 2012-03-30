@@ -231,6 +231,10 @@ namespace cogbot.Actions.SimExport
             {
                 ExportCommand.IsExporting = false;
             }
+            else
+            {
+                ExportCommand.IsExporting = true;
+            }
             const string hlp = @"
             
             Toplevel Directives
