@@ -208,6 +208,7 @@ namespace cogbot.Actions.SimExport
         public static void WriteTaskInventory(Primitive sop, XmlTextWriter writer, ICollection<InventoryBase> tinv, ImportSettings options)
         {
             if (tinv == null) return;
+            int ObjectNum = -1;
             if (tinv.Count > 0) // otherwise skip this
             {
                 writer.WriteStartElement("TaskInventory");
@@ -220,6 +221,22 @@ namespace cogbot.Actions.SimExport
                     bool obj = (item.AssetType == AssetType.Object);
                     if (obj)
                     {
+                        ObjectNum++;
+                        if (CogbotHelpers.IsNullOrZero(item.RezzID))
+                        {
+                            string rtiStatus = ExportCommand.dumpDir + sop.ID + "." + ObjectNum + ".rti";
+                            lock (ExportCommand.fileWriterLock)
+                            {
+                                if (File.Exists(rtiStatus))
+                                {
+                                    string[] conts = File.ReadAllText(rtiStatus).Split(',');
+                                    if (conts.Length > 2)
+                                    {
+                                        item.RezzID = UUID.Parse(conts[0]);
+                                    }
+                                }
+                            }
+                        }
                         if (CogbotHelpers.IsNullOrZero(item.RezzID))
                         {
                             ExportCommand.LogError(sop.ID, "AssetZERO: " + item);

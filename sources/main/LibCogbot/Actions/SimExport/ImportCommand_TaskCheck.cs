@@ -125,7 +125,7 @@ namespace cogbot.Actions.SimExport
                 }
             }
             // this makes sure we know that late found childs are assets
-            foreach (PrimToCreate parent in parents)
+            foreach (PrimToCreate parent in LockInfo.CopyOf(parents))
             {
                 if (parent.IsAsset) parent.SetIsAsset();
             }
@@ -136,7 +136,7 @@ namespace cogbot.Actions.SimExport
 
         private void CheckTasks(ImportSettings settings)
         {
-            foreach (PrimToCreate parent in parents)
+            foreach (PrimToCreate parent in LockInfo.CopyOf(parents))
             {
                 var ls = new Linkset()
                 {
