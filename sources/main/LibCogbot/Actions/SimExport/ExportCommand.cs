@@ -581,12 +581,12 @@ namespace cogbot.Actions.SimExport
 
         static private HashSet<uint> RequiredForExportLocalIDs
         {
-            get { return ImportCommand.Importing.MustExportUINT; }
+            get { return Importing.MustExportUINT; }
         }
 
-        public ImportCommand Importing
+        static public ImportCommand Importing
         {
-            get { return Importing; }
+            get { return ImportCommand.Importing; }
         }
 
         public static ExportCommand Exporting;
@@ -676,7 +676,7 @@ namespace cogbot.Actions.SimExport
             throw new NotImplementedException(s);
         }
 
-        public bool PutItemToTaskInv(BotClient Client, SimObject exportPrim, string name)
+        public bool PutItemToTaskInv(BotClient Client, uint localID, SimObject exportPrim, string name)
         {
             InventoryItem found = GetInvItem(Client, name);
             if (found == null)
@@ -684,21 +684,24 @@ namespace cogbot.Actions.SimExport
                 Failure("Cant find InvItem " + name);
                 return false;
             }
-
-            PermissionWho pwo = Importing.TheSimAvatar.EffectivePermissionWho(exportPrim);
-            PermissionMask pmo = CogbotHelpers.PermMaskForWho(pwo, exportPrim.Properties.Permissions);
-            bool canModifyObject = Permissions.HasPermissions(pmo, PermissionMask.Modify);
-            if (!canModifyObject)
+            bool canModifyObject = true;
+            if (exportPrim!=null)
             {
-                
+                PermissionWho pwo = Importing.TheSimAvatar.EffectivePermissionWho(exportPrim);
+                PermissionMask pmo = CogbotHelpers.PermMaskForWho(pwo, exportPrim.Properties.Permissions);
+                canModifyObject = Permissions.HasPermissions(pmo, PermissionMask.Modify);
+                if (!canModifyObject)
+                {
+
+                }
             }
             if (found.InventoryType == InventoryType.LSL)
             {
-                Client.Inventory.CopyScriptToTask(exportPrim.LocalID, (InventoryItem)found, true);
+                Client.Inventory.CopyScriptToTask(localID, (InventoryItem)found, true);
                 //Client.Inventory.RequestSetScriptRunning(exportPrim.ID, found.UUID, true);
             } else
             {
-                Client.Inventory.UpdateTaskInventory(exportPrim.LocalID, (InventoryItem)found);
+                Client.Inventory.UpdateTaskInventory(localID, (InventoryItem)found);
             }
             return canModifyObject;
         }

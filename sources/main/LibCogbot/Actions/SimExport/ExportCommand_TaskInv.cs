@@ -91,14 +91,33 @@ namespace cogbot.Actions.SimExport
             if (eMessage.StartsWith("RTI:"))
             {
                 eMessage = eMessage.Substring(4).Trim();
+                if (eMessage.StartsWith("objcount="))
+                {
+                    string nomod = ExportCommand.dumpDir + arg2 + ".rti_status";
+                    lock (fileWriterLock) File.WriteAllText(nomod, eMessage);
+                    return;
+                }
                 string[] lr = eMessage.Split(new[] { ',' });
                 var objid = UUIDFactory.GetUUID(lr[0]);
                 Importing.MustExport.Add(objid);
                 lock (fileWriterLock) File.WriteAllText(dumpDir + objid + ".objectAsset", eMessage);
                 var exportPrimID = UUIDFactory.GetUUID(lr[1]);
                 var objectNumber = int.Parse(lr[2]);
-                string exportFile = dumpDir + exportPrimID + "." + objectNumber + ".rti";
-                lock (fileWriterLock) File.WriteAllText(exportFile, eMessage);
+                string exportFile = dumpDir + exportPrimID + "." + objectNumber + ".rti";              
+                lock (fileWriterLock)
+                {
+                    if (File.Exists(exportFile))
+                    {
+                        string rt = File.ReadAllText(exportFile);
+                        if (rt.Length > 30)
+                        {
+                            lr = rt.Split(new[] { ',' });
+                            var oldobjid = UUIDFactory.GetUUID(lr[0]);
+                            KillInWorldAndDisk(oldobjid);
+                        }
+                    }
+                    File.WriteAllText(exportFile, eMessage);
+                }
                 return;
             }
         }

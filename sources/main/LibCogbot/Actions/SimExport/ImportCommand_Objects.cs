@@ -401,6 +401,12 @@ namespace cogbot.Actions.SimExport
                 {
                     IsAsset = true;
                 }
+                string rtiStatus = ExportCommand.dumpDir + OldID + ".rti_status";
+                if (File.Exists(rtiStatus))
+                {
+                    MustUseAgentCopy = File.ReadAllText(rtiStatus) == "nomod";
+                }
+                
                 if (IsLocalScene) return;
                 if (CogbotHelpers.IsNullOrZero(NewID))
                 {
