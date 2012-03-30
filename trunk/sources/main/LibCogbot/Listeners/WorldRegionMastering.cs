@@ -717,6 +717,7 @@ namespace cogbot.Listeners
 
         public override void Parcels_OnAccessListReply(object sender, ParcelAccessListReplyEventArgs e)
         {
+            return;
             SimRegion r = SimRegion.GetRegion(e.Simulator.RegionID, client);
             if (r != null) r.Parcels_OnAccessList(e);
             //base.Parcels_OnAccessListReply(simulator, sequenceID, localID, flags, accessEntries);
