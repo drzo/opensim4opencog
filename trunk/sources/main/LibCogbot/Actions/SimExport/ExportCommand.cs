@@ -385,7 +385,7 @@ namespace cogbot.Actions.SimExport
             foreach (var P in PSBuf)
             {
                 if (!primsAtAll) break;
-                if (IsComplete(P.ID, false, arglist)) continue;
+                if (IsComplete(P.ID, false, false, arglist)) continue;
                 // skip attachments and avatars
                 if (IsSkipped(P, arglist)) continue;
                 if (!P.HasPrim)
@@ -550,7 +550,7 @@ namespace cogbot.Actions.SimExport
         }
 
 
-        private void GiveStatus()
+        public void GiveStatus()
         {
             Success("Awaiting Linkset of " + PrimWaitingLinkset.Count + " objects");
             Success("Awaiting TaskAsset of " + TaskAssetWaiting.Count + " assets");
@@ -569,6 +569,9 @@ namespace cogbot.Actions.SimExport
             Success("link = " + FileCount("*.link"));
             Success("repack = " + FileCount("*.repack"));
             Success("rti = " + FileCount("*.rti"));
+            Success("rti.0 = " + FileCount("*.0.rti"));
+            Success("rti_status = " + FileCount("*.rti_status"));
+            Success("objectAsset = " + FileCount("*.objectAsset"));
             Success("taskobj = " + FileCount("*.taskobj"));
             Success("PSBuf = " + PSBuf.Count);
         }

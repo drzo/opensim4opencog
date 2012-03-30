@@ -308,6 +308,7 @@ namespace cogbot.Actions.SimExport
                 arglist.Add("link");
                 arglist.Add("task");
                 arglist.Add("taskobj");
+                arglist.Add("CountReady");
             }
             if (arglist.Contains("prim"))
             {
@@ -367,6 +368,7 @@ namespace cogbot.Actions.SimExport
             if (arglist.Contains("checktasks")) CheckTasks(importSettings);
             if (arglist.Contains("upackobjs")) UnpackTaskObjs(importSettings);
             if (arglist.Contains("oar")) CreateOARFile(importSettings, "exported.oar");
+            if (arglist.Contains("CountReady")) CountReady(importSettings);
             if (arglist.Contains("cleanup")) CleanupPrims(importSettings);
             writeLine("Completed SimImport");
             return SuccessOrFailure();
