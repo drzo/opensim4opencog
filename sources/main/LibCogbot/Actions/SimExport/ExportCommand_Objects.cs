@@ -106,7 +106,7 @@ namespace cogbot.Actions.SimExport
         }
         private static bool IsIncluded(UUID id, uint lid)
         {
-            ImportCommand importing = ImportCommand.Running;
+            ImportCommand importing = ImportCommand.Importing;
             if (!CogbotHelpers.IsNullOrZero(id)) if (Exporting.TasksRezed.ContainsKey(id) || importing.MustExport.Contains(id))
                 return true;
             if (lid != 0) if (importing.MustExportUINT.Contains(lid) || importing.GetOldPrim(lid) != null)
@@ -146,6 +146,7 @@ namespace cogbot.Actions.SimExport
         {
             if (IsSkipped(exportPrim, settings)) return false;
             Simulator CurSim = exportPrim.GetSimulator();
+            //settings.CurSim = CurSim;
             WorldObjects.EnsureSelected(exportPrim.LocalID, CurSim);
             string pathStem = Path.Combine(dumpDir, exportPrim.ID.ToString());
             if (settings.Contains("task") || showsMissingOnly)
@@ -484,7 +485,7 @@ namespace cogbot.Actions.SimExport
                     {
                         lock (fileWriterLock) File.WriteAllText(exportFile, output);
                     }
-                    var ptc = ImportCommand.Running.APrimToCreate(prim);
+                    var ptc = Importing.APrimToCreate(prim);
                     ptc.Rezed = exportPrim;
                    
                     if (forced && !verbosely) return;

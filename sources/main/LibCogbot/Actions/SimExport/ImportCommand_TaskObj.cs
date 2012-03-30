@@ -48,7 +48,7 @@ namespace cogbot.Actions.SimExport
                 {
                     if (_taskOSD == null)
                     {
-                        CreatedPrim.LoadTaskOSD(Running.WriteLine);
+                        CreatedPrim.LoadTaskOSD(Importing.WriteLine);
                     }
                     return _taskOSD;
                     
@@ -92,6 +92,7 @@ namespace cogbot.Actions.SimExport
                     oneAssetID = value;
                 }
             }
+
             public UUID OldItemID;
 
             protected InventoryManager Inventory
@@ -220,7 +221,7 @@ namespace cogbot.Actions.SimExport
                 }
                 else
                 {
-                    ItemToCreate itc = Running.FindItemToCreate(OldAssetID, AssetType, false);
+                    ItemToCreate itc = Importing.FindItemToCreate(OldAssetID, AssetType, false);
                     NewItemID = itc.NewItemID;
                 }
                 areItem = areItem ?? new ManualResetEvent(false);
@@ -298,7 +299,7 @@ namespace cogbot.Actions.SimExport
                 }
                 Client.Objects.ObjectProperties += TaskInventoryItemReceived;
 
-                if (AgentItem.InventoryType == InventoryType.LSL)
+                if (AgentItem.InventoryType == InventoryType.LSL || true)
                 {
                    // Inventory.CopyScriptToTask(CreatedPrim.NewLocalID, (InventoryItem)AgentItem, oldRunning);
                    // Inventory.RequestSetScriptRunning(CreatedPrim.NewID, TargetTaskItem.UUID, oldRunning);
@@ -376,7 +377,7 @@ namespace cogbot.Actions.SimExport
             {
                 var splt = contents.Split(',');
                 var oldID = UUID.Parse(splt[3]);
-                return Running.GetOldPrim(oldID);
+                return Importing.GetOldPrim(oldID);
             }
 
             public InventoryItem ToInventoryBase(out bool improvement, bool improve)
@@ -496,12 +497,13 @@ namespace cogbot.Actions.SimExport
                 OldAssetID = asset.AssetID;
                 if (SourceTaskItem != null) SourceTaskItem.AssetUUID = asset.AssetID;
                 //AddRelated(item.AssetUUID, item.AssetType);
-                if (false)
-                {
-                    Running.Assets_OnReceived(trans, asset);
-                    Running.TaskItemComplete(CreatedPrim.OldID, itemID, asset.AssetID, asset.AssetType);
-                }
+                //if (false)
                 if (waiting != null) waiting.Set();
+                {
+                    ExportCommand.IsExporting = true;
+                    Running.Assets_OnReceived(trans, asset);
+                    // Running.TaskItemComplete(CreatedPrim.OldID, itemID, asset.AssetID, asset.AssetType);
+                }
             }
 
             public void Request()
@@ -520,17 +522,22 @@ namespace cogbot.Actions.SimExport
                     return;
                     //UnpackTaskObject
                 }
-                if (!Exporting.settings.Contains("tasklsl"))
-                {
-                  //  RFailure("Use tasklsl for " + this);
-                    return;
-                }
-                if (item.AssetType == AssetType.LSLText || item.AssetType == AssetType.Notecard)
+                if (item.AssetType == AssetType.LSLText)
                 {
                     //Perhaps copy to AgentInventory first
+                    if (!Exporting.settings.Contains("tasklsl"))
+                    {
+                        //  RFailure("Use tasklsl for " + this);
+                        return;
+                    }
                 }
                 Running.Client.Assets.RequestInventoryAsset(item.AssetUUID, itemID, CreatedPrim.OldID, item.OwnerID,
                                                             item.AssetType, true, Asset_Received);
+                if (NumRequests > 1) if (!NoCopyItem)
+                {
+                    Running.Client.Inventory.MoveTaskInventory(CreatedPrim.OldLocalID, itemID, CreatedPrim.OldID,
+                                                               Client.Network.CurrentSim);
+                }
                 NumRequests++;
             }
 
@@ -541,6 +548,7 @@ namespace cogbot.Actions.SimExport
             }
             private void RequestRezObject0()
             {
+                if (ExportCommand.UseObjectUnpacker && !CreatedPrim.MustUseAgentCopy) return;
                 var Running = Exporting;
                 InventoryItem item = SourceTaskItem;
                 UUID itemID = item.UUID;
@@ -624,7 +632,7 @@ namespace cogbot.Actions.SimExport
             private void RFailure(string s, params object[] args)
             {
                 failures.WriteLine(s, args);
-                Running.Failure(DLRConsole.SafeFormat(s, args));
+                Importing.Failure(DLRConsole.SafeFormat(s, args));
             }
 
             internal void UnpackTaskObject(ImportSettings arglist, InventoryObject invObject,
@@ -677,7 +685,7 @@ namespace cogbot.Actions.SimExport
                     if (NoCopyItem)
                     {
                         var exportPrim = CreatedPrim.Rezed;
-                        PermissionWho pwo = Running.TheSimAvatar.EffectivePermissionWho(exportPrim);
+                        PermissionWho pwo = Importing.TheSimAvatar.EffectivePermissionWho(exportPrim);
                         PermissionMask pmo = CogbotHelpers.PermMaskForWho(pwo, exportPrim.Properties.Permissions);
                         bool canModifyObject = Permissions.HasPermissions(pmo, PermissionMask.Modify);
                         if (!canModifyObject && !Exporting.settings.Contains("nctaskobjs"))
@@ -753,7 +761,7 @@ namespace cogbot.Actions.SimExport
 
                 var invObject = SourceTaskItem;
                 var itemID = SourceTaskItem.UUID;
-                var Failure = (OutputDelegate)Running.WriteLine;
+                var Failure = (OutputDelegate)Importing.WriteLine;
                 if (CogbotHelpers.IsNullOrZero(OldAssetID))
                 {
                     OldAssetID = RezzedO.ID;
@@ -777,7 +785,7 @@ namespace cogbot.Actions.SimExport
 
                 Primitive prim = RezzedO.Prim;
                 uint unpackedLocalID = RezzedO.LocalID;
-                Running.MustExportUINT.Add(unpackedLocalID);
+                Importing.MustExportUINT.Add(unpackedLocalID);
 
                 Simulator simulator = RezzedO.GetSimulator();
                 string taskInfo = "" + unpackedLocalID + "," + simulator.Handle + "," + OldAssetID + "," +
@@ -849,7 +857,7 @@ namespace cogbot.Actions.SimExport
 
             private void AddKill(uint unpackedLocalID, Simulator simulator, string repackFile, OutputDelegate Failure)
             {
-                Running.KillClosures.Add(() => KillMade(Failure, unpackedLocalID, simulator, repackFile));
+                Importing.KillClosures.Add(() => KillMade(Failure, unpackedLocalID, simulator, repackFile));
             }
 
             private void KillMade(OutputDelegate Failure, uint unpackedLocalID, Simulator simulator, string repackFile)
@@ -989,6 +997,12 @@ namespace cogbot.Actions.SimExport
                     bool canModify = Permissions.HasPermissions(pm, PermissionMask.Modify);
                     bool canCopy = Permissions.HasPermissions(pm, PermissionMask.Copy);
                     if (canCopy) return false;
+
+                    // perhaps if the objecty is no-mod.. lets see if we can use the Move code.. cant hurt!
+                    if (!Permissions.HasPermissions(theAvatar.EffectivePermissionsMask(CreatedPrim.Rezed), PermissionMask.Modify))
+                    {
+                        return false;
+                    }
                     return true;
                 }
             }
@@ -1017,8 +1031,8 @@ namespace cogbot.Actions.SimExport
                 Error = "";
                 Client.Objects.ObjectProperties -= rezedInWorld;
                 OldAssetID = e.Properties.ObjectID;
-                Running.MustExport.Add(OldAssetID);
-                ExportCommand.Exporting.TasksRezed[oneAssetID] = this;
+                Importing.MustExport.Add(OldAssetID);
+                Exporting.TasksRezed[oneAssetID] = this;
                 PostRezzed();
                 rezedEvent.Set();
             }
@@ -1090,5 +1104,28 @@ namespace cogbot.Actions.SimExport
             }
         }
 
+        private void UnpackTaskObjs(ImportSettings settings)
+        {
+            foreach (PrimToCreate ptc in parents)
+            {
+                if (ptc.TaskObjectCount > 0)
+                {
+                    Exporting.AttemptMoveTo(ptc.SimPosition);
+                    Thread.Sleep(3000);
+                    ptc.UnpackRTI();
+                    Thread.Sleep(3000);
+                }
+            }
+            foreach (PrimToCreate ptc in childs)
+            {
+                if (ptc.TaskObjectCount > 0)
+                {
+                    Exporting.AttemptMoveTo(ptc.SimPosition);
+                    Thread.Sleep(3000);
+                    ptc.UnpackRTI();
+                    Thread.Sleep(3000);
+                }
+            }
+        }
     }
 }

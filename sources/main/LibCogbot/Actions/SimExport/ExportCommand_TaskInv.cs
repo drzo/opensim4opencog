@@ -85,37 +85,20 @@ namespace cogbot.Actions.SimExport
         public readonly HashSet<UUID> CompletedTaskItem = new HashSet<UUID>();
         //public readonly Dictionary<UUID, InventoryItem> UUID2ITEM = new Dictionary<UUID, InventoryItem>();
         //private int TaskInvFailures = 0;
-        private InventoryObject WaitingFolderObjects;
-        private bool WaitingFolderObjectBool;
-        private SimObject WaitingFolderSimObject;
 
         private void listen_TaskInv(string eMessage, UUID arg2)
         {
             if (eMessage.StartsWith("RTI:"))
             {
-                int popTo = eMessage.IndexOf("RTI:");
-                eMessage = eMessage.Substring(4 + popTo).Trim();
+                eMessage = eMessage.Substring(4).Trim();
                 string[] lr = eMessage.Split(new[] { ',' });
                 var objid = UUIDFactory.GetUUID(lr[0]);
-                var assetID = UUIDFactory.GetUUID(lr[1]);
-                var exportPrimID = UUIDFactory.GetUUID(lr[2]);
-                string exportFile = dumpDir + assetID + ".object";
+                Importing.MustExport.Add(objid);
+                lock (fileWriterLock) File.WriteAllText(dumpDir + objid + ".objectAsset", eMessage);
+                var exportPrimID = UUIDFactory.GetUUID(lr[1]);
+                var objectNumber = int.Parse(lr[2]);
+                string exportFile = dumpDir + exportPrimID + "." + objectNumber + ".rti";
                 lock (fileWriterLock) File.WriteAllText(exportFile, eMessage);
-
-                var taskInv = WaitingFolderObjects;
-                if (taskInv == null)
-                {
-                    //Error("cant find taskinv item");
-                    return;
-                }
-                var itemID = taskInv.UUID;
-                eMessage += "," + itemID;
-
-                string exportFile2 = dumpDir + itemID + ".repack";
-                lock (fileWriterLock) File.WriteAllText(exportFile2, eMessage);
-                TaskItemComplete(objid, taskInv.UUID, assetID, taskInv.AssetType);                
-                WaitingFolderSimObject = GetSimObjectFromUUID(objid);
-                WaitingFolderObjectBool = false;
                 return;
             }
         }
@@ -365,7 +348,7 @@ namespace cogbot.Actions.SimExport
                 Failure(string.Format("Skipping writting contents unil Items/Objects can be resolved: for {0}\n{1}",
                                       named(exportPrim), TaskInvFailures));
             }
-            var ptc = ImportCommand.Running.APrimToCreate(exportPrim.ID);
+            var ptc = Importing.APrimToCreate(exportPrim.ID);
             return ptc.EnsureTaskInv(false);
         }
 
@@ -499,7 +482,7 @@ namespace cogbot.Actions.SimExport
                         File.Delete(file);
                         if (artifacts)
                         {
-                            ImportCommand.Running.KillID(assetID);
+                            Importing.KillID(assetID);
                         }
                         if (settings.Contains("once")) return;
                     }
@@ -515,7 +498,7 @@ namespace cogbot.Actions.SimExport
                         File.Delete(file);
                         if (artifacts)
                         {
-                            ImportCommand.Running.KillID(assetID);
+                            Importing.KillID(assetID);
                         }
                         if (settings.Contains("once")) return;
                     }
@@ -527,7 +510,7 @@ namespace cogbot.Actions.SimExport
                         string filetext = File.ReadAllText(file);
                         string[] csv = filetext.Split(new[] { ',' });
                         UUID assetID = UUIDFactory.GetUUID(csv[2]);
-                        ImportCommand.Running.KillID(assetID);
+                        Importing.KillID(assetID);
                         UUID holderID = UUIDFactory.GetUUID(csv[3]);
                         string exportFile = dumpDir + "" + holderID + ".task";
                         if (File.Exists(exportFile))

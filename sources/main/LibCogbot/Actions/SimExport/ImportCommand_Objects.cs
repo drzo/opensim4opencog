@@ -221,7 +221,7 @@ namespace cogbot.Actions.SimExport
                         i = Prim.LocalID;
                         if (i == 0)
                         {
-                            Running.Failure("Failed to return LocalID");
+                            Importing.Failure("Failed to return LocalID");
                             i = OldLocalID0;                           
                         }
                     }
@@ -469,12 +469,12 @@ namespace cogbot.Actions.SimExport
                         
                     if (MissingLLSD(id))
                     {
-                        Running.Failure("Warning missing link child " + id + " on parent " + this.ToString());
+                        Importing.Failure("Warning missing link child " + id + " on parent " + this.ToString());
                         ExportCommand.Exporting.AddMoveTo(SimPosition);
                         MissingChildern++;
                         continue;
                     }
-                    PrimToCreate ptc = Running.APrimToCreate(id);
+                    PrimToCreate ptc = Importing.APrimToCreate(id);
                     if (ptc == null)
                     {
                         //Failure("FAILED: Relink cant find PTC=" + id);
@@ -506,7 +506,7 @@ namespace cogbot.Actions.SimExport
                 Vector3 pp = prim.Position;
                 if (prim.ParentID != 0)
                 {
-                    var parent = Running.GetOldPrim(prim.ParentID);
+                    var parent = Importing.GetOldPrim(prim.ParentID);
                     if (parent == null)
                     {
                         found = false;
@@ -594,6 +594,10 @@ namespace cogbot.Actions.SimExport
         static public bool MissingLLSD(UUID id)
         {
             return !File.Exists(ExportCommand.dumpDir + id + ".llsd");
+        }
+        static public bool MissingRTI(UUID id)
+        {
+            return !File.Exists(ExportCommand.dumpDir + id + ".0.rti");
         }
 
         static public bool MissingLINK(UUID id)

@@ -127,9 +127,11 @@ namespace cogbot.Actions.SimExport
                             regenObjInv = new List<InventoryBase>();
                             lock (TaskItemsToCreate)
                             {
+                                TaskObjectCount = 0;
                                 foreach (var toCreate in LockInfo.CopyOf(TaskItemsToCreate))
                                 {
                                     bool improvement;
+                                    if (toCreate.AssetType == AssetType.Object) TaskObjectCount++;
                                     var item = toCreate.ToInventoryBase(out improvement, improve);
                                     if (improvement)
                                     {
@@ -146,7 +148,7 @@ namespace cogbot.Actions.SimExport
                         }
                         if (!RequestNewTaskInventory().WaitOne(TimeSpan.FromSeconds(10)))
                         {
-                            Running.WriteLine("Unable to retrieve TaskInv for " + ToString());
+                            Importing.WriteLine("Unable to retrieve TaskInv for " + ToString());
                         }
                     }
                     return sourceObjectinventory = regenObjInv;
@@ -180,15 +182,15 @@ namespace cogbot.Actions.SimExport
 
                     if (!String.IsNullOrEmpty(filename))
                     {
-                        Running.Client.Assets.XferReceived += xferCallback;
+                        Importing.Client.Assets.XferReceived += xferCallback;
 
                         // Start the actual asset xfer
-                        _xferID = Running.Client.Assets.RequestAssetXfer(filename, true, false, UUID.Zero, AssetType.Unknown,
+                        _xferID = Importing.Client.Assets.RequestAssetXfer(filename, true, false, UUID.Zero, AssetType.Unknown,
                                                                  true);
                     }
                     else
                     {
-                        Logger.DebugLog("Task is empty for " + NewID, Running.Client);
+                        Logger.DebugLog("Task is empty for " + NewID, Importing.Client);
                         if (TaskInventoryLikely)
                         {
                             sourceObjectinventory = SimObjectImpl.ERROR_TASK_INV;
@@ -210,7 +212,7 @@ namespace cogbot.Actions.SimExport
             {
                 if (e.Xfer.XferID == _xferID)
                 {
-                    Running.Client.Assets.XferReceived -= xferCallback;
+                    Importing.Client.Assets.XferReceived -= xferCallback;
                     if (e.Xfer.Error != TransferError.None)
                     {
                         sourceObjectinventory = SimObjectImpl.ERROR_TASK_INV;
@@ -228,7 +230,7 @@ namespace cogbot.Actions.SimExport
 
             public BotClient Client
             {
-                get { return Running.Client; }
+                get { return Importing.Client; }
             }
 
             public UUID AgentSyncFolder { get; set; }
@@ -317,6 +319,7 @@ namespace cogbot.Actions.SimExport
                 Client.Objects.ObjectProperties += TaskInventoryItemReceived;
             }
 
+            public int TaskObjectCount = -1;
             public bool LoadTaskOSD(OutputDelegate WriteLine)
             {
                 failed = 0;
@@ -335,11 +338,12 @@ namespace cogbot.Actions.SimExport
                     return false;
                 }
 
-                lock (TaskItemsToCreate) if (taskData.Count == TaskItemsToCreate.Count)
+                lock (TaskItemsToCreate) if (taskData.Count == TaskItemsToCreate.Count && taskData.Count > 0)
                 {
                     succeeded = taskData.Count;
                     return true;
                 }
+                TaskObjectCount = 0;
                 // scan for existing source nodes
                 lock (TaskItemsToCreate)
                 {
@@ -364,6 +368,7 @@ namespace cogbot.Actions.SimExport
                         {
                             titc = new TaskItemToCreate(this, item);
                             TaskItemsToCreate.Add(titc);
+                            if (titc.AssetType == AssetType.Object) TaskObjectCount++;
                         }
                         else
                         {
@@ -375,6 +380,19 @@ namespace cogbot.Actions.SimExport
                 return failed == 0;
             }
 
+            public void UnpackRTI()
+            {
+                if (TaskObjectCount == 0) return;
+                if (!MissingRTI(OldID)) return;
+                if (RTIRequested) return;
+                RTIRequested = true;
+                File.WriteAllText(ExportCommand.dumpDir + OldID + ".0.rti", "");
+                if (!Exporting.PutItemToTaskInv(Client, Rezed, "SimExportUnpackAll"))
+                {
+                    File.WriteAllText(ExportCommand.dumpDir + OldID + ".0.rti", "!mod");
+                    this.MustUseAgentCopy = true;
+                }
+            }
             public bool SyncToAgentFolder(OutputDelegate WriteLine, bool createObjects)
             {
                 failed = 0;
@@ -423,6 +441,9 @@ namespace cogbot.Actions.SimExport
             }
 
             public bool IsAsset = false;
+            internal bool RTIRequested;
+            public bool MustUseAgentCopy;
+
             public void SetIsAsset()
             {
                 IsAsset = true;
@@ -455,7 +476,7 @@ namespace cogbot.Actions.SimExport
                     TaskInvComplete = true;
                     return true;
                 }
-                LoadTaskOSD(Running.WriteLine);
+                LoadTaskOSD(Importing.WriteLine);
                 var ti = SourceTaskInventory(useCache);
                 foreach (InventoryBase i in ti)
                 {

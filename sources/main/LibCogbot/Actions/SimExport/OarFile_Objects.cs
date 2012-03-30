@@ -228,7 +228,7 @@ namespace cogbot.Actions.SimExport
                                 item.RezzID = ImportCommand.GetMissingFiller(item.AssetType);
                             if (options.ContainsKey("error404") && !itemName.Contains("ERROR404"))
                                 itemName += "ERROR404";
-                            ImportCommand.Running.Failure("Zero AssetID " + item.Name);
+                            ImportCommand.Importing.Failure("Zero AssetID " + item.Name);
                         }
                     }
                     else
@@ -241,7 +241,7 @@ namespace cogbot.Actions.SimExport
                                 item.AssetUUID = ImportCommand.GetMissingFiller(item.AssetType);
                             if (options.ContainsKey("error404") && !itemName.Contains("ERROR404"))
                                 itemName += "ERROR404";
-                            ImportCommand.Running.Failure("Zero AssetID " + item.Name);
+                            ImportCommand.Importing.Failure("Zero AssetID " + item.Name);
                         }                        
                     }
                     writer.WriteStartElement("TaskInventoryItem");
