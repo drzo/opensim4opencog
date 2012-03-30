@@ -221,10 +221,16 @@ namespace cogbot.Actions.SimExport
             int readyObjectsForDelete = 0;
             int unreadyObjs = 0;
             int unreadyObjsMustReRez = 0;
+            int requestedShort = 0;
             Vector3 where;
             foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.rti"))
             {
                 var contents = File.ReadAllText(file).Split(',');
+                if (contents.Length < 20)
+                {
+                    requestedShort++;
+                    continue;
+                }
                 var objID = UUID.Parse(contents[0]);
                 if (CogbotHelpers.IsNullOrZero(objID)) continue;
                 var holderID = UUID.Parse(contents[1]);
@@ -247,6 +253,7 @@ namespace cogbot.Actions.SimExport
             Success("readyObjectsForDelete = " + readyObjectsForDelete);
             Success("unreadyObjs = " + unreadyObjs);
             Success("unreadyObjsMustReRez = " + unreadyObjsMustReRez);
+            Success("requestedShort = " + requestedShort);
         }
     }
 }
