@@ -243,6 +243,10 @@ namespace cogbot.Actions.SimExport
                     if (!inWorld) unreadyObjsMustReRez++;
                 }
             }
+            Success("readyObjects = " + readyObjects);
+            Success("readyObjectsForDelete = " + readyObjectsForDelete);
+            Success("unreadyObjs = " + unreadyObjs);
+            Success("unreadyObjsMustReRez = " + unreadyObjsMustReRez);
         }
     }
 }
