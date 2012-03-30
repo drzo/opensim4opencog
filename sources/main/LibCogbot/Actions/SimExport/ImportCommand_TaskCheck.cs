@@ -213,5 +213,36 @@ namespace cogbot.Actions.SimExport
             }
             Success("t=" + found + " m=" + mssingTO.Count + " td=" + item2TO.Count + " duped=" + duped.Count);
         }
+
+        private void CountReady(ImportSettings settings)
+        {
+            Exporting.GiveStatus();
+            int readyObjects = 0;
+            int readyObjectsForDelete = 0;
+            int unreadyObjs = 0;
+            int unreadyObjsMustReRez = 0;
+            Vector3 where;
+            foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.rti"))
+            {
+                var contents = File.ReadAllText(file).Split(',');
+                var objID = UUID.Parse(contents[0]);
+                if (CogbotHelpers.IsNullOrZero(objID)) continue;
+                var holderID = UUID.Parse(contents[1]);
+                var uuidstr = Path.GetFileName(file).Split('.');
+                var objNum = int.Parse(uuidstr[1]);
+                bool complete = ExportCommand.IsComplete(objID, false, true, settings);
+                bool inWorld = Exporting.IsExisting(objID, out where);
+                if (complete)
+                {
+                    readyObjects++;
+                    if (inWorld) readyObjectsForDelete++;
+                }
+                else
+                {
+                    unreadyObjs++;
+                    if (!inWorld) unreadyObjsMustReRez++;
+                }
+            }
+        }
     }
 }

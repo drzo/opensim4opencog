@@ -512,7 +512,7 @@ namespace cogbot.Actions.SimExport
             }
         }
 
-        static public bool IsComplete(UUID uuid, bool includeLink, ImportSettings settings)
+        static public bool IsComplete(UUID uuid, bool includeLink, bool includeTask, ImportSettings settings)
         {
             if (!PerfectTaskOSD(uuid, settings))
             {
@@ -521,6 +521,14 @@ namespace cogbot.Actions.SimExport
             if (ImportCommand.MissingLLSD(uuid)) return false;
             if (includeLink && ImportCommand.MissingLINK(uuid)) return false;
             if (ImportCommand.MissingTASK(uuid)) return false;
+            if (includeTask)
+            {
+                string taskFileContent = File.ReadAllText(ExportCommand.dumpDir + uuid + ".task");
+                if (taskFileContent.Length < 36) return true;
+                var ptc = Importing.APrimToCreate(uuid);
+                bool cmp = ptc.EnsureTaskInv(true);
+                if (cmp) return false;
+            }
             return true;
         }
 

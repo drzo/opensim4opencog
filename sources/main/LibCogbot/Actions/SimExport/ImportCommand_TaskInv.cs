@@ -378,7 +378,7 @@ namespace cogbot.Actions.SimExport
                 return failed == 0;
             }
 
-            private void AssignObjectNums()
+            public void AssignObjectNums()
             {
                 TaskObjectCount = 0;
                 foreach (TaskItemToCreate toCreate in TaskItemsToCreate)
