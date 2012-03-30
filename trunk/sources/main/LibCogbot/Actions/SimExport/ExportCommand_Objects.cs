@@ -527,7 +527,7 @@ namespace cogbot.Actions.SimExport
                 if (taskFileContent.Length < 36) return true;
                 var ptc = Importing.APrimToCreate(uuid);
                 bool cmp = ptc.EnsureTaskInv(true);
-                if (cmp) return false;
+                if (!cmp) return false;
             }
             return true;
         }
