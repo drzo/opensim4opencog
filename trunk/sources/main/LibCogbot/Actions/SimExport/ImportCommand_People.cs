@@ -109,11 +109,11 @@ namespace cogbot.Actions.SimExport
                 }
                 WaitOnCreate = WaitOnCreate ?? new ManualResetEvent(false);
                 WaitOnCreate.Reset();
-                Running.Client.Directory.DirGroupsReply += GroupSearchReply;
-                Running.Client.Directory.StartGroupSearch(name, 0, OldID);
+                Importing.Client.Directory.DirGroupsReply += GroupSearchReply;
+                Importing.Client.Directory.StartGroupSearch(name, 0, OldID);
                 if (!WaitOnCreate.WaitOne(3000))
                 {
-                    return Running.Client.Self.ActiveGroup;
+                    return Importing.Client.Self.ActiveGroup;
                 } 
                 return base.NewID;
             }
@@ -134,8 +134,8 @@ namespace cogbot.Actions.SimExport
                 WaitOnCreate.Reset();
                 // should we use this instead??
                 //    Running.Client.Avatars.RequestAvatarNameSearch(name.Replace(" ", ", "), OldID);
-                Running.Client.Directory.DirPeopleReply += PeopleSearchReply; 
-                Running.Client.Directory.StartPeopleSearch(name, 0, OldID);
+                Importing.Client.Directory.DirPeopleReply += PeopleSearchReply; 
+                Importing.Client.Directory.StartPeopleSearch(name, 0, OldID);
                 WaitOnCreate.WaitOne(3000);
                 return base.NewID;
             }
@@ -154,11 +154,11 @@ namespace cogbot.Actions.SimExport
                     }
                     return base.NewID = UUID.Random();
                 }
-                Running.Client.Groups.GroupCreatedReply += GroupCreateReply;
-                Running.Client.Groups.RequestCreateGroup(newGroup);
+                Importing.Client.Groups.GroupCreatedReply += GroupCreateReply;
+                Importing.Client.Groups.RequestCreateGroup(newGroup);
                 if (!WaitOnCreate.WaitOne(5000))
                 {
-                    return Running.Client.Self.ActiveGroup;
+                    return Importing.Client.Self.ActiveGroup;
                 }
                 return base.NewID;
             }
@@ -185,10 +185,10 @@ namespace cogbot.Actions.SimExport
             private UUID CreatePerson(string name)
             {
                 if (!CogbotHelpers.IsNullOrZero(base.NewID)) return base.NewID;
-                if (name == "MISSINGPERSON" && !CogbotHelpers.IsNullOrZero(Running.MISSINGPERSON))
-                    return Running.MISSINGPERSON;
-                if (name == "LINDENZERO" && !CogbotHelpers.IsNullOrZero(Running.LINDENZERO))
-                    return Running.LINDENZERO;
+                if (name == "MISSINGPERSON" && !CogbotHelpers.IsNullOrZero(Importing.MISSINGPERSON))
+                    return Importing.MISSINGPERSON;
+                if (name == "LINDENZERO" && !CogbotHelpers.IsNullOrZero(Importing.LINDENZERO))
+                    return Importing.LINDENZERO;
                 if (IsLocalScene)
                 {
                     if (OldName == name)
@@ -197,18 +197,18 @@ namespace cogbot.Actions.SimExport
                     }
                     return base.NewID = UUID.Random();
                 }
-                if (IsGroup) return Running.Client.Self.ActiveGroup;
-                return base.NewID = Running.Client.Self.AgentID;
+                if (IsGroup) return Importing.Client.Self.ActiveGroup;
+                return base.NewID = Importing.Client.Self.AgentID;
             }
 
             private void GroupCreateReply(object sender, GroupCreatedReplyEventArgs e)
             {
-                Running.Client.Groups.GroupCreatedReply -= GroupCreateReply;
+                Importing.Client.Groups.GroupCreatedReply -= GroupCreateReply;
                 ErrorMessage = e.Message;
                 if (e.Success)
                 {
                     NewID = e.GroupID;
-                    Running.Client.Groups.UpdateGroup(NewID, GetNewGroup());
+                    Importing.Client.Groups.UpdateGroup(NewID, GetNewGroup());
                 }
                 WaitOnCreate.Set();
             }
@@ -216,7 +216,7 @@ namespace cogbot.Actions.SimExport
             private void PeopleSearchReply(object sender, DirPeopleReplyEventArgs e)
             {
                 if (e.QueryID != OldID) return;
-                Running.Client.Directory.DirPeopleReply -= PeopleSearchReply;
+                Importing.Client.Directory.DirPeopleReply -= PeopleSearchReply;
                 foreach (var match in e.MatchedPeople)
                 {
                     if (match.FirstName + " " + match.LastName == NewName)
@@ -231,7 +231,7 @@ namespace cogbot.Actions.SimExport
             private void GroupSearchReply(object sender, DirGroupsReplyEventArgs e)
             {
                 if (e.QueryID != OldID) return;
-                Running.Client.Directory.DirGroupsReply -= GroupSearchReply;
+                Importing.Client.Directory.DirGroupsReply -= GroupSearchReply;
                 foreach (var match in e.MatchedGroups)
                 {
                     if (match.GroupName == NewName)

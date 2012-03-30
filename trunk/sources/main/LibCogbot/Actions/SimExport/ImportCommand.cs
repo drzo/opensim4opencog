@@ -62,7 +62,7 @@ namespace cogbot.Actions.SimExport
 
         public void Failure(string s, params object[] args)
         {
-            ImportCommand.Running.Failure(DLRConsole.SafeFormat(s, args));
+            ImportCommand.Importing.Failure(DLRConsole.SafeFormat(s, args));
         }
     }
 
@@ -112,7 +112,7 @@ namespace cogbot.Actions.SimExport
         }
         private static readonly object WorkFlowLock = new object();
 
-        public static ImportCommand Running;
+        public static ImportCommand Importing;
         public static bool IsLocalScene = true;
         public static LocalSimScene LocalScene = new LocalSimScene();
         //private HashSet<string> arglist;
@@ -194,7 +194,7 @@ namespace cogbot.Actions.SimExport
             }
             MissingItemInfo mis = new MissingItemInfo(memberName, before);
             if (missing != null) missing.Add(mis);
-            Running.Failure("Missing: " + mis);
+            Importing.Failure("Missing: " + mis);
             UnresolvedUUIDs.Add(before);
             return before;
         }
@@ -214,7 +214,7 @@ namespace cogbot.Actions.SimExport
             Client.Objects.ObjectUpdate += OnObjectPropertiesNewesh;
             Client.Network.EventQueueRunning += logged_in;
             ImportPTCFiles(new ImportSettings(), true, false);
-            Running = this;
+            Importing = this;
         }
 
         private void logged_in(object sender, EventQueueRunningEventArgs e)
@@ -361,6 +361,7 @@ namespace cogbot.Actions.SimExport
             if (arglist.Contains("lslprims")) ConfirmLSLPrims(importSettings);
             if (arglist.Contains("todo")) DoTodo(importSettings);
             if (arglist.Contains("checktasks")) CheckTasks(importSettings);
+            if (arglist.Contains("upackobjs")) UnpackTaskObjs(importSettings);
             if (arglist.Contains("oar")) CreateOARFile(importSettings, "exported.oar");
             if (arglist.Contains("cleanup")) CleanupPrims(importSettings);
             writeLine("Completed SimImport");

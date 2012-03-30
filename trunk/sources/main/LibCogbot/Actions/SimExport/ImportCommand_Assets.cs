@@ -204,13 +204,13 @@ namespace cogbot.Actions.SimExport
                 if (CogbotHelpers.IsNullOrZero(NewID))
                 {
                     string importProgress = ProgressFile;
-                    var item = ExportCommand.Exporting.GetInvItem(Running.Client, "" + OldID, GetAssetUploadsFolder());
+                    var item = ExportCommand.Exporting.GetInvItem(Importing.Client, "" + OldID, GetAssetUploadsFolder());
                     if (item != null)
                     {
                         NewID = item.AssetUUID;
                         RezRequested = true;
                         NewItemID = item.UUID;
-                        NewTaskID = Running.Client.Self.AgentID;
+                        NewTaskID = Importing.Client.Self.AgentID;
                         lock (ExportCommand.fileWriterLock) if (File.Exists(importProgress)) return;
                         WriteProgress();
                         return;
@@ -230,7 +230,7 @@ namespace cogbot.Actions.SimExport
             {
                 get
                 {
-                    return Running.Client.Inventory;
+                    return Importing.Client.Inventory;
                 }
             }
 
@@ -400,9 +400,9 @@ namespace cogbot.Actions.SimExport
                         }
                         return true;
                     }
-                    NewID = UUID.Combine(OldID, Running.Client.Self.SecureSessionID);
+                    NewID = UUID.Combine(OldID, Importing.Client.Self.SecureSessionID);
                     NewUUID2OBJECT[NewID] = this;
-                    Running.Client.Assets.RequestUploadKnown(NewID, assetType, AssetData, storeLocal, OldID);
+                    Importing.Client.Assets.RequestUploadKnown(NewID, assetType, AssetData, storeLocal, OldID);
                     RezRequested = true;
                 }
                 return true;
@@ -446,7 +446,7 @@ namespace cogbot.Actions.SimExport
             {
                 if (!success1)
                 {
-                    Running.Failure("!SUCCESS " + status + " ON " + this);
+                    Importing.Failure("!SUCCESS " + status + " ON " + this);
                     return;
                 }
                 NewID = assetid;
@@ -466,7 +466,7 @@ namespace cogbot.Actions.SimExport
                 get
                 {
                     return "assetid," + uuidString(NewID) + "," + uuidString(OldID) +
-                           "," + assetType + "," + uuidString(Running.Client.Self.SecureSessionID) +
+                           "," + assetType + "," + uuidString(Importing.Client.Self.SecureSessionID) +
                            ",itemid," + uuidString(NewItemID) + "," + uuidString(OldItemID) +
                            ",taskid," + uuidString(NewTaskID) + "," + uuidString(OldTaskID);
                 }
@@ -479,7 +479,7 @@ namespace cogbot.Actions.SimExport
 
             private void ConfirmDLable()
             {
-                Running.Client.Assets.RequestAsset(NewID, assetType, true, OnDownloaded);
+                Importing.Client.Assets.RequestAsset(NewID, assetType, true, OnDownloaded);
 
             }
 
@@ -521,7 +521,7 @@ namespace cogbot.Actions.SimExport
                 }
                 if (!transfer.Success)
                 {
-                    Running.Error(ExportCommand.Exporting.LocalFailure, "bad transfer on " + this);
+                    Importing.Error(ExportCommand.Exporting.LocalFailure, "bad transfer on " + this);
                 }
                 else
                 {
@@ -555,7 +555,7 @@ namespace cogbot.Actions.SimExport
 
             public void UpdateAsset(byte[] data)
             {
-                Running.Client.Assets.RequestUploadKnown(NewID, assetType, data, false, OldID);
+                Importing.Client.Assets.RequestUploadKnown(NewID, assetType, data, false, OldID);
             }
 
             public override void ReplaceAll()

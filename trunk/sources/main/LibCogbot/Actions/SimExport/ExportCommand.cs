@@ -373,9 +373,9 @@ namespace cogbot.Actions.SimExport
                 PSBuf.Clear();
             }
             PSBuf.AddRange(PS);
-            lock (ImportCommand.Running.MustExport)
+            lock (Importing.MustExport)
             {
-                foreach (UUID id in LockInfo.CopyOf(ImportCommand.Running.MustExport))
+                foreach (UUID id in LockInfo.CopyOf(Importing.MustExport))
                 {
                     var o = WorldObjects.GetSimObjectFromUUID(id);
                     if (o != null) PSBuf.Add(o);
@@ -568,6 +568,7 @@ namespace cogbot.Actions.SimExport
             Success("task = " + FileCount("*.task"));
             Success("link = " + FileCount("*.link"));
             Success("repack = " + FileCount("*.repack"));
+            Success("rti = " + FileCount("*.rti"));
             Success("taskobj = " + FileCount("*.taskobj"));
             Success("PSBuf = " + PSBuf.Count);
         }
@@ -578,11 +579,21 @@ namespace cogbot.Actions.SimExport
         }
 
 
-        private readonly HashSet<uint> RequiredForExportLocalIDs = new HashSet<uint>();
+        static private HashSet<uint> RequiredForExportLocalIDs
+        {
+            get { return ImportCommand.Importing.MustExportUINT; }
+        }
+
+        public ImportCommand Importing
+        {
+            get { return Importing; }
+        }
+
         public static ExportCommand Exporting;
         private ulong RegionHandle;
         private ListAsSet<SimObject> PSBuf = new ListAsSet<SimObject>();
         public ImportSettings settings;
+        public static bool UseObjectUnpacker = true;
         //private Simulator CurSim;
 
 
@@ -636,7 +647,7 @@ namespace cogbot.Actions.SimExport
                 if (UUID.TryParse(fu, out sourceId2)) sourceId = sourceId2;
                 eMessage = eMessage.Substring(findC + 1).TrimStart();
             }
-            ListenForRelay(eMessage, sourceId);
+            if (ListenForRelay != null) ListenForRelay(eMessage, sourceId);
         }
         static public UUID[] GetUUIDs(string mustHave)
         {
@@ -673,6 +684,14 @@ namespace cogbot.Actions.SimExport
                 Failure("Cant find InvItem " + name);
                 return false;
             }
+
+            PermissionWho pwo = Importing.TheSimAvatar.EffectivePermissionWho(exportPrim);
+            PermissionMask pmo = CogbotHelpers.PermMaskForWho(pwo, exportPrim.Properties.Permissions);
+            bool canModifyObject = Permissions.HasPermissions(pmo, PermissionMask.Modify);
+            if (!canModifyObject)
+            {
+                
+            }
             if (found.InventoryType == InventoryType.LSL)
             {
                 Client.Inventory.CopyScriptToTask(exportPrim.LocalID, (InventoryItem)found, true);
@@ -681,7 +700,7 @@ namespace cogbot.Actions.SimExport
             {
                 Client.Inventory.UpdateTaskInventory(exportPrim.LocalID, (InventoryItem)found);
             }
-            return true;
+            return canModifyObject;
         }
 
         public InventoryItem GetInvItem(GridClient Client, string name)
@@ -1053,7 +1072,7 @@ namespace cogbot.Actions.SimExport
            {
                if (!ImportCommand.MissingLLSD(ObjectID))
                {
-                   var ptc = ImportCommand.Running.GetOldPrim(ObjectID);
+                   var ptc = ImportCommand.Importing.GetOldPrim(ObjectID);
                    append.WriteLine("OBJ: " + ptc + " " + Obj);
                    append.WriteLine("LOC: " + ptc.SimPosition);
                }

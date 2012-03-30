@@ -263,12 +263,12 @@ namespace cogbot.Actions.SimExport
                 if (p.ParentID == 0)
                 {
                     Linkset linkset = new Linkset();
-                    linkset.Parent = ImportCommand.Running.APrimToCreate(p);
+                    linkset.Parent = ImportCommand.Importing.APrimToCreate(p);
 
                     prims.ForEach(delegate(Primitive q)
                     {
                         if (q.ParentID == p.LocalID)
-                            linkset.Children.Add(ImportCommand.Running.APrimToCreate(q));
+                            linkset.Children.Add(ImportCommand.Importing.APrimToCreate(q));
                     });
 
                     OarFile.SaveLinkset(linkset, path + "/Primitive_" + linkset.Parent.NewID.ToString() + ".xml", false,

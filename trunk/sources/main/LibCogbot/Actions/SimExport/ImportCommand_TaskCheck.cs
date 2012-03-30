@@ -26,14 +26,14 @@ namespace cogbot.Actions.SimExport
             {
                 get
                 {
-                    return Running.GetOldPrim(RezzedID);
+                    return Importing.GetOldPrim(RezzedID);
                 }
             }
             public PrimToCreate InsideOf
             {
                 get
                 {
-                    return Running.GetOldPrim(OldTaskHolder);
+                    return Importing.GetOldPrim(OldTaskHolder);
                 }
             }
             public override bool Equals(object obj)
