@@ -549,18 +549,8 @@ namespace cogbot.Actions.SimExport
             }
             private void RequestRezObject0()
             {
-                if (ExportCommand.UseObjectUnpacker)
-                {
-                    if (!CreatedPrim.MustUseAgentCopy)
-                    {
-                        // should be the way?!
-                        //CreatedPrim.UnpackRTI();
-                        return;
-                    }
-                }
-
                 string rtiStatus = ExportCommand.dumpDir + CreatedPrim.OldID + "." + ObjectNum + ".rti";
-                lock(ExportCommand.fileWriterLock)
+                lock (ExportCommand.fileWriterLock)
                 {
                     if (File.Exists(rtiStatus))
                     {
@@ -576,8 +566,22 @@ namespace cogbot.Actions.SimExport
                                 missing = false;
                                 return;
                             }
+                            else
+                            {
+                                CreatedPrim.MustUseAgentCopy = true;
+                            }
                         }
 
+                    }
+                }
+
+                if (ExportCommand.UseObjectUnpacker)
+                {
+                    if (!CreatedPrim.MustUseAgentCopy)
+                    {
+                        // should be the way?!
+                        //CreatedPrim.UnpackRTI();
+                        return;
                     }
                 }
 
@@ -1031,7 +1035,8 @@ namespace cogbot.Actions.SimExport
                     if (canCopy) return false;
 
                     // perhaps if the objecty is no-mod.. lets see if we can use the Move code.. cant hurt!
-                    if (!Permissions.HasPermissions(theAvatar.EffectivePermissionsMask(CreatedPrim.Rezed), PermissionMask.Modify))
+                    var o = CreatedPrim.Rezed;
+                    if (o != null && !Permissions.HasPermissions(theAvatar.EffectivePermissionsMask(o), PermissionMask.Modify))
                     {
                         return false;
                     }
