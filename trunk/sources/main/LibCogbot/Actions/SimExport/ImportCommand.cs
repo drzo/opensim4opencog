@@ -348,7 +348,7 @@ namespace cogbot.Actions.SimExport
             if (arglist.Contains("move"))
             {
                 MoveToKnownObjects();
-                return Success("Moving to " + parents.Count);
+                return Success("Moving to " + _parents.Count);
             }
             bool tasksObjs = arglist.Contains("taskobj") && !IsLocalScene;
             if (tasksObjs || arglist.Contains("checktasks")) ImportTaskObjects(importSettings);

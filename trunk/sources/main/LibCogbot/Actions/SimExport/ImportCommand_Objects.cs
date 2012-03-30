@@ -20,8 +20,16 @@ namespace cogbot.Actions.SimExport
     public partial class ImportCommand 
     {
         private PrimToCreate prev = null;
-        private readonly HashSet<PrimToCreate> parents = new HashSet<PrimToCreate>();
-        private readonly HashSet<PrimToCreate> childs = new HashSet<PrimToCreate>();
+        private readonly HashSet<PrimToCreate> _parents = new HashSet<PrimToCreate>();
+        public IEnumerable<PrimToCreate> parents
+        {
+            get { return LockInfo.CopyOf(_parents); }
+        }
+        public IEnumerable<PrimToCreate> childs
+        {
+            get { return LockInfo.CopyOf(_childs); }
+        }
+        private readonly HashSet<PrimToCreate> _childs = new HashSet<PrimToCreate>();
         static readonly HashSet<PrimToCreate> diskPrims = new HashSet<PrimToCreate>();
         public String ResetPropertiesString = "";//"File.ReadAllText(ExportCommand.dumpDir + "..\\rezbankkill.txt");
         private HashSet<PrimToCreate> ORPHANS;
@@ -665,7 +673,7 @@ namespace cogbot.Actions.SimExport
         private void ImportPrims(ImportSettings arglist, bool rezParents)
         {
             if (IsLocalScene) rezParents = false;            
-            if (childs.Count == 0 || IsLocalScene)
+            if (_childs.Count == 0 || IsLocalScene)
             {
                 bool ptcOnly = arglist.arglist.Contains("ptc") && !IsLocalScene;
                 WriteLine("Loading Prims from LLSD Files");
@@ -689,10 +697,10 @@ namespace cogbot.Actions.SimExport
                             Failure("Missing Prim witha  PTC file! " + ptc);
                             var p = ptc.Prim;
                             CreatePrim(arglist, ptc);
-                            parents.Add(ptc);
+                            _parents.Add(ptc);
                         } else
                         {
-                            parents.Add(ptc);
+                            _parents.Add(ptc);
                         }
                     }
                     if (ptc == null)
@@ -701,10 +709,10 @@ namespace cogbot.Actions.SimExport
                         ///Exporting.ExportPrim(Client, ptc.Rezed, this.WriteLine, arglist);
                         if (ptc.ParentID != 0)
                         {
-                            childs.Add(ptc);
+                            _childs.Add(ptc);
                             continue;
                         }
-                        parents.Add(ptc);
+                        _parents.Add(ptc);
                     } else
                     {
                         if (ptc.Prim.RegionHandle != 1249045209445888)
@@ -723,7 +731,7 @@ namespace cogbot.Actions.SimExport
             }
             else
             {
-                WriteLine("Loading Prims from Preloaded Files Count = " + parents.Count);
+                WriteLine("Loading Prims from Preloaded Files Count = " + _parents.Count);
                 int loaded = 0; 
                 foreach (PrimToCreate ptc in diskPrims)
                 {
@@ -732,10 +740,10 @@ namespace cogbot.Actions.SimExport
                     if (++loaded % 25 == 0) WriteLine("Prims loaded " + loaded + "...");
                     if (prim.ParentID != 0)
                     {
-                        childs.Add(ptc);
+                        _childs.Add(ptc);
                         continue;
                     }
-                    parents.Add(ptc);
+                    _parents.Add(ptc);
                     if (rezParents) CreatePrim(arglist, ptc);
                 }
             }
@@ -743,7 +751,7 @@ namespace cogbot.Actions.SimExport
 
         private void RezPrims(ImportSettings arglist)
         {
-            WriteLine("Imported parents " + parents.Count);
+            WriteLine("Imported parents " + _parents.Count);
             int created = 0; 
             foreach (PrimToCreate ptc in parents)
             {
@@ -754,7 +762,7 @@ namespace cogbot.Actions.SimExport
                     SetPermissionsAll(arglist.CurSim, new List<uint>() { ptc.NewLocalID });
                 }
             }
-            WriteLine("Importing children " + childs.Count);
+            WriteLine("Importing children " + _childs.Count);
             //if (sculptOnly) return Success("Sculpt Only");
             foreach (PrimToCreate ptc in childs)
             {
@@ -762,7 +770,7 @@ namespace cogbot.Actions.SimExport
                 if (++created % 25 == 0) WriteLine("Childs created " + created + "...");
             }
             List<string> skipCompare = new List<string>() { "LocalID", "ID", "ParentID", "ObjectID", "Tag" };
-            WriteLine("COMPLETE: Imported P=" + parents.Count + " C=" + childs.Count);
+            WriteLine("COMPLETE: Imported P=" + _parents.Count + " C=" + _childs.Count);
         }
 
         private PrimToCreate GetFromWorld(ImportSettings arglist, UUID idp, SimObject O)
@@ -797,8 +805,8 @@ namespace cogbot.Actions.SimExport
         {
             RemoveFrom(ORPHANS, id);
             RemoveFrom(EXCUSED_ORPHANS, id);
-            RemoveFrom(parents, id);
-            RemoveFrom(childs, id);
+            RemoveFrom(_parents, id);
+            RemoveFrom(_childs, id);
             RemoveFrom(MustExportUINT, id.OldLocalID);
             RemoveFrom(MustExportUINT, id.ParentID);
             RemoveFrom(MustExport, id.OldID);
@@ -815,8 +823,8 @@ namespace cogbot.Actions.SimExport
             }
             RemoveFrom(ORPHANS, id);
             RemoveFrom(EXCUSED_ORPHANS, id);
-            RemoveFrom(parents, id);
-            RemoveFrom(childs, id);
+            RemoveFrom(_parents, id);
+            RemoveFrom(_childs, id);
             RemoveFrom(MustExport, id);
             var uid = ExportCommand.dumpDir + id;
             KillFileID(id);
@@ -885,7 +893,7 @@ namespace cogbot.Actions.SimExport
                         }
                         parent = GetFromWorld(arglist, idp, O);
                         if (parent == null) continue;
-                        parents.Add(parent);
+                        _parents.Add(parent);
                     }
                     else
                     {
@@ -991,7 +999,7 @@ namespace cogbot.Actions.SimExport
                 bool killExclude = arglist.Contains("killexcludes");
                 if (arglist.Contains("excludes") || killExclude)
                 {
-                    foreach (PrimToCreate ptc in LockInfo.CopyOf(parents))
+                    foreach (PrimToCreate ptc in parents)
                     {
                         if (!ptc.ExcludeFromExport && ExportCommand.IsSkippedPTC(ptc))
                         {
@@ -1002,7 +1010,7 @@ namespace cogbot.Actions.SimExport
                             KillID(ptc);
                         }
                     }
-                    foreach (PrimToCreate ptc in LockInfo.CopyOf(childs))
+                    foreach (PrimToCreate ptc in childs)
                     {
                         if (!ptc.ExcludeFromExport && ExportCommand.IsSkippedPTC(ptc))
                         {
@@ -1557,7 +1565,7 @@ namespace cogbot.Actions.SimExport
         private void KillMissing(ImportSettings settings)
         {
 
-            foreach (PrimToCreate parent in LockInfo.CopyOf(parents))
+            foreach (PrimToCreate parent in parents)
             {
                 if (parent.MissingChildern > 0)
                 {
