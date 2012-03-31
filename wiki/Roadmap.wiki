@@ -32,7 +32,7 @@ then an overlay pack that has all the chatbot stuff in it
  # Progress to ProgramK Prolog IAML bot
 
 
-== needed for Afghan village ==
+== needed for demo project ==
 
  * multiple AV's
  * easy deployment
@@ -40,5 +40,3 @@ then an overlay pack that has all the chatbot stuff in it
  * some aiml or aiml-ish implementation integrated
  * some tale-spinnish thing
  * headless mode
-
-dmiles leaving March 28th for a month to Israel
