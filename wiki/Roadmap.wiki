@@ -23,13 +23,14 @@ Please edit this only after some concensus on roadmap
 
 == dmiles ==
 
- # Help Annie get compiling again
- # get low level cogobt movement to use prim pusher
- # Make a publically downloadable version of opecog (small version ) 
-then an overlay pack that has all the chatbot stuff in it
  # simexport
- # revisit RTParser and see if there is a salvable chatbot in there somewhere
- # Progress to ProgramK Prolog IAML bot
+ # Help Annie get compiling again
+ # get low level cogbot movement to use prim pusher - now the default
+ # Make a publically downloadable version of cogbot (small version ) 
+then an overlay pack that has all the chatbot stuff in it
+ # revisit RTParser and see if there is a salvageable chatbot in there somewhere - COMPLETED (Kino confirms it's working for Hanson)
+ 
+ # Progress to ProgramK Prolog AIML bot
 
 
 == needed for demo project ==
