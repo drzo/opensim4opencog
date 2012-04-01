@@ -1192,6 +1192,7 @@ namespace OpenMetaverse
             map["die_at_edge"] = OSD.FromBoolean(((Flags & PrimFlags.DieAtEdge) != 0));
             map["return_at_edge"] = OSD.FromBoolean(((Flags & PrimFlags.ReturnAtEdge) != 0));
             map["temporary"] = OSD.FromBoolean(((Flags & PrimFlags.Temporary) != 0));
+            map["temporary_on_rez"] = OSD.FromBoolean(((Flags & PrimFlags.TemporaryOnRez) != 0));
             map["sandbox"] = OSD.FromBoolean(((Flags & PrimFlags.Sandbox) != 0));
             map["creation_date"] = OSD.FromDate(Properties. CreationDate);
             //@TODO map["rez_date"] = OSD.FromDate(RezDate);
@@ -1275,6 +1276,7 @@ namespace OpenMetaverse
             var DieAtEdge = map["die_at_edge"].AsBoolean();
             var ReturnAtEdge = map["return_at_edge"].AsBoolean();
             var Temporary = map["temporary"].AsBoolean();
+            var TemporaryOnRez = map["temporary_on_rez"].AsBoolean();
             var Sandbox = map["sandbox"].AsBoolean();
 
             Properties.CreationDate = map["creation_date"].AsDate();
@@ -1416,6 +1418,21 @@ namespace OpenMetaverse
 
             if (map["shadows"].AsBoolean())
                 prim.Flags |= PrimFlags.CastShadows;
+
+            if (map["temporary"].AsBoolean())
+                prim.Flags |= PrimFlags.Temporary;
+
+            if (map["temporary_on_rez"].AsBoolean())
+                prim.Flags |= PrimFlags.TemporaryOnRez;
+
+            if (map["die_at_edge"].AsBoolean())
+                prim.Flags |= PrimFlags.DieAtEdge;
+
+            if (map["return_at_edge"].AsBoolean())
+                prim.Flags |= PrimFlags.ReturnAtEdge;
+
+            if (map["sandbox"].AsBoolean())
+                prim.Flags |= PrimFlags.Sandbox;
 
             prim.ID = map["id"].AsUUID();
             prim.LocalID = map["localid"].AsUInteger();
