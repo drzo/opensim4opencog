@@ -662,6 +662,7 @@ namespace OpenMetaverse.StructuredData
         private const BindingFlags basePropertyFlags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
         const BindingFlags publicStatic = (BindingFlags.Public | BindingFlags.Static);
         static ParameterModifier[] MODIFIERS_ZERO = new ParameterModifier[0];
+        static readonly Dictionary<string ,MethodInfo> conversions =  new Dictionary<string, MethodInfo>();
         public static object ConvertOP(object StartObject, Type[] fromTypes, Type toType, Type operatorType, out bool found)
         {
             found = true;
@@ -670,10 +671,21 @@ namespace OpenMetaverse.StructuredData
             if (fromTypes == null)
                 fromTypes = (StartObject != null) ? new Type[] { StartObject.GetType() } : new Type[0];
 
+            string convKey = null;
+            if (fromTypes.Length == 1)
+            {
+                convKey = fromTypes[0].FullName + "->" + toType.FullName;
+            }
+
             MethodInfo mi = null;
+            if (convKey != null) lock (conversions) conversions.TryGetValue(convKey, out mi);
             try
             {
-                mi = operatorType.GetMethod("op_Explicit", publicStatic, null, fromTypes, MODIFIERS_ZERO);
+                if (mi == null)
+                {
+                    if (fromTypes.Length == 1)
+                        mi = operatorType.GetMethod("op_Explicit", publicStatic, null, fromTypes, MODIFIERS_ZERO);
+                }
             }
             catch (AmbiguousMatchException)
             {
@@ -685,7 +697,7 @@ namespace OpenMetaverse.StructuredData
             try
             {
                 if (mi == null)
-                    mi = operatorType.GetMethod("op_Implicit", publicStatic, null, fromTypes, MODIFIERS_ZERO);
+                    if (fromTypes.Length == 1) mi = operatorType.GetMethod("op_Implicit", publicStatic, null, fromTypes, MODIFIERS_ZERO);
             }
             catch (AmbiguousMatchException)
             {
@@ -703,8 +715,9 @@ namespace OpenMetaverse.StructuredData
                                                   BindingFlags.InvokeMethod | publicStatic,
                                                   null, null, objects);
                 }
-                catch (AmbiguousMatchException)
+                catch (Exception)
                 {
+                    if (convKey != null) lock (conversions) conversions[convKey] = mi;
                     return mi.Invoke(null, objects);
                 }
             }
@@ -740,6 +753,8 @@ namespace OpenMetaverse.StructuredData
 
                     if (paramType.IsAssignableFrom(searchType))
                     {
+                        convKey = searchType.FullName + "->" + toType.FullName;
+                        lock (conversions) conversions[convKey] = m;
                         return m.Invoke(null, objects);
                     }
                 }
@@ -764,9 +779,15 @@ namespace OpenMetaverse.StructuredData
         {
             return (T)o;
         }
+
+        static Dictionary<Type,MethodInfo> cm = new Dictionary<Type, MethodInfo>();
         public static object InvokeCast(Object obj, Type t)
         {
-            MethodInfo castMethod = typeof(OSD).GetMethod("Cast").MakeGenericMethod(t);
+            MethodInfo castMethod = null;
+            lock (cm) if (!cm.TryGetValue(t, out castMethod))
+            {
+                cm[t] = castMethod = typeof (OSD).GetMethod("Cast").MakeGenericMethod(t);
+            }
             object castedObject = castMethod.Invoke(null, new object[] {obj});
             return castedObject;
         }
