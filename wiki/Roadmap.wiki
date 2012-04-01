@@ -10,8 +10,9 @@ Please edit this only after some concensus on roadmap
 
 == Annie == 
 === first ===
- # learn C#, 
+ # learn C#, DONE
  # get latest compiling from Doug,  
+ # behavior tree impllementation from the 'types' system
  # make a demo project, probably an area populated by some bots
 
 === later ===
@@ -25,7 +26,7 @@ Please edit this only after some concensus on roadmap
 
  # simexport
  # Help Annie get compiling again
- # get low level cogbot movement to use prim pusher - now the default
+ # get low level cogbot movement to use prim pusher - now the default -SOLVED- was bug
  # Make a publically downloadable version of cogbot (small version ) 
 then an overlay pack that has all the chatbot stuff in it
  # revisit RTParser and see if there is a salvageable chatbot in there somewhere - COMPLETED (Kino confirms it's working for Hanson)
@@ -41,3 +42,4 @@ then an overlay pack that has all the chatbot stuff in it
  * some aiml or aiml-ish implementation integrated
  * some tale-spinnish thing
  * headless mode
+ * mono
