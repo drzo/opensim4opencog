@@ -394,12 +394,13 @@ namespace cogbot.Actions.SimExport
 
             public void UnpackRTI()
             {
-                if (TaskObjectCount == 0) return;
+                if (TaskObjectCount < 1) return;
                 if (!MissingRTI(OldID)) return;
                 if (RTIRequested) return;
                 RTIRequested = true;
                 lock (ExportCommand.fileWriterLock) File.WriteAllText(ExportCommand.dumpDir + OldID + ".0.rti", "requested");
                 Exporting.AttemptMoveTo(SimPosition);
+                lock (Importing.ExportHolder) Importing.ExportHolder.Add(OldID);
                 Thread.Sleep(3000);
                 if (!Exporting.PutItemToTaskInv(Client, OldLocalID, _rezed , "SimExportUnpackCopy"))
                 {

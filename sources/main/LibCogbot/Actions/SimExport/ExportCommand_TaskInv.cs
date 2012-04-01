@@ -190,39 +190,55 @@ namespace cogbot.Actions.SimExport
             lock (fileWriterLock) File.WriteAllText(exportFile, OSDParser.SerializeLLSDXmlString(all));
         }
 
-        static public bool PerfectTaskOSD(UUID uuid, ImportSettings sets)
+        static public string PerfectTaskOSD(UUID uuid, ImportSettings sets, bool includeRTI)
         {
             string exportFile = dumpDir + "" + uuid + ".task";
-            if (!File.Exists(exportFile)) return false;
+            if (!File.Exists(exportFile)) return "!fnd";
             string osdText = File.ReadAllText(exportFile);
-            if (osdText.Length < 20) return true;
+            if (osdText.Length < 20) return "";
             OSDArray osd = OSDParser.DeserializeLLSDXml(osdText) as OSDArray;
+            int objNum = -1;
+            bool writeBack = false;
+            string errors = "";
             foreach (OSDMap array in osd)
             {
                 var type = array["AssetType"].AsInteger();
                 if (type == (int)AssetType.Object)
                 {
+                    objNum++;
                     var r = array["RezzID"];
                     if (r.Type == OSDType.Unknown)
                     {
                         File.Delete(exportFile);
-                        return false;
+                        return "old";
                     }
-                    var ri = r.AsUUID();
-                    if (CogbotHelpers.IsNullOrZero(ri))
+                    bool missingRezID = CogbotHelpers.IsNullOrZero(r.AsUUID());
+                    if (!missingRezID) continue;
+                    if (!includeRTI) return "!" + objNum;
+                    string rtiFile = ExportCommand.dumpDir + "" + uuid + "." + objNum + ".rti";
+                    if (!File.Exists(rtiFile)) return "!rti" + objNum;
+                    var sf = File.ReadAllText(rtiFile).Split(',');
+                    if (sf.Length > 2)
                     {
-                        return false;
+                        var ri = UUID.Parse(sf[0]);
+                        if (CogbotHelpers.IsNullOrZero(ri))
+                        {
+                            errors += "!rti" + objNum;
+                            continue;
+                        }
+                        array["RezzID"] = ri;
+                        writeBack = true;
                     }
-                    if (sets.Contains("killrezids"))
-                    {
-                        File.Delete(exportFile);
-                        return false;
-                    }
+                    continue;
                 }
                 var o = array["AssetUUID"].AsUUID();
-                if (CogbotHelpers.IsNullOrZero(o)) return false;
+                if (CogbotHelpers.IsNullOrZero(o)) return "!asset";
             }
-            return true;
+            if (writeBack)
+            {
+                File.WriteAllText(exportFile,OSDParser.SerializeLLSDXmlString(osd));
+            }
+            return errors;
         }
 
         private bool checkTaskPerm(SimObject exportPrim, InventoryItem item, BotClient Client, OutputDelegate Failure, bool mustModify)

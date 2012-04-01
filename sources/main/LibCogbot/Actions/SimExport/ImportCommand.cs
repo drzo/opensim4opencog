@@ -212,6 +212,7 @@ namespace cogbot.Actions.SimExport
             Client.Assets.AssetUploaded += new EventHandler<AssetUploadEventArgs>(Assets_AssetUploaded);
             Client.Objects.ObjectPropertiesFamily += OnObjectPropertiesFamily;
             Client.Objects.ObjectUpdate += OnObjectPropertiesNewesh;
+            Client.Objects.ObjectProperties += OnObjectPropertiesNewesh1;
             Client.Network.EventQueueRunning += logged_in;
             ImportPTCFiles(new ImportSettings(), true, false);
             Importing = this;

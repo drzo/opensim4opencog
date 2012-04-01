@@ -222,11 +222,16 @@ namespace cogbot.Actions.SimExport
             int unreadyObjs = 0;
             int unreadyObjsMustReRez = 0;
             int requestedShort = 0;
-            Vector3 where;
-            foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.rti"))
+            foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.*.rti"))
             {
-                var contents = File.ReadAllText(file).Split(',');
-                if (contents.Length < 20)
+                if (!file.EndsWith("rti"))
+                {
+                    //rti_status
+                    continue;
+                }
+                string rtiData = File.ReadAllText(file);
+                var contents = rtiData.Split(',');
+                if (contents.Length < 2)
                 {
                     requestedShort++;
                     continue;
@@ -234,19 +239,35 @@ namespace cogbot.Actions.SimExport
                 var objID = UUID.Parse(contents[0]);
                 if (CogbotHelpers.IsNullOrZero(objID)) continue;
                 var holderID = UUID.Parse(contents[1]);
-                var uuidstr = Path.GetFileName(file).Split('.');
-                var objNum = int.Parse(uuidstr[1]);
-                bool complete = ExportCommand.IsComplete(objID, false, true, settings);
+                // var uuidstr = Path.GetFileName(file).Split('.');
+                // var objNum = int.Parse(uuidstr[1]);
+                string completeStr = ExportCommand.IsComplete(objID, false, true, settings);
+                Vector3 where; 
                 bool inWorld = Exporting.IsExisting(objID, out where);
-                if (complete)
+                if (string.IsNullOrEmpty(completeStr))
                 {
                     readyObjects++;
-                    if (inWorld) readyObjectsForDelete++;
+                    if (inWorld)
+                    {
+                        readyObjectsForDelete++;
+                    } else
+                    {
+                        
+                    }
                 }
                 else
                 {
                     unreadyObjs++;
-                    if (!inWorld) unreadyObjsMustReRez++;
+                    if (!inWorld)
+                    {
+                        unreadyObjsMustReRez++;
+                        Failure("REREZ: " + completeStr + " " + rtiData);   
+                    } else
+                    {
+                        MustExport.Add(objID);
+                        MustExport.Add(holderID);
+                        Failure("RTIDATA: " + completeStr + " " + rtiData);                        
+                    }
                 }
             }
             Success("readyObjects = " + readyObjects);
