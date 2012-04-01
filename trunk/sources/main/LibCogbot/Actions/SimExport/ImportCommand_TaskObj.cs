@@ -22,6 +22,7 @@ namespace cogbot.Actions.SimExport
         public List<Action> KillClosures = new List<Action>();
         public HashSet<UUID> MustExport = new HashSet<UUID>();
         public HashSet<uint> MustExportUINT = new HashSet<uint>();
+        public HashSet<UUID> ExportHolder = new HashSet<UUID>();
 
         public class TaskItemToCreate
         {
@@ -352,7 +353,7 @@ namespace cogbot.Actions.SimExport
                 var fid = item.ParentUUID;
                 var iid = item.UUID;
                 var aid = item.AssetUUID;
-                var rid = item.AssetUUID;
+                var rid = item.RezzID;
                 var ast = item.AssetType;
                 if(TaskItemOSD["typeosd"].AsString().Contains("Folder"))
                 {
@@ -715,7 +716,7 @@ namespace cogbot.Actions.SimExport
                     PostRezzed();
                     return;
                 }
-                if (RezzedO == null)
+                if (TaskRezzedO == null)
                 {
                     //UUID objectID = UUID.Zero;
                     if (NoCopyItem)
@@ -776,9 +777,9 @@ namespace cogbot.Actions.SimExport
                         }
                     }
                     newAssetID = OldAssetID;
-                    RezzedO = ExportCommand.GetSimObjectFromUUID(OldAssetID);
+                    TaskRezzedO = ExportCommand.GetSimObjectFromUUID(OldAssetID);
                 }
-                if (RezzedO == null)
+                if (TaskRezzedO == null)
                 {
                     missing = true;
                     Failure("Cant FIND taskinv object " + this);
@@ -800,36 +801,36 @@ namespace cogbot.Actions.SimExport
                 var Failure = (OutputDelegate)Importing.WriteLine;
                 if (CogbotHelpers.IsNullOrZero(OldAssetID))
                 {
-                    OldAssetID = RezzedO.ID;
+                    OldAssetID = TaskRezzedO.ID;
                 }
                 //folderObject.Add(O);
                 Exporting.TasksRezed[OldAssetID] = this;
 
-                RezzedO = ExportCommand.GetSimObjectFromUUID(OldAssetID);
-                if (RezzedO == null)
+                TaskRezzedO = ExportCommand.GetSimObjectFromUUID(OldAssetID);
+                if (TaskRezzedO == null)
                 {
-                    RezzedO = ExportCommand.GetSimObjectFromUUID(OldAssetID);
+                    TaskRezzedO = ExportCommand.GetSimObjectFromUUID(OldAssetID);
                 }
-                if (RezzedO == null)
+                if (TaskRezzedO == null)
                 {
-                    RezzedO = ExportCommand.GetSimObjectFromUUID(OldAssetID);
+                    TaskRezzedO = ExportCommand.GetSimObjectFromUUID(OldAssetID);
                 }
-                if (RezzedO == null)
+                if (TaskRezzedO == null)
                 {
-                    RezzedO = ExportCommand.GetSimObjectFromUUID(OldAssetID);
+                    TaskRezzedO = ExportCommand.GetSimObjectFromUUID(OldAssetID);
                 }
 
-                Primitive prim = RezzedO.Prim;
-                uint unpackedLocalID = RezzedO.LocalID;
+                Primitive prim = TaskRezzedO.Prim;
+                uint unpackedLocalID = TaskRezzedO.LocalID;
                 Importing.MustExportUINT.Add(unpackedLocalID);
 
-                Simulator simulator = RezzedO.GetSimulator();
+                Simulator simulator = TaskRezzedO.GetSimulator();
                 string taskInfo = "" + unpackedLocalID + "," + simulator.Handle + "," + OldAssetID + "," +
                                   CreatedPrim.OldID + "," + invObject.AssetUUID + "," + itemID + "," +
                                   NoCopyItem.ToString() + "," + ToString();
                 string taskObjFile = ExportCommand.dumpDir + itemID + ".taskobj";
                 string repackFile = ExportCommand.dumpDir + itemID + ".repack";
-                string objectAssetFile = ExportCommand.dumpDir + RezzedO.ID.ToString() + ".objectAsset";
+                string objectAssetFile = ExportCommand.dumpDir + TaskRezzedO.ID.ToString() + ".objectAsset";
                 lock (ExportCommand.fileWriterLock)
                 {
                     File.WriteAllText(repackFile, taskInfo);
@@ -850,29 +851,29 @@ namespace cogbot.Actions.SimExport
                     }
                     if (prim.ParentID != 0)
                     {
-                        Failure("Cant Drop! " + this + " Obj=" + RezzedO);
+                        Failure("Cant Drop! " + this + " Obj=" + TaskRezzedO);
                     }
-                    Vector3 pos = RezzedO.SimPosition;
+                    Vector3 pos = TaskRezzedO.SimPosition;
 
                     Client.Objects.SetPosition(simulator, unpackedLocalID, newPos);
                     Exporting.AddMoveTo(CreatedPrim.SimPosition);
                     Client.Objects.RequestObject(simulator, unpackedLocalID);
                     waitUntil = DateTime.Now.AddSeconds(10);
-                    while (RezzedO.SimPosition == pos && DateTime.Now < waitUntil)
+                    while (TaskRezzedO.SimPosition == pos && DateTime.Now < waitUntil)
                     {
                         Thread.Sleep(250);
                     }
-                    if (RezzedO.SimPosition == pos)
+                    if (TaskRezzedO.SimPosition == pos)
                     {
-                        Failure("Cant Move! " + this + " Obj=" + RezzedO);
+                        Failure("Cant Move! " + this + " Obj=" + TaskRezzedO);
                     }
                 } else
                 {
                     Exporting.AddMoveTo(prim.Position);
                 }
-                if (ExportCommand.IsSkipped(RezzedO, Exporting.settings))
+                if (ExportCommand.IsSkipped(TaskRezzedO, Exporting.settings))
                 {
-                    Failure("IsSkipped " + RezzedO);
+                    Failure("IsSkipped " + TaskRezzedO);
                 }
                 int saved = Exporting.LocalFailures;
                 Exporting.LocalFailures = 0;
@@ -936,13 +937,13 @@ namespace cogbot.Actions.SimExport
                     }
                     else
                     {
-                        Failure("Couldnt find it " + RezzedO);
+                        Failure("Couldnt find it " + TaskRezzedO);
                     }
                 }
                 if (!wasKilled)
                 {
                     missing = true;
-                    Failure("Could not kill temp object " + RezzedO);
+                    Failure("Could not kill temp object " + TaskRezzedO);
                 }
                 else
                 {
@@ -1053,7 +1054,7 @@ namespace cogbot.Actions.SimExport
             }
 
             ManualResetEvent rezedEvent = new ManualResetEvent(false);
-            private SimObject RezzedO;
+            private SimObject TaskRezzedO;
             private bool missing;
             private bool oldRunning;
             public int ObjectNum = -1;
@@ -1075,7 +1076,24 @@ namespace cogbot.Actions.SimExport
                 rezedEvent.Set();
             }
         }
-
+        private void OnObjectPropertiesNewesh1(object sender, ObjectPropertiesEventArgs e)
+        {
+            var p = e.Properties;
+            var holder = p.FromTaskID;
+            var O = WorldObjects.GetSimObjectFromUUID(p.ObjectID);
+            if (ExportHolder.Contains(holder))
+            {
+                if (O != null)
+                {
+                    if (O.IsPhysical)
+                    {
+                        O.IsPhysical = false;
+                    }
+                    //O.IsTemporary = false;
+                }
+            }
+            
+        }
         private void OnObjectPropertiesNewesh(object sender, PrimEventArgs e)
         {
             Primitive prim = e.Prim;
@@ -1092,6 +1110,15 @@ namespace cogbot.Actions.SimExport
                 if (MustExportUINT.Contains(prim.LocalID))
                 {
                     MustExport.Add(prim.ID);
+                }
+            }
+            if (ExportHolder.Count > 0)
+            {
+                var pp = prim.Properties;                
+                Client.Objects.SelectObject(e.Simulator, prim.LocalID);
+                if (pp != null)
+                {
+
                 }
             }
         }
@@ -1148,10 +1175,7 @@ namespace cogbot.Actions.SimExport
             {
                 if (ptc.TaskObjectCount > 0)
                 {
-                    Exporting.AttemptMoveTo(ptc.SimPosition);
-                    Thread.Sleep(3000);
                     ptc.UnpackRTI();
-                    Thread.Sleep(3000);
                 }
             }
             foreach (PrimToCreate ptc in childs)

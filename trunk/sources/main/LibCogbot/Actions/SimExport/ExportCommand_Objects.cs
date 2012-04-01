@@ -60,7 +60,7 @@ namespace cogbot.Actions.SimExport
             if (P is SimAvatar) return true;
             if (P == null) return true;
             if (IsIncluded(P.ID, P.LocalID)) return false;
-            if (IsIncluded(P.Parent.ID, P.ParentID)) return false;
+            if (P.Parent != null) if (IsIncluded(P.Parent.ID, P.ParentID)) return false;
 
             Primitive pp = P.Prim0;
             if (P.IsKilled)
@@ -512,24 +512,14 @@ namespace cogbot.Actions.SimExport
             }
         }
 
-        static public bool IsComplete(UUID uuid, bool includeLink, bool includeTask, ImportSettings settings)
+        static public string IsComplete(UUID uuid, bool includeLink, bool includeTask, ImportSettings settings)
         {
-            if (!PerfectTaskOSD(uuid, settings))
-            {
-                return false;
-            }
-            if (ImportCommand.MissingLLSD(uuid)) return false;
-            if (includeLink && ImportCommand.MissingLINK(uuid)) return false;
-            if (ImportCommand.MissingTASK(uuid)) return false;
-            if (includeTask)
-            {
-                string taskFileContent = File.ReadAllText(ExportCommand.dumpDir + uuid + ".task");
-                if (taskFileContent.Length < 36) return true;
-                var ptc = Importing.APrimToCreate(uuid);
-                bool cmp = ptc.EnsureTaskInv(true);
-                if (!cmp) return false;
-            }
-            return true;
+            string whynotCOmplete = "";
+            if (ImportCommand.MissingLLSD(uuid)) return "!llsd";
+            if (includeLink && ImportCommand.MissingLINK(uuid)) whynotCOmplete += "!link";
+            if (ImportCommand.MissingTASK(uuid)) return whynotCOmplete += "!task";
+            whynotCOmplete += PerfectTaskOSD(uuid, settings, true);
+            return whynotCOmplete;
         }
 
         public static string named(SimObject prim)
@@ -574,9 +564,9 @@ namespace cogbot.Actions.SimExport
 
         public bool IsExisting(UUID id, out Vector3 loc)
         {
+            loc = Vector3.Zero;
             if (CogbotHelpers.IsNullOrZero(id))
             {
-                loc = Vector3.Zero;
                 return false;
             }
             string fnd = null;
@@ -585,7 +575,7 @@ namespace cogbot.Actions.SimExport
             EventHandler<ChatEventArgs> fff = (o,e) =>
             {
                 string eM = e.Message;
-                int f = eM.IndexOf("oDO,lfnd");
+                int f = eM.IndexOf("oDO,");
                 if (f<0) return;
                 if (!eM.Contains(idstr)) return;
                 fnd = eM.Substring(f);
@@ -595,12 +585,15 @@ namespace cogbot.Actions.SimExport
             Client.Self.Chat("lfnd," + id, 4201, ChatType.Normal);
             if (!are.WaitOne(TimeSpan.FromSeconds(10)))
             {
-                loc = Vector3.Zero;
                 return false;
             }
             Client.Self.ChatFromSimulator -= fff;
             string[] sp = fnd.Split(',');
-            loc = new Vector3(float.Parse(sp[3]), float.Parse(sp[4]), float.Parse(sp[5]));
+            if (sp.Length > 4)
+            {
+
+                loc = new Vector3(float.Parse(sp[2]), float.Parse(sp[3]), float.Parse(sp[4]));
+            }
             return loc != Vector3.Zero;
         }
     }
