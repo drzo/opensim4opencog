@@ -740,6 +740,25 @@ namespace cogbot.TheOpenSims
             {
                 Primitive p = _Prim0;
                 return (p != null && ((p.Flags & PrimFlags.Temporary) != 0 || (p.Flags & PrimFlags.TemporaryOnRez) != 0));
+            } set
+            {
+                if (IsTemporary == value) return;
+                Primitive Prim = this.Prim;
+                if (Prim == null)
+                {
+                    Debug("Wont set IsTemporary because Prim==null");
+                    return;
+                }
+                if (value)
+                {
+                    WorldSystem.SetPrimFlags(Prim, (PrimFlags)(Prim.Flags | PrimFlags.Temporary));
+                    PathFinding.MadeNonTemp = false;
+                }
+                else
+                {
+                    WorldSystem.SetPrimFlags(Prim, (PrimFlags)(Prim.Flags - PrimFlags.Temporary));
+                    PathFinding.MadeNonTemp = true;
+                }
             }
         }
 
@@ -2749,6 +2768,7 @@ namespace cogbot.TheOpenSims
             }
 
             internal bool MadeNonPhysical = false;
+            internal bool MadeNonTemp = false;
             internal bool MadePhantom = false;
             public bool IsMeshed { get; set; }
 
@@ -3285,7 +3305,7 @@ namespace cogbot.TheOpenSims
         string MissingData { get; }
         bool TaskInventoryLikely { get; }
         Primitive Prim0 { get; }
-        bool IsTemporary { get; }
+        bool IsTemporary { get; set; }
 
         void StartGetTaskInventory();
     }
