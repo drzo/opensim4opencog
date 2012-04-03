@@ -371,6 +371,7 @@ namespace cogbot.Actions.SimExport
             if (arglist.Contains("oar")) CreateOARFile(importSettings, "exported.oar");
             if (arglist.Contains("CountReady")) CountReady(importSettings);
             if (arglist.Contains("cleanup")) CleanupPrims(importSettings);
+            if (arglist.Contains("cleanuptasks")) CleanupTasks(importSettings);
             writeLine("Completed SimImport");
             return SuccessOrFailure();
         }

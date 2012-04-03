@@ -214,6 +214,25 @@ namespace cogbot.Actions.SimExport
             Success("t=" + found + " m=" + mssingTO.Count + " td=" + item2TO.Count + " duped=" + duped.Count);
         }
 
+
+        /// <summary>
+        /// Return false when the object is still in the world
+        /// </summary>
+        /// <param name="objID"></param>
+        /// <returns></returns>
+        public bool KillTaskObject(UUID objID, out bool inWorld)
+        {
+            Vector3 where;
+            inWorld = Exporting.IsExisting(objID, out where);
+            if (!inWorld) return true;
+            Exporting.AttemptMoveTo(where);
+            Thread.Sleep(3000);
+            SimObject O = WorldObjects.GetSimObjectFromUUID(objID);
+            if (O == null) return false;
+            Exporting.KillInWorld(objID);
+            return true;
+        }
+
         private void CountReady(ImportSettings settings)
         {
             Exporting.GiveStatus();
@@ -249,7 +268,10 @@ namespace cogbot.Actions.SimExport
                     readyObjects++;
                     if (inWorld)
                     {
-                        readyObjectsForDelete++;
+                        Exporting.AttemptMoveTo(where);
+                        Thread.Sleep(3000);
+                        Exporting.KillInWorld(objID);
+                        readyObjectsForDelete++;                      
                     } else
                     {
                         
@@ -275,6 +297,23 @@ namespace cogbot.Actions.SimExport
             Success("unreadyObjs = " + unreadyObjs);
             Success("unreadyObjsMustReRez = " + unreadyObjsMustReRez);
             Success("requestedShort = " + requestedShort);
+        }
+
+        private void CleanupTasks(ImportSettings settings)
+        {
+            int prekilled = 0;
+            int missing = 0;
+            int destroyed = 0;
+
+            foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.objectAsset"))
+            {
+                bool wasInWorld;
+                bool killed = KillTaskObject(UUID.Parse(Path.GetFileNameWithoutExtension(file)), out wasInWorld);
+                if (wasInWorld && !killed) missing++;
+                if (!wasInWorld) prekilled++;
+                if (wasInWorld && killed) destroyed++;
+            }
+            Success("destroyed=" + destroyed + " missing=" + missing + " prekilled=" + prekilled);
         }
     }
 }

@@ -477,6 +477,15 @@ namespace cogbot.Actions.SimExport
                     }
                     primOSD["RegionPosition"] = pp;
                     primOSD["RegionRotation"] = pr;
+                    if (exportPrim.PathFinding.MadeNonPhysical)
+                    {
+                        primOSD["physical"] = true;
+                        primOSD["use_physics"] = true;
+                    }
+                    if (exportPrim.PathFinding.MadeNonTemp)
+                    {
+                        primOSD["temporary"] = true;
+                    }
                     AddExportUser(primOSD["CreatorID"]);
                     AddExportGroup(primOSD["GroupID"]);
                     AddExportUser(primOSD["OwnerID"]);
@@ -535,13 +544,13 @@ namespace cogbot.Actions.SimExport
         }
 
         private TaskQueueHandler KillInWorldTask = new TaskQueueHandler("KillInWorldAndDisk");
-        private void KillInWorldAndDisk(UUID oldobjid)
+        public void KillInWorldAndDisk(UUID oldobjid)
         {
             if (CogbotHelpers.IsNullOrZero(oldobjid)) return;
             Importing.KillID(oldobjid);
-            KillInWorldAndDisk0(oldobjid);
+            KillInWorld(oldobjid);
         }
-        private void KillInWorldAndDisk0(UUID oldobjid)
+        public void KillInWorld(UUID oldobjid)
         {
             Vector3 at;
             if (!IsExisting(oldobjid, out at)) return;
@@ -557,7 +566,7 @@ namespace cogbot.Actions.SimExport
                 }
                 else
                 {
-                    KillInWorldAndDisk0(oldobjid);
+                    KillInWorld(oldobjid);
                 }
             });
         }
