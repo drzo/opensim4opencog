@@ -488,9 +488,9 @@ namespace cogbot.Actions.SimExport
                 into = FolderCalled("TaskInvKilled") ?? Client.Inventory.FindFolderForType(AssetType.TrashFolder);
             }
             int count = 0;
-            lock (fileWriterLock)
+            lock (fileWriterLock) foreach (string ext in new[] { "*.repack",/* "*.objectAsset"*/ })
             {
-                foreach (var file in Directory.GetFiles(dumpDir, "*.repack"))
+                foreach (var file in Directory.GetFiles(dumpDir, ext))
                 {
                     count++;
                     if (count > 1) if (settings.Contains("once")) return;

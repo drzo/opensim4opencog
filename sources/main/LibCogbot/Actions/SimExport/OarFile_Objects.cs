@@ -219,10 +219,11 @@ namespace cogbot.Actions.SimExport
                     if (item == null) continue;
                     string itemName = item.Name;
                     bool obj = (item.AssetType == AssetType.Object);
+                    UUID itemAssetUUID = obj ? item.RezzID : item.AssetUUID;
                     if (obj)
                     {
                         ObjectNum++;
-                        if (CogbotHelpers.IsNullOrZero(item.RezzID))
+                        if (CogbotHelpers.IsNullOrZero(itemAssetUUID))
                         {
                             string rtiStatus = ExportCommand.dumpDir + sop.ID + "." + ObjectNum + ".rti";
                             lock (ExportCommand.fileWriterLock)
@@ -232,17 +233,17 @@ namespace cogbot.Actions.SimExport
                                     string[] conts = File.ReadAllText(rtiStatus).Split(',');
                                     if (conts.Length > 2)
                                     {
-                                        item.RezzID = UUID.Parse(conts[0]);
+                                        itemAssetUUID = UUID.Parse(conts[0]);
                                     }
                                 }
                             }
                         }
-                        if (CogbotHelpers.IsNullOrZero(item.RezzID))
+                        if (CogbotHelpers.IsNullOrZero(itemAssetUUID))
                         {
                             ExportCommand.LogError(sop.ID, "AssetZERO: " + item);
                             if (!options.ContainsKey("keepmissing")) continue;
                             if (options.ContainsKey("use404"))
-                                item.RezzID = ImportCommand.GetMissingFiller(item.AssetType);
+                                itemAssetUUID = ImportCommand.GetMissingFiller(item.AssetType);
                             if (options.ContainsKey("error404") && !itemName.Contains("ERROR404"))
                                 itemName += "ERROR404";
                             ImportCommand.Importing.Failure("Zero AssetID " + item.Name);
@@ -250,12 +251,12 @@ namespace cogbot.Actions.SimExport
                     }
                     else
                     {
-                        if (CogbotHelpers.IsNullOrZero(item.AssetUUID))
+                        if (CogbotHelpers.IsNullOrZero(itemAssetUUID))
                         {
                             ExportCommand.LogError(sop.ID, "AssetZERO: " + item);
                             if (!options.ContainsKey("keepmissing")) continue;
                             if (options.ContainsKey("use404"))
-                                item.AssetUUID = ImportCommand.GetMissingFiller(item.AssetType);
+                                itemAssetUUID = ImportCommand.GetMissingFiller(item.AssetType);
                             if (options.ContainsKey("error404") && !itemName.Contains("ERROR404"))
                                 itemName += "ERROR404";
                             ImportCommand.Importing.Failure("Zero AssetID " + item.Name);
@@ -267,7 +268,7 @@ namespace cogbot.Actions.SimExport
                     {
                         perms = Permissions.FullPermissions;
                     }
-                    UUID itemAssetUUID = obj ? item.RezzID : item.AssetUUID;
+
                     if (CogbotHelpers.IsNullOrZero(itemAssetUUID))
                     {
                         continue;
