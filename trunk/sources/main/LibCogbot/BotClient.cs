@@ -1453,7 +1453,7 @@ namespace cogbot
                 string SelfName = String.Format("{0}", GetName());
                 str = str.Replace("$bot", SelfName);
                 if (str.StartsWith(SelfName)) str = str.Substring(SelfName.Length).Trim();
-                if (false) ClientManager.SetDebugConsole(__TheRadegastInstance);
+                ClientManager.SetDebugConsole(__TheRadegastInstance);
                 ClientManager.WriteLine(str);
             }
             catch (Exception ex)
@@ -1943,8 +1943,11 @@ namespace cogbot
                 if (!Running) return;
                 Running = false;
                 logout();
-                updateTimer.Enabled = false;
-                updateTimer.Close();
+                if (updateTimer!=null)
+                {
+                    updateTimer.Enabled = false;
+                    updateTimer.Close();
+                }
                 //botPipeline.Shut
                 if (botPipeline != null) botPipeline.Dispose();
                 if (lispEventProducer != null) lispEventProducer.Dispose();
@@ -2456,6 +2459,7 @@ namespace cogbot
 
         public void SetRadegastLoginOptions()
         {
+            if (TheRadegastInstance == null) return;
             ClientManager.EnsureRadegastForm(this, TheRadegastInstance, "EnsureRadegastForm from SetRadegastLoginOptions " + GetName());
             var to = TheRadegastInstance.Netcom.LoginOptions;
             to.FirstName = BotLoginParams.FirstName;
