@@ -583,7 +583,6 @@ namespace cogbot
         {
             BotClient bc = CreateBotClient0(first, last, passwd, simurl, location);
             EnsureBotClientHasRadegast(bc);
-            bc.SetRadegastLoginOptions();
             PostAutoExecEnqueue(() => MakeRunning(bc));
             return bc;            
         }
@@ -638,10 +637,16 @@ namespace cogbot
                     }
                 }
             }
+            string name = "EnsureBotClientHasRadegast: " + bc.GetName();
+           
             gridClient = gridClient ?? bc.gridClient ?? new GridClient();
-            bc.TheRadegastInstance = inst ?? bc.TheRadegastInstance ?? new RadegastInstance(gridClient);
-            EnsureRadegastForm(bc, bc.TheRadegastInstance, "EnsureBotClientHasRadegast: " + bc.GetName());
-            bc.SetRadegastLoginOptions();
+            InSTAThread(() =>
+                            {
+                                bc.TheRadegastInstance = inst ??
+                                                         bc.TheRadegastInstance ?? new RadegastInstance(gridClient);
+                                EnsureRadegastForm(bc, bc.TheRadegastInstance, name);
+                                bc.SetRadegastLoginOptions();
+                            }, name);
         }
 
 

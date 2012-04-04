@@ -383,7 +383,20 @@ namespace cogbot.Listeners
                     {
                         throw new ArgumentException("" + client);
                     }
-                    TheSimAvatar = (SimAvatarClient)GetSimObjectFromUUID(id);
+                    var simObject = GetSimObjectFromUUID(id);
+                    if (simObject != null)
+                    {
+                        if (simObject is SimAvatarClient)
+                        {
+                            TheSimAvatar = (SimAvatarClient) simObject;
+                        }
+                        else
+                        {
+                            SimAvatarClient impl;
+                            TheSimAvatar = impl = new SimAvatarClient(id, this, client.Network.CurrentSim);
+                            impl.AspectName = client.GetName();
+                        }
+                    }
                     if (m_TheSimAvatar == null) lock (UUIDTypeObject)
                     {
                         Avatar av = GetAvatar(id, client.Network.CurrentSim);

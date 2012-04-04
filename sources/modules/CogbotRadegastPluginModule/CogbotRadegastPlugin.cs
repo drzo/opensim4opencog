@@ -290,7 +290,7 @@ namespace CogbotRadegastPluginModule
         {
             ClientManager.PostAutoExecEnqueue(() =>
             {
-                clientManager.ShutDown();
+                TheBot.Dispose();
                 RemoveRadegastEvents();
             });
             ClientManager.PostAutoExec.Start();
