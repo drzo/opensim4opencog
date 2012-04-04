@@ -255,7 +255,7 @@ namespace ABuildStartup
                               {
                                   var firstProc = new System.Diagnostics.Process();
                                   firstProc.StartInfo.FileName = "swipl-win.exe";
-                                  firstProc.StartInfo.Arguments = "-f StartCogbot.pl";
+                                  firstProc.StartInfo.Arguments = "-f prolog/cogbot.pl";// "-f StartCogbot.pl";
 
                                   firstProc.EnableRaisingEvents = true;
                                   AllocConsole();
