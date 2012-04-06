@@ -354,7 +354,7 @@ namespace SbsSW.SwiPlCs
             // redirect read stream
             DelegateStreamReadFunction old_read_function = PlEngine._function_read;
             DelegateStreamReadFunction rf = new DelegateStreamReadFunction(Sread);
-            PlEngine.SetStreamFunctionRead(PlStreamType.Input, rf);
+            if (PrologClient.RedirectStreams) PlEngine.SetStreamFunctionRead(PlStreamType.Input, rf);
 
             try
             {
@@ -371,7 +371,7 @@ namespace SbsSW.SwiPlCs
                     throw new PlLibException("PlCall read_term fails! goal:" + _query_string);
 
                 // restore stream function
-                PlEngine.SetStreamFunctionRead(PlStreamType.Input, old_read_function);
+                if (PrologClient.RedirectStreams) PlEngine.SetStreamFunctionRead(PlStreamType.Input, old_read_function);
 
                 // set list of variables and variable_names into _queryVariables
                 foreach (PlTerm t in variablenames_list.ToList())
