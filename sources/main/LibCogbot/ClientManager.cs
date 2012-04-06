@@ -31,6 +31,7 @@ namespace cogbot
             SingleInstance = SingleInstance ?? new ClientManager();
         }
 
+        public static bool StartLispThreadAtPluginInit = false;
         public static readonly TaskQueueHandler OneAtATimeQueue = new TaskQueueHandler("ClientManager OneAtATime", new TimeSpan(0, 0, 0, 0, 10), true, false);
         public static readonly TaskQueueHandler PostAutoExec = new TaskQueueHandler("PostExec", new TimeSpan(0, 0, 0, 0, 10), false, false);
         public static object SingleInstanceLock = new object();
@@ -1247,7 +1248,19 @@ namespace cogbot
         readonly static Dictionary<string,Color> Name2Color = new Dictionary<string, Color>();
         public static RadegastInstance GlobalRadegastInstance;
         private static bool GlobalRadegastInstanceGCUsed;
-        private bool StartedUpLisp;
+        private static bool _StartedUpLisp;
+        static public bool StartedUpLisp
+        {
+            get
+            {
+                lock (OneAtATimeStartupLisp)
+                {
+                    return _StartedUpLisp;
+                }
+            }
+            set { _StartedUpLisp = value; }
+        }
+
         private bool StartingUpLisp;
 
         public static Color DeriveColor(string input)
