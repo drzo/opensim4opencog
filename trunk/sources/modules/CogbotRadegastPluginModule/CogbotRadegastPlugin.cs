@@ -138,13 +138,19 @@ namespace CogbotRadegastPluginModule
             TheBot.InvokeNext("Re-enable login button", () =>
                                                             {
                                                                 TheBot.DebugWriteLine("SetLoginButton = r-enabled");
-                                                                SetLoginButton("Cogbot", true);
+                                                                SetLoginButton(OldLoginText, true);
                                                             });
             if (plugInitCalledEver)
             {
                 return;
             }
             plugInitCalledEver = true;
+            if (ClientManager.StartLispThreadAtPluginInit) RunClientManagerStartupLisp();
+        }
+    
+        public void RunClientManagerStartupLisp() {
+             
+            if (ClientManager.StartedUpLisp) return;
             ThreadStart mi = () =>
                                  {
                                      DLRConsole.SafelyRun(clientManager.StartUpLisp);
@@ -162,6 +168,7 @@ namespace CogbotRadegastPluginModule
                                         {
                                             Name = "StartUpLispThread"
                                         };
+                StartUpLispThread.SetApartmentState(ApartmentState.STA);
                 StartUpLispThread.Start();
             }
         }
@@ -169,6 +176,7 @@ namespace CogbotRadegastPluginModule
         private void netcom_ClientLoggingIn(object sender, OverrideEventArgs e)
         {
             if (!AllowRadegastUIControl) e.Cancel = true;
+            if (ClientManager.StartLispThreadAtPluginInit)RunClientManagerStartupLisp();
         }
 
         private void netcom_ClientLoggingOut(object sender, OverrideEventArgs e)
@@ -216,7 +224,7 @@ namespace CogbotRadegastPluginModule
 
         private void SetupRadegastGUI(RadegastInstance inst)
         {
-            DLRConsole.AllocConsole();
+            DLRConsole.AllocConsole();            
             SetLoginButton("SetupCogbotGUI", false);
             DLRConsole.SafelyRun(() =>
                                      {
@@ -268,6 +276,8 @@ namespace CogbotRadegastPluginModule
         {
             DLRConsole.InvokeControl(RadegastInstance.MainForm, () => SetLoginButton0(text, enabled));
         }
+
+        private string OldLoginText = null;
         internal void SetLoginButton0(String text, bool enabled)
         {
             RadegastTab tab2 = RadegastInstance.TabConsole.GetTab("login");
@@ -278,7 +288,27 @@ namespace CogbotRadegastPluginModule
                 if (login != null)
                 {
                     login.btnLogin.Enabled = enabled;
-                    if (text != null) login.btnLogin.Text = text;
+                    if (text != null)
+                    {
+                        if (OldLoginText == null) OldLoginText = login.btnLogin.Text;
+                        login.btnLogin.Text = text;
+                    }
+                }
+            }
+        }
+        internal void GetLoginButton(out String text, out  bool enabled)
+        {
+            text = null;
+            enabled = true;
+            RadegastTab tab2 = RadegastInstance.TabConsole.GetTab("login");
+            if (tab2 != null)
+            {
+                tab2.AllowDetach = true;
+                var login = tab2.Control as LoginConsole;
+                if (login != null)
+                {
+                    enabled = login.btnLogin.Enabled;
+                    text = login.btnLogin.Text;
                 }
             }
         }
