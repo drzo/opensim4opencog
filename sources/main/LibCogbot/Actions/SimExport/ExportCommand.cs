@@ -72,6 +72,7 @@ namespace cogbot.Actions.SimExport
         {
             UUID uuid;
             if (inventoryHolder.TryGetValue(name, out uuid)) return uuid;
+            if (Client.Inventory.Store == null) return UUID.Zero;
             var rid = Client.Inventory.Store.RootFolder.UUID;
             List<InventoryBase> cnt = Client.Inventory.FolderContents(rid, Client.Self.AgentID, true, false, InventorySortOrder.ByDate,
                                                       5000);

@@ -587,7 +587,12 @@ namespace cogbot.Actions.SimExport
         private void GleanUUIDsFrom(UUID uuid)
         {
             if (CogbotHelpers.IsNullOrZero(uuid)) return;
-            foreach (var item0 in Client.Inventory.Store.GetContents(uuid))
+            var clientInventoryStore = Client.Inventory.Store;
+            if (clientInventoryStore == null)
+            {
+                return;
+            }
+            foreach (var item0 in clientInventoryStore.GetContents(uuid))
             {
                 UUID oldID;
                 if (UUID.TryParse(item0.Name, out oldID))
