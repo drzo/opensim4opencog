@@ -1163,7 +1163,7 @@ namespace cogbot.TheOpenSims
                     {
                         WorldSystem.StartTextureDownload(prim.Sculpt.SculptTexture);
                     }
-                    TaskInvGrabber.Enqueue(StartGetTaskInventory);
+                   // TaskInvGrabber.Enqueue(StartGetTaskInventory);
                 }
         }
 

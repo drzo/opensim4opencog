@@ -376,8 +376,8 @@ namespace ABuildStartup
             }
 
             if (false) cogbot.ClientManager.SingleInstance.ProcessCommandArgs();
-            //ClientManager.InSTAThread(StartExtraRadegast, "StartExtraRadegast");
-            StartRadegast();
+            ClientManager.InSTAThread(StartRadegast, "StartExtraRadegast").Join();
+            //StartRadegast();
         }
 
         public static void StartRadegast()

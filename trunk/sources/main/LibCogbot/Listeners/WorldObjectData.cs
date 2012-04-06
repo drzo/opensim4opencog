@@ -46,7 +46,7 @@ namespace cogbot.Listeners
         public override void Objects_OnObjectProperties(object sender, ObjectPropertiesEventArgs e)
         {
             var simulator = e.Simulator;
-            var props = e.Properties;
+            var props = e.Properties;          
             //throw new InvalidOperationException("Objects_OnObjectProperties");
             CheckConnected(simulator);
             //NeverSelect(props.LocalID, simulator);                
@@ -79,8 +79,8 @@ namespace cogbot.Listeners
                     updateMe.Properties = (props);
                 }
                 //Debug("UpdateProperties: {0}", updateMe.DebugInfo());
+                describePrimToAI(prim, simulator);
             }
-            describePrimToAI(prim, simulator);
         }
 
         #region Nested type: DoWhat
