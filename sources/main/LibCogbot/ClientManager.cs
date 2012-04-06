@@ -26,6 +26,11 @@ namespace cogbot
 
     public class ClientManager : IDisposable,ScriptExecutorGetter
     {
+        static ClientManager()
+        {
+            SingleInstance = SingleInstance ?? new ClientManager();
+        }
+
         public static readonly TaskQueueHandler OneAtATimeQueue = new TaskQueueHandler("ClientManager OneAtATime", new TimeSpan(0, 0, 0, 0, 10), true, false);
         public static readonly TaskQueueHandler PostAutoExec = new TaskQueueHandler("PostExec", new TimeSpan(0, 0, 0, 0, 10), false, false);
         public static object SingleInstanceLock = new object();
@@ -129,13 +134,13 @@ namespace cogbot
                     GlobalWriteLine("" + e);
                     throw e;
                 }
-                SingleInstance = this;                
+                SingleInstance = this;
             }
             DLRConsole.AddOutput(new OutputDelegateWriter(VeryRealWriteLine));
             var col = DLRConsole.TransparentCallers;
             lock (col)
             {
-                col.Add(typeof (BotClient));
+                col.Add(typeof(BotClient));
                 col.Add(typeof(Command));
                 col.Add(typeof(ClientManager));
                 col.Add(typeof(cogbot.Listeners.SimEventMulticastPipeline));
@@ -588,6 +593,7 @@ namespace cogbot
             BotClient bc = CreateBotClient0(first, last, passwd, simurl, location);
             EnsureBotClientHasRadegast(bc);
             PostAutoExecEnqueue(() => MakeRunning(bc));
+            StartUpLisp();
             return bc;            
         }
 
