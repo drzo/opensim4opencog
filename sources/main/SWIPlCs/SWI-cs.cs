@@ -2596,12 +2596,20 @@ namespace SbsSW.SwiPlCs
                 else
                 {
                     PrologClient.ConsoleWriteLine("Init3");
-                    if (!IsStreamFunctionReadModified)
-                    {
-                        DelegateStreamReadFunction rf = new DelegateStreamReadFunction(Sread_function);
-                        if (PrologClient.RedirectStreams) PlEngine.SetStreamFunctionRead(PlStreamType.Input, rf);
-                        IsStreamFunctionReadModified = false;
-                    }
+                    SetStreamReader(Sread_function);
+                }
+            }
+        }
+
+
+        public static void SetStreamReader(DelegateStreamReadFunction rf)
+        {
+            if (PrologClient.RedirectStreams)
+            {
+               // if (!IsStreamFunctionReadModified)
+                {
+                    PlEngine.SetStreamFunctionRead(PlStreamType.Input, new DelegateStreamReadFunction(rf));
+                    IsStreamFunctionReadModified = true;
                 }
             }
         }
@@ -2664,8 +2672,8 @@ namespace SbsSW.SwiPlCs
 
 
 
-        static bool IsStreamFunctionWriteModified;  // default = false;
-        static bool IsStreamFunctionReadModified;   // default = false;
+        public static bool IsStreamFunctionWriteModified;  // default = false;
+        public static bool IsStreamFunctionReadModified;   // default = false;
 
         /// <summary>To Avoid callbackOnCollectedDelegate MDA</summary>
         internal static Streams.DelegateStreamWriteFunction _function_write;

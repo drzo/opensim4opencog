@@ -496,7 +496,7 @@ namespace SbsSW.SwiPlCs
             {
                 if (PrologIsSetup) return;
                 PrologIsSetup = true;
-                SetupProlog0();
+                SafelyRun(SetupProlog0);
                 RegisterPLCSForeigns();
             }
         }
@@ -529,11 +529,11 @@ namespace SbsSW.SwiPlCs
             if (!IsUseableSwiProlog(SwiHomeDir))
             {
 
-                SwiHomeDir = "c:\\Program Files\\pl";
+                SwiHomeDir = "c:/Program Files/pl";
 
                 if (Is64BitComputer() && !Is64BitRuntime())
                 {
-                    SwiHomeDir = "c:\\Program Files (x86)\\pl";
+                    SwiHomeDir = "c:/Program Files (x86)/pl";
                 }
             }
             AltSwiHomeDir = AltSwiHomeDir ?? ".";
@@ -564,12 +564,12 @@ namespace SbsSW.SwiPlCs
             if (path != null)
                 if (!path.ToLower().StartsWith(SwiHomeDir.ToLower()))
                 {
-                    Environment.SetEnvironmentVariable("PATH", SwiHomeDir + "\\bin;" + IKVMHome + ";" + path);
+                    Environment.SetEnvironmentVariable("PATH", SwiHomeDir + "/bin;" + IKVMHome + ";" + path);
                 }
-            string libpath = "";
+            libpath = "";
 
 
-            string swiHomeBin = SwiHomeDir + "\\bin";
+            string swiHomeBin = SwiHomeDir + "/bin";
             libpath += swiHomeBin;
             if (swiHomeBin != IKVMHome)
             {
@@ -585,9 +585,14 @@ namespace SbsSW.SwiPlCs
                 LD_LIBRARY_PATH = libpath;
                 Environment.SetEnvironmentVariable("LD_LIBRARY_PATH", LD_LIBRARY_PATH);
             }
-
-
-            string CLASSPATH = java.lang.System.getProperty("java.class.path");
+           // SafelyRun(SetupProlog1);
+           // SafelyRun(SetupProlog2);
+        }
+        public static void SetupProlog1()
+        {
+            Console.WriteLine("geting lib path");
+            CLASSPATH = java.lang.System.getProperty("java.class.path");
+            Console.WriteLine("GOT lib path");
             string CLASSPATH0 = Environment.GetEnvironmentVariable("CLASSPATH");
 
             if (String.IsNullOrEmpty(CLASSPATH))
@@ -597,7 +602,7 @@ namespace SbsSW.SwiPlCs
             string jplcp = clasPathOf(new jpl.JPL());
 
             if (!JplDisabled)
-                CLASSPATH = IKVMHome + "\\SWIJPL.dll" + ";" + IKVMHome + "\\SWIJPL.jar;" + CLASSPATH0;
+                CLASSPATH = IKVMHome + "/SWIJPL.dll" + ";" + IKVMHome + "/SWIJPL.jar;" + CLASSPATH0;
 
             ConsoleWriteLine("CLASSPATH=" + CLASSPATH);
             if (CLASSPATH != null)
@@ -606,11 +611,16 @@ namespace SbsSW.SwiPlCs
                 java.lang.System.setProperty("java.class.path", CLASSPATH);
             }
             java.lang.System.setProperty("java.library.path", libpath);
+        }
+        static string CLASSPATH = null;
+        static string libpath = null;
+        public static void SetupProlog2()
+        {
             try
             {
                 if (!JplDisabled)
                 {
-                    JPL.setNativeLibraryDir(SwiHomeDir + "\\bin");
+                    JPL.setNativeLibraryDir(SwiHomeDir + "/bin");
                     try
                     {
                         JPL.loadNativeLibrary();
@@ -636,7 +646,7 @@ namespace SbsSW.SwiPlCs
                         PlEngine.Initialize(param);
                     }
                     if (IsPLWin) return;
-                    PlEngine.SetStreamFunctionRead(PlStreamType.Input, new DelegateStreamReadFunction(Sread));
+                    if (!PlEngine.IsStreamFunctionReadModified) PlEngine.SetStreamReader(Sread);
                     PlQuery.PlCall("nl.");
                 }
                 catch (Exception e)
@@ -658,15 +668,15 @@ namespace SbsSW.SwiPlCs
         {
             if (string.IsNullOrEmpty(swiHomeDir)) return false;
             if (!Directory.Exists(swiHomeDir)) return false;
-            if (File.Exists(swiHomeDir + "\\bin\\libpl.dll"))
+            if (File.Exists(swiHomeDir + "/bin/libpl.dll"))
             {
-                Console.WriteLine("SWI too old: " + swiHomeDir + "\\bin\\libpl.dll");
+                Console.WriteLine("SWI too old: " + swiHomeDir + "/bin/libpl.dll");
                 return false;
             }
-            if (File.Exists(swiHomeDir + "\\bin\\swipl.dll")) return true;
-            if (!File.Exists(swiHomeDir + "\\boot32.prc") &&
-                !File.Exists(swiHomeDir + "\\boot.prc") &&
-                !File.Exists(swiHomeDir + "\\boot64.prc"))
+            if (File.Exists(swiHomeDir + "/bin/swipl.dll")) return true;
+            if (!File.Exists(swiHomeDir + "/boot32.prc") &&
+                !File.Exists(swiHomeDir + "/boot.prc") &&
+                !File.Exists(swiHomeDir + "/boot64.prc"))
             {
                 Console.WriteLine("RC file missing from " + swiHomeDir);
                 return false;
@@ -754,11 +764,11 @@ namespace SbsSW.SwiPlCs
             DirectoryInfo source;
             if (Is64BitRuntime())
             {
-                source = new DirectoryInfo(IKVMHome + "\\bin-x64\\");
+                source = new DirectoryInfo(IKVMHome + "/bin-x64/");
             }
             else
             {
-                source = new DirectoryInfo(IKVMHome + "\\bin-x86\\");
+                source = new DirectoryInfo(IKVMHome + "/bin-x86/");
             }
             if (source.Exists) CopyFiles(source, destination, true, "*.*", false);
         }
@@ -1046,15 +1056,15 @@ namespace SbsSW.SwiPlCs
             if (!JplDisabled)
                 SafelyRun(() =>
                               {
-                                  if (File.Exists(IKVMHome + "\\jpl_for_ikvm.phps"))
+                                  if (File.Exists(IKVMHome + "/jpl_for_ikvm.phps"))
                                   {
-                                      if (!File.Exists(SwiHomeDir + "\\library\\jpl.pl.old"))
+                                      if (!File.Exists(SwiHomeDir + "/library/jpl.pl.old"))
                                       {
-                                          File.Copy(SwiHomeDir + "\\library\\jpl.pl",
-                                                    SwiHomeDir + "\\library\\jpl.pl.old",
+                                          File.Copy(SwiHomeDir + "/library/jpl.pl",
+                                                    SwiHomeDir + "/library/jpl.pl.old",
                                                     true);
                                       }
-                                      File.Copy(IKVMHome + "\\jpl_for_ikvm.phps", SwiHomeDir + "\\library\\jpl.pl", true);
+                                      File.Copy(IKVMHome + "/jpl_for_ikvm.phps", SwiHomeDir + "/library/jpl.pl", true);
                                   }
                               });
 
@@ -1299,8 +1309,7 @@ jpl_jlist_demo :-
         //[TestMethod]
         public void StreamRead()
         {
-            DelegateStreamReadFunction rf = new DelegateStreamReadFunction(Sread);
-            PlEngine.SetStreamFunctionRead(PlStreamType.Input, rf);
+            PlEngine.SetStreamReader(Sread);
             // NOTE: read/1 needs a dot ('.') at the end
             PlQuery.PlCall("assert( (test_read(A) :- read(A)) )");
             PlTerm t = PlQuery.PlCallQuery("test_read(A)");
@@ -1361,13 +1370,13 @@ jpl_jlist_demo :-
         {
             if (value != null)
             {
-                value = value.TrimEnd("/\\".ToCharArray());
+                value = value.TrimEnd("\\/".ToCharArray()).Replace("\\", "/");
             }
             return value;
         }
 
 
-        public static string AltSwiHomeDir = "C:\\development\\opensim4opencog";// Path.Combine(".", "swiprolog");
+        public static string AltSwiHomeDir = "C:/development/opensim4opencog";// Path.Combine(".", "swiprolog");
         public static bool JplSafeNativeMethodsDisabled = false;
         public static bool JplSafeNativeMethodsCalled = false;
         public static bool IsHalted = false;
@@ -1376,10 +1385,10 @@ jpl_jlist_demo :-
         public static bool FailOnMissingInsteadOfError = true;
         public static Thread CreatorThread;
         public static bool IsPLWin;
-        public static bool RedirectStreams = true;
+        public static bool RedirectStreams = false;
         public static int VMStringsAsAtoms = libpl.CVT_STRING;
 
-        public static bool IsLinux = false;//Type.GetType("Mono.Runtime") != null;
+        public static bool IsLinux = Type.GetType("Mono.Runtime") != null;
 
         /* static public void WriteLine(string s, params object[] args)
          {
@@ -1390,7 +1399,7 @@ jpl_jlist_demo :-
         public bool Consult(string filename)
         {
             // atomic quote the filename
-            string replace = "'" + filename.Replace("\\", "\\\\").Replace("'", "\\'") + "'";
+            string replace = "'" + filename.Replace("\\", "/").Replace("'", "\\'") + "'";
             return PlCall("[" + replace + "]");
         }
 
