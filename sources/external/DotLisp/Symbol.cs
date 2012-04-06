@@ -64,6 +64,7 @@ public class Symbol
 
 internal class SymbolTable
 	{
+    internal SymbolTable Parent;
 	internal Symbol internConstant(String name,Object val)
 		{
 		Symbol result = null;
@@ -269,7 +270,7 @@ internal class SymbolTable
 			}
 		}
 
-	static Hashtable table = new Hashtable(500);
+	Hashtable table = new Hashtable(500);
 	// String->Type
 	private static Hashtable fullNamesToTypes = new Hashtable(500);
 	// String->ArrayList<Type>
