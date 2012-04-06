@@ -26,7 +26,7 @@ namespace MushDLR223.ScriptEngines
     }
     abstract public class DotLispInterpreterBase : LispInterpreter
     {
-        static private Interpreter _dotLispInterpreter;
+        private Interpreter _dotLispInterpreter;
         static private int _dotLispInterpreterCount = 0;
         static private object _dotLispInterpreterInitLock = new object();
 

@@ -404,7 +404,7 @@ namespace MushDLR223.Utilities
         private static readonly object[] NOARGS = new object[0];
         //public static bool PrintToSystemConsole = true;
         public static bool HasWinforms = false;
-        public static bool IsOnMonoUnix = false;
+        public static bool IsOnMonoUnix = true;
         public static bool SafelyRun(MethodInvoker call)
         {
             return SafelyRun(call, Error);
@@ -434,40 +434,55 @@ namespace MushDLR223.Utilities
         public static void DetectMainEnv(TextWriter Console)
         {
             var osv = Environment.OSVersion;
+            Console = Console ?? InitialConsoleOut ?? InitialConsoleERR;
             if (Console != null)
             {
-                Console.WriteLine("Current Directory={0}", Environment.CurrentDirectory);      // Current working directory of the program
-                Console.WriteLine("CommandLine={0}", Environment.CommandLine);                 // Command line used to execute the program
-                Console.WriteLine("MachineName={0}", Environment.MachineName);                 // Name of the current machine
-                Console.WriteLine("NewLine={0}", Environment.NewLine);                         // Newline character used by OS, \n for Unix, \n\r for Windows
-                Console.WriteLine("Environment.OSVersion = " + osv);
-                Console.WriteLine("Environment.OSVersion.Platform = " + osv.Platform);
-                Console.WriteLine("Environment.OSVersion.VersionString = " + osv.VersionString);
-                Console.WriteLine("Environment.OSVersion.ServicePack = " + osv.ServicePack);
-                Console.WriteLine("ProcessorCount={0}", Environment.ProcessorCount);           // Number of CPU's in the machine
-                Console.WriteLine("StackTrace={0}", Environment.StackTrace);                   // Prints all functions called in order
-                Console.WriteLine("SystemDirectory={0}", Environment.SystemDirectory);         // Returns the "system" directory of the OS, not valid on Unix
-                Console.WriteLine("TickCount={0}", Environment.TickCount);                     // Number of milliseconds since the system started
-                Console.WriteLine("UserDomainName={0}", Environment.UserDomainName);           // Windows domain, Machine name on Unix
-                Console.WriteLine("UserInteractive={0}", Environment.UserInteractive);         //
-                Console.WriteLine("UserName={0}", Environment.UserName);                       // Current username
-                Console.WriteLine("Version={0}", Environment.Version);                         // C# engine version
-                Console.WriteLine("WorkingSet={0}", Environment.WorkingSet);                   // Memory allocated to the process
+                Console.WriteLine("Current Directory={0}", SafeCall(() => Environment.CurrentDirectory));      // Current working directory of the program
+                Console.WriteLine("CommandLine={0}", SafeCall(() => Environment.CommandLine));                 // Command line used to execute the program
+                Console.WriteLine("MachineName={0}", SafeCall(() => Environment.MachineName));                 // Name of the current machine
+                Console.WriteLine("NewLine={0}", SafeCall(() => Environment.NewLine));                         // Newline character used by OS, \n for Unix, \n\r for Windows
+                if (osv != null)
+                {
+                    Console.WriteLine("Environment.OSVersion = " + osv);
+                    Console.WriteLine("Environment.OSVersion.Platform = " + osv.Platform);
+                    Console.WriteLine("Environment.OSVersion.VersionString = " + osv.VersionString);
+                    Console.WriteLine("Environment.OSVersion.ServicePack = " + osv.ServicePack);
+                }
+                Console.WriteLine("ProcessorCount={0}", SafeCall(() => Environment.ProcessorCount));           // Number of CPU's in the machine
+                Console.WriteLine("StackTrace={0}", SafeCall(() => Environment.StackTrace));                   // Prints all functions called in order
+                Console.WriteLine("SystemDirectory={0}", SafeCall(() => Environment.SystemDirectory));         // Returns the "system" directory of the OS, not valid on Unix
+                Console.WriteLine("TickCount={0}", SafeCall(() => Environment.TickCount));                     // Number of milliseconds since the system started
+                Console.WriteLine("UserDomainName={0}", SafeCall(() => Environment.UserDomainName));           // Windows domain, Machine name on Unix
+                Console.WriteLine("UserInteractive={0}", SafeCall(() => Environment.UserInteractive));         //
+                Console.WriteLine("UserName={0}", SafeCall(() => Environment.UserName));                       // Current username
+                Console.WriteLine("Version={0}", SafeCall(() => Environment.Version));                         // C# engine version
+                Console.WriteLine("WorkingSet={0}", SafeCall(() => Environment.WorkingSet));                   // Memory allocated to the process
 
                 // ExpandEnviromentalVariables expands any named variable between %%
-                Console.WriteLine("ExpandEnvironentVariables={0}", Environment.ExpandEnvironmentVariables("This system has the following path: %PATH%"));
-
-                String[] arguments = Environment.GetCommandLineArgs();
-                Console.WriteLine("CommandLineArgs={0}", String.Join(", ", arguments));
-
-                String[] drives = Environment.GetLogicalDrives();
-                Console.WriteLine("GetLogicalDrives: {0}", String.Join(", ", drives));
+                Console.WriteLine("ExpandEnvironentVariables={0}", SafeCall(() => Environment.ExpandEnvironmentVariables("This system has the following path: %PATH%")));
+                Console.WriteLine("CommandLineArgs={0}", SafeCall(() => String.Join(", ", Environment.GetCommandLineArgs())));
+                Console.WriteLine("GetLogicalDrives: {0}", SafeCall(() => String.Join(", ", Environment.GetLogicalDrives())));
             }
-            IsOnMonoUnix = osv.Platform == PlatformID.Unix;
-            HasWinforms = osv.Platform != PlatformID.Unix;
+            if (osv != null)
+            {
+                IsOnMonoUnix = osv.Platform == PlatformID.Unix;
+                HasWinforms = osv.Platform != PlatformID.Unix;
+            }
             MakeWindowsOnly("Mono.Security.dll");
             MakeWindowsOnly("XML.dll");
             MakeWindowsOnly("GraphvizDot.dll");
+        }
+
+        private static object SafeCall<T>(Func<T> func)
+        {
+            try
+            {
+                return func();
+            }
+            catch (Exception e)
+            {
+                return "" + e;
+            }
         }
 
         private static void MakeWindowsOnly(string p)
@@ -503,7 +518,7 @@ namespace MushDLR223.Utilities
 
         public static bool AllocConsole()
         {
-            DetectMainEnv(null);
+            SafelyRun(() => DetectMainEnv(null));
             if (!AllocedConsole)
             {
                 var ConsoleError = Console.Error;

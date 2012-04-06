@@ -398,7 +398,11 @@ namespace MushDLR223.ScriptEngines
                 //lock (Lock)
                 {
                     ScriptInterpreter si = UsedCSharpScriptDefinedType(self, type);
-                    if (si != null) return si; 
+                    if (si != null)
+                    {
+                        si.Self = self;
+                        return si;
+                    } 
                     si = LoadScriptInterpreter0(type, self);
                     StartScanningAppDomain();
                     return si;
@@ -473,10 +477,12 @@ namespace MushDLR223.ScriptEngines
                     ScanPredfinedAssemblies();
                     InstanceNewInterpTypes(self);
                 }
+                ScriptInterpreter typed = null;
                 foreach (var set in Interpreters)
                 {
                     if (set.LoadsFileType(type, self))
                     {
+                        typed = set;
 #if COGBOT
                         if (set is BotScriptInterpreter)
                         {
@@ -486,9 +492,14 @@ namespace MushDLR223.ScriptEngines
                             }
                         }
 #endif
-                        return set;
+                        if (typed.Self == self) return set;
                     }
                 }
+                if (typed != null)
+                {
+                    return typed.newInterpreter(self);
+                }
+
                 return UsedCSharpScriptDefinedType(self, type);
                 //default
                 return new DotLispInterpreter(self);
