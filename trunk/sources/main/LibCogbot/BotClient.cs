@@ -1143,12 +1143,25 @@ namespace cogbot
         {
             DisplayNotificationInChatReal(DLRConsole.SafeFormat(str, args));
         }
+
+        String stringBuff = "";
+        object stringBuffLock = new object();
         public void DisplayNotificationInChatReal(string str)
         {
+            lock (stringBuffLock)
+            {
+                if (stringBuff == "")
+                {
+                    stringBuff = str;
+                } else
+                {
+                    stringBuff = stringBuff + "\r\n" + str;
+                    return;
+                }
+            }
             InvokeGUI(
                 () =>
                     {
-                        ClientManager.WriteLine(str);
                         ChatConsole cc = (ChatConsole) TheRadegastInstance.TabConsole.Tabs["chat"].Control;
                         RichTextBoxPrinter tp = (RichTextBoxPrinter) cc.ChatManager.TextPrinter;
                         InvokeGUI(cc.rtbChat, () =>
@@ -1159,6 +1172,12 @@ namespace cogbot
                                                           tp.Content = s.Substring(s.Length - 30000);
                                                       }
                                                       //if (cc.)
+                                                      lock (stringBuffLock)
+                                                      {
+                                                          str = stringBuff;
+                                                          stringBuff = "";
+                                                      }
+                                                      ClientManager.WriteLine(str);
                                                       TheRadegastInstance.TabConsole.DisplayNotificationInChat(str);
                                                   });
 
