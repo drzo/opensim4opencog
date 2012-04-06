@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using cogbot;
+using cogbot.Actions.System;
 using cogbot.Listeners;
 using cogbot.ScriptEngines;
 using MushDLR223.ScriptEngines;
@@ -37,7 +38,8 @@ namespace PrologScriptEngine
         public SwiPrologModule(BotClient parent)
             : base(parent)
         {
-            PLScriptInterpreter = new PrologScriptInterpreter(parent);   
+            PLScriptInterpreter = new PrologScriptInterpreter(parent);
+            parent.RegisterCommand(new SwipCommand(parent));
         }
 
 #if RTPARSER_INCLUDED
