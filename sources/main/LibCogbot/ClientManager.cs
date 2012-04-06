@@ -453,6 +453,10 @@ namespace cogbot
 
 
         ScriptEventListener _scriptEventListener = null;
+        public ScriptInterpreter TaskInterperter
+        {
+            get { return _lispTaskInterperter; }
+        }
         ScriptInterpreter _lispTaskInterperter;
         public readonly object LispTaskInterperterLock = new object();
         public bool LispTaskInterperterNeedLoad = true;
@@ -477,7 +481,7 @@ namespace cogbot
                         _lispTaskInterperter.LoadFile("cogbot.lisp",WriteLine);
                         _lispTaskInterperter.Intern("clientManager", this);
                         _scriptEventListener = new ScriptEventListener(_lispTaskInterperter, null);
-                        _lispTaskInterperter.Intern("thisClient", this);
+                        ///_lispTaskInterperter.Intern("thisClient", this);
                         WriteLine("Completed Loading TaskInterperter '" + taskInterperterType + "'\n");
                         // load the initialization string
                     }
@@ -646,6 +650,7 @@ namespace cogbot
                                                          bc.TheRadegastInstance ?? new RadegastInstance(gridClient);
                                 EnsureRadegastForm(bc, bc.TheRadegastInstance, name);
                                 bc.SetRadegastLoginOptions();
+                                //bc.TheRadegastInstance.MainForm.WindowState = FormWindowState.Minimized;
                             }, name);
         }
 
@@ -666,6 +671,7 @@ namespace cogbot
                                                if (bc.InvokedMakeRunning) return;
                                                bc.InvokedMakeRunning = true;
                                            }
+                                           bc.SetRadegastLoginOptions();
                                            AddTypesToBotClient(bc);
                                            bc.StartupClientLisp();
                                        };
@@ -684,14 +690,14 @@ namespace cogbot
                                      });
         }
 
-        public static void InSTAThread(ThreadStart invoker, string fullName) {
+        public static Thread InSTAThread(ThreadStart invoker, string fullName) {
 
             Thread t = new Thread(new ThreadStart(() =>
             {
                 Thread ct = Thread.CurrentThread;
                 try
                 {
-                    ct.SetApartmentState(ApartmentState.STA);
+                    if (ct.ApartmentState != ApartmentState.STA) ct.SetApartmentState(ApartmentState.STA);
                 }
                 catch (Exception)
                 {
@@ -708,14 +714,14 @@ namespace cogbot
             t.Name = "InSTAThread " + fullName;
             try
             {
-                t.SetApartmentState(ApartmentState.STA);
+                if (t.ApartmentState != ApartmentState.STA) t.SetApartmentState(ApartmentState.STA);
             }
             catch (Exception)
             {
                                
             }
             t.Start();
-
+            return t;
         }
     
         public LoginDetails GetBotLoginParams(string first, string last, string passwd, string simurl, string location)
