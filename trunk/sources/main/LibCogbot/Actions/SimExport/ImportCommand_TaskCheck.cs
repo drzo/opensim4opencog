@@ -255,9 +255,14 @@ namespace cogbot.Actions.SimExport
                     requestedShort++;
                     continue;
                 }
-                var objID = UUID.Parse(contents[0]);
-                if (CogbotHelpers.IsNullOrZero(objID)) continue;
-                var holderID = UUID.Parse(contents[1]);
+                UUID objID, holderID;
+                if (!UUID.TryParse(contents[0], out objID) || !UUID.TryParse(contents[1], out holderID))
+                {
+
+                    Failure("SHORT: " + file + " " + rtiData);                        
+                    requestedShort++;
+                    continue; 
+                }
                 // var uuidstr = Path.GetFileName(file).Split('.');
                 // var objNum = int.Parse(uuidstr[1]);
                 string completeStr = ExportCommand.IsComplete(objID, false, true, settings);

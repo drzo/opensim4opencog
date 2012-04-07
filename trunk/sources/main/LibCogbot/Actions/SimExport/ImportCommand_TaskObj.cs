@@ -398,6 +398,7 @@ namespace cogbot.Actions.SimExport
                         }
                         SetItemFromOSD(SourceTaskItem, false);
                     }
+                    ScriptRunningCheck();
                     if (!improve) return SourceTaskItem;
                     if (CogbotHelpers.IsNullOrZero(OldAssetID))
                     {
@@ -454,8 +455,9 @@ namespace cogbot.Actions.SimExport
                     {
                         if (SourceTaskItem.AssetType != AssetType.Object)
                         {
-                            SourceTaskItem.RezzID = SourceTaskItem.AssetUUID; 
-                        } else
+                            SourceTaskItem.RezzID = SourceTaskItem.AssetUUID;
+                        }
+                        else
                         {
                             waiting = new ManualResetEvent(false);
                             RequestRezObject();
@@ -468,7 +470,37 @@ namespace cogbot.Actions.SimExport
                         }
                     }
                 }
+                ScriptRunningCheck();
                 return SourceTaskItem;
+            }
+
+            private bool ranScriptRunningCheck;
+            private void ScriptRunningCheck()
+            {
+                if (ranScriptRunningCheck) return;
+                if (SourceTaskItem != null && SourceTaskItem.AssetType == AssetType.LSLText)
+                {
+                    ranScriptRunningCheck = true;
+                    var holderID = HolderPrim.OldID;
+                    string file = ExportCommand.dumpDir + holderID + "." + OldItemID + ".scriptState";
+                    if (!File.Exists(file))
+                    {
+                        Inventory.RequestGetScriptRunning(holderID, OldItemID);
+                    }
+                    Thread.Sleep(1000);
+                    if (!File.Exists(file))
+                    {
+                        Thread.Sleep(1000);
+                        if (!File.Exists(file))
+                        {
+                            Thread.Sleep(1000);
+                            if (!File.Exists(file))
+                            {
+
+                            }
+                        }
+                    }
+                }
             }
 
             public void Asset_Received(AssetDownload trans, Asset asset)
@@ -743,7 +775,7 @@ namespace cogbot.Actions.SimExport
                         }
                         Client.Objects.ObjectProperties += rezedInWorld;
                         Error = "Awaiting Attach";
-                        Importing.ExportHolder.Add(HolderPrim.OldID);
+                        lock (Importing.ExportHolder) Importing.ExportHolder.Add(HolderPrim.OldID);
                         Client.Appearance.Attach(AgentItem, invObject.AttachPoint, true);
                         bool success = rezedEvent.WaitOne(TimeSpan.FromMinutes(1));
                         Client.Objects.ObjectProperties -= rezedInWorld;
@@ -1081,9 +1113,11 @@ namespace cogbot.Actions.SimExport
         {
             var p = e.Properties;
             var holder = p.FromTaskID;
-            var O = WorldObjects.GetSimObjectFromUUID(p.ObjectID);
+            var objID = p.ObjectID;
             if (ExportHolder.Contains(holder))
             {
+                Client.Inventory.RequestSetScriptRunning(objID, UUID.Zero, false);
+                var O = WorldObjects.GetSimObjectFromUUID(objID);
                 if (O != null)
                 {
                     O.IsPhysical = false;

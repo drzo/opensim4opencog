@@ -562,5 +562,11 @@ namespace cogbot.Actions.SimExport
             return I.Name + "(" + I.AssetType + " " + I.AssetUUID + ")@" + named(O);
         }
 
+        private void On_ScriptRunningReply(object sender, ScriptRunningReplyEventArgs e)
+        {
+            File.WriteAllText(dumpDir + e.ObjectID + "." + e.ScriptID + ".scriptState",
+                              e.ObjectID + "," + e.ScriptID + "," + e.IsRunning + "," + e.IsMono);
+            ;
+        }
     }
 }
