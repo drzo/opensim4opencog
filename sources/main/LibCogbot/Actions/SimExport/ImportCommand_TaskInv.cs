@@ -259,6 +259,12 @@ namespace cogbot.Actions.SimExport
                 set
                 {
                     _taskInvComplete = value;
+                    if (value)
+                    {
+                        if (_contents == null) _contents = new List<InventoryBase>();
+                        if (sourceObjectinventory == null) sourceObjectinventory = new List<InventoryBase>();
+                        if (TaskItemsToCreate == null) TaskItemsToCreate = new List<TaskItemToCreate>();
+                    }
                     SaveProgressFile();
                 }
             }
@@ -307,6 +313,18 @@ namespace cogbot.Actions.SimExport
 
             public void CreateWorkflow(UUID agentSyncFolderHolder)
             {
+                string taskFile = ExportCommand.dumpDir + OldID + ".task";
+                if (File.Exists(taskFile))
+                {
+                    string taskDataS = File.ReadAllText(taskFile);
+                    if (string.IsNullOrEmpty(taskDataS) || taskDataS.Length < 30)
+                    {
+                        sourceObjectinventory = new List<InventoryBase>();
+                        TaskItemsToCreate = new List<TaskItemToCreate>();
+                        TaskInvComplete = true;
+                        return;
+                    }
+                }
                 if (CogbotHelpers.IsNullOrZero(AgentSyncFolder))
                 {
                     AgentSyncFolder = Exporting.FolderCalled(OldID.ToString(), agentSyncFolderHolder);
@@ -488,17 +506,18 @@ namespace cogbot.Actions.SimExport
                     if (taskinv == null) return false;
                     Exporting.SaveTaskOSD(OldID, taskinv);
                 }
-                var agentSyncFolderHolder = Exporting.FolderCalled("TaskInvHolder");
-                CreateWorkflow(agentSyncFolderHolder);
-
                 string taskFile = ExportCommand.dumpDir + OldID + ".task";
                 if (!File.Exists(taskFile)) return false;
                 string taskDataS = File.ReadAllText(taskFile);
                 if (string.IsNullOrEmpty(taskDataS) || taskDataS.Length < 30)
                 {
+                    sourceObjectinventory = new List<InventoryBase>();
+                    TaskItemsToCreate = new List<TaskItemToCreate>();
                     TaskInvComplete = true;
                     return true;
                 }
+                var agentSyncFolderHolder = Exporting.FolderCalled("TaskInvHolder");
+                CreateWorkflow(agentSyncFolderHolder);
                 LoadTaskOSD(Importing.WriteLine);
                 var ti = SourceTaskInventory(useCache);
                 foreach (InventoryBase i in ti)

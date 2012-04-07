@@ -145,6 +145,7 @@ namespace cogbot.Actions.SimExport
             testClient.Assets.XferReceived += Asset_Xfer;
             testClient.Groups.GroupNamesReply += GroupNames;
             testClient.Avatars.UUIDNameReply += UserNames;
+            testClient.Inventory.ScriptRunningReply += On_ScriptRunningReply;
             Name = "simexport";
             Description = "Exports an object to an xml file. Usage: simexport exportPrim-spec directory";
             Category = CommandCategory.Objects;
