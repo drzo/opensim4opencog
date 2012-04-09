@@ -276,11 +276,18 @@ namespace cogbot.Actions.SimExport
             {
                 arglist.Add(s);
             }
-            if (arglist.Contains("reoar"))
-            {
-                OarFile.PackageArchive("cog_export/oarfile/", "repack.oar", false, false);
-                return SuccessOrFailure();
-            }
+			if (arglist.Contains("reoar"))
+			{
+				OarFile.PackageArchive("cog_export/oarfile/", "repack.oar", false, false);
+				return SuccessOrFailure();
+			}
+			if (arglist.Contains("nolldie"))
+			{
+			    ReplaceLSLText(ExportCommand.assetDumpDir,"llDie()",
+							   "llOwnerSay((string)llGetKey() + \",script caused die ,\" + llGetObjectName() + \",\" + (string)llGetPos() + \",\" + llGetScriptName() + \",\" + llGetLinkNumber())",
+							   arglist);
+				return SuccessOrFailure();
+			}
             if (arglist.Contains("hhp"))
             {
                 //arglist.Add("keepmissing");
@@ -290,12 +297,12 @@ namespace cogbot.Actions.SimExport
                // arglist.Add("lslprims");
                 //arglist.Add("request");
                 //arglist.Add("KillMissing");
-                //arglist.Add("reztaskobj");
+                arglist.Add("reztaskobj");
                 arglist.Add("prim");
                 arglist.Add("confirm");
                 arglist.Add("link");
                 arglist.Add("checktasks");
-                //arglist.Add("tasklsl");
+                arglist.Add("tasklsl");
             }
             bool doRez = false;
             if (arglist.Contains("all"))
@@ -350,7 +357,7 @@ namespace cogbot.Actions.SimExport
             if (arglist.Contains("move"))
             {
                 MoveToKnownObjects();
-                return Success("Moving to " + _parents.Count);
+                Success("Moving to " + _parents.Count);
             }
             bool tasksObjs = arglist.Contains("taskobj") && !IsLocalScene;
             if (tasksObjs || arglist.Contains("checktasks")) ImportTaskObjects(importSettings);

@@ -170,46 +170,55 @@ namespace cogbot.Actions.SimExport
             List<TaskFileInfo> duped = new List<TaskFileInfo>();
             foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.objectAsset"))
             {
+                break;
                 found++;
                 string fileString = File.ReadAllText(file);
                 string[] c = fileString.Split(',');
-                TaskFileInfo to = new TaskFileInfo()
+                try
                 {
-                    OldLid = uint.Parse(c[0]),
-                    RezzedID = UUID.Parse(c[2]),
-                    OldTaskHolder = UUID.Parse(c[3]),
-                    AssetUUID = UUID.Parse(c[4]),
-                    TaskItemID = UUID.Parse(c[5])
-                };
-                bool missing = false;
-                if (MissingLLSD(to.RezzedID))
-                {
-                    Failure("Need LLSD: " + fileString);
-                    to.missingLLSD = true;
-                    mssingTO.Add(to);
-                }
-                TaskFileInfo old;
-                if (item2TO.TryGetValue(to.TaskItemID, out old))
-                {
-                    if (old.missingLLSD)
+
+                    TaskFileInfo to = new TaskFileInfo()
+                                          {
+                                              OldLid = uint.Parse(c[0]),
+                                              RezzedID = UUID.Parse(c[2]),
+                                              OldTaskHolder = UUID.Parse(c[3]),
+                                              AssetUUID = UUID.Parse(c[4]),
+                                              TaskItemID = UUID.Parse(c[5])
+                                          };
+                    bool missing = false;
+                    if (MissingLLSD(to.RezzedID))
                     {
-                        item2TO[to.TaskItemID] = to;
-                        duped.Add(old);
+                        Failure("Need LLSD: " + fileString);
+                        to.missingLLSD = true;
+                        mssingTO.Add(to);
+                    }
+                    TaskFileInfo old;
+                    if (item2TO.TryGetValue(to.TaskItemID, out old))
+                    {
+                        if (old.missingLLSD)
+                        {
+                            item2TO[to.TaskItemID] = to;
+                            duped.Add(old);
+                        }
+                        else
+                        {
+                            duped.Add(to);
+                        }
                     }
                     else
                     {
-                        duped.Add(to);
+                        if (to.missingLLSD)
+                        {
+                            continue;
+                        }
+                        item2TO[to.TaskItemID] = to;
                     }
-                }
-                else
-                {
-                    if (to.missingLLSD)
-                    {
-                        continue;
-                    }
-                    item2TO[to.TaskItemID] = to;
-                }
 
+                }
+                catch (Exception ee)
+                {
+                    Failure("fileIssue: " + file + " = " + fileString);
+                }
             }
             Success("t=" + found + " m=" + mssingTO.Count + " td=" + item2TO.Count + " duped=" + duped.Count);
         }
@@ -276,10 +285,12 @@ namespace cogbot.Actions.SimExport
                         Exporting.AttemptMoveTo(where);
                         Thread.Sleep(3000);
                         Exporting.KillInWorld(objID);
+                        Importing.APrimToCreate(holderID);
                         readyObjectsForDelete++;                      
                     } else
                     {
-                        
+                        Importing.APrimToCreate(holderID);
+                        Importing.APrimToCreate(objID);
                     }
                 }
                 else
@@ -288,12 +299,17 @@ namespace cogbot.Actions.SimExport
                     if (!inWorld)
                     {
                         unreadyObjsMustReRez++;
-                        Failure("REREZ: " + completeStr + " " + rtiData);   
+                        Failure("REREZ: " + completeStr + " " + rtiData);
+                        Importing.APrimToCreate(holderID).MustUseAgentCopy = true;
+                        File.Delete(ExportCommand.dumpDir + holderID + ".rti_status");
+                        File.Delete(file);
                     } else
                     {
                         MustExport.Add(objID);
                         MustExport.Add(holderID);
-                        Failure("RTIDATA: " + completeStr + " " + rtiData);                        
+                        Importing.APrimToCreate(holderID);
+                        Failure("RTIDATA: " + completeStr + " " + rtiData);
+                        Exporting.AddMoveTo(where);
                     }
                 }
             }

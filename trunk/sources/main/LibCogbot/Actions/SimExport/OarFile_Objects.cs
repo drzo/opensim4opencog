@@ -207,7 +207,10 @@ namespace cogbot.Actions.SimExport
         }
         public static void WriteTaskInventory(Primitive sop, XmlTextWriter writer, ICollection<InventoryBase> tinv, ImportSettings options)
         {
-            if (tinv == null) return;
+            if (tinv == null)
+            {
+                return;
+            }
             int ObjectNum = -1;
             if (tinv.Count > 0) // otherwise skip this
             {
@@ -251,6 +254,7 @@ namespace cogbot.Actions.SimExport
                     }
                     else
                     {
+                        if (CogbotHelpers.IsNullOrZero(itemAssetUUID)) itemAssetUUID = item.RezzID;
                         if (CogbotHelpers.IsNullOrZero(itemAssetUUID))
                         {
                             ExportCommand.LogError(sop.ID, "AssetZERO: " + item);

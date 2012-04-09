@@ -1099,7 +1099,11 @@ namespace cogbot.Actions.SimExport
                 {
                     ptc = utc as PrimToCreate;
                 }
-                if (ptc != null) return ptc;
+                if (ptc != null)
+                {
+                    AddParentORChild(ptc); 
+                    return ptc;
+                }
                 ptc = new PrimToCreate(primitive);
                 if (primitive.Sculpt != null)
                 {
@@ -1115,6 +1119,7 @@ namespace cogbot.Actions.SimExport
                 }
                 UUID2OBJECT[ptc.OldID] = ptc;
                 UINT2OBJECT[ptc.OldLocalID] = ptc;
+                AddParentORChild(ptc);
                 return ptc;
             }
         }
@@ -1134,6 +1139,7 @@ namespace cogbot.Actions.SimExport
                 }
                 if (ptc != null)
                 {
+                    AddParentORChild(ptc);
                     return ptc;
                 }
                 ptc = new PrimToCreate(oldObjectID);
@@ -1142,6 +1148,7 @@ namespace cogbot.Actions.SimExport
                 if (oldLocalId > 0)
                 {
                     UINT2OBJECT[oldLocalId] = ptc;
+                    AddParentORChild(ptc);
                 }
                 else
                 {
@@ -1150,6 +1157,12 @@ namespace cogbot.Actions.SimExport
                 return ptc;
             }
         }
+
+        private void AddParentORChild(PrimToCreate create)
+        {
+            if (create.ParentID == 0) _parents.Add(create); else _childs.Add(create);
+        }
+
         public PrimToCreate GetOldPrim(uint localID)
         {
             if (localID == 0)
@@ -1580,7 +1593,7 @@ namespace cogbot.Actions.SimExport
                 SimObject Rezed = toCreate.Rezed;
                 if (Rezed == null)
                 {
-                    Exporting.AttemptMoveTo(toCreate.SimPosition);
+                    Exporting.AddMoveTo(toCreate.SimPosition);
                 }
             }
         }

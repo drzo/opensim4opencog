@@ -399,7 +399,11 @@ namespace cogbot.Actions.SimExport
                         SetItemFromOSD(SourceTaskItem, false);
                     }
                     ScriptRunningCheck();
-                    if (!improve) return SourceTaskItem;
+                    if (!improve)
+                    {
+                        AssetDownloadCheck();
+                        return SourceTaskItem;
+                    }
                     if (CogbotHelpers.IsNullOrZero(OldAssetID))
                     {
                         if (SourceTaskItem.AssetType == AssetType.LSLText && !Exporting.settings.Contains("tasklsl"))
@@ -470,8 +474,47 @@ namespace cogbot.Actions.SimExport
                         }
                     }
                 }
+                AssetDownloadCheck();
                 ScriptRunningCheck();
                 return SourceTaskItem;
+            }
+
+            private bool ranAssetDownloadCheck;
+            private void AssetDownloadCheck()
+            {
+                if (ranAssetDownloadCheck) return;
+                if (AssetType == AssetType.Object) return;
+                var item = AgentItem;
+                UUID taskID = UUID.Zero;
+                if (item == null)
+                {
+                    item = SourceTaskItem;
+                    if (item != null)
+                    {
+                        taskID = HolderPrim.OldID;
+                    }
+                }
+                var assetID = OldAssetID;
+                if (CogbotHelpers.IsNullOrZero(assetID))
+                {
+                    if (SourceTaskItem != null) assetID = SourceTaskItem.AssetUUID;
+                }
+
+                if (CogbotHelpers.IsNullOrZero(assetID))
+                {
+                    if (AgentItem != null)
+                    {
+                        assetID = AgentItem.AssetUUID;
+                        taskID = UUID.Zero;
+                    }
+                }
+                if (CogbotHelpers.IsNullOrZero(assetID)) return;
+                if (item != null)
+                    Client.Assets.RequestInventoryAsset(assetID, item.UUID, taskID, item.OwnerID,
+                                                        item.AssetType, true, Asset_Received);
+                ranAssetDownloadCheck = true;
+                Exporting.AddRelated(assetID, AssetType);
+                Client.Assets.RequestAsset(assetID, AssetType, true, Asset_Received);
             }
 
             private bool ranScriptRunningCheck;
@@ -482,24 +525,13 @@ namespace cogbot.Actions.SimExport
                 {
                     ranScriptRunningCheck = true;
                     var holderID = HolderPrim.OldID;
-                    string file = ExportCommand.dumpDir + holderID + "." + OldItemID + ".scriptState";
-                    if (!File.Exists(file))
+                    var iid = SourceTaskItem.UUID;
+                    string file = ExportCommand.dumpDir + holderID + "." + iid + ".scriptState";
+                    if (File.Exists(file))
                     {
-                        Inventory.RequestGetScriptRunning(holderID, OldItemID);
+                        return;
                     }
-                    Thread.Sleep(1000);
-                    if (!File.Exists(file))
-                    {
-                        Thread.Sleep(1000);
-                        if (!File.Exists(file))
-                        {
-                            Thread.Sleep(1000);
-                            if (!File.Exists(file))
-                            {
-
-                            }
-                        }
-                    }
+                    Inventory.RequestGetScriptRunning(holderID, iid);
                 }
             }
 
@@ -648,9 +680,10 @@ namespace cogbot.Actions.SimExport
                 var holderPrim = HolderPrim.Rezed;
                 if (holderPrim == null)
                 {
+                    Running.AttemptMoveTo(HolderPrim.SimPosition);
                     uint exportLocalID = HolderPrim.Prim.LocalID;
                     Client.Objects.RequestObject(Running.settings.CurSim, exportLocalID);
-                    holderPrim = WorldObjects.GetSimObjectFromUUID(HolderPrim.OldID);
+                    holderPrim = ExportCommand.GetSimObjectFromUUID(HolderPrim.OldID);
                 }
                 if (holderPrim == null)
                 {
