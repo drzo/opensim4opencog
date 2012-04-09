@@ -635,6 +635,24 @@ namespace cogbot.Actions.SimExport
             }
         }
 
+		public static void ReplaceLSLText(string dir, string before, string after, ImportSettings arglist)
+		{
+			int changed = 0;
+			int seenAsset = 0;
+			HashSet<ItemToCreate> ItemsToCreate = LocalScene.Assets;
+			bool alwayReupload = arglist.Contains("reup");
+			foreach (var file in Directory.GetFiles(dir, "*.lsl")) {
+				seenAsset++;
+				string readfile = File.ReadAllText(file);
+				if (!readfile.Contains(before)) continue;
+				readfile = readfile.Replace(before,after);
+				changed++;
+				File.WriteAllText(file,readfile);
+			}
+			Importing.Success("ReplaceLSLText seenAssets=" + seenAsset + " changed=" + changed);
+		}
+
+
         private void UploadAllAssets(ImportSettings arglist)
         {
             bool sameIds = arglist.Contains("sameid");
@@ -701,7 +719,7 @@ namespace cogbot.Actions.SimExport
                     EnsureUploaded(itc, alwayReupload, ref uploaded, ref reuploaded);
                 }
             }
-            Success("Uploaded assets=" + uploaded + " seenAssets=" + seenAsset + " reuploaded=" + reuploaded);
+			Success("Uploaded assets=" + uploaded + " seenAssets=" + seenAsset + " reuploaded=" + reuploaded);
         }
 
         private void EnsureUploaded(ItemToCreate itc, bool alwayReupload, ref int uploaded, ref int reuploaded)
