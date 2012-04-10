@@ -7,7 +7,6 @@ using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using System.IO;
-using Radegast;
 using Settings=OpenMetaverse.Settings;
 using Console = MushDLR223.Utilities.DLRConsole;
 
@@ -29,7 +28,7 @@ namespace cogbot
         {
             ClientManager.UsingCogbotFromRadgast = false;
             ClientManager.UsingRadgastFromCogbot = true;
-            MainProgram.CommandLine = new CommandLine {DisableSound = false};
+           // MainProgram.CommandLine = new CommandLine {DisableSound = false};
 
             if (!ClientManager.AllocedConsole)
             {

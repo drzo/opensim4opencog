@@ -8,8 +8,6 @@ using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 using OpenMetaverse.Packets;
-using Radegast;
-using Radegast.Netcom;
 using System.Windows.Forms;
 
 namespace cogbot.Actions.Land
@@ -98,7 +96,7 @@ namespace cogbot.Actions.Land
             Success("MINIMAP " + (t1 ? "PASS" : "FAIL") + ": " + r.Name + ": (" + r.X + "," + r.Y + ") " + r.Access);
             return TeleportTest(r);
         }
-
+        /*
         private bool TestViaLogin(GridRegion r)
         {
             var TheRadegastInstance = Client.TheRadegastInstance;
@@ -138,7 +136,7 @@ namespace cogbot.Actions.Land
             Client.Settings.USE_LLSD_LOGIN = false;
             Client.Settings.LOGIN_TIMEOUT = 60000;
             return Client.Network.Login(loginParams.FirstName, loginParams.LastName, loginParams.Password, "Radegast", r.Name, "1.0");
-        }
+        }*/
 
         private bool MiniMapTest(GridRegion r)
         {

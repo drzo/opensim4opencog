@@ -628,38 +628,6 @@ namespace cogbot
                 return bc;       
             }
         }
-        private void EnsureBotClientHasRadegast(BotClient bc)
-        {
-            LastRefBotClient = bc;
-            GridClient gridClient = bc.gridClient;
-            RadegastInstance inst = bc.TheRadegastInstance;
-            lock (_wasFirstGridClientLock)
-            {
-                if (_wasFirstGridClient)
-                {
-                    _wasFirstGridClient = false;
-                    if (ClientManager.UsingCogbotFromRadgast)
-                    {
-                        inst = GlobalRadegastInstance;
-                    }
-                    if (inst != null)
-                    {
-                        gridClient = inst.Client;
-                    }
-                }
-            }
-            string name = "EnsureBotClientHasRadegast: " + bc.GetName();
-           
-            gridClient = gridClient ?? bc.gridClient ?? new GridClient();
-            InSTAThread(() =>
-                            {
-                                bc.TheRadegastInstance = inst ??
-                                                         bc.TheRadegastInstance ?? new RadegastInstance(gridClient);
-                                EnsureRadegastForm(bc, bc.TheRadegastInstance, name);
-                                bc.SetRadegastLoginOptions();
-                                //bc.TheRadegastInstance.MainForm.WindowState = FormWindowState.Minimized;
-                            }, name);
-        }
 
 
         object MakeRunningLock = new object();
@@ -1067,6 +1035,37 @@ namespace cogbot
             }
         }
 
+        private void EnsureBotClientHasRadegast(BotClient bc)
+        {
+            LastRefBotClient = bc;
+            GridClient gridClient = bc.gridClient;
+            RadegastInstance inst = bc.TheRadegastInstance;
+            lock (_wasFirstGridClientLock)
+            {
+                if (_wasFirstGridClient)
+                {
+                    _wasFirstGridClient = false;
+                    if (ClientManager.UsingCogbotFromRadgast)
+                    {
+                        inst = GlobalRadegastInstance;
+                    }
+                    if (inst != null)
+                    {
+                        gridClient = inst.Client;
+                    }
+                }
+            }
+            string name = "EnsureBotClientHasRadegast: " + bc.GetName();
+
+            gridClient = gridClient ?? bc.gridClient ?? new GridClient();
+            InSTAThread(() =>
+            {
+                EnsureRadegastForm(bc, bc.TheRadegastInstance, name);
+                bc.SetRadegastLoginOptions();
+                //bc.TheRadegastInstance.MainForm.WindowState = FormWindowState.Minimized;
+            }, name);
+        }
+
         public void SetDebugConsole(RadegastInstance inst)
         {
             if (inst==null) return;
@@ -1098,7 +1097,9 @@ namespace cogbot
         }
 
         public void EnsureRadegastForm(BotClient bc, RadegastInstance instance, string name)
-        {          
+        {
+            bc.TheRadegastInstance = instance ??
+                         bc.TheRadegastInstance ?? new RadegastInstance(bc.gridClient);
             var mf = instance.MainForm;
             lock (EnsuringRadegastLock)
             {
@@ -1107,7 +1108,11 @@ namespace cogbot
                 EnsureForm0(mf, name);
             }
         }
-
+        public static RadegastInstance GlobalRadegastInstance;
+        public BotClient BotClientFor(RadegastInstance instance)
+        {
+            return GetBotByGridClient(instance.Client);
+        }
         protected object EnsuringRadegastLock = new object();
 
         public void EnsureForm0(Form mf, string name)
@@ -1246,7 +1251,6 @@ namespace cogbot
             };
 
         readonly static Dictionary<string,Color> Name2Color = new Dictionary<string, Color>();
-        public static RadegastInstance GlobalRadegastInstance;
         private static bool GlobalRadegastInstanceGCUsed;
         private static bool _StartedUpLisp;
         static public bool StartedUpLisp
@@ -1780,10 +1784,7 @@ namespace cogbot
             }
         }
 
-        public BotClient BotClientFor(RadegastInstance instance)
-        {
-            return GetBotByGridClient(instance.Client);
-        }
+
 
         public void AddBotClient(BotClient client)
         {

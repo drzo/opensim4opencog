@@ -11,7 +11,6 @@ using OpenMetaverse;
 using System.Reflection;
 using cogbot.TheOpenSims;
 using OpenMetaverse.Assets;
-using Radegast;
 
 namespace cogbot.ScriptEngines
 {

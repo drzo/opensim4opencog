@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using cogbot.Listeners;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
-using Radegast;
 
 using MushDLR223.ScriptEngines;
 

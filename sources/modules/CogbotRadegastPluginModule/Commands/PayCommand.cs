@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using cogbot.Listeners;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
-
+using Radegast;
 
 using MushDLR223.ScriptEngines;
 
@@ -30,7 +30,7 @@ namespace cogbot.Actions.Money
             bool isObject = !(o is SimAvatar);
             UUID target = o.ID;
             GridClient client = TheBotClient;
-            //if (used == args.Length) (new frmPay(TheBotClient.TheRadegastInstance, o.ID, o.GetName(), isObject)).ShowDialog();
+            if (used == args.Length) (new frmPay(TheBotClient.TheRadegastInstance, o.ID, o.GetName(), isObject)).ShowDialog();
             //else
             {
                 int amount;

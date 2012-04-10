@@ -4,7 +4,6 @@ using System.Drawing;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 using OpenMetaverse.Imaging;
-using Radegast.Rendering;
 
 namespace cogbot.TheOpenSims
 {

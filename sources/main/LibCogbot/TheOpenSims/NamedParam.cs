@@ -17,7 +17,7 @@ namespace cogbot
         /// </summary>
         /// <param name="k"></param>
         /// <param name="v"></param>
-        internal NamedParam(KeyType k, object v)
+        public NamedParam(KeyType k, object v)
         {
             memberTarget = null;
             _key = ToKey(k);
@@ -73,7 +73,7 @@ namespace cogbot
         /// <param name="k"></param>
         /// <param name="type"></param>
         /// <param name="v"></param>
-        internal NamedParam(object target, MemberInfo inf, KeyType k, Type type, object v)
+        public NamedParam(object target, MemberInfo inf, KeyType k, Type type, object v)
         {
             memberTarget = target;
             info = inf;
@@ -91,7 +91,7 @@ namespace cogbot
         /// <param name="type"></param>
         /// <param name="v"></param>
         /// <param name="choices"></param>
-        internal NamedParam(KeyType k, Type type, object v, params object[] choices)
+        public NamedParam(KeyType k, Type type, object v, params object[] choices)
         {
             memberTarget = null;
             _key = ToKey(k);
@@ -148,7 +148,7 @@ namespace cogbot
         /// </summary>
         /// <param name="param"></param>
         /// <param name="o"></param>
-        internal NamedParam(NamedParam param, object o)
+        public NamedParam(NamedParam param, object o)
         {
             memberTarget = param.memberTarget;
             _Type = param._Type;
@@ -163,7 +163,7 @@ namespace cogbot
         /// </summary>
         /// <param name="type"></param>
         /// <param name="DataType"></param>
-        internal NamedParam(Type type, Type DataType)
+        public NamedParam(Type type, Type DataType)
         {
             memberTarget = null;
             _Type = type;
