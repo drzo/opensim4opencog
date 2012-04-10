@@ -5,7 +5,6 @@ using cogbot.Listeners;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
-using Radegast;
 
 using MushDLR223.ScriptEngines;
 

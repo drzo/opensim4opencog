@@ -1446,6 +1446,7 @@
      <Reference name="System.Windows.Forms" localCopy="false"/>
      <Reference name="System.Data" localCopy="false"/>
      <Reference name="OpenMetaverse" localCopy="false"/>
+     <Reference name="OpenMetaverse.StructuredData" localCopy="false"/>
      <Reference name="OpenMetaverseTypes" localCopy="false"/>     
      <Reference name="Radegast.exe" localCopy="false"/>
      <Reference name="System" localCopy="false"/>

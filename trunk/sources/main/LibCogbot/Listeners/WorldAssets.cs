@@ -13,7 +13,6 @@ using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 using OpenMetaverse.Imaging;
-using Radegast;
 using Object=System.Object;
 using Settings=OpenMetaverse.Settings;
 

@@ -6,7 +6,7 @@ using PathSystem3D.Navigation;
 
 namespace cogbot.TheOpenSims
 {
-    internal class EffectBeamInfo
+    public class EffectBeamInfo
     {
         readonly GridClient client;
 

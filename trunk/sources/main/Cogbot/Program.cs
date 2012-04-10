@@ -22,7 +22,7 @@ using CommandLine.Text;
 namespace ABuildStartup
 {
 
-    public class Program
+    public static class Program
     {
         /// <summary>
         /// The main entry point for the application.
@@ -31,7 +31,7 @@ namespace ABuildStartup
         public static void Main()
         {
             string[] use = Environment.GetCommandLineArgs() ?? new string[0];
-
+            ClientManager.StartLispThreadAtPluginInit = true;
             if (use.Length > 0)
             {
                 string arg0 = use[0].ToLower();
@@ -86,8 +86,12 @@ namespace ABuildStartup
             {
                 FilteredWriteLine("ExitCode: " + ExitCode + " for " + Environment.CommandLine);
             }
-            Application.Exit();
-            Environment.Exit(ExitCode);
+
+            if (UseApplicationExit)
+            {
+                Application.Exit();
+                Environment.Exit(ExitCode);
+            }
             return;
         }
 
@@ -216,7 +220,7 @@ namespace ABuildStartup
             }
             else
             {
-                DLRConsoleError.WriteLine("Used: " + ABuildStartCommandLine.GetUsage());
+              //  DLRConsoleError.WriteLine("Used: " + ABuildStartCommandLine.GetUsage());
             }
 
             args = args ?? new string[0];
@@ -393,6 +397,8 @@ namespace ABuildStartup
         }
 
         public static bool UsingExceptionHandlers = false;
+        public static bool UseApplicationExit = true;
+
         public static void SetExceptionHandlers(bool use)
         {
             if (use == UsingExceptionHandlers) return;
