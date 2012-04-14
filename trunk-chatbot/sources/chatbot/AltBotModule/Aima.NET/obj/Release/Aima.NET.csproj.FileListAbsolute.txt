@@ -1,0 +1,5 @@
+C:\RD4541\Acore\AIMLbotSource2.5\Aima.NET\bin\Release\Aima.dll
+C:\RD4541\Acore\AIMLbotSource2.5\Aima.NET\bin\Release\Aima.pdb
+C:\RD4541\Acore\AIMLbotSource2.5\Aima.NET\obj\Release\ResolveAssemblyReference.cache
+C:\RD4541\Acore\AIMLbotSource2.5\Aima.NET\obj\Release\Aima.dll
+C:\RD4541\Acore\AIMLbotSource2.5\Aima.NET\obj\Release\Aima.pdb

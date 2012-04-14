@@ -1,0 +1,17 @@
+C:\RD4541\Acore\aimanet-3026\Aima.NET\bin\Debug\Aima.dll
+C:\RD4541\Acore\aimanet-3026\Aima.NET\bin\Debug\Aima.pdb
+C:\RD4541\Acore\aimanet-3026\Aima.NET\obj\Debug\ResolveAssemblyReference.cache
+C:\RD4541\Acore\aimanet-3026\Aima.NET\obj\Debug\Aima.dll
+C:\RD4541\Acore\aimanet-3026\Aima.NET\obj\Debug\Aima.pdb
+C:\RD4541\Acore\AIMLbotSource2.5\Aima.NET\bin\Debug\Aima.dll
+C:\RD4541\Acore\AIMLbotSource2.5\Aima.NET\bin\Debug\Aima.pdb
+C:\RD4541\Acore\AIMLbotSource2.5\Aima.NET\obj\Debug\ResolveAssemblyReference.cache
+C:\RD4541\Acore\AIMLbotSource2.5\Aima.NET\obj\Debug\Aima.dll
+C:\RD4541\Acore\AIMLbotSource2.5\Aima.NET\obj\Debug\Aima.pdb
+C:\dev\Cogbot2012-01-22\sources\chatbot\AltBotModule\Aima.NET\obj\Debug\ResolveAssemblyReference.cache
+C:\dev\Cogbot2012-01-22\sources\chatbot\AltBotModule\Aima.NET\obj\Debug\Aima.dll
+C:\dev\Cogbot2012-01-22\sources\chatbot\AltBotModule\Aima.NET\obj\Debug\Aima.pdb
+C:\dev\Cogbot2012-01-22\sources\chatbot\AltBotModule\Aima.NET\bin\Debug\Aima.dll
+C:\dev\Cogbot2012-01-22\sources\chatbot\AltBotModule\Aima.NET\bin\Debug\Aima.pdb
+C:\dev\Cogbot2012-01-22\sources\chatbot\AltBotModule\Aima.NET\bin\Debug\Iesi.Collections.Generic.dll
+C:\dev\Cogbot2012-01-22\sources\chatbot\AltBotModule\Aima.NET\bin\Debug\Iesi.Collections.Generic.pdb

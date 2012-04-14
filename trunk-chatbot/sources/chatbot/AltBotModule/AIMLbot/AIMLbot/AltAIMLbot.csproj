@@ -1,0 +1,195 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{9C87D82C-0E27-4995-A2CB-72BCB84EF2E2}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>AltAIMLbot</RootNamespace>
+    <AssemblyName>AltAIMLbot</AssemblyName>
+    <SignAssembly>false</SignAssembly>
+    <AssemblyOriginatorKeyFile>
+    </AssemblyOriginatorKeyFile>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>
+    </DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="DcBus">
+      <HintPath>..\..\..\..\..\_daxlab\dolllab\SELIFE\SELIFE-A\DcBus\bin\Debug\DcBus.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AIMLTagHandlers\bot.cs" />
+    <Compile Include="AIMLTagHandlers\condition.cs" />
+    <Compile Include="AIMLTagHandlers\chemcmd.cs" />
+    <Compile Include="AIMLTagHandlers\behavior.cs" />
+    <Compile Include="AIMLTagHandlers\btxml.cs" />
+    <Compile Include="AIMLTagHandlers\crontag.cs" />
+    <Compile Include="AIMLTagHandlers\say.cs" />
+    <Compile Include="AIMLTagHandlers\satisfied.cs" />
+    <Compile Include="AIMLTagHandlers\rnddbl.cs" />
+    <Compile Include="AIMLTagHandlers\rndint.cs" />
+    <Compile Include="AIMLTagHandlers\scxml.cs" />
+    <Compile Include="AIMLTagHandlers\nop.cs" />
+    <Compile Include="AIMLTagHandlers\date.cs" />
+    <Compile Include="AIMLTagHandlers\formal.cs" />
+    <Compile Include="AIMLTagHandlers\gender.cs" />
+    <Compile Include="AIMLTagHandlers\get.cs" />
+    <Compile Include="AIMLTagHandlers\gossip.cs" />
+    <Compile Include="AIMLTagHandlers\id.cs" />
+    <Compile Include="AIMLTagHandlers\inject.cs" />
+    <Compile Include="AIMLTagHandlers\input.cs" />
+    <Compile Include="AIMLTagHandlers\javascript.cs" />
+    <Compile Include="AIMLTagHandlers\learn.cs" />
+    <Compile Include="AIMLTagHandlers\lowercase.cs" />
+    <Compile Include="AIMLTagHandlers\person.cs" />
+    <Compile Include="AIMLTagHandlers\person2.cs" />
+    <Compile Include="AIMLTagHandlers\pop.cs" />
+    <Compile Include="AIMLTagHandlers\postcache.cs" />
+    <Compile Include="AIMLTagHandlers\push.cs" />
+    <Compile Include="BehaviorTree.cs" />
+    <Compile Include="Cron.cs" />
+    <Compile Include="Qfsm.cs" />
+    <Compile Include="AIMLTagHandlers\random.cs" />
+    <Compile Include="AIMLTagHandlers\refserver.cs" />
+    <Compile Include="AIMLTagHandlers\sentence.cs" />
+    <Compile Include="AIMLTagHandlers\set.cs" />
+    <Compile Include="AIMLTagHandlers\size.cs" />
+    <Compile Include="AIMLTagHandlers\sr.cs" />
+    <Compile Include="AIMLTagHandlers\srai.cs" />
+    <Compile Include="AIMLTagHandlers\star.cs" />
+    <Compile Include="AIMLTagHandlers\system.cs" />
+    <Compile Include="AIMLTagHandlers\that.cs" />
+    <Compile Include="AIMLTagHandlers\thatstar.cs" />
+    <Compile Include="AIMLTagHandlers\think.cs" />
+    <Compile Include="AIMLTagHandlers\topicstar.cs" />
+    <Compile Include="AIMLTagHandlers\uppercase.cs" />
+    <Compile Include="AIMLTagHandlers\version.cs" />
+    <Compile Include="Bot.cs" />
+    <Compile Include="Normalize\ApplySubstitutions.cs" />
+    <Compile Include="Normalize\MakeCaseInsensitive.cs" />
+    <Compile Include="Normalize\SplitIntoSentences.cs" />
+    <Compile Include="Normalize\StripIllegalCharacters.cs" />
+    <Compile Include="Qchem.cs" />
+    <Compile Include="Request.cs" />
+    <Compile Include="Result.cs" />
+    <Compile Include="Servitor.cs" />
+    <Compile Include="User.cs" />
+    <Compile Include="Utils\AIMLLoader.cs" />
+    <Compile Include="Utils\AIMLTagHandler.cs" />
+    <Compile Include="Utils\CustomTag.cs" />
+    <Compile Include="Utils\Gender.cs" />
+    <Compile Include="Utils\MatchState.cs" />
+    <Compile Include="Utils\Node.cs" />
+    <Compile Include="Utils\RandomMemory.cs" />
+    <Compile Include="Utils\SettingsDictionary.cs" />
+    <Compile Include="Utils\SubQuery.cs" />
+    <Compile Include="Utils\TagHandler.cs" />
+    <Compile Include="Utils\TextTransformer.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ConfigurationFiles\DefaultPredicates.xml" />
+    <Content Include="ConfigurationFiles\GenderSubstitutions.xml" />
+    <Content Include="ConfigurationFiles\Person2Substitutions.xml" />
+    <Content Include="ConfigurationFiles\PersonSubstitutions.xml" />
+    <Content Include="ConfigurationFiles\Settings.xml" />
+    <Content Include="ConfigurationFiles\Splitters.xml" />
+    <Content Include="ConfigurationFiles\Substitutions.xml" />
+    <Content Include="README and Notes.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\main\MushDLR223\MushDLR223.csproj">
+      <Project>{48494816-BEFE-41CC-B89A-F6E0DA8026EC}</Project>
+      <Name>MushDLR223</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Aima.NET\Aima.NET.csproj">
+      <Project>{FA9C09AC-8A10-429D-A2DC-CCD047C91F89}</Project>
+      <Name>Aima.NET</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\GenericSets\src\Iesi.Collections.Generic\Iesi.Collections.Generic.csproj">
+      <Project>{67E00DEB-AAC1-4433-A608-110FCC34AD21}</Project>
+      <Name>Iesi.Collections.Generic</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\minisatcs\MinisatCs\MinisatCS.csproj">
+      <Project>{A3C8D017-245B-4AEE-B6DC-F9E4D1B92A5E}</Project>
+      <Name>MinisatCS</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

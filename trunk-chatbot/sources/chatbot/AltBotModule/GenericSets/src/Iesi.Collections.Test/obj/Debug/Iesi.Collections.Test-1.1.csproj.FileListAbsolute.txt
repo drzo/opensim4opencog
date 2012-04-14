@@ -1,0 +1,1 @@
+C:\dev\Cogbot2012-01-22\sources\chatbot\AltBotModule\GenericSets\src\Iesi.Collections.Test\obj\Debug\ResolveAssemblyReference.cache

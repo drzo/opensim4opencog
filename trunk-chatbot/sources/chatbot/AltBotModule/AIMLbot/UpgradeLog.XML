@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type='text/xsl' href='_UpgradeReport_Files/UpgradeReport.xslt'?><UpgradeLog>
+<Properties><Property Name="Solution" Value="AIMLbot">
+</Property><Property Name="Solution File" Value="C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\AIMLbot.sln">
+</Property><Property Name="User Options File" Value="C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\AIMLbot.suo">
+</Property><Property Name="Date" Value="Thursday, September 22, 2011">
+</Property><Property Name="Time" Value="0:42 AM">
+</Property></Properties><Event ErrorLevel="0" Project="" Source="AIMLbot.sln" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot.sln">
+</Event><Event ErrorLevel="0" Project="" Source="AIMLbot.suo" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot.suo">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLbot.csproj" Description="Project file successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLbot.csproj">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\bot.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\bot.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\condition.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\condition.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\date.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\date.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\formal.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\formal.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\gender.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\gender.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\get.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\get.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\gossip.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\gossip.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\id.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\id.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\input.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\input.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\javascript.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\javascript.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\learn.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\learn.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\lowercase.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\lowercase.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\person.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\person.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\person2.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\person2.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\random.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\random.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\sentence.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\sentence.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\set.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\set.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\size.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\size.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\sr.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\sr.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\srai.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\srai.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\star.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\star.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\system.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\system.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\that.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\that.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\thatstar.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\thatstar.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\think.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\think.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\topicstar.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\topicstar.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\uppercase.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\uppercase.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLTagHandlers\version.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\AIMLTagHandlers\version.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\Bot.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\Bot.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\Normalize\ApplySubstitutions.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\Normalize\ApplySubstitutions.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\Normalize\MakeCaseInsensitive.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\Normalize\MakeCaseInsensitive.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\Normalize\SplitIntoSentences.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\Normalize\SplitIntoSentences.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\Normalize\StripIllegalCharacters.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\Normalize\StripIllegalCharacters.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\Request.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\Request.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\Result.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\Result.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\User.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\User.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\Utils\AIMLLoader.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\Utils\AIMLLoader.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\Utils\AIMLTagHandler.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\Utils\AIMLTagHandler.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\Utils\CustomTag.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\Utils\CustomTag.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\Utils\Gender.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\Utils\Gender.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\Utils\MatchState.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\Utils\MatchState.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\Utils\Node.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\Utils\Node.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\Utils\SettingsDictionary.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\Utils\SettingsDictionary.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\Utils\SubQuery.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\Utils\SubQuery.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\Utils\TagHandler.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\Utils\TagHandler.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\Utils\TextTransformer.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\Utils\TextTransformer.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\Properties\AssemblyInfo.cs" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\Properties\AssemblyInfo.cs">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\ConfigurationFiles\DefaultPredicates.xml" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\ConfigurationFiles\DefaultPredicates.xml">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\ConfigurationFiles\GenderSubstitutions.xml" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\ConfigurationFiles\GenderSubstitutions.xml">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\ConfigurationFiles\Person2Substitutions.xml" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\ConfigurationFiles\Person2Substitutions.xml">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\ConfigurationFiles\PersonSubstitutions.xml" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\ConfigurationFiles\PersonSubstitutions.xml">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\ConfigurationFiles\Settings.xml" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\ConfigurationFiles\Settings.xml">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\ConfigurationFiles\Splitters.xml" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\ConfigurationFiles\Splitters.xml">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\ConfigurationFiles\Substitutions.xml" Description="File successfully backed up as C:\RD4541\Acore\AIMLbotSource2.5\AIMLbot\Backup\AIMLbot\ConfigurationFiles\Substitutions.xml">
+</Event><Event ErrorLevel="1" Project="AIMLbot" Source="AIMLbot\AIMLbot.csproj" Description="Your project is targeting .NET Framework 2.0 or 3.0. If your project uses assemblies requiring a newer .NET Framework, your project will fail to build. You can change the .NET Framework version by clicking Properties on the project menu and then selecting a new version in the '.NET Framework' dropdown box. (In Visual Basic, this is located on the Compile tab by clicking the 'Advanced Compiler Options...' button.)">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLbot.csproj" Description="Project converted successfully">
+</Event><Event ErrorLevel="3" Project="AIMLbot" Source="AIMLbot\AIMLbot.csproj" Description="Converted">
+</Event><Event ErrorLevel="0" Project="" Source="AIMLbot.sln" Description="Solution converted successfully">
+</Event><Event ErrorLevel="3" Project="" Source="AIMLbot.sln" Description="Converted">
+</Event><Event ErrorLevel="0" Project="AIMLbot" Source="AIMLbot\AIMLbot.csproj" Description="Scan complete: Upgrade not required for project files.">
+</Event></UpgradeLog>

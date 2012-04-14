@@ -1,0 +1,14 @@
+C:\RD4541\Acore\minisatcs\minisatcs\MinisatCs\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\RD4541\Acore\minisatcs\minisatcs\MinisatCs\bin\Debug\MinisatCs.exe
+C:\RD4541\Acore\minisatcs\minisatcs\MinisatCs\bin\Debug\MinisatCs.pdb
+C:\RD4541\Acore\minisatcs\minisatcs\MinisatCs\obj\x86\Debug\MinisatCs.exe
+C:\RD4541\Acore\minisatcs\minisatcs\MinisatCs\obj\x86\Debug\MinisatCs.pdb
+C:\dev\Cogbot2012-01-22\sources\chatbot\AltBotModule\minisatcs\MinisatCs\bin\Debug\MinisatCs.exe
+C:\dev\Cogbot2012-01-22\sources\chatbot\AltBotModule\minisatcs\MinisatCs\bin\Debug\MinisatCs.pdb
+C:\dev\Cogbot2012-01-22\sources\chatbot\AltBotModule\minisatcs\MinisatCs\bin\Debug\Aima.dll
+C:\dev\Cogbot2012-01-22\sources\chatbot\AltBotModule\minisatcs\MinisatCs\bin\Debug\Aima.pdb
+C:\dev\Cogbot2012-01-22\sources\chatbot\AltBotModule\minisatcs\MinisatCs\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\dev\Cogbot2012-01-22\sources\chatbot\AltBotModule\minisatcs\MinisatCs\obj\x86\Debug\MinisatCs.exe
+C:\dev\Cogbot2012-01-22\sources\chatbot\AltBotModule\minisatcs\MinisatCs\obj\x86\Debug\MinisatCs.pdb
+C:\dev\Cogbot2012-01-22\sources\chatbot\AltBotModule\minisatcs\MinisatCs\bin\Debug\Iesi.Collections.Generic.dll
+C:\dev\Cogbot2012-01-22\sources\chatbot\AltBotModule\minisatcs\MinisatCs\bin\Debug\Iesi.Collections.Generic.pdb

@@ -1,0 +1,7 @@
+C:\RD4541\Acore\minisatcs\minisatcs\MinisatCs\obj\x86\Release\ResolveAssemblyReference.cache
+C:\RD4541\Acore\minisatcs\minisatcs\MinisatCs\bin\Release\MinisatCs.exe
+C:\RD4541\Acore\minisatcs\minisatcs\MinisatCs\bin\Release\MinisatCs.pdb
+C:\RD4541\Acore\minisatcs\minisatcs\MinisatCs\bin\Release\Aima.dll
+C:\RD4541\Acore\minisatcs\minisatcs\MinisatCs\bin\Release\Aima.pdb
+C:\RD4541\Acore\minisatcs\minisatcs\MinisatCs\obj\x86\Release\MinisatCs.exe
+C:\RD4541\Acore\minisatcs\minisatcs\MinisatCs\obj\x86\Release\MinisatCs.pdb

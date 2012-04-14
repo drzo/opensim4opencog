@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Iesi.Collections.Generic", "Iesi.Collections.Generic\Iesi.Collections.Generic.csproj", "{67E00DEB-AAC1-4433-A608-110FCC34AD21}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Iesi.Collections.Generic.Test", "Iesi.Collections.Generic.Test\Iesi.Collections.Generic.Test.csproj", "{40EE99A9-32F3-47E3-B740-5C25E3102C18}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Iesi.Collections.Test-1.1", "Iesi.Collections.Test\Iesi.Collections.Test-1.1.csproj", "{CD003655-9A41-4D66-A38B-E7A37D89386C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{67E00DEB-AAC1-4433-A608-110FCC34AD21}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67E00DEB-AAC1-4433-A608-110FCC34AD21}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67E00DEB-AAC1-4433-A608-110FCC34AD21}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67E00DEB-AAC1-4433-A608-110FCC34AD21}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40EE99A9-32F3-47E3-B740-5C25E3102C18}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40EE99A9-32F3-47E3-B740-5C25E3102C18}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40EE99A9-32F3-47E3-B740-5C25E3102C18}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40EE99A9-32F3-47E3-B740-5C25E3102C18}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CD003655-9A41-4D66-A38B-E7A37D89386C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD003655-9A41-4D66-A38B-E7A37D89386C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD003655-9A41-4D66-A38B-E7A37D89386C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD003655-9A41-4D66-A38B-E7A37D89386C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
