@@ -37,6 +37,7 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Threading;
 using cogbot;
+using Cogbot.Library;
 using cogbot.Listeners;
 using cogbot.TheOpenSims;
 using MushDLR223.Utilities;
@@ -440,7 +441,7 @@ namespace CogbotRadegastPluginModule
         private void btnSay_Click(object sender, EventArgs e)
         {
             string s = cbxInput.Text;
-            BotClient bc = ClientManager.SingleInstance.BotClientFor(this.instance);
+            BotClient bc = CogbotGUI.BotClientFor(this.instance);
             if (bc != null)
             {
                 WriteLine("cogbot> " + s);

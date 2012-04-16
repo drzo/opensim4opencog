@@ -10,6 +10,7 @@ using cogbot.Actions.Movement;
 using cogbot.Actions.Scripting;
 using cogbot.Actions.System;
 using cogbot.Actions.WebUtil;
+using Cogbot.Library;
 using cogbot.Utilities;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
@@ -22,8 +23,6 @@ using System.Collections;
 using cogbot.ScriptEngines;
 using System.IO;
 using cogbot.Listeners;
-using Radegast;
-using Radegast.Netcom;
 using cogbot.TheOpenSims;
 using System.Drawing;
 using Settings=OpenMetaverse.Settings;
@@ -154,7 +153,6 @@ namespace cogbot
 
         public void Login(bool blocking)
         {
-            SetRadegastLoginOptions();
             if (IsLoggedInAndReady) return;
             if (ExpectConnected) return;
             if (Network.CurrentSim != null)
@@ -172,21 +170,13 @@ namespace cogbot
                 Settings.LOGIN_SERVER = BotLoginParams.URI;
                 if (TheRadegastInstance != null)
                 {
-                    var LoginEvent = BotLoginParams.LoginEvent; 
-                    LoginEvent.Reset();
-                    // non blocking
-                    InvokeGUI(TheRadegastInstance.MainForm, TheRadegastInstance.Netcom.Login);
-                    
-                    if (blocking)
-                    {
-                        bool madeIt = LoginEvent.WaitOne(BotLoginParams.loginParams.Timeout, false);
-
-                    }
+                    LoginViaRadegast(blocking);
                     return;
                 }
                 //SetLoginOptionsFromRadegast();
                 if (!blocking)
                 {
+                    Settings.USE_LLSD_LOGIN = true;
                     Network.BeginLogin(BotLoginParams.loginParams);
                 } else
                 {
@@ -198,6 +188,21 @@ namespace cogbot
                 LogException("Login", ex);
             }
 
+        }
+
+        private void LoginViaRadegast(bool blocking)
+        {
+            CogbotGUI.SetRadegastLoginOptions(TheRadegastInstance, this);
+            var LoginEvent = BotLoginParams.LoginEvent;
+            LoginEvent.Reset();
+            // non blocking
+            CogbotGUI.InvokeGUI(TheRadegastInstance.MainForm, TheRadegastInstance.Netcom.Login);
+
+            if (blocking)
+            {
+                bool madeIt = LoginEvent.WaitOne(BotLoginParams.loginParams.Timeout, false);
+
+            }
         }
 
         private void LogException(string p, Exception ex)
@@ -371,19 +376,21 @@ namespace cogbot
                     if (nc != null) nc.InstantMessageSent -= IMSent;
                 }
                 __TheRadegastInstance = value;
-                if (value==null) return;
+                if (value == null) return;
                 var vc = value.Client;
                 if (gridClient != vc)
                 {
                     WriteLine("wierd gridclients");
-                }                
+                }
                 value.Netcom.InstantMessageSent += IMSent;
 
-                if (false) ClientManager.SetDebugConsole(value);
+                if (false) CogbotGUI.SetDebugConsole(value);
             }
         }
 
-        private void IMSent(object sender, InstantMessageSentEventArgs e)
+        public event InstantMessageSentArgs OnInstantMessageSent;
+
+        private void IMSent(object sender, Radegast.Netcom.InstantMessageSentEventArgs e)
         {
             if (OnInstantMessageSent!=null)
                 try
@@ -395,8 +402,6 @@ namespace cogbot
                     LogException("ImSent", ex);
                 }
         }
-
-        public event InstantMessageSentArgs OnInstantMessageSent; 
 
         readonly public VoiceManager VoiceManager;
         // Shell-like inventory commands need to be aware of the 'current' inventory folder.
@@ -1144,47 +1149,6 @@ namespace cogbot
             DisplayNotificationInChatReal(DLRConsole.SafeFormat(str, args));
         }
 
-        String stringBuff = "";
-        object stringBuffLock = new object();
-        public void DisplayNotificationInChatReal(string str)
-        {
-            lock (stringBuffLock)
-            {
-                if (stringBuff == "")
-                {
-                    stringBuff = str;
-                } else
-                {
-                    stringBuff = stringBuff + "\r\n" + str;
-                    return;
-                }
-            }
-            InvokeGUI(
-                () =>
-                    {
-                        ChatConsole cc = (ChatConsole) TheRadegastInstance.TabConsole.Tabs["chat"].Control;
-                        RichTextBoxPrinter tp = (RichTextBoxPrinter) cc.ChatManager.TextPrinter;
-                        InvokeGUI(cc.rtbChat, () =>
-                                                  {
-                                                      string s = tp.Content;
-                                                      if (s.Length > 30000)
-                                                      {
-                                                          tp.Content = s.Substring(s.Length - 30000);
-                                                      }
-                                                      //if (cc.)
-                                                      lock (stringBuffLock)
-                                                      {
-                                                          str = stringBuff;
-                                                          stringBuff = "";
-                                                      }
-                                                      ClientManager.WriteLine(str);
-                                                      TheRadegastInstance.TabConsole.DisplayNotificationInChat(str);
-                                                  });
-
-                    });
-        }
-
-
         private void Inventory_OnInventoryObjectReceived(object sender, InventoryObjectOfferedEventArgs e)
         {
             if (true)
@@ -1472,7 +1436,7 @@ namespace cogbot
                 string SelfName = String.Format("{0}", GetName());
                 str = str.Replace("$bot", SelfName);
                 if (str.StartsWith(SelfName)) str = str.Substring(SelfName.Length).Trim();
-                ClientManager.SetDebugConsole(__TheRadegastInstance);
+                CogbotGUI.SetDebugConsole(__TheRadegastInstance);
                 ClientManager.WriteLine(str);
             }
             catch (Exception ex)
@@ -1494,7 +1458,7 @@ namespace cogbot
                 string SelfName = String.Format("{0}", GetName());
                 str = str.Replace("$bot", SelfName);
                 if (str.StartsWith(SelfName)) str = str.Substring(SelfName.Length).Trim();
-                if (false) ClientManager.SetDebugConsole(__TheRadegastInstance);
+                if (false) CogbotGUI.SetDebugConsole(__TheRadegastInstance);
                 ClientManager.DebugWriteLine(str);
             }
             catch (Exception ex)
@@ -1767,7 +1731,7 @@ namespace cogbot
             {
                 if (!ClientManager.StarupLispCreatedBotClients)
                 {
-                    GetLoginOptionsFromRadegast();
+                    CogbotGUI.GetLoginOptionsFromRadegast(TheRadegastInstance, this);
                 }
                 LoginRetries = 0; // maybe LoginRetriesFresh??
                 WriteLine("Logged in successfully");
@@ -2476,172 +2440,6 @@ namespace cogbot
             return items;
         }
 
-        public void SetRadegastLoginOptions()
-        {
-            if (TheRadegastInstance == null) return;
-            ClientManager.EnsureRadegastForm(this, TheRadegastInstance, "EnsureRadegastForm from SetRadegastLoginOptions " + GetName());
-            var to = TheRadegastInstance.Netcom.LoginOptions;
-            to.FirstName = BotLoginParams.FirstName;
-            to.LastName = BotLoginParams.LastName;
-            to.Password = BotLoginParams.Password;
-            string loginURI = BotLoginParams.URI;
-
-            MainProgram.CommandLine.LoginUri = loginURI;
-            MainProgram.CommandLine.Location = BotLoginParams.Start;
-            int gidx; 
-            Grid G = GetGridIndex(loginURI, out gidx);
-            if (G == null)
-            {
-                G = new Grid(BotLoginParams.URI, BotLoginParams.URI, loginURI);
-                to.GridCustomLoginUri = loginURI;
-            }
-            else
-            {
-                BotLoginParams.URI = G.LoginURI;
-            }
-            TheRadegastInstance.Netcom.LoginOptions.Grid = G;
-            to.Grid = G;
-            string botStartAt = BotLoginParams.Start;            
-
-            if (botStartAt == "home")
-            {
-                to.StartLocation = StartLocationType.Home;
-            }
-            else if (botStartAt == "last")
-            {
-                to.StartLocation = StartLocationType.Last;                
-            } else
-            {
-                to.StartLocation = StartLocationType.Custom;
-                to.StartLocationCustom = botStartAt;
-            }            
-            to.Version = BotLoginParams.Version;
-            to.Channel = BotLoginParams.Channel;
-            RadegastTab tab;
-            if (TheRadegastInstance.TabConsole.Tabs.TryGetValue("login", out tab))
-            {
-                tab.AllowDetach = true;
-                tab.AllowClose = false;
-                tab.AllowMerge = false;
-                tab.AllowHide = false;  
-                LoginConsole form = (LoginConsole)tab.Control;
-                DLRConsole.InvokeControl(form, () => SetRadegastLoginForm(form, to));
-            }
-        }
-
-        public Grid GetGridIndex(String gridName, out int gridIx)
-        {
-            var instance = TheRadegastInstance;
-            gridIx = -1;
-            for (int i = 0; i < instance.GridManger.Count; i++)
-            {
-                Grid testGrid = instance.GridManger[i];
-                // cbxGrid.Items.Add(instance.GridManger[i]);
-                if (gridName == testGrid.ID || gridName == testGrid.LoginURI || gridName == testGrid.Name)
-                {
-                    gridIx = i;
-                    return testGrid;
-                }
-            }
-            return null;
-        }
-        private void SetRadegastLoginForm(LoginConsole console, LoginOptions options)
-        {
-            console.cbxUsername.Text = (string.Format("{0} {1}", options.FirstName, options.LastName)).Trim();
-
-            switch (options.StartLocation)
-            {
-                case StartLocationType.Last:
-                    //console.cbxLocation.Text = options.StartLocationCustom = "last";
-                    console.cbxLocation.SelectedIndex = 1;
-                    break;
-                case StartLocationType.Home:
-                    //console.cbxLocation.Text = options.StartLocationCustom = "home";
-                    console.cbxLocation.SelectedIndex = 0;
-                    break;
-                default:
-                    console.cbxLocation.SelectedIndex = -1;
-                    console.cbxLocation.Text = options.StartLocationCustom;
-                    break;
-            }
-            console.cbTOS.Checked = true;
-            var G = options.Grid;
-            string gridName = options.GridCustomLoginUri;        
-            int gridIx = -1;
-            String LoginURI = null;
-            G = GetGridIndex(gridName, out gridIx) ?? G;
-            if (gridIx == -1)
-            {
-                if (G != null && !String.IsNullOrEmpty(G.ID))
-                {
-                    LoginURI = G.LoginURI;
-                    if (LoginURI != null) console.txtCustomLoginUri.Text = LoginURI;
-                    console.cbxGrid.Text = G.Name ?? G.ID;
-                    TheRadegastInstance.Netcom.LoginOptions.Grid = G;
-                }
-                else { console.cbxGrid.Text = "Custom"; }
-                if (LoginURI == null) console.txtCustomLoginUri.Text = options.GridCustomLoginUri;
-            } else {
-                console.txtCustomLoginUri.Text = G.LoginURI;
-                console.cbxGrid.SelectedIndex = gridIx;
-            }
-        }
-
-        public void GetLoginOptionsFromRadegast()
-        {
-            var from = TheRadegastInstance.Netcom.LoginOptions;
-            BotLoginParams.FirstName = from.FirstName;
-            BotLoginParams.LastName = from.LastName;
-            BotLoginParams.Password = from.Password;
-            BotLoginParams.URI = from.GridCustomLoginUri;
-            Grid g = from.Grid;
-            if (g != null)
-            {
-                BotLoginParams.URI = g.LoginURI;
-            }
-            switch (from.StartLocation)
-            {
-                case StartLocationType.Last:
-                    BotLoginParams.Start = "last";
-                    break;
-                case StartLocationType.Home:
-                    BotLoginParams.Start = "home";
-                    break;
-                default:
-                    BotLoginParams.Start = from.StartLocationCustom;
-                    break;
-            }
-            BotLoginParams.Version = from.Version;
-            BotLoginParams.Channel = from.Channel;
-            SetRadegastLoginOptions();
-        }
-
-        public void ShowTab(string name)
-        {
-            InvokeGUI(() => TheRadegastInstance.TabConsole.GetTab(name.ToLower()).Select());
-        }
-
-        public void AddTab(string name, string label, UserControl _debugWindow, EventHandler CloseDebug)
-        {
-            InvokeGUI(() =>
-                       {
-                           RadegastTab tab = TheRadegastInstance.TabConsole.AddTab(name.ToLower(), label, _debugWindow);
-                           tab.AllowDetach = true;
-                           tab.AllowMerge = true;
-                           //tab.TabClosed += ((sender, args) => _debugWindow.Dispose());
-                           if (CloseDebug != null)
-                           {
-                               tab.AllowClose = true;
-                               tab.TabClosed += CloseDebug;
-                           }
-                           else
-                           {
-                               tab.AllowClose = false;
-                           }
-                           //Application.EnableVisualStyles();
-                           //Application.Run(new Form(_debugWindow));
-                       });
-        }
 
         public Thread InvokeThread(String name, ThreadStart action)
         {
@@ -2676,28 +2474,10 @@ namespace cogbot
                 return tr;
             }
         }
-        public void InvokeGUI(Control mf, ThreadStart o)
-        {
-            try
-            {
-                if (false && mf.IsHandleCreated)
-                {
-                }
-                if (mf.InvokeRequired)
-                {
-                    mf.Invoke(o);
-                }
-                else o();
-            }
-            catch (Exception e)
-            {
-                WriteLine("ERROR! InvokeGUI " + e);
-            }
-        }
 
         public void InvokeGUI(ThreadStart o)
         {
-            InvokeGUI(TheRadegastInstance.MainForm, o);
+            CogbotGUI.InvokeGUI(TheRadegastInstance.MainForm, o);
         }
 
         public BotPermissions GetSecurityLevel(UUID uuid, string name)
@@ -2999,6 +2779,88 @@ namespace cogbot
         }
 
         #endregion
+
+        BotClient TheBot
+        {
+            get { return this; }
+        }
+        String stringBuff = "";
+        readonly object stringBuffLock = new object();
+        public void DisplayNotificationInChatReal(string str)
+        {
+            var instance = TheRadegastInstance;
+            lock (stringBuffLock)
+            {
+                if (stringBuff == "")
+                {
+                    stringBuff = str;
+                }
+                else
+                {
+                    stringBuff = stringBuff + "\r\n" + str;
+                    return;
+                }
+            }
+            if (instance == null)
+            {
+                lock (stringBuffLock)
+                {
+                    str = stringBuff;
+                    stringBuff = "";
+                }
+                ClientManager.WriteLine(str);
+                return;
+            }
+            TheBot.InvokeGUI(
+                () =>
+                {
+                    var cc = (Radegast.ChatConsole)instance.TabConsole.Tabs["chat"].Control;
+                    var tp = (Radegast.RichTextBoxPrinter)cc.ChatManager.TextPrinter;
+                    CogbotGUI.InvokeGUI(cc.rtbChat, () =>
+                    {
+                        string s = tp.Content;
+                        if (s.Length > 30000)
+                        {
+                            tp.Content = s.Substring(s.Length - 30000);
+                        }
+                        //if (cc.)
+                        lock (stringBuffLock)
+                        {
+                            str = stringBuff;
+                            stringBuff = "";
+                        }
+                        ClientManager.WriteLine(str);
+                        instance.TabConsole.DisplayNotificationInChat(str);
+                    });
+
+                });
+        }
+        public void ShowTab(string name)
+        {
+            TheBot.InvokeGUI(() => TheRadegastInstance.TabConsole.GetTab(name.ToLower()).Select());
+        }
+
+        public void AddTab(string name, string label, UserControl _debugWindow, EventHandler CloseDebug)
+        {
+            TheBot.InvokeGUI(() =>
+            {
+                Radegast.RadegastTab tab = TheRadegastInstance.TabConsole.AddTab(name.ToLower(), label, _debugWindow);
+                tab.AllowDetach = true;
+                tab.AllowMerge = true;
+                //tab.TabClosed += ((sender, args) => _debugWindow.Dispose());
+                if (CloseDebug != null)
+                {
+                    tab.AllowClose = true;
+                    tab.TabClosed += CloseDebug;
+                }
+                else
+                {
+                    tab.AllowClose = false;
+                }
+                //Application.EnableVisualStyles();
+                //Application.Run(new Form(_debugWindow));
+            });
+        }
     }
 
     public delegate void InstantMessageSentArgs(object sender, IMessageSentEventArgs args);

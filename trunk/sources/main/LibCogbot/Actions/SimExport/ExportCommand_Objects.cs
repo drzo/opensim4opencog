@@ -61,7 +61,6 @@ namespace cogbot.Actions.SimExport
             if (P == null) return true;
             if (IsIncluded(P.ID, P.LocalID)) return false;
             if (P.Parent != null) if (IsIncluded(P.Parent.ID, P.ParentID)) return false;
-
             Primitive pp = P.Prim0;
             if (P.IsKilled)
             {
@@ -73,6 +72,8 @@ namespace cogbot.Actions.SimExport
             if (P.IsTemporary) return true;           
             if (!P.HasPrim) return true;
             if (pp == null) return true;
+            var sp = P.SimPosition;
+            if (!onlyObjectAt.IsInside(sp.X, sp.Y, sp.Z)) return true;
             Primitive.ObjectProperties props = pp.Properties;
             if (props != null)
             {

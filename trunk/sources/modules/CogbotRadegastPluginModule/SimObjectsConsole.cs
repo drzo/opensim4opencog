@@ -59,7 +59,7 @@ namespace CogbotRadegastPluginModule
         private Primitive currentPrim = new Primitive();
         private ListViewItem currentItem = new ListViewItem();
         private float searchRadius = 15.0f;
-        public bool IsDisposing;
+        public bool IsDisposing = true;
         //PropertiesQueue propRequester;
 
         public SimObjectsConsole(RadegastInstance instance, CogbotRadegastPlugin plugin)

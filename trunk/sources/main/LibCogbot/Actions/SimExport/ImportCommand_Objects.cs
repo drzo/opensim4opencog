@@ -626,6 +626,18 @@ namespace cogbot.Actions.SimExport
 
         private void ImportPTCFiles(ImportSettings arglist, bool lloadOnly, bool rezMissing)
         {
+            foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.objectAsset"))
+            {
+                string fileUUID = Path.GetFileNameWithoutExtension(Path.GetFileName(file));
+                UUID oldId = UUID.Parse(fileUUID);
+                MustExport.Add(oldId);
+            }
+            foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.ptc"))
+            {
+                string fileUUID = Path.GetFileNameWithoutExtension(Path.GetFileName(file));
+                UUID oldId = UUID.Parse(fileUUID);
+                MustExport.Add(oldId);
+            }
             if (IsLocalScene) return;
             WriteLine("Loading Prims from PTC Files...");
             int loaded = 0;
