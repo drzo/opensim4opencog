@@ -662,6 +662,12 @@ namespace cogbot.Actions.SimExport
             HashSet<ItemToCreate> ItemsToCreate = LocalScene.Assets;
             bool alwayReupload = arglist.Contains("reup");
             Success("Uploading assets... sameIds=" + sameIds);
+            var au = GetAssetUploadsFolder();
+            if (CogbotHelpers.IsNullOrZero(au))
+            {
+                Success("Cant get AssetUploads folder");
+                return;
+            }
             foreach (var file in Directory.GetFiles(ExportCommand.assetDumpDir, "*.*"))
             {
                 if (file.EndsWith(".object") || file.EndsWith(".simasset") || file.EndsWith(".rzi"))

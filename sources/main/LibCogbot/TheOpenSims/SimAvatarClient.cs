@@ -422,7 +422,7 @@ namespace cogbot.TheOpenSims
             if (Client0 != null)
             {
                 Client0.WorldSystem.WriteLine(str);
-                if (Client0.TheRadegastInstance != null)
+                //if (Client0.TheRadegastInstance != null)
                 {
                     Client0.DisplayNotificationInChat(str);
                 }

@@ -49,7 +49,7 @@ namespace cogbot
         {
             ClientManager.arguments = new Parser(args);
             consoleBase = new DLRConsole("textform");
-            ClientManager manager = new ClientManager();
+            ClientManager manager = ClientManager.SingleInstance;
             manager.outputDelegate = new OutputDelegate(WriteLine);
             if (!manager.ProcessCommandArgs())
             {

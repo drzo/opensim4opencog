@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using System.Threading;
 using cogbot;
 using cogbot.Actions.Agent;
+using Cogbot.Library;
 using cogbot.ScriptEngines;
 using cogbot.Utilities;
 using log4net.Core;
@@ -14,7 +15,6 @@ using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using cogbot.Actions;
-using Radegast;
 using cogbot.Actions.Scripting;
 using Settings=OpenMetaverse.Settings;
 
@@ -587,12 +587,12 @@ namespace cogbot
         private static readonly object OneAtATime = new object();
         private static readonly object OneAtATime2 = new object();
         private static readonly object OneAtATimeStartupLisp = new object();
-        private bool _wasFirstGridClient = true;
-        private readonly object _wasFirstGridClientLock = new object();
+        public static bool _wasFirstGridClient = true;
+        public static readonly object _wasFirstGridClientLock = new object();
         public BotClient CreateBotClient(string first, string last, string passwd, string simurl, string location)
         {
             BotClient bc = CreateBotClient0(first, last, passwd, simurl, location);
-            EnsureBotClientHasRadegast(bc);
+            LastRefBotClient = bc;
             PostAutoExecEnqueue(() => MakeRunning(bc));
             StartUpLisp();
             return bc;            
@@ -646,13 +646,14 @@ namespace cogbot
                                                if (bc.InvokedMakeRunning) return;
                                                bc.InvokedMakeRunning = true;
                                            }
-                                           bc.SetRadegastLoginOptions();
+                                           if (ClientManager.UsingCogbotFromRadgast)
+                                               CogbotGUI.SetRadegastLoginOptions(bc.TheRadegastInstance, bc);
                                            AddTypesToBotClient(bc);
                                            bc.StartupClientLisp();
                                        };
             PostAutoExecEnqueue(() =>
                                      {
-                                         bc.SetRadegastLoginOptions();
+                                         if (ClientManager.UsingCogbotFromRadgast) CogbotGUI.SetRadegastLoginOptions(bc.TheRadegastInstance, bc);
                                          // in-case someoine hits the login button
                                          bc.Network.LoginProgress += (s, e) =>
                                                                          {
@@ -894,11 +895,6 @@ namespace cogbot
             lock (Accounts)
                 foreach (var bc in BotClients)
                 {
-                    EnsureBotClientHasRadegast(bc);
-                }
-            lock (Accounts)
-                foreach (var bc in BotClients)
-                {
                     MakeRunning(bc);
                 }
         }
@@ -937,7 +933,7 @@ namespace cogbot
                 {
                     if (!GlobalRadegastInstanceGCUsed)
                     {
-                        gc = GlobalRadegastInstance.Client;
+                        gc = CogbotGUI.GlobalRadegastInstance.Client;
                         GlobalRadegastInstanceGCUsed = true;
                         foreach (BotClient c in BotClients)
                         {
@@ -1035,108 +1031,6 @@ namespace cogbot
             }
         }
 
-        private void EnsureBotClientHasRadegast(BotClient bc)
-        {
-            LastRefBotClient = bc;
-            GridClient gridClient = bc.gridClient;
-            RadegastInstance inst = bc.TheRadegastInstance;
-            lock (_wasFirstGridClientLock)
-            {
-                if (_wasFirstGridClient)
-                {
-                    _wasFirstGridClient = false;
-                    if (ClientManager.UsingCogbotFromRadgast)
-                    {
-                        inst = GlobalRadegastInstance;
-                    }
-                    if (inst != null)
-                    {
-                        gridClient = inst.Client;
-                    }
-                }
-            }
-            string name = "EnsureBotClientHasRadegast: " + bc.GetName();
-
-            gridClient = gridClient ?? bc.gridClient ?? new GridClient();
-            InSTAThread(() =>
-            {
-                EnsureRadegastForm(bc, bc.TheRadegastInstance, name);
-                bc.SetRadegastLoginOptions();
-                //bc.TheRadegastInstance.MainForm.WindowState = FormWindowState.Minimized;
-            }, name);
-        }
-
-        public void SetDebugConsole(RadegastInstance inst)
-        {
-            if (inst==null) return;
-            if (TheDebugConsoleRTB == null)
-            {
-                SetDebugConsole0(inst.TabConsole.GetTab("debug"));
-                if (TheDebugConsoleRTB == null)
-                {
-                    SetDebugConsole0(inst.TabConsole.GetTab("cogbot"));
-                    if (TheDebugConsoleRTB == null) SetDebugConsole0(inst.TabConsole.GetTab("chat"));
-                }
-            }
-        }
-        public void SetDebugConsole0(RadegastTab tab)
-        {
-            if (tab == null) return;
-            var dc = tab.Control as DebugConsole;
-            if (dc != null)
-            {
-                TheDebugConsoleRTB = dc.rtbLog;
-                return;
-            }
-            var dc2 = tab.Control as ChatConsole;
-            if (dc2 != null)
-            {
-                TheDebugConsoleRTB = dc2.rtbChat;
-                return;
-            }
-        }
-
-        public void EnsureRadegastForm(BotClient bc, RadegastInstance instance, string name)
-        {
-            bc.TheRadegastInstance = instance ??
-                         bc.TheRadegastInstance ?? new RadegastInstance(bc.gridClient);
-            var mf = instance.MainForm;
-            lock (EnsuringRadegastLock)
-            {
-                if (bc.EnsuredRadegastRunning) return;
-                bc.EnsuredRadegastRunning = true;
-                EnsureForm0(mf, name);
-            }
-        }
-        public static RadegastInstance GlobalRadegastInstance;
-        public BotClient BotClientFor(RadegastInstance instance)
-        {
-            return GetBotByGridClient(instance.Client);
-        }
-        protected object EnsuringRadegastLock = new object();
-
-        public void EnsureForm0(Form mf, string name)
-        {
-            if (!mf.IsHandleCreated)
-            {
-                // mf.Visible = false;
-                //  mf.Show();
-                //mf.Visible = false;
-                InSTAThread(new ThreadStart(() =>
-                {
-                    if (!mf.IsHandleCreated) Application.Run(mf);
-                }), "EnsureForm0 " + name);
-            }
-            else
-            {
-                //mf.BeginInvoke(new MethodInvoker(() => mf.Visible = true));
-                if(false)
-                {
-                    Application.Run(mf);
-                }  
-            }
-        }
-
         /// <summary>
         /// 
         /// </summary>
@@ -1185,10 +1079,17 @@ namespace cogbot
                 string input = Program.consoleBase.CmdPrompt(GetPrompt());
                 if (string.IsNullOrEmpty(input)) continue;
                 CmdResult executeCommand = ExecuteCommand(input, null, WriteLine);
-                if (executeCommand==null) continue;
+                FlushWriter(System.Console.Out);
+                FlushWriter(System.Console.Error);
+                if (executeCommand == null) continue;
                 WriteLine(executeCommand.ToString());
             }
             Dispose();
+        }
+
+        static void FlushWriter(TextWriter textWriter)
+        {
+            if (textWriter != null) textWriter.Flush();
         }
 
         private static bool RanAutoExec = false;
@@ -1199,7 +1100,6 @@ namespace cogbot
         public static OutputDelegate Filter = null;
         public static OutputDelegate Real = DLRConsole.DebugWriteLine;
 
-        public static RichTextBox TheDebugConsoleRTB = null;
         public static bool AllocedConsole;
         public static bool dosBox;
         public static bool noGUI;
@@ -1288,42 +1188,7 @@ namespace cogbot
 
         public static void VeryRealWriteLine_Log(Color color, string timeStamp, string named, string mesg)
         {
-            RichTextBox rtbLog = TheDebugConsoleRTB;
-            if (rtbLog == null)
-            {
-                var O = Console.Out;
-                if (O == null) return;
-                O.WriteLine(mesg);
-                return;
-            }
-            if (rtbLog.InvokeRequired)
-            {
-                if (rtbLog.IsHandleCreated)
-                    rtbLog.BeginInvoke(new MethodInvoker(() => VeryRealWriteLine_Log(color, timeStamp, named, mesg)));
-                return;
-            }
-            Color prev = rtbLog.SelectionColor;
-            try
-            {
-                rtbLog.SelectionColor = Color.FromKnownColor(KnownColor.WindowText);
-                if (!String.IsNullOrEmpty(timeStamp))
-                {
-                    rtbLog.AppendText(string.Format("{0} ", timeStamp));
-                }
-                if (!String.IsNullOrEmpty(named))
-                {
-                    rtbLog.AppendText("[");
-                    rtbLog.SelectionColor = color;
-                    rtbLog.AppendText(named);
-                    rtbLog.SelectionColor = Color.FromKnownColor(KnownColor.WindowText);
-                    rtbLog.AppendText("]: - ");
-                }
-                rtbLog.AppendText(string.Format("{0}{1}", mesg, Environment.NewLine));
-            }
-            finally
-            {
-                rtbLog.SelectionColor = prev;
-            }
+            CogbotGUI.WriteDebugLine(mesg, color, timeStamp, named);
         }
 
         public OutputDelegate outputDelegate
@@ -1373,8 +1238,14 @@ namespace cogbot
         }
 
         public static void GlobalWriteLine0(string check)
-        {            
+        {
 
+            var cb = Program.consoleBase;
+            if (cb != null)
+            {
+                cb.Output(check);
+                return;
+            }
             if (Filter != null)
             {
                 Filter(check);

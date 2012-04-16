@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace CogbotRagegastPluginModule.Properties
+namespace CogbotRadegastPluginModule.Properties
 {
 
 

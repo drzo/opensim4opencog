@@ -62,7 +62,7 @@ namespace cogbot.Actions.SimExport
         static public bool UseBinarySerialization = false;
 
         Box3Fill seenObjectsAt = new Box3Fill(true);
-        Box3Fill onlyObjectAt = new Box3Fill(true);
+        static Box3Fill onlyObjectAt = new Box3Fill(true);
 
         public UUID inventoryHolderUUID
         {
@@ -83,14 +83,21 @@ namespace cogbot.Actions.SimExport
             }
             if (cnt == null)
             {
-                cnt = Client.Inventory.FolderContents(rid, Client.Self.AgentID, true, false, InventorySortOrder.ByDate,
-                                                      5000);
-            }
-            if (cnt == null)
-            {
+                foreach (
+                    KeyValuePair<UUID, InventoryNode> node in
+                        MushDLR223.Utilities.LockInfo.CopyOf(Client.Inventory.Store.Items))
+                {
+                    var n = node.Value;
+                    if (n.ParentID == rid)
+                    {
+                        var d = n.Data;
+                        if (d is InventoryItem) continue;
+                        if (d.Name == name)
+                            return inventoryHolder[name] = d.UUID;
+                    }
+                }
                 return UUID.Zero;
             }
-
             foreach (var c in cnt)
             {
                 if (c.Name == name)
@@ -150,6 +157,10 @@ namespace cogbot.Actions.SimExport
             Description = "Exports an object to an xml file. Usage: simexport exportPrim-spec directory";
             Category = CommandCategory.Objects;
             if (!Incremental) lock (fileWriterLock) PurgeExport();
+            ///onlyObjectAt.AddPoint(new Vector3(-256, -256, -256));
+            ///onlyObjectAt.AddPoint(new Vector3(512, 512, 9024));
+            onlyObjectAt.AddPoint(new Vector3(-256, -256, 90));
+            onlyObjectAt.AddPoint(new Vector3(512, 512, 200));
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
@@ -160,8 +171,6 @@ namespace cogbot.Actions.SimExport
             IsExporting = true;
             var CurSim = Client.Network.CurrentSim;
             RegionHandle = CurSim.Handle;
-            onlyObjectAt.AddPoint(new Vector3(-256, -256, -256));
-            onlyObjectAt.AddPoint(new Vector3(512, 512, 9024));
             haveBeenTo.AddPoint(TheSimAvatar.SimPosition);
             AttemptSitMover();
             WorldObjects.MaintainSimObjectInfoMap = false;
@@ -399,7 +408,6 @@ namespace cogbot.Actions.SimExport
 
                 Vector3 sp;
                 if (!P.TryGetSimPosition(out sp)) continue;
-                if (!onlyObjectAt.IsInside(sp.X, sp.Y, sp.Z)) continue;
 
                 objects++;
                 string issues = P.MissingData;

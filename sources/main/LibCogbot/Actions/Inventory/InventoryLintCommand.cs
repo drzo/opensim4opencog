@@ -31,20 +31,31 @@ namespace cogbot.Actions.Inventory.Shell
             StringBuilder result = new StringBuilder();
 
             InventoryFolder rootFolder = Inventory.RootFolder;
+            int found = 0;
+            int items = 0;
+            int remed = 0;
             foreach (KeyValuePair<UUID, InventoryNode> node in MushDLR223.Utilities.LockInfo.CopyOf(Inventory.Items))
             {
+                found++;
                 var n = node.Value;
-                if (n.Parent==null)
+                if (n.Parent==null || n.Parent.Data.Name=="TaskInvHolder")
                 {
                     var d = n.Data;
+                    items++;
                     if (d is InventoryItem) continue;
-                    if (n.ParentID==UUID.Zero)
+                    if (n.ParentID == UUID.Zero || (n.Parent != null && n.Parent.Data.Name == "TaskInvHolder"))
                     {
                         UUID uuid;
-                        if (UUID.TryParse(d.Name,out uuid))
+                        if (UUID.TryParse(d.Name, out uuid))
                         {
+                            remed++;
+                            Client.Inventory.MoveFolder(node.Key,
+                                                        Client.Inventory.FindFolderForType(AssetType.TrashFolder));
+                            /*
+                            Client.Inventory.RemoveDescendants(node.Key);
                             Client.Inventory.RemoveFolder(node.Key);
                             Client.Inventory.RemoveItem(node.Key);
+                             */
                         }
                     }
                 }

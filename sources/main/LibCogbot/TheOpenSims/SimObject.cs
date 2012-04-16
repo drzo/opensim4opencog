@@ -3037,7 +3037,7 @@ namespace cogbot.TheOpenSims
             {
                 lock (FILock)
                 {
-                    if (_infoMap.ContainsKey(s))
+                    if (_infoMap != null && _infoMap.ContainsKey(s))
                     {
                         var val = _infoMap[s].Value;
                         if (val is NullType) return null;

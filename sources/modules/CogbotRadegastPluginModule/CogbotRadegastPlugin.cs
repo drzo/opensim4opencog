@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Threading;
 using System.Windows.Forms;
 using cogbot;
+using Cogbot.Library;
 using cogbot.Listeners;
 using cogbot.TheOpenSims;
 using MushDLR223.Utilities;
@@ -41,7 +42,7 @@ namespace CogbotRadegastPluginModule
             {
                 if (_theBot == null)
                 {
-                    _theBot = ClientManager.SingleInstance.BotClientFor(RadegastInstance);
+                    _theBot = CogbotGUI.BotClientFor(RadegastInstance);
                 }
                 return _theBot;
             }
@@ -113,13 +114,14 @@ namespace CogbotRadegastPluginModule
             {
                 if (!plugInitCalledEver)
                 {
-                    ClientManager.GlobalRadegastInstance = inst;
+                    CogbotGUI.GlobalRadegastInstance = inst;
                 }
                 ClientManager.UsingCogbotFromRadgast = true;
                 clientManager = ClientManager.SingleInstance ?? new ClientManager();
             }
             BotClient bc = clientManager.EnsureBotByGridClient(inst.Client);
             bc.TheRadegastInstance = inst;
+            _theBot = bc;
             cogbotRadegastInterpreter = new CogbotRadegastInterpreter(this);
             RadegastInstance.CommandsManager.LoadInterpreter(cogbotRadegastInterpreter);
             _commandContextAction = new CommandContextAction(inst, this);
@@ -135,6 +137,7 @@ namespace CogbotRadegastPluginModule
             inst.MainForm.Invoke(new MethodInvoker(() => SetupRadegastGUI(inst)));
             DLRConsole.SafelyRun(() => clientManager.ProcessCommandArgs());
             chatConsole.StartWriter();
+            if (bc.IsLoggedInAndReady) return;
             TheBot.InvokeNext("Re-enable login button", () =>
                                                             {
                                                                 TheBot.DebugWriteLine("SetLoginButton = r-enabled");
@@ -224,6 +227,7 @@ namespace CogbotRadegastPluginModule
 
         private void SetupRadegastGUI(RadegastInstance inst)
         {
+
             DLRConsole.AllocConsole();            
             SetLoginButton("SetupCogbotGUI", false);
             DLRConsole.SafelyRun(() =>
@@ -270,6 +274,12 @@ namespace CogbotRadegastPluginModule
                                                                       tab.AllowDetach = true;
                                                                   });
                                      });
+            if (TheBot.IsLoggedInAndReady)
+            {
+                RadegastInstance.Netcom.Network_LoginProgress(this,
+                                                              new LoginProgressEventArgs(LoginStatus.Success,
+                                                                                         "Cogbot already logged in", ""));
+            }
         }
 
         public void SetLoginButton(String text, bool enabled)

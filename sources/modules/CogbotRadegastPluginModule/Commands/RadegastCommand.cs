@@ -4,6 +4,7 @@ using System.Threading;
 using System.Windows.Forms;
 using cogbot;
 using cogbot.Actions;
+using Cogbot.Library;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using org.opencyc.xml;
@@ -28,6 +29,11 @@ namespace cogbot.Actions.System
             if (args==null || args.Length==0) args =new []{"show"};
             if (PanelGUI == null)
             {
+                if (Client.TheRadegastInstance == null)
+                {
+                    CogbotGUI.EnsureBotClientHasRadegast(Client);
+                    Thread.Sleep(10000);
+                }
                 PanelGUI = Client.TheRadegastInstance.MainForm;
                 // (new Thread(() =>
                 {
@@ -49,6 +55,7 @@ namespace cogbot.Actions.System
             }
             string arg0 = args[0].ToLower();
 
+            Control.CheckForIllegalCrossThreadCalls = false;
 
             switch (arg0)
             {

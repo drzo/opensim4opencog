@@ -300,6 +300,18 @@ namespace ABuildStartup
             if (ClientManager.arguments.GetWithout("--nogui", out oArgs))
             {
                 ClientManager.noGUI = true;
+            } else
+            {
+                try
+                {
+                    // probe for X windows
+                    var f = System.Windows.Forms.SystemInformation.MenuAccessKeysUnderlined;
+                }
+                catch (Exception)
+                {
+                    // X windows missing
+                    ClientManager.noGUI = true;
+                }
             }
             if (ClientManager.dosBox) AllocConsole();
 
