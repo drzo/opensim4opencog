@@ -550,8 +550,8 @@ namespace MushDLR223.Utilities
                                                           };
 
         static private readonly object m_syncRoot = new object();
-        static private int y = -1;
-        private int cp = 0;
+        static private int m_cursorYPosition = -1;
+        //private int cp = 0;
         private int h = 1;
         private string prompt = "# ";
         static private StringBuilder cmdline = new StringBuilder();
@@ -563,8 +563,8 @@ namespace MushDLR223.Utilities
         private static readonly TextWriter ConsoleError = new OutputDelegateWriter(SYSTEM_ERR_WRITELINE);
 
         public Commands Commands = new Commands();
-        private bool echo = true;
-        static private List<string> history = new List<string>();
+        ///private bool echo = true;
+        ///static private List<string> history = new List<string>();
         private bool gui = false;
 
         public object ConsoleScene = null;
@@ -689,10 +689,10 @@ namespace MushDLR223.Utilities
         private void AddToHistory(string text)
         {
             if (text.Trim().Length == 0) return;
-            while (history.Count >= 100)
-                history.RemoveAt(0);
+            while (m_history.Count >= 100)
+                m_history.RemoveAt(0);
 
-            history.Add(text);
+            m_history.Add(text);
         }
 
         private DLRConsole m_console = null;
@@ -944,9 +944,9 @@ namespace MushDLR223.Utilities
         {
             lock (cmdline) lock (m_syncRoot)
                 {
-                    if (y != -1)
+                    if (m_cursorYPosition != -1)
                     {
-                        y = SetCursorTop(y);
+                        m_cursorYPosition = SetCursorTop(m_cursorYPosition);
                         CursorLeft = 0;
 
                         int count = cmdline.Length;
@@ -955,7 +955,7 @@ namespace MushDLR223.Utilities
                         while (count-- > 0)
                             SystemWrite0(" ");
 
-                        y = SetCursorTop(y);
+                        m_cursorYPosition = SetCursorTop(m_cursorYPosition);
                         CursorLeft = 0;
                     }
                     // dont trim off spaces
@@ -966,8 +966,8 @@ namespace MushDLR223.Utilities
                     foreach (var argsFmt in safeFormatSplit)
                     {
                         WriteEachLine(senderColor, sender, color, argsFmt.Trim(trim));
-                        if (y != -1)
-                            y = CursorTop;
+                        if (m_cursorYPosition != -1)
+                            m_cursorYPosition = CursorTop;
                     }
                 }
         }
@@ -995,41 +995,36 @@ namespace MushDLR223.Utilities
 
         static void WriteEachLine(ConsoleColor senderColor, string sender, ConsoleColor color, string trimmed)
         {
-            if (y != -1)
-                y = CursorTop;
+            if (m_cursorYPosition != -1)
+                m_cursorYPosition = CursorTop;
             WritePrefixLine(senderColor, sender);
-            if (IsOnMonoUnix)
-            {
-                if (!NoConsoleVisible) SystemConsole.WriteLine(trimmed);
-
-            }
-            else WriteConsoleLine(color, "{0}", trimmed);
+            WriteConsoleLine(color, " {0}", trimmed);
             omittedPrefix = "";
-            if (y != -1)
-                y = CursorTop;
+            if (m_cursorYPosition != -1)
+                m_cursorYPosition = CursorTop;
         }
 
         static public void WriteNewLine(ConsoleColor color, string format, params object[] args)
         {
             lock (cmdline) lock (m_syncRoot)
                 {
-                    if (y != -1)
+                    if (m_cursorYPosition != -1)
                     {
-                        y = SetCursorTop(y);
+                        m_cursorYPosition = SetCursorTop(m_cursorYPosition);
                         CursorLeft = 0;
 
                         int count = cmdline.Length;
 
-                        SystemWrite0("  ");
+                        SystemWrite0("wnl  ");
                         while (count-- > 0)
                             SystemWrite0(" ");
 
-                        y = SetCursorTop(y);
+                        m_cursorYPosition = SetCursorTop(m_cursorYPosition);
                         CursorLeft = 0;
                     }
                     WriteConsoleLine(color, format, args);
-                    if (y != -1)
-                        y = CursorTop;
+                    if (m_cursorYPosition != -1)
+                        m_cursorYPosition = CursorTop;
                 }
         }
 
@@ -1078,12 +1073,19 @@ namespace MushDLR223.Utilities
 
                     WriteColorText(color, sender);
                     PauseIfTraced("WritePrefixLine: " + sender);
-                    SystemWrite0("] \t");
+                    SystemWrite0("] ");
+                    Flush();
                 }
             }
             catch (ObjectDisposedException)
             {
             }
+        }
+
+        private static void Flush()
+        {
+            InitialConsoleOut.Flush();
+            InitialConsoleERR.Flush();
         }
 
         public static void WriteColorText(ConsoleColor color, string text)
@@ -1094,12 +1096,14 @@ namespace MushDLR223.Utilities
                 {
                     ForegroundColor = color;
                     SystemWrite0(text);
+                    Flush();
                     ResetColor();
                 }
                 catch (ArgumentNullException)
                 {
                     // Some older systems dont support coloured text.
                     SystemWrite0(" (ANE) " + text);
+                    Flush();
                 }
             }
         }
@@ -1112,59 +1116,66 @@ namespace MushDLR223.Utilities
                 Output(s);
         }
 
+
+        private const string LOGLEVEL_NONE = "(none)"; 
+
+        private int m_cursorXPosition = 0;
+        //private StringBuilder m_commandLine = new StringBuilder();
+        private bool m_echo = true;
+        private List<string> m_history = new List<string>();
+
         private void Show()
         {
             lock (cmdline)
             {
-                if (y == -1 || BufferWidth == 0)
+                if (m_cursorYPosition == -1 || System.Console.BufferWidth == 0)
                     return;
 
-                int xc = prompt.Length + cp;
-                int new_x = xc % BufferWidth;
-                int new_y = y + xc / BufferWidth;
-                int end_y = y + (cmdline.Length + prompt.Length) / BufferWidth;
-                if (end_y / BufferWidth >= h)
-                    h++;
-                if (end_y >= BufferHeight) // wrap
+                int xc = prompt.Length + m_cursorXPosition;
+                int new_x = xc % System.Console.BufferWidth;
+                int new_y = m_cursorYPosition + xc / System.Console.BufferWidth;
+                int end_y = m_cursorYPosition + (cmdline.Length + prompt.Length) / System.Console.BufferWidth;
+
+                if (end_y >= System.Console.BufferHeight) // wrap
                 {
-                    y--;
+                    m_cursorYPosition--;
                     new_y--;
-                    CursorLeft = 0;
-                    CursorTop = BufferHeight - 1;
-                    SystemWriteLine0(" ");
+                    SetCursorLeft(0);
+                    SetCursorTop(System.Console.BufferHeight - 1);
+                    System.Console.WriteLine(" ");
                 }
 
-                y = SetCursorTop(y);
-                CursorLeft = 0;
+                m_cursorYPosition = SetCursorTop(m_cursorYPosition);
+                SetCursorLeft(0);
 
-                if (echo)
-                    SystemWrite0("{0}{1}", prompt, cmdline);
+                if (m_echo)
+                    System.Console.Write("{0}{1}", prompt, cmdline);
                 else
-                    SystemWrite0("{0}", prompt);
+                    System.Console.Write("{0}", prompt);
 
-                SetCursorLeft(new_x);
                 SetCursorTop(new_y);
+                SetCursorLeft(new_x);
             }
         }
+
 
         public void LockOutput()
         {
             Monitor.Enter(cmdline);
             try
             {
-                if (y != -1)
+                if (m_cursorYPosition != -1)
                 {
-                    y = SetCursorTop(y);
-                    CursorLeft = 0;
+                    m_cursorYPosition = SetCursorTop(m_cursorYPosition);
+                    System.Console.CursorLeft = 0;
 
                     int count = cmdline.Length + prompt.Length;
 
                     while (count-- > 0)
-                        SystemWrite0(" ");
+                        System.Console.Write(" ");
 
-                    y = SetCursorTop(y);
-                    CursorLeft = 0;
-
+                    m_cursorYPosition = SetCursorTop(m_cursorYPosition);
+                    SetCursorLeft(0);
                 }
             }
             catch (Exception)
@@ -1174,44 +1185,105 @@ namespace MushDLR223.Utilities
 
         public void UnlockOutput()
         {
-            if (y != -1)
+            if (m_cursorYPosition != -1)
             {
-                y = CursorTop;
+                m_cursorYPosition = System.Console.CursorTop;
                 Show();
             }
             Monitor.Exit(cmdline);
         }
 
+        static public void WriteColorTextNEW(ConsoleColor color, string sender)
+        {
+            try
+            {
+                lock (m_syncRoot)
+                {
+                    try
+                    {
+                        System.Console.ForegroundColor = color;
+                        System.Console.Write(sender);
+                        System.Console.ResetColor();
+                    }
+                    catch (ArgumentNullException)
+                    {
+                        // Some older systems dont support coloured text.
+                        System.Console.WriteLine(sender);
+                    }
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+            }
+        }
+
+        private void WriteLocalText(string text, string level)
+        {
+            string outText = text;
+
+            if (level != LOGLEVEL_NONE)
+            {
+                string regex = @"^(?<Front>.*?)\[(?<Category>[^\]]+)\]:?(?<End>.*)";
+
+                Regex RE = new Regex(regex, RegexOptions.Multiline);
+                MatchCollection matches = RE.Matches(text);
+
+                if (matches.Count == 1)
+                {
+                    outText = matches[0].Groups["End"].Value;
+                    System.Console.Write(matches[0].Groups["Front"].Value);
+
+                    System.Console.Write("[");
+                    WriteColorText(DeriveColor(matches[0].Groups["Category"].Value),
+                            matches[0].Groups["Category"].Value);
+                    System.Console.Write("]:");
+                }
+            }
+
+            if (level == "error")
+                WriteColorText(ConsoleColor.Red, outText);
+            else if (level == "warn")
+                WriteColorText(ConsoleColor.Yellow, outText);
+            else
+                System.Console.Write(outText);
+
+            System.Console.WriteLine();
+        }
+
         public void Output(string text)
+        {
+            Output(text, LOGLEVEL_NONE);
+        }
+
+        public void Output(string text, string level)
         {
             lock (cmdline)
             {
-                if (y == -1)
+                if (m_cursorYPosition == -1)
                 {
-                    SystemWriteLine0(text);
+                    WriteLocalText(text, level);
 
                     return;
                 }
 
-                y = SetCursorTop(y);
-                CursorLeft = 0;
+                m_cursorYPosition = SetCursorTop(m_cursorYPosition);
+                SetCursorLeft(0);
 
                 int count = cmdline.Length + prompt.Length;
 
                 while (count-- > 0)
-                    SystemWrite0(" ");
+                    System.Console.Write(" ");
 
-                y = SetCursorTop(y);
-                CursorLeft = 0;
+                m_cursorYPosition = SetCursorTop(m_cursorYPosition);
+                SetCursorLeft(0);
 
-                SystemWriteLine0(text);
+                WriteLocalText(text, level);
 
-                y = CursorTop;
+                m_cursorYPosition = System.Console.CursorTop;
 
                 Show();
             }
         }
-
         private bool ContextHelp()
         {
             string[] words = Parser.Parse(cmdline.ToString());
@@ -1292,42 +1364,17 @@ namespace MushDLR223.Utilities
 
         public string ReadLine(string p, bool isCommand, bool e)
         {
-            h = 1;
-            cp = 0;
+            m_cursorXPosition = 0;
             prompt = p;
-            echo = e;
-            int historyLine = history.Count;
+            m_echo = e;
+            int historyLine = m_history.Count;
 
-            if (gui)
-            {
-                SystemWrite0("{0}", prompt);
-                string cmdinput = TheConsole.ReadLine();
-
-                if (isCommand)
-                {
-                    string[] cmd = Commands.Resolve(Parser.Parse(cmdinput));
-
-                    if (cmd.Length != 0)
-                    {
-                        int i;
-
-                        for (i = 0; i < cmd.Length; i++)
-                        {
-                            if (cmd[i].Contains(" "))
-                                cmd[i] = "\"" + cmd[i] + "\"";
-                        }
-                        return String.Empty;
-                    }
-                }
-                return cmdinput;
-            }
-
-            CursorLeft = 0; // Needed for mono
-            SystemWrite0(" "); // Needed for mono
+            SetCursorLeft(0); // Needed for mono
+            System.Console.Write(" "); // Needed for mono
 
             lock (cmdline)
             {
-                y = CursorTop;
+                m_cursorYPosition = System.Console.CursorTop;
                 cmdline.Remove(0, cmdline.Length);
             }
 
@@ -1335,44 +1382,47 @@ namespace MushDLR223.Utilities
             {
                 Show();
 
-                ConsoleKeyInfo key = TheConsole.ReadKey(true);
-                char c = key.KeyChar;
+                ConsoleKeyInfo key = System.Console.ReadKey(true);
+                char enteredChar = key.KeyChar;
 
-                if (!Char.IsControl(c))
+                if (!Char.IsControl(enteredChar))
                 {
-                    if (cp >= 318)
+                    if (m_cursorXPosition >= 318)
                         continue;
 
-                    if (c == '?' && isCommand)
+                    if (enteredChar == '?' && isCommand)
                     {
                         if (ContextHelp())
                             continue;
                     }
 
-                    cmdline.Insert(cp, c);
-                    cp++;
+                    cmdline.Insert(m_cursorXPosition, enteredChar);
+                    m_cursorXPosition++;
                 }
                 else
                 {
                     switch (key.Key)
                     {
                         case ConsoleKey.Backspace:
-                            if (cp == 0)
+                            if (m_cursorXPosition == 0)
                                 break;
-                            cmdline.Remove(cp - 1, 1);
-                            cp--;
+                            cmdline.Remove(m_cursorXPosition - 1, 1);
+                            m_cursorXPosition--;
 
-                            CursorLeft = 0;
-                            y = SetCursorTop(y);
+                            SetCursorLeft(0);
+                            m_cursorYPosition = SetCursorTop(m_cursorYPosition);
 
-                            SystemWrite0("{0}{1} ", prompt, cmdline);
+                            if (m_echo)
+                                System.Console.Write("{0}{1} ", prompt, cmdline);
+                            else
+                                System.Console.Write("{0}", prompt);
 
                             break;
                         case ConsoleKey.End:
-                            cp = cmdline.Length;
+                            m_cursorXPosition = cmdline.Length;
                             break;
                         case ConsoleKey.Home:
-                            cp = 0;
+                            m_cursorXPosition = 0;
                             break;
                         case ConsoleKey.UpArrow:
                             if (historyLine < 1)
@@ -1380,72 +1430,79 @@ namespace MushDLR223.Utilities
                             historyLine--;
                             LockOutput();
                             cmdline.Remove(0, cmdline.Length);
-                            cmdline.Append(history[historyLine]);
-                            cp = cmdline.Length;
+                            cmdline.Append(m_history[historyLine]);
+                            m_cursorXPosition = cmdline.Length;
                             UnlockOutput();
                             break;
                         case ConsoleKey.DownArrow:
-                            if (historyLine >= history.Count)
+                            if (historyLine >= m_history.Count)
                                 break;
                             historyLine++;
                             LockOutput();
-                            if (historyLine == history.Count)
+                            if (historyLine == m_history.Count)
                             {
                                 cmdline.Remove(0, cmdline.Length);
                             }
                             else
                             {
                                 cmdline.Remove(0, cmdline.Length);
-                                cmdline.Append(history[historyLine]);
+                                cmdline.Append(m_history[historyLine]);
                             }
-                            cp = cmdline.Length;
+                            m_cursorXPosition = cmdline.Length;
                             UnlockOutput();
                             break;
                         case ConsoleKey.LeftArrow:
-                            if (cp > 0)
-                                cp--;
+                            if (m_cursorXPosition > 0)
+                                m_cursorXPosition--;
                             break;
                         case ConsoleKey.RightArrow:
-                            if (cp < cmdline.Length)
-                                cp++;
+                            if (m_cursorXPosition < cmdline.Length)
+                                m_cursorXPosition++;
                             break;
                         case ConsoleKey.Enter:
-                            CursorLeft = 0;
-                            y = SetCursorTop(y);
+                            SetCursorLeft(0);
+                            m_cursorYPosition = SetCursorTop(m_cursorYPosition);
 
-                            SystemWriteLine0("{0}{1}", prompt, cmdline);
+                            System.Console.WriteLine();
+                            //Show();
 
                             lock (cmdline)
                             {
-                                y = -1;
+                                m_cursorYPosition = -1;
                             }
+
+                            string commandLine = cmdline.ToString();
 
                             if (isCommand)
                             {
-                                string[] cmd = Commands.Resolve(Parser.Parse(cmdline.ToString()));
+                                string[] cmd = Commands.Resolve(Parser.Parse(commandLine));
 
                                 if (cmd.Length != 0)
                                 {
-                                    int i;
+                                    int index;
 
-                                    for (i = 0; i < cmd.Length; i++)
+                                    for (index = 0; index < cmd.Length; index++)
                                     {
-                                        if (cmd[i].Contains(" "))
-                                            cmd[i] = "\"" + cmd[i] + "\"";
+                                        if (cmd[index].Contains(" "))
+                                            cmd[index] = "\"" + cmd[index] + "\"";
                                     }
                                     AddToHistory(String.Join(" ", cmd));
                                     return String.Empty;
                                 }
                             }
 
-                            AddToHistory(cmdline.ToString());
-                            return cmdline.ToString();
+                            // If we're not echoing to screen (e.g. a password) then we probably don't want it in history
+                            if (m_echo && commandLine != "")
+                                AddToHistory(commandLine);
+
+                            return commandLine;
                         default:
                             break;
                     }
                 }
             }
         }
+
 
         public static void DebugWriteLine(string format, params object[] args)
         {
@@ -1530,7 +1587,7 @@ namespace MushDLR223.Utilities
         private static void SystemWriteLine0(string format, params object[] args)
         {
             var Outputs = DLRConsole.Outputs;
-            if (Outputs.Count == 0)
+            if (Outputs.Count == 0 || IsOnMonoUnix)
             {
                 var sformat = SafeFormat(format, args);
                 if (String.IsNullOrEmpty(sformat)) return;
@@ -1567,9 +1624,10 @@ namespace MushDLR223.Utilities
         }
         private static void SystemWriteLine00(string format)
         {
-            if (IsOnMonoUnix)
+            if (IsOnMonoUnix || Outputs.Count == 0)
             {
-                CALL_SYSTEM_ERR_WRITELINE("SystemWriteLine00: " + format);
+                CALL_SYSTEM_ERR_WRITELINE(format);
+                return;
             }
             format = GetFormat(format).TrimEnd();
             PauseIfTraced(format);
@@ -1763,6 +1821,10 @@ namespace MushDLR223.Utilities
         internal static void SystemWrite000(string format)
         {
             format = GetFormat(format);
+            if (IsOnMonoUnix)
+            {
+                SystemConsole.Write(format);
+            }
             PauseIfTraced("SystemWrite00- " + format); // keep
             foreach (TextWriter o in Outputs)
             {
