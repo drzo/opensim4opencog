@@ -46,7 +46,7 @@ namespace cogbot.Actions.Inventory.Shell
                     if (n.ParentID == UUID.Zero || (n.Parent != null && n.Parent.Data.Name == "TaskInvHolder"))
                     {
                         UUID uuid;
-                        if (UUID.TryParse(d.Name, out uuid))
+                        if (UUID.TryParse(d.Name, out uuid) || d.Name.ToLower().Contains("taskinv"))
                         {
                             remed++;
                             Client.Inventory.MoveFolder(node.Key,
@@ -62,7 +62,7 @@ namespace cogbot.Actions.Inventory.Shell
 
             }
 
-            return Success(result.ToString());;
+            return Success("remed=" + remed + " items=" + items + " total=" + found); ;
         }
 
         void PrintFolder(InventoryFolder f, StringBuilder result, int indent)
