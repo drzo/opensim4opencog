@@ -7,6 +7,7 @@ using System.Threading;
 using MushDLR223.ScriptEngines;
 using TASK = System.Threading.ThreadStart;
 using ThreadState=System.Threading.ThreadState;
+///using Thread = MushDLR223.Utilities.SafeThread;
 
 namespace MushDLR223.Utilities
 {
@@ -239,6 +240,7 @@ namespace MushDLR223.Utilities
 
         public TaskQueueHandler(object str, TimeSpan msWaitBetween, TimeSpan maxPerOperation, bool autoStart, bool doDebug)
         {
+            System.Diagnostics.Debug.Listeners.Clear();
             NeverStart = !doDebug;
             NeverStart = false;
             debugRequested = doDebug;
