@@ -66,7 +66,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="swipl32.lib"
+				AdditionalDependencies="&quot;C:\Program Files (x86)\pl\lib\swipl.lib&quot;"
 				OutputFile="$(OutDir)\$(ProjectName).dll"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -219,6 +219,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="&quot;C:\Program Files (x86)\pl\lib\swipl.lib&quot;"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -274,6 +275,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalDependencies="&quot;C:\Program Files\pl\lib\swipl.lib&quot;"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
