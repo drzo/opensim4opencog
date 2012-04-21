@@ -13,7 +13,7 @@
 % ===============================================================================================
 % Split input into many words
 % ===============================================================================================
-toString_atom(Input,Atom):-toCycApiExpression(Input,Out,[]),ctrace,string_to_atom(Atom,Out).
+toString_atom(Input,Atom):-toCycApiExpression(Input,Out,[]),atrace,string_to_atom(Atom,Out).
 
 tokenizeInput(Input,Tokens):- notrace(is_string(Input)),toString_atom(Input,Atom),!,tokenizeInput(Atom,Tokens),!.
 %%tokenizeInput(String,Tokens):-hotrace(tokenizeInput0(String,Tokens)),!.
@@ -140,7 +140,7 @@ tell('allSaid1.pl'),allSaid(That),'format'('oneSaid(~q).~n',[That]),fail. told.
 tell('allThat1.pl'),allThats(That),'format'('oneThat(~q).~n',[That]),fail. told.
 
 */
-:-['temp/allThat1.pl'],['temp/allSaid1.pl'].
+%%:-['temp/allThat1.pl'],['temp/allSaid1.pl'].
 
 findThatMatch(Aiml1,Aiml2):-allThats(Sarg,Aiml1),allSaid(Path,Aiml2),sameBindingIC(Sarg,Path).
 
