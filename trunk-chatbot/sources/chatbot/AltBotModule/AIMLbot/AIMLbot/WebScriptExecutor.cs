@@ -2,11 +2,11 @@
 using System.IO;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-//using RTParser.Utils;
 using AltAIMLbot;
 
 namespace AIMLbot
 {
+#if false
     public class WebScriptExecutor : ScriptExecutorGetter, ScriptExecutor
     {
 
@@ -84,4 +84,5 @@ namespace AIMLbot
 
         #endregion
     }
+#endif
 }
