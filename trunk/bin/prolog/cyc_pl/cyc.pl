@@ -28,6 +28,7 @@
 	 cycQuery/2,
 	 cycQuery/6,
 	 cycQuery/8,
+         sublTransaction/2,
 	 toMarkUp/4,
 	 cycAssert/1,
 	 cycAssert/2,
@@ -169,8 +170,8 @@
       canTrace/0, 
       ctrace/0,
       isConsole/0,
-      multi_transparent/1
-
+      multi_transparent/1,
+      isCycConstantMade/1
 	 ]).
 :-module_transparent(user:nart/3).
 
@@ -606,6 +607,7 @@ cycInit.
      setCycOption(cycServer,'10.10.10.193':3601),
      setCycOption(cycServer,'10.10.10.198':3601),
      setCycOption(cycServer,'logicmoo.ath.cx':3601),
+     setCycOption(cycServer,'logicmoo.dyndns.org':3601),
       setCycOption(query(backchains),3),
       setCycOption(query(number),nil),
       setCycOption(query(time),20), %max ten seconds maybe?
@@ -672,7 +674,7 @@ finishCycConnection(SocketId,OutStream,InStream):-
 cycInfo:- % will add more 
    listing(cycConnectionAvalable),
    listing(cycConnectionUsed),
-%   listing(user:isCycConstantMade),
+%   listing(isCycConstantMade),
   % listing('$CycOption'),
    number_of_clauses(cycCache(_)),
    number_of_clauses(cycCacheToDo(_)).
@@ -1150,10 +1152,14 @@ readCycLTermChars(InStream,[],[constail|OuterType],ResponseTail,ResponseTypeTail
    readCycLTermChars(InStream,[],[sexp,constail|OuterType],ResponseTail,ResponseTypeTail),!.
 
 % "any sexpr"
-readCycLTermChars(InStream,[],[sexp|OuterType],ResponseOut,ResponseType):-
-   peek_code(InStream,Start),
-   readCycLTermCharsUntil(Start,InStream,Response,Type),
-   debugFmt('cyc>~s (~w)',[Response,Type]).
+readCycLTermChars(InStream,[],[sexp|OuterType],Response,Type):-
+   readCycL(InStream,Response),Type = vary,
+   debugFmt('cycl>~s (~w)',[Response,Type]),! .
+   
+% "any sexpr"
+readCycLTermChars(InStream,[],[sexp|OuterType],Response,Type):-
+   readCycLTermCharsUntil(-1,InStream,Response,Type),
+   debugFmt('cyc>~s (~w)',[Response,Type]),! .
 
 /*
 readCycLTermCharsUntil(34,InStream,Response,string):-!, % double quoted
@@ -1188,15 +1194,19 @@ readCycLTermCharsUntil(40,InStream,Trim,cons):-!,
    readCycL(InStream,[_|Trim]),
    streamClear(InStream).
 
-readCycLTermCharsUntil(Char,InStream,Trim,atom):-!,
+readCycLTermCharsUntil(Ch,InStream,Trim,atom(Ch)):-!,
   % get_code(InStream,_),
-   readCycL(InStream,[_|Trim]),
+   readCycL(InStream,Trim),
    streamClear(InStream).
 
 % needs better solution!  .01 seconds works but .001 seconds don't :(  meaning even .01 might in some circumstances be unreliable
-streamClear(InStream) :- once(catch(wait_for_input([InStream], Inputs, 0.01),E,(trace,debugFmt(E)))),Inputs=[],!.
+streamClear(InStream) :- once(catch(wait_for_input([InStream], Inputs, 0.01),_,true)),Inputs=[],!.
+%%streamClear(InStream) :- once(catch(wait_for_input([InStream], Inputs, 0.01),E,(trace,debugFmt(E)))),Inputs=[],!.
 %streamClear(InStream) :-get_code(InStream, Was),((Was == -1) -> (true);(debugFmt('FoundMore ~c ~q ~n',[Was,Was]),streamClear(InStream))),!.
 streamClear(InStream) :- get_code(InStream, _Was),( (_Was == -1) -> true ; streamClear(InStream)),!.
+
+string_to_stream(String,InStream):- string(String),string_to_atom(String,Atom),!,string_to_stream(Atom,InStream).
+string_to_stream(Atom,InStream):- atom_to_memory_file(Atom, Handle),open_memory_file(Handle,read,InStream).
 
 % ===================================================================
 %  Read until
@@ -1214,7 +1224,7 @@ readUntilUnless([Prev|Prevs],Chars,Unless,InStream,Response):-append(_,Unless,[P
    get_code_no_eof(InStream,_),
    peek_code(InStream,Next),
    append([Prev|Prevs],[Next],AllPrev),
-   readUntilUnless(AllPrev,Chars,Unless,InStream,ResponseSub).
+   readUntilUnless(AllPrev,Chars,Unless,InStream,Response).
 
 % Hit termination
 readUntilUnless(Prevs,Chars,Unless,InStream,Response):-append(Response,Chars,Prevs),!.
@@ -1224,7 +1234,7 @@ readUntilUnless([Prev|Prevs],Chars,Unless,InStream,Response):-
    get_code_no_eof(InStream,_),
    peek_code(InStream,Next),
    append([Prev|Prevs],[Next],AllPrev),
-   readUntilUnless(AllPrev,Chars,Unless,InStream,ResponseSub).
+   readUntilUnless(AllPrev,Chars,Unless,InStream,Response).
    
 
       
@@ -1515,9 +1525,12 @@ cycUnassert(CycL,Mt):-
 % ===================================================================
 
 
+cacheQueries:-fail.
 
+cycQuery(CycL):-cycQuery(CycL,'EverythingPSC').
+%%cycQuery(CycL):-cycQuery(CycL,'InferencePSC').
+%%cycQuery(CycL):-cycQuery(CycL,'(#$MtSpace #$CurrentWorldDataCollectorMt-NonHomocentric (#$MtTimeDimFn #$Now))').
 
-cycQuery(CycL):-cycQuery(CycL,'InferencePSC').
 cycQuery(CycL,Mt):-
 	 queryParams(Backchain,Number,Time,Depth),
 	 cycQuery(CycL,Mt,Backchain,Number,Time,Depth).
@@ -1527,12 +1540,12 @@ cycQuery(CycL,Mt,Backchain,Number,Time,Depth):-
       safe_numbervars(Copy,'$VAR',0,_),!,
       cycQuery(Copy,CycL,Mt,Vars,Backchain,Number,Time,Depth).
 
-cycQuery(Copy,CycL,Mt,Vars,Backchain,Number,Time,Depth):-
+cycQuery(Copy,CycL,Mt,Vars,Backchain,Number,Time,Depth):- cacheQueries,
       cached_query(Copy,Results),!,
       member(CycL,Results).
 
 %cachable?
-cycQuery(Copy,CycL,Mt,Result,Backchain,Number,Time,Depth):-cachable_query(Copy),!,
+cycQuery(Copy,CycL,Mt,Result,Backchain,Number,Time,Depth):- cacheQueries, cachable_query(Copy),!,
       findall(CycL,cycQueryReal(CycL,Mt,Result,Backchain,Number,Time,Depth),Save),
       (Save=[] -> (true,asserta(cached_query(Copy,[]))); (ground(Save)->asserta(cached_query(Copy,Save));true)),!,
       member(CycL,Save).
@@ -1596,7 +1609,7 @@ sublTransaction(Server,SubL,Result):-
    get_code(InStream,G),
    get_code(InStream,E),
    get_code(InStream,T),
-   get_code(InStream,Space),
+   consume_spaces(InStream),
    call_cleanup(
       (getTransactionSize([G,E,T],OutStream,InStream,PQSYM,SubL,Size),transGetResults(Size,OutStream,InStream,PQSYM,Result)),_,
                   (releaseTransaction(PQSYM),finishCycConnection(SocketId,OutStream,InStream))).
@@ -1628,7 +1641,7 @@ transGetResults(Size,OutStream,InStream,PQSYM,Vars):- fail,
          get_code(InStream,G),
          get_code(InStream,E),
          get_code(InStream,T),
-         get_code(InStream,Space),
+         consume_spaces(InStream),
          readUntil(10,InStream,Result),
          %releaseTransaction(Exit,PQSYM,SocketId,OutStream,InStream),
          debugFmt('~n~s',[Result]),
@@ -1639,15 +1652,16 @@ transGetResults(Size,OutStream,InStream,PQSYM,Vars):- fail,
 transGetResults(Size,OutStream,InStream,PQSYM,Result):-
       sformat(Send,'(clet ((res (car ~w )))(csetq ~w (cdr ~w))res)',[PQSYM,PQSYM,PQSYM]),      
       repeat,
+      streamClear(InStream),
       once((writel(OutStream,Send), 
       get_code(InStream,G),
       get_code(InStream,E),
       get_code(InStream,T),
-      get_code(InStream,Space),
+      consume_spaces(InStream),
       peek_code(InStream,PCode),
 
       %readUntil(10,InStream,ResultTrim),
-      readCycLTermCharsUntil(PCode,InStream,ResultTrim,Type),
+      readCycLTermCharsUntil(PCode,InStream,ResultTrim,_Type),
       debugFmt('~n~s~n',[[PCode|ResultTrim]]))),
       eachResult(PCode,InStream,Result,[PCode|ResultTrim],Cut),
               ((Cut==cut,!);(Cut==fail,!,fail);true).
@@ -1668,6 +1682,10 @@ syncCycLVars([Binding|T],[PBinding|VV]):-
       once(balanceBinding(Binding,PBinding)),
       syncCycLVars(T,VV),!.
 
+consume_wspaces(InStream):-peek_code(InStream,Space),member(Space,[32,10,13]),get_code(InStream,_),!,consume_spaces(InStream).
+consume_wspaces(_InStream).
+consume_spaces(InStream):-peek_code(InStream,32),get_code(InStream,_),!,consume_spaces(InStream).
+consume_spaces(_InStream).
 % ===================================================================
 %  SubL Transactions
 % ===================================================================
@@ -1791,22 +1809,22 @@ unquoteAtom(Atom,New):-concat_atom(LIST,'"',Atom),concat_atom(LIST,'',New),!.
 % ============================================
 
 :-dynamic_transparent(makeConstant/0).
-:-dynamic_transparent(isCycConstantMade/1).
+:-dynamic(isCycConstantMade/1).
 :-dynamic_transparent(isCycConstantNever/1).
 :-dynamic_transparent(isCycConstantNever/2).
 :-dynamic_transparent(isCycConstantGuess/1).
 :-dynamic_transparent(isCycConstantGuess/2).
 
 
-user:isCycConstantMade(isa).
-user:isCycConstantMade(or).
-user:isCycConstantMade(genls).
-user:isCycConstantMade('UniversalVocabularyMt').
-user:isCycConstantMade('BaseKB').
-user:isCycConstantMade('Collection').
-user:isCycConstantMade('Predicate').
-user:isCycConstantMade('Microtheory').
-user:isCycConstantMade(X):-constant(X,_,_,_).
+isCycConstantMade(isa).
+isCycConstantMade(or).
+isCycConstantMade(genls).
+isCycConstantMade('UniversalVocabularyMt').
+isCycConstantMade('BaseKB').
+isCycConstantMade('Collection').
+isCycConstantMade('Predicate').
+isCycConstantMade('Microtheory').
+isCycConstantMade(X):-constant(X,_,_,_).
 
 %user:isCycConstantMade(X):-nonvar(X),isCycConstantGuess(X).
 
@@ -2119,6 +2137,7 @@ readCycL(Stream,CHARS)  :-
 		flag('bracket_depth',_,0),
 		retractall(reading_in_comment),
 		retractall(reading_in_string),!,
+                consume_wspaces(Stream),
 		readCycLChars_p0(Stream,CHARS),!. %%,trim(CHARS,Trim).
 
 readCycLChars_p0(Stream,[]):- really_at_end_of_stream(Stream),!.

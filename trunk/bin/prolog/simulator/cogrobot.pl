@@ -15,14 +15,14 @@
    botClient/1, botClient/2,
    botClientCall/1, botClientCall/2,
    botClientCmd/1, botClientCmd/2, botClientCmd/3,
-   simObject/1, simAvatar/1, simAvDistance/3, simAsset/1,
+   simObject/1, simAvatar/1, simAvDistance/3, simAsset/1, simAccount/1,
    gridClient/1,
    resolveObjectByName/2,
    vectorAdd/3,
    distanceTo/2,
    toGlobalVect/2,
    toLocalVect/2,
-   onSimEvent/3,
+   onSimEvent/3,wasSimEvent/3,
    obj2Npl/2,
    npl2Obj/2,
    chat/1,
@@ -37,7 +37,12 @@
    simObjectColor/2
    ]).
 
+:-set_prolog_flag(double_quotes,string).
 
+atInit(Call):-term_to_atom(Call,Atom),atom_concat(Atom,'_done',Did),dynamic(Did),atInitCall(atInit(Did,Call)).
+atInitCall(Call):-at_initialization(Call),Call.
+atInit(Did,_Call):-Did,!.
+atInit(Did,Call):-assert(Did),!,Call.
 
 
 %%:- absolute_file_name('.',X),asserta(prev_dir6(X)),listing(prev_dir6).
@@ -58,22 +63,25 @@ assertIfNew(Gaf):-assert(Gaf).
 :- assertIfNew(user:file_search_path(test, '../test')).
 
 %%:- use_module(library(testsupport)).
-:-use_module(library(clipl)).
+:-use_module(library(swicli)).
 
 
-:-cliLoadAssembly('AForge.Imaging.dll').
-:-cliLoadAssembly('AForge.Imaging.Formats.dll').
+%:-atInit(cliLoadAssembly('AForge.Imaging.dll')).
+%:-atInit(cliLoadAssembly('AForge.Imaging.Formats.dll')).
 %------------------------------------------------------------------------------
 
 %% load needed modules
 
-:-use_module(library(clipl)).
+:-use_module(library(swicli)).
 %%:-use_module(library(jpl)).
 
 %------------------------------------------------------------------------------
 
 %% load the cogbot assembly
-:- current_prolog_flag(address_bits,32) -> cliLoadAssembly('Cogbot32.exe') ; cliLoadAssembly('Cogbot.exe').
+:-dynamic(loadedCogbotAssembly/0).
+loadCogbotAssembly:-loadedCogbotAssembly,!.
+loadCogbotAssembly:-assert(loadedCogbotAssembly),current_prolog_flag(address_bits,32) -> cliLoadAssembly('Cogbot32.exe') ; cliLoadAssembly('Cogbot.exe').
+:-atInit(loadCogbotAssembly).
 
 %% cache the type names
 % prevents us having to use long names for things like SimAvatar
@@ -83,7 +91,7 @@ cacheShortNames:-
   cliMembers('cogbot.Listeners.WorldObjects',_),
   cliMembers('OpenMetaverse.Primitive',_).
 
-:-cacheShortNames.
+:-atInit(cacheShortNames).
 %------------------------------------------------------------------------------
 % some type layout conversions (to make cleaner code)
 %
@@ -102,7 +110,7 @@ addLayouts:-
  %%  cliAddLayout('Guid',guid(string)),
   !.
 
-:-addLayouts.
+:-atInit(addLayouts).
 
 
 %------------------------------------------------------------------------------
@@ -265,16 +273,31 @@ listPrims:-listS(simObject).
 robotToString(C,C):-var(C).
 robotToString([],[]).
 robotToString([A|B],[AA|BB]):-robotToString(A,AA),robotToString(B,BB).
+robotToString(Obj,array(ArrayS)):-Obj='@'(_O), cliIsType(Obj,'System.Array'),cliArrayToTermList(Obj,Array),!,robotToString(Array,ArrayS).
 robotToString(Obj,list(ArrayS)):-Obj='@'(_O), cliIsType(Obj,'System.Collections.Generic.IList'('cogbot.NamedParam')),cliCall(Obj,'ToArray',[],Array),robotToString(Array,ArrayS).
-robotToString(Obj,array(ArrayS)):-Obj='@'(_O), cliIsType(Obj,'System.Array'),cliArrayToTermList(Obj,Array),robotToString(Array,ArrayS).
 robotToString(Obj,enumr(ArrayS)):-Obj='@'(_O), cliIsType(Obj,'System.Collections.IEnumerable'),cliArrayToTermList(Obj,Array),robotToString(Array,ArrayS).
 robotToString(C,AS):-compound(C),C=..[F|Args],not(member(F,['@'])),robotToString(Args,ArgS),AS=..[F|ArgS].
 robotToString(C,AS):-cliToString(C,AS).
 
+nop(_).
+
 
 %% print some events
 %%onSimEvent(_A,_B,_C):-!. % comment out this first line to print them
-onSimEvent(A,B,C):-!,assertz(wasSimEvent(A,B,C)),!.%% robotToString(C,AS),!,writeq(onSimEvent(AS)),nl.
+:-dynamic(wasSimEvent/3).
+onSimEvent(A,B,C):-contains_var("On-Log-Message",a(B,C)),!.
+onSimEvent(A,B,C):-contains_var('DATA_UPDATE',a(B,C)),!.
+onSimEvent(A,B,C):-!,nop(assertz(wasSimEvent(A,B,C))),!,robotToString(C,AS),!,writeq(onSimEvent(AS)),nl.
+
+
+%% clearSimEvent(NumToLeave):- predicate_property(wasSimEvent(_,_,_),number_of_clauses(N)),Remove is N-Num, (Remove<=0->true;( ... )).
+clearSimEvent(Num):- predicate_property(wasSimEvent(_,_,_),number_of_clauses(N)),Num>=N,!.
+clearSimEvent(Num):- retract(wasSimEvent(_,_,_)),predicate_property(wasSimEvent(_,_,_),number_of_clauses(N)),Num >= N,!.
+clearSimEvent(_Num).
+
+%% Every minute trim EventLog to 1000 entries
+clearEvents:-repeat,sleep(60),clearSimEvent(1000),fail.
+:-atInit(thread_create(clearEvents,_,[])).
 
 %%:-module_transparent(onFirstBotClient/2).
 
@@ -286,8 +309,8 @@ user:onFirstBotClient(A,B):-
    cliToString(onFirstBotClient(A-B-Obj),Objs),writeq(Objs),nl.
 
 %% register onFirstBotClient
-:- cliAddEventHandler('cogbot.ClientManager','BotClientCreated',onFirstBotClient(_,_)).
-
+registerOnFirstBotClient:- cliAddEventHandler('cogbot.ClientManager','BotClientCreated',onFirstBotClient(_,_)).
+:-atInit(registerOnFirstBotClient).
 
 %------------------------------------------------------------------------------
 % start Radegast!
@@ -296,7 +319,11 @@ user:onFirstBotClient(A,B):-
 
 runSL:-ranSL,!.
 % this is so you can reconsult this file without restarting radegast
-runSL:-asserta(ranSL),!,cliCall('ABuildStartup.Program','Main',[],_).
+runSL:-asserta(ranSL),!,
+   cliSet('MushDLR223.Utilities.DLRConsole','NoConsoleVisible','@'(true)),
+   cliSet('ABuildStartup.Program','UseApplicationExit','@'(false)),
+   cliSet('cogbot.ClientManager','noGUI','@'(true)),
+   cliCall('ABuildStartup.Program','Main',[],_).
 
 % assertIfNew is assert a new grounded atomic fact only if the predicate
 % was previously undefined
@@ -312,7 +339,9 @@ runSL:-asserta(ranSL),!,cliCall('ABuildStartup.Program','Main',[],_).
 obj2Npl(O,npl(66,O)).
 npl2Obj(npl(66,O),O).
 
-:-cliToFromRecomposer('System.Collections.Generic.IList'('cogbot.NamedParam'),'npl'(_,_),obj2Npl,npl2Obj).
+registerNamedParamRecomposer:-cliToFromRecomposer('System.Collections.Generic.IList'('cogbot.NamedParam'),'npl'(_,_),obj2Npl,npl2Obj).
+
+:-atInit(registerNamedParamRecomposer).
 
 %------------------------------------------------------------------------------
 % CLR Introspection of event handlers
@@ -334,7 +363,7 @@ resolveAvatar(Name,Name):-cliIsObject(Name),cliIsType(Name,'SimAvatar'),!.
 resolveAvatar(Name,Object):-cliIsObject(Name),cliToString(Name,String),!,resolveAvatar(String,Object).
 resolveAvatar(Name,Object):-cliCall('cogbot.Listeners.WorldObjects','GetSimAvatarFromNameIfKnown'(string),[Name],Object).
 
-%% resolveObjectByName(stop_hill_walk,O),simObjectColor(O,C),cliWriteln(C).
+%% resolveObjectByName(start_hill_walk,O),simObjectColor(O,C),cliWriteln(C).
 %% cliCall(static('cogbot.TheOpenSims.SimImageUtils'),'ToNamedColors'('OpenMetaverse.Color4'),[struct('Color4',1,0,1,0)],Named),cliCol(Named,NamedE),cliWriteln(NamedE).
 simObjectColor(A,NamedE):-simObject(A),cliCall(static('cogbot.TheOpenSims.SimImageUtils'),'ToNamedColors'('cogbot.TheOpenSims.SimObject'),[A],Named),cliCol(Named,NamedE).
 simObjectColor(A,NamedE):-fail,simObject(A),cliGet(A,textures,B),cliGet(B,faceTextures,C),cliCol(C,E),E\=='@'(null),cliGet(E,rgba,CC),

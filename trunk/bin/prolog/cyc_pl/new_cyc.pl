@@ -584,7 +584,7 @@ cycInit.
       %setCycOption(cycCFasl,'10.10.10.198':3615),
      setCycOption(cycServer,'10.10.10.193':3601),
      setCycOption(cycServer,'10.10.10.198':3601),
-     setCycOption(cycServer,'logicmoo.ath.cx':3601),
+     setCycOption(cycServer,'logicmoo.dyndns.org':3601),
       setCycOption(query(backchains),3),
       setCycOption(query(number),nil),
       setCycOption(query(time),20), %max ten seconds maybe?
@@ -4191,6 +4191,9 @@ loggerFmtReal(S,F,A):-
         writeFmtFlushed(S,F,A),
         flush_output_safe(S),!.
 
+
+ifThen(X,Y):-X,!,Y.
+ifThen(_,_).
 
 
 
