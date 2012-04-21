@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using cogbot;
@@ -277,9 +278,12 @@ namespace CogbotRadegastPluginModule
                                      });
             if (TheBot.IsLoggedInAndReady)
             {
-                RadegastInstance.Netcom.Network_LoginProgress(this,
-                                                              new LoginProgressEventArgs(LoginStatus.Success,
-                                                                                         "Cogbot already logged in", ""));
+                RadegastInstance.Netcom.GetType().GetMethod("Network_LoginProgress",
+                                                            BindingFlags.Instance | BindingFlags.NonPublic |
+                                                            BindingFlags.Public)
+                    .Invoke(RadegastInstance.Netcom,
+                            new object[]
+                                {this, new LoginProgressEventArgs(LoginStatus.Success, "Cogbot already logged in", "")});
             }
         }
 
