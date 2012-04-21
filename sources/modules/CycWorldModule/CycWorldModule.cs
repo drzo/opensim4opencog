@@ -31,6 +31,7 @@ namespace CycWorldModule
         public CycWorldModule(BotClient _parent)
             : base(_parent)
         {
+            MushDLR223.ScriptEngines.ScriptManager.AddInterpreter(new CycInterpreter(_parent));
             client = _parent;
             bool startIt = false;
             lock (oneInstanceLock)

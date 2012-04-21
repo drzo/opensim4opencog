@@ -1,6 +1,5 @@
 using System;
 using System.ComponentModel;
-using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using cogbot;
@@ -12,6 +11,7 @@ using OpenMetaverse;
 using Radegast;
 using Radegast.Netcom;
 using Settings=Radegast.Settings;
+using Thread = MushDLR223.Utilities.SafeThread;
 
 //using RadegastTab = Radegast.SleekTab;
 
@@ -277,10 +277,9 @@ namespace CogbotRadegastPluginModule
                                      });
             if (TheBot.IsLoggedInAndReady)
             {
-                RadegastInstance.Netcom.GetType().GetMethod("Network_LoginProgress",
-                                                            BindingFlags.NonPublic | BindingFlags.Instance).Invoke(
-                    RadegastInstance.Netcom,
-                    new object[] {this, new LoginProgressEventArgs(LoginStatus.Success, "Cogbot already logged in", "")});
+                RadegastInstance.Netcom.Network_LoginProgress(this,
+                                                              new LoginProgressEventArgs(LoginStatus.Success,
+                                                                                         "Cogbot already logged in", ""));
             }
         }
 

@@ -2,12 +2,9 @@
 using System.ComponentModel;
 using System.Threading;
 using System.Windows.Forms;
-using cogbot;
-using cogbot.Actions;
 using Cogbot.Library;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
-using org.opencyc.xml;
 using Radegast;
 
 using MushDLR223.ScriptEngines;

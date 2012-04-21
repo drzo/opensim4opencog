@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{EF87CF4A-6495-468E-9513-F14AD7314865}</ProjectGuid>
+    <ProjectGuid>{5E4986E9-B111-48F4-AB39-47EC8FF0B525}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon></ApplicationIcon>
@@ -87,19 +87,21 @@
     <Reference Include="System.Xml">
         <Name>System.Xml</Name>
     </Reference>
-    <Reference Include="SwiPlCs.dll">
-        <Name>SwiPlCs.dll</Name>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\main\LibCogbot\Cogbot.Library.csproj">
       <Name>Cogbot.Library</Name>
-      <Project>{8DF4C430-5CFA-4B74-BE06-99973C2366F9}</Project>
+      <Project>{CFD9D26D-0E82-42DA-8AE6-7478FA512D37}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\main\MushDLR223\MushDLR223.csproj">
       <Name>MushDLR223</Name>
-      <Project>{9081E245-7421-41E0-8399-31FE42160F69}</Project>
+      <Project>{8AD70616-77C5-4FFE-945A-1697E761F707}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\main\SWIPlCs\SwiPlCs.csproj">
+      <Name>SwiPlCs</Name>
+      <Project>{84C6E576-0CCD-43A7-830F-C5313E0EE780}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
