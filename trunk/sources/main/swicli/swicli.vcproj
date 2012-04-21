@@ -378,6 +378,20 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 		</Filter>
+		<File
+			RelativePath=".\swicli.pl"
+			DeploymentContent="true"
+			>
+			<FileConfiguration
+				Name="Debug|x64"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					CommandLine="copy swicli.pl  &quot;c:\Program Files\pl\library\&quot;"
+					Outputs=" &quot;c:\Program Files\pl\library\swicli.pl&quot;"
+				/>
+			</FileConfiguration>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
