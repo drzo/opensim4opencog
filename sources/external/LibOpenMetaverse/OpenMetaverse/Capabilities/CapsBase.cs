@@ -86,7 +86,6 @@ namespace OpenMetaverse.Http
             public RequestState(HttpWebRequest request, byte[] uploadData, int millisecondsTimeout, OpenWriteEventHandler openWriteCallback,
                 DownloadProgressEventHandler downloadProgressCallback, RequestCompletedEventHandler completedCallback)
             {
-                MushDLR223.Utilities.SafeThread.RegisterCurrentThread();
                 Request = request;
                 UploadData = uploadData;
                 MillisecondsTimeout = millisecondsTimeout;
@@ -97,15 +96,12 @@ namespace OpenMetaverse.Http
 
             public void OpenWriteCallback(HttpWebRequest request)
             {
-                MushDLR223.Utilities.SafeThread.RegisterCurrentThread();
                 OpenWriteCallback0(request);
             }
 
             public void CompletedCallback(HttpWebRequest request, HttpWebResponse response, byte[] bytes, Exception exception)
             {
-                MushDLR223.Utilities.SafeThread.RegisterCurrentThread();
                 CompletedCallback0(request, response, bytes, exception);
-                MushDLR223.Utilities.SafeThread.DeregisterCurrentThread();
             }
         }
 
@@ -187,7 +183,6 @@ namespace OpenMetaverse.Http
 
         static void OpenWrite(IAsyncResult ar)
         {
-            MushDLR223.Utilities.SafeThread.RegisterCurrentThread();
 
             RequestState state = (RequestState)ar.AsyncState;
 
@@ -215,13 +210,11 @@ namespace OpenMetaverse.Http
                 //Logger.Log.Debug("CapsBase.OpenWrite(): " + ex.Message);
                 if (state.CompletedCallback0 != null)
                     state.CompletedCallback(state.Request, null, null, ex);
-                MushDLR223.Utilities.SafeThread.DeregisterCurrentThread();
             }
         }
 
         static void GetResponse(IAsyncResult ar)
         {
-            MushDLR223.Utilities.SafeThread.RegisterCurrentThread();
             RequestState state = (RequestState)ar.AsyncState;
             HttpWebResponse response = null;
             byte[] responseData = null;
@@ -292,12 +285,10 @@ namespace OpenMetaverse.Http
 
             if (state.CompletedCallback0 != null)
                 state.CompletedCallback(state.Request, response, responseData, error);
-            MushDLR223.Utilities.SafeThread.DeregisterCurrentThread();
         }
 
         static void TimeoutCallback(object state, bool timedOut)
         {
-            MushDLR223.Utilities.SafeThread.RegisterCurrentThread();
             if (timedOut)
             {
                 RequestState requestState = state as RequestState;
