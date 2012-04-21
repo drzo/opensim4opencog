@@ -1,10 +1,271 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Threading;
+using System.Windows.Forms;
 using TASK = System.Threading.ThreadStart;
 
 namespace MushDLR223.Utilities
-{
+{    
+    public class SafeThread
+    {
+
+        /// <summary>
+        /// ?- cliGet('MushDLR223.Utilities.SafeThread','AllThreads',List),cliGet(List,'Count',C).
+        /// </summary>
+        public static ListAsSet<Thread> AllThreads = new ListAsSet<Thread>();
+        public static Dictionary<Thread, SafeThread> AllThreads2Safe = new Dictionary<Thread, SafeThread>();
+        static Thread reaper = new Thread(ReapDeadThreads);
+        public static void RegisterCurrentThread()
+        {
+            Thread thread = Thread.CurrentThread;
+            RegisterThread(thread);
+        }
+        public static void DeregisterCurrentThread()
+        {
+            DeregisterThread(Thread.CurrentThread);
+        }
+
+        static SafeThread()
+        {
+            SafeThread.ThreadAdded += dummy;
+            SafeThread.ThreadRemoved += dummy;
+            Application.ThreadException += OnThreadException;
+            Application.ThreadExit += OnThreadExit;
+
+        }
+
+        private static void dummy(Thread obj)
+        {          
+        }
+        public static event Action<Thread> ThreadAdded;
+        public static event Action<Thread> ThreadRemoved;
+        static public void RegisterThread(Thread thread)
+        {
+            if (!AllThreads.Contains(thread))
+            {
+                AllThreads.Add(thread);
+            }  else
+            {
+                
+            }        
+            if (ThreadAdded != null) ThreadAdded(thread);
+            AllThreads2Safe.Remove(thread);
+        }
+        static public void DeregisterThread(Thread thread)
+        {
+            AllThreads.Remove(thread);
+            if (ThreadRemoved != null) ThreadRemoved(thread);
+        }
+        private static void OnThreadException(object sender, ThreadExceptionEventArgs e)
+        {
+           //is it on this thread? DeregisterCurrentThread();           
+        }
+
+        private static void OnThreadExit(object sender, EventArgs e)
+        {
+            DeregisterCurrentThread();
+        }
+        public static implicit operator Thread(SafeThread st)
+        {
+            return st.AsThread;
+        }
+        public static implicit operator SafeThread(Thread st)
+        {
+            lock (AllThreads2Safe)
+            {
+                SafeThread safe;
+                if (AllThreads2Safe.TryGetValue(st, out safe))
+                {
+                    return safe;
+                }
+                return new SafeThread(st);
+            }
+        }
+        private static void ReapDeadThreads()
+        {
+            while (true)
+            {
+                Thread.Sleep(3000);
+                foreach (Thread thread in AllThreads)
+                {
+                    ThreadState state = thread.ThreadState;
+                    if (state == ThreadState.Unstarted) continue;
+                    if (state == ThreadState.Suspended) continue;
+                    if (state == ThreadState.WaitSleepJoin) continue;
+                    if (state == ThreadState.Running) continue;
+                    DeregisterThread(thread);
+                }                
+            }
+        }
+
+
+        public readonly Thread theThread;
+        public SafeThread(ThreadStart start)
+        {
+            theThread = new Thread(() =>
+                                       {
+                                           RegisterThread(theThread);
+                                           start();
+                                           DeregisterThread(Thread.CurrentThread);
+                                       });
+            lock (AllThreads2Safe) AllThreads2Safe[theThread] = this;
+        }
+
+        private SafeThread(Thread start)
+        {
+            theThread = start;
+            RegisterThread(theThread);
+            AllThreads2Safe[theThread] = this;
+        }
+
+        public static SafeThread CurrentThread
+        {
+            get { return new SafeThread(Thread.CurrentThread); }
+        }
+
+        public string Name
+        {
+            get { return theThread.Name; }
+            set
+            {
+                if (!value.StartsWith("Bless")) value = "Blessed Be" + value;
+                theThread.Name = value;
+            }
+        }
+
+        public bool IsAlive
+        {
+            get { return theThread.IsAlive; }
+        }
+        
+        public bool IsBackground
+        {
+            get { return theThread.IsBackground; }
+            set { theThread.IsBackground = value; }
+        }
+
+        public ApartmentState ApartmentState
+        {
+            get { return theThread.ApartmentState; }
+            set { theThread.ApartmentState = value; }
+        }
+
+        public Thread AsThread
+        {
+            get { return theThread; }
+        }
+
+        public ThreadPriority Priority
+        {
+            get { return theThread.Priority; }
+            set { theThread.Priority = value; }
+        }
+
+        public ThreadState ThreadState
+        {
+            get { return theThread.ThreadState; }
+        }
+
+        public override bool Equals(object obj)
+        {
+            SafeThread o = obj as SafeThread;
+            return o != null && o.theThread == theThread;
+        }
+        public static bool operator ==(SafeThread obj1, SafeThread obj2)
+        {
+            return EqualsTwo(obj1,obj2);
+        }
+
+        private static bool EqualsTwo(SafeThread one, SafeThread other)
+        {
+            if (ReferenceEquals(one, other)) return true;
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(null, one)) return false;
+            return Equals(other.theThread, one.theThread);
+        }
+
+        public static bool operator !=(SafeThread obj1, SafeThread obj2)
+        {
+            return !EqualsTwo(obj1, obj2);
+        }
+
+        public void SetApartmentState(ApartmentState state)
+        {
+            theThread.SetApartmentState(state);
+        }
+
+        public void Start()
+        {
+            if (string.IsNullOrEmpty(theThread.Name) || !theThread.Name.StartsWith("Bless"))
+            {
+                theThread.Name = "Blessed Be " + theThread.Name;
+            }
+            theThread.Start();
+        }
+
+        public static void Sleep(int i)
+        {
+            Thread.Sleep(i);
+        }
+        public static void Sleep(TimeSpan i)
+        {
+            Thread.Sleep(i);
+        }
+
+        public void Abort()
+        {
+            theThread.Abort();
+        }
+
+        public void Join()
+        {
+            theThread.Join();
+        }
+        public bool Join(TimeSpan i)
+        {
+            return theThread.Join(i);
+        }
+
+        public static void ResetAbort()
+        {
+            Thread.ResetAbort();
+        }
+
+        public void Resume()
+        {
+            theThread.Resume();
+        }
+
+        public override string ToString()
+        {
+            return theThread.ToString();
+        }
+
+        public bool Equals(SafeThread other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(other.theThread, theThread);
+        }
+
+        public override int GetHashCode()
+        {
+            return (theThread != null ? theThread.GetHashCode() : 0);
+        }
+
+        public void Interrupt()
+        {
+            theThread.Interrupt();
+        }
+
+        public void TrySetApartmentState(ApartmentState state)
+        {
+            theThread.TrySetApartmentState(state);
+        }
+
+    }
+
     /// <summary>
     /// A ThreadRunInfo contains info relating to each queued WorkItem. 
     /// </summary>

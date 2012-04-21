@@ -1,12 +1,13 @@
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{C1167694-8EF3-4539-A5C0-14F61AAB088A}</ProjectGuid>
+    <ProjectGuid>{0CCFDCD9-9749-49D1-B19C-7BC457ED8ECD}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ApplicationIcon></ApplicationIcon>
+    <ApplicationIcon>
+    </ApplicationIcon>
     <AssemblyKeyContainerName>
     </AssemblyKeyContainerName>
     <AssemblyName>MushDLR223</AssemblyName>
@@ -16,9 +17,11 @@
     <DelaySign>false</DelaySign>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder></AppDesignerFolder>
+    <AppDesignerFolder>
+    </AppDesignerFolder>
     <RootNamespace>MushDLR223</RootNamespace>
-    <StartupObject></StartupObject>
+    <StartupObject>
+    </StartupObject>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
   </PropertyGroup>
@@ -29,7 +32,8 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;VISUAL_STUDIO</DefineConstants>
-    <DocumentationFile></DocumentationFile>
+    <DocumentationFile>
+    </DocumentationFile>
     <DebugSymbols>False</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>True</Optimize>
@@ -49,7 +53,8 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;VISUAL_STUDIO</DefineConstants>
-    <DocumentationFile></DocumentationFile>
+    <DocumentationFile>
+    </DocumentationFile>
     <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>False</Optimize>
@@ -64,73 +69,61 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System">
-        <Name>System</Name>
+      <Name>System</Name>
     </Reference>
     <Reference Include="System.Core">
-        <Name>System.Core</Name>
+      <Name>System.Core</Name>
     </Reference>
     <Reference Include="System.Data">
-        <Name>System.Data</Name>
+      <Name>System.Data</Name>
     </Reference>
     <Reference Include="System.Xml">
-        <Name>System.Xml</Name>
+      <Name>System.Xml</Name>
     </Reference>
     <Reference Include="System.Web">
-        <Name>System.Web</Name>
+      <Name>System.Web</Name>
     </Reference>
     <Reference Include="System.Drawing">
-        <Name>System.Drawing</Name>
+      <Name>System.Drawing</Name>
     </Reference>
     <Reference Include="System.Windows.Forms">
-        <Name>System.Windows.Forms</Name>
+      <Name>System.Windows.Forms</Name>
     </Reference>
     <Reference Include="System.Data">
-        <Name>System.Data</Name>
-    </Reference>
-    <Reference Include="ABCL.Net.dll">
-        <Name>ABCL.Net.dll</Name>
+      <Name>System.Data</Name>
     </Reference>
     <Reference Include="log4net.dll">
-        <Name>log4net.dll</Name>
+      <Name>log4net.dll</Name>
     </Reference>
     <Reference Include="HttpServer.dll">
-        <Name>HttpServer.dll</Name>
-    </Reference>
-    <Reference Include="SwiPlCs.dll">
-        <Name>SwiPlCs.dll</Name>
+      <Name>HttpServer.dll</Name>
     </Reference>
     <Reference Include="System">
-        <Name>System</Name>
-    </Reference>
-    <Reference Include="DotLisp.dll">
-        <Name>DotLisp.dll</Name>
-    </Reference>
-    <Reference Include="OpenCyc.dll">
-        <Name>OpenCyc.dll</Name>
-    </Reference>
-    <Reference Include="IKVM.Runtime.dll">
-        <Name>IKVM.Runtime.dll</Name>
-    </Reference>
-    <Reference Include="IKVM.OpenJDK.Core.dll">
-        <Name>IKVM.OpenJDK.Core.dll</Name>
+      <Name>System</Name>
     </Reference>
     <Reference Include="Microsoft.JScript">
-        <Name>Microsoft.JScript</Name>
+      <Name>Microsoft.JScript</Name>
     </Reference>
     <Reference Include="Microsoft.Vsa">
-        <Name>Microsoft.Vsa</Name>
+      <Name>Microsoft.Vsa</Name>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\SWIPlCs\SwiPlCs.csproj">
+      <Name>SwiPlCs</Name>
+      <Project>{74E1E267-9D8D-4FF7-A4BD-B13FEA4D2E04}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\external\DotLisp\DotLisp.csproj">
+      <Name>DotLisp</Name>
+      <Project>{C0EE15AA-DFE1-458F-853C-B6A6472A32DF}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ScriptEngines\ABCLInterpreter.cs">
-    </Compile>
     <Compile Include="ScriptEngines\ClojureInterpreter.cs">
     </Compile>
     <Compile Include="ScriptEngines\CommonScriptInterpreter.cs">
-    </Compile>
-    <Compile Include="ScriptEngines\CycInterpreter.cs">
     </Compile>
     <Compile Include="ScriptEngines\DotLispInterpreter.cs">
     </Compile>
@@ -147,6 +140,8 @@
     <Compile Include="Utilities\CancellableThreadPool.cs">
     </Compile>
     <Compile Include="Utilities\ClientManagerHttpServer.cs">
+    </Compile>
+    <Compile Include="Utilities\ConfigSettingAttribute.cs">
     </Compile>
     <Compile Include="Utilities\ConsoleBase.cs">
     </Compile>
