@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{E1FA7F5C-4162-4048-B9F3-00AA658F50D0}</ProjectGuid>
+    <ProjectGuid>{FBE29320-E3AC-457A-ADAF-705F89CA6B64}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon></ApplicationIcon>
@@ -76,22 +76,22 @@
   <ItemGroup>
     <ProjectReference Include="..\..\main\LibCogbot\Cogbot.Library.csproj">
       <Name>Cogbot.Library</Name>
-      <Project>{C5404EA5-A365-40CF-B335-9C3CD2C7F5FB}</Project>
+      <Project>{8DF4C430-5CFA-4B74-BE06-99973C2366F9}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\main\MushDLR223\MushDLR223.csproj">
       <Name>MushDLR223</Name>
-      <Project>{C1167694-8EF3-4539-A5C0-14F61AAB088A}</Project>
+      <Project>{9081E245-7421-41E0-8399-31FE42160F69}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse\OpenMetaverse.csproj">
       <Name>OpenMetaverse</Name>
-      <Project>{19575429-4721-4D88-AE58-B0C80092344D}</Project>
+      <Project>{C0726C9F-1472-4501-BA0E-26C5054CA7EF}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverseTypes\OpenMetaverseTypes.csproj">
       <Name>OpenMetaverseTypes</Name>
-      <Project>{E35F8C50-6EFE-4462-9866-2F28B038D414}</Project>
+      <Project>{A312BB5F-8A9F-4800-AC23-AE8762CD14EF}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>

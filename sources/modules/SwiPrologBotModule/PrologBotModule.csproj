@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{AACB7699-2166-425D-A953-6D518C09F8F0}</ProjectGuid>
+    <ProjectGuid>{EF87CF4A-6495-468E-9513-F14AD7314865}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon></ApplicationIcon>
@@ -94,49 +94,23 @@
   <ItemGroup>
     <ProjectReference Include="..\..\main\LibCogbot\Cogbot.Library.csproj">
       <Name>Cogbot.Library</Name>
-      <Project>{BC9E9D0A-0AF3-4CE7-AA2D-0E35157E9EB8}</Project>
+      <Project>{8DF4C430-5CFA-4B74-BE06-99973C2366F9}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\main\MushDLR223\MushDLR223.csproj">
       <Name>MushDLR223</Name>
-      <Project>{0CCFDCD9-9749-49D1-B19C-7BC457ED8ECD}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
-    <ProjectReference Include="..\..\main\PathSystem3D\PathSystem3D.csproj">
-      <Name>PathSystem3D</Name>
-      <Project>{241645EC-EC4B-4370-9404-9769F1E1905F}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
-    <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse\OpenMetaverse.csproj">
-      <Name>OpenMetaverse</Name>
-      <Project>{2732F7DF-5782-4E5F-ADC7-48530C5F33AD}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
-    <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverseTypes\OpenMetaverseTypes.csproj">
-      <Name>OpenMetaverseTypes</Name>
-      <Project>{EC0F8D7E-1D8F-4175-A5B8-D4E680C8F418}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
-    <ProjectReference Include="..\..\external\DotLisp\DotLisp.csproj">
-      <Name>DotLisp</Name>
-      <Project>{226E60A3-56F2-4211-8EAA-B6DC9AF7357F}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
-    <ProjectReference Include="..\..\main\PrologScriptEngine\PrologScriptEngine.csproj">
-      <Name>PrologScriptEngine</Name>
-      <Project>{9D24C115-FB04-4BEA-8784-7544D2F2AC9D}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
-    <ProjectReference Include="..\..\external\Radegast\Radegast.csproj">
-      <Name>Radegast</Name>
-      <Project>{B55A610B-2E0F-411E-AB20-53E736CCF3DF}</Project>
+      <Project>{9081E245-7421-41E0-8399-31FE42160F69}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PrologScriptInterpreter.cs">
+    </Compile>
     <Compile Include="SwipCommand.cs">
     </Compile>
     <Compile Include="SwiPrologModule.cs">
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs">
     </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />

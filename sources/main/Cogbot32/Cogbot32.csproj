@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{ADF5B215-8C7E-45D4-BF82-7AE9808625D4}</ProjectGuid>
+    <ProjectGuid>{23C407BD-DBE4-4F55-B365-03004FC206AC}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon></ApplicationIcon>
@@ -70,7 +70,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Cogbot\Cogbot.csproj">
       <Name>Cogbot</Name>
-      <Project>{C3300926-1244-4233-B434-C3A87E303B6E}</Project>
+      <Project>{BAF03F74-2DB0-479B-83D0-7F3A88055435}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
