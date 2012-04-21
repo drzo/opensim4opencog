@@ -19,8 +19,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-            OutputDirectory="C:\Program Files (x86)\pl\bin"
-            IntermediateDirectory="C:\Program Files (x86)\pl\lib"
+			OutputDirectory="C:\Program Files (x86)\pl\bin"
+			IntermediateDirectory="C:\Program Files (x86)\pl\lib"
 			ConfigurationType="2"
 			CharacterSet="1"
 			ManagedExtensions="1"
@@ -64,7 +64,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="&quot;C:\Program Files (x86)\pl\lib\swipl.lib&quot;"
-				OutputFile="$(OutDir)\$(ProjectName).dll"
+				OutputFile="C:\Program Files\pl\bin\swicli.dll"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
@@ -96,8 +96,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-            OutputDirectory="C:\Program Files (x86)\pl\bin"
-            IntermediateDirectory="C:\Program Files (x86)\pl\lib"
+			OutputDirectory="C:\Program Files (x86)\pl\bin"
+			IntermediateDirectory="C:\Program Files (x86)\pl\lib"
 			ConfigurationType="1"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
@@ -140,6 +140,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="&quot;C:\Program Files (x86)\pl\lib\swipl.lib&quot;"
+				OutputFile="C:\Program Files\pl\bin\swicli.dll"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -224,34 +225,34 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 		</Filter>
-        <File
-            RelativePath=".\swicli.pl"
-            DeploymentContent="true"
-            >
-            <FileConfiguration
-                Name="Debug|Win32"
-                >
-                <Tool
-                    Name="VCCustomBuildTool"
-                    CommandLine="copy swicli.pl  &quot;c:\Program Files (x86)\pl\library\&quot;&#x0D;&#x0A;"
-                    Outputs=" &quot;c:\Program Files (x86)\pl\library\swicli.pl&quot;"
-                />
-            </FileConfiguration>
-        </File>
-        <File
-            RelativePath=".\swicli.pl"
-            DeploymentContent="true"
-            >
-            <FileConfiguration
-                Name="Release|Win32"
-                >
-                <Tool
-                    Name="VCCustomBuildTool"
-                    CommandLine="copy swicli.pl  &quot;c:\Program Files (x86)\pl\library\&quot;&#x0D;&#x0A;"
-                    Outputs=" &quot;c:\Program Files (x86)\pl\library\swicli.pl&quot;"
-                />
-            </FileConfiguration>
-        </File>
+		<File
+			RelativePath=".\swicli.pl"
+			DeploymentContent="true"
+			>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					CommandLine="copy swicli.pl  &quot;c:\Program Files (x86)\pl\library\&quot;&#x0D;&#x0A;"
+					Outputs=" &quot;c:\Program Files (x86)\pl\library\swicli.pl&quot;"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath=".\swicli.pl"
+			DeploymentContent="true"
+			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					CommandLine="copy swicli.pl  &quot;c:\Program Files (x86)\pl\library\&quot;&#x0D;&#x0A;"
+					Outputs=" &quot;c:\Program Files (x86)\pl\library\swicli.pl&quot;"
+				/>
+			</FileConfiguration>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
