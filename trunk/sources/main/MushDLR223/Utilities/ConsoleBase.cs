@@ -449,7 +449,7 @@ namespace MushDLR223.Utilities
                     Console.WriteLine("Environment.OSVersion.ServicePack = " + osv.ServicePack);
                 }
                 Console.WriteLine("ProcessorCount={0}", SafeCall(() => Environment.ProcessorCount));           // Number of CPU's in the machine
-                Console.WriteLine("StackTrace={0}", SafeCall(() => Environment.StackTrace));                   // Prints all functions called in order
+                //Console.WriteLine("StackTrace={0}", SafeCall(() => Environment.StackTrace));                   // Prints all functions called in order
                 Console.WriteLine("SystemDirectory={0}", SafeCall(() => Environment.SystemDirectory));         // Returns the "system" directory of the OS, not valid on Unix
                 Console.WriteLine("TickCount={0}", SafeCall(() => Environment.TickCount));                     // Number of milliseconds since the system started
                 Console.WriteLine("UserDomainName={0}", SafeCall(() => Environment.UserDomainName));           // Windows domain, Machine name on Unix
