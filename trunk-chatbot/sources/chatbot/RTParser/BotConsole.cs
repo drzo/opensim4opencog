@@ -274,6 +274,21 @@ namespace RTParser
                         UseBreakpointOnError = true;
                         continue;
                     }
+                    if (s == "--servitor")
+                    {
+                        myBot.useServitor = true;
+                        continue;
+                    }
+                    if (s == "--cycon")
+                    {
+                        myBot.CycEnabled  = true;
+                        continue;
+                    }
+                    if (s == "--cycoff")
+                    {
+                        myBot.CycEnabled = false;
+                        continue;
+                    }
                     if (s == "--nobreakpoints")
                     {
                         UseBreakpointOnError = false;
@@ -307,6 +322,9 @@ namespace RTParser
             myBot.isAcceptingUserInput = false;
             writeLine("-----------------------------------------------------------------");
             myBot.SetName(myName);
+
+            if (myBot.useServitor) myBot.updateRTP2Sevitor();
+
             myBot.isAcceptingUserInput = true;
         }
         public static void RunGUI(string[] args, RTPBot myBot, OutputDelegate writeLine)
@@ -390,19 +408,29 @@ namespace RTParser
                     }
 
                     bool myBotBotDirective = false;
-                    if (!input.StartsWith("@"))
+                    if (useServitor)
                     {
-                        //      string userJustSaid = input;
-                        input = "@locally " + myUser.UserName + " - " + input;
+                        // See what the servitor says
+                        updateRTP2Sevitor(myUser);
+                        BotAsAUser.JustSaid = servitor.respondToChat(input);
+                        updateServitor2RTP(myUser);
                     }
-                    User user = myUser;
-                    TaskQueueHandler.TimeProcess(
-                        "ROBOTCONSOLE: " + input,
-                        () =>
+                    else
+                    {
+                        if (!input.StartsWith("@"))
+                        {
+                            //      string userJustSaid = input;
+                            input = "@locally " + myUser.UserName + " - " + input;
+                        }
+                        User user = myUser;
+                        TaskQueueHandler.TimeProcess(
+                            "ROBOTCONSOLE: " + input,
+                            () =>
                             {
                                 myBotBotDirective = myBot.BotDirective(user, input, writeLine);
                             });
-                    //if (!myBotBotDirective) continue;
+                        //if (!myBotBotDirective) continue;
+                    }
                     writeLine("-----------------------------------------------------------------");
                     writeLine("{0}: {1}", myUser.UserName, myUser.JustSaid);
                     if (!WaitUntilVerbalOutput)

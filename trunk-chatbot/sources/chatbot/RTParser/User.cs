@@ -1363,6 +1363,18 @@ namespace RTParser
             return GetResult(i, false);
         }
 
+        public void setOutputSentence(int n, int sent, string data)
+        {
+            if (n >= this.Results.Count)
+            {
+                return;
+                //this.Results[n] = new   Result(this, this.bot, new Request("", this, this.bot),this);
+            }
+            Result historicResult = (Result)this.Results[n];
+            historicResult.OutputSentences[sent] = data;
+
+        }
+
         public void SetOutputSentences(string args, User responder)
         {
             args = ForOutputTemplate(args);

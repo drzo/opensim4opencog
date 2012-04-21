@@ -103,5 +103,6 @@ namespace RTParser
         IEnumerable<Unifiable> BotOutputs { get; }
 
         PrintOptions PrintOptions { get; set; }
+        void setOutputSentence(int n, int sent, string data);
     }
 }

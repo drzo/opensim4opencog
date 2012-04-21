@@ -10,6 +10,7 @@ using MushDLR223.Utilities;
 using RTParser;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
+using AIMLbot;
 
 namespace AIMLBotModule
 {
@@ -138,9 +139,9 @@ namespace AIMLBotModule
         {
             string setUser;
             DLRConsole.DebugWriteLine("<- SetUser=" + user + " lastKnownUser=" + lastKnownUser);
-            if (RTPBot.UnknowableName(user))
+            if (Bot.UnknowableName(user))
             {
-                if (RTPBot.UnknowableName(lastKnownUser))
+                if (Bot.UnknowableName(lastKnownUser))
                 {
                     DLRConsole.DebugWriteLine("THEREFORE Same persom with still unknown name (make one up)");
                     setUser = lastKnownUser = UNKNOWN_PARTENER;
@@ -153,7 +154,7 @@ namespace AIMLBotModule
             }
             else
             {
-                if (RTPBot.UnknowableName(lastKnownUser))
+                if (Bot.UnknowableName(lastKnownUser))
                 {
                     DLRConsole.DebugWriteLine("THEREFORE Same Person now known name");
                     WorldSystemModule.RenameUser(lastKnownUser, user);
@@ -183,9 +184,9 @@ namespace AIMLBotModule
 
     public class AIMLEventSubscriber : SimEventSubscriber
     {
-        private RTPBot AimlBot;
+        private Bot AimlBot;
         private readonly WorldObjectsModule World;
-        public AIMLEventSubscriber(RTPBot bot, WorldObjectsModule obj)
+        public AIMLEventSubscriber(Bot bot, WorldObjectsModule obj)
         {
             AimlBot = bot;
             World = obj;

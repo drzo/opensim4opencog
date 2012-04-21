@@ -12,11 +12,13 @@ namespace AIMLbot
         public Bot()
             : base()
         {
+            //useServitor = true;
         }
         public void loadAIMLFromFiles()
         {
             base.loadAIMLFromDefaults();
         }
+        
     }
     public class MasterUser : RTParser.UserImpl
     {

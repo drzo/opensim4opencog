@@ -27,6 +27,7 @@ using RTParser.Web;
 using Console=System.Console;
 using UPath = RTParser.Unifiable;
 using UList = System.Collections.Generic.List<RTParser.Utils.TemplateInfo>;
+using AltAIMLbot;
 
 namespace RTParser
 {
@@ -125,6 +126,8 @@ namespace RTParser
         public User ExemplarUser;
         public string NamePath;
         public string NameAsSet;
+
+
         //public Request BotAsRequestUsed = null;
         public Request GetBotRequest(string s)
         {
@@ -560,6 +563,185 @@ namespace RTParser
             return qsbase;
         }
 
+        public Servitor servitor = null;
+        public bool useServitor = false;
+        public void sayConsole(string message)
+        {
+            //Default output
+            Console.WriteLine("SERVITOR SAYS:{0}", message);
+        }
+        public void updateServitor2RTP(User activeUser)
+        {
+            if (useServitor == false) return;
+            if (servitor == null)
+            {
+                servitor = new Servitor(this.UserID, null);
+                servitor.curBot.sayProcessor = new sayProcessorDelegate(sayConsole);
+            }
+            updateServitor2RTP();
+            //User specific code (ALTBOT USER->RTPUSER  )
+            try
+            {
+                if (activeUser.Predicates != null)
+                    foreach (string key in servitor.curUser.Predicates.Keys)
+                    {
+                        string v = servitor.curUser.Predicates.grabSetting(key);
+                        activeUser.Predicates.updateSetting(key, v);
+                        Console.WriteLine("ALT->RTP Predicates[{0}] = {1}", key, v);
+                    }
+
+                int rcount = servitor.curUser.SailentResultCount;
+                for (int n = 0; n < rcount; n++)
+                {
+
+                    AltAIMLbot.Result historicResult = servitor.curUser.GetResult(n);
+                    if (historicResult == null) continue;
+                    for (int sent = 0; sent < historicResult.OutputSentences.Count; sent++)
+                    {
+                        string data = historicResult.OutputSentences[sent];
+                        activeUser.setOutputSentence(n, sent, data);
+                        Console.WriteLine("ALT->RTP setOutputSentence[{0},{1}] = {2}",n,sent,data);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(" **** ERR : {0} {1} " , e.Message , e.StackTrace);
+            }
+        }
+        public void updateServitor2RTP()
+        {
+            if (useServitor == false) return;
+            if (servitor == null)
+            {
+                servitor = new Servitor(this.UserID, null);
+                servitor.curBot.sayProcessor = new sayProcessorDelegate(sayConsole);
+            }
+
+        }
+        public void updateRTP2Sevitor(User activeUser)
+        {
+            if (useServitor == false) return;
+            if (servitor == null)
+            {
+                servitor = new Servitor(this.UserID, null);
+                servitor.curBot.sayProcessor = new sayProcessorDelegate(sayConsole);
+            }
+            updateRTP2Sevitor();
+            try
+            {
+                //User specific code (RTPUSER -> ALTBOT USER)
+                string that = activeUser.getThat(activeUser);
+                servitor.curUser.setUserID(activeUser.UserID);
+                if (activeUser.Predicates != null)
+                    foreach (string key in activeUser.Predicates.Keys)
+                    {
+                        string v = activeUser.Predicates[key];
+                        servitor.curUser.Predicates.updateSetting(key, v);
+                        Console.WriteLine("RTP->ALT Predicates[{0}] = {1}", key, v);
+                    }
+
+                int rcount = activeUser.SailentResultCount;
+                for (int n = 0; n < rcount; n++)
+                {
+
+                    Result historicResult = activeUser.GetResult(n, true, null);
+                    if (historicResult == null) continue;
+                    for (int sent = 0; sent < historicResult.OutputSentenceCount; sent++)
+                    {
+                        string data = historicResult.GetOutputSentence(sent);
+                        servitor.curUser.setOutputSentence(n, sent, data);
+                        Console.WriteLine("RTP->ALT setOutputSentence[{0},{1}] = {2}", n, sent, data);
+                    }
+                }
+                // An alternate way is at the request level
+                //   Result historicResult = activeUser.GetResult(n, true, activeUser);
+                //   AltAIMLbot .Result duplicateResult = new AltAIMLbot.Result (servitor.curUser, servitor .curBot
+                //                                              ,servitor.curBot.LastRequest);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(" **** ERR : {0} {1} ", e.Message , e.StackTrace);
+            }
+
+        }
+        public void updateRTP2Sevitor()
+        {
+            if (useServitor == false) return;
+            if (servitor==null)
+            {
+                servitor = new Servitor(this.UserID, null);
+                servitor.curBot.sayProcessor = new sayProcessorDelegate(sayConsole);
+            }
+            // fill in the blanks
+            servitor.curBot.AdminEmail = this.AdminEmail;
+            servitor.curBot.conversationStack = this.conversationStack;
+            servitor.curBot.isAcceptingUserInput = this.isAcceptingUserInput;
+            servitor.curBot.LastLogMessage = this.LastLogMessage;
+            servitor.curBot.MaxThatSize = this.MaxThatSize;
+            servitor.curBot.StartedOn = this.StartedOn;
+            servitor.curBot.TrustAIML = this.TrustAIML;
+            servitor.curBot.StartedOn = this.StartedOn;
+            servitor.curBot.GlobalSettings.updateSetting("aimldirectory", PathToAIML);
+
+            if (SharedGlobalSettings !=null) 
+            foreach (string key in SharedGlobalSettings.Keys)
+            {
+                string v = SharedGlobalSettings[key];
+                servitor.curBot.GlobalSettings.updateSetting(key, v);
+                servitor.setBBHash(key, v);
+            }
+
+            if (GlobalSettings != null)
+            foreach (string key in GlobalSettings.Keys)
+            {
+                string v = GlobalSettings[key];
+                servitor.curBot.GlobalSettings.updateSetting(key, v);
+                servitor.setBBHash(key, v);
+            }
+
+            if ((GenderSubstitutions != null) 
+                && (servitor.curBot.GenderSubstitutions.Count != GenderSubstitutions.Count))
+            foreach (string key in GenderSubstitutions.Keys)
+            {
+                string v = GenderSubstitutions[key];
+                servitor.curBot.GenderSubstitutions.updateSetting(key, v);
+            }
+
+            if ((Person2Substitutions != null)
+                && (servitor.curBot.Person2Substitutions.Count != Person2Substitutions.Count))
+                foreach (string key in Person2Substitutions.Keys)
+            {
+                string v = Person2Substitutions[key];
+                servitor.curBot.Person2Substitutions.updateSetting(key, v);
+            }
+
+            if ((PersonSubstitutions != null)
+                && (servitor.curBot.PersonSubstitutions.Count != PersonSubstitutions.Count))
+                foreach (string key in PersonSubstitutions.Keys)
+            {
+                string v = PersonSubstitutions[key];
+                servitor.curBot.PersonSubstitutions.updateSetting(key, v);
+            }
+
+            if ((InputSubstitutions != null)
+                && (servitor.curBot.InputSubstitutions.Count != InputSubstitutions.Count))
+                foreach (string key in InputSubstitutions.Keys)
+            {
+                string v = InputSubstitutions[key];
+                servitor.curBot.InputSubstitutions.updateSetting(key, v);
+            }
+
+            if ((DefaultPredicates != null)
+                && (servitor.curBot.DefaultPredicates.Count != DefaultPredicates.Count))
+                foreach (string key in DefaultPredicates.Keys)
+            {
+                string v = DefaultPredicates[key];
+                servitor.curBot.DefaultPredicates.updateSetting(key, v);
+            }
+
+            
+        }
         /// <summary>
         /// Ctor
         /// </summary>
@@ -700,6 +882,12 @@ namespace RTParser
         /// </summary>
         public void loadAIMLFromDefaults()
         {
+            if (useServitor)
+            {
+               // servitor.curBot.loadAIMLFromDefaults();
+                return;
+            }
+
         }
 
         public void loadAIMLFromDefaults0()
@@ -713,6 +901,7 @@ namespace RTParser
         /// </summary>
         public void loadAIMLFromURI(string path, Request request)
         {
+
             bool prev = request.GraphsAcceptingUserInput;
             LoaderOptions savedOptions = request.LoadOptions;
             try
@@ -728,6 +917,14 @@ namespace RTParser
             {
                 request.GraphsAcceptingUserInput = prev;
                 request.LoadOptions = savedOptions;
+            }
+            if (useServitor)
+            {
+                if (HostSystem.FileExists(path))
+                {
+                    servitor.curBot.loadAIMLFromFiles(path);
+                }
+                return;
             }
         }
 
@@ -746,9 +943,26 @@ namespace RTParser
                 // maybe loads settings files if they are there
                 string settings = HostSystem.Combine(path, "Settings.xml");
                 if (HostSystem.FileExists(settings)) loadSettingsFile(settings, request);
+                if (useServitor)
+                {
+                    if (HostSystem.FileExists(settings))
+                    {
+                        servitor.curBot.loadSettings(settings);
+                    }
+                }
                 //loading settings first
                 loadConfigs(this, path, request);
+
                 loadAIMLFromURI(path, request);
+                if (useServitor)
+                {
+                    if (HostSystem.FileExists(path))
+                    {
+
+                        servitor.curBot.loadAIMLFromFiles(path);
+                        //return;
+                    }
+                }
             }
             finally
             {
@@ -776,6 +990,14 @@ namespace RTParser
         /// <param name="filename">The originator of the XML document</param>
         public void loadAIMLFromXML(XmlDocument newAIML, LoaderOptions filename, Request request)
         {
+            if (useServitor)
+            {
+                if (HostSystem.FileExists(filename.ToString()))
+                {
+                    servitor.curBot.loadAIMLFromXML(newAIML, filename.ToString());
+                    return;
+                }
+            }
             bool prev = request.GraphsAcceptingUserInput;
             try
             {
@@ -1842,6 +2064,8 @@ The AIMLbot program.
             //new AIMLbot.User("heardselfsay", this)
             var thisBotAsUser = FindOrCreateUser(myName);
             this.BotAsUser = thisBotAsUser;
+            if (useServitor) { updateRTP2Sevitor(); }
+
             clojureInterpreter.Intern("BotAsUser", thisBotAsUser);
             thisBotAsUser.IsRoleAcct = true;
             SharedGlobalSettings = this.GlobalSettings;

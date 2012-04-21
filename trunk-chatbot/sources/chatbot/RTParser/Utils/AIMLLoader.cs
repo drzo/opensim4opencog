@@ -472,27 +472,33 @@ namespace RTParser.Utils
                 else
                     writeToLog("Processing AIML file: " + path + " from " + master);
                 master.AddFileLoaded(path);
-                AutoClosingStream tr = HostSystem.OpenRead(path);
-                try
+                if (RProcessor.useServitor)
                 {
-                    string pfile = request.Filename;
+                    RProcessor.servitor.curBot.loadAIMLFromFile(path);
+                }
+                else
+                {
+                    AutoClosingStream tr = HostSystem.OpenRead(path);
                     try
                     {
-                        request.Filename = path;
-                        loadOpts = request.LoadOptions;
-                        total += this.loadAIMLStream(tr, loadOpts);
-                        TotalCheck(pfile, total, loadOpts);
+                        string pfile = request.Filename;
+                        try
+                        {
+                            request.Filename = path;
+                            loadOpts = request.LoadOptions;
+                            total += this.loadAIMLStream(tr, loadOpts);
+                            TotalCheck(pfile, total, loadOpts);
+                        }
+                        finally
+                        {
+                            request.Filename = pfile;
+                        }
                     }
                     finally
                     {
-                        request.Filename = pfile;
+                        HostSystem.Close(tr);
                     }
                 }
-                finally
-                {
-                    HostSystem.Close(tr);
-                }
-
                 writeToLog("Loaded AIMLFile: '{0}'", path + " from " + master);
                 return total;
             }

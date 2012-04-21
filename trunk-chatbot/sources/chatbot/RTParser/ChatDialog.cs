@@ -397,6 +397,11 @@ namespace RTParser
         /// <returns>the result to be output to the user</returns>        
         public string ChatString(string rawInput, string UserGUID)
         {
+            if (useServitor)
+            {
+                return servitor.respondToChat(rawInput);
+
+            }
             return Chat(rawInput, UserGUID).Output;
         }
 
@@ -431,6 +436,15 @@ namespace RTParser
 
         public Result ChatWithRequest(Request request, Result parentResultIn)
         {
+            if (useServitor)
+            {
+                string input = request.ChatInput.OrignalRawText.ToString();
+                string answer = servitor.respondToChat(input);
+                Result result = request.CreateResult(request);
+                result.SetOutput = answer;
+                return result;
+            }
+
             User target = request.Responder;
             User user = request.Requester;
             SettingsDictionary userPredicates = user.Predicates;

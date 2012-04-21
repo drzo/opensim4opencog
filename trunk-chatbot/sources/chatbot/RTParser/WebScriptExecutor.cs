@@ -40,24 +40,43 @@ namespace RTParser.Web
             if (s == null) return new CmdResult("null cmd", false);
             s = s.Trim();
             if (s == "") return new CmdResult("empty cmd", false);
-            if (s.StartsWith("aiml"))
+            if (TheBot.useServitor)
             {
-                s = s.Substring(4).Trim();
-                if (s.StartsWith("@ "))
-                    s = "@withuser" + s.Substring(1);
+                TheBot.updateRTP2Sevitor();
+                string input = s;
+                input = input.Replace("withuser null", "");
+                input = input.Replace("aiml @" , "");
+                input = input.Replace("- ?", "");
+                string res = TheBot.servitor.respondToChat(input);
+                bool r = true;
+                if (outputDelegate != null) outputDelegate(res);
+                WriteLine(res);
+                TheBot.updateServitor2RTP();
+
+                return new CmdResult(res, r);
+
             }
-            if (!s.StartsWith("@")) s = "@" + s;
-       //     sw.WriteLine("AIMLTRACE " + s);
-            User myUser = null;// TheBot.LastUser;
-            //OutputDelegate del = outputDelegate ?? sw.WriteLine;
-            bool r = TheBot.BotDirective(myUser, s, sw.WriteLine);
-            sw.Flush();
-            string res = sw.ToString();
-            // for now legacy
-            //res = res.Replace("menevalue=", "mene value=");
+            else
+            {
+                if (s.StartsWith("aiml"))
+                {
+                    s = s.Substring(4).Trim();
+                    if (s.StartsWith("@ "))
+                        s = "@withuser" + s.Substring(1);
+                }
+                if (!s.StartsWith("@")) s = "@" + s;
+                //     sw.WriteLine("AIMLTRACE " + s);
+                User myUser = null;// TheBot.LastUser;
+                //OutputDelegate del = outputDelegate ?? sw.WriteLine;
+                bool r = TheBot.BotDirective(myUser, s, sw.WriteLine);
+                sw.Flush();
+                string res = sw.ToString();
+                // for now legacy
+                //res = res.Replace("menevalue=", "mene value=");
             if (outputDelegate != null) outputDelegate(res);
             WriteLine(res);
             return new CmdResult(res, r);
+            }
         }
 
         public CmdResult ExecuteXmlCommand(string s, object session, OutputDelegate outputDelegate)
