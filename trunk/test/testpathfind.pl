@@ -2,11 +2,12 @@
 
 
 :- use_module(test(testsupport)).
-:-use_module(library(clipl)).
+:-use_module(library(swicli)).
 :-use_module(library('simulator/cogrobot')).
 
 :-discontiguous(test_desc/2).
 :-discontiguous(test/1).
+:-discontiguous(test_desc_redo/2).
 
 :- dynamic(goMethod/1).
 
@@ -48,7 +49,7 @@ move_test(Name):-atom_concat('start_',Name,Start),atom_concat('stop_',Name,Stop)
 move_test(Time , Start , End) :-
         apiBotClientCmd(stopmoving),
 	teleportTo(Start),
-        apiBotClientCmd('remeshprim'),
+        apiBotClientCmd('remeshprim dist 50'),
         botClient(['TheSimAvatar','KillPipes'],_),
 	goByMethod(End),
         apiBotClientCmd(waitpos(Time,End)),
@@ -66,9 +67,7 @@ test_desc(clear , 'clear path 10 meters').
 test(N) :-
 	N = clear,
 	start_test(N),
-        move_test(15,
-		'annies haven/129.044327/128.206070/81.519630/',
-	        'annies haven/133.630234/132.717392/81.546028/'),
+        move_test(15,start_test_1,stop_test_1),
 	std_end(N , 17 ,2).
 
 
@@ -99,11 +98,11 @@ test(N) :-
 	N = elev_path,
 	start_test(N),
 	move_test(15 ,
-		  'annies haven/149.389313/129.028732/85.411255/',
-		  'annies haven/156.894470/137.385620/85.394775/'),
+		  start_test_5,
+		  stop_test_5),
 	std_end(N , 17 , 0).
 
-test_desc(ridge , 'On Elevated land Path').
+test_desc_redo(ridge , 'On Elevated land Path').
 test(N) :-
 	N = ridge,
 	start_test(N),
@@ -112,7 +111,7 @@ test(N) :-
 		  'stop_ridge'),
 	std_end(N , 40 , 0).
 
-test_desc(ahill , 'Arround Elevated hill').
+test_desc_redo(ahill , 'Arround Elevated hill').
 test(N) :-
 	N = ahill,
 	start_test(N),
@@ -122,7 +121,7 @@ test(N) :-
 	std_end(N , 40 , 0).
 
 
-test_desc(swim_surface , 'Swim arround the island').
+test_desc_redo(swim_surface , 'Swim arround the island').
 test(N) :-
 	N = swim_surface,
 	start_test(N),
@@ -137,8 +136,8 @@ test(N) :-
 	N = grnd_maze,
 	start_test(N),
 	move_test(30 ,
-		  'annies haven/4.813091/6.331439/27.287579/',
-		  'annies haven/26.930264/12.801470/27.149252/'),
+		  start_test_8,
+		  stop_test_8),
 	std_end(N , 34 , 2).
 
 test_desc(island_hop , 'Island hop').
@@ -148,7 +147,7 @@ test(N) :-
 	move_test(45 , start_island_hop , stop_island_hop),
 	std_end(N , 45 , 2).
 
-test_desc(hill_walk , 'Hill Walk').
+test_desc_redo(hill_walk , 'Hill Walk').
 test(N) :-
 	N = hill_walk,
 	start_test(N),
@@ -157,7 +156,7 @@ test(N) :-
 
 
 
-test_desc1(spiral , 'Spiral Tube').
+test_desc_redo(spiral , 'Spiral Tube').
 test1(N) :-
 	N = spiral,
 	start_test(N),
@@ -211,7 +210,7 @@ test(7, N) :-
 tpf_method(GoMethod) :-
 	retractall(goMethod(_)),
 	asserta(goMethod(GoMethod)),
-	cliSet('SimAvatarImpl' , 'UseTeleportFallback' , '@'(false)),
+	cliSet('SimAvatarClient' , 'GotoUseTeleportFallback' , '@'(false)),
 %	clause(testpathfind:test(Name) , _),
 	test_desc(Name , Desc),
         'format'('~n~ndoing test: ~q',[test_desc(Name , Desc)]),
@@ -239,7 +238,7 @@ tpf2 :- repeat,once(tpf),sleep(10),fail.
 %% example: ?- tpf(clear).
 tpf(Name) :-
         goMethod(GoMethod),
-	cliSet('SimAvatarImpl' , 'UseTeleportFallback' , '@'(false)),
+	cliSet('SimAvatarClient' , 'GotoUseTeleportFallback' , '@'(false)),
 	test_desc(Name , Desc),
 	doTest(Name , testpathfind:test(Name) , Results),
 	ppTest([name(Name),
