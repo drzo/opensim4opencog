@@ -7,7 +7,9 @@ using System.Xml.Serialization;
 #if USE_MUSHDLR
 using MushDLR223.Utilities;
 #endif
+#if USE_IKVM
 using Class = java.lang.Class;
+#endif
 using CycFort = SbsSW.SwiPlCs.PlTerm;
 using PrologCli = SbsSW.SwiPlCs.PrologClient;
 
@@ -56,7 +58,7 @@ namespace SbsSW.SwiPlCs
         public static BindingFlags InstanceFields = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.IgnoreCase;
 
 
-        const string ExportModule = "clipl";
+        const string ExportModule = "swicli";
 
         public static bool Warn(string text, params object[] ps)
         {
@@ -68,15 +70,15 @@ namespace SbsSW.SwiPlCs
         {
             ulong prologEvents = EventHandlerInProlog.PrologEvents;
             ulong refCount = libpl.TermRefCount;
-            CheckEngine();
-            RegisterThread(Thread.CurrentThread);
+            RegisterCurrentThread();
             try
             {
                 if (ps != null && ps.Length > 0) text = String.Format(text, ps);
             }
-            catch (Exception)
+            catch (Exception)            
             {
             }
+            DeregisterThread(Thread.CurrentThread);
             return text;
         }
 
@@ -177,11 +179,11 @@ namespace SbsSW.SwiPlCs
                 int fillAt = 0;
                 if (origin != null)
                 {
-                    args[fillAt++].FromObject((origin));
+                    args[fillAt++].FromObject(PinObject(origin));
                 }
                 for (int i = 0; i < paramz.Length; i++)
                 {
-                    args[fillAt++].FromObject((paramz[i]));
+                    args[fillAt++].FromObject(PinObject(paramz[i]));
                 }
                 bool IsVoid = returnType == typeof (void);
                 if (!IsVoid)
@@ -467,15 +469,19 @@ namespace SbsSW.SwiPlCs
                 if (d != null) return d.Method ?? d.GetType().GetMethod("Invoke");
             }
             string fn = memberSpec.Name;
-            var mi = GetMethod(c, fn, BindingFlagsALL);
-            if (mi != null) return mi;
+            MethodInfo mi = null;
+            if (arity == 0)
+            {
+                mi = GetMethod(c, fn, BindingFlagsALL);
+                if (mi != null) return mi;
+            }
             Type[] paramz = GetParamSpec(memberSpec);
             try
             {
-                mi = c.GetMethod(fn, paramz);
+                mi = c.GetMethod(fn, BindingFlagsALL, null, CallingConventions.Any, paramz, null);
                 if (mi != null) return mi;
             }
-            catch (AmbiguousMatchException e)
+            catch (/*AmbiguousMatch*/ Exception e)
             {
                 Debug("AME: " + e + " fn = " + fn);
             }
@@ -1094,6 +1100,7 @@ namespace SbsSW.SwiPlCs
                 }
                 handlerInProlog = new EventHandlerInProlog(Key);
                 PrologEventHandlers.Add(Key, handlerInProlog);
+                PinObject(handlerInProlog.Delegate);
                 fi.AddEventHandler(getInstance, handlerInProlog.Delegate);
             }
             return true;
@@ -1118,6 +1125,7 @@ namespace SbsSW.SwiPlCs
             EventHandlerInProlog handlerInProlog;
             lock (PrologEventHandlers) if (PrologEventHandlers.TryGetValue(Key, out handlerInProlog))
                 {
+                    UnPinObject(handlerInProlog.Delegate);
                     fi.RemoveEventHandler(getInstance, handlerInProlog.Delegate);
                     PrologEventHandlers.Remove(Key);
                     return true;
@@ -1263,6 +1271,14 @@ namespace SbsSW.SwiPlCs
             {
                 return null;
             }
+            catch (MissingMethodException)
+            {
+                return null;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         [PrologVisible(ModuleName = ExportModule)]
@@ -1364,7 +1380,8 @@ namespace SbsSW.SwiPlCs
             }
             object getInstance = GetInstance(valueIn);
             if (getInstance == null) return valueOut.Unify(PlTerm.PlString("null"));
-            var val = getInstance as java.lang.Object;
+#if USE_IKVM
+            object val = getInstance as java.lang.Object;
             if (val == null)
             {
                 Class c = ikvm.runtime.Util.getClassFromObject(getInstance);
@@ -1372,6 +1389,10 @@ namespace SbsSW.SwiPlCs
                 return valueOut.Unify(PlTerm.PlString(s));
             }
             return valueOut.Unify(PlTerm.PlString(val.toString()));
+#else
+            object val = getInstance;
+            return valueOut.Unify(PlTerm.PlString(val.ToString()));
+#endif
         }
 
         [PrologVisible(ModuleName = ExportModule)]

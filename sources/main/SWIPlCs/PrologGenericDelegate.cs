@@ -1,11 +1,224 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 
 namespace SbsSW.SwiPlCs
 {
+
+    /// <summary>
+    /// Same as Queue except Dequeue function blocks until there is an object to return.
+    /// Note: This class does not need to be synchronized
+    /// </summary>
+    public class BlockingQueue<T> : Queue<T>
+    {
+        private object SyncRoot;
+        private bool open = true;
+
+        /// <summary>
+        /// Create new BlockingQueue.
+        /// </summary>
+        /// <param name="col">The System.Collections.ICollection to copy elements from</param>
+        public BlockingQueue(IEnumerable<T> col)
+            : base(col)
+        {
+            SyncRoot = new object();
+            open = true;
+        }
+
+        /// <summary>
+        /// Create new BlockingQueue.
+        /// </summary>
+        /// <param name="capacity">The initial number of elements that the queue can contain</param>
+        public BlockingQueue(int capacity)
+            : base(capacity)
+        {
+            SyncRoot = new object();
+            open = true;
+        }
+
+        /// <summary>
+        /// Create new BlockingQueue.
+        /// </summary>
+        public BlockingQueue()
+            : base()
+        {
+            SyncRoot = new object();
+            open = true;
+        }
+
+        /// <summary>
+        /// BlockingQueue Destructor (Close queue, resume any waiting thread).
+        /// </summary>
+        ~BlockingQueue()
+        {
+            Close();
+        }
+
+        /// <summary>
+        /// Remove all objects from the Queue.
+        /// </summary>
+        public new void Clear()
+        {
+            lock (SyncRoot)
+            {
+                base.Clear();
+            }
+        }
+
+        /// <summary>
+        /// Remove all objects from the Queue, resume all dequeue threads.
+        /// </summary>
+        public void Close()
+        {
+            lock (SyncRoot)
+            {
+                open = false;
+                base.Clear();
+                Monitor.PulseAll(SyncRoot); // resume any waiting threads
+            }
+        }
+
+        /// <summary>
+        /// Removes and returns the object at the beginning of the Queue.
+        /// </summary>
+        /// <returns>Object in queue.</returns>
+        public new T Dequeue()
+        {
+            return Dequeue(Timeout.Infinite);
+        }
+
+        /// <summary>
+        /// Removes and returns the object at the beginning of the Queue.
+        /// </summary>
+        /// <param name="timeout">time to wait before returning</param>
+        /// <returns>Object in queue.</returns>
+        public T Dequeue(TimeSpan timeout)
+        {
+            return Dequeue(timeout.Milliseconds);
+        }
+
+        /// <summary>
+        /// Removes and returns the object at the beginning of the Queue.
+        /// </summary>
+        /// <param name="timeout">time to wait before returning (in milliseconds)</param>
+        /// <returns>Object in queue.</returns>
+        public T Dequeue(int timeout)
+        {
+            lock (SyncRoot)
+            {
+                while (open && (base.Count == 0))
+                {
+                    if (!Monitor.Wait(SyncRoot, timeout))
+                        throw new InvalidOperationException("Timeout");
+                }
+                if (open)
+                    return base.Dequeue();
+                else
+                    throw new InvalidOperationException("Queue Closed");
+            }
+        }
+
+        public bool Dequeue(int timeout, ref T obj)
+        {
+            lock (SyncRoot)
+            {
+                while (open && (base.Count == 0))
+                {
+                    if (!Monitor.Wait(SyncRoot, timeout))
+                        return false;
+                }
+                if (open)
+                {
+                    obj = base.Dequeue();
+                    return true;
+                }
+                else
+                {
+                    obj = default(T);
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Adds an object to the end of the Queue
+        /// </summary>
+        /// <param name="obj">Object to put in queue</param>
+        public new void Enqueue(string name, T obj)
+        {
+            lock (SyncRoot)
+            {
+                base.Enqueue(obj);
+                Monitor.Pulse(SyncRoot);
+            }
+        }
+
+        /// <summary>
+        /// Open Queue.
+        /// </summary>
+        public void Open()
+        {
+            lock (SyncRoot)
+            {
+                open = true;
+            }
+        }
+
+        /// <summary>
+        /// Gets flag indicating if queue has been closed.
+        /// </summary>
+        public bool Closed
+        {
+            get { return !open; }
+        }
+    }
     public abstract class PrologGenericDelegate
     {
+        public static BlockingQueue<Action> PrologEventQueue = new BlockingQueue<Action>();
+        static private void PrologEventLoop()
+        {
+            Action outgoingPacket = null;
+
+            // FIXME: This is kind of ridiculous. Port the HTB code from Simian over ASAP!
+            System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+            while (true)
+            {
+                if (PrologEventQueue.Dequeue(100, ref outgoingPacket))
+                {
+                    // Very primitive rate limiting, keeps a fixed buffer of time between each packet
+                    stopwatch.Stop();
+                    if (stopwatch.ElapsedMilliseconds < 10)
+                    {
+                        //Logger.DebugLog(String.Format("Rate limiting, last packet was {0}ms ago", ms));
+                        Thread.Sleep(10 - (int)stopwatch.ElapsedMilliseconds);
+                    }
+                    try
+                    {
+                        outgoingPacket();
+                    }
+                    catch (Exception)
+                    {
+                    }
+                    stopwatch.Start();
+                }
+            }
+        }
+
+        public static Thread PrologGenericDelegateThread;
+        static public void EnsureStated()
+        {
+            if (PrologGenericDelegateThread == null)
+            {
+                PrologGenericDelegateThread = new Thread(PrologEventLoop);
+                PrologGenericDelegateThread.Name = "PrologEventSerializer";
+                PrologGenericDelegateThread.TrySetApartmentState(ApartmentState.STA);
+                PrologGenericDelegateThread.IsBackground = true;
+                PrologClient.RegisterThread(PrologGenericDelegateThread);
+                PrologGenericDelegateThread.Start();
+            }
+        }
+
 #if USE_MUSHDLR
         public static TaskQueueHandler PrologEventQueue = new TaskQueueHandler("PrologEventQueue");
 #endif
@@ -100,52 +313,68 @@ namespace SbsSW.SwiPlCs
         // void functions 0-6
         public void GenericFun0()
         {
-            CallProlog();
+            CallPrologV();
         }
 
         public void GenericFun1<A>(A a)
         {
-            CallProlog(a);
+            CallPrologV(a);
         }
         public void GenericFun2<A, B>(A a, B b)
         {
-            CallProlog(a, b);
+            CallPrologV(a, b);
         }
         public void GenericFun3<A, B, C>(A a, B b, C c)
         {
-            CallProlog(a, b, c);
+            CallPrologV(a, b, c);
         }
         public void GenericFun4<A, B, C, D>(A a, B b, C c, D d)
         {
-            CallProlog(a, b, c, d);
+            CallPrologV(a, b, c, d);
         }
         public void GenericFun5<A, B, C, D, E>(A a, B b, C c, D d, E e)
         {
-            CallProlog(a, b, c, d, e);
+            CallPrologV(a, b, c, d, e);
         }
         public void GenericFun6<A, B, C, D, E, F>(A a, B b, C c, D d, E e, F f)
         {
-            CallProlog(a, b, c, d, e, f);
+            CallPrologV(a, b, c, d, e, f);
         }
         public void GenericFun7<A, B, C, D, E, F, G>(A a, B b, C c, D d, E e, F f, G g)
         {
-            CallProlog(a, b, c, d, e, f, g);
+            CallPrologV(a, b, c, d, e, f, g);
         }
         public void GenericFun8<A, B, C, D, E, F, G, H>(A a, B b, C c, D d, E e, F f, G g, H h)
         {
-            CallProlog(a, b, c, d, e, f, g, h);
+            CallPrologV(a, b, c, d, e, f, g, h);
         }
 
-
-        public virtual object CallProlog(params object[] paramz)
+        public /*virtual*/ void CallPrologV(params object[] paramz)
+        {
+            if (!IsUsingGlobalQueue)
+            {
+                CallProlog0(paramz);
+                return;
+            }
+            PrologEventQueue.Open();
+            string threadName = null;// "CallProlog " + Thread.CurrentThread.Name;
+            PrologEventQueue.Enqueue(threadName, () => CallProlog0(paramz));
+            EnsureStated();
+        }
+        public /*virtual*/ object CallProlog(params object[] paramz)
         {
             if (!IsUsingGlobalQueue) return CallProlog0(paramz);
-            string threadName = "CallProlog " + Thread.CurrentThread.Name;
-#if USE_MUSHDLR
-            PrologEventQueue.Enqueue(threadName, () => CallProlog0(paramz));
-            return null;
-#endif
-            throw new MissingMemberException("No global queueing " + threadName);
+            string threadName = null;//"CallProlog " + Thread.CurrentThread.Name;
+            AutoResetEvent are = new AutoResetEvent(false);
+            object[] result = new object[1];
+            PrologEventQueue.Enqueue(threadName, () =>
+                                         {
+                                            result[0] = CallProlog0(paramz);
+                                            are.Set();
+                                         });
+            EnsureStated();
+            are.WaitOne();
+            return result[0];
         }
 
         private object CallProlog0(object[] paramz)

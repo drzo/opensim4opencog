@@ -140,7 +140,7 @@ namespace SbsSW.SwiPlCs
                     m_hLibrary = NativeMethodsLinux.LoadLibrary(fileName);
                     if (m_hLibrary.IsInvalid)
                     {
-                        Console.WriteLine("IsInvalid LoadUnmanagedLibrary " + fileName);
+                        PrologClient.ConsoleTrace("IsInvalid LoadUnmanagedLibrary " + fileName);
                        // int hr = Marshal.GetHRForLastWin32Error();
                        // Marshal.ThrowExceptionForHR(hr);
                     }
@@ -463,7 +463,7 @@ namespace SbsSW.SwiPlCs
 
         internal static void InternalError(string cause, Exception exception)
         {
-            Console.WriteLine(cause+" " + exception);
+            PrologClient.ConsoleTrace(cause+" " + exception);
             throw exception;
         }
 

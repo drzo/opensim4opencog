@@ -395,7 +395,7 @@ namespace SbsSW.SwiPlCs
 #if _DEBUG
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                PrologClient.ConsoleTrace(ex.Message);
             }
 #endif
             finally

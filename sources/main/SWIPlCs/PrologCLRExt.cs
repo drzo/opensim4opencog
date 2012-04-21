@@ -32,7 +32,14 @@ using System.Text;
 using System.Collections;
 using System.Collections.Specialized;
 using System.Data;
+#if USE_IKVM
 using java.lang;
+#endif
+#if USE_IKVM
+using Class = java.lang.Class;
+#else
+using Class = System.Type;
+#endif
 using Exception=System.Exception;
 using Object=System.Object;
 using String=System.String;
@@ -158,14 +165,18 @@ namespace SbsSW.SwiPlCs
                 Class obj = null;
                 try
                 {
+#if USE_IKVM
                     obj = Class.forName(typeName);
+#endif
                 }
                 catch (Exception e)
                 {
                 }
                 if (obj != null)
                 {
+#if USE_IKVM
                     type = ikvm.runtime.Util.getInstanceTypeFromClass((Class)obj);
+#endif
                 }
                 if (type == null)
                 {
@@ -684,7 +695,7 @@ namespace SbsSW.SwiPlCs
             catch (SystemException e)
             {
                 lastException = e;
-                Console.WriteLine("ignoring " + e.ToString());
+                PrologClient.ConsoleTrace("ignoring " + e.ToString());
             }
             MethodInfo[] methods = type.GetMethods(flags);
             if (false)
@@ -724,7 +735,7 @@ namespace SbsSW.SwiPlCs
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine("ignoring " + e.ToString());
+                        PrologClient.ConsoleTrace("ignoring " + e.ToString());
                     }
                 }
 
@@ -740,7 +751,7 @@ namespace SbsSW.SwiPlCs
                 catch (SystemException e)
                 {
                     lastException = e;
-                    Console.WriteLine("ignoring " + e.ToString());
+                    PrologClient.ConsoleTrace("ignoring " + e.ToString());
                 }
                 object result = null;
                 if (TryInvokeWithBinder(type, name, defaultBinder, argarray, target, isStatic, ref lastException,
@@ -796,7 +807,7 @@ namespace SbsSW.SwiPlCs
 
             if (lastException != null)
             {
-                Console.WriteLine("rethrowing " + lastException.ToString());
+                PrologClient.ConsoleTrace("rethrowing " + lastException.ToString());
                 throw lastException;
             }
             throw new Exception("Can't find matching method: " + name + " for: " + type.Name +

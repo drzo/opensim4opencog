@@ -5,12 +5,16 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Xml.Serialization;
-using jpl;
 #if USE_MUSHDLR
 using MushDLR223.Utilities;
 #endif
+#if USE_IKVM
+using jpl;
 using Class = java.lang.Class;
-using ArrayList=System.Collections.ArrayList;
+#else
+using Class = System.Type;
+#endif
+using ArrayList = System.Collections.ArrayList;
 using CycFort = SbsSW.SwiPlCs.PlTerm;
 using PrologCli = SbsSW.SwiPlCs.PrologClient;
 
@@ -658,8 +662,12 @@ namespace SbsSW.SwiPlCs
             // Just Mono
             t = ResolveType("Mono.Math.BigInteger");
             if (t != null) return t.GetMethod("Parse", arrayOfStringType).Invoke(null, new object[] { value });
-            // IKVM           
+            // IKVM         
+#if USE_IKVM
             return new java.math.BigInteger(value);
+#else
+            return long.Parse(value);
+#endif
         }
         static object ToBigDecimal(string value)
         {
@@ -670,8 +678,12 @@ namespace SbsSW.SwiPlCs
             // Just Mono
             t = ResolveType("Java.Math.BigDecimal");
             if (t != null) return t.GetMethod("Parse", arrayOfStringType).Invoke(null, new object[] { value });
-            // IKVM           
+            // IKVM   
+#if USE_IKVM
             return new java.math.BigDecimal(value);
+#else
+            return double.Parse(value);
+#endif        
         }
         public static Object CastTerm0(PlTerm o, Type pt)
         {
@@ -1050,7 +1062,9 @@ namespace SbsSW.SwiPlCs
                         }
                     case "void":
                         {
+#if USE_IKVM
                             if (pt == typeof(void)) return JPL.JVOID;
+#endif
                             return null;
                         }
                     default:
@@ -1637,7 +1651,9 @@ namespace SbsSW.SwiPlCs
             {
                 return libpl.PL_unify(TermRef, ((PlTerm)o).TermRef);
             }
+#if USE_IKVM
             if (o is Term) return UnifyToProlog(ToPLCS((Term)o), term);
+#endif
             if (PreserveObjectType)
             {
                 return PlSucceedOrFail(UnifyTagged(o, term));

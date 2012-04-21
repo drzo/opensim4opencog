@@ -70,8 +70,11 @@ using SbsSW.DesignByContract;
 using SbsSW.SwiPlCs.Exceptions;
 using SbsSW.SwiPlCs.Streams;
 using System.Collections.ObjectModel;
+#if USE_IKVM
 using Class=java.lang.Class;
-
+#else
+using Class = System.Type;
+#endif
 /********************************
 *	       TYPES	Comment     *
 ********************************/
@@ -391,26 +394,26 @@ namespace SbsSW.SwiPlCs
     /// <code>
     ///     PlQuery q = new PlQuery("member", new PlTermV(new PlTerm("A"), new PlTerm("[a,b,c]")));
     ///     while (q.NextSolution())
-    ///         Console.WriteLine(s[0].ToString());
+    ///         PrologClient.ConsoleTrace(s[0].ToString());
     /// </code>
     /// <para>There is an other constructor of <see cref="PlQuery"/> which simplify the sample above.</para>
     /// <code>
     ///     PlQuery q = new PlQuery("member(A, [a,b,c])");
     ///     foreach (PlTermV s in q.Solutions)
-    ///         Console.WriteLine(s[0].ToString());
+    ///         PrologClient.ConsoleTrace(s[0].ToString());
     /// </code>
     /// <para>An other way to get the results is to use <see cref="PlQuery.SolutionVariables"/> to iterate over <see cref="PlQueryVariables"/>.</para>
     /// <code>
     ///     PlQuery q = new PlQuery("member(A, [a,b,c])");
     ///     foreach (PlQueryVariables vars in q.SolutionVariables)
-    ///         Console.WriteLine(vars["A"].ToString());
+    ///         PrologClient.ConsoleTrace(vars["A"].ToString());
     /// </code>
     /// <para>It is also possible to get all solutions in a list by <see cref="PlQuery.ToList()"/>. 
     /// This could be used to work with LinQ to objects which is really nice. <see cref="PlQuery"/> and <see cref="PlQuery.ToList()"/> for further samples.</para>
     /// <code>
     ///     var results = from n in new PlQuery("member(A, [a,b,c])").ToList() select new {A = n["A"].ToString()};
     ///     foreach (var s in results)
-    ///         Console.WriteLine(s.A);
+    ///         PrologClient.ConsoleTrace(s.A);
     /// </code>
     /// </example>
     [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
@@ -467,7 +470,7 @@ namespace SbsSW.SwiPlCs
         /// <param name="plTerm">how ?</param>
         public static void DoIt(this PlTerm plTerm)
         {
-            Console.WriteLine(plTerm.ToString());
+            PrologClient.ConsoleTrace(plTerm.ToString());
         }
     }
     */
@@ -1738,7 +1741,7 @@ namespace SbsSW.SwiPlCs
             throw new PlTypeException("ulong", term);
         }
 
-
+#if USE_IKVM
         public static explicit operator java.math.BigInteger(PlTerm term)
         {
             Check.Require(term.TermRefIntern != 0);
@@ -1753,6 +1756,7 @@ namespace SbsSW.SwiPlCs
             string s = (string)term;
             return new java.math.BigDecimal(s);
         }
+#endif
 
         /// <summary>
         /// Yields the value as a C# double if PlTerm represents a Prolog integer or float. 
@@ -2444,10 +2448,12 @@ namespace SbsSW.SwiPlCs
             {
                 if (!SavedRegisterForeign.TryGetValue(key, out prev))
                 {
+                    PrologClient.PinObject(method);
                     SavedRegisterForeign[key] = method;
                     return true;
                 }
             }
+            PrologClient.PinObject(method);
             PrologClient.ConsoleWriteLine("PinDelegate: " + key + " <- " + method.Method + " from " + prev.Method +
                                     " as " + method.GetType().Name);
             return false;
@@ -2630,7 +2636,7 @@ namespace SbsSW.SwiPlCs
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    PrologClient.ConsoleTrace(e);
                     if (e is Exception) throw (Exception)e;
                     throw new Exception("SPECIAL: " + e);
                 }
@@ -2836,6 +2842,10 @@ namespace SbsSW.SwiPlCs
         private IntPtr _iEngineNumber = IntPtr.Zero;
         private IntPtr _iEngineNumberStore = IntPtr.Zero;
 
+        public IntPtr EngineNumber
+        {
+            get { return _iEngineNumber; }
+        }
 
         #region IDisposable
         // see : "Implementing a Dispose Method  [C#]" in  ms-help://MS.VSCC/MS.MSDNVS/cpguide/html/cpconimplementingdisposemethod.htm
@@ -2900,21 +2910,57 @@ namespace SbsSW.SwiPlCs
         /// </summary>
         public PlMtEngine()
         {
-            if (0 != libpl.PL_is_initialised(IntPtr.Zero, IntPtr.Zero))
+            try
             {
-                try
+                if (0 != libpl.PL_is_initialised(IntPtr.Zero, IntPtr.Zero))
                 {
-                    _iEngineNumber = libpl.PL_create_engine(IntPtr.Zero);
+                    try
+                    {
+                        _iEngineNumber = libpl.PL_create_engine(IntPtr.Zero);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw (new PlException("PL_create_engine : " + ex.Message));
+                    }
                 }
-                catch (Exception ex)
+                else
                 {
-                    throw (new PlException("PL_create_engine : " + ex.Message));
+                    throw new PlLibException("There is no PlEngine initialized");
                 }
-            }
-            else
+            } catch(Exception e)
             {
-                throw new PlLibException("There is no PlEngine initialized");
+                throw new PlLibException("new PlEngine: " + e.Message + " " + e.StackTrace);
             }
+        }
+
+        public PlMtEngine(IntPtr engineNumber)
+        {
+            _iEngineNumber = engineNumber;
+        }
+
+        // override object.Equals
+        public override bool Equals(object obj)
+        {
+            //       
+            // See the full list of guidelines at
+            //   http://go.microsoft.com/fwlink/?LinkID=85237  
+            // and also the guidance for operator== at
+            //   http://go.microsoft.com/fwlink/?LinkId=85238
+            //
+
+            if (obj == null || GetType() != obj.GetType())
+            {
+                return false;
+            }
+            PlMtEngine other = (PlMtEngine)obj;
+            return other._iEngineNumber == _iEngineNumber;
+            
+        }
+
+// override object.GetHashCode
+        public override int GetHashCode()
+        {
+            return _iEngineNumber.GetHashCode();
         }
 
         /// <summary>

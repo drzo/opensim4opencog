@@ -8,6 +8,9 @@ using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Xml.Serialization;
+using SbsSW.SwiPlCs.Callback;
+using SbsSW.SwiPlCs.Exceptions;
+#if USE_IKVM
 using ikvm.extensions;
 using IKVM.Internal;
 using ikvm.runtime;
@@ -15,16 +18,13 @@ using java.net;
 using java.util;
 //using jpl;
 using jpl;
-using SbsSW.SwiPlCs.Callback;
-using SbsSW.SwiPlCs.Exceptions;
-using SbsSW.SwiPlCs.Streams;
-using System.Windows.Forms;
 using Hashtable = java.util.Hashtable;
 using ClassLoader = java.lang.ClassLoader;
 using Class = java.lang.Class;
 using sun.reflect.misc;
-using ArrayList=System.Collections.ArrayList;
 using Util = ikvm.runtime.Util;
+#endif
+using ArrayList=System.Collections.ArrayList;
 using CycFort = SbsSW.SwiPlCs.PlTerm;
 using PrologCli = SbsSW.SwiPlCs.PrologClient;
 
@@ -678,6 +678,13 @@ typedef struct // define a context structure  { ... } context;
 
         public static T InvokeFromC<T>(Func<T> action, bool discard)
         {
+            lock (SafeThreads)
+            {
+                return InvokeFromC0(action, discard);  
+            } 
+        }
+        public static T InvokeFromC0<T>(Func<T> action, bool discard)
+        {
             Thread threadCurrentThread = Thread.CurrentThread;
             RegisterThread(threadCurrentThread);
             uint fid = libpl.PL_open_foreign_frame();
@@ -686,10 +693,17 @@ typedef struct // define a context structure  { ... } context;
             {
                 return action();
             }
-            finally 
+            catch (Exception e)
             {
-                if (discard) libpl.PL_discard_foreign_frame(fid);
-                DeregisterThread(threadCurrentThread);
+                throw e;
+            }
+            finally
+            {
+                if (discard)
+                {
+                    libpl.PL_discard_foreign_frame(fid);
+                    DeregisterThread(threadCurrentThread);
+                }
             }
         }
     }
