@@ -862,7 +862,7 @@
   <Reference name="System.Windows.Forms" localCopy="false"/>
   <Reference name="System.Drawing" localCopy="false"/>
   <Reference name="System.Core" localCopy="false" />
-  <Reference name="MinisatCs" localCopy="false"/>      
+  <Reference name="Iesi.Collections.Generic" localCopy="false"/>       
 
   <Files>
       <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="NEVERUSE.cs"/></Match>
@@ -924,6 +924,7 @@
       <Reference name="MinisatCs" localCopy="false"/>      
       <Reference name="Iesi.Collections.Generic" localCopy="false"/>      
       <Reference name="System.Core" localCopy="false" />
+      <Reference name="DcBus.dll" localCopy="false" />
 
       <Files>
           <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="NEVERUSE.cs"/></Match>
