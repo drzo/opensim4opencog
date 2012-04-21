@@ -602,13 +602,16 @@ namespace cogbot.TheOpenSims
         }
 
         static bool IsInited = false;
+        static bool IsIniting = false;
         static object InitLock = new object();
         static public void LoadDefaultTypes()
         {
             lock (InitLock)
             {
-                if (IsInited) return;
+                if (IsInited || IsIniting) return;
+                IsIniting = true;
                 LoadDefaultTypes0();
+                IsIniting = false;
                 IsInited = true;
             }
 
