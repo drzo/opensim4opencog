@@ -5,18 +5,22 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
+#if USE_IKVM
 using IKVM.Internal;
 using ikvm.runtime;
 using java.net;
 using jpl;
+#endif
 using SbsSW.SwiPlCs.Callback;
 using SbsSW.SwiPlCs.Exceptions;
 using SbsSW.SwiPlCs.Streams;
 using System.Windows.Forms;
+#if USE_IKVM
 using Hashtable = java.util.Hashtable;
 using ClassLoader = java.lang.ClassLoader;
 using Class = java.lang.Class;
 using sun.reflect.misc;
+#endif
 using CycFort = SbsSW.SwiPlCs.PlTerm;
 using PrologCli = SbsSW.SwiPlCs.PrologClient;
 
@@ -35,214 +39,6 @@ namespace SbsSW.SwiPlCs
             return bits == 64;
         }
 
-        public static Dictionary<Thread, IntPtr> SafeThreads = new Dictionary<Thread, IntPtr>();
-        public static Dictionary<int, Thread> engineToThread = new Dictionary<int, Thread>();
-
-        public static void RegisterMainThread()
-        {
-            lock (SafeThreads)
-            {
-                Application.ThreadExit += new EventHandler(OnThreadExit);
-                var t = Thread.CurrentThread;
-                SafeThreads.Add(t, IntPtr.Zero);
-                int self = libpl.PL_thread_self();
-                engineToThread.Add(self, t);
-            }
-        }
-
-        private static void OnThreadExit(object sender, EventArgs e)
-        {
-
-        }
-
-        public static bool OneToOneEnginesPeThread = true;
-        public static void RegisterThread(Thread thread)
-        {
-            lock (SafeThreads)
-            {
-                lock (unregisteredThreads) unregisteredThreads.Remove(thread);
-                int self = libpl.PL_thread_self();
-                IntPtr _iEngineNumber;
-                IntPtr _oiEngineNumber;
-                Thread otherThread;
-                bool threadOnceHadEngine = SafeThreads.TryGetValue(thread, out _iEngineNumber);
-                bool plthreadHasThread = engineToThread.TryGetValue(self, out otherThread);
-                bool plThreadHasDifferntThread = false;
-                if (plthreadHasThread)
-                {
-                    plThreadHasDifferntThread = otherThread != thread;
-                }
-                if (threadOnceHadEngine)
-                {
-                    if (self < 1)
-                    {
-                        Debug("self < 1: " + thread);
-                        return; //maybe mnot fine                       
-                    }
-                    if (plThreadHasDifferntThread)
-                    {
-                        Debug("plThreadHasDifferntThread " + thread);
-                        return; //maybe mnot fine       
-                    }
-                    return; // all was fine;
-                    //  if (thread == CreatorThread || true) return;
-
-                    int iRet = CheckEngine();
-
-                    return; // all was fine;
-                }
-                else
-                {
-                    // thread never had engine
-                    int ret = libpl.PL_thread_attach_engine(IntPtr.Zero);
-                    int self0 = libpl.PL_thread_self();
-                    if (ret == self0)
-                    {
-                        SafeThreads.Add(thread, IntPtr.Zero);
-                        engineToThread[self0] = thread;
-                        RegisterThread(thread);
-                        return;
-                    }
-                    _iEngineNumber = libpl.PL_create_engine(IntPtr.Zero);
-                    SafeThreads.Add(thread, _iEngineNumber);
-                    int self2 = libpl.PL_thread_self();
-                    if (self2 == -1)
-                    {
-                        if (libpl.PL_is_initialised(IntPtr.Zero, IntPtr.Zero) == libpl.PL_fail)
-                        {
-                            try
-                            {
-                                ret = libpl.PL_thread_attach_engine(_iEngineNumber);
-                                int self3 = libpl.PL_thread_self();
-                                engineToThread.Add(self3, thread);
-                                return;
-                            }
-                            catch (Exception ex)
-                            {
-                                throw (new PlException("PL_create_engine : " + ex.Message));
-                            }
-                        }
-                        else
-                        {
-                            //int ret = libpl.PL_thread_attach_engine(_iEngineNumber);
-                            IntPtr pNullPointer = IntPtr.Zero;
-                            int iRet = libpl.PL_set_engine(_iEngineNumber, ref pNullPointer);
-                            switch (iRet)
-                            {
-                                case libpl.PL_ENGINE_SET:
-                                    {
-                                        int self4 = libpl.PL_thread_self();
-                                        engineToThread.Add(self4, thread);
-                                        return; // all is fine!
-                                    }
-                                case libpl.PL_ENGINE_INVAL: throw (new PlLibException("PlSetEngine returns Invalid")); //break;
-                                case libpl.PL_ENGINE_INUSE: throw (new PlLibException("PlSetEngine returns it is used by an other thread")); //break;
-                                default: throw (new PlLibException("Unknown return from PlSetEngine"));
-                            }
-                            int self3 = libpl.PL_thread_self();
-                            engineToThread.Add(self3, thread);
-                        }
-                        return;
-                    }
-
-                    engineToThread.Add(self2, thread);
-                }
-                /*
-                //
-                if (self != ret)
-                {
-                    engineToThread[ret] = thread;
-                }
-
-                if (engineToThread.TryGetValue(self, out otherThread))
-                {
-                    // All good!
-                    if (otherThread == thread)
-                        return;
-                    bool othreadOnceHadEngine = SafeThreads.TryGetValue(otherThread, out _oiEngineNumber);
-                    int ret = libpl.PL_thread_attach_engine(_iEngineNumber);
-                    if (self != ret)
-                    {
-                        engineToThread[ret] = thread;
-                        //what does this mean?
-                        SafeThreads.TryGetValue(thread, out _iEngineNumber);
-                    }
-                }
-                libpl.PL_set_engine(libpl.PL_ENGINE_CURRENT, ref oldEngine);
-                if (!OneToOneEnginesPeThread)
-                {
-                }
-                SafeThreads.Add(thread, _iEngineNumber);
-                  */
-            }
-        }
-
-        private static void Debug(object plthreadhasdifferntthread)
-        {
-
-        }
-
-        public static int CheckEngine()
-        {
-            IntPtr _iEngineNumber;
-            IntPtr pNullPointer = IntPtr.Zero;
-            IntPtr PL_ENGINE_CURRENT_PTR = new IntPtr(libpl.PL_ENGINE_CURRENT); // ((PL_engine_t)0x2)
-            int iRet = libpl.PL_set_engine(PL_ENGINE_CURRENT_PTR, ref pNullPointer);
-            if (libpl.PL_ENGINE_SET == iRet) return iRet;
-            switch (iRet)
-            {
-                case libpl.PL_ENGINE_SET:
-                    {
-                        break; // all is fine!
-                    }
-                case libpl.PL_ENGINE_INVAL:
-                    throw (new PlLibException("PlSetEngine returns Invalid")); //break;
-                case libpl.PL_ENGINE_INUSE:
-                    throw (new PlLibException("PlSetEngine returns it is used by an other thread")); //break;
-                default:
-                    throw (new PlLibException("Unknown return from PlSetEngine"));
-            }
-
-            return iRet;
-        }
-
-        static readonly List<Thread> unregisteredThreads = new List<Thread>();
-        public static void DeregisterThread(Thread thread)
-        {
-            lock (unregisteredThreads) unregisteredThreads.Add(thread);
-        }
-
-        public static void ExitThread(Thread thread)
-        {
-            return;
-            lock (SafeThreads)
-            {
-                int self = libpl.PL_thread_self();
-                IntPtr _iEngineNumber;
-                if (!SafeThreads.TryGetValue(thread, out _iEngineNumber))
-                {
-                    return;
-                }
-                SafeThreads.Remove(thread);
-                if (libpl.PL_destroy_engine(_iEngineNumber) != 0)
-                {
-                    try
-                    {
-                        _iEngineNumber = libpl.PL_create_engine(IntPtr.Zero);
-                    }
-                    catch (Exception ex)
-                    {
-                        throw (new PlException("PL_create_engine : " + ex.Message));
-                    }
-                }
-            }
-        }
-
-        private static void Thread_Exit(object sender, EventArgs e)
-        {
-            
-        }
-
         /// <summary>
         /// The OS and not the .Net process
         ///  therefore "Program Files" are either for 64bit or 32bit apps
@@ -252,6 +48,7 @@ namespace SbsSW.SwiPlCs
         {
             return Is64BitRuntime() || !String.IsNullOrEmpty(Environment.GetEnvironmentVariable("ProgramFiles(x86)"));
         }
+        #if USE_IKVM
 
         internal static Term[] ToJPL(PlTermV args)
         {
@@ -273,7 +70,6 @@ namespace SbsSW.SwiPlCs
         {
             return ToFLI(args.TermRef);
         }
-
 
         internal static PlTerm ToPLCS(Term args)
         {
@@ -303,6 +99,7 @@ namespace SbsSW.SwiPlCs
             }
             return target;
         }
+#endif
 
         private static PlTermV ToPLCSV(PlTerm[] terms)
         {
@@ -333,6 +130,7 @@ namespace SbsSW.SwiPlCs
             return term.GetType().GetField(s, PrologCli.BindingFlagsALL).GetValue(term);
         }
 
+#if USE_IKVM
         private static jpl.fli.term_t ToFLI(uint hndle)
         {
             jpl.fli.term_t t = new jpl.fli.term_t();
@@ -392,6 +190,7 @@ namespace SbsSW.SwiPlCs
             }
         }
 
+#endif
         public static void SetField(object target, string name, object value)
         {
             FieldInfo field = target.GetType().GetField(name, BindingFlagsALL);
@@ -399,12 +198,13 @@ namespace SbsSW.SwiPlCs
             field.SetValue(field.IsStatic ? null : target, value);
         }
 
+#if USE_IKVM
         public static jpl.Term InModule(string s, jpl.Term o)
         {
             if (s == null || s == "" || s == "user") return o;
             return new jpl.Compound(":", new Term[] { new jpl.Atom(s), o });
         }
-
+#endif
         ///<summary>
         ///</summary>
         ///<exception cref="NotImplementedException"></exception>
@@ -495,15 +295,17 @@ namespace SbsSW.SwiPlCs
             lock (PrologIsSetupLock)
             {
                 if (PrologIsSetup) return;
+                AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
                 PrologIsSetup = true;
                 SafelyRun(SetupProlog0);
+                SafelyRun(SetupProlog2);
                 RegisterPLCSForeigns();
             }
         }
         public static void SetupProlog0()
         {
-            Console.WriteLine("SetupProlog");
-            SafelyRun(SetupIKVM);
+            PrologClient.ConsoleTrace("SetupProlog");
+          //  SafelyRun(SetupIKVM);
             if (!IsUseableSwiProlog(SwiHomeDir))
             {
                 try
@@ -588,11 +390,12 @@ namespace SbsSW.SwiPlCs
            // SafelyRun(SetupProlog1);
            // SafelyRun(SetupProlog2);
         }
+#if USE_IKVM
         public static void SetupProlog1()
         {
-            Console.WriteLine("geting lib path");
+            PrologClient.ConsoleTrace("geting lib path");
             CLASSPATH = java.lang.System.getProperty("java.class.path");
-            Console.WriteLine("GOT lib path");
+            ConsoleTrace("GOT lib path");
             string CLASSPATH0 = Environment.GetEnvironmentVariable("CLASSPATH");
 
             if (String.IsNullOrEmpty(CLASSPATH))
@@ -612,12 +415,14 @@ namespace SbsSW.SwiPlCs
             }
             java.lang.System.setProperty("java.library.path", libpath);
         }
+#endif
         static string CLASSPATH = null;
         static string libpath = null;
         public static void SetupProlog2()
         {
             try
             {
+#if USE_IKVM
                 if (!JplDisabled)
                 {
                     JPL.setNativeLibraryDir(SwiHomeDir + "/bin");
@@ -636,7 +441,7 @@ namespace SbsSW.SwiPlCs
                     }
                 }
                 SafelyRun(TestClassLoader);
-
+#endif
                 //if (IsPLWin) return;
                 try
                 {
@@ -670,7 +475,7 @@ namespace SbsSW.SwiPlCs
             if (!Directory.Exists(swiHomeDir)) return false;
             if (File.Exists(swiHomeDir + "/bin/libpl.dll"))
             {
-                Console.WriteLine("SWI too old: " + swiHomeDir + "/bin/libpl.dll");
+                ConsoleTrace("SWI too old: " + swiHomeDir + "/bin/libpl.dll");
                 return false;
             }
             if (File.Exists(swiHomeDir + "/bin/swipl.dll")) return true;
@@ -678,7 +483,7 @@ namespace SbsSW.SwiPlCs
                 !File.Exists(swiHomeDir + "/boot.prc") &&
                 !File.Exists(swiHomeDir + "/boot64.prc"))
             {
-                Console.WriteLine("RC file missing from " + swiHomeDir);
+                ConsoleTrace("RC file missing from " + swiHomeDir);
                 return false;
             }
             return true;
@@ -753,6 +558,7 @@ namespace SbsSW.SwiPlCs
                 }
             }
         }
+#if USE_IKVM
 
         private static void SetupIKVM()
         {
@@ -879,10 +685,10 @@ namespace SbsSW.SwiPlCs
                 c = ikvm.runtime.Util.getFriendlyClassFromType(s1);
                 if (c != null)
                 {
-                    Console.WriteLine("class: " + c + " from type " + s1.FullName);
+                    ConsoleTrace("class: " + c + " from type " + s1.FullName);
                     continue;
                 }
-                Console.WriteLine("cant get " + s1.FullName);
+                ConsoleTrace("cant get " + s1.FullName);
             }
 
             foreach (var s1 in new jpl.JPL().GetType().Assembly.GetTypes())
@@ -890,10 +696,10 @@ namespace SbsSW.SwiPlCs
                 c = ikvm.runtime.Util.getFriendlyClassFromType(s1);
                 if (c != null)
                 {
-                    //Console.WriteLine("" + c);
+                    //ConsoleTrace("" + c);
                     continue;
                 }
-                Console.WriteLine("cant get " + s1.FullName);
+                ConsoleTrace("cant get " + s1.FullName);
             }
             return;
         }
@@ -920,10 +726,11 @@ namespace SbsSW.SwiPlCs
             }
             return s;
         }
-
+#endif
         //[MTAThread]
         public static void Main(string[] args0)
         {
+            PingThreadFactories();
             bool demo = false;
             SetupProlog();
 
@@ -943,16 +750,16 @@ namespace SbsSW.SwiPlCs
                     using (PlQuery q = new PlQuery("father(P, C), atomic_list_concat([P,' is_father_of ',C], L)"))
                     {
                         foreach (PlTermV v in q.Solutions)
-                            Console.WriteLine(ToCSString(v));
+                            ConsoleTrace(ToCSString(v));
 
                         foreach (PlQueryVariables v in q.SolutionVariables)
-                            Console.WriteLine(v["L"].ToString());
+                            ConsoleTrace(v["L"].ToString());
 
 
-                        Console.WriteLine("all child's from uwe:");
+                        ConsoleTrace("all child's from uwe:");
                         q.Variables["P"].Unify("uwe");
                         foreach (PlQueryVariables v in q.SolutionVariables)
-                            Console.WriteLine(v["C"].ToString());
+                            ConsoleTrace(v["C"].ToString());
                     }
                     //PlQuery.PlCall("ensure_loaded(library(thread_util))");
                     //Warning: [Thread 2] Thread running "thread_run_interactor" died on exception: thread_util:attach_console/0: Undefined procedure: thread_util:win_open_console/5
@@ -965,12 +772,14 @@ namespace SbsSW.SwiPlCs
                 PlAssert("tc3:-foo3(X,Y,Z),Z,writeln(f(X,Y,Z)),X=5");
             }
 
+#if USE_IKVM
             ClassFile.ThrowFormatErrors = false;
             libpl.NoToString = true;
             //SafelyRun((() => PlCall("jpl0")));            
             //SafelyRun((() => DoQuery(new Query(new jpl.Atom("jpl0")))));
             libpl.NoToString = false;
             ClassFile.ThrowFormatErrors = true;
+#endif
             if (args0.Length > 0)
             {
                 int i = 0;
@@ -988,9 +797,10 @@ namespace SbsSW.SwiPlCs
             }
             if (!JplDisabled)
             {
+#if USE_IKVM
                 var run = new jpl.Atom("prolog");
                 while (!IsHalted) SafelyRun(() => DoQuery(new jpl.Query(run)));
-
+#endif
             }
             else
             {
@@ -1001,11 +811,11 @@ namespace SbsSW.SwiPlCs
 
 
 
-            Console.WriteLine("press enter to exit");
+            ConsoleTrace("press enter to exit");
             Console.ReadLine();
             SafelyRun((() => PlEngine.PlCleanup()));
 
-            Console.WriteLine("finshed!");
+            ConsoleTrace("finshed!");
 
 
         }
@@ -1029,6 +839,9 @@ namespace SbsSW.SwiPlCs
             CreatorThread = Thread.CurrentThread;
             RegisterMainThread();
             ShortNameType = new Dictionary<string, Type>();
+            ShortNameType["string"] = typeof(String);
+            ShortNameType["object"] = typeof(Object);
+            ShortNameType["sbyte"] = typeof(sbyte);
             //ShortNameType = new PrologBackedDictionary<string, Type>(null, "shortTypeName");
             PlForeignSwitches Nondeterministic = PlForeignSwitches.Nondeterministic;
             Fn015.Register();
@@ -1041,7 +854,7 @@ namespace SbsSW.SwiPlCs
             InternMethod(ExportModule, "loadAssembly", typeof(PrologClient).GetMethod("LoadAssembly"));
             InternMethod(null, "cwl", typeof(Console).GetMethod("WriteLine", new Type[] { typeof(string) }));
             RegisterJPLForeigns();
-            RegisterThread(CreatorThread);
+            //RegisterThread(CreatorThread);
             //PLNULL = PlTerm.PlCompound("@", PlTerm.PlAtom("null"));
             //PLVOID = PlTerm.PlCompound("@", PlTerm.PlAtom("void"));
             //PLTRUE = PlTerm.PlCompound("@", PlTerm.PlAtom("true"));
@@ -1068,7 +881,7 @@ namespace SbsSW.SwiPlCs
                                   }
                               });
 
-            PlEngine.RegisterForeign(null, "link_swiplcs", 1, new DelegateParameter1(link_swiplcs),
+            PlEngine.RegisterForeign("swicli", "link_swiplcs", 1, new DelegateParameter1(link_swiplcs),
                                      PlForeignSwitches.None);
             //JplSafeNativeMethods.install();
             JplSafeNativeMethodsCalled = true;
@@ -1132,7 +945,9 @@ jpl_jlist_demo :-
             {
                 if (!JplDisabled)
                 {
+#if USE_IKVM
                     return DoQuery(m, f, args);
+#endif
                 }
                 if (PlCsDisabled)
                 {
@@ -1157,11 +972,11 @@ jpl_jlist_demo :-
                 {
                     bool enabled = !JplSafeNativeMethodsDisabled;
                     SafelyRun(
-                        () => Console.WriteLine("JplSafeNativeMethods called again from " + term + " result=" + enabled));
+                        () => ConsoleTrace("JplSafeNativeMethods called again from " + term + " result=" + enabled));
                     return enabled;
                 }
                 JplSafeNativeMethodsCalled = true;
-                SafelyRun(() => Console.WriteLine("JplSafeNativeMethods call first time from " + term));
+                SafelyRun(() => ConsoleTrace("JplSafeNativeMethods call first time from " + term));
                 JplSafeNativeMethods.install();
                 //var v = new PlTerm("_1");
                 //JplSafeNativeMethods.jpl_c_lib_version_1_plc(v.TermRef);
@@ -1178,6 +993,7 @@ jpl_jlist_demo :-
         private static bool DoQuery(string query)
         {
             if (JplDisabled) return PlCall(query);
+#if USE_IKVM
             Query q;
             try
             {
@@ -1189,8 +1005,12 @@ jpl_jlist_demo :-
                 return false;
             }
             return DoQuery(q);
+#else
+            return PlCall(query);
+#endif
         }
 
+#if USE_IKVM
         public static bool DoQuery(string m, string f, PlTermV args)
         {
             if (JplDisabled) return PlCall(m, f, args);
@@ -1220,7 +1040,7 @@ jpl_jlist_demo :-
                     foreach (var list in ToEnumer(ht.elements()))
                     {
                         string s = "" + list;
-                        Console.WriteLine(s);
+                        ConsoleTrace(s);
                     }
                 }
                 return any;
@@ -1232,7 +1052,7 @@ jpl_jlist_demo :-
             }
 
         }
-
+#endif
         public static void ConsoleWriteLine(string text)
         {
             Console.Error.WriteLine(text);
@@ -1240,12 +1060,14 @@ jpl_jlist_demo :-
 
         public static void WriteException(Exception exception)
         {
+#if USE_IKVM
             java.lang.Exception ex = exception as java.lang.Exception;
             if (ex != null)
             {
                 ex.printStackTrace();
 
             }
+#endif
             //else
             {
                 Exception inner = exception.InnerException;
@@ -1258,7 +1080,7 @@ jpl_jlist_demo :-
 
             ConsoleWriteLine("PrologClient: " + exception);
         }
-
+#if USE_IKVM
         private static IEnumerable ToEnumer(java.util.Enumeration enumeration)
         {
             List<object> list = new List<object>();
@@ -1277,7 +1099,7 @@ jpl_jlist_demo :-
             }
             return list;
         }
-
+#endif
         private static void FooMethod(String print)
         {
             //DoQuery(new Query("asserta(jpl:jvm_ready)."));
@@ -1292,7 +1114,7 @@ jpl_jlist_demo :-
             //DoQuery(new Query(new jpl.Atom("interactor")));
             //DoQuery(new Query(new jpl.Compound("writeq", new Term[] { new jpl.Integer(1) })));
 
-            Console.WriteLine(print);
+            ConsoleTrace(print);
         }
 
         static internal long Sread(IntPtr handle, System.IntPtr buffer, long buffersize)
@@ -1343,7 +1165,7 @@ jpl_jlist_demo :-
 
         private static void WriteDebug(string s)
         {
-            Console.WriteLine(s);
+            ConsoleTrace(s);
         }
 
 

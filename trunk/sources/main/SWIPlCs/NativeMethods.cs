@@ -147,11 +147,11 @@ namespace SbsSW.SwiPlCs
         {
             if (!File.Exists(DllFileName))
             {
-                Console.WriteLine("No such file: " + DllFileName);
+                PrologClient.ConsoleTrace("No such file: " + DllFileName);
             }
             if (!File.Exists(DllFileName1))
             {
-                Console.WriteLine("No such file: " + DllFileName);
+                PrologClient.ConsoleTrace("No such file: " + DllFileName);
             }
         }
 
@@ -199,10 +199,10 @@ namespace SbsSW.SwiPlCs
 		//	 ENGINES (MT-ONLY)
 		// TYPES :  PL_engine_t			-> void *
 		//			PL_thread_attr_t	-> struct
-		[DllImport(DllFileName)]
-			// PL_EXPORT(PL_engine_t)	PL_create_engine(PL_thread_attr_t *attributes);
-		internal static extern IntPtr PL_create_engine(IntPtr attr);
-		[DllImport(DllFileName)]	// PL_EXPORT(int)		PlSetEngine(PL_engine_t engine, PL_engine_t *old);
+        [DllImport(DllFileName)]
+        // PL_EXPORT(PL_engine_t)	PL_create_engine(PL_thread_attr_t *attributes);
+        internal static extern IntPtr PL_create_engine(IntPtr attr);
+        [DllImport(DllFileName)]	// PL_EXPORT(int)		PlSetEngine(PL_engine_t engine, PL_engine_t *old);
 		internal static extern int PL_set_engine(IntPtr engine, [In, Out] ref IntPtr old);
 		[DllImport(DllFileName)]	// PL_EXPORT(int)		PL_destroy_engine(PL_engine_t engine);
 		internal static extern int PL_destroy_engine(IntPtr engine);

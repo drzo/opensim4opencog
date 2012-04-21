@@ -1,6 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+#if USE_IKVM
+using Class = java.lang.Class;
+#else
+using Class = System.Type;
+#endif
 
 namespace SbsSW.SwiPlCs
 {
@@ -40,7 +45,11 @@ namespace SbsSW.SwiPlCs
                     return o;
                 }
                 Warn("tag_to_object: {0}", s);
+#if USE_IKVM
                 return jpl.fli.Prolog.tag_to_object(s);
+#else
+                return null;
+#endif
             }
         }
         public static string object_to_tag(object o)
@@ -64,6 +73,7 @@ namespace SbsSW.SwiPlCs
                 {
                     return s;
                 }
+                PinObject(o);
                 GCHandle gch = GCHandle.Alloc(o, GCHandleType.Normal);
                 IntPtr iptr = (IntPtr)gch;
                 s = "C#" + iptr.ToInt64();
@@ -79,7 +89,7 @@ namespace SbsSW.SwiPlCs
                 }
                 if (ObjToTag.Count % 10000 == 0)
                 {
-                    Console.WriteLine("ObjToTag=" + ObjToTag);
+                    PrologClient.ConsoleTrace("ObjToTag=" + ObjToTag);
                 }
 
                 return s;
@@ -235,6 +245,38 @@ namespace SbsSW.SwiPlCs
             return RemoveTaggedObject(tag);
         }
 
+        public static object PinObject(object pinme)
+        {
+            try
+            {
+                GCHandle gch = GCHandle.Alloc(pinme, GCHandleType.Pinned);
+                GCHandle gch2 = GCHandle.Alloc(pinme, GCHandleType.Pinned);
+                if (gch != gch2)
+                {
+
+                }
+            }
+            catch (Exception)
+            {
+                GCHandle gch = GCHandle.Alloc(pinme, GCHandleType.Normal);
+            }
+            return pinme;
+        }
+        public static object UnPinObject(object pinme)
+        {
+            try
+            {
+                GCHandle gch = GCHandle.Alloc(pinme, GCHandleType.Pinned);
+                gch.Free();
+            }
+            catch (Exception)
+            {
+                GCHandle gch = GCHandle.Alloc(pinme, GCHandleType.Normal);
+                gch.Free();
+            } 
+            return pinme;
+        }
+
         private static bool RemoveTaggedObject(string tag)
         {
             lock (TagToObj)
@@ -242,6 +284,7 @@ namespace SbsSW.SwiPlCs
                 object obj;
                 if (TagToObj.TryGetValue(tag, out obj))
                 {
+                    UnPinObject(obj);
                     TagToObj.Remove(tag);
                     if (obj is IDisposable)
                     {

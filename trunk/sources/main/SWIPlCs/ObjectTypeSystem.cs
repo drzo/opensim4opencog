@@ -8,6 +8,9 @@ using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Xml.Serialization;
+using SbsSW.SwiPlCs.Callback;
+using SbsSW.SwiPlCs.Exceptions;
+#if USE_IKVM
 using ikvm.extensions;
 using IKVM.Internal;
 using ikvm.runtime;
@@ -15,16 +18,15 @@ using java.net;
 using java.util;
 //using jpl;
 using jpl;
-using SbsSW.SwiPlCs.Callback;
-using SbsSW.SwiPlCs.Exceptions;
-using SbsSW.SwiPlCs.Streams;
-using System.Windows.Forms;
 using Hashtable = java.util.Hashtable;
 using ClassLoader = java.lang.ClassLoader;
 using Class = java.lang.Class;
 using sun.reflect.misc;
-using ArrayList=System.Collections.ArrayList;
 using Util = ikvm.runtime.Util;
+#else
+using Class = System.Type;
+#endif
+using ArrayList = System.Collections.ArrayList;
 using CycFort = SbsSW.SwiPlCs.PlTerm;
 using PrologCli = SbsSW.SwiPlCs.PrologClient;
 
@@ -32,6 +34,75 @@ namespace SbsSW.SwiPlCs
 {
     public partial class PrologClient
     {
+
+        static private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            var domain = (AppDomain)sender;
+            foreach (var assembly in domain.GetAssemblies())
+            {
+                if (assembly.FullName == args.Name)
+                    return assembly;
+                if (assembly.ManifestModule.Name == args.Name)
+                    return assembly;
+            }
+            foreach (Assembly assembly in AssembliesLoaded)
+            {
+                if (assembly.FullName == args.Name)
+                    return assembly;
+                if (assembly.ManifestModule.Name == args.Name)
+                    return assembly;
+            }
+            return null;
+
+        }
+
+        public static Assembly AssemblyLoad(string assemblyName)
+        {
+            try
+            {
+                return Assembly.Load(assemblyName);
+            }
+            catch (Exception e)
+            {
+                try
+                {
+                    return Assembly.LoadFile(assemblyName);
+                }
+                catch (Exception)
+                {
+                    try
+                    {
+                        return Assembly.LoadFrom(assemblyName);
+                    }
+                    catch (Exception)
+                    {
+                        try
+                        {
+                            return Assembly.LoadFrom(assemblyName + ".dll");
+                        }
+                        catch (Exception)
+                        {
+                        }
+                        try
+                        {
+                            return Assembly.LoadFrom(assemblyName + ".exe");
+                        }
+                        catch (Exception)
+                        {
+                        }
+                        try
+                        {
+                            return Assembly.LoadWithPartialName(assemblyName);
+                        }
+                        catch (Exception)
+                        {
+                            throw e;
+                        }
+                    }
+                }
+            }
+        }
+
         public static List<Assembly> AssembliesLoaded = new List<Assembly>();
         public static List<string> AssembliesLoading = new List<string>();
         public static List<Type> TypesLoaded = new List<Type>();
@@ -65,9 +136,29 @@ namespace SbsSW.SwiPlCs
                 {
                     Assembly assemblyLoad = Assembly.Load(refed);
                     ResolveAssembly(assemblyLoad);
+                    continue;
                 }
                 catch (Exception e)
                 {
+                    var top = Path.Combine(Path.GetDirectoryName(assembly.Location), refed.Name);
+                    try
+                    {
+                        Assembly assemblyLoad = Assembly.LoadFrom(top + ".dll");
+                        ResolveAssembly(assemblyLoad);
+                        continue;
+                    }
+                    catch (Exception)
+                    {
+                    }
+                    try
+                    {
+                        Assembly assemblyLoad = Assembly.LoadFrom(top + ".exe");
+                        ResolveAssembly(assemblyLoad);
+                        continue;
+                    }
+                    catch (Exception)
+                    {
+                    }
                     Warn("LoadReferencedAssemblies:{0} caused {1}", assemblyName, e);
                 }
             }
@@ -104,6 +195,7 @@ namespace SbsSW.SwiPlCs
         /// <returns></returns>
         public static bool cliLoadAssembly(PlTerm term1)
         {
+            PingThreadFactories();
             try
             {
                 return cliLoadAssemblyUncaught(term1);
@@ -140,7 +232,7 @@ namespace SbsSW.SwiPlCs
                 Assembly assembly = null;
                 try
                 {
-                    assembly = Assembly.Load(name);
+                    assembly = AssemblyLoad(name);
                     if (assembly != null) return ResolveAssembly(assembly);
                 }
                 catch (Exception e)
@@ -318,17 +410,28 @@ namespace SbsSW.SwiPlCs
                     var c = s1;// ikvm.runtime.Util.getFriendlyClassFromType(s1);
                     if (c != null)
                     {
-                        Console.WriteLine("name:" + className + " type:" + s1.FullName + " class:" + c);
+                       // ConsoleTrace("name:" + className + " type:" + s1.FullName + " class:" + c);
                         return UnifyTagged(c, term2);
                     }
-                    Console.WriteLine("cant getFriendlyClassFromType " + s1.FullName);
+                    ConsoleTrace("cant getFriendlyClassFromType " + s1.FullName);
                     return false;
                 }
-                Console.WriteLine("cant ResolveType " + className);
+                ConsoleTrace("cant ResolveType " + className);
                 return false;
             }
-            Console.WriteLine("cant IsAtom " + term1);
+            ConsoleTrace("cant IsAtom " + term1);
             return false;
+        }
+
+        public static void ConsoleTrace(object s)
+        {
+            try
+            {
+                Console.WriteLine(s);
+            }
+            catch (Exception)
+            {
+            }  
         }
 
         [PrologVisible(ModuleName = ExportModule)]
@@ -340,17 +443,22 @@ namespace SbsSW.SwiPlCs
                 Class c = ResolveClass(className);
                 if (c != null)
                 {
-                    Console.WriteLine("cliFindClass:" + className + " class:" + c);
+                    ConsoleTrace("cliFindClass:" + className + " class:" + c);
                     string tag = object_to_tag(c);
                     return AddTagged(clazzObjectOut.TermRef, tag) != 0;
                 }
-                Console.WriteLine("cant ResolveClass " + className);
+                ConsoleTrace("cant ResolveClass " + className);
                 return false;
             }
             Type t = GetType(clazzName);
             if (t != null)
             {
-                Class c = ikvm.runtime.Util.getFriendlyClassFromType(t);
+                Class c = null;
+#if USE_IKVM
+                c = ikvm.runtime.Util.getFriendlyClassFromType(t);
+#else
+                c = t;
+#endif
                 string tag = object_to_tag(c);
                 return AddTagged(clazzObjectOut.TermRef, tag) != 0;
             }
@@ -420,7 +528,11 @@ namespace SbsSW.SwiPlCs
             }
             object val = GetInstance(valueIn);
             // extension method
+#if USE_IKVM
             return valueOut.FromObject((val.getClass()));
+#else
+            return valueOut.FromObject((val.GetType()));
+#endif
         }
         [PrologVisible(ModuleName = ExportModule)]
         static public bool cliClassFromType(PlTerm valueIn, PlTerm valueOut)
@@ -433,8 +545,12 @@ namespace SbsSW.SwiPlCs
             }
             Type val = GetType(valueIn);
             if (val == null) return false;
+#if USE_IKVM
             Class c = ikvm.runtime.Util.getFriendlyClassFromType(val);
             return valueOut.FromObject((c));
+#else
+            return valueOut.FromObject((val));
+#endif
         }
         [PrologVisible(ModuleName = ExportModule)]
         static public bool cliTypeFromClass(PlTerm valueIn, PlTerm valueOut)
@@ -447,8 +563,12 @@ namespace SbsSW.SwiPlCs
             }
             Class val = GetType(valueIn);
             if (val == null) return false;
-            var c = ikvm.runtime.Util.getInstanceTypeFromClass(val);
+#if USE_IKVM
+            Type c = ikvm.runtime.Util.getInstanceTypeFromClass(val);
             return valueOut.FromObject((c));
+#else
+            return valueOut.FromObject(val);
+#endif
         }
         [PrologVisible(ModuleName = ExportModule)]
         static public bool cliShortType(PlTerm valueName, PlTerm valueIn)
@@ -503,7 +623,12 @@ namespace SbsSW.SwiPlCs
             }
             Class val = CastTerm(valueIn, typeof(Class)) as Class;
             if (val == null) return false;
+
+#if USE_IKVM
             return valueOut.Unify(val.getName());
+#else
+            return valueOut.Unify(val.GetType().Name);
+#endif
         }
         [PrologVisible(ModuleName = ExportModule)]
         static public bool cliGetTypename(PlTerm valueIn, PlTerm valueOut)
@@ -552,8 +677,13 @@ namespace SbsSW.SwiPlCs
         {
             if (name == "@" || name == "$cli_object" || name == "array" || name == null) return null;
             Type t = ResolveClassAsType(name);
+#if USE_IKVM
             Class c = ikvm.runtime.Util.getFriendlyClassFromType((Type)t);
             return c;
+#else
+            return t;
+#endif
+
         }
         private static Type ResolveClassAsType(string name)
         {
@@ -640,6 +770,7 @@ namespace SbsSW.SwiPlCs
                     if (t != null) return t;
                 }
                 Class obj = null;
+#if USE_IKVM
                 try
                 {
                     obj = Class.forName(typeName);
@@ -654,6 +785,7 @@ namespace SbsSW.SwiPlCs
                 {
                     type = ikvm.runtime.Util.getInstanceTypeFromClass((Class)obj);
                 }
+#endif
                 if (type == null)
                 {
                     type = getPrimitiveType(typeName);

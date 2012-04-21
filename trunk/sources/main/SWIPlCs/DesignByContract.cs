@@ -34,7 +34,7 @@ namespace SbsSW.DesignByContract
     ///		}
     ///		catch (System.Exception ex)
     ///		{
-    ///			Console.WriteLine(ex.ToString());
+    ///			PrologClient.ConsoleTrace(ex.ToString());
     ///		}
     ///	}
     /// </code>
