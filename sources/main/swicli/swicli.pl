@@ -1,4 +1,4 @@
-:- module(clipl,
+:- module(swicli,
           [
             cli_debug/1,
             cli_Eval/3,
@@ -365,7 +365,7 @@ cli_GetSymbol(Engine,Name,Value):- (cli_Interned(Engine,Name,Value);Value=cli_Un
 
 %%:-interactor.
 
-ensureExported:-current_predicate(clipl:F/A),atom_concat(cli,_,F),export(F/A),fail.
+ensureExported:-current_predicate(swicli:F/A),atom_concat(cli,_,F),export(F/A),fail.
 ensureExported.
 
 :-ensureExported.
