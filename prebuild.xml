@@ -812,93 +812,6 @@
   </Project>
 
 
-    <Project name="AltAIMLbot" path="sources/chatbot/AltBotModule/AIMLBot/AIMLBot" type="Library" frameworkVersion="v3_5">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-            
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../../../bin/</ReferencePath>
-      <Reference name="System" localCopy="false"/>
-      <Reference name="System.Data" localCopy="false"/>
-      <Reference name="System.Xml" localCopy="false"/>
-      <Reference name="System.Web" localCopy="false"/>
-      <Reference name="System.Windows.Forms" localCopy="false"/>
-      <Reference name="System.Drawing" localCopy="false"/>
-      <Reference name="Aima.NET" localCopy="false"/>
-      <Reference name="MushDLR223" localCopy="false"/>
-      <Reference name="MinisatCs" localCopy="false"/>      
-      <Reference name="Iesi.Collections.Generic" localCopy="false"/>      
-      <Reference name="System.Core" localCopy="false" />
-
-      <Files>
-          <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="NEVERUSE.cs"/></Match>
-      </Files>
-  </Project>
-
-
-    <Project name="MinisatCs" path="sources/chatbot/AltBotModule/minisatcs/MinisatCs" type="Library" frameworkVersion="v3_5">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../../../bin/</ReferencePath>
-      <Reference name="System" localCopy="false"/>
-      <Reference name="System.Data" localCopy="false"/>
-      <Reference name="System.Xml" localCopy="false"/>
-      <Reference name="System.Web" localCopy="false"/>
-      <Reference name="System.Windows.Forms" localCopy="false"/>
-      <Reference name="System.Drawing" localCopy="false"/>
-      <Reference name="System.Core" localCopy="false" />
-
-      <Files>
-          <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="NEVERUSE.cs"/></Match>
-      </Files>
-  </Project>
-
-
-    <Project name="Aima.NET" path="sources/chatbot/AltBotModule/Aima.NET" type="Library" frameworkVersion="v3_5">
-  <Configuration name="Debug">
-    <Options>
-      <OutputPath>../../../../bin/</OutputPath>
-    </Options>
-  </Configuration>
-  <Configuration name="Release">
-    <Options>
-
-      <OutputPath>../../../../bin/</OutputPath>
-    </Options>
-  </Configuration>
-
-  <ReferencePath>../../../../bin/</ReferencePath>
-  <Reference name="System" localCopy="false"/>
-  <Reference name="System.Data" localCopy="false"/>
-  <Reference name="System.Xml" localCopy="false"/>
-  <Reference name="System.Web" localCopy="false"/>
-  <Reference name="System.Windows.Forms" localCopy="false"/>
-  <Reference name="System.Drawing" localCopy="false"/>
-  <Reference name="System.Core" localCopy="false" />
-
-  <Files>
-      <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="NEVERUSE.cs"/></Match>
-  </Files>
-</Project>
-
 
     <Project name="Iesi.Collections.Generic" path="sources/chatbot/AltBotModule/GenericSets/src/Iesi.Collections.Generic" type="Library" frameworkVersion="v3_5">
   <Configuration name="Debug">
@@ -927,19 +840,21 @@
 </Project>
 
 
- <Project name="Iesi.Collections" path="sources/chatbot/AltBotModule/GenericSets/src/Iesi.Collections" type="Library" frameworkVersion="v3_5">
+
+    <Project name="Aima.NET" path="sources/chatbot/AltBotModule/Aima.NET" type="Library" frameworkVersion="v3_5">
   <Configuration name="Debug">
     <Options>
-        <OutputPath>../../../../../../bin/</OutputPath>
+      <OutputPath>../../../../bin/</OutputPath>
     </Options>
   </Configuration>
   <Configuration name="Release">
     <Options>
-        <OutputPath>../../../../../../bin/</OutputPath>
+
+      <OutputPath>../../../../bin/</OutputPath>
     </Options>
   </Configuration>
 
-  <ReferencePath>../../../../../../bin/</ReferencePath>
+  <ReferencePath>../../../../bin/</ReferencePath>
   <Reference name="System" localCopy="false"/>
   <Reference name="System.Data" localCopy="false"/>
   <Reference name="System.Xml" localCopy="false"/>
@@ -947,11 +862,74 @@
   <Reference name="System.Windows.Forms" localCopy="false"/>
   <Reference name="System.Drawing" localCopy="false"/>
   <Reference name="System.Core" localCopy="false" />
+  <Reference name="MinisatCs" localCopy="false"/>      
 
   <Files>
       <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="NEVERUSE.cs"/></Match>
   </Files>
 </Project>
+
+
+
+    <Project name="MinisatCs" path="sources/chatbot/AltBotModule/minisatcs/MinisatCs" type="Library" frameworkVersion="v3_5">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+
+          <OutputPath>../../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../../../../bin/</ReferencePath>
+      <Reference name="System" localCopy="false"/>
+      <Reference name="System.Data" localCopy="false"/>
+      <Reference name="System.Xml" localCopy="false"/>
+      <Reference name="System.Web" localCopy="false"/>
+      <Reference name="System.Windows.Forms" localCopy="false"/>
+      <Reference name="System.Drawing" localCopy="false"/>
+      <Reference name="System.Core" localCopy="false" />
+      <Reference name="Aima.NET" localCopy="false"/>
+
+      <Files>
+          <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="NEVERUSE.cs"/></Match>
+      </Files>
+  </Project>
+
+    <Project name="AltAIMLbot" path="sources/chatbot/AltBotModule/AIMLBot/AIMLBot" type="Library" frameworkVersion="v3_5">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+
+          <OutputPath>../../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../../../../bin/</ReferencePath>
+      <Reference name="System" localCopy="false"/>
+      <Reference name="System.Data" localCopy="false"/>
+      <Reference name="System.Xml" localCopy="false"/>
+      <Reference name="System.Web" localCopy="false"/>
+      <Reference name="System.Windows.Forms" localCopy="false"/>
+      <Reference name="System.Drawing" localCopy="false"/>
+      <Reference name="Aima.NET" localCopy="false"/>
+      <Reference name="MushDLR223" localCopy="false"/>
+      <Reference name="MinisatCs" localCopy="false"/>      
+      <Reference name="Iesi.Collections.Generic" localCopy="false"/>      
+      <Reference name="System.Core" localCopy="false" />
+
+      <Files>
+          <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="NEVERUSE.cs"/></Match>
+      </Files>
+  </Project>
+
 
     <Project name="PathSystem3D" path="sources/main/PathSystem3D" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
