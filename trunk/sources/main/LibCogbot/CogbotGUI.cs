@@ -32,7 +32,7 @@ namespace Cogbot.Library
             else
             {
                 //mf.BeginInvoke(new MethodInvoker(() => mf.Visible = true));
-                //if(false)
+                if(false)
                 {
                     Application.Run(mf);
                 }  
