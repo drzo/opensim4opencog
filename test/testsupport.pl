@@ -37,7 +37,7 @@
 			apiBotClientCmd/1,
 			onChatTSHook/3, std_end/2, std_end/3,
 			doTest/3 , ppTest/1]).
-:-use_module(library(clipl)).
+:-use_module(library(swicli)).
 
 :- dynamic(current_test/1).
 :- dynamic(chat_hook_installed/0).

@@ -510,12 +510,12 @@
     <Project name="SwiPlCs" path="sources/main/SWIPlCs" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>../../../bin/</OutputPath>
+          <OutputPath>C:\Program Files\pl\bin\</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>../../../bin/</OutputPath>
+          <OutputPath>C:\Program Files\pl\bin\</OutputPath>
         </Options>
       </Configuration>
 
