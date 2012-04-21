@@ -1,12 +1,13 @@
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{EC571ECC-4799-4133-AACD-CFD2D7A1365D}</ProjectGuid>
+    <ProjectGuid>{8A6C3511-618F-45F1-8BAC-9912A8C084DD}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ApplicationIcon></ApplicationIcon>
+    <ApplicationIcon>
+    </ApplicationIcon>
     <AssemblyKeyContainerName>
     </AssemblyKeyContainerName>
     <AssemblyName>PrologScriptEngine</AssemblyName>
@@ -16,9 +17,11 @@
     <DelaySign>false</DelaySign>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder></AppDesignerFolder>
+    <AppDesignerFolder>
+    </AppDesignerFolder>
     <RootNamespace>PrologScriptEngine</RootNamespace>
-    <StartupObject></StartupObject>
+    <StartupObject>
+    </StartupObject>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
   </PropertyGroup>
@@ -29,7 +32,8 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;VISUAL_STUDIO</DefineConstants>
-    <DocumentationFile></DocumentationFile>
+    <DocumentationFile>
+    </DocumentationFile>
     <DebugSymbols>False</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>True</Optimize>
@@ -49,7 +53,8 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;VISUAL_STUDIO</DefineConstants>
-    <DocumentationFile></DocumentationFile>
+    <DocumentationFile>
+    </DocumentationFile>
     <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>False</Optimize>
@@ -64,68 +69,64 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System">
-        <Name>System</Name>
+      <Name>System</Name>
     </Reference>
     <Reference Include="System.Core">
-        <Name>System.Core</Name>
+      <Name>System.Core</Name>
     </Reference>
     <Reference Include="System.Data">
-        <Name>System.Data</Name>
+      <Name>System.Data</Name>
     </Reference>
     <Reference Include="System.Data.DataSetExtensions">
-        <Name>System.Data.DataSetExtensions</Name>
+      <Name>System.Data.DataSetExtensions</Name>
     </Reference>
     <Reference Include="System.Deployment">
-        <Name>System.Deployment</Name>
+      <Name>System.Deployment</Name>
     </Reference>
     <Reference Include="System.Drawing">
-        <Name>System.Drawing</Name>
+      <Name>System.Drawing</Name>
     </Reference>
     <Reference Include="System.Windows.Forms">
-        <Name>System.Windows.Forms</Name>
+      <Name>System.Windows.Forms</Name>
     </Reference>
     <Reference Include="System.Xml">
-        <Name>System.Xml</Name>
-    </Reference>
-    <Reference Include="SwiPlCs.dll">
-        <Name>SwiPlCs.dll</Name>
+      <Name>System.Xml</Name>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LibCogbot\Cogbot.Library.csproj">
       <Name>Cogbot.Library</Name>
-      <Project>{D5BB8C9F-B2A6-4205-BC39-1DE3DA7AF551}</Project>
+      <Project>{BA32479F-01DF-4837-B13E-6C2A0AAC84AE}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\MushDLR223\MushDLR223.csproj">
       <Name>MushDLR223</Name>
-      <Project>{8F6734A1-CA3F-4201-8E43-B3B77BF6EDD5}</Project>
+      <Project>{88C94DCA-4B0A-4A4C-A195-B556D4AA51C8}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\PathSystem3D\PathSystem3D.csproj">
       <Name>PathSystem3D</Name>
-      <Project>{F7BAA0E4-5300-467F-99F1-A45F9D40918A}</Project>
+      <Project>{F90616A7-BF18-4B12-A8F6-5C451057FEDE}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverse\OpenMetaverse.csproj">
       <Name>OpenMetaverse</Name>
-      <Project>{5F4578E7-93FD-45DD-ADBA-E3D76AADBC8B}</Project>
+      <Project>{22FA3947-66A6-4E6B-8ED1-A3E33098F6F0}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\LibOpenMetaverse\OpenMetaverseTypes\OpenMetaverseTypes.csproj">
       <Name>OpenMetaverseTypes</Name>
-      <Project>{05F596D5-D247-474D-8F3C-023D0FF74137}</Project>
+      <Project>{41058D1E-2FB1-4911-8BEF-6EC71FFC5F2D}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\external\DotLisp\DotLisp.csproj">
       <Name>DotLisp</Name>
-      <Project>{36C198DC-964C-4760-98BE-5200A45DBB3F}</Project>
+      <Project>{C0EE15AA-DFE1-458F-853C-B6A6472A32DF}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
-    <ProjectReference Include="..\..\external\Radegast\Radegast.csproj">
-      <Name>Radegast</Name>
-      <Project>{BCE89F63-FD0C-4C0A-91F1-496BF6628807}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    <ProjectReference Include="..\SWIPlCs\SwiPlCs.csproj">
+      <Project>{74E1E267-9D8D-4FF7-A4BD-B13FEA4D2E04}</Project>
+      <Name>SwiPlCs</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

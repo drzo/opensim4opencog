@@ -6,7 +6,6 @@ using cogbot;
 using cogbot.ScriptEngines;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
-using Radegast;
 using SbsSW.SwiPlCs;
 
 namespace PrologScriptEngine
