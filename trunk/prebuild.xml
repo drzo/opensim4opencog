@@ -520,10 +520,11 @@
       </Configuration>
 
       <ReferencePath>../../../bin</ReferencePath>
-      <Reference name="SWIJPL.dll" localCopy="false"/>
+<!--      <Reference name="SWIJPL.dll" localCopy="false"/>
       <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
       <Reference name="IKVM.Runtime.JNI.dll" localCopy="false"/>
+-->
       <Reference name="System" localCopy="false"/>
       <Reference name="System.Core" localCopy="false"/>
       <Reference name="System.Data" localCopy="false"/>
@@ -761,15 +762,10 @@
       <Reference name="System.Drawing" localCopy="false"/>
       <Reference name="System.Windows.Forms" localCopy="false"/>
       <Reference name="System.Data" localCopy="false"/>
-      <Reference name="ABCL.Net.dll" localCopy="false"/>
       <Reference name="log4net.dll" localCopy="false"/>
        <Reference name="HttpServer.dll" localCopy="false"/>
-      <Reference name="SwiPlCs" localCopy="false"/>
       <Reference name="System" localCopy="false"/>
       <Reference name="DotLisp" localCopy="false"/>
-      <Reference name="OpenCyc.dll" localCopy="false"/>
-      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
-      <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
       <Reference name="Microsoft.JScript"  localCopy="false"/>
       <Reference name="Microsoft.Vsa"  localCopy="false"/>
       <Files>
@@ -815,6 +811,148 @@
           <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="AssemblyInfo.cs"/><Exclude name="Program.cs"/></Match>
       </Files>
   </Project>
+
+
+    <Project name="AltAIMLbot" path="sources/chatbot/AltBotModule/AIMLBot/AIMLBot" type="Library" frameworkVersion="v3_5">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+            
+          <OutputPath>../../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../../../../bin/</ReferencePath>
+      <Reference name="System" localCopy="false"/>
+      <Reference name="System.Data" localCopy="false"/>
+      <Reference name="System.Xml" localCopy="false"/>
+      <Reference name="System.Web" localCopy="false"/>
+      <Reference name="System.Windows.Forms" localCopy="false"/>
+      <Reference name="System.Drawing" localCopy="false"/>
+      <Reference name="Aima.NET" localCopy="false"/>
+      <Reference name="MushDLR223" localCopy="false"/>
+      <Reference name="MinisatCs" localCopy="false"/>      
+      <Reference name="Iesi.Collections.Generic" localCopy="false"/>      
+      <Reference name="System.Core" localCopy="false" />
+
+      <Files>
+          <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="NEVERUSE.cs"/></Match>
+      </Files>
+  </Project>
+
+
+    <Project name="MinisatCs" path="sources/chatbot/AltBotModule/minisatcs/MinisatCs" type="Library" frameworkVersion="v3_5">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+
+          <OutputPath>../../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../../../../bin/</ReferencePath>
+      <Reference name="System" localCopy="false"/>
+      <Reference name="System.Data" localCopy="false"/>
+      <Reference name="System.Xml" localCopy="false"/>
+      <Reference name="System.Web" localCopy="false"/>
+      <Reference name="System.Windows.Forms" localCopy="false"/>
+      <Reference name="System.Drawing" localCopy="false"/>
+      <Reference name="System.Core" localCopy="false" />
+
+      <Files>
+          <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="NEVERUSE.cs"/></Match>
+      </Files>
+  </Project>
+
+
+    <Project name="Aima.NET" path="sources/chatbot/AltBotModule/Aima.NET" type="Library" frameworkVersion="v3_5">
+  <Configuration name="Debug">
+    <Options>
+      <OutputPath>../../../../bin/</OutputPath>
+    </Options>
+  </Configuration>
+  <Configuration name="Release">
+    <Options>
+
+      <OutputPath>../../../../bin/</OutputPath>
+    </Options>
+  </Configuration>
+
+  <ReferencePath>../../../../bin/</ReferencePath>
+  <Reference name="System" localCopy="false"/>
+  <Reference name="System.Data" localCopy="false"/>
+  <Reference name="System.Xml" localCopy="false"/>
+  <Reference name="System.Web" localCopy="false"/>
+  <Reference name="System.Windows.Forms" localCopy="false"/>
+  <Reference name="System.Drawing" localCopy="false"/>
+  <Reference name="System.Core" localCopy="false" />
+
+  <Files>
+      <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="NEVERUSE.cs"/></Match>
+  </Files>
+</Project>
+
+
+    <Project name="Iesi.Collections.Generic" path="sources/chatbot/AltBotModule/GenericSets/src/Iesi.Collections.Generic" type="Library" frameworkVersion="v3_5">
+  <Configuration name="Debug">
+    <Options>
+        <OutputPath>../../../../../../bin/</OutputPath>
+    </Options>
+  </Configuration>
+  <Configuration name="Release">
+    <Options>
+        <OutputPath>../../../../../../bin/</OutputPath>
+    </Options>
+  </Configuration>
+
+  <ReferencePath>../../../../../../bin/</ReferencePath>
+  <Reference name="System" localCopy="false"/>
+  <Reference name="System.Data" localCopy="false"/>
+  <Reference name="System.Xml" localCopy="false"/>
+  <Reference name="System.Web" localCopy="false"/>
+  <Reference name="System.Windows.Forms" localCopy="false"/>
+  <Reference name="System.Drawing" localCopy="false"/>
+  <Reference name="System.Core" localCopy="false" />
+
+  <Files>
+      <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="NEVERUSE.cs"/></Match>
+  </Files>
+</Project>
+
+
+ <Project name="Iesi.Collections" path="sources/chatbot/AltBotModule/GenericSets/src/Iesi.Collections" type="Library" frameworkVersion="v3_5">
+  <Configuration name="Debug">
+    <Options>
+        <OutputPath>../../../../../../bin/</OutputPath>
+    </Options>
+  </Configuration>
+  <Configuration name="Release">
+    <Options>
+        <OutputPath>../../../../../../bin/</OutputPath>
+    </Options>
+  </Configuration>
+
+  <ReferencePath>../../../../../../bin/</ReferencePath>
+  <Reference name="System" localCopy="false"/>
+  <Reference name="System.Data" localCopy="false"/>
+  <Reference name="System.Xml" localCopy="false"/>
+  <Reference name="System.Web" localCopy="false"/>
+  <Reference name="System.Windows.Forms" localCopy="false"/>
+  <Reference name="System.Drawing" localCopy="false"/>
+  <Reference name="System.Core" localCopy="false" />
+
+  <Files>
+      <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="NEVERUSE.cs"/></Match>
+  </Files>
+</Project>
 
     <Project name="PathSystem3D" path="sources/main/PathSystem3D" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
@@ -1100,42 +1238,6 @@
      </Files>
 </Project>
     
- <Project name="PrologScriptEngine" path="sources/main/PrologScriptEngine" type="Library" frameworkVersion="v3_5">
-  <Configuration name="Debug">
-    <Options>
-        <OutputPath>../../../bin/</OutputPath>
-    </Options>
-  </Configuration>
-  <Configuration name="Release">
-    <Options>
-        <OutputPath>../../../bin/</OutputPath>
-    </Options>
-  </Configuration>
-
-  <ReferencePath>../../../bin</ReferencePath>
-  <Reference name="System" localCopy="false"/>
-  <Reference name="System.Core" localCopy="false"/>
-  <Reference name="System.Data" localCopy="false"/>
-  <Reference name="System.Data.DataSetExtensions" localCopy="false"/>
-  <Reference name="System.Deployment" localCopy="false"/>
-  <Reference name="System.Drawing" localCopy="false"/>
-  <Reference name="System.Windows.Forms" localCopy="false"/>
-  <Reference name="System.Xml" localCopy="false"/>
-   <Reference name="Cogbot.Library" localCopy="false"/>
-   <Reference name="MushDLR223"  localCopy="false"/>
-   <Reference name="PathSystem3D" localCopy="false"/>
-   <Reference name="OpenMetaverse" localCopy="false"/>
-   <Reference name="OpenMetaverseTypes" localCopy="false"/>      
-   <Reference name="DotLisp" localCopy="false"/>
-   <Reference name="SwiPlCs.dll" localCopy="false"/>
-   <Reference name="Radegast.exe" localCopy="false"/>
-
-  <Files>
-      <Match path="." pattern="*.cs"  recurse="true"  subType="Form">  
-      <Exclude name="AssemblyInfo.cs"/><Exclude name="Plugins/"/></Match>
-  </Files>
-</Project>
-
 
  <Project name="PrologBotModule" path="sources/modules/SwiPrologBotModule" type="Library" frameworkVersion="v3_5">
   <Configuration name="Debug">
@@ -1160,18 +1262,45 @@
   <Reference name="System.Xml" localCopy="false"/>
    <Reference name="Cogbot.Library" localCopy="false"/>
    <Reference name="MushDLR223"  localCopy="false"/>
-   <Reference name="PathSystem3D" localCopy="false"/>
-   <Reference name="OpenMetaverse" localCopy="false"/>
-   <Reference name="OpenMetaverseTypes" localCopy="false"/>      
-   <Reference name="DotLisp" localCopy="false"/>
-   <!-- <Reference name="AIMLbot" localCopy="false"/> -->
    <Reference name="SwiPlCs.dll" localCopy="false"/>
-   <Reference name="PrologScriptEngine"  localCopy="false"/>
-   <Reference name="Radegast.exe" localCopy="false"/>
+  <Files>
+      <Match path="." pattern="*.cs"  recurse="true"  subType="Form">  
+      <Exclude name="EXCLUDED.cs"/></Match>
+  </Files>
+</Project>
+
+
+  <Project name="ABCLInterpreterModule" path="sources/modules/ABCLInterpreterModule" type="Library" frameworkVersion="v3_5">
+  <Configuration name="Debug">
+    <Options>
+        <OutputPath>../../../bin/</OutputPath>
+    </Options>
+  </Configuration>
+  <Configuration name="Release">
+    <Options>
+        <OutputPath>../../../bin/</OutputPath>
+    </Options>
+  </Configuration>
+
+  <ReferencePath>../../../bin</ReferencePath>
+  <Reference name="System" localCopy="false"/>
+  <Reference name="System.Core" localCopy="false"/>
+  <Reference name="System.Data" localCopy="false"/>
+  <Reference name="System.Data.DataSetExtensions" localCopy="false"/>
+  <Reference name="System.Deployment" localCopy="false"/>
+  <Reference name="System.Drawing" localCopy="false"/>
+  <Reference name="System.Windows.Forms" localCopy="false"/>
+  <Reference name="System.Xml" localCopy="false"/>
+   <Reference name="Cogbot.Library" localCopy="false"/>
+   <Reference name="MushDLR223"  localCopy="false"/>
+   <Reference name="ABCL.Net.dll" localCopy="false"/>
+   <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
+   <Reference name="IKVM.Runtime.dll" localCopy="false"/>
+   <Reference name="IKVM.Runtime.JNI.dll" localCopy="false"/>
 
   <Files>
       <Match path="." pattern="*.cs"  recurse="true"  subType="Form">  
-      <Exclude name="AssemblyInfo.cs"/><Exclude name="Plugins/"/></Match>
+      <Exclude name="EXCLUDED.cs"/></Match>
   </Files>
 </Project>
 
@@ -1209,53 +1338,6 @@
      </Files>
 </Project>
 
-<!--
-
-
-      <Reference name="Cogbot.Library" localCopy="false"/>
-      <Reference name="PathSystem3D" localCopy="false"/>
-      <Reference name="OpenMetaverse" localCopy="false"/>
-      <Reference name="OpenMetaverseTypes" localCopy="false"/>      
-      <Reference name="DotLisp" localCopy="false"/>
-      <Reference name="AIMLbot" localCopy="false"/>
-      <Reference name="System.Core" localCopy="false"/>
-      <Reference name="OpenCyc.dll" localCopy="false"/>
-       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
-      <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
-
-
- <Project name="GraphvizDot" path="sources/external/xglore/Plugins/GraphvizDot" type="Library" frameworkVersion="v3_5">
-      <Configuration name="Debug">
-        <Options>
-            <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-            <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../../../bin</ReferencePath>
-      <Reference name="Cogbot.Library" localCopy="false"/>
-      <Reference name="PathSystem3D" localCopy="false"/>
-      <Reference name="OpenMetaverse" localCopy="false"/>
-      <Reference name="OpenMetaverseTypes" localCopy="false"/>      
-      <Reference name="System" localCopy="false"/>
-      <Reference name="DotLisp" localCopy="false"/>
-      <Reference name="AIMLbot" localCopy="false"/>
-      <Reference name="System.Core" localCopy="false"/>
-      <Reference name="OpenCyc.dll" localCopy="false"/>
-       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
-      <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
-      <Files>
-          <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
-          <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
-      </Files>
-</Project>
-
--->
-
   <Project name="TheSimiansModule" path="sources/modules/TheSimiansModule" type="Library" frameworkVersion="v3_5">
      <Configuration name="Debug">
        <Options>
@@ -1279,9 +1361,6 @@
      <Reference name="OpenMetaverseTypes" localCopy="false"/>     
      <Reference name="System" localCopy="false"/>
      <Reference name="DotLisp" localCopy="false"/>
-     <Reference name="OpenCyc.dll" localCopy="false"/>
-      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
-     <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
      <Files>
          <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
          <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
@@ -1354,10 +1433,6 @@
      <Reference name="OpenMetaverse" localCopy="false"/>
      <Reference name="OpenMetaverseTypes" localCopy="false"/>     
      <Reference name="System" localCopy="false"/>
-     <Reference name="DotLisp" localCopy="false"/>
-     <Reference name="OpenCyc.dll" localCopy="false"/>
-      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
-     <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
      <Files>
          <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
      </Files>
@@ -1593,567 +1668,6 @@
              <!--<Match path="Assemblies" pattern="*.*" buildAction="Content" copyToOutput="Always"/> -->
          </Files>
       </Project>
-
- <!-- 
- OpenSim 
-  <Project name="IdealistViewer" path="sources/external/IdealistViewer" type="Exe">
-    <Configuration name="Debug">
-      <Options>
-        <OutputPath>../../../bin/</OutputPath>
-      </Options>
-    </Configuration>
-    <Configuration name="Release">
-      <Options>
-        <OutputPath>../../../bin/</OutputPath>
-      </Options>
-    </Configuration>
-
-    <ReferencePath>../../bin</ReferencePath>
-    <Reference name="System" localCopy="false"/>
-    <Reference name="System.Drawing" localCopy="false"/>
-    <Reference name="System.Xml"/>
-    <Reference name="Mono.Addins.dll" localCopy="false"/>
-    <Reference name="XMLRPC.dll" localCopy="false"/>
-    <Reference name="Nini.dll" localCopy="false"/>
-    <Reference name="fmodex-dotnet.dll" localCopy="false"/>
-    <Reference name="log4net.dll" localCopy="false"/>
-    <Reference name="Irrlicht.NET.dll" localCopy="false"/>
-    <Reference name="Irrlicht.Extensions.dll" localCopy="false"/>
-    <Reference name="jabber-net.dll" localCopy="false"/>
-    <Reference name="muzzle.dll" localCopy="false"/>
-    <Reference name="OpenMetaverse" />
-    <Reference name="OpenMetaverseTypes" />
-    <Reference name="PrimMesher.dll" localCopy="false"/>
-    <Reference name="MXP.dll" localCopy="false"/>
-    <Reference name="protobuf-net.dll" localCopy="false"/>
-    <Reference name="System.Windows.Forms" />
-    <Reference name="System.Data" />
-    <Reference name="RadegastSpeech" localCopy="false"/>
-    <Files>
-      <Match pattern="*.cs" recurse="true"/>
-      <Match pattern="*.resx" buildAction="EmbeddedResource" recurse="true"/>
-    </Files>
-  </Project>
-app -->
-  <!--
-
-
-  <Project name="IdealistRadegastPlugin" path="sources/external/IdealistRadegastPlugin" type="Library" frameworkVersion="v3_5">
-   <Configuration name="Debug">
-     <Options>
-       <OutputPath>../../../bin/</OutputPath>
-     </Options>
-   </Configuration>
-   <Configuration name="Release">
-     <Options>
-       
-       <OutputPath>../../../bin/</OutputPath>
-       <PlatformTarget>anycpu</PlatformTarget>
-     </Options>
-   </Configuration>
-
-   <ReferencePath>../../../bin</ReferencePath>
-   <Reference name="OpenMetaverse" localCopy="false"/>
-   <Reference name="OpenMetaverseTypes" localCopy="false"/>
-   
-   <Reference name="IdealistViewer.exe" localCopy="false"/>
-   <Reference name="HttpServer"/>
-   <Reference name="Irrlicht.Extensions" />
-   <Reference name="Irrlicht.NET" />
-   <Reference name="log4net" />
-   <Reference name="Radegast.exe" />
-   <Reference name="MXP" />
-   <Reference name="Nini" />
-   <Reference name="PrimMesher" />
-   <Reference name="protobuf-net" />
-   <Reference name="System" />
-   <Reference name="System.Core"/>
-   <Reference name="System.Drawing" />
-   <Reference name="System.Windows.Forms" />
-   <Reference name="System.Xml.Linq"/>
-   <Reference name="System.Data.DataSetExtensions"/>
-   <Reference name="System.Data" />
-   <Reference name="System.Xml" />
-   <Files>
-       <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
-       <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
-   </Files>
-</Project>
-
-
-    <Project name="LookingGlass.Framework" path="sources/external/LookingGlass-svn/src/LookingGlass.Framework" type="Library" frameworkVersion="v3_5">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Data"/>
-      <Reference name="System.Windows.Forms"/>
-      <Reference name="System.Xml"/>
-      <Reference name="log4net.dll"/>
-      <Reference name="OpenMetaverse.dll"/>
-      <Reference name="OpenMetaverseTypes"/>
-      <Reference name="OpenMetaverse.StructuredData.dll"/>
-      <Files>
-        <Match pattern="*.cs" recurse="false"/>
-        <Match pattern="Logging/*.cs" recurse="false"/>
-        <Match pattern="Modules/*.cs" recurse="false"/>
-        <Match pattern="Parameters/*.cs" recurse="false"/>
-        <Match pattern="Statistics/*.cs" recurse="false"/>
-        <Match pattern="WorkQueue/*.cs" recurse="false"/>
-      </Files>
-    </Project>
-
-    <Project name="LookingGlass.Comm" path="sources/external/LookingGlass-svn/src/LookingGlass.Comm" type="Library" frameworkVersion="v3_5">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Data"/>
-      <Reference name="System.Drawing"/>
-      <Reference name="System.Xml"/>
-      <Reference name="LookingGlass.Framework"/>
-      <Reference name="OpenMetaverse.dll"/>
-      <Reference name="OpenMetaverse.StructuredData.dll"/>
-      <Reference name="OpenMetaverseTypes"/>
-
-      <Files>
-        <Match pattern="*.cs" recurse="false"/>
-      </Files>
-    </Project>
-
-
-    <Project name="LookingGlass.Rest" path="sources/external/LookingGlass-svn/src/LookingGlass.Rest" type="Library" frameworkVersion="v3_5">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Data"/>
-      <Reference name="System.Web"/>
-      <Reference name="System.Windows.Forms"/>
-      <Reference name="System.Xml"/>
-      <Reference name="LookingGlass.Framework"/>
-      <Reference name="LookingGlass.Renderer"/>
-      <Reference name="LookingGlass.World"/>
-      <Reference name="OpenMetaverse.dll"/>
-      <Reference name="OpenMetaverseTypes"/>
-      <Reference name="OpenMetaverse.StructuredData.dll"/>
-      <Files>
-        <Match pattern="*.cs" recurse="false"/>
-      </Files>
-    </Project>
-
-
-    <Project name="LookingGlass.World" path="sources/external/LookingGlass-svn/src/LookingGlass.World" type="Library" frameworkVersion="v3_5">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Drawing"/>
-      <Reference name="LookingGlass.Comm"/>
-      <Reference name="LookingGlass.Framework"/>
-      <Reference name="OpenMetaverse.dll"/>
-      <Reference name="OpenMetaverseTypes"/>
-      <Reference name="OpenMetaverse.StructuredData.dll"/>
-      <Reference name="CSJ2K.dll"/>
-      <Files>
-        <Match pattern="*.cs" recurse="false"/>
-      </Files>
-    </Project>
-
-
-    <Project name="LookingGlass.World.LL" path="sources/external/LookingGlass-svn/src/LookingGlass.World.LL" type="Library" frameworkVersion="v3_5">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Data"/>
-      <Reference name="System.Drawing"/>
-      <Reference name="System.Xml"/>
-      <Reference name="LookingGlass.Comm"/>
-      <Reference name="LookingGlass.Framework"/>
-      <Reference name="LookingGlass.World"/>
-      <Reference name="OpenMetaverse.dll"/>
-      <Reference name="OpenMetaverse.StructuredData.dll"/>
-      <Reference name="OpenMetaverseTypes"/>
-      <Files>
-        <Match pattern="*.cs" recurse="false"/>
-      </Files>
-    </Project>
-
-    <Project name="LookingGlass.World.OS" path="sources/external/LookingGlass-svn/src/LookingGlass.World.OS" type="Library" frameworkVersion="v3_5">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Data"/>
-      <Reference name="System.XML"/>
-      <Reference name="LookingGlass.Comm"/>
-      <Reference name="LookingGlass.Framework"/>
-      <Reference name="LookingGlass.World"/>
-      <Reference name="LookingGlass.World.LL"/>
-      <Reference name="OpenMetaverse.dll"/>
-      <Reference name="OpenMetaverseTypes"/>
-      <Files>
-        <Match pattern="*.cs" recurse="false"/>
-      </Files>
-    </Project>
-
-    <Project name="LookingGlass.World.Services" path="sources/external/LookingGlass-svn/src/LookingGlass.World.Services" type="Library" frameworkVersion="v3_5">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Data"/>
-      <Reference name="LookingGlass.Comm"/>
-      <Reference name="LookingGlass.Framework"/>
-      <Reference name="LookingGlass.Rest"/>
-      <Reference name="LookingGlass.World"/>
-      <Reference name="LookingGlass.World.LL"/>
-      <Reference name="OpenMetaverse.dll"/>
-      <Reference name="OpenMetaverseTypes"/>
-      <Reference name="OpenMetaverse.StructuredData.dll"/>
-      <Files>
-        <Match pattern="*.cs" recurse="false"/>
-      </Files>
-    </Project>
-
-    <Project name="LookingGlass.Renderer" path="sources/external/LookingGlass-svn/src/LookingGlass.Renderer" type="Library" frameworkVersion="v3_5">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Data"/>
-      <Reference name="System.Drawing"/>
-      <Reference name="System.Windows.Forms"/>
-      <Reference name="System.Xml"/>
-      <Reference name="LookingGlass.Framework"/>
-      <Reference name="LookingGlass.World"/>
-      <Reference name="OpenMetaverse.dll"/>
-      <Reference name="OpenMetaverseTypes"/>
-      <Reference name="PrimMesher.dll"/>
-      <Files>
-        <Match pattern="*.cs" recurse="false"/>
-        <Match pattern="Mesher/*.cs" recurse="false"/>
-      </Files>
-    </Project>
-
-    <Project name="LookingGlass.Renderer.Ogre" path="sources/external/LookingGlass-svn/src/LookingGlass.Renderer.Ogre" type="Library" frameworkVersion="v3_5">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Data"/>
-      <Reference name="System.Drawing"/>
-      <Reference name="System.Windows.Forms"/>
-      <Reference name="System.Xml"/>
-      <Reference name="LookingGlass.Framework"/>
-      <Reference name="LookingGlass.Renderer"/>
-      <Reference name="LookingGlass.Rest"/>
-      <Reference name="LookingGlass.World"/>
-      <Reference name="LookingGlass.World.LL"/>
-      <Reference name="OpenMetaverse.dll"/>
-      <Reference name="OpenMetaverse.StructuredData.dll"/>
-      <Reference name="OpenMetaverseTypes"/>
-      <Files>
-        <Match pattern="*.cs" recurse="false"/>
-      </Files>
-    </Project>
-
-    <Project name="LookingGlass.Renderer.Map" path="sources/external/LookingGlass-svn/src/LookingGlass.Renderer.Map" type="Library" frameworkVersion="v3_5">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Core"/>
-      <Reference name="LookingGlass.Framework"/>
-      <Reference name="LookingGlass.Renderer"/>
-      <Reference name="LookingGlass.World"/>
-      <Reference name="OpenMetaverse.dll"/>
-      <Reference name="OpenMetaverse.StructuredData.dll"/>
-      <Reference name="OpenMetaverseTypes"/>
-      <Files>
-        <Match pattern="*.cs" recurse="false"/>
-      </Files>
-    </Project>
-
-    <Project name="LookingGlass.Renderer.OGL" path="sources/external/LookingGlass-svn/src/LookingGlass.Renderer.OGL" type="Library" frameworkVersion="v3_5">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Core"/>
-      <Reference name="System.Data"/>
-      <Reference name="System.Drawing"/>
-      <Reference name="System.Windows.Forms"/>
-      <Reference name="LookingGlass.Framework"/>
-      <Reference name="LookingGlass.Renderer"/>
-      <Reference name="LookingGlass.World"/>
-      <Reference name="LookingGlass.World.LL"/>
-      <Reference name="OpenTK.dll"/>
-      <Reference name="OpenTK.Compatibility.dll"/>
-      <Reference name="OpenTK.GLControl.dll"/>
-      <Reference name="OpenMetaverse.dll"/>
-      <Reference name="OpenMetaverse.StructuredData.dll"/>
-      <Reference name="OpenMetaverseTypes"/>
-      <Files>
-        <Match pattern="*.cs" recurse="false"/>
-      </Files>
-    </Project>
-
-
-    <Project name="LookingGlass.View" path="sources/external/LookingGlass-svn/src/LookingGlass.View" type="Library" frameworkVersion="v3_5">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Data"/>
-      <Reference name="System.Drawing"/>
-      <Reference name="System.Windows.Forms"/>
-      <Reference name="LookingGlass.Framework"/>
-      <Reference name="LookingGlass.Renderer"/>
-      <Reference name="LookingGlass.Rest"/>
-      <Reference name="LookingGlass.World"/>
-      <Reference name="OpenMetaverse"/>
-      <Reference name="OpenMetaverseTypes"/>
-      <Reference name="OpenMetaverse.StructuredData"/>
-      <Files>
-        <Match pattern="ViewWindow.cs" recurse="false" subType="Form"/>
-        <Match pattern="ViewAvatars.cs" recurse="false" subType="Form"/>
-        <Match pattern="ViewChat.cs" recurse="false" subType="Form"/>
-        <Match pattern="*.cs" recurse="false"/>
-        <Match pattern="*.resx" recurse="false" buildAction="EmbeddedResource" subType="Designer"/>
-      </Files>
-    </Project>
-
-
-    <Project name="LookingGlass.Comm.LLLP" path="sources/external/LookingGlass-svn/src/LookingGlass.Comm.LLLP" type="Library" frameworkVersion="v3_5">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Xml"/>
-      <Reference name="System.Data"/>
-      <Reference name="LookingGlass.Comm"/>
-      <Reference name="LookingGlass.Framework"/>
-      <Reference name="LookingGlass.View"/>
-      <Reference name="LookingGlass.Rest"/>
-      <Reference name="LookingGlass.World"/>
-      <Reference name="LookingGlass.World.LL"/>
-      <Reference name="LookingGlass.World.OS"/>
-      <Reference name="OpenMetaverse.dll"/>
-      <Reference name="OpenMetaverse.StructuredData.dll"/>
-      <Reference name="OpenMetaverseTypes"/>
-      <Files>
-        <Match pattern="*.cs" recurse="false"/>
-      </Files>
-    </Project>
-
-
-    <Project name="LookingGlass.Radegast" path="sources/external/LookingGlass-svn/src/LookingGlass.Radegast" type="Library" frameworkVersion="v3_5">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Data"/>
-      <Reference name="System.Drawing"/>
-      <Reference name="System.Windows.Forms"/>
-      <Reference name="System.Xml"/>
-      <Reference name="LookingGlass.Comm"/>
-      <Reference name="LookingGlass.Comm.LLLP"/>
-      <Reference name="LookingGlass.Framework"/>
-      <Reference name="LookingGlass.Renderer"/>
-      <Reference name="LookingGlass.World"/>
-      <Reference name="Radegast.exe"/>
-      <Reference name="OpenMetaverse.dll"/>
-      <Reference name="OpenMetaverseTypes"/>
-      <Reference name="OpenMetaverse.StructuredData.dll"/>
-      <Files>
-        <Match pattern="RadegastWindow.cs" recurse="false" subType="form"/>
-        <Match pattern="*.cs" recurse="false"/>
-        <Match pattern="*.resx" recurse="false" buildAction="EmbeddedResource" subType="Designer"/>
-      </Files>
-    </Project>
-
-    <Project name="LookingGlass" path="sources/external/LookingGlass-svn/src/LookingGlass" type="Exe" frameworkVersion="v3_5">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../../../bin/</ReferencePath>
-      <Reference name="System"/>
-      <Reference name="System.Data"/>
-      <Reference name="System.Drawing"/>
-      <Reference name="System.Windows.Forms"/>
-      <Reference name="System.Xml"/>
-      <Reference name="LookingGlass.Comm"/>
-      <Reference name="LookingGlass.Comm.LLLP"/>
-      <Reference name="LookingGlass.Framework"/>
-      <Reference name="LookingGlass.Radegast"/>
-      <Reference name="LookingGlass.View"/>
-      <Reference name="OpenMetaverse.dll"/>
-      <Reference name="Radegast.exe"/>
-      <Files>
-        <Match pattern="*.cs" recurse="true"/>
-      </Files>
-    </Project>
-
-
--->
-
-    <!--
-    <Project name="LookingGlassOgre" language="C++" path="sources/external/LookingGlass-svn/src/LookingGlassOgre" type="Library" frameworkVersion="v3_5">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-
-      <ReferencePath>../../../../../bin/</ReferencePath>
-      <Reference name="OgreMain.lib"/>
-      <Reference name="OIS.lib"/>
-      <Files>
-        <Match pattern="*.cpp" recurse="false"/>
-      </Files>
-    </Project>
--->
 
     <Project name="Cogbot.LAIR" path="sources/chatbot/LAIR.ResourceAPIs/Cogbot.LAIR" type="Exe" rootNamespace="Cogbot.LAIR" frameworkVersion="v3_5">
       <Configuration name="Debug">
