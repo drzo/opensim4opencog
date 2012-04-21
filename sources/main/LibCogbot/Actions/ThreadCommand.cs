@@ -5,6 +5,7 @@ using System.Threading;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
+using Thread = MushDLR223.Utilities.SafeThread;
 
 using MushDLR223.ScriptEngines;
 

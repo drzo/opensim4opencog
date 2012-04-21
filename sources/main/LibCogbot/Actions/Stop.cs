@@ -6,6 +6,7 @@ using MushDLR223.Utilities;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
+using Thread = MushDLR223.Utilities.SafeThread;
 
 namespace cogbot.Actions
 {

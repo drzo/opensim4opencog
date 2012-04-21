@@ -36,6 +36,7 @@ using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
 using OpenMetaverse.Interfaces;
 using OpenMetaverse.Messages.Linden;
+using Thread = MushDLR223.Utilities.SafeThread;
 
 namespace OpenMetaverse
 {        

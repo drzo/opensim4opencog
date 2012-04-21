@@ -11,6 +11,7 @@ using OpenMetaverse;
 using System.Reflection;
 using cogbot.TheOpenSims;
 using OpenMetaverse.Assets;
+using Thread = MushDLR223.Utilities.SafeThread;
 
 namespace cogbot.ScriptEngines
 {

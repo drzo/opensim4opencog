@@ -173,6 +173,7 @@ internal class SymbolTable
 
     internal Type[] findTypes(String name)
     {
+        if (name.TrimStart('.') == "IDataObject") return new Type[] {typeof (System.Windows.Forms.IDataObject)};
         if (name.IndexOf(".") > -1)	//namespace qualified
         {
             Type t = (Type)fullNamesToTypes[name];

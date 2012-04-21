@@ -200,7 +200,7 @@ namespace cogbot.Actions.SimExport
         }
 
         public static UUID GetAssetUploadsFolder()
-        {
+        {            
             UUID assetUploadsFolder = ExportCommand.Exporting.FolderCalled("AssetUploads");
             return assetUploadsFolder;
         }
@@ -220,6 +220,7 @@ namespace cogbot.Actions.SimExport
 
         private void logged_in(object sender, EventQueueRunningEventArgs e)
         {
+            if (ExportCommand.Exporting == null) return;
             Client.Network.EventQueueRunning -= logged_in;
             UUID id = GetAssetUploadsFolder();
             GleanUUIDsFrom(id);

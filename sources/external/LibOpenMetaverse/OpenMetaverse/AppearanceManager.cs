@@ -32,6 +32,7 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.Imaging;
 using OpenMetaverse.Assets;
+using Thread = MushDLR223.Utilities.SafeThread;
 
 namespace OpenMetaverse
 {

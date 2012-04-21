@@ -27,6 +27,7 @@ namespace cogbot.Actions.System
             string[] tokens = args.objectPhrase.Split(null);
 
             BotClient Client = TheBotClient;
+            if (Client.IsLoggedInAndReady) return Success("Already logged in");
             //if ((tokens.Length != 1) && (tokens.Length != 3))
             //{
             //    return ("Please enter login FirstName LastName and Password to login to the SL");

@@ -17,6 +17,7 @@ using OpenMetaverse;
 using cogbot.Actions;
 using cogbot.Actions.Scripting;
 using Settings=OpenMetaverse.Settings;
+using Thread = MushDLR223.Utilities.SafeThread;
 
 //using Radegast;
 namespace cogbot
@@ -650,6 +651,7 @@ namespace cogbot
                                                CogbotGUI.SetRadegastLoginOptions(bc.TheRadegastInstance, bc);
                                            AddTypesToBotClient(bc);
                                            bc.StartupClientLisp();
+                                           //System.Threading.Thread.CurrentThread.Abort();
                                        };
             PostAutoExecEnqueue(() =>
                                      {
@@ -681,6 +683,7 @@ namespace cogbot
                 try
                 {
                     invoker();
+                   // ct.Abort();
                 }
                 catch (Exception e)
                 {
@@ -835,22 +838,26 @@ namespace cogbot
                     BotClientForAcct(account);
             }
         }
-
         public void StartUpLisp()
         {
-            
-            LockInfo.TestLock("Startp Lisp", OneAtATime, TimeSpan.FromMinutes(2));
             lock (OneAtATimeStartupLisp)
             {
                 if (StartedUpLisp) return;
-                StartedUpLisp = true;                
+                StartedUpLisp = true;
             }
+            InSTAThread(StartUpLisp0, "StartupLisp0");
+        }
+
+        public void StartUpLisp0()
+        {
+            
+            LockInfo.TestLock("Startp Lisp", OneAtATime, TimeSpan.FromMinutes(2));
             StartingUpLisp = true;
-            StartUpLisp0();
+            StartUpLisp1();
             StartingUpLisp = false;
             PostAutoExec.Start();
         }
-        public void StartUpLisp0()
+        public void StartUpLisp1()
         {
             initTaskInterperter();
             EnsureAutoExec();
@@ -1102,7 +1109,7 @@ namespace cogbot
 
         public static bool AllocedConsole;
         public static bool dosBox;
-        public static bool noGUI;
+        public static bool noGUI = false;
 
         private static void VeryRealWriteLine(string s, params object[] args)
         {

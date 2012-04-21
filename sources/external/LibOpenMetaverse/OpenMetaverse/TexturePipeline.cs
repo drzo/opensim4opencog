@@ -31,6 +31,7 @@ using System.Collections.Generic;
 using System.Threading;
 using OpenMetaverse.Packets;
 using OpenMetaverse.Assets;
+using Thread = MushDLR223.Utilities.SafeThread;
 
 namespace OpenMetaverse
 {

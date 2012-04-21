@@ -29,6 +29,7 @@ using Settings=OpenMetaverse.Settings;
 using cogbot.Actions.Agent;
 using System.Text;
 using Type=System.Type;
+using Thread = MushDLR223.Utilities.SafeThread;
 
 //using RadegastTab = Radegast.SleekTab;
 
@@ -151,6 +152,11 @@ namespace cogbot
             Login(false);
         }
 
+        public void LoginBlocked()
+        {
+            Login(true);
+        }
+
         public void Login(bool blocking)
         {
             if (IsLoggedInAndReady) return;
@@ -180,6 +186,7 @@ namespace cogbot
                     Network.BeginLogin(BotLoginParams.loginParams);
                 } else
                 {
+                    Settings.USE_LLSD_LOGIN = true;
                     Network.Login(BotLoginParams.loginParams);
                 }
             }
