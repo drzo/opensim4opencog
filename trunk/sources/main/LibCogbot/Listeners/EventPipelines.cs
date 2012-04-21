@@ -7,6 +7,7 @@ using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using System.Threading;
+using Thread = MushDLR223.Utilities.SafeThread;
 
 namespace cogbot.Listeners
 {

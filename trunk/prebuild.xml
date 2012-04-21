@@ -520,11 +520,6 @@
       </Configuration>
 
       <ReferencePath>../../../bin</ReferencePath>
-<!--      <Reference name="SWIJPL.dll" localCopy="false"/>
-      <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
-      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
-      <Reference name="IKVM.Runtime.JNI.dll" localCopy="false"/>
--->
       <Reference name="System" localCopy="false"/>
       <Reference name="System.Core" localCopy="false"/>
       <Reference name="System.Data" localCopy="false"/>
@@ -796,8 +791,9 @@
       <!-- <Reference name="HttpServer.dll" localCopy="false"/>-->
       <Reference name="System.Core" localCopy="false" />
       <Reference name="OpenCyc.dll" localCopy="false"/>
-      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
       <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
+      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
+      <Reference name="IKVM.Runtime.JNI.dll" localCopy="false"/>
       <Reference name="MushDLR223"  localCopy="false"/>
       <Reference name="LAIR.Collections.dll" localCopy="false"/>
       <Reference name="LAIR.ResourceAPIs.WordNet" localCopy="false"/>      
@@ -1262,7 +1258,7 @@
   <Reference name="System.Xml" localCopy="false"/>
    <Reference name="Cogbot.Library" localCopy="false"/>
    <Reference name="MushDLR223"  localCopy="false"/>
-   <Reference name="SwiPlCs.dll" localCopy="false"/>
+   <Reference name="SwiPlCs" localCopy="false"/>
   <Files>
       <Match path="." pattern="*.cs"  recurse="true"  subType="Form">  
       <Exclude name="EXCLUDED.cs"/></Match>
@@ -1437,41 +1433,6 @@
          <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
      </Files>
 </Project>
-
-    <!--
-  <Project name="PDDLAuthoring" path="sources/modules/PDDLAuthoring" type="Library" frameworkVersion="v3_5">
-     <Configuration name="Debug">
-       <Options>
-           <OutputPath>../../../bin/</OutputPath>
-       </Options>
-     </Configuration>
-     <Configuration name="Release">
-       <Options>
-
-           <OutputPath>../../../bin/</OutputPath>
-       </Options>
-     </Configuration>
-
-     <ReferencePath>../../../bin</ReferencePath>
-     <Reference name="Cogbot.Library" localCopy="false"/>
-     <Reference name="PathSystem3D" localCopy="false"/>
-     <Reference name="System.Drawing" localCopy="false"/>
-     <Reference name="System.Windows.Forms" localCopy="false"/>
-     <Reference name="System.Data" localCopy="false"/>
-     <Reference name="OpenMetaverse" localCopy="false"/>
-     <Reference name="OpenMetaverseTypes" localCopy="false"/>     
-     <Reference name="System" localCopy="false"/>
-     <Reference name="DotLisp" localCopy="false"/>
-     <Reference name="OpenCyc.dll" localCopy="false"/>
-      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
-     <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
-     <Files>
-         <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
-         <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
-     </Files>
-</Project>
-
--->
 
     <Project name="IrcRegionModule" path="sources/modules/IrcRegionModule" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
@@ -1803,6 +1764,7 @@
       <Reference name="fmodex-dotnet.dll" localCopy="false"/>
       <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
+      <Reference name="IKVM.Runtime.JNI.dll" localCopy="false"/>
       <Reference name="IrcRegionModule" />
       <Reference name="jabber-net.dll" localCopy="false"/>
       <Reference name="log4net.dll" localCopy="false"/>
@@ -1822,7 +1784,7 @@
       <Reference name="RadSpeechLin" />
       <Reference name="RadSpeechWin" />
       <Reference name="CommandLine.dll"  localCopy="false" />
-      <Reference name="SwiPlCs.dll" localCopy="false"/>
+      <Reference name="SwiPlCs" localCopy="false"/>
       <Reference name="System" localCopy="false"/>
       <Reference name="System.Data" />
       <Reference name="System.Drawing" localCopy="false"/>

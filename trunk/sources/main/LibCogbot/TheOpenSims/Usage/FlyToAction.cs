@@ -3,6 +3,7 @@ using System.Threading;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
+using Thread = MushDLR223.Utilities.SafeThread;
 
 namespace cogbot.TheOpenSims
 {

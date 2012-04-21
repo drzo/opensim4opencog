@@ -12,6 +12,7 @@ using PathSystem3D.Mesher;
 using PathSystem3D.Navigation;
 using System.Reflection;
 using MushDLR223.ScriptEngines;
+using Thread = MushDLR223.Utilities.SafeThread;
 
 namespace cogbot.TheOpenSims
 {

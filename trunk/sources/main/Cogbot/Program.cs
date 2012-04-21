@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using cogbot;
@@ -16,8 +15,8 @@ using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using Radegast;
-using SbsSW.SwiPlCs;
 using CommandLine.Text;
+using Thread = MushDLR223.Utilities.SafeThread;
 
 namespace ABuildStartup
 {

@@ -9,7 +9,6 @@ using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 using OpenMetaverse.StructuredData;
-using NotImplementedException=sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 namespace cogbot.Actions.SimExport
 {

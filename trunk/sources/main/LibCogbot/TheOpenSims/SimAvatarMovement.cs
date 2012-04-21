@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using cogbot.Actions.Pathfinder;
 using cogbot.Listeners;
-using java.lang;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
@@ -13,9 +12,9 @@ using Exception=System.Exception;
 using Math=System.Math;
 using Object=System.Object;
 using String=System.String;
-using Thread=System.Threading.Thread;
 using System.Drawing;
 using ControlFlags = OpenMetaverse.AgentManager.ControlFlags;
+using Thread = MushDLR223.Utilities.SafeThread;
 
 namespace cogbot.TheOpenSims
 {
@@ -905,7 +904,7 @@ namespace cogbot.TheOpenSims
                     return false;
                 default:
                     {
-                        throw new UnsupportedOperationException("" + SalientMovementProceedure);
+                        throw new InvalidOperationException("" + SalientMovementProceedure);
                     }
             }
         }

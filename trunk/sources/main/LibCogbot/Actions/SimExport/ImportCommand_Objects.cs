@@ -626,6 +626,7 @@ namespace cogbot.Actions.SimExport
 
         private void ImportPTCFiles(ImportSettings arglist, bool lloadOnly, bool rezMissing)
         {
+            if (!Directory.Exists(ExportCommand.dumpDir)) return;
             foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.objectAsset"))
             {
                 string fileUUID = Path.GetFileNameWithoutExtension(Path.GetFileName(file));
