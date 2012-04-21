@@ -50,10 +50,12 @@ namespace AltAIMLbot
         public  Thread myCronThread = null;
         public  string lastAIMLInstance = "";
         public bool traceServitor = true;
+
         public Servitor(string UserID, sayProcessorDelegate outputDelegate)
         {
             Start(UserID, outputDelegate);
         }
+
         public void Start(string UserID,sayProcessorDelegate outputDelegate)
         {
             Console.WriteLine("RealBot operating in :" + Environment.CurrentDirectory);
@@ -92,11 +94,29 @@ namespace AltAIMLbot
             startFSMEngine();
             startBehaviorEngine();
             startCronEngine();
+            curBot.myBehaviors.keepTime("activation", RunStatus.Success);
+            curBot.myBehaviors.activationTime("activation", RunStatus.Success);
 
+        }
+
+        public bool setGuestEvalObject(object guestObj)
+        {
+            if (curBot == null) return false;
+            curBot.guestEvalObject = guestObj;
+            return true;
         }
 
         public string respondToChat(string input)
         {
+            if (curBot.myBehaviors.definedBehavior("chatRoot"))
+            {
+                curUser.Predicates.updateSetting("lastinput", input);
+                curBot.lastBehaviorChatInput = input;
+                curBot.lastBehaviorUser = curUser;
+                curBot.myBehaviors.runBotBehavior("chatRoot",curBot);
+                return curBot.lastBehaviorChatOutput;
+            }
+
             try
             {
                     Request r = new Request(input, curUser, curBot);
@@ -140,6 +160,9 @@ namespace AltAIMLbot
                     Console.WriteLine("SERVITOR: reactToChat({0})={1}", input, res.Output);
                 }
                 sayResponse(res.Output);
+                // Mark the output time
+                curBot.myBehaviors.keepTime("lastchatoutput", RunStatus.Success);
+                curBot.myBehaviors.activationTime("lastchatoutput", RunStatus.Success);
             }
             catch
             { }
@@ -157,6 +180,10 @@ namespace AltAIMLbot
                     Console.WriteLine("SERVITOR: reactToChat({0},{2})={1}", input, res.Output, UserID);
                 }
                 sayResponse(res.Output);
+                // Mark the output time
+                curBot.myBehaviors.keepTime("lastchatoutput", RunStatus.Success);
+                curBot.myBehaviors.activationTime("lastchatoutput", RunStatus.Success);
+
             }
             catch
             { }

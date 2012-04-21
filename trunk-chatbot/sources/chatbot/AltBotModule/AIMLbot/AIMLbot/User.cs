@@ -28,7 +28,10 @@ namespace AltAIMLbot
         {
             get{return this.id;}
         }
-
+        public void setUserID(string uid)
+        {
+            id = uid;
+        }
         /// <summary>
         /// A collection of all the result objects returned to the user in this session
         /// </summary>
@@ -156,6 +159,17 @@ namespace AltAIMLbot
             return this.getThat(n, 0);
         }
 
+        public int SailentResultCount
+        {
+            get
+            {
+                lock (Results)
+                {
+                    return Results.Count;
+                }
+            }
+        }
+
         /// <summary>
         /// Returns the sentence numbered by "sentence" of the output "n" steps ago from the bot
         /// </summary>
@@ -175,6 +189,16 @@ namespace AltAIMLbot
             return string.Empty;
         }
 
+        public void setOutputSentence(int n, int sent, string data)
+        {
+            if (n >= this.Results.Count)
+            {
+                this.Results[n] = new Result(this, this.bot, new Request("", this, this.bot));
+            }
+            Result historicResult = (Result)this.Results[n];
+            historicResult.OutputSentences[sent] = data;
+
+        }
         /// <summary>
         /// Returns the first sentence of the last output from the bot
         /// </summary>
@@ -213,6 +237,40 @@ namespace AltAIMLbot
             return string.Empty;
         }
 
+
+        public Result GetResult(int i)
+        {
+            return GetResult(i, false);
+        }
+        public Result GetResult(int i, bool mustBeSalient)
+        {
+            return GetResult(i, mustBeSalient, null);
+        }
+        public Result GetResult(int i, bool mustBeSalient, UserConversationScope responder)
+        {
+            bool mustBeResponder = responder != null;
+            //if (i == -1) return CurrentRequest.CurrentResult;
+            lock (Results)
+            {
+                if (i >= Results.Count)
+                {
+                    return null;
+                }
+                {
+                    foreach (var r in Results)
+                    {
+                        //if (r.Responder == this) continue;
+                        //if (mustBeResponder) if (r.Responder != responder) continue;
+                        //if (mustBeSalient && !r.IsSalient) continue;
+                        if (i == 0) return r;
+                        i--;
+                    }
+                    return null;
+                }
+            }
+        }
+
+
         /// <summary>
         /// Adds the latest result from the bot to the Results collection
         /// </summary>
@@ -220,6 +278,10 @@ namespace AltAIMLbot
         public void addResult(Result latestResult)
         {
             this.Results.Insert(0, latestResult);
+        }
+        public void setResult(int n, Result desiredResult)
+        {
+            this.Results[n]= desiredResult;
         }
         #endregion
     }

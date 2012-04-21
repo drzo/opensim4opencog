@@ -195,6 +195,10 @@ namespace AltAIMLbot.Utils
                 {
                     processImmediate(currentNode, filename);
                 }
+                if (currentNode.Name == "subaiml")
+                {
+                    processImmediate(currentNode, filename);
+                }
             }
         }
 
@@ -264,6 +268,10 @@ namespace AltAIMLbot.Utils
                 {
                     processImmediate(thisNode, filename);
                 }
+                if (thisNode.Name == "subaiml")
+                {
+                    processImmediate(thisNode, filename);
+                }
             }
         }
 
@@ -315,6 +323,10 @@ namespace AltAIMLbot.Utils
                 {
                     processImmediate(thisNode, filename);
                 }
+                if (thisNode.Name == "subaiml")
+                {
+                    processImmediate(thisNode, filename);
+                }
             }
         }
 
@@ -342,6 +354,16 @@ namespace AltAIMLbot.Utils
             XmlNode pattern = this.FindNode("pattern", node);
             XmlNode template = this.FindNode("template", node);
 
+            Node ourGraphMaster;
+            if (this.bot.Graphs.ContainsKey(this.graphName ))
+            {
+                ourGraphMaster = this.bot.Graphs[this.graphName];
+            }
+            else
+            {
+                ourGraphMaster = this.bot.Graphmaster;
+            }
+
             if (object.Equals(null, pattern))
             {
                 throw new XmlException("Missing pattern tag in a node found in " + filename);
@@ -358,7 +380,8 @@ namespace AltAIMLbot.Utils
             {
                 try
                 {
-                    this.bot.Graphmaster.addCategory(categoryPath, template.OuterXml, filename,1,1);
+                    //this.bot.Graphmaster.addCategory(categoryPath, template.OuterXml, filename, 1, 1);
+                    ourGraphMaster.addCategory(categoryPath, template.OuterXml, filename, 1, 1);
                     // keep count of the number of categories that have been processed
                     this.bot.Size++;
                 }

@@ -46,8 +46,11 @@ namespace AltAIMLbot.AIMLTagHandlers
                 {
                     try
                     {
-                       string rx = this.templateNode.Attributes["max"].Value;
-                       range = double.Parse(rx);
+                        if (this.templateNode.Attributes["max"] != null)
+                        {
+                            string rx = this.templateNode.Attributes["max"].Value;
+                            range = double.Parse(rx);
+                        }
                     }
                     catch
                     {

@@ -75,6 +75,9 @@
     <Compile Include="AIMLTagHandlers\chemcmd.cs" />
     <Compile Include="AIMLTagHandlers\behavior.cs" />
     <Compile Include="AIMLTagHandlers\btxml.cs" />
+    <Compile Include="AIMLTagHandlers\subaiml.cs" />
+    <Compile Include="AIMLTagHandlers\wolframserver.cs" />
+    <Compile Include="AIMLTagHandlers\trueknowledgeserver.cs" />
     <Compile Include="AIMLTagHandlers\crontag.cs" />
     <Compile Include="AIMLTagHandlers\say.cs" />
     <Compile Include="AIMLTagHandlers\satisfied.cs" />

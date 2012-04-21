@@ -67,7 +67,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                                     }
                                     else
                                     {
-                                        this.bot.writeToLog("ERROR! An input tag with a bady formed index (" + this.templateNode.Attributes[0].Value + ") was encountered processing the input: " + this.request.rawInput);
+                                        this.bot.writeToLog("ERROR! An input tag with a badly formed index (" + this.templateNode.Attributes[0].Value + ") was encountered processing the input: " + this.request.rawInput);
                                     }
                                 }
                                 else
@@ -77,7 +77,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                             }
                             catch
                             {
-                                this.bot.writeToLog("ERROR! A thatstar tag with a bady formed index (" + this.templateNode.Attributes[0].Value + ") was encountered processing the input: " + this.request.rawInput);
+                                this.bot.writeToLog("ERROR! A thatstar tag with a badly formed index (" + this.templateNode.Attributes[0].Value + ") was encountered processing the input: " + this.request.rawInput);
                             }
                         }
                     }

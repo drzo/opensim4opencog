@@ -23,10 +23,10 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 namespace AltAIMLbot.AIMLTagHandlers
 {
-    public class scxml : AltAIMLbot.Utils.AIMLTagHandler
+    public class subaiml : AltAIMLbot.Utils.AIMLTagHandler
     {
 
-        public scxml(AltAIMLbot.AltBot bot,
+        public subaiml(AltAIMLbot.AltBot bot,
                 AltAIMLbot.User user,
                 AltAIMLbot.Utils.SubQuery query,
                 AltAIMLbot.Request request,
@@ -41,18 +41,13 @@ namespace AltAIMLbot.AIMLTagHandlers
 
         protected override string ProcessChange()
         {
-            if (this.templateNode.Name.ToLower() == "scxml")
+            if (this.templateNode.Name.ToLower() == "subaiml")
             {
-                // Simply push the filled in tag contents onto the stack
+                // 
                 try
                 {
-                    String templateNodeTotalValue = this.templateNode.OuterXml;
-                    String myName = "root";
-                    if (this.templateNode.Attributes["name"] != null)
-                    {
-                        myName = this.templateNode.Attributes["name"].Value;
-                    }
-                    this.user.bot.defineFSM((string)myName, (string)templateNodeTotalValue);
+
+                    this.user.bot.myBehaviors.defineSubAIML(this.templateNode);
                 }
                 catch
                 {

@@ -50,7 +50,10 @@ namespace AltAIMLbot.AIMLTagHandlers
                     String myName = "root";
                     try
                     {
-                        myName = this.templateNode.Attributes["id"].Value;
+                        if (this.templateNode.Attributes["id"] != null)
+                        {
+                            myName = this.templateNode.Attributes["id"].Value;
+                        }
                     }
                     catch
                     {

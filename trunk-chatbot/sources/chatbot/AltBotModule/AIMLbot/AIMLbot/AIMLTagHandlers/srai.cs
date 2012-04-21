@@ -38,12 +38,33 @@ namespace AltAIMLbot.AIMLTagHandlers
         {
             if (this.templateNode.Name.ToLower() == "srai")
             {
+                string graphName = "*";
+                try
+                {
+                    if (this.templateNode.Attributes["graph"] != null)
+                    {
+                        graphName = this.templateNode.Attributes["graph"].Value;
+                    }
+                }
+                catch (Exception e)
+                {
+                    graphName = "*";
+                }            
+
                 if (this.templateNode.InnerText.Length > 0)
                 {
                     if (this.templateNode.Attributes.Count > 0)
                     {
-                        string myTopic = this.templateNode.Attributes["topic"].Value;
-                        string myState = this.templateNode.Attributes["state"].Value;
+                        string myTopic = "";
+                        string myState = "";
+                        if (this.templateNode.Attributes["topic"] != null)
+                        {
+                            myTopic = this.templateNode.Attributes["topic"].Value;
+                        }
+                        if (this.templateNode.Attributes["state"] != null)
+                        {
+                            myState = this.templateNode.Attributes["state"].Value;
+                        }
                         if ((myTopic.Length > 0) || (myState.Length > 0))
                         {
                             // Extended SRAI with explicit topic and state attributes
@@ -53,16 +74,16 @@ namespace AltAIMLbot.AIMLTagHandlers
                             string localState = this.user.State;
                             // pass through anything not specified
                             if (myTopic.Length == 0) { myTopic = localTopic; }
-                            if (myState.Length == 0) { myTopic = localState; }
+                            if (myState.Length == 0) { myState = localState; }
                             // insert the args
                             this.user.Predicates.updateSetting("topic", myTopic);
                             this.user.Predicates.updateSetting("state", myState);
                             // make the call
                             Request subRequest0 = new Request(this.templateNode.InnerText, this.user, this.bot);
                             subRequest0.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
-                            Result subQuery0 = this.bot.Chat(subRequest0);
+                            Result subQuery0 = this.bot.Chat(subRequest0,graphName);
                             this.request.hasTimedOut = subRequest0.hasTimedOut;
-                            // restore tthis level values
+                            // restore this level values
                             this.user.Predicates.updateSetting("topic", localTopic);
                             this.user.Predicates.updateSetting("state", localState);
                             Console.WriteLine(" --- SRAI: RETURNA [{0}]", subQuery0.Output);
@@ -75,7 +96,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                         // Plain old SRAI
                         Request subRequest = new Request(this.templateNode.InnerText, this.user, this.bot);
                         subRequest.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
-                        Result subQuery = this.bot.Chat(subRequest);
+                        Result subQuery = this.bot.Chat(subRequest,graphName);
                         this.request.hasTimedOut = subRequest.hasTimedOut;
                         Console.WriteLine(" --- SRAI: RETURNB [{0}]", subQuery.Output);
                         return subQuery.Output;

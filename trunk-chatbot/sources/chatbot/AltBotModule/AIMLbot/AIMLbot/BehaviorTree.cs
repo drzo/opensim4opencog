@@ -13,6 +13,7 @@ using Aima.Core.Logic.Propositional.Parsing;
 using Aima.Core.Logic.Propositional.Parsing.AST;
 using Aima.Core.Logic.Propositional.Visitors;
 using MiniSatCS;
+using System.Reflection;
 
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Courssey, Daxtron Labs
@@ -246,6 +247,19 @@ namespace AltAIMLbot
             result = newTree.runBehaviorTree(this.bot);
             return result;
         }
+
+        public bool definedBehavior(string behaviorName)
+        {
+            return behaveTrees.ContainsKey(behaviorName);
+        }
+
+        public void defineSubAIML(XmlNode xnode)
+        {
+            BehaviorTree newTree = new BehaviorTree();
+            newTree.bot = bot;
+            newTree.ProcessStateAiml(xnode);
+        }
+
         public RunStatus runBotBehavior(string behaviorName, AltBot deBot)
         {
             bot = deBot;
@@ -402,8 +416,44 @@ namespace AltAIMLbot
 
         public bool isAnAssert(string nodeName)
         {
-            return ((nodeName.ToLower() == "assert") || (nodeName.ToLower() == "asserttimer")); 
+            return (
+                       (nodeName.ToLower() == "assert") 
+                    || (nodeName.ToLower() == "asserttimer")
+                    || (nodeName.ToLower() == "assertguest")
+                    ); 
         }
+
+        // in case we want the xpath of a node
+        // see http://stackoverflow.com/questions/241238/how-to-get-xpath-from-an-xmlnode-instance-c-sharp
+        //     http://stackoverflow.com/questions/451950/get-the-xpath-to-an-xelement
+        // includes names for readibility. maybe useful for behavior stack
+        public string GetXPathToNode(XmlNode node)
+        {
+            if (node.NodeType == XmlNodeType.Attribute)
+            {
+                // attributes have an OwnerElement, not a ParentNode; also they have              
+                // to be matched by name, not found by position              
+                return String.Format("{0}/@{1}", GetXPathToNode(((XmlAttribute)node).OwnerElement), node.Name);
+            }
+            if (node.ParentNode == null)
+            {
+                // the only node with no parent is the root node, which has no path 
+                return "";
+            }
+
+            //get the index 
+            int iIndex = 1;
+            XmlNode xnIndex = node;
+            while (xnIndex.PreviousSibling != null && xnIndex.PreviousSibling.Name == xnIndex.Name)
+            {
+                iIndex++;
+                xnIndex = xnIndex.PreviousSibling;
+            }
+
+            // the path to a node is the path to its parent, plus "/node()[n]", where 
+            // n is its position among its siblings.          
+            return String.Format("{0}/{1}[{2}]", GetXPathToNode(node.ParentNode), node.Name, iIndex);
+        } 
 
         public RunStatus processNode(XmlNode myNode)
         {
@@ -415,7 +465,10 @@ namespace AltAIMLbot
             {
                 if((myNode.Attributes != null)&&(myNode .Attributes .Count >0))
                 {
-                    nodeID = myNode.Attributes["id"].Value;
+                    if (myNode.Attributes["id"] != null)
+                    {
+                        nodeID = myNode.Attributes["id"].Value;
+                    }
                 }
             }
             catch(Exception e)
@@ -519,6 +572,18 @@ namespace AltAIMLbot
                     case "processkb":
                         result = ProcessKBModel(myNode);
                         break;
+
+                    case "chat":
+                        result = ProcessChat(myNode);
+                        break;
+
+                    case "assertguest":
+                        result = ProcessAssertGuest(myNode);
+                        break;
+                    case "taskguest":
+                        result = ProcessTaskGuest(myNode);
+                        break;
+
                     default:
                         // Ignore the Nops
                         result = RunStatus.Success;
@@ -864,6 +929,111 @@ namespace AltAIMLbot
             return r;
         }
 
+        // Assert based on guest object Eval
+        // "cond" will be invoked on bot.guestEvalObject which should return a bool
+        // which will determine the assert success or failure
+        // fails if guest does not exist
+        // the inner text defines the call parameters
+        // One idiom would be to check if the guest object exists as a guard to
+        //  a guest specific behavior subtree
+        // One can also use the check for <selector>'s that depend on a particular
+        //  guest object type
+        public RunStatus ProcessAssertGuest(XmlNode myNode)
+        {
+            string condition = myNode.Attributes["cond"].Value;
+            string parameters = myNode.InnerText;
+            //if it doesn't exist then return failure
+            if (bot.guestEvalObject == null)
+            {
+                return RunStatus.Failure;
+            }
+            RunStatus r = RunStatus.Failure;
+            try
+            {
+                MethodInfo info = bot.guestEvalObject.GetType().GetMethod(condition);
+                if (info != null)
+                {
+                    bool result = (bool)info.Invoke(bot.guestEvalObject, new object[] { parameters });
+                    if (result) r = RunStatus.Success;
+                }
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine("Error ProcessAssertGuest '{0}':{1}", condition, e.Message);
+                return RunStatus.Failure;
+            }
+
+            return r;
+        }
+
+        public RunStatus ProcessTaskGuest(XmlNode myNode)
+        {
+            string condition = myNode.Attributes["call"].Value;
+            string parameters = myNode.InnerText;
+            //if it doesn't exist then return  failure(success would also make sense)
+            if (bot.guestEvalObject == null)
+            {
+                return RunStatus.Failure;
+            }
+            RunStatus r = RunStatus.Failure;
+            try
+            {
+                MethodInfo info = bot.guestEvalObject.GetType().GetMethod(condition);
+                if (info != null)
+                {
+                    bool result = (bool)info.Invoke(bot.guestEvalObject, new object[] { parameters });
+                    if (result) r = RunStatus.Success;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessAssertGuest '{0}':{1}", condition, e.Message);
+                return RunStatus.Failure;
+            }
+
+            return r;
+        }
+
+
+        //CHAT: chat controlled by the behavior system
+        public RunStatus ProcessChat(XmlNode myNode)
+        {
+            string sentStr = myNode.InnerXml;
+            string graphName = "*";
+            try
+            {
+                if (myNode.Attributes["graph"] != null)
+                {
+                    graphName = myNode.Attributes["graph"].Value;
+                }
+            }
+            catch (Exception e)
+            {
+                graphName = "*";
+            }
+
+            try
+            {
+                sentStr += bot.lastBehaviorChatInput;
+                Request r = new Request(sentStr, bot.lastBehaviorUser, bot);
+                Result res = bot.Chat(r,graphName);
+                bot.lastBehaviorChatOutput=res.Output;
+                if (res.isValidOutput)
+                {
+                    return RunStatus.Success;
+                }
+                else
+                {
+                    return RunStatus.Failure;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error ProcessChat '{0}' '{1}':{2}", sentStr, bot.lastBehaviorChatInput, e.Message);
+                return RunStatus.Failure;
+            }
+        }
+
         // Propositional Reasoner interface
         // Assert to KB
         public RunStatus ProcessTellKB(XmlNode myNode)
@@ -884,6 +1054,8 @@ namespace AltAIMLbot
                 return RunStatus.Failure;
             }
         }
+
+
         public RunStatus ProcessTellBaseKB(XmlNode myNode)
         {
             string sentStr = myNode.InnerXml;
@@ -1393,27 +1565,43 @@ namespace AltAIMLbot
 
             try
             {
-                string returnV = myNode.Attributes["return"].Value;
-                if (returnV.ToLower() == "failure") { result = RunStatus.Failure; }
-                if (returnV.ToLower() == "success") { result = RunStatus.Success; }
+                if (myNode.Attributes["return"] != null)
+                {
+
+                    string returnV = myNode.Attributes["return"].Value;
+                    if (returnV.ToLower() == "failure") { result = RunStatus.Failure; }
+                    if (returnV.ToLower() == "success") { result = RunStatus.Success; }
+                }
             }
             catch
             {
                 result = RunStatus.Success;
                 
             }
+            string graphName = "*";
+            try
+            {
+                if (myNode.Attributes["graph"] != null)
+                {
+                    graphName = myNode.Attributes["graph"].Value;
+                }
+            }
+            catch (Exception e)
+            {
+                graphName = "*";
+            }            
             try
             {
                 
                 //XmlNode resultTemplateNode = AIMLTagHandler.getNode("<template>" + myNode.InnerXml + "</template>");
                 XmlDocument resultAIMLDoc = new XmlDocument();
-                resultAIMLDoc.LoadXml( "<aiml>" + myNode.InnerXml + "</aiml>");
+                resultAIMLDoc.LoadXml( "<aiml graph='"+graphName+"'>" + myNode.InnerXml + "</aiml>");
                 bot.loadAIMLFromXML(resultAIMLDoc, "dynamic_code");
                 //bot.evalTemplateNode(templateNode);
             }
             catch (Exception e)
             {
-                Console.WriteLine("ERR: ProcessTask");
+                Console.WriteLine("ERR: ProcessStateAiml");
                 Console.WriteLine("ERR:" + e.Message);
                 Console.WriteLine("ERR:" + e.StackTrace);
                 Console.WriteLine("ERR XML:" + myNode.OuterXml);

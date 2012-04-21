@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.IO;
@@ -65,6 +66,7 @@ namespace AltAIMLbot
         public Model myModel = null;
         public Model myActiveModel = null;
 
+        public object guestEvalObject = null;
 
         /// <summary>
         /// A dictionary object that looks after all the settings associated with this bot
@@ -339,9 +341,15 @@ namespace AltAIMLbot
         public int Size;
 
         /// <summary>
-        /// The "brain" of the bot
+        /// The default "brain" of the bot
         /// </summary>
         public AltAIMLbot.Utils.Node Graphmaster;
+
+        /// <summary>
+        /// The named "brains" of the bot
+        /// default graphmaster should be listed under "*"
+        /// </summary>
+        public Dictionary<string, AltAIMLbot.Utils.Node> Graphs;
 
         /// <summary>
         /// If set to false the input from AIML files will undergo the same normalization process that
@@ -370,6 +378,10 @@ namespace AltAIMLbot
         public delegate void LogMessageDelegate();
 
         public sayProcessorDelegate sayProcessor;
+
+        public string lastBehaviorChatInput;
+        public string lastBehaviorChatOutput;
+        public User lastBehaviorUser;
 
         #endregion
 
@@ -445,6 +457,8 @@ namespace AltAIMLbot
             this.DefaultPredicates = new SettingsDictionary(this);
             this.CustomTags = new Dictionary<string, TagHandler>();
             this.Graphmaster = new AltAIMLbot.Utils.Node();
+            this.Graphs = new Dictionary<string, AltAIMLbot.Utils.Node>();
+            this.Graphs.Add("*", this.Graphmaster);
         }
 
         /// <summary>
@@ -711,18 +725,37 @@ namespace AltAIMLbot
             return this.Chat(request);
         }
 
+        public Result Chat(Request request)
+        {
+            return Chat(request, "*");
+        }
         /// <summary>
         /// Given a request containing user input, produces a result from the bot.
         /// Sensitive to request.user.Qstate
         /// </summary>
         /// <param name="request">the request from the user</param>
         /// <returns>the result to be output to the user</returns>
-        public Result Chat(Request request)
+        public Result Chat(Request request,string graphID)
         {
+            
+            Node ourGraphMaster;
+            if (Graphs.ContainsKey(graphID))
+            {
+                ourGraphMaster = Graphs[graphID];
+            }
+            else
+            {
+                ourGraphMaster = Graphmaster;
+            }
+
             Result result = new Result(request.user, this, request);
 
             if (this.isAcceptingUserInput)
             {
+                // Mark the input time
+                myBehaviors.keepTime("lastchatinput",RunStatus.Success );
+                myBehaviors.activationTime("lastchatinput", RunStatus.Success);
+
                 // Normalize the input
                 AIMLLoader loader = new AIMLLoader(this);
                 AltAIMLbot.Normalize.SplitIntoSentences splitter = new AltAIMLbot.Normalize.SplitIntoSentences(this);
@@ -761,7 +794,8 @@ namespace AltAIMLbot
                         foreach (string nstate in request.user.Qstate.Keys)
                         {
                             string path = loader.generatePath(sentence, request.user.getLastBotOutput(), request.user.Topic, nstate, nstate, true);
-                            double statev = this.Graphmaster.getPathScore(path);
+                            //double statev = this.Graphmaster.getPathScore(path);
+                            double statev = ourGraphMaster.getPathScore(path);
 
                             if (statev == bestv)
                             {
@@ -790,7 +824,8 @@ namespace AltAIMLbot
                 foreach (string path in result.NormalizedPaths)
                 {
                     Utils.SubQuery query = new SubQuery(path);
-                    query.Template = this.Graphmaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
+                    //query.Template = this.Graphmaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
+                    query.Template = ourGraphMaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
                     Console.WriteLine("DEBUG: TemplatePath = " + query.TemplatePath);
                     Console.WriteLine("DEBUG: Template = " + query.Template);
                     result.SubQueries.Add(query);
@@ -989,6 +1024,12 @@ namespace AltAIMLbot
                         case "refserver":
                             tagHandler = new AIMLTagHandlers.refserver(this, user, query, request, result, node);
                             break;
+                        case "trueknowledgeserver":
+                            tagHandler = new AIMLTagHandlers.trueknowledgeserver(this, user, query, request, result, node);
+                            break;
+                        case "wolframserver":
+                            tagHandler = new AIMLTagHandlers.wolframserver(this, user, query, request, result, node);
+                            break;
 
                         case "inject":
                             tagHandler = new AIMLTagHandlers.inject(this, user, query, request, result, node);
@@ -1022,6 +1063,9 @@ namespace AltAIMLbot
                             break;
                         case "crontag":
                             tagHandler = new AIMLTagHandlers.crontag(this, user, query, request, result, node);
+                            break;
+                        case "subaiml":
+                            tagHandler = new AIMLTagHandlers.subaiml(this, user, query, request, result, node);
                             break;
 
                         default:

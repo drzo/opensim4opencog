@@ -45,6 +45,13 @@ namespace AltAIMLbot.Utils
                 return this.orderedKeys.Count;
             }
         }
+        public List<string> Keys
+        {
+            get
+            {
+                return orderedKeys;
+            }
+        }
 
         /// <summary>
         /// An XML representation of the contents of this dictionary
@@ -221,6 +228,10 @@ namespace AltAIMLbot.Utils
                     string bbKey = bbPrefix + MakeCaseInsensitive.TransformInput(key).ToLower();
                     this.bot.myChemistry.m_cBus.setHash(bbKey, value);
                 }
+            }
+            else
+            {
+                addSetting(name, value);
             }
         }
 

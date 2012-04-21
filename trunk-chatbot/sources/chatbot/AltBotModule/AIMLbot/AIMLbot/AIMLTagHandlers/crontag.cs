@@ -74,7 +74,10 @@ namespace AltAIMLbot.AIMLTagHandlers
                     String myTimeMode = "absolute";
                     try
                     {
-                        myTimeMode = this.templateNode.Attributes["mode"].Value;
+                        if (this.templateNode.Attributes["mode"] != null)
+                        {
+                            myTimeMode = this.templateNode.Attributes["mode"].Value;
+                        }
                     }
                     catch (Exception)
                     {

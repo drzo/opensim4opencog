@@ -69,6 +69,10 @@ namespace AltAIMLbot.AIMLTagHandlers
                         if ((message.Length > 0) && (this.user.bot.sayProcessor != null))
                         {
                             this.user.bot.sayProcessor(message);
+                            // Mark the output time
+                            this.user.bot.myBehaviors.keepTime("lastchatoutput", RunStatus.Success);
+                            this.user.bot.myBehaviors.activationTime("lastchatoutput", RunStatus.Success);
+
                         }
                     }
                     else
@@ -79,6 +83,9 @@ namespace AltAIMLbot.AIMLTagHandlers
                         Console.WriteLine("  SayB msg2:{0}", message2);
                         if (message.Length > 0) this.user.bot.sayProcessor(message);
                         if (message2.Length > 0) this.user.bot.sayProcessor(message2);
+                        // Mark the output time
+                        this.user.bot.myBehaviors.keepTime("lastchatoutput", RunStatus.Success);
+                        this.user.bot.myBehaviors.activationTime("lastchatoutput", RunStatus.Success);
                     }
                 }
                 catch(Exception e)

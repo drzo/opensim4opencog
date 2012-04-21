@@ -81,6 +81,21 @@ namespace AltAIMLbot
             }
         }
 
+        public bool isValidOutput
+        {
+            get
+            {
+                if (OutputSentences.Count > 0)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
         /// <summary>
         /// Returns the raw sentences without any logging 
         /// </summary>
