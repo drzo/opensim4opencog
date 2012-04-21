@@ -1,10 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
-using OpenMetaverse;
-using OpenMetaverse.Packets;
-
 using MushDLR223.ScriptEngines;
 using PrologScriptEngine;
 using SbsSW.SwiPlCs;
@@ -51,9 +46,9 @@ namespace cogbot.Actions.System
                                                                           return o;
                                                                       }, false);
                                      });
+                PrologClient.RegisterCurrentThread();
                 mre.WaitOne();
                 if (o == null) return Success("swip: " + cmd.Value);
-                PrologClient.RegisterThread(Thread.CurrentThread);
                 return Success("swip: " + cmd.Value + " " + o);
             }
             catch (Exception e)
