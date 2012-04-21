@@ -614,14 +614,14 @@ namespace AIMLBotModule
                         }, "AIML_OnInstantMessage: " + myUser + ": " + message);
         }
 
-        IEnumerable<Thread> ThreadList
+    /*    IEnumerable<Thread> ThreadList
         {
             get
             {
                 return WorldSystem.client.GetBotCommandThreads();
             }
         }
-
+        */
         private void RunTask(ThreadStart action, string name)
         {
             Enqueue(name, () => client.InvokeThread(name, action));
@@ -644,12 +644,13 @@ namespace AIMLBotModule
             var sourcetype = e.SourceType;
 
             if (String.IsNullOrEmpty(message) || message.Length < 2) return;
-            if (sourcetype == ChatSourceType.System) return;
+            if (sourcetype == ChatSourceType.System) return;          
             if (fromname == GetName())
             {
                 HeardMyselfSay(UUID.Zero, message);
                 return;
             }
+            if (message.StartsWith("/me (")) return;
             if (string.IsNullOrEmpty(fromname))
             {
                 Primitive prim = WorldSystem.GetPrimitive(id, e.Simulator);
