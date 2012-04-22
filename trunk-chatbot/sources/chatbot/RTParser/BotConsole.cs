@@ -548,7 +548,7 @@ namespace RTParser
             GraphMaster G = myUser.StartGraph;
             Request request = myUser.LastRequest;
 
-            if (G.DoGraphCommand(cmd, console, showHelp, args, request)) return true;
+            if (G != null && G.DoGraphCommand(cmd, console, showHelp, args, request)) return true;
 
             if (RTPBotCommands.ChGraphCmd(request, showHelp, console, cmd, myUser, args)) return true;
 

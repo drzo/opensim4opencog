@@ -186,6 +186,7 @@ namespace AltAIMLbot
 
         public void keepTime(string nodeID, RunStatus R)
         {
+            if (bot == null) return;
             // Update on first entry
             if (R == RunStatus.Success)
             {
