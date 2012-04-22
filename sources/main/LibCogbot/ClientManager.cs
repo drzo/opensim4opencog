@@ -17,7 +17,9 @@ using OpenMetaverse;
 using cogbot.Actions;
 using cogbot.Actions.Scripting;
 using Settings=OpenMetaverse.Settings;
+#if USE_SAFETHREADS
 using Thread = MushDLR223.Utilities.SafeThread;
+#endif
 
 //using Radegast;
 namespace cogbot
@@ -670,7 +672,7 @@ namespace cogbot
 
         public static Thread InSTAThread(ThreadStart invoker, string fullName) {
 
-            Thread t = new Thread(new ThreadStart(() =>
+            Thread t = new System.Threading.Thread(new ThreadStart(() =>
             {
                 Thread ct = Thread.CurrentThread;
                 try
@@ -1485,7 +1487,14 @@ namespace cogbot
                     registeredSystemApplicationCommandTypes.Add(t);
                     if (!t.IsInterface)
                     {
+                        string typename = t.Name;
                         ConstructorInfo info = t.GetConstructor(new Type[] { typeof(BotClient) });
+                        if (info == null) info = t.GetConstructor(new Type[] {typeof (GridClient)});
+                        if (info == null)
+                        {
+                            WriteLine("Missing BotClient constructor in " + typename);
+                            return false;
+                        }
                         try
                         {
                             Command command = (Command)info.Invoke(new object[] { null });
@@ -1493,7 +1502,7 @@ namespace cogbot
                         }
                         catch (Exception e)
                         {
-                            WriteLine("RegisterType: " + e + "\n" + e.InnerException + "\n In " + t.Name);
+                            WriteLine("RegisterType: " + e + "\n" + e.InnerException + "\n In " + typename);
                         }
                     }
                 }

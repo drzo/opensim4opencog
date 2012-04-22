@@ -16,7 +16,9 @@ using MushDLR223.Utilities;
 using OpenMetaverse;
 using Radegast;
 using CommandLine.Text;
+#if USE_SAFETHREADS
 using Thread = MushDLR223.Utilities.SafeThread;
+#endif
 
 namespace ABuildStartup
 {

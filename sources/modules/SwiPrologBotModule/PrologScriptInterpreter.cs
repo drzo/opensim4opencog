@@ -88,6 +88,7 @@ namespace PrologScriptEngine
             : base(self)
         {
             Init(self);
+            PrologClient.PlNamed("MyBot");
         }
 
         static private readonly object GroupInitLock = new object();
@@ -102,7 +103,6 @@ namespace PrologScriptEngine
                 {
                     IsInited = true;
                     prologClient.InitFromUser();
-                    PrologClient.PlNamed("MyBot");
                 }
             }
         }

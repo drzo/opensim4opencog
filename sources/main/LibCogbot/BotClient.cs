@@ -29,8 +29,9 @@ using Settings=OpenMetaverse.Settings;
 using cogbot.Actions.Agent;
 using System.Text;
 using Type=System.Type;
+#if USE_SAFETHREADS
 using Thread = MushDLR223.Utilities.SafeThread;
-
+#endif
 //using RadegastTab = Radegast.SleekTab;
 
 // older LibOMV
@@ -1809,7 +1810,7 @@ namespace cogbot
             return found;
         }
 
-        public Dictionary<Assembly, List<Listener>> AssemblyListeners = new Dictionary<Assembly, List<Listener>>();
+        public Dictionary<Assembly, List<Listener>> AssemblyListeners =   new Dictionary<Assembly, List<Listener>>();
 
         public List<Listener> LoadAssembly(Assembly assembly)
         {
@@ -1824,8 +1825,8 @@ namespace cogbot
                 items = new List<Listener>();
                 KnownAssembies.Add(assembly, items);
             }
-            bool found = false;               
-
+            bool found = false;
+            foreach (Type t in assembly.GetTypes()) RegisterType(t);
             foreach (Type t in assembly.GetTypes())
             {
                 try

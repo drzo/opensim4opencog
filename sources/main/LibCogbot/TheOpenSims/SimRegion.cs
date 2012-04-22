@@ -9,7 +9,9 @@ using MushDLR223.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Mesher;
 using PathSystem3D.Navigation;
+#if USE_SAFETHREADS
 using Thread = MushDLR223.Utilities.SafeThread;
+#endif
 
 namespace cogbot.TheOpenSims
 {

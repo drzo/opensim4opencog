@@ -14,7 +14,10 @@ using Object=System.Object;
 using String=System.String;
 using System.Drawing;
 using ControlFlags = OpenMetaverse.AgentManager.ControlFlags;
+#if USE_SAFETHREADS
 using Thread = MushDLR223.Utilities.SafeThread;
+#endif
+
 
 namespace cogbot.TheOpenSims
 {

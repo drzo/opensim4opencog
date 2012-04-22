@@ -12,7 +12,9 @@ using OpenMetaverse;
 using Radegast;
 using Radegast.Netcom;
 using Settings=Radegast.Settings;
+#if USE_SAFETHREADS
 using Thread = MushDLR223.Utilities.SafeThread;
+#endif
 
 //using RadegastTab = Radegast.SleekTab;
 

@@ -46,6 +46,10 @@ namespace DotLisp
             {
                 return new CLSLateBoundMember(name);
             }
+            return new FindMemberLater(name, symtab, typename, isStatic);
+        }
+        internal static CLSMember FindMember0(String name, SymbolTable symtab, String typename, Boolean isStatic)
+        {
             Type[] types = symtab.findTypes(typename);
             Exception e = null;
             foreach (Type type in types)
@@ -62,6 +66,10 @@ namespace DotLisp
                 {
                     e = nie;
                 }
+                catch (Exception nie)
+                {
+                    e = nie;
+                }
             }
             throw e ?? new Exception("Can't find " +
                                           (isStatic ? "static" : "instance") +
@@ -74,9 +82,14 @@ namespace DotLisp
             {
                 return new CLSLateBoundMember(name);
             }
+            return new FindMemberLaterNoSymtab(name, type, isStatic);
+        }
+
+        internal static CLSMember FindMember0(String name, Type type, Boolean isStatic)
+        {
             //lookup name in type, create approriate derivee
             MemberInfo[] members = type.GetMember(name,
-                                                              BindingFlags.Public | BindingFlags.NonPublic |
+                                                              BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy |
                                                               (isStatic ? BindingFlags.Static : BindingFlags.Instance)
                                                              ); //all public members with matching isstatic
             if (members.Length == 0)
@@ -246,6 +259,72 @@ namespace DotLisp
         {
             if (o == null) return null;
             return o.GetType();
+        }
+    }
+
+    internal class FindMemberLaterNoSymtab : CLSMember
+    {
+        internal CLSMember found = null;
+        private readonly Type _Type;
+        internal bool _Static;
+        public FindMemberLaterNoSymtab(string s, Type typename, bool @static)
+        {
+            name = s;
+            _Type = typename;
+            _Static = @static;
+            
+        }
+
+        public override object Invoke(params object[] args)
+        {
+            return GetFound().Invoke(args);
+        }
+
+        public virtual CLSMember GetFound()
+        {
+            if (found == null)
+            {
+                found = FindMember0(name, _Type, _Static);
+            }
+            return found;
+        }
+        internal override Object getValue()
+        {
+            return GetFound().getValue();
+        }
+
+        internal override void setValue(Object val)
+        {
+            GetFound().setValue(val);
+        }
+
+        public override string ToString()
+        {
+            return GetFound().ToString();
+            return base.ToString();
+        }
+    }
+
+    internal class FindMemberLater : FindMemberLaterNoSymtab
+    {
+        private readonly SymbolTable _Symtab;
+        private readonly string _Typename;
+        public FindMemberLater(string s, SymbolTable symtab, string typename, bool @static)
+            : base(s, null, @static)
+        {
+            name = s;
+            _Symtab = symtab;
+            _Typename = typename;
+            _Static = @static;
+        }
+
+        public override CLSMember GetFound()
+        {
+            if (found == null)
+            {
+                found = FindMember0(name, _Symtab, _Typename, _Static);
+            }
+            return found;
         }
     }
 }

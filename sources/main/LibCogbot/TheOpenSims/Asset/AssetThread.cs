@@ -1,7 +1,10 @@
 using System;
 using System.Threading;
 using OpenMetaverse;
+#if USE_SAFETHREADS
 using Thread = MushDLR223.Utilities.SafeThread;
+#endif
+
 
 namespace cogbot.TheOpenSims
 {
