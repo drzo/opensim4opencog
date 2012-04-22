@@ -10,7 +10,7 @@ using OpenMetaverse;
 
 namespace IrcRegionModule
 {
-    public class IrcCommand : Command, SystemApplicationCommand
+    public class IrcCommand : Command, GridMasterCommand
 
     {
         private string _ircNick = "cogbotIrcBridge";

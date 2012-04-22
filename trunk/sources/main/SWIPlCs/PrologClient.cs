@@ -1227,12 +1227,12 @@ jpl_jlist_demo :-
 
         public void InitFromUser()
         {
-            ConsultIfExists("clipl.pl");
+            ConsultIfExists("prolog/cogbot.pl");
         }
 
-        public void ConsultIfExists(string file)
+        public bool ConsultIfExists(string file)
         {
-            if (File.Exists(file)) Consult(file);
+            return PrologClient.InvokeFromC(() => File.Exists(file) && Consult(file), false);
         }
     }
 

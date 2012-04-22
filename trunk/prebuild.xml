@@ -804,7 +804,8 @@
       <Reference name="Microsoft.Vsa"  localCopy="false"/>
       <Reference name="PrologScriptEngine"  localCopy="false"/>
       <Reference name="AltAIMLbot"  localCopy="false"/>
-      
+      <Reference name="DcBus.dll" localCopy="false" />
+      <Reference name="Enyim.Caching.dll"  localCopy="false"/>
 
       <Files>
           <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="AssemblyInfo.cs"/><Exclude name="Program.cs"/></Match>
@@ -1777,6 +1778,7 @@
       <Reference name="SWIJPL.dll" localCopy="false"/>
       <Reference name="TheSimiansModule" />
       <Reference name="XMLRPC.dll" localCopy="false"/>
+
 <!--
       <Reference name="LAIR.ResourceAPIs.WordNet"/>
       <Reference name="AIMLbot" />
