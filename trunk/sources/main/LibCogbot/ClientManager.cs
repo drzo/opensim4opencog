@@ -31,7 +31,7 @@ namespace cogbot
     {
         static ClientManager()
         {
-            SingleInstance = SingleInstance ?? new ClientManager();
+           // SingleInstance = SingleInstance ?? new ClientManager();
         }
 
         public static bool StartLispThreadAtPluginInit = false;
@@ -101,7 +101,20 @@ namespace cogbot
 
         public static bool DownloadTextures = false;
         public static int nextTcpPort = 5555;
-        static public ClientManager SingleInstance = null;
+        static ClientManager _si;
+        static public ClientManager SingleInstance
+        {
+            get
+            {
+                if (_si == null)
+                {
+                    _si = new ClientManager();
+                }
+                return _si;
+            }
+            set { _si = value; }
+        }
+
         public static int debugLevel = 2;
 
         public BotClient OnlyOneCurrentBotClient;
@@ -132,7 +145,7 @@ namespace cogbot
         {
             lock (SingleInstanceLock)
             {
-                if (SingleInstance != null)
+                if (_si != null)
                 {
                     Exception e = new Exception("Only one instance of Client Manafger please!!");
                     GlobalWriteLine("" + e);
@@ -649,7 +662,7 @@ namespace cogbot
                                                if (bc.InvokedMakeRunning) return;
                                                bc.InvokedMakeRunning = true;
                                            }
-                                           if (ClientManager.UsingCogbotFromRadgast)
+                                           if (Configuration.UsingCogbotFromRadgast)
                                                CogbotGUI.SetRadegastLoginOptions(bc.TheRadegastInstance, bc);
                                            AddTypesToBotClient(bc);
                                            bc.StartupClientLisp();
@@ -657,7 +670,7 @@ namespace cogbot
                                        };
             PostAutoExecEnqueue(() =>
                                      {
-                                         if (ClientManager.UsingCogbotFromRadgast) CogbotGUI.SetRadegastLoginOptions(bc.TheRadegastInstance, bc);
+                                         if (Configuration.UsingCogbotFromRadgast) CogbotGUI.SetRadegastLoginOptions(bc.TheRadegastInstance, bc);
                                          // in-case someoine hits the login button
                                          bc.Network.LoginProgress += (s, e) =>
                                                                          {
@@ -804,8 +817,6 @@ namespace cogbot
         public bool GetTextures = true; //needed for iniminfo
 
         string version = "1.0.0";
-        public static bool UsingCogbotFromRadgast = false;
-        public static bool UsingRadgastFromCogbot = false;
         public bool StarupLispCreatedBotClients;
         public static bool IsVisualStudio;
         public static Parser arguments
@@ -938,7 +949,7 @@ namespace cogbot
                     account.Client = client;
                 }
                 GridClient gc = null;
-                if (ClientManager.UsingCogbotFromRadgast)
+                if (Configuration.UsingCogbotFromRadgast)
                 {
                     if (!GlobalRadegastInstanceGCUsed)
                     {

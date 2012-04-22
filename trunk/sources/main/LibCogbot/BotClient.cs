@@ -742,7 +742,7 @@ namespace cogbot
         }
         public void RunOnLogin()
         {
-            lock (RunStartupClientLisplock)
+            //lock (RunStartupClientLisplock)
             {
                 StartupClientLisp();
                 InvokeJoin("Waiting on RunOnLogin");
@@ -2485,6 +2485,11 @@ namespace cogbot
 
         public void InvokeGUI(ThreadStart o)
         {
+            if (TheRadegastInstance==null)
+            {
+                o();
+                return;
+            }
             CogbotGUI.InvokeGUI(TheRadegastInstance.MainForm, o);
         }
 

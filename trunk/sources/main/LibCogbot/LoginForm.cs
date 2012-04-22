@@ -211,7 +211,7 @@ namespace cogbot
         {
             try
             {
-                Configuration c2 = Configuration.Deserialize(fileName);
+                Configuration c2 = Deserialize(fileName);
                 this.Version = c2.Version;
                 this.firstName = c2.firstName;
                 this.lastName = c2.lastName;
@@ -235,7 +235,7 @@ namespace cogbot
         {
             try
             {
-                Configuration.Serialize("botconfig.xml", this);
+                Serialize("botconfig.xml", this);
             }
             catch (Exception e)
             {
@@ -301,6 +301,8 @@ namespace cogbot
             set { _onLogin = value; }
         }
 
+        public static bool UsingCogbotFromRadgast = false;
+        public static bool UsingRadgastFromCogbot = false;
     }
     #endregion
 

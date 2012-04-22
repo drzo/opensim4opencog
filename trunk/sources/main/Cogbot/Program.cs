@@ -322,12 +322,12 @@ namespace ABuildStartup
                               ClientManager.arguments = new Parser(args);
                               if (ClientManager.noGUI)
                               {
-                                  ClientManager.UsingRadgastFromCogbot = true;
+                                  Configuration.UsingRadgastFromCogbot = true;
                                   cogbot.Program.MainRun(args);
                               }
                               else
                               {
-                                  ClientManager.UsingCogbotFromRadgast = true;
+                                  Configuration.UsingCogbotFromRadgast = true;
                                   RadegastMain(args);
                               }
                           });

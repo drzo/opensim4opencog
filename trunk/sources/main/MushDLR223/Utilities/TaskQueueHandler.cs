@@ -33,7 +33,7 @@ namespace MushDLR223.Utilities
         {
             get
             {
-                return TaskThreadChangeLockReal;
+                //return TaskThreadChangeLockReal;
                 return new object();
             }
         } 

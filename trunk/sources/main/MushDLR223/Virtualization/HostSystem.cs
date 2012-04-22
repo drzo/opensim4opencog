@@ -688,19 +688,22 @@ namespace MushDLR223.Virtualization
                 var fnp = Path.GetFileName(path);
                 var fi = new FileInfo(path);
                 var pdn = new DirectoryInfo(dn);
-                var files = pdn.GetFileSystemInfos();
-                string ffn = Path.GetFileName(fi.FullName).ToLower();
-                foreach (var newFileInfo in files)
+                if (pdn.Exists)
                 {
-                    if (newFileInfo.Name.ToLower() == ffn)
+                    var files = pdn.GetFileSystemInfos();
+                    string ffn = Path.GetFileName(fi.FullName).ToLower();
+                    foreach (var newFileInfo in files)
                     {
-                        if (fi.FullName != newFileInfo.FullName)
+                        if (newFileInfo.Name.ToLower() == ffn)
                         {
-                            if (dn.ToLower() == pdn.FullName.ToLower())
+                            if (fi.FullName != newFileInfo.FullName)
                             {
-                                return newFileInfo.FullName;
+                                if (dn.ToLower() == pdn.FullName.ToLower())
+                                {
+                                    return newFileInfo.FullName;
+                                }
+                                return newFileInfo.Name;
                             }
-                            return newFileInfo.Name;
                         }
                     }
                 }
