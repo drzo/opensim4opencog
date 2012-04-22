@@ -26,8 +26,8 @@ namespace cogbot
         [STAThread]
         internal static void Main(string[] args)
         {
-            ClientManager.UsingCogbotFromRadgast = false;
-            ClientManager.UsingRadgastFromCogbot = true;
+            Configuration.UsingCogbotFromRadgast = false;
+            Configuration.UsingRadgastFromCogbot = true;
            // MainProgram.CommandLine = new CommandLine {DisableSound = false};
 
             if (!ClientManager.AllocedConsole)

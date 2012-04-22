@@ -1507,6 +1507,10 @@ namespace cogbot.Listeners
 
         private static void ReallyEnsureSelected_Thread(object sender)
         {
+            if (inTimer)
+            {
+                return;
+            }
             lock (SelectObjectsTimerLock)
             {
                 if (inTimer)
@@ -1548,8 +1552,8 @@ namespace cogbot.Listeners
                     S.Client.Objects.SelectObjects(S, askFor, true);
                 }
             }
-            lock (SelectObjectsTimerLock)
-                inTimer = false;
+            //lock (SelectObjectsTimerLock)
+            inTimer = false;
         }
 
 

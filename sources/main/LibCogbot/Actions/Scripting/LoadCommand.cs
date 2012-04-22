@@ -49,7 +49,7 @@ namespace cogbot.Actions.System
             var assemj = FindAssembly0(assemblyName, AppDomain.CurrentDomain.BaseDirectory) ??
                          FindAssembly0(assemblyName, curDir) ??
                          FindAssembly0(assemblyName, Path.GetDirectoryName(typeof (cogbot.BotClient).Assembly.CodeBase));
-            if (assemj != null) return assemj;
+            if (assemj != null || assemblyName.Contains("Serializer")) return assemj;
            return assemj;
         }
 

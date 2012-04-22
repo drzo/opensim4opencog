@@ -43,7 +43,7 @@ namespace CycWorldModule
                 {
                     DLRConsole.DebugWriteLine("\n\n\nStaring more than one CycModule?!");
                 }
-            if (startIt) InvokeGUI(InitInstance);
+            if (startIt) InitInstance();// InvokeGUI(InitInstance);
         }
 
         private void InitInstance()

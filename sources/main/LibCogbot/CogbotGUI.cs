@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -50,7 +50,7 @@ namespace Cogbot.Library
                 if (ClientManager._wasFirstGridClient)
                 {
                     ClientManager._wasFirstGridClient = false;
-                    if (ClientManager.UsingCogbotFromRadgast)
+                    if (Configuration.UsingCogbotFromRadgast)
                     {
                         inst = GlobalRadegastInstance;
                     }

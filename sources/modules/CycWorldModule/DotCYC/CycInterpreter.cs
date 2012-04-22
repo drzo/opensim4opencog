@@ -16,6 +16,7 @@ namespace CycWorldModule.DotCYC
 
         public override void InternType(Type t)
         {
+            EnsureInit();
             dotLispInterpreter.InternType(t);
         }
 
