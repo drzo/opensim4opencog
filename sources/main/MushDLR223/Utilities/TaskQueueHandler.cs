@@ -1807,7 +1807,7 @@ namespace MushDLR223.Utilities
                                  () =>
                                      {
                                          CallNow(pretask, "pre ", s);
-                                         CallNow(() => NoExceptions<bool>(are.Set), "setter ", s);
+                                         are.Set();
                                      });
             if (!WasStartCalled && !NeverStart)
             {
@@ -1817,6 +1817,7 @@ namespace MushDLR223.Utilities
             if (IsTaskThread)
             {
                 TJ();
+                return true;
             }
             else
             {

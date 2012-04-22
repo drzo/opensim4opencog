@@ -2018,7 +2018,8 @@ namespace cogbot
 
         private bool InvokeJoin(string s)
         {
-            return InvokeJoin(s, -1);
+           // return InvokeJoin(s, -1);
+            return true;
         }
         private bool InvokeJoin(string s, int millisecondsTimeout)
         {
