@@ -45,64 +45,99 @@ namespace SbsSW.SwiPlCs
                 if (assembly.ManifestModule.Name == args.Name)
                     return assembly;
             }
-            foreach (Assembly assembly in AssembliesLoaded)
+
+            lock (AssembliesLoaded) foreach (Assembly assembly in AssembliesLoaded)
             {
                 if (assembly.FullName == args.Name)
                     return assembly;
                 if (assembly.ManifestModule.Name == args.Name)
                     return assembly;
             }
-            return null;
+            string curDir = new DirectoryInfo(".").FullName;
+            string assemblyName = args.Name;
+            int comma = assemblyName.IndexOf(",");
+            if (comma > 0)
+            {
+                assemblyName = assemblyName.Substring(0, comma);
+            }
+            var assemj = FindAssembly0(assemblyName, AppDomain.CurrentDomain.BaseDirectory) ??
+                         FindAssembly0(assemblyName, curDir) ??
+                         FindAssembly0(assemblyName, Path.GetDirectoryName(typeof(SwiPlCs.PrologClient).Assembly.CodeBase));
+            if (assemj != null) return assemj;
+            return assemj;
+        }
 
+        private static List<string> LoaderExtensionStrings = new List<string> { "dll", "exe", "jar", "lib", "dynlib", "class", "so" };
+        public static Assembly FindAssembly0(string assemblyName, string dirname)
+        {
+            string filename = Path.Combine(dirname, assemblyName);
+            string loadfilename = filename;
+            bool tryexts = !File.Exists(loadfilename);
+            string filenameLower = filename.ToLower();
+            List<string> LoaderExtensions = new List<string>();
+            lock (LoaderExtensionStrings)
+            {
+                LoaderExtensions.AddRange(LoaderExtensionStrings);
+            }
+            foreach (string extension in LoaderExtensions)
+            {
+                if (filenameLower.EndsWith("." + extension))
+                {
+                    tryexts = false;
+                    break;
+                }
+            }
+
+            if (tryexts)
+            {
+                foreach (var s in LoaderExtensions)
+                {
+                    string testfile = loadfilename + "." + s;
+                    if (File.Exists(testfile))
+                    {
+                        loadfilename = testfile;
+                        break;
+                    }
+
+                }
+            }
+            if (File.Exists(loadfilename))
+            {
+                try
+                {
+                    return Assembly.LoadFile(loadfilename);
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
+            return null;
         }
 
         public static Assembly AssemblyLoad(string assemblyName)
         {
+            Assembly assembly = null;
             try
             {
-                return Assembly.Load(assemblyName);
+                assembly = Assembly.Load(assemblyName);
             }
-            catch (Exception e)
+            catch (FileNotFoundException fnf)
             {
-                try
-                {
-                    return Assembly.LoadFile(assemblyName);
-                }
-                catch (Exception)
-                {
-                    try
-                    {
-                        return Assembly.LoadFrom(assemblyName);
-                    }
-                    catch (Exception)
-                    {
-                        try
-                        {
-                            return Assembly.LoadFrom(assemblyName + ".dll");
-                        }
-                        catch (Exception)
-                        {
-                        }
-                        try
-                        {
-                            return Assembly.LoadFrom(assemblyName + ".exe");
-                        }
-                        catch (Exception)
-                        {
-                        }
-                        try
-                        {
-                            return Assembly.LoadWithPartialName(assemblyName);
-                        }
-                        catch (Exception)
-                        {
-                            throw e;
-                        }
-                    }
-                }
+                if (fnf.FileName != assemblyName) throw fnf;
             }
-        }
+            catch (Exception)
+            {
+                throw;
+            }
+            if (assembly != null) return assembly;
+            assembly = FindAssembly0(assemblyName, AppDomain.CurrentDomain.BaseDirectory) ??
+                       FindAssembly0(assemblyName, (new DirectoryInfo(".").FullName)) ??
+                       FindAssembly0(assemblyName, Path.GetDirectoryName(typeof(SwiPlCs.PrologClient).Assembly.CodeBase));
+            if (assembly != null) return assembly;
+            return Assembly.LoadFrom(assemblyName);
 
+        }
         public static List<Assembly> AssembliesLoaded = new List<Assembly>();
         public static List<string> AssembliesLoading = new List<string>();
         public static List<Type> TypesLoaded = new List<Type>();

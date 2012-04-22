@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using Class = java.lang.Class;
 #else
 using Class = System.Type;
+using System.Threading;
 #endif
 
 namespace SbsSW.SwiPlCs
@@ -245,10 +246,27 @@ namespace SbsSW.SwiPlCs
             return RemoveTaggedObject(tag);
         }
 
+
+        public static bool CantPin(object pinme)
+        {
+            return pinme.GetType().Name.Contains("e");
+        }
+
         public static object PinObject(object pinme)
         {
+            if (true) return pinme;
             try
             {
+                if (CantPin(pinme))
+                {
+                    GCHandle.Alloc(pinme, GCHandleType.Normal);
+                    return pinme;
+                }
+                if (!Monitor.TryEnter(pinme))
+                {
+                    return pinme;
+                }
+                Monitor.Exit(pinme);
                 GCHandle gch = GCHandle.Alloc(pinme, GCHandleType.Pinned);
                 GCHandle gch2 = GCHandle.Alloc(pinme, GCHandleType.Pinned);
                 if (gch != gch2)
