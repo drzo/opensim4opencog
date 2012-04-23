@@ -30,6 +30,13 @@ namespace cogbot.Actions
         Security
     }
     /// <summary>
+    /// An interface for commands is only invoked on Grid mastering bots
+    /// Such as Directory info requests (10 bots doing the command at once will create problems)   
+    /// </summary>
+    public interface NotAutoLoaded : BotCommand
+    {
+    }
+    /// <summary>
     /// An interface for commands is only invoked on Region mastering bots
     /// Such as terrain uploads and simulator info (10 bots doing the command at once will create problems)
     /// Non region master bots are thinner clients and usually not fit for object tracking

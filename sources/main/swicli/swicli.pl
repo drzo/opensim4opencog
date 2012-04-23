@@ -70,7 +70,11 @@
 %------------------------------------------------------------------------------
 % Load C++ DLL
 %------------------------------------------------------------------------------
-:-load_foreign_library(swicli).
+:-dynamic(loadedCLIAssembly/0).
+loadCLIAssembly:-loadedCLIAssembly,!.
+loadCLIAssembly:-assert(loadedCLIAssembly),current_prolog_flag(address_bits,32) -> load_foreign_library(swicli32) ; load_foreign_library(swicli).
+:-loadCLIAssembly.
+
 
 %------------------------------------------------------------------------------
 % The C++ DLL should have given us cli_load_lib/4
