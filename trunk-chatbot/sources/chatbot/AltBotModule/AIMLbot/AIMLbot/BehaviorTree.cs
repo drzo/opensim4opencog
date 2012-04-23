@@ -632,9 +632,9 @@ namespace AltAIMLbot
                 nodeID = "null";
             }
             
+            bool origCritical = bot.inCritical;
             ProcessNodeAddEvents(myNode);
-
-           // Console.WriteLine("Process BNode {1} {0}", nodeID, myNode.Name.ToLower());
+            // Console.WriteLine("Process BNode {1} {0}", nodeID, myNode.Name.ToLower());
             // Start a winner
             bot.myBehaviors.keepTime(nodeID, RunStatus.Success);
             try
@@ -703,6 +703,7 @@ namespace AltAIMLbot
                         bot.myBehaviors.activationTime(nodeID, RunStatus.Success);
                         bot.myBehaviors.runEventHandler("onsuccess");
                         ProcessNodeDeleteEvents(myNode);
+                        bot.inCritical = origCritical;
                         return RunStatus.Success;
                         break;
                     case "stoptimer":
@@ -714,6 +715,7 @@ namespace AltAIMLbot
                         }
                         bot.myBehaviors.runEventHandler("onsuccess");
                         ProcessNodeDeleteEvents(myNode);
+                        bot.inCritical = origCritical;
                         return RunStatus.Success;
                         break;
 
@@ -758,6 +760,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
+                bot.inCritical = origCritical;
                 result = RunStatus.Failure;
                 Console.WriteLine("### BNODE ERR:{0} {1} {2}", myNode.Name.ToLower(), nodeID, result);
                 Console.WriteLine("### BNODE ERR:" + e.Message);
@@ -769,6 +772,7 @@ namespace AltAIMLbot
                 }
             }
             // update on exit
+            //bot.inCritical = origCritical;
             bot.myBehaviors.keepTime(nodeID, result);
             bot.myBehaviors.activationTime(nodeID, result);
 
@@ -779,7 +783,7 @@ namespace AltAIMLbot
             if (result == RunStatus.Success) bot.myBehaviors.runEventHandler("onsuccess");
             if (result == RunStatus.Failure) bot.myBehaviors.runEventHandler("onfail");
             ProcessNodeDeleteEvents(myNode);
-
+            bot.inCritical = origCritical;
             return result;
 
         }
@@ -794,6 +798,10 @@ namespace AltAIMLbot
                 if (evnt.StartsWith ("on"))
                 {
                     this.bot.myBehaviors.addEventHandler(evnt, val);
+                }
+                if (evnt == "incritical")
+                {
+                    this.bot.inCritical = (val == "true");
                 }
             }
         }
@@ -837,7 +845,11 @@ namespace AltAIMLbot
             {
                 if (myNode.Attributes["restore"] != null)
                 {
-                    restorable = (myNode.Attributes["restore"].Value.ToLower() == "true");
+                    restorable |= (myNode.Attributes["restore"].Value.ToLower() == "true");
+                }
+                if (myNode.Attributes["resumes"] != null)
+                {
+                    restorable |= (myNode.Attributes["resumes"].Value.ToLower() == "true");
                 }
                 if (myNode.Attributes["pace"] != null)
                 {
@@ -856,6 +868,7 @@ namespace AltAIMLbot
                 result = ProcessParallel(myNode);
                 return result;
             }
+            Console.WriteLine("\n\n****** COMPLEX BEHAVIOR BEGIN\n\n");
             string nodeID = "null";
             try
             {
@@ -933,6 +946,8 @@ namespace AltAIMLbot
                 if (continueflag == false)
                 {
                     restorePoint[nodeID] = childIndex;
+                    Console.WriteLine("\n\n****** COMPLEX BEHAVIOR EXIT FAILURE\n\n");
+
                     return RunStatus.Failure;
 
                 }
@@ -944,6 +959,7 @@ namespace AltAIMLbot
             }
             // if we make it to the end then the reset the restore point
             restorePoint[nodeID] = 0;
+            Console.WriteLine("\n\n****** COMPLEX BEHAVIOR EXIT SUCCESS\n\n");
             return RunStatus.Success;
 
         }
@@ -952,21 +968,43 @@ namespace AltAIMLbot
         {
             while ((bot.outputQueue.Count > 0) || (bot.myBehaviors.eventQueue.Count > 0))
             {
-                bot.processOutputQueue();
                 if (bot.myBehaviors.eventQueue.Count > 0)
                 {
                     string peekstr = bot.myBehaviors.eventQueue.Peek();
                     if (peekstr == "abort")
                     {
+                        
                         continueflag = false;
                         bot.myBehaviors.queueEvent("onabort");
+                        bot.outputQueue.Clear();
                     }
                     bot.myBehaviors.processOneEventQueue();
                 }
+                bot.processOutputQueue();
+                processSATEvents();
             }
             return continueflag;
         }
 
+        public void processSATEvents()
+        {
+            // Scan to see if any defined events are listed
+            // in the positive SATModel table
+            // this means events can be SAT inferable
+            // so you can have onpanic, onhappy, onfear
+            // One problem could be multiple triggers, but that
+            // could be handled by the called behaviors
+            // like onmousemove versus onclick
+            if (bot.myPositiveSATModleString == null) return;
+            if (bot.myBehaviors.eventTable.Count == 0) return;
+            foreach (string evnt in bot.myBehaviors.eventTable.Keys)
+            {
+                if (bot.myPositiveSATModleString.Contains(evnt))
+                {
+                    bot.myBehaviors.queueEvent(evnt);
+                }
+            }
+        }
 
         public RunStatus ProcessSubBehavior(XmlNode myNode)
         {
@@ -1592,6 +1630,7 @@ namespace AltAIMLbot
             bot.myActiveModel = bot.myModel;
             string totalModel = bot.myModel.AsSentenceString();
             string postPositives = bot.myModel.strPositives();
+            bot.myPositiveSATModleString = postPositives;
             //bot.myChemistry.m_cBus.setHash("activeModel", totalModel);
             bot.myChemistry.m_cBus.setHash("activeModel", postPositives);
             Console.WriteLine("SAT MODEL FOUND:{0}", postPositives);

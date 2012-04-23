@@ -58,6 +58,7 @@ namespace AltAIMLbot
         public QfsmSet myFSMS = new QfsmSet();
         public BehaviorSet myBehaviors = new BehaviorSet();
         public Cron myCron = null;
+        public bool inCritical = false;
         public RandomMemory myRandMem = new RandomMemory();
 
         public KnowledgeBase myKB = new KnowledgeBase();
@@ -65,6 +66,7 @@ namespace AltAIMLbot
         public WalkSAT myWalkSAT = new WalkSAT();
         public Model myModel = null;
         public Model myActiveModel = null;
+        public string myPositiveSATModleString = null;
 
         public object guestEvalObject = null;
         public Queue<string> outputQueue = new Queue<string>();

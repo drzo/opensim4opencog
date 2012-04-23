@@ -85,9 +85,17 @@ namespace AltAIMLbot
 
                         if (myBot.isAcceptingUserInput)
                         {
-                            now = DateTime.Now;
-                            checkProcesses(now);
-                            doCrontab(now);
+                            if (!myBot.inCritical)
+                            {
+                                now = DateTime.Now;
+                                checkProcesses(now);
+                                doCrontab(now);
+                            }
+                            else
+                            {
+                                Console.WriteLine("--inCritical--");
+                                Thread.Sleep(500);
+                            }
                         }
                     }
                     catch (Exception e)
