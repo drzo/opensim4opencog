@@ -10,7 +10,7 @@ using Aima.Core.Logic.Propositional.Algorithms;
 using Aima.Core.Logic.Propositional.Parsing;
 using Aima.Core.Logic.Propositional.Parsing.AST;
 /******************************************************************************************
-AltAIMLBot -- Copyright (c) 2011-2012,Kino Courssey, Daxtron Labs
+AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -108,15 +108,32 @@ namespace AltAIMLbot
 
         public string respondToChat(string input)
         {
+            // Try the event first
+            if (curBot.myBehaviors.hasEventHandler("onchat"))
+            {
+                Console.WriteLine(" ************ FOUND ONCHAT ************");
+                curUser.Predicates.updateSetting("lastinput", input);
+                curBot.lastBehaviorChatInput = input;
+                curBot.lastBehaviorUser = curUser;
+                //curBot.myBehaviors.runEventHandler("onchat");
+                curBot.myBehaviors.queueEvent("onchat");
+                curBot.processOutputQueue();
+
+                return curBot.lastBehaviorChatOutput;
+            }
+            // else try the named behavior
             if (curBot.myBehaviors.definedBehavior("chatRoot"))
             {
                 curUser.Predicates.updateSetting("lastinput", input);
                 curBot.lastBehaviorChatInput = input;
                 curBot.lastBehaviorUser = curUser;
-                curBot.myBehaviors.runBotBehavior("chatRoot",curBot);
+                //curBot.myBehaviors.runBotBehavior("chatRoot", curBot);
+                curBot.myBehaviors.queueEvent("chatRoot");
+                curBot.processOutputQueue();
+
                 return curBot.lastBehaviorChatOutput;
             }
-
+            // else just do it (no other behavior is defined)
             try
             {
                     Request r = new Request(input, curUser, curBot);
@@ -312,7 +329,8 @@ namespace AltAIMLbot
                     {
                         try
                         {
-                            curBot.myBehaviors.runBotBehaviors(curBot);
+                            //curBot.myBehaviors.runBotBehaviors(curBot);
+                            curBot.performBehaviors();
                         }
                         catch (Exception e)
                         {
@@ -428,6 +446,10 @@ namespace AltAIMLbot
 
             while (true)
             {
+                if ((curBot !=null)&&(curBot.outputQueue.Count > 0))
+                {
+                    curBot.processOutputQueue();
+                }
 
                 if (safeBB())
                 {
@@ -487,6 +509,7 @@ namespace AltAIMLbot
 
 
                 }
+
                 updateTime();
                 Thread.Sleep(interval);
             }

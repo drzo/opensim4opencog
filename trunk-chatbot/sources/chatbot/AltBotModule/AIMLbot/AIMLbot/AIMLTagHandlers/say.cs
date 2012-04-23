@@ -2,7 +2,7 @@
 using System.Xml;
 using System.Text;
 /******************************************************************************************
-AltAIMLBot -- Copyright (c) 2011-2012,Kino Courssey, Daxtron Labs
+AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -68,7 +68,8 @@ namespace AltAIMLbot.AIMLTagHandlers
                         Console.WriteLine("sayResponse :{0}:{1}", myUUID.ToString(), message);
                         if ((message.Length > 0) && (this.user.bot.sayProcessor != null))
                         {
-                            this.user.bot.sayProcessor(message);
+                            //this.user.bot.sayProcessor(message);
+                            this.user.bot.postOutput(message);
                             // Mark the output time
                             this.user.bot.myBehaviors.keepTime("lastchatoutput", RunStatus.Success);
                             this.user.bot.myBehaviors.activationTime("lastchatoutput", RunStatus.Success);
@@ -81,8 +82,10 @@ namespace AltAIMLbot.AIMLTagHandlers
                         string message2 = this.templateNode.InnerText;
                         Console.WriteLine("  SayB msg1:{0}", message);
                         Console.WriteLine("  SayB msg2:{0}", message2);
-                        if (message.Length > 0) this.user.bot.sayProcessor(message);
-                        if (message2.Length > 0) this.user.bot.sayProcessor(message2);
+                        //if (message.Length > 0) this.user.bot.sayProcessor(message);
+                        //if (message2.Length > 0) this.user.bot.sayProcessor(message2);
+                        if (message.Length > 0) this.user.bot.postOutput(message);
+                        if (message2.Length > 0) this.user.bot.postOutput(message2);
                         // Mark the output time
                         this.user.bot.myBehaviors.keepTime("lastchatoutput", RunStatus.Success);
                         this.user.bot.myBehaviors.activationTime("lastchatoutput", RunStatus.Success);

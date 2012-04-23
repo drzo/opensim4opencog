@@ -16,7 +16,7 @@ using MiniSatCS;
 using System.Reflection;
 
 /******************************************************************************************
-AltAIMLBot -- Copyright (c) 2011-2012,Kino Courssey, Daxtron Labs
+AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -161,13 +161,16 @@ namespace AltAIMLbot
         public Hashtable behaveTrees;
         public Dictionary<string, Int32> entryTime = new Dictionary<string, Int32>();
         public Dictionary<string, Int32> execTime = new Dictionary<string, Int32>();
+        public Dictionary<string, string> eventTable = new Dictionary<string, string>();
         public AltBot bot;
         public ValenceSet VSoup;
+        public Stack handlerStack;
 
         public BehaviorSet()
         {
             behaveTrees = new Hashtable();
             VSoup = new ValenceSet();
+            handlerStack = new Stack();
         }
         public void defineBehavior(string treeName, string behaviorDef)
         {
@@ -187,20 +190,28 @@ namespace AltAIMLbot
         public void keepTime(string nodeID, RunStatus R)
         {
             if (bot == null) return;
-            // Update on first entry
-            if (R == RunStatus.Success)
+            try
             {
-                if (!bot.myBehaviors.entryTime.ContainsKey(nodeID))
+                    // Update on first entry
+                if ((R==null) || (R == RunStatus.Success))
                 {
-                    bot.myBehaviors.entryTime[nodeID] = Environment.TickCount;
+                    if (!bot.myBehaviors.entryTime.ContainsKey(nodeID))
+                    {
+                        bot.myBehaviors.entryTime[nodeID] = Environment.TickCount;
+                    }
                 }
-            }
-            else
+                else
+                {
+                    // Remove the ID on any failure
+                    bot.myBehaviors.entryTime.Remove(nodeID);
+                }
+              }
+            catch (Exception e)
             {
-                // Remove the ID on any failure
-                bot.myBehaviors.entryTime.Remove(nodeID);
+                Console.WriteLine("ERR:" + e.Message);
+                Console.WriteLine("ERR:" + e.StackTrace);
             }
-        }
+       }
 
         public Int32 timeRunning(string nodeID)
         {
@@ -246,6 +257,39 @@ namespace AltAIMLbot
             string treeName = "temptree123" +newTree.rgen.Next();
             newTree.defineBehavior(treeName, BTXML);
             result = newTree.runBehaviorTree(this.bot);
+           
+            return result;
+        }
+
+        public RunStatus runBTXML(XmlNode BTXML)
+        {
+            RunStatus result = RunStatus.Failure;
+            BehaviorTree newTree = new BehaviorTree();
+            newTree.bot = bot;
+            //result = newTree.processNode(BTXML);
+
+            // Execute All Children
+            foreach (XmlNode childNode in BTXML.ChildNodes)
+            {
+                RunStatus childResult = newTree.processNode(childNode);
+                // Except for Asserts
+                if (newTree.isAnAssert(childNode.Name))
+                {
+                    if (childResult == RunStatus.Failure)
+                    {
+                        return RunStatus.Failure;
+                    }
+                }
+                else
+                {
+                    // Normal processing (We dont care)
+                    if (childResult == RunStatus.Success)
+                    {
+                        // return RunStatus.Success;
+                    }
+                }
+            }
+            return RunStatus.Success;           
             return result;
         }
 
@@ -261,9 +305,112 @@ namespace AltAIMLbot
             newTree.ProcessStateAiml(xnode);
         }
 
+        #region EventHandlers
+        public Queue<string> eventQueue = new Queue<string>();
+
+        public void addEventHandler(string evnt, string val)
+        {
+            if (eventTable.ContainsKey(evnt))
+                eventTable[evnt] = val;
+            else
+                eventTable.Add(evnt, val);
+
+        }
+        public void deleteEventHandler(string evnt, string val)
+        {
+            if (eventTable.ContainsKey(evnt))
+                eventTable.Remove(evnt);
+        }
+        public  bool hasEventHandler(string evnt)
+        {
+            Console.WriteLine("   hasEventHandler({0}) ={1}", evnt, eventTable.ContainsKey(evnt)); 
+            return eventTable.ContainsKey(evnt);
+        }
+
+        public void runEventHandler(string evnt)
+        {
+            if (hasEventHandler(evnt))
+            {
+                runBotBehavior(eventTable[evnt], bot);
+            }
+            else
+            {
+                if (definedBehavior(evnt)) runBotBehavior(evnt, bot);
+            }
+
+        }
+
+        public void queueEvent(string evnt)
+        {
+            Console.WriteLine("ENQUE EVENT : {0}", evnt);
+            eventQueue.Enqueue(evnt);
+        }
+
+        public void pushHandlers()
+        {
+            // Remember and keep a clone
+            handlerStack.Push(eventTable);
+            eventTable = new Dictionary<string, string>(eventTable);
+        }
+
+        public void popHandlers()
+        {
+            // Restore the last one
+            if (handlerStack.Count > 0)
+            {
+                eventTable = (Dictionary<string, string>)handlerStack.Pop();
+            }
+        }
+
+        public void processEventQueue()
+        {
+            string ourEvent = "";
+            while (eventQueue.Count > 0)
+            {
+                try
+                {
+                    ourEvent = eventQueue.Dequeue();
+                    Console.WriteLine(" *** processEventQueue : {0}", ourEvent);
+                    runEventHandler(ourEvent);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(" ERR: processEventQueue '{0}' exception induced failure! ", ourEvent);
+                    Console.WriteLine("ERR:" + e.Message);
+                    Console.WriteLine("ERR:" + e.StackTrace);
+                }
+            }
+        }
+        public void processOneEventQueue()
+        {
+            string ourEvent = "";
+            if (eventQueue.Count > 0)
+            {
+                try
+                {
+                    ourEvent = eventQueue.Dequeue();
+                    Console.WriteLine(" *** processEventQueue : {0}", ourEvent);
+                    runEventHandler(ourEvent);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(" ERR: processEventQueue '{0}' exception induced failure! ", ourEvent);
+                    Console.WriteLine("ERR:" + e.Message);
+                    Console.WriteLine("ERR:" + e.StackTrace);
+                }
+            }
+        }
+        #endregion
+
         public RunStatus runBotBehavior(string behaviorName, AltBot deBot)
         {
             bot = deBot;
+            
+            if (hasEventHandler(behaviorName))
+            {
+                return runBotBehavior(eventTable[behaviorName], deBot);
+            }
+
             if (behaveTrees.ContainsKey(behaviorName))
             {
                 try
@@ -282,14 +429,18 @@ namespace AltAIMLbot
                 return RunStatus.Failure;
             }
             else
-            {
+            { 
+                
                 Console.WriteLine(" ERR: runBotBehavior did not find Tree '{0}' ", behaviorName);
                 return RunStatus.Failure;
             }
         }
+
         public void runBotBehaviors(AltBot deBot)
         {
             bot = deBot;
+
+            processEventQueue();
             // if there is a root defined then run it
             // otherwise run them all
             if (behaveTrees.ContainsKey("root"))
@@ -352,12 +503,16 @@ namespace AltAIMLbot
         public int tickRate=1000;
         public long satCount = 0;
         public long satMod = 400;
+        public Dictionary<string, int> restorePoint;
+
         
         // Kinda based on the idea at ...
         // http://www.garagegames.com/community/blogs/view/21143
         public BehaviorTree()
         {
             treeDoc = new XmlDocument();
+            restorePoint = new Dictionary<string, int>();
+
         }
         public void defineBehavior(string mname, string behaviorDef)
         {
@@ -476,6 +631,9 @@ namespace AltAIMLbot
             {
                 nodeID = "null";
             }
+            
+            ProcessNodeAddEvents(myNode);
+
            // Console.WriteLine("Process BNode {1} {0}", nodeID, myNode.Name.ToLower());
             // Start a winner
             bot.myBehaviors.keepTime(nodeID, RunStatus.Success);
@@ -543,6 +701,8 @@ namespace AltAIMLbot
                         // start a stopwatch
                         bot.myBehaviors.keepTime(nodeID, RunStatus.Success);
                         bot.myBehaviors.activationTime(nodeID, RunStatus.Success);
+                        bot.myBehaviors.runEventHandler("onsuccess");
+                        ProcessNodeDeleteEvents(myNode);
                         return RunStatus.Success;
                         break;
                     case "stoptimer":
@@ -552,6 +712,8 @@ namespace AltAIMLbot
                         {
                             bot.myBehaviors.entryTime.Remove(nodeID);
                         }
+                        bot.myBehaviors.runEventHandler("onsuccess");
+                        ProcessNodeDeleteEvents(myNode);
                         return RunStatus.Success;
                         break;
 
@@ -584,6 +746,9 @@ namespace AltAIMLbot
                     case "taskguest":
                         result = ProcessTaskGuest(myNode);
                         break;
+                    case "enqueue":
+                        result = ProcessEnqueue(myNode);
+                        break;
 
                     default:
                         // Ignore the Nops
@@ -611,19 +776,197 @@ namespace AltAIMLbot
             {
                // Console.WriteLine("Result BNode {0} {1} {2}", myNode.Name.ToLower(), nodeID, result);
             }
+            if (result == RunStatus.Success) bot.myBehaviors.runEventHandler("onsuccess");
+            if (result == RunStatus.Failure) bot.myBehaviors.runEventHandler("onfail");
+            ProcessNodeDeleteEvents(myNode);
+
             return result;
 
         }
 
+        public void ProcessNodeAddEvents(XmlNode myNode)
+        {
+            this.bot.myBehaviors.pushHandlers();
+            foreach (XmlAttribute anode in myNode.Attributes)
+            {
+                string evnt = anode.Name.ToLower();
+                string val = anode.Value;
+                if (evnt.StartsWith ("on"))
+                {
+                    this.bot.myBehaviors.addEventHandler(evnt, val);
+                }
+            }
+        }
+       
+        public void ProcessNodeDeleteEvents(XmlNode myNode)
+        {
+            foreach (XmlAttribute anode in myNode.Attributes)
+            {
+                string evnt = anode.Name.ToLower();
+                string val = anode.Value;
+                if (evnt.StartsWith ("on"))
+                {
+                    this.bot.myBehaviors.deleteEventHandler(evnt, val);
+                }
+            }
+            this.bot.myBehaviors.popHandlers();
+        }
         #region TagProcessors
 
         public RunStatus ProcessBehavior(XmlNode myNode)
         {
         // A behavior is implicitly a <parallel> node
-            RunStatus result = RunStatus.Failure;
-            result = ProcessParallel(myNode);
-            return result;
+        //    RunStatus result = RunStatus.Failure;
+        //    result = ProcessParallel(myNode);
+        //    return result;
+
+        // behavior accepts attributes of
+            //restore
+            //pace
+            //onchat
+            //onrestore
+            //onabort
+            //onsuccess
+            //onfail
+
+            bool restorable = false;
+            bool restoring = false;
+            int pace = 0;
+            bool continueflag = true;
+            try
+            {
+                if (myNode.Attributes["restore"] != null)
+                {
+                    restorable = (myNode.Attributes["restore"].Value.ToLower() == "true");
+                }
+                if (myNode.Attributes["pace"] != null)
+                {
+                    pace = 5000;
+                    pace = Int32.Parse(myNode.Attributes["pace"].Value);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERROR: processing <Behavior > attributes");
+            }
+            // just use <parallel> if its not restorable
+            if (restorable == false)
+            {
+                RunStatus result = RunStatus.Failure;
+                result = ProcessParallel(myNode);
+                return result;
+            }
+            string nodeID = "null";
+            try
+            {
+                if((myNode.Attributes != null)&&(myNode .Attributes .Count >0))
+                {
+                    if (myNode.Attributes["id"] != null)
+                    {
+                        nodeID = myNode.Attributes["id"].Value;
+                    }
+                }
+            }
+            catch(Exception e)
+            {
+                nodeID = "null";
+            }
+            // If it is not restorable then set index to zero
+            if (!restorePoint.ContainsKey(nodeID))
+                restorePoint.Add(nodeID, 0);
+
+            if (restorable == false)
+            {
+                restorePoint[nodeID] = 0;
+            }
+
+            int restP = restorePoint [nodeID];
+            restoring = (restP > 0);
+
+            // if restorable then check all asserts up to the restore point
+            int childIndex = 0;
+            for (childIndex = 0; childIndex < restP; childIndex++)
+            {
+                XmlNode childNode = myNode.ChildNodes[childIndex];
+                if (isAnAssert(childNode.Name))
+                {
+                    RunStatus childResult = processNode(childNode);
+                    if (childResult == RunStatus.Failure)
+                    {
+                        return RunStatus.Failure;
+                    }
+                }
+                
+            }
+            // Execute All Children
+            if (restoring)
+            {
+                bot.myBehaviors.queueEvent("onrestore");
+                continueflag = tickEventQueues(continueflag);
+            }
+            //foreach (XmlNode childNode in myNode.ChildNodes)
+            for (childIndex = restP; childIndex < myNode.ChildNodes.Count; childIndex++)
+            {
+                XmlNode childNode = myNode.ChildNodes[childIndex];
+                //RunStatus childResult = processNode(childNode);
+                RunStatus childResult = processNode(childNode);
+                // Except for Asserts
+                if (isAnAssert(childNode.Name))
+                {
+                    if (childResult == RunStatus.Failure)
+                    {
+                        return RunStatus.Failure;
+                    }
+                }
+                else
+                {
+                    // Normal processing (We dont care)
+                    if (childResult == RunStatus.Success)
+                    {
+                        // return RunStatus.Success;
+                    }
+                }
+                restorePoint[nodeID] = childIndex;
+                // do we have an interrupt ?
+
+                continueflag = tickEventQueues(continueflag);
+                if (continueflag == false)
+                {
+                    restorePoint[nodeID] = childIndex;
+                    return RunStatus.Failure;
+
+                }
+                if (pace > 0)
+                {
+                    Thread.Sleep(pace);
+                }
+
+            }
+            // if we make it to the end then the reset the restore point
+            restorePoint[nodeID] = 0;
+            return RunStatus.Success;
+
         }
+
+        public bool tickEventQueues(bool continueflag)
+        {
+            while ((bot.outputQueue.Count > 0) || (bot.myBehaviors.eventQueue.Count > 0))
+            {
+                bot.processOutputQueue();
+                if (bot.myBehaviors.eventQueue.Count > 0)
+                {
+                    string peekstr = bot.myBehaviors.eventQueue.Peek();
+                    if (peekstr == "abort")
+                    {
+                        continueflag = false;
+                        bot.myBehaviors.queueEvent("onabort");
+                    }
+                    bot.myBehaviors.processOneEventQueue();
+                }
+            }
+            return continueflag;
+        }
+
 
         public RunStatus ProcessSubBehavior(XmlNode myNode)
         {
@@ -634,6 +977,26 @@ namespace AltAIMLbot
             {
                 behaviorName = myNode.Attributes["id"].Value;
                 result =bot.myBehaviors.runBotBehavior(behaviorName, bot);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERR: ProcessSubBehavior");
+                Console.WriteLine("ERR:" + e.Message);
+                Console.WriteLine("ERR:" + e.StackTrace);
+                Console.WriteLine("ERR XML:" + myNode.OuterXml);
+            }
+            return result;
+        }
+
+        public RunStatus ProcessEnqueue(XmlNode myNode)
+        {
+
+            RunStatus result = RunStatus.Success;
+            string behaviorName = "root";
+            try
+            {
+                behaviorName = myNode.InnerText;
+                bot.myBehaviors.queueEvent(behaviorName);
             }
             catch (Exception e)
             {
@@ -1018,7 +1381,9 @@ namespace AltAIMLbot
                 sentStr += bot.lastBehaviorChatInput;
                 Request r = new Request(sentStr, bot.lastBehaviorUser, bot);
                 Result res = bot.Chat(r,graphName);
-                bot.lastBehaviorChatOutput=res.Output;
+                //bot.lastBehaviorChatOutput=res.Output;
+                bot.lastBehaviorChatOutput = "";
+                bot.postOutput(res.Output);
                 if (res.isValidOutput)
                 {
                     return RunStatus.Success;

@@ -89,6 +89,7 @@ namespace RTParser
             
         public Result HeardSomeoneSay1Sentence(User theFactSpeaker, User toWhom, string message, Result result, ThreadControl control)
         {
+            if (MyBot.useServitor) return null;
             bool toWhomNonNull = toWhom != null;
             string whatListenerLastSaid = null;
             if (toWhomNonNull) whatListenerLastSaid = toWhom.JustSaid;
@@ -104,6 +105,7 @@ namespace RTParser
         public Result HeardSome1Say11Sentence(User theFactSpeaker, User toWhom, Utterance ele, string message, Result prevResult, ThreadControl control)
         {
             if (this.TurnOffSelfListening) return null;
+            if (MyBot.useServitor) return null;
             //Result LR = result;
             if (message == null) return null;
 
@@ -193,6 +195,7 @@ namespace RTParser
         {
             if (!TryUnderstandSentence) return null;
             if (this.TurnOffSelfListening) return null;
+            if (MyBot.useServitor) return null;
             if (NonSalientMessage(message)) return null;
             message = ToHeard(message);
             if (string.IsNullOrEmpty(message)) return null;
@@ -222,6 +225,7 @@ namespace RTParser
         {
             if (!TryUnderstandSentence) return null;
             if (this.TurnOffSelfListening) return null;
+            if (MyBot.useServitor) return null;
             string whatListenerLastSaid = toWhom == null ? null : toWhom.JustSaid;
             string whatSpeakerLastSaid = theFactSpeaker == null ? null : theFactSpeaker.JustSaid;
             //theFactSpeaker.JustSaid = message;

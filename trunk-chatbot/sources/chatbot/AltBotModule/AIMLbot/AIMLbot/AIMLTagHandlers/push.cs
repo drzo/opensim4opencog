@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Xml;
 using System.Text;
 /******************************************************************************************
-AltAIMLBot -- Copyright (c) 2011-2012,Kino Courssey, Daxtron Labs
+AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,

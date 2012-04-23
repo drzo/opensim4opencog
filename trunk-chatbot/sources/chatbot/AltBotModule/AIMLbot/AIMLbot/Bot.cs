@@ -16,7 +16,7 @@ using Aima.Core.Logic.Propositional.Algorithms;
 using Aima.Core.Logic.Propositional.Parsing;
 using Aima.Core.Logic.Propositional.Parsing.AST;
 /******************************************************************************************
-AltAIMLBot -- Copyright (c) 2011-2012,Kino Courssey, Daxtron Labs
+AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -67,6 +67,7 @@ namespace AltAIMLbot
         public Model myActiveModel = null;
 
         public object guestEvalObject = null;
+        public Queue<string> outputQueue = new Queue<string>();
 
         /// <summary>
         /// A dictionary object that looks after all the settings associated with this bot
@@ -713,6 +714,44 @@ namespace AltAIMLbot
 
         #region Conversation methods
 
+        public void processOutputQueue()
+        {
+            while (outputQueue.Count > 0)
+            {
+                string msg = outputQueue.Dequeue();
+                if (sayProcessor != null)
+                {
+                    sayProcessor(msg);
+                }
+                else
+                {
+                    Console.WriteLine("BOT OUTPUT:{0}", msg);
+                }
+            }
+        }
+
+        public void postOutput(string msg)
+        {
+            // just post output
+            outputQueue.Enqueue(msg);
+        }
+        public void sendOutput(string msg)
+        {
+            // posts and processes
+            outputQueue.Enqueue(msg);
+            processOutputQueue();
+        }
+
+        public string getPendingOutput()
+        {
+            string outmsg = "";
+            while (outputQueue.Count > 0)
+            {
+                string msg = outputQueue.Dequeue();
+                outmsg += msg + "\r\n";
+            }
+            return outmsg;
+        }
         /// <summary>
         /// Given some raw input and a unique ID creates a response for a new user
         /// </summary>
@@ -1044,7 +1083,7 @@ namespace AltAIMLbot
                             tagHandler = new AIMLTagHandlers.scxml(this, user, query, request, result, node);
                             break;
                         case "btxml":
-                            tagHandler = new AIMLTagHandlers.scxml(this, user, query, request, result, node);
+                            tagHandler = new AIMLTagHandlers.btxml(this, user, query, request, result, node);
                             break;
                         case "say":
                             tagHandler = new AIMLTagHandlers.say(this, user, query, request, result, node);

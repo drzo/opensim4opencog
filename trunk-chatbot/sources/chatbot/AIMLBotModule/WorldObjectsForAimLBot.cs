@@ -716,6 +716,8 @@ namespace AIMLBotModule
         public void HeardMyselfSay(UUID uuid, string message)
         {
             if (MyBotNullWarning()) return;
+            if (MyBot.useServitor) return;
+
             Enqueue("HeardMyselfSay: " + message,
                     () => MyBot.HeardSomeoneSay1Sentence(MyBot.BotAsUser, MyUser, message, null, null));
         }
