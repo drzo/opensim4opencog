@@ -1435,11 +1435,14 @@
       <ReferencePath>../../../bin</ReferencePath>
       <Reference name="Cogbot.Library" localCopy="false"/>
       <Reference name="MushDLR223"  localCopy="false"/>
-      <Reference name="System.Data" localCopy="false"/>
       <Reference name="OpenMetaverse" localCopy="false"/>
       <Reference name="OpenMetaverseTypes" localCopy="false"/>
       <Reference name="log4net" localCopy="false"/>
-      <Reference name="Meebey.SmartIrc4net" localCopy="false"/>
+      <Reference name="System" localCopy="false"/>
+      <Reference name="System.Core" localCopy="false"/>
+      <Reference name="System.Configuration" localCopy="false"/>
+      <Reference name="System.Runtime.Remoting" localCopy="false"/>
+      <Reference name="System.Data" localCopy="false"/>
       <Files>
         <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
 

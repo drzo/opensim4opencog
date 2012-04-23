@@ -1491,7 +1491,7 @@ namespace cogbot
             }
             if (newType) ScriptManager.AddType(t);
             if (newType) ScriptManager.LoadSysVars(t);
-            if (typeof(SystemApplicationCommand).IsAssignableFrom(t))
+            if (typeof(SystemApplicationCommand).IsAssignableFrom(t) && !typeof(NotAutoLoaded).IsAssignableFrom(t))
             {
                 if (!registeredSystemApplicationCommandTypes.Contains(t))
                 {

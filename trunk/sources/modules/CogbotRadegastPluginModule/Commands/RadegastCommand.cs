@@ -29,7 +29,16 @@ namespace cogbot.Actions.System
                 if (Client.TheRadegastInstance == null)
                 {
                     CogbotGUI.EnsureBotClientHasRadegast(Client);
-                    Thread.Sleep(10000);
+                    int max = 40;
+                    while (Client.TheRadegastInstance == null && max > 0)
+                    {
+                        max--;
+                        Thread.Sleep(1000);
+                    }
+                    if (Client.TheRadegastInstance == null)
+                    {
+                        return Failure("Could not make client in timely manner");
+                    }
                 }
                 PanelGUI = Client.TheRadegastInstance.MainForm;
                 // (new Thread(() =>

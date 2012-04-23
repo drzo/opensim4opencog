@@ -7,13 +7,11 @@ namespace IrcRegionModule
 {
     public class IrcBotModule : WorldObjectsModule
     {
-        public static IrcCommand IrcCommand;
+        public IrcCommand IrcCommand;
 
         public IrcBotModule(BotClient parent)
             : base(parent)
         {
-            IrcCommand = IrcCommand ?? new IrcCommand(client);
-            client.RegisterCommand("irc", IrcCommand);
             //parent.Commands.Add();
         }
 

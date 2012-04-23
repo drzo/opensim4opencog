@@ -10,7 +10,7 @@ using OpenMetaverse;
 
 namespace IrcRegionModule
 {
-    public class IrcCommand : Command, GridMasterCommand
+    public class IrcCommand : Command, GridMasterCommand, NotAutoLoaded
 
     {
         private string _ircNick = "cogbotIrcBridge";
@@ -157,7 +157,7 @@ namespace IrcRegionModule
             }
         }
 
-        private static Meebey.SmartIrc4net.IrcClient ircClient = new IrcClient();
+        private Meebey.SmartIrc4net.IrcClient ircClient;
         private Thread ListenerThreaThread;
         private BotClient TheBC = null;
         private UUID _groupID = UUID.Zero;
@@ -191,9 +191,8 @@ namespace IrcRegionModule
             Name = "irc";
             TheBC = bc;
             Description = "connects to IRC. Usage: irc channel nick server";
-            Category = CommandCategory.Other;
-            IrcRegionModule.IrcBotModule.IrcCommand = this;
-            
+            Category = CommandCategory.Other;            
+            ircClient = new IrcClient();
         }
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {

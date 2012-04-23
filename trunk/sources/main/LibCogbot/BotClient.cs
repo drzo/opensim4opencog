@@ -721,8 +721,8 @@ namespace cogbot
             lock (RunStartupClientLisplock)
             {
                 if (!RunStartupClientLisp) return;
-                DebugWriteLine("Running StartupClientLisp");
                 RunStartupClientLisp = false;
+                DebugWriteLine("Running StartupClientLisp");
                 string startupClientLisp = ClientManager.config.startupClientLisp;
                 if (startupClientLisp.Length > 1)
                 {
@@ -2300,12 +2300,32 @@ namespace cogbot
             {
                 if (t.IsSubclassOf(typeof(Command)))
                 {
-                    if (!typeof(SystemApplicationCommand).IsAssignableFrom(t))
+                    if (!typeof(SystemApplicationCommand).IsAssignableFrom(t) && !typeof(NotAutoLoaded).IsAssignableFrom(t))
                     {
+                        string typename = t.Name;
+                        bool useGridClient = false;
                         ConstructorInfo info = t.GetConstructor(new Type[] { typeof(BotClient) });
+                        if (info == null)
+                        {
+                            useGridClient = true;
+                            info = t.GetConstructor(new Type[] { typeof(GridClient) });
+                        }
+                        if (info == null)
+                        {
+                            WriteLine("Missing BotClient constructor in " + typename);
+                            return;
+                        }
                         try
                         {
-                            Command command = (Command)info.Invoke(new object[] { this });
+                            Command command = null;
+                            if (useGridClient)
+                            {
+                                command = (Command)info.Invoke(new object[] { gridClient });
+                            }
+                            else
+                            {
+                                command = (Command) info.Invoke(new object[] {this});
+                            }
                             RegisterCommand(command);
                         }
                         catch (Exception e)
