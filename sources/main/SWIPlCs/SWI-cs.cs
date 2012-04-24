@@ -2582,7 +2582,6 @@ namespace SbsSW.SwiPlCs
             }
             else
             {
-                PrologClient.ConsoleWriteLine("Init1");
                 libpl.LoadLibPl();
                 // redirect input and output stream to receive messages from prolog
                 DelegateStreamWriteFunction wf = new DelegateStreamWriteFunction(Swrite_function);
@@ -2596,12 +2595,11 @@ namespace SbsSW.SwiPlCs
                 local_argv[idx++] = "";
                 foreach (string s in argv)
                     local_argv[idx++] = s;
-                PrologClient.ConsoleWriteLine("Init22");
                 if (0 == libpl.PL_initialise(local_argv.Length, local_argv))
                     throw new PlLibException("failed to initialize");
                 else
                 {
-                    PrologClient.ConsoleWriteLine("Init3");
+                    PrologClient.ConsoleWriteLine("PL_initialised");
                     SetStreamReader(Sread_function);
                 }
             }

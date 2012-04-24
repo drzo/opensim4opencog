@@ -147,12 +147,16 @@ namespace SbsSW.SwiPlCs
         {
             if (!File.Exists(DllFileName))
             {
+                if (!File.Exists(DllFileName1))
+                {
+                    PrologClient.ConsoleTrace("No such file: " + DllFileName1);
+                } else
+                {
+                    return;
+                }
                 PrologClient.ConsoleTrace("No such file: " + DllFileName);
             }
-            if (!File.Exists(DllFileName1))
-            {
-                PrologClient.ConsoleTrace("No such file: " + DllFileName);
-            }
+
         }
 
         public static string PlLib

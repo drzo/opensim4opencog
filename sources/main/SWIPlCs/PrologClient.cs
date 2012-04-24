@@ -350,6 +350,7 @@ namespace SbsSW.SwiPlCs
             {
                 Environment.SetEnvironmentVariable("SWI_HOME_DIR", SwiHomeDir);
             }
+            if (!ConfirmRCFile(SwiHomeDir)) ConsoleTrace("RC file missing from " + SwiHomeDir);
             string platformSuffix = Is64BitRuntime() ? "-x64" : "-x86";
             if (copyPlatFormVersions)
             {
@@ -479,11 +480,16 @@ namespace SbsSW.SwiPlCs
                 return false;
             }
             if (File.Exists(swiHomeDir + "/bin/swipl.dll")) return true;
+            if (!ConfirmRCFile(swiHomeDir)) return false;
+            return true;
+        }
+
+        private static bool ConfirmRCFile(string swiHomeDir)
+        {
             if (!File.Exists(swiHomeDir + "/boot32.prc") &&
                 !File.Exists(swiHomeDir + "/boot.prc") &&
                 !File.Exists(swiHomeDir + "/boot64.prc"))
             {
-                ConsoleTrace("RC file missing from " + swiHomeDir);
                 return false;
             }
             return true;
