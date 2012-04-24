@@ -247,11 +247,14 @@ namespace SbsSW.SwiPlCs
         }
 
         private static bool LoadedLibPl = false;
+        private static bool TryLoadedLibPl = false;
+
         internal static void LoadLibPl()
         {
-            if (LoadedLibPl) return;
+            if (LoadedLibPl || TryLoadedLibPl) return;
             try
             {
+                TryLoadedLibPl = true;
                 LoadUnmanagedLibrary(SafeNativeMethods.DllFileName1);
                 LoadedLibPl = true;
             }
