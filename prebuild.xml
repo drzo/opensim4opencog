@@ -507,7 +507,8 @@
       </Files>
     </Project>
 
-    <Project name="SwiPlCs" path="sources/main/SWIPlCs" type="Library" frameworkVersion="v3_5">
+
+    <Project name="Swicli.Library" path="sources/main/Swicli.Library" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
           <OutputPath>C:\Program Files\pl\bin\</OutputPath>
@@ -1243,7 +1244,7 @@
   <Reference name="System.Xml" localCopy="false"/>
    <Reference name="Cogbot.Library" localCopy="false"/>
    <Reference name="MushDLR223"  localCopy="false"/>
-   <Reference name="SwiPlCs" localCopy="false"/>
+   <Reference name="Swicli.Library" localCopy="false"/>
   <Files>
       <Match path="." pattern="*.cs"  recurse="true"  subType="Form">  
       <Exclude name="EXCLUDED.cs"/></Match>
@@ -1772,7 +1773,7 @@
       <Reference name="RadSpeechLin" />
       <Reference name="RadSpeechWin" />
       <Reference name="CommandLine.dll"  localCopy="false" />
-      <Reference name="SwiPlCs" localCopy="false"/>
+      <Reference name="Swicli.Library" localCopy="false"/>
       <Reference name="System" localCopy="false"/>
       <Reference name="System.Data" />
       <Reference name="System.Drawing" localCopy="false"/>

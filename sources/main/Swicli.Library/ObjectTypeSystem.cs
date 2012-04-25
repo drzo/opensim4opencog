@@ -35,278 +35,6 @@ namespace SbsSW.SwiPlCs
     public partial class PrologClient
     {
 
-        static private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
-        {
-            var domain = (AppDomain)sender;
-            foreach (var assembly in domain.GetAssemblies())
-            {
-                if (assembly.FullName == args.Name)
-                    return assembly;
-                if (assembly.ManifestModule.Name == args.Name)
-                    return assembly;
-            }
-
-            lock (AssembliesLoaded) foreach (Assembly assembly in AssembliesLoaded)
-            {
-                if (assembly.FullName == args.Name)
-                    return assembly;
-                if (assembly.ManifestModule.Name == args.Name)
-                    return assembly;
-            }
-            string curDir = new DirectoryInfo(".").FullName;
-            string assemblyName = args.Name;
-            int comma = assemblyName.IndexOf(",");
-            if (comma > 0)
-            {
-                assemblyName = assemblyName.Substring(0, comma);
-            }
-            var assemj = FindAssembly0(assemblyName, AppDomain.CurrentDomain.BaseDirectory) ??
-                         FindAssembly0(assemblyName, curDir) ??
-                         FindAssembly0(assemblyName, Path.GetDirectoryName(typeof(SwiPlCs.PrologClient).Assembly.CodeBase));
-            if (assemj != null) return assemj;
-            return assemj;
-        }
-
-        private static List<string> LoaderExtensionStrings = new List<string> { "dll", "exe", "jar", "lib", "dynlib", "class", "so" };
-        public static Assembly FindAssembly0(string assemblyName, string dirname)
-        {
-            string filename = Path.Combine(dirname, assemblyName);
-            string loadfilename = filename;
-            bool tryexts = !File.Exists(loadfilename);
-            string filenameLower = filename.ToLower();
-            List<string> LoaderExtensions = new List<string>();
-            lock (LoaderExtensionStrings)
-            {
-                LoaderExtensions.AddRange(LoaderExtensionStrings);
-            }
-            foreach (string extension in LoaderExtensions)
-            {
-                if (filenameLower.EndsWith("." + extension))
-                {
-                    tryexts = false;
-                    break;
-                }
-            }
-
-            if (tryexts)
-            {
-                foreach (var s in LoaderExtensions)
-                {
-                    string testfile = loadfilename + "." + s;
-                    if (File.Exists(testfile))
-                    {
-                        loadfilename = testfile;
-                        break;
-                    }
-
-                }
-            }
-            if (File.Exists(loadfilename))
-            {
-                try
-                {
-                    return Assembly.LoadFile(loadfilename);
-                }
-                catch (Exception)
-                {
-                    throw;
-                }
-            }
-            return null;
-        }
-
-        public static Assembly AssemblyLoad(string assemblyName)
-        {
-            Assembly assembly = null;
-            try
-            {
-                assembly = Assembly.Load(assemblyName);
-            }
-            catch (FileNotFoundException fnf)
-            {
-                if (fnf.FileName != assemblyName) throw fnf;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            if (assembly != null) return assembly;
-            assembly = FindAssembly0(assemblyName, AppDomain.CurrentDomain.BaseDirectory) ??
-                       FindAssembly0(assemblyName, (new DirectoryInfo(".").FullName)) ??
-                       FindAssembly0(assemblyName, Path.GetDirectoryName(typeof(SwiPlCs.PrologClient).Assembly.CodeBase));
-            if (assembly != null) return assembly;
-            return Assembly.LoadFrom(assemblyName);
-
-        }
-        public static List<Assembly> AssembliesLoaded = new List<Assembly>();
-        public static List<string> AssembliesLoading = new List<string>();
-        public static List<Type> TypesLoaded = new List<Type>();
-        public static List<Type> TypesLoading = new List<Type>();
-
-        public static bool ResolveAssembly(Assembly assembly)
-        {
-            string assemblyName = assembly.FullName;
-            lock (AssembliesLoaded)
-            {
-                if (AssembliesLoading.Contains(assemblyName))
-                {
-                    return true;
-                }
-                AssembliesLoading.Add(assemblyName);
-                LoadReferencedAssemblies(assembly);
-                // push to the front
-                AssembliesLoaded.Remove(assembly);
-                AssembliesLoaded.Insert(0, assembly);
-            }
-            LoadTypesFromAssembly(assembly);
-            return true;
-        }
-
-        private static void LoadReferencedAssemblies(Assembly assembly)
-        {
-            foreach (var refed in assembly.GetReferencedAssemblies())
-            {
-                string assemblyName = refed.FullName;
-                try
-                {
-                    Assembly assemblyLoad = Assembly.Load(refed);
-                    ResolveAssembly(assemblyLoad);
-                    continue;
-                }
-                catch (Exception e)
-                {
-                    var top = Path.Combine(Path.GetDirectoryName(assembly.Location), refed.Name);
-                    try
-                    {
-                        Assembly assemblyLoad = Assembly.LoadFrom(top + ".dll");
-                        ResolveAssembly(assemblyLoad);
-                        continue;
-                    }
-                    catch (Exception)
-                    {
-                    }
-                    try
-                    {
-                        Assembly assemblyLoad = Assembly.LoadFrom(top + ".exe");
-                        ResolveAssembly(assemblyLoad);
-                        continue;
-                    }
-                    catch (Exception)
-                    {
-                    }
-                    Warn("LoadReferencedAssemblies:{0} caused {1}", assemblyName, e);
-                }
-            }
-        }
-
-        private static void LoadTypesFromAssembly(Assembly assembly)
-        {
-            string assemblyName = assembly.FullName;
-            try
-            {
-                foreach (Type t in assembly.GetTypes())
-                {
-                    try
-                    {
-                        LoadType(t);
-                    }
-                    catch (Exception te)
-                    {
-                        // Warn(e.Message);
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                // get types problem
-                // Warn(e.Message);
-            }
-        }
-        /// <summary>
-        /// cliLoadAssembly('SwiPlCs.dll').
-        /// cliLoadAssembly('Cogbot.exe').
-        /// </summary>
-        /// <param name="term1"></param>
-        /// <returns></returns>
-        public static bool cliLoadAssembly(PlTerm term1)
-        {
-            PingThreadFactories();
-            try
-            {
-                return cliLoadAssemblyUncaught(term1);
-            }
-            catch (Exception e)
-            {
-                Warn("cliLoadAssembly: {0} caused {1}", term1, e);
-                return false;
-            }
-        }
-        public static bool cliLoadAssemblyUncaught(PlTerm term1)
-        {
-            try
-            {
-                if (term1.IsVar)
-                {
-                    Warn("cliLoadAssembly IsVar {0}", term1);
-                    return false;
-                }
-                if (IsTaggedObject(term1))
-                {
-                    var assemblyOrType = GetInstance(term1);
-                    if (assemblyOrType is Assembly)
-                    {
-                        return ResolveAssembly((Assembly)assemblyOrType);
-                    }
-                    if (assemblyOrType is Type)
-                    {
-                        return ResolveAssembly(((Type)assemblyOrType).Assembly);
-                    }
-                    return Warn("Cannot get assembly from {0} for {1}", assemblyOrType, term1);
-                }
-                string name = term1.Name;
-                Assembly assembly = null;
-                try
-                {
-                    assembly = AssemblyLoad(name);
-                    if (assembly != null) return ResolveAssembly(assembly);
-                }
-                catch (Exception e)
-                {
-                    //Warn("Load: " + name + " caused " + e);
-                }
-                var fi = new FileInfo(name);
-                if (fi.Exists)
-                {
-                    string fiFullName = fi.FullName;
-                    try
-                    {
-                        assembly = Assembly.LoadFile(fiFullName);
-                        if (assembly != null) return ResolveAssembly(assembly);
-                    }
-                    catch (Exception e)
-                    {
-                        Warn("LoadFile: {0} caused {1}", fiFullName, e);
-                    }
-                }
-                try
-                {
-                    if (assembly == null) assembly = Assembly.LoadWithPartialName(name);
-                }
-                catch (Exception e)
-                {
-                    Warn("LoadWithPartialName: {0} caused {1}", name, e);
-                }
-                if (assembly == null) return Warn("Cannot get assembly from {0} for {1}", name, term1);
-                return ResolveAssembly(assembly);
-
-            }
-            catch (Exception exception)
-            {
-                throw ToPlException(exception);
-            }
-            return true;
-        }
-
         [PrologVisible(Name = "cliLoadType", Arity = 1, TypeOf = null)]
         private static void LoadType(Type t)
         {
@@ -606,7 +334,7 @@ namespace SbsSW.SwiPlCs
 #endif
         }
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliShortType(PlTerm valueName, PlTerm valueIn)
+        static public bool cliShorttype(PlTerm valueName, PlTerm valueIn)
         {
             if (!valueName.IsString && !valueName.IsAtom) return Warn("valueName must be string or atom {0}", valueName);
             string name = valueName.Name;
@@ -908,8 +636,23 @@ namespace SbsSW.SwiPlCs
             {
                 if (char.IsLower(m.Name[0]))
                 {
-                    pm.Name = m.Name;
+                    string mName = m.Name;
+                    if (ForceJanCase)
+                    {
+                        pm.Name = ToPrologCase(mName);
+                    } else
+                    {
+                        pm.Name = mName;
+                    }
                 }
+                else
+                {
+                    string mName = m.Name;
+                    pm.Name = ToPrologCase(mName);
+                }
+            } else
+            {
+                pm.Name = ToPrologCase(pm.Name);
             }
             InternMethod(pm.ModuleName, pm.Name, m);
         }

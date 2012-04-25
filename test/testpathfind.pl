@@ -144,7 +144,7 @@ test_desc(island_hop , 'Island hop').
 test(N) :-
 	N = island_hop,
 	start_test(N),
-	move_test(45 , start_island_hop , stop_island_hop),
+	move_test(45 , start_is_land_hop , stop_is_land_hop),
 	std_end(N , 45 , 2).
 
 test_desc_redo(hill_walk , 'Hill Walk').
@@ -210,7 +210,7 @@ test(7, N) :-
 tpf_method(GoMethod) :-
 	retractall(goMethod(_)),
 	asserta(goMethod(GoMethod)),
-	cliSet('SimAvatarClient' , 'GotoUseTeleportFallback' , '@'(false)),
+	cli_set('SimAvatarClient' , 'GotoUseTeleportFallback' , '@'(false)),
 %	clause(testpathfind:test(Name) , _),
 	test_desc(Name , Desc),
         'format'('~n~ndoing test: ~q',[test_desc(Name , Desc)]),
@@ -238,7 +238,7 @@ tpf2 :- repeat,once(tpf),sleep(10),fail.
 %% example: ?- tpf(clear).
 tpf(Name) :-
         goMethod(GoMethod),
-	cliSet('SimAvatarClient' , 'GotoUseTeleportFallback' , '@'(false)),
+	cli_set('SimAvatarClient' , 'GotoUseTeleportFallback' , '@'(false)),
 	test_desc(Name , Desc),
 	doTest(Name , testpathfind:test(Name) , Results),
 	ppTest([name(Name),
@@ -249,10 +249,10 @@ tpf(Name) :-
 
  makePipe(S,E):-toLocalVect(S,v3(SX,SY,SZ)),toLocalVect(E,v3(EX,EY,EZ)),
     sformat(SF,'~w,~w,~w,~w,~w,~w,~w,~w,~w',[255,0,0,SX,SY,SZ,EX,EY,EZ]),
-    botClient(BC),cliCall(BC,talk(SF,100,'Normal'),_).
+    botClient(BC),cli_call(BC,talk(SF,100,'Normal'),_).
 
 end_of_file.
 
- botClient(X),cliCall(X,talk(hi),V)
+ botClient(X),cli_call(X,talk(hi),V)
 
 

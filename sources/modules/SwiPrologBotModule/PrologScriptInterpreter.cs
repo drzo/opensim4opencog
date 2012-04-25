@@ -55,7 +55,7 @@ namespace PrologScriptEngine
                     var list = list0;
                     DLRConsole.SafelyRun(() =>
                     {
-                        if (AutoInternMethods) PrologClient.InternMethod(module, null, list);
+                        if (AutoInternMethods) PrologClient.InternMethod(module, PrologClient.ToPrologCase(list.Name), list);
                         if (deeper)
                         {
                             foreach (var s in list.GetParameters())
