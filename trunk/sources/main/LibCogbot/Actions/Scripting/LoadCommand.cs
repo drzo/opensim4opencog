@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection.Emit;
 using System.Text;
 using System.Reflection;
 using MushDLR223.Utilities;
@@ -21,39 +22,6 @@ namespace cogbot.Actions.System
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
         }
 
-        private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
-        {
-            var domain = (AppDomain) sender;
-            foreach (var assembly in domain.GetAssemblies())
-            {
-                if (assembly.FullName == args.Name)
-                    return assembly;
-                if (assembly.ManifestModule.Name == args.Name)
-                    return assembly;
-            }
-
-            foreach (Assembly assembly in LockInfo.CopyOf(TheBotClient.AssemblyListeners.Keys))
-            {
-                if (assembly.FullName == args.Name)
-                    return assembly;
-                if (assembly.ManifestModule.Name == args.Name)
-                    return assembly;
-            }
-            string curDir = new DirectoryInfo(".").FullName;
-            string assemblyName = args.Name;
-            int comma = assemblyName.IndexOf(",");
-            if (comma > 0)
-            {
-                assemblyName = assemblyName.Substring(0, comma);
-            }
-            var assemj = FindAssembly0(assemblyName, AppDomain.CurrentDomain.BaseDirectory) ??
-                         FindAssembly0(assemblyName, curDir) ??
-                         FindAssembly0(assemblyName, Path.GetDirectoryName(typeof (cogbot.BotClient).Assembly.CodeBase));
-            if (assemj != null || assemblyName.Contains("Serializer")) return assemj;
-           return assemj;
-        }
-
-        private static List<string> LoaderExtensions = new List<string> { "dll", "exe", "jar", "lib", "dynlib", "class", "so" };
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
@@ -105,23 +73,122 @@ namespace cogbot.Actions.System
                throw;
             }
             if (assembly != null) return assembly;
-            assembly = FindAssembly0(assemblyName, AppDomain.CurrentDomain.BaseDirectory) ??
-                       FindAssembly0(assemblyName, (new DirectoryInfo(".").FullName)) ??
-                       FindAssembly0(assemblyName, Path.GetDirectoryName(typeof(cogbot.BotClient).Assembly.CodeBase));
+            assembly = LoadAssemblyByFile(assemblyName);
             if (assembly != null) return assembly;
             return Assembly.LoadFrom(assemblyName);
 
         }
-        public static Assembly FindAssembly0(string assemblyName, string dirname)
+
+        static private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
         {
+            var domain = (AppDomain)sender;
+            foreach (var assembly in LockInfo.CopyOf(domain.GetAssemblies()))
+            {
+                if (assembly.FullName == args.Name)
+                    return assembly;
+                if (assembly.ManifestModule.Name == args.Name)
+                    return assembly;
+            }
+
+            foreach (Assembly assembly in LockInfo.CopyOf(AssembliesLoaded))
+            {
+                if (assembly.FullName == args.Name)
+                    return assembly;
+                if (assembly.ManifestModule.Name == args.Name)
+                    return assembly;
+            }
+            string assemblyName = args.Name;
+            int comma = assemblyName.IndexOf(",");
+            if (comma > 0)
+            {
+                assemblyName = assemblyName.Substring(0, comma);
+            }
+            return LoadAssemblyByFile(assemblyName);
+        }
+
+        protected static IEnumerable<Assembly> AssembliesLoaded
+        {
+            get { return new List<Assembly>(); }
+        }
+
+        private static Assembly LoadAssemblyByFile(string assemblyName)
+        {
+            if (File.Exists(assemblyName))
+            {
+                try
+                {
+                    var fi = new FileInfo(assemblyName);
+                    if (fi.Exists) return Assembly.LoadFile(fi.FullName);
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
+            IList<string> sp = LockInfo.CopyOf((IEnumerable<string>)null);
+            foreach (var dir in new[] { AppDomain.CurrentDomain.BaseDirectory, new DirectoryInfo(".").FullName, Path.GetDirectoryName(typeof(BotClient).Assembly.CodeBase), Environment.CurrentDirectory })
+            {
+                if (!sp.Contains(dir)) sp.Add(dir);
+            }
+            string lastTested = "";
+            foreach (var s in LockInfo.CopyOf(AppDomain.CurrentDomain.GetAssemblies()))
+            {
+                try
+                {
+                    if (s is AssemblyBuilder) continue;
+                    string dir = Path.GetDirectoryName(s.CodeBase);
+                    dir = NormalizePath(dir);
+                    if (dir == lastTested) continue;
+                    lastTested = dir;
+                    if (!sp.Contains(dir)) sp.Add(dir);
+                }
+                catch (NotSupportedException)
+                {
+                    // Reflected Assemblies do this
+                }
+            }
+            foreach (string pathname in sp)
+            {
+                var assemj = FindAssemblyByPath(assemblyName, pathname);
+                if (assemj != null) return assemj;
+            }
+
+            return null;
+        }
+
+        private static string NormalizePath(string dirname1)
+        {
+            string dirname = dirname1;
+            if (dirname.StartsWith("file:\\"))
+            {
+                dirname = dirname.Substring(6);
+            }
+            if (dirname.StartsWith("file://"))
+            {
+                dirname = dirname.Substring(7);
+            }
+            dirname = new FileInfo(dirname).FullName;
+            if (dirname != dirname1)
+            {
+                return dirname;
+            }
+            return dirname1;
+        }
+
+
+        private static readonly List<string> LoaderExtensionStrings = new List<string> { "dll", "exe", "jar", "lib", "dynlib", "class", "so" };
+        public static Assembly FindAssemblyByPath(string assemblyName, string dirname)
+        {
+
+            dirname = NormalizePath(dirname);
             string filename = Path.Combine(dirname, assemblyName);
             string loadfilename = filename;
             bool tryexts = !File.Exists(loadfilename);
             string filenameLower = filename.ToLower();
             List<string> LoaderExtensions = new List<string>();
-            lock (LoadCommand.LoaderExtensions)
+            lock (LoaderExtensionStrings)
             {
-                LoaderExtensions.AddRange(LoadCommand.LoaderExtensions);
+                LoaderExtensions.AddRange(LoaderExtensionStrings);
             }
             foreach (string extension in LoaderExtensions)
             {
@@ -136,7 +203,7 @@ namespace cogbot.Actions.System
             {
                 foreach (var s in LoaderExtensions)
                 {
-                    string testfile =  loadfilename + "." + s;
+                    string testfile = loadfilename + "." + s;
                     if (File.Exists(testfile))
                     {
                         loadfilename = testfile;
@@ -149,10 +216,10 @@ namespace cogbot.Actions.System
             {
                 try
                 {
-                    return Assembly.LoadFile(loadfilename);
+                    return Assembly.LoadFile(new FileInfo(loadfilename).FullName);
                 }
                 catch (Exception)
-                {                    
+                {
                     throw;
                 }
             }

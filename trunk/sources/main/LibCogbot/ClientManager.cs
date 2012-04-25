@@ -76,11 +76,21 @@ namespace cogbot
         static private IDisposable clientManagerHttpServer;
         public void AddTool(BotClient client, string name, string text, EventHandler threadStart)
         {
-            client.InvokeGUI(() => AddTool0(client, name, text, threadStart));
+            client.InvokeGUI(() =>
+                                 {
+                                     try
+                                     {
+                                         AddTool0(name, text, threadStart);
+                                         
+                                     } catch(Exception e)
+                                     {
+                                         DebugWriteLine("" + e);
+                                     }
+                                 });
         }
 
         public delegate void AddToolDelegate(string name, string text, EventHandler threadStart);
-        private void AddTool0(BotClient client, string name, string text, EventHandler threadStart)
+        private void AddTool0(string name, string text, EventHandler threadStart)
         {
             // SuspendLayout();
             ToolStripMenuItem stripMenuItem =

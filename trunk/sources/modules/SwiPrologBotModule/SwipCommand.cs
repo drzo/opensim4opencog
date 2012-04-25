@@ -36,7 +36,7 @@ namespace cogbot.Actions.System
                 Nullable<PlTerm> cmd = null;
                 object o = null;
                 ManualResetEvent mre = new ManualResetEvent(false);
-                Client.InvokeGUI(() =>
+                Client.InvokeGUI(true, () =>
                                      {
                                          o = PrologClient.InvokeFromC(() =>
                                                                       {

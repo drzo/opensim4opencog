@@ -359,6 +359,7 @@ namespace cogbot
             get { return WorldSystem.IsRegionMaster; }
         }
 
+        readonly List<ThreadStart> OnRadegastSet = new List<ThreadStart>();
         private Radegast.RadegastInstance __TheRadegastInstance;
         public Radegast.RadegastInstance TheRadegastInstance
         {
@@ -384,13 +385,16 @@ namespace cogbot
                     if (nc != null) nc.InstantMessageSent -= IMSent;
                 }
                 __TheRadegastInstance = value;
-                if (value == null) return;
                 var vc = value.Client;
                 if (gridClient != vc)
                 {
                     WriteLine("wierd gridclients");
                 }
                 value.Netcom.InstantMessageSent += IMSent;
+                foreach (ThreadStart start in LockInfo.CopyOf(OnRadegastSet))
+                {
+                    InvokeGUI(start);
+                }
 
                 if (false) CogbotGUI.SetDebugConsole(value);
             }
@@ -2504,14 +2508,24 @@ namespace cogbot
             }
         }
 
+
         public void InvokeGUI(ThreadStart o)
         {
-            if (TheRadegastInstance==null)
+            if (TheRadegastInstance == null)
+            {
+                OnRadegastSet.Add(o);
+                return;
+            }
+            CogbotGUI.InvokeGUI(TheRadegastInstance.MainForm, o);
+        }
+        public void InvokeGUI(bool noRadegastRequired, ThreadStart o)
+        {
+            if (noRadegastRequired && TheRadegastInstance == null)
             {
                 o();
                 return;
             }
-            CogbotGUI.InvokeGUI(TheRadegastInstance.MainForm, o);
+            InvokeGUI(o);
         }
 
         public BotPermissions GetSecurityLevel(UUID uuid, string name)

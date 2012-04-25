@@ -562,19 +562,19 @@ namespace TheSimiansModule
                 {
                     var gc = Actor.GetBotClient();
                     gc.InvokeGUI((() =>
-                                                    {
-                                                        try
-                                                        {
-                                                            string name = "ST: " + gc.GetName();
-                                                            _debugWindow = new SimThinkerDebug(name,gc);
-                                                            gc.AddTab(name, name, _debugWindow, CloseDebug);
-                                                        }
-                                                        catch (Exception e)
-                                                        {
-                                                            DLRConsole.DebugWriteLine("" + e);
-                                                        }
-                                                    }
-                                         ));
+                                      {
+                                          try
+                                          {
+                                              string name = "ST: " + gc.GetName();
+                                              _debugWindow = new SimThinkerDebug(name, gc);
+                                              gc.AddTab(name, name, _debugWindow, CloseDebug);
+                                          }
+                                          catch (Exception e)
+                                          {
+                                              DLRConsole.DebugWriteLine("" + e);
+                                          }
+                                      }
+                                 ));
                 }
                 else
                 {

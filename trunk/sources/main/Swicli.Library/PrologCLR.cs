@@ -845,14 +845,14 @@ namespace SbsSW.SwiPlCs
         }
 
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliEnterLock(PlTerm lockObj)
+        static public bool cliLockEnter(PlTerm lockObj)
         {
             object getInstance = GetInstance(lockObj);
             Monitor.Enter(getInstance);
             return true;
         }
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliExitLock(PlTerm lockObj)
+        static public bool cliLockExit(PlTerm lockObj)
         {
             object getInstance = GetInstance(lockObj);
             Monitor.Exit(getInstance);
@@ -1344,14 +1344,14 @@ namespace SbsSW.SwiPlCs
         /// <param name="str"></param>
         /// <returns></returns>
         [PrologVisible(ModuleName = ExportModule)]
-        public static bool cliToStringRaw(PlTerm obj, PlTerm str)
+        public static bool cliToStrRaw(PlTerm obj, PlTerm str)
         {
             try
             {
                 if (!str.IsVar)
                 {
                     var plvar = PlTerm.PlVar();
-                    cliToStringRaw(obj, plvar);
+                    cliToStrRaw(obj, plvar);
                     return SpecialUnify(str, plvar);
                 }
                 if (obj.IsString) return str.Unify(obj);

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Xml.Serialization;
 using SbsSW.SwiPlCs.Callback;
@@ -88,6 +89,7 @@ typedef struct // define a context structure  { ... } context;
         {
             InternMethod(module, pn, list, null);
         }
+        public static bool ForceJanCase = true;
         public static void InternMethod(string module, string pn, MethodInfo list, object defaultInstanceWhenMissing)
         {
             if (list == null)
@@ -96,6 +98,14 @@ typedef struct // define a context structure  { ... } context;
             }
             Type type = list.DeclaringType;
             pn = pn ?? (type.Name + "." + list.Name);
+            if (ForceJanCase)
+            {
+                var pn2 = ToPrologCase(pn);
+                if (pn2 != pn)
+                {
+                    pn = pn2;
+                }
+            }
             ParameterInfo[] ps = list.GetParameters();
             Type rt = list.ReturnType;
             int paramlen = ps.Length;
@@ -179,6 +189,63 @@ typedef struct // define a context structure  { ... } context;
                 PlEngine.RegisterForeign(module, pn, plarity - maxOptionals, del, PlForeignSwitches.VarArgs);
                 maxOptionals--;
             }
+        }
+
+        public static string ToPrologCase(string pn)
+        {
+            bool cameCased = false;
+            foreach (char c in pn)
+            {
+                if (Char.IsUpper(c) || c == '.' || c == '-')
+                {
+                    cameCased = true;
+                    break;
+                }
+            }
+            if (!cameCased) return pn;
+            StringBuilder newname = new StringBuilder();
+            bool lastCapped = true;
+            bool lastUnderscored = true;
+            foreach (char c in pn)
+            {
+
+                if (Char.IsUpper(c))
+                {
+                    if (lastCapped)
+                    {
+                        newname.Append(CharToLower(c));
+                    }
+                    else
+                    {
+                        if (!lastUnderscored) newname.Append('_');
+                        newname.Append(CharToLower(c));
+                        lastCapped = true;
+                    }
+                    lastUnderscored = false;
+                }
+                else
+                {
+                    if (c == '_' || c == '-')
+                    {
+                        lastCapped = false;
+                        if (lastUnderscored) continue;
+                        newname.Append('_');
+                        lastUnderscored = true;
+                        continue;
+                    }
+                    newname.Append(CharToLower(c));
+                    lastCapped = false;
+                    lastUnderscored = false;
+                }
+            }
+            return newname.ToString();
+        }
+
+        private static char CharToLower(char c)
+        {
+            if (c == '-') return '_';
+            return Char.ToLower(c);
+
         }
 
         private static DelegateParameterVarArgs GetDelV(MethodInfo list, Type type, bool nonvoid, bool isbool, bool isStatic, int plarity, object defaultInstanceWhenMissing)

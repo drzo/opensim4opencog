@@ -1,79 +1,79 @@
 :- module(swicli,
           [
             cli_debug/1,
-            cli_Eval/3,
-            cli_GetSymbol/3,
-            cli_Intern/3,
-            cli_IsDefined/2,
-            cliAddEventHandler/3,
-            cliAddLayout/2,
-            cliArrayToTerm/2,
-            cliArrayToTermList/2,
-            cliCall/3,
-            cliCall/4,
-            cliCol/2,
-            cliCast/3,
-            cliCollection/2,
-            cliFindClass/2,
-            cliFindMethod/3,
-            cliFindType/2,
-            cliGet/3,
-            cliGetRaw/3,
-            cliGetType/2,
-            cliIsNull/1,
-            cliNonNull/1,
-            cliIsObject/1,
-            cliIsType/2,            
-            cliLoadAssembly/1,
-            cliMemb/2,
-            cliMemb/3,
-            cliMembers/2,
-            cliNew/3,
-            cliNew/4,
-            cliPropsForType/2,
-            cliSet/3,
-            cliSetRaw/3,
-            cliSubProperty/2,
-            cliShortType/2,
-            cliSubclass/2,
-            cliToData/2,
-            cliToData/3,
-            cliToFromLayout/3,
-            cliToString/2,
-            cliToStringRaw/2,
-            cliToTagged/2,
-            cliTypeSpec/2,
-            cliWrite/1,
-            cliWriteln/1,
-            cliUnify/2,
-            cliWithLock/2,
-            cliEnterLock/1,
-            cliExitLock/1,
-            cliNewDelegate/3,
+            cli_eval/3,
+            cli_getSymbol/3,
+            cli_intern/3,
+            cli_is_defined/2,
+            cli_add_event_handler/3,
+            cli_add_layout/2,
+            cli_array_to_term/2,
+            cli_array_to_termlist/2,
+            cli_call/3,
+            cli_call/4,
+            cli_col/2,
+            cli_cast/3,
+            cli_collection/2,
+            cli_find_class/2,
+            cli_find_method/3,
+            cli_find_type/2,
+            cli_get/3,
+            cli_get_raw/3,
+            cli_get_type/2,
+            cli_is_null/1,
+            cli_non_null/1,
+            cli_is_object/1,
+            cli_is_type/2,            
+            cli_load_assembly/1,
+            cli_memb/2,
+            cli_memb/3,
+            cli_members/2,
+            cli_new/3,
+            cli_new/4,
+            cli_props_for_type/2,
+            cli_set/3,
+            cli_set_raw/3,
+            cli_subproperty/2,
+            cli_shorttype/2,
+            cli_subclass/2,
+            cli_to_data/2,
+            cli_to_data/3,
+            cli_to_from_layout/3,
+            cli_to_str/2,
+            cli_to_str_raw/2,
+            cli_to_tagged/2,
+            cli_typespec/2,
+            cli_write/1,
+            cli_writeln/1,
+            cli_unify/2,
+            cli_with_lock/2,
+            cli_lock_enter/1,
+            cli_lock_exit/1,
+            cli_new_delegate/3,
             link_swiplcs/1,
             to_string/2,
-            cliToFromRecomposer/4,
-            cliWriteFormat/3,
-            cliWriteFormat/2
+            cli_to_from_recomposer/4,
+            cli_fmt/3,
+            cli_fmt/2
           ]).
 
 
 
 :-dynamic(shortTypeName/2).
-:-dynamic(cliSubProperty/2).
+:-dynamic(cli_subproperty/2).
 
 :-set_prolog_flag(double_quotes,string).
 
 :-module_transparent(shortTypeName/2).
-%%:-module_transparent(cliGet/3).
+%%:-module_transparent(cli_get/3).
 
 %------------------------------------------------------------------------------
 % Load C++ DLL
 %------------------------------------------------------------------------------
-:-dynamic(loadedCLIAssembly/0).
-loadCLIAssembly:-loadedCLIAssembly,!.
-loadCLIAssembly:-assert(loadedCLIAssembly),current_prolog_flag(address_bits,32) -> load_foreign_library(swicli32) ; load_foreign_library(swicli).
-:-loadCLIAssembly.
+:-dynamic(loadedcli_Assembly/0).
+loadcli_Assembly:-loadedcli_Assembly,!.
+loadcli_Assembly:-assert(loadedcli_Assembly),current_prolog_flag(address_bits,32) -> load_foreign_library(swicli32) ; load_foreign_library(swicli).
+:-loadcli_Assembly.
 
 
 %------------------------------------------------------------------------------
@@ -82,240 +82,240 @@ loadCLIAssembly:-assert(loadedCLIAssembly),current_prolog_flag(address_bits,32) 
 %------------------------------------------------------------------------------
 onWindows:-current_prolog_flag(arch,ARCH),atomic_list_concat([_,_],'win',ARCH).
 
-:- cli_load_lib('SWIProlog','SwiPlCs','SbsSW.SwiPlCs.swipl_win','install').
+:- cli_load_lib('SWIProlog','swicli.Library','SbsSW.SwiPlCs.swipl_win','install').
 
 %% remember to: export LD_LIBRARY_PATH=/development/opensim4opencog/bin:/development/opensim4opencog/lib/x86_64-linux:$LD_LIBRARY_PATH
 
 %------------------------------------------------------------------------------
 %% cli_load_lib/4 should have given us 
-%   cliLoadAssembly/1
+%   cli_load_assembly/1
 %------------------------------------------------------------------------------
-:- cliLoadAssembly('SwiPlCs.dll').
-% the cliLoadAssembly/1 should have give us a few more cli<Predicates>
+:- cli_load_assembly('Swicli.Library').
+% the cli_load_assembly/1 should have give us a few more cli_<Predicates>
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%% cliIsType(+Impl,+Type) tests to see if the Impl Object is assignable to Type
+%% cli_is_type(+Impl,+Type) tests to see if the Impl Object is assignable to Type
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cliIsType(Impl,Type):-cliFindType(Type,RealType),cliCall(RealType,'IsInstanceOfType'(object),[Impl],'@'(true)).
+cli_is_type(Impl,Type):-cli_find_type(Type,RealType),cli_call(RealType,'IsInstanceOfType'(object),[Impl],'@'(true)).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%% cliSubclass(+Subclass,+Superclass) tests to see if the Subclass is assignable to Superclass
+%% cli_subclass(+Subclass,+Superclass) tests to see if the Subclass is assignable to Superclass
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cliSubclass(Sub,Sup):-cliFindType(Sub,RealSub),cliFindType(Sup,RealSup),cliCall(RealSup,'IsAssignableFrom'('System.Type'),[RealSub],'@'(true)).
+cli_subclass(Sub,Sup):-cli_find_type(Sub,RealSub),cli_find_type(Sup,RealSup),cli_call(RealSup,'IsAssignableFrom'('System.Type'),[RealSub],'@'(true)).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%% cliCol(+Col,-Elem) iterates out Elems for Collection
+%% cli_col(+Col,-Elem) iterates out Elems for Collection
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-% old version:s cliCollection(Obj,Ele):-cliCall(Obj,'ToArray',[],Array),cliArrayToTerm(Array,Vect),!,arg(_,Vect,Ele).
-cliCollection(Error,_Ele):-cliIsNull(Error),!,fail.
-cliCollection([S|Obj],Ele):-!,member(Ele,[S|Obj]).
-cliCollection(Obj,Ele):-
-      cliMemb(Obj,m(_, 'GetEnumerator', _, [], [], _, _)),
-      cliCall(Obj,'GetEnumerator',[],Enum),!,
-      call_cleanup(cli_enumerator_element(Enum,Ele),cliFree(Enum)).
-cliCollection(Obj,Ele):-cliArrayToTerm(Obj,Vect),!,arg(_,Vect,Ele).
-cliCollection(Obj,Ele):-cliMemb(Obj,m(_, 'ToArray', _, [], [], _, _)),cliCall(Obj,'ToArray',[],Array),cliArrayToTerm(Array,Vect),!,arg(_,Vect,Ele).
-cliCollection(Obj,Ele):-cliArrayToTermList(Obj,Vect),!,member(Ele,Vect).
+% old version:s cli_collection(Obj,Ele):-cli_call(Obj,'ToArray',[],Array),cli_array_to_term(Array,Vect),!,arg(_,Vect,Ele).
+cli_collection(Error,_Ele):-cli_is_null(Error),!,fail.
+cli_collection([S|Obj],Ele):-!,member(Ele,[S|Obj]).
+cli_collection(Obj,Ele):-
+      cli_memb(Obj,m(_, 'GetEnumerator', _, [], [], _, _)),
+      cli_call(Obj,'GetEnumerator',[],Enum),!,
+      call_cleanup(cli_enumerator_element(Enum,Ele),cli_free(Enum)).
+cli_collection(Obj,Ele):-cli_array_to_term(Obj,Vect),!,arg(_,Vect,Ele).
+cli_collection(Obj,Ele):-cli_memb(Obj,m(_, 'ToArray', _, [], [], _, _)),cli_call(Obj,'ToArray',[],Array),cli_array_to_term(Array,Vect),!,arg(_,Vect,Ele).
+cli_collection(Obj,Ele):-cli_array_to_termlist(Obj,Vect),!,member(Ele,Vect).
 
-cliCol(X,Y):-cliCollection(X,Y).
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%% cliWriteln(+Obj) writes an object out
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cliWrite(S):-cliToString(S,W),writeq(W).
-cliWriteln(S):-cliWrite(S),nl.
-
-
-cliWriteFormat(WID,String,Args):-writeq(WID),write(':'),cliWriteFormat(String,Args),cliFree(WID). %% WID will be made again each call
-cliWriteFormat(String,Args):-cliCall('System.String','Format'('string','object[]'),[String,Args],Result),cliWriteln(Result).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%% cliToString(+Obj,-String) writes an object out to string
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cliToString(Term,Term):- not(compound(Term)),!.
-cliToString(Term,String):-cliIsObject(Term),!,cliToStringRaw(Term,String).
-cliToString([A|B],[AS|BS]):-!,cliToString(A,AS),cliToString(B,BS).
-cliToString(Term,String):-Term=..[F|A],cliToString(A,AS),String=..[F|AS],!.
+cli_col(X,Y):-cli_collection(X,Y).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%% cliIsNull(+Obj) is Object null or void or variable
+%% cli_writeln(+Obj) writes an object out
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cliIsNull(Obj):-notrace(var(Obj);Obj='@'(null);Obj='@'(void)),!.
-cliNonNull(Obj):-not(cliIsNull(Obj)).
+cli_write(S):-cli_to_str(S,W),writeq(W).
+cli_writeln(S):-cli_write(S),nl.
+
+
+cli_fmt(WID,String,Args):-writeq(WID),write(':'),cli_fmt(String,Args),cli_free(WID). %% WID will be made again each call
+cli_fmt(String,Args):-cli_call('System.String','Format'('string','object[]'),[String,Args],Result),cli_writeln(Result).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%% cli_to_str(+Obj,-String) writes an object out to string
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cli_to_str(Term,Term):- not(compound(Term)),!.
+cli_to_str(Term,String):-cli_is_object(Term),!,cli_to_str_raw(Term,String).
+cli_to_str([A|B],[AS|BS]):-!,cli_to_str(A,AS),cli_to_str(B,BS).
+cli_to_str(Term,String):-Term=..[F|A],cli_to_str(A,AS),String=..[F|AS],!.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%% cliIsObject(+Obj) is Object a CLR object and not null or void
+%% cli_is_null(+Obj) is Object null or void or variable
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cliIsObject([_|_]):-!,fail.
-cliIsObject('@'(O)):-!,O\=void,O\=null.
-cliIsObject(enum(_,_)):-!.
-cliIsObject(O):-functor(O,F,_),memberchk(F,[struct,object]).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%% cliIsTaggedObject(+Obj) is Object a tagged object and not null or void
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cliIsTaggedObject([_|_]):-!,fail.
-cliIsTaggedObject('@'(O)):-!, O\=void,O\=null.
+cli_is_null(Obj):-notrace(var(Obj);Obj='@'(null);Obj='@'(void)),!.
+cli_non_null(Obj):-not(cli_is_null(Obj)).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%%% cliMemb(O,F,X) Object to the member infos of it
+%% cli_is_object(+Obj) is Object a CLR object and not null or void
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cliMemb(O,X):-cliMembers(O,Y),member(X,Y).
-cliMemb(O,F,X):-cliMemb(O,X),member(F,[f,p, c,m ,e]),functor(X,F,_).
+cli_is_object([_|_]):-!,fail.
+cli_is_object('@'(O)):-!,O\=void,O\=null.
+cli_is_object(enum(_,_)):-!.
+cli_is_object(O):-functor(O,F,_),memberchk(F,[struct,object]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%%% cliPreserve(TF,Calls)
+%% cli_is_taggedObject(+Obj) is Object a tagged object and not null or void
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cliPreserve(TF,Calls):-
-   cliGet('SbsSW.SwiPlCs.PrologClient','PreserveObjectType',O),
-   call_cleanup((cliSet('SbsSW.SwiPlCs.PrologClient','PreserveObjectType',TF),Calls),
-   cliSet('SbsSW.SwiPlCs.PrologClient','PreserveObjectType',O)).
+cli_is_taggedObject([_|_]):-!,fail.
+cli_is_taggedObject('@'(O)):-!, O\=void,O\=null.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%%% cliObjectCollect(Calls).  
+%%% cli_memb(O,F,X) Object to the member infos of it
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cli_memb(O,X):-cli_members(O,Y),member(X,Y).
+cli_memb(O,F,X):-cli_memb(O,X),member(F,[f,p, c,m ,e]),functor(X,F,_).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%%% cli_Preserve(TF,Calls)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cli_Preserve(TF,Calls):-
+   cli_get('SbsSW.SwiPlCs.PrologClient','PreserveObjectType',O),
+   call_cleanup((cli_set('SbsSW.SwiPlCs.PrologClient','PreserveObjectType',TF),Calls),
+   cli_set('SbsSW.SwiPlCs.PrologClient','PreserveObjectType',O)).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%%% cli_with_collection(Calls).  
 %%%%%% as tagged objects are created they are tracked .. when the call is complete any new object tags are released
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cliObjectCollect(Calls):-cliTrackerBegin(O),call_cleanup(Calls,cliTrackerFree(O)).
+cli_with_collection(Calls):-cli_tracker_begin(O),call_cleanup(Calls,cli_tracker_free(O)).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%%% cliNew(+Obj, +CallTerm, -Out).
+%%% cli_new(+Obj, +CallTerm, -Out).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%% ?- cliNew('java.lang.Long'(long),[44],Out),cliToString(Out,Str).
+%% ?- cli_new('java.lang.Long'(long),[44],Out),cli_to_str(Out,Str).
 %% same as..
-%% ?- cliNew('java.lang.Long',[long],[44],Out),cliToString(Out,Str).
+%% ?- cli_new('java.lang.Long',[long],[44],Out),cli_to_str(Out,Str).
 %% arity 4 exists to specify generic types
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cliNew(Clazz,ConstArgs,Out):-Clazz=..[BasicType|ParmSpc],cliNew(BasicType,ParmSpc,ConstArgs,Out).
+cli_new(Clazz,ConstArgs,Out):-Clazz=..[BasicType|ParmSpc],cli_new(BasicType,ParmSpc,ConstArgs,Out).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%%% cliCall(+Obj, +CallTerm, -Out).
-%%% cliCall(+Obj, +MethodSpec, +Params, -Out).
+%%% cli_call(+Obj, +CallTerm, -Out).
+%%% cli_call(+Obj, +MethodSpec, +Params, -Out).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cliCall(Obj,[Prop|CallTerm],Out):-cliGet(Obj,Prop,Mid),!,cliCall(Mid,CallTerm,Out).
-cliCall(Obj,CallTerm,Out):-CallTerm=..[MethodName|Args],cliCall(Obj,MethodName,Args,Out).
-cliCall(Obj,[Prop|CallTerm],Params,Out):-cliGet(Obj,Prop,Mid),!,cliCall(Mid,CallTerm,Params,Out).
-cliCall(Obj,MethodSpec,Params,Out):-cliCallRaw(Obj,MethodSpec,Params,OutRaw),!,Out=OutRaw.
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%%% cliLibCall(+CallTerm, -Out).
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cliLibCall(CallTerm,Out):-cliCall('SbsSW.SwiPlCs.PrologClient',CallTerm,Out).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%%% cliGet(+Obj, +PropTerm, -Out).
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cliGet(Obj,_,_):-cliIsNull(Obj),!,fail.
-cliGet(Obj,[P],Value):-!,cliGet(Obj,P,Value).
-cliGet(Obj,[P|N],Value):-!,cliGet(Obj,P,M),cliGet(M,N,Value),!.
-cliGet(Obj,P,ValueOut):-cliGetOverloaded(Obj,P,Value),!,cliUnify(Value,ValueOut).
-
-cliGetOverloaded(Obj,_,_):-cliIsNull(Obj),!,fail,throw(cliIsNull(Obj)).
-cliGetOverloaded(Obj,P,Value):-cliGetHook(Obj,P,Value),!.
-cliGetOverloaded(Obj,P,Value):-cliGetRaw(Obj,P,Value),!.
-cliGetOverloaded(Obj,P,Value):-not(atom(Obj)),cliGetType(Obj,CType),!,cliGetTypeSubProps(CType,Sub),cliGetRawS(Obj,Sub,SubValue),cliGetOverloaded(SubValue,P,Value),!.
-
-cliGetRawS(Obj,[P],Value):-!,cliGetRawS(Obj,P,Value).
-cliGetRawS(Obj,[P|N],Value):-!,cliGetRawS(Obj,P,M),cliGetRawS(M,N,Value),!.
-cliGetRawS(Obj,P,Value):-cliGetRaw(Obj,P,Value),!.
-
-%%cliGetTypeSubProps(CType,Sub):-cliProppedType(
-cliGetTypeSubProps(CType,Sub):-cliSubProperty(Type,Sub),cliSubclass(CType,Type).
-
-:-dynamic(cliGetHook/3).
-:-multifile(cliGetHook/3).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%%% cliSet(+Obj, +PropTerm, +NewValue).
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cliSet(Obj,_,_):-cliIsNull(Obj),!,fail.
-cliSet(Obj,[P],Value):-!,cliSet(Obj,P,Value).
-cliSet(Obj,[P|N],Value):-!,cliGet(Obj,P,M),cliSet(M,N,Value),!.
-cliSet(Obj,P,Value):-cliSetOverloaded(Obj,P,Value).
-
-cliSetOverloaded(Obj,_,_):-cliIsNull(Obj),!,fail.
-cliSetOverloaded(Obj,P,Value):-cliSetHook(Obj,P,Value),!.
-cliSetOverloaded(Obj,P,Value):-cliSubProperty(Type,Sub),cliIsType(Obj,Type),cliGetRawS(Obj,Sub,SubValue),cliSetOverloaded(SubValue,P,Value),!.
-cliSetOverloaded(Obj,P,Value):-cliSetRaw(Obj,P,Value),!.
-
-:-dynamic(cliSetHook/3).
-:-multifile(cliSetHook/3).
+cli_call(Obj,[Prop|CallTerm],Out):-cli_get(Obj,Prop,Mid),!,cli_call(Mid,CallTerm,Out).
+cli_call(Obj,CallTerm,Out):-CallTerm=..[MethodName|Args],cli_call(Obj,MethodName,Args,Out).
+cli_call(Obj,[Prop|CallTerm],Params,Out):-cli_get(Obj,Prop,Mid),!,cli_call(Mid,CallTerm,Params,Out).
+cli_call(Obj,MethodSpec,Params,Out):-cli_call_raw(Obj,MethodSpec,Params,Out_raw),!,Out=Out_raw.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%%% cliUnify(OE,PE)
+%%% cli_libCall(+CallTerm, -Out).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cliUnify(OE,PE):-OE=PE,!.
-cliUnify(enum(_,O1),O2):-!,cliUnify(O1,O2).
-cliUnify(O2,enum(_,O1)):-!,cliUnify(O1,O2).
-cliUnify(O1,O2):-atomic(O1),atomic(O2),string_to_atom(S1,O1),string_to_atom(S2,O2),!,S1==S2.
-cliUnify([O1|ARGS1],[O2|ARGS2]):-!,cliUnify(O1,O2),cliUnify(ARGS1,ARGS2).
-cliUnify(O1,O2):-cliIsTaggedObject(O1),cliToString(O1,S1),!,cliUnify(O2,S1).
-cliUnify(O1,O2):-O1=..[F|[A1|RGS1]],!,O2=..[F|[A2|RGS2]],cliUnify([A1|RGS1],[A2|RGS2]).
+cli_libCall(CallTerm,Out):-cli_call('SbsSW.SwiPlCs.PrologClient',CallTerm,Out).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%%% cli_get(+Obj, +PropTerm, -Out).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cli_get(Obj,_,_):-cli_is_null(Obj),!,fail.
+cli_get(Obj,[P],Value):-!,cli_get(Obj,P,Value).
+cli_get(Obj,[P|N],Value):-!,cli_get(Obj,P,M),cli_get(M,N,Value),!.
+cli_get(Obj,P,ValueOut):-cli_getOverloaded(Obj,P,Value),!,cli_unify(Value,ValueOut).
+
+cli_getOverloaded(Obj,_,_):-cli_is_null(Obj),!,fail,throw(cli_is_null(Obj)).
+cli_getOverloaded(Obj,P,Value):-cli_getHook(Obj,P,Value),!.
+cli_getOverloaded(Obj,P,Value):-cli_get_raw(Obj,P,Value),!.
+cli_getOverloaded(Obj,P,Value):-not(atom(Obj)),cli_get_type(Obj,CType),!,cli_get_typeSubProps(CType,Sub),cli_get_rawS(Obj,Sub,SubValue),cli_getOverloaded(SubValue,P,Value),!.
+
+cli_get_rawS(Obj,[P],Value):-!,cli_get_rawS(Obj,P,Value).
+cli_get_rawS(Obj,[P|N],Value):-!,cli_get_rawS(Obj,P,M),cli_get_rawS(M,N,Value),!.
+cli_get_rawS(Obj,P,Value):-cli_get_raw(Obj,P,Value),!.
+
+%%cli_get_typeSubProps(CType,Sub):-cli_ProppedType(
+cli_get_typeSubProps(CType,Sub):-cli_subproperty(Type,Sub),cli_subclass(CType,Type).
+
+:-dynamic(cli_getHook/3).
+:-multifile(cli_getHook/3).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%%% cli_set(+Obj, +PropTerm, +NewValue).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cli_set(Obj,_,_):-cli_is_null(Obj),!,fail.
+cli_set(Obj,[P],Value):-!,cli_set(Obj,P,Value).
+cli_set(Obj,[P|N],Value):-!,cli_get(Obj,P,M),cli_set(M,N,Value),!.
+cli_set(Obj,P,Value):-cli_setOverloaded(Obj,P,Value).
+
+cli_setOverloaded(Obj,_,_):-cli_is_null(Obj),!,fail.
+cli_setOverloaded(Obj,P,Value):-cli_setHook(Obj,P,Value),!.
+cli_setOverloaded(Obj,P,Value):-cli_subproperty(Type,Sub),cli_is_type(Obj,Type),cli_get_rawS(Obj,Sub,SubValue),cli_setOverloaded(SubValue,P,Value),!.
+cli_setOverloaded(Obj,P,Value):-cli_set_raw(Obj,P,Value),!.
+
+:-dynamic(cli_setHook/3).
+:-multifile(cli_setHook/3).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%%% cli_unify(OE,PE)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cli_unify(OE,PE):-OE=PE,!.
+cli_unify(enum(_,O1),O2):-!,cli_unify(O1,O2).
+cli_unify(O2,enum(_,O1)):-!,cli_unify(O1,O2).
+cli_unify(O1,O2):-atomic(O1),atomic(O2),string_to_atom(S1,O1),string_to_atom(S2,O2),!,S1==S2.
+cli_unify([O1|ARGS1],[O2|ARGS2]):-!,cli_unify(O1,O2),cli_unify(ARGS1,ARGS2).
+cli_unify(O1,O2):-cli_is_taggedObject(O1),cli_to_str(O1,S1),!,cli_unify(O2,S1).
+cli_unify(O1,O2):-O1=..[F|[A1|RGS1]],!,O2=..[F|[A2|RGS2]],cli_unify([A1|RGS1],[A2|RGS2]).
 
 %type   jpl_iterator_element(object, datum)
 
 % jpl_iterator_element(+Iterator, -Element) :-
 
-cli_iterator_element(I, E) :- cliIsType(I,'java.util.Iterator'),!,
-	(   cliCall(I, hasNext, [], @(true))
-	->  (   cliCall(I, next, [], E)        % surely it's steadfast...
+cli_iterator_element(I, E) :- cli_is_type(I,'java.util.Iterator'),!,
+	(   cli_call(I, hasNext, [], @(true))
+	->  (   cli_call(I, next, [], E)        % surely it's steadfast...
 	;   cli_iterator_element(I, E)
 	)
 	).
-cli_enumerator_element(I, E) :- %%cliIsType('System.Collections.IEnumerator',I),!,
-	(   cliCall(I, 'MoveNext', [], @(true))
-	->  (   cliGet(I, 'Current', E)        % surely it's steadfast...
+cli_enumerator_element(I, E) :- %%cli_is_type('System.Collections.IEnumerator',I),!,
+	(   cli_call(I, 'MoveNext', [], @(true))
+	->  (   cli_get(I, 'Current', E)        % surely it's steadfast...
 	;   cli_enumerator_element(I, E)
 	)
 	).
 
 
 
-cliToData(Term,String):- cliNew('System.Collections.Generic.List'(object),[],[],Objs),cliToData(Objs,Term,String).
-cliToData(_,Term,Term):- not(compound(Term)),!.
-%%cliToData(_Objs,[A|B],[A|B]):-!.
-cliToData(_Objs,[A|B],[A|B]):-'\+' '\+' A=[_=_],!.
-cliToData(Objs,[A|B],[AS|BS]):-!,cliToData(Objs,A,AS),cliToData(Objs,B,BS).
-cliToData(Objs,Term,String):-cliIsTaggedObject(Term),!,cliGetTermData(Objs,Term,Mid),(Term==Mid-> true; cliToData(Objs,Mid,String)).
-cliToData(Objs,Term,FAS):-Term=..[F|A],cliToData1(Objs,F,A,Term,FAS).
+cli_to_data(Term,String):- cli_new('System.Collections.Generic.List'(object),[],[],Objs),cli_to_data(Objs,Term,String).
+cli_to_data(_,Term,Term):- not(compound(Term)),!.
+%%cli_to_data(_Objs,[A|B],[A|B]):-!.
+cli_to_data(_Objs,[A|B],[A|B]):-'\+' '\+' A=[_=_],!.
+cli_to_data(Objs,[A|B],[AS|BS]):-!,cli_to_data(Objs,A,AS),cli_to_data(Objs,B,BS).
+cli_to_data(Objs,Term,String):-cli_is_taggedObject(Term),!,cli_gettermData(Objs,Term,Mid),(Term==Mid-> true; cli_to_data(Objs,Mid,String)).
+cli_to_data(Objs,Term,FAS):-Term=..[F|A],cli_to_data1(Objs,F,A,Term,FAS).
 
-cliToData1(_Objs,struct,_A,Term,Term):-!.
-cliToData1(_Objs,object,_A,Term,Term):-!.
-cliToData1(_Objs,enum,_A,Term,Term):-!.
+cli_to_data1(_Objs,struct,_A,Term,Term):-!.
+cli_to_data1(_Objs,object,_A,Term,Term):-!.
+cli_to_data1(_Objs,enum,_A,Term,Term):-!.
 
-cliToData1(Objs,F,A,_Term,String):-cliToData(Objs,A,AS),!,String=..[F|AS].
+cli_to_data1(Objs,F,A,_Term,String):-cli_to_data(Objs,A,AS),!,String=..[F|AS].
 
-cliGetTermData(Objs,Term,String):-cliGetType(Term,Type),cliPropsForType(Type,Props),cliGetMap(Objs,Term,Props,Name,Value,Name=Value,Mid),!,cliToData(Objs,Mid,String).
-cliGetTermData(Objs,Term,Mid):-cliGetTerm(Objs,Term,Mid),!.
+cli_gettermData(Objs,Term,String):-cli_get_type(Term,Type),cli_props_for_type(Type,Props),cli_getMap(Objs,Term,Props,Name,Value,Name=Value,Mid),!,cli_to_data(Objs,Mid,String).
+cli_gettermData(Objs,Term,Mid):-cli_getterm(Objs,Term,Mid),!.
 
 
-cliGetMap(Objs,Term,_,_,_,_,List):- cliIsType(Term,'System.Collections.IEnumerable'),findall(ED,(cliCol(Term,E),cliToData(Objs,E,ED)),List),!.
-cliGetMap(Objs,Term,Props,Name,Value,NameValue,List):-cliGetMap1(Objs,Term,Props,Name,Value,NameValue,List).
+cli_getMap(Objs,Term,_,_,_,_,List):- cli_is_type(Term,'System.Collections.IEnumerable'),findall(ED,(cli_col(Term,E),cli_to_data(Objs,E,ED)),List),!.
+cli_getMap(Objs,Term,Props,Name,Value,NameValue,List):-cli_getMap1(Objs,Term,Props,Name,Value,NameValue,List).
 
-cliGetMap1(Objs,Term,Props,Name,Value,NameValue,List):-findall(NameValue,(member(Name,Props),cliGetRaw(Term,Name,ValueM),cliToData(Objs,ValueM,Value)),List).
+cli_getMap1(Objs,Term,Props,Name,Value,NameValue,List):-findall(NameValue,(member(Name,Props),cli_get_raw(Term,Name,ValueM),cli_to_data(Objs,ValueM,Value)),List).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%%% cliWithLock(Lock,Call)
+%%% cli_with_lock(Lock,Call)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cliWithLock(Lock,Call):-setup_call_cleanup(cliEnterLock(Lock),Call,cliExitLock(Lock)).
+cli_with_lock(Lock,Call):-setup_call_cleanup(cli_lock_enter(Lock),Call,cli_lock_exit(Lock)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %%% cli_debug/[1,2]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 
 cli_debug(format(Format,Args)):-atom(Format),sformat(S,Format,Args),cli_debug(S).
-cli_debug(Data):-format(user_error,'~n %% CLI-DEBUG: ~q~n',[Data]),flush_output(user_error).
+cli_debug(Data):-format(user_error,'~n %% cli_-DEBUG: ~q~n',[Data]),flush_output(user_error).
 
 %%cli_debug(Engine,Data):- format(user_error,'~n %% ENGINE-DEBUG: ~q',[Engine]),cli_debug(Data).
 
@@ -323,53 +323,53 @@ to_string(Object,String):-jpl_is_ref(Object),!,jpl_call(Object,toString,[],Strin
 to_string(Object,String):-Object=String.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%%% cli_Intern/3
+%%% cli_intern/3
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-:-dynamic(cli_Interned/3).
-:-multifile(cli_Interned/3).
-:-module_transparent(cli_Interned/3).
-cli_Intern(Engine,Name,Value):-retractall(cli_Interned(Engine,Name,_)),assert(cli_Interned(Engine,Name,Value)),cli_debug(cli_Interned(Name,Value)),!.
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%%% cli_Eval/3
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-
-:-dynamic(cli_Eval_Hook/3).
-:-multifile(cli_Eval_Hook/3).
-:-module_transparent(cli_Eval_Hook/3).
-
-cli_Eval(Engine,Name,Value):- cli_Eval_Hook(Engine,Name,Value),!,cli_debug(cli_Eval(Engine,Name,Value)),!.
-cli_Eval(Engine,Name,Value):- Value=cli_Eval(Engine,Name),cli_debug(cli_Eval(Name,Value)),!.
-
-cli_Eval_Hook(Engine,In,Out):- catch(call((In,Out=In)),E,Out= foobar(Engine,In,E)).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%%% cli_IsDefined/2
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-
-cli_IsDefined(_Engine,Name):-cli_debug(cli_not_IsDefined(Name)),!,fail.
+:-dynamic(cli_interned/3).
+:-multifile(cli_interned/3).
+:-module_transparent(cli_interned/3).
+cli_intern(Engine,Name,Value):-retractall(cli_interned(Engine,Name,_)),assert(cli_interned(Engine,Name,Value)),cli_debug(cli_interned(Name,Value)),!.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%%% cli_GetSymbol/3
+%%% cli_eval/3
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 
-cli_GetSymbol(Engine,Name,Value):- (cli_Interned(Engine,Name,Value);Value=cli_UnDefined(Name)),!,cli_debug(cli_GetSymbol(Name,Value)),!.
+:-dynamic(cli_eval_Hook/3).
+:-multifile(cli_eval_Hook/3).
+:-module_transparent(cli_eval_Hook/3).
+
+cli_eval(Engine,Name,Value):- cli_eval_Hook(Engine,Name,Value),!,cli_debug(cli_eval(Engine,Name,Value)),!.
+cli_eval(Engine,Name,Value):- Value=cli_eval(Engine,Name),cli_debug(cli_eval(Name,Value)),!.
+
+cli_eval_Hook(Engine,In,Out):- catch(call((In,Out=In)),E,Out= foobar(Engine,In,E)).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%%% cli_is_defined/2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+
+cli_is_defined(_Engine,Name):-cli_debug(cli_not_is_defined(Name)),!,fail.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%%% cli_getSymbol/3
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+
+cli_getSymbol(Engine,Name,Value):- (cli_interned(Engine,Name,Value);Value=cli_UnDefined(Name)),!,cli_debug(cli_getSymbol(Name,Value)),!.
 
 
 
 
 
 
-:-cli_debug('I am swi_cli.pl in BIN DIR!!').
+:-cli_debug('I am swi_cli_.pl in BIN DIR!!').
 
 %:-use_module(library(jpl)).
 %:-use_module(library(pce)).
 
 %%:-interactor.
 
-ensureExported:-current_predicate(swicli:F/A),atom_concat(cli,_,F),export(F/A),fail.
+ensureExported:-current_predicate(swicli:F/A),atom_concat(cli_,_,F),export(F/A),fail.
 ensureExported.
 
 :-ensureExported.
@@ -378,47 +378,47 @@ ensureExported.
 end_of_file.
 
 
-15 ?- cliToTagged(sbyte(127),O),cliGetType(O,T),cliWriteln(O is T).
+15 ?- cli_to_tagged(sbyte(127),O),cli_get_type(O,T),cli_writeln(O is T).
 "127"is"System.SByte"
 O = @'C#283319280',
 T = @'C#283324332'.
 
-16 ?- cliToTagged(long(127),O),cliGetType(O,T),cliWriteln(O is T).
+16 ?- cli_to_tagged(long(127),O),cli_get_type(O,T),cli_writeln(O is T).
 "127"is"System.Int64"
 O = @'C#283345876',
 T = @'C#283345868'.
 
-17 ?- cliToTagged(ulong(127),O),cliGetType(O,T),cliWriteln(O is T).
+17 ?- cli_to_tagged(ulong(127),O),cli_get_type(O,T),cli_writeln(O is T).
 "127"is"System.UInt64"
 O = @'C#283346772',
 T = @'C#283346760'.
 
-15 ?- cliToTagged(sbyte(127),O),cliGetType(O,T),cliWriteln(O is T).
+15 ?- cli_to_tagged(sbyte(127),O),cli_get_type(O,T),cli_writeln(O is T).
 "127"is"System.SByte"
 O = @'C#283319280',
 T = @'C#283324332'.
 
-16 ?- cliToTagged(long(127),O),cliGetType(O,T),cliWriteln(O is T).
+16 ?- cli_to_tagged(long(127),O),cli_get_type(O,T),cli_writeln(O is T).
 "127"is"System.Int64"
 O = @'C#283345876',
 T = @'C#283345868'.
 
-18 ?- cliToTagged(343434127,O),cliGetType(O,T),cliWriteln(O is T).
+18 ?- cli_to_tagged(343434127,O),cli_get_type(O,T),cli_writeln(O is T).
 "343434127"is"System.Int32"
 O = @'C#281925284',
 T = @'C#281925280'.
 
-19 ?- cliToTagged(3434341271,O),cliGetType(O,T),cliWriteln(O is T).
+19 ?- cli_to_tagged(3434341271,O),cli_get_type(O,T),cli_writeln(O is T).
 "3434341271"is"System.UInt64"
 O = @'C#281926616',
 T = @'C#283346760'.
 
-21 ?- cliToTagged(343434127111,O),cliGetType(O,T),cliWriteln(O is T).
+21 ?- cli_to_tagged(343434127111,O),cli_get_type(O,T),cli_writeln(O is T).
 "343434127111"is"System.UInt64"
 O = @'C#281930092',
 T = @'C#283346760'.
 
-28 ?- cliToTagged(34343412711111111111111111111111111111,O),cliGetType(O,T),cliWriteln(O is T).
+28 ?- cli_to_tagged(34343412711111111111111111111111111111,O),cli_get_type(O,T),cli_writeln(O is T).
 "34343412711111111111111111111111111111"is"java.math.BigInteger"
 O = @'C#281813796',
 T = @'C#281810860'.

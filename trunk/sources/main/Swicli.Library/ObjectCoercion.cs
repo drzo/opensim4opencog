@@ -23,7 +23,7 @@ namespace SbsSW.SwiPlCs
     public partial class PrologClient
     {
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliGetTerm(PlTerm valueCol, PlTerm valueIn, PlTerm valueOut)
+        static public bool cliGetterm(PlTerm valueCol, PlTerm valueIn, PlTerm valueOut)
         {
             List<object> objs;
             if (valueCol.IsVar)
@@ -38,7 +38,7 @@ namespace SbsSW.SwiPlCs
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                cliGetTerm(valueCol, valueIn, plvar);
+                cliGetterm(valueCol, valueIn, plvar);
                 return SpecialUnify(valueOut, plvar);
             }
             if (IsTaggedObject(valueIn))
@@ -94,12 +94,12 @@ namespace SbsSW.SwiPlCs
             return valueOut.Unify(PlC("array", typeToSpec(et), PlC("values", termv)));
         }
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliArrayToTermList(PlTerm arrayValue, PlTerm valueOut)
+        static public bool cliArrayToTermlist(PlTerm arrayValue, PlTerm valueOut)
         {
-            if (!valueOut.IsVar)
+            if (!valueOut.IsVar) 
             {
                 var plvar = PlTerm.PlVar();
-                cliArrayToTermList(arrayValue, plvar);
+                cliArrayToTermlist(arrayValue, plvar);
                 return SpecialUnify(valueOut, plvar);
             }
 
@@ -1357,7 +1357,7 @@ namespace SbsSW.SwiPlCs
             return elements;
         }
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliTypeSpec(PlTerm clazzSpec, PlTerm valueOut)
+        static public bool cliTypespec(PlTerm clazzSpec, PlTerm valueOut)
         {
             return valueOut.Unify(typeToSpec(GetType(clazzSpec)));
         }

@@ -54,7 +54,7 @@ testDebug(Term):-format(user_error,'  ~q~n',[Term]),flush_output(user_error).
 % unify if this is the bot's name
 botName(Name) :-
 	Name = 'testbot Ogborn'.  %TODO Douglas, how do I read this from
-% Configuration in ClientManager.cs
+% Configuration in clientManager.cs
 
 needed(TestName , Number) :-
 	botName(Name),
@@ -74,10 +74,10 @@ failure(TestName) :-
 
 all_needed(_ , 0).
 
-all_needed(N , Num_Needed) :-
-	Num_Needed > 0,
-	needed(N , Num_Needed),
-	NN is Num_Needed - 1,
+all_needed(N , Num_needed) :-
+	Num_needed > 0,
+	needed(N , Num_needed),
+	NN is Num_needed - 1,
 	all_needed(N , NN).
 
 %
@@ -173,9 +173,9 @@ require_chat_hook :-
 
 require_chat_hook :-
 	asserta(chat_hook_installed),
-	user:gridClient(Obj),
-	cliGet(Obj , 'Self' , S),
-	cliAddEventHandler(S , 'ChatFromSimulator' , onChatTSHook(_,_,_)).
+	user:gridCliient(Obj),
+	cli_get(Obj , 'Self' , S),
+	cli_add_event_handler(S , 'ChatFromSimulator' , onChatTSHook(_,_,_)).
 
 % string_subst(?S , ?T , ?R , ?NS)
 % Substitute all occurances of T with R in S, producing NS
