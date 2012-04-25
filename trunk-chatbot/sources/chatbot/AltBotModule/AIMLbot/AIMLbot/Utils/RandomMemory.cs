@@ -99,6 +99,37 @@ namespace AltAIMLbot.Utils
             return resultNode;
         }
 
+        public int selectOneXMLIndex(XmlNode randomNode)
+        {
+            int selected = r.Next(randomNode.ChildNodes.Count);
+            XmlNode resultNode = randomNode.ChildNodes[selected];
+
+            double weight_sum = 0;
+            double accum = 0;
+            foreach (XmlNode testNode in randomNode.ChildNodes)
+            {
+                double weight = 1 - value(testNode.InnerXml); // recent will be close to 1
+                weight_sum += weight;
+            }
+
+            // Roulette selection, pick one and return
+            double randomPoint = r.NextDouble() * weight_sum;
+            int index = 0;
+            foreach (XmlNode testNode in randomNode.ChildNodes)
+            {
+                index++;
+                double weight = 1 - value(testNode.InnerXml); // 
+                accum += weight;
+                if (accum >= randomPoint)
+                {
+                    string result = testNode.InnerXml;
+                    registerPick(result);
+                    return index;
+                }
+            }
+
+            return index;
+        }
 
     }
 }

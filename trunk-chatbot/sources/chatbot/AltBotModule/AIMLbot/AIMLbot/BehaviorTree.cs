@@ -578,6 +578,10 @@ namespace AltAIMLbot
                     || (nodeName.ToLower() == "assertguest")
                     ); 
         }
+        public bool isBreaker(string nodeName)
+        {
+            return ((nodeName.ToLower() == "breaker"));
+        }
 
         // in case we want the xpath of a node
         // see http://stackoverflow.com/questions/241238/how-to-get-xpath-from-an-xmlnode-instance-c-sharp
@@ -694,6 +698,9 @@ namespace AltAIMLbot
                     case "behavior":
                         result = ProcessBehavior(myNode);
                         break;
+                    case "rbehavior":
+                        result = ProcessRBehavior(myNode);
+                        break;
                     case "subbehavior":
                         result = ProcessSubBehavior(myNode);
                         break;
@@ -750,6 +757,9 @@ namespace AltAIMLbot
                         break;
                     case "enqueue":
                         result = ProcessEnqueue(myNode);
+                        break;
+                    case "breaker":
+                        result = ProcessBreaker(myNode);
                         break;
 
                     default:
@@ -940,12 +950,23 @@ namespace AltAIMLbot
                     }
                 }
                 restorePoint[nodeID] = childIndex;
+                // if child is a breaker node 
+                //   you should return to the next sibling not the breaker
+                //   which will just break again 
                 // do we have an interrupt ?
+                if (isBreaker(childNode.Name))
+                {
+                    restorePoint[nodeID] = childIndex + 1;
+                }
 
                 continueflag = tickEventQueues(continueflag);
                 if (continueflag == false)
                 {
                     restorePoint[nodeID] = childIndex;
+                    if (isBreaker(childNode.Name))
+                    {
+                        restorePoint[nodeID] = childIndex + 1;
+                    }
                     Console.WriteLine("\n\n****** COMPLEX BEHAVIOR EXIT FAILURE\n\n");
 
                     return RunStatus.Failure;
@@ -960,6 +981,185 @@ namespace AltAIMLbot
             // if we make it to the end then the reset the restore point
             restorePoint[nodeID] = 0;
             Console.WriteLine("\n\n****** COMPLEX BEHAVIOR EXIT SUCCESS\n\n");
+            return RunStatus.Success;
+
+        }
+
+        public RunStatus ProcessBreaker(XmlNode myNode)
+        {
+
+            RunStatus result = RunStatus.Success;
+            try
+            {
+                bot.myBehaviors.queueEvent("abort");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERR: ProcessBraker");
+                Console.WriteLine("ERR:" + e.Message);
+                Console.WriteLine("ERR:" + e.StackTrace);
+                Console.WriteLine("ERR XML:" + myNode.OuterXml);
+            }
+            return result;
+        }
+
+        public RunStatus ProcessRBehavior(XmlNode myNode)
+        {
+            // A RBehavior is implicitly a <random> node
+            //    RunStatus result = RunStatus.Failure;
+            //    result = ProcessRandom(myNode);
+            //    return result;
+
+            // This node should pick some child at random
+            // and remember and return to this child until it returns success
+            // this is a top level intermediate node.
+            // The real recovery should be in the child called, but it needs
+            // to remember in case the child is interrupted, you want to 
+            // go back to the same child
+            // Could be thought of as a random routing behavior 
+
+            // behavior accepts attributes of
+            //restore
+            //pace
+            //onchat
+            //onrestore
+            //onabort
+            //onsuccess
+            //onfail
+
+            bool restorable = false;
+            bool restoring = false;
+            int pace = 0;
+            bool continueflag = true;
+            try
+            {
+                if (myNode.Attributes["restore"] != null)
+                {
+                    restorable |= (myNode.Attributes["restore"].Value.ToLower() == "true");
+                }
+                if (myNode.Attributes["resumes"] != null)
+                {
+                    restorable |= (myNode.Attributes["resumes"].Value.ToLower() == "true");
+                }
+                if (myNode.Attributes["pace"] != null)
+                {
+                    pace = 5000;
+                    pace = Int32.Parse(myNode.Attributes["pace"].Value);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERROR: processing <RBehavior > attributes");
+            }
+            // just use <random> if its not restorable
+            if (restorable == false)
+            {
+                RunStatus result = RunStatus.Failure;
+                result = ProcessRandomSelector (myNode);
+                return result;
+            }
+            Console.WriteLine("\n\n****** COMPLEX RBEHAVIOR BEGIN\n\n");
+            string nodeID = "null";
+            try
+            {
+                if ((myNode.Attributes != null) && (myNode.Attributes.Count > 0))
+                {
+                    if (myNode.Attributes["id"] != null)
+                    {
+                        nodeID = myNode.Attributes["id"].Value;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                nodeID = "null";
+            }
+            // If it is not restorable then set index to zero
+            if (!restorePoint.ContainsKey(nodeID))
+                restorePoint.Add(nodeID, -1);
+
+            if (restorable == false)
+            {
+                restorePoint[nodeID] = -1;
+            }
+
+            int restP = restorePoint[nodeID];
+            restoring = (restP >= 0); // zero node matters in an RBehavior
+
+            // if restorable then check all asserts up to the restore point
+            int childIndex = 0;
+            for (childIndex = 0; childIndex < restP; childIndex++)
+            {
+                XmlNode childNode = myNode.ChildNodes[childIndex];
+                if (isAnAssert(childNode.Name))
+                {
+                    RunStatus childResult = processNode(childNode);
+                    if (childResult == RunStatus.Failure)
+                    {
+                        return RunStatus.Failure;
+                    }
+                }
+
+            }
+            // Execute All Children
+            if (restoring)
+            {
+                bot.myBehaviors.queueEvent("onrestore");
+                continueflag = tickEventQueues(continueflag);
+            }
+            else
+            {
+                int randomChild = this.bot.myRandMem.selectOneXMLIndex(myNode);
+                restorePoint[nodeID] = randomChild;
+                restP = randomChild;
+            }
+
+            //foreach (XmlNode childNode in myNode.ChildNodes)
+            //for (childIndex = restP; childIndex < myNode.ChildNodes.Count; childIndex++)
+            childIndex = restP;
+            {
+                XmlNode childNode = myNode.ChildNodes[childIndex];
+                //RunStatus childResult = processNode(childNode);
+                RunStatus childResult = processNode(childNode);
+                // Except for Asserts
+                if (isAnAssert(childNode.Name))
+                {
+                    if (childResult == RunStatus.Failure)
+                    {
+                        return RunStatus.Failure;
+                    }
+                }
+                else
+                {
+                    // Normal processing (We dont care)
+                    if (childResult == RunStatus.Success)
+                    {
+                        // return RunStatus.Success;
+                        // For a RBehavior child their karma is complete
+                        restorePoint[nodeID] = -1;
+                    }
+                }
+                //restorePoint[nodeID] = childIndex;
+                // do we have an interrupt ?
+
+                continueflag = tickEventQueues(continueflag);
+                if ((continueflag == false)||(childResult == RunStatus.Failure))
+                {
+                    restorePoint[nodeID] = childIndex;
+                    Console.WriteLine("\n\n****** COMPLEX RBEHAVIOR EXIT FAILURE\n\n");
+
+                    return RunStatus.Failure;
+
+                }
+                if (pace > 0)
+                {
+                    Thread.Sleep(pace);
+                }
+
+            }
+            // if we make it to the end then the reset the restore point
+            restorePoint[nodeID] = -1;
+            Console.WriteLine("\n\n****** COMPLEX RBEHAVIOR EXIT SUCCESS\n\n");
             return RunStatus.Success;
 
         }
@@ -1038,7 +1238,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
-                Console.WriteLine("ERR: ProcessSubBehavior");
+                Console.WriteLine("ERR: ProcessEnqueue");
                 Console.WriteLine("ERR:" + e.Message);
                 Console.WriteLine("ERR:" + e.StackTrace);
                 Console.WriteLine("ERR XML:" + myNode.OuterXml);
