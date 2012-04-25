@@ -1096,6 +1096,9 @@ namespace AltAIMLbot
                         case "behavior":
                             tagHandler = new AIMLTagHandlers.behavior(this, user, query, request, result, node);
                             break;
+                        case "rbehavior":
+                            tagHandler = new AIMLTagHandlers.rbehavior(this, user, query, request, result, node);
+                            break;
                         case "rndint":
                             tagHandler = new AIMLTagHandlers.rndint(this, user, query, request, result, node);
                             break;

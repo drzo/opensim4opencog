@@ -114,7 +114,8 @@ namespace AltAIMLbot.Utils
 
             // Roulette selection, pick one and return
             double randomPoint = r.NextDouble() * weight_sum;
-            int index = 0;
+            int index = -1;
+            int maxindex = randomNode.ChildNodes.Count-1;
             foreach (XmlNode testNode in randomNode.ChildNodes)
             {
                 index++;
@@ -124,6 +125,7 @@ namespace AltAIMLbot.Utils
                 {
                     string result = testNode.InnerXml;
                     registerPick(result);
+
                     return index;
                 }
             }

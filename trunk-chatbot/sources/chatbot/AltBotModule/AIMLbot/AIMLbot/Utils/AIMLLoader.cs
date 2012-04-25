@@ -179,7 +179,7 @@ namespace AltAIMLbot.Utils
                 {
                     this.processCategory(currentNode, filename);
                 }
-                if (currentNode.Name == "behavior")
+                if ((currentNode.Name == "behavior")||(currentNode.Name == "rbehavior"))
                 {
                     processImmediate(currentNode, filename);
                 }
@@ -252,7 +252,7 @@ namespace AltAIMLbot.Utils
                 {
                     processCategory(thisNode, topicName, stateNamePre, stateNamePost, filename);
                 }
-                if (thisNode.Name == "behavior")
+                if ((thisNode.Name == "behavior")||(thisNode.Name == "rbehavior"))
                 {
                     processImmediate(thisNode, filename);
                 }
@@ -307,7 +307,7 @@ namespace AltAIMLbot.Utils
                 {
                     processCategory(thisNode, topicName, stateNamePre,stateNamePost, filename);
                 }
-                if (thisNode.Name == "behavior")
+                if ((thisNode.Name == "behavior")||(thisNode.Name == "rbehavior"))
                 {
                     processImmediate(thisNode, filename);
                 }

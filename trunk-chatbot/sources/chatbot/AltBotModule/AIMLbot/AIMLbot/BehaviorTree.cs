@@ -1110,6 +1110,7 @@ namespace AltAIMLbot
             else
             {
                 int randomChild = this.bot.myRandMem.selectOneXMLIndex(myNode);
+                
                 restorePoint[nodeID] = randomChild;
                 restP = randomChild;
             }
