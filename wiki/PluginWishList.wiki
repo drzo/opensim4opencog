@@ -18,6 +18,7 @@ This is a list of plugins we'd love to see some day, just to help establish dire
   * microtheeory of SL culture.
   * Pragmatics module that plans speech and nonverbal acts to maximize utility - e.g. that assertively orders griefers off land, or greets the bot's owner's friend.
   * Text to speech/ speech to text integration
+  * Teacher bot personality and moodle integration plugin
 
 
   
