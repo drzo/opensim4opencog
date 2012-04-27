@@ -17,4 +17,7 @@ This is a list of plugins we'd love to see some day, just to help establish dire
   * Model of human psychology  - So, for example, aiml topics could only match when the bot is tired, or the bot could be ennervated after being in a frightening environment for a long time.
   * microtheeory of SL culture.
   * Pragmatics module that plans speech and nonverbal acts to maximize utility - e.g. that assertively orders griefers off land, or greets the bot's owner's friend.
+  * Text to speech/ speech to text integration
+
+
   
