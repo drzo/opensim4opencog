@@ -285,6 +285,21 @@ typedef struct // define a context structure  { ... } context;
         }
         private static object InvokeCaught(MethodInfo info, object o, object[] os, Action todo)
         {
+            return InvokeFromC(() => InvokeCaught0(info, o, os, todo), true);
+        }
+        private static object InvokeCaught0(MethodInfo info, object o, object[] os, Action todo)
+        {
+            Thread threadCurrentThread = Thread.CurrentThread;
+            bool add1FrameCount = false;
+            uint fid = 0;
+            if (add1FrameCount)
+            {
+                int fidCount = IncrementUseCount(threadCurrentThread, ForiegnFrameCounts);
+                if (SaneThreadWorld) if (fidCount == 1) fid = libpl.PL_open_foreign_frame();
+            } else
+            {
+                fid = libpl.PL_open_foreign_frame();
+            }
             try
             {
                 if (info.IsGenericMethodDefinition)
@@ -332,10 +347,15 @@ typedef struct // define a context structure  { ... } context;
             catch (Exception ex)
             {
                 var pe = ToPlException(ex);
-                string s = ex.ToString() + "\n" + ex.StackTrace;
+                var ie = InnerMostException(ex);
+                string s = ie.ToString() + "\n" + ie.StackTrace;
                 Warn("ex: {0}", s);
                 //throw pe;
                 return false;// pe;
+            } finally
+            {
+                if (add1FrameCount) DecrementUseCount(threadCurrentThread, ForiegnFrameCounts);
+                if (fid > 0) libpl.PL_close_foreign_frame(fid);
             }
         }
         private static Type[] GetObjectTypes(ParameterInfo[] parameterInfos)
@@ -359,6 +379,16 @@ typedef struct // define a context structure  { ... } context;
             }
             return t;
         }
+
+        private static Exception InnerMostException(Exception ex)
+        {
+            var ie = ex.InnerException;
+            if (ie != null && ie != ex)
+            {
+                return InnerMostException(ie);
+            }
+            return ex;
+        }
         private static PlException ToPlException(Exception ex)
         {
             if (ex is PlException) return (PlException)ex;
@@ -367,7 +397,7 @@ typedef struct // define a context structure  { ... } context;
             {
                 return ToPlException(ie);
             }
-            return new PlException(ex.Message, ex);
+            return new PlException(ex.GetType() + ": " + ex.Message, ex);
         }
 
         private static Type GetArityType(int paramlen)
@@ -745,20 +775,43 @@ typedef struct // define a context structure  { ... } context;
 
         public static T InvokeFromC<T>(Func<T> action, bool discard)
         {
+            Thread threadCurrentThread = Thread.CurrentThread;
+            int fidCount = IncrementUseCount(threadCurrentThread, ForiegnFrameCounts);
             lock (SafeThreads)
             {
-                return InvokeFromC0(action, discard);  
+                try
+                {
+                    return InvokeFromC0(action, discard, fidCount == 1);
+                }
+                catch (AccessViolationException)
+                {
+                    throw;
+                }
+                catch (Exception)
+                {
+                    throw;
+                } finally
+                {
+                    DecrementUseCount(threadCurrentThread, ForiegnFrameCounts);
+                }
             } 
         }
-        public static T InvokeFromC0<T>(Func<T> action, bool discard)
+        public static T InvokeFromC0<T>(Func<T> action, bool discard, bool useFrame)
         {
+            discard = true;
+            useFrame = true;
             Thread threadCurrentThread = Thread.CurrentThread;
             RegisterThread(threadCurrentThread);
-            uint fid = libpl.PL_open_foreign_frame();
+            uint fid = 0;
+            if (useFrame) fid = libpl.PL_open_foreign_frame();
 
             try
             {
                 return action();
+            }
+            catch (AccessViolationException)
+            {
+                throw;
             }
             catch (Exception e)
             {
@@ -766,11 +819,11 @@ typedef struct // define a context structure  { ... } context;
             }
             finally
             {
-                if (discard)
+                if (discard && useFrame)
                 {
-                    libpl.PL_discard_foreign_frame(fid);
-                    DeregisterThread(threadCurrentThread);
+                    libpl.PL_close_foreign_frame(fid);
                 }
+                DeregisterThread(threadCurrentThread);
             }
         }
     }

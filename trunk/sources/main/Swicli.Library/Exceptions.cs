@@ -71,16 +71,26 @@ namespace SbsSW.SwiPlCs.Exceptions
         public PlLibException()
 			: base()
 		{
+            BP();
 		}
-        /// <inheritdoc />
+
+	    static private void BP()
+	    {
+	        return;
+	    }
+
+	    /// <inheritdoc />
         public PlLibException(string message)
 			: base(message)
 		{
-		}
+            BP();
+        }
         /// <inheritdoc />
         public PlLibException(string message, Exception innerException)
 			: base(message, innerException)
 		{
+            BP();
+
 		}
 		#region implementation of ISerializable
 
@@ -89,7 +99,8 @@ namespace SbsSW.SwiPlCs.Exceptions
         protected PlLibException(SerializationInfo info, StreamingContext context)
 			: base(info, context)
 		{
-		}
+            BP();
+        }
 
 		// see http://msdnwiki.microsoft.com/en-us/mtpswiki/f1d0010b-14fb-402f-974f-16318f0bc19f.aspx
         /// <inheritdoc />

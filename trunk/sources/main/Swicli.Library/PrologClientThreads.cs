@@ -28,42 +28,54 @@ namespace SbsSW.SwiPlCs
 {
     public partial class PrologClient
     {
+        public static bool SaneThreadWorld = true;
         public static Dictionary<Thread, int> ThreadRegisterations = new Dictionary<Thread, int>();
+        public static Dictionary<Thread, int> ForiegnFrameCounts = new Dictionary<Thread, int>();
 
-        internal static void IncrementUseCount(Thread thread)
+        internal static int IncrementUseCount(Thread thread)
         {
-            lock (ThreadRegisterations)
+            return IncrementUseCount(thread, ThreadRegisterations);
+        }
+        internal static int DecrementUseCount(Thread thread)
+        {
+            return DecrementUseCount(thread, ThreadRegisterations);
+        }
+        internal static int IncrementUseCount(Thread thread, Dictionary<Thread, int> registration)
+        {
+            lock (registration)
             {
-                int regs;
-                if (!ThreadRegisterations.TryGetValue(thread, out regs))
+                int regs = 0;
+                if (!registration.TryGetValue(thread, out regs))
                 {
-                    ThreadRegisterations[thread] = 1;
+                    registration[thread] = 1;
                 }
                 else
                 {
-                    ThreadRegisterations[thread] = regs + 1;
+                    registration[thread] = regs + 1;
                 }
+                return regs + 1;
             }
         }
-        internal static void DecrementUseCount(Thread thread)
+        internal static int DecrementUseCount(Thread thread, Dictionary<Thread, int> registration)
         {
-            lock (ThreadRegisterations)
+            lock (registration)
             {
-                int regs;
-                if (!ThreadRegisterations.TryGetValue(thread, out regs))
+                int regs = 0;
+                if (!registration.TryGetValue(thread, out regs))
                 {
-                    ThreadRegisterations[thread] = 0;
+                    registration[thread] = 0;
                 }
                 else
                 {
-                    ThreadRegisterations[thread] = regs - 1;
+                    registration[thread] = regs - 1;
                 }
+                return regs - 1;
             }
         }
 
 
 
-        public static Dictionary<Thread, IntPtr> SafeThreads = new Dictionary<Thread, IntPtr>();
+        public static Dictionary<int, IntPtr> SafeThreads = new Dictionary<int, IntPtr>();
         public static Dictionary<int, Thread> engineToThread = new Dictionary<int, Thread>();
         public static Dictionary<int, int> threadToEngine = new Dictionary<int, int>();
 
@@ -78,10 +90,10 @@ namespace SbsSW.SwiPlCs
             lock (SafeThreads)
             {
                 Application.ThreadExit += new EventHandler(OnThreadExit);
-                var t = Thread.CurrentThread;
-                SafeThreads.Add(t, IntPtr.Zero);
-                int self = libpl.PL_thread_self();
-                engineToThread.Add(self, t);
+                var t = Thread.CurrentThread.ManagedThreadId;
+              //  SafeThreads.Add(t, new IntPtr(libpl.PL_ENGINE_MAIN));
+               // int self = libpl.PL_thread_self();
+              //  engineToThread.Add(self, t);
             }
         }
 
@@ -126,7 +138,7 @@ namespace SbsSW.SwiPlCs
 
         public static void RegisterThread(Thread thread)
         {
-            if (thread == CreatorThread) return;
+            //if (thread == CreatorThread) return;
             if (OneToOneEnginesPeThread)
             {
                 // leaks!
@@ -138,27 +150,136 @@ namespace SbsSW.SwiPlCs
             }
         }
 
+        static readonly IntPtr PL_ENGINE_CURRENT_PTR = new IntPtr(libpl.PL_ENGINE_CURRENT); // ((PL_engine_t)0x2)
         public static void RegisterThread121(Thread thread)
+        {
+            try
+            {
+                IntPtr ce = GetCurrentEngine();
+                if (ce == IntPtr.Zero)
+                {
+                    RegisterThread121A(thread);
+                }
+            } catch(Exception e)
+            {
+                RegisterThread121A(thread);                
+            }
+
+        }
+        public static void RegisterThread121A(Thread thread)
+        {
+            if (thread == CreatorThread)
+            {
+                return;
+            }
+            lock (SafeThreads)
+            {
+                IncrementUseCount(thread);
+                int count;
+                if (ForiegnFrameCounts.TryGetValue(thread, out count))
+                {
+                   // if (count > 1) return;
+                }
+                lock (unregisteredThreads) unregisteredThreads.Remove(thread);
+                IntPtr _iEngineNumber;
+                IntPtr _iEngineNumberReally = IntPtr.Zero;
+                bool threadHasSelf = SafeThreads.TryGetValue(thread.ManagedThreadId, out _iEngineNumber);
+                if (threadHasSelf)
+                {
+                   // EnsureEngine(_iEngineNumber);
+                    return;
+                }
+                if (0 != libpl.PL_is_initialised(IntPtr.Zero, IntPtr.Zero))
+                {
+                    libpl.PL_initialise(0, null);
+                    try
+                    {
+                        //_iEngineNumber = libpl.PL_create_engine(IntPtr.Zero);
+                        libpl.PL_thread_attach_engine(_iEngineNumber);
+                        SafeThreads.Add(thread.ManagedThreadId, _iEngineNumber);
+                        return;
+                        int iRet = libpl.PL_set_engine(_iEngineNumber, ref _iEngineNumberReally);
+                        EnsureEngine(_iEngineNumber);
+                    }
+                    catch (Exception ex)
+                    {
+                        string[] local_argv = new string[] { "-q" };
+                        if (0 == libpl.PL_initialise(local_argv.Length, local_argv))
+                            throw new PlLibException("failed to initialize");
+                        throw (new PlException("PL_create_engine : " + ex.Message));
+                    }
+                } else
+                {
+                    throw (new PlException("PL_is_initialised failed: "));                    
+                }
+
+            }
+        }
+        static IntPtr GetCurrentEngine()
+        {
+            IntPtr _iEngineNumberReallyCurrent = IntPtr.Zero;
+            int iRet2 = libpl.PL_set_engine(PL_ENGINE_CURRENT_PTR, ref _iEngineNumberReallyCurrent);
+            if (iRet2 == libpl.PL_ENGINE_INVAL)
+            {
+                return IntPtr.Zero;
+            }
+            CheckIRet(iRet2);
+            return _iEngineNumberReallyCurrent;
+        }
+        private static void EnsureEngine(IntPtr _iEngineNumber)
+        {
+            IntPtr _iEngineNumberReallyCurrent = IntPtr.Zero;
+            int iRet2 = libpl.PL_set_engine(PL_ENGINE_CURRENT_PTR, ref _iEngineNumberReallyCurrent);
+            CheckIRet(iRet2);
+            if (_iEngineNumber == _iEngineNumberReallyCurrent)
+            {
+                return;
+            }
+
+            int iRet = libpl.PL_set_engine(_iEngineNumber, ref _iEngineNumberReallyCurrent);           
+            if (libpl.PL_ENGINE_SET == iRet)
+            {
+                EnsureEngine(_iEngineNumber);
+                return;
+            }
+            CheckIRet(iRet);
+        }
+
+        private static void CheckIRet(int iRet)
+        {
+            switch (iRet)
+            {
+                case libpl.PL_ENGINE_SET:
+                    {
+                        break; // all is fine!
+                    }
+                case libpl.PL_ENGINE_INVAL:
+                    throw (new PlLibException("PlSetEngine returns Invalid")); //break;
+                case libpl.PL_ENGINE_INUSE:
+                    throw (new PlLibException("PlSetEngine returns it is used by an other thread")); //break;
+                default:
+                    throw (new PlLibException("Unknown return from PlSetEngine"));
+            }
+        }
+
+        public static void RegisterThread121T(Thread thread)
         {
             if (thread == CreatorThread) return;
             lock (SafeThreads)
             {
+                lock (unregisteredThreads) unregisteredThreads.Remove(thread);
                 int oldSelf;
                 bool threadHasSelf = threadToEngine.TryGetValue(thread.ManagedThreadId, out oldSelf);
-                if (threadHasSelf)
+                if (!threadHasSelf)
                 {
-                    return;
+                    //if (thread == CreatorThread) return;
+                    IncrementUseCount(thread);
+                    threadToEngine[thread.ManagedThreadId] = libpl.PL_thread_attach_engine(IntPtr.Zero);
                 }
-                //if (thread == CreatorThread) return;
-                IncrementUseCount(thread);
-                lock (unregisteredThreads) unregisteredThreads.Remove(thread);
-                //libpl.PL_thread_attach_engine(IntPtr.Zero);
-                threadToEngine[thread.ManagedThreadId] = libpl.PL_thread_attach_engine(IntPtr.Zero);
-                if (threadToEngine.Count % 20 == 0)
-                {
-
-
-                }
+                IntPtr _iEngineNumber = IntPtr.Zero;
+                int iRet = libpl.PL_set_engine(PL_ENGINE_CURRENT_PTR, ref _iEngineNumber);
+                if (libpl.PL_ENGINE_SET == iRet) return;
+                CheckIRet(iRet);
             }
         }
 
@@ -254,7 +375,7 @@ namespace SbsSW.SwiPlCs
                 IntPtr _iEngineNumber;
                 IntPtr _oiEngineNumber;
                 Thread otherThread;
-                bool threadOnceHadEngine = SafeThreads.TryGetValue(thread, out _iEngineNumber);
+                bool threadOnceHadEngine = SafeThreads.TryGetValue(thread.ManagedThreadId, out _iEngineNumber);
                 bool plthreadHasThread = engineToThread.TryGetValue(self, out otherThread);
                 bool plThreadHasDifferntThread = false;
                 GCHandle.Alloc(thread, GCHandleType.Normal);
@@ -288,17 +409,17 @@ namespace SbsSW.SwiPlCs
                     int self0 = libpl.PL_thread_self();
                     if (ret == self0)
                     {
-                        SafeThreads.Add(thread, IntPtr.Zero);
+                        SafeThreads.Add(thread.ManagedThreadId, IntPtr.Zero);
                         engineToThread[self0] = thread;
                         //RegisterThread(thread);
                         return;
                     }
                     _iEngineNumber = GetFreeEngine();
-                    SafeThreads.Add(thread, _iEngineNumber);
+                    SafeThreads.Add(thread.ManagedThreadId, _iEngineNumber);
                     int self2 = libpl.PL_thread_self();
                     if (self2 == -1)
                     {
-                        if (libpl.PL_is_initialised(IntPtr.Zero, IntPtr.Zero) == libpl.PL_fail)
+                        if (libpl.PL_is_initialised(IntPtr.Zero, IntPtr.Zero) != 0)
                         {
                             try
                             {
@@ -390,29 +511,6 @@ namespace SbsSW.SwiPlCs
         {
             IntPtr _iEngineNumber;
             IntPtr pNullPointer = IntPtr.Zero;
-            IntPtr PL_ENGINE_CURRENT_PTR = new IntPtr(libpl.PL_ENGINE_CURRENT); // ((PL_engine_t)0x2)
-            int iRet = libpl.PL_set_engine(PL_ENGINE_CURRENT_PTR, ref pNullPointer);
-            if (libpl.PL_ENGINE_SET == iRet) return iRet;
-            switch (iRet)
-            {
-                case libpl.PL_ENGINE_SET:
-                    {
-                        break; // all is fine!
-                    }
-                case libpl.PL_ENGINE_INVAL:
-                    throw (new PlLibException("PlSetEngine returns Invalid")); //break;
-                case libpl.PL_ENGINE_INUSE:
-                    throw (new PlLibException("PlSetEngine returns it is used by an other thread")); //break;
-                default:
-                    throw (new PlLibException("Unknown return from PlSetEngine"));
-            }
-
-            return iRet;
-        }
-        public static int CheckEngine(IntPtr PL_ENGINE_CURRENT_PTR)
-        {
-            IntPtr _iEngineNumber;
-            IntPtr pNullPointer = IntPtr.Zero;
             int iRet = libpl.PL_set_engine(PL_ENGINE_CURRENT_PTR, ref pNullPointer);
             if (libpl.PL_ENGINE_SET == iRet) return iRet;
             switch (iRet)
@@ -437,17 +535,8 @@ namespace SbsSW.SwiPlCs
         {
             lock (SafeThreads)
             {
-                lock (unregisteredThreads) unregisteredThreads.Add(thread);
-                int regs = -1;
-                if (!ThreadRegisterations.TryGetValue(thread, out regs))
-                {
-                    ThreadRegisterations[thread] = 0;
-                }
-                else
-                {
-                    ThreadRegisterations[thread] = regs - 1;
-                }
-                if (regs == 1)
+                int regs = DecrementUseCount(thread);
+                if (regs == 0)
                 {
                     if (OneToOneEnginesPeThread)
                     {
@@ -468,12 +557,12 @@ namespace SbsSW.SwiPlCs
             {
                 int self = libpl.PL_thread_self();
                 IntPtr _iEngineNumber;
-                if (!SafeThreads.TryGetValue(thread, out _iEngineNumber))
+                if (!SafeThreads.TryGetValue(thread.ManagedThreadId, out _iEngineNumber))
                 {
                     return;
                 }
                 //  if (_iEngineNumber == IntPtr.Zero) return;
-                SafeThreads.Remove(thread);
+                SafeThreads.Remove(thread.ManagedThreadId);
                 var rnull = IntPtr.Zero;
                 if (libpl.PL_set_engine(IntPtr.Zero, ref rnull) != 0)
                 {
@@ -499,11 +588,6 @@ namespace SbsSW.SwiPlCs
                     }
                 }
             }
-        }
-
-        private static void Thread_Exit(object sender, EventArgs e)
-        {
-
         }
     }
 }
