@@ -395,7 +395,7 @@ namespace SbsSW.SwiPlCs
 
         public abstract object CallPrologFast(object[] paramz);
 
-        readonly public bool IsUsingGlobalQueue = false;
+        static public bool IsUsingGlobalQueue = false;
         public bool IsSyncronous = true;
         public object SyncLock;
 

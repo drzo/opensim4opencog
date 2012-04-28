@@ -1663,8 +1663,11 @@ namespace SbsSW.SwiPlCs
             Check.Require(term.TermRefIntern != 0);
             return CastToString(term.TermRef);
         }
-
         public static string CastToString(uint TermRef)
+        {
+            return PrologClient.InvokeFromC(() => CastToString0(TermRef), true);
+        }
+        public static string CastToString0(uint TermRef)
         {
             String s = "";
             if (0 != libpl.PL_get_chars(TermRef, ref s, libpl.CVT_ALL | libpl.CVT_WRITE | libpl.BUF_RING))

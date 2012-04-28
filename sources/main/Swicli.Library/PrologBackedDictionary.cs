@@ -85,7 +85,7 @@ namespace SbsSW.SwiPlCs
             {
                 if (plQuery != null) plQuery.Dispose();
                 plQuery = null;
-                if (fframe != 0) libpl.PL_discard_foreign_frame(fframe);
+                if (fframe != 0) libpl.PL_close_foreign_frame(fframe);
                 fframe = 0;
             }
 

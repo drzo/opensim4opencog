@@ -31,6 +31,7 @@ namespace SbsSW.SwiPlCs
 
         readonly static private Dictionary<object, string> ObjToTag = new Dictionary<object, string>();
         readonly static private Dictionary<string, object> TagToObj = new Dictionary<string, object>();
+        private static readonly Dictionary<int, Dictionary<uint, List<string>>> EngineFrameTags = new Dictionary<int, Dictionary<uint, List<string>>>();
         public static object tag_to_object(string s)
         {
             if (string.IsNullOrEmpty(s) || s == "void" || !s.StartsWith("C#"))
@@ -170,11 +171,25 @@ namespace SbsSW.SwiPlCs
 
             //libpl.PL_put_atom_chars(t1.TermRef + 1, tag);
             bool ret = t1.Unify(tag); // = t1;*/
+            uint fid = 0;// libpl.PL_open_foreign_frame();
             uint nt = libpl.PL_new_term_ref();
             libpl.PL_cons_functor_v(nt,
                                     OBJ_1,
                                     new PlTermV(PlTerm.PlAtom(tag)).A0);
-            return libpl.PL_unify(TermRef, nt);
+            PlTerm termValue = new PlTerm(nt);
+            PlTerm termVar = new PlTerm(TermRef);
+            int retcode = libpl.PL_unify(TermRef, nt);
+            if (fid > 0) libpl.PL_close_foreign_frame(fid);
+            if (retcode != libpl.PL_succeed)
+            {
+                //libpl.PL_put_term(nt, TermRef);
+                if (retcode == libpl.PL_fail)
+                {
+                    return retcode;
+                }
+                return retcode;
+            }
+            return retcode;
         }
 
         protected static uint OBJ_1
