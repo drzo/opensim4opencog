@@ -1,5 +1,7 @@
 ﻿/*********************************************************
 * 
+*  Project: Swicli.Library - Two Way Interface to .NET and MONO 
+*  Author:        Douglas R. Miles
 *  Author:        Uwe Lesta
 *  Copyright (C): 2008, Uwe Lesta SBS-Softwaresysteme GmbH
 *
@@ -28,13 +30,11 @@ using System.Security.Permissions;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-//[assembly: AssemblyTitle("SWI-Pl-cs2 - A .NET interface to SWI-Prolog ©")]
-[assembly: AssemblyTitle("SWIPlCs - A .NET interface to SWI-Prolog ©")]
-[assembly: AssemblyDescription(".NET interface to SWI-Prolog ©")]
+[assembly: AssemblyTitle("Swicli.Library - A SWI-Prolog interface to CLI/CLR")]
+[assembly: AssemblyDescription("MONO & .NET two-way interface to SWI-Prolog")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("SBS-Softwaresysteme written by Uwe Lesta/Douglas Miles")]
-//[assembly: AssemblyProduct("SWI-Pl-cs2")]
-[assembly: AssemblyProduct("SWIPlCs")]
+[assembly: AssemblyCompany("Logicmoo/SBS-Softwaresysteme written by Uwe Lesta/Douglas Miles")]
+[assembly: AssemblyProduct("Swicli.Library")]
 [assembly: AssemblyCopyright("Copyright © 2010 under LGPL 2.1")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -45,7 +45,7 @@ using System.Security.Permissions;
 [assembly: ComVisible(true)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("5782cb18-d94e-4fba-9f25-410bf962bb77")]
+[assembly: Guid("5782cb18-d94e-4fba-9f25-410bf962b666")]
 
 // Version information for an assembly consists of the following four values:
 //

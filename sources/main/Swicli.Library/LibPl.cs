@@ -1,6 +1,8 @@
 #define USESAFELIB
 /*********************************************************
 * 
+*  Project: Swicli.Library - Two Way Interface to .NET and MONO 
+*  Author:        Douglas R. Miles
 *  Author:        Uwe Lesta
 *  Copyright (C): 2008, Uwe Lesta SBS-Softwaresysteme GmbH
 *
@@ -27,7 +29,10 @@ using System.Threading;
 using System.Windows.Forms;
 using SbsSW.SwiPlCs.Exceptions;         // in PlHalt
 
-using System.Runtime.InteropServices;	// marscall
+using System.Runtime.InteropServices;
+using Swicli.Library;
+
+// marscall
 
 // ReSharper disable InconsistentNaming
 namespace SbsSW.SwiPlCs
@@ -122,7 +127,7 @@ namespace SbsSW.SwiPlCs
             get
             {
 #if USESAFELIB
-                
+                if (PrologClient.IsLinux) return true;
                 return m_hLibrary != null && !m_hLibrary.IsInvalid;
 #else 
                 return true;
@@ -137,7 +142,7 @@ namespace SbsSW.SwiPlCs
             {
                 if (PrologClient.IsLinux)
                 {
-                    m_hLibrary = NativeMethodsLinux.LoadLibrary(fileName);
+                    m_hLibrary = NativeMethodsLinux.LoadLibrary("/lib64/pl-6.0.3/lib/x86_64/libswipl.so");
                     if (m_hLibrary.IsInvalid)
                     {
                         PrologClient.ConsoleTrace("IsInvalid LoadUnmanagedLibrary " + fileName);
@@ -145,7 +150,7 @@ namespace SbsSW.SwiPlCs
                        // Marshal.ThrowExceptionForHR(hr);
                     }
                 }
-                else
+                else 
                 {
                     m_hLibrary = NativeMethodsWindows.LoadLibrary(fileName);
                     if (m_hLibrary.IsInvalid)

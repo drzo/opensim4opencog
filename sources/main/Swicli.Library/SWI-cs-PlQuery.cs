@@ -1,5 +1,7 @@
 /*********************************************************
 * 
+*  Project: Swicli.Library - Two Way Interface to .NET and MONO 
+*  Author:        Douglas R. Miles
 *  Author:        Uwe Lesta
 *  Copyright (C): 2008, Uwe Lesta SBS-Softwaresysteme GmbH
 *
@@ -18,8 +20,6 @@
 *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *
 *********************************************************/
-
-
 using System;
 using System.Collections;		        // IEnumerable PlTail
 using System.Collections.Generic;		// IEnumerable ( PlQuery )
@@ -28,6 +28,7 @@ using SbsSW.DesignByContract;
 using SbsSW.SwiPlCs.Exceptions;
 using SbsSW.SwiPlCs.Streams;
 using System.Collections.ObjectModel;
+using Swicli.Library;
 
 // The namespace summary is above class NamespaceDoc
 namespace SbsSW.SwiPlCs

@@ -1,3 +1,24 @@
+/*********************************************************
+* 
+*  Project: Swicli.Library - Two Way Interface to .NET and MONO 
+*  Author:        Douglas R. Miles
+*  Copyright (C): 2008, Logicmoo - http://www.kqml.org
+*
+*  This library is free software; you can redistribute it and/or
+*  modify it under the terms of the GNU Lesser General Public
+*  License as published by the Free Software Foundation; either
+*  version 2.1 of the License, or (at your option) any later version.
+*
+*  This library is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+*  Lesser General Public License for more details.
+*
+*  You should have received a copy of the GNU Lesser General Public
+*  License along with this library; if not, write to the Free Software
+*  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*
+*********************************************************/
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,6 +32,7 @@ using ikvm.runtime;
 using java.net;
 using jpl;
 #endif
+using SbsSW.SwiPlCs;
 using SbsSW.SwiPlCs.Callback;
 using SbsSW.SwiPlCs.Exceptions;
 using SbsSW.SwiPlCs.Streams;
@@ -22,9 +44,9 @@ using Class = java.lang.Class;
 using sun.reflect.misc;
 #endif
 using CycFort = SbsSW.SwiPlCs.PlTerm;
-using PrologCli = SbsSW.SwiPlCs.PrologClient;
+using PrologCli = Swicli.Library.PrologClient;
 
-namespace SbsSW.SwiPlCs
+namespace Swicli.Library
 {
     public partial class PrologClient
     {

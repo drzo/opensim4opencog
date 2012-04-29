@@ -1,3 +1,23 @@
+/*********************************************************
+* 
+*  Author:        Douglas R. Miles
+*  Copyright (C): 2008, Logicmoo - http://www.kqml.org
+*
+*  This library is free software; you can redistribute it and/or
+*  modify it under the terms of the GNU Lesser General Public
+*  License as published by the Free Software Foundation; either
+*  version 2.1 of the License, or (at your option) any later version.
+*
+*  This library is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+*  Lesser General Public License for more details.
+*
+*  You should have received a copy of the GNU Lesser General Public
+*  License along with this library; if not, write to the Free Software
+*  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*
+*********************************************************/
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -12,13 +32,14 @@ using MushDLR223.Utilities;
 using jpl;
 using Class = java.lang.Class;
 #else
+using SbsSW.SwiPlCs;
 using Class = System.Type;
 #endif
 using ArrayList = System.Collections.ArrayList;
 using CycFort = SbsSW.SwiPlCs.PlTerm;
-using PrologCli = SbsSW.SwiPlCs.PrologClient;
+using PrologCli = Swicli.Library.PrologClient;
 
-namespace SbsSW.SwiPlCs
+namespace Swicli.Library
 {
     public partial class PrologClient
     {
@@ -655,30 +676,74 @@ namespace SbsSW.SwiPlCs
 
         static object ToBigInteger(string value)
         {
-
-            // .net 4.0 and Mono
-            Type t = ResolveType("System.Numerics.BigInteger");
-            if (t != null) return t.GetMethod("Parse", arrayOfStringType).Invoke(null, new object[] { value });
+            Type t;
             // Just Mono
-            t = ResolveType("Mono.Math.BigInteger");
-            if (t != null) return t.GetMethod("Parse", arrayOfStringType).Invoke(null, new object[] { value });
+            t = Type.GetType("Mono.Math.BigInteger");
+            if (t != null)
+            {
+                var m = t.GetMethod("Parse", arrayOfStringType);
+                if (m != null) return m.Invoke(null, new object[] {value});
+            }
+            // .net 4.0 and Mono
+            t = ResolveType("System.Numerics.BigInteger");
+            if (t != null)
+            {
+                var m = t.GetMethod("Parse", arrayOfStringType);
+                if (m != null) return m.Invoke(null, new object[] { value });
+            }
+            // Just Mono Android
+            t = ResolveType("Java.Math.BigInteger");
+            if (t != null)
+            {
+                var m = t.GetMethod("Parse", arrayOfStringType);
+                if (m != null) return m.Invoke(null, new object[] { value });
+            }
+
             // IKVM         
+            t = ResolveType("java.math.BigInteger");
+            if (t != null)
+            {
+                var m = t.GetConstructor(arrayOfStringType);
+                if (m != null) return m.Invoke(new object[] { value });
+            }             
 #if USE_IKVM
             return new java.math.BigInteger(value);
 #else
+            if (!value.StartsWith("-")) return ulong.Parse(value);
             return long.Parse(value);
 #endif
         }
         static object ToBigDecimal(string value)
         {
-            //Type[] arrayOfStringType = new Type[] { typeof(string) };
-            // .net 4.0 and Mono
-            Type t = ResolveType("System.Numerics.BigDecimal");
-            if (t != null) return t.GetMethod("Parse", arrayOfStringType).Invoke(null, new object[] { value });
+            Type t;
             // Just Mono
+            t = Type.GetType("Mono.Math.BigDecimal");
+            if (t != null)
+            {
+                var m = t.GetMethod("Parse", arrayOfStringType);
+                if (m != null) return m.Invoke(null, new object[] { value });
+            }
+            // .net 4.0 and Mono
+            t = ResolveType("System.Numerics.BigDecimal");
+            if (t != null)
+            {
+                var m = t.GetMethod("Parse", arrayOfStringType);
+                if (m != null) return m.Invoke(null, new object[] { value });
+            }
+            // Just Mono Android
             t = ResolveType("Java.Math.BigDecimal");
-            if (t != null) return t.GetMethod("Parse", arrayOfStringType).Invoke(null, new object[] { value });
+            if (t != null)
+            {
+                var m = t.GetMethod("Parse", arrayOfStringType);
+                if (m != null) return m.Invoke(null, new object[] { value });
+            }
             // IKVM   
+            t = ResolveType("java.math.BigDecimal");
+            if (t != null)
+            {
+                var m = t.GetConstructor(arrayOfStringType);
+                if (m != null) return m.Invoke(new object[] {value});
+            }
 #if USE_IKVM
             return new java.math.BigDecimal(value);
 #else
@@ -1606,7 +1671,7 @@ namespace SbsSW.SwiPlCs
             return results;
         }
 
-        private static bool SpecialUnify(PlTerm valueOut, PlTerm plvar)
+        private static bool SpecialUnify(PlTerm valueOut, CycFort plvar)
         {
             bool b = valueOut.Unify(plvar);
             if (b) return true;

@@ -1,3 +1,24 @@
+/*********************************************************
+* 
+*  Project: Swicli.Library - Two Way Interface to .NET and MONO 
+*  Author:        Douglas R. Miles
+*  Copyright (C): 2008, Logicmoo - http://www.kqml.org
+*
+*  This library is free software; you can redistribute it and/or
+*  modify it under the terms of the GNU Lesser General Public
+*  License as published by the Free Software Foundation; either
+*  version 2.1 of the License, or (at your option) any later version.
+*
+*  This library is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+*  Lesser General Public License for more details.
+*
+*  You should have received a copy of the GNU Lesser General Public
+*  License along with this library; if not, write to the Free Software
+*  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*
+*********************************************************/
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -9,6 +30,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml.Serialization;
+using SbsSW.SwiPlCs;
 using SbsSW.SwiPlCs.Callback;
 using SbsSW.SwiPlCs.Exceptions;
 #if USE_IKVM
@@ -29,9 +51,32 @@ using Class = System.Type;
 #endif
 using ArrayList = System.Collections.ArrayList;
 using CycFort = SbsSW.SwiPlCs.PlTerm;
-using PrologCli = SbsSW.SwiPlCs.PrologClient;
+using PrologCli = Swicli.Library.PrologClient;
 
-namespace SbsSW.SwiPlCs
+namespace Swicli.Library
+{
+    public static class Embedded
+    {
+        static public int install()
+        {
+            try
+            {
+                PrologCli.IsPLWin = Type.GetType("Mono.Runtime") == null;
+                PrologClient.RedirectStreams = false;
+                PrologClient.SetupProlog();
+                PrologClient.ConsoleWriteLine(typeof(Embedded).FullName + ".install suceeded");
+                return libpl.PL_succeed;
+            }
+            catch (Exception e)
+            {
+                PrologClient.WriteException(e);
+                PrologClient.ConsoleWriteLine(typeof(Embedded).FullName + ".install failed");
+                return libpl.PL_fail;
+            }
+        }
+    }
+}
+namespace Swicli.Library
 {
     public partial class PrologClient
     {
@@ -78,7 +123,7 @@ namespace SbsSW.SwiPlCs
                 }
             }
             IList<string> sp = CopyOf((IEnumerable<string>)AssemblySearchPaths);
-            foreach (var dir in new[] { AppDomain.CurrentDomain.BaseDirectory, new DirectoryInfo(".").FullName, Path.GetDirectoryName(typeof(SwiPlCs.PrologClient).Assembly.CodeBase),Environment.CurrentDirectory })
+            foreach (var dir in new[] { AppDomain.CurrentDomain.BaseDirectory, new DirectoryInfo(".").FullName, Path.GetDirectoryName(typeof(PrologClient).Assembly.CodeBase),Environment.CurrentDirectory })
             {
                 if (!sp.Contains(dir)) sp.Add(dir);
             }
