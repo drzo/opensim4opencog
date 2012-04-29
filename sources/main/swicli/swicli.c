@@ -20,8 +20,8 @@ typedef char gchar;
 /*
 
 Linux: Compile with: 
- 	  ../../../bin/swipl-ld -shared -o ../../../bin/swicli.so swicli.c `pkg-config --cflags --libs mono-2` -lm
-
+ 	  swipl-ld -shared -o ../../../bin/swicli.so swicli.c `pkg-config --cflags --libs mono-2` -lm
+      swipl-ld -m32 -shared -o ../../../bin/swicli32.so swicli.c `pkg-config --cflags --libs mono-2` -lm
 Windows: remember "Not Using Precompiled Headers"
           and compile this file as .cpp
 
