@@ -127,19 +127,23 @@ guitracer:-debug.
 :-use_module(library(swicli)).
 
 
-%% simAvatar(X),cliGet(X,'SalientMovementProceedure',Y).
+%% simAvatar(X),cli_get(X,'SalientMovementProceedure',Y).
 
 %% apiBotClientCmd(astargoto(stop_test_5)).
 
 %%:- createWritelnDelegate(_X).
 
-%ike:-cogrobot:clientManager(X),cliCall(X,'CreateBotClient'('ILikeIKE','Resident','flamebucket88!', "https://login.agni.lindenlab.com/cgi-bin/login.cgi","last"),Y). %% ,cliCall(Y,'LoginBlocked',_). %%('@'(true))
-%ike:-cogrobot:clientManager(X),cliCall(X,'CreateBotClient'('DimeBagFurry','Resident','tek123', "https://login.agni.lindenlab.com/cgi-bin/login.cgi","home"),Y). %% ,cliCall(Y,'LoginBlocked',_). %%('@'(true))
+:-dynamic(ike1Ran).
+ike1:-ike1Ran,!.
+ike1:-assert(ike1Ran),fail.
+ike1:-cogrobot:clientManager(X),cli_call(X,'CreateBotClient'('DimeBagFurry','Resident','abc123', "https://login.agni.lindenlab.com/cgi-bin/login.cgi","home"),_Y). %% ,cli_call(Y,'LoginBlocked',_). %%('@'(true))
+%ike1:-cogrobot:clientManager(X),cli_call(X,'CreateBotClient'('Nephrael','Rae','abc123', "https://login.agni.lindenlab.com/cgi-bin/login.cgi","home"),Y). %% ,cli_call(Y,'LoginBlocked',_). %%('@'(true))
 ike:-thread_create(ike1,_,[]).
 gui:-thread_create(botClientCmd(showgui),_,[]).
-ike1:-cogrobot:clientManager(X),cliCall(X,'CreateBotClient'('Nephrael','Rae','tek123', "https://login.agni.lindenlab.com/cgi-bin/login.cgi","home"),Y). %% ,cliCall(Y,'LoginBlocked',_). %%('@'(true))
-%% cliCall('System.Threading.ThreadPool','GetAvailableThreads'(X,Y),_)
-%%onFirstBotClient("'(thisClient \"ILikeIKE Resident\")"-_G2886-"'(thisClient \"ILikeIKE Resident\")")
+%% cli_call('System.Threading.ThreadPool','GetAvailableThreads'(X,Y),_)
+%%onFirstBotClient("'(thisClient \"ILikeIKE Resident\")"-_g2886-"'(thisClient \"ILikeIKE Resident\")")
 %:-sleep(20),tpf(clear),tpf(elev_path).
 %%%:-at_initialization((sleep(20),tpf1)).
 %:-tpf.
+
+%%:-ike.
