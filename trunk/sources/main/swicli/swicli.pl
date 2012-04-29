@@ -72,7 +72,7 @@
 %------------------------------------------------------------------------------
 :-dynamic(loadedcli_Assembly/0).
 loadcli_Assembly:-loadedcli_Assembly,!.
-loadcli_Assembly:-assert(loadedcli_Assembly),current_prolog_flag(address_bits,32) -> load_foreign_library(swicli32) ; load_foreign_library(swicli).
+loadcli_Assembly:-assert(loadedcli_Assembly), current_prolog_flag(unix,true)-> load_foreign_library(foreign(swicli));(current_prolog_flag(address_bits,32) -> load_foreign_library(swicli32) ; load_foreign_library(swicli)).
 :-loadcli_Assembly.
 
 
@@ -82,7 +82,7 @@ loadcli_Assembly:-assert(loadedcli_Assembly),current_prolog_flag(address_bits,32
 %------------------------------------------------------------------------------
 onWindows:-current_prolog_flag(arch,ARCH),atomic_list_concat([_,_],'win',ARCH).
 
-:- cli_load_lib('SWIProlog','swicli.Library','SbsSW.SwiPlCs.swipl_win','install').
+:- cli_load_lib('SWIProlog','Swicli.Library','Swicli.Library.Embedded','install').
 
 %% remember to: export LD_LIBRARY_PATH=/development/opensim4opencog/bin:/development/opensim4opencog/lib/x86_64-linux:$LD_LIBRARY_PATH
 
@@ -319,8 +319,8 @@ cli_debug(Data):-format(user_error,'~n %% cli_-DEBUG: ~q~n',[Data]),flush_output
 
 %%cli_debug(Engine,Data):- format(user_error,'~n %% ENGINE-DEBUG: ~q',[Engine]),cli_debug(Data).
 
-to_string(Object,String):-jpl_is_ref(Object),!,jpl_call(Object,toString,[],String).
-to_string(Object,String):-Object=String.
+%%to_string(Object,String):-jpl_is_ref(Object),!,jpl_call(Object,toString,[],String).
+to_string(Object,String):-cli_to_str(Object,String).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %%% cli_intern/3
@@ -356,13 +356,6 @@ cli_is_defined(_Engine,Name):-cli_debug(cli_not_is_defined(Name)),!,fail.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 
 cli_getSymbol(Engine,Name,Value):- (cli_interned(Engine,Name,Value);Value=cli_UnDefined(Name)),!,cli_debug(cli_getSymbol(Name,Value)),!.
-
-
-
-
-
-
-:-cli_debug('I am swi_cli_.pl in BIN DIR!!').
 
 %:-use_module(library(jpl)).
 %:-use_module(library(pce)).

@@ -3,6 +3,7 @@ using System.Threading;
 using MushDLR223.ScriptEngines;
 using PrologScriptEngine;
 using SbsSW.SwiPlCs;
+using Swicli.Library;
 
 namespace cogbot.Actions.System
 {

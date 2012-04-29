@@ -67,7 +67,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="&quot;C:\Program Files\pl\lib\swipl.lib&quot;"
-				OutputFile="&quot;C:\Program Files\pl\lib\swicli.dll&quot;"
+				OutputFile="&quot;C:\Program Files\pl\bin\swicli.dll&quot;"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
@@ -145,7 +145,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="&quot;C:\Program Files\pl\lib\swipl.lib&quot;"
-				OutputFile="&quot;C:\Program Files\pl\lib\swicli.dll&quot;"
+				OutputFile="&quot;C:\Program Files\pl\bin\swicli.dll&quot;"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
@@ -393,6 +393,15 @@
 					Name="VCCustomBuildTool"
 					CommandLine="copy swicli.pl  &quot;c:\Program Files (x86)\pl\library\&quot;&#x0D;&#x0A;"
 					Outputs=" &quot;c:\Program Files (x86)\pl\library\swicli.pl&quot;"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Debug|x64"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					CommandLine="copy swicli.pl &quot;c:\Program Files\pl\library\&quot;"
+					Outputs=" &quot;c:\Program Files\pl\library\swicli.pl&quot;"
 				/>
 			</FileConfiguration>
 		</File>

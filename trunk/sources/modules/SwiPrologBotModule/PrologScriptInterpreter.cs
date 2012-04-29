@@ -7,6 +7,7 @@ using cogbot.ScriptEngines;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using SbsSW.SwiPlCs;
+using Swicli.Library;
 
 namespace PrologScriptEngine
 {
