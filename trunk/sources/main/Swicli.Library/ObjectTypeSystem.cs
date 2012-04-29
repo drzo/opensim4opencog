@@ -1,3 +1,24 @@
+/*********************************************************
+* 
+*  Project: Swicli - Two Way Interface to .NET and MONO 
+*  Author:        Douglas R. Miles
+*  Copyright (C): 2008, Logicmoo - http://www.kqml.org
+*
+*  This library is free software; you can redistribute it and/or
+*  modify it under the terms of the GNU Lesser General Public
+*  License as published by the Free Software Foundation; either
+*  version 2.1 of the License, or (at your option) any later version.
+*
+*  This library is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+*  Lesser General Public License for more details.
+*
+*  You should have received a copy of the GNU Lesser General Public
+*  License along with this library; if not, write to the Free Software
+*  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*
+*********************************************************/
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,6 +29,7 @@ using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Xml.Serialization;
+using SbsSW.SwiPlCs;
 using SbsSW.SwiPlCs.Callback;
 using SbsSW.SwiPlCs.Exceptions;
 #if USE_IKVM
@@ -24,18 +46,18 @@ using Class = java.lang.Class;
 using sun.reflect.misc;
 using Util = ikvm.runtime.Util;
 #else
+using Swicli.Library;
 using Class = System.Type;
 #endif
 using ArrayList = System.Collections.ArrayList;
 using CycFort = SbsSW.SwiPlCs.PlTerm;
-using PrologCli = SbsSW.SwiPlCs.PrologClient;
+using PrologCli = Swicli.Library.PrologClient;
 
-namespace SbsSW.SwiPlCs
+namespace Swicli.Library
 {
     public partial class PrologClient
     {
-
-        [PrologVisible(Name = "cliLoadType", Arity = 1, TypeOf = null)]
+        [PrologVisible(Name = "cli_load_type", Arity = 1, TypeOf = null)]
         private static void LoadType(Type t)
         {
             lock (TypesLoaded)
@@ -62,7 +84,7 @@ namespace SbsSW.SwiPlCs
             }
         }
 
-        public static Type GetTypeThrowIfMissing(PlTerm clazzSpec)
+        public static Type GetTypeThrowIfMissing(CycFort clazzSpec)
         {
             Type fi = GetType(clazzSpec);
             if (fi == null)
@@ -652,7 +674,7 @@ namespace SbsSW.SwiPlCs
                 }
             } else
             {
-                pm.Name = ToPrologCase(pm.Name);
+                if (ForceJanCase) pm.Name = ToPrologCase(pm.Name);
             }
             InternMethod(pm.ModuleName, pm.Name, m);
         }

@@ -1,4 +1,25 @@
-﻿#if (!STANDARD)
+﻿/*********************************************************
+* 
+*  Project: Swicli.Library - Two Way Interface to .NET and MONO 
+*  Author:        Douglas R. Miles
+*  Copyright (C): 2008, Logicmoo - http://www.kqml.org
+*
+*  This library is free software; you can redistribute it and/or
+*  modify it under the terms of the GNU Lesser General Public
+*  License as published by the Free Software Foundation; either
+*  version 2.1 of the License, or (at your option) any later version.
+*
+*  This library is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+*  Lesser General Public License for more details.
+*
+*  You should have received a copy of the GNU Lesser General Public
+*  License along with this library; if not, write to the Free Software
+*  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*
+*********************************************************/
+#if (!STANDARD)
 #define debugging
 #define arg1index
 #define mswindows
@@ -44,8 +65,8 @@ using Exception=System.Exception;
 using Object=System.Object;
 using String=System.String;
 using System.Collections.Generic;
-using PrologEngine = SbsSW.SwiPlCs.PrologClient;
-using CONTEXT = SbsSW.SwiPlCs.PrologClient;//SbsSW.SwiPlCs.PrologEngine;
+using PrologEngine = Swicli.Library.PrologClient;
+using CONTEXT = Swicli.Library.PrologClient;//SbsSW.SwiPlCs.PrologEngine;
 using Term = SbsSW.SwiPlCs.PlTerm;
 public class A
 {
@@ -54,7 +75,7 @@ public class A
         return new string[] {foo, foo};
     }
 }
-namespace SbsSW.SwiPlCs
+namespace Swicli.Library
 {
     /*
       ----------------
@@ -178,7 +199,7 @@ namespace SbsSW.SwiPlCs
                     type = ikvm.runtime.Util.getInstanceTypeFromClass((Class)obj);
 #endif
                 }
-                if (type == null)
+                if (type == null && !PrologClient.IsLinux)
                 {
                     type = Type.GetTypeFromProgID(typeName);
                 }
@@ -508,7 +529,7 @@ namespace SbsSW.SwiPlCs
             int i = l.Count;
             while (i-- > 0)
             {
-                n = PlTerm.PlCompound(".", ObjectToTerm(l[i]), n);
+                n = Term.PlCompound(".", ObjectToTerm(l[i]), n);
             }
             return n;
         }

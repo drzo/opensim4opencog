@@ -1,5 +1,7 @@
 /*********************************************************
 * 
+*  Project: Swicli.Library - Two Way Interface to .NET and MONO 
+*  Author:        Douglas R. Miles
 *  Author:        Uwe Lesta
 *  Copyright (C): 2008, Uwe Lesta SBS-Softwaresysteme GmbH
 *
@@ -73,6 +75,7 @@ using System.Collections.ObjectModel;
 #if USE_IKVM
 using Class=java.lang.Class;
 #else
+using Swicli.Library;
 using Class = System.Type;
 #endif
 /********************************

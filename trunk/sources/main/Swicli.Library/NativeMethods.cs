@@ -1,6 +1,8 @@
 #define USESAFELIB
 /*********************************************************
 * 
+*  Project: Swicli.Library - Two Way Interface to .NET and MONO 
+*  Author:        Douglas R. Miles
 *  Author:        Uwe Lesta
 *  Copyright (C): 2008, Uwe Lesta SBS-Softwaresysteme GmbH
 *
@@ -45,7 +47,7 @@ using Microsoft.Win32.SafeHandles;
 
 //using System.Runtime.CompilerServices;
 using System.Runtime.ConstrainedExecution;
-
+using Swicli.Library;
 
 
 namespace SbsSW.SwiPlCs
@@ -145,6 +147,7 @@ namespace SbsSW.SwiPlCs
         //public const string DllFileName = @"C:\Program Files\pl\bin\swipl.dll";
         static SafeNativeMethods()
         {
+            if (PrologClient.IsLinux) return;
             if (!File.Exists(DllFileName))
             {
                 if (!File.Exists(DllFileName1))
