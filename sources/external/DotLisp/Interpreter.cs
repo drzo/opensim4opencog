@@ -132,7 +132,9 @@ public class Interpreter
 				catch(Exception ex)
 					{
                         Loc loc = new Loc(t.file, line);
+					    Console.Error.WriteLine(ex);
                         Console.Error.WriteLine("loc=" + loc);
+
                         Console.ReadLine();
 					throw BacktraceException.push(ex,
                                                             new BacktraceFrame(loc, "when evaluating ", expr), this);
