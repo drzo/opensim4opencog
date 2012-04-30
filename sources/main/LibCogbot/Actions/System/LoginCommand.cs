@@ -1,6 +1,7 @@
 using System;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
+using Radegast;
 
 namespace cogbot.Actions.System
 {
@@ -48,7 +49,18 @@ namespace cogbot.Actions.System
                 }
                 if (tokens.Length > 3)
                 {
-                    Client.BotLoginParams.URI = tokens[3];
+                    Radegast.GridManager gm = new GridManager();
+                    gm.LoadGrids();
+                    string url = tokens[3];
+                    string find = url.ToLower();
+                    foreach (var grid in gm.Grids)
+                    {
+                        if (find == grid.Name.ToLower() || find == grid.ID.ToLower())
+                        {
+                            url = grid.LoginURI;
+                        }
+                    }
+                    Client.BotLoginParams.URI = url;
                 }
                 if (tokens.Length > 4)
                 {
