@@ -90,7 +90,7 @@ internal class SymbolTable
                 //throw new Exception("Constant: " + name + " already defined");
                 return (Symbol)(table[name]);
             }
-	        if (false) from = from.Parent;
+	        from = from.Parent;
 	    }
 		this.table[name] = result = new Constant(name,val);
 		return result;
@@ -297,7 +297,7 @@ internal class SymbolTable
 	// String->Type
 	private static Hashtable fullNamesToTypes = new Hashtable(500);
 	// String->ArrayList<Type>
-	private Hashtable shortNamesToTypes = new Hashtable(500);
+	static private Hashtable shortNamesToTypes = new Hashtable(500);
 
     public static List<Assembly> LoadedAssemblies = new List<Assembly>();
 

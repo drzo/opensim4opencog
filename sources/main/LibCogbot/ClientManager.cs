@@ -487,7 +487,11 @@ namespace cogbot
         ScriptEventListener _scriptEventListener = null;
         public ScriptInterpreter TaskInterperter
         {
-            get { return _lispTaskInterperter; }
+            get
+            {
+                initTaskInterperter();
+                return _lispTaskInterperter;
+            }
         }
         ScriptInterpreter _lispTaskInterperter;
         public readonly object LispTaskInterperterLock = new object();
