@@ -1,9 +1,14 @@
 Bot commands are one of the first things that a person can do in Cogbot without learning how to program.  They allow a person to control Cogbot in the virtual world imperatively like "say hi" .. and the bot will say "hi".  They can be used from graphical user interface, the command line, botscript language, AIML, Prolog, Lisp, over the socket, and even httpd.   Best way to learn them is to start using them to do simple things in the world.
 
 
-So we began with the command line version of cogbot.
+So we began with the command line version of cogbot. In Linux
 {{{
 mono Cogbot.exe --nogui
+}}}
+
+or, in Windows
+{{{
+Cogbot.exe --nogui
 }}}
 
 If you have already configured your botconfig.xml with a secondlife acct then this may automatically log you on.  Read [botconfig.xml] page for more info.   For this example we will assume you have not configured that so that we can show how to log one in fresh.
