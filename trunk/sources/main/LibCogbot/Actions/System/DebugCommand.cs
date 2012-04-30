@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
@@ -23,7 +24,7 @@ namespace cogbot.Actions.System
 
             args[0] = args[0].ToLower();
             int level = -1;
-            foreach (var s in typeof(Helpers.LogLevel).GetFields())
+            foreach (var s in typeof(Helpers.LogLevel).GetFields(BindingFlags.Static | BindingFlags.Public))
             {
                 level++;
                 if (s.Name.ToLower().StartsWith(args[0]))
