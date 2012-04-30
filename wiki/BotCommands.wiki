@@ -22,17 +22,50 @@ For this example we will assume you have not configured that so that we can show
 
 First we login
 {{{
-0 avatars online: login Your Resident pass123 agni last
+0 avatars online: login ExampleBot Resident pass1234 agni last
 }}}
 
 We had very much debug above but for now we are going to concentrate on commands so we will set Debug level to None
 {{{
-1 avatar online: debug None
+1 avatars online: debug none
+Logging is set to None
+Success debug
+1 avatars online:
 }}}
 to set less output (we'll still see some having to do things going on in the simulator such as other people taking.
 
-Speaking of which it would be a great time to mention that it is very useful for you to have a second acct logged into the simulator using a graphical client like Imprudence for the purposes of watching your bot execute the commands. 
+Speaking of which, it is very useful for you to have a second acct logged into the simulator using a graphical client like Imprudence for watching your bot execute the commands.
 
+Lets compare the two commands we used above
+"login" and "debug"
+
+Debug was a modal command and executed instantly returning the words:
+{{{
+Logging is set to None
+Success debug
+}}}
+
+Then showed the prompt again
+{{{
+1 avatars online:
+}}}
+
+whereas the "login" command started the login to the server but might take a while to complete.
+
+We might typed
+{{{
+waitforlogin 30
+}}}
+
+after the login command.  Which would have told it to stop reading commands for up to 30 seconds until the bot is logged in.  If the bot is already logged in.. then the commands will complete immediately.
+
+{{{
+1 avatars online: waitforlogin 30
+DimeBagFurry Resident: Korean EduIsland (216.82.44.118:13002)
+waitforlogin 0 failures and 1 successes
+ 1 successes
+1 avatars online:
+}}}
 
 
 
