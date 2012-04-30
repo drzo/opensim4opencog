@@ -16,7 +16,7 @@ namespace cogbot.Actions.Communication
         public ImCommand(BotClient testClient)
         {
             Name = "im";
-            Description = "Instant message someone. Usage: im [firstname] [lastname] [message]";
+            Description = "Instant message someone. Usage: im [[firstname] [lastname]] [message]";
             Category = CommandCategory.Communication;
         }
 
@@ -46,10 +46,16 @@ namespace cogbot.Actions.Communication
 
 
             // Build the message
-            for (int ct = 2; ct < args.Length; ct++)
-                message += args[ct] + " ";
             message = message.TrimEnd();
             string ToAvatarName = args[0] + " " + args[1];
+            int skip = 2;
+            if (ToAvatarName.StartsWith("$"))
+            {
+                ToAvatarName = args[0];
+                skip = 1;
+            }
+            for (int ct = skip; ct < args.Length; ct++)
+                message += args[ct] + " ";
             UUID found = WorldSystem.GetUserID(ToAvatarName);
             if (found==UUID.Zero) return Failure( "Name lookup for " + ToAvatarName + " failed");
             if (message.Length > 1023) message = message.Remove(1023);
