@@ -25,10 +25,14 @@ First we login
 0 avatars online: login Your Resident pass123 agni last
 }}}
 
-Now look
+We had very much debug above but for now we are going to concentrate on commands so we will set Debug level to None
 {{{
-1 avatar online: look
+1 avatar online: debug None
 }}}
+to set less output (we'll still see some having to do things going on in the simulator such as other people taking.
+
+Speaking of which it would be a great time to mention that it is very useful for you to have a second acct logged into the simulator using a graphical client like Imprudence for the purposes of watching your bot execute the commands. 
+
 
 
 
