@@ -232,7 +232,7 @@ namespace MushDLR223.Utilities
         public TaskQueueHandler(object named)
             : this(named, TimeSpan.FromMilliseconds(10), TimeSpan.MaxValue, true, true)
         {
-            VeryBad("CREATE TaskQueueHandler1 " + named);
+            if (DebugLevel > 0) VeryBad("CREATE TaskQueueHandler1 " + named);
         }
 
         /*
@@ -245,12 +245,12 @@ namespace MushDLR223.Utilities
         public TaskQueueHandler(object named, TimeSpan msWaitBetween, bool autoStart)
             : this(named, msWaitBetween, TimeSpan.MaxValue, autoStart, true)
         {
-            VeryBad("CREATE TaskQueueHandler3");
+            if (DebugLevel > 0) VeryBad("CREATE TaskQueueHandler3");
         }
         public TaskQueueHandler(object str, TimeSpan msWaitBetween, bool autoStart, bool doDebug) :
             this(str, msWaitBetween, TimeSpan.MaxValue, autoStart, doDebug)
         {
-            VeryBad("CREATE TaskQueueHandler4");
+            if (DebugLevel > 0) VeryBad("CREATE TaskQueueHandler4");
         }
 
         public TaskQueueHandler(object str, TimeSpan msWaitBetween, TimeSpan maxPerOperation, bool autoStart, bool doDebug)
@@ -293,13 +293,14 @@ namespace MushDLR223.Utilities
 
         static TaskQueueHandler()
         {
+            DebugLevel = 3;
             // If we don't have a high resolution timer then Stopwatch will fall back
             // to DateTime, which is much less reliable
-            if (Stopwatch.IsHighResolution)
+            if (DebugLevel > 2) if (Stopwatch.IsHighResolution)
                 DLRConsole.DebugWriteLine("We have a high resolution timer available");
 
             long frequency = Stopwatch.Frequency;
-            DLRConsole.DebugWriteLine(" Timer frequency in ticks per second = {0}", frequency);
+            if (DebugLevel > 1) DLRConsole.DebugWriteLine(" Timer frequency in ticks per second = {0}", frequency);
         }
 
         static TimeSpan TimeSpanBetween(TimeSpan orig, TimeSpan low, TimeSpan high)
@@ -1615,7 +1616,7 @@ namespace MushDLR223.Utilities
 
         private void VeryBad(String action)
         {
-            if (TurnOffDebugMessages) return;
+            if (TurnOffDebugMessages || DebugLevel == 0) return;
             action = CreateMessage(action);
             WriteLine(action);
         }
@@ -1895,6 +1896,8 @@ namespace MushDLR223.Utilities
         {
             get { return SinceLastTaskStarted.Busy; }
         }
+
+        public static int DebugLevel { get; set; }
 
         private void PopDebugString(string s)
         {
