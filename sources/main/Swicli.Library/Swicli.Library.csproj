@@ -59,7 +59,7 @@
     <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>False</Optimize>
-    <OutputPath>..\..\..\..\..\program files\pl\bin\</OutputPath>
+    <OutputPath>\\titan\public\lib64\swipl-6.0.2\lib\x86_64-linux\</OutputPath>
     <RegisterForComInterop>False</RegisterForComInterop>
     <RemoveIntegerChecks>False</RemoveIntegerChecks>
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
