@@ -22,11 +22,14 @@ namespace cogbot.Actions.System
                 return Success("Logging is " + Settings.LOG_LEVEL);
 
             args[0] = args[0].ToLower();
+            int level = -1;
             foreach (var s in typeof(Helpers.LogLevel).GetFields())
             {
+                level++;
                 if (s.Name.ToLower().StartsWith(args[0]))
                 {
-                    Settings.LOG_LEVEL = (Helpers.LogLevel)s.GetValue(null);
+                    Settings.LOG_LEVEL = (Helpers.LogLevel) s.GetValue(null);
+                    MushDLR223.Utilities.TaskQueueHandler.DebugLevel = level;
                     return Success("Logging is set to " + Settings.LOG_LEVEL);
                 }
             }
