@@ -54,7 +54,13 @@
             to_string/2,
             cli_to_from_recomposer/4,
             cli_fmt/3,
-            cli_fmt/2
+            cli_fmt/2,
+
+            cli_with_gc/1,
+            cli_tracker_begin/1,
+            cli_tracker_free/1,
+
+            cli_free/1
           ]).
 
 
@@ -175,9 +181,9 @@ cli_memb(O,F,X):-cli_memb(O,X),member(F,[f,p, c,m ,e]),functor(X,F,_).
 %%% cli_Preserve(TF,Calls)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 cli_Preserve(TF,Calls):-
-   cli_get('SbsSW.SwiPlCs.PrologClient','PreserveObjectType',O),
-   call_cleanup((cli_set('SbsSW.SwiPlCs.PrologClient','PreserveObjectType',TF),Calls),
-   cli_set('SbsSW.SwiPlCs.PrologClient','PreserveObjectType',O)).
+   cli_get('Swicli.Library.PrologClient','PreserveObjectType',O),
+   call_cleanup((cli_set('Swicli.Library.PrologClient','PreserveObjectType',TF),Calls),
+   cli_set('Swicli.Library.PrologClient','PreserveObjectType',O)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %%% cli_with_collection(Calls).  
@@ -210,7 +216,7 @@ cli_call(Obj,MethodSpec,Params,Out):-cli_call_raw(Obj,MethodSpec,Params,Out_raw)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %%% cli_libCall(+CallTerm, -Out).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cli_libCall(CallTerm,Out):-cli_call('SbsSW.SwiPlCs.PrologClient',CallTerm,Out).
+cli_libCall(CallTerm,Out):-cli_call('Swicli.Library.PrologClient',CallTerm,Out).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %%% cli_get(+Obj, +PropTerm, -Out).
@@ -310,6 +316,13 @@ cli_getMap1(Objs,Term,Props,Name,Value,NameValue,List):-findall(NameValue,(membe
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 cli_with_lock(Lock,Call):-setup_call_cleanup(cli_lock_enter(Lock),Call,cli_lock_exit(Lock)).
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%%% cli_with_gc/1 use Forienly defined cli_tracker_begin/1 and cli_tracker_free/1
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+
+cli_with_gc(Call):-setup_call_cleanup(cli_tracker_begin(Mark),Call,cli_tracker_free(Mark)).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %%% cli_debug/[1,2]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
@@ -369,6 +382,7 @@ ensureExported.
 
 
 end_of_file.
+
 
 
 15 ?- cli_to_tagged(sbyte(127),O),cli_get_type(O,T),cli_writeln(O is T).

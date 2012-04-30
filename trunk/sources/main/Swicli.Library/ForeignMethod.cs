@@ -33,22 +33,6 @@ using System.Xml.Serialization;
 using SbsSW.SwiPlCs;
 using SbsSW.SwiPlCs.Callback;
 using SbsSW.SwiPlCs.Exceptions;
-#if USE_IKVM
-using ikvm.extensions;
-using IKVM.Internal;
-using ikvm.runtime;
-using java.net;
-using java.util;
-//using jpl;
-using jpl;
-using Hashtable = java.util.Hashtable;
-using ClassLoader = java.lang.ClassLoader;
-using Class = java.lang.Class;
-using sun.reflect.misc;
-using Util = ikvm.runtime.Util;
-#endif
-using Swicli.Library;
-using ArrayList=System.Collections.ArrayList;
 using CycFort = SbsSW.SwiPlCs.PlTerm;
 using PrologCli = Swicli.Library.PrologClient;
 
@@ -308,12 +292,13 @@ typedef struct // define a context structure  { ... } context;
         }
         private static object InvokeCaught(MethodInfo info, object o, object[] os, Action todo)
         {
-            return InvokeFromC(() => InvokeCaught0(info, o, os, todo), true);
+            return InvokeCaught0(info, o, os, todo);
         }
         private static object InvokeCaught0(MethodInfo info, object o, object[] os, Action todo)
         {
             Thread threadCurrentThread = Thread.CurrentThread;
             bool add1FrameCount = false;
+            bool openFFI = false;
             uint fid = 0;
             if (add1FrameCount)
             {
@@ -321,7 +306,7 @@ typedef struct // define a context structure  { ... } context;
                 if (SaneThreadWorld) if (fidCount == 1) fid = libpl.PL_open_foreign_frame();
             } else
             {
-                fid = libpl.PL_open_foreign_frame();
+                if (openFFI) fid = libpl.PL_open_foreign_frame();
             }
             try
             {
@@ -405,6 +390,11 @@ typedef struct // define a context structure  { ... } context;
 
         private static Exception InnerMostException(Exception ex)
         {
+            if (ex is ReflectionTypeLoadException)
+            {
+                var ile = ((ReflectionTypeLoadException) ex).LoaderExceptions;
+                if (ile.Length == 1) return InnerMostException(ile[0]);
+            }
             var ie = ex.InnerException;
             if (ie != null && ie != ex)
             {
@@ -415,7 +405,7 @@ typedef struct // define a context structure  { ... } context;
         private static PlException ToPlException(Exception ex)
         {
             if (ex is PlException) return (PlException)ex;
-            var ie = ex.InnerException;
+            var ie = InnerMostException(ex);
             if (ie != null && ie != ex)
             {
                 return ToPlException(ie);
