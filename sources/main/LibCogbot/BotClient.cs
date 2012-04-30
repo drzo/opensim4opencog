@@ -887,10 +887,14 @@ namespace cogbot
                     Dialog = InstantMessageDialog.MessageFromObject;
                     break;
             }
-
+            UUID regionID = UUID.Zero;
+            if (e.Simulator!=null)
+            {
+                regionID = e.Simulator.RegionID;
+            }
             Self_OnMessage(e.FromName, e.SourceID, e.OwnerID,
                            e.Message, UUID.Zero, false,
-                           e.Simulator.RegionID, e.Position,
+                           regionID, e.Position,
                            Dialog, e.Type, e);
             ;
            
