@@ -1,3 +1,11 @@
+Bot commands are one of the first things that a person can do in Cogbot without learning how to program.  They allow a person to control Cogbot in the virtual world imperatively like "say hi" .. and the bot will say "hi".  They can be used from graphical user interface, the command line, botscript language, AIML, Prolog, Lisp, over the socket, and even httpd.   Best way to learn them is to start using them to do simple things in the world.
+So we began with the command line version of cogbot.
+
+{{{ mono Cogbot.exe --nogui }}}
+
+
+
+
 {{{
 
 *  !crouch: Starts or stops crouching.
