@@ -12,7 +12,12 @@ cd \pathtocogbot\
 Cogbot.exe --nogui
 }}}
 
-If you have already configured your botconfig.xml with a secondlife acct then this may automatically log you on.  Read [botconfig.xml] page for more info.   For this example we will assume you have not configured that so that we can show how to log one in fresh.
+If you have already configured your botconfig.xml with a secondlife acct then this may automatically log you on.  Read [botconfig.xml] page for more info.  Quite a bit of debuggish output will happen after entering the above command line that for now we'll forgo the analysis of it.  You can wait for a few seconds for the output to fly past and eventually stop with: {{{
+0 avatars online: 
+}}}
+
+
+For this example we will assume you have not configured that so that we can show how to log one in fresh.
 
 First we login
 {{{
