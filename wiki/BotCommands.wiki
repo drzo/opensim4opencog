@@ -1,13 +1,15 @@
-* !*crouch*  Starts or stops crouching.
-* !*fly*  Starts or stops flying.
-* !*help*  Print this help message.
-* !*jump*  Jumps or flies up
-* !*pay*  Pays a prim.
-* !*say*  Say something.
-* !*sit*  Attempt to sit on the closest prim
-* !*stand*  Stand
-* !*wear*  Wear an outfit folder from inventory.
-* !*whisper*  Whisper something.
+{{{
+
+* ! *crouch*  Starts or stops crouching.
+* ! *fly*  Starts or stops flying.
+* ! *help*  Print this help message.
+* ! *jump*  Jumps or flies up
+* ! *pay*  Pays a prim.
+* ! *say*  Say something.
+* ! *sit*  Attempt to sit on the closest prim
+* ! *stand*  Stand
+* ! *wear*  Wear an outfit folder from inventory.
+* ! *whisper*  Whisper something.
 * *@*  Restrict the following commands to one or all avatars.
 * *activategroup*  Set a group as active.
 * *addfriend*  Add avatar friend.
@@ -228,3 +230,5 @@
 * *xfer*  Downloads the specified asset using the Xfer system.
 * *Help complete
 * *Success help
+
+}}}
