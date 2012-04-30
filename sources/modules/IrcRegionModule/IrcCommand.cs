@@ -189,7 +189,7 @@ namespace IrcRegionModule
         public IrcCommand(BotClient bc) 
         {
             Name = "irc";
-            TheBC = bc;
+            if (bc != null) TheBC = bc;
             Description = "connects to IRC. Usage: irc channel nick server";
             Category = CommandCategory.Other;            
             ircClient = new IrcClient();
