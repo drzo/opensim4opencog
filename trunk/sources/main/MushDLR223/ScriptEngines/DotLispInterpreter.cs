@@ -153,7 +153,8 @@ namespace MushDLR223.ScriptEngines
         /// <param name="textForm"></param>
         public override void Intern(string varname, object value)
         {
-           dotLispInterpreter.Intern(varname, value);
+            EnsureInit();
+            dotLispInterpreter.Intern(varname, value);
         } // method: Intern
 
 
@@ -164,6 +165,7 @@ namespace MushDLR223.ScriptEngines
         /// <returns></returns>
         public override object Eval(object code)
         {
+            EnsureInit();
             return dotLispInterpreter.Eval(code);
         } // method: Eval
 
