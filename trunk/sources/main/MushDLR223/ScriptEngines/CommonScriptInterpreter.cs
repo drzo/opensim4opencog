@@ -47,11 +47,6 @@ namespace MushDLR223.ScriptEngines
 
         protected CommonScriptInterpreter()
         {
-            InitSelf(this);
-        }
-        protected CommonScriptInterpreter(object self)
-        {
-            InitSelf(self);
         }
 
         private void InitSelf(object self)

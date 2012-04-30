@@ -38,8 +38,8 @@ namespace CycWorldModule.DotCYC
             return false;
         }
 
-        public CycInterpreter(object self)
-            : base(self)
+        public CycInterpreter()
+            : base()
         {
         }
 
@@ -127,7 +127,7 @@ namespace CycWorldModule.DotCYC
         /// <returns></returns>
         public override DotLispInterpreterBase MakeInterp(object self)
         {
-            var v = new CycInterpreter(self);
+            var v = new CycInterpreter();
             v.Intern("*SELF*", self);
             return v;
         } // method: newInterpreter

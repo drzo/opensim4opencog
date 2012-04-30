@@ -64,22 +64,41 @@ public class Symbol
 
 internal class SymbolTable
 	{
-    internal SymbolTable Parent;
+    private readonly Interpreter interpreter;
+    public SymbolTable(Interpreter interpreter)
+    {
+        this.interpreter = interpreter;
+    }
+    internal SymbolTable Parent
+    {
+       get
+       {
+           if (interpreter.Parent != null) return interpreter.Parent.symbolTable;
+           return null;
+       }
+    }
 	internal Symbol internConstant(String name,Object val)
 		{
 		Symbol result = null;
-		if(table.ContainsKey(name))
-			{
-            // KHC : just return what the constant alreay is
-			//throw new Exception("Constant: " + name + " already defined");
-                return (Symbol)( table[name]);
-			}
-		table[name] = result = new Constant(name,val);
+	    SymbolTable from = this;
+        while (from != null)
+	    {
+            var table = from.table;
+            if (table.ContainsKey(name))
+            {
+                // KHC : just return what the constant alreay is
+                //throw new Exception("Constant: " + name + " already defined");
+                return (Symbol)(table[name]);
+            }
+	        if (false) from = from.Parent;
+	    }
+		this.table[name] = result = new Constant(name,val);
 		return result;
 		}
 
 	internal Symbol intern(String name)
 		{
+	    var table = this.table;
 		Symbol result = (Symbol)table[name];
 		if(result == null)
 			{
@@ -278,7 +297,7 @@ internal class SymbolTable
 	// String->Type
 	private static Hashtable fullNamesToTypes = new Hashtable(500);
 	// String->ArrayList<Type>
-	private static Hashtable shortNamesToTypes = new Hashtable(500);
+	private Hashtable shortNamesToTypes = new Hashtable(500);
 
     public static List<Assembly> LoadedAssemblies = new List<Assembly>();
 

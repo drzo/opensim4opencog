@@ -43,6 +43,11 @@ namespace PrologScriptEngine
             InternTypeS(type, _reachAllTypes);
         }
 
+        public object Impl
+        {
+            get { return this; }
+        }
+
         static void InternTypeS(Type type, int depth)
         {
             if (depth == 0) return;
@@ -86,7 +91,7 @@ namespace PrologScriptEngine
         }
 
         public PrologScriptInterpreter(object self)
-            : base(self)
+            : base()
         {
             Init(self);
             PrologClient.PlNamed("MyBot");

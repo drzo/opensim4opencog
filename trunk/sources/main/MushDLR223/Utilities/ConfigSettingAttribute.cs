@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using MushDLR223.ScriptEngines;
 
 namespace MushDLR223.Utilities
 {
@@ -142,7 +143,7 @@ namespace MushDLR223.Utilities
                 }
                 catch (Exception e)
                 {
-                    var ie = e.InnerException;
+                    var ie = ScriptManager.InnerMostException(e);
                     if (ie != null) e = ie;
                     return e.Message;
                 }

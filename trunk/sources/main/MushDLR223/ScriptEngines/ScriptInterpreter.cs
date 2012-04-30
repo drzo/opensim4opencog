@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using DotLisp;
 
 namespace MushDLR223.ScriptEngines
 {
@@ -34,6 +35,7 @@ namespace MushDLR223.ScriptEngines
         void InternType(Type t);
 
         object Self { get; set; }
+        object Impl { get; }
     }
 
     public class subtask

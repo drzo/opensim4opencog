@@ -12,6 +12,21 @@ namespace MushDLR223.ScriptEngines
 {
     public class ScriptManager
     {
+        public static Exception InnerMostException(Exception ex)
+        {
+            if (ex is ReflectionTypeLoadException)
+            {
+                var ile = ((ReflectionTypeLoadException)ex).LoaderExceptions;
+                if (ile.Length == 1) return InnerMostException(ile[0]);
+            }
+            var ie = ex.InnerException;
+            if (ie != null && ie != ex)
+            {
+                return InnerMostException(ie);
+            }
+            return ex;
+        }
+
         static private System.Diagnostics.TraceListener tl;
         static ScriptManager()
         {
@@ -501,7 +516,9 @@ namespace MushDLR223.ScriptEngines
 
                 return UsedCSharpScriptDefinedType(self, type);
                 //default
-                return new DotLispInterpreter(self);
+                var dl = new DotLispInterpreter();
+                dl.Self = self;
+                return dl;
             } // method: LoadScriptInterpreter
         }
 
@@ -512,7 +529,9 @@ namespace MushDLR223.ScriptEngines
                 type = type.ToLower();
                 if (type.StartsWith("dotlisp"))
                 {
-                    return new DotLispInterpreter(self);
+                    var dl = new DotLispInterpreter();
+                    dl.Self = self;
+                    return dl;
                 }
             }
             return null;

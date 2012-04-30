@@ -34,7 +34,7 @@ namespace MushDLR223.ScriptEngines
         }
 
         public ClojureInterpreter(object self)
-            : base(self)
+            : base()
         {
         }
 
