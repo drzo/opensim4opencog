@@ -8,9 +8,9 @@ mono Cogbot.exe --nogui
 
 If you have already configured your botconfig.xml with a secondlife acct then this may automatically log you on.  Read [botconfig.xml] page for more info.   For this example we will assume you have not configured that so that we can show how to log one in fresh.
 
-
-0 avatars online: {{{ login Your Resident pass123 agni last }}
-
+{{{
+0 avatars online: login Your Resident pass123 agni last }}
+}}}
 
 
 
