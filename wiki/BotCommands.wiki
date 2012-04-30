@@ -57,15 +57,20 @@ We might typed
 waitforlogin 30
 }}}
 
-after the login command.  Which would have told it to stop reading commands for up to 30 seconds until the bot is logged in.  If the bot is already logged in.. then the commands will complete immediately.
+after the login command.  Which would have told it to stop reading commands for up to 30 seconds until the bot is logged in. 
 
 {{{
 1 avatars online: waitforlogin 30
-DimeBagFurry Resident: Korean EduIsland (216.82.44.118:13002)
+ExampleBot Resident: Korean EduIsland (216.82.44.118:13002)
 waitforlogin 0 failures and 1 successes
  1 successes
 1 avatars online:
 }}}
+
+Since the bot was already logged in the command will complete immediately.
+
+
+
 
 
 
