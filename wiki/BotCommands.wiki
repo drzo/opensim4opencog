@@ -2,9 +2,11 @@ Bot commands are one of the first things that a person can do in Cogbot without 
 
 
 So we began with the command line version of cogbot.
-{{{ mono Cogbot.exe --nogui  }}}
+{{{
+mono Cogbot.exe --nogui
+}}}
 
-If you have already configured your botconfig.xml with a secondlife acct then this may automatically log you on.  Read botconfig.xml[BotConfig] page for more info.   For this example we will assume you have not configured that so that we can show how to log one in fresh.
+If you have already configured your botconfig.xml with a secondlife acct then this may automatically log you on.  Read [botconfig.xml] page for more info.   For this example we will assume you have not configured that so that we can show how to log one in fresh.
 
 
 0 avatars online: {{{ login Your Resident pass123 agni last }}
