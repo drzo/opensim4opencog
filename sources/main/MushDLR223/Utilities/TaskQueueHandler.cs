@@ -179,7 +179,22 @@ namespace MushDLR223.Utilities
         //public ulong GoodPings = 0;
         public bool IsDisposing = false;
         //public ulong LatePings = 0;
-        public bool problems = false;
+        public bool _problems = false;
+        public bool problems
+        {
+            get
+            {
+                return _problems;
+            }
+            set
+            {
+                if (value)
+                {
+                    
+                }
+                _problems = value; 
+            }
+        }
         public bool SimplyLoopNoWait = false;
 
         public bool WaitingForPong = false;
@@ -754,7 +769,10 @@ namespace MushDLR223.Utilities
                 }
                 if (!TurnOffDebugMessages) errOutput(CreateMessage("WaitOne: TIMEOUT ERROR {0} was {1} ", INFO,
                                         GetTimeString(ThisMaxOperationTimespan)));
-                problems = true;
+                if (RealTodo > 1)
+                {
+                    problems = true;
+                } 
                 //TestLock(BusyTrackingLock);
                 //lock (BusyTrackingLock)
                 {
