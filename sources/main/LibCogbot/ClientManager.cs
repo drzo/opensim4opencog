@@ -265,7 +265,6 @@ namespace cogbot
                 text = text.Substring(1).TrimStart();
             }
             if (string.IsNullOrEmpty(text)) return null;
-            WriteLine("textform> {0}", text);
             CmdResult res = ExecuteBotsCommand(text, session, WriteLine);
             if (res != null && res.Success) return res;
             res = ExecuteSystemCommand(text, session, WriteLine);
