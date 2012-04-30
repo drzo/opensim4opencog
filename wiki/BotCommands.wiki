@@ -6,8 +6,9 @@ So we began with the command line version of cogbot. In Linux
 mono Cogbot.exe --nogui
 }}}
 
-or, in Windows
+or, in Windows start a Command Prompt
 {{{
+cd \pathtocogbot\
 Cogbot.exe --nogui
 }}}
 
