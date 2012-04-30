@@ -378,8 +378,7 @@ namespace ABuildStartup
             {
                 DLRConsole.SystemWriteLine(CommandLine.GetHeader());
                 DLRConsole.SystemWriteLine();
-                RadegastInstance instance = new RadegastInstance(new GridClient());
-                Radegast.GridManager grids = instance.GridManger;
+                Radegast.GridManager grids = new Radegast.GridManager();
                 DLRConsole.SystemWriteLine("Use Grid ID as the parameter for --grid");
                 DLRConsole.SystemWriteLine("{0,-25} - {1}", "Grid ID", "Grid Name");
                 DLRConsole.SystemWriteLine("========================================================");

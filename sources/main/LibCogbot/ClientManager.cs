@@ -1910,7 +1910,21 @@ namespace cogbot
         public string URI
         {
             get { return loginParams.URI; }
-            set { loginParams.URI = value; }
+            set
+            {
+                var gm = new Radegast.GridManager();
+                gm.LoadGrids();
+                string url = value;
+                string find = url.ToLower();
+                foreach (var grid in gm.Grids)
+                {
+                    if (find == grid.Name.ToLower() || find == grid.ID.ToLower())
+                    {
+                        url = grid.LoginURI;
+                    }
+                }
+                loginParams.URI = url;
+            }
         }
 
         /// <summary>The client software version information</summary>
