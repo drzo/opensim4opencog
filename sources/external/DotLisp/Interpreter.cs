@@ -11,11 +11,12 @@ namespace DotLisp
 {
 public class Interpreter
 	{
-	public Interpreter()
+    public Interpreter(Interpreter parent)
 		{
+        this.Parent = parent;
 		globalenv = new Env(null,null,null);
 		reader = new Reader(this);
-		symbolTable = new SymbolTable();
+        symbolTable = new SymbolTable(this);
 
 		Assembly[] asm = AppDomain.CurrentDomain.GetAssemblies();
 		foreach(Assembly a in asm)
@@ -474,10 +475,11 @@ public class Interpreter
 	GenericFunction get_enum_gf;
 	BinOp compare_gf;
 	GenericFunction strgf;
-	SymbolTable symbolTable;
+	internal SymbolTable symbolTable;
 
 	internal HybridDictionary traceList = new HybridDictionary();
 	[ThreadStatic] static Boolean inTrace = false;
+    public Interpreter Parent;
 
     public void Dispose()
     {

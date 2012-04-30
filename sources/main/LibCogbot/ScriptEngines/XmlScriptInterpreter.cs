@@ -21,6 +21,10 @@ namespace cogbot.ScriptEngines
     {
         public BotClient BotClient;
 
+        public object Impl
+        {
+            get { return this; }
+        }
         public override object Self
         {
             get { return BotClient; }
@@ -63,7 +67,7 @@ namespace cogbot.ScriptEngines
         }
 
         public XmlScriptInterpreter(object bc)
-            : base(bc)
+            : base()
         {
             if (bc is ClientManager) bc = ((ClientManager)bc).LastBotClient ?? bc;
             BotClient = bc as BotClient;

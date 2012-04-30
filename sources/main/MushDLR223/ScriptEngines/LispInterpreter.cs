@@ -9,14 +9,14 @@ namespace MushDLR223.ScriptEngines
     abstract public class LispInterpreter : CommonScriptInterpreter
     {
 
-        public LispInterpreter(object self)
-            : base(self)
+        protected LispInterpreter()
+            : base()
         {
         }
 
         sealed public override object Self
         {
-            get { return GetSymbol("this"); }
+            get { return GetSymbol("this") ?? GetSymbol("*SELF*"); }
             set
             {
                 Intern("*SELF*", value);

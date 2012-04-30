@@ -1801,7 +1801,7 @@ namespace cogbot
                         }
                         catch (Exception e)
                         {
-                            e = InnerMostException(e);
+                            e = ScriptManager.InnerMostException(e);
                             LogException("ERROR!  " + name + " " + t + " " + e + "\n In " + t.Name, e);
                         }
                     }
@@ -1837,6 +1837,10 @@ namespace cogbot
                 {
                     if (t.IsSubclassOf(typeof(WorldObjectsModule)))
                     {
+                        if (t.Name.Contains("Prolog"))
+                        {
+                            continue;
+                        }
                         ConstructorInfo info = t.GetConstructor(new Type[] { typeof(BotClient) });
                         try
                         {
@@ -1852,7 +1856,7 @@ namespace cogbot
                                            }
                                            catch (Exception e1)
                                            {
-                                               e1 = InnerMostException(e1);
+                                               e1 = ScriptManager.InnerMostException(e1);
                                                LogException("ERROR! RegisterListener: " + e1 + "\n In " + Thread.CurrentThread.Name, e1);   
                                            }
                                        });
@@ -1860,7 +1864,7 @@ namespace cogbot
                         }
                         catch (Exception e)
                         {
-                            e = InnerMostException(e);
+                            e = ScriptManager.InnerMostException(e);
                             LogException("ERROR! RegisterListener: " + e + "\n In " + t.Name, e);
                         }
                     }
@@ -1875,13 +1879,6 @@ namespace cogbot
                 // throw new Exception("missing entry point " + assembly);
             }
             return items;
-        }
-        public static Exception InnerMostException(Exception exception)
-        {
-            Exception inner = exception.InnerException;
-            if (inner != null && inner != exception)
-                return InnerMostException(inner);
-            return exception;
         }
 
         /// <summary>

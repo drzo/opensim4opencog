@@ -648,7 +648,7 @@ namespace cogbot.TheOpenSims
             StreamReader r = new StreamReader(f);
             r.BaseStream.Seek(0, SeekOrigin.Begin);
             TextReader tr = r;
-            Interpreter interp = new DotLisp.Interpreter();
+            Interpreter interp = new DotLisp.Interpreter((Interpreter)ClientManager.SingleInstance.TaskInterperter.Impl);
             while (tr.Peek() != -1)
             {
                 Object read = interp.Read(filename, tr);

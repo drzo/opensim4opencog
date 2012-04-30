@@ -49,16 +49,22 @@ namespace cogbot.ScriptEngines
         }
 
         public BotScriptInterpreter(object bc)
-            : base(bc)
+            : base()
         {
            // if (bc is ClientManager) bc = ((ClientManager)bc).LastBotClient ?? bc;
             BotClient = (BotClient) bc;
+            Self = bc;
         }
 
         public override object Self
         {
             get { return BotClient; }
             set { if (value is BotClient) BotClient = value as BotClient; }
+        }
+
+        public object Impl
+        {
+            get { return this; }
         }
 
         public override void Init(object self)
