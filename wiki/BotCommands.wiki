@@ -69,46 +69,12 @@ waitforlogin 0 failures and 1 successes
 
 Since the bot was already logged in the command will complete immediately.
 
+==More In Issues==
 
+See  issue 9  for a bit more info about format of args
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-{{{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}}}
-
-
+Douglas - feel free to blow this away if you integrate the info
+in here
 
 ==Help==
 {{{
