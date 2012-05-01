@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
@@ -24,8 +25,12 @@ namespace cogbot.Actions.Movement
             Simulator sim = Client.Network.CurrentSim;
             if (sim == null)
             {
-                WriteLine("Client Current Sim== null!");                
-                sim = Client.Network.Simulators[0];
+                WriteLine("Client Current Sim== null!");
+                foreach (Simulator s in LockInfo.CopyOf(Client.Network.Simulators))
+                {
+                    sim = s;
+                    break;                    
+                }
                 Client.Network.CurrentSim = sim;
             }
             sim.ObjectsPrimitives.ForEach(

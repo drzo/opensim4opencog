@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using cogbot.Listeners;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
@@ -29,19 +30,18 @@ namespace cogbot.Actions.Agent
                     result.AppendLine(A.ToString());
                 }
             }
-            lock (Client.Network.Simulators)
             {
-                for (int i = 0; i < Client.Network.Simulators.Count; i++)
+                foreach (Simulator sim in LockInfo.CopyOf(Client.Network.Simulators))
                 {
-                    if (Client.Network.Simulators[i].ObjectsAvatars.Count==0) continue;
+                    if (sim.ObjectsAvatars.Count==0) continue;
                     result.AppendLine();
-                    result.Append("Region: " + Client.Network.Simulators[i]);
-                    Client.Network.Simulators[i].ObjectsAvatars.ForEach(
+                    result.Append("Region: " + sim);
+                    sim.ObjectsAvatars.ForEach(
                         delegate(Avatar av)
                         {
                             if (string.IsNullOrEmpty(av.Name))
                             {
-                                Client.Objects.SelectObjects(Client.Network.Simulators[i], new uint[] { av.LocalID }, true);
+                                Client.Objects.SelectObjects(sim, new uint[] { av.LocalID }, true);
                             }
                             result.AppendLine();
                             result.AppendFormat(" {0} (Group: {1}, Location: {2}, UUID: {3})",

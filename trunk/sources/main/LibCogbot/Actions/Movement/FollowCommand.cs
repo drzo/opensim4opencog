@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using PathSystem3D.Navigation;
@@ -50,25 +51,23 @@ namespace cogbot.Actions.Movement
 
         bool Follow(string name)
         {
-            lock (Client.Network.Simulators)
+            foreach (Simulator sim in LockInfo.CopyOf(Client.Network.Simulators))
             {
-                for (int i = 0; i < Client.Network.Simulators.Count; i++)
-                {
-                    Avatar target = Client.Network.Simulators[i].ObjectsAvatars.Find(
-                        delegate(Avatar avatar)
+                Avatar target = sim.ObjectsAvatars.Find(
+                    delegate(Avatar avatar)
                         {
                             return avatar.Name == name;
                         }
                     );
 
-                    if (target != null)
-                    {
-                        targetLocalID = target.LocalID;
-                        Active = true;
-                        return true;
-                    }
+                if (target != null)
+                {
+                    targetLocalID = target.LocalID;
+                    Active = true;
+                    return true;
                 }
             }
+
 
             if (Active)
             {
@@ -84,17 +83,16 @@ namespace cogbot.Actions.Movement
             if (Active)
             {
                 // Find the target position
-                lock (Client.Network.Simulators)
                 {
-                    for (int i = 0; i < Client.Network.Simulators.Count; i++)
+                    foreach (Simulator sim in LockInfo.CopyOf(Client.Network.Simulators))
                     {
                         Avatar targetAv;
 
-                        if (Client.Network.Simulators[i].ObjectsAvatars.TryGetValue(targetLocalID, out targetAv))
+                        if (sim.ObjectsAvatars.TryGetValue(targetLocalID, out targetAv))
                         {
                             float distance = 0.0f;
 
-                            if (Client.Network.Simulators[i] == Client.Network.CurrentSim)
+                            if (sim == Client.Network.CurrentSim)
                             {
                                 distance = Vector3.Distance(targetAv.Position, Client.Self.SimPosition);
                             }
@@ -106,7 +104,7 @@ namespace cogbot.Actions.Movement
                             if (distance > DISTANCE_BUFFER)
                             {
                                 uint regionX, regionY;
-                                Utils.LongToUInts(Client.Network.Simulators[i].Handle, out regionX, out regionY);
+                                Utils.LongToUInts(sim.Handle, out regionX, out regionY);
 
                                 double xTarget = (double)targetAv.Position.X + (double)regionX;
                                 double yTarget = (double)targetAv.Position.Y + (double)regionY;
