@@ -12,14 +12,14 @@
 
 == Installation ==
 
-=== MS windows === (==== requires .NET 2.0 or above ====)
+=== MS windows _requires .NET 2.0 or above_ ===
 Copy these two directories onto your Prolog Install Dir.
 {{{
 ./bin/   
 ./library/
 }}}
 
-=== Linux OS/X === (==== requires Mono (2.10.8+)====)
+=== Linux OS/X _requires Mono (2.10.8+)_ ===
 Copy these two directories onto your Prolog Install Dir
 {{{
 ./lib/  
