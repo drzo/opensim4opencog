@@ -180,14 +180,19 @@ namespace cogbot
                     LoginViaRadegast(blocking);
                     return;
                 }
+
+                Settings.USE_LLSD_LOGIN = true;
+                if (DLRConsole.IsOnMonoUnix)
+                {
+                    Settings.USE_LLSD_LOGIN = true;
+                }
                 //SetLoginOptionsFromRadegast();
                 if (!blocking)
                 {
-                    Settings.USE_LLSD_LOGIN = true;
+                    
                     Network.BeginLogin(BotLoginParams.loginParams);
                 } else
                 {
-                    Settings.USE_LLSD_LOGIN = true;
                     Network.Login(BotLoginParams.loginParams);
                 }
             }
@@ -1217,6 +1222,7 @@ namespace cogbot
         {
             if (ExpectConnected && reason != NetworkManager.DisconnectType.ClientInitiated)
             {
+                return;
                 List<Simulator> sims = new List<Simulator>();
                 lock (Network.Simulators)
                 {
@@ -2355,7 +2361,10 @@ namespace cogbot
         }
         internal object GetAvatar()
         {
-            if (gridClient.Self.AgentID != UUID.Zero) return TheSimAvatar;
+            if (gridClient.Self.AgentID != UUID.Zero)
+            {
+                if (WorldSystem.m_TheSimAvatar != null) return TheSimAvatar;
+            }
             return this;
         }
 

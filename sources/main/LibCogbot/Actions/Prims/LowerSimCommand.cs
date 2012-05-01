@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 using OpenMetaverse.StructuredData;
@@ -48,7 +49,7 @@ namespace cogbot.Actions.Land
             if (len>1)
             {
                 string simName = string.Join(" ", args, 0, len - 1);
-                foreach (var list in Client.Network.Simulators)
+                foreach (Simulator list in LockInfo.CopyOf(Client.Network.Simulators))
                 {
                     if (simName==list.Name) sim = list;
                 }

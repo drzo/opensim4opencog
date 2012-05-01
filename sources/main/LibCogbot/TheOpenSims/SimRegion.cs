@@ -531,7 +531,7 @@ namespace cogbot.TheOpenSims
             {
                 return GetRegion(handle,gc);
             }
-            foreach (var s in gc.Network.Simulators)
+            foreach (Simulator s in LockInfo.CopyOf(gc.Network.Simulators))
             {
                 if (!string.IsNullOrEmpty(s.Name) && s.Name.Contains(simname))
                 {

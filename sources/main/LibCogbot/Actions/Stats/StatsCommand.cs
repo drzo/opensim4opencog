@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
@@ -21,12 +22,9 @@ namespace cogbot.Actions.System
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             StringBuilder output = new StringBuilder();
-
-            lock (Client.Network.Simulators)
             {
-                for (int i = 0; i < Client.Network.Simulators.Count; i++)
+                foreach (Simulator sim in LockInfo.CopyOf(Client.Network.Simulators))
                 {
-                    Simulator sim = Client.Network.Simulators[i];
 
                     output.AppendLine(String.Format(
                         "[{0}] Dilation: {1} InBPS: {2} OutBPS: {3} ResentOut: {4}  ResentIn: {5}",

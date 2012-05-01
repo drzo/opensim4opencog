@@ -56,6 +56,11 @@ namespace cogbot.Actions.Land
             //   base.acceptInput(verb, args);
 
             BotClient Client = TheBotClient;
+            if (!Client.IsLoggedInAndReady)
+            {
+                WriteLine("Not yet logged in");
+                return;
+            }
             string subject = args.objectPhrase;
             if (subject.Length == 0)
             {

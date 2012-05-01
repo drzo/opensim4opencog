@@ -1,3 +1,4 @@
+using MushDLR223.Utilities;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
@@ -15,11 +16,10 @@ namespace cogbot.Actions.Land
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            lock (Client.Network.Simulators)
             {
-                foreach (Simulator S in Client.Network.Simulators)
+                foreach (Simulator sim in LockInfo.CopyOf(Client.Network.Simulators))
                 {
-                    WorldSystem.CatchUp(S);
+                    WorldSystem.CatchUp(sim);
                 }
             }
             return Success("Ran " + Name);
