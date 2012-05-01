@@ -18,6 +18,7 @@ X=499, Y=1000
 == Installation ==
 
 === MS windows ===
+==== requires .NET 2.0 or above ====
 Copy these two directories onto your Prolog Install Dir.
 {{{
 ./bin/   
@@ -25,6 +26,7 @@ Copy these two directories onto your Prolog Install Dir.
 }}}
 
 === Linux OS/X ===
+==== requires Mono (2.10.8+)====
 Copy these two directories onto your Prolog Install Dir
 {{{
 ./lib/  
