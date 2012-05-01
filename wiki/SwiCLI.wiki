@@ -29,6 +29,7 @@ Copy these two directories onto your Prolog Install Dir
 == Running / Examples ==
 
 {{{
+[root@titan bin]# . mono_sysvars.sh
 [root@titan bin]# swipl
 Welcome to SWI-Prolog (Multi-threaded, 64 bits, Version 6.0.2)
 Copyright (c) 1990-2011 University of Amsterdam, VU Amsterdam
