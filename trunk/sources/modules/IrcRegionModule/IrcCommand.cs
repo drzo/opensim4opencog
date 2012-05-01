@@ -118,6 +118,7 @@ namespace IrcRegionModule
 
         private void RelayToSim(string nick, string data)
         {
+            if (!Client.IsLoggedInAndReady) return;
             Client.Self.Chat(string.Format("{0}: {1}", nick, data), 0, ChatType.Normal);
             if (!CogbotHelpers.IsNullOrZero(groupToRelayTo))
                 Client.Self.InstantMessageGroup(nick, groupToRelayTo, data);
