@@ -8,7 +8,6 @@ Based on the SwiPlCS by Uwe Lesta, SwiCLI is a module that works on both Unix/Ma
 
 == Details ==
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
+  * *cli_new(+Type,+Param,-Object)* Create a new system object 
   * Headings, paragraphs, and lists
   * Automatic links to other wiki pages
