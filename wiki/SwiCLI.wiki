@@ -2,7 +2,7 @@
 
 == Download ==
 {{{
-http://dl.dropbox.com/u/3086769/SWICLI-Packaged.zip
+[http://dl.dropbox.com/u/3086769/SWICLI-Packaged.zip Download]
 }}}
 == Introduction ==
 
