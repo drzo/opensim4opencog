@@ -17,20 +17,20 @@
 
 === MS windows ===
 Copy these two directories onto your Prolog Install Dir.
-
+{{{
 ./bin/   
 ./library/
-
+}}}
 
 === Linux OS/X ===
 Copy these two directories onto your Prolog Install Dir
-
+{{{
 ./lib/  
 ./library/
-
+}}}
 
 == Usage Examples ==
-
+{{{
 ?- cli_new('System.Collections.Generic.List'('System.String'),[int],[10],Out).
 Out = @'C#516939544'.
 
@@ -64,3 +64,5 @@ O = @'C#516939472'.
 ?- cli_get_type($O,Type),cli_typespec(Type,Name).
 Type = @'C#516939520',
 Name = 'System.Collections.Generic.List'('String').
+
+}}}
