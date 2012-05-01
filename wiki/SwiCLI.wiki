@@ -1,13 +1,12 @@
-# SWI-Prolog 2-Way interface to .NET
+= SWI-Prolog 2-Way interface to .NET =
+
+
+== Introduction ==
 
 Based on the SwiPlCS by Uwe Lesta, SwiCLI is a module that works on both Unix/Mac and Windows to provide SWI-Prolog full control of the Common Language Infrastructure.  
 
-= Introduction =
 
-Add your content here.
-
-
-= Details =
+== Details ==
 
 Add your content here.  Format your content with:
   * Text in *bold* or _italic_
