@@ -65,9 +65,15 @@ public class Symbol
 internal class SymbolTable
 	{
     private readonly Interpreter interpreter;
+    private readonly List<string> Usings = new List<string>();
     public SymbolTable(Interpreter interpreter)
     {
         this.interpreter = interpreter;
+        Usings.Add("System");
+        Usings.Add("System.Collections");
+        Usings.Add("System.Collections.Generic");
+        Usings.Add("System.Relection");
+        internType(typeof (string));
     }
     internal SymbolTable Parent
     {
@@ -172,15 +178,9 @@ internal class SymbolTable
                     if (fullNamesToTypes[t.FullName] == null)
                     {
                         fullNamesToTypes[t.FullName] = t;
-
-                        ArrayList arr = (ArrayList)shortNamesToTypes[t.Name];
-
-                        if (arr == null)
-                        {
-                            arr = new ArrayList(5);
-                            shortNamesToTypes[t.Name] = arr;
-                        }
+                        ArrayList arr = GetTypeCache(t.Name);
                         arr.Add(t);
+
                     }
             }
             catch (Exception e)
@@ -189,13 +189,33 @@ internal class SymbolTable
             }
 		}
 
+    public ArrayList GetTypeCache(string s)
+    {
+        ArrayList arr = (ArrayList)shortNamesToTypes[s];
+
+        if (arr == null)
+        {
+            arr = new ArrayList(5);
+            shortNamesToTypes[s] = arr;
+            foreach (string u in Usings)
+            {
+                Type t0 = Type.GetType(s + "." + s);
+                if (t0 != null && !arr.Contains(t0)) arr.Add(t0);
+            }
+        }
+        return arr;
+    }
+
 
     internal Type[] findTypes(String name)
     {
+        string noDot = name.TrimStart('.');
         if (name.TrimStart('.') == "IDataObject") return new Type[] { typeof(System.Windows.Forms.IDataObject) };
         if (name.TrimStart('.') == "Enum") return new Type[] { typeof(System.Enum) };
         if (name.TrimStart('.') == "Convert") return new Type[] { typeof(System.Convert) };
         if (name.TrimStart('.') == "Type") return new Type[] { typeof(System.Type) };
+        if (name.TrimStart('.') == "String") return new Type[] { typeof(System.String) };
+        if (name.TrimStart('.') == "Array") return new Type[] { typeof(System.Array) };
         if (name.IndexOf(".") > -1)	//namespace qualified
         {
             Type t = (Type)fullNamesToTypes[name];
@@ -208,6 +228,7 @@ internal class SymbolTable
         }
         else	//short name
         {
+
             ArrayList tlist = (ArrayList)shortNamesToTypes[name];
             if (tlist == null)
             {
@@ -221,6 +242,12 @@ internal class SymbolTable
             }
             else if (tlist.Count > 0)
             {
+                if (noDot == "Array") return new Type[] { typeof(System.Array) };
+                foreach (string s in Usings)
+                {
+                    Type t = Type.GetType(s + "." + name);
+                    if (t != null) return new[] {t};
+                }
                 return (Type[])tlist.ToArray(typeof(Type));
             }
         }
@@ -233,26 +260,31 @@ internal class SymbolTable
     }
 
     internal Type findType(String name)
-		{
-		if(name.IndexOf(".") > -1)	//namespace qualified
-			{
-			Type t = (Type)fullNamesToTypes[name];
-			if(t != null)
-				return t;
-			else
-				{
-				throw new Exception("Can't find " + name);
-				}
-			}
-		else	//short name
-			{
-			ArrayList tlist = (ArrayList)shortNamesToTypes[name];
+    {
+        if (name.IndexOf(".") > -1) //namespace qualified
+        {
+            Type t = (Type) fullNamesToTypes[name];
+            if (t != null)
+                return t;
+            else
+            {
+                throw new Exception("Can't find " + name);
+            }
+        }
+        else //short name
+        {
+            foreach (string s in Usings)
+            {
+                Type t = Type.GetType(s + "." + name);
+                if (t != null) return t;
+            }
+            ArrayList tlist = (ArrayList) shortNamesToTypes[name];
             if (tlist == null)
             {
                 if (name.Contains(":"))
                 {
                     name = name.Replace(":", ".");
-                    return (Type)fullNamesToTypes[name];
+                    return (Type) fullNamesToTypes[name];
                 }
                 throw new Exception("Can't find Type: " + name);
             }
@@ -262,26 +294,37 @@ internal class SymbolTable
                 foreach (Type type in tlist)
                 {
                     string typeString = type.ToString();
-                    if (typeString == "System.Type") return (Type)type;
-                    if (typeString == "System.Enum") return (Type)type;
-                    if (typeString == "System.IO.Path") return (Type)type;
-                    if (typeString == "System.Collections.IEnumerable") return (Type)type;
-                    if (typeString == "System.Collections.IEnumerator") return (Type)type;
-                    if (typeString == "System.Environment") return (Type)type;
-                    if (typeString == "System.Windows.Forms.IDataObject") return (Type)type;
+                    int lastIndex = typeString.LastIndexOf('.');
+                    if (lastIndex > 0)
+                    {
+                        string assemName = typeString.Substring(0, lastIndex);
+                        foreach (string s in Usings)
+                        {
+                            if (s == assemName)
+                            {
+                                return type;
+                            }
+                        }
+                    }
+                    if (typeString == "System.Type") return (Type) type;
+                    if (typeString == "System.Enum") return (Type) type;
+                    if (typeString == "System.IO.Path") return (Type) type;
+                    if (typeString == "System.Collections.IEnumerable") return (Type) type;
+                    if (typeString == "System.Collections.IEnumerator") return (Type) type;
+                    if (typeString == "System.Environment") return (Type) type;
+                    if (typeString == "System.Windows.Forms.IDataObject") return (Type) type;
                 }
                 foreach (Type type in tlist)
                 {
                     string typeString = type.ToString();
-                    if (typeString.StartsWith("System.")) return (Type)type;
-                    if (typeString.StartsWith("DotLisp.")) return (Type)type;
-                    if (typeString.StartsWith("Microsoft.")) return (Type)type;
-                    if (typeString.StartsWith("Mono.")) return (Type)type;
+                    if (typeString.StartsWith("System.")) return (Type) type;
+                    if (typeString.StartsWith("DotLisp.")) return (Type) type;
+                    if (typeString.StartsWith("Microsoft.")) return (Type) type;
+                    if (typeString.StartsWith("Mono.")) return (Type) type;
                 }
 
                 //todo tell them which names conflict
-                StringBuilder sb = new StringBuilder
-                                         ("Ambiguous Type name: " + name + " ->");
+                StringBuilder sb = new StringBuilder("Ambiguous Type name: " + name + " ->");
                 foreach (Type type in tlist)
                 {
                     sb.Append("\n " + type.FullName);
@@ -289,11 +332,11 @@ internal class SymbolTable
                 throw new Exception(sb.ToString());
             }
             else
-                return (Type)tlist[0];
-			}
-		}
+                return (Type) tlist[0];
+        }
+    }
 
-	Hashtable table = new Hashtable(500);
+    Hashtable table = new Hashtable(500);
 	// String->Type
 	private static Hashtable fullNamesToTypes = new Hashtable(500);
 	// String->ArrayList<Type>
