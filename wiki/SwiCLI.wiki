@@ -1,4 +1,4 @@
-= SWI-Prolog 2-Way interface to .NET =
+= SWI-Prolog 2-Way interface to Common Language Infrastructure (.NET) =
 
 == Download ==
 {{{
@@ -7,9 +7,9 @@ http://dl.dropbox.com/u/3086769/SWICLI-Packaged.zip
 == Introduction ==
 
   * Provides SWI-Prolog full control of the Common Language Infrastructure.
-  * SwiCLI is a module that works on both Unix/Mac and Windows.
-  * cli_* preds loosely based on jpl_* interface of JPL
-  * ~Copy/pasted much code from SwiPlCS by Uwe Lesta ~
+  * SwiCLI is a module that works on Linux, OS/X and MS Windows.
+  * cli_ preds loosely based on jpl_ interface of JPL
+  * _Copy/pasted much code from SwiPlCS by Uwe Lesta_
   * See library/swicli.pl for predicate list
 {{{
 ?- use_module(library(swicli)).
