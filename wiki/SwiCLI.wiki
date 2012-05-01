@@ -55,7 +55,7 @@ Y = 8.
 
 {{{
 ?- cli_new('System.Collections.Generic.List'('System.String'),[int],[10],Obj).
-Out = @'C#516939544'.
+Obj = @'C#516939544'.
 }}}
 {{{
 ?- cli_get($Obj,'Count',Out).
