@@ -1,6 +1,9 @@
 = SWI-Prolog 2-Way interface to .NET =
 
-
+== Download ==
+{{{
+http://dl.dropbox.com/u/3086769/SWICLI-Packaged.zip
+}}}
 == Introduction ==
 
   * Provides SWI-Prolog full control of the Common Language Infrastructure.
@@ -8,7 +11,12 @@
   * cli_* preds loosely based on jpl_* interface of JPL
   * ~Copy/pasted much code from SwiPlCS by Uwe Lesta ~
   * See library/swicli.pl for predicate list
+{{{
+?- use_module(library(swicli)).
 
+?- cli_call('System.Threading.ThreadPool','GetAvailableThreads'(X,Y),_).
+X=499, Y=1000
+}}}
 == Installation ==
 
 === MS windows ===
