@@ -9,12 +9,7 @@
   * cli_ preds loosely based on jpl_ interface of JPL
   * _Copy/pasted much code from SwiPlCS by Uwe Lesta_
   * See library/swicli.pl for predicate list
-{{{
-?- use_module(library(swicli)).
 
-?- cli_call('System.Threading.ThreadPool','GetAvailableThreads'(X,Y),_).
-X=499, Y=1000
-}}}
 == Installation ==
 
 === MS windows ===
@@ -33,7 +28,32 @@ Copy these two directories onto your Prolog Install Dir
 ./library/
 }}}
 
-== Usage Examples ==
+== Running / Examples ==
+
+{{{
+[root@titan bin]# swipl
+Welcome to SWI-Prolog (Multi-threaded, 64 bits, Version 6.0.2)
+Copyright (c) 1990-2011 University of Amsterdam, VU Amsterdam
+SWI-Prolog comes with ABSOLUTELY NO WARRANTY. This is free software,
+and you are welcome to redistribute it under certain conditions.
+Please visit http://www.swi-prolog.org for details.
+
+For help, use ?- help(Topic). or ?- apropos(Word).
+
+?- use_module(library(swicli)).
+SetupProlog
+
+RegisterPLCSForeigns
+done RegisterPLCSForeigns
+Swicli.Library.Embedded.install suceeded
+% library(swicli) compiled into swicli 2.00 sec, 1,411 clauses
+true.
+
+?- cli_call('System.Threading.ThreadPool','GetAvailableThreads'(X,Y),_).
+X = 200,
+Y = 8.
+}}}
+
 {{{
 ?- cli_new('System.Collections.Generic.List'('System.String'),[int],[10],Out).
 Out = @'C#516939544'.
