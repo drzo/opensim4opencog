@@ -211,8 +211,11 @@ namespace SbsSW.SwiPlCs
         internal static extern IntPtr PL_create_engine(IntPtr attr);
         [DllImport(DllFileName)]	// PL_EXPORT(int)		PlSetEngine(PL_engine_t engine, PL_engine_t *old);
 		internal static extern int PL_set_engine(IntPtr engine, [In, Out] ref IntPtr old);
-		[DllImport(DllFileName)]	// PL_EXPORT(int)		PL_destroy_engine(PL_engine_t engine);
-		internal static extern int PL_destroy_engine(IntPtr engine);
+        [DllImport(DllFileName)]	// PL_EXPORT(int)		PL_destroy_engine(PL_engine_t engine);
+        internal static extern int PL_destroy_engine(IntPtr engine);
+
+	    [DllImport(DllFileName)]   // PL_EXPORT(int)	int PL_thread_at_exit(void (*function)(void *), void *closure, int global)
+	    internal static extern int PL_thread_at_exit(Delegate function, IntPtr closure, int globlal);
 
         /*******************************
         *	     COMPARE		*

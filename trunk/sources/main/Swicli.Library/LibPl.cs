@@ -346,7 +346,10 @@ namespace SbsSW.SwiPlCs
         internal static int PL_destroy_engine(IntPtr engine)
         { return SafeNativeMethods.PL_destroy_engine(engine); }
 
-
+        public static int PL_thread_at_exit(Delegate function, IntPtr closure, int global)
+        {
+            return SafeNativeMethods.PL_thread_at_exit(function, closure, global);
+        }
 
         internal static uint PL_new_atom(string text)
         { return SafeNativeMethods.PL_new_atom(text); }

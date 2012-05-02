@@ -218,6 +218,7 @@ namespace Swicli.Library
                         //_iEngineNumber = libpl.PL_create_engine(IntPtr.Zero);
                         libpl.PL_thread_attach_engine(_iEngineNumber);
                         SafeThreads.Add(thread.ManagedThreadId, _iEngineNumber);
+                        libpl.PL_thread_at_exit((DelegateParameter0)ThreadAtExit, IntPtr.Zero, 0);
                         return;
                         int iRet = libpl.PL_set_engine(_iEngineNumber, ref _iEngineNumberReally);
                         EnsureEngine(_iEngineNumber);
@@ -236,6 +237,12 @@ namespace Swicli.Library
 
             }
         }
+
+        private static bool ThreadAtExit()
+        {
+            throw new NotImplementedException();
+        }
+
         static IntPtr GetCurrentEngine()
         {
             IntPtr _iEngineNumberReallyCurrent = IntPtr.Zero;
@@ -523,7 +530,7 @@ namespace Swicli.Library
             return libpl.PL_create_engine(IntPtr.Zero);
         }
 
-        private static void Debug(object plthreadhasdifferntthread)
+        public static void Debug(object plthreadhasdifferntthread)
         {
 
         }
