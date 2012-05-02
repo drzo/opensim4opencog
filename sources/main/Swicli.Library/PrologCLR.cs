@@ -202,11 +202,11 @@ namespace Swicli.Library
                 int fillAt = 0;
                 if (origin != null)
                 {
-                    args[fillAt++].FromObject(PinObject(origin));
+                    args[fillAt++].FromObject(origin);
                 }
                 for (int i = 0; i < paramz.Length; i++)
                 {
-                    args[fillAt++].FromObject(PinObject(paramz[i]));
+                    args[fillAt++].FromObject(paramz[i]);
                 }
                 bool IsVoid = returnType == typeof (void);
                 if (!IsVoid)

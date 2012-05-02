@@ -1,12 +1,13 @@
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{85178ED6-124C-47BF-9AFF-F3D7DAA52915}</ProjectGuid>
+    <ProjectGuid>{3A7CCF20-D80D-4629-9EF4-9245700EC041}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ApplicationIcon></ApplicationIcon>
+    <ApplicationIcon>
+    </ApplicationIcon>
     <AssemblyKeyContainerName>
     </AssemblyKeyContainerName>
     <AssemblyName>PrologBotModule</AssemblyName>
@@ -16,9 +17,11 @@
     <DelaySign>false</DelaySign>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder></AppDesignerFolder>
+    <AppDesignerFolder>
+    </AppDesignerFolder>
     <RootNamespace>PrologBotModule</RootNamespace>
-    <StartupObject></StartupObject>
+    <StartupObject>
+    </StartupObject>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
   </PropertyGroup>
@@ -29,7 +32,8 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;VISUAL_STUDIO</DefineConstants>
-    <DocumentationFile></DocumentationFile>
+    <DocumentationFile>
+    </DocumentationFile>
     <DebugSymbols>False</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>True</Optimize>
@@ -49,7 +53,8 @@
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
     <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;VISUAL_STUDIO</DefineConstants>
-    <DocumentationFile></DocumentationFile>
+    <DocumentationFile>
+    </DocumentationFile>
     <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <Optimize>False</Optimize>
@@ -64,45 +69,43 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System">
-        <Name>System</Name>
+      <Name>System</Name>
     </Reference>
     <Reference Include="System.Core">
-        <Name>System.Core</Name>
+      <Name>System.Core</Name>
     </Reference>
     <Reference Include="System.Data">
-        <Name>System.Data</Name>
+      <Name>System.Data</Name>
     </Reference>
     <Reference Include="System.Data.DataSetExtensions">
-        <Name>System.Data.DataSetExtensions</Name>
+      <Name>System.Data.DataSetExtensions</Name>
     </Reference>
     <Reference Include="System.Deployment">
-        <Name>System.Deployment</Name>
+      <Name>System.Deployment</Name>
     </Reference>
     <Reference Include="System.Drawing">
-        <Name>System.Drawing</Name>
+      <Name>System.Drawing</Name>
     </Reference>
     <Reference Include="System.Windows.Forms">
-        <Name>System.Windows.Forms</Name>
+      <Name>System.Windows.Forms</Name>
     </Reference>
     <Reference Include="System.Xml">
-        <Name>System.Xml</Name>
+      <Name>System.Xml</Name>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\main\LibCogbot\Cogbot.Library.csproj">
+      <Project>{5EB69646-1DD7-4E15-A2B3-2813717D4A4A}</Project>
       <Name>Cogbot.Library</Name>
-      <Project>{83E8C7CD-1E75-43B4-9573-1814CF4AD42D}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\main\MushDLR223\MushDLR223.csproj">
       <Name>MushDLR223</Name>
-      <Project>{5DA4D380-A233-48CD-B5D5-A734A8CFEF6A}</Project>
+      <Project>{B948F21E-8791-47D8-8E83-8F63E7CD11A5}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
-    <ProjectReference Include="..\..\main\SWIPlCs\SwiPlCs.csproj">
-      <Name>SwiPlCs</Name>
-      <Project>{95F6483D-8B04-4DE8-9776-1551DC2C0A60}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    <ProjectReference Include="..\..\main\Swicli.Library\Swicli.Library.csproj">
+      <Project>{BA10B6F0-3E52-4AD2-A2DF-ECCF3F4C090F}</Project>
+      <Name>Swicli.Library</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -38,22 +38,23 @@ namespace Swicli.Library
         public static bool PreserveObjectType;
 
         [ThreadStatic]
-        static List<List<string>> _locallyTrackedObjects;
-        static List<List<string>> LocallyTrackedObjects
+        static ThreadEngineObjectTracker _locallyTrackedObjects;
+        static ThreadEngineObjectTracker LocallyTrackedObjects
         {
             get
             {
                 if (_locallyTrackedObjects == null)
                 {
-                    _locallyTrackedObjects = new List<List<string>>();
+                    _locallyTrackedObjects = new ThreadEngineObjectTracker();
                 }
                 return _locallyTrackedObjects;
             }
         }
 
-        readonly static private Dictionary<object, string> ObjToTag = new Dictionary<object, string>();
-        readonly static private Dictionary<string, object> TagToObj = new Dictionary<string, object>();
-        private static readonly Dictionary<int, Dictionary<uint, List<string>>> EngineFrameTags = new Dictionary<int, Dictionary<uint, List<string>>>();
+        public static bool DebugRefs = true;
+        public static bool StrictRefs = true;
+        readonly static private Dictionary<object, TrackedObject> ObjToTag = new Dictionary<object, TrackedObject>();
+        readonly static private Dictionary<string, TrackedObject> TagToObj = new Dictionary<string, TrackedObject>();
         public static object tag_to_object(string s)
         {
             if (string.IsNullOrEmpty(s) || s == "void" || !s.StartsWith("C#"))
@@ -63,12 +64,13 @@ namespace Swicli.Library
             }
             lock (ObjToTag)
             {
-                object o;
+                TrackedObject o;
                 if (TagToObj.TryGetValue(s, out o))
                 {
-                    return o;
+                    LocallyTrackedObjects.AddTracking(o);
+                    return o.Value;
                 }
-                Warn("tag_to_object: {0}", s);
+                if (DebugRefs) Warn("tag_to_object: {0}", s);
 #if USE_IKVM
                 return jpl.fli.Prolog.tag_to_object(s);
 #else
@@ -87,36 +89,37 @@ namespace Swicli.Library
             Type t = o.GetType();
             if (IsStructRecomposable(t) || t.IsPrimitive)
             {
-                Debug(string.Format("object_to_tag:{0} from {1}", t, o));
+                if (DebugRefs) Debug(string.Format("object_to_tag:{0} from {1}", t, o));
             }
 
             lock (ObjToTag)
             {
-                string s;
+                TrackedObject s;
                 if (ObjToTag.TryGetValue(o, out s))
                 {
-                    return s;
+                    LocallyTrackedObjects.AddTracking(s);
+                    return s.TagName;
                 }
-                PinObject(o);
-                GCHandle gch = GCHandle.Alloc(o, GCHandleType.Normal);
-                IntPtr iptr = (IntPtr)gch;
-                s = "C#" + iptr.ToInt64();
+                GCHandle iptr = PinObject(o);
+                long adr = ((IntPtr) iptr).ToInt64();
+                var hc = iptr.GetHashCode();
+                string tagname = "C#" + adr;
+                
+                s = new TrackedObject(o)
+                        {
+                            TagName = tagname,
+                            Pinned = iptr,
+                            HashCode = hc
+                        };
                 ObjToTag[o] = s;
-                TagToObj[s] = o;
-                lock (LocallyTrackedObjects)
-                {
-                    if (LocallyTrackedObjects.Count > 0)
-                    {
-                        var tc = LocallyTrackedObjects[0];
-                        tc.Add(s);
-                    }
-                }
-                if (ObjToTag.Count % 10000 == 0)
+                TagToObj[tagname] = s;
+                LocallyTrackedObjects.AddTracking(s);
+                if (DebugRefs && ObjToTag.Count % 10000 == 0)
                 {
                     PrologClient.ConsoleTrace("ObjToTag=" + ObjToTag);
                 }
 
-                return s;
+                return s.TagName;
             }
             //return jpl.fli.Prolog.object_to_tag(o);
         }
@@ -146,7 +149,8 @@ namespace Swicli.Library
         {
             if (valueIn.IsVar)
             {
-                return Warn("Cant find instance {0}", valueIn);
+               if (StrictRefs) return Warn("Cant find instance {0}", valueIn);
+                return valueIn.Unify(valueOut);
             }
             if (!valueOut.IsVar)
             {
@@ -229,31 +233,20 @@ namespace Swicli.Library
         [PrologVisible(ModuleName = ExportModule)]
         static public bool cliTrackerBegin(PlTerm tracker)
         {
-            lock (ObjToTag)
-            {
-                List<string> newTracking = new List<string>();
-                LocallyTrackedObjects.Insert(0, newTracking);
-                return UnifyTagged(newTracking, tracker);
-            }
+            var newTracking = LocallyTrackedObjects.CreateFrame();
+            return UnifyTagged(newTracking, tracker);
         }
 
         [PrologVisible(ModuleName = ExportModule)]
         static public bool cliTrackerFree(PlTerm tracker)
         {
-            lock (ObjToTag)
+            TrackedFrame tc0 = (TrackedFrame)GetInstance(tracker);
+            if (tc0 != null)
             {
-                List<string> tc0 = (List<string>)GetInstance(tracker);
-                if (tc0 == null)
-                {
-                    tc0 = LocallyTrackedObjects[0];
-                }
-                LocallyTrackedObjects.Remove(tc0);
-                foreach (var s in tc0)
-                {
-                    RemoveTaggedObject(s);
-                }
+                LocallyTrackedObjects.RemoveFrame(tc0);
+                return true;
             }
-            return true;
+            return false;
         }
 
         [PrologVisible(ModuleName = ExportModule)]
@@ -280,17 +273,68 @@ namespace Swicli.Library
             {
                 return true;
             }
-            return RemoveTaggedObject(tag);
+            lock (TagToObj)
+            {
+                TrackedObject oref;
+                if (TagToObj.TryGetValue(tag, out oref))
+                {
+                    oref.Heaped = false;
+                    oref.RemoveRef();
+                    if (oref.Refs > 0)
+                    {
+                        return RemoveTaggedObject(tag);
+                    }
+                    return true;
+                }
+                return false;
+            }
         }
 
+        [PrologVisible(ModuleName = ExportModule)]
+        static public bool cliHeap(PlTerm taggedObject)
+        {
+            if (taggedObject.IsVar)
+            {
+                return false;
+            }
+            string tag;
+            if (taggedObject.IsCompound)
+            {
+                tag = taggedObject[1].Name;
+            }
+            else if (taggedObject.IsAtom)
+            {
+                tag = taggedObject.Name;
+            }
+            else if (taggedObject.IsString)
+            {
+                tag = taggedObject.Name;
+            }
+            else
+            {
+                return true;
+            }
+            lock (TagToObj)
+            {
+                TrackedObject oref;
+                if (TagToObj.TryGetValue(tag,out oref))
+                {
+                    oref.Heaped = true;
+                    return true;
+                }
+                return false;
+            }
+        }
 
         public static bool CantPin(object pinme)
         {
             return pinme.GetType().Name.Contains("e");
         }
 
-        public static object PinObject(object pinme)
+        public static GCHandle PinObject(object pinme)
         {
+            return GCHandle.Alloc(pinme);
+#if false
             if (true) return pinme;
             try
             {
@@ -316,6 +360,7 @@ namespace Swicli.Library
                 GCHandle gch = GCHandle.Alloc(pinme, GCHandleType.Normal);
             }
             return pinme;
+#endif
         }
         public static object UnPinObject(object pinme)
         {
@@ -332,14 +377,14 @@ namespace Swicli.Library
             return pinme;
         }
 
-        private static bool RemoveTaggedObject(string tag)
+        public static bool RemoveTaggedObject(string tag)
         {
             lock (TagToObj)
             {
-                object obj;
+                TrackedObject obj;
                 if (TagToObj.TryGetValue(tag, out obj))
                 {
-                    UnPinObject(obj);
+                    //UnPinObject(obj);
                     TagToObj.Remove(tag);
                     if (obj is IDisposable)
                     {
@@ -349,11 +394,181 @@ namespace Swicli.Library
                         }
                         catch (Exception e)
                         {
-                            Warn("Dispose of {0} had problem {1}", obj, e);
+                            if (DebugRefs) Warn("Dispose of {0} had problem {1}", obj, e);
                         }
                     }
+                    obj.Pinned.Free();
                     return ObjToTag.Remove(obj);
                 }
+                return false;
+            }
+        }
+    }
+
+    public class TrackedObject: IComparable<TrackedObject>
+    {
+        public string TagName;
+        public int Refs = 0;
+        public object Value;
+        public GCHandle Pinned;
+        public bool Heaped = false;
+        public int HashCode;
+        public Thread LastThread;
+
+        public TrackedObject(object value)
+        {
+            Value = value;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null || GetType() != obj.GetType())
+            {
+                return false;
+            }
+            TrackedObject other = (TrackedObject) obj;
+            return Pinned == other.Pinned;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode;
+        }
+
+        public long ToInt64()
+        {
+            return ((IntPtr) Pinned).ToInt64();
+        }
+
+        #region IComparable<ObjectWRefCounts> Members
+
+        public int CompareTo(TrackedObject other)
+        {
+            return ToInt64().CompareTo(other.ToInt64());
+        }
+
+        #endregion
+
+        public void RemoveRef()
+        {
+            Refs--;
+            if (Refs == 0 && !Heaped)
+            {
+                PrologClient.RemoveTaggedObject(TagName);
+            }
+        }
+
+        public override string ToString()
+        {
+            string vs;
+            try
+            {
+                vs = Value.ToString();
+            }
+            catch (Exception e)
+            {
+                vs = "" + e;
+            }
+            return TagName + " for " + vs;
+        }
+
+        public void AddRef()
+        {
+            Refs++;
+        }
+    }
+    public class TrackedFrame
+    {
+        HashSet<TrackedObject> TrackedObjects;
+        public void AddTracking(TrackedObject info)
+        {
+            if (TrackedObjects == null)
+            {
+                TrackedObjects = new HashSet<TrackedObject>();
+            }
+            if (TrackedObjects.Add(info))
+            {
+                info.AddRef();
+            }
+        }
+
+        public void RemoveRefs()
+        {
+            if (TrackedObjects == null) return;
+            foreach (var oref in TrackedObjects)
+            {
+                oref.RemoveRef();
+            }
+        }
+        public TrackedFrame Prev;
+    }
+    internal class ThreadEngineObjectTracker
+    {
+        private TrackedFrame CurrentTrackedFrame = null;
+        public ThreadEngineObjectTracker()
+        {
+            CurrentTrackedFrame = new TrackedFrame();
+        }
+
+        public TrackedFrame CreateFrame()
+        {
+            if (CurrentTrackedFrame == null)
+            {
+                CurrentTrackedFrame = new TrackedFrame();
+                return CurrentTrackedFrame;
+            }
+            TrackedFrame newTrackedFrame = new TrackedFrame {Prev = CurrentTrackedFrame};
+            CurrentTrackedFrame = newTrackedFrame;
+            return newTrackedFrame;
+        }
+        public TrackedFrame PopFrame()
+        {
+            if (CurrentTrackedFrame == null)
+            {
+                return null;
+            }
+            TrackedFrame old = CurrentTrackedFrame;
+            CurrentTrackedFrame = old.Prev;
+            old.RemoveRefs();
+            return old;
+        }
+
+        public void AddTracking(TrackedObject info)
+        {
+            if (CurrentTrackedFrame == null)
+            {
+                return;
+            }
+            else
+            {
+                if (CurrentTrackedFrame.Prev == null)
+                {
+                    Thread lt = info.LastThread;
+                    Thread ct = Thread.CurrentThread;
+                    if (ct == lt)
+                    {
+                        return;
+                    }
+                    info.LastThread = ct;
+                }
+                CurrentTrackedFrame.AddTracking(info);
+            }
+        }
+
+        public bool RemoveFrame(TrackedFrame frame)
+        {
+            if (CurrentTrackedFrame == frame)
+            {
+                PopFrame();
+                return true;
+            }
+            else
+            {
+                if (PrologClient.DebugRefs)
+                {
+                    PrologClient.Debug("Removing wierd frame" + frame);
+                }
+                frame.RemoveRefs();
                 return false;
             }
         }

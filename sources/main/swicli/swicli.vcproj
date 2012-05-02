@@ -7,7 +7,7 @@
 	RootNamespace="DummyLibraryUsage"
 	Keyword="Win32Proj"
 	AssemblyReferenceSearchPaths="&quot;..\..\..\bin&quot;"
-	TargetFrameworkVersion="131072"
+	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
 		<Platform
@@ -146,7 +146,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="&quot;C:\Program Files\pl\lib\swipl.lib&quot;"
 				OutputFile="&quot;C:\Program Files\pl\bin\swicli.dll&quot;"
-				LinkIncremental="2"
+				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
 				SubSystem="2"
@@ -334,6 +334,14 @@
 			AssemblyName="System, Version=2.0.0.0, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL"
 			MinFrameworkVersion="131072"
 		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{BA10B6F0-3E52-4AD2-A2DF-ECCF3F4C090F}"
+			RelativePathToProject=".\sources\main\Swicli.Library\Swicli.Library.csproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{0B6361DD-2B03-4EE0-8A83-80667E3E5EA8}"
+			RelativePathToProject=".\sources\main\SWICLITestDLL\SWICLITestDLL.csproj"
+		/>
 	</References>
 	<Files>
 		<Filter
@@ -400,7 +408,7 @@
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					CommandLine="copy swicli.pl &quot;c:\Program Files\pl\library\&quot;"
+					CommandLine="copy swicli.pl &quot;c:\Program Files\pl\library\&quot;&#x0D;&#x0A;"
 					Outputs=" &quot;c:\Program Files\pl\library\swicli.pl&quot;"
 				/>
 			</FileConfiguration>
