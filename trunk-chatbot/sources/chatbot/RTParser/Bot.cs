@@ -570,6 +570,34 @@ namespace RTParser
             //Default output
             Console.WriteLine("SERVITOR SAYS:{0}", message);
         }
+        public void reloadServitor()
+        {
+            if (servitor.skiploading )return;
+            string servitorbin = GlobalSettings.grabSetting("servitorbin");
+            if (File.Exists(servitorbin))
+            {
+                servitor.loadFromBinaryFile(servitorbin);
+                servitor.skiploading = true;
+            }
+            else
+            {
+                Console.WriteLine("No file exists for reloadServitor()");
+            }
+        }
+        public void saveServitor()
+        {
+            string servitorbin = GlobalSettings.grabSetting("servitorbin");
+            if (!File.Exists(servitorbin))
+            {
+                servitor.saveToBinaryFile(servitorbin);
+                servitor.skiploading = true;
+            }
+            else
+            {
+                Console.WriteLine("Skipping saveServitor(): already exists!!!");
+            }
+
+        }
         public void updateServitor2RTP(User activeUser)
         {
             if (useServitor == false) return;
@@ -577,6 +605,7 @@ namespace RTParser
             {
                 servitor = new Servitor(this.UserID, null);
                 servitor.curBot.sayProcessor = new sayProcessorDelegate(sayConsole);
+                reloadServitor();
             }
             updateServitor2RTP();
             //User specific code (ALTBOT USER->RTPUSER  )
@@ -616,6 +645,7 @@ namespace RTParser
             {
                 servitor = new Servitor(this.UserID, null);
                 servitor.curBot.sayProcessor = new sayProcessorDelegate(sayConsole);
+                reloadServitor();
             }
 
         }
@@ -626,6 +656,7 @@ namespace RTParser
             {
                 servitor = new Servitor(this.UserID, null);
                 servitor.curBot.sayProcessor = new sayProcessorDelegate(sayConsole);
+                reloadServitor();
             }
             updateRTP2Sevitor();
             try
@@ -672,6 +703,9 @@ namespace RTParser
             {
                 servitor = new Servitor(this.UserID, null);
                 servitor.curBot.sayProcessor = new sayProcessorDelegate(sayConsole);
+                reloadServitor();
+
+
             }
             // fill in the blanks
             servitor.curBot.AdminEmail = this.AdminEmail;
@@ -922,7 +956,7 @@ namespace RTParser
             {
                 if (HostSystem.FileExists(path))
                 {
-                    servitor.curBot.loadAIMLFromFiles(path);
+                    servitor.loadAIMLFromFiles(path);
                 }
                 return;
             }
@@ -959,7 +993,7 @@ namespace RTParser
                     if (HostSystem.FileExists(path))
                     {
 
-                        servitor.curBot.loadAIMLFromFiles(path);
+                        servitor.loadAIMLFromFiles(path);
                         //return;
                     }
                 }
@@ -1949,6 +1983,7 @@ The AIMLbot program.
                 TheCyc.WriteConfig();
                 DefaultStartGraph.WriteConfig();
                 writeDebugLine("Bot loaded");
+                saveServitor();
             }
         }
 
@@ -2044,6 +2079,10 @@ The AIMLbot program.
             finally
             {
                 request.GraphsAcceptingUserInput = prev;
+            }
+            if (useServitor)
+            {
+                saveServitor();
             }
         }
 

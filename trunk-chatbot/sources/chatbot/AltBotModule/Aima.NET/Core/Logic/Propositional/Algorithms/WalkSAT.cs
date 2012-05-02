@@ -12,7 +12,7 @@ namespace Aima.Core.Logic.Propositional.Algorithms
     using Aima.Core.Logic.Propositional.Parsing.AST;
     using Aima.Core.Logic.Propositional.Visitors;
     using Aima.Core.Util;
-
+    [Serializable]
     public class WalkSAT
     {
         private Model myModel;

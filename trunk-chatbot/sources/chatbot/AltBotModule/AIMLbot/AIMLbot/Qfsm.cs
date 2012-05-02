@@ -27,12 +27,13 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 namespace AltAIMLbot
 {
+    [Serializable]
     public class QfsmSet
     {
-        public Hashtable machines;
+        public Dictionary<string,Qfsm> machines;
         public QfsmSet()
         {
-            machines = new Hashtable();
+            machines = new Dictionary<string, Qfsm>();
         }
         public void defineMachine(string machine, string stateDef)
         {
@@ -69,6 +70,7 @@ namespace AltAIMLbot
 
     }
 
+    [Serializable]
     public class Qfsm
     {
         public XmlDocument rulesDoc;

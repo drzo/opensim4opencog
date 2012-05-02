@@ -6,6 +6,7 @@ using System.Xml;
 
 namespace AltAIMLbot.Utils
 {
+    [Serializable]
     public class RandomMemory
     {
         Dictionary<string,double> myMem = null;

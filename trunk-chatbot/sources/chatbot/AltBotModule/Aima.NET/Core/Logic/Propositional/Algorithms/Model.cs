@@ -10,7 +10,7 @@ namespace Aima.Core.Logic.Propositional.Algorithms
 
     using Aima.Core.Logic.Propositional.Parsing;
     using Aima.Core.Logic.Propositional.Parsing.AST;
-
+    [Serializable]
     public class Model : IPLVisitor {
 
         Dictionary<string, bool?> h = new Dictionary<string, bool?>();

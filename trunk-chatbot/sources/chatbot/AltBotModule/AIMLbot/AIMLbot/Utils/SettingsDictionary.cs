@@ -10,6 +10,7 @@ namespace AltAIMLbot.Utils
     /// A bespoke Dictionary<,> for loading, adding, checking, removing and extracting
     /// settings.
     /// </summary>
+    [Serializable]
     public class SettingsDictionary
     {
         #region Attributes

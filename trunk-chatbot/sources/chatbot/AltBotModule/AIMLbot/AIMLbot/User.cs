@@ -7,6 +7,7 @@ namespace AltAIMLbot
     /// <summary>
     /// Encapsulates information and history of a user who has interacted with the bot
     /// </summary>
+    [Serializable]
     public class User
     {
         #region Attributes

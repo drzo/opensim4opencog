@@ -474,7 +474,7 @@ namespace RTParser.Utils
                 master.AddFileLoaded(path);
                 if (RProcessor.useServitor)
                 {
-                    RProcessor.servitor.curBot.loadAIMLFromFile(path);
+                    RProcessor.servitor.loadAIMLFromFile(path);
                 }
                 else
                 {

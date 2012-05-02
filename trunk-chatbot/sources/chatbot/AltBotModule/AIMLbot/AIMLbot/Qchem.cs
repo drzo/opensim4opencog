@@ -28,6 +28,8 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 namespace AltAIMLbot
 {
+    [Serializable]
+
     public class Qchem
     {
         public HashtableSerailizable Reactions = new HashtableSerailizable();
@@ -52,12 +54,20 @@ namespace AltAIMLbot
         public List<KeyValuePair<String, int>> SortedBlackBoard = new List<KeyValuePair<String, int>>();
         public HashtableSerailizable IORules = new HashtableSerailizable();
         //public Breather myBreather = null;
-        public ListBox myWatchBox = null;
 
         public RChem m_RChem = null;
 
+        [NonSerialized]
         Timer Clock = null;
+        [NonSerialized]
+        public ListBox myWatchBox = null;
+
         string cacheIP = "127.0.0.1";
+
+        // References:
+        // http://code.google.com/p/openc2e/
+        // https://code.launchpad.net/openc2e
+        // https://github.com/ccdevnet/openc2e
 
         // lookup table, snaffled from real creatures
         // TODO: work out if these are meaningful values :)

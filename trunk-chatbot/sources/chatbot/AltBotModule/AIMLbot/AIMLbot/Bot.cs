@@ -43,7 +43,7 @@ namespace AltAIMLbot
     /// 
         public delegate void sayProcessorDelegate(string message);
         public delegate void systemProcessorDelegate(string message);
-
+[Serializable]
     public class AltBot
     {
         #region Attributes
@@ -61,10 +61,15 @@ namespace AltAIMLbot
         public bool inCritical = false;
         public RandomMemory myRandMem = new RandomMemory();
 
+        [NonSerialized ]
         public KnowledgeBase myKB = new KnowledgeBase();
+        [NonSerialized]
         public KnowledgeBase myBaseKB = new KnowledgeBase();
+        [NonSerialized]
         public WalkSAT myWalkSAT = new WalkSAT();
+        [NonSerialized]
         public Model myModel = null;
+        [NonSerialized]
         public Model myActiveModel = null;
         public string myPositiveSATModleString = null;
 
@@ -1228,10 +1233,22 @@ namespace AltAIMLbot
             {
                 fi.Delete();
             }
-
             FileStream saveFile = File.Create(path);
-            BinaryFormatter bf = new BinaryFormatter();
-            bf.Serialize(saveFile, this.Graphmaster);
+            try
+            {
+                BinaryFormatter bf = new BinaryFormatter();
+                //this.myBehaviors.preSerial();
+                bf.Serialize(saveFile, this.Graphmaster);
+                bf.Serialize(saveFile, this.myCron);
+                bf.Serialize(saveFile, this.myRandMem);
+                bf.Serialize(saveFile, this.Graphs);
+               // bf.Serialize(saveFile, this.myBehaviors);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERR:" + e.Message);
+                Console.WriteLine("ERR:" + e.StackTrace);
+            }
             saveFile.Close();
         }
 
@@ -1243,8 +1260,17 @@ namespace AltAIMLbot
         {
             FileStream loadFile = File.OpenRead(path);
             BinaryFormatter bf = new BinaryFormatter();
-            this.Graphmaster = (Node)bf.Deserialize(loadFile);
+            this.Graphmaster = (AltAIMLbot.Utils.Node)bf.Deserialize(loadFile);
+            this.myCron = (Cron)bf.Deserialize(loadFile);
+            this.myRandMem = (RandomMemory)bf.Deserialize(loadFile);
+            this.Graphs = (Dictionary<string, AltAIMLbot.Utils.Node>)bf.Deserialize(loadFile);
+            //this.myBehaviors = (BehaviorSet)bf.Deserialize(loadFile);
+
             loadFile.Close();
+            this.myBehaviors.bot = this;
+            this.myCron.myBot = this;
+           // this.myBehaviors.postSerial(this);
+
         }
 
         #endregion

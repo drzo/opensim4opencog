@@ -10,7 +10,7 @@ namespace Aima.Core.Logic.Propositional.Algorithms
     using Aima.Core.Logic.Propositional.Parsing;
     using Aima.Core.Logic.Propositional.Parsing.AST;
     using Aima.Core.Logic.Propositional.Visitors;
-
+    [Serializable ]
     public class KnowledgeBase {
         public IList<Sentence> Sentences { get; private set; }
 

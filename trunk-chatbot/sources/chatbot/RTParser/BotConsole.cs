@@ -189,6 +189,10 @@ namespace RTParser
         {
             RTPBot myBot = null;
             TaskQueueHandler.TimeProcess("ROBOTCONSOLE: STARTUP", () => { myBot = Startup(args); });
+            if (myBot.useServitor)
+            {
+                myBot.saveServitor();
+            }
             if (new List<string>(args).Contains("--gui"))
             {
                 TaskQueueHandler.TimeProcess("ROBOTCONSOLE: RUN", () => RunGUI(args, myBot, MainConsoleWriteLn));

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using DcBus;
+using System.Runtime.Serialization.Formatters.Binary;
 
 using System.Threading;
 using Aima.Core.Logic.Propositional.Algorithms;
@@ -50,9 +51,20 @@ namespace AltAIMLbot
         public  Thread myCronThread = null;
         public  string lastAIMLInstance = "";
         public bool traceServitor = true;
+        public bool skiploading = false;
+        public bool savedServitor = false;
+        public bool skipPersonalityCheck = false;
+        public bool initialCritical = false;
 
         public Servitor(string UserID, sayProcessorDelegate outputDelegate)
         {
+            Start(UserID, outputDelegate);
+        }
+        public Servitor(string UserID, sayProcessorDelegate outputDelegate, bool skipLoading, bool skippersonalitycheck, bool initialcritical)
+        {
+            skiploading = skipLoading;
+            skipPersonalityCheck = skippersonalitycheck;
+            initialCritical = initialcritical;
             Start(UserID, outputDelegate);
         }
 
@@ -79,9 +91,13 @@ namespace AltAIMLbot
 
             curUser = myUser;
             myBot.isAcceptingUserInput = false;
+            myBot.inCritical = initialCritical;
             startMtalkWatcher();
             Thread.Sleep(600);
-            bool personDefined = checkNewPersonality();
+
+            bool personDefined=false;
+            if (!skipPersonalityCheck) personDefined= checkNewPersonality();
+
             lock (myBot)
             {
                 if ((personDefined == false) && (lastAIMLInstance.Length == 0))
@@ -574,6 +590,102 @@ namespace AltAIMLbot
 
             }
 
+        }
+
+
+        #region Serialization
+        public void loadAIMLFromFile(string path)
+        {
+            if (skiploading) return;
+            if (curBot != null)
+            {
+                curBot.loadAIMLFromFile(path);
+            }
+        }
+        public void loadAIMLFromFiles(string path)
+        {
+            if (skiploading) return;
+            if (curBot != null)
+            {
+                curBot.loadAIMLFromFiles(path);
+            }
+        }
+
+        /// <summary>
+        /// Saves the whole bot to a binary file to avoid processing the AIML each time the 
+        /// bot starts
+        /// </summary>
+        /// <param name="path">the path to the file for saving</param>
+        public void saveToBinaryFile(string path)
+        {
+            Console.WriteLine("START SERVITOR BINARY SAVE:{0}", path);
+            if (savedServitor)
+            {
+                Console.WriteLine(" - WARNING: PREVIOUS SAVE TO:{0}", path);
+            }
+            // check to delete an existing version of the file
+            FileInfo fi = new FileInfo(path);
+            if (fi.Exists)
+            {
+                Console.WriteLine(" - BINARY SAVE OVERWRITE:{0}", path);
+                fi.Delete();
+            }
+            curBot.saveToBinaryFile(path);
+            savedServitor = true;
+            Console.WriteLine("SERVITOR BINARY SAVED:{0}", path);
+        }
+
+        public void saveToBinaryFile0(string path)
+        {
+            Console.WriteLine("START SERVITOR BINARY SAVE:{0}", path);
+            if (savedServitor)
+            {
+                Console.WriteLine(" - WARNING: PREVIOUS SAVE TO:{0}", path);
+            }
+            // check to delete an existing version of the file
+            FileInfo fi = new FileInfo(path);
+            if (fi.Exists)
+            {
+                Console.WriteLine(" - BINARY SAVE OVERWRITE:{0}", path);
+                fi.Delete();
+            }
+
+            FileStream saveFile = File.Create(path);
+            BinaryFormatter bf = new BinaryFormatter();
+            bf.Serialize(saveFile, curBot);
+            saveFile.Close();
+            savedServitor = true;
+            Console.WriteLine("SERVITOR BINARY SAVED:{0}", path);
+        }
+
+        /// <summary>
+        /// Loads a dump of whole bot into memory so avoiding processing the AIML files again
+        /// </summary>
+        /// <param name="path">the path to the dump file</param>
+        public void loadFromBinaryFile(string path)
+        {
+            Console.WriteLine("START SERVITOR BINARY LOAD:{0}", path);
+            curBot.loadFromBinaryFile(path);
+            Console.WriteLine("SERVITOR BINARY LOAD:{0}", path);
+        }
+        public void loadFromBinaryFile0(string path)
+        {
+            Console.WriteLine("START SERVITOR BINARY LOAD:{0}", path);
+            FileStream loadFile = File.OpenRead(path);
+            BinaryFormatter bf = new BinaryFormatter();
+            curBot = (AltBot)bf.Deserialize(loadFile);
+            loadFile.Close();
+            Console.WriteLine("SERVITOR BINARY LOAD:{0}", path);
+        }
+
+        #endregion
+
+        public void shutdown()
+        {
+            if (tmTalkThread != null) tmTalkThread.Abort();
+            if (tmFSMThread != null) tmFSMThread.Abort();
+            if (tmBehaveThread != null) tmBehaveThread.Abort();
+            if (myCronThread != null) myCronThread.Abort();
         }
     }
 

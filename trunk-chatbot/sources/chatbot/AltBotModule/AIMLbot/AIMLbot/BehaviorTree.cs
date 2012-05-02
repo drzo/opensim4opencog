@@ -4,6 +4,7 @@ using System.Collections;
 //using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Xml;
 using System.Threading;
 using System.IO;
@@ -50,6 +51,7 @@ namespace AltAIMLbot
         Positive,
         Negative,
     }
+    [Serializable]
 
     public class Valence
     {
@@ -86,6 +88,8 @@ namespace AltAIMLbot
             LastUpdate = Environment.TickCount;
         }
     }
+
+    [Serializable]
 
     public class ValenceSet
     {
@@ -156,22 +160,101 @@ namespace AltAIMLbot
 
     }
 
+    [Serializable ]
     public class BehaviorSet
     {
-        public Hashtable behaveTrees;
+        //public Hashtable behaveTrees;
+        public Dictionary<string, BehaviorTree> behaveTrees;
         public Dictionary<string, Int32> entryTime = new Dictionary<string, Int32>();
         public Dictionary<string, Int32> execTime = new Dictionary<string, Int32>();
         public Dictionary<string, string> eventTable = new Dictionary<string, string>();
-        public AltBot bot;
         public ValenceSet VSoup;
         public Stack handlerStack;
+        public string persistantDirectory;
+
+        public AltBot bot {
+                get { return _bot; }
+                set {
+                        _bot = value;
+
+                        foreach (string k in behaveTrees.Keys)
+                        {
+                            behaveTrees[k].bot = _bot;
+                        }
+                    } 
+          }
+        [NonSerialized ]
+        private AltBot _bot;
 
         public BehaviorSet()
         {
-            behaveTrees = new Hashtable();
+            //behaveTrees = new Hashtable();
+            behaveTrees = new Dictionary<string, BehaviorTree>();
             VSoup = new ValenceSet();
             handlerStack = new Stack();
         }
+       
+        public void preSerial()
+        {
+            foreach (string k in behaveTrees.Keys)
+            {
+                behaveTrees[k].preSerial();
+            }
+
+        }
+
+        public void postSerial(AltBot deBot)
+        {
+            bot = deBot;
+            foreach (string k in behaveTrees.Keys)
+            {
+                behaveTrees[k].postSerial(deBot);
+            }
+        }
+
+        public void persistAllToFiles()
+        {
+            foreach (string k in behaveTrees.Keys)
+            {
+                persistToFile(k);
+            }
+        }
+
+        public void persistToFile(string treeName)
+        {
+            if (persistantDirectory == null) return;
+            if (!Directory.Exists(persistantDirectory)) return;
+
+            string diskName = String.Format("{0}/{1}.BTX", persistantDirectory, behaveTrees[treeName].name);
+            //if (File.Exists(diskName)) return;
+            StreamWriter outfile = new StreamWriter(diskName);
+            outfile.Write(behaveTrees[treeName].treeDoc.OuterXml);
+            outfile.Flush();
+            outfile.Close();
+        }
+
+        public void loadFromFiles(string ID)
+        {
+            if (behaveTrees.ContainsKey(ID))
+            {
+                if (behaveTrees[ID].treeDoc != null)
+                {
+                    return;
+                }
+            }
+            string diskName = String.Format("{0}/{1}.BTX", persistantDirectory, behaveTrees[ID].name);
+            if (!File.Exists(diskName))
+            {
+                //defineBehavior(ID, "");
+            }
+            else
+            {
+                string readText = File.ReadAllText(diskName);
+
+                defineBehavior(ID, readText);
+            }
+        }
+
         public void defineBehavior(string treeName, string behaviorDef)
         {
             try
@@ -179,6 +262,7 @@ namespace AltAIMLbot
                 BehaviorTree newTree = new BehaviorTree();
                 newTree.defineBehavior(treeName, behaviorDef);
                 behaveTrees[treeName] = newTree;
+                persistToFile(treeName);
             }
             catch (Exception e)
             {
@@ -224,11 +308,26 @@ namespace AltAIMLbot
 
         public void activationTime(string nodeID, RunStatus R)
         {
-            if (R == RunStatus.Success)
+            if (bot == null) return;
+            try
             {
-                bot.myBehaviors.execTime[nodeID] = Environment.TickCount;
+                if ((R == null) || (R == RunStatus.Success))
+                {
+                    if ((bot.myBehaviors.execTime.Count==0)||
+                        (!bot.myBehaviors.execTime.ContainsKey(nodeID)))
+                    {
+                        bot.myBehaviors.execTime.Add(nodeID,Environment.TickCount);
+                    }
+                    bot.myBehaviors.execTime[nodeID] = Environment.TickCount;
+                }
+
             }
-        }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERR:" + e.Message);
+                Console.WriteLine("ERR:" + e.StackTrace);
+            }
+    }
 
         public Int32 lastRunning(string nodeID)
         {
@@ -295,6 +394,14 @@ namespace AltAIMLbot
 
         public bool definedBehavior(string behaviorName)
         {
+            if (behaveTrees.ContainsKey(behaviorName)) return true;
+            string diskName = String.Format("{0}/{1}.BTX", persistantDirectory, behaviorName);
+            if (!File.Exists(diskName))
+            {
+                return false;
+            }
+            string readText = File.ReadAllText(diskName);
+            defineBehavior(behaviorName, readText);
             return behaveTrees.ContainsKey(behaviorName);
         }
 
@@ -323,7 +430,14 @@ namespace AltAIMLbot
         }
         public  bool hasEventHandler(string evnt)
         {
-            Console.WriteLine("   hasEventHandler({0}) ={1}", evnt, eventTable.ContainsKey(evnt)); 
+            if (eventTable.ContainsKey(evnt))
+            {
+                Console.WriteLine("   hasEventHandler({0}) ={1}", evnt, true);
+            }
+            if (definedBehavior(evnt))
+            {
+                Console.WriteLine("   definedBehavior({0}) ={1}", evnt, true);
+            }
             return eventTable.ContainsKey(evnt);
         }
 
@@ -389,12 +503,12 @@ namespace AltAIMLbot
                 try
                 {
                     ourEvent = eventQueue.Dequeue();
-                    Console.WriteLine(" *** processEventQueue : {0}", ourEvent);
+                    Console.WriteLine(" *** processOneEventQueue : {0}", ourEvent);
                     runEventHandler(ourEvent);
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(" ERR: processEventQueue '{0}' exception induced failure! ", ourEvent);
+                    Console.WriteLine(" ERR: processOneEventQueue '{0}' exception induced failure! ", ourEvent);
                     Console.WriteLine("ERR:" + e.Message);
                     Console.WriteLine("ERR:" + e.StackTrace);
                 }
@@ -490,22 +604,35 @@ namespace AltAIMLbot
 
         }
     }
-
-    class BehaviorTree
+    [Serializable]
+    public class BehaviorTree
     {
-        public XmlDocument treeDoc;
         public string curState;
         public string initialState;
         public Int32 transitionTime;
         public Random rgen = new Random();
         public string name;
-        public AltBot bot;
         public int tickRate=1000;
         public long satCount = 0;
         public long satMod = 400;
         public Dictionary<string, int> restorePoint;
+        private string serialDoc=null;
 
-        
+        public AltBot bot
+        {
+            get { return _bot; }
+            set
+            {
+                _bot = value;
+
+            }
+        }
+
+        [NonSerialized]
+        private AltBot _bot;
+        [NonSerialized]
+        public XmlDocument treeDoc;
+      
         // Kinda based on the idea at ...
         // http://www.garagegames.com/community/blogs/view/21143
         public BehaviorTree()
@@ -514,6 +641,19 @@ namespace AltAIMLbot
             restorePoint = new Dictionary<string, int>();
 
         }
+
+
+        public void preSerial()
+        {
+            serialDoc = treeDoc.OuterXml;
+        }
+        public void postSerial(AltBot bot)
+        {
+            _bot = bot;
+            if (treeDoc == null) treeDoc = new XmlDocument();
+            treeDoc.LoadXml(serialDoc);
+        }
+
         public void defineBehavior(string mname, string behaviorDef)
         {
             try

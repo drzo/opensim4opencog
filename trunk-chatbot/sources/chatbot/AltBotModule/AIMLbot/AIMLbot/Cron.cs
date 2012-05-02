@@ -30,6 +30,8 @@ namespace AltAIMLbot
     /// <summary>
     /// An implementation of the Cron service.
     /// </summary>
+    [Serializable ]
+
     public class Cron
     {
         private ArrayList crontab_ar;
@@ -37,7 +39,8 @@ namespace AltAIMLbot
         private ArrayList processes;
         int lastMinute;
         int lastSecond;
-        private AltBot myBot;
+        [NonSerialized ]
+        public AltBot myBot;
 
         public Cron(AltBot deBot)
         { 
@@ -93,7 +96,7 @@ namespace AltAIMLbot
                             }
                             else
                             {
-                                Console.WriteLine("--inCritical--");
+                                // Console.WriteLine("--inCritical--");
                                 Thread.Sleep(500);
                             }
                         }
