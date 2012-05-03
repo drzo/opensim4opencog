@@ -1070,6 +1070,9 @@ namespace AltAIMLbot
                         case "refserver":
                             tagHandler = new AIMLTagHandlers.refserver(this, user, query, request, result, node);
                             break;
+                        case "pannouserver":
+                            tagHandler = new AIMLTagHandlers.pannouserver(this, user, query, request, result, node);
+                            break;
                         case "trueknowledgeserver":
                             tagHandler = new AIMLTagHandlers.trueknowledgeserver(this, user, query, request, result, node);
                             break;

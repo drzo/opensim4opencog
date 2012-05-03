@@ -228,7 +228,8 @@ namespace AltAIMLbot
             string diskName = String.Format("{0}/{1}.BTX", persistantDirectory, behaveTrees[treeName].name);
             //if (File.Exists(diskName)) return;
             StreamWriter outfile = new StreamWriter(diskName);
-            outfile.Write(behaveTrees[treeName].treeDoc.OuterXml);
+            string docText = behaveTrees[treeName].treeDoc.OuterXml;
+            outfile.Write(docText);
             outfile.Flush();
             outfile.Close();
         }

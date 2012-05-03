@@ -572,7 +572,13 @@ namespace RTParser
         }
         public void reloadServitor()
         {
-            if (servitor.skiploading )return;
+            string behaviorcache = GlobalSettings.grabSetting("behaviorcache");
+            if ((behaviorcache != null) && (behaviorcache.Length > 0))
+            {
+                servitor.curBot.myBehaviors.persistantDirectory=behaviorcache;
+            }
+
+            if (servitor.skiploading) return;
             string servitorbin = GlobalSettings.grabSetting("servitorbin");
             if (File.Exists(servitorbin))
             {
@@ -586,10 +592,14 @@ namespace RTParser
         }
         public void saveServitor()
         {
+            List<string> allPaths = new List<string>();
+            servitor.curBot.Graphmaster.collectPaths("",allPaths);
+            File.WriteAllLines(@"./aiml/graphmap.txt", allPaths.ToArray());
+
             string servitorbin = GlobalSettings.grabSetting("servitorbin");
             if (!File.Exists(servitorbin))
             {
-                servitor.saveToBinaryFile(servitorbin);
+                //servitor.saveToBinaryFile(servitorbin);
                 servitor.skiploading = true;
             }
             else

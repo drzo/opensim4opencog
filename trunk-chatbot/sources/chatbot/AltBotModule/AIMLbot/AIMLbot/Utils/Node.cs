@@ -126,6 +126,31 @@ namespace AltAIMLbot.Utils
             }
         }
 
+
+        public void collectPaths(string inpath, List<string> collector)
+        {
+            string curWord = this.word;
+            string ourPath = inpath + " " + curWord;
+            if ((template != null) && (template.Length >1))
+            {
+                // a leaf node
+                if (template.Length < 96)
+                {
+                    collector.Add(ourPath.Trim()+"| ["+template.Replace("\r"," ").Replace("\n"," ").Trim()+"]");
+                }
+                else
+                {
+                    collector.Add(ourPath .Trim ()+"| [template]");
+
+                }
+            }
+            foreach (string childWord in children.Keys)
+            {
+                Node childNode = children[childWord];
+                childNode.collectPaths(ourPath, collector);
+            }
+
+        }
         #endregion
 
         #region Evaluate Node
