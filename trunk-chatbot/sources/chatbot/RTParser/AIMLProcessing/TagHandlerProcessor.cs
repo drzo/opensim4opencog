@@ -164,9 +164,11 @@ namespace RTParser
                     case "beforethat": // <input index="3"/> 
                         tagHandler = new input(targetBot, user, query, request, result, node, 3);
                         break;
+#if !(__MonoCS__)
                     case "javascript":
                         tagHandler = new javascript(targetBot, user, query, request, result, node);
                         break;
+#endif
                     case "learn":
                     case "load":
                     case "noload": // the commented version of <load>

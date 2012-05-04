@@ -1,4 +1,4 @@
-// #define USEVSAHOST
+#if !(__MonoCS__)
 using System;
 using System.Collections.Generic;
 #if USEVSAHOST
@@ -112,7 +112,9 @@ namespace RTParser.AIMLTagHandlers
                                                                    "System.Windows.Forms",
                                                                    "System.Xml",
                                                                };
+#if !(_MonoCS__)		
         public static readonly Microsoft.JScript.Vsa.VsaEngine Engine;
+#endif
 
         static javascript()
         {
@@ -238,3 +240,4 @@ namespace RTParser.AIMLTagHandlers
 #endif
     }
 }
+#endif
