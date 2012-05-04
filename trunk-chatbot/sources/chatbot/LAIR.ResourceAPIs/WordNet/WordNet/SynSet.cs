@@ -204,7 +204,7 @@ namespace LAIR.ResourceAPIs.WordNet
                 int wordEnd = definition.IndexOf(' ', wordStart + 1) - 1;
                 int wordLen = wordEnd - wordStart + 1;
                 string word = definition.Substring(wordStart, wordLen);
-                if (word.Contains(' '))
+                if ((bool)word.Contains(' '))
                     throw new Exception("Unexpected space in word:  " + word);
 
                 _words.Add(word);
