@@ -290,8 +290,7 @@ namespace Swicli.Library
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                cliGetType(valueIn, plvar);
-                return SpecialUnify(valueOut, plvar);
+                return cliGetType(valueIn, plvar) && SpecialUnify(valueOut, plvar);
             }
             object val = GetInstance(valueIn);
             if (val == null)
@@ -308,8 +307,7 @@ namespace Swicli.Library
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                cliGetClass(valueIn, plvar);
-                return SpecialUnify(valueOut, plvar);
+                return cliGetClass(valueIn, plvar) && SpecialUnify(valueOut, plvar);
             }
             object val = GetInstance(valueIn);
             // extension method
@@ -325,8 +323,7 @@ namespace Swicli.Library
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                cliClassFromType(valueIn, plvar);
-                return SpecialUnify(valueOut, plvar);
+                return cliClassFromType(valueIn, plvar) && SpecialUnify(valueOut, plvar);
             }
             Type val = GetType(valueIn);
             if (val == null) return false;
@@ -343,8 +340,7 @@ namespace Swicli.Library
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                cliTypeFromClass(valueIn, plvar);
-                return SpecialUnify(valueOut, plvar);
+                return cliTypeFromClass(valueIn, plvar) && SpecialUnify(valueOut, plvar);
             }
             Class val = GetType(valueIn);
             if (val == null) return false;
@@ -403,8 +399,7 @@ namespace Swicli.Library
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                cliGetClassname(valueIn, plvar);
-                return SpecialUnify(valueOut, plvar);
+                return cliGetClassname(valueIn, plvar) && SpecialUnify(valueOut, plvar);
             }
             Class val = CastTerm(valueIn, typeof(Class)) as Class;
             if (val == null) return false;
@@ -421,8 +416,7 @@ namespace Swicli.Library
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                cliGetTypename(valueIn, plvar);
-                return SpecialUnify(valueOut, plvar);
+                return cliGetTypename(valueIn, plvar) && SpecialUnify(valueOut, plvar);
             }
             Type val = CastTerm(valueIn, typeof(Type)) as Type;
             if (val == null) return false;

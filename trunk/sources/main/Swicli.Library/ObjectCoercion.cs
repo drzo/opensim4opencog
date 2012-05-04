@@ -59,8 +59,7 @@ namespace Swicli.Library
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                cliGetterm(valueCol, valueIn, plvar);
-                return SpecialUnify(valueOut, plvar);
+                return cliGetterm(valueCol, valueIn, plvar) && SpecialUnify(valueOut, plvar);
             }
             if (IsTaggedObject(valueIn))
             {
@@ -94,8 +93,7 @@ namespace Swicli.Library
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                cliArrayToTerm(arrayValue, plvar);
-                return SpecialUnify(valueOut, plvar);
+                return cliArrayToTerm(arrayValue, plvar) && SpecialUnify(valueOut, plvar);
             }
             object getInstance = GetInstance(arrayValue);
             if (getInstance == null) return valueOut.Unify(PLNULL);
@@ -120,8 +118,7 @@ namespace Swicli.Library
             if (!valueOut.IsVar) 
             {
                 var plvar = PlTerm.PlVar();
-                cliArrayToTermlist(arrayValue, plvar);
-                return SpecialUnify(valueOut, plvar);
+                return cliArrayToTermlist(arrayValue, plvar) && SpecialUnify(valueOut, plvar);
             }
 
             object getInstance = GetInstance(arrayValue);
@@ -147,8 +144,7 @@ namespace Swicli.Library
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                cliTermToArray(arrayValue, plvar);
-                return SpecialUnify(valueOut, plvar);
+                return cliTermToArray(arrayValue, plvar) && SpecialUnify(valueOut, plvar);
             }
             Type elementType = ResolveType(arrayValue.Name);
             if (elementType == null)
@@ -268,8 +264,7 @@ namespace Swicli.Library
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                cliCast(valueIn, clazzSpec, plvar);
-                return SpecialUnify(valueOut, plvar);
+                return cliCast(valueIn, clazzSpec, plvar) && SpecialUnify(valueOut, plvar);
             }
             Type type = GetType(clazzSpec);
             object retval = CastTerm(valueIn, type);
@@ -286,8 +281,7 @@ namespace Swicli.Library
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                cliCastImmediate(valueIn, clazzSpec, plvar);
-                return SpecialUnify(valueOut, plvar);
+                return cliCastImmediate(valueIn, clazzSpec, plvar) && SpecialUnify(valueOut, plvar);
             }
             Type type = GetType(clazzSpec);
             object retval = CastTerm(valueIn, type);

@@ -135,8 +135,7 @@ namespace Swicli.Library
             if (!str.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                cliToTagged(obj, plvar);
-                return SpecialUnify(str, plvar);
+                return cliToTagged(obj, plvar) && SpecialUnify(str, plvar);
             }
             //if (obj.IsString) return str.Unify(obj);
             if (obj.IsVar) return str.Unify(obj);
@@ -155,8 +154,7 @@ namespace Swicli.Library
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                cliImmediateObject(valueIn, plvar);
-                return SpecialUnify(valueOut, plvar);
+                return cliImmediateObject(valueIn, plvar) && SpecialUnify(valueOut, plvar);
             }
             object retval = GetInstance(valueIn);
             return valueOut.FromObject(retval);

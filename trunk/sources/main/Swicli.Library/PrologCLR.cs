@@ -73,12 +73,13 @@ namespace Swicli.Library
         public static readonly Type[] ONE_STRING = new[] {typeof (string)};
 
         public static BindingFlags BindingFlagsJustStatic = BindingFlags.Public | BindingFlags.NonPublic |
-                                                            BindingFlags.Static;
+                                                            BindingFlags.Static | BindingFlags.FlattenHierarchy;
         public static BindingFlags BindingFlagsInstance = BindingFlags.Public | BindingFlags.NonPublic |
-                                                            BindingFlags.Instance;
+                                                            BindingFlags.Instance | BindingFlags.FlattenHierarchy;
         public static BindingFlags BindingFlagsALL = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static |
-                                                     BindingFlags.Instance | BindingFlags.IgnoreCase | BindingFlags.IgnoreReturn;
-        public static BindingFlags InstanceFields = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.IgnoreCase;
+                                                     BindingFlags.Instance | BindingFlags.IgnoreCase | BindingFlags.IgnoreReturn 
+                                                     | BindingFlags.FlattenHierarchy;
+        public static BindingFlags InstanceFields = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.IgnoreCase | BindingFlags.FlattenHierarchy;
 
 
         const string ExportModule = "swicli";
@@ -239,8 +240,7 @@ namespace Swicli.Library
             else
             {
                 var plvar = PlTerm.PlVar();
-                plvar.FromObject(ret1);
-                return SpecialUnify(plTerm, plvar);
+                return plvar.FromObject(ret1) && SpecialUnify(plTerm, plvar);
             }
         }
 
@@ -271,7 +271,7 @@ namespace Swicli.Library
             return paramz;
         }
 
-        private static EventInfo findEventInfo(PlTerm memberSpec, Type c)
+        private static EventInfo findEventInfo(PlTerm memberSpec, Type c, ref Type[] paramz)
         {
             if (memberSpec.IsVar)
             {
@@ -297,7 +297,8 @@ namespace Swicli.Library
                     var arg1 = memberSpec.Arg(0);
                     if (arg1.IsInteger)
                     {
-                        return findEventInfo(arg1, c);
+                        Type[] paramzN = null;
+                        return findEventInfo(arg1, c, ref paramzN);
                     }
                 }
             }
@@ -306,6 +307,7 @@ namespace Swicli.Library
             if (ei != null) return ei;
             var members = c.GetEvents(BindingFlagsALL);
             int arity = memberSpec.Arity;
+            paramz = paramz ?? GetParamSpec(memberSpec);
             foreach (var infos in members)
             {
                 ParameterInfo[] getParmeters = GetParmeters(infos);
@@ -318,16 +320,17 @@ namespace Swicli.Library
         }
         private static MemberInfo findMember(PlTerm memberSpec, Type c)
         {
+            Type[] paramz = null;
             if (IsTaggedObject(memberSpec))
             {
                 var r = GetInstance(memberSpec) as MemberInfo;
                 if (r != null) return r;
-            }
+            }            
             return findField(memberSpec, c) ??
                    (MemberInfo)
-                   findProperty(memberSpec, c, true, true) ??
-                   (MemberInfo) findMethod(memberSpec, -1, c) ??
-                   findProperty(memberSpec, c, false, false);
+                   findPropertyInfo(memberSpec, c, true, true, ref paramz) ??
+                   (MemberInfo) findMethodInfo(memberSpec, -1, c, ref paramz) ??
+                   findPropertyInfo(memberSpec, c, false, false, ref paramz);
             //findConstructor(memberSpec, c));
         }
         private static FieldInfo findField(PlTerm memberSpec, Type c)
@@ -375,7 +378,7 @@ namespace Swicli.Library
             set { indexTest[v] = value; }
         }
 
-        private static PropertyInfo findProperty(PlTerm memberSpec, Type c, bool mustHaveP, bool assumeParamTypes)
+        private static PropertyInfo findPropertyInfo(PlTerm memberSpec, Type c, bool mustHaveP, bool assumeParamTypes, ref Type[] paramz)
         {
             if (c == null)
             {
@@ -399,12 +402,13 @@ namespace Swicli.Library
                 var r = tag_to_object(memberSpec[1].Name) as PropertyInfo;
                 if (r != null) return r;
             }
-            Type[] paramz = GetParamSpec(memberSpec);
+            paramz = paramz ?? GetParamSpec(memberSpec);
             if (memberSpec.IsCompound)
             {
                 if (memberSpec.Name == "p")
                 {
-                    return findProperty(memberSpec.Arg(0), c, false, assumeParamTypes);
+                    Type[] paramzN = null;
+                    return findPropertyInfo(memberSpec.Arg(0), c, false, assumeParamTypes, ref paramzN);
                 }
                 if (mustHaveP) return null;
             }
@@ -466,7 +470,7 @@ namespace Swicli.Library
             return false;
         }
 
-        private static MethodInfo findMethod(PlTerm memberSpec, int arity, Type c)
+        private static MethodInfo findMethodInfo(PlTerm memberSpec, int arity, Type c, ref Type[] paramz)
         {
             if (c == null)
             {
@@ -498,7 +502,7 @@ namespace Swicli.Library
                 mi = GetMethod(c, fn, BindingFlagsALL);
                 if (mi != null) return mi;
             }
-            Type[] paramz = GetParamSpec(memberSpec);
+            paramz = paramz ?? GetParamSpec(memberSpec);
             try
             {
                 mi = c.GetMethod(fn, BindingFlagsALL, null, CallingConventions.Any, paramz, null);
@@ -531,7 +535,7 @@ namespace Swicli.Library
         }
 
 
-        private static ConstructorInfo findConstructor(PlTerm memberSpec, Type c)
+        private static ConstructorInfo findConstructorInfo(PlTerm memberSpec, Type c, ref Type[] paramz)
         {
             if (c == null)
             {
@@ -548,7 +552,7 @@ namespace Swicli.Library
                 var mis = c.GetConstructors(BindingFlagsALL);
                 return mis[memberSpec.intValue()];
             }
-            Type[] paramz = GetParamSpec(memberSpec);
+            paramz = paramz ?? GetParamSpec(memberSpec);
             if (paramz != null)
             {
                 var mi = c.GetConstructor(paramz);
@@ -798,7 +802,8 @@ namespace Swicli.Library
         static public bool cliFindConstructor(PlTerm clazzSpec, PlTerm memberSpec, PlTerm methodOut)
         {
             Type c = GetType(clazzSpec);
-            ConstructorInfo mi = findConstructor(memberSpec, c);
+            Type[] paramz = null;
+            MethodBase mi = findConstructorInfo(memberSpec, c, ref paramz);
             if (mi != null)
             {
                 return methodOut.FromObject((mi));
@@ -819,8 +824,7 @@ namespace Swicli.Library
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                cliNew(clazzSpec, memberSpec, valueIn, plvar);
-                return SpecialUnify(valueOut, plvar);
+                return cliNew(clazzSpec, memberSpec, valueIn, plvar) && SpecialUnify(valueOut, plvar);
             }
             Type c = GetType(clazzSpec);
             if (c == null)
@@ -828,7 +832,36 @@ namespace Swicli.Library
                 Warn("Cant resolve clazzSpec {0}", clazzSpec);
                 return false;
             }
-            ConstructorInfo mi = findConstructor(memberSpec, c);
+            Type[] paramz = null;
+            MethodBase mi = findConstructorInfo(memberSpec, c, ref paramz);
+            object target = null;
+            if (mi == null)
+            {
+                int arity = paramz.Length;
+                if (arity == 1)
+                {
+                    mi = c.GetMethod("op_Implicit", (BindingFlags.Public | BindingFlags.Static), null, paramz,
+                                     new ParameterModifier[0]);
+                    if (mi == null)
+                    {
+                        mi = c.GetMethod("op_Explicit", (BindingFlags.Public | BindingFlags.Static), null, paramz,
+                                         new ParameterModifier[0]);
+                    }
+                    if (mi == null)
+                    {
+                        if (c.IsPrimitive)
+                        {
+                            //Warn("Trying to constuct a primitive type");
+                            return valueOut.FromObject(Convert.ChangeType(GetInstance(valueIn.Arg(0)), c));
+                        }
+                    }
+                }
+                if (mi == null)
+                {
+                    MethodInfo[] members = c.GetMethods(BindingFlagsJustStatic);
+                    mi = BestMethod(paramz, members, c, true);
+                }
+            }
             if (mi == null)
             {
                 Warn("Cant find constructor {0} on {1}", memberSpec, c);
@@ -836,9 +869,54 @@ namespace Swicli.Library
             }
             Action postCallHook;
             object[] values = PlListToCastedArray(valueIn, mi.GetParameters(), out postCallHook);
-            var ret = valueOut.FromObject((mi.Invoke(values)));
+            object res;
+
+            // mono doesnt mind..
+            //  typeof(System.Text.StringBuilder).GetConstructor(new[]{typeof(System.String)}).Invoke(null,new object[]{"hi there"}).ToString();
+            // .NET doesnt
+            if (mi is ConstructorInfo)
+            {
+                res = ((ConstructorInfo)mi).Invoke(values);
+            }
+            else
+            {
+                res = mi.Invoke(null, values);
+            }
+            var ret = valueOut.FromObject(res);
             postCallHook();
             return ret;
+        }
+        private static MethodBase BestMethod(Type[] paramz, MethodInfo[] members, Type returnType, bool mustStatic)
+        {
+            MethodBase maybe = null;
+            foreach (var infos in members)
+            {
+                if (mustStatic && !infos.IsStatic) continue;
+                ParameterInfo[] testParams = infos.GetParameters();
+                if (testParams.Length == paramz.Length)
+                {
+                    if (returnType.IsAssignableFrom(infos.ReturnType))
+                    {
+                        if (ParamsMatch(paramz, testParams))
+                        {
+                            return infos;
+                        }
+                        if (maybe == null) maybe = infos;
+                    }
+                }
+            }
+            return maybe;
+        }
+
+        private static bool ParamsMatch(Type[] paramz, ParameterInfo[] paramInfos)
+        {
+            int i = 0;
+            foreach (ParameterInfo info in paramInfos)
+            {
+                if (!info.ParameterType.IsAssignableFrom(paramz[i])) return false;
+                i++;
+            }
+            return true;
         }
 
         /// <summary>
@@ -854,8 +932,7 @@ namespace Swicli.Library
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                cliNewArray(clazzSpec, rank, plvar);
-                return SpecialUnify(valueOut, plvar);
+                return cliNewArray(clazzSpec, rank, plvar) && SpecialUnify(valueOut, plvar);
             }
             Type c = GetType(clazzSpec);
             if (c == null)
@@ -887,12 +964,12 @@ namespace Swicli.Library
             if (!methodOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                cliFindMethod(clazzOrInstance, memberSpec, plvar);
-                return SpecialUnify(methodOut, plvar);
+                return cliFindMethod(clazzOrInstance, memberSpec, plvar) && SpecialUnify(methodOut, plvar);
             }
             object getInstance = GetInstance(clazzOrInstance);
             Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
-            var mi = findMethod(memberSpec, -1, c);
+            Type[] paramz = null;
+            var mi = findMethodInfo(memberSpec, -1, c, ref paramz);
             if (mi != null)
             {
                 return methodOut.FromObject((mi));
@@ -908,16 +985,16 @@ namespace Swicli.Library
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                cliCallRaw(clazzOrInstance, memberSpec, valueIn, plvar);
-                return SpecialUnify(valueOut, plvar);
+                return cliCallRaw(clazzOrInstance, memberSpec, valueIn, plvar) && SpecialUnify(valueOut, plvar);
             }
             object getInstance = GetInstance(clazzOrInstance);
             Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
             int arity = Arglen(valueIn);
-            var mi = findMethod(memberSpec, arity, c);
+            Type[] paramz = null;
+            var mi = findMethodInfo(memberSpec, arity, c, ref paramz);
             if (mi == null)
             {
-                var ei = findEventInfo(memberSpec, c);
+                var ei = findEventInfo(memberSpec, c, ref paramz);
                 if (ei != null) return cliRaiseEventHandler(clazzOrInstance, memberSpec, valueIn, valueOut);
                 if (valueIn.IsAtom && valueIn.Name == "[]") return cliGetRaw(clazzOrInstance, memberSpec, valueOut);
                 Warn("Cant find method {0} on {1}", memberSpec, c);
@@ -937,8 +1014,7 @@ namespace Swicli.Library
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                cliNewDelegate(delegateClass, prologPred, plvar);
-                return SpecialUnify(valueOut, plvar);
+                return cliNewDelegate(delegateClass, prologPred, plvar) && SpecialUnify(valueOut, plvar);
             }
             object retval = cliDelegateTerm(GetTypeThrowIfMissing(delegateClass), prologPred, true);
             return valueOut.FromObject(retval);
@@ -1013,12 +1089,12 @@ namespace Swicli.Library
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                cliRaiseEventHandler(clazzOrInstance, memberSpec, valueIn, plvar);
-                return SpecialUnify(valueOut, plvar);
+                return cliRaiseEventHandler(clazzOrInstance, memberSpec, valueIn, plvar) && SpecialUnify(valueOut, plvar);
             }
             object getInstance = GetInstance(clazzOrInstance);
             Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
-            EventInfo evi = findEventInfo(memberSpec, c);
+            Type[] paramz = null;
+            EventInfo evi = findEventInfo(memberSpec, c, ref paramz);
             if (evi == null)
             {
                 return Warn("Cant find event {0} on {1}", memberSpec, c);
@@ -1100,7 +1176,8 @@ namespace Swicli.Library
         {
             object getInstance = GetInstance(clazzOrInstance);
             Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
-            EventInfo fi = findEventInfo(memberSpec, c);
+            Type[] paramz = null;
+            EventInfo fi = findEventInfo(memberSpec, c, ref paramz);
             if (fi == null)
             {
                 return Warn("Cant find event {0} on {1}", memberSpec, c);
@@ -1133,7 +1210,8 @@ namespace Swicli.Library
         {
             object getInstance = GetInstance(clazzOrInstance);
             Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
-            EventInfo fi = findEventInfo(memberSpec, c);//
+            Type[] paramz = null;
+            EventInfo fi = findEventInfo(memberSpec, c, ref paramz);//
             if (fi == null)
             {
                 return Warn("Cant find event {0} on {1}", memberSpec, c);
@@ -1166,8 +1244,7 @@ namespace Swicli.Library
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                cliGetRaw(clazzOrInstance, memberSpec, plvar);
-                return SpecialUnify(valueOut, plvar);
+                return cliGetRaw(clazzOrInstance, memberSpec, plvar) && SpecialUnify(valueOut, plvar);
             }
             object getInstance = GetInstance(clazzOrInstance);
             Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
@@ -1183,6 +1260,7 @@ namespace Swicli.Library
         }
         static public object cliGet0(object getInstance, PlTerm memberSpec, Type c, out bool found)
         {
+            Type[] paramz = null;
             FieldInfo fi = findField(memberSpec, c);
             if (fi != null)
             {
@@ -1190,7 +1268,7 @@ namespace Swicli.Library
                 found = true;
                 return (fiGetValue);
             }
-            var pi = findProperty(memberSpec, c, false, true);
+            var pi = findPropertyInfo(memberSpec, c, false, true, ref paramz);
             if (pi != null)
             {
                 var mi = pi.GetGetMethod();
@@ -1212,7 +1290,7 @@ namespace Swicli.Library
                     return getInstance;
                 }
                 string fn = memberSpec.Name;
-                MethodInfo mi = findMethod(memberSpec, -1, c) ??
+                MethodInfo mi = findMethodInfo(memberSpec, -1, c, ref paramz) ??
                                 GetMethod(c, fn, BindingFlagsALL) ??
                                 GetMethod(c, "get_" + fn, BindingFlagsALL) ??
                                 GetMethod(c, "Get" + fn, BindingFlagsALL) ??
@@ -1251,8 +1329,7 @@ namespace Swicli.Library
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                cliGetProperty(clazzOrInstance, memberSpec, indexValues, plvar);
-                return SpecialUnify(valueOut, plvar);
+                return cliGetProperty(clazzOrInstance, memberSpec, indexValues, plvar) && SpecialUnify(valueOut, plvar);
             }
             object getInstance = GetInstance(clazzOrInstance);
             Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
@@ -1261,7 +1338,8 @@ namespace Swicli.Library
                 Warn("Cant find instance {0}", clazzOrInstance);
                 return false;
             }
-            var pi = findProperty(memberSpec, c, false, true);
+            Type[] paramz = null;
+            var pi = findPropertyInfo(memberSpec, c, false, true, ref paramz);
             if (pi == null)
             {
                 Warn("Cant find property {0} on {1}", memberSpec, c);
@@ -1323,7 +1401,8 @@ namespace Swicli.Library
                 fi.SetValue(target, value);
                 return true;
             }
-            var pi = findProperty(memberSpec, c, false, true);
+            Type[] paramz = null;
+            var pi = findPropertyInfo(memberSpec, c, false, true, ref paramz);
             if (pi != null)
             {
                 var mi = pi.GetSetMethod();
@@ -1339,7 +1418,7 @@ namespace Swicli.Library
             else
             {
                 string fn = memberSpec.Name;
-                MethodInfo mi = findMethod(memberSpec, -1, c) ??
+                MethodInfo mi = findMethodInfo(memberSpec, -1, c, ref paramz) ??
                                 GetMethod(c, "set_" + fn, BindingFlagsALL) ??
                                 GetMethod(c, "Set" + fn, BindingFlagsALL) ??
                                 GetMethod(c, "from" + fn, BindingFlagsALL);
@@ -1374,8 +1453,7 @@ namespace Swicli.Library
                 if (!str.IsVar)
                 {
                     var plvar = PlTerm.PlVar();
-                    cliToStrRaw(obj, plvar);
-                    return SpecialUnify(str, plvar);
+                    return cliToStrRaw(obj, plvar) && SpecialUnify(str, plvar);
                 }
                 if (obj.IsString) return str.Unify(obj);
                 if (obj.IsVar) return str.Unify((string)obj);
@@ -1398,8 +1476,7 @@ namespace Swicli.Library
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                cliJavaToString(valueIn, plvar);
-                return SpecialUnify(valueOut, plvar);
+                return cliJavaToString(valueIn, plvar) && SpecialUnify(valueOut, plvar);
             }
             object getInstance = GetInstance(valueIn);
             if (getInstance == null) return valueOut.Unify(PlTerm.PlString("null"));
