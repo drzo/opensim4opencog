@@ -1,0 +1,25 @@
+= Server and Build Dependencies =
+
+This is a list of all dependencies of the installer
+
+= Common =
+
+These are bundles common to more than one component
+
+= Core =
+
+  * The server must serve http://cogbot.logicmoo.com/install/cogbot/cogbot-core.zip, which is expanded into the install root
+
+The cogbot-core.zip file must contain
+
+  * bin
+  * bin/Cogbot.exe
+  * bin/cogbot.ico
+
+botconfig.xml must include code to read
+
+bin\\startupLisp.lisp
+
+= Prolog integration =
+
+  * the server must serve http://cogbot.logicmoo.com/install/cogbot/swicli.zip which is expanded into prolog home.
