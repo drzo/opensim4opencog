@@ -1811,7 +1811,6 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
                 {
                     if (b is java.lang.Float) return true;
                     if (b is java.lang.Double) return true;
-                    if (b is java.lang.String) return true;
                     if (b is java.lang.Integer) return true;
                     if (b is java.lang.Long) return true;
                     if (b is java.math.BigInteger) return true;
