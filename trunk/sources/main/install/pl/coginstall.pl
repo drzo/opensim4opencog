@@ -27,16 +27,14 @@ server_port(8070).   % change this number to use a different port
 
 % http://www.swi-prolog.org/howto/http/HTTPFile.html
 
-% an image is /f/fluffybunny.png, not /f/img/fluffybunny.png
-%
-http:location(files_uri, '/static', []).
-
 user:file_search_path(document_root, './files').
 % static file handlers. js, images, etc. served from ./f
+% an image is /f/fluffybunny.png, not /f/img/fluffybunny.png
+%
 :- http_handler(root(f), serve_files_in_directory(document_root), [prefix]).
 
 %
-% redirect root to start page
+% redirect http://cogbot.logicmoo.com root to start page
 :- http_handler(root(reset) , coginstall:redir(
 					 start,
 					 pages:reset_install_request),
