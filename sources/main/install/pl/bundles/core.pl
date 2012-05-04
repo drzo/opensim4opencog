@@ -1,4 +1,10 @@
 %
+%   Installer for Cogbot
+%   Copyright (c) 2012, Anne Ogborn
+%   This code governed by the Cogbot New BSD License
+%   which should have come with this code.
+%
+%
 %   bundle file for cogbot core
 %
 %   also defines a lot of common bundles

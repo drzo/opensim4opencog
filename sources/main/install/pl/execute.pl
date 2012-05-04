@@ -8,7 +8,13 @@
 	  ]).
 
 %
-%   Execute the plan
+%   Installer for Cogbot
+%   Copyright (c) 2012, Anne Ogborn
+%   This code governed by the Cogbot New BSD License
+%   which should have come with this code
+%
+%   This executes the plan. The plan is an ordered list
+%   of bundle names.
 %
 
 :- use_module(library(http/http_open)).
@@ -23,7 +29,6 @@
 :- initialization
 	mutex_create(progress).
 
-% TODO make this handle errors gracefully
 do_plan_in_thread(Plan, Config) :-
 	debugout('Executing plan ~w with Config ~w~n', [Plan, Config]),
 	make_directories_exist(Config),

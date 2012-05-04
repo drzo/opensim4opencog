@@ -9,9 +9,21 @@
       component_will_install/1
 		     ]).
 
+%
+%   Installer for Cogbot
+%   Copyright (c) 2012, Anne Ogborn
+%   This code governed by the Cogbot New BSD License
+%   which should have come with this code.
+%
+% This is the model for the component selection page.
+% Display code is in componentspage
+%
+% Towards the bottom are the component definitions
+% If you add a component the definition goes down there
+%
+
 :- use_module(library(http/html_write)).
 :- use_module(library(http/http_dispatch)).
-
 
 :- discontiguous component/1,
 	component_name/2,

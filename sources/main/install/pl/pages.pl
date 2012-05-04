@@ -5,6 +5,15 @@
 		  architecture/1
 		 ]).
 
+%
+%   Installer for Cogbot
+%   Copyright (c) 2012, Anne Ogborn
+%   This code governed by the Cogbot New BSD License
+%   which should have come with this code.
+%
+%   This is only the architecture stuff
+%
+
 :-dynamic  architecture/1.
 
 architecture(64).

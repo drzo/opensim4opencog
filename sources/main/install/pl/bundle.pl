@@ -3,25 +3,25 @@
 		   bundle_section//1,
 		   bundle/4
 		  ]).
-
 %
-%    This is the planner
+%   Installer for Cogbot
+%   Copyright (c) 2012, Anne Ogborn
+%   This code governed by the Cogbot New BSD License
+%   which should have come with this code.
 %
-
-:- use_module(library(http/html_write)).
-:- use_module(library(clpfd)).
-:- use_module(library(uri)).
-
-:- use_module(component).
-:- use_module(pages, [architecture/1]).
-
-:- discontiguous bundle_for/2, bundle/4, deps/2, deps/3, before/2.
-
-:-include('bundles/common.pl').
-:-include('bundles/all.pl').
-:-include('bundles/core.pl').
-:-include('bundles/prolog.pl').
-
+%
+%    A 'bundle' is an atomic installer action.
+%    This module includes code to handle the bundle descriptions on
+%    the showplan page.
+%
+%    This module also includes the actual planner that generates an
+%    ordered list of bundle names.
+%
+%    Individual bundles are in the directory bundles.
+%    They need to be use_module'd here.
+%
+%%	%%%%%%%%%%%%%%%%%%%%%%%%
+%
 %
 %  bundle support
 %
@@ -60,9 +60,26 @@
 %             on the config setting
 %
 
+:- use_module(library(http/html_write)).
+:- use_module(library(clpfd)).
+:- use_module(library(uri)).
+
+:- use_module(component).
+:- use_module(pages, [architecture/1]).
+
+:- discontiguous bundle_for/2, bundle/4, deps/2, deps/3, before/2.
+
+:-include('bundles/common.pl').
+:-include('bundles/all.pl').
+:-include('bundles/core.pl').
+:-include('bundles/prolog.pl').
+% If you add bundles, you have to add them above this line
+
+
 %
 % given a bundle name expands to the prolog-html
 % representation of that bundle on the showplan page
+
 
 %
 %  bundles of these types aren't displayed

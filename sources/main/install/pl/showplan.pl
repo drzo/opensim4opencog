@@ -1,6 +1,14 @@
 :- module(showplan, [
 		    ]).
 %
+%   Installer for Cogbot
+%   Copyright (c) 2012, Anne Ogborn
+%   This code governed by the Cogbot New BSD License
+%   which should have come with this code.
+%
+
+
+%
 % Display the planned install actions and get approval
 %
 
@@ -50,8 +58,3 @@ showplan_buttons -->
 	    \wizard_button(reset, 'Cancel The Installation'),
 	    \wizard_button_default(license, 'Take These Actions')
 	     ]).
-
-
-% TODO there's a bug, it's installing both 32 and 64 bit dotnet
-%
-%

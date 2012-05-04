@@ -1,5 +1,19 @@
 :-module(coglicense, [
 		  ]).
+%
+%   Installer for Cogbot
+%   Copyright (c) 2012, Anne Ogborn
+%   This code governed by the Cogbot New BSD License
+%   which should have come with this code.
+%
+% License page for Cogbot.
+%
+% To add a license to this page, add a license type bundle
+% as a dependency on the component
+%
+% Most of the actual licenses will be iframe included html files in
+% the files directory
+%
 
 :- use_module(library(http/html_write)).
 :- use_module(library(http/http_dispatch)).

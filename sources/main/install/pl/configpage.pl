@@ -1,6 +1,15 @@
 :-module(configpage, [
 		  ]).
-
+%
+%   Installer for Cogbot
+%   Copyright (c) 2012, Anne Ogborn
+%   This code governed by the Cogbot New BSD License
+%   which should have come with this code.
+%
+% This is the configuration page.
+%   bundles of type config are accumulated, and all the
+%   questions needed from the user are asked.
+%
 :- use_module(library(http/html_write)).
 :- use_module(library(http/http_dispatch)).
 
@@ -8,7 +17,6 @@
 :- use_module(bundle).
 :- use_module(execute, [plan_config_entries/2]).
 :- use_module(layout).
-
 
 :- http_handler(root(config) ,
 		config_page_handler,
