@@ -338,7 +338,12 @@ namespace OpenMetaverse
         #endregion Properties
 
         /// <summary>All of the simulators we are currently connected to</summary>
-        public List<Simulator> Simulators = new List<Simulator>();
+        public List<Simulator> Simulators
+        {
+            get { lock (_simulators) return new List<Simulator>(_simulators); }
+        }
+
+        public List<Simulator> _simulators;
 
         /// <summary>Handlers for incoming capability events</summary>
         internal CapsEventDictionary CapsEvents;
@@ -462,10 +467,11 @@ namespace OpenMetaverse
             // we're connected to in order to send the packet.
             Simulator simulator = CurrentSim;
 
-            if (simulator == null && Client.Network.Simulators.Count >= 1)
+            var Simulators = Client.Network.Simulators;
+            if (simulator == null && Simulators.Count >= 1)
             {
                 Logger.DebugLog("CurrentSim object was null, using first found connected simulator", Client);
-                simulator = Client.Network.Simulators[0];
+                simulator = Simulators[0];
             }            
 
             if (simulator != null && simulator.Connected)
@@ -511,6 +517,7 @@ namespace OpenMetaverse
         public Simulator Connect(IPAddress ip, ushort port, ulong handle, bool setDefault, string seedcaps)
         {
             IPEndPoint endPoint = new IPEndPoint(ip, (int)port);
+            Console.Error.WriteLine("EndpoinT" + endPoint);
             return Connect(endPoint, handle, setDefault, seedcaps);
         }
 
@@ -531,18 +538,37 @@ namespace OpenMetaverse
 
             lock (SimulatorsLock)
             {
-                simulator = FindSimulator(endPoint);
+                Logger.DebugLog("findSim=" + endPoint);
+                try
+                {
+                    simulator = FindSimulator(endPoint);
+                }
+                catch (Exception e)
+                {
+                    Logger.DebugLog("newSim0=" + endPoint);
+                    throw;
+                }
 
-            if (simulator == null)
-            {
-                // We're not tracking this sim, create a new Simulator object
-                simulator = new Simulator(Client, endPoint, handle);
+                if (simulator == null)
+                {
+                    // We're not tracking this sim, create a new Simulator object
+                    try
+                    {
+                        simulator = new Simulator(Client, endPoint, handle);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.DebugLog("newSim1=" + endPoint);
+                        throw;
+                    }
                     Endpoint2Simulators.Add(endPoint.ToString(), simulator);
-                // Immediately add this simulator to the list of current sims. It will be removed if the
-                // connection fails
-                lock (Simulators) Simulators.Add(simulator);
+                    // Immediately add this simulator to the list of current sims. It will be removed if the
+                    // connection fails
+                    lock (_simulators) _simulators.Add(simulator);
+                }
             }
-            }
+
+            Logger.DebugLog("Sim=" + simulator);
 
             if (!simulator.Connected)
             {
@@ -564,22 +590,24 @@ namespace OpenMetaverse
                     // Start the packet sending thread
                     Thread sendThread = new Thread(new ThreadStart(OutgoingPacketHandler));
                     sendThread.Name = "Outgoing UDP packet dispatcher";
-                    sendThread.Start();                    
+                    sendThread.Start();
+                    Logger.DebugLog("!connected=" + simulator);
                 }
 
                 // raise the SimConnecting event and allow any event
                 // subscribers to cancel the connection
                 if (m_SimConnecting != null)
                 {
+                    Logger.DebugLog("m_SimConnecting=" + m_SimConnecting);
                     SimConnectingEventArgs args = new SimConnectingEventArgs(simulator);
                     OnSimConnecting(args);
 
                     if (args.Cancel)
                     {
                         // Callback is requesting that we abort this connection
-                        lock (Simulators)
+                        lock (_simulators)
                         {
-                            Simulators.Remove(simulator);
+                            _simulators.Remove(simulator);
                             lock(SimulatorsLock)
                             {
                                 Endpoint2Simulators.Remove(endPoint.ToString());
@@ -589,13 +617,14 @@ namespace OpenMetaverse
                     }
                 }
 
+                Logger.DebugLog("Connect=" + setDefault);
                 // Attempt to establish a connection to the simulator
                 if (simulator.Connect(setDefault))
                 {
                     if (DisconnectTimer == null)
                     {
                         // Start a timer that checks if we've been disconnected
-                        DisconnectTimer = new Timer(new TimerCallback(DisconnectTimer_Elapsed), null,
+                        DisconnectTimer = new Timer(new TimerCallback(DisconnectTimer_Elapsed), this,
                             Client.Settings.SIMULATOR_TIMEOUT, Client.Settings.SIMULATOR_TIMEOUT);
                     }
 
@@ -621,9 +650,9 @@ namespace OpenMetaverse
                 else
                 {
                     // Connection failed, remove this simulator from our list and destroy it
-                    lock (Simulators)
+                    lock (_simulators)
                     {
-                        Simulators.Remove(simulator);
+                        _simulators.Remove(simulator);
                     }                    
                     lock (SimulatorsLock)
                     {
@@ -729,13 +758,13 @@ namespace OpenMetaverse
                     OnSimDisconnected(new SimDisconnectedEventArgs(simulator, DisconnectType.NetworkTimeout));
                 }
 
-                lock (Simulators) Simulators.Remove(simulator);
+                lock (_simulators) _simulators.Remove(simulator);
                 lock (SimulatorsLock)
                 {
                     Endpoint2Simulators.Remove(simulator.IPEndPoint.ToString());
                 }
 
-                if (Simulators.Count == 0) Shutdown(DisconnectType.SimShutdown);
+                if (_simulators.Count == 0) Shutdown(DisconnectType.SimShutdown);
             }
             else
             {
@@ -769,10 +798,11 @@ namespace OpenMetaverse
             // Send a CloseCircuit packet to simulators if we are initiating the disconnect
             bool sendCloseCircuit = (type == DisconnectType.ClientInitiated || type == DisconnectType.NetworkTimeout);
 
-            lock (Simulators)
+            lock (_simulators)
             {
+                var Simulators = Client.Network.Simulators;
                 // Disconnect all simulators except the current one
-                for (int i = 0; i < Simulators.Count; i++)
+                for (int i = 0; i < _simulators.Count; i++)
                 {
                     if (Simulators[i] != null && Simulators[i] != CurrentSim)
                     {
@@ -786,7 +816,7 @@ namespace OpenMetaverse
                     }
                 }
 
-                Simulators.Clear();
+                _simulators.Clear();
             }
             lock (SimulatorsLock)
             {
@@ -927,7 +957,7 @@ namespace OpenMetaverse
             if (simulator != CurrentSim)
             {
                 Simulator oldSim = CurrentSim;
-                lock (Simulators) CurrentSim = simulator; // CurrentSim is synchronized against Simulators
+                lock (_simulators) CurrentSim = simulator; // CurrentSim is synchronized against Simulators
 
                 simulator.SetSeedCaps(seedcaps);
 
@@ -943,6 +973,7 @@ namespace OpenMetaverse
 
         private void DisconnectTimer_Elapsed(object obj)
         {
+            Console.WriteLine("DisconnectTimer_Elapsed=" + obj);
             if (!connected || CurrentSim == null)
             {
                 if (DisconnectTimer != null)

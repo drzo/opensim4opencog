@@ -151,7 +151,7 @@ namespace OpenMetaverse.Rendering
             }
         }
 
-        // Operations
+        // Operations	
         public static PhysicsVector operator +(PhysicsVector a, PhysicsVector b)
         {
             return new PhysicsVector(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
@@ -991,9 +991,11 @@ namespace OpenMetaverse.Rendering
             if (lambda < 0.0f) // we're before v1;
                 return null;
 
-            return v1 + lambda * simplexDirection;
+            return ((PhysicsVector)v1) + (PhysicsVector)(lambda * simplexDirection);
         }
     }
+	
+	///mnt/enki/development/opensim4opencog/current/sources/external/LibOpenMetaverse/OpenMetaverse.Rendering.Meshmerizer/MeshmerizerTypes.cs(994,23): error CS0121: The call is ambiguous between the following methods or properties: `OpenMetaverse.Rendering.PhysicsVector.operator +(OpenMetaverse.Rendering.PhysicsVector, OpenMetaverse.Rendering.PhysicsVector)' and `OpenMetaverse.Rendering.PhysicsVector.operator +(OpenMetaverse.Rendering.PhysicsVector, OpenMetaverse.Rendering.PhysicsVector)'
 
     public class PrimitiveBaseShape
     {

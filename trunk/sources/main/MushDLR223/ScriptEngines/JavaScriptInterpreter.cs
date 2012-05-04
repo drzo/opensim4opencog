@@ -1,4 +1,5 @@
-﻿#define USEVSAHOST
+﻿#if !(__MonoCS__)
+#define USEVSAHOST
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -1300,3 +1301,5 @@ namespace Evaluator
 
 }
 #endif
+
+#endif  //FUBQARENCE

@@ -8,6 +8,6 @@ svn co https://opensim4opencog.googlecode.com/svn/trunk-chatbot/bin-chatbot bin-
 svn co https://opensim4opencog.googlecode.com/svn/trunk-logicmoo/prolog/programk bin/prolog/programk
 svn co https://opensim4opencog.googlecode.com/svn/trunk-logicmoo/prolog/startrek bin/prolog/startrek
 svn co https://opensim4opencog.googlecode.com/svn/trunk-logicmoo/prolog/hyhtn bin/prolog/hyhtn
-xcopy /y /c bin-chatbot\*.* bin\
+xcopy /y /c bin-chatbot\?*.* bin\
 @echo Dont forget to: runprebuild.bat!
 

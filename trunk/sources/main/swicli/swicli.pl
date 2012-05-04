@@ -77,8 +77,13 @@
 % Load C++ DLL
 %------------------------------------------------------------------------------
 :-dynamic(loadedcli_Assembly/0).
+
+foName1(X):- current_prolog_flag(address_bits,32) -> X = swicli32 ;  X= swicli.
+foName(Y):-foName1(X), current_prolog_flag(unix,true) -> Y= foreign(X); Y =X.
+
 loadcli_Assembly:-loadedcli_Assembly,!.
-loadcli_Assembly:-assert(loadedcli_Assembly), current_prolog_flag(unix,true)-> load_foreign_library(foreign(swicli));(current_prolog_flag(address_bits,32) -> load_foreign_library(swicli32) ; load_foreign_library(swicli)).
+loadcli_Assembly:-assert(loadedcli_Assembly),fail.
+loadcli_Assembly:- foName(SWICLI),load_foreign_library(SWICLI).
 :-loadcli_Assembly.
 
 
@@ -193,20 +198,80 @@ cli_with_collection(Calls):-cli_tracker_begin(O),call_cleanup(Calls,cli_tracker_
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%%% cli_new(+Obj, +CallTerm, -Out).
+%%% cli_new(+X, +Params, -V).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%% ?- cli_load_assembly('IKVM.OpenJDK.Core')
 %% ?- cli_new('java.lang.Long'(long),[44],Out),cli_to_str(Out,Str).
 %% same as..
 %% ?- cli_new('java.lang.Long',[long],[44],Out),cli_to_str(Out,Str).
 %% arity 4 exists to specify generic types
+%% ?- cli_new('System.Int64',[int],[44],Out),cli_to_str(Out,Str).
+%% ?- cli_new('System.Text.StringBuilder',[string],["hi there"],Out),cli_to_str(Out,Str).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%
+%   X can be:
+%    * an atomic classname
+%       e.g. 'java.lang.String'
+%    * an atomic descriptor
+%       e.g. '[I' or 'Ljava.lang.String;'
+%    * a suitable type
+%       i.e. any class(_,_) or array(_)
+%
+%   if X is an object (non-array)  type   or  descriptor and Params is a
+%   list of values or references, then V  is the result of an invocation
+%   of  that  type's  most  specifically-typed    constructor  to  whose
+%   respective formal parameters the actual   Params are assignable (and
+%   assigned)
+%
+%   if X is an array type or descriptor   and Params is a list of values
+%   or references, each of which is   (independently)  assignable to the
+%   array element type, then V is a  new   array  of as many elements as
+%   Params has members,  initialised  with   the  respective  members of
+%   Params;
+%
+%   if X is an array type  or   descriptor  and Params is a non-negative
+%   integer N, then V is a new array of that type, with N elements, each
+%   initialised to Java's appropriate default value for the type;
+%
+%   If V is {Term} then we attempt to convert a new jpl.Term instance to
+%   a corresponding term; this is of  little   obvious  use here, but is
+%   consistent with jpl_call/4 and jpl_get/3
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+
 cli_new(Clazz,ConstArgs,Out):-Clazz=..[BasicType|ParmSpc],cli_new(BasicType,ParmSpc,ConstArgs,Out).
+%%cli_new(ClazzConstArgs,Out):-ClazzConstArgs=..[BasicType|ConstArgs],cli_new(BasicType,ConstArgs,ConstArgs,Out).
 
+/*
+ NOTES
+
+ ?- cli_new('System.Int32'(int),[44],Out),cli_to_str(Out,Str).
+ERROR: Trying to constuct a primitive type
+ERROR: Cant find constructor [int] on System.Int32
+   Fail: (8) swicli:cli_new('System.Int32', [int], [44], _G731) ? abort
+% Execution Aborted
+*/
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%%% cli_call(+Obj, +CallTerm, -Out).
-%%% cli_call(+Obj, +MethodSpec, +Params, -Out).
+%%% cli_call(+Obj, +CallTerm, -Result).
+%%% cli_call(+X, +MethodSpec, +Params, -Result).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%
+%   X should be:
+%     an object reference
+%       (for static or instance methods)
+%     a classname, descriptor or type
+%       (for static methods of the denoted class)
+%
+%   MethodSpec should be:
+%     a method name (as an atom)
+%       (may involve dynamic overload resolution based on inferred types of params)
+%
+%   Params should be:
+%     a proper list (perhaps empty) of suitable actual parameters for the named method
+%
+%   finally, an attempt will be made to unify Result with the returned result
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+
 cli_call(Obj,[Prop|CallTerm],Out):-cli_get(Obj,Prop,Mid),!,cli_call(Mid,CallTerm,Out).
 cli_call(Obj,CallTerm,Out):-CallTerm=..[MethodName|Args],cli_call(Obj,MethodName,Args,Out).
 cli_call(Obj,[Prop|CallTerm],Params,Out):-cli_get(Obj,Prop,Mid),!,cli_call(Mid,CallTerm,Params,Out).
@@ -219,8 +284,30 @@ cli_call(Obj,MethodSpec,Params,Out):-cli_call_raw(Obj,MethodSpec,Params,Out_raw)
 cli_libCall(CallTerm,Out):-cli_call('Swicli.Library.PrologClient',CallTerm,Out).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%%% cli_get(+Obj, +PropTerm, -Out).
+%%% cli_get(+X, +Fspec, -V).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%
+%   X can be:
+%     * a classname, a descriptor, or an (object or array) type
+%       (for static fields);
+%     * a non-array object
+%       (for static and non-static fields)
+%     * an array
+%       (for 'length' pseudo field, or indexed element retrieval),
+%   but not:
+%     * a String
+%       (clashes with class name; anyway, String has no fields to retrieve)
+%
+%   Fspec can be:
+%       * an atomic field name,
+%       * or an integral array index (to get an element from an array,
+%	* or a pair I-J of integers (to get a subrange (slice?) of an
+%	  array)
+%       * A list of  [a,b(1),c] to denoate cli_getting X.a.b(1).c
+%
+%   finally, an attempt will be made to unify V with the retrieved value
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+
 cli_get(Obj,_,_):-cli_is_null(Obj),!,fail.
 cli_get(Obj,[P],Value):-!,cli_get(Obj,P,Value).
 cli_get(Obj,[P|N],Value):-!,cli_get(Obj,P,M),cli_get(M,N,Value),!.
