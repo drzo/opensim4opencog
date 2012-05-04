@@ -3,10 +3,17 @@
 	       do_buttons//0,
 	       finish_section//0
 	      ]).
-
+%
+%   Installer for Cogbot
+%   Copyright (c) 2012, Anne Ogborn
+%   This code governed by the Cogbot New BSD License
+%   which should have come with this code.
 %
 %  This is the page that's displayed while we actually do the install.
 %  Actual install is in execute
+%
+%  We actually query page do, which starts the install and
+%  redirects about redir
 %
 
 

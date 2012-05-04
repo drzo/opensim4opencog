@@ -1,7 +1,17 @@
 :- module(componentspage, [
 			   components_page_content//0
 			  ]).
-
+%
+%   Installer for Cogbot
+%   Copyright (c) 2012, Anne Ogborn
+%   This code governed by the Cogbot New BSD License
+%   which should have come with this code.
+%
+%
+% this is the actual components page
+%
+% The model is in components
+%
 :- use_module(library(http/html_write)).
 :- use_module(library(http/http_dispatch)).
 :- use_module(library(http/http_parameters)).

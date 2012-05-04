@@ -3,6 +3,31 @@
         autostart/0,
 	server_port/1
 ]).
+%
+%   Installer for Cogbot
+%   Copyright (c) 2012, Anne Ogborn
+%   This code governed by the Cogbot New BSD License
+%   which should have come with this code.
+%
+%   Architecture:
+%      This is an http server. It launches a web
+%      browser that browses the start page, then guides
+%      the user through the install.
+%
+%      The user selects 'components', integrated modules of
+%      Cogbot functionality.
+%      Each component depends on n 'bundles'. A bundle is an
+%      atomic installer action. Bundles have dependencies and
+%      ordering, via the 'deps' and 'before' preds.
+%
+%      Actual installation is from cached files. The user
+%      specifies a temporary file location. If there are cogbot files
+%      in that location, they are used. If not, then they are downloaded
+%      from the logicmoo site.
+%
+%      In many places abstract location names are used. This is my own
+%      system, not Jan's.
+%
 
 :- use_module(library(http/thread_httpd)).
 :- use_module(library(http/http_dispatch)).
@@ -140,3 +165,5 @@ stop_server :-
 	http_stop_server(Port, []),
 	format(user_error, 'Server halted on port ~n', [Port]),
 	reset_installer.
+
+:- autostart.

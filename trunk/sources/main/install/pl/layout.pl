@@ -5,6 +5,15 @@
 	wizard_button_default_submit//1
 ]).
 
+%
+%   Installer for Cogbot
+%   Copyright (c) 2012, Anne Ogborn
+%   This code governed by the Cogbot New BSD License
+%   which should have come with this code.
+%
+%   This is the definitions of the styling and layout of the pages.
+%
+
 :- use_module(library(http/html_write)).
 
 %% <module> General installer page layout.

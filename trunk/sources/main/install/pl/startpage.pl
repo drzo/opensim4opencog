@@ -1,8 +1,16 @@
 :- module(startpage , []).
 %
+%   Installer for Cogbot
+%   Copyright (c) 2012, Anne Ogborn
+%   This code governed by the Cogbot New BSD License
+%   which should have come with this code.
+%
+
+%
 %  The start page that just greets the user,
-%  discovers what prolog they're running,
+%  discovers what prolog they're running (32 or 64 bit architecture)
 %  and offers them a choice of cogbot's to install
+%  (32 or 64 bit)
 %
 :- use_module(library(http/html_write)).
 :- use_module(library(http/http_dispatch)).
