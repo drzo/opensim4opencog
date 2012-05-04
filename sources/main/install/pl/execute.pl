@@ -106,8 +106,12 @@ do_plan([Name|T], Config) :-
 	append_progress(Name),
 	do_plan(T, Config).
 
+%
+% desktop
+%
 do_plan([Name|T], Config) :-
-	bundle(Name, desktop, _, _Args),!,
+	bundle(Name, desktop, _, Args),!,
+	gtrace,
 	memberchk(path(ExePath), Args),
 	memberchk(icon(IconPath), Args),
 	id_abs_path(ExePath, Config, PLExe),
@@ -118,12 +122,12 @@ do_plan([Name|T], Config) :-
 	prolog_to_os_filename(PLIcon, WinIcon),
 	id_abs_path(program('\\bin'), Config, PLBin),
 	prolog_to_os_filename(PLBin, WinBin),
-	format(string(S), '~w\\cogbotshortcut.vbs "~w" "~w" "~w"~n',
+	format(string(S), 'cmd.exe /C ~w\\cogbotshortcut.vbs "~w" "~w" "~w"~n',
 	       [WindowsCWD, WinExe, WinIcon, WinBin]),
 	string_to_atom(S, A),
 	(
 	   shell(A, Status),
-	   debugout('Shell completes with status ~w~n', [Status])
+	   debugout('Shell ~w completes with status ~w~n', [A, Status])
 	;
 	   thread_signal(main, format(user_error,
 				      'Desktop Shell failed  ~w~n', [A]))
@@ -142,7 +146,7 @@ file_download(URL, File) :-
 	    close(In)).
 
 %
-%  unzip the
+%  unzip to
 file_unzip(From, To) :-
 	prolog_to_os_filename(From, FromWindows),
 	prolog_to_os_filename(To, ToWindows),
@@ -159,7 +163,6 @@ file_unzip(From, To) :-
 	;
 	   thread_signal(main, format(user_error, 'Shell failed  ~w~n', [A]))
 	).
-
 
 %%	%%%%%%%%%%%%%%%%% Convert symbolic to absolute paths
 %

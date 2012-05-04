@@ -1,6 +1,6 @@
-strExePath = WScript.Arguments(1)
-strIconPath = WScript.Arguments(2)
-strWorkDir = WScript.Arguments(3)
+strExePath = WScript.Arguments(0)
+strIconPath = WScript.Arguments(1)
+strWorkDir = WScript.Arguments(2)
 
 set WshShell = WScript.CreateObject("WScript.Shell" )
 strDesktop = WshShell.SpecialFolders("AllUsersDesktop" )
@@ -18,9 +18,9 @@ if not outputfileObject.FolderExists("C:\ProgramData\Microsoft\Windows\Start Men
 end if
 
 set oStartLink = WshShell.CreateShortcut("C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Cogbot\Cogbot.lnk" )
-oStartLink.TargetPath = strExeDir
+oStartLink.TargetPath = strExePath
 oStartLink.WindowStyle = 1
-oStartLink.IconLocation = strIconDir
+oStartLink.IconLocation = strIconPath
 oStartLink.Description = "Shortcut For Cogbot"
 oStartLink.WorkingDirectory = strWorkDir
 oStartLink.Save 
