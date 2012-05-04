@@ -881,7 +881,7 @@ namespace cogbot.Actions.SimExport
         {
             var CurSim = arglist.CurSim;
             WriteLine("Linking imports");
-            List<string> skipCompare;
+            List<string> skipCompare = null;
             foreach (var file in Directory.GetFiles(ExportCommand.dumpDir, "*.link"))
             {
                 var uuids = ExportCommand.GetUUIDs(File.ReadAllText(file));
@@ -942,7 +942,7 @@ namespace cogbot.Actions.SimExport
                 linkset.RemoveAt(0);
 
                 if (false)
-                {
+                {				
                     linkset.Reverse();
                     SetPrimsPostLink(CurSim, arglist.GroupID, parent, linkset, skipCompare);
                 }

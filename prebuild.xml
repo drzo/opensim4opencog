@@ -14,7 +14,7 @@
           <DebugInformation>true</DebugInformation>
           <IncrementalBuild>true</IncrementalBuild>
           <NoStdLib>false</NoStdLib>
-          <PlatformTarget>anycpu</PlatformTarget>
+          <PlatformTarget>AnyCPU</PlatformTarget>
         </Options>
       </Configuration>
       <Configuration name="Release">
@@ -30,7 +30,7 @@
           <DebugInformation>false</DebugInformation>
           <IncrementalBuild>true</IncrementalBuild>
           <NoStdLib>false</NoStdLib>
-          <PlatformTarget>anycpu</PlatformTarget>
+          <PlatformTarget>AnyCPU</PlatformTarget>
         </Options>
       </Configuration>
 
@@ -81,14 +81,12 @@
         <Configuration name="Debug">
           <Options>
             <OutputPath>../../../../bin/</OutputPath>
-            <PlatformTarget>x86</PlatformTarget>
             <XmlDocFile>LAIR.CommonPort.XML</XmlDocFile>
            </Options>
         </Configuration>
         <Configuration name="Release">
           <Options>
             <OutputPath>../../../../bin/</OutputPath>
-            <PlatformTarget>x86</PlatformTarget>
             <XmlDocFile>LAIR.CommonPort.XML</XmlDocFile>
           </Options>
         </Configuration>
@@ -511,12 +509,12 @@
     <Project name="Swicli.Library" path="sources/main/Swicli.Library" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
-          <OutputPath>C:\Program Files\pl\bin\</OutputPath>
+            <OutputPath>bin/temp</OutputPath>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-          <OutputPath>C:\Program Files\pl\bin\</OutputPath>
+            <OutputPath>bin/temp</OutputPath>
         </Options>
       </Configuration>
 
@@ -539,6 +537,39 @@
         <Match path="." pattern="Properties/AssemblyInfo.cs"/>-->
       </Files>
     </Project>
+
+    <Project name="SWICLITestDLL" path="sources/main/SWICLITestDLL" type="Library" frameworkVersion="v3_5">
+      <Configuration name="Debug">
+        <Options>
+            <OutputPath>bin/temp</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+            <OutputPath>bin/temp</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../../bin</ReferencePath>
+      <Reference name="System" localCopy="false"/>
+      <Reference name="System.Core" localCopy="false"/>
+      <Reference name="System.Data" localCopy="false"/>
+      <Reference name="System.Data.DataSetExtensions" localCopy="false"/>
+      <Reference name="System.Deployment" localCopy="false"/>
+      <Reference name="System.Drawing" localCopy="false"/>
+      <Reference name="System.Windows.Forms" localCopy="false"/>
+      <Reference name="System.Xml" localCopy="false"/>
+      <Files>
+        <Match path="." pattern="*.cs"  recurse="true"  subType="Form">
+          <Exclude name="Plugins/"/>
+        </Match>
+        <!--<Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource">
+          <Exclude name="Plugins/"/>
+        </Match>
+        <Match path="." pattern="Properties/AssemblyInfo.cs"/>-->
+      </Files>
+    </Project>
+
 
       <Project name="OpenMetaverseTypes" path="sources/external/LibOpenMetaverse/OpenMetaverseTypes" type="Library" rootNamespace="OpenMetaverse" frameworkVersion="v3_5">
         <Configuration name="Debug">
@@ -873,7 +904,7 @@
 
 
 
-    <Project name="MinisatCs" path="sources/chatbot/AltBotModule/minisatcs/MinisatCs" type="Library" frameworkVersion="v3_5">
+    <Project name="MiniSatCS" path="sources/chatbot/AltBotModule/minisatcs/MinisatCs" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../../../bin/</OutputPath>
@@ -923,7 +954,7 @@
       <Reference name="System.Drawing" localCopy="false"/>
       <Reference name="Aima.NET" localCopy="false"/>
       <Reference name="MushDLR223" localCopy="false"/>
-      <Reference name="MinisatCs" localCopy="false"/>      
+      <Reference name="MiniSatCs" localCopy="false"/>      
       <Reference name="Iesi.Collections.Generic" localCopy="false"/>      
       <Reference name="System.Core" localCopy="false" />
       <Reference name="DcBus.dll" localCopy="false" />
@@ -960,7 +991,7 @@
       <Reference name="System.Xml" localCopy="false"/>
       <Reference name="System.Web" localCopy="false"/>
       <Reference name="MushDLR223" localCopy="false"/>
-      <Reference name="HttpServer" localCopy="false"/>
+      <Reference name="HttpServer" path="..\..\..\bin" localCopy="false"/>
       <Files>
           <Match path="Navigation/Debug" pattern="*.cs" recurse="false" subType="Form"/>
           <Match path="." pattern="*.cs" recurse="true" subType="Code"/>
@@ -1012,7 +1043,7 @@
         <Configuration name="Release">
             <Options>
                 <OutputPath>../../../bin/</OutputPath>
-                <PlatformTarget>anycpu</PlatformTarget>
+                <PlatformTarget>AnyCPU</PlatformTarget>
             </Options>
         </Configuration>
 
@@ -1040,7 +1071,6 @@
         <Reference name="Tools.dll" localCopy="false" />
         <Reference name="log4net.dll" localCopy="false" />
         <Reference name="CommandLine.dll"  localCopy="false" />
-
         <Reference name="XMLRPC.dll" localCopy="false" />
 
         <Files>
@@ -1603,8 +1633,8 @@
          <Reference name="Radegast" />
          <Reference name="Radegast.exe" />
          <Reference name="Radegast.Plugin.Speech" />
-         <Reference name="Assemblies/Monobjc.dll" localCopy="false"/>
-         <Reference name="Assemblies/Monobjc.Cocoa.dll" localCopy="false"/>
+         <Reference name="Monobjc.dll" localCopy="false"/>
+         <Reference name="Monobjc.Cocoa.dll" localCopy="false"/>
          
          <Reference name="System" />
          <Reference name="System.Core"/>
@@ -1623,14 +1653,12 @@
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../../bin/</OutputPath>
-          <PlatformTarget>x86</PlatformTarget>
           <XmlDocFile>Cogbot.LAIR.XML</XmlDocFile>
          </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
           <OutputPath>../../../../bin/</OutputPath>
-          <PlatformTarget>x86</PlatformTarget>
           <XmlDocFile>Cogbot.LAIR.XML</XmlDocFile>
         </Options>
       </Configuration>
@@ -1677,14 +1705,12 @@
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../../../bin/</OutputPath>
-          <PlatformTarget>x86</PlatformTarget>
           <XmlDocFile>Cogbot.LAIR.XML</XmlDocFile>
          </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
           <OutputPath>../../../../../bin/</OutputPath>
-          <PlatformTarget>x86</PlatformTarget>
           <XmlDocFile>Cogbot.LAIR.XML</XmlDocFile>
         </Options>
       </Configuration>
@@ -1727,7 +1753,7 @@
 
 
     <!-- DebugApp app -->
-  <Project name="Cogbot" path="sources/main/Cogbot" type="Exe" frameworkVersion="v3_5">
+  <Project name="Cogbot" path="sources/main/Cogbot" icon="../install/icons/cogbot.ico" type="Exe" frameworkVersion="v3_5">
   <Configuration name="Debug">
     <Options>
       <OutputPath>../../../bin/</OutputPath>
@@ -1773,13 +1799,11 @@
       <Reference name="RadSpeechLin" />
       <Reference name="RadSpeechWin" />
       <Reference name="CommandLine.dll"  localCopy="false" />
-      <Reference name="Swicli.Library" localCopy="false"/>
       <Reference name="System" localCopy="false"/>
       <Reference name="System.Data" />
       <Reference name="System.Drawing" localCopy="false"/>
       <Reference name="System.Windows.Forms" />
       <Reference name="System.Xml"/>
-      <Reference name="SWIJPL.dll" localCopy="false"/>
       <Reference name="TheSimiansModule" />
       <Reference name="XMLRPC.dll" localCopy="false"/>
 
@@ -1820,7 +1844,7 @@
 
 
 
-    <Project name="Cogbot32" path="sources/main/Cogbot32" type="Exe" frameworkVersion="v3_5">
+    <Project name="Cogbot32" path="sources/main/Cogbot32"  icon="../install/icons/cogbot.ico" type="Exe" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
