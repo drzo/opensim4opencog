@@ -79,11 +79,11 @@
 :-dynamic(loadedcli_Assembly/0).
 
 foName1(X):- current_prolog_flag(address_bits,32) -> X = swicli32 ;  X= swicli.
-foName(Y):-foName1(X), current_prolog_flag(unix,true) -> Y= foreign(X); Y =X.
+foName(Y):-foName1(X), (current_prolog_flag(unix,true) -> Y= foreign(X); Y =X).
 
 loadcli_Assembly:-loadedcli_Assembly,!.
 loadcli_Assembly:-assert(loadedcli_Assembly),fail.
-loadcli_Assembly:- foName(SWICLI),load_foreign_library(SWICLI).
+loadcli_Assembly:- foName(SWICLI),strip_module(SWICLI,_,DLL),load_foreign_library(DLL).
 :-loadcli_Assembly.
 
 

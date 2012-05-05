@@ -35,9 +35,6 @@
     <CompileTarget>SharedLibrary</CompileTarget>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="main.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="main.c" />
+    <Compile Include="swicli.c" />
   </ItemGroup>
 </Project>

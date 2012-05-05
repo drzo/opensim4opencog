@@ -296,6 +296,7 @@ typedef struct // define a context structure  { ... } context;
         }
         private static object InvokeCaught0(MethodInfo info, object o, object[] os, Action todo)
         {
+			if (!ClientReady) return null;
             Thread threadCurrentThread = Thread.CurrentThread;
             bool add1FrameCount = false;
             bool openFFI = false;

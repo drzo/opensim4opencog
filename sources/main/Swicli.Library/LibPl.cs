@@ -142,6 +142,7 @@ namespace SbsSW.SwiPlCs
             {
                 if (PrologClient.IsLinux)
                 {
+					return;
                     m_hLibrary = NativeMethodsLinux.LoadLibrary("/lib64/pl-6.0.3/lib/x86_64/libswipl.so");
                     if (m_hLibrary.IsInvalid)
                     {
