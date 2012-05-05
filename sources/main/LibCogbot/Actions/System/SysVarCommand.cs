@@ -25,7 +25,7 @@ namespace cogbot.Actions.System
             int used = 0;
             var sysvars = LockInfo.CopyOf(ScriptManager.SysVars);
             if (args.Length == 0) args = new[] { "" };
-            ConfigSettingAttribute one = null;
+            List<ConfigSettingAttribute> setThese = new List<ConfigSettingAttribute>();
             int found = 0;
             string find = args[0].ToLower();
             foreach (var sv in sysvars)
@@ -35,17 +35,17 @@ namespace cogbot.Actions.System
                 {
                     found++;
                     WriteLine("" + svv.DebugInfo);
-                    one = svv;
+                    setThese.Add(svv);
                 }
             }
             if (args.Length == 1)
             {
                 return Success("Found sysvars: " + found);
             }
-            if (one != null && found == 1)
+            foreach(var one in setThese)
             {
                 one.Value = args[1];
-                return Success("Set sysvar: " + one.Name + " to " + one.Value);
+                Success("Set sysvar: " + one.Name + " to " + one.Value);
             }
             return ShowUsage();
         }
