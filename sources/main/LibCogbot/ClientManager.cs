@@ -1452,6 +1452,7 @@ namespace cogbot
         {
             ShutDown();
             // TODO: It would be really nice if we could figure out a way to abort the ReadLine here in so that Run() will exit.
+            Application.Exit(0);
         }
 
         readonly List<Assembly> KnownAssembies = new List<Assembly>();

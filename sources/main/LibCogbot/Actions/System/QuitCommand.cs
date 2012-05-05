@@ -29,6 +29,7 @@ namespace cogbot.Actions.System
             {
 
             }
+            ClientManager.Quit();
             return r;
 
         }
