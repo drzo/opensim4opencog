@@ -66,7 +66,6 @@ bundle(getgridcreds,
 	    ])]).
 
 
-% TODO broke this
 %
 %  writes the include file for botconfig
 %
