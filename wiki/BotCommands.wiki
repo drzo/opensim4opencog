@@ -1,5 +1,9 @@
+= botcmd =
+
 Bot commands are one of the first things that a person can do in Cogbot without learning how to program.  They allow a person to control Cogbot in the virtual world imperatively like "say hi" .. and the bot will say "hi".  They can be used from graphical user interface, the command line, botscript language, AIML, Prolog, Lisp, over the socket, and even httpd.   Best way to learn them is to start using them to do simple things in the world.
 
+
+== starting ==
 
 So we began with the command line version of cogbot. In Linux
 {{{
@@ -36,6 +40,8 @@ to set less output (we'll still see some having to do things going on in the sim
 
 Speaking of which, it is very useful for you to have a second acct logged into the simulator using a graphical client like Imprudence for watching your bot execute the commands.
 
+Setting the buffer width and height to 8000 in the windows cmd box (right click the title bar, Properties, the Layout tab, set Screen buffer size, Width and Height, to 8000) is also useful in cutting down on debug spam.
+
 Lets compare the two commands we used above
 "login" and "debug"
 
@@ -68,6 +74,95 @@ waitforlogin 0 failures and 1 successes
 }}}
 
 Since the bot was already logged in the command will complete immediately.
+
+The bot may be in an inconvenient place. To move it, you'll need to be it's master.
+
+When the bot logs in, it should IM you with 'hello master'. If not, you can set yourself as master with
+
+{{{
+setmaster ExampleMaster Resident
+Master set to ExampleMaster Resident (9eda1cfc-e0c4-41ed-b2d2-e62bb70366df)
+}}}
+
+Now simply send the bot a TP request. The bot automatically accepts.
+
+When you're ready to quit, (not now), you can type
+
+{{{
+quit
+}}}
+
+== Simple Actions ==
+
+
+We've got a bot standing there, lets make it do things in the world.
+
+type
+
+{{{
+say hello world
+}}}
+
+and the bot says hello world in local chat
+
+Lets have it sit.
+
+Rez a prim near the bot for it to sit on, and type
+
+{{{
+sit
+}}}
+
+The bot will sit on it.
+
+{{{
+stand
+}}}
+
+Makes the bot stand back up.
+
+If you move the prim a little ways away, and type
+
+{{{
+sit
+}}}
+
+the bot will sit on the ground instead.
+
+You can specify what the bot should sit on.  Name the prim *bot chair*, stand the bot up, and try
+
+{{{
+sit bot chair
+}}}
+
+Notice that you don't need quotes
+
+
+
+
+makes the bot sit on the nearest prim. If it's not near enough, it'll sit on the ground.
+
+but 
+
+{{{
+!sit
+}}}
+makes 
+
+bang commands are deprecated -
+
+
+quit logs the bot off, and kills cogbot if no more are online.
+
+need section for multiple av's
+
+
+
+
+== Ways of sending bot commands to the bot ==
+
+
+
 
 ==More In Issues==
 
