@@ -755,6 +755,17 @@ namespace Swicli.Library
             return s;
         }
 #endif
+		
+		        //[MTAThread]
+        public static void Main0(string[] args0)
+        {
+            PingThreadFactories();
+            bool demo = false;
+            SetupProlog();
+			libpl.PL_initialise(args0.Length, args0);
+			libpl.PL_toplevel();
+		}
+		
         //[MTAThread]
         public static void Main(string[] args0)
         {
@@ -834,14 +845,14 @@ namespace Swicli.Library
             {
                 if (!PlCsDisabled)
                     // loops on exception
-                    while (!SafelyRun((() => libpl.PL_toplevel()))) ;
+                    while (!SafelyRun(()=>libpl.PL_toplevel())) ;
             }
 
 
 
             ConsoleTrace("press enter to exit");
             Console.ReadLine();
-            SafelyRun((() => PlEngine.PlCleanup()));
+            SafelyRun(()=>PlEngine.PlCleanup());
 
             ConsoleTrace("finshed!");
 

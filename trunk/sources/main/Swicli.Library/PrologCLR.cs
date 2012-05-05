@@ -196,6 +196,9 @@ namespace Swicli.Library
 
         public static object CallProlog(object target, string module, string name, int arity, object origin, object[] paramz, Type returnType, bool discard)
         {
+			if (!ClientReady) {
+				return null;
+			}
             return InvokeFromC(() =>
             {
 
