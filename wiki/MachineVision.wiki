@@ -1,5 +1,4 @@
 
-
 = Machine Vision =
 
 Cogbot would benefit from being able to characterize surfaces.
@@ -27,6 +26,5 @@ This is notes about available machine vision/image processing packages that migh
   * Neatvision - I've used this for a project. Sadly, it's dead, because it was exactly what we needed. It had a GUI dataflow / visual programming pipeline builder, and a very wide variety of transforms. Unofrtunately it's closed source, dead, and depends on Java 1.4.  The offered replacement depends on matlab
 
   * cIMg  - C++ library with nice support.
+            Name is really "CoolImage", but many places refer to it as cImg (even on the project website).
             It appears to be quite simple to use, and the demo program seems more performant.
-
-
