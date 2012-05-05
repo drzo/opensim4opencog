@@ -1,4 +1,3 @@
-
 = Machine Vision =
 
 Cogbot would benefit from being able to characterize surfaces.
@@ -17,14 +16,18 @@ Cogbot would benefit from being able to characterize surfaces.
 This is notes about available machine vision/image processing packages that might be suitable for doing texture analysis
 
 
-  * OpenCV - this seems to be the closest there is to a standard machine vision package. However, it is complex, extremely poorly documented, and seems to be in disarray - I couldn't even find coherent build instructions or get it to build.
 
   * AForge - a nice, easy to use package in C#  The Hough transform is slow, we need to run some performance tests
+
+  * cIMg  - C++ library with nice support.
+            Name is really "CoolImage", but many places refer to it as cImg (even on the project website).
+            It appears to be quite simple to use, and the demo program seems more performant.
+
+  * eyepatch - this is what Kino originally was going to use. It seems more an application than a library, and seems really oriented towards camera analysis.
 
   * ImageJ - seems quite slow, and more of a toy app than a library
 
   * Neatvision - I've used this for a project. Sadly, it's dead, because it was exactly what we needed. It had a GUI dataflow / visual programming pipeline builder, and a very wide variety of transforms. Unofrtunately it's closed source, dead, and depends on Java 1.4.  The offered replacement depends on matlab
 
-  * cIMg  - C++ library with nice support.
-            Name is really "CoolImage", but many places refer to it as cImg (even on the project website).
-            It appears to be quite simple to use, and the demo program seems more performant.
+  * OpenCV - this seems to be the closest there is to a standard machine vision package. However, it is complex, extremely poorly documented, and seems to be in disarray - I couldn't even find coherent build instructions or get it to build.
+
