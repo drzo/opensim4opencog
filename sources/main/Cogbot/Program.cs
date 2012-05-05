@@ -259,7 +259,7 @@ namespace ABuildStartup
                 DoAndExit(() =>
                               {
                                   var firstProc = new System.Diagnostics.Process();
-                                  firstProc.StartInfo.FileName = "swipl-win.exe";
+                                  firstProc.StartInfo.FileName = @"c:\Program Files\pl\bin\swipl-win.exe";
                                   firstProc.StartInfo.Arguments = "-f prolog/cogbot.pl";// "-f StartCogbot.pl";
 
                                   firstProc.EnableRaisingEvents = true;
@@ -268,18 +268,14 @@ namespace ABuildStartup
                                   firstProc.WaitForExit();
                               });                
                 return;
-            }
-#if USE_SWIPROLOG            
+            }     
             if (ClientManager.arguments.GetAfter("--swipl", out oArgs))
             {
                 string[] newArgs = oArgs;
                 if (newArgs.Length == 0) newArgs = new string[] { "-f", "cynd/cogbot.pl" };
-                newArgs = new string[] { };
-                AllocConsole();
-                DoAndExit(() => PrologScriptEngine.PrologScriptInterpreter.Main(newArgs));
+                RunType("PrologBotModule:PrologScriptEngine.PrologScriptInterpreter", newArgs);
                 return;
             }
-#endif
             if (ClientManager.arguments.GetAfter("--main", out oArgs))
             {
                 string[] newArgs = oArgs;
