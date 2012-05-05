@@ -343,7 +343,7 @@ namespace OpenMetaverse
             get { lock (_simulators) return new List<Simulator>(_simulators); }
         }
 
-        public List<Simulator> _simulators;
+        public List<Simulator> _simulators = new List<Simulator>();
 
         /// <summary>Handlers for incoming capability events</summary>
         internal CapsEventDictionary CapsEvents;
