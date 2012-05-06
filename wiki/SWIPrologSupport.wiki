@@ -7,7 +7,7 @@
 You will probably want to remove a lot of debugging verbiage
 So, in 
 
-{{
+{{{
 C:\pathtocogbot\bin\prolog\simulator\cogrobot.pl
 }}}
 
@@ -20,7 +20,7 @@ Uncomment
 
 in
 
-{{
+{{{
 C:\pathtocogbot\bin\prolog\simulator\cogrobot.pl
 }}}
 
@@ -107,7 +107,5 @@ runSL.
    textureIDToImageParts/2,
    requestTexture/1,
    simObjectColor/2
-
-
 
 
