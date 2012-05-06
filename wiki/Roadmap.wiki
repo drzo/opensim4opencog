@@ -7,9 +7,11 @@ This is our long term strategy. We can change things on
 the ongoing roadmap fairly easily, but should try to 'stag the course' 
 with these items
 
- # Afghan Village - a simple demo area with bots moving around, doing activities, and responding to each other and to humans in the area - a demo of basic cogbot functionality.
+ # Binary release - roughly May 15. Have a prebuilt binary release of Cogbot available for download from google code.
 
- # Public Release - Having all the existing components working well enough, and cogbot well enough packaged, documented, etc. that we can begin to attract users.
+ # Afghan Village - roughtly July 1. A simple demo area with bots moving around, doing activities, and responding to each other and to humans in the area - a demo of basic cogbot functionality. 
+
+ # Public Release - roughly Sept 15.  Having all the existing components working well enough, and cogbot well enough packaged, documented, etc. that we can begin to attract users, make public announcements, and be 'alpha'.
 
 == needed for demo project ==
 
@@ -21,10 +23,26 @@ with these items
  * headless mode - COMPLETED
  * mono - COMPLETED works fine on Redhat with BUGs on Ubuntu 
 
+=== Components to be in the release ===
+
+
+
 == needed for public release ==
 
  * Build system sane
- * 
+ * installer finished
+ * Complete regression test coverage
+ * setup and run pathfinding unit tests
+ * Bug list reasonably clean
+ * Every component currently in the installer's cvomponent list must work well enough to be useable.
+ * AIML interpreter hasn't been worked on in 9 months, needes to be working
+ * ABCL interpreter working
+ * Sims working
+ 
+ * PR plan
+ * website
+ * Example files made
+ * Some level of documentation of everything
 
 
 
@@ -38,7 +56,7 @@ Please edit this only after some concensus on roadmap
 == Annie == 
 === first ===
 
- # get latest compiling from Doug,  
+ # get latest compiling from Doug
  # make a demo project, probably an area populated by some bots
 
 === later ===
@@ -58,4 +76,3 @@ then an overlay pack that has all the chatbot stuff in it
  # revisit RTParser and see if there is a salvageable chatbot in there somewhere - COMPLETED (Kino confirms it's working for Hanson)
  
  # Progress to ProgramK Prolog AIML bot
-
