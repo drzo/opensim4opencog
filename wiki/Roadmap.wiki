@@ -36,10 +36,11 @@ then an overlay pack that has all the chatbot stuff in it
 
 == needed for demo project ==
 
- * multiple AV's
+ * multiple AV's - COMPLETED
  * easy deployment
  * pathfinding (to level we've seen)
  * some aiml or aiml-ish implementation integrated
  * some tale-spinnish thing
- * headless mode
- * mono
+ * headless mode - COMPLETED
+ * mono - COMPLETED works fine on Redhat
+     with BUGs on Ubuntu 
