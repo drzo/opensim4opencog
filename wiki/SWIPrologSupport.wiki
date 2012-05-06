@@ -1,0 +1,113 @@
+  Support for the swi-Prolog language is built into Cogbot's Prolog integration module.
+
+= Starting with a prolog top level =
+
+== Setup ==
+
+You will probably want to remove a lot of debugging verbiage
+So, in 
+
+{{
+C:\pathtocogbot\bin\prolog\simulator\cogrobot.pl
+}}}
+
+On line 286
+Uncomment
+
+{{{
+% onSimEvent(_A,_B,_C):-!. % comment out this first line to print them
+}}}
+
+in
+
+{{
+C:\pathtocogbot\bin\prolog\simulator\cogrobot.pl
+}}}
+
+on line 139 modify the code to your own user name, password, and loginuri
+
+== Start ==
+
+=== With normal start ===
+
+{{{
+cd c:\pathtoCogBot\bin
+swipl-win.exe  -f prolog/cogbot.pl
+}}}
+
+and query 
+
+{{{
+ike.
+}}}
+
+
+=== Sample Module ===
+
+A sample example module is in
+
+{{{
+c:\pathtoCogBot\bin\runcogbot.pl
+}}}
+
+Double clicking it launches cogbot, brings up Radegast, and logs the bot on.  
+
+Notice that it has an end_of_file at line 35.
+
+=== From Visual Studio ===
+
+Select *swicli* as startup project
+Run with the VS *play* button
+
+= Including cogbot in your swi-Prolog program =
+
+Add a file search path to cogbot/bin/prolog directory as root of cogbot
+
+:-ensure_loaded(cogbot('simulator/cogrobot')).
+
+= Showing Radegast =
+
+{{{
+runSL.
+}}}
+
+= API's =
+
+   runSL/0,
+   listMembs/0,
+   worldSystem/1,
+   worldSystem/2,
+   botClient/1,
+   botClient/2,
+   botClientCall/1, 
+   botClientCall/2,
+   botClientCmd/1,
+   botClientCmd/2,
+   botClientCmd/3,
+   simObject/1,
+   simAvatar/1,
+   simAvDistance/3,
+   simAsset/1,
+   simAccount/1,
+   gridCliient/1,
+   resolveObjectByName/2,
+   vectorAdd/3,
+   distanceTo/2,
+   toGlobalVect/2,
+   toLocalVect/2,
+   onSimEvent/3,wasSimEvent/3,
+   obj2Npl/2,
+   npl2Obj/2,
+   chat/1,
+   chat/2,
+   chat/3,
+   createWritelnDelegate/2,
+   createWritelnDelegate/1,
+   textureIDToImage/2,
+   textureIDToImageParts/2,
+   requestTexture/1,
+   simObjectColor/2
+
+
+
+
