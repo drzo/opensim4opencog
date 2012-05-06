@@ -145,6 +145,22 @@ position (double quoted)
 
 !match CanModify
 
+! and $ in commands
+$master
+$selected   (group of selected prims)
+primid is local id
+@ coerces prim position to 3d location @primid 15
+
+@: Restrict the following commands to one or all avatars.
+
+max is maximum prims in filterset
+dist is maximum dist to avatar
+/priminfo $selected maxdist 2  
+the selected prims (that is, the prims in my 'selected' grasper) tha are within 2 meters of my AV 
+
+See all this stuff starting at line 445 of WorldCommandParsing
+
+/priminfo $selected maxdist 2.1 mindist 1.9 max 4 nth2 matches Window !matches -like ownedby $master
 
 
 
