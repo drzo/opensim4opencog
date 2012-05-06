@@ -137,17 +137,16 @@ sit bot chair
 
 Notice that you don't need quotes
 
+UUID
+localid
+a unique substring of it's name
+position (double quoted)
+[4:42:33 PM] Douglas R. Miles: mindist 1 maxdist 3 nth 1
+
+!match CanModify
 
 
 
-makes the bot sit on the nearest prim. If it's not near enough, it'll sit on the ground.
-
-but 
-
-{{{
-!sit
-}}}
-makes 
 
 bang commands are deprecated -
 
