@@ -71,6 +71,10 @@ Add a file search path to cogbot/bin/prolog directory as root of cogbot
 runSL.
 }}}
 
+Doug - what's this actually do?
+
+
+
 = API's =
 
    runSL/0,
@@ -107,5 +111,3 @@ runSL.
    textureIDToImageParts/2,
    requestTexture/1,
    simObjectColor/2
-
-
