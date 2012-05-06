@@ -38,9 +38,8 @@ then an overlay pack that has all the chatbot stuff in it
 
  * multiple AV's - COMPLETED
  * easy deployment
- * pathfinding (to level we've seen)
- * some aiml or aiml-ish implementation integrated
+ * pathfinding (to level we've seen) COMPLETED
+ * some aiml or aiml-ish implementation integrated - KinoInProgress
  * some tale-spinnish thing
  * headless mode - COMPLETED
- * mono - COMPLETED works fine on Redhat
-     with BUGs on Ubuntu 
+ * mono - COMPLETED works fine on Redhat with BUGs on Ubuntu 
