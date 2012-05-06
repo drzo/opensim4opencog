@@ -59,6 +59,7 @@
 %  desktop  - build the desktop icon and start menu entry, depending
 %             on the config setting
 %
+%  goal     - execute an arbitrary prolog goal
 
 :- use_module(library(http/html_write)).
 :- use_module(library(clpfd)).
