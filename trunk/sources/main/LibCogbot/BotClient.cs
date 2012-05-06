@@ -2170,7 +2170,11 @@ namespace cogbot
             if (string.IsNullOrEmpty(text)) return null;
             text = Parser.ParseArguments(text)[0].ToLower();
             Command fnd;
-
+            if (Commands == null || Commands.Count == 0)
+            {
+                WriteLine("No commands defined yet " + this);
+                return null;
+            }
             if (Commands.TryGetValue(text, out fnd)) return fnd;
             if (clientCmds)
             {
