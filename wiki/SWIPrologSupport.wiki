@@ -73,6 +73,13 @@ runSL.
 
 Doug - what's this actually do?
 
+= Making the bot execute a bot command =
+
+{{{
+3 ?- botClientCall(executeCommand("jump"),X),cli_writeln(X).
+"Success Jump"
+X = @'C#186521916'.
+}}}
 
 
 = API's =
