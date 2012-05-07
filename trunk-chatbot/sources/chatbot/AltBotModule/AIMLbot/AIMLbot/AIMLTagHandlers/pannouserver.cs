@@ -68,6 +68,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                     string myUrl = this.templateNode.Attributes["url"].Value;
                     string myLogin = this.templateNode.Attributes["login"].Value;
                     string myKey = this.templateNode.Attributes["key"].Value;
+                    string onFail = this.templateNode.Attributes["onfail"].Value;
                     string query = templateNodeInnerValue;
                     query = query.Replace('\n', ' ');
                     query = query.Replace('\r', ' ');
@@ -111,6 +112,11 @@ namespace AltAIMLbot.AIMLTagHandlers
                         {
 
                                 webAns = "Sorry, I don't understand.";
+                                if (onFail != null)
+                                {
+                                    bot.myBehaviors.queueEvent(onFail);
+                                }
+                                
                             }
 
                     }
@@ -118,6 +124,10 @@ namespace AltAIMLbot.AIMLTagHandlers
                     {
 
                             webAns = "Sorry, I don't understand.";
+                            if (onFail != null)
+                            {
+                                bot.myBehaviors.queueEvent(onFail);
+                            }
 
                     }
                     Console.WriteLine("pannouserver :" + webAns);

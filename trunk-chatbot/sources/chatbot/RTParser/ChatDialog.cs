@@ -436,7 +436,7 @@ namespace RTParser
 
         public Result ChatWithRequest(Request request, Result parentResultIn)
         {
-            if (useServitor)
+            if ((useServitor)&&(servitor !=null))
             {
                 string input = request.ChatInput.OrignalRawText.ToString();
                 string answer = servitor.respondToChat(input);
@@ -444,7 +444,12 @@ namespace RTParser
                 result.SetOutput = answer;
                 return result;
             }
-
+            if ((useServitor) && (servitor == null))
+            {
+                Result result = request.CreateResult(request);
+                result.SetOutput = "Servitor nulled at this time.";
+                return result;
+            }
             User target = request.Responder;
             User user = request.Requester;
             SettingsDictionary userPredicates = user.Predicates;

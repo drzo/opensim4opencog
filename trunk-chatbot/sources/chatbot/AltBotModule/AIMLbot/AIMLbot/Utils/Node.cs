@@ -414,6 +414,9 @@ namespace AltAIMLbot.Utils
                             case MatchState.Topic:
                                 query.TopicStar.Add(newWildcard.ToString());
                                 break;
+                            case MatchState.State:
+                                query.InputStar.Add(newWildcard.ToString());
+                                break;
                         }
                     }
                     query.TemplatePath = "_ " + query.TemplatePath;
@@ -438,6 +441,10 @@ namespace AltAIMLbot.Utils
                 else if (firstWord == "<TOPIC>")
                 {
                     newMatchstate = MatchState.Topic;
+                }
+                else if (firstWord == "<STATE>")
+                {
+                    newMatchstate = MatchState.State;
                 }
 
                 Node childNode = (Node)this.children[firstWord];
@@ -464,6 +471,10 @@ namespace AltAIMLbot.Utils
                                 break;
                             case MatchState.Topic:
                                 query.TopicStar.Add(newWildcard.ToString());
+                                newWildcard.Remove(0, newWildcard.Length);
+                                break;
+                            case MatchState.State:
+                                query.InputStar.Add(newWildcard.ToString());
                                 newWildcard.Remove(0, newWildcard.Length);
                                 break;
                         }
@@ -504,6 +515,9 @@ namespace AltAIMLbot.Utils
                                 break;
                             case MatchState.Topic:
                                 query.TopicStar.Add(newWildcard.ToString());
+                                break;
+                            case MatchState.State:
+                                query.InputStar.Add(newWildcard.ToString());
                                 break;
                         }
                     }

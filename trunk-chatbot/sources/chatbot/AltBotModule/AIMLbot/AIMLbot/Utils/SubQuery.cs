@@ -42,6 +42,8 @@ namespace AltAIMLbot.Utils
         /// will contain the block of text that the user has inputted that is matched by the wildcard.
         /// </summary>
         public List<string> TopicStar = new List<string>();
+        public List<string> StateStar = new List<string>();
+
         #endregion
 
         /// <summary>

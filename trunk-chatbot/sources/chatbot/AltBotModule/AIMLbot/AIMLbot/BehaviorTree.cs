@@ -160,6 +160,61 @@ namespace AltAIMLbot
 
     }
 
+    public class SemiStringStack
+    {
+        private List<string> items = new List<string>();
+
+        public void Push(string item)
+        {
+            items.Add(item);
+        }
+        public string Pop()
+        {
+            if (items.Count > 0)
+            {
+                string temp = items[items.Count - 1];
+                items.RemoveAt(items.Count - 1);
+                return temp;
+            }
+            else
+                return default(string);
+        }
+        public string PopRandom()
+        {
+            if (items.Count > 0)
+            {
+                Random rng = new Random();
+                int pick = rng.Next(items.Count - 1);
+                string temp = items[pick];
+                items.RemoveAt(pick);
+                return temp;
+            }
+            else
+                return default(string);
+        }
+
+        public int Count
+        {
+            get { return items.Count; }
+        }
+        public bool Contains(string s)
+        {
+            return items.Contains(s);
+        }
+        public void Remove(int itemAtPosition)
+        {
+            items.RemoveAt(itemAtPosition);
+         }
+        public void RemoveAny(string item)
+        {
+            int index = items.FindLastIndex(delegate(string s) { return s == item; });
+            if (index > 0)
+            {
+                items.RemoveAt(index);
+            }
+        }
+    } 
+
     [Serializable ]
     public class BehaviorSet
     {
@@ -186,12 +241,14 @@ namespace AltAIMLbot
         [NonSerialized ]
         private AltBot _bot;
 
+       
         public BehaviorSet()
         {
             //behaveTrees = new Hashtable();
             behaveTrees = new Dictionary<string, BehaviorTree>();
             VSoup = new ValenceSet();
             handlerStack = new Stack();
+            
         }
        
         public void preSerial()
@@ -516,6 +573,69 @@ namespace AltAIMLbot
             }
         }
         #endregion
+        #region bStack
+        /// <summary>
+        /// A general stack to remember things to activate later
+        /// </summary>
+        public SemiStringStack behaviorStack = new SemiStringStack();
+
+        public void pushUniqueToStack(string evnt)
+        {
+            // only one instance of an entry can be on the stack at a time
+            if (behaviorStack.Contains(evnt)) return;
+            behaviorStack.Push(evnt);
+        }
+        public void removeFromStack(string evnt)
+        {
+            // only one instance of an entry can be on the stack at a time
+            if (!behaviorStack.Contains(evnt)) return;
+            behaviorStack.RemoveAny(evnt);
+        }
+        public bool behaviorStackActive()
+        {
+            return (behaviorStack.Count>0);
+        }
+
+        public void processRandomEventStack()
+        {
+            string ourEvent = "";
+            if (behaviorStack.Count > 0)
+            {
+                try
+                {
+                    ourEvent = behaviorStack.PopRandom();
+                    Console.WriteLine(" *** processOneEventStack : {0}", ourEvent);
+                    runEventHandler(ourEvent);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(" ERR: processOneEventStack '{0}' exception induced failure! ", ourEvent);
+                    Console.WriteLine("ERR:" + e.Message);
+                    Console.WriteLine("ERR:" + e.StackTrace);
+                }
+            }
+        }
+        public void processOneEventStack()
+        {
+            string ourEvent = "";
+            if (behaviorStack.Count > 0)
+            {
+                try
+                {
+                    ourEvent = behaviorStack.Pop();
+                    Console.WriteLine(" *** processOneEventStack : {0}", ourEvent);
+                    runEventHandler(ourEvent);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(" ERR: processOneEventStack '{0}' exception induced failure! ", ourEvent);
+                    Console.WriteLine("ERR:" + e.Message);
+                    Console.WriteLine("ERR:" + e.StackTrace);
+                }
+            }
+        } 
+        #endregion
+
 
         public RunStatus runBotBehavior(string behaviorName, AltBot deBot)
         {
@@ -970,7 +1090,26 @@ namespace AltAIMLbot
             }
             this.bot.myBehaviors.popHandlers();
         }
+
+
         #region TagProcessors
+
+        public RunStatus ProcessPushBehavior(XmlNode myNode)
+        {
+            string behavior = myNode.InnerText;
+            bot.myBehaviors.pushUniqueToStack(behavior);
+            return RunStatus.Success;
+        }
+        public RunStatus ProcessPopBehavior(XmlNode myNode)
+        {
+            bot.myBehaviors.processOneEventStack();
+            return RunStatus.Success;
+        }
+        public RunStatus ProcessPopRandomBehavior(XmlNode myNode)
+        {
+            bot.myBehaviors.processRandomEventStack();
+            return RunStatus.Success;
+        }
 
         public RunStatus ProcessBehavior(XmlNode myNode)
         {
@@ -1109,7 +1248,8 @@ namespace AltAIMLbot
                         restorePoint[nodeID] = childIndex + 1;
                     }
                     Console.WriteLine("\n\n****** COMPLEX BEHAVIOR EXIT FAILURE\n\n");
-
+                    // we put this behavior in the running for resumption
+                    bot.myBehaviors.pushUniqueToStack(nodeID);
                     return RunStatus.Failure;
 
                 }
@@ -1121,6 +1261,7 @@ namespace AltAIMLbot
             }
             // if we make it to the end then the reset the restore point
             restorePoint[nodeID] = 0;
+            bot.myBehaviors.removeFromStack(nodeID);
             Console.WriteLine("\n\n****** COMPLEX BEHAVIOR EXIT SUCCESS\n\n");
             return RunStatus.Success;
 
@@ -1545,6 +1686,8 @@ namespace AltAIMLbot
 
             // Special variables?
             if (varName == "timeout") bbVal = elapsedTime;
+            if (varName == "behaviorstackcount") bbVal = bot.myBehaviors.behaviorStack.Count;
+            if (varName == "behaviorqueuecount") bbVal = bot.myBehaviors.eventQueue.Count;
             if (varName == "prob") bbVal = rgen.NextDouble();
             if (varName.Contains(".runtime"))
             {

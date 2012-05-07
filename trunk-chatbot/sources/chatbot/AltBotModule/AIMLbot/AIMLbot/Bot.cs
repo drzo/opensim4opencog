@@ -379,6 +379,12 @@ namespace AltAIMLbot
         /// </summary>
         public Stack<string> conversationStack = new Stack<string>();
 
+        /// <summary>
+        /// in the <say> tag should the sapi be passed as-is (using innerXML) or not (using innerText)
+        /// usually set when the sayProcessor delegate is set
+        /// </summary>
+        public bool saySapi = false;
+
         #endregion
 
         #region Delegates
@@ -1097,6 +1103,9 @@ namespace AltAIMLbot
                             break;
                         case "say":
                             tagHandler = new AIMLTagHandlers.say(this, user, query, request, result, node);
+                            break;
+                        case "sapi":
+                            tagHandler = new AIMLTagHandlers.sapi(this, user, query, request, result, node);
                             break;
                         case "satisfied":
                             tagHandler = new AIMLTagHandlers.satisfied(this, user, query, request, result, node);

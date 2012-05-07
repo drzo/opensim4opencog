@@ -12,6 +12,7 @@ namespace AltAIMLbot.Utils
     {
         UserInput,
         That,
-        Topic
+        Topic,
+        State
     }
 }

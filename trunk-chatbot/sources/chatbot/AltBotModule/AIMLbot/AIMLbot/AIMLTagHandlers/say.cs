@@ -57,6 +57,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                     {
                         // non atomic version of the node
                         string message = this.templateNode.InnerText;
+                        //if (bot.saySapi) message = this.templateNode.InnerXml;
                         Console.WriteLine("  SayA msg1:{0}", message);
                         //if (message.Length > 0) this.user.bot.sayProcessor(message);
                         this.bot.setBBHash("TTSText", message);

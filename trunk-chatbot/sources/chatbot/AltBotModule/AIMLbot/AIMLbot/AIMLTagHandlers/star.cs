@@ -49,7 +49,8 @@ namespace AltAIMLbot.AIMLTagHandlers
                     if (this.templateNode.Attributes.Count == 0)
                     {
                         // return the first (latest) star in the List<>
-                        return (string)this.query.InputStar[0];
+                        //return (string)this.query.InputStar[0];
+                        return (string)this.query.InputStar[this.query.InputStar.Count-1];
                     }
                     else if (this.templateNode.Attributes.Count == 1)
                     {
@@ -61,7 +62,8 @@ namespace AltAIMLbot.AIMLTagHandlers
                                 index--;
                                 if ((index >= 0) & (index < this.query.InputStar.Count))
                                 {
-                                    return (string)this.query.InputStar[index];
+                                    //return (string)this.query.InputStar[index];
+                                    return (string)this.query.InputStar[this.query.InputStar.Count-index-1];
                                 }
                                 else
                                 {
