@@ -75,7 +75,7 @@ Doug - what's this actually do?
 
 = Making the bot execute a bot command =
 
-[BotCommand botcmd language] is the basic command language for ordering the bot to do things in world. You can execute bot commands from Prolog.
+[BotCommands botcmd language] is the basic command language for ordering the bot to do things in world. You can execute bot commands from Prolog.
 
 {{{
 3 ?- botClientCall(executeCommand("jump"),X),cli_writeln(X).
