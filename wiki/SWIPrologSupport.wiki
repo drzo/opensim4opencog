@@ -65,13 +65,16 @@ Add a file search path to cogbot/bin/prolog directory as root of cogbot
 
 :-ensure_loaded(cogbot('simulator/cogrobot')).
 
-= Showing Radegast =
+= Logging the bot on =
+
+If you didn't log the bot on automatically at startup, 
 
 {{{
 runSL.
 }}}
 
-Doug - what's this actually do?
+Makes sure the bot is running. Logs bot on using the botconfig.xml
+parameters if necessary.
 
 = Making the bot execute a bot command =
 
