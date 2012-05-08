@@ -121,21 +121,18 @@ For example, SimAvatar is the underlying representation of agents the simulator 
 X = @'C#638101232';
 X = @'C#638101728';
 X = @'C#638111960';
-X = @'C#638101045';
 false.
 
 }}}
 
-The term @atom is a reference to a C# SimAvatar object.
+The term @atom is a reference to a C# object, in this case an instance of SimAvatar.
 
 With a reference we can use cli_get to extract information from the reference.
-
-The simulator retains references to agents that have recently signed off, but only truly signed on avatars are represented by an in world object. So we can filter our results to those where the C# method hasprim returns true. Since it's a C# true we need to unify with @(true). Notice that the code below lists only 3 avatars, the code above lists 4.
 
 The shorthand method cli_to_str/2 calls to_string on the object.
 
 {{{
-[1] 58 ?- simAvatar(X),cli_get(X,hasprim,@(true)),cli_to_str(X,S).
+[1] 58 ?- simAvatar(X),cli_to_str(X,S).
 X = @'C#638101232',
 S = "BinaBot Daxeline" ;
 X = @'C#638101728',
