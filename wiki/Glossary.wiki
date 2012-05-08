@@ -1,4 +1,3 @@
-
 = Introduction =
 
 This is a glossary of terms, parts, and pieces of Cogbot.
@@ -27,11 +26,23 @@ If you add entries please keep them alphabetized
 
   * Second Life - A large virtual world service operated by Linden Labs
 
+  * SimAvatar - the C# object that represents an avatar known to the simulator, human or bot. You may only want logged on agents, in which case you need to check if the AV has a prim, like this:
+
+{{{
+[1] 58 ?- simAvatar(X),cli_get(X,hasprim,@(true)),cli_to_str(X,S).
+X = @'C#638101232',
+S = "BinaBot Daxeline" ;
+X = @'C#638101728',
+S = "Nephrael Rajesh" ;
+X = @'C#638111960',
+S = "Trollerblades Wasp" ;
+false.
+
+}}}
+
   * SWICLI - An interface between swi-prolog and Microsoft CLI, the bytecode format for .Net. Because LibOMV, the SL protocol library, is in C#, many things have been built in C# to run CLI on .NET or Mono
 
   * swipl - swi-Prolog, a prolog implementation with integrated IDE. Cogbot supports swi-Prolog programming
 
   * WordNet - a semantic thesaurus by Purdue Univ. used by Cogbot to improve AIML matching.
-
-
 
