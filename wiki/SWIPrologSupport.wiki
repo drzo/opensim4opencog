@@ -92,6 +92,41 @@ If the command takes args
 botClientCmd(say('hello world')).
 }}}
 
+= [SwiCLI] =
+
+Cogbot's core is written in C#. Access to the underlying C# objects is through [SwiCLI], a bridge between swi-Prolog and the CLI runtime that C# is built upon.
+
+For example, SimAvatar is the underlying representation of agents the simulator knows about. The predicate  simAvatar/1 unifies if it's argument is a reference to a known SimAvatar object.
+
+{{{
+[1] 58 ?- simAvatar(X).
+X = @'C#638101232';
+X = @'C#638101728';
+X = @'C#638111960';
+X = @'C#638101045';
+false.
+
+}}}
+
+The term @atom is a reference to a C# SimAvatar object.
+
+With a reference we can use cli_get to extract information from the reference.
+
+The simulator retains references to agents that have recently signed off, but only truly signed on avatars are represented by an in world object. So we can filter our results to those where the C# method hasprim returns true. Since it's a C# true we need to unify with @(true). Notice that the code below lists only 3 avatars, the code above lists 4.
+
+The shorthand method cli_to_str/2 calls to_string on the object.
+
+{{{
+[1] 58 ?- simAvatar(X),cli_get(X,hasprim,@(true)),cli_to_str(X,S).
+X = @'C#638101232',
+S = "BinaBot Daxeline" ;
+X = @'C#638101728',
+S = "Nephrael Rajesh" ;
+X = @'C#638111960',
+S = "Trollerblades Wasp" ;
+false.
+}}}
+
 
 
 = API's =
