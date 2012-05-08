@@ -1,0 +1,25 @@
+#Cogbot command line
+
+= Introduction =
+
+Cogbot.exe [opts]
+
+ * -aiml          Runs just the AIML interpretor")]
+ * -swipl         Runs just the SWIPL interpretor
+ * -httpd <port>  Start bot HTTPD on Port
+ * -nogui         Headless daemon operation
+ * -lcd           Locally change the directory
+
+= Headless server command line (from Program.cs) =
+
+The cogbot server is usually started from Radegast
+
+ * --lcd [Dir] Change the working directory
+ * --noexcpt   Ignore exceptions
+ * --aiml      Only the aiml interpretor
+ * --plwin     Display a prolog top level
+ * --swipl     DOUG?
+ * --main      DOUG?
+ * --noconfig 
+ * --console
+ * --nogui     don't start Radegast
