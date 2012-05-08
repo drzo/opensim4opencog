@@ -24,14 +24,13 @@ Uncomment
 % onSimEvent(_A,_B,_C):-!. % comment out this first line to print them
 }}}
 
-To set up your bot's credentials,
-in
+
+To set up your bot's credentials, on line 139 of this file modify the code to your own user name, password, and loginuri:
 
 {{{
-C:\pathtocogbot\bin\prolog\simulator\cogrobot.pl
+C:\pathtocogbot\bin\prolog\cogbot.pl
 }}}
 
-on line 139 modify the code to your own user name, password, and loginuri
 
 == Start ==
 
