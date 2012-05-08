@@ -1,5 +1,11 @@
   Support for the swi-Prolog language is built into Cogbot's Prolog integration module.
 
+  API's for swipl integration with Cogbot are in 
+
+{{{
+C:\pathtocogbot\bin\prolog\simulator\cogrobot.pl
+}}}
+
 = Starting with a prolog top level =
 
 == Setup ==
