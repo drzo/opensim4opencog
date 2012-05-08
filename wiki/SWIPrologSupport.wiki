@@ -82,6 +82,14 @@ runSL.
 Makes sure the bot is running. Logs bot on using the botconfig.xml
 parameters if necessary.
 
+= Showing Radegast =
+
+{{{
+?-botClientCmd(showgui).
+}}}
+
+Notice that closing the Radegast window kills the bot and the prolog process.
+
 = Making the bot execute a bot command =
 
 [BotCommands botcmd language] is the basic command language for ordering the bot to do things in world. You can execute bot commands from Prolog.
