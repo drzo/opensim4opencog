@@ -10,6 +10,8 @@ C:\pathtocogbot\bin\prolog\simulator\cogrobot.pl
 
 == Setup ==
 
+=== remove excess debugging ===
+
 You will probably want to remove a lot of debugging verbiage
 So, in 
 
@@ -24,6 +26,8 @@ Uncomment
 % onSimEvent(_A,_B,_C):-!. % comment out this first line to print them
 }}}
 
+
+=== Set Bot Credentials ===
 
 To set up your bot's credentials, on line 139 of this file modify the code to your own user name, password, and loginuri:
 
