@@ -24,6 +24,7 @@ Uncomment
 % onSimEvent(_A,_B,_C):-!. % comment out this first line to print them
 }}}
 
+To set up your bot's credentials,
 in
 
 {{{
