@@ -134,7 +134,13 @@ deed, etc. on front tab of edit panel
 
 == parcel controls ==
 
+== reading parcel info ==
+
+=== banning/ ejecting ===
+
 == region/estate controls ==
+
+==reading region/estate info ==
 
 = gestures =
 
@@ -153,6 +159,10 @@ deed, etc. on front tab of edit panel
 == stop animation ==
 
 = profile =
+
+== get picks iterator ==
+
+== get rez date ==
 
 = preferences =
 
@@ -192,8 +202,72 @@ texture animation?
 
 == detecting newly rezzed/deleted objects ==
 
+== detect sound play ==
+
 = money =
 
 == pay lindens ==
 
 = camera -do we even have one? =
+
+= using assets =
+
+== play sound ==
+
+== notecard ==
+
+=== read contents ===
+
+=== create ===
+
+== script ==
+
+=== create ===
+
+=== start/stop ===
+
+=== add/remove from object inventory ===
+
+=== save to/ load from my inventory ===
+
+= voice =
+
+= sit =
+
+== determine what I'm sitting on ==
+
+== sit on something ==
+
+== unsit ==
+
+= point, look, touch =
+
+== set point at/ look at ==
+
+== select an object(s) ==
+
+== touch an object ==
+
+== grab a physical object ==
+
+== detect what another av is selecting ==
+
+= movement =
+
+== walk ==
+
+== run ==
+
+== fly ==
+
+== stop flying / fall ==
+
+== jump ==
+
+= media/ browser interaction =
+
+= mute =
+
+== mute/unmute an av ==
+
+== mute/ unmute an object ==
