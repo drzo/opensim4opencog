@@ -52,12 +52,12 @@ same_refs(A,B):-nonvar(A),nonvar(B),same_file(A,B),!.
 same_refs(A,B):-expand_to_absolutes(A,AA),expand_to_absolutes(B,BB),same_file(AA,BB),!.
 
 join_pathnames(First,Second,All):-var(First),nonvar(Second),nonvar(All),!,
-   expand_to_absolutes(All,Joined),atomic(Joined),trace,   
+   expand_to_absolutes(All,Joined),atomic(Joined),trace,
    concat_atom(List,'/',Joined),
    expand_aliases_locally(Second,BE),
-   append(AE,BE0,List),concat_atom(BE0,'/',BE),   
+   append(AE,BE0,List),concat_atom(BE0,'/',BE),
    expand_aliases(First,AE),!.
-   
+
 join_pathnames(First,Second,All):-nonvar(First),nonvar(Second),var(All),!,
    cb_file_search_path(First,A),expand_to_absolutes(A,AE),
    cb_file_search_path(Second,B),concat_atom([AE,B],'/',Joined),expand_to_absolutes(Joined,Place),!,same_refs(Place,All),!.
@@ -67,7 +67,7 @@ join_pathnames(First,Second,All):-nonvar(First),var(Second),nonvar(All),!,
    cb_file_search_path(First,A),expand_to_absolutes(A,AE),
    cb_file_search_path(Second,B),concat_atom([AE,B],'/',Joined),expand_to_absolutes(Joined,Place),!,same_refs(Place,All),!.
 
-join_pathnames(First,Second,Full):-var(First),nonvar(Full),   
+join_pathnames(First,Second,Full):-var(First),nonvar(Full),
    cb_file_search_path(First,A),expand_to_absolutes(A,AE),
    cb_file_search_path(Second,B),concat_atom([AE,B],'/',Joined),expand_to_absolutes(Joined,Place),is_absolute_file_name(Place),!.
 
@@ -136,9 +136,16 @@ guitracer:-debug.
 :-dynamic(ike1Ran).
 ike1:-ike1Ran,!.
 ike1:-assert(ike1Ran),fail.
-ike1:-cogrobot:clientManager(X),cli_call(X,'CreateBotClient'('DimeBagFurry','Resident','abc123', "https://login.agni.lindenlab.com/cgi-bin/login.cgi","home"),_Y). %% ,cli_call(Y,'LoginBlocked',_). %%('@'(true))
+ike1:-cogrobot:clientManager(X),cli_call(X,'CreateBotClient'('ike','Testbot','060788', "http://www.pathwayslms.com:9000/","home"),_Y). %% ,cli_call(Y,'LoginBlocked',_). %%('@'(true))
 %ike1:-cogrobot:clientManager(X),cli_call(X,'CreateBotClient'('Nephrael','Rae','abc123', "https://login.agni.lindenlab.com/cgi-bin/login.cgi","home"),Y). %% ,cli_call(Y,'LoginBlocked',_). %%('@'(true))
 ike:-thread_create(ike1,_,[]).
+
+:-dynamic(raphe1Ran).
+raphe1:- raphe1Ran,!.
+raphe1:-assert(raphe1Ran),fail.
+raphe1:-cogrobot:clientManager(X),cli_call(X,'CreateBotClient'('raphe','Testbot','060788', "http://www.pathwayslms.com:9000/","home"),_Y).
+raphe:-thread_create(raphe1,_,[]).
+
 gui:-thread_create(botClientCmd(showgui),_,[]).
 %% cli_call('System.Threading.ThreadPool','GetAvailableThreads'(X,Y),_)
 %%onFirstBotClient("'(thisClient \"ILikeIKE Resident\")"-_g2886-"'(thisClient \"ILikeIKE Resident\")")
