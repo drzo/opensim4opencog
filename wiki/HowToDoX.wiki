@@ -6,15 +6,42 @@
 
 = Overall =
 
-== Start one or more bots ==
+== Log in a bot ==
+
+{{{
+:-dynamic(raphe1Ran).
+raphe1:- raphe1Ran,!.
+raphe1:-assert(raphe1Ran),fail.
+raphe1:-cogrobot:clientManager(X),cli_call(X,'CreateBotClient'('FirstName','LastName','sekretpassword', "http://www.pathwayslms.com:9000/","home"),_Y).
+raphe:-thread_create(raphe1,_,[]).
+
+?-raphe.
+
+}}}
 
 == switch commands to a bot ==
 
+DOUG -  ????
+
+{{{
+11 ?- botClientCmd(setbot).
+@'C#505389568':"SetOnlyOneCurrentBotClient="
+"Success setbot"
+true.
+}}}
+
 == attach/detach radegast ==
+
+DOUG - how to control which I attach to?
+DOUG - detach
 
 == log bots out ==
 
+DOUG
+
 == shut down and exit cleanly ==
+
+DOUG
 
 = Work with assets =
 
@@ -26,6 +53,14 @@ How do I save assets?
 == Images ==
 
 === Upload ===
+
+{{{
+17 ?- botClientCmd('help uploadimage').
+@'C#505406816':"uploadimage: Upload an image to your inventory."
+@'C#505406816':"Help complete"
+"Success help"
+true.
+}}}
 
 === Get Image from UUID ===
 
@@ -176,7 +211,9 @@ deed, etc. on front tab of edit panel
 
 == Activate a group ==
 
-set role?
+botClientCmd('activategroup MyGroup').
+
+DOUG - set role?
 
 = getting information from the environment =
 
@@ -258,7 +295,12 @@ texture animation?
 
 = movement =
 
+waitpos
+
 == walk ==
+
+botClientCmd(crouch).
+botClientCmd(jump).
 
 == run ==
 
@@ -267,6 +309,11 @@ texture animation?
 == stop flying / fall ==
 
 == jump ==
+
+{{{
+?- botClientCmd(crouch).
+?- botClientCmd(jump).
+}}}
 
 = media/ browser interaction =
 
@@ -282,6 +329,13 @@ texture animation?
 botClientCmd(help).
 ... much help text ...
 
+
+15 ?- botClientCmd('help activategroup').
+@'C#505396056':"activategroup: Set a group as active."
+@'C#505396056':"Help complete"
+"Success help"
+true.
+
 6 ?- botClientCmd('debug Debug').
 @'C#505362840':"Logging is set to Debug"
 "Success debug"
@@ -290,4 +344,6 @@ true.
 Usage: //debug [level] where level is one of None, Debug, Error, Info, Warn
 }}}
 
+= Interrupt current action =
 
+@'C#505366584':"botact: Invoke a command a bot interuptable action (interupts previous foreground action)."
