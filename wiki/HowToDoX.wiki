@@ -1,0 +1,199 @@
+#Description how to do various things
+
+= Introduction =
+
+  This page is arranged by thing a programmer might want to do in Cogbot
+
+= Overall =
+
+== Start one or more bots ==
+
+== switch commands to a bot ==
+
+== attach/detach radegast ==
+
+== log bots out ==
+
+== shut down and exit cleanly ==
+
+= Work with assets =
+
+How do I set permissions when uploading?
+How do I set name and description?
+
+How do I save assets?
+
+== Images ==
+
+=== Upload ===
+
+=== Get Image from UUID ===
+
+get as what?
+
+Can I manipulate the image data?
+
+== Sound ==
+
+=== Upload ===
+
+=== Determine Length ===
+
+== Animation ==
+
+=== Upload ===
+
+Loop?  In/out %?
+Ease?
+Hand pose/expression
+priority
+
+=== Characteristics ===
+
+What info can I get?
+
+= snapshots =
+
+== Taking a snapshot ==
+
+=== To disk ===
+
+=== To Inventory ===
+
+= attachments =
+
+== attaching inventory ==
+
+How to set attachment point
+
+== detaching inventory ==
+
+== Touching an attachment ==
+
+=== on self ===
+
+=== on other ===
+
+= rezzed objects =
+
+== rez standard objects ==
+
+=== rez plants ===
+
+== rez from inventory ==
+
+== save to inventory ==
+
+== change rezzed object ==
+
+=== move, scale, rotate, change cut and so on ===
+
+=== link ===
+
+=== change texture ID and UV mapping ===
+
+alpha? colors? glow? fullbright? bumpmap?
+
+=== change contents ====
+
+=== change permissions ===
+
+=== set for sale ===
+
+=== share wtih group ===
+
+deed, etc. on front tab of edit panel
+
+=== Set locked, physical, phantom, temp ===
+
+=== Flexi and light ===
+
+= inventory =
+
+=== move items ===
+
+=== delete items ===
+
+=== modify permissions ===
+
+=== wear from inventory ===
+
+= clothing =
+
+== wear ==
+
+== remove ==
+
+== modify (appearance mode) ==
+
+== bake appearance ==
+
+= land =
+
+== modify terrain ==
+
+== parcel controls ==
+
+== region/estate controls ==
+
+= gestures =
+
+== create gesture ==
+
+== activate gesture ==
+
+== play gesture ==
+
+= animations =
+
+== play animation ==
+
+== get list of animations playing ==
+
+== stop animation ==
+
+= profile =
+
+= preferences =
+
+== network settings ==
+
+= friends =
+
+???
+
+= groups =
+
+= getting information from the environment =
+
+== objects rezzed in world ==
+
+=== prim params ===
+
+=== face params ===
+
+texture animation?
+
+=== media params ===
+
+== attachments and clothing on other av's ==
+
+== attachments and clothing on self ==
+
+== listening to chat ==
+
+== sun, wind, clouds ==
+
+== payment event ==
+
+== determining ground height ==
+
+== collisions ==
+
+== detecting newly rezzed/deleted objects ==
+
+= money =
+
+== pay lindens ==
+
+= camera -do we even have one? =
