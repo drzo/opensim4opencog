@@ -245,6 +245,8 @@ texture animation?
 
 == detect sound play ==
 
+== detect having been ejected ==
+
 = money =
 
 == pay lindens ==
