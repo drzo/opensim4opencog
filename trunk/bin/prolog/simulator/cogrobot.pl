@@ -283,7 +283,7 @@ nop(_).
 
 
 %% print some events
-%%onSimEvent(_A,_B,_C):-!. % comment out this first line to print them
+onSimEvent(_A,_B,_C):-!. % comment out this first line to print them
 :-dynamic(wasSimEvent/3).
 onSimEvent(_A,B,C):-contains_var("On-Log-Message",a(B,C)),!.
 onSimEvent(_A,B,C):-contains_var('DATA_UPDATE',a(B,C)),!.
