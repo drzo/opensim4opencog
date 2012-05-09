@@ -299,6 +299,9 @@ texture animation?
 
 waitpos
 
+@'C#505366584':"autopilot: Moves the avatar to the specified global position using simulator autopilot."
+
+
 == walk ==
 
 botClientCmd(crouch).
