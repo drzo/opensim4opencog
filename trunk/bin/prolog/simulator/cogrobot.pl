@@ -176,7 +176,7 @@ clientManager(SingleInstance):-cli_get('cogbot.ClientManager','SingleInstance',S
 
 %% get the botClient Instance
 % this only unifies once, someday there will be a BotClients
-botClient(Obj):-clientManager(Man),cli_get(Man,'LastRefBotClient',Obj).
+botClient(Obj):-clientManager(Man),cli_get(Man,'LastBotClient',Obj).
 
 % given an object and a property returns value for the avatar
 %
