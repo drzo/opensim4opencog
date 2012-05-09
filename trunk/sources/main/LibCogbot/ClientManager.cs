@@ -608,6 +608,7 @@ namespace cogbot
         {
             get
             {
+                if (OnlyOneCurrentBotClient != null) return OnlyOneCurrentBotClient;
                 if (LastRefBotClient != null) return LastRefBotClient;
                 return null;
             }
