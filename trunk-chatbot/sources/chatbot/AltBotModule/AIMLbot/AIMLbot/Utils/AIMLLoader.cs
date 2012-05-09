@@ -4,6 +4,7 @@ using System.Xml;
 using System.IO;
 using System.Text;
 using System.Threading;
+ 
 
 namespace AltAIMLbot.Utils
 {
@@ -167,6 +168,11 @@ namespace AltAIMLbot.Utils
             // process each of these child nodes
             foreach (XmlNode currentNode in rootChildren)
             {
+                if (currentNode.Name == "ser")
+                {
+                    processSer(currentNode, filename);
+                    continue;
+                }
                 if (currentNode.Name == "topic")
                 {
                     this.processTopic(currentNode, filename);
@@ -272,6 +278,10 @@ namespace AltAIMLbot.Utils
                 {
                     processImmediate(thisNode, filename);
                 }
+                if (thisNode.Name == "ser")
+                {
+                    processSer(thisNode, filename);
+                }
             }
         }
 
@@ -327,6 +337,60 @@ namespace AltAIMLbot.Utils
                 {
                     processImmediate(thisNode, filename);
                 }
+                if (thisNode.Name == "ser")
+                {
+                    processSer(thisNode, filename);
+                }
+            }
+        }
+        /// <summary>
+        /// Adds a preprocessed path and content to the  graphmaster structure
+        /// </summary>
+        /// <param name="node">the XML node containing the category</param>
+        /// <param name="filename">the file from which this category was taken</param>
+        private void processSer(XmlNode node, string filename)
+        {
+            Node ourGraphMaster;
+            if (this.bot.Graphs.ContainsKey(this.graphName))
+            {
+                ourGraphMaster = this.bot.Graphs[this.graphName];
+            }
+            else
+            {
+                ourGraphMaster = this.bot.Graphmaster;
+            }
+            XmlNode template = this.FindNode("template", node);
+            string categoryPath = "";
+            
+            categoryPath = node.Attributes["path"].Value;
+            if ((categoryPath ==null) || (categoryPath.Length ==0)) return;
+            categoryPath = categoryPath.Trim();
+            if ((categoryPath == null) || (categoryPath.Length == 0)) return;
+
+            if (object.Equals(null, template))
+            {
+                this.bot.writeToLog("Missing template tag in the node with path: " + categoryPath + " found in " + filename);
+                return;
+            }
+
+            // o.k., add the processed AIML to the GraphMaster structure
+            if (categoryPath.Length > 0)
+            {
+                try
+                {
+                    //this.bot.Graphmaster.addCategory(categoryPath, template.OuterXml, filename, 1, 1);
+                    ourGraphMaster.addCategory(categoryPath, template.OuterXml, filename, 1, 1);
+                    // keep count of the number of categories that have been processed
+                    this.bot.Size++;
+                }
+                catch
+                {
+                    this.bot.writeToLog("ERROR! Failed to load a new category into the graphmaster where the path = " + categoryPath + " and template = " + template.OuterXml + " produced by a category in the file: " + filename);
+                }
+            }
+            else
+            {
+                this.bot.writeToLog("WARNING! Attempted to load a new category with an empty pattern where the path = " + categoryPath + " and template = " + template.OuterXml + " produced by a category in the file: " + filename);
             }
         }
 

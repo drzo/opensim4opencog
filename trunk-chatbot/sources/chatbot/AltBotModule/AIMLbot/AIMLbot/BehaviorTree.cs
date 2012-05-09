@@ -232,7 +232,15 @@ namespace AltAIMLbot
                 set {
                         _bot = value;
 
-                        foreach (string k in behaveTrees.Keys)
+                        List<string> btList = new List<string>();
+                        lock (behaveTrees)
+                        {
+                            foreach (String treeName in behaveTrees.Keys)
+                            {
+                                btList.Add(treeName);
+                            }
+                        }
+                        foreach (string k in btList)
                         {
                             behaveTrees[k].bot = _bot;
                         }
@@ -291,6 +299,17 @@ namespace AltAIMLbot
             outfile.Close();
         }
 
+        public List<string> behaviorXmlList()
+        {
+            List<string> XList = new List<string>();
+            foreach (String treeName in behaveTrees.Keys)
+            {
+                string docText = behaveTrees[treeName].treeDoc.OuterXml;
+                XList.Add(docText);
+            }
+            return XList;
+        }
+
         public void loadFromFiles(string ID)
         {
             if (behaveTrees.ContainsKey(ID))
@@ -320,6 +339,7 @@ namespace AltAIMLbot
                 BehaviorTree newTree = new BehaviorTree();
                 newTree.defineBehavior(treeName, behaviorDef);
                 behaveTrees[treeName] = newTree;
+                if (_bot != null) behaveTrees[treeName].bot = _bot;
                 persistToFile(treeName);
             }
             catch (Exception e)
@@ -673,7 +693,7 @@ namespace AltAIMLbot
 
         public void runBotBehaviors(AltBot deBot)
         {
-            bot = deBot;
+            if (bot != deBot) bot = deBot;
 
             processEventQueue();
             // if there is a root defined then run it
@@ -701,26 +721,41 @@ namespace AltAIMLbot
             }
             else
             {
-
-                foreach (string treeName in behaveTrees.Keys)
+                try
                 {
-                    try
+                    List <string> bkeys = new List<string> ();
+                    foreach (string treeName in behaveTrees.Keys)
                     {
-                        BehaviorTree curTree = (BehaviorTree)behaveTrees[treeName];
-                        if (curTree == null)
-                        {
-                            Console.WriteLine("WARN: Tree '{0}' is null", treeName);
-                            return;
-                        } 
-                        curTree.runBehaviorTree(deBot);
+                        bkeys.Add(treeName);
                     }
-                    catch (Exception e)
+
+                    foreach (string treeName in bkeys)
                     {
-                        Console.WriteLine("ERR: SourceTree =", treeName);
-                        Console.WriteLine("ERR:" + e.Message);
-                        Console.WriteLine("ERR:" + e.StackTrace);
+                        try
+                        {
+                            BehaviorTree curTree = (BehaviorTree)behaveTrees[treeName];
+                            if (curTree == null)
+                            {
+                                Console.WriteLine("WARN: Tree '{0}' is null", treeName);
+                                continue;
+                            }
+                            curTree.runBehaviorTree(deBot);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("ERR: SourceTree =", treeName);
+                            Console.WriteLine("ERR:" + e.Message);
+                            Console.WriteLine("ERR:" + e.StackTrace);
+                        }
                     }
                 }
+                catch (Exception e)
+                {
+                    Console.WriteLine("ERR: runBotBehaviors");
+                Console.WriteLine("ERR:" + e.Message);
+                Console.WriteLine("ERR:" + e.StackTrace);
+                }
+
             }
 
         }
@@ -1273,7 +1308,7 @@ namespace AltAIMLbot
             RunStatus result = RunStatus.Success;
             try
             {
-                bot.myBehaviors.queueEvent("abort");
+                bot.myBehaviors.queueEvent("break");
             }
             catch (Exception e)
             {
@@ -1442,6 +1477,7 @@ namespace AltAIMLbot
             }
             // if we make it to the end then the reset the restore point
             restorePoint[nodeID] = -1;
+            bot.myBehaviors.removeFromStack(nodeID);
             Console.WriteLine("\n\n****** COMPLEX RBEHAVIOR EXIT SUCCESS\n\n");
             return RunStatus.Success;
 
@@ -1459,6 +1495,13 @@ namespace AltAIMLbot
                         
                         continueflag = false;
                         bot.myBehaviors.queueEvent("onabort");
+                        bot.outputQueue.Clear();
+                    }
+                    if (peekstr == "break")
+                    {
+
+                        continueflag = false;
+                        bot.myBehaviors.queueEvent("onbreak");
                         bot.outputQueue.Clear();
                     }
                     bot.myBehaviors.processOneEventQueue();
@@ -1901,9 +1944,21 @@ namespace AltAIMLbot
 
             try
             {
-                sentStr += bot.lastBehaviorChatInput;
+
+                bot.lastBehaviorChatInput = "";
+                bot.lastBehaviorChatOutput = "";
+                if (bot.chatInputQueue.Count == 0)
+                {
+                    return RunStatus.Success;
+                }
+               
+                if (bot.chatInputQueue.Count > 0)
+                {
+                    bot.lastBehaviorChatInput = bot.chatInputQueue.Dequeue();
+                    sentStr += bot.lastBehaviorChatInput;
+                }
                 Request r = new Request(sentStr, bot.lastBehaviorUser, bot);
-                Result res = bot.Chat(r,graphName);
+                Result res= bot.Chat(r, graphName);
                 //bot.lastBehaviorChatOutput=res.Output;
                 bot.lastBehaviorChatOutput = "";
                 bot.postOutput(res.Output);

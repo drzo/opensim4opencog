@@ -579,6 +579,30 @@ namespace RTParser
             }
 
             if (servitor.skiploading) return;
+
+            string graphcache = GlobalSettings.grabSetting("graphcache");
+            if (File.Exists(graphcache))
+            {
+                try
+                {
+                    bool localCritical = servitor.curBot.inCritical;
+                    servitor.curBot.inCritical = true;
+                    servitor.loadAIMLFromFile(graphcache);
+                    servitor.curBot.inCritical = localCritical;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("***** ERR reloadServitor():{0} ERR ******", e.Message );
+                }
+                servitor.skiploading = true;
+                Console.WriteLine("***** reloadServitor():{0} COMPLETE ******", graphcache);
+                return;
+            }
+            else
+            {
+                Console.WriteLine("No file exists for reloadServitor(graphcache)");
+            }
+
             string servitorbin = GlobalSettings.grabSetting("servitorbin");
             if (File.Exists(servitorbin))
             {
@@ -593,8 +617,47 @@ namespace RTParser
         public void saveServitor()
         {
             List<string> allPaths = new List<string>();
-            servitor.curBot.Graphmaster.collectPaths("",allPaths);
-            File.WriteAllLines(@"./aiml/graphmap.txt", allPaths.ToArray());
+            List<string> allCrons = new List<string>();
+            List<string> allBehaviors = new List<string>();
+            //servitor.curBot.Graphmaster.collectPaths("",allPaths);
+            //File.WriteAllLines(@"./aiml/graphmap.txt", allPaths.ToArray());
+            string graphcache = GlobalSettings.grabSetting("graphcache");
+            if (File.Exists(graphcache))
+            {
+                Console.WriteLine("***** saveServitor():{0} SKIPPING ******", graphcache);
+                servitor.skiploading = true;
+                return;
+            }
+            string[] header = { "<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "<aiml version=\"1.0\">", " <state name=\"*\">" };
+            string[] footer = { " </state>", "</aiml>" };
+            servitor.curBot.Graphmaster.collectFullPaths("", allPaths);
+            allCrons = servitor.curBot.myCron.cronXmlList();
+            allBehaviors = servitor.curBot.myBehaviors.behaviorXmlList();
+            //StreamWriter sw = File.CreateText(@"./aiml/servitorgraphmap.aiml");
+            StreamWriter sw = File.CreateText(graphcache);
+            foreach (string line in header)
+            {
+                sw.WriteLine(line);
+            }
+            foreach (string line in allCrons)
+            {
+                sw.WriteLine(line);
+            }
+            foreach (string line in allPaths.ToArray())
+            {
+                sw.WriteLine(line);
+            }
+            foreach (string line in allBehaviors)
+            {
+            //    sw.WriteLine(line);
+            }
+
+            foreach( string line in footer)
+            {
+                sw.WriteLine(line);
+            }
+            sw.Flush();
+            sw.Close();
 
             string servitorbin = GlobalSettings.grabSetting("servitorbin");
             if (!File.Exists(servitorbin))

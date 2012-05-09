@@ -396,6 +396,7 @@ namespace AltAIMLbot
         public string lastBehaviorChatInput;
         public string lastBehaviorChatOutput;
         public User lastBehaviorUser;
+        public Queue<string> chatInputQueue = new Queue<string>();
 
         #endregion
 
@@ -975,7 +976,7 @@ namespace AltAIMLbot
                 tagHandler = this.getBespokeTags(user, query, request, result, node);
                 if (object.Equals(null, tagHandler))
                 {
-                    Console.WriteLine("  -- Process :" + tagName);
+                    //Console.WriteLine("  -- Process :" + tagName);
                     switch (tagName)
                     {
                         case "bot":
@@ -1150,7 +1151,16 @@ namespace AltAIMLbot
                             {
                                 if (childNode.NodeType != XmlNodeType.Text)
                                 {
-                                    childNode.InnerXml = this.processNode(childNode, query, request, result, user);
+                                    try
+                                    {
+                                        childNode.InnerXml = this.processNode(childNode, query, request, result, user);
+                                    }
+                                    catch(Exception e)
+                                    {
+                                        Console.WriteLine("AIML processNode ERR {0}: {1}", tagName, e.Message);
+                                        Console.WriteLine("AIML processNode OuterXML: {0}", node.OuterXml);
+                                        childNode.InnerXml = childNode.InnerText;
+                                    }
                                 }
                             }
                         }
@@ -1175,7 +1185,7 @@ namespace AltAIMLbot
                         }
                         else
                         {
-                            Console.WriteLine(" -- Result3 {0} : {1}", tagName, resultNode.InnerXml);
+                            //Console.WriteLine(" -- Result3 {0} : {1}", tagName, resultNode.InnerXml);
                             return resultNode.InnerXml;
                         }
                     }

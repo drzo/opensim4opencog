@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Collections;
+using System.Collections.Generic;
 using System.Threading;
 using System.Diagnostics;
 using System.Windows.Forms;
@@ -235,7 +236,22 @@ namespace AltAIMLbot
             // -1 represents the star * from the crontab
             return ((ArrayList)list).Contains(val) || ((ArrayList)list).Contains(-1);
         }
-
+        private string decodeList(Object list)
+        {
+            string decoded = "";
+            foreach (int elem in ((ArrayList)list))
+            {
+                if (decoded.Length == 0)
+                {
+                    decoded += elem.ToString();
+                }
+                else
+                {
+                    decoded += ","+elem.ToString();
+                }
+            }
+            return decoded;
+        }
         private int getMDay(DateTime date)
         {
             date.AddMonths(-(date.Month - 1));
@@ -417,6 +433,22 @@ namespace AltAIMLbot
             // (besides, my implementation was too specific to post here)
             Console.WriteLine("ERR CRON : {0}", error);
             Thread.Sleep(5000);
+        }
+
+        public List<string> cronXmlList()
+        {
+            List<string> XList = new List<string>();
+            foreach (String cronKey in crontab.Keys)
+            {
+                ArrayList entry = (ArrayList)crontab[cronKey];
+                string dat = String.Format("<crontag timeline=\"{5} {4} {3} {2} {1} {0}\" mode=\"{6}\" id=\"{7}\"> {8} </crontag>",
+                  decodeList(entry[0]),decodeList( entry[1]),
+                  decodeList(entry[2]), decodeList(entry[3]),
+                  decodeList(entry[4]), decodeList(entry[5]),
+                  entry[6], cronKey, entry[8]);
+                XList.Add(dat);
+            }
+            return XList ;
         }
     }
 }

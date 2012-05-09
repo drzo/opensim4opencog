@@ -129,7 +129,9 @@ namespace AltAIMLbot
             {
                 Console.WriteLine(" ************ FOUND ONCHAT ************");
                 curUser.Predicates.updateSetting("lastinput", input);
-                curBot.lastBehaviorChatInput = input;
+                //curBot.lastBehaviorChatInput = input;
+                curBot.chatInputQueue.Enqueue(input);
+
                 curBot.lastBehaviorUser = curUser;
                 //curBot.myBehaviors.runEventHandler("onchat");
                 curBot.myBehaviors.queueEvent("onchat");
@@ -141,7 +143,8 @@ namespace AltAIMLbot
             if (curBot.myBehaviors.definedBehavior("chatRoot"))
             {
                 curUser.Predicates.updateSetting("lastinput", input);
-                curBot.lastBehaviorChatInput = input;
+                //curBot.lastBehaviorChatInput = input;
+                curBot.chatInputQueue.Enqueue(input);
                 curBot.lastBehaviorUser = curUser;
                 //curBot.myBehaviors.runBotBehavior("chatRoot", curBot);
                 curBot.myBehaviors.queueEvent("chatRoot");

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Xml;
+using System.Web;
 
 namespace AltAIMLbot.Utils
 {
@@ -148,6 +149,23 @@ namespace AltAIMLbot.Utils
             {
                 Node childNode = children[childWord];
                 childNode.collectPaths(ourPath, collector);
+            }
+
+        }
+        public void collectFullPaths(string inpath, List<string> collector)
+        {
+            string curWord = this.word;
+            string ourPath = inpath + " " + curWord;
+            if ((template != null) && (template.Length > 1))
+            {
+                var encoded = HttpUtility.HtmlEncode(ourPath.Trim());
+                string serTemplate = String.Format("<ser path=\"{0}\"> {1} </ser>", encoded, template);
+                collector.Add(serTemplate);
+            }
+            foreach (string childWord in children.Keys)
+            {
+                Node childNode = children[childWord];
+                childNode.collectFullPaths(ourPath, collector);
             }
 
         }

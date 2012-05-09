@@ -10,7 +10,7 @@ namespace AltAIMLbot.Utils
     public class RandomMemory
     {
         Dictionary<string,double> myMem = null;
-        public double Halflife = 60000;
+        public double Halflife = 180000;
         public double smoother = 0.00001;
         Random r = new Random();
 
