@@ -24,9 +24,24 @@ raphe:-thread_create(raphe1,_,[]).
 DOUG -  ????
 
 {{{
-11 ?- botClientCmd(setbot).
-@'C#505389568':"SetOnlyOneCurrentBotClient="
+37 ?- botClientCmd('setbot raphe Testbot').
+@'C#543265224':"SetOnlyOneCurrentBotClient='(thisClient \"raphe Testbot\")"
 "Success setbot"
+true.
+
+38 ?- botClientCmd(jump).
+@'C#543267536':"$bot jumped."
+"Success Jump"
+true.
+
+39 ?- botClientCmd('setbot ike Testbot').
+@'C#543265136':"SetOnlyOneCurrentBotClient='(thisClient \"ike Testbot\")"
+"Success setbot"
+true.
+
+40 ?- botClientCmd(jump).
+@'C#543266024':"$bot jumped."
+"Success Jump"
 true.
 }}}
 
