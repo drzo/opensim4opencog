@@ -58,6 +58,12 @@ DOUG
 
 DOUG
 
+== Execute prolog from botcmd
+
+{{{
+/swip X is 1 + 1, botClientCmd(say(X)).
+}}}
+
 = Work with assets =
 
 How do I set permissions when uploading?
