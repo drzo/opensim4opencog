@@ -116,9 +116,12 @@ namespace cogbot
         {
             get
             {
-                if (_si == null)
+                lock (SingleInstanceLock)
                 {
-                    _si = new ClientManager();
+                    if (_si == null)
+                    {
+                        _si = new ClientManager();
+                    }
                 }
                 return _si;
             }
