@@ -178,6 +178,26 @@ need section for multiple av's
 
 
 
+== defining locations ==
+
+[13:19] BinaBot Daxeline: location formats      simname/x/y/z  
+[13:19] BinaBot Daxeline: location formats      x/y/z  
+[13:20] BinaBot Daxeline: location formats      "Annie Obscure"
+[13:20] BinaBot Daxeline: location formats      "Annie"
+[13:21] BinaBot Daxeline: location formats    "ObjectNAme spec" 1
+[13:21] bungiecord Burnstein: if it matches more than one
+[13:21] BinaBot Daxeline: location formats    nth 1 "ObjectNAme spec"
+[13:23] bungiecord Burnstein: at symbol
+[13:23] bungiecord Burnstein: angle and distance
+[13:33] BinaBot Daxeline: ok /moveto @0*1
+[13:33] BinaBot Daxeline: ok /moveto @90*2
+
+nice to have:
+match LSL's preferred representation
+
+[13:20] BinaBot Daxeline: location formats      <x,y,z>
+[13:20] bungiecord Burnstein: with a space
+[13:21] bungiecord Burnstein: so <4.0, 5.0, 18.0>
 
 ==More In Issues==
 
@@ -185,6 +205,25 @@ See  issue 9  for a bit more info about format of args
 
 Douglas - feel free to blow this away if you integrate the info
 in here
+
+== Sources for us editors ==
+
+see Cogbot.listeners.WorldCommandParsing  for list of prepositions and variables
+
+
+! and $ in commands
+$master
+$selected   (group of selected prims)
+primid is local id
+@ coerces prim position to 3d location @primid 15
+
+max is maximum prims in filterset
+dist is maximum dist to avatar
+/priminfo $selected maxdist 2  
+the selected prims (that is, the prims in my 'selected' grasper) tha are within 2 meters of my AV 
+
+See all this stuff starting at line 445 of WorldCommandParsing
+
 
 ==Help==
 {{{
