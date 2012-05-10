@@ -15,7 +15,7 @@ namespace cogbot.Actions.Pathfinder
         public AStarPath(BotClient client)
         {
             Name = GetType().Name;
-            Description = "Use A* Pathfinding to get to object";
+            Description = "Return the path that would be used by A* Pathfinding to get to object";
             Category = cogbot.Actions.CommandCategory.Movement;
             Parameters = new[] { new NamedParam( typeof(SimPosition), typeof(Vector3d)) };
 

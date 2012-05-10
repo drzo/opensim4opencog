@@ -17,7 +17,7 @@ namespace cogbot
         private static void Usage()
         {
             DLRConsole.SystemWriteLine("Usage: " + Environment.NewLine +
-                    "cogbot.exe --first firstname --last lastname --pass password [--loginuri=\"uri\"] [--startpos \"sim/x/y/z\"] [--master \"master name\"] [--masterkey \"master uuid\"] [--gettextures] [--scriptfile \"filename\"]");
+                    "cogbot.exe --first firstname --last lastname --pass password [--loginuri=\"uri\"] [--startpos \"sim/x/y/z\"] [--master \"master name\"] [--masterkey \"master uuid\"] [--gettextures] [--scriptfile \"filename\"] [--nogui]");
         }
 
         public static DLRConsole consoleBase;
