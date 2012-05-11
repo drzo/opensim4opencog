@@ -60,7 +60,9 @@ assertIfNewRC(Gaf):-asserta(Gaf).
 
 :- discontiguous
 	hill_person/1,
-	hill_credentials/4.
+	hill_credentials/4,
+	sex/2,
+	age/2.
 
 %
 %  Log on the bots and start the simulation. This is
@@ -109,6 +111,9 @@ logon_a_bot(Name) :-
 	format('made botID ~w~n', [BotID]),
 	assert(botID(Name, BotID)).
 
+
+loginuri("http://www.pathwayslms.com:9000/").
+
 %%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %            bot credentials
 %%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -121,38 +126,66 @@ tribe('Hillperson').
 hill_person(otopopo).
 hill_credentials(otopopo, 'Otopopo', Tribe, PW) :-
     pw(PW),
- tribe(Tribe).
+    tribe(Tribe).
+age(otopopo, 17).
+sex(otopopo, m).
 
 hill_person(bignose).
 hill_credentials(bignose, 'Bignose', Tribe, PW) :-
     pw(PW),
     tribe(Tribe).
+age(bignose, 42).
+sex(bignose, m).
 
 hill_person(yuppie).
 hill_credentials(yuppie, 'Yuppie', Tribe, PW) :-
     pw(PW),
     tribe(Tribe).
+age(yuppie, 21).
+sex(yuppie, f).
 
 hill_person(onosideboard).
 hill_credentials(onosideboard, 'Onosideboard', Tribe, PW) :-
     pw(PW),
     tribe(Tribe).
+age(onosideboard, 35).
+sex(onosideboard, f).
 
 hill_person(lemonaide).
 hill_credentials(lemonaide, 'Lemonaide', Tribe, PW) :-
     pw(PW),
     tribe(Tribe).
+age(lemonaide, 7).
+sex(lemonaide, f).
 
 hill_person(opthamologist).
 hill_credentials(opthamologist, 'Opthamologist', Tribe, PW) :-
     pw(PW),
     tribe(Tribe).
+age(opthamologist, 62).
+sex(opthamologist, f).
 
-loginuri("http://www.pathwayslms.com:9000/").
 
-%%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%	more bot dependent facts
-%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
+everybody_be_tribal :-
+	hill_person(Name),
+	age(Name, Age),
+	sex(Name, Sex),
+	thread_create(
+	    be_tribal(
+		0, % day
+		Name,
+		Age,
+		Sex,
+		10.0, % cal
+		10.0
+	    ), _, []),
+	fail.
+everybody_be_tribal.
+
+ebt :- everybody_be_tribal.
+
+
+
+
 
 
