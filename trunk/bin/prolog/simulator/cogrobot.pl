@@ -212,20 +212,27 @@ botClient(Property,Value):-botClient(Obj),cli_get(Obj,Property,Value),!.
 
 % a way to call a method on c#
 % cli_call('System',printf(32),Y).
-botClientCall(Call):-botClientCall(Call,Res),cli_writeln(Res).
-botClientCall([P|N],Value):-!,botClient(Obj),cli_get(Obj,P,Mid),cli_get(Mid,N,Value).
-botClientCall(Property,Value):-botClient(Obj),cli_call(Obj,Property,Value).
+botClientCall(Call):-botClient(BotID),at_botClientCall(BotID,Call).
+botClientCall(Call,Res):-botClient(BotID),at_botClientCall(BotID,Call,Res).
+
+at_botClientCall(BotID,Call):-at_botClientCall(BotID,Call,Res),cli_writeln(Res).
+at_botClientCall(BotID,[P|N],Value):-!,cli_get(BotID,P,Mid),cli_get(Mid,N,Value).
+at_botClientCall(BotID,Property,Value):-cli_call(BotID,Property,Value).
+
 
 % wrappered execute command in a convenience pred
 % botClientCmd(say("hi"))
 %
-botClientCmd(In):-botClientCmd(In,Out),cli_writeln(Out),!.
-botClientCmd([C|Cmd],Out):-toStringableArgs([C|Cmd],CCmd),!,concat_atom(CCmd,' ',Str),botClientCall(executeCommand(Str),Out).
-botClientCmd(C,Out):-compound(C),!,C=..[F|A],listifyFlat(A,FL),!,botClientCmd([F|FL],Out).
-% this form expects a term of the form methodname(arg, arg,arg)
-%%botClientCmd(Str,Out):-botClientCall(executeCommand(Str),Out).
-botClientCmd(Str,Out):-botClientCmd(Str,cli_fmt(botClientCmd),Out).
-botClientCmd(Str,WriteDelegate,Out):-botClient(C),cli_call(C,executeCommand(Str,C,WriteDelegate),Out).
+botClientCmd(In):-botClient(BotID),at_botClientCmd(BotID,In),!.
+botClientCmd(In,Out):-botClient(BotID),at_botClientCmd(BotID,In,Out),!.
+botClientCmd(Str,WriteDelegate,Out):-botClient(BotID),at_botClientCmd(BotID,Str,WriteDelegate,Out).
+
+at_botClientCmd(BotID,In):-at_botClientCmd(BotID,In,Out),cli_writeln(Out),!.
+at_botClientCmd(BotID,[C|Cmd],Out):-toStringableArgs([C|Cmd],CCmd),!,concat_atom(CCmd,' ',Str),at_botClientCall(BotID,executeCommand(Str),Out).
+at_botClientCmd(BotID,C,Out):-compound(C),!,C=..[F|A],listifyFlat(A,FL),!,botClientCmd(BotID,[F|FL],Out).
+at_botClientCmd(BotID,Str,Out):-at_botClientCmd(BotID,Str,cli_fmt(botClientCmd),Out).
+at_botClientCmd(BotID,Str,WriteDelegate,Out):-cli_call(BotID,executeCommand(Str,BotID,WriteDelegate),Out).
+
 
 toStringableArgs(Var,Var):-var(Var),!.
 toStringableArgs([C|Cmd],[A|Amd]):-toStringableArg(C,A),toStringableArgs(Cmd,Amd).
