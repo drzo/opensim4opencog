@@ -108,6 +108,7 @@ logon_a_bot(Name) :-
 	cli_call(CM,
 		 'CreateBotClient'(First, Last, Password, Loginuri, "home"),
 		 BotID),
+        cli_call(BotID,'Login',_),
 	format('made botID ~w~n', [BotID]),
 	assert(botID(Name, BotID)).
 
@@ -121,7 +122,7 @@ loginuri("http://www.pathwayslms.com:9000/").
 % if you have all the passwords the same this saves some typing
 %
 pw('hillpeople').
-tribe('Hillperson').
+tribe('Dougstribe').
 
 hill_person(otopopo).
 hill_credentials(otopopo, 'Otopopo', Tribe, PW) :-
