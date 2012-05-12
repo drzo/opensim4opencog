@@ -1,10 +1,41 @@
 :- module(tribal, [
-	 be_tribal/3
+	 be_tribal/1
 		  ]).
 
 :- use_module(hillpeople(weather)).
 :- use_module(hillpeople(hillpeople)).
 :- use_module(hillpeople(navigation)).
+:- use_module(hillpeople(actions)).
+:- use_module(cogbot(cogrobot)).
+
+be_tribal(Name) :-
+	botID(Name, ID),
+	set_current_bot(ID),
+	sex(Name, Sex),
+	age(Name, Age),
+	be_tribal(
+	    _,
+	    Name,
+	    status(
+		Sex,
+		Age,
+		10.0, % cal
+		10.0)).
+
+%
+%  In test_wander_mode they just wander from point to point
+%
+test_wander_mode.
+
+be_tribal(
+    Loc,
+    Name,
+    _) :-
+	test_wander_mode,
+	nearest_waypoint(WP, Dist),
+	Dist >= 3.0,
+	botClientCmd(
+
 
 %
 % Die if yer starved
@@ -22,6 +53,9 @@ be_tribal(
     sleep(30),
     logout(Name).
 
+%
+% die if yer outta protein
+%
 be_tribal(
     _,
     Name,
@@ -42,7 +76,7 @@ be_tribal(
     Location,
     Name,
     Status) :-
-	night,
+	is_night,
 	\+ memberchk(Location, [hut1, hut2, hut3]),
 	home(Name, Home),
 	nearest_waypoint(Name, WP),
@@ -62,7 +96,7 @@ be_tribal(
     Location,
     Name,
     Status) :-
-	night,
+	is_night,
 	home(Name, Location),
 	\+ sitting_on(Name, sleeping_mat),
 	sit_on(Name, sleeping_mat),
@@ -78,7 +112,7 @@ be_tribal(
     Location,
     Name,
     Status) :-
-	night,
+	is_night,
 	home(Name, Location),
 	sitting_on(Name, sleeping_mat),
 	play_sound(Name, snore),
