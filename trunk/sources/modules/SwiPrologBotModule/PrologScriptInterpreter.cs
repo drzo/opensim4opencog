@@ -20,7 +20,7 @@ namespace PrologScriptEngine
             PrologScriptInterpreter pscript = new PrologScriptInterpreter(null);
             pscript.Init(pscript);
             pscript.Intern("pscript", pscript);
-            PrologClient.Main(args);
+            PrologClient.Main0(args);
         }
         ///<summary>
         ///</summary>

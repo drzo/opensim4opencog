@@ -1668,6 +1668,7 @@ namespace SbsSW.SwiPlCs
         }
         public static string CastToString(uint TermRef)
         {
+            return CastToString0(TermRef);
             return PrologClient.InvokeFromC(() => CastToString0(TermRef), true);
         }
         public static string CastToString0(uint TermRef)

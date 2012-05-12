@@ -1,178 +1,1192 @@
-<html>
+<html xmlns:v="urn:schemas-microsoft-com:vml"
+xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns:m="http://schemas.microsoft.com/office/2004/12/omml"
+xmlns="http://www.w3.org/TR/REC-html40">
 
 <head>
 <meta http-equiv=Content-Type content="text/html; charset=windows-1252">
-<meta name=Generator content="Microsoft Word 12 (filtered)">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 12">
+<meta name=Originator content="Microsoft Word 12">
+<link rel=File-List href="documentation_files/filelist.xml">
+<link rel=Edit-Time-Data href="documentation_files/editdata.mso">
+<!--[if !mso]>
+<style>
+v\:* {behavior:url(#default#VML);}
+o\:* {behavior:url(#default#VML);}
+w\:* {behavior:url(#default#VML);}
+.shape {behavior:url(#default#VML);}
+</style>
+<![endif]-->
 <title>A SWI-Prolog to Dotnet interface</title>
+<link rel=themeData href="documentation_files/themedata.thmx">
+<link rel=colorSchemeMapping href="documentation_files/colorschememapping.xml">
+<!--[if gte mso 9]><xml>
+ <w:WordDocument>
+  <w:TrackMoves>false</w:TrackMoves>
+  <w:TrackFormatting/>
+  <w:ValidateAgainstSchemas/>
+  <w:SaveIfXMLInvalid>false</w:SaveIfXMLInvalid>
+  <w:IgnoreMixedContent>false</w:IgnoreMixedContent>
+  <w:AlwaysShowPlaceholderText>false</w:AlwaysShowPlaceholderText>
+  <w:DoNotPromoteQF/>
+  <w:LidThemeOther>EN-US</w:LidThemeOther>
+  <w:LidThemeAsian>X-NONE</w:LidThemeAsian>
+  <w:LidThemeComplexScript>X-NONE</w:LidThemeComplexScript>
+  <w:Compatibility>
+   <w:BreakWrappedTables/>
+   <w:SnapToGridInCell/>
+   <w:WrapTextWithPunct/>
+   <w:UseAsianBreakRules/>
+   <w:DontGrowAutofit/>
+   <w:SplitPgBreakAndParaMark/>
+   <w:DontVertAlignCellWithSp/>
+   <w:DontBreakConstrainedForcedTables/>
+   <w:DontVertAlignInTxbx/>
+   <w:Word11KerningPairs/>
+   <w:CachedColBalance/>
+  </w:Compatibility>
+  <w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel>
+  <m:mathPr>
+   <m:mathFont m:val="Cambria Math"/>
+   <m:brkBin m:val="before"/>
+   <m:brkBinSub m:val="&#45;-"/>
+   <m:smallFrac m:val="off"/>
+   <m:dispDef/>
+   <m:lMargin m:val="0"/>
+   <m:rMargin m:val="0"/>
+   <m:defJc m:val="centerGroup"/>
+   <m:wrapIndent m:val="1440"/>
+   <m:intLim m:val="subSup"/>
+   <m:naryLim m:val="undOvr"/>
+  </m:mathPr></w:WordDocument>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:LatentStyles DefLockedState="false" DefUnhideWhenUsed="true"
+  DefSemiHidden="true" DefQFormat="false" DefPriority="99"
+  LatentStyleCount="267">
+  <w:LsdException Locked="false" Priority="0" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="Normal"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="heading 1"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="heading 2"/>
+  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 3"/>
+  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 4"/>
+  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 5"/>
+  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 6"/>
+  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 7"/>
+  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 8"/>
+  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 9"/>
+  <w:LsdException Locked="false" Priority="39" Name="toc 1"/>
+  <w:LsdException Locked="false" Priority="39" Name="toc 2"/>
+  <w:LsdException Locked="false" Priority="39" Name="toc 3"/>
+  <w:LsdException Locked="false" Priority="39" Name="toc 4"/>
+  <w:LsdException Locked="false" Priority="39" Name="toc 5"/>
+  <w:LsdException Locked="false" Priority="39" Name="toc 6"/>
+  <w:LsdException Locked="false" Priority="39" Name="toc 7"/>
+  <w:LsdException Locked="false" Priority="39" Name="toc 8"/>
+  <w:LsdException Locked="false" Priority="39" Name="toc 9"/>
+  <w:LsdException Locked="false" Priority="35" QFormat="true" Name="caption"/>
+  <w:LsdException Locked="false" Priority="10" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="Title"/>
+  <w:LsdException Locked="false" Priority="1" Name="Default Paragraph Font"/>
+  <w:LsdException Locked="false" Priority="11" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="Subtitle"/>
+  <w:LsdException Locked="false" Priority="22" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="Strong"/>
+  <w:LsdException Locked="false" Priority="20" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="Emphasis"/>
+  <w:LsdException Locked="false" Priority="59" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Table Grid"/>
+  <w:LsdException Locked="false" UnhideWhenUsed="false" Name="Placeholder Text"/>
+  <w:LsdException Locked="false" Priority="1" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="No Spacing"/>
+  <w:LsdException Locked="false" Priority="60" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Shading"/>
+  <w:LsdException Locked="false" Priority="61" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light List"/>
+  <w:LsdException Locked="false" Priority="62" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Grid"/>
+  <w:LsdException Locked="false" Priority="63" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 1"/>
+  <w:LsdException Locked="false" Priority="64" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 2"/>
+  <w:LsdException Locked="false" Priority="65" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 1"/>
+  <w:LsdException Locked="false" Priority="66" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 2"/>
+  <w:LsdException Locked="false" Priority="67" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 1"/>
+  <w:LsdException Locked="false" Priority="68" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 2"/>
+  <w:LsdException Locked="false" Priority="69" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 3"/>
+  <w:LsdException Locked="false" Priority="70" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Dark List"/>
+  <w:LsdException Locked="false" Priority="71" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Shading"/>
+  <w:LsdException Locked="false" Priority="72" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful List"/>
+  <w:LsdException Locked="false" Priority="73" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Grid"/>
+  <w:LsdException Locked="false" Priority="60" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Shading Accent 1"/>
+  <w:LsdException Locked="false" Priority="61" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light List Accent 1"/>
+  <w:LsdException Locked="false" Priority="62" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Grid Accent 1"/>
+  <w:LsdException Locked="false" Priority="63" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 1 Accent 1"/>
+  <w:LsdException Locked="false" Priority="64" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 2 Accent 1"/>
+  <w:LsdException Locked="false" Priority="65" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 1 Accent 1"/>
+  <w:LsdException Locked="false" UnhideWhenUsed="false" Name="Revision"/>
+  <w:LsdException Locked="false" Priority="34" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="List Paragraph"/>
+  <w:LsdException Locked="false" Priority="29" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="Quote"/>
+  <w:LsdException Locked="false" Priority="30" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="Intense Quote"/>
+  <w:LsdException Locked="false" Priority="66" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 2 Accent 1"/>
+  <w:LsdException Locked="false" Priority="67" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 1 Accent 1"/>
+  <w:LsdException Locked="false" Priority="68" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 2 Accent 1"/>
+  <w:LsdException Locked="false" Priority="69" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 3 Accent 1"/>
+  <w:LsdException Locked="false" Priority="70" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Dark List Accent 1"/>
+  <w:LsdException Locked="false" Priority="71" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Shading Accent 1"/>
+  <w:LsdException Locked="false" Priority="72" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful List Accent 1"/>
+  <w:LsdException Locked="false" Priority="73" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Grid Accent 1"/>
+  <w:LsdException Locked="false" Priority="60" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Shading Accent 2"/>
+  <w:LsdException Locked="false" Priority="61" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light List Accent 2"/>
+  <w:LsdException Locked="false" Priority="62" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Grid Accent 2"/>
+  <w:LsdException Locked="false" Priority="63" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 1 Accent 2"/>
+  <w:LsdException Locked="false" Priority="64" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 2 Accent 2"/>
+  <w:LsdException Locked="false" Priority="65" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 1 Accent 2"/>
+  <w:LsdException Locked="false" Priority="66" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 2 Accent 2"/>
+  <w:LsdException Locked="false" Priority="67" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 1 Accent 2"/>
+  <w:LsdException Locked="false" Priority="68" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 2 Accent 2"/>
+  <w:LsdException Locked="false" Priority="69" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 3 Accent 2"/>
+  <w:LsdException Locked="false" Priority="70" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Dark List Accent 2"/>
+  <w:LsdException Locked="false" Priority="71" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Shading Accent 2"/>
+  <w:LsdException Locked="false" Priority="72" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful List Accent 2"/>
+  <w:LsdException Locked="false" Priority="73" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Grid Accent 2"/>
+  <w:LsdException Locked="false" Priority="60" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Shading Accent 3"/>
+  <w:LsdException Locked="false" Priority="61" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light List Accent 3"/>
+  <w:LsdException Locked="false" Priority="62" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Grid Accent 3"/>
+  <w:LsdException Locked="false" Priority="63" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 1 Accent 3"/>
+  <w:LsdException Locked="false" Priority="64" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 2 Accent 3"/>
+  <w:LsdException Locked="false" Priority="65" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 1 Accent 3"/>
+  <w:LsdException Locked="false" Priority="66" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 2 Accent 3"/>
+  <w:LsdException Locked="false" Priority="67" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 1 Accent 3"/>
+  <w:LsdException Locked="false" Priority="68" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 2 Accent 3"/>
+  <w:LsdException Locked="false" Priority="69" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 3 Accent 3"/>
+  <w:LsdException Locked="false" Priority="70" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Dark List Accent 3"/>
+  <w:LsdException Locked="false" Priority="71" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Shading Accent 3"/>
+  <w:LsdException Locked="false" Priority="72" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful List Accent 3"/>
+  <w:LsdException Locked="false" Priority="73" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Grid Accent 3"/>
+  <w:LsdException Locked="false" Priority="60" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Shading Accent 4"/>
+  <w:LsdException Locked="false" Priority="61" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light List Accent 4"/>
+  <w:LsdException Locked="false" Priority="62" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Grid Accent 4"/>
+  <w:LsdException Locked="false" Priority="63" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 1 Accent 4"/>
+  <w:LsdException Locked="false" Priority="64" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 2 Accent 4"/>
+  <w:LsdException Locked="false" Priority="65" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 1 Accent 4"/>
+  <w:LsdException Locked="false" Priority="66" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 2 Accent 4"/>
+  <w:LsdException Locked="false" Priority="67" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 1 Accent 4"/>
+  <w:LsdException Locked="false" Priority="68" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 2 Accent 4"/>
+  <w:LsdException Locked="false" Priority="69" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 3 Accent 4"/>
+  <w:LsdException Locked="false" Priority="70" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Dark List Accent 4"/>
+  <w:LsdException Locked="false" Priority="71" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Shading Accent 4"/>
+  <w:LsdException Locked="false" Priority="72" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful List Accent 4"/>
+  <w:LsdException Locked="false" Priority="73" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Grid Accent 4"/>
+  <w:LsdException Locked="false" Priority="60" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Shading Accent 5"/>
+  <w:LsdException Locked="false" Priority="61" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light List Accent 5"/>
+  <w:LsdException Locked="false" Priority="62" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Grid Accent 5"/>
+  <w:LsdException Locked="false" Priority="63" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 1 Accent 5"/>
+  <w:LsdException Locked="false" Priority="64" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 2 Accent 5"/>
+  <w:LsdException Locked="false" Priority="65" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 1 Accent 5"/>
+  <w:LsdException Locked="false" Priority="66" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 2 Accent 5"/>
+  <w:LsdException Locked="false" Priority="67" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 1 Accent 5"/>
+  <w:LsdException Locked="false" Priority="68" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 2 Accent 5"/>
+  <w:LsdException Locked="false" Priority="69" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 3 Accent 5"/>
+  <w:LsdException Locked="false" Priority="70" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Dark List Accent 5"/>
+  <w:LsdException Locked="false" Priority="71" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Shading Accent 5"/>
+  <w:LsdException Locked="false" Priority="72" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful List Accent 5"/>
+  <w:LsdException Locked="false" Priority="73" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Grid Accent 5"/>
+  <w:LsdException Locked="false" Priority="60" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Shading Accent 6"/>
+  <w:LsdException Locked="false" Priority="61" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light List Accent 6"/>
+  <w:LsdException Locked="false" Priority="62" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Light Grid Accent 6"/>
+  <w:LsdException Locked="false" Priority="63" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 1 Accent 6"/>
+  <w:LsdException Locked="false" Priority="64" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Shading 2 Accent 6"/>
+  <w:LsdException Locked="false" Priority="65" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 1 Accent 6"/>
+  <w:LsdException Locked="false" Priority="66" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium List 2 Accent 6"/>
+  <w:LsdException Locked="false" Priority="67" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 1 Accent 6"/>
+  <w:LsdException Locked="false" Priority="68" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 2 Accent 6"/>
+  <w:LsdException Locked="false" Priority="69" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Medium Grid 3 Accent 6"/>
+  <w:LsdException Locked="false" Priority="70" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Dark List Accent 6"/>
+  <w:LsdException Locked="false" Priority="71" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Shading Accent 6"/>
+  <w:LsdException Locked="false" Priority="72" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful List Accent 6"/>
+  <w:LsdException Locked="false" Priority="73" SemiHidden="false"
+   UnhideWhenUsed="false" Name="Colorful Grid Accent 6"/>
+  <w:LsdException Locked="false" Priority="19" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="Subtle Emphasis"/>
+  <w:LsdException Locked="false" Priority="21" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="Intense Emphasis"/>
+  <w:LsdException Locked="false" Priority="31" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="Subtle Reference"/>
+  <w:LsdException Locked="false" Priority="32" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="Intense Reference"/>
+  <w:LsdException Locked="false" Priority="33" SemiHidden="false"
+   UnhideWhenUsed="false" QFormat="true" Name="Book Title"/>
+  <w:LsdException Locked="false" Priority="37" Name="Bibliography"/>
+  <w:LsdException Locked="false" Priority="39" QFormat="true" Name="TOC Heading"/>
+ </w:LatentStyles>
+</xml><![endif]-->
 <style>
 <!--
  /* Font Definitions */
  @font-face
 	{font-family:Helvetica;
-	panose-1:2 11 6 4 2 2 2 2 2 4;}
-@font-face
-	{font-family:Wingdings;
-	panose-1:5 0 0 0 0 0 0 0 0 0;}
+	panose-1:2 11 6 4 2 2 2 2 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:swiss;
+	mso-font-pitch:variable;
+	mso-font-signature:-536859905 -1073711037 9 0 511 0;}
 @font-face
 	{font-family:"Cambria Math";
-	panose-1:2 4 5 3 5 4 6 3 2 4;}
+	panose-1:2 4 5 3 5 4 6 3 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:roman;
+	mso-font-pitch:variable;
+	mso-font-signature:-536870145 1107305727 0 0 415 0;}
 @font-face
 	{font-family:Tahoma;
-	panose-1:2 11 6 4 3 5 4 4 2 4;}
+	panose-1:2 11 6 4 3 5 4 4 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:swiss;
+	mso-font-pitch:variable;
+	mso-font-signature:-520081665 -1073717157 41 0 66047 0;}
 @font-face
 	{font-family:Consolas;
-	panose-1:2 11 6 9 2 2 4 3 2 4;}
+	panose-1:2 11 6 9 2 2 4 3 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:modern;
+	mso-font-pitch:fixed;
+	mso-font-signature:-520092929 1073806591 9 0 415 0;}
+@font-face
+	{font-family:Constantia;
+	panose-1:2 3 6 2 5 3 6 3 3 3;
+	mso-font-charset:0;
+	mso-generic-font-family:roman;
+	mso-font-pitch:variable;
+	mso-font-signature:-1610611985 1073750091 0 0 415 0;}
  /* Style Definitions */
  p.MsoNormal, li.MsoNormal, div.MsoNormal
-	{margin:0in;
+	{mso-style-unhide:no;
+	mso-style-qformat:yes;
+	mso-style-parent:"";
+	margin:0in;
 	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
 	font-size:12.0pt;
-	font-family:"Times New Roman","serif";}
+	font-family:"Times New Roman","serif";
+	mso-fareast-font-family:"Times New Roman";
+	mso-fareast-theme-font:minor-fareast;}
 h1
-	{mso-style-link:"Heading 1 Char";
+	{mso-style-priority:9;
+	mso-style-unhide:no;
+	mso-style-qformat:yes;
+	mso-style-link:"Heading 1 Char";
+	mso-margin-top-alt:auto;
 	margin-right:0in;
+	mso-margin-bottom-alt:auto;
 	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:1;
 	font-size:24.0pt;
 	font-family:"Times New Roman","serif";
+	mso-fareast-font-family:"Times New Roman";
+	mso-fareast-theme-font:minor-fareast;
 	font-weight:bold;}
 h2
-	{mso-style-link:"Heading 2 Char";
+	{mso-style-priority:9;
+	mso-style-unhide:no;
+	mso-style-qformat:yes;
+	mso-style-link:"Heading 2 Char";
+	mso-margin-top-alt:auto;
 	margin-right:0in;
+	mso-margin-bottom-alt:auto;
 	margin-left:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:2;
 	font-size:18.0pt;
 	font-family:"Times New Roman","serif";
+	mso-fareast-font-family:"Times New Roman";
+	mso-fareast-theme-font:minor-fareast;
 	font-weight:bold;}
 a:link, span.MsoHyperlink
-	{color:blue;
-	text-decoration:underline;}
+	{mso-style-noshow:yes;
+	mso-style-priority:99;
+	color:blue;
+	text-decoration:underline;
+	text-underline:single;}
 a:visited, span.MsoHyperlinkFollowed
-	{color:purple;
-	text-decoration:underline;}
+	{mso-style-noshow:yes;
+	mso-style-priority:99;
+	color:purple;
+	text-decoration:underline;
+	text-underline:single;}
 p
-	{margin-right:0in;
+	{mso-style-noshow:yes;
+	mso-style-priority:99;
+	mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
 	margin-left:0in;
-	font-size:12.0pt;
-	font-family:"Times New Roman","serif";}
-address
-	{mso-style-link:"HTML Address Char";
-	margin:0in;
-	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
 	font-size:12.0pt;
 	font-family:"Times New Roman","serif";
+	mso-fareast-font-family:"Times New Roman";
+	mso-fareast-theme-font:minor-fareast;}
+address
+	{mso-style-noshow:yes;
+	mso-style-priority:99;
+	mso-style-link:"HTML Address Char";
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	font-family:"Times New Roman","serif";
+	mso-fareast-font-family:"Times New Roman";
+	mso-fareast-theme-font:minor-fareast;
 	font-style:italic;}
 code
-	{font-family:"Courier New";}
+	{mso-style-noshow:yes;
+	mso-style-priority:99;
+	font-family:"Courier New";
+	mso-ascii-font-family:"Courier New";
+	mso-fareast-font-family:"Times New Roman";
+	mso-fareast-theme-font:minor-fareast;
+	mso-hansi-font-family:"Courier New";
+	mso-bidi-font-family:"Courier New";}
 pre
-	{mso-style-link:"HTML Preformatted Char";
+	{mso-style-noshow:yes;
+	mso-style-priority:99;
+	mso-style-link:"HTML Preformatted Char";
 	margin:0in;
 	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt;
 	font-size:10.0pt;
-	font-family:"Courier New";}
+	font-family:"Courier New";
+	mso-fareast-font-family:"Times New Roman";
+	mso-fareast-theme-font:minor-fareast;}
 tt
-	{font-family:"Courier New";}
+	{mso-style-noshow:yes;
+	mso-style-priority:99;
+	font-family:"Courier New";
+	mso-ascii-font-family:"Courier New";
+	mso-fareast-font-family:"Times New Roman";
+	mso-fareast-theme-font:minor-fareast;
+	mso-hansi-font-family:"Courier New";
+	mso-bidi-font-family:"Courier New";}
 p.MsoAcetate, li.MsoAcetate, div.MsoAcetate
-	{mso-style-link:"Balloon Text Char";
+	{mso-style-noshow:yes;
+	mso-style-priority:99;
+	mso-style-link:"Balloon Text Char";
 	margin:0in;
 	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
 	font-size:8.0pt;
-	font-family:"Tahoma","sans-serif";}
+	font-family:"Tahoma","sans-serif";
+	mso-fareast-font-family:"Times New Roman";
+	mso-fareast-theme-font:minor-fareast;}
+span.HTMLAddressChar
+	{mso-style-name:"HTML Address Char";
+	mso-style-noshow:yes;
+	mso-style-priority:99;
+	mso-style-unhide:no;
+	mso-style-locked:yes;
+	mso-style-link:"HTML Address";
+	font-family:"Times New Roman","serif";
+	mso-ascii-font-family:"Times New Roman";
+	mso-hansi-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	font-style:italic;}
 span.Heading1Char
 	{mso-style-name:"Heading 1 Char";
+	mso-style-priority:9;
+	mso-style-unhide:no;
+	mso-style-locked:yes;
 	mso-style-link:"Heading 1";
 	font-family:"Constantia","serif";
+	mso-ascii-font-family:Constantia;
+	mso-hansi-font-family:Constantia;
 	color:#7C9163;
 	font-weight:bold;}
 span.Heading2Char
 	{mso-style-name:"Heading 2 Char";
+	mso-style-noshow:yes;
+	mso-style-priority:9;
+	mso-style-unhide:no;
+	mso-style-locked:yes;
 	mso-style-link:"Heading 2";
 	font-family:"Constantia","serif";
+	mso-ascii-font-family:Constantia;
+	mso-hansi-font-family:Constantia;
 	color:#A5B592;
 	font-weight:bold;}
 span.HTMLPreformattedChar
 	{mso-style-name:"HTML Preformatted Char";
+	mso-style-noshow:yes;
+	mso-style-priority:99;
+	mso-style-unhide:no;
+	mso-style-locked:yes;
 	mso-style-link:"HTML Preformatted";
-	font-family:Consolas;}
-span.HTMLAddressChar
-	{mso-style-name:"HTML Address Char";
-	mso-style-link:"HTML Address";
-	font-family:"Times New Roman","serif";
-	font-style:italic;}
+	font-family:Consolas;
+	mso-ascii-font-family:Consolas;
+	mso-hansi-font-family:Consolas;
+	mso-bidi-font-family:Consolas;}
 span.BalloonTextChar
 	{mso-style-name:"Balloon Text Char";
+	mso-style-noshow:yes;
+	mso-style-priority:99;
+	mso-style-unhide:no;
+	mso-style-locked:yes;
 	mso-style-link:"Balloon Text";
-	font-family:"Tahoma","sans-serif";}
+	font-family:"Tahoma","sans-serif";
+	mso-ascii-font-family:Tahoma;
+	mso-hansi-font-family:Tahoma;
+	mso-bidi-font-family:Tahoma;}
+p.msochpdefault, li.msochpdefault, div.msochpdefault
+	{mso-style-name:msochpdefault;
+	mso-style-unhide:no;
+	mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman","serif";
+	mso-fareast-font-family:"Times New Roman";
+	mso-fareast-theme-font:minor-fareast;}
 .MsoChpDefault
-	{font-size:10.0pt;}
+	{mso-style-type:export-only;
+	mso-default-props:yes;
+	font-size:10.0pt;
+	mso-ansi-font-size:10.0pt;
+	mso-bidi-font-size:10.0pt;}
 @page WordSection1
 	{size:8.5in 11.0in;
-	margin:1.0in 1.0in 1.0in 1.0in;}
+	margin:1.0in 1.0in 1.0in 1.0in;
+	mso-header-margin:.5in;
+	mso-footer-margin:.5in;
+	mso-paper-source:0;}
 div.WordSection1
 	{page:WordSection1;}
  /* List Definitions */
- ol
+ @list l0
+	{mso-list-id:13557;
+	mso-list-template-ids:-1275297106;}
+@list l0:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l1
+	{mso-list-id:3870411;
+	mso-list-template-ids:1307839444;}
+@list l1:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l2
+	{mso-list-id:42951779;
+	mso-list-template-ids:-122131884;}
+@list l2:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l3
+	{mso-list-id:47341485;
+	mso-list-template-ids:1460317350;}
+@list l3:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l4
+	{mso-list-id:91896980;
+	mso-list-template-ids:-2122968032;}
+@list l4:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l5
+	{mso-list-id:120272926;
+	mso-list-template-ids:1011498984;}
+@list l5:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l6
+	{mso-list-id:177351989;
+	mso-list-template-ids:-375071494;}
+@list l6:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l7
+	{mso-list-id:225143301;
+	mso-list-template-ids:101238696;}
+@list l7:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l8
+	{mso-list-id:241720784;
+	mso-list-template-ids:-1588286500;}
+@list l8:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l9
+	{mso-list-id:247470453;
+	mso-list-template-ids:-1221804894;}
+@list l9:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l10
+	{mso-list-id:382293731;
+	mso-list-template-ids:821484986;}
+@list l10:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l11
+	{mso-list-id:404883442;
+	mso-list-template-ids:-221058438;}
+@list l11:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l12
+	{mso-list-id:447241905;
+	mso-list-template-ids:-246103446;}
+@list l12:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l13
+	{mso-list-id:484736818;
+	mso-list-template-ids:171465804;}
+@list l13:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l14
+	{mso-list-id:493838616;
+	mso-list-template-ids:924468962;}
+@list l14:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l15
+	{mso-list-id:513348682;
+	mso-list-template-ids:981356588;}
+@list l15:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l15:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:1.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:"Courier New";
+	mso-bidi-font-family:"Times New Roman";}
+@list l16
+	{mso-list-id:544028623;
+	mso-list-template-ids:1658882232;}
+@list l16:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l17
+	{mso-list-id:547767716;
+	mso-list-template-ids:-1352636934;}
+@list l17:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l18
+	{mso-list-id:557013745;
+	mso-list-template-ids:344458216;}
+@list l18:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l19
+	{mso-list-id:653413110;
+	mso-list-template-ids:609789218;}
+@list l19:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l20
+	{mso-list-id:677847053;
+	mso-list-template-ids:-1753424370;}
+@list l20:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l21
+	{mso-list-id:701517958;
+	mso-list-template-ids:-886304308;}
+@list l21:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l22
+	{mso-list-id:721291798;
+	mso-list-template-ids:1253323990;}
+@list l22:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l23
+	{mso-list-id:732048830;
+	mso-list-template-ids:-65789842;}
+@list l23:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l24
+	{mso-list-id:792484707;
+	mso-list-template-ids:1843298164;}
+@list l24:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l25
+	{mso-list-id:865870773;
+	mso-list-template-ids:813070294;}
+@list l25:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l26
+	{mso-list-id:923996901;
+	mso-list-template-ids:737155670;}
+@list l26:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l27
+	{mso-list-id:1030228237;
+	mso-list-template-ids:-1312146428;}
+@list l27:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l28
+	{mso-list-id:1155997622;
+	mso-list-template-ids:1668300440;}
+@list l28:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l29
+	{mso-list-id:1158618551;
+	mso-list-template-ids:1269887126;}
+@list l29:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l30
+	{mso-list-id:1171676641;
+	mso-list-template-ids:-1530245326;}
+@list l30:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l31
+	{mso-list-id:1201698367;
+	mso-list-template-ids:1188187782;}
+@list l31:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l32
+	{mso-list-id:1260719171;
+	mso-list-template-ids:885699734;}
+@list l32:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l33
+	{mso-list-id:1387921991;
+	mso-list-template-ids:786855652;}
+@list l33:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l34
+	{mso-list-id:1459684171;
+	mso-list-template-ids:525526384;}
+@list l34:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l35
+	{mso-list-id:1558201699;
+	mso-list-template-ids:1006656036;}
+@list l35:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l36
+	{mso-list-id:1584485465;
+	mso-list-template-ids:1155272238;}
+@list l36:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l37
+	{mso-list-id:1606882992;
+	mso-list-template-ids:757655228;}
+@list l37:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l38
+	{mso-list-id:1622106646;
+	mso-list-template-ids:1278221186;}
+@list l38:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l38:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:1.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:"Courier New";
+	mso-bidi-font-family:"Times New Roman";}
+@list l39
+	{mso-list-id:1771583442;
+	mso-list-template-ids:2135448758;}
+@list l39:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l40
+	{mso-list-id:1818956058;
+	mso-list-template-ids:-1895407928;}
+@list l40:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l41
+	{mso-list-id:1877884916;
+	mso-list-template-ids:1635926330;}
+@list l41:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l42
+	{mso-list-id:2081637869;
+	mso-list-template-ids:-1368888936;}
+@list l42:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l43
+	{mso-list-id:2088187654;
+	mso-list-template-ids:555223478;}
+@list l43:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+ol
 	{margin-bottom:0in;}
 ul
 	{margin-bottom:0in;}
 -->
 </style>
-
+<!--[if gte mso 10]>
+<style>
+ /* Style Definitions */
+ table.MsoNormalTable
+	{mso-style-name:"Table Normal";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	mso-style-noshow:yes;
+	mso-style-priority:99;
+	mso-style-qformat:yes;
+	mso-style-parent:"";
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman","serif";}
+</style>
+<![endif]-->
 <meta name=Author content="Douglas R. Miles">
+<!--[if gte mso 9]><xml>
+ <o:shapedefaults v:ext="edit" spidmax="2050"/>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <o:shapelayout v:ext="edit">
+  <o:idmap v:ext="edit" data="1"/>
+ </o:shapelayout></xml><![endif]-->
 </head>
 
-<body lang=EN-US link=blue vlink=purple>
+<body lang=EN-US link=blue vlink=purple style='tab-interval:.5in'>
 
 <div class=WordSection1>
 
-<h1><i>SWICLI 1.x</i> Prolog API overview</h1>
+<h1><i><span style='mso-fareast-font-family:"Times New Roman"'>SWICLI 1.x</span></i><span
+style='mso-fareast-font-family:"Times New Roman"'> Prolog API overview<o:p></o:p></span></h1>
 
-<div class=MsoNormal align=center style='text-align:center'>
+<div class=MsoNormal align=center style='text-align:center'><span
+style='mso-fareast-font-family:"Times New Roman"'>
 
 <hr size=2 width="100%" align=center>
 
-</div>
+</span></div>
 
-<span style='font-size:12.0pt;font-family:"Times New Roman","serif"'>
+<span style='font-size:12.0pt;font-family:"Times New Roman","serif";mso-fareast-font-family:
+"Times New Roman";mso-ansi-language:EN-US;mso-fareast-language:EN-US;
+mso-bidi-language:AR-SA'>
 
-<ul type=disc>
- <li class=MsoNormal><a href="#Introduction">Introduction</a></li>
- <li class=MsoNormal><a href="#JPL_types_Dotnet_types_as_seen_by">SWICLI types (.NET
-     types, as seen by Prolog)</a></li>
- <li class=MsoNormal><a href="#representation_of_Dotnet_values...">representation
-     of .NET values and references within Prolog</a></li>
- <li class=MsoNormal><a href="#repn_of_Dotnet_types_1_structured">representation
-     of .NET types within Prolog (1): <i>structured</i> notation</a></li>
- <li class=MsoNormal><a href="#repn_of_Dotnet_types_2_descriptor">representation
-     of .NET types within Prolog (2): <i>descriptor</i> notation</a></li>
- <li class=MsoNormal><a href="#repn_of_Dotnet_types_3_classname">representation
-     of .NET types within Prolog (3): classname notation</a></li>
- <li class=MsoNormal><a href="#creating_instances_of_Dotnet_classes">creating
-     instances of .NET classes</a></li>
- <li class=MsoNormal><a href="#calling_methods_of_Dotnet_objects_...">calling
-     methods of .NET objects or classes</a></li>
- <li class=MsoNormal><a href="#fetching_field_values_of_Dotnet_objects..">fetching
-     field values of .NET objects or classes</a></li>
- <li class=MsoNormal><a href="#setting_field_values_of_Dotnet_objects...">setting
-     field values of .NET objects or classes</a></li>
- <li class=MsoNormal><a href="#a_slightly_longer_example">a slightly longer
-     example</a></li>
- <li class=MsoNormal><a href="#jpl_new3">cli_new/3</a></li>
- <li class=MsoNormal><a href="#jpl_call4">cli_call/4</a></li>
- <li class=MsoNormal><a href="#jpl_set3">cli_set/3</a></li>
- <li class=MsoNormal><a href="#jpl_get3">cli_get/3</a></li>
- <li class=MsoNormal><a href="#exceptions">exceptions thrown by .NET</a></li>
- <li class=MsoNormal><a href="#testing">testing</a></li>
- <li class=MsoNormal><a href="#to_do">to do</a></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l24 level1 lfo1;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><a href="#Introduction">Introduction</a><o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-list:l24 level1 lfo1;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><a
+     href="#JPL_types_Dotnet_types_as_seen_by">SWICLI types (.NET types, as
+     seen by Prolog)</a><o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-list:l24 level1 lfo1;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><a
+     href="#representation_of_Dotnet_values...">representation of .NET values
+     and references within Prolog</a><o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-list:l24 level1 lfo1;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><a
+     href="#repn_of_Dotnet_types_1_structured">representation of .NET types
+     within Prolog (1): <i>structured</i> notation</a><o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-list:l24 level1 lfo1;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><a
+     href="#repn_of_Dotnet_types_2_descriptor">representation of .NET types
+     within Prolog (2): <i>descriptor</i> notation</a><o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-list:l24 level1 lfo1;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><a
+     href="#repn_of_Dotnet_types_3_classname">representation of .NET types
+     within Prolog (3): classname notation</a><o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-list:l24 level1 lfo1;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><a
+     href="#creating_instances_of_Dotnet_classes">creating instances of .NET
+     classes</a><o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-list:l24 level1 lfo1;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><a
+     href="#calling_methods_of_Dotnet_objects_...">calling methods of .NET
+     objects or classes</a><o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-list:l24 level1 lfo1;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><a
+     href="#fetching_field_values_of_Dotnet_objects">fetching field values of
+     .NET objects or classes</a><o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-list:l24 level1 lfo1;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><a
+     href="#setting_field_values_of_Dotnet_objects.">setting field values of
+     .NET objects or classes</a><o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-list:l24 level1 lfo1;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><a
+     href="#a_slightly_longer_example">a slightly longer example</a><o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-list:l24 level1 lfo1;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><a href="#jpl_new3">cli_new/3</a><o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-list:l24 level1 lfo1;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><a href="#jpl_call4">cli_call/4</a><o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-list:l24 level1 lfo1;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><a href="#jpl_set3">cli_set/3</a><o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-list:l24 level1 lfo1;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><a href="#jpl_get3">cli_get/3</a><o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-list:l24 level1 lfo1;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><a href="#exceptions">exceptions
+     thrown by .NET</a><o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-list:l24 level1 lfo1;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><a href="#testing">testing</a><o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-list:l24 level1 lfo1;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><a href="#to_do">to do</a><o:p></o:p></span></li>
 </ul>
 
 </span>
 
-<div class=MsoNormal align=center style='text-align:center'>
+<div class=MsoNormal align=center style='text-align:center'><span
+style='mso-fareast-font-family:"Times New Roman"'>
 
 <hr size=2 width="100%" align=center>
 
-</div>
+</span></div>
 
-<h2><a name=Introduction></a><span style='font-family:"Arial","sans-serif"'>Introduction</span></h2>
+<h2><a name=Introduction></a><span style='font-family:"Arial","sans-serif";
+mso-fareast-font-family:"Times New Roman"'>Introduction</span><span
+style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></h2>
 
 <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>This is an
 overview of an interface which allows SWI-Prolog programs to dynamically create
@@ -181,159 +1195,196 @@ and manipulate .NET objects.</span> </p>
 <p><span style='font-family:"Arial","sans-serif"'>Here are some significant
 features of the interface and its implementation:</span> </p>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>it is
-     completely dynamic: no precompilation is required to manipulate any .NET
-     classes which can be found at run time, and any objects which can be
-     instantiated from them</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l6 level1 lfo2;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>it
+     is completely dynamic: no precompilation is required to manipulate any
+     .NET classes which can be found at run time, and any objects which can be
+     instantiated from them</span><span style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>it is
-     interoperable with <b><i>SWICLI</i></b>'s .NET API (which has evolved from
-     Uwe Lesta's <i>SwiPlCS</i>)</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l9 level1 lfo3;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>it
+     is interoperable with <b><i>SWICLI</i></b>'s .NET API (which has evolved
+     from Uwe Lesta's <i>SwiPlCS</i>)</span><span style='mso-fareast-font-family:
+     "Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>it requires
-     .NET 2.0 and class libraries (although it doesn't depend on any .NET
-     2-specific facilities, and originally was developed for use with both 1.0
-     thru 4.0 .NETs, I haven't tested it with 1.0 recently, and don't support
-     this)</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l12 level1 lfo4;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>it
+     requires .NET 2.0 and class libraries (although it doesn't depend on any
+     .NET 2-specific facilities, and originally was developed for use with both
+     1.0 thru 4.0 .NETs, I haven't tested it with 1.0 recently, and don't
+     support this)</span><span style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>it exploits
-     the <i>Invocation API</i> of the <i>.NET P/Invoke Interface</i>: this is a
-     mandatory feature of any compliant .NET</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l40 level1 lfo5;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>it
+     exploits the <i>Invocation API</i> of the <i>.NET P/Invoke Interface</i>:
+     this is a mandatory feature of any compliant .NET</span><span
+     style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>it is
-     implemented with a fair amount of C# code and Prolog code in one module (<i>swicli.pl</i>)&nbsp;
-     (which I believe to be ISO Standard Prolog compliant and portable) and a
-     SWI-Prolog-specific foreign library (<i>swicli[32].dll</i> for Windows and
-     swicli[32].so *nix), implemented in ANSI C but making a lot of use of the
-     SWI-Prolog <i>Foreign Language Interface </i>Then uses Swicli.Library.dll
-     (Managed binary) that runs on both Mono and .NET runtimes.</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l29 level1 lfo6;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>it
+     is implemented with a fair amount of C# code and Prolog code in one module
+     (<i>swicli.pl</i>)&nbsp; (which I believe to be ISO Standard Prolog
+     compliant and portable) and a SWI-Prolog-specific foreign library (<i>swicli[32].dll</i>
+     for Windows and swicli[32].so *nix), implemented in ANSI C but making a
+     lot of use of the SWI-Prolog <i>Foreign Language Interface </i>Then uses
+     Swicli.Library.dll (Managed binary) that runs on both Mono and .NET
+     runtimes.</span><span style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>the
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l20 level1 lfo7;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>the
      foreign-language part has so far been tested on Windows XP, Windows7 and
      Fedora Linux, but is believed to be readily portable to SWI-Prolog on
-     other platforms</span></li>
+     other platforms</span><span style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>as far as
-     is feasible, .NET data values and object references are represented within
-     Prolog canonically and without loss of information (minor exceptions: .NET
-     <i>float </i>and <i>double</i> values are both converted to Prolog <i>float
-     </i>values; .NET <i>byte</i>, <i>char</i>, <i>short</i>, <i>int</i> and <i>long</i>
-     values are all converted to Prolog <i>integer</i> values; the type
-     distinctions which are lost are normally of no significance)</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l13 level1 lfo8;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>as
+     far as is feasible, .NET data values and object references are represented
+     within Prolog canonically and without loss of information (minor
+     exceptions: .NET <i>float </i>and <i>double</i> values are both converted
+     to Prolog <i>float </i>values; .NET <i>byte</i>, <i>char</i>, <i>short</i>,
+     <i>int</i> and <i>long</i> values are all converted to Prolog <i>integer</i>
+     values; the type distinctions which are lost are normally of no
+     significance)</span><span style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>references
-     within Prolog to .NET objects:</span></li>
- <ul type=circle>
-  <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>should be
-      treated as opaque handles</span></li>
-  <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>are canonical
-      (two references are ==/2 equal if-and-only-if they refer to the <i>same
-      object</i> within the .NET)</span></li>
-  <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>are
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l15 level1 lfo9;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>references
+     within Prolog to .NET objects:</span><span style='mso-fareast-font-family:
+     "Times New Roman"'><o:p></o:p></span></li>
+ <ul style='margin-top:0in' type=circle>
+  <li class=MsoNormal style='mso-list:l15 level2 lfo9;tab-stops:list 1.0in'><span
+      style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>should
+      be treated as opaque handles</span><span style='mso-fareast-font-family:
+      "Times New Roman"'><o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-list:l15 level2 lfo9;tab-stops:list 1.0in'><span
+      style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>are
+      canonical (two references are ==/2 equal if-and-only-if they refer to the
+      <i>same object</i> within the .NET)</span><span style='mso-fareast-font-family:
+      "Times New Roman"'><o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-list:l15 level2 lfo9;tab-stops:list 1.0in'><span
+      style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>are
       represented as structures containing a distinctive atom so as to exploit
       SWI-Prolog's atom garbage collection: when an object reference is
       garbage-collected in Prolog, the .NET garbage collector is informed, so
       there is sound and complete overall garbage collection of .NET objects
-      within the combined Prolog+.NET system</span></li>
+      within the combined Prolog+.NET system</span><span style='mso-fareast-font-family:
+      "Times New Roman"'><o:p></o:p></span></li>
  </ul>
 </ul>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>.NET class
-     methods can be called by name: <b><i>SWICLI</i></b> invisibly fetches (and
-     caches) essential details of method invocation, exploiting <i>.NET
-     Reflection</i> facilities</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l14 level1 lfo10;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>.NET
+     class methods can be called by name: <b><i>SWICLI</i></b> invisibly
+     fetches (and caches) essential details of method invocation, exploiting <i>.NET
+     Reflection</i> facilities</span><span style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>the API is
-     similar to that of XPCE: the four main interface calls are <i>cli_new</i>,
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l37 level1 lfo11;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>the
+     API is similar to that of XPCE: the four main interface calls are <i>cli_new</i>,
      <i>cli_call, cli_set</i> and <i>cli_get</i> (there is a single <i>cli_free</i>,
-     though .NET's garbage collection is extended transparently into Prolog)</span></li>
+     though .NET's garbage collection is extended transparently into Prolog)</span><span
+     style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
-<ul type=disc>
- <li class=MsoNormal><i><span style='font-family:"Arial","sans-serif"'>cli_call</span></i><span
-     style='font-family:"Arial","sans-serif"'> resolves overloaded methods
-     automatically and dynamically, inferring the types of the call's actual
-     parameters, and identifying the most specific of the applicable method
-     implementations (similarly, <i>cli_new</i> resolves overloaded
-     constructors)</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l18 level1 lfo12;tab-stops:list .5in'><i><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>cli_call</span></i><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>
+     resolves overloaded methods automatically and dynamically, inferring the
+     types of the call's actual parameters, and identifying the most specific
+     of the applicable method implementations (similarly, <i>cli_new</i>
+     resolves overloaded constructors)</span><span style='mso-fareast-font-family:
+     "Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>Prolog code
-     which uses the API calls is responsible for passing suitably-typed values
-     and references, since the P/INVOKE doesn't perform complete dynamic
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l23 level1 lfo13;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>Prolog
+     code which uses the API calls is responsible for passing suitably-typed
+     values and references, since the P/INVOKE doesn't perform complete dynamic
      type-checking, and nor currently does <b><i>SWICLI</i></b> (although the <i>overloaded
-     method resolution</i> mechanism could probably be adapted to do this)</span></li>
+     method resolution</i> mechanism could probably be adapted to do this)</span><span
+     style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>Prolog code
-     can reason about the types of .NET data values, object references, fields
-     and methods: <b><i>SWICLI</i></b> supports a canonical representation of
-     all .NET types as structured terms (e.g. </span><tt><b><span
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l28 level1 lfo14;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>Prolog
+     code can reason about the types of .NET data values, object references,
+     fields and methods: <b><i>SWICLI</i></b> supports a canonical
+     representation of all .NET types as structured terms (e.g. </span><tt><b><span
      style='font-size:10.0pt'>array(array(byte))</span></b></tt><span
-     style='font-family:"Arial","sans-serif"'>) and also as atomic .NET
-     signatures</span></li>
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>)
+     and also as atomic .NET signatures</span><span style='mso-fareast-font-family:
+     "Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>the
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l32 level1 lfo15;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>the
      Prolog-calls-.NET (mine) and .NET-calls-Prolog (Fred's) parts of <b><i>SWICLI</i></b>
      are largely independent; mine concentrates on representing all .NET data
      values and objects within Prolog, and supporting manipulation of objects;
      Fred's concentrates on representing any Prolog term within .NET, and
      supporting the calling of goals within Prolog and the retrieving of
-     results back into .NET</span></li>
+     results back into .NET</span><span style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Helvetica","sans-serif"'>when
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l22 level1 lfo16;tab-stops:list .5in'><span
+     style='font-family:"Helvetica","sans-serif";mso-fareast-font-family:"Times New Roman"'>when
      called from Prolog, <i>void</i> methods return a <i>void</i> value (which
-     is distinct from all other <b><i>SWICLI</i></b> values and references)</span></li>
+     is distinct from all other <b><i>SWICLI</i></b> values and references)</span><span
+     style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>it uses </span><tt><b><span
-     style='font-size:13.5pt'>@/1</span></b></tt><span style='font-family:"Arial","sans-serif"'>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l17 level1 lfo17;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>it
+     uses </span><tt><b><span style='font-size:13.5pt'>@/1</span></b></tt><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>
      to construct representations of certain .NET values; if&nbsp; </span><tt><b><span
-     style='font-size:13.5pt'>@/1</span></b></tt><span style='font-family:"Arial","sans-serif"'>
-     is defined as a prefix operator (as used by XPCE), then you can write </span><tt><b><span
+     style='font-size:13.5pt'>@/1</span></b></tt><span style='font-family:"Arial","sans-serif";
+     mso-fareast-font-family:"Times New Roman"'> is defined as a prefix
+     operator (as used by XPCE), then you can write </span><tt><b><span
      style='font-size:13.5pt'>@false</span></b></tt><span style='font-family:
-     "Arial","sans-serif"'>, </span><tt><b><span style='font-size:13.5pt'>@true</span></b></tt><span
-     style='font-family:"Arial","sans-serif"'>, </span><tt><b><span
+     "Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>, </span><tt><b><span
+     style='font-size:13.5pt'>@true</span></b></tt><span style='font-family:
+     "Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>, </span><tt><b><span
      style='font-size:13.5pt'>@null</span></b></tt><span style='font-family:
-     "Arial","sans-serif"'> etc. in your source code; otherwise (and for
-     portability) you'll have to write e.g. </span><tt><b><span
-     style='font-size:13.5pt'>@(true)</span></b></tt><span style='font-family:
-     "Arial","sans-serif"'> etc.</span></li>
+     "Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'> etc. in
+     your source code; otherwise (and for portability) you'll have to write
+     e.g. </span><tt><b><span style='font-size:13.5pt'>@(true)</span></b></tt><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>
+     etc.</span><span style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
-<div class=MsoNormal align=center style='text-align:center'>
+<div class=MsoNormal align=center style='text-align:center'><span
+style='mso-fareast-font-family:"Times New Roman"'>
 
 <hr size=2 width="100%" align=center>
 
-</div>
+</span></div>
 
-<h2><a name="JPL_types_Dotnet_types_as_seen_by"></a>SWICLI types (.NET types, as
-seen by Prolog)</h2>
+<h2><a name="JPL_types_Dotnet_types_as_seen_by"></a><span style='mso-fareast-font-family:
+"Times New Roman"'>SWICLI types (.NET types, as seen by Prolog)<o:p></o:p></span></h2>
 
 <blockquote style='margin-top:5.0pt;margin-bottom:5.0pt'>
 
@@ -480,14 +1531,15 @@ instance</i></b> (other than of <i>System.String</i>)</span></p>
 
 </blockquote>
 
-<div class=MsoNormal align=center style='text-align:center'>
+<div class=MsoNormal align=center style='text-align:center'><span
+style='mso-fareast-font-family:"Times New Roman"'>
 
 <hr size=2 width="100%" align=center>
 
-</div>
+</span></div>
 
-<h2><a name="representation_of_Dotnet_values..."></a>representation of .NET
-values and references within Prolog</h2>
+<h2><a name="representation_of_Dotnet_values..."></a><span style='mso-fareast-font-family:
+"Times New Roman"'>representation of .NET values and references within Prolog<o:p></o:p></span></h2>
 
 <p class=MsoNormal><span style='font-family:"Helvetica","sans-serif"'>Instances
 of <b><i>SWICLI</i></b> types are represented within Prolog as follows:</span></p>
@@ -498,8 +1550,8 @@ style='font-size:13.5pt'>@(true)</span></b></tt><span style='font-family:"Arial"
 and </span><tt><b><span style='font-size:13.5pt'>@(false)</span></b></tt> </p>
 
 <p><b><i><span style='font-family:"Arial","sans-serif"'>char</span></i></b><span
-style='font-family:"Arial","sans-serif"'> values are represented by corresponding
-Prolog <i>integers</i></span> </p>
+style='font-family:"Arial","sans-serif"'> values are represented by
+corresponding Prolog <i>integers</i></span> </p>
 
 <p><b><i><span style='font-family:"Arial","sans-serif"'>int</span></i></b><span
 style='font-family:"Arial","sans-serif"'>, <b><i>short</i></b> and <b><i>byte</i></b>
@@ -542,21 +1594,23 @@ where Tag ia an <i>atom</i> whose name encodes a P/INVOKE global reference
 value; this may change, but won't affect Prolog programs which respect the
 opacity of references</span></p>
 
-<div class=MsoNormal align=center style='text-align:center'>
+<div class=MsoNormal align=center style='text-align:center'><span
+style='mso-fareast-font-family:"Times New Roman"'>
 
 <hr size=2 width="100%" align=center>
 
-</div>
+</span></div>
 
-<h2><a name="repn_of_Dotnet_types_1_structured"></a>Representation of .NET types
-within Prolog (1): <i>structured</i> notation</h2>
+<h2><a name="repn_of_Dotnet_types_1_structured"></a><span style='mso-fareast-font-family:
+"Times New Roman"'>Representation of .NET types within Prolog (1): <i>structured</i>
+notation<o:p></o:p></span></h2>
 
 <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>The <b><i>SWICLI
-Prolog API</i></b> allows Prolog applications to inspect, manipulate, and
-reason about the types of .NET values, references, methods etc., and this
-section describes how these types themselves (as opposed to instances thereof)
-are represented.&nbsp; Predicates which pass these type representations include
-</span><b><a href="api.html#jpl_class_to_type/2">cli_class_to_type/2</a>, <a
+Prolog API</i></b> allows Prolog applications to inspect, manipulate, and reason
+about the types of .NET values, references, methods etc., and this section
+describes how these types themselves (as opposed to instances thereof) are
+represented.&nbsp; Predicates which pass these type representations include </span><b><a
+href="api.html#jpl_class_to_type/2">cli_class_to_type/2</a>, <a
 href="api.html#jpl_classname_to_type/2">cli_classname_to_type/2</a>, <a
 href="api.html#jpl_datum_to_type/2">cli_datum_to_type/2</a>, <a
 href="api.html#jpl_is_object_type/1">cli_is_object_type/1</a>, <a
@@ -633,19 +1687,21 @@ style='font-size:13.5pt'>array(</span></b></tt><i><span style='font-family:
 </i>notation for .NET types is designed to be convenient for composition and
 decomposition by matching (unification).</span></p>
 
-<div class=MsoNormal align=center style='text-align:center'>
+<div class=MsoNormal align=center style='text-align:center'><span
+style='mso-fareast-font-family:"Times New Roman"'>
 
 <hr size=2 width="100%" align=center>
 
-</div>
+</span></div>
 
-<h2><a name="repn_of_Dotnet_types_2_descriptor"></a>representation of .NET types
-within Prolog (2): <i>descriptor</i> notation</h2>
+<h2><a name="repn_of_Dotnet_types_2_descriptor"></a><span style='mso-fareast-font-family:
+"Times New Roman"'>representation of .NET types within Prolog (2): <i>descriptor</i>
+notation<o:p></o:p></span></h2>
 
 <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>The <i>descriptor</i>
-notation for .NET types is one of two textual notations employed by the .NET
-and the .NET class libraries; <b><i>SWICLI</i></b> (necessarily) supports both
-(and supports conversion between all three representations).</span> </p>
+notation for .NET types is one of two textual notations employed by the .NET and
+the .NET class libraries; <b><i>SWICLI</i></b> (necessarily) supports both (and
+supports conversion between all three representations).</span> </p>
 
 <p><span style='font-family:"Arial","sans-serif"'>Examples:</span> </p>
 
@@ -695,14 +1751,16 @@ denotes the type of a method</span></p>
 
 </blockquote>
 
-<div class=MsoNormal align=center style='text-align:center'>
+<div class=MsoNormal align=center style='text-align:center'><span
+style='mso-fareast-font-family:"Times New Roman"'>
 
 <hr size=2 width="100%" align=center>
 
-</div>
+</span></div>
 
-<h2><a name="repn_of_Dotnet_types_3_classname"></a>representation of .NET types
-within Prolog (3): <i>classname</i> notation</h2>
+<h2><a name="repn_of_Dotnet_types_3_classname"></a><span style='mso-fareast-font-family:
+"Times New Roman"'>representation of .NET types within Prolog (3): <i>classname</i>
+notation<o:p></o:p></span></h2>
 
 <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>The <i>classname</i>
 notation for .NET types is the other textual notation employed by the .NET and
@@ -739,24 +1797,26 @@ style='font-family:"Arial","sans-serif"'> denotes an <b><i>array</i></b> of <b><
 
 </blockquote>
 
-<div class=MsoNormal align=center style='text-align:center'>
+<div class=MsoNormal align=center style='text-align:center'><span
+style='mso-fareast-font-family:"Times New Roman"'>
 
 <hr size=2 width="100%" align=center>
 
-</div>
+</span></div>
 
-<h1>Using the <i>SWICLI 1.x</i> Prolog API</h1>
+<h1><span style='mso-fareast-font-family:"Times New Roman"'>Using the <i>SWICLI
+1.x</i> Prolog API<o:p></o:p></span></h1>
 
-<h2><a name="creating_instances_of_Dotnet_classes"></a>creating instances of .NET
-classes</h2>
+<h2><a name="creating_instances_of_Dotnet_classes"></a><span style='mso-fareast-font-family:
+"Times New Roman"'>creating instances of .NET classes<o:p></o:p></span></h2>
 
-<p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>To create an
-instance of a .NET class from within Prolog, call <b>cli_new(+Class,+Params,-Ref)</b>
+<p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>To create an instance
+of a .NET class from within Prolog, call <b>cli_new(+Class,+Params,-Ref)</b>
 with a classname, a list of actual parameters for the constructor, and a
 variable to be bound to the new reference, e.g.</span> </p>
 
-<p class=MsoNormal><tt><b><span style='font-size:13.5pt'>cli_new( 'System.Forms.Frame',
-['frame with dialog'], F)</span></b></tt></p>
+<p class=MsoNormal><tt><b><span style='font-size:13.5pt'>cli_new(
+'System.Forms.Frame', ['frame with dialog'], F)</span></b></tt></p>
 
 <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>which binds <b>F</b>
 to a new object reference, e.g.</span> </p>
@@ -772,14 +1832,15 @@ class type in <i>structured </i>notation, e.g. </span><code><span
 style='font-size:10.0pt'>array(boolean)</span></code><span style='font-family:
 "Arial","sans-serif"'>.</span></p>
 
-<div class=MsoNormal align=center style='text-align:center'>
+<div class=MsoNormal align=center style='text-align:center'><span
+style='mso-fareast-font-family:"Times New Roman"'>
 
 <hr size=2 width="100%" align=center>
 
-</div>
+</span></div>
 
-<h2><a name="calling_methods_of_Dotnet_objects_..."></a>calling methods of .NET
-objects or classes</h2>
+<h2><a name="calling_methods_of_Dotnet_objects_..."></a><span style='mso-fareast-font-family:
+"Times New Roman"'>calling methods of .NET objects or classes<o:p></o:p></span></h2>
 
 <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>The object
 reference generated by the <b>cli_new/3</b> call (above) can be passed to other
@@ -791,8 +1852,8 @@ reference generated by the <b>cli_new/3</b> call (above) can be passed to other
 <p class=MsoNormal>&nbsp;<span style='font-family:"Arial","sans-serif"'>e.g.</span>
 </p>
 
-<p class=MsoNormal><tt><b><span style='font-size:13.5pt'>cli_call( F,
-setVisible, [@(true)], _)</span></b></tt></p>
+<p class=MsoNormal><tt><b><span style='font-size:13.5pt'>cli_call( F, setVisible,
+[@(true)], _)</span></b></tt></p>
 
 <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>which calls
 the <b>setVisible</b> method of the object to which <b>F</b> refers,
@@ -803,8 +1864,8 @@ new <b>JFrame</b> in the top left corner of the desktop.)</span> </p>
 
 <p><span style='font-family:"Arial","sans-serif"'>Note the anonymous variable
 passed as the fourth argument to <b>cli_call/4.&nbsp;</b> A variable in this
-position receives the result of the method call: either a value or a reference.&nbsp;
-Since </span><tt><b><span style='font-size:13.5pt'>SetVisible()</span></b></tt><span
+position receives the result of the method call: either a value or a
+reference.&nbsp; Since </span><tt><b><span style='font-size:13.5pt'>SetVisible()</span></b></tt><span
 style='font-family:"Arial","sans-serif"'> is a void method, the call returns
 the (artificial) reference </span><tt><b><span style='font-size:13.5pt'>@(void)</span></b></tt><span
 style='font-family:"Arial","sans-serif"'>.</span> </p>
@@ -828,21 +1889,24 @@ style='font-family:"Helvetica","sans-serif"'>+Ref</span></b><span
 style='font-family:"Arial","sans-serif"'> argument represents a class, then the
 named static method of that class&nbsp; is called.</span> </p>
 
-<div class=MsoNormal align=center style='text-align:center'>
+<div class=MsoNormal align=center style='text-align:center'><span
+style='mso-fareast-font-family:"Times New Roman"'>
 
 <hr size=2 width="100%" align=center>
 
-</div>
+</span></div>
 
-<h2><a name="fetching_field_values_of_Dotnet_objects..."></a>Fetching field and
-property values of .NET objects or classes</h2>
+<h2><a name="fetching_field_values_of_Dotnet_objects."></a><span
+style='mso-fareast-font-family:"Times New Roman"'>Fetching field and property
+values of .NET objects or classes<o:p></o:p></span></h2>
 
 <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>The <b>cli_get/3</b>
 API predicate can retrieve the value of an instance field or a static field,
 e.g.</span> </p>
 
-<p class=MsoNormal><tt><b><span style='font-size:13.5pt'>cli_get( 'System.Color',
-pink, Pink)</span></b></tt></p>
+<p class=MsoNormal><tt><b><span style='font-size:13.5pt'><span
+style='mso-spacerun:yes'>    </span>cli_get( 'System.Color', pink, Pink)</span></b></tt><b><span
+style='font-size:13.5pt;font-family:"Courier New"'><o:p></o:p></span></b></p>
 
 <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>which binds
 the Prolog variable </span><tt><b><span style='font-size:13.5pt'>Pink</span></b></tt><span
@@ -864,14 +1928,16 @@ has the following interface:</span> </p>
 argument represents a class, then a static field of that class with FieldName
 is accessed.</span> </p>
 
-<div class=MsoNormal align=center style='text-align:center'>
+<div class=MsoNormal align=center style='text-align:center'><span
+style='mso-fareast-font-family:"Times New Roman"'>
 
 <hr size=2 width="100%" align=center>
 
-</div>
+</span></div>
 
-<h2><a name="setting_field_values_of_Dotnet_objects..."></a>Setting field or
-properties values of .NET objects or classes</h2>
+<h2><a name="setting_field_values_of_Dotnet_objects.."></a><span
+style='mso-fareast-font-family:"Times New Roman"'>Setting field or properties
+values of .NET objects or classes<o:p></o:p></span></h2>
 
 <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>Object and
 class fields can be set (i.e. have values or references assigned to them) by
@@ -884,53 +1950,69 @@ the <b>cli_set/3</b> API procedure, which has the following interface:</span> </
 must be a value or reference of a type suitable for assignment to the named
 field of the class or object.</span> </p>
 
-<div class=MsoNormal align=center style='text-align:center'>
+<div class=MsoNormal align=center style='text-align:center'><span
+style='mso-fareast-font-family:"Times New Roman"'>
 
 <hr size=2 width="100%" align=center>
 
-</div>
+</span></div>
 
-<h2><a name="a_slightly_longer_example"></a>a slightly longer example</h2>
+<h2><a name="a_slightly_longer_example"></a><span style='mso-fareast-font-family:
+"Times New Roman"'>a slightly longer example<o:p></o:p></span></h2>
 
 <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>This code
 fragment</span> </p>
 
 <pre><tt><b><span style='font-size:13.5pt'>&nbsp;&nbsp;&nbsp; findall(</span></b></tt><b><span
-style='font-size:13.5pt'><br>
-<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Ar,</tt><br>
-<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (&nbsp;&nbsp; current_prolog_flag( N, V),</tt><br>
-<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; term_to_atom( V, Va),</tt><br>
-<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cli_new( '[LSystem.String;', [N,Va], Ar)</tt><br>
-<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ),</tt><br>
-<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Ars</tt><br>
-<tt>&nbsp;&nbsp;&nbsp; ),</tt><br>
-<tt>&nbsp;&nbsp;&nbsp; cli_new( '[[LSystem.String;', Ars, Ac),</tt><br>
-<tt>&nbsp;&nbsp;&nbsp; cli_datums_to_array( [name,value], Ah),</tt><br>
-<tt>&nbsp;&nbsp;&nbsp; cli_new( 'System.Forms.Frame', ['current_prolog_flag'], F),</tt><br>
-<tt>&nbsp;&nbsp;&nbsp; cli_call( F, getContentPane, [], CP),</tt><br>
-<tt>&nbsp;&nbsp;&nbsp; cli_new( 'System.Forms.Table', [Ac,Ah], T),</tt><br>
-<tt>&nbsp;&nbsp;&nbsp; cli_new( 'System.Forms.ScrollPane', [T], SP),</tt><br>
-<tt>&nbsp;&nbsp;&nbsp; cli_call( CP, add, [SP,'Center'], _),</tt><br>
-<tt>&nbsp;&nbsp;&nbsp; cli_call( F, setSize, [600,400], _),</tt></span></b></pre>
+style='font-size:13.5pt'><o:p></o:p></span></b></pre><pre><tt><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Ar,</b></tt><b><span
+style='font-size:13.5pt'><o:p></o:p></span></b></pre><pre><tt><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (&nbsp;&nbsp; current_prolog_flag( N, V),</b></tt><b><span
+style='font-size:13.5pt'><o:p></o:p></span></b></pre><pre><tt><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; term_to_atom( V, Va),</b></tt><b><span
+style='font-size:13.5pt'><o:p></o:p></span></b></pre><pre><tt><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cli_new( '[LSystem.String;', [N,Va], Ar)</b></tt><b><span
+style='font-size:13.5pt'><o:p></o:p></span></b></pre><pre><tt><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ),</b></tt><b><span
+style='font-size:13.5pt'><o:p></o:p></span></b></pre><pre><tt><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Ars</b></tt><b><span
+style='font-size:13.5pt'><o:p></o:p></span></b></pre><pre><tt><b>&nbsp;&nbsp;&nbsp; ),</b></tt><b><span
+style='font-size:13.5pt'><o:p></o:p></span></b></pre><pre><tt><b>&nbsp;&nbsp;&nbsp; cli_new( '[[LSystem.String;', Ars, Ac),</b></tt><b><span
+style='font-size:13.5pt'><o:p></o:p></span></b></pre><pre><tt><b>&nbsp;&nbsp;&nbsp; cli_datums_to_array( [name,value], Ah),</b></tt><b><span
+style='font-size:13.5pt'><o:p></o:p></span></b></pre><pre><tt><b>&nbsp;&nbsp;&nbsp; cli_new( 'System.Forms.Frame', ['current_prolog_flag'], F),</b></tt><b><span
+style='font-size:13.5pt'><o:p></o:p></span></b></pre><pre><tt><b>&nbsp;&nbsp;&nbsp; cli_call( F, getContentPane, [], CP),</b></tt><b><span
+style='font-size:13.5pt'><o:p></o:p></span></b></pre><pre><tt><b>&nbsp;&nbsp;&nbsp; cli_new( 'System.Forms.Table', [Ac,Ah], T),</b></tt><b><span
+style='font-size:13.5pt'><o:p></o:p></span></b></pre><pre><tt><b>&nbsp;&nbsp;&nbsp; cli_new( 'System.Forms.ScrollPane', [T], SP),</b></tt><b><span
+style='font-size:13.5pt'><o:p></o:p></span></b></pre><pre><tt><b>&nbsp;&nbsp;&nbsp; cli_call( CP, add, [SP,'Center'], _),</b></tt><b><span
+style='font-size:13.5pt'><o:p></o:p></span></b></pre><pre><tt><b>&nbsp;&nbsp;&nbsp; cli_call( F, setSize, [600,400], _),!.<o:p></o:p></b></tt></pre><pre><o:p>&nbsp;</o:p></pre>
 
 <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>builds an
 array of arrays of strings containing the names and values of the current
 SWI-Prolog &quot;flags&quot;, and displays it in a JTable within a ScrollPane
 within a JFrame:</span> </p>
 
-<p class=MsoNormal><img border=0 width=524 height=269 src=screendump.jpg></p>
+<p class=MsoNormal><span style='mso-fareast-font-family:"Times New Roman"'><o:p>&nbsp;</o:p></span></p>
+
+<div class=MsoNormal align=center style='text-align:center'><span
+style='mso-fareast-font-family:"Times New Roman"'>
+
+<hr size=2 width="100%" align=center>
+
+</span></div>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<p class=MsoNormal><span style='font-family:"Arial","sans-serif"'><o:p>&nbsp;</o:p></span></p>
 
 <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>In addition
 to <b><i>SWICLI</i></b> API calls, this code calls <b>cli_datums_to_array/2</b>,
 a utility which converts any list of valid representations of .NET values (or
 objects) into a new .NET array, whose base type is the most specialised type of
-which all list members are instances, and which is defined thus:</span> </p>
+which all list members are instances, and which is defined thus:</span></p>
 
-<pre><tt><b><span style='font-size:13.5pt'>cli_datums_to_array( Ds, A) :-</span></b></tt><b><span
-style='font-size:13.5pt'><br>
-<tt>&nbsp;&nbsp;&nbsp; ground( Ds),</tt><br>
-<tt>&nbsp;&nbsp;&nbsp; cli_datums_to_most_specific_common_ancestor_type( Ds, T),</tt><br>
-<tt>&nbsp;&nbsp;&nbsp; cli_new( array(T), Ds, A).</tt></span></b></pre>
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<pre><tt><b><span style='font-size:12.0pt'>cli_datums_to_array( Ds, A) :-</span></b></tt><b><span
+style='font-size:12.0pt'><o:p></o:p></span></b></pre><pre><tt><b><span
+style='font-size:12.0pt'>&nbsp;&nbsp;&nbsp; ground( Ds),</span></b></tt><b><span
+style='font-size:12.0pt'><o:p></o:p></span></b></pre><pre><tt><b><span
+style='font-size:12.0pt'>&nbsp;&nbsp;&nbsp; cli_datums_to_most_specific_common_ancestor_type( Ds, T),</span></b></tt><b><span
+style='font-size:12.0pt'><o:p></o:p></span></b></pre><pre><tt><b><span
+style='font-size:12.0pt'>&nbsp;&nbsp;&nbsp; cli_new( array(T), Ds, A).<o:p></o:p></span></b></tt></pre><pre><o:p>&nbsp;</o:p></pre>
 
 <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>Having found
 the &quot;most specific common ancestor type&quot; (my phrase :-), a new array
@@ -947,18 +2029,19 @@ of operation of <b>cli_new/3</b>:</span> </p>
 
 </blockquote>
 
-<p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>See the
-relevant Appendix for fuller details of the API procedures.</span> </p>
+<p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>See the relevant
+Appendix for fuller details of the API procedures.</span> </p>
 
 <p><span style='font-family:"Arial","sans-serif"'>Don't forget the possibility
 of writing and manipulating new .NET classes to serve your Prolog applications:
 this interface is not designed to make .NET programming redundant :-)</span> </p>
 
-<div class=MsoNormal align=center style='text-align:center'>
+<div class=MsoNormal align=center style='text-align:center'><span
+style='mso-fareast-font-family:"Times New Roman"'>
 
 <hr size=2 width="100%" align=center>
 
-</div>
+</span></div>
 
 <p class=MsoNormal><br>
 <a name="jpl_new3"></a><tt><b><span style='font-size:18.0pt'>cli_new( +X,
@@ -967,37 +2050,55 @@ this interface is not designed to make .NET programming redundant :-)</span> </p
 <p class=MsoNormal><tt><b><span style='font-size:13.5pt'>X</span></b></tt><span
 style='font-family:"Arial","sans-serif"'> can be:</span> </p>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>a suitable <i>type</i></span></li>
- <ul type=circle>
-  <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>i.e. any </span><tt><b><span
-      style='font-size:13.5pt'>class(_,_)</span></b></tt><span
-      style='font-family:"Arial","sans-serif"'>, </span><tt><b><span
-      style='font-size:13.5pt'>array(_)</span></b></tt><span style='font-family:
-      "Arial","sans-serif"'> or primitive type (e.g. </span><tt><b><span
-      style='font-size:13.5pt'>byte</span></b></tt><span style='font-family:
-      "Arial","sans-serif"'> but not </span><tt><b><span style='font-size:13.5pt'>void</span></b></tt><span
-      style='font-family:"Arial","sans-serif"'>)</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l38 level1 lfo18;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>a
+     suitable <i>type</i></span><span style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
+ <ul style='margin-top:0in' type=circle>
+  <li class=MsoNormal style='mso-list:l38 level2 lfo18;tab-stops:list 1.0in'><span
+      style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>i.e.
+      any </span><tt><b><span style='font-size:13.5pt'>class(_,_)</span></b></tt><span
+      style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>,
+      </span><tt><b><span style='font-size:13.5pt'>array(_)</span></b></tt><span
+      style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>
+      or primitive type (e.g. </span><tt><b><span style='font-size:13.5pt'>byte</span></b></tt><span
+      style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>
+      but not </span><tt><b><span style='font-size:13.5pt'>void</span></b></tt><span
+      style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>)</span><span
+      style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
  </ul>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>an atomic <i>classname</i></span></li>
- <ul type=circle>
-  <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>e.g. </span><tt><b><span
-      style='font-size:13.5pt'>'System.String'</span></b></tt></li>
-  <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>e.g. </span><tt><b><span
-      style='font-size:13.5pt'>'LSystem.String;'</span></b></tt><span
-      style='font-family:"Arial","sans-serif"'>&nbsp;&nbsp; (a redundant but
-      legitimate form)</span></li>
+ <li class=MsoNormal style='mso-list:l38 level1 lfo18;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>an
+     atomic <i>classname</i></span><span style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
+ <ul style='margin-top:0in' type=circle>
+  <li class=MsoNormal style='mso-list:l38 level2 lfo18;tab-stops:list 1.0in'><span
+      style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>e.g.
+      </span><tt><b><span style='font-size:13.5pt'>'System.String'</span></b></tt><span
+      style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-list:l38 level2 lfo18;tab-stops:list 1.0in'><span
+      style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>e.g.
+      </span><tt><b><span style='font-size:13.5pt'>'LSystem.String;'</span></b></tt><span
+      style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>&nbsp;&nbsp;
+      (a redundant but legitimate form)</span><span style='mso-fareast-font-family:
+      "Times New Roman"'><o:p></o:p></span></li>
  </ul>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>an atomic <i>descriptor</i></span></li>
- <ul type=circle>
-  <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>e.g. </span><tt><b><span
-      style='font-size:13.5pt'>'[I'</span></b></tt></li>
+ <li class=MsoNormal style='mso-list:l38 level1 lfo18;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>an
+     atomic <i>descriptor</i></span><span style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
+ <ul style='margin-top:0in' type=circle>
+  <li class=MsoNormal style='mso-list:l38 level2 lfo18;tab-stops:list 1.0in'><span
+      style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>e.g.
+      </span><tt><b><span style='font-size:13.5pt'>'[I'</span></b></tt><span
+      style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
  </ul>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>a class
-     object</span></li>
- <ul type=circle>
-  <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>i.e. an
-      object whose type is&nbsp; </span><tt><b><span style='font-size:13.5pt'>class([.NET,lang],['Class'])</span></b></tt></li>
+ <li class=MsoNormal style='mso-list:l38 level1 lfo18;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>a
+     class object</span><span style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
+ <ul style='margin-top:0in' type=circle>
+  <li class=MsoNormal style='mso-list:l38 level2 lfo18;tab-stops:list 1.0in'><span
+      style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>i.e.
+      an object whose type is&nbsp; </span><tt><b><span style='font-size:13.5pt'>class([.NET,lang],['Class'])</span></b></tt><span
+      style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
  </ul>
 </ul>
 
@@ -1054,11 +2155,12 @@ are assignable</span></p>
 
 </blockquote>
 
-<div class=MsoNormal align=center style='text-align:center'>
+<div class=MsoNormal align=center style='text-align:center'><span
+style='mso-fareast-font-family:"Times New Roman"'>
 
 <hr size=2 width="100%" align=center>
 
-</div>
+</span></div>
 
 <p class=MsoNormal><br>
 <a name="jpl_call4"></a><tt><b><span style='font-size:18.0pt'>cli_call( +X,
@@ -1067,16 +2169,16 @@ are assignable</span></p>
 <p class=MsoNormal><tt><b><span style='font-size:13.5pt'>X</span></b></tt><span
 style='font-family:"Arial","sans-serif"'> can be:</span> </p>
 
-<p class=MsoNormal><span style='font-family:Symbol'>·</span>  <span
+<p class=MsoNormal><span style='font-family:Symbol'>·</span>&nbsp; <span
 style='font-family:"Arial","sans-serif"'>a <i>type</i>, <i>class object</i> or <i>classname</i>
-(for static methods of the denoted class, or for static or instance methods of System.Class)</span>
-</p>
+(for static methods of the denoted class, or for static or instance methods of
+System.Class)</span> </p>
 
 <blockquote style='margin-top:5.0pt;margin-bottom:5.0pt'>
 
 <blockquote style='margin-top:5.0pt;margin-bottom:5.0pt'>
 
-<p class=MsoNormal><span style='font-family:Symbol'>·</span>  <span
+<p class=MsoNormal><span style='font-family:Symbol'>·</span>&nbsp; <span
 style='font-family:"Arial","sans-serif"'>a class instance or array (for static
 or instance methods)</span> </p>
 
@@ -1085,7 +2187,7 @@ or instance methods)</span> </p>
 <p class=MsoNormal><tt><b><span style='font-size:13.5pt'>Method</span></b></tt><span
 style='font-family:"Arial","sans-serif"'> can be:</span> </p>
 
-<p class=MsoNormal><span style='font-family:Symbol'>·</span>  <span
+<p class=MsoNormal><span style='font-family:Symbol'>·</span>&nbsp; <span
 style='font-family:"Arial","sans-serif"'>an atomic method name (if this name is
 ambiguous, as a result of method overloading, then it will be resolved by
 considering the types of <b>Args</b>, as far as they can be inferred)</span> </p>
@@ -1096,7 +2198,7 @@ considering the types of <b>Args</b>, as far as they can be inferred)</span> </p
 
 <blockquote style='margin-top:5.0pt;margin-bottom:5.0pt'>
 
-<p class=MsoNormal><span style='font-family:Symbol'>·</span>  <span
+<p class=MsoNormal><span style='font-family:Symbol'>·</span>&nbsp; <span
 style='font-family:"Arial","sans-serif"'>an integral method index (untested:
 for static overload resolution)</span> </p>
 
@@ -1108,7 +2210,7 @@ for static overload resolution)</span> </p>
 
 <blockquote style='margin-top:5.0pt;margin-bottom:5.0pt'>
 
-<p class=MsoNormal><span style='font-family:Symbol'>·</span>  <span
+<p class=MsoNormal><span style='font-family:Symbol'>·</span>&nbsp; <span
 style='font-family:"Arial","sans-serif"'>a </span><tt><b><span
 style='font-size:13.5pt'>methodID/1</span></b></tt><span style='font-family:
 "Arial","sans-serif"'> structure (ditto)</span> </p>
@@ -1118,9 +2220,11 @@ style='font-size:13.5pt'>methodID/1</span></b></tt><span style='font-family:
 <p class=MsoNormal><tt><b><span style='font-size:13.5pt'>Args</span></b></tt><span
 style='font-family:"Arial","sans-serif"'> must be</span> </p>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>a proper
-     list (possibly empty) of ground arguments</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l34 level1 lfo19;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>a
+     proper list (possibly empty) of ground arguments</span><span
+     style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
 <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>Finally, an
@@ -1129,11 +2233,12 @@ style='font-family:"Arial","sans-serif"'> with the returned result.</span></p>
 
 </blockquote>
 
-<div class=MsoNormal align=center style='text-align:center'>
+<div class=MsoNormal align=center style='text-align:center'><span
+style='mso-fareast-font-family:"Times New Roman"'>
 
 <hr size=2 width="100%" align=center>
 
-</div>
+</span></div>
 
 <p class=MsoNormal><br>
 <a name="jpl_set3"></a><tt><b><span style='font-size:18.0pt'>cli_set( +X,
@@ -1148,104 +2253,131 @@ to value </span><tt><b><span style='font-size:13.5pt'>V</span></b></tt> </p>
 <p><tt><b><span style='font-size:13.5pt'>X</span></b></tt><span
 style='font-family:"Arial","sans-serif"'> can be:</span> </p>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>a <i>class
-     object</i>, a <i>classname</i>, or an (object or array) <i>type</i> (for
-     static fields, or System.Class fields)</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l11 level1 lfo20;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>a
+     <i>class object</i>, a <i>classname</i>, or an (object or array) <i>type</i>
+     (for static fields, or System.Class fields)</span><span style='mso-fareast-font-family:
+     "Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
 <blockquote style='margin-top:5.0pt;margin-bottom:5.0pt'>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>a <i>class
-     instance</i> (for non-static fields)</span></li>
-</ul>
-
-</blockquote>
-
-<blockquote style='margin-top:5.0pt;margin-bottom:5.0pt'>
-
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>an <i>array</i>
-     (for indexed element or subrange assignment)</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l4 level1 lfo21;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>a
+     <i>class instance</i> (for non-static fields)</span><span
+     style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
 </blockquote>
 
 <blockquote style='margin-top:5.0pt;margin-bottom:5.0pt'>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>but not a <i>string</i>
-     (no fields to retrieve)</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l27 level1 lfo22;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>an
+     <i>array</i> (for indexed element or subrange assignment)</span><span
+     style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
+</ul>
+
+</blockquote>
+
+<blockquote style='margin-top:5.0pt;margin-bottom:5.0pt'>
+
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l8 level1 lfo23;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>but
+     not a <i>string</i> (no fields to retrieve)</span><span style='mso-fareast-font-family:
+     "Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
 <p class=MsoNormal><tt><b><span style='font-size:13.5pt'>Field</span></b></tt><span
 style='font-family:"Arial","sans-serif"'> can be:</span> </p>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>an atomic
-     field name (overloading will be resolved dynamically, by considering the
-     inferred type of </span><b><span style='font-family:"Helvetica","sans-serif"'>V</span></b><span
-     style='font-family:"Arial","sans-serif"'>)</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l33 level1 lfo24;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>an
+     atomic field name (overloading will be resolved dynamically, by
+     considering the inferred type of </span><b><span style='font-family:"Helvetica","sans-serif";
+     mso-fareast-font-family:"Times New Roman"'>V</span></b><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>)</span><span
+     style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
 </blockquote>
 
 <blockquote style='margin-top:5.0pt;margin-bottom:5.0pt'>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>an integral
-     field index (static resolution: not tried yet)</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l31 level1 lfo25;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>an
+     integral field index (static resolution: not tried yet)</span><span
+     style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
 </blockquote>
 
 <blockquote style='margin-top:5.0pt;margin-bottom:5.0pt'>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>a </span><tt><b><span
-     style='font-size:13.5pt'>fieldID/1</span></b></tt><span style='font-family:
-     "Arial","sans-serif"'> (static resolution: not tried yet)</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l3 level1 lfo26;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>a
+     </span><tt><b><span style='font-size:13.5pt'>fieldID/1</span></b></tt><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>
+     (static resolution: not tried yet)</span><span style='mso-fareast-font-family:
+     "Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
 </blockquote>
 
 <blockquote style='margin-top:5.0pt;margin-bottom:5.0pt'>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>a variable
-     (field names, or array indices, are generated)(?!)</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l39 level1 lfo27;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>a
+     variable (field names, or array indices, are generated)(?!)</span><span
+     style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
 </blockquote>
 
 <blockquote style='margin-top:5.0pt;margin-bottom:5.0pt'>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>an array
-     index </span><tt><b><span style='font-size:13.5pt'>I</span></b></tt><span
-     style='font-family:"Arial","sans-serif"'> (</span><tt><b><span
-     style='font-size:13.5pt'>X</span></b></tt><span style='font-family:"Arial","sans-serif"'>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l16 level1 lfo28;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>an
+     array index </span><tt><b><span style='font-size:13.5pt'>I</span></b></tt><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>
+     (</span><tt><b><span style='font-size:13.5pt'>X</span></b></tt><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>
      must be an array object: </span><tt><b><span style='font-size:13.5pt'>X[I]</span></b></tt><span
-     style='font-family:"Arial","sans-serif"'> is assigned </span><tt><b><span
-     style='font-size:13.5pt'>V</span></b></tt><span style='font-family:"Arial","sans-serif"'>)</span></li>
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>
+     is assigned </span><tt><b><span style='font-size:13.5pt'>V</span></b></tt><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>)</span><span
+     style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
 </blockquote>
 
 <blockquote style='margin-top:5.0pt;margin-bottom:5.0pt'>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>a pair </span><tt><b><span
-     style='font-size:13.5pt'>I-J</span></b></tt><span style='font-family:"Arial","sans-serif"'>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l42 level1 lfo29;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>a
+     pair </span><tt><b><span style='font-size:13.5pt'>I-J</span></b></tt><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>
      of integers (</span><tt><b><span style='font-size:13.5pt'>J</span></b></tt><span
-     style='font-family:"Arial","sans-serif"'> can be a variable) (</span><tt><b><span
-     style='font-size:13.5pt'>X</span></b></tt><span style='font-family:"Arial","sans-serif"'>
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>
+     can be a variable) (</span><tt><b><span style='font-size:13.5pt'>X</span></b></tt><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>
      must be an array object, </span><tt><b><span style='font-size:13.5pt'>V</span></b></tt><span
-     style='font-family:"Arial","sans-serif"'> must be a list of values: </span><tt><b><span
-     style='font-size:13.5pt'>X[I-J]</span></b></tt><span style='font-family:
-     "Arial","sans-serif"'> will be assigned </span><tt><b><span
-     style='font-size:13.5pt'>V</span></b></tt><span style='font-family:"Arial","sans-serif"'>)</span></li>
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>
+     must be a list of values: </span><tt><b><span style='font-size:13.5pt'>X[I-J]</span></b></tt><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>
+     will be assigned </span><tt><b><span style='font-size:13.5pt'>V</span></b></tt><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>)</span><span
+     style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
 <p class=MsoNormal><tt><b><span style='font-size:13.5pt'>V</span></b></tt><span
@@ -1254,11 +2386,12 @@ may pass variables to <b><i>SWICLI</i></b>?!)</span></p>
 
 </blockquote>
 
-<div class=MsoNormal align=center style='text-align:center'>
+<div class=MsoNormal align=center style='text-align:center'><span
+style='mso-fareast-font-family:"Times New Roman"'>
 
 <hr size=2 width="100%" align=center>
 
-</div>
+</span></div>
 
 <p class=MsoNormal><br>
 <a name="jpl_get3"></a><tt><b><span style='font-size:18.0pt'>cli_get( +X,
@@ -1267,92 +2400,111 @@ may pass variables to <b><i>SWICLI</i></b>?!)</span></p>
 <p class=MsoNormal><tt><b><span style='font-size:13.5pt'>X</span></b></tt><span
 style='font-family:"Arial","sans-serif"'> can be:</span> </p>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>a <i>class
-     object</i>, a <i>classname</i>, or an (object or array) <i>type</i> (for
-     static fields, or System.Class fields)</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l25 level1 lfo30;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>a
+     <i>class object</i>, a <i>classname</i>, or an (object or array) <i>type</i>
+     (for static fields, or System.Class fields)</span><span style='mso-fareast-font-family:
+     "Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
 <blockquote style='margin-top:5.0pt;margin-bottom:5.0pt'>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>a <i>class
-     instance</i> (for non-static fields)</span></li>
-</ul>
-
-</blockquote>
-
-<blockquote style='margin-top:5.0pt;margin-bottom:5.0pt'>
-
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>an <i>array</i>
-     (for the 'length' pseudo field, or for indexed element retrieval)</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l41 level1 lfo31;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>a
+     <i>class instance</i> (for non-static fields)</span><span
+     style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
 </blockquote>
 
 <blockquote style='margin-top:5.0pt;margin-bottom:5.0pt'>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>but not a String
-     (clashes with classname; anyway, System.String has no fields to retrieve)</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l26 level1 lfo32;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>an
+     <i>array</i> (for the 'length' pseudo field, or for indexed element
+     retrieval)</span><span style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
+</ul>
+
+</blockquote>
+
+<blockquote style='margin-top:5.0pt;margin-bottom:5.0pt'>
+
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l30 level1 lfo33;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>but
+     not a String (clashes with classname; anyway, System.String has no fields
+     to retrieve)</span><span style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
 <p class=MsoNormal><tt><b><span style='font-size:13.5pt'>Field</span></b></tt><span
 style='font-family:"Arial","sans-serif"'> can be</span> </p>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>an atomic
-     field name</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l36 level1 lfo34;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>an
+     atomic field name</span><span style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
 </blockquote>
 
 <blockquote style='margin-top:5.0pt;margin-bottom:5.0pt'>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>or an
-     integral field index (these are a secret :-)</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l2 level1 lfo35;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>or
+     an integral field index (these are a secret :-)</span><span
+     style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
 </blockquote>
 
 <blockquote style='margin-top:5.0pt;margin-bottom:5.0pt'>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>or a </span><tt><b><span
-     style='font-size:13.5pt'>fieldID/1</span></b></tt><span style='font-family:
-     "Arial","sans-serif"'> (not for general consumption :-)</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l19 level1 lfo36;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>or
+     a </span><tt><b><span style='font-size:13.5pt'>fieldID/1</span></b></tt><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>
+     (not for general consumption :-)</span><span style='mso-fareast-font-family:
+     "Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
 </blockquote>
 
 <blockquote style='margin-top:5.0pt;margin-bottom:5.0pt'>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>or an
-     integral array index (high-bound checking is done by .NET, maybe throwing
-     an exception)</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l43 level1 lfo37;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>or
+     an integral array index (high-bound checking is done by .NET, maybe
+     throwing an exception)</span><span style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
 </blockquote>
 
 <blockquote style='margin-top:5.0pt;margin-bottom:5.0pt'>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>or a
-     variable (field names, or array indices, are generated)</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l10 level1 lfo38;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>or
+     a variable (field names, or array indices, are generated)</span><span
+     style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
 </blockquote>
 
 <blockquote style='margin-top:5.0pt;margin-bottom:5.0pt'>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>or a pair </span><tt><b><span
-     style='font-size:13.5pt'>I-J</span></b></tt><span style='font-family:"Arial","sans-serif"'>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l21 level1 lfo39;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>or
+     a pair </span><tt><b><span style='font-size:13.5pt'>I-J</span></b></tt><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>
      of integers or variables (array subranges are generated) (relational or
-     what?!)</span></li>
+     what?!)</span><span style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
 <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>Immediately
@@ -1362,13 +2514,15 @@ with the internally computed result.</span></p>
 
 </blockquote>
 
-<div class=MsoNormal align=center style='text-align:center'>
+<div class=MsoNormal align=center style='text-align:center'><span
+style='mso-fareast-font-family:"Times New Roman"'>
 
 <hr size=2 width="100%" align=center>
 
-</div>
+</span></div>
 
-<h2><a name=exceptions></a>exceptions thrown by .NET</h2>
+<h2><a name=exceptions></a><span style='mso-fareast-font-family:"Times New Roman"'>exceptions
+thrown by .NET<o:p></o:p></span></h2>
 
 <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>Uncaught
 exceptions thrown by the .NET in the course of handling a <b><i>SWICLI</i> 3.x
@@ -1391,13 +2545,14 @@ returned as Prolog exceptions with this structure:</span></p>
 <p class=MsoNormal><tt><b><span style='font-size:13.5pt'>cli_exception( <i>classname</i>,
 <i>reference_to_exception_object</i>)</span></b></tt></p>
 
-<div class=MsoNormal align=center style='text-align:center'>
+<div class=MsoNormal align=center style='text-align:center'><span
+style='mso-fareast-font-family:"Times New Roman"'>
 
 <hr size=2 width="100%" align=center>
 
-</div>
+</span></div>
 
-<h2><a name=testing></a>testing</h2>
+<h2><a name=testing></a><span style='mso-fareast-font-family:"Times New Roman"'>testing<o:p></o:p></span></h2>
 
 <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>For a
 rudimentary test, run</span> </p>
@@ -1408,72 +2563,89 @@ rudimentary test, run</span> </p>
 patiently for some Swing windows to appear (but not too patiently, in case
 something is wrong...)</span> </p>
 
-<div class=MsoNormal align=center style='text-align:center'>
+<div class=MsoNormal align=center style='text-align:center'><span
+style='mso-fareast-font-family:"Times New Roman"'>
 
 <hr size=2 width="100%" align=center>
 
-</div>
+</span></div>
 
-<h2><a name="to_do"></a>to do</h2>
+<h2><a name="to_do"></a><span style='mso-fareast-font-family:"Times New Roman"'>to
+do<o:p></o:p></span></h2>
 
-<p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>Apart from
-any bugs I don't know about, this interface is usable and useful as it
+<p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>Apart from any
+bugs I don't know about, this interface is usable and useful as it
 stands.&nbsp; Nevertheless there are some things &quot;to do&quot; at some
 stage in the future, e.g.</span> </p>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>support
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l7 level1 lfo40;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>support
      non-virtual method calls (i.e. explicitly call a method of some ancestor
      class despite there being an overriding method (i.e. of the same name
      etc.) in a &quot;nearer&quot; class). &nbsp;I believe this is a fairly
      arcane .NET feature, but it is needed for completeness; I want to
-     accommodate it without complicating the syntax of regular method calls.</span></li>
+     accommodate it without complicating the syntax of regular method calls.</span><span
+     style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>map the .NET's
-     </span><tt><b><span style='font-size:13.5pt'>vprintf()</span></b></tt><span
-     style='font-family:"Arial","sans-serif"'> messages onto something in
-     SWI-Prolog (the user_error stream?)</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l1 level1 lfo41;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>map
+     the .NET's </span><tt><b><span style='font-size:13.5pt'>vprintf()</span></b></tt><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>
+     messages onto something in SWI-Prolog (the user_error stream?)</span><span
+     style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>catch the .NET's
-     </span><tt><b><span style='font-size:13.5pt'>abort()</span></b></tt><span
-     style='font-family:"Arial","sans-serif"'> and </span><tt><b><span
-     style='font-size:13.5pt'>exit()</span></b></tt><span style='font-family:
-     "Arial","sans-serif"'> events, and handle them appropriately (e.g. stop a .NET
-     <i>abort</i> from killing the SWI-Prolog process)</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l5 level1 lfo42;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>catch
+     the .NET's </span><tt><b><span style='font-size:13.5pt'>abort()</span></b></tt><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>
+     and </span><tt><b><span style='font-size:13.5pt'>exit()</span></b></tt><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>
+     events, and handle them appropriately (e.g. stop a .NET <i>abort</i> from
+     killing the SWI-Prolog process)</span><span style='mso-fareast-font-family:
+     "Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>propagate
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l0 level1 lfo43;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>propagate
      SWI-Prolog's ABORT action into the .NET as appropriate, e.g. to interrupt
-     a pending <b><i>SWICLI</i></b> call</span></li>
+     a pending <b><i>SWICLI</i></b> call</span><span style='mso-fareast-font-family:
+     "Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
-<ul type=disc>
- <li class=MsoNormal><span style='font-family:"Arial","sans-serif"'>reduce the
-     (extravagant) overheads of each <b><i>SWICLI</i></b> call (without
-     compromising functionality or safety)</span></li>
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l35 level1 lfo44;tab-stops:list .5in'><span
+     style='font-family:"Arial","sans-serif";mso-fareast-font-family:"Times New Roman"'>reduce
+     the (extravagant) overheads of each <b><i>SWICLI</i></b> call (without
+     compromising functionality or safety)</span><span style='mso-fareast-font-family:
+     "Times New Roman"'><o:p></o:p></span></li>
 </ul>
 
-<div class=MsoNormal align=center style='text-align:center'>
+<div class=MsoNormal align=center style='text-align:center'><span
+style='mso-fareast-font-family:"Times New Roman"'>
 
 <hr size=2 width="100%" align=center>
 
-</div>
+</span></div>
 
-<address><span style='font-size:13.5pt'><a
-href="mailto:paul.singleton@bcs.org.uk">Douglas R. Miles</a></span></address>
+<address><span style='font-size:13.5pt;mso-fareast-font-family:"Times New Roman"'><a
+href="mailto:paul.singleton@bcs.org.uk">Douglas R. Miles</a></span><span
+style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></address>
 
-<address><span style='font-size:13.5pt'>drafted 10th November 2000</span></address>
+<address><span style='font-size:13.5pt;mso-fareast-font-family:"Times New Roman"'>drafted
+10th November 2000</span><span style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></address>
 
-<address><span style='font-size:13.5pt'>revised 14th December 2000</span></address>
+<address><span style='font-size:13.5pt;mso-fareast-font-family:"Times New Roman"'>revised
+14th December 2000</span><span style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></address>
 
-<address style='margin-bottom:12.0pt'><span style='font-size:13.5pt'>revised
-11th March 2003<br>
-revised 18th February 2004</span></address>
+<address style='margin-bottom:12.0pt'><span style='font-size:13.5pt;mso-fareast-font-family:
+"Times New Roman"'>revised 11th March 2003<br>
+revised 18th February 2004</span><span style='mso-fareast-font-family:"Times New Roman"'><o:p></o:p></span></address>
 
 <p class=MsoNormal style='margin-bottom:12.0pt'>&nbsp;</p>
 
