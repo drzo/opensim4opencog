@@ -115,6 +115,7 @@ namespace Swicli.Library
             {
                 Application.ThreadExit += new EventHandler(OnThreadExit);
                 var t = Thread.CurrentThread.ManagedThreadId;
+                //libpl.PL_thread_at_exit((DelegateParameter0)PrologThreadAtExitGlobal, IntPtr.Zero, 1);
               //  SafeThreads.Add(t, new IntPtr(libpl.PL_ENGINE_MAIN));
                // int self = libpl.PL_thread_self();
               //  engineToThread.Add(self, t);
@@ -183,12 +184,22 @@ namespace Swicli.Library
                 if (ce == IntPtr.Zero)
                 {
                     RegisterThread121A(thread);
+                    //ce = GetCurrentEngine();
+                } else
+                {
+                    
                 }
+                TestEngineViable(ce);
             } catch(Exception e)
             {
                 RegisterThread121A(thread);                
             }
 
+        }
+
+        private static void TestEngineViable(IntPtr ce)
+        {
+            //PlQuery.PlCall(
         }
         public static void RegisterThread121A(Thread thread)
         {
@@ -220,7 +231,7 @@ namespace Swicli.Library
                         //_iEngineNumber = libpl.PL_create_engine(IntPtr.Zero);
                         libpl.PL_thread_attach_engine(_iEngineNumber);
                         SafeThreads.Add(thread.ManagedThreadId, _iEngineNumber);
-                        libpl.PL_thread_at_exit((DelegateParameter0)ThreadAtExit, IntPtr.Zero, 0);
+                        libpl.PL_thread_at_exit((DelegateParameter0)PrologThreadAtExit, IntPtr.Zero, 0);
                         return;
                         int iRet = libpl.PL_set_engine(_iEngineNumber, ref _iEngineNumberReally);
                         EnsureEngine(_iEngineNumber);
@@ -240,9 +251,15 @@ namespace Swicli.Library
             }
         }
 
-        private static bool ThreadAtExit()
+        private static bool PrologThreadAtExit()
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            return true;
+        }
+        private static bool PrologThreadAtExitGlobal()
+        {
+            //throw new NotImplementedException();
+            return true;
         }
 
         static IntPtr GetCurrentEngine()
@@ -288,7 +305,7 @@ namespace Swicli.Library
                 case libpl.PL_ENGINE_INUSE:
                     throw (new PlLibException("PlSetEngine returns it is used by an other thread")); //break;
                 default:
-                    throw (new PlLibException("Unknown return from PlSetEngine"));
+                    throw (new PlLibException("Unknown return from PlSetEngine = " + iRet));
             }
         }
 

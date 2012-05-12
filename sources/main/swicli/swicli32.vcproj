@@ -7,7 +7,7 @@
 	RootNamespace="DummyLibraryUsage"
 	Keyword="Win32Proj"
 	AssemblyReferenceSearchPaths="&quot;..\..\..\bin&quot;"
-	TargetFrameworkVersion="131072"
+	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
 		<Platform
@@ -99,8 +99,8 @@
 		</Configuration>
 		<Configuration
 			Name="Debug|x64"
-			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			OutputDirectory="C:\Program Files (x86)\pl\bin"
+			IntermediateDirectory="C:\Program Files (x86)\pl\lib"
 			ConfigurationType="2"
 			CharacterSet="1"
 			ManagedExtensions="1"
@@ -150,7 +150,7 @@
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
 				SubSystem="2"
-				TargetMachine="17"
+				TargetMachine="1"
 				AllowIsolation="true"
 			/>
 			<Tool
@@ -334,6 +334,10 @@
 			RelativePath="System.dll"
 			AssemblyName="System, Version=2.0.0.0, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL"
 			MinFrameworkVersion="131072"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{31CFF8E7-BE42-40F2-B012-95ED537A86B1}"
+			RelativePathToProject=".\sources\main\Swicli.Library\Swicli.Library.csproj"
 		/>
 	</References>
 	<Files>
