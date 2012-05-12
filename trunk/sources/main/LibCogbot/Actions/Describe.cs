@@ -90,7 +90,9 @@ namespace cogbot.Actions.Land
                         }
                         return;
                     }
+                    Success("looked at range " + range + " and saw " + objs.Count);
                 }
+                Success("We have no body yet");
             }
             else
             {
@@ -117,7 +119,7 @@ namespace cogbot.Actions.Land
                                 WriteLine(WorldSystem.describeAvatar((Avatar) prim.Prim));
                             else
                                 WriteLine(WorldSystem.describePrim(prim.Prim, detailed));
-                            if (found > 30) break;
+                            //if (found > 30) break;
                         }
                         else
                         {

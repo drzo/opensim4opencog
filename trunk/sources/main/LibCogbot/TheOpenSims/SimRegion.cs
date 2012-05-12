@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using cogbot.Listeners;
 using cogbot.ScriptEngines;
+using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Mesher;

@@ -565,5 +565,9 @@ namespace MushDLR223.ScriptEngines
             return tokens;
         }
 
+        public void	 ParseParams(object[] parameters)
+        {
+           // throw new NotImplementedException();
+        }
     }
 }

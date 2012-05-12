@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using MushDLR223.ScriptEngines;
 using OpenMetaverse;
 
 namespace cogbot.TheOpenSims

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Xml.Serialization;
 using DotLisp;
+using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse.StructuredData;
 using cogbot.TheOpenSims;
