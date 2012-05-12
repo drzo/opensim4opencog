@@ -34,7 +34,10 @@
    textureIDToImage/2,
    textureIDToImageParts/2,
    requestTexture/1,
-   simObjectColor/2
+   simObjectColor/2,
+   current_bot/1,
+   set_current_bot/1,
+   unset_current_bot/1
    ]).
 
 :-set_prolog_flag(double_quotes,string).
