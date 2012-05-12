@@ -110,6 +110,25 @@ If the command takes args
 botClientCmd(say('hello world')).
 }}}
 
+The term is, in general, variadic.  So, the equivilent of 
+
+{{{
+/waitpos 30 tree 1
+}}}
+
+is 
+
+{{{
+botClientCmd(waitpos(30, tree, 1)).
+}}}
+
+The args can also be passed as a list, so
+
+{{{
+botClientCmd(waitpos([30, tree, 1])).
+}}}
+
+
 = [SwiCLI] =
 
 Cogbot's core is written in C#. Access to the underlying C# objects is through [SwiCLI], a bridge between swi-Prolog and the CLI runtime that C# is built upon.
