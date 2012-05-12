@@ -116,22 +116,23 @@ add_layouts:-
 :-atInit(add_layouts).
 
 %------------------------------------------------------------------------------
-% object getter functions
+% much code uses botClient(Me) like botClientCmd and say/n  
 %
-% cli_get is a field accessor that says use the property, if you can't
-% find that use the _raw field and return.
+% so current_bot(Me) is checked by botClient(Me) and is a thread_local predicate
+%  
+% usage:
+%  set_current_bot(Me), .....  unset_current_bot(Me)
 %
-% So this is 'get the GridMaster property from the static
-% cogbot.Listeners.WorldObjects and return in Sys'
-%
+% bug prone antipattern, but it's supported:
+%  current_bot(OldBot), set_current_bot(Me) .....   set_current_bot(OldBot)
+% though current_bot(OldBot) may throw if not bot is set
 % ------------------------------------------------------------------------------
-%
 %
 cogbot_throw(Error):-throw(cogbot_user_error(Error)).
 
 :-dynamic current_bot_db/2.
 current_bot(BotID):-thread_self(TID),current_bot_db(TID,BotID),!.
-current_bot(_BotID):-thread_self(TID),cogbot_throw(no_current_bot(tid(TID))).
+current_bot(BotID):-clientManager(Man),cli_get(Man,'LastBotClient',BotID).
 set_current_bot(BotID):-thread_self(TID),retractall(current_bot_db(TID,_)),asserta(current_bot_db(TID,BotID)).
 unset_current_bot(BotID):-thread_self(TID),current_bot_db(TID,OLD), 
     (OLD=BotID -> retract(current_bot_db(TID,OLD)) ; cogbot_throw(unset_current_bot(tid(TID),used(BotID),expected(OLD)))).
@@ -200,7 +201,7 @@ clientManager(SingleInstance):-cli_get('cogbot.ClientManager','SingleInstance',S
 
 %% get the botClient Instance
 % this only unifies once, someday there will be a BotClients
-botClient(Obj):-catch(current_bot(Obj),_,fail).
+botClient(Obj):-catch(current_bot(Obj),_,fail),!.
 botClient(Obj):-clientManager(Man),cli_get(Man,'LastBotClient',Obj).
 
 % given an object and a property returns value for the avatar
