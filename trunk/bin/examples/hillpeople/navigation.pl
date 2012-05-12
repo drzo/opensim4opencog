@@ -1,11 +1,44 @@
 :- module(navigation, [
 		       waypoint/1,
-		       move_via_wp/2
+		       move_via_wp/2,
+		       waypoint_path/3
 		      ]).
 
+:- use_module(cogbot(cogrobot)).
 
 %
-% unifies with waypoints - points mentioned in a c
+% find the nearest waypoint to the named bot
+%
+nearest_waypoint(BotName, WPName) :-
+	setof(Name, waypoint(Name), WP_List),
+	nearest_waypoint(BotName, 10000.0, WP_List, hut1, WPName),!.
+
+nearest_waypoint(_, _, [], Nearest, Nearest).
+nearest_waypoint(BotName, MinDist, [H|T], _Nearest, Result) :-
+	resolveObjectByName(H, Obj),
+	with_bot(BotName, distanceTo(Obj, D)),
+	D < MinDist,
+	nearest_waypoint(BotName, D, T, H, Result).
+
+nearest_waypoint(BotName, MinDist, [_|T], Nearest, Result) :-
+	nearest_waypoint(BotName, MinDist, T, Nearest, Result).
+
+% inclusive path from A to B
+%
+% waypoint_path(?A, ?B, ?Path)
+%
+waypoint_path(A, B, Path) :-
+	waypoint_path(A, B, [A], Path).
+
+waypoint_path(A, A, _, [A]).
+waypoint_path(A, B, SoFar,[A|T]) :-
+	conn(A, X),
+	A \= X, % safety against pathological conn
+	\+ memberchk(X, SoFar),
+	waypoint_path(X, B, [X|SoFar], T).
+
+%
+% unifies with waypoint names - points mentioned in a c
 %
 waypoint(X) :- c(X, _).
 waypoint(X) :- c(_, X).
@@ -16,7 +49,7 @@ waypoint(X) :- c(_, X).
 free_point(X) :-
 	\+ waypoint(X).
 
-conn(A,B) :- c(A,B),!.
+conn(A,B) :- c(A,B).
 conn(A,B) :- c(B,A).
 
 c(hut1, wp1).
