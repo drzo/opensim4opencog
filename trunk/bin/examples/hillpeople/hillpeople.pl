@@ -84,7 +84,7 @@ logon_bots :-
 	(
 	    hill_person(Name),
 	    logon_by_name(Name),
-	    sleep(30),
+	    sleep(1),
 	    fail
 	;
 	    true
@@ -129,7 +129,7 @@ loginuri("http://www.pathwayslms.com:9000/").
 % if you have all the passwords the same this saves some typing
 %
 pw('hillpeople').
-tribe('Dougstribe').
+tribe('Hillperson').
 
 hill_person(otopopo).
 hill_credentials(otopopo, 'Otopopo', Tribe, PW) :-
@@ -191,15 +191,9 @@ everybody_be_tribal :-
 	age(Name, Age),
 	sex(Name, Sex),
 	thread_create(
-	    be_tribal(
-		unknown,
-		Name,
-		status(
-		    Age,
-		    Sex,
-		    10.0, % cal
-		    10.0)
-	    ), _, []),
+	    be_tribal(Name)
+	    ,
+	    _, []),
 	fail.
 everybody_be_tribal.
 
