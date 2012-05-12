@@ -6,6 +6,7 @@
 
 :- use_module(cogbot(cogrobot)).
 :- use_module(hillpeople(hillpeople)).
+:- use_module(hillpeople(navigation)).
 
 % doug - is there a more elegant way than generating botcmd to
 % do setbot?
@@ -24,16 +25,18 @@ botcmd_with_bot(Name, BotCmd) :-
 	botID(Name, BotID),
 	cli_call(BotID, 'ExecuteCommand'(BotCmd), _Ret).
 
-call_with_bot(Name, Goal) :-
-	botID(Name, BotID),
+
+call_with_bot(_Name, _Goal).  % TODO :-
+/*	botID(Name, BotID),
 	cli_call(BotID, 'ExecuteCommand'('jump'), _Ret).
+*/
 
 %
 %  call goal on all bots
 %
 with_all_bots(Goal) :-
 	hill_person(Name),
-	with_bot(Name, Goal).
+	call_with_bot(Name, Goal).
 
 
 

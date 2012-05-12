@@ -1,10 +1,13 @@
 :- module(hillpeople, [
 		       logon_bots/0,
 		       botID/2,
-		       hill_person/1
+		       age/2,
+		       sex/2,
+		       hill_person/1,
+		       home/2
 		      ]).
 
-%------------------------------------------------------------------------------
+%--------------------------------------------------------
 %
 %  hillpeople.pl
 %
@@ -24,10 +27,11 @@
 %     6. comment out any bots you automatically log in with
 %     botconfig.xml
 %     7. Consult this file
-%     8. Query logon_bots.
+%     8. Query logon_bots.  This logs on the bots
+%     9. Query ebt.  This starts the bots doing their thing.
 %
 %
-%------------------------------------------------------------------------------
+%---------------------------------------------------------------------
 
 :-set_prolog_flag(double_quotes,string).
 
@@ -53,6 +57,7 @@ assertIfNewRC(Gaf):-asserta(Gaf).
 :- use_module(cogbot(cogrobot)).
 :- use_module(hillpeople(slow_planner)).
 :- use_module(hillpeople(actions)).
+:- use_module(hillpeople(tribal)).
 
 :-dynamic
 	botID/2,
@@ -62,7 +67,9 @@ assertIfNewRC(Gaf):-asserta(Gaf).
 	hill_person/1,
 	hill_credentials/4,
 	sex/2,
-	age/2.
+	age/2,
+	home/2,
+	husband_of/2.
 
 %
 %  Log on the bots and start the simulation. This is
@@ -130,13 +137,8 @@ hill_credentials(otopopo, 'Otopopo', Tribe, PW) :-
     tribe(Tribe).
 age(otopopo, 17).
 sex(otopopo, m).
-
-hill_person(bignose).
-hill_credentials(bignose, 'Bignose', Tribe, PW) :-
-    pw(PW),
-    tribe(Tribe).
-age(bignose, 42).
-sex(bignose, m).
+home(otopopo, hut1).
+husband_of(otopopo, yuppie).
 
 hill_person(yuppie).
 hill_credentials(yuppie, 'Yuppie', Tribe, PW) :-
@@ -144,13 +146,25 @@ hill_credentials(yuppie, 'Yuppie', Tribe, PW) :-
     tribe(Tribe).
 age(yuppie, 21).
 sex(yuppie, f).
+home(yuppie, hut1).
+
+hill_person(bignose).
+hill_credentials(bignose, 'Bignose', Tribe, PW) :-
+    pw(PW),
+    tribe(Tribe).
+age(bignose, 42).
+sex(bignose, m).
+home(bignose, hut2).
+husband_of(bignose, onosideboard).
 
 hill_person(onosideboard).
-hill_credentials(onosideboard, 'Onosideboard', Tribe, PW) :-
+hill_credentials(onosideboard,
+		 'Onosideboard', Tribe, PW) :-
     pw(PW),
     tribe(Tribe).
 age(onosideboard, 35).
 sex(onosideboard, f).
+home(onosideboard, hut2).
 
 hill_person(lemonaide).
 hill_credentials(lemonaide, 'Lemonaide', Tribe, PW) :-
@@ -158,6 +172,8 @@ hill_credentials(lemonaide, 'Lemonaide', Tribe, PW) :-
     tribe(Tribe).
 age(lemonaide, 7).
 sex(lemonaide, f).
+parent_of(onosideboard, lemonaide).
+home(lemonaide, hut2).
 
 hill_person(opthamologist).
 hill_credentials(opthamologist, 'Opthamologist', Tribe, PW) :-
@@ -165,7 +181,10 @@ hill_credentials(opthamologist, 'Opthamologist', Tribe, PW) :-
     tribe(Tribe).
 age(opthamologist, 62).
 sex(opthamologist, f).
+home(opthamologist, hut3).
 
+
+home(_, hut3). % fallback, stay in 3 if you don't know
 
 everybody_be_tribal :-
 	hill_person(Name),
@@ -173,12 +192,13 @@ everybody_be_tribal :-
 	sex(Name, Sex),
 	thread_create(
 	    be_tribal(
-		0, % day
+		unknown,
 		Name,
-		Age,
-		Sex,
-		10.0, % cal
-		10.0
+		status(
+		    Age,
+		    Sex,
+		    10.0, % cal
+		    10.0)
 	    ), _, []),
 	fail.
 everybody_be_tribal.
