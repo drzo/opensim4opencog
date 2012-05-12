@@ -112,6 +112,27 @@ add_layouts:-
 
 :-atInit(add_layouts).
 
+%------------------------------------------------------------------------------
+% object getter functions
+%
+% cli_get is a field accessor that says use the property, if you can't
+% find that use the _raw field and return.
+%
+% So this is 'get the GridMaster property from the static
+% cogbot.Listeners.WorldObjects and return in Sys'
+%
+% ------------------------------------------------------------------------------
+%
+%
+cogbot_throw(Error):-throw(cogbot_user_error(Error)).
+
+:-dynamic current_bot_db/2.
+current_bot(BotID):-thread_self(TID),current_bot_db(TID,BotID),!.
+current_bot(_BotID):-thread_self(TID),cogbot_throw(no_current_bot(tid(TID))).
+set_current_bot(BotID):-thread_self(TID),retractall(current_bot_db(TID,_)),asserta(current_bot_db(TID,BotID)).
+unset_current_bot(BotID):-thread_self(TID),current_bot_db(TID,OLD), 
+    (OLD=BotID -> retract(current_bot_db(TID,OLD)) ; cogbot_throw(unset_current_bot(tid(TID),used(BotID),expected(OLD)))).
+
 
 %------------------------------------------------------------------------------
 % object getter functions
@@ -176,6 +197,7 @@ clientManager(SingleInstance):-cli_get('cogbot.ClientManager','SingleInstance',S
 
 %% get the botClient Instance
 % this only unifies once, someday there will be a BotClients
+botClient(Obj):-catch(current_bot(Obj),_,fail).
 botClient(Obj):-clientManager(Man),cli_get(Man,'LastBotClient',Obj).
 
 % given an object and a property returns value for the avatar
@@ -290,7 +312,7 @@ nop(_).
 
 
 %% print some events
-onSimEvent(_A,_B,_C):-!. % comment out this first line to print them
+%%%onSimEvent(_A,_B,_C):-!. % comment out this first line to print them
 :-dynamic(wasSimEvent/3).
 onSimEvent(_A,B,C):-contains_var("On-Log-Message",a(B,C)),!.
 onSimEvent(_A,B,C):-contains_var('DATA_UPDATE',a(B,C)),!.
@@ -312,7 +334,7 @@ clearEvents:-repeat,sleep(60),clearSimEvent(1000),fail.
 user:onFirstBotClient(A,B):- %%%attach_console,trace,
  botClient(Obj),
   % uncomment the next line if you want all commands to run thru the universal event handler
-   cli_add_event_handler(Obj,'EachSimEvent',onSimEvent(_,_,_)),
+   %%cli_add_event_handler(Obj,'EachSimEvent',onSimEvent(_,_,_)),
    cli_to_str(onFirstBotClient(A-B-Obj),Objs),writeq(Objs),nl.
 
 %% register onFirstBotClient
