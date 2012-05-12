@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using cogbot.TheOpenSims;
+using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Interfaces;
@@ -820,7 +821,15 @@ namespace cogbot.Listeners
                         if (prim is string)
                         {
                             string s = (string) prim;
-                            if (s != ToAvatarName) return GetUserID(s);
+                            if (s != ToAvatarName)
+                            {
+                                var foundc = GetUserID(s);
+                                if (foundc == UUID.Zero)
+                                {
+
+                                }
+                                return foundc;
+                            }
                         }
                     }
                 }

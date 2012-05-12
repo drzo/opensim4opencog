@@ -4,11 +4,43 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Xml.Serialization;
-using cogbot.TheOpenSims;
 using MushDLR223.Utilities;
 using KeyType = System.String;
-namespace cogbot
+namespace MushDLR223.ScriptEngines
 {
+    public struct NullType
+    {
+        public override int GetHashCode()
+        {
+            return Type.GetHashCode() ^ Inst.GetHashCode();
+        }
+
+        public static NullType GetNullType(Type dataType)
+        {
+            return new NullType(dataType);
+        }
+
+        public override string ToString()
+        {
+            return "(" + Type.Name + ")null";
+        }
+
+        public NullType(Object inst, MemberInfo type)
+        {
+            Inst = inst;
+            Type = type;
+        }
+
+        readonly public Object Inst;
+        public MemberInfo Type;// { get; set; }
+
+        public NullType(Type type)
+        {
+            Inst = null;
+            Type = type;
+        }
+    }
+
     [XmlType]
     public struct NamedParam
     {
@@ -219,7 +251,7 @@ namespace cogbot
             set { SetValue(value); }
         }
 
-        internal void SetValue(object value)
+        public void SetValue(object value)
         {
             _value = value;
             if (info == null || memberTarget == null)
@@ -330,6 +362,11 @@ namespace cogbot
                 ((ConstructorInfo)field).Invoke(new object[] { o, value });
                 return;
             }
+        }
+
+        public static NamedParam[] CreateParams(params object[] paramz)
+        {
+            return null;
         }
     }
 }

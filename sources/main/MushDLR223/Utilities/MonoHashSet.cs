@@ -108,7 +108,10 @@ namespace MushDLR223.Utilities
             lock (SyncLock)
             {
                 int indexOf = realList.IndexOf(value);
-                if (indexOf >= 0) return indexOf;
+                if (indexOf >= 0)
+                {
+                    return indexOf;
+                }
                 return realList.Add(value);
             }
         }
@@ -435,7 +438,10 @@ namespace MushDLR223.Utilities
                 }
                 else
                 {
-                    if (realList.Contains(item)) return false;
+                    if (realList.Contains(item))
+                    {
+                        return false;
+                    }
                 }
                 {
                     realList.Add(item);

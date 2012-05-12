@@ -552,5 +552,14 @@ namespace cogbot.Actions
             argsUsed = 0;
             return Client.Network.CurrentSim;
         }
+
+        protected T GetParamValue<T>(string paramName, Parser parser)
+        {
+            foreach (NamedParam param in Parameters)
+            {
+                
+            }
+            return default(T);
+        }
     }
 }

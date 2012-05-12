@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using cogbot.TheOpenSims;
+using MushDLR223.ScriptEngines;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using PathSystem3D.Navigation;

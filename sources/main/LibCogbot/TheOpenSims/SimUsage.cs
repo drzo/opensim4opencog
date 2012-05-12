@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using cogbot.Listeners;
 using cogbot.Utilities;
+using MushDLR223.ScriptEngines;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
