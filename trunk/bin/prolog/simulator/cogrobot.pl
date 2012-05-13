@@ -11,10 +11,11 @@
 :-module(cogrobot,
   [
    runSL/0,listMembs/0,
-   worldSystem/1, worldSystem/2,
+   worldSystem/1, worldSystem/2, clientManager/1,
    botClient/1, botClient/2,
    botClientCall/1, botClientCall/2,
    botClientCmd/1, botClientCmd/2, botClientCmd/3,
+   at_botClientCmd/2, at_botClientCmd/3, at_botClientCmd/4,
    simObject/1, simAvatar/1, simAvDistance/3, simAsset/1, simAccount/1,
    gridCliient/1,
    resolveObjectByName/2,
@@ -22,7 +23,7 @@
    distanceTo/2,
    toGlobalVect/2,
    toLocalVect/2,
-   %%onSimEvent/3,
+   %%onSimEvent/3,  %% uses user:* wrapper
    wasSimEvent/3,
    obj2Npl/2,
    npl2Obj/2,
@@ -39,10 +40,11 @@
    current_bot/1,
    set_current_bot/1,
    unset_current_bot/1,
-   %%robotToString/2,
+   %%robotToString/2,   %% uses user:* wrapper
    cmdargs_to_atomstr/2,
    set_bot_writeln_delegate/1,
-   bot_writeln_delegate/1
+   bot_writeln_delegate/1,
+   createBotClient/7
    ]).
 
 :-set_prolog_flag(double_quotes,string).
@@ -142,6 +144,24 @@ set_current_bot(BotID):-thread_self(TID),retractall(current_bot_db(TID,_)),asser
 unset_current_bot(BotID):-thread_self(TID),current_bot_db(TID,OLD), 
     (OLD=BotID -> retract(current_bot_db(TID,OLD)) ; cogbot_throw(unset_current_bot(tid(TID),used(BotID),expected(OLD)))).
 
+
+%------------------------------------------------------------------------------
+% object getter functions
+%
+:-dynamic createdBotClient/7.
+createBotClient(First, Last, Password, Loginuri, Location, TFLogin, BotID):-        
+	clientManager(CM),
+	cli_call(CM,'CreateBotClient'(First, Last, Password, Loginuri, Location), BotID),
+        asserta(createdBotClient(First, Last, Password, Loginuri, Location,TFLogin,BotID)),
+        (TFLogin==true ->cli_call(BotID,'Login',_);true).
+
+catchNoErrors(Call):-ignore(catch(Call,_,true)).
+
+logoutBots:-write('logoutbots\n'),flush_output,clientManager(CM),cli_call(CM,'Quit',_).
+%%logoutBots:-createdBotClient(_First, _Last, _Password, _Loginuri, _Location, _TFLogin, BotID),catchNoErrors(cli_call(BotID,'Dispose',_)),fail.
+%%logoutBots:-catchNoErrors((clientManager(CM),cli_call(CM,'ShutDown',_))),cli_call('System.Environment','Exit'(0),_).
+
+:-at_halt(logoutBots).
 
 %------------------------------------------------------------------------------
 % object getter functions
@@ -343,6 +363,9 @@ robotToString(Obj,enumr(ArrayS)):-Obj='@'(_O), cli_is_type(Obj,'System.Collectio
 robotToString(C,AS):-compound(C),C=..[F|Args],not(member(F,['@'])),robotToString(Args,ArgS),AS=..[F|ArgS].
 robotToString(C,AS):-cli_to_str(C,AS).
 
+user:robotToString(A,B):-cogrobot:robotToString(A,B).
+
+
 nop(_).
 
 
@@ -375,7 +398,7 @@ user:onFirstBotClient(A,B):- %%%attach_console,trace,
 
 %% register onFirstBotClient
 registerOnFirstBotClient:- cli_add_event_handler('cogbot.ClientManager','BotClientCreated',onFirstBotClient(_,_)).
-:-atInit(registerOnFirstBotClient).
+%%:-atInit(registerOnFirstBotClient).
 
 %------------------------------------------------------------------------------
 % start Radegast!
