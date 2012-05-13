@@ -28,7 +28,7 @@ namespace cogbot.Actions
         public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
             acceptInput0(verb, args, WriteLine);
-            return Success(verb + " complete");
+            return Success("complete");
         }
 
         void acceptInput0(string verb, Parser args, OutputDelegate WriteLine)

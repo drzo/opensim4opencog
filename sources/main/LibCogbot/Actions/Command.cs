@@ -406,6 +406,10 @@ namespace cogbot.Actions
 
         public CmdResult Failure(string usage)
         {
+            if (!usage.ToLower().Contains(Name.ToLower()))
+            {
+                usage = Name + ": " + usage;
+            }
             failure++;
             LocalWL(usage);
             return Result(usage, false);
@@ -413,9 +417,13 @@ namespace cogbot.Actions
 
         public CmdResult Success(string usage)
         {
+            if (!usage.ToLower().Contains(Name.ToLower()))
+            {
+                usage = Name + ": " + usage;
+            }
             success++;
             LocalWL(usage);
-            return Result("Success " + Name, true);
+            return Result("Success " + usage, true);
         }
 
         public void LocalWL(string usage)
@@ -440,11 +448,15 @@ namespace cogbot.Actions
 
         protected CmdResult Result(string usage, bool tf)
         {
+            if (!usage.ToLower().Contains(Name.ToLower()))
+            {
+                usage = Name + ": " + usage;
+            }
             return new CmdResult(usage, tf);
         }
         protected CmdResult SuccessOrFailure()
         {
-            return Result(Name + " " + failure + " failures and " + success + " successes", failure == 0);
+            return new CmdResult(Name + " " + failure + " failures and " + success + " successes", failure == 0);
         }
 
 
