@@ -335,11 +335,11 @@
 			MinFrameworkVersion="131072"
 		/>
 		<ProjectReference
-			ReferencedProjectIdentifier="{9199338C-E83A-4946-B7CA-D97AE1B5ECC0}"
+			ReferencedProjectIdentifier="{3E81CC42-A862-4D41-A29D-A481CEC3DFF4}"
 			RelativePathToProject=".\sources\main\Swicli.Library\Swicli.Library.csproj"
 		/>
 		<ProjectReference
-			ReferencedProjectIdentifier="{6D87F333-36AB-4FE3-B6F2-3E383EF78745}"
+			ReferencedProjectIdentifier="{017515AD-A3D6-4ABE-97E6-5A70B9754ADB}"
 			RelativePathToProject=".\sources\main\SWICLITestDLL\SWICLITestDLL.csproj"
 		/>
 	</References>
