@@ -1128,7 +1128,7 @@ namespace Swicli.Library
                         }
                     default:
                         {
-                            lock (ToFromConvertLock)
+                            
                             {
                                 object o = tag_to_object(name);
                                 if (o == null)
@@ -1137,7 +1137,7 @@ namespace Swicli.Library
                                 }
                                 return o;
 #if plvar_pins                                
-                                lock (atomToPlRef)
+                                lock (ToFromConvertLock) lock (atomToPlRef)
                                 {
                                     PlRef oldValue;
                                     if (!atomToPlRef.TryGetValue(name, out oldValue))
@@ -1760,7 +1760,7 @@ namespace Swicli.Library
             {
                 if (true)
                 {
-                    lock (ToFromConvertLock)
+                    //lock (ToFromConvertLock)
                     {
                         var tag = object_to_tag(o);
                         AddTagged(TermRef, tag);
@@ -1886,7 +1886,7 @@ namespace Swicli.Library
             {
                 return ToFieldLayout("event", typeToName(t), o, t, term, false, false);
             }
-            lock (ToFromConvertLock)
+            //lock (ToFromConvertLock)
             {
                 var tag = object_to_tag(o);
                 AddTagged(TermRef, tag);

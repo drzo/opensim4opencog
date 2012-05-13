@@ -79,6 +79,7 @@ namespace SbsSW.SwiPlCs.Exceptions
 
 	    static private void BP()
 	    {
+            libpl.PL_open_foreign_frame();
             PrologClient.BP();
             return;
 	    }
@@ -144,14 +145,14 @@ namespace SbsSW.SwiPlCs.Exceptions
         public PlException()
 			: base()
 		{
-			_exTerm = PlTerm.PlVar();
-            PrologClient.BP();
+            EnsureExFrame();
+            _exTerm = PlTerm.PlVar();
 		}
         /// <inheritdoc />
         public PlException(string message)
 			: base(message)
 		{
-            PrologClient.BP();
+            EnsureExFrame();
             _messagePl = message;
             _exTerm = PlTerm.PlAtom(message);
             //_exTerm = new PlTerm(message);
@@ -160,7 +161,7 @@ namespace SbsSW.SwiPlCs.Exceptions
         public PlException(string message, Exception innerException)
 			: base(message, innerException)
 		{
-            PrologClient.BP();
+            EnsureExFrame();
             _messagePl = message + "; innerExeption:" + innerException.Message;
             _exTerm = PlTerm.PlAtom(message);
             //_exTerm = new PlTerm(message);
@@ -173,7 +174,7 @@ namespace SbsSW.SwiPlCs.Exceptions
         protected PlException(SerializationInfo info, StreamingContext context)
 			: base(info, context)
 		{
-            PrologClient.BP();
+            EnsureExFrame();
 			if (info == null)
 				throw new ArgumentNullException("info");
             _messagePl = (string)info.GetValue("_messagePl", typeof(string));
@@ -202,9 +203,16 @@ namespace SbsSW.SwiPlCs.Exceptions
         /// <see cref="PlException"/>
         public PlException(PlTerm term)
 		{
+            EnsureExFrame();
             Check.Require(term.TermRefIntern != 0);
             _exTerm = new PlTerm(term.TermRef);  // If this line is deleted -> update comment in PlTern(term_ref)
 		}
+
+        private void EnsureExFrame()
+        {
+            libpl.PL_open_foreign_frame();
+            PrologClient.BP();
+        }
 
         /// <summary>
         /// Get the <see cref="PlTerm"/> of this exception.
@@ -271,7 +279,6 @@ namespace SbsSW.SwiPlCs.Exceptions
 		public void Throw()
 		{
 			// term_t
-            libpl.PL_open_foreign_frame();
 			uint a = libpl.PL_new_term_ref();
 			// atom_t 
 			uint name = 0;
