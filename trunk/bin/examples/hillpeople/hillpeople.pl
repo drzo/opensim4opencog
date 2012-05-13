@@ -101,9 +101,11 @@ logon_by_name(Name) :-
 	    format('making a bot for ~w~n', [Name]),
             logon_a_bot(Name),!.
 
+/*
 logon_by_name(Name) :-
 	    format('making a bot for ~w~n', [Name]),
-	    thread_create(logon_a_bot(Name), _, [detatch(true)]).
+	    thread_create(logon_a_bot(Name), _, [detached(true)]).
+*/
 
 %
 %%	This logs in a single bot
@@ -121,7 +123,7 @@ logon_a_bot(Name) :-
 		 'CreateBotClient'(First, Last, Password, Loginuri, "last"),
 		 BotID),
         assert(botID(Name, BotID)),
-        cli_call(BotID,'Login',_),        
+        cli_call(BotID,'Login',_),
 	format('made botID ~w~n', [BotID]),
         (thread_self(main)->true;thread_exit(true)).
 
