@@ -396,12 +396,12 @@ namespace cogbot
             }
             try
             {
-                _scriptEventListener.Dispose();
+                if (_scriptEventListener != null) _scriptEventListener.Dispose();          
             }
             catch (Exception) { }
             try
             {
-                _lispTaskInterperter.Dispose();
+                if (_lispTaskInterperter != null) _lispTaskInterperter.Dispose();
             }
             catch (Exception) { }
         }
