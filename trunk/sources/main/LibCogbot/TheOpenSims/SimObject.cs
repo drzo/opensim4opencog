@@ -1678,12 +1678,15 @@ namespace cogbot.TheOpenSims
 
         public virtual bool TryGetSimPosition(out Vector3 pos, OutputDelegate Debug)
         {
+            Primitive thisPrim = null;
+            pos = this.LastKnownSimPos;
             lock (HasPrimLock)
             {
+                thisPrim = this._Prim0;
+            }
+            {
                 {
-                    pos = this.LastKnownSimPos;
-                    Primitive thisPrim = this._Prim0;
-                    if (!HasPrim || thisPrim == null)
+                    if (thisPrim == null)
                     {
                         return (default(Vector3) != pos);
                     }
