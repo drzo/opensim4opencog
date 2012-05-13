@@ -303,7 +303,7 @@ namespace cogbot.TheOpenSims
         {
             Affordances.ObjectType.SuperType.Add(SimTypeSystem.GetObjectType("Avatar"));
             _knownTypeUsages = new ListAsSet<SimTypeUsage>();
-            WorldObjects.SimAvatars.Add(this);
+            WorldSystem.AddAvatar(this, id);
         }
 
         public FriendInfo FriendshipInfo

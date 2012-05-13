@@ -25,8 +25,12 @@ namespace cogbot.TheOpenSims
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof (SimObjectImpl)) return false;
-            return Equals((SimObjectImpl) obj);
+            //if (obj.GetType() != typeof (SimObjectImpl)) return false;
+            if (Equals((SimObjectImpl) obj))
+            {
+                return true;
+            }
+            return false;
         }
         private bool _confirmedObject;
         public bool ConfirmedObject

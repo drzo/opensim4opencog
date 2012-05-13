@@ -204,6 +204,7 @@ namespace cogbot.TheOpenSims
             //    AspectName += objectSystem.client + "_Avatar_" + slAvatar.LocalID;
             //}
             //MakeEnterable(this);
+            WorldSystem.AddAvatar(this,id);
         }
 
 

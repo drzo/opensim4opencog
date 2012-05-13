@@ -789,6 +789,7 @@ namespace cogbot.Listeners
                     if (UUIDTypeObjectTryGetValue(id, out before))
                     {
                         if (Object.ReferenceEquals(before, type)) return;
+                        if (!(type is SimAvatarClient) && before is SimAvatarClient) return;
                         //todo Master.SendNewEvent("uuid-change",""+id, before, type);
                         Debug("uuid change" + id + " " + before + " -> " + type);
                     }
@@ -1639,8 +1640,14 @@ namespace cogbot.Listeners
             }
         }
 
-        private void AddAvatar(SimAvatar obj0, UUID uuid)
+        internal void AddAvatar(SimAvatar obj0, UUID uuid)
         {
+            var from = WorldObjects.SimAvatars;
+            if (obj0 is SimAvatarClient)
+            {
+                from.Remove(obj0);
+                SimObjects.Remove(obj0);
+            }
             SimAvatars.Add((SimAvatar)obj0);
             //client.Avatars.RequestAvatarPicks(uuid);
             SimObjects.AddTo(obj0);
