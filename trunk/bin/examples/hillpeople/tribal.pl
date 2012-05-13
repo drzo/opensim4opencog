@@ -40,11 +40,11 @@ be_tribal(
     Status) :-
 	test_wander_mode,
 	memberchk(en_route([H|T]), Status),
-	hillPeopleCmd(moveto(H, 1), MoveStat),
-	hillPeopleCmd(waitpos(20, H , 1), WaitStat),
-	hillPeopleSay('"en_route went to ~w Remaining: ~w"', [H,T]),
-	hillPeopleSay('"Move: ~w"', [MoveStat]),
-	hillPeopleSay('"Wait: ~w~n"', [WaitStat]),
+	botClientCmd(moveto(H, 1), MoveStat),
+	botClientCmd(waitpos(20, H , 1), WaitStat),
+	say_format('en_route went to ~w Remaining: ~w', [H,T]),
+	say_ref('Move', MoveStat),
+	say_ref('Wait', WaitStat),
 	select(en_route(_), Status, en_route(T) , NewStatus),
 	be_tribal(H, Name, NewStatus).
 
@@ -58,7 +58,7 @@ be_tribal(
 	test_wander_mode,
 	memberchk(en_route([]), Status),
 	select(en_route([]), Status, NewStatus),
-	hillPeopleSay('"en_route empty, removing it"', []),
+	say_format('en_route empty, removing it', []),
 	be_tribal(Loc, Name, NewStatus).
 
 %
@@ -72,11 +72,11 @@ be_tribal(
 	\+ memberchk(en_route(_), Status),
 	nearest_waypoint(WP, Dist),
 	Dist >= 3.0,
-	hillPeopleCmd(moveto(WP, 1), MoveStat),
-	hillPeopleCmd(waitpos(10, WP, 1), WaitStat),
-	hillPeopleSay('"too far from nearest waypoint, moving to ~w"',[WP]),
-	hillPeopleSay('"Move: ~w"', [MoveStat]),
-	hillPeopleSay('"Wait: ~w"', [WaitStat]),
+	botClientCmd(moveto(WP, 1), MoveStat),
+	botClientCmd(waitpos(10, WP, 1), WaitStat),
+	say_format('too far from nearest waypoint, moving to~w',[WP]),
+	say_ref('Move', MoveStat),
+	say_ref('Wait', WaitStat),
 	be_tribal(WP, Name, Status).
 
 %
@@ -94,12 +94,9 @@ be_tribal(
 	random_member(End, AllWP),
 	End \= Start,
 	waypoint_path(Start, End, Path),
-	hillPeopleSay('"No Path, new ~w to ~w is ~w"',
+	say_format('No Path, new ~w to ~w is ~w"',
 	       [Start, End, Path]),
 	be_tribal(Start, Name, [en_route(Path) | Status]).
-
-
-
 
 
 %
@@ -114,9 +111,9 @@ be_tribal(
 	Cal,
 	_)) :-
     Cal < -4.0,
-    hillPeopleCmd(anim(die)),
+    botClientCmd(anim(die)),
     sleep(30),
-    hillPeopleCmd(logout).
+    botClientCmd(logout).
 
 %
 % die if yer outta protein
@@ -130,9 +127,9 @@ be_tribal(
 	_,
 	Pro)) :-
     Pro < -4.0,
-    hillPeopleCmd(anim(die)),
+    botClientCmd(anim(die)),
     sleep(30),
-    hillPeopleCmd(logout).
+    botClientCmd(logout).
 
 %
 % Go home at night
