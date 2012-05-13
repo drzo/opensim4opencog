@@ -38,7 +38,8 @@
    current_bot/1,
    set_current_bot/1,
    unset_current_bot/1,
-   robotToString/2
+   robotToString/2,
+   cmdargs_to_atomstr/2
    ]).
 
 :-set_prolog_flag(double_quotes,string).
@@ -255,13 +256,16 @@ botClientCmd(In,Out):-botClient(BotID),at_botClientCmd(BotID,In,Out),!.
 botClientCmd(Str,WriteDelegate,Out):-botClient(BotID),at_botClientCmd(BotID,Str,WriteDelegate,Out).
 
 at_botClientCmd(BotID,In):-at_botClientCmd(BotID,In,Out),cli_writeln(Out),!.
-at_botClientCmd(BotID,StrIn,Out):-args_to_string(StrIn,Str),at_botClientCmd(BotID,Str,cli_fmt(botClientCmd),Out).
-at_botClientCmd(BotID,StrIn,WriteDelegate,Out):-args_to_string(StrIn,Str),cli_call(BotID,executeCommand(Str,BotID,WriteDelegate),Out).
+at_botClientCmd(BotID,StrIn,Out):-cmdargs_to_atomstr(StrIn,Str),at_botClientCmd(BotID,Str,cli_fmt(botClientCmd),Out).
+at_botClientCmd(BotID,StrIn,WriteDelegate,Out):-cmdargs_to_atomstr(StrIn,Str),cli_call(BotID,executeCommand(Str,BotID,WriteDelegate),Out).
 
-args_to_string(StrIn,StrIn):- (atom(StrIn);string(StrIn)),!.
-args_to_string([C|Cmd],Out):-toStringableArgs([C|Cmd],CCmd),!,concat_atom(CCmd,' ',Str),args_to_string(Str,Out).
-args_to_string(C,Out):-compound(C),!,C=..[F|A],listifyFlat([F|A],FL),args_to_string(FL,Out).
-args_to_string(StrIn,StrIn).
+
+% wrappered execute command in a convenience pred
+% cmdargs_to_atomstr(say("hi"),Out)
+%
+cmdargs_to_atomstr([C|Cmd],Out):-toStringableArgs(Cmd,SCmd),!,concat_atom([C|SCmd],' ',Str),cmdargs_to_atomstr(Str,Out).
+cmdargs_to_atomstr(C,Out):-compound(C),!,C=..[F|A],listifyFlat([F|A],FL),cmdargs_to_atomstr(FL,Out).
+cmdargs_to_atomstr(Str,Str):-!. %%toStringableArg(StrIn,Str).
 
 toStringableArgs(Var,Var):-var(Var),!.
 toStringableArgs([C|Cmd],[A|Amd]):-toStringableArg(C,A),toStringableArgs(Cmd,Amd).
@@ -271,6 +275,7 @@ toStringableArg(Var,Var):-var(Var),!,throw(toStringableArgVar(Var)).
 toStringableArg(v3d(X,Y,Z),A):-concat_atom([X,Y,Z],'/',A).
 toStringableArg(v3(X,Y,Z),A):-concat_atom([X,Y,Z],'/',A).
 toStringableArg(S,Out):-string(S),!,string_to_atom(S,A),concat_atom(['"',A,'"'],'',Out).
+toStringableArg(A,A):-atom(A),atom_concat('"',_,A),!.
 toStringableArg(A,Out):-atom(A),!,concat_atom(['"',A,'"'],'',Out).
 toStringableArg('@'(OBJ),Out):-cli_is_type('@'(OBJ),'SimObject'),!,cli_get('@'(OBJ),id,uuid(Out)).
 toStringableArg(Var,Var).
