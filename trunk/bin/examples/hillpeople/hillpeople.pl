@@ -99,7 +99,11 @@ logon_by_name(Name) :- bot_ran(Name),!.
 logon_by_name(Name) :- assert(bot_ran(Name)),fail.
 logon_by_name(Name) :-
 	    format('making a bot for ~w~n', [Name]),
-	    thread_create(logon_a_bot(Name), _, []).
+            logon_a_bot(Name),!.
+
+logon_by_name(Name) :-
+	    format('making a bot for ~w~n', [Name]),
+	    thread_create(logon_a_bot(Name), _, [detatch(true)]).
 
 %
 %%	This logs in a single bot
@@ -114,11 +118,12 @@ logon_a_bot(Name) :-
 	cogrobot:clientManager(CM),
 	format('after clientManager ~w ~w~n', [Name, CM]),
 	cli_call(CM,
-		 'CreateBotClient'(First, Last, Password, Loginuri, "home"),
+		 'CreateBotClient'(First, Last, Password, Loginuri, "last"),
 		 BotID),
-        cli_call(BotID,'Login',_),
+        assert(botID(Name, BotID)),
+        cli_call(BotID,'Login',_),        
 	format('made botID ~w~n', [BotID]),
-	assert(botID(Name, BotID)).
+        (thread_self(main)->true;thread_exit(true)).
 
 
 loginuri("http://www.pathwayslms.com:9000/").
