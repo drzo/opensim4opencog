@@ -1042,10 +1042,14 @@ namespace Swicli.Library
                     return (Delegate)RecastObject(fi, tag_to_object((string)prologPred.Arg(0)), null);
                 }
             }
-
+            string pn = prologPred.Name;
+            if (pn == ".")
+            {
+                Warn("Delegate term = " + pn);
+            }
             var Key = new DelegateObjectInPrologKey
                           {
-                              Name = prologPred.Name,
+                              Name = pn,
                               Arity = prologPred.Arity,
                               DelegateType = fi
                           };

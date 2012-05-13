@@ -29,6 +29,7 @@ using System;
 using System.Runtime.Serialization;	// Exception implementation 
 using System.Security.Permissions;	// SecurityPermissionAttribute for GetObjectData
 using SbsSW.DesignByContract;
+using Swicli.Library;
 
 namespace SbsSW.SwiPlCs.Exceptions
 {
@@ -78,7 +79,8 @@ namespace SbsSW.SwiPlCs.Exceptions
 
 	    static private void BP()
 	    {
-	        return;
+            PrologClient.BP();
+            return;
 	    }
 
 	    /// <inheritdoc />
@@ -143,11 +145,13 @@ namespace SbsSW.SwiPlCs.Exceptions
 			: base()
 		{
 			_exTerm = PlTerm.PlVar();
+            PrologClient.BP();
 		}
         /// <inheritdoc />
         public PlException(string message)
 			: base(message)
 		{
+            PrologClient.BP();
             _messagePl = message;
             _exTerm = PlTerm.PlAtom(message);
             //_exTerm = new PlTerm(message);
@@ -156,6 +160,7 @@ namespace SbsSW.SwiPlCs.Exceptions
         public PlException(string message, Exception innerException)
 			: base(message, innerException)
 		{
+            PrologClient.BP();
             _messagePl = message + "; innerExeption:" + innerException.Message;
             _exTerm = PlTerm.PlAtom(message);
             //_exTerm = new PlTerm(message);
@@ -168,6 +173,7 @@ namespace SbsSW.SwiPlCs.Exceptions
         protected PlException(SerializationInfo info, StreamingContext context)
 			: base(info, context)
 		{
+            PrologClient.BP();
 			if (info == null)
 				throw new ArgumentNullException("info");
             _messagePl = (string)info.GetValue("_messagePl", typeof(string));
