@@ -47,7 +47,7 @@ namespace cogbot.Actions
                 }
                 TheBotClient.Talk(text);
             }
-            return Success("said: " + text);
+            return new CmdResult("said: " + args, true);
         }
     }
 }
