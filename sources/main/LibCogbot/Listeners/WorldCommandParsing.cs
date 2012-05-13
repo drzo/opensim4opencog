@@ -172,6 +172,43 @@ namespace cogbot.Listeners
                 prim = matches[0];
                 return pickNum == 1 && prim != null;
             }
+
+            while (true)
+            {
+                string lname = name.ToLower();
+                int lastPick = -1;
+                int num0 = 0;
+                foreach (var m in matches)
+                {
+                    num0++;
+                    if (m.Properties == null) continue;
+                    if (string.IsNullOrEmpty(m.Properties.Name)) continue;
+                    if (m.Properties.Name.ToLower() == lname)
+                    {
+                        if (lastPick > 0)
+                        {
+                            lastPick = -1;
+                            break; //foreach
+                        }
+                        lastPick = num0;
+                    }
+                }
+                if (lastPick > 0)
+                {
+                    if (pickNum == 0)
+                    {
+                        argsUsed = 1;
+                    }
+                    else
+                    {
+                        argsUsed = 2;
+                    }
+                    prim = matches[lastPick - 1];
+                    return true;
+                }
+                break;
+            }
+
             bool retVal = false;
 
             if (m_TheSimAvatar != null) TheSimAvatar.SortByDistance(matches);
