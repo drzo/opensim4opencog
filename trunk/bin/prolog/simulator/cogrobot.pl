@@ -268,13 +268,14 @@ cmdargs_to_atomstr(C,Out):-compound(C),!,C=..[F|A],listifyFlat([F|A],FL),cmdargs
 cmdargs_to_atomstr(Str,Str):-!. %%toStringableArg(StrIn,Str).
 
 toStringableArgs(Var,Var):-var(Var),!.
-toStringableArgs([C|Cmd],[A|Amd]):-toStringableArg(C,A),toStringableArgs(Cmd,Amd).
+toStringableArgs([C|Cmd],[A|Amd]):-toStringableArg(C,A),toStringableArgs(Cmd,Amd),!.
 toStringableArgs(CCmd,CCmd).
 
 toStringableArg(Var,Var):-var(Var),!,throw(toStringableArgVar(Var)).
 toStringableArg(v3d(X,Y,Z),A):-concat_atom([X,Y,Z],'/',A).
+toStringableArg(uuid(ID),ID):-!.
 toStringableArg(v3(X,Y,Z),A):-concat_atom([X,Y,Z],'/',A).
-toStringableArg(S,Out):-string(S),!,string_to_atom(S,A),concat_atom(['"',A,'"'],'',Out).
+toStringableArg(S,Out):-string(S),!,string_to_atom(S,A),toStringableArg(A,Out).
 toStringableArg(A,A):-atom(A),atom_concat('"',_,A),!.
 toStringableArg(A,Out):-atom(A),!,concat_atom(['"',A,'"'],'',Out).
 toStringableArg('@'(OBJ),Out):-cli_is_type('@'(OBJ),'SimObject'),!,cli_get('@'(OBJ),id,uuid(Out)).
