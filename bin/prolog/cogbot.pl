@@ -117,7 +117,7 @@ guitracer:-debug.
 
 %%:-ensure_loaded(library('programk/logicmoo_module_aiml_testing.pl')).
 
-:-ensure_loaded(library('startrek/mudreader.pl')).
+mud:-ensure_loaded(library('startrek/mudreader.pl')).
 
 :-ensure_loaded(library('simulator/cogrobot')).
 :-ensure_loaded(test('testsupport')).
