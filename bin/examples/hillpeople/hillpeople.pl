@@ -3,6 +3,7 @@
 		       botID/2,
 		       age/2,
 		       sex/2,
+		       husband_of/2,
 		       hill_person/1,
 		       home/2
 		      ]).
@@ -188,11 +189,8 @@ home(_, hut3). % fallback, stay in 3 if you don't know
 
 everybody_be_tribal :-
 	hill_person(Name),
-	age(Name, Age),
-	sex(Name, Sex),
 	thread_create(
-	    be_tribal(Name)
-	    ,
+	    be_tribal(Name),
 	    _, []),
 	fail.
 everybody_be_tribal.

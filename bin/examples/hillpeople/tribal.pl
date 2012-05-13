@@ -16,25 +16,81 @@ be_tribal(Name) :-
 	be_tribal(
 	    _,
 	    Name,
-	    status(
-		Sex,
-		Age,
-		10.0, % cal
-		10.0)).
+	    [
+		sex(Sex),
+		age(Age),
+		cal(10.0),
+		pro(10.0)
+	    ]).
 
+%%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%            Test Wander Mode
+%%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 %  In test_wander_mode they just wander from point to point
 %
 test_wander_mode.
 
+%
+% if we have a route, walk to next waypoint
+%
+be_tribal(
+    _,
+    Name,
+    Status) :-
+	test_wander_mode,
+	memberchk(en_route([H|T]), Status),
+	botClientCmd(moveto(H, 1)),
+	botClientCmd(waitpos(20, H , 1)),
+	select(en_route(_), Status, en_route(T) , NewStatus),
+	be_tribal(H, Name, NewStatus).
+
+%
+% cope with being done
+%
 be_tribal(
     Loc,
     Name,
-    _) :-
+    Status) :-
 	test_wander_mode,
+	memberchk(en_route([]), Status),
+	select(en_route([]), Status, NewStatus),
+	be_tribal(Loc, Name, NewStatus).
+
+%
+% go to the nearest waypoint
+%
+be_tribal(
+    _Loc,
+    Name,
+    Status) :-
+	test_wander_mode,
+	\+ memberchk(en_route(_), Status),
 	nearest_waypoint(WP, Dist),
 	Dist >= 3.0,
-	botClientCmd(
+	botClientCmd(moveto(WP, 1)),
+	botClientCmd(waitpos(WP, 1)),
+	be_tribal(WP, Name, Status).
+
+%
+%  Set up a path
+%
+be_tribal(
+    _Loc,
+    Name,
+    Status) :-
+	test_wander_mode,
+	\+ memberchk(en_route(_), Status),
+	nearest_waypoint(Start, Dist),
+	Dist < 3.0,
+	waypoints(AllWP),
+	random_member(End, AllWP),
+	End \= Start,
+	waypoint_path(Start, End, Path),
+	be_tribal(Start, Name, [en_route(Path) | Status]).
+
+
+
 
 
 %
@@ -42,36 +98,37 @@ be_tribal(
 %
 be_tribal(
     _,
-    Name,
+    _Name,
     status(
 	_,
 	_,
 	Cal,
 	_)) :-
     Cal < -4.0,
-    play_animation(Name, die),
+    botClientCmd(anim(die)),
     sleep(30),
-    logout(Name).
+    botClientCmd(logout).
 
 %
 % die if yer outta protein
 %
 be_tribal(
     _,
-    Name,
+    _Name,
     status(
 	_,
 	_,
 	_,
 	Pro)) :-
     Pro < -4.0,
-    play_animation(Name, die),
+    botClientCmd(anim(die)),
     sleep(30),
-    logout(Name).
+    botClientCmd(logout).
 
 %
 % Go home at night
 %
+/*
 be_tribal(
     Location,
     Name,
@@ -123,7 +180,7 @@ be_tribal(
 	    Location,
 	    Name,
 	    NewStatus).
-
+*/
 %
 % At this point it's obvious, I need a planner.
 % just because there's a combinatorial explosion here.
