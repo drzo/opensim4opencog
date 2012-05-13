@@ -254,11 +254,13 @@ botClientCmd(In,Out):-botClient(BotID),at_botClientCmd(BotID,In,Out),!.
 botClientCmd(Str,WriteDelegate,Out):-botClient(BotID),at_botClientCmd(BotID,Str,WriteDelegate,Out).
 
 at_botClientCmd(BotID,In):-at_botClientCmd(BotID,In,Out),cli_writeln(Out),!.
-at_botClientCmd(BotID,[C|Cmd],Out):-toStringableArgs([C|Cmd],CCmd),!,concat_atom(CCmd,' ',Str),at_botClientCall(BotID,executeCommand(Str),Out).
-at_botClientCmd(BotID,C,Out):-compound(C),!,C=..[F|A],listifyFlat(A,FL),!,botClientCmd(BotID,[F|FL],Out).
-at_botClientCmd(BotID,Str,Out):-at_botClientCmd(BotID,Str,cli_fmt(botClientCmd),Out).
-at_botClientCmd(BotID,Str,WriteDelegate,Out):-cli_call(BotID,executeCommand(Str,BotID,WriteDelegate),Out).
+at_botClientCmd(BotID,StrIn,Out):-args_to_string(StrIn,Str),at_botClientCmd(BotID,Str,cli_fmt(botClientCmd),Out).
+at_botClientCmd(BotID,StrIn,WriteDelegate,Out):-args_to_string(StrIn,Str),cli_call(BotID,executeCommand(Str,BotID,WriteDelegate),Out).
 
+args_to_string(StrIn,StrIn):- (atom(StrIn);string(StrIn)),!.
+args_to_string([C|Cmd],Out):-toStringableArgs([C|Cmd],CCmd),!,concat_atom(CCmd,' ',Str),args_to_string(Str,Out).
+args_to_string(C,Out):-compound(C),!,C=..[F|A],listifyFlat([F|A],FL),args_to_string(FL,Out).
+args_to_string(StrIn,StrIn).
 
 toStringableArgs(Var,Var):-var(Var),!.
 toStringableArgs([C|Cmd],[A|Amd]):-toStringableArg(C,A),toStringableArgs(Cmd,Amd).
@@ -343,7 +345,7 @@ user:onFirstBotClient(A,B):- %%%attach_console,trace,
 
 %% register onFirstBotClient
 registerOnFirstBotClient:- cli_add_event_handler('cogbot.ClientManager','BotClientCreated',onFirstBotClient(_,_)).
-:-atInit(registerOnFirstBotClient).
+%%:-atInit(registerOnFirstBotClient).
 
 %------------------------------------------------------------------------------
 % start Radegast!
