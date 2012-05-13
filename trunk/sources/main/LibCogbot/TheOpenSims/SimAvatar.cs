@@ -595,7 +595,7 @@ namespace cogbot.TheOpenSims
         }
         public void AddGoupRoles(List<AvatarGroup> groups)
         {
-            if (theAvatar != null)
+            if (_Prim0 != null)
             {
                 foreach (AvatarGroup avatarGroup in groups)
                 {
