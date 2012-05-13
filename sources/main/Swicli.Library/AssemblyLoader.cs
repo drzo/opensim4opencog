@@ -531,5 +531,10 @@ namespace Swicli.Library
             }
             return copy;
         }
+
+        internal static void BP()
+        {
+            return;
+        }
     }
 }
