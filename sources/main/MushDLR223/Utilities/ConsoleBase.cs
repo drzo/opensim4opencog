@@ -1084,8 +1084,14 @@ namespace MushDLR223.Utilities
 
         private static void Flush()
         {
-            InitialConsoleOut.Flush();
-            InitialConsoleERR.Flush();
+            try
+            {
+                InitialConsoleOut.Flush();
+                InitialConsoleERR.Flush();
+            }
+            catch
+            {
+            }
         }
 
         public static void WriteColorText(ConsoleColor color, string text)
@@ -1528,7 +1534,13 @@ namespace MushDLR223.Utilities
         private static Thread MainThread = Thread.CurrentThread;
         public static void ExecWithMaxTime(Action action, int i)
         {
-            action();
+            try
+            {
+                action();
+            }
+            catch
+            {
+            }
             return;
             AutoResetEvent are = new AutoResetEvent(false);
             Thread orig = Thread.CurrentThread;
