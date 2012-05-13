@@ -22,7 +22,8 @@
    distanceTo/2,
    toGlobalVect/2,
    toLocalVect/2,
-   onSimEvent/3,wasSimEvent/3,
+   %%onSimEvent/3,
+   wasSimEvent/3,
    obj2Npl/2,
    npl2Obj/2,
    chat/1,
@@ -38,8 +39,10 @@
    current_bot/1,
    set_current_bot/1,
    unset_current_bot/1,
-   robotToString/2,
-   cmdargs_to_atomstr/2
+   %%robotToString/2,
+   cmdargs_to_atomstr/2,
+   set_bot_writeln_delegate/1,
+   bot_writeln_delegate/1
    ]).
 
 :-set_prolog_flag(double_quotes,string).
@@ -255,8 +258,8 @@ botClientCmd(In):-botClient(BotID),at_botClientCmd(BotID,In),!.
 botClientCmd(In,Out):-botClient(BotID),at_botClientCmd(BotID,In,Out),!.
 botClientCmd(Str,WriteDelegate,Out):-botClient(BotID),at_botClientCmd(BotID,Str,WriteDelegate,Out).
 
-at_botClientCmd(BotID,In):-at_botClientCmd(BotID,In,Out),cli_writeln(Out),!.
-at_botClientCmd(BotID,StrIn,Out):-cmdargs_to_atomstr(StrIn,Str),at_botClientCmd(BotID,Str,cli_fmt(botClientCmd),Out).
+at_botClientCmd(BotID,In):-at_botClientCmd(BotID,In,cli_fmt(botClientCmd),Out),cli_writeln(Out),!.
+at_botClientCmd(BotID,StrIn,Out):-cmdargs_to_atomstr(StrIn,Str),at_botClientCmd(BotID,Str,pluggable_callback(botClientCmd),Out).
 at_botClientCmd(BotID,StrIn,WriteDelegate,Out):-cmdargs_to_atomstr(StrIn,Str),cli_call(BotID,executeCommand(Str,BotID,WriteDelegate),Out).
 
 
@@ -298,9 +301,24 @@ gridCliient(Obj):-botClient(BC),cli_get(BC,'gridCliient',Obj).
 %------------------------------------------------------------------------------
 % create a writeline delegate
 %------------------------------------------------------------------------------
-createWritelnDelegate(WID):-createWritelnDelegate(cli_fmt(cogrobot),WID).
+createWritelnDelegate(WID):-createWritelnDelegate(pluggable_callback(cogrobot),WID).
 createWritelnDelegate(WriteDelegate,WID):-cli_new_delegate('MushDLR223.ScriptEngines.OutputDelegate',WriteDelegate,WID).
 
+null_callback(_,_,_).
+
+:-dynamic(bot_writeln_delegate/1).
+
+bot_writeln_delegate(null_callback).
+
+user:pluggable_callback(A,B,C):-cogrobot:pluggable_callback(A,B,C).
+pluggable_callback(A,B,C):-bot_writeln_delegate(Pred),call(Pred,A,B,C).
+
+
+%------------------------------------------------------------------------------
+% set a default a writeline delegate
+%------------------------------------------------------------------------------
+set_bot_writeln_delegate(Pred/3):-!,set_bot_writeln_delegate(Pred).
+set_bot_writeln_delegate(Pred):-retractall(bot_writeln_delegate(_)),assert(bot_writeln_delegate(Pred)).
 
 %------------------------------------------------------------------------------
 % listing functions
