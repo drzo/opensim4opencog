@@ -1,27 +1,34 @@
 :- module(navigation, [
 		       waypoint/1,
-		       move_via_wp/2,
+		       waypoints/1,
+		       nearest_waypoint/2,
 		       waypoint_path/3
 		      ]).
 
 :- use_module(cogbot(cogrobot)).
 
 %
+%  Unify with a list of all waypoints
+%
+waypoints(All) :-
+	setof(Name, waypoint(Name), All).
+
+%
 % find the nearest waypoint to the named bot
 %
-nearest_waypoint(BotName, WPName) :-
+nearest_waypoint(WPName, WPDist) :-
 	setof(Name, waypoint(Name), WP_List),
-	nearest_waypoint(BotName, 10000.0, WP_List, hut1, WPName),!.
+	nearest_waypoint(10000.0, WP_List, hut1, WPDist, WPName),!.
 
-nearest_waypoint(_, _, [], Nearest, Nearest).
-nearest_waypoint(BotName, MinDist, [H|T], _Nearest, Result) :-
+nearest_waypoint(NearDist, [], Nearest, NearDist, Nearest).
+nearest_waypoint(MinDist, [H|T], _Nearest, ResultDist, Result) :-
 	resolveObjectByName(H, Obj),
-	with_bot(BotName, distanceTo(Obj, D)),
+	distanceTo(Obj, D),
 	D < MinDist,
-	nearest_waypoint(BotName, D, T, H, Result).
+	nearest_waypoint(D, T, H, ResultDist, Result).
 
-nearest_waypoint(BotName, MinDist, [_|T], Nearest, Result) :-
-	nearest_waypoint(BotName, MinDist, T, Nearest, Result).
+nearest_waypoint(MinDist, [_|T], Nearest, ResultDist, Result) :-
+	nearest_waypoint(MinDist, T, Nearest, ResultDist, Result).
 
 % inclusive path from A to B
 %
