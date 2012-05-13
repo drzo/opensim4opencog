@@ -271,6 +271,7 @@ namespace SbsSW.SwiPlCs.Exceptions
 		public void Throw()
 		{
 			// term_t
+            libpl.PL_open_foreign_frame();
 			uint a = libpl.PL_new_term_ref();
 			// atom_t 
 			uint name = 0;
