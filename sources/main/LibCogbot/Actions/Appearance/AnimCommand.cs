@@ -10,7 +10,7 @@ namespace cogbot.Actions.Appearance
 {
     public class AnimCommand : Command, BotPersonalCommand
     {
-        public static bool NOSEARCH_ANIM = true;
+        public static bool NOSEARCH_ANIM = false;
         public AnimCommand(BotClient testClient)
         {
             TheBotClient = testClient;
@@ -36,8 +36,24 @@ namespace cogbot.Actions.Appearance
                     alist += Environment.NewLine;
                 }
                 WriteLine("Currently: {0}", alist);
-                return ShowUsage();// " anim [seconds] HOVER [seconds] 23423423423-4234234234-234234234-23423423  +CLAP -JUMP STAND";
-           }
+                return ShowUsage();// " anim [seconds] HOVER [seconds] 23423423423-4234234234-234234234-23423423  +CLAP -JUMP STAND";           
+            }
+
+            string directive = args[0].ToLower();
+
+            if (directive == "stopall")
+            {
+                Dictionary<UUID, bool> animations = new Dictionary<UUID, bool>();
+                var anims = TheSimAvatar.GetCurrentAnims();
+                foreach(var ani in anims) {                                                        
+                    animations[ani] = false;
+                }
+                int knownCount = animations.Count;
+
+                Client.Self.Animate(animations, true);
+                return Success("Stopping " + animations.Count + " animation(s)");
+            }
+
             int time = 1300; //should be long enough for most animations
             List<KeyValuePair<UUID, int>> amins = new List<KeyValuePair<UUID, int>>();
             for (int i = 0; i < args.Length; i++)
@@ -86,7 +102,7 @@ namespace cogbot.Actions.Appearance
                 }
                 if (anim == UUID.Zero)
                 {
-                    WriteLine("unknown animation " + a);
+                    WriteLine("skipping unknown animation " + a);
                     continue;
                 }
                  if (mode==0)
@@ -144,7 +160,7 @@ namespace cogbot.Actions.Appearance
                 WriteLine("ANIM ECHO " + str);
                 Success("\nStart anim " + str + "\n");
             }
-            return Success("Ran " + amins.Count + " amins");
+            return Success("Ran " + amins.Count + " steps");
         }
     }
 }
