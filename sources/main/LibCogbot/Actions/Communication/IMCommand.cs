@@ -22,7 +22,7 @@ namespace cogbot.Actions.Communication
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            if (args.Length < 3)
+            if (args.Length < 2)
                 return ShowUsage();// " im [firstname] [lastname] [message]";
 
             string message = String.Empty;
