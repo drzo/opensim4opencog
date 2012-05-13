@@ -40,14 +40,11 @@ be_tribal(
     Status) :-
 	test_wander_mode,
 	memberchk(en_route([H|T]), Status),
-	botClientCmd(moveto(H, 1), MoveStat),
-	botClientCmd(waitpos(20, H , 1), WaitStat),
-	format(string(Debug), '"en_route went to ~w Remaining: ~w"', [H,T]),
-	botClientCmd(say(Debug), _),
-	format(string(Debug2), '"Move: ~w"', [MoveStat]),
-	botClientCmd(say(Debug2), _),
-	format(string(Debug3), '"Wait: ~w~n"', [WaitStat]),
-	botClientCmd(say(Debug3), _),
+	hillPeopleCmd(moveto(H, 1), MoveStat),
+	hillPeopleCmd(waitpos(20, H , 1), WaitStat),
+	hillPeopleSay('"en_route went to ~w Remaining: ~w"', [H,T]),
+	hillPeopleSay('"Move: ~w"', [MoveStat]),
+	hillPeopleSay('"Wait: ~w~n"', [WaitStat]),
 	select(en_route(_), Status, en_route(T) , NewStatus),
 	be_tribal(H, Name, NewStatus).
 
@@ -61,8 +58,7 @@ be_tribal(
 	test_wander_mode,
 	memberchk(en_route([]), Status),
 	select(en_route([]), Status, NewStatus),
-	format(string(Debug), '"en_route empty, removing it"', []),
-	botClientCmd(say(Debug), _),
+	hillPeopleSay('"en_route empty, removing it"', []),
 	be_tribal(Loc, Name, NewStatus).
 
 %
@@ -76,14 +72,11 @@ be_tribal(
 	\+ memberchk(en_route(_), Status),
 	nearest_waypoint(WP, Dist),
 	Dist >= 3.0,
-	botClientCmd(moveto(WP, 1), MoveStat),
-	botClientCmd(waitpos(10, WP, 1), WaitStat),
-	format(string(Debug), '"too far from nearest waypoint, moving to~w"',[WP]),
-	botClientCmd(say(Debug), _),
-	format(string(Debug2), '"Move: ~w"', [MoveStat]),
-	botClientCmd(say(Debug2), _),
-	format(string(Debug3), '"Wait: ~w"', [WaitStat]),
-	botClientCmd(say(Debug3), _),
+	hillPeopleCmd(moveto(WP, 1), MoveStat),
+	hillPeopleCmd(waitpos(10, WP, 1), WaitStat),
+	hillPeopleSay('"too far from nearest waypoint, moving to ~w"',[WP]),
+	hillPeopleSay('"Move: ~w"', [MoveStat]),
+	hillPeopleSay('"Wait: ~w"', [WaitStat]),
 	be_tribal(WP, Name, Status).
 
 %
@@ -101,9 +94,8 @@ be_tribal(
 	random_member(End, AllWP),
 	End \= Start,
 	waypoint_path(Start, End, Path),
-	format(string(Debug), '"No Path, new ~w to ~w is ~w"',
+	hillPeopleSay('"No Path, new ~w to ~w is ~w"',
 	       [Start, End, Path]),
-	botClientCmd(say(Debug), _),
 	be_tribal(Start, Name, [en_route(Path) | Status]).
 
 
@@ -122,9 +114,9 @@ be_tribal(
 	Cal,
 	_)) :-
     Cal < -4.0,
-    botClientCmd(anim(die)),
+    hillPeopleCmd(anim(die)),
     sleep(30),
-    botClientCmd(logout).
+    hillPeopleCmd(logout).
 
 %
 % die if yer outta protein
@@ -138,9 +130,9 @@ be_tribal(
 	_,
 	Pro)) :-
     Pro < -4.0,
-    botClientCmd(anim(die)),
+    hillPeopleCmd(anim(die)),
     sleep(30),
-    botClientCmd(logout).
+    hillPeopleCmd(logout).
 
 %
 % Go home at night
