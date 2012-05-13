@@ -1,5 +1,5 @@
 :-set_prolog_flag(double_quotes,string).
 
-:-['../hyhtn/htncode.pl'].
+:-['./prolog/hyhtn/htncode.pl'].
 
-:-['createInstanceFile.pl'].
+:-['./examples/mudmaker/startrek/createInstanceFile.pl'].
