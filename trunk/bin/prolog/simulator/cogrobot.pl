@@ -268,6 +268,10 @@ toStringableArgs(CCmd,CCmd).
 
 toStringableArg(Var,Var):-var(Var),!,throw(toStringableArgVar(Var)).
 toStringableArg(v3d(X,Y,Z),A):-concat_atom([X,Y,Z],'/',A).
+toStringableArg(v3(X,Y,Z),A):-concat_atom([X,Y,Z],'/',A).
+toStringableArg(S,Out):-string(S),!,string_to_atom(S,A),concat_atom(['"',A,'"'],'',Out).
+toStringableArg(A,Out):-atom(A),!,concat_atom(['"',A,'"'],'',Out).
+toStringableArg('@'(OBJ),Out):-cli_is_type('@'(OBJ),'SimObject'),!,cli_get('@'(OBJ),id,uuid(Out)).
 toStringableArg(Var,Var).
 
 % helper pred for botClientCmd
@@ -309,7 +313,7 @@ robotToString(C,C):-var(C).
 robotToString([],[]).
 robotToString([A|B],[AA|BB]):-robotToString(A,AA),robotToString(B,BB).
 robotToString(Obj,array(ArrayS)):-Obj='@'(_O), cli_is_type(Obj,'System.Array'),cli_array_to_termlist(Obj,Array),!,robotToString(Array,ArrayS).
-robotToString(Obj,list(ArrayS)):-Obj='@'(_O), cli_is_type(Obj,'System.Collections.Generic.IList'('cogbot.NamedParam')),cli_call(Obj,'ToArray',[],Array),robotToString(Array,ArrayS).
+robotToString(Obj,list(ArrayS)):-Obj='@'(_O), cli_is_type(Obj,'System.Collections.Generic.IList'('MushDLR223.ScriptEngines.NamedParam')),cli_call(Obj,'ToArray',[],Array),robotToString(Array,ArrayS).
 robotToString(Obj,enumr(ArrayS)):-Obj='@'(_O), cli_is_type(Obj,'System.Collections.IEnumerable'),cli_array_to_termlist(Obj,Array),robotToString(Array,ArrayS).
 robotToString(C,AS):-compound(C),C=..[F|Args],not(member(F,['@'])),robotToString(Args,ArgS),AS=..[F|ArgS].
 robotToString(C,AS):-cli_to_str(C,AS).
@@ -318,12 +322,13 @@ nop(_).
 
 
 %% print some events
-%%%onSimEvent(_A,_B,_C):-!. % comment out this first line to print them
+onSimEvent(_A,_B,_C):-!. % comment out this first line to print them
 :-dynamic(wasSimEvent/3).
 onSimEvent(_A,B,C):-contains_var("On-Log-Message",a(B,C)),!.
 onSimEvent(_A,B,C):-contains_var('DATA_UPDATE',a(B,C)),!.
 onSimEvent(A,B,C):-!,nop(assertz(wasSimEvent(A,B,C))),!,robotToString(C,AS),!,writeq(onSimEvent(AS)),nl.
 
+user:onSimEvent(A,B,C):-cogrobot:onSimEvent(A,B,C).
 
 %% clearSimEvent(NumToLeave):- predicate_property(wasSimEvent(_,_,_),number_of_clauses(N)),Remove is N-Num, (Remove<=0->true;( ... )).
 clearSimEvent(Num):- predicate_property(wasSimEvent(_,_,_),number_of_clauses(N)),Num>=N,!.
@@ -340,12 +345,12 @@ clearEvents:-repeat,sleep(60),clearSimEvent(1000),fail.
 user:onFirstBotClient(A,B):- %%%attach_console,trace,
  botClient(Obj),
   % uncomment the next line if you want all commands to run thru the universal event handler
-   %%cli_add_event_handler(Obj,'EachSimEvent',onSimEvent(_,_,_)),
+   cli_add_event_handler(Obj,'EachSimEvent',onSimEvent(_,_,_)),
    cli_to_str(onFirstBotClient(A-B-Obj),Objs),writeq(Objs),nl.
 
 %% register onFirstBotClient
 registerOnFirstBotClient:- cli_add_event_handler('cogbot.ClientManager','BotClientCreated',onFirstBotClient(_,_)).
-%%:-atInit(registerOnFirstBotClient).
+:-atInit(registerOnFirstBotClient).
 
 %------------------------------------------------------------------------------
 % start Radegast!
