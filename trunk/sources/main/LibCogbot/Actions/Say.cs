@@ -22,6 +22,10 @@ namespace cogbot.Actions
           //  base.acceptInput(verb, args);
            
             string text = args.str;
+            if (args.Length == 1)
+            {
+                text = args[0];
+            }
 
             if (args.str.Length > 0)
             {
