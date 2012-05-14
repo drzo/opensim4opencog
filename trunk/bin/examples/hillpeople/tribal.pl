@@ -40,8 +40,8 @@ be_tribal(
     Status) :-
 	test_wander_mode,
 	memberchk(en_route([H|T]), Status),
-	botClientCmd(moveto(H, 1), MoveStat),
-	botClientCmd(waitpos(20, H , 1), WaitStat),
+	botcmd(moveto(H, 1), MoveStat),
+	botcmd(waitpos(20, H , 1), WaitStat),
 	say_format('en_route went to ~w Remaining: ~w', [H,T]),
 	say_ref('Move', MoveStat),
 	say_ref('Wait', WaitStat),
@@ -72,8 +72,8 @@ be_tribal(
 	\+ memberchk(en_route(_), Status),
 	nearest_waypoint(WP, Dist),
 	Dist >= 3.0,
-	botClientCmd(moveto(WP, 1), MoveStat),
-	botClientCmd(waitpos(10, WP, 1), WaitStat),
+	botcmd(moveto(WP, 1), MoveStat),
+	botcmd(waitpos(10, WP, 1), WaitStat),
 	say_format('too far from nearest waypoint, moving to~w',[WP]),
 	say_ref('Move', MoveStat),
 	say_ref('Wait', WaitStat),
@@ -111,9 +111,9 @@ be_tribal(
 	Cal,
 	_)) :-
     Cal < -4.0,
-    botClientCmd(anim(die)),
+    botcmd(anim(die)),
     sleep(30),
-    botClientCmd(logout).
+    botcmd(logout).
 
 %
 % die if yer outta protein
@@ -127,9 +127,9 @@ be_tribal(
 	_,
 	Pro)) :-
     Pro < -4.0,
-    botClientCmd(anim(die)),
+    botcmd(anim(die)),
     sleep(30),
-    botClientCmd(logout).
+    botcmd(logout).
 
 %
 % Go home at night

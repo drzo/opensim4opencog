@@ -123,30 +123,29 @@ mud:-ensure_loaded(library('startrek/mudreader.pl')).
 :-ensure_loaded(test('testsupport')).
 :-ensure_loaded(test('testpathfind')).
 
-%%:-runSL.
 :-use_module(library(swicli)).
 
 
-%% simAvatar(X),cli_get(X,'SalientMovementProceedure',Y).
+%% world_avatar(X),cli_get(X,'SalientMovementProceedure',Y).
 
-%% apiBotClientCmd(astargoto(stop_test_5)).
+%% botapi(astargoto(stop_test_5)).
 
 %%:- createWritelnDelegate(_X).
 
 :-dynamic(ike1Ran).
 ike1:-ike1Ran,!.
 ike1:-assert(ike1Ran),fail.
-ike1:-cogrobot:clientManager(X),cli_call(X,'CreateBotClient'('ike','Testbot','060788', "http://www.pathwayslms.com:9000/","home"),_Y). %% ,cli_call(Y,'LoginBlocked',_). %%('@'(true))
-%ike1:-cogrobot:clientManager(X),cli_call(X,'CreateBotClient'('Nephrael','Rae','abc123', "https://login.agni.lindenlab.com/cgi-bin/login.cgi","home"),Y). %% ,cli_call(Y,'LoginBlocked',_). %%('@'(true))
+ike1:-logon_bot('ike','Testbot','060788', "http://www.pathwayslms.com:9000/","home",Y).
+%ike1:-logon_bot('ExampleBot','Resident','abc123', "https://login.agni.lindenlab.com/cgi-bin/login.cgi","last",_).
 ike:-thread_create(ike1,_,[]).
 
 :-dynamic(raphe1Ran).
 raphe1:- raphe1Ran,!.
 raphe1:-assert(raphe1Ran),fail.
-raphe1:-cogrobot:clientManager(X),cli_call(X,'CreateBotClient'('raphe','Testbot','060788', "http://www.pathwayslms.com:9000/","home"),_Y).
+raphe1:-logon_bot('raphe','Testbot','060788', "http://www.pathwayslms.com:9000/","home"),_Y).
 raphe:-thread_create(raphe1,_,[]).
 
-gui:-thread_create(botClientCmd(showgui),_,[]).
+gui:-thread_create(botcmd(showgui),_,[]).
 %% cli_call('System.Threading.ThreadPool','GetAvailableThreads'(X,Y),_)
 %%onFirstBotClient("'(thisClient \"ILikeIKE Resident\")"-_g2886-"'(thisClient \"ILikeIKE Resident\")")
 %:-sleep(20),tpf(clear),tpf(elev_path).

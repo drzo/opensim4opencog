@@ -23,22 +23,22 @@ goMethod('astargoto').  % only use A*
 goByMethod(Location) :-
 	goMethod(GM),!, % slight ugliness, just want first one
 	Goal =.. [GM, Location],
-	apiBotClientCmd(Goal).
+	botapi(Goal).
 
 
 %%  teleportTo('annies haven/129.044327/128.206070/81.519630/')
 %% teleportTo('annies haven/129.044327/128.206070/80')
-%% apiBotClientCmd(autopilot('annies haven/127.044327/128.206070/81.519630/')).
+%% botapi(autopilot('annies haven/127.044327/128.206070/81.519630/')).
 teleportTo(StartName):-
-        apiBotClientCmd(stopmoving),
+        botapi(stopmoving),
         cogrobot:toGlobalVect(StartName,Start),
         cogrobot:vectorAdd(Start,v3d(0,0,0.7),Start2),
-        apiBotClientCmd(teleport(Start2)).
+        botapi(teleport(Start2)).
         /*
-        %%apiBotClientCmd(waitpos(2,Start)),
+        %%botapi(waitpos(2,Start)),
         cogrobot:distanceTo(Start,Dist),
         %% if fallthru floor try to get closer
-        (Dist < 3 -> apiBotClientCmd(moveto(Start)) ; ( cogrobot:vectorAdd(Start2,v3d(0,0,1),Start3),apiBotClientCmd(teleport(Start3)) )),!.*/
+        (Dist < 3 -> botapi(moveto(Start)) ; ( cogrobot:vectorAdd(Start2,v3d(0,0,1),Start3),botapi(teleport(Start3)) )),!.*/
 
 % convenience method that does the 'normal' thing -
 % tp to Start, move using the standard method to
@@ -47,13 +47,13 @@ teleportTo(StartName):-
 move_test(Name):-atom_concat('start_',Name,Start),atom_concat('stop_',Name,Stop),move_test(10,Start,Stop).
 
 move_test(Time , Start , End) :-
-        apiBotClientCmd(stopmoving),
+        botapi(stopmoving),
 	teleportTo(Start),
-        apiBotClientCmd('remeshprim dist 50'),
+        botapi('remeshprim dist 50'),
         botClient(['TheSimAvatar','KillPipes'],_),
 	goByMethod(End),
-        apiBotClientCmd(waitpos(Time,End)),
-        apiBotClientCmd(stopmoving).
+        botapi(waitpos(Time,End)),
+        botapi(stopmoving).
 
 
 % this is just to debug the test framework with
@@ -174,8 +174,8 @@ test1(N) :-
 test(3, N) :-
 	N= 'Rotating Obstacle',
 	start_test(N),
-	apiBotClientCmd(teleport('annies haven/137.404724/187.234711/1000.985291/')),
-	time_limit(15 , apiBotClientCmd('follow*'('annies haven/139.016434/206.675934/1000.985229/'))),
+	botapi(teleport('annies haven/137.404724/187.234711/1000.985291/')),
+	time_limit(15 , botapi('follow*'('annies haven/139.016434/206.675934/1000.985229/'))),
 	needed(_,3,1),
 	\+ obstacle(_),
 	end_test.
@@ -184,8 +184,8 @@ test(3, N) :-
 test(6, N) :-
 	N= 'narrowest gap we can go through',
 	start_test(N),
-	apiBotClientCmd(teleport('annies haven/150.241486/131.945526/1000.985291/')),
-	time_limit(15 , apiBotClientCmd('follow*'('annies haven/148.898590/146.752121/1000.988281/'))),
+	botapi(teleport('annies haven/150.241486/131.945526/1000.985291/')),
+	time_limit(15 , botapi('follow*'('annies haven/148.898590/146.752121/1000.988281/'))),
 	\+ obstacle(_),
 	\+ forbidden(_,_,_),
 	end_test.
@@ -193,15 +193,15 @@ test(6, N) :-
 test(6, N) :-
 	N= 'tortured prim tube',
 	start_test(N),
-	apiBotClientCmd(teleport('annies haven/236.392776/245.958130/1000.986572/')),
-	time_limit(20 , apiBotClientCmd('follow*'('annies haven/239.544891/232.117767/1000.987122/'))),
+	botapi(teleport('annies haven/236.392776/245.958130/1000.986572/')),
+	time_limit(20 , botapi('follow*'('annies haven/239.544891/232.117767/1000.987122/'))),
 	end_test.
 
 test(7, N) :-
 	N= 'jagged maze',
 	start_test(N),
-	apiBotClientCmd(teleport('annies haven/233.436218/221.673218/1000.988770/')),
-	time_limit(60 , apiBotClientCmd('follow*'('annies haven/248.193939/190.898941/1000.985291/'))),
+	botapi(teleport('annies haven/233.436218/221.673218/1000.988770/')),
+	time_limit(60 , botapi('follow*'('annies haven/248.193939/190.898941/1000.985291/'))),
 	\+ obstacle(_),
 	end_test.
 
