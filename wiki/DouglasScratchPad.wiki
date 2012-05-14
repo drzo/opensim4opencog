@@ -1,4 +1,6 @@
-#summary One-sentence summary of this page.
+{{{
+
+
 [11:30] <ski> but i means stuff like : if one thing happens, that may mean some other info isn't applicable, and so shouldn't even be passed any value for (if it can be helped)
 [11:30] <ski> e.g. if there's a parse error, or unknown referent, then not much can be done
 [11:31] <dmiles_afk> yeah like "pickup wood1 wood2 wood3 wood4"   -> objects_not_found([wood3,wood4])
@@ -19,3 +21,5 @@
 [11:41] * Fly-Man- has left IRC
 [11:41] <ski> hehe
 [11:41] <dmiles_afk> CL/Clojure/Java/C#/Prolog  all can heave their own code for walking it
+
+}}}
