@@ -12,7 +12,7 @@
 :-dynamic(raphe1Ran).
 raphe1:- raphe1Ran,!.
 raphe1:-assert(raphe1Ran),fail.
-raphe1:-cogrobot:clientManager(X),cli_call(X,'CreateBotClient'('FirstName','LastName','sekretpassword', "http://www.pathwayslms.com:9000/","home"),_Y).
+raphe1:-logon_bot('FirstName','LastName','sekretpassword', "http://www.pathwayslms.com:9000/","home",_Y).
 raphe:-thread_create(raphe1,_,[]).
 
 ?-raphe.
@@ -24,24 +24,16 @@ raphe:-thread_create(raphe1,_,[]).
 DOUG -  ????
 
 {{{
-37 ?- botClientCmd('setbot raphe Testbot').
-@'C#543265224':"SetOnlyOneCurrentBotClient='(thisClient \"raphe Testbot\")"
-"Success setbot"
+37 ?- botcmd('setbot raphe Testbot').
 true.
 
-38 ?- botClientCmd(jump).
-@'C#543267536':"$bot jumped."
-"Success Jump"
+38 ?- botcmd(jump).
 true.
 
-39 ?- botClientCmd('setbot ike Testbot').
-@'C#543265136':"SetOnlyOneCurrentBotClient='(thisClient \"ike Testbot\")"
-"Success setbot"
+39 ?- botcmd('setbot ike Testbot').
 true.
 
-40 ?- botClientCmd(jump).
-@'C#543266024':"$bot jumped."
-"Success Jump"
+40 ?- botcmd(jump).
 true.
 }}}
 
@@ -61,7 +53,7 @@ DOUG
 == Execute prolog from botcmd
 
 {{{
-/swip X is 1 + 1, botClientCmd(say(X)).
+/swip X is 1 + 1, botcmd(say(X)).
 }}}
 
 = Work with assets =
@@ -76,9 +68,9 @@ How do I save assets?
 === Upload ===
 
 {{{
-17 ?- botClientCmd('help uploadimage').
-@'C#505406816':"uploadimage: Upload an image to your inventory."
-@'C#505406816':"Help complete"
+17 ?- botdo('help uploadimage').
+"uploadimage: Upload an image to your inventory."
+"Help complete"
 "Success help"
 true.
 }}}
@@ -232,7 +224,7 @@ deed, etc. on front tab of edit panel
 
 == Activate a group ==
 
-botClientCmd('activategroup MyGroup').
+botdo('activategroup MyGroup').
 
 DOUG - set role?
 
@@ -320,13 +312,13 @@ texture animation?
 
 waitpos
 
-@'C#505366584':"autopilot: Moves the avatar to the specified global position using simulator autopilot."
+"autopilot: Moves the avatar to the specified global position using simulator autopilot."
 
 
 == walk ==
 
-botClientCmd(crouch).
-botClientCmd(jump).
+botcmd(crouch).
+botcmd(jump).
 
 == run ==
 
@@ -337,8 +329,8 @@ botClientCmd(jump).
 == jump ==
 
 {{{
-?- botClientCmd(crouch).
-?- botClientCmd(jump).
+?- botcmd(crouch).
+?- botcmd(jump).
 }}}
 
 = media/ browser interaction =
@@ -352,18 +344,18 @@ botClientCmd(jump).
 = get help =
 
 {{{
-botClientCmd(help).
+botdo(help).
 ... much help text ...
 
 
-15 ?- botClientCmd('help activategroup').
-@'C#505396056':"activategroup: Set a group as active."
-@'C#505396056':"Help complete"
+15 ?- botdo('help activategroup').
+"activategroup: Set a group as active."
+"Help complete"
 "Success help"
 true.
 
-6 ?- botClientCmd('debug Debug').
-@'C#505362840':"Logging is set to Debug"
+6 ?- botcmd('debug Debug').
+"Logging is set to Debug"
 "Success debug"
 true.
 
@@ -372,4 +364,4 @@ Usage: //debug [level] where level is one of None, Debug, Error, Info, Warn
 
 = Interrupt current action =
 
-@'C#505366584':"botact: Invoke a command a bot interuptable action (interupts previous foreground action)."
+"botact: Invoke a command a bot interuptable action (interupts previous foreground action)."
