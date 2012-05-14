@@ -55,6 +55,8 @@
             cli_to_from_recomposer/4,
             cli_fmt/3,
             cli_fmt/2,
+            cli_halt/0,
+            cli_halt/1,
 
             cli_with_gc/1,
             cli_tracker_begin/1,
@@ -86,7 +88,8 @@ loadcli_Assembly:-assert(loadedcli_Assembly),fail.
 loadcli_Assembly:- foName(SWICLI),strip_module(SWICLI,_,DLL),load_foreign_library(DLL).
 :-loadcli_Assembly.
 
-
+cli_halt:-cli_halt(0).
+cli_halt(_Status):-cli_call('Swicli.Library.PrologClient','ManagedHalt',_).
 %------------------------------------------------------------------------------
 % The C++ DLL should have given us cli_load_lib/4
 %  ?- cli_load_lib(+AppDomainName, +AssemblyPartialName, +FullClassName, +StaticMethodName).
@@ -142,7 +145,7 @@ cli_write(S):-cli_to_str(S,W),writeq(W).
 cli_writeln(S):-cli_write(S),nl.
 
 
-cli_fmt(WID,String,Args):-writeq(WID),write(':'),cli_fmt(String,Args),cli_free(WID). %% WID will be made again each call
+cli_fmt(WID,String,Args):-cli_fmt(String,Args),cli_free(WID). %% WID will be made again each call
 cli_fmt(String,Args):-cli_call('System.String','Format'('string','object[]'),[String,Args],Result),cli_writeln(Result).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
