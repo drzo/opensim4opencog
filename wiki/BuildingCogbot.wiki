@@ -8,10 +8,8 @@
   # rebuild swicli
   
 
-[http://http://cogbot.logicmoo.com/swicli32refs.png]
+http://http://cogbot.logicmoo.com/swicli32refs.png
 
-[http://http://cogbot.logicmoo.com/swiclirefs.png]
+http://http://cogbot.logicmoo.com/swiclirefs.png
 
-[http://http://cogbot.logicmoo.com/swiclifixed.png]
-
-
+http://http://cogbot.logicmoo.com/swiclifixed.png
