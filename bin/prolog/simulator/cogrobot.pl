@@ -2,57 +2,62 @@
 %
 %  cogrobot.pl
 %
-%     Module for use of Cogbot in SecondLife!!!
+%     Module for use of _cogbot_ in SecondLife!!!
 %
-% Cogbot is usually in this mode
+% _cogbot_ is usually in this mode
 % set_prolog_flag(double_quotes,string).
 %
 %------------------------------------------------------------------------------
 :-module(cogrobot,
   [
-   runSL/0,listMembs/0,
-   worldSystem/1, worldSystem/2, clientManager/1,
-   botClient/1, botClient/2,
-   botClientCall/1, botClientCall/2,
-   botClientCmd/1, botClientCmd/2, botClientCmd/3,
-   at_botClientCmd/2, at_botClientCmd/3, at_botClientCmd/4,
-   simObject/1, simAvatar/1, simAvDistance/3, simAsset/1, simAccount/1,
-   gridCliient/1,
+   run_sl/0,
+   gridclient_ref/1,
+   world_ref/1, world_get/2, client_manager_ref/1,
+   current_bot/1, botget/2,
+   botcall/1, botcall/2,
+
+   botdo/1,wb_botdo/2,
+
+   botcmd/1, botcmd/2, botcmd/3,   
+   wb_botcmd/2, wb_botcmd/3, wb_botcmd/4,
+
+   grid_object/1, world_avatar/1, world_object/1,
+   grid_asset/1, grid_account/1,
+   simAvDistance/3, 
    resolveObjectByName/2,
    vectorAdd/3,
    distanceTo/2,
    toGlobalVect/2,
    toLocalVect/2,
-   %%onSimEvent/3,  %% uses user:* wrapper
-   wasSimEvent/3,
+   %%on_sim_event/3,  %% uses user:* wrapper
+   sim_event_db/3,
    obj2Npl/2,
    npl2Obj/2,
    chat/1,
    chat/2,
    chat/3,
    %%cli_fmt/3,
-   createWritelnDelegate/2,
-   createWritelnDelegate/1,
+   create_write_hook/2,
+   create_write_hook/1,
    textureIDToImage/2,
    textureIDToImageParts/2,
    requestTexture/1,
-   simObjectColor/2,
-   current_bot/1,
+   object_color/2,
    set_current_bot/1,
    unset_current_bot/1,
-   %%robotToString/2,   %% uses user:* wrapper
+   %%robot_to_str/2,   %% uses user:* wrapper
    cmdargs_to_atomstr/2,
    set_bot_writeln_delegate/1,
    bot_writeln_delegate/1,
-   createBotClient/7
+   logon_bot/6
    ]).
 
 :-set_prolog_flag(double_quotes,string).
 
-atInit(Call):-term_to_atom(Call,Atom),atom_concat(Atom,'_done',Did),dynamic(Did),atInitCall(atInit(Did,Call)).
-atInitCall(Call):-at_initialization(Call),Call.
-atInit(Did,_Call):-Did,!.
-atInit(Did,Call):-assert(Did),!,Call.
+app_restore(Call):-term_to_atom(Call,Atom),atom_concat(Atom,'_done',Did),dynamic(Did),app_init_call(app_restore(Did,Call)).
+app_init_call(Call):-at_initialization(Call),Call.
+app_restore(Did,_Call):-Did,!.
+app_restore(Did,Call):-assert(Did),!,Call.
 
 
 %%:- absolute_file_name('.',X),asserta(prev_dir6(X)),listing(prev_dir6).
@@ -60,24 +65,24 @@ atInit(Did,Call):-assert(Did),!,Call.
 %%:-source_location(File,_Line),file_directory_name(File, Directory),cd(Directory).
 
 
-assertIfNew(Gaf):-catch(call(Gaf),_,fail),!.
-assertIfNew(Gaf):-assert(Gaf).
+assert_once(Gaf):-catch(call(Gaf),_,fail),!.
+assert_once(Gaf):-assert(Gaf).
 
-:- assertIfNew(user:file_search_path(foreign, '.')).
-:- assertIfNew(user:file_search_path(jpl_examples, 'examples/prolog')).
-:- assertIfNew(user:file_search_path(jar, '.')).
-:- assertIfNew(user:file_search_path(library, '.')).
-:- assertIfNew(user:file_search_path(library, '..')).
-:- assertIfNew(user:file_search_path(library, '../..')).
-:- assertIfNew(user:file_search_path(library, '../../test')).
-:- assertIfNew(user:file_search_path(test, '../test')).
+:- assert_once(user:file_search_path(foreign, '.')).
+:- assert_once(user:file_search_path(jpl_examples, 'examples/prolog')).
+:- assert_once(user:file_search_path(jar, '.')).
+:- assert_once(user:file_search_path(library, '.')).
+:- assert_once(user:file_search_path(library, '..')).
+:- assert_once(user:file_search_path(library, '../..')).
+:- assert_once(user:file_search_path(library, '../../test')).
+:- assert_once(user:file_search_path(test, '../test')).
 
 %%:- use_module(library(testsupport)).
 :-use_module(library(swicli)).
 
 
-%:-atInit(cli_load_assembly('AForge.Imaging.dll')).
-%:-atInit(cli_load_assembly('AForge.Imaging.Formats.dll')).
+%:-app_restore(cli_load_assembly('AForge.Imaging.dll')).
+%:-app_restore(cli_load_assembly('AForge.Imaging.Formats.dll')).
 %------------------------------------------------------------------------------
 
 %% load needed modules
@@ -88,20 +93,20 @@ assertIfNew(Gaf):-assert(Gaf).
 %------------------------------------------------------------------------------
 
 %% load the cogbot assembly
-:-dynamic(loadedCogbotAssembly/0).
-loadCogbotAssembly:-loadedCogbotAssembly,!.
-loadCogbotAssembly:-assert(loadedCogbotAssembly),current_prolog_flag(address_bits,32) -> cli_load_assembly('Cogbot32.exe') ; cli_load_assembly('Cogbot.exe').
-:-atInit(loadCogbotAssembly).
+:-dynamic(loaded_cogbot_assembly/0).
+load_cogbot_assembly:-loaded_cogbot_assembly,!.
+load_cogbot_assembly:-assert(loaded_cogbot_assembly),current_prolog_flag(address_bits,32) -> cli_load_assembly('Cogbot32.exe') ; cli_load_assembly('Cogbot.exe').
+:-app_restore(load_cogbot_assembly).
 
 %% cache the type names
 % prevents us having to use long names for things like SimAvatar
 %
-cacheShortNames:-
+cache_cogbot_types:-
   cli_members('cogbot.TheOpenSims.SimAvatar',_),
   cli_members('cogbot.Listeners.WorldObjects',_),
   cli_members('OpenMetaverse.Primitive',_).
 
-:-atInit(cacheShortNames).
+:-app_restore(cache_cogbot_types).
 %------------------------------------------------------------------------------
 % some type layout conversions (to make cleaner code)
 %
@@ -120,12 +125,12 @@ add_layouts:-
  %%  cli_add_layout('Guid',guid(string)),
   !.
 
-:-atInit(add_layouts).
+:-app_restore(add_layouts).
 
 %------------------------------------------------------------------------------
-% much code uses botClient(Me) like botClientCmd and say/n  
+% much code uses current_bot(Me) like botcmd and say/n  
 %
-% so current_bot(Me) is checked by botClient(Me) and is a thread_local predicate
+%  and is a thread_local predicate if no bot has been registered by thread its the last created bot
 %  
 % usage:
 %  set_current_bot(Me), .....  unset_current_bot(Me)
@@ -135,116 +140,130 @@ add_layouts:-
 % though current_bot(OldBot) may throw if not bot is set
 % ------------------------------------------------------------------------------
 %
-cogbot_throw(Error):-throw(cogbot_user_error(Error)).
-
 :-dynamic current_bot_db/2.
 current_bot(BotID):-thread_self(TID),current_bot_db(TID,BotID),!.
-current_bot(BotID):-clientManager(Man),cli_get(Man,'LastBotClient',BotID).
+current_bot(BotID):-client_manager_ref(Man),cli_get(Man,'LastBotClient',BotID).
+
 set_current_bot(BotID):-thread_self(TID),retractall(current_bot_db(TID,_)),asserta(current_bot_db(TID,BotID)).
+
 unset_current_bot(BotID):-thread_self(TID),current_bot_db(TID,OLD), 
     (OLD=BotID -> retract(current_bot_db(TID,OLD)) ; cogbot_throw(unset_current_bot(tid(TID),used(BotID),expected(OLD)))).
 
 
 %------------------------------------------------------------------------------
-% object getter functions
-%
-:-dynamic createdBotClient/7.
-createBotClient(First, Last, Password, Loginuri, Location, TFLogin, BotID):-        
-	clientManager(CM),
-	cli_call(CM,'CreateBotClient'(First, Last, Password, Loginuri, Location), BotID),
-        asserta(createdBotClient(First, Last, Password, Loginuri, Location,TFLogin,BotID)),
-        (TFLogin==true ->cli_call(BotID,'Login',_);true).
+% throws cogbot based exceptions
+% PRIVATE
+% ------------------------------------------------------------------------------
+cogbot_throw(Error):-throw(cogbot_user_error(Error)).
 
-catchNoErrors(Call):-ignore(catch(Call,_,true)).
-
-logoutBots:-write('logoutbots\n'),flush_output,clientManager(CM),cli_call(CM,'Quit',_).
-%%logoutBots:-createdBotClient(_First, _Last, _Password, _Loginuri, _Location, _TFLogin, BotID),catchNoErrors(cli_call(BotID,'Dispose',_)),fail.
-%%logoutBots:-catchNoErrors((clientManager(CM),cli_call(CM,'ShutDown',_))),cli_call('System.Environment','Exit'(0),_).
-
-:-at_halt(logoutBots).
 
 %------------------------------------------------------------------------------
-% object getter functions
-%
-% cli_get is a field accessor that says use the property, if you can't
-% find that use the _raw field and return.
-%
-% So this is 'get the GridMaster property from the static
-% cogbot.Listeners.WorldObjects and return in Sys'
-%
+% log a bot onto simulator and sets a current bot
+% PUBLIC
 % ------------------------------------------------------------------------------
-%
-%
+logon_bot(First, Last, Password, Loginuri, Location, BotID):-
+        create_bot(First, Last, Password, Loginuri, Location, BotID),
+        set_current_bot(BotID),
+	cli_call(BotID,'LoginBlocked',_).
 
-worldSystem(Sys):-cli_get('cogbot.Listeners.WorldObjects','GridMaster',Sys).
+%------------------------------------------------------------------------------
+% create a botclient (will call startups (like botconfig.xml) but no call to implicit login)
+% PUBLIC
+% ------------------------------------------------------------------------------
+create_bot(First, Last, Password, Loginuri, Location, BotID):-        
+	client_manager_ref(CM),
+	cli_call(CM,'CreateBotClient'(First, Last, Password, Loginuri, Location), BotID),
+        asserta(bot_client_db(First, Last, Password, Loginuri, Location, BotID)).
+
+
+%------------------------------------------------------------------------------
+% System shutdowns
+% ------------------------------------------------------------------------------
+:-dynamic(bot_client_db/6).
+
+ignore_caught(Call):-ignore(catch(Call,_,true)).
+
+
+kill_pl_threads:-thread_property(ID,status(running)),thread_signal(ID,thread_exit(true)),fail.
+kill_pl_threads:-cli_halt(0).
+
+app_quit:-write('logoutbots\n'),flush_output,client_manager_ref(CM),cli_call(CM,'Quit',_),kill_pl_threads.
+%%logoutBots:-bot_client_db(_First, _Last, _Password, _Loginuri, _Location, BotID),ignore_caught(cli_call(BotID,'Dispose',_)),fail.
+%%logoutBots:-ignore_caught((client_manager_ref(CM),cli_call(CM,'ShutDown',_))),cli_call('System.Environment','Exit'(0),_).
+
+:-at_halt(app_quit).
+
+
+%------------------------------------------------------------------------------
+% Refernce to the scene is world_ref
+%------------------------------------------------------------------------------
+world_ref(Sys):-cli_get('cogbot.Listeners.WorldObjects','GridMaster',Sys).
 
 % gets some property of the GridMaster
-%  worldSystem(+Field, -Value)
+%  world_get(+Field, -Value)
 %
-worldSystem(Field,Value):-worldSystem(Sys),cli_get(Sys,Field,Value).
+world_get(Field,Value):-world_ref(Sys),cli_get(Sys,Field,Value).
 
 %% get each SimObject
 % this is every primitive, linked or not, as a complex term
 % it's a partially marshalled object from the simulator
 % cli_col iterates thru elements
-simObject(Ele):-worldSystem('SimObjects',Objs),cli_col(Objs,Ele).
+grid_object(Ele):-world_get('SimObjects',Objs),cli_col(Objs,Ele),not(cli_is_type(Ele,'SimAvatar')).
 
-simRootObject(Ele):-worldSystem('SimRootObjects',Objs),cli_col(Objs,Ele).
+%------------------------------------------------------------------------------
+% ways of iterating in world objects
+%------------------------------------------------------------------------------
+world_object(Ele):-grid_object(Ele),cli_get(Ele,isattachment,@(false)).
 
-% the above is simpler form of:   simObject(Ele):-worldSystem(Sys),cli_get(Sys,'SimObjects',Obj),cli_col(Obj,Ele).
+world_root_object(Ele):-world_get('SimRootObjects',Objs),cli_col(Objs,Ele).
 
 %% get each SimAvatar
 %
 % this is the set of av's that are known to the simulator, they are only
 % actually present if they have a prim
 %
-% simObject and simAvatar handle the complexity of sim crossings
+% grid_object and world_avatar handle the complexity of sim crossings
 %
-simAvatar(Ele):-simAccount(Ele),cli_get(Ele,hasprim,@(true)).
+world_avatar(Ele):-grid_account(Ele),cli_get(Ele,hasprim,@(true)).
 
 %
-% a simAccount/1 is like simAvatar (they are avatars known about in system..
+% a grid_account/1 is like world_avatar (they are avatars known about in system..
 %    including friends not logged in)
 %
-simAccount(Ele):-worldSystem('SimAvatars',Objs),cli_col(Objs,Ele).
+grid_account(Ele):-world_get('SimAvatars',Objs),cli_col(Objs,Ele).
 
 %
-% a simRegion predicate with simParcels (cli_ not done yet)
+% a grid_region returns all regions known to cogbot
 %
-simRegion(Ele):-cli_get('cogbot.TheOpenSims.SimRegion','CurrentRegions',Objs),cli_col(Objs,Ele).
+grid_region(Ele):-cli_get('cogbot.TheOpenSims.SimRegion','CurrentRegions',Objs),cli_col(Objs,Ele).
 
-simParcel(Ele):-simRegion(Sim),cli_get(Sim,parcels,Objs),cli_col(Objs,Ele).
+grid_parcels(Ele):-grid_region(Sim),cli_get(Sim,parcels,Objs),cli_col(Objs,Ele).
 
-%% get the clientManager Instance
+%% get the client_manager_ref Instance
 %%
 %  A class that holds all the static singletons
 %  A Client is a logged on acct in this context
 %
 %  Clientmanager binds radegast to the Client
 %  botconfig is run from Clientmanager
-clientManager(SingleInstance):-cli_get('cogbot.ClientManager','SingleInstance',SingleInstance).
-
-%% get the botClient Instance
-% this only unifies once, someday there will be a BotClients
-botClient(Obj):-catch(current_bot(Obj),_,fail),!.
-botClient(Obj):-clientManager(Man),cli_get(Man,'LastBotClient',Obj).
+client_manager_ref(SingleInstance):-cli_get('cogbot.ClientManager','SingleInstance',SingleInstance).
 
 % given an object and a property returns value for the avatar
 %
 % walks down property tree
-% botClient([name,length,X)
-% botClient([name,length],X)
-% botClient([position,z],X)
+% botget([name,length,X)
+% botget([name,length],X)
+% botget([position,z],X)
 %
 % a.b.c.d
-% botClient([a.b.c.d],X).
-% botClient([a,b,c,d],X).
-% botClient([a,b,c,d],X). = mybot.a.b.c.d
-% prolog botClient([a,b,c,d],X). = c# object X = myBotClient.a.b.c.d
-% botClient(['Inventory','Store',rootfolder,name],Y).
+% botget([a.b.c.d],X).
+% botget([a,b,c,d],X).
+% botget([a,b,c,d],X). = mybot.a.b.c.d
+% prolog botget([a,b,c,d],X). = c# object X = myBotClient.a.b.c.d
+% botget(['Inventory','Store',rootfolder,name],Y).
 % Y = "My Inventory".
 %
-% botClient(['Inventory','Store',rootnode,nodes,values],Y),
+% botget(['Inventory','Store',rootnode,nodes,values],Y),
 %	findall(S,(cli_col(Y,Z),cli_to_str(Z,S)),L),writeq(L).
 %	["Scripts","Photo Album","*MD* Brown Leather Hat w/Bling",
 %	"Body Parts","Notecards","Objects","Clothing","Landmarks","Textures",
@@ -253,34 +272,40 @@ botClient(Obj):-clientManager(Man),cli_get(Man,'LastBotClient',Obj).
 %       Y = @'C#720558400'
 %
 %       finds all grandchildren
-%       botClient(['Inventory','Store',rootnode,nodes,values],Y),
+%       botget(['Inventory','Store',rootnode,nodes,values],Y),
 %	     findall(S,(cli_col(Y,Z),cli_get(Z,'children',GC),
 %	     cli_collecton(GC,'children',GCReal),cli_to_str(GCReal,S)),L),writeq(L).
 %
 
-botClient([P|N],Value):-!,botClient(Obj),cli_get(Obj,[P|N],Value).
-botClient(Property,Value):-botClient(Obj),cli_get(Obj,Property,Value),!.
+botget([P|N],Value):-!,current_bot(Obj),cli_get(Obj,[P|N],Value).
+botget(Property,Value):-current_bot(Obj),cli_get(Obj,Property,Value),!.
 
 % a way to call a method on c#
 % cli_call('System',printf(32),Y).
-botClientCall(Call):-botClient(BotID),at_botClientCall(BotID,Call).
-botClientCall(Call,Res):-botClient(BotID),at_botClientCall(BotID,Call,Res).
+botcall(Call):-current_bot(BotID),wb_botcall(BotID,Call).
+botcall(Call,Res):-current_bot(BotID),wb_botcall(BotID,Call,Res).
 
-at_botClientCall(BotID,Call):-at_botClientCall(BotID,Call,Res),cli_writeln(Res).
-at_botClientCall(BotID,[P|N],Value):-!,cli_get(BotID,P,Mid),cli_get(Mid,N,Value).
-at_botClientCall(BotID,Property,Value):-cli_call(BotID,Property,Value).
+wb_botcall(BotID,Call):-wb_botcall(BotID,Call,Res),cli_writeln(Res).
+wb_botcall(BotID,[P|N],Value):-!,cli_get(BotID,P,Mid),cli_get(Mid,N,Value).
+wb_botcall(BotID,Property,Value):-cli_call(BotID,Property,Value).
 
 
 % wrappered execute command in a convenience pred
-% botClientCmd(say("hi"))
+% botCmd(say("hi"))
 %
-botClientCmd(In):-botClient(BotID),at_botClientCmd(BotID,In),!.
-botClientCmd(In,Out):-botClient(BotID),at_botClientCmd(BotID,In,Out),!.
-botClientCmd(Str,WriteDelegate,Out):-botClient(BotID),at_botClientCmd(BotID,Str,WriteDelegate,Out).
+botdo(In):-current_bot(BotID),wb_botdo(BotID,In),!.
+wb_botdo(BotID,In):-wb_botcmd(BotID,In,cli_fmt(botcmd),_).
 
-at_botClientCmd(BotID,In):-at_botClientCmd(BotID,In,cli_fmt(botClientCmd),Out),cli_writeln(Out),!.
-at_botClientCmd(BotID,StrIn,Out):-cmdargs_to_atomstr(StrIn,Str),at_botClientCmd(BotID,Str,pluggable_callback(botClientCmd),Out).
-at_botClientCmd(BotID,StrIn,WriteDelegate,Out):-cmdargs_to_atomstr(StrIn,Str),cli_call(BotID,executeCommand(Str,BotID,WriteDelegate),Out).
+% wrappered execute command in a convenience pred
+% botcmd(say("hi"))
+%
+botcmd(In):-current_bot(BotID),wb_botcmd(BotID,In),!.
+botcmd(In,Out):-current_bot(BotID),wb_botcmd(BotID,In,Out),!.
+botcmd(Str,WriteDelegate,Out):-current_bot(BotID),wb_botcmd(BotID,Str,WriteDelegate,Out).
+
+wb_botcmd(BotID,StrIn):-wb_botcmd(BotID,StrIn,Out),cli_get(Out,success,@(true)).
+wb_botcmd(BotID,StrIn,Out):-cmdargs_to_atomstr(StrIn,Str),wb_botcmd(BotID,Str,pluggable_callback(botcmd),Out).
+wb_botcmd(BotID,StrIn,WriteDelegate,Out):-cmdargs_to_atomstr(StrIn,Str),cli_call(BotID,executeCommand(Str,BotID,WriteDelegate),Out).
 
 
 % wrappered execute command in a convenience pred
@@ -304,7 +329,7 @@ toStringableArg(A,Out):-atom(A),!,concat_atom(['"',A,'"'],'',Out).
 toStringableArg('@'(OBJ),Out):-cli_is_type('@'(OBJ),'SimObject'),!,cli_get('@'(OBJ),id,uuid(Out)).
 toStringableArg(Var,Var).
 
-% helper pred for botClientCmd
+% helper pred for botcmd
 listifyFlat([],[]):-!.
 listifyFlat([H|T],HT):-!,listifyFlat(H,HL),listifyFlat(T,TL),!,append(HL,TL,HT).
 listifyFlat(C,FA):-functor(C,F,1),!,C=..[F,A],!,listifyFlat(A,FA).
@@ -313,16 +338,16 @@ listifyFlat(v3(X,Y,Z),[v3(X,Y,Z)]).
 listifyFlat(C,FA):-compound(C),!,C=..[F|A],!,listifyFlat([F|A],FA).
 listifyFlat(C,[C]).
 
-%% get the gridCliient Instance
-%  libOMV's version of gridCliient, in case you want the direct one
-gridCliient(Obj):-botClient(BC),cli_get(BC,'gridCliient',Obj).
+%% get the GridClient Instance
+%  libOMV's version of gridclient_ref, in case you want the direct one
+gridclient_ref(Obj):-current_bot(BC),cli_get(BC,'gridClient',Obj).
 
 
 %------------------------------------------------------------------------------
 % create a writeline delegate
 %------------------------------------------------------------------------------
-createWritelnDelegate(WID):-createWritelnDelegate(pluggable_callback(cogrobot),WID).
-createWritelnDelegate(WriteDelegate,WID):-cli_new_delegate('MushDLR223.ScriptEngines.OutputDelegate',WriteDelegate,WID).
+create_write_hook(WID):-create_write_hook(pluggable_callback(cogrobot),WID).
+create_write_hook(WriteDelegate,WID):-cli_new_delegate('MushDLR223.ScriptEngines.OutputDelegate',WriteDelegate,WID).
 
 null_callback(_,_,_).
 
@@ -340,88 +365,78 @@ pluggable_callback(A,B,C):-bot_writeln_delegate(Pred),call(Pred,A,B,C).
 set_bot_writeln_delegate(Pred/3):-!,set_bot_writeln_delegate(Pred).
 set_bot_writeln_delegate(Pred):-retractall(bot_writeln_delegate(_)),assert(bot_writeln_delegate(Pred)).
 
-%------------------------------------------------------------------------------
-% listing functions
-%------------------------------------------------------------------------------
-
-listS(P):-call(P,A),cli_to_str(A,S),writeq(S),fail.
-listS(P):-writeq('done'(P)),nl.
-
-listAvatars:-listS(simAvatar).
-listPrims:-listS(simObject).
-
 
 %------------------------------------------------------------------------------
 % event handler functions
 %------------------------------------------------------------------------------
-robotToString(C,C):-var(C).
-robotToString([],[]).
-robotToString([A|B],[AA|BB]):-robotToString(A,AA),robotToString(B,BB).
-robotToString(Obj,array(ArrayS)):-Obj='@'(_O), cli_is_type(Obj,'System.Array'),cli_array_to_termlist(Obj,Array),!,robotToString(Array,ArrayS).
-robotToString(Obj,list(ArrayS)):-Obj='@'(_O), cli_is_type(Obj,'System.Collections.Generic.IList'('MushDLR223.ScriptEngines.NamedParam')),cli_call(Obj,'ToArray',[],Array),robotToString(Array,ArrayS).
-robotToString(Obj,enumr(ArrayS)):-Obj='@'(_O), cli_is_type(Obj,'System.Collections.IEnumerable'),cli_array_to_termlist(Obj,Array),robotToString(Array,ArrayS).
-robotToString(C,AS):-compound(C),C=..[F|Args],not(member(F,['@'])),robotToString(Args,ArgS),AS=..[F|ArgS].
-robotToString(C,AS):-cli_to_str(C,AS).
+robot_to_str(C,C):-var(C).
+robot_to_str([],[]).
+robot_to_str([A|B],[AA|BB]):-robot_to_str(A,AA),robot_to_str(B,BB).
+robot_to_str(Obj,array(ArrayS)):-Obj='@'(_O), cli_is_type(Obj,'System.Array'),cli_array_to_termlist(Obj,Array),!,robot_to_str(Array,ArrayS).
+robot_to_str(Obj,list(ArrayS)):-Obj='@'(_O), cli_is_type(Obj,'System.Collections.Generic.IList'('MushDLR223.ScriptEngines.NamedParam')),cli_call(Obj,'ToArray',[],Array),robot_to_str(Array,ArrayS).
+robot_to_str(Obj,enumr(ArrayS)):-Obj='@'(_O), cli_is_type(Obj,'System.Collections.IEnumerable'),cli_array_to_termlist(Obj,Array),robot_to_str(Array,ArrayS).
+robot_to_str(C,AS):-compound(C),C=..[F|Args],not(member(F,['@'])),robot_to_str(Args,ArgS),AS=..[F|ArgS].
+robot_to_str(C,AS):-cli_to_str(C,AS).
 
-user:robotToString(A,B):-cogrobot:robotToString(A,B).
+user:robot_to_str(A,B):-cogrobot:robot_to_str(A,B).
 
 
 nop(_).
 
 
 %% print some events
-onSimEvent(_A,_B,_C):-!. % comment out this first line to print them
-:-dynamic(wasSimEvent/3).
-onSimEvent(_A,B,C):-contains_var("On-Log-Message",a(B,C)),!.
-onSimEvent(_A,B,C):-contains_var('DATA_UPDATE',a(B,C)),!.
-onSimEvent(A,B,C):-!,nop(assertz(wasSimEvent(A,B,C))),!,robotToString(C,AS),!,writeq(onSimEvent(AS)),nl.
+on_sim_event(_A,_B,_C):-!. % comment out this first line to print them
+:-dynamic(sim_event_db/3).
+on_sim_event(_A,B,C):-contains_var("On-Log-Message",a(B,C)),!.
+on_sim_event(_A,B,C):-contains_var('DATA_UPDATE',a(B,C)),!.
+on_sim_event(A,B,C):-!,nop(assertz(sim_event_db(A,B,C))),!,robot_to_str(C,AS),!,writeq(on_sim_event(AS)),nl.
 
-user:onSimEvent(A,B,C):-cogrobot:onSimEvent(A,B,C).
+user:on_sim_event(A,B,C):-cogrobot:on_sim_event(A,B,C).
 
-%% clearSimEvent(NumToLeave):- predicate_property(wasSimEvent(_,_,_),number_of_clauses(N)),Remove is N-Num, (Remove<=0->true;( ... )).
-clearSimEvent(Num):- predicate_property(wasSimEvent(_,_,_),number_of_clauses(N)),Num>=N,!.
-clearSimEvent(Num):- retract(wasSimEvent(_,_,_)),predicate_property(wasSimEvent(_,_,_),number_of_clauses(N)),Num >= N,!.
-clearSimEvent(_Num).
+%% trim_sim_events(NumToLeave):- predicate_property(sim_event_db(_,_,_),number_of_clauses(N)),Remove is N-Num, (Remove<=0->true;( ... )).
+trim_sim_events(Num):- predicate_property(sim_event_db(_,_,_),number_of_clauses(N)),Num>=N,!.
+trim_sim_events(Num):- retract(sim_event_db(_,_,_)),predicate_property(sim_event_db(_,_,_),number_of_clauses(N)),Num >= N,!.
+trim_sim_events(_Num).
 
 %% Every minute trim EventLog to 1000 entries
-clearEvents:-repeat,sleep(60),clearSimEvent(1000),fail.
-:-atInit(thread_create(clearEvents,_,[])).
+clearEvents:-repeat,sleep(60),trim_sim_events(1000),fail.
+:-app_restore(thread_create(clearEvents,_,[])).
 
-%%:-module_transparent(onFirstBotClient/2).
+%%:-module_transparent(first_bot_client_hook/2).
 
 %% on first bot Client created register the global event handler
-user:onFirstBotClient(A,B):- %%%attach_console,trace,
- botClient(Obj),
+user:first_bot_client_hook(A,B):- %%%attach_console,trace,
+ current_bot(Obj),
   % uncomment the next line if you want all commands to run thru the universal event handler
-   cli_add_event_handler(Obj,'EachSimEvent',onSimEvent(_,_,_)),
-   cli_to_str(onFirstBotClient(A-B-Obj),Objs),writeq(Objs),nl.
+   cli_add_event_handler(Obj,'EachSimEvent',on_sim_event(_,_,_)),
+   cli_to_str(first_bot_client_hook(A-B-Obj),Objs),writeq(Objs),nl.
 
-%% register onFirstBotClient
-registerOnFirstBotClient:- cli_add_event_handler('cogbot.ClientManager','BotClientCreated',onFirstBotClient(_,_)).
-%%:-atInit(registerOnFirstBotClient).
+%% register first_bot_client_hook
+register_on_first_bot_client:- cli_add_event_handler('cogbot.ClientManager','BotClientCreated',first_bot_client_hook(_,_)).
+:-app_restore(register_on_first_bot_client).
 
 %------------------------------------------------------------------------------
 % start Radegast!
 %------------------------------------------------------------------------------
-:-dynamic(ranSL).
+:-dynamic(ran_sl).
 
-runSL:-ranSL,!.
+run_sl:-ran_sl,!.
 % this is so you can reconsult this file without restarting radegast
-runSL:-asserta(ranSL),!,
+run_sl:-asserta(ran_sl),!,
    cli_set('MushDLR223.Utilities.DLRConsole','NoConsoleVisible','@'(true)),
    cli_set('ABuildStartup.Program','UseApplicationExit','@'(false)),
    cli_set('cogbot.ClientManager','noGUI','@'(true)),
    cli_call('ABuildStartup.Program','Main',[],_).
 
-% assertIfNew is assert a new grounded atomic fact only if the predicate
+% assert_once is assert a new grounded atomic fact only if the predicate
 % was previously undefined
 
-%:-retractall(cli_SubProperty(_,_)).
-:-assertIfNew(cli_SubProperty('cogbot.TheOpenSims.SimAvatar','ProfileProperties')).
-:-assertIfNew(cli_SubProperty('cogbot.TheOpenSims.SimAvatar','AvatarInterests')).
-:-assertIfNew(cli_SubProperty('cogbot.TheOpenSims.SimAvatar','FriendshipInfo')).
-:-assertIfNew(cli_SubProperty('cogbot.TheOpenSims.SimObject','Prim')).
-:-assertIfNew(cli_SubProperty('cogbot.TheOpenSims.SimObject','Properties')).
+%:-retractall(cli_subproperty(_,_)).
+:-assert_once(cli_subproperty('cogbot.TheOpenSims.SimAvatar','ProfileProperties')).
+:-assert_once(cli_subproperty('cogbot.TheOpenSims.SimAvatar','AvatarInterests')).
+:-assert_once(cli_subproperty('cogbot.TheOpenSims.SimAvatar','FriendshipInfo')).
+:-assert_once(cli_subproperty('cogbot.TheOpenSims.SimObject','Prim')).
+:-assert_once(cli_subproperty('cogbot.TheOpenSims.SimObject','Properties')).
 
 
 obj2Npl(O,npl(66,O)).
@@ -430,12 +445,12 @@ npl2Obj(npl(66,O),O).
 registerNamedParamRecomposer:-!.
 registerNamedParamRecomposer:-cli_to_from_recomposer('System.Collections.Generic.IList'('cogbot.NamedParam'),'npl'(_,_),obj2Npl,npl2Obj).
 
-:-atInit(registerNamedParamRecomposer).
+:-app_restore(registerNamedParamRecomposer).
 
 %------------------------------------------------------------------------------
 % CLR Introspection of event handlers
 %------------------------------------------------------------------------------
-simAsset(Asset):-  cli_get('cogbot.TheOpenSims.SimAssetStore','SimAssets',Assets),cli_col(Assets,Asset).
+grid_asset(Asset):-  cli_get('cogbot.TheOpenSims.SimAssetStore','SimAssets',Assets),cli_col(Assets,Asset).
 
 
 gridCliientEvents(E):-cli_memb('OpenMetaverse.GridClient',f,M),arg(3,M,Type),cli_memb(Type,e,E).
@@ -448,19 +463,19 @@ listMembs. % so pred doesnt fail
 %%:-listMembs.
 
 % coerces anything to avatar object
-resolveAvatar(Name,Name):-cli_is_object(Name),cli_is_type(Name,'SimAvatar'),!.
-resolveAvatar(Name,Object):-cli_is_object(Name),cli_to_str(Name,String),!,resolveAvatar(String,Object).
-resolveAvatar(Name,Object):-cli_call('cogbot.Listeners.WorldObjects','GetSimAvatarFromNameIfKnown'(string),[Name],Object).
+to_avatar(Name,Name):-cli_is_object(Name),cli_is_type(Name,'SimAvatar'),!.
+to_avatar(Name,Object):-cli_is_object(Name),cli_to_str(Name,String),!,to_avatar(String,Object).
+to_avatar(Name,Object):-cli_call('cogbot.Listeners.WorldObjects','GetSimAvatarFromNameIfKnown'(string),[Name],Object).
 
-%% resolveObjectByName(start_hill_walk,O),simObjectColor(O,C),cli_writeln(C).
+%% resolveObjectByName(start_hill_walk,O),object_color(O,C),cli_writeln(C).
 %% cli_call(static('cogbot.TheOpenSims.SimImageUtils'),'ToNamedColors'('OpenMetaverse.Color4'),[struct('Color4',1,0,1,0)],Named),cli_col(Named,NamedE),cli_writeln(NamedE).
-simObjectColor(A,NamedE):-simObject(A),cli_call(static('cogbot.TheOpenSims.SimImageUtils'),'ToNamedColors'('cogbot.TheOpenSims.SimObject'),[A],Named),cli_col(Named,NamedE).
-simObjectColor(A,NamedE):-fail,simObject(A),cli_get(A,textures,B),cli_get(B,faceTextures,C),cli_col(C,E),E\=='@'(null),cli_get(E,rgba,CC),
+object_color(A,NamedE):-grid_object(A),cli_call(static('cogbot.TheOpenSims.SimImageUtils'),'ToNamedColors'('cogbot.TheOpenSims.SimObject'),[A],Named),cli_col(Named,NamedE).
+object_color(A,NamedE):-fail,grid_object(A),cli_get(A,textures,B),cli_get(B,faceTextures,C),cli_col(C,E),E\=='@'(null),cli_get(E,rgba,CC),
   cli_call(static('cogbot.TheOpenSims.SimImageUtils'),'ToNamedColors'('OpenMetaverse.Color4'),[CC],Named),cli_col(Named,NamedE).
 
 /*
 
-38 ?- simAsset(A),cli_get(A,assetType, enum('AssetType', 'Texture')),cli_get(A,id,UUID),cli_get(A,assetData,Data),Data\=='@'(null), cli_call('OpenMetaverse.Imaging.OpenJPEG','DecodeToImage'(Data,O1,O2),_),cli_get_type(O2,T),cli_writeln(T).
+38 ?- grid_asset(A),cli_get(A,assetType, enum('AssetType', 'Texture')),cli_get(A,id,UUID),cli_get(A,assetData,Data),Data\=='@'(null), cli_call('OpenMetaverse.Imaging.OpenJPEG','DecodeToImage'(Data,O1,O2),_),cli_get_type(O2,T),cli_writeln(T).
 "System.D_rawing.Bitmap"
 A = @'C#664147632',
 UUID = uuid("38b86f85-2575-52a9-a531-23108d8da837"),
@@ -475,18 +490,18 @@ T = @'C#664150520' .
 b2img(Data,Image):-Data\=='@'(null),cli_call('OpenMetaverse.Imaging.OpenJPEG','DecodeToImage'(Data,_O1,Image),_).
 
 textureIDToImage(UUID,Image):-nonvar(UUID),!,cli_call('cogbot.Listeners.WorldObjects',['GridMaster','TextureBytesForUUID'(UUID)],Bytes),b2img(Bytes,Image).
-textureIDToImage(UUID,Image):-var(UUID),!,simAsset(A),cli_get(A,assetType, enum('AssetType', 'Texture')),cli_get(A,id,UUID),cli_get(A,assetData,Data),b2img(Data,Image).
-textureIDToImageParts(UUID,Part):-simAsset(A),cli_get(A,assetType, enum('AssetType', 'Texture')),cli_get(A,id,UUID),cli_get(A,imageStats,Parts),cli_array_to_termlist(Parts,List),List=[_|_],member(Part,List).
+textureIDToImage(UUID,Image):-var(UUID),!,grid_asset(A),cli_get(A,assetType, enum('AssetType', 'Texture')),cli_get(A,id,UUID),cli_get(A,assetData,Data),b2img(Data,Image).
+textureIDToImageParts(UUID,Part):-grid_asset(A),cli_get(A,assetType, enum('AssetType', 'Texture')),cli_get(A,id,UUID),cli_get(A,imageStats,Parts),cli_array_to_termlist(Parts,List),List=[_|_],member(Part,List).
 
 
-requestTexture(UUID):-worldSystem(Sys),cli_call(Sys,'StartTextureDownload'(UUID),_O).
+requestTexture(UUID):-world_ref(Sys),cli_call(Sys,'StartTextureDownload'(UUID),_O).
 
 resolveObjectByName(Name,Object):-cli_call('cogbot.Listeners.WorldObjects','GetSimPositionByName'(string),[Name],Object).
 
-sayTo(Speaker,ToWho,What):-resolveAvatar(ToWho,Listener),cli_call(Speaker,talkto('SimAvatar',string),[Listener,What],_O).
+sayTo(Speaker,ToWho,What):-to_avatar(ToWho,Listener),cli_call(Speaker,talkto('SimAvatar',string),[Listener,What],_O).
 
-% gives you a list of all the properties
-simObject(X,OE):-simObject(X),cli_get(X,infoMap,Y),cli_col(Y,PE),cli_unify(OE,PE).
+% gives you a list of all the properties on all grid objects
+grid_object(X,OE):-grid_object(X),cli_get(X,infoMap,Y),cli_col(Y,PE),cli_unify(OE,PE).
 
 :-set_prolog_flag(double_quotes,string).
 %------------------------------------------------------------------------------
@@ -494,9 +509,9 @@ simObject(X,OE):-simObject(X),cli_get(X,infoMap,Y),cli_col(Y,PE),cli_unify(OE,PE
 simDistance(V1,V2,D):-cli_call(V1,distance(V1,V2),D).
 
 simAvDistance(A,C,E):-var(A),nonvar(C),!,simAvDistance(C,A,E).
-simAvDistance(A,C,E):-simAvatar(A),cli_get(A,globalposition,B),simAvatar(C),A\=C,cli_get(C,globalposition,D),simDistance(B,D,E).
+simAvDistance(A,C,E):-world_avatar(A),cli_get(A,globalposition,B),world_avatar(C),A\=C,cli_get(C,globalposition,D),simDistance(B,D,E).
 simObjDistance(A,C,E):-var(A),nonvar(C),!,simObjDistance(C,A,E).
-simObjDistance(A,C,E):-simObject(A),cli_get(A,globalposition,B),simObject(C),A\=C,cli_get(C,globalposition,D),simDistance(B,D,E).
+
 %------------------------------------------------------------------------------
 %------------------------------------------------------------------------------
 
@@ -509,9 +524,9 @@ vectorAdd(A1,A2,R):-cli_call(A1,add(A1,A2),R).
 
 % already global vect!
 toGlobalVect(Vect,Vect):-functor(Vect,v3d,3),!.
-toGlobalVect(v3(A,B,C),Vect):-botClient(['Network','CurrentSim','Handle'],S),cli_call('SimRegion','HandleLocalToGlobal'(S,v3(A,B,C)),Vect),!.
+toGlobalVect(v3(A,B,C),Vect):-botget(['Network','CurrentSim','Handle'],S),cli_call('SimRegion','HandleLocalToGlobal'(S,v3(A,B,C)),Vect),!.
 %% ?- toGlobalVect('annies haven/129.044327/128.206070/81.519630',D).
-toGlobalVect(A,Vect):-atom(A),concat_atom([R,X,Y,Z|_],'/',A),!,gridCliient(BC),cli_call('SimRegion','GetRegionByName'(R,BC),Reg),cli_call(Reg,'LocalToGlobal'(v3(X,Y,Z)),Vect).
+toGlobalVect(A,Vect):-atom(A),concat_atom([R,X,Y,Z|_],'/',A),!,gridclient_ref(BC),cli_call('SimRegion','GetRegionByName'(R,BC),Reg),cli_call(Reg,'LocalToGlobal'(v3(X,Y,Z)),Vect).
 %% ?- toGlobalVect('129.044327/128.206070/81.519630',D).
 toGlobalVect(A,Vect):-atom(A),concat_atom([X,Y,Z],'/',A),!,toGlobalVect(v3(X,Y,Z),Vect).
 %% ?- toGlobalVect('CyberPunk Buddha - L',D).
@@ -521,14 +536,27 @@ toGlobalVect(Obj,Vect):-cli_get(Obj,globalposition,Vect),!.
 toLocalVect(Obj,LV):-toGlobalVect(Obj,Vect),cli_call('SimRegion','GlobalToLocalStatic'(Vect),LV).
 
 %% 
-distanceTo(A,R):-toGlobalVect(A,A2),!,botClient(['Self','GlobalPosition'],A1),cli_call(A2,distance(A1,A2),R).
+distanceTo(A,R):-toGlobalVect(A,A2),!,botget(['Self','GlobalPosition'],A1),cli_call(A2,distance(A1,A2),R).
 
 % ?- moveTo('CyberPunk Buddha - L',4,FD).
 
-moveTo(Dest,Time,FDist):-botClientCmd(moveto(Dest)),botClientCmd(waitpos(Time,Dest)),botClientCmd(stopMoving),distanceTo(Dest,FDist).
+moveTo(Dest,Time,FDist):-botcmd(moveto(Dest)),botcmd(waitpos(Time,Dest)),botcmd(stopMoving),distanceTo(Dest,FDist).
 
 chat(Msg):-chat(Msg,0).
 chat(Msg,Ch):-chat(Msg,Ch,'Normal').
-chat(Msg,Ch,Type):-botClient(X),cli_call(X,talk(Msg,Ch,Type),_).
+chat(Msg,Ch,Type):-current_bot(X),cli_call(X,talk(Msg,Ch,Type),_).
 
 %%:-prev_dir6(X),cd(X).
+
+
+%------------------------------------------------------------------------------
+% listing functions
+%------------------------------------------------------------------------------
+
+listS(P):-call(P,A),cli_to_str(A,S),writeq(S),fail.
+listS(P):-writeq('done'(P)),nl.
+
+listAvatars:-listS(world_avatar).
+listPrims:-listS(grid_object).
+
+

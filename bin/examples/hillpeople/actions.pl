@@ -13,12 +13,12 @@
 say_format(Format, Args) :-
     format(string(Contents), Format, Args),
     format(string(QContents), '"~w"', [Contents]),
-    botClientCmd(say(QContents), _).
+    botcmd(say(QContents)).
 
 say_ref(Prompt, Ref) :-
     cli_to_str(Ref, S),
     format(string(Out), '"~w: ~w"', [Prompt, S]),
-    botClientCmd(say(Out), _).
+    botcmd(say(Out)).
 
 
 % doug - is there a more elegant way than generating botcmd to
@@ -29,7 +29,7 @@ with_bot(Name, Goal) :-
 	cli_get(ID, name, SLName),
 	format(string(S), 'setbot ~w', [SLName]),
         string_to_atom(S, A),
-	botClientCmd(A),
+	botcmd(A),
 	call(Goal). % in an ideal world I'd set it back,
                     %but can't find current bot
 */

@@ -34,7 +34,7 @@
 			obstacle/0, obstacle/1,
 			failure/1, failure/2,
 			current_test/1,
-			apiBotClientCmd/1,
+			botapi/1,
 			onChatTSHook/3, std_end/2, std_end/3,
 			doTest/3 , ppTest/1]).
 :-use_module(library(swicli)).
@@ -117,7 +117,7 @@ start_test(Name) :-
 	retractall(forbidden(_,_)),
 	retractall(obstacle(_)),
 	retractall(failure(_,_)),
-	apiBotClientCmd(stop),!.
+	botapi(stop),!.
 
 % call at conclusion of test
 % this only gets there if the test succeeds, so it's pretty suspicious.
@@ -173,7 +173,7 @@ require_chat_hook :-
 
 require_chat_hook :-
 	asserta(chat_hook_installed),
-	user:gridCliient(Obj),
+	user:gridclient_ref(Obj),
 	cli_get(Obj , 'Self' , S),
 	cli_add_event_handler(S , 'ChatFromSimulator' , onChatTSHook(_,_,_)).
 
@@ -196,7 +196,7 @@ list_string_subst(S , T , R , NS) :-
 
 list_string_subst(S , _ , _ , S).
 
-apiBotClientCmd(A) :- user:botClientCmd(A).
+botapi(A) :- user:botcmd(A,_).
 
 %%user:onChatTSHook(X,Y,Z):-testsupport:onChatTSHook(X,Y,Z).
 

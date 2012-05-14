@@ -36,6 +36,8 @@
 
 :-set_prolog_flag(double_quotes,string).
 
+dbgfmt(F,A):-'format'(F,A).
+
 %
 % Change this line to cd to cogbot/bin directory on your system
 %  the exists_file is so it doesn't do it again when reconsulted
@@ -98,12 +100,12 @@ logon_bots :-
 logon_by_name(Name) :- bot_ran(Name),!.
 logon_by_name(Name) :- assert(bot_ran(Name)),fail.
 logon_by_name(Name) :-
-	    format('making a bot for ~w~n', [Name]),
+	    dbgfmt('making a bot for ~w~n', [Name]),
             logon_a_bot(Name),!.
 
 /*
 logon_by_name(Name) :-
-	    format('making a bot for ~w~n', [Name]),
+	    dbgfmt('making a bot for ~w~n', [Name]),
 	    thread_create(logon_a_bot(Name), _, [detached(true)]).
 */
 
@@ -116,15 +118,9 @@ logon_by_name(Name) :-
 logon_a_bot(Name) :-
 	loginuri(Loginuri),
 	hill_credentials(Name, First, Last, Password),
-	format('before clientManager ~w~n', [Name]),
-	cogrobot:clientManager(CM),
-	format('after clientManager ~w ~w~n', [Name, CM]),
-	cli_call(CM,
-		 'CreateBotClient'(First, Last, Password, Loginuri, "last"),
-		 BotID),
+        logon_bot(First, Last, Password, Loginuri, "last", BotID),
         assert(botID(Name, BotID)),
-        cli_call(BotID,'Login',_),
-	format('made botID ~w~n', [BotID]),
+        dbgfmt('made botID ~w~n', [BotID]),
         (thread_self(main)->true;thread_exit(true)).
 
 
@@ -138,6 +134,7 @@ loginuri("http://www.pathwayslms.com:9000/").
 %
 pw('hillpeople').
 tribe('Hillperson').
+%tribe('Dougstribe').
 
 hill_person(otopopo).
 hill_credentials(otopopo, 'Otopopo', Tribe, PW) :-

@@ -26,8 +26,8 @@
 % iterates over all the truly signed on
 % avatars within Dist
 cog_avatars(AV, Dist) :-
-	botClient(Bot),
-	simAvatar(AV),
+	current_bot(Bot),
+	world_avatar(AV),
 	AV \= Bot,
 	simAvDistance(Bot, AV, D),
 	D =< Dist.
