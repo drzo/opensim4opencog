@@ -21,5 +21,7 @@
 [11:41] * Fly-Man- has left IRC
 [11:41] <ski> hehe
 [11:41] <dmiles_afk> CL/Clojure/Java/C#/Prolog  all can heave their own code for walking it
+[11:42] <ski> yea
+[11:42] <dmiles_afk> oh and lest i forget:  HTTPD which gets backj an XML document
 
 }}}
