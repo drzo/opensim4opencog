@@ -229,8 +229,10 @@ namespace Swicli.Library
                     try
                     {
                         //_iEngineNumber = libpl.PL_create_engine(IntPtr.Zero);
-                        libpl.PL_thread_attach_engine(_iEngineNumber);
-                        SafeThreads.Add(thread.ManagedThreadId, _iEngineNumber);
+                        var self = libpl.PL_thread_attach_engine(_iEngineNumber);
+                        var ce = GetCurrentEngine();
+                        SafeThreads.Add(thread.ManagedThreadId, ce);
+                        threadToEngine.Add(thread.ManagedThreadId, self);
                         libpl.PL_thread_at_exit((DelegateParameter0)PrologThreadAtExit, IntPtr.Zero, 0);
                         return;
                         int iRet = libpl.PL_set_engine(_iEngineNumber, ref _iEngineNumberReally);
@@ -635,6 +637,22 @@ namespace Swicli.Library
                     }
                 }
             }
+        }
+
+        public static void KillPrologThreads()
+        {
+            lock (ThreadRegLock)
+            {
+                foreach (KeyValuePair<int, IntPtr> engine in SafeThreads)
+                {
+                    IntPtr ptr = engine.Value;
+                    if (ptr.ToInt64() > PL_ENGINE_CURRENT_PTR.ToInt64())
+                    {
+                        libpl.PL_destroy_engine(ptr);
+                    }
+                }
+            }
+            throw new NotImplementedException();
         }
     }
 }

@@ -151,11 +151,12 @@ cli_fmt(String,Args):-cli_call('System.String','Format'('string','object[]'),[St
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %% cli_to_str(+Obj,-String) writes an object out to string
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cli_to_str(Term,Term):- not(compound(Term)),!.
-cli_to_str(Term,String):-cli_is_object(Term),!,cli_to_str_raw(Term,String).
-cli_to_str([A|B],[AS|BS]):-!,cli_to_str(A,AS),cli_to_str(B,BS).
-cli_to_str(Term,String):-Term=..[F|A],cli_to_str(A,AS),String=..[F|AS],!.
-
+cli_to_str(Term,String):-catch(ignore(cli_to_str0(Term,String0)),_,true),copy_term(String0,String),numbervars(String,666,_).
+cli_to_str0(Term,Term):- not(compound(Term)),!.
+cli_to_str0(Term,String):-cli_is_object(Term),!,cli_to_str_raw(Term,String).
+cli_to_str0([A|B],[AS|BS]):-!,cli_to_str0(A,AS),cli_to_str0(B,BS).
+cli_to_str0(Term,String):-Term=..[F|A],cli_to_str0(A,AS),String=..[F|AS],!.
+cli_to_str0(Term,Term).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %% cli_is_null(+Obj) is Object null or void or variable

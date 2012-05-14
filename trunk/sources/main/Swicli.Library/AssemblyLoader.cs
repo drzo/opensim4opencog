@@ -81,7 +81,12 @@ namespace Swicli.Library
 {
     public partial class PrologClient
     {
-
+        static public bool ManagedHalt()
+        {
+            KillPrologThreads();
+            Environment.Exit(0);
+            return true;
+        }
         static private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
         {
             var domain = (AppDomain)sender;

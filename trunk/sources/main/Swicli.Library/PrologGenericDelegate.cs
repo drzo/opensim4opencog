@@ -415,7 +415,7 @@ namespace Swicli.Library
 
         public abstract object CallPrologFast(object[] paramz);
 
-        static public bool IsUsingGlobalQueue = false;
+        static public bool IsUsingGlobalQueue = true;
         public bool IsSyncronous = true;
         public object SyncLock;
 
