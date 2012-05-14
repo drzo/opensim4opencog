@@ -28,14 +28,14 @@ namespace cogbot.Actions.Communication
             string message = String.Empty;
 
             int argsUsed;
-            List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
-            if (!IsEmpty(PS))
+            SimObject prim;
+            if (WorldSystem.tryGetPrim(args, out prim, out argsUsed))
             {
                 for (int ct = argsUsed; ct < args.Length; ct++)
                     message += args[ct] + " ";
                 message = message.TrimEnd();
                 int nfound = 0;
-                foreach (var prim in PS)
+                //foreach (var prim in PS)
                 {
                     TheBotClient.InstantMessage(prim.ID, message, UUID.Zero);
                     Success(Name + ": " + prim);
