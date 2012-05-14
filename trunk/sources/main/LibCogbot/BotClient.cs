@@ -95,9 +95,66 @@ namespace cogbot
         /// data returned from the data server</param>
         protected virtual void OnEachSimEvent(SimObjectEvent e)
         {
+            if (e.Verb == "On-Log-Message") return;
+            if (ExpectConnected == false) return;
             EventHandler<SimObjectEvent> handler = m_EachSimEvent;
-            if (handler != null)
-                handler(this, e);
+            if (handler == null) return;
+            List<Delegate> todo = new List<Delegate>();
+            lock (m_EachSimEventLock)
+            {
+                handler = m_EachSimEvent;
+                if (handler == null) return;
+                AddTodo(handler.GetInvocationList(), todo);
+            }
+            bool async = todo.Count > 3;
+
+            foreach (var d in todo)
+            {
+                var del = (EventHandler<SimObjectEvent>) d;
+                ThreadStart task = () =>
+                                       {
+                                           try
+                                           {
+                                               del(this, e);
+                                           }
+                                           catch (Exception ex)
+                                           {
+                                               LogException("OnEachSimEvent Worker", ex);
+                                           }
+                                       };
+                if (async)
+                {
+                    ThreadPool.QueueUserWorkItem(sync => task());
+                } else
+                {
+                    task();
+                }
+            }
+        }
+
+        static void AddTodo(Delegate[] lst, List<Delegate> todo)
+        {
+            if (lst == null || lst.Length == 0) return;
+            foreach (var del in lst)
+            {
+                if (del is MulticastDelegate)
+                {
+                    var mc = (MulticastDelegate) del;
+                    Delegate[] innerds = mc.GetInvocationList();
+                    MethodInfo fo = mc.Method;
+                    if (innerds == null || innerds.Length == 0 ||
+                        (innerds.Length == 1 && innerds[0] == mc) || (fo != null && fo.Name == "Invoke"))
+                    {
+                        todo.Add(mc);
+                        continue;
+                    }
+                    AddTodo(innerds, todo);
+                }
+                else
+                {
+                    todo.Add(del);
+                }
+            }
         }
 
         /// <summary>Thread sync lock object</summary>
@@ -150,11 +207,13 @@ namespace cogbot
         public bool ExpectConnected;
         public void Login()
         {
+            LoginRetries = LoginRetriesFresh;
             Login(false);
         }
 
         public void LoginBlocked()
         {
+            LoginRetries = LoginRetriesFresh;
             Login(true);
         }
 
@@ -2060,8 +2119,31 @@ namespace cogbot
             if (string.IsNullOrEmpty(text)) return null;
             CmdResult res = ExecuteBotCommand(text, session, WriteLine);
             if (res != null) return res;
-            res = ClientManager.ExecuteSystemCommand(text, session, WriteLine);           
+            res = ClientManager.ExecuteSystemCommand(text, session, WriteLine);
             if (res != null) return res;
+            string verb = Parser.ParseArguments(text)[0];
+            Command act = GetCommand(verb, false);
+            if (act != null)
+            {
+                if (act is GridMasterCommand)
+                {
+                    if (!WorldSystem.IsGridMaster)
+                    {
+                        WriteLine("I am not gridMaster " + text + ".");
+                        return null;
+                    }
+                }
+                if (act is RegionMasterCommand)
+                {
+                    if (!IsRegionMaster)
+                    {
+                        WriteLine("I am not regionMaster " + text + ".");
+                    }
+                }
+                string pargs = (text.Length > verb.Length) ? text.Substring(verb.Length + 1) : "";
+                return BotClient.DoCmdAct(act, verb, pargs, BotClient.SessionToCallerId(session),
+                                          WriteLine);
+            }
             WriteLine("I don't understand the ExecuteCommand " + text + ".");
             return null;
         }
