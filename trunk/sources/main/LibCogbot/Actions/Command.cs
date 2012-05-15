@@ -404,16 +404,26 @@ namespace cogbot.Actions
             return false;
         }
 
-        public CmdResult Failure(string usage)
+        public CmdResult Failure(string message)
         {
+            var Name = "Failure";
+            if (!message.ToLower().Contains(Name.ToLower()))
+            {
+                message = Name + ": " + message;
+            }
             failure++;
-            return Result(usage, false);
+            return Result(message, false);
         }
 
-        public CmdResult Success(string usage)
+        public CmdResult Success(string message)
         {
+            var Name = "Success";
+            if (!message.ToLower().Contains(Name.ToLower()))
+            {
+                message = Name + ": " + message;
+            }
             success++;
-            return Result("Success " + usage, true);
+            return Result(message, true);
         }
 
         public void LocalWL(string usage)
