@@ -520,7 +520,7 @@ namespace cogbot
         public int RunningMode = (int)Modes.normal;
         public UUID AnimationFolder = UUID.Zero;
 
-        BotInventoryEval searcher = null; // new InventoryEval(this);
+        public BotInventoryEval BotInventory = null; // new InventoryEval(this);
         //public Inventory Inventory;
         //public InventoryManager Manager;
         // public Configuration config;
@@ -721,7 +721,7 @@ namespace cogbot
             Groups.CurrentGroups += callback;
 
             ClientManager.PostAutoExecEnqueue(() => { updateTimer.Start(); });
-            searcher = new BotInventoryEval(this);
+            BotInventory = new BotInventoryEval(this);
             ClientManager.PostAutoExecEnqueue(() =>
             {
                 if (useLispEventProducer)
@@ -1418,7 +1418,7 @@ namespace cogbot
 
                 InventoryFolder rootFolder = Inventory.Store.RootFolder;
                 //InventoryEval searcher = new InventoryEval(this);
-                searcher.evalOnFolders(rootFolder, usage, itemName);
+                BotInventory.evalOnFolders(rootFolder, usage, itemName);
             }
             else
             {
@@ -1432,7 +1432,7 @@ namespace cogbot
             // should be just the objects folder 
             InventoryFolder rootFolder = Inventory.Store.RootFolder;
             //InventoryEval searcher = new InventoryEval(this);
-            searcher.evalOnFolders(rootFolder, "print", "");
+            BotInventory.evalOnFolders(rootFolder, "print", "");
         }
 
         public void wearFolder(string folderName)
@@ -1484,7 +1484,7 @@ namespace cogbot
         {
             InventoryFolder rootFolder = Inventory.Store.RootFolder;
             //InventoryEval searcher = new InventoryEval(this);
-            searcher.evalOnFolders(rootFolder, "print", "");
+            BotInventory.evalOnFolders(rootFolder, "print", "");
 
         }
 
@@ -1494,7 +1494,7 @@ namespace cogbot
             InventoryFolder rootFolder = Inventory.Store.RootFolder;  //  .Inventory.InventorySkeleton.Folders;// .RootUUID;
             //InventoryEval searcher = new InventoryEval(this);
 
-            return searcher.findInFolders(rootFolder, name);
+            return BotInventory.findInFolders(rootFolder, name);
 
         }
 
