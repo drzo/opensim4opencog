@@ -22,7 +22,7 @@ nearest_waypoint(WPName, WPDist) :-
 
 nearest_waypoint(NearDist, [], Nearest, NearDist, Nearest).
 nearest_waypoint(MinDist, [H|T], _Nearest, ResultDist, Result) :-
-	resolveObjectByName(H, Obj),
+	name_to_postion(H, Obj),
 	distanceTo(Obj, D),
 	D < MinDist,
 	nearest_waypoint(D, T, H, ResultDist, Result).
