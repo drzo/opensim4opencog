@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections;
+using System.Threading;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 
 namespace cogbot
@@ -193,6 +195,93 @@ namespace cogbot
                 WriteLine("Search Exception :" + e.StackTrace);
                 WriteLine("  msg:" + e.Message);
 
+            }
+        }
+        public void TraverseNodes(InventoryNode start)
+        {
+            TraverseNodes(start,TimeSpan.FromSeconds(10));
+        }
+        public void TraverseNodes(InventoryNode start, TimeSpan maxTime)
+        {
+            var Inventory = botclient.Inventory.Store;
+            bool has_items = false;
+
+            foreach (InventoryNode node in start.Nodes.Values)
+            {
+                if (node.Data is InventoryItem)
+                {
+                    has_items = true;
+                    break;
+                }
+            }
+
+            if (!has_items || start.NeedsUpdate)
+            {
+                InventoryFolder f = (InventoryFolder)start.Data;
+                AutoResetEvent gotFolderEvent = new AutoResetEvent(false);
+                bool success = false;
+
+                EventHandler<FolderUpdatedEventArgs> callback = delegate(object sender, FolderUpdatedEventArgs ea)
+                {
+                    if (f.UUID == ea.FolderID)
+                    {
+                        if (((InventoryFolder)Inventory.Items[ea.FolderID].Data).DescendentCount <= Inventory.Items[ea.FolderID].Nodes.Count)
+                        {
+                            success = true;
+                            gotFolderEvent.Set();
+                        }
+                    }
+                };
+
+                botclient.Inventory.FolderUpdated += callback;
+                fetchFolder(f.UUID, f.OwnerID, true);
+                gotFolderEvent.WaitOne(maxTime, false);
+                botclient.Inventory.FolderUpdated -= callback;
+
+                if (!success)
+                {
+                    Logger.Log(string.Format("Failed fetching folder {0}, got {1} items out of {2}", f.Name, Inventory.Items[f.UUID].Nodes.Count, ((InventoryFolder)Inventory.Items[f.UUID].Data).DescendentCount), Helpers.LogLevel.Error, botclient);
+                }
+            }
+
+            foreach (InventoryBase item in Inventory.GetContents((InventoryFolder)start.Data))
+            {
+                if (item is InventoryFolder)
+                {
+                    TraverseNodes(Inventory.GetNodeFor(item.UUID), maxTime);
+                }
+            }
+        }
+        private readonly List<UUID> fetchedFolders = new List<UUID>();
+        bool UseInventoryCaps
+        {
+            get
+            {
+                bool res =
+                    botclient.Network.CurrentSim != null
+                    && botclient.Network.CurrentSim.Caps != null
+                    && botclient.Network.CurrentSim.Caps.CapabilityURI("FetchInventoryDescendents2") != null
+                    && !DLRConsole.IsOnMonoUnix;
+                return res;
+            }
+        }
+        private void fetchFolder(UUID folderID, UUID ownerID, bool force)
+        {
+            if (force || !fetchedFolders.Contains(folderID))
+            {
+                if (!fetchedFolders.Contains(folderID))
+                {
+                    fetchedFolders.Add(folderID);
+                }
+
+                if (!UseInventoryCaps)
+                {
+                    botclient.Inventory.RequestFolderContents(folderID, ownerID, true, true, InventorySortOrder.ByDate);
+                }
+                else
+                {
+                    botclient.Inventory.RequestFolderContentsCap(folderID, ownerID, true, true, InventorySortOrder.ByDate);
+                }
             }
         }
 
