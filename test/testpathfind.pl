@@ -36,7 +36,7 @@ teleportTo(StartName):-
         botapi(teleport(Start2)).
         /*
         %%botapi(waitpos(2,Start)),
-        cogrobot:distanceTo(Start,Dist),
+        cogrobot:distance_to(Start,Dist),
         %% if fallthru floor try to get closer
         (Dist < 3 -> botapi(moveto(Start)) ; ( cogrobot:vectorAdd(Start2,v3d(0,0,1),Start3),botapi(teleport(Start3)) )),!.*/
 
@@ -50,7 +50,7 @@ move_test(Time , Start , End) :-
         botapi(stopmoving),
 	teleportTo(Start),
         botapi('remeshprim dist 50'),
-        botClient(['TheSimAvatar','KillPipes'],_),
+        botcall(['TheSimAvatar','KillPipes'],_),
 	goByMethod(End),
         botapi(waitpos(Time,End)),
         botapi(stopmoving).
@@ -249,10 +249,10 @@ tpf(Name) :-
 
  makePipe(S,E):-position_to_v3(S,v3(SX,SY,SZ)),position_to_v3(E,v3(EX,EY,EZ)),
     sformat(SF,'~w,~w,~w,~w,~w,~w,~w,~w,~w',[255,0,0,SX,SY,SZ,EX,EY,EZ]),
-    botClient(BC),cli_call(BC,talk(SF,100,'Normal'),_).
+    current_bot(BC),cli_call(BC,talk(SF,100,'Normal'),_).
 
 end_of_file.
 
- botClient(X),cli_call(X,talk(hi),V)
+ current_bot(X),cli_call(X,talk(hi),V)
 
 
