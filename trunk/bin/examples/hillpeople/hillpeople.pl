@@ -20,7 +20,8 @@
 %
 %     Instructions:
 %     1. Load the hillpeople.oar into an empty sim
-%     2. Create 6 bot accounts. You can do this with the TODO script
+%     2. Create 6 bot accounts. You can do this with the
+%        createusers script
 %     3. If this file isn't in cogbot/bin/examples/hillpeople modify the
 %     line below to cd into cogbot/bin
 %     4. change loginuri to your login uri
