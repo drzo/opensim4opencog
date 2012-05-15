@@ -24,11 +24,11 @@
    grid_object/1, world_avatar/1, world_object/1,
    grid_asset/1, grid_account/1,
    simAvDistance/3, 
-   resolveObjectByName/2,
+   name_to_postion/2,
    vectorAdd/3,
    distanceTo/2,
-   toGlobalVect/2,
-   toLocalVect/2,
+   position_to_v3d/2,
+   position_to_v3/2,
    %%on_sim_event/3,  %% uses user:* wrapper
    sim_event_db/3,
    obj2Npl/2,
@@ -39,9 +39,9 @@
    %%cli_fmt/3,
    create_write_hook/2,
    create_write_hook/1,
-   textureIDToImage/2,
-   textureIDToImageParts/2,
-   requestTexture/1,
+   uuid_to_cli_image/2,
+   uuid_to_image_parts/2,
+   request_texture/1,
    object_color/2,
    set_current_bot/1,
    unset_current_bot/1,
@@ -49,7 +49,10 @@
    cmdargs_to_atomstr/2,
    set_bot_writeln_delegate/1,
    bot_writeln_delegate/1,
-   logon_bot/6
+   logon_bot/6,
+   create_bot/6,
+   wb_botinventory/3,
+   inventory_node_name/2
    ]).
 
 :-set_prolog_flag(double_quotes,string).
@@ -158,8 +161,9 @@ cogbot_throw(Error):-throw(cogbot_user_error(Error)).
 
 
 %------------------------------------------------------------------------------
-% log a bot onto simulator and sets a current bot
-% PUBLIC
+% syncronously log a bot onto simulator and set the current_bot/1
+% PUBLIC    
+% TODO - should we remove the return result since we set current bot?
 % ------------------------------------------------------------------------------
 logon_bot(First, Last, Password, Loginuri, Location, BotID):-
         create_bot(First, Last, Password, Loginuri, Location, BotID),
@@ -184,7 +188,7 @@ create_bot(First, Last, Password, Loginuri, Location, BotID):-
 ignore_caught(Call):-ignore(catch(Call,_,true)).
 
 
-kill_pl_threads:-thread_property(ID,status(running)),thread_signal(ID,thread_exit(true)),fail.
+kill_pl_threads:-thread_property(ID,status(running)),ID\=main,thread_signal(ID,thread_exit(true)),fail.
 kill_pl_threads:-cli_halt(0).
 
 app_quit:-write('logoutbots\n'),flush_output,client_manager_ref(CM),cli_call(CM,'Quit',_),kill_pl_threads.
@@ -276,9 +280,55 @@ client_manager_ref(SingleInstance):-cli_get('cogbot.ClientManager','SingleInstan
 %	     findall(S,(cli_col(Y,Z),cli_get(Z,'children',GC),
 %	     cli_collecton(GC,'children',GCReal),cli_to_str(GCReal,S)),L),writeq(L).
 %
+botget(Property,Value):-current_bot(BotID),wb_botget(BotID,Property,Value).
 
-botget([P|N],Value):-!,current_bot(Obj),cli_get(Obj,[P|N],Value).
-botget(Property,Value):-current_bot(Obj),cli_get(Obj,Property,Value),!.
+wb_botget(BotID,Property,Value):-cli_get(BotID,Property,Value),!.
+
+% wb_botinventory(+BotID,?Path,?NodeDataRef).
+% if just checking for items existence you  _  the third arg
+% (the third arg is the Node contents)
+%
+% ?- current_bot(BotID),wb_botinventory(BotID,[A,'Clothing'],X).
+% BotID = @'C#508280816',
+% A = "My Inventory",
+% X = @'C#598007568' ;
+% BotID = @'C#508280816',
+% A = "Library",
+% X = @'C#598013968' ;
+% false.
+%
+% ?- current_bot(BotID),wb_botinventory(BotID,[A,'Clothing',What],X).
+% BotID = @'C#508280816',
+% A = "Library",
+% What = "Female Shape & Outfit",
+% X = @'C#598060416' ;
+% BotID = @'C#508280816',
+% A = "Library",
+% What = "Gamer Male",
+% X = @'C#598062912' 
+
+wb_botinventory(BotID,[StartName,TopName|Path],Node):-
+   lists:member(Start,['RootNode','LibraryRootNode']),   
+   wb_botget(BotID,['Inventory','Store',Start],StartNode),
+   cli_get(StartNode,[nodes,values],StartCol),
+   cli_get(StartNode,[data,name],StartName),
+   cli_col(StartCol,Top),cli_get(Top,data,TopData),
+   cli_get(TopData,name,TopName),
+   inventory_children(Top,TopData,Path,Node).
+
+inventory_children(_Top,TopData,[],NodeData):-cli_unify(NodeData,TopData).
+inventory_children(Mid,_MidData,[TopName|Path],NodeData):-
+   cli_get(Mid,[nodes,values],StartCol),
+   cli_col(StartCol,Top),cli_get(Top,data,TopData),
+   cli_get(TopData,name,TopName),
+   inventory_children(Top,TopData,Path,NodeData).
+      
+inventory_node_name(Node,Name):-cli_get(Node,[data,name],Name),!.
+inventory_node_name(Node,Name):-cli_get(Node,[data,name],Name),!.
+inventory_node_name(_Node,'unk').
+
+             
+
 
 % a way to call a method on c#
 % cli_call('System',printf(32),Y).
@@ -467,7 +517,7 @@ to_avatar(Name,Name):-cli_is_object(Name),cli_is_type(Name,'SimAvatar'),!.
 to_avatar(Name,Object):-cli_is_object(Name),cli_to_str(Name,String),!,to_avatar(String,Object).
 to_avatar(Name,Object):-cli_call('cogbot.Listeners.WorldObjects','GetSimAvatarFromNameIfKnown'(string),[Name],Object).
 
-%% resolveObjectByName(start_hill_walk,O),object_color(O,C),cli_writeln(C).
+%% name_to_postion(start_hill_walk,O),object_color(O,C),cli_writeln(C).
 %% cli_call(static('cogbot.TheOpenSims.SimImageUtils'),'ToNamedColors'('OpenMetaverse.Color4'),[struct('Color4',1,0,1,0)],Named),cli_col(Named,NamedE),cli_writeln(NamedE).
 object_color(A,NamedE):-grid_object(A),cli_call(static('cogbot.TheOpenSims.SimImageUtils'),'ToNamedColors'('cogbot.TheOpenSims.SimObject'),[A],Named),cli_col(Named,NamedE).
 object_color(A,NamedE):-fail,grid_object(A),cli_get(A,textures,B),cli_get(B,faceTextures,C),cli_col(C,E),E\=='@'(null),cli_get(E,rgba,CC),
@@ -489,14 +539,14 @@ T = @'C#664150520' .
 %%b2img('@'(null),'@'(null)):-!.
 b2img(Data,Image):-Data\=='@'(null),cli_call('OpenMetaverse.Imaging.OpenJPEG','DecodeToImage'(Data,_O1,Image),_).
 
-textureIDToImage(UUID,Image):-nonvar(UUID),!,cli_call('cogbot.Listeners.WorldObjects',['GridMaster','TextureBytesForUUID'(UUID)],Bytes),b2img(Bytes,Image).
-textureIDToImage(UUID,Image):-var(UUID),!,grid_asset(A),cli_get(A,assetType, enum('AssetType', 'Texture')),cli_get(A,id,UUID),cli_get(A,assetData,Data),b2img(Data,Image).
-textureIDToImageParts(UUID,Part):-grid_asset(A),cli_get(A,assetType, enum('AssetType', 'Texture')),cli_get(A,id,UUID),cli_get(A,imageStats,Parts),cli_array_to_termlist(Parts,List),List=[_|_],member(Part,List).
+uuid_to_cli_image(UUID,Image):-nonvar(UUID),!,cli_call('cogbot.Listeners.WorldObjects',['GridMaster','TextureBytesForUUID'(UUID)],Bytes),b2img(Bytes,Image).
+uuid_to_cli_image(UUID,Image):-var(UUID),!,grid_asset(A),cli_get(A,assetType, enum('AssetType', 'Texture')),cli_get(A,id,UUID),cli_get(A,assetData,Data),b2img(Data,Image).
+uuid_to_image_parts(UUID,Part):-grid_asset(A),cli_get(A,assetType, enum('AssetType', 'Texture')),cli_get(A,id,UUID),cli_get(A,imageStats,Parts),cli_array_to_termlist(Parts,List),List=[_|_],member(Part,List).
 
 
-requestTexture(UUID):-world_ref(Sys),cli_call(Sys,'StartTextureDownload'(UUID),_O).
+request_texture(UUID):-world_ref(Sys),cli_call(Sys,'StartTextureDownload'(UUID),_O).
 
-resolveObjectByName(Name,Object):-cli_call('cogbot.Listeners.WorldObjects','GetSimPositionByName'(string),[Name],Object).
+name_to_postion(Name,Object):-cli_call('cogbot.Listeners.WorldObjects','GetSimPositionByName'(string),[Name],Object).
 
 sayTo(Speaker,ToWho,What):-to_avatar(ToWho,Listener),cli_call(Speaker,talkto('SimAvatar',string),[Listener,What],_O).
 
@@ -523,20 +573,20 @@ simObjDistance(A,C,E):-var(A),nonvar(C),!,simObjDistance(C,A,E).
 vectorAdd(A1,A2,R):-cli_call(A1,add(A1,A2),R).
 
 % already global vect!
-toGlobalVect(Vect,Vect):-functor(Vect,v3d,3),!.
-toGlobalVect(v3(A,B,C),Vect):-botget(['Network','CurrentSim','Handle'],S),cli_call('SimRegion','HandleLocalToGlobal'(S,v3(A,B,C)),Vect),!.
-%% ?- toGlobalVect('annies haven/129.044327/128.206070/81.519630',D).
-toGlobalVect(A,Vect):-atom(A),concat_atom([R,X,Y,Z|_],'/',A),!,gridclient_ref(BC),cli_call('SimRegion','GetRegionByName'(R,BC),Reg),cli_call(Reg,'LocalToGlobal'(v3(X,Y,Z)),Vect).
-%% ?- toGlobalVect('129.044327/128.206070/81.519630',D).
-toGlobalVect(A,Vect):-atom(A),concat_atom([X,Y,Z],'/',A),!,toGlobalVect(v3(X,Y,Z),Vect).
-%% ?- toGlobalVect('CyberPunk Buddha - L',D).
-toGlobalVect(A,Vect):-atom(A),!,resolveObjectByName(A,Obj),cli_get(Obj,globalposition,Vect),!.
-toGlobalVect(Obj,Vect):-cli_get(Obj,globalposition,Vect),!.
+position_to_v3d(Vect,Vect):-functor(Vect,v3d,3),!.
+position_to_v3d(v3(A,B,C),Vect):-botget(['Network','CurrentSim','Handle'],S),cli_call('SimRegion','HandleLocalToGlobal'(S,v3(A,B,C)),Vect),!.
+%% ?- position_to_v3d('annies haven/129.044327/128.206070/81.519630',D).
+position_to_v3d(A,Vect):-atom(A),concat_atom([R,X,Y,Z|_],'/',A),!,gridclient_ref(BC),cli_call('SimRegion','GetRegionByName'(R,BC),Reg),cli_call(Reg,'LocalToGlobal'(v3(X,Y,Z)),Vect).
+%% ?- position_to_v3d('129.044327/128.206070/81.519630',D).
+position_to_v3d(A,Vect):-atom(A),concat_atom([X,Y,Z],'/',A),!,position_to_v3d(v3(X,Y,Z),Vect).
+%% ?- position_to_v3d('CyberPunk Buddha - L',D).
+position_to_v3d(A,Vect):-atom(A),!,name_to_postion(A,Obj),cli_get(Obj,globalposition,Vect),!.
+position_to_v3d(Obj,Vect):-cli_get(Obj,globalposition,Vect),!.
 
-toLocalVect(Obj,LV):-toGlobalVect(Obj,Vect),cli_call('SimRegion','GlobalToLocalStatic'(Vect),LV).
+position_to_v3(Obj,LV):-position_to_v3d(Obj,Vect),cli_call('SimRegion','GlobalToLocalStatic'(Vect),LV).
 
 %% 
-distanceTo(A,R):-toGlobalVect(A,A2),!,botget(['Self','GlobalPosition'],A1),cli_call(A2,distance(A1,A2),R).
+distanceTo(A,R):-position_to_v3d(A,A2),!,botget(['Self','GlobalPosition'],A1),cli_call(A2,distance(A1,A2),R).
 
 % ?- moveTo('CyberPunk Buddha - L',4,FD).
 
