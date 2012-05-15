@@ -31,7 +31,7 @@ goByMethod(Location) :-
 %% botapi(autopilot('annies haven/127.044327/128.206070/81.519630/')).
 teleportTo(StartName):-
         botapi(stopmoving),
-        cogrobot:toGlobalVect(StartName,Start),
+        cogrobot:position_to_v3d(StartName,Start),
         cogrobot:vectorAdd(Start,v3d(0,0,0.7),Start2),
         botapi(teleport(Start2)).
         /*
@@ -247,7 +247,7 @@ tpf(Name) :-
 		option('goMethod ' , GoMethod)]).
 
 
- makePipe(S,E):-toLocalVect(S,v3(SX,SY,SZ)),toLocalVect(E,v3(EX,EY,EZ)),
+ makePipe(S,E):-position_to_v3(S,v3(SX,SY,SZ)),position_to_v3(E,v3(EX,EY,EZ)),
     sformat(SF,'~w,~w,~w,~w,~w,~w,~w,~w,~w',[255,0,0,SX,SY,SZ,EX,EY,EZ]),
     botClient(BC),cli_call(BC,talk(SF,100,'Normal'),_).
 
