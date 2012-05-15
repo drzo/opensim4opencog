@@ -24,9 +24,9 @@
    grid_object/1, world_avatar/1, world_object/1,
    grid_asset/1, grid_account/1,
    simAvDistance/3, 
-   name_to_postion/2,
+   name_to_location_ref/2,
    vectorAdd/3,
-   distanceTo/2,
+   distance_to/2,
    position_to_v3d/2,
    position_to_v3/2,
    %%on_sim_event/3,  %% uses user:* wrapper
@@ -517,7 +517,7 @@ to_avatar(Name,Name):-cli_is_object(Name),cli_is_type(Name,'SimAvatar'),!.
 to_avatar(Name,Object):-cli_is_object(Name),cli_to_str(Name,String),!,to_avatar(String,Object).
 to_avatar(Name,Object):-cli_call('cogbot.Listeners.WorldObjects','GetSimAvatarFromNameIfKnown'(string),[Name],Object).
 
-%% name_to_postion(start_hill_walk,O),object_color(O,C),cli_writeln(C).
+%% name_to_location_ref(start_hill_walk,O),object_color(O,C),cli_writeln(C).
 %% cli_call(static('cogbot.TheOpenSims.SimImageUtils'),'ToNamedColors'('OpenMetaverse.Color4'),[struct('Color4',1,0,1,0)],Named),cli_col(Named,NamedE),cli_writeln(NamedE).
 object_color(A,NamedE):-grid_object(A),cli_call(static('cogbot.TheOpenSims.SimImageUtils'),'ToNamedColors'('cogbot.TheOpenSims.SimObject'),[A],Named),cli_col(Named,NamedE).
 object_color(A,NamedE):-fail,grid_object(A),cli_get(A,textures,B),cli_get(B,faceTextures,C),cli_col(C,E),E\=='@'(null),cli_get(E,rgba,CC),
@@ -546,7 +546,7 @@ uuid_to_image_parts(UUID,Part):-grid_asset(A),cli_get(A,assetType, enum('AssetTy
 
 request_texture(UUID):-world_ref(Sys),cli_call(Sys,'StartTextureDownload'(UUID),_O).
 
-name_to_postion(Name,Object):-cli_call('cogbot.Listeners.WorldObjects','GetSimPositionByName'(string),[Name],Object).
+name_to_location_ref(Name,Object):-cli_call('cogbot.Listeners.WorldObjects','GetSimPositionByName'(string),[Name],Object).
 
 sayTo(Speaker,ToWho,What):-to_avatar(ToWho,Listener),cli_call(Speaker,talkto('SimAvatar',string),[Listener,What],_O).
 
@@ -580,17 +580,17 @@ position_to_v3d(A,Vect):-atom(A),concat_atom([R,X,Y,Z|_],'/',A),!,gridclient_ref
 %% ?- position_to_v3d('129.044327/128.206070/81.519630',D).
 position_to_v3d(A,Vect):-atom(A),concat_atom([X,Y,Z],'/',A),!,position_to_v3d(v3(X,Y,Z),Vect).
 %% ?- position_to_v3d('CyberPunk Buddha - L',D).
-position_to_v3d(A,Vect):-atom(A),!,name_to_postion(A,Obj),cli_get(Obj,globalposition,Vect),!.
+position_to_v3d(A,Vect):-atom(A),!,name_to_location_ref(A,Obj),cli_get(Obj,globalposition,Vect),!.
 position_to_v3d(Obj,Vect):-cli_get(Obj,globalposition,Vect),!.
 
 position_to_v3(Obj,LV):-position_to_v3d(Obj,Vect),cli_call('SimRegion','GlobalToLocalStatic'(Vect),LV).
 
 %% 
-distanceTo(A,R):-position_to_v3d(A,A2),!,botget(['Self','GlobalPosition'],A1),cli_call(A2,distance(A1,A2),R).
+distance_to(A,R):-position_to_v3d(A,A2),!,botget(['Self','GlobalPosition'],A1),cli_call(A2,distance(A1,A2),R).
 
 % ?- moveTo('CyberPunk Buddha - L',4,FD).
 
-moveTo(Dest,Time,FDist):-botcmd(moveto(Dest)),botcmd(waitpos(Time,Dest)),botcmd(stopMoving),distanceTo(Dest,FDist).
+moveTo(Dest,Time,FDist):-botcmd(moveto(Dest)),botcmd(waitpos(Time,Dest)),botcmd(stopMoving),distance_to(Dest,FDist).
 
 chat(Msg):-chat(Msg,0).
 chat(Msg,Ch):-chat(Msg,Ch,'Normal').
