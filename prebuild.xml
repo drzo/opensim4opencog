@@ -1128,10 +1128,6 @@
        <Reference name="System.Xml" localCopy="false"/>
        <Reference name="System.Web" localCopy="false"/>
        <Reference name="System.Core" localCopy="false" />
-       <Reference name="OpenCyc.dll" localCopy="false"/>
-       <Reference name="ABCL.Net.dll" localCopy="false"/>
-       <Reference name="IKVM.Runtime.dll" localCopy="false"/>
-       <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
        <Reference name="Radegast.exe" localCopy="false"/>
        <Reference name="MushDLR223"  localCopy="false"/>
          <!--   
@@ -1315,8 +1311,7 @@
       <Exclude name="EXCLUDED.cs"/></Match>
   </Files>
 </Project>
-
-
+<!--
  <Project name="CSProlog" path="sources/chatbot/RTParser/Prolog" type="Exe" frameworkVersion="v3_5">
      <Configuration name="Debug">
        <Options>
@@ -1349,7 +1344,7 @@
          <Match path="." pattern="*.cs"  recurse="true"  subType="Form"> <Exclude name="Plugins/"/><Exclude name="PrologConsole.cs"/></Match>
      </Files>
 </Project>
-
+-->
   <Project name="TheSimiansModule" path="sources/modules/TheSimiansModule" type="Library" frameworkVersion="v3_5">
      <Configuration name="Debug">
        <Options>
@@ -1506,9 +1501,6 @@
      <Reference name="Radegast.exe" localCopy="false"/>
      <Reference name="System" localCopy="false"/>
      <Reference name="DotLisp" localCopy="false"/>
-     <Reference name="OpenCyc.dll" localCopy="false"/>
-      <Reference name="IKVM.Runtime.dll" localCopy="false"/>
-     <Reference name="IKVM.OpenJDK.Core.dll" localCopy="false"/>
      <Files>
          <Match path="." pattern="*.cs"  recurse="true"  subType="Form"/>
          <Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource"/>
