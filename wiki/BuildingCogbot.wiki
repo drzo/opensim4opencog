@@ -2,7 +2,9 @@
   
   # checkout from svn
   # right click on swicli project in SwiProlog folder, choose properties
-  # under Common Properties, you will see one or two missing references. Remove them, then add Swicli.Library and SWICLITestDLL  by clicking 'Add New Reference...' button and on Projects tab select these.
+  # under Common Properties, you will see one or two missing references. 
+  # Remove them, then add Swicli.Library and SWICLITestDLL by clicking 'Add New Reference...' button and on Projects tab select these.
+  # repeat for swicli32
   # rebuild the Solution
   # rebuild swicli.library
   # rebuild swicli
