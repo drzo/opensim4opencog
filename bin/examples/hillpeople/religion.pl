@@ -18,7 +18,9 @@
 god_likes(_, _).
 
 god('Gopupu').
+long_name('Gopupu', 'The God who can be named, but not in polite company').
 god('Yoko Ono').
+long_name('Yoko Ono', 'The beloved of John').
 god('Latuppi').
 god('Raivo').
 long_name('Raivo', 'The Estonian').
@@ -29,7 +31,6 @@ god('Prlg', 'The Horned God of Clauses').
 god('Erlang').
 god('Hickey').
 god('Ringo').
-god('Thor').
 god('Haskell').
 god('Oppenheimer').
 god('Medula').
@@ -40,8 +41,11 @@ god('Kastyke').  % courtesy of Erik Granström's "The Fifth Conflux" tetralogy
 god('Knuth').
 god('Annie').
 god('Doug').
+god('Kino').
+long_name('Kino', 'The Creator').
 god('Mammon').
 god('Squat').
+prayer('Squat', 'Squat, Squat, give us a parking spot! And we\'ll send you nine nuns in the mail').
 
 
 
