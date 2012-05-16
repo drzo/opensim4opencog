@@ -119,7 +119,7 @@ logon_by_name(Name) :-
 logon_a_bot(Name) :-
 	loginuri(Loginuri),
 	hill_credentials(Name, First, Last, Password),
-        logon_bot(First, Last, Password, Loginuri, "last", BotID),
+        logon_bot(First, Last, Password, Loginuri, "home", BotID),
         assert(botID(Name, BotID)),
         dbgfmt('made botID ~w~n', [BotID]),
         (thread_self(main)->true;thread_exit(true)).
@@ -196,7 +196,7 @@ everybody_be_tribal :-
 	hill_person(Name),
 	thread_create(
 	    be_tribal(Name),
-	    _, []),
+	    _, [alias(Name)]),
 	fail.
 everybody_be_tribal.
 
