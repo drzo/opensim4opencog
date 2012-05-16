@@ -163,7 +163,7 @@ sex(bignose, m).
 home(bignose, hut2).
 husband_of(bignose, onosideboard).
 
-hill_person(onosideboard).
+%hill_person(onosideboard).
 hill_credentials(onosideboard,
 		 'Onosideboard', Tribe, PW) :-
     pw(PW),
@@ -172,7 +172,7 @@ age(onosideboard, 35).
 sex(onosideboard, f).
 home(onosideboard, hut2).
 
-hill_person(lemonaide).
+%hill_person(lemonaide).
 hill_credentials(lemonaide, 'Lemonaide', Tribe, PW) :-
     pw(PW),
     tribe(Tribe).
@@ -181,7 +181,7 @@ sex(lemonaide, f).
 parent_of(onosideboard, lemonaide).
 home(lemonaide, hut2).
 
-hill_person(opthamologist).
+%hill_person(opthamologist).
 hill_credentials(opthamologist, 'Opthamologist', Tribe, PW) :-
     pw(PW),
     tribe(Tribe).
