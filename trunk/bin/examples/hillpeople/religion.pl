@@ -23,7 +23,7 @@ god('Yoko Ono').
 long_name('Yoko Ono', 'The beloved of John').
 god('Latuppi').
 god('Raivo').
-long_name('Raivo', 'The Estonian').
+long_name('Raivo', 'The Estonian One').
 god('Snert').
 god('Thalamus').
 god('Prlg').
@@ -38,6 +38,7 @@ long_name('Medula', 'Medula Oblongata').
 god('Frontal Cortex').
 god('Flying Spaghetti Monster').
 god('Kastyke').  % courtesy of Erik Granström's "The Fifth Conflux" tetralogy
+long_name('Kastyke', 'Beloved by Ski').
 god('Knuth').
 god('Annie').
 god('Doug').
