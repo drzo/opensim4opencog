@@ -168,7 +168,7 @@ cogbot_throw(Error):-throw(cogbot_user_error(Error)).
 logon_bot(First, Last, Password, Loginuri, Location, BotID):-
         create_bot(First, Last, Password, Loginuri, Location, BotID),
         set_current_bot(BotID),
-	cli_call(BotID,'LoginBlocked',_).
+	cli_call(BotID,'Login',_).
 
 %------------------------------------------------------------------------------
 % create a botclient (will call startups (like botconfig.xml) but no call to implicit login)

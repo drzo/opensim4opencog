@@ -19,6 +19,9 @@ ebt:-hillpeople:ebt.
 say:-botID(Name, BotID),wb_botcmd(BotID,say(Name)),fail.
 say.
 
+wab(Cmd):- botID(_Name,ID),wb_botdo(ID,Cmd),fail.
+wab(_Cmd).
+
 :-use_module(library('dialect/ifprolog')).
 
 iki:-logon_bot('ExampleBot','Resident','pass123', "https://login.agni.lindenlab.com/cgi-bin/login.cgi","last",_).
