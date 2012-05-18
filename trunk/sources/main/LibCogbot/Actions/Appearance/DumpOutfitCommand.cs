@@ -17,9 +17,16 @@ namespace cogbot.Actions.Appearance
         public DumpOutfitCommand(BotClient testClient)
         {
             Name = "dumpoutfit";
-            Description = "Dumps all of the textures from an avatars outfit to the hard drive. Usage: dumpoutfit [avatar-uuid]";
+            Description = "Dumps all of the textures from an avatars outfit to the hard drive. Usage: dumpoutfit [avatar-spec]";
             Category = CommandCategory.Inventory;
-            Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Usage = Name + " [avatar-spec] // no avatar-spec then use $self";
+            Parameters = NamedParam.CreateParams(
+                NamedParam.Optional("target", typeof(SimAvatar),
+                                    "the prim or agent you wish to see " + Name +
+                                    " (see meets a specified <a href='wiki/BotCommands#AgentSpec'>Agent Spec</a>.)"));
+            ResultMap = NamedParam.CreateParams(
+                "message", typeof(string), "if success was false, the reason why",
+                "success", typeof(bool), "true if command was successful");
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

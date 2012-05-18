@@ -13,9 +13,16 @@ namespace cogbot.Actions.Appearance
         {
             TheBotClient = testClient;
             Name = "attachments";
-            Description = "Prints a list of the currently known agent attachments. Usage: attachments [prim-uuid]";
+            Description = "Prints a list of the currently known agent attachments or on another avatar";
+            Usage = Name + " [prim-spec] // no prim-spec then use $self";
             Category = CommandCategory.Appearance;
-            Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Parameters = NamedParam.CreateParams(
+                NamedParam.Optional("target", typeof(SimAvatar),
+                                    "the prim or agent you wish to see " + Name +
+                                    " (see meets a specified <a href='wiki/BotCommands#PrimSpec'>Prim Spec</a>.)"));
+            ResultMap = NamedParam.CreateParams(
+                "message", typeof(string), "if success was false, the reason why",
+                "success", typeof(bool), "true if command was successful");
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

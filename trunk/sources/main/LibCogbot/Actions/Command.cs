@@ -289,6 +289,11 @@ namespace cogbot.Actions
 
         public Command(BotClient bc)
         {
+            ResultMap = NamedParam.CreateParams(
+                "message", typeof(string), "if success was false, the reason why",
+                "success", typeof(bool), "true if command was successful");
+            Parameters = NamedParam.CreateParams("stuff", typeof (string), "this command is missing documentation!");
+
             _mClient = bc;
             WriteLine = StaticWriteLine;
             Name = GetType().Name.Replace("Command", "");

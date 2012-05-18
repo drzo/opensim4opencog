@@ -17,8 +17,15 @@ namespace cogbot.Actions.Appearance
         {
             Name = "clone";
             Description = "Clone the appearance of a nearby avatar. Usage: clone [name]";
+            Usage = Name + " [prim-spec] // no prim-spec then use $self";
             Category = CommandCategory.Appearance;
-            Parameters = new[] { new NamedParam(typeof(SimAvatar), typeof(UUID)) };
+            Parameters = NamedParam.CreateParams(
+                NamedParam.Optional("target", typeof(SimAvatar),
+                                    "the prim or agent you wish to see " + Name +
+                                    " (see meets a specified <a href='wiki/BotCommands#PrimSpec'>Prim Spec</a>.)"));
+            ResultMap = NamedParam.CreateParams(
+                "message", typeof(string), "if success was false, the reason why",
+                "success", typeof(bool), "true if command was successful");
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
