@@ -368,5 +368,10 @@ namespace MushDLR223.ScriptEngines
         {
             return null;
         }
+
+        public static object[] CreateParm(string name, Type type, string description)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
