@@ -8,6 +8,7 @@ using MushDLR223.ScriptEngines;
 
 namespace cogbot.Actions
 {
+    [Obsolete]
     class Whisper : Command, BotPersonalCommand, BotStatefullCommand
     {
         public UUID currentAvatar = UUID.Zero;
@@ -16,12 +17,15 @@ namespace cogbot.Actions
         public Whisper(BotClient Client)
             : base(Client)
         {
-            Description = "Whisper a message to a user.";
-            Usage = "To whisper a message to an avatar, type \"whisper to <avatar name>\"";
+            Description = "IM a user. Has nothing to do with SL 'whisper'";
+            Usage = "To whisper a message to an avatar, type \"whisper to <avatar name> <message>\" To reply to the last person who IMed you, type \"whisper <message>\"";
             Parameters =
-                NamedParam.CreateParams(NamedParam.CreateParm("target", typeof (Avatar), "who you are wispering to"),
-                                        NamedParam.CreateParm("message", typeof (string), "what you wisper"));
-            ResultMap = NamedParam.CreateParams("personFound", typeof(bool), "sentCorrect", typeof(bool));
+                NamedParam.CreateParams(
+                            "target", typeof (Avatar), "who you are IMing",
+                            "message", typeof (string), "what you IM");
+            ResultMap = NamedParam.CreateParams(
+                            "personFound", typeof(bool), "true iff we found the person to whisper to", 
+                            "sentCorrect", typeof(bool), "true iff we successfully sent the message");
             currentAvatar = UUID.Zero;
             currentSession = UUID.Zero;
         }
