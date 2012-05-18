@@ -18,7 +18,10 @@ namespace cogbot.Actions
         {
             Description = "Whisper a message to a user.";
             Usage = "To whisper a message to an avatar, type \"whisper to <avatar name>\"";
-
+            Parameters =
+                NamedParam.CreateParams(NamedParam.CreateParm("target", typeof (Avatar), "who you are wispering to"),
+                                        NamedParam.CreateParm("message", typeof (string), "what you wisper"));
+            ResultMap = NamedParam.CreateParams("personFound", typeof(bool), "sentCorrect", typeof(bool));
             currentAvatar = UUID.Zero;
             currentSession = UUID.Zero;
         }
