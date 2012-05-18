@@ -97,7 +97,8 @@ namespace cogbot.Actions
         /// <summary>
         /// Introspective Parameters for calling command from code
         /// </summary>
-        public NamedParam[] Parameters;
+        public NamedParam[][] ParameterVersions;
+        public NamedParam[] ResultMap;
 
         public Type CmdType;
         public Command WithBotClient;
@@ -120,9 +121,10 @@ namespace cogbot.Actions
             IsStateFul = live.IsStateFull || live is BotStatefullCommand;
             Name = live.Name;
             usageString = live.Usage;
-            Parameters = live.Parameters;
+            ParameterVersions = live.ParameterVersions;
             helpString = live.Description;
             Category = live.Category;
+            ResultMap = live.ResultMap;
             CmdType = live.GetType();
             CmdTypeConstructor = CmdType.GetConstructors()[0];
             IsGridClientCommand = CmdTypeConstructor.GetParameters()[0].ParameterType == typeof(GridClient);
@@ -190,7 +192,23 @@ namespace cogbot.Actions
         /// <summary>
         /// Introspective Parameters for calling command from code
         /// </summary>
-        public NamedParam[] Parameters;
+        public NamedParam[][] ParameterVersions;
+        public NamedParam[] Parameters
+        {
+            get
+            {
+                if (ParameterVersions == null || ParameterVersions.Length == 0) return null;
+                return ParameterVersions[0];
+            }
+            set
+            {
+                if (ParameterVersions == null)
+                {
+                    ParameterVersions = new NamedParam[1][];
+                }
+                ParameterVersions[0] = value;
+            }
+        }
         public NamedParam[] ResultMap;
 
         /// <summary>
