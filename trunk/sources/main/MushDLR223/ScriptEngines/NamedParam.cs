@@ -372,9 +372,9 @@ namespace MushDLR223.ScriptEngines
         {
             return paramz;
         }
-        public static object Optional(string name, Type type, string description)
+        public static NamedParam Optional(string name, Type type, string description)
         {
-            return null;
+            return default(NamedParam);
         }
     }
 }
