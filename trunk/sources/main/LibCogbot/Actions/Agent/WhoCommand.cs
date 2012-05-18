@@ -13,12 +13,16 @@ namespace cogbot.Actions.Agent
     public class WhoCommand: Command, RegionMasterCommand
     {
         public WhoCommand(BotClient testClient)
-		{
-			Name = "Who";
-			Description = "Lists seen avatars.";
+        {
+            Name = "Who";
+            Description = "Lists seen avatars.";
             Category = CommandCategory.Other;
-            Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
-		}
+            Parameters = NamedParam.CreateParams();
+            ResultMap = NamedParam.CreateParams(
+                "avatarList", typeof (List<Avatar>), "list of present avatars",
+                "message", typeof(string), "if success was false, the reason why",
+                "success", typeof (bool), "true if command was successful");
+        }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{

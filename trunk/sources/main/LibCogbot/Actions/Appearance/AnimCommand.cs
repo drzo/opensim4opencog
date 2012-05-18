@@ -15,11 +15,26 @@ namespace cogbot.Actions.Appearance
         {
             TheBotClient = testClient;
             Name = "anim";
-            Description = "Do a animation or gesture.  Usage:  anim [seconds] HOVER [seconds] 23423423423-4234234234-234234234-23423423  +CLAP -JUMP STAND";
+            Description = "List or do animation or gesture on Simulator.";
+            Usage =
+                @"Usage: anim // just lists anims currently ran
+                  Usage: anim stopall +HOVER 5 +23423423423-4234234234-234234234-23423423 10 -CLAP  " +
+                "// stop all current anims, begin hover, wait 5 seconds, begin clapping, wait 10 seconds, stop clapping ";
+
             Category = CommandCategory.Appearance;
-            Parameters = new[] { new NamedParam(typeof(SimAnimation), typeof(UUID)) };
+            ParameterVersions = NamedParam.CreateParamVersions(
+                NamedParam.CreateParams(),
+                NamedParam.CreateParams(
+                    NamedParam.Optional("stopall", typeof (int), "stops all current anims"),
+                    NamedParam.Optional("anim_0-N", typeof (UUID), "+/-animuuid"),
+                    NamedParam.Optional("seconds", typeof (int), "how long to pause for")
+                    ));
+            ResultMap = NamedParam.CreateParams(
+                "ranSteps", typeof (List<string>), "list of ran animsteps",
+                "message", typeof (string), "if success was false, the reason why",
+                "success", typeof (bool), "true if command was successful");
         }
-       
+
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             if (args.Length < 1)
