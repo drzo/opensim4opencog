@@ -196,7 +196,7 @@ namespace OpenMetaverse.StructuredData
          }
         public static OSD FromObject0(object value)
         {
-            if (value == null) { return new OSD(); }
+            if (value == null) { return new OSDNull(); }
             else if (value is bool) { return new OSDBoolean((bool)value); }
             else if (value is int) { return new OSDInteger((int)value); }
             else if (value is uint) { return new OSDBinary((uint)value); }
@@ -219,7 +219,7 @@ namespace OpenMetaverse.StructuredData
             else if (value is Vector4) { return FromVector4((Vector4)value); }
             else if (value is Quaternion) { return FromQuaternion((Quaternion)value); }
             else if (value is Color4) { return FromColor4((Color4)value); }
-            else return new OSD();
+            else return new OSDNull(value);
         }
         public static object ToObject(Type type, OSD value)
         {
@@ -1066,7 +1066,7 @@ namespace OpenMetaverse.StructuredData
             if (uuids == null)
             {
                 IsMissing();
-                return new OSD();
+                return new OSDNull();
             }
             if (uuids.Length == 0)
             {
@@ -1085,11 +1085,32 @@ namespace OpenMetaverse.StructuredData
                 }
                 else
                 {
-                    osd0 = new OSD();
+                    osd0 = new OSDNull();
                 }
                 osda.Add(osd0);
             }
             return osda;
+        }
+
+        public virtual object AsObject()
+        {
+            return null;
+        }
+    }
+
+    public class OSDNull : OSD
+    {
+        public OSDNull(object obj)
+        {
+            value = obj;
+        }
+        object value = null;
+        public OSDNull()
+        {            
+        }
+        public override object AsObject()
+        {
+            return value;
         }
     }
 
@@ -1098,6 +1119,10 @@ namespace OpenMetaverse.StructuredData
     /// </summary>
     public sealed class OSDBoolean : OSD
     {
+        public override object AsObject()
+        {
+            return value;
+        }
         private bool value;
 
         private static byte[] trueBinary = { 0x31 };
@@ -1124,6 +1149,10 @@ namespace OpenMetaverse.StructuredData
     /// </summary>
     public sealed class OSDInteger : OSD
     {
+        public override object AsObject()
+        {
+            return value;
+        }
         private int value;
 
         public override OSDType Type { get { return OSDType.Integer; } }
@@ -1151,6 +1180,10 @@ namespace OpenMetaverse.StructuredData
     /// </summary>
     public sealed class OSDReal : OSD
     {
+        public override object AsObject()
+        {
+            return value;
+        }
         private double value;
 
         public override OSDType Type { get { return OSDType.Real; } }
@@ -1218,6 +1251,10 @@ namespace OpenMetaverse.StructuredData
     /// </summary>
     public sealed class OSDString : OSD
     {
+        public override object AsObject()
+        {
+            return value;
+        }
         private string value;
 
         public override OSDType Type { get { return OSDType.String; } }
@@ -1322,6 +1359,10 @@ namespace OpenMetaverse.StructuredData
     /// </summary>
     public sealed class OSDUUID : OSD
     {
+        public override object AsObject()
+        {
+            return value;
+        }
         private UUID value = UUID.Zero;
 
         public override OSDType Type { get { return OSDType.UUID; } }
@@ -1343,6 +1384,10 @@ namespace OpenMetaverse.StructuredData
     /// </summary>
     public sealed class OSDDate : OSD
     {
+        public override object AsObject()
+        {
+            return value;
+        }
         private DateTime value;
 
         public override OSDType Type { get { return OSDType.Date; } }
@@ -1397,6 +1442,10 @@ namespace OpenMetaverse.StructuredData
     /// </summary>
     public sealed class OSDUri : OSD
     {
+        public override object AsObject()
+        {
+            return value;
+        }
         private Uri value;
 
         public override OSDType Type { get { return OSDType.URI; } }
@@ -1428,6 +1477,10 @@ namespace OpenMetaverse.StructuredData
     /// </summary>
     public sealed class OSDBinary : OSD
     {
+        public override object AsObject()
+        {
+            return value;
+        }
         private byte[] value;
 
         public override OSDType Type { get { return OSDType.Binary; } }
@@ -1533,8 +1586,12 @@ namespace OpenMetaverse.StructuredData
     /// <summary>
     /// 
     /// </summary>
-    public sealed class OSDMap : OSD, IDictionary<string, OSD>
+    public sealed class OSDMap : OSD, IDictionary<string, OSD>, IDictionary<string,object>
     {
+        public override object AsObject()
+        {
+            return value;
+        }
         private Dictionary<string, OSD> value;
 
         public override OSDType Type { get { return OSDType.Map; } }
@@ -1559,6 +1616,18 @@ namespace OpenMetaverse.StructuredData
 
         public override bool AsBoolean() { return value.Count > 0; }
 
+        /// <summary>
+        /// Returns an enumerator that iterates through the collection.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="T:System.Collections.Generic.IEnumerator`1"/> that can be used to iterate through the collection.
+        /// </returns>
+        /// <filterpriority>1</filterpriority>
+        IEnumerator<KeyValuePair<string, object>> IEnumerable<KeyValuePair<string, object>>.GetEnumerator()
+        {
+            throw new NotImplementedException();
+        }
+
         public override string ToString()
         {
             return OSDParser.SerializeJsonString(this, true);
@@ -1566,10 +1635,94 @@ namespace OpenMetaverse.StructuredData
 
         #region IDictionary Implementation
 
+        /// <summary>
+        /// Removes the first occurrence of a specific object from the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+        /// </summary>
+        /// <returns>
+        /// true if <paramref name="item"/> was successfully removed from the <see cref="T:System.Collections.Generic.ICollection`1"/>; otherwise, false. This method also returns false if <paramref name="item"/> is not found in the original <see cref="T:System.Collections.Generic.ICollection`1"/>.
+        /// </returns>
+        /// <param name="item">The object to remove from the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+        ///                 </param><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only.
+        ///                 </exception>
+        public bool Remove(KeyValuePair<string, object> item)
+        {
+            return Remove(ToOSDKV(item.Key, item.Value));
+        }
+
+        private KeyValuePair<string, OSD> ToOSDKV(string key, object value1)
+        {
+            return new KeyValuePair<string, OSD>(key, ToOSD(value1));
+        }
+
+        private OSD ToOSD(object value1)
+        {
+            return OSD.FromObject(value);
+        }
+
         public int Count { get { return value.Count; } }
         public bool IsReadOnly { get { return false; } }
         public ICollection<string> Keys { get { return value.Keys; } }
+
+        /// <summary>
+        /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </returns>
+        ICollection<object> IDictionary<string, object>.Values
+        {
+            get { throw new NotImplementedException(); }
+        }
+
         public ICollection<OSD> Values { get { return value.Values; } }
+
+        /// <summary>
+        /// Gets the value associated with the specified key.
+        /// </summary>
+        /// <returns>
+        /// true if the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/> contains an element with the specified key; otherwise, false.
+        /// </returns>
+        /// <param name="key">The key whose value to get.
+        ///                 </param><param name="value">When this method returns, the value associated with the specified key, if the key is found; otherwise, the default value for the type of the <paramref name="value"/> parameter. This parameter is passed uninitialized.
+        ///                 </param><exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.
+        ///                 </exception>
+        public bool TryGetValue(string key, out object value)
+        {
+            OSD v;
+            if (!TryGetValue(key, out v))
+            {
+                value = null;
+                return false;
+            }
+            value = v.AsObject();
+            return true;
+        }
+
+        /// <summary>
+        /// Gets or sets the element with the specified key.
+        /// </summary>
+        /// <returns>
+        /// The element with the specified key.
+        /// </returns>
+        /// <param name="key">The key of the element to get or set.
+        ///                 </param><exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.
+        ///                 </exception><exception cref="T:System.Collections.Generic.KeyNotFoundException">The property is retrieved and <paramref name="key"/> is not found.
+        ///                 </exception><exception cref="T:System.NotSupportedException">The property is set and the <see cref="T:System.Collections.Generic.IDictionary`2"/> is read-only.
+        ///                 </exception>
+        object IDictionary<string, object>.this[string key]
+        {
+            get
+            {
+                OSD ret = this[key];
+                return ret.AsObject();
+            }
+
+            set
+            {
+                this[key] = OSD.FromObject(value);
+            }
+        }
+
         public OSD this[string key]
         {
             get
@@ -1578,7 +1731,7 @@ namespace OpenMetaverse.StructuredData
                 if (this.value.TryGetValue(key, out llsd))
                     return llsd;
                 else
-                    return new OSD();
+                    return new OSDNull();
             }
             set { this.value[string.Intern(key)] = value; }
         }
@@ -1586,6 +1739,20 @@ namespace OpenMetaverse.StructuredData
         public bool ContainsKey(string key)
         {
             return value.ContainsKey(key);
+        }
+
+        /// <summary>
+        /// Adds an element with the provided key and value to the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// </summary>
+        /// <param name="key">The object to use as the key of the element to add.
+        ///                 </param><param name="value">The object to use as the value of the element to add.
+        ///                 </param><exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.
+        ///                 </exception><exception cref="T:System.ArgumentException">An element with the same key already exists in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        ///                 </exception><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.IDictionary`2"/> is read-only.
+        ///                 </exception>
+        public void Add(string key, object value)
+        {
+            throw new NotImplementedException();
         }
 
         public void Add(string key, OSD llsd)
@@ -1608,9 +1775,53 @@ namespace OpenMetaverse.StructuredData
             return value.TryGetValue(key, out llsd);
         }
 
+        /// <summary>
+        /// Adds an item to the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+        /// </summary>
+        /// <param name="item">The object to add to the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+        ///                 </param><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only.
+        ///                 </exception>
+        public void Add(KeyValuePair<string, object> item)
+        {
+            throw new NotImplementedException();
+        }
+
         public void Clear()
         {
             value.Clear();
+        }
+
+        /// <summary>
+        /// Determines whether the <see cref="T:System.Collections.Generic.ICollection`1"/> contains a specific value.
+        /// </summary>
+        /// <returns>
+        /// true if <paramref name="item"/> is found in the <see cref="T:System.Collections.Generic.ICollection`1"/>; otherwise, false.
+        /// </returns>
+        /// <param name="item">The object to locate in the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+        ///                 </param>
+        public bool Contains(KeyValuePair<string, object> item)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Copies the elements of the <see cref="T:System.Collections.Generic.ICollection`1"/> to an <see cref="T:System.Array"/>, starting at a particular <see cref="T:System.Array"/> index.
+        /// </summary>
+        /// <param name="array">The one-dimensional <see cref="T:System.Array"/> that is the destination of the elements copied from <see cref="T:System.Collections.Generic.ICollection`1"/>. The <see cref="T:System.Array"/> must have zero-based indexing.
+        ///                 </param><param name="arrayIndex">The zero-based index in <paramref name="array"/> at which copying begins.
+        ///                 </param><exception cref="T:System.ArgumentNullException"><paramref name="array"/> is null.
+        ///                 </exception><exception cref="T:System.ArgumentOutOfRangeException"><paramref name="arrayIndex"/> is less than 0.
+        ///                 </exception><exception cref="T:System.ArgumentException"><paramref name="array"/> is multidimensional.
+        ///                     -or-
+        ///                 <paramref name="arrayIndex"/> is equal to or greater than the length of <paramref name="array"/>.
+        ///                     -or-
+        ///                     The number of elements in the source <see cref="T:System.Collections.Generic.ICollection`1"/> is greater than the available space from <paramref name="arrayIndex"/> to the end of the destination <paramref name="array"/>.
+        ///                     -or-
+        ///                     Type <paramref name="T"/> cannot be cast automatically to the type of the destination <paramref name="array"/>.
+        ///                 </exception>
+        public void CopyTo(KeyValuePair<string, object>[] array, int arrayIndex)
+        {
+            throw new NotImplementedException();
         }
 
         public bool Contains(KeyValuePair<string, OSD> kvp)
@@ -1653,6 +1864,10 @@ namespace OpenMetaverse.StructuredData
     /// </summary>
     public sealed class OSDArray : OSD, IList<OSD>
     {
+        public override object AsObject()
+        {
+            return OSD.ToObject(typeof(object[]), this);
+        }
         private List<OSD> value;
 
         public override OSDType Type { get { return OSDType.Array; } }

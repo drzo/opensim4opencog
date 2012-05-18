@@ -131,14 +131,14 @@ namespace OpenMetaverse.StructuredData
         {
             int character = ReadAndSkipWhitespace(reader);
             if (character < 0)
-                return new OSD(); // server returned an empty file, so we're going to pass along a null LLSD object
+                return new OSDNull(); // server returned an empty file, so we're going to pass along a null LLSD object
 
             OSD osd;
             int matching;
             switch ((char)character)
             {
                 case undefNotationValue:
-                    osd = new OSD();
+                    osd = new OSDNull();
                     break;
                 case trueNotationValueOne:
                     osd = OSD.FromBoolean(true);
