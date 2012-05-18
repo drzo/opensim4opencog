@@ -104,7 +104,11 @@ namespace cogbot.Actions
         public ConstructorInfo CmdTypeConstructor;
         public string Description
         {
-            get { return GetDescription(); }
+            get
+            {
+                if (!string.IsNullOrEmpty(helpString)) return helpString;
+                return helpString + "  Usage: " + usageString; 
+            }
         }
 
         public CommandInfo(Command live)
@@ -117,7 +121,7 @@ namespace cogbot.Actions
             Name = live.Name;
             usageString = live.Usage;
             Parameters = live.Parameters;
-            helpString = live.makeHelpString();
+            helpString = live.Description;
             Category = live.Category;
             CmdType = live.GetType();
             CmdTypeConstructor = CmdType.GetConstructors()[0];
@@ -139,11 +143,6 @@ namespace cogbot.Actions
             return cmd;
         }
 
-        public virtual string GetDescription()
-        {
-            if (!string.IsNullOrEmpty(helpString)) return helpString;
-            return helpString + "  Usage: " + usageString;
-        }
     }
 
     public abstract class Command : IComparable
@@ -154,6 +153,39 @@ namespace cogbot.Actions
         protected string helpString;
         protected string usageString;
 
+        virtual public string Description
+        {
+            get
+            {
+                return helpString + "  Usage: " + Usage;
+            }
+            set
+            {
+                if (String.IsNullOrEmpty(value)) return;
+                int half = value.ToLower().IndexOf("usage");
+                if (half == -1)
+                {
+                    half = value.ToLower().IndexOf("use");
+                }
+                if (half == -1)
+                {
+                    helpString = value;
+                    return;
+                }
+                helpString = value.Substring(0, half).TrimEnd();
+                Usage = value.Substring(half);
+
+            }
+        }
+
+        public virtual string Usage
+        {
+            get { return usageString; }
+            set
+            {
+                usageString = value.Trim().Replace("Usage:", " ").Replace("usage:", " ").Replace("Use:", " ").Trim();
+            }
+        }
 
         /// <summary>
         /// Introspective Parameters for calling command from code
@@ -161,6 +193,29 @@ namespace cogbot.Actions
         public NamedParam[] Parameters;
         public NamedParam[] ResultMap;
 
+        /// <summary>
+        /// Show commandusage
+        /// </summary>
+        /// <returns>CmdResult Failure with a string containing the parameter usage instructions</returns>
+        public virtual CmdResult ShowUsage()
+        {
+            return ShowUsage(Usage);
+        }
+        public virtual CmdResult ShowUsage(string usg)
+        {
+            CmdResult res = Failure("Usage: //" + usg);
+            res.InvalidArgs = true;
+            return res;
+        }
+
+        protected T GetParamValue<T>(string paramName, Parser parser)
+        {
+            foreach (NamedParam param in Parameters)
+            {
+
+            }
+            return default(T);
+        }
 
 
 
@@ -260,39 +315,6 @@ namespace cogbot.Actions
         } // method: acceptInput
 
 
-        public string Description
-        {
-            get
-            {
-                return GetDescription();
-            }
-            set
-            {
-                if (String.IsNullOrEmpty(value)) return;
-                int half = value.ToLower().IndexOf("usage");
-                if (half == -1)
-                {
-                    half = value.ToLower().IndexOf("use");
-                }
-                if (half==-1)
-                {
-                    helpString = value;
-                    return;
-                }
-                Description = value.Substring(0, half).TrimEnd();
-                Usage = value.Substring(half);
-
-            }
-        }
-
-        public string Usage
-        {
-            get { return makeUsageString(); }
-            set
-            {
-                usageString = value.Trim().Replace("Usage:", " ").Replace("usage:", " ").Replace("Use:", " ").Trim();
-            }
-        }
 
         /// <summary>
         /// When set to true, think will be called.
@@ -418,25 +440,8 @@ namespace cogbot.Actions
             else
                 throw new ArgumentException("Object is not of type Command.");
         }
-        public virtual string GetDescription()
-        {
-            if (!string.IsNullOrEmpty(helpString)) return helpString;
-            return helpString + "  Usage: " + Usage;
-        }
 
-
-        public virtual string makeHelpString()
-        {
-            if (!string.IsNullOrEmpty(helpString)) return helpString;
-            return helpString;
-        }
-
-        public virtual string makeUsageString()
-        {
-            if (!String.IsNullOrEmpty(usageString)) return usageString;
-            return helpString;
-        }
-                
+  
         // Helpers
 
         protected Vector3 GetSimPosition()
@@ -542,22 +547,6 @@ namespace cogbot.Actions
             return cr;
         }
 
-
-        /// <summary>
-        /// Show commandusage
-        /// </summary>
-        /// <returns>CmdResult Failure with a string containing the parameter usage instructions</returns>
-        public virtual CmdResult ShowUsage()
-        {
-            return ShowUsage(Usage);
-        }
-        public virtual CmdResult ShowUsage(string usg)
-        {
-            CmdResult res = Failure("Usage: //" +usg);
-            res.InvalidArgs = true;
-            return res;
-        }
-
         protected bool TryEnumParse(Type type, string[] names, int argStart, out int argsUsed, out object value)
         {
             ulong d = 0;
@@ -648,13 +637,5 @@ namespace cogbot.Actions
             return Client.Network.CurrentSim;
         }
 
-        protected T GetParamValue<T>(string paramName, Parser parser)
-        {
-            foreach (NamedParam param in Parameters)
-            {
-                
-            }
-            return default(T);
-        }
     }
 }

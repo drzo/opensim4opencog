@@ -18,6 +18,8 @@ namespace cogbot.Actions.Communication
             Name = "im";
             Description = "Instant message someone. Usage: im [[firstname] [lastname]] [message]";
             Category = CommandCategory.Communication;
+            Parameters = NamedParam.CreateParams("target", typeof (Avatar), "message", typeof (string));
+            ResultMap = NamedParam.CreateParams("personFound", typeof(bool), "sentCorrect", typeof(bool));
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

@@ -19,30 +19,40 @@ namespace cogbot.Actions.Land
             Parameters = new []{ new NamedParam(typeof(SimObject), typeof(UUID))};
         }
 
-        public override string makeHelpString()
+        public override string Description
         {
-            BotClient Client = TheBotClient;
-            string str = "Describe ";
-            string[] names = new string[Client.describers.Count];
-            Client.describers.Keys.CopyTo(names, 0);
-            for (int i = 0; i < Client.describers.Count - 1; ++i)
-                str += names[i] + ", ";
-            str += "or " + names[Client.describers.Count - 1] + ".";
-            return str;
+            get
+            {
+                BotClient Client = TheBotClient;
+                string str = "Describe ";
+                string[] names = new string[Client.describers.Count];
+                Client.describers.Keys.CopyTo(names, 0);
+                for (int i = 0; i < Client.describers.Count - 1; ++i)
+                    str += names[i] + ", ";
+                str += "or " + names[Client.describers.Count - 1] + ".";
+                return str;
+            }
+            set
+            {
+                base.Description = value;
+            }
         }
 
-        public override string makeUsageString()
+        public override string Usage
         {
+            get
+            {
 
-            BotClient Client = TheBotClient;
-            string str = "\"describe\": describes everything around you \r\n you can also type ";
-            string[] names = new string[Client.describers.Count];
-            Client.describers.Keys.CopyTo(names, 0);
-            for (int i = 0; i < Client.describers.Count - 1; ++i)
-                str += "\"describe " + names[i] + "\", ";
-            str += "or \"describe " + names[Client.describers.Count - 1] + "\" to describe them respectively.";
+                BotClient Client = TheBotClient;
+                string str = "\"describe\": describes everything around you \r\n you can also type ";
+                string[] names = new string[Client.describers.Count];
+                Client.describers.Keys.CopyTo(names, 0);
+                for (int i = 0; i < Client.describers.Count - 1; ++i)
+                    str += "\"describe " + names[i] + "\", ";
+                str += "or \"describe " + names[Client.describers.Count - 1] + "\" to describe them respectively.";
 
-            return str;
+                return str;
+            }
         }
 
         public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
