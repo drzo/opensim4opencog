@@ -543,6 +543,12 @@ namespace cogbot.Actions
         {
             try
             {
+                if (!string.IsNullOrEmpty(WriteLineResultName))
+                {
+                    string before = "" + Results[WriteLineResultName];
+                    string newstring = before + "\n" + usage;
+                    Results[WriteLineResultName] = newstring.TrimStart();                    
+                }
                 WriteLine(usage);
             }
             catch (Exception e)
@@ -665,6 +671,10 @@ namespace cogbot.Actions
             argsUsed = 0;
             return Client.Network.CurrentSim;
         }
-
+        public string WriteLineResultName = "message";
+        protected void SetWriteLine(string resultName)
+        {
+            WriteLineResultName = resultName;
+        }
     }
 }

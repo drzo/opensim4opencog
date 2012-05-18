@@ -25,8 +25,8 @@ namespace cogbot.Actions.Appearance
             ParameterVersions = NamedParam.CreateParamVersions(
                 NamedParam.CreateParams(),
                 NamedParam.CreateParams(
-                    NamedParam.Optional("stopall", typeof (int), "stops all current anims"),
-                    NamedParam.Optional("anim_0-N", typeof (UUID), "+/-animuuid"),
+                    NamedParam.Optional("stopall", typeof (bool), "stops all current anims"),
+                    NamedParam.Optional("anim_0-N", typeof (SimAnimation), "+/-animuuid"),
                     NamedParam.Optional("seconds", typeof (int), "how long to pause for")
                     ));
             ResultMap = NamedParam.CreateParams(
@@ -53,7 +53,7 @@ namespace cogbot.Actions.Appearance
                 WriteLine("Currently: {0}", alist);
                 return ShowUsage();// " anim [seconds] HOVER [seconds] 23423423423-4234234234-234234234-23423423  +CLAP -JUMP STAND";           
             }
-
+            int argStart = 0;
             string directive = args[0].ToLower();
 
             if (directive == "stopall")
@@ -66,12 +66,13 @@ namespace cogbot.Actions.Appearance
                 int knownCount = animations.Count;
 
                 Client.Self.Animate(animations, true);
-                return Success("Stopping " + animations.Count + " animation(s)");
+                argStart++;
             }
-
+            
             int time = 1300; //should be long enough for most animations
             List<KeyValuePair<UUID, int>> amins = new List<KeyValuePair<UUID, int>>();
-            for (int i = 0; i < args.Length; i++)
+            base.SetWriteLine("message");
+            for (int i = argStart; i < args.Length; i++)
             {
                 int mode = 0;
                 string a = args[i];
@@ -129,6 +130,7 @@ namespace cogbot.Actions.Appearance
                  }
                 amins.Add(new KeyValuePair<UUID,int>(anim,mode));
             }
+            base.SetWriteLine("argStep");
             foreach (KeyValuePair<UUID, int> anim in amins)
             {
                 try
