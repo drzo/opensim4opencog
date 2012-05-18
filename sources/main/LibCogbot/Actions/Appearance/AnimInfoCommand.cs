@@ -14,9 +14,13 @@ namespace cogbot.Actions.Appearance
         {
             TheBotClient = testClient;
             Name = "animinfo";
-            Description = "Show debug info about anims.  Usage:  animinfo [match]";
+            Description = "Show debug info about anims.";
+            Usage = "animinfo [match]";
             Category = CommandCategory.Appearance;
-            Parameters = new[] { new NamedParam(typeof(SimAnimation), typeof(UUID)) };
+            Parameters = NamedParam.CreateParams(NamedParam.Optional("anim", typeof (SimAnimation), "the animation you want info about such as duration"));
+            ResultMap = NamedParam.CreateParams(
+                "message", typeof(string), "debug infos about the animations",
+                "success", typeof(bool), "true if command was successful");
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

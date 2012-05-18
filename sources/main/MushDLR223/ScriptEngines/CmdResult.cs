@@ -24,7 +24,9 @@ namespace MushDLR223.ScriptEngines
             }
             set
             {
-                this["Message"] = value;
+                string before = "" + this["Message"];
+                string newstring = before + "\n" + value;
+                Results["Message"] = newstring.TrimStart();
             }
         }
         public bool InvalidArgs

@@ -130,7 +130,7 @@ namespace cogbot.Actions.Appearance
                  }
                 amins.Add(new KeyValuePair<UUID,int>(anim,mode));
             }
-            base.SetWriteLine("argStep");
+            base.SetWriteLine("ranSteps");
             foreach (KeyValuePair<UUID, int> anim in amins)
             {
                 try
