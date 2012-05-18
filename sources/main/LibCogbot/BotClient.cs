@@ -861,7 +861,7 @@ namespace cogbot
             {
                 foreach (var cmd in Commands.Values)
                 {
-                    if (cmd.IsStateFull)
+                    if (cmd.IsStateFul)
                     {
                         actions.Add(cmd.WithBotClient);
                     }
@@ -1995,7 +1995,7 @@ namespace cogbot
                 CommandInfo command = new CommandInfo(live);
                 Commands.Add(name, command);
                 command.Name = orginalName;
-                if (command.IsStateFull)
+                if (command.IsStateFul)
                 {
                     live.TheBotClient = this;
                     command.WithBotClient = live;

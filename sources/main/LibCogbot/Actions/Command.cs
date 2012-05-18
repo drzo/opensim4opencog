@@ -88,11 +88,11 @@ namespace cogbot.Actions
 
     public class  CommandInfo
     {
-        public bool IsStateFull;
+        public bool IsStateFul;
         public CommandCategory Category;
         public string Name { get; set; }
-        public string helpString;
-        public string usageString;
+        public string helpString;  // overview
+        public string usageString;   // after the colon of Usage:
         public bool IsGridClientCommand = false;
         /// <summary>
         /// Introspective Parameters for calling command from code
@@ -117,7 +117,7 @@ namespace cogbot.Actions
         }
         public void LoadFromCommand(Command live)
         {
-            IsStateFull = live.IsStateFull || live is BotStatefullCommand;
+            IsStateFul = live.IsStateFull || live is BotStatefullCommand;
             Name = live.Name;
             usageString = live.Usage;
             Parameters = live.Parameters;
@@ -126,7 +126,7 @@ namespace cogbot.Actions
             CmdType = live.GetType();
             CmdTypeConstructor = CmdType.GetConstructors()[0];
             IsGridClientCommand = CmdTypeConstructor.GetParameters()[0].ParameterType == typeof(GridClient);
-            if (IsStateFull) WithBotClient = live;
+            if (IsStateFul) WithBotClient = live;
         }
 
         public Command MakeInstance(BotClient client)
