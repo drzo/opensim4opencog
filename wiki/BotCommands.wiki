@@ -206,6 +206,48 @@ See  issue 9  for a bit more info about format of args
 Douglas - feel free to blow this away if you integrate the info
 in here
 
+==  Inventory ==
+
+Inventory is referred to by a syntax similar to paths in unix file systems.
+
+Inventory paths start at 'My Inventory' as /.  So a typical set of clothing might be in
+
+/Clothing/My Party Dress
+
+so
+
+wear /Clothing/My Party Dress
+
+The botcmd parser tries to parse correctly without quotes, but you can force it to accept spaces with double quotes
+
+wear "/Clothing/My Party Dress"
+
+It's possible to change the current directory in inventory.
+
+cd /Clothing
+
+now you can refer to local path by omitting the leading /
+
+wear "My Party Dress"
+
+. is the current folder
+
+.. is the parent folder, so
+
+if you have 
+
+cd /Clothing/theater/costumes/victorian/ball gown
+
+then you can refer to 
+
+/Clothing/theater/costumes/edwardian
+
+as 
+
+../../edwardian
+
+
+
 == Sources for us editors ==
 
 see Cogbot.listeners.WorldCommandParsing  for list of prepositions and variables
