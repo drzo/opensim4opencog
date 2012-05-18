@@ -9,7 +9,7 @@ using MushDLR223.ScriptEngines;
 
 namespace cogbot.Actions.Agent
 {
-    public class ProfileCloneCommand : Command, BotPersonalCommand
+    public class ProfileCloneCommand : Command, BotPersonalCommand, BotStatefullCommand
     {
         Avatar.AvatarProperties Properties;
         Avatar.Interests Interests;
@@ -26,11 +26,27 @@ namespace cogbot.Actions.Agent
         {
 
             Name = "Profile Clone";
-            Description = "Clones another avatars profile as closely as possible. WARNING: This command will " +
-                "destroy your existing profile! Usage: profileclone [targetuuid]";
+            Description = "Clones another avatars profile as closely as possible. WARNING: This command will destroy your existing profile!";
+            Usage ="profileclone [targetuuid]";
             Category = CommandCategory.Other;
-            Parameters = new [] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Parameters = NamedParam.CreateParams("agent", typeof(UUID), "agent you are going to clone");
+            ResultMap = NamedParam.CreateParams(
+                "reason", typeof(string), "if success was false, the reason why",
+                "success", typeof(bool), "true if command was successful");
         }
+
+        #region Implementation of IDisposable
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+
+        }
+
+        #endregion
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
@@ -163,6 +179,5 @@ namespace cogbot.Actions.Agent
                     ReceivedProfileEvent.Set();
             }
         }
-
     }
 }

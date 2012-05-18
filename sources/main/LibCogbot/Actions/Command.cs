@@ -94,6 +94,16 @@ namespace cogbot.Actions
         public string helpString;  // overview
         public string usageString;   // after the colon of Usage:
         public bool IsGridClientCommand = false;
+
+        public bool IsObsolete
+        {
+            get
+            {
+                if (CmdType.GetCustomAttributes(typeof(ObsoleteAttribute), false) != null) return true;
+                return false;
+            }
+        }
+
         /// <summary>
         /// Introspective Parameters for calling command from code
         /// </summary>
@@ -226,6 +236,7 @@ namespace cogbot.Actions
             return res;
         }
 
+        public IDictionary<string, object> Results = new OSDMap();
         protected T GetParamValue<T>(string paramName, Parser parser)
         {
             foreach (NamedParam param in Parameters)
@@ -554,13 +565,13 @@ namespace cogbot.Actions
             {
                 message = Name + ": " + message;
             }
-            var cr = new CmdResult(message, tf, new OSDMap());
+            var cr = new CmdResult(message, tf, Results);
             LocalWL(cr.ToString());
             return cr;
         }
         protected CmdResult SuccessOrFailure()
         {
-            var cr = new CmdResult(Name + " " + failure + " failures and " + success + " successes", failure == 0, new OSDMap());
+            var cr = new CmdResult(Name + " " + failure + " failures and " + success + " successes", failure == 0, Results);
             LocalWL(cr.ToString());
             return cr;
         }
