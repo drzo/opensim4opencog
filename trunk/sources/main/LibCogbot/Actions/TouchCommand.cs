@@ -12,9 +12,14 @@ namespace cogbot.Actions
         public TouchCommand(BotClient testClient)
 		{
 			Name = "touch";
-			Description = "Attempt to touch a prim with specified UUID";
+			Description = @"Touch a prim that meets a specified <a href='wiki/BotCommands#PrimSpec'>Prim Spec</a>.
+Ignores the object's default action, always touches.";
             Category = CommandCategory.Objects;
-            Parameters = new [] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
+            Parameters = NamedParam("object", typeof(SimObject),
+                "The object to touch, as specified in <a href='wiki/BotCommands#PrimSpec'>Prim Spec</a>");
+            ResultMap = NamedParam.CreateParams(
+                 "message", typeof(string), "if success was false, the reason why",
+                 "success", typeof(bool), "true if we touched the object");
 		}
 		
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

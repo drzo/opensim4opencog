@@ -14,9 +14,11 @@ namespace cogbot.Actions.Agent
         public Use(BotClient Client)
             : base(Client)
         {
-            Description = "Use an item from inventory or world.";
+            Description = "Interface to the OpenSims module. <a href='wiki/TheOpenSims'>Documentation Here</a>";
+            Usage = "DMILES TODO";
             Category = CommandCategory.Objects;
-            Parameters = new[] { new NamedParam(typeof(SimPosition), typeof(UUID)) };
+            Parameters = new[] { new NamedParam(typeof(SimPosition), typeof(UUID)) };  //DMILES TODO
+            // DMILE
             Name = "Use..";
         }
 
