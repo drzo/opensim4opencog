@@ -226,6 +226,10 @@ It's possible to change the current directory in inventory.
 
 cd /Clothing
 
+and discover the current directory with 
+
+pwd
+
 now you can refer to local path by omitting the leading /
 
 wear "My Party Dress"
