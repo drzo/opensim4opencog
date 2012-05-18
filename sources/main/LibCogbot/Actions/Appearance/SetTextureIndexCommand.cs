@@ -16,13 +16,15 @@ namespace cogbot.Actions.Appearance
         public SetTextureIndexCommand(BotClient testClient)
         {
             Name = "SetTexture";
-            Description = "Set appearance texture of avatar. Usage: SetTexture [face-index] [texture-uuid]";
+            Description = "Set appearance texture of avatar.";
+            Usage = "Usage: SetTexture [face-index] [texture-uuid]";
             Category = CommandCategory.Appearance;
-            Parameters = new[]
-                             {
-                                 new NamedParam(typeof (AvatarTextureIndex), typeof (AvatarTextureIndex)),
-                                 new NamedParam(typeof (SimTexture), typeof (UUID))
-                             };
+            Parameters = NamedParam.CreateParams(
+                "textureIndex", typeof (AvatarTextureIndex), "face index of where to set the texture",
+                "texture", typeof (SimTexture), "texture UUID to set the face");
+            ResultMap = NamedParam.CreateParams(
+                "message", typeof(string), "if success was false, the reason why",
+                "success", typeof(bool), "true if command was successful");
         }
         /// <summary>
         /// //settexture 5 8dcd4a48-2d37-4909-9f78-f7a9eb4ef903

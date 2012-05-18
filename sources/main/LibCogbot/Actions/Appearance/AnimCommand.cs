@@ -27,10 +27,10 @@ namespace cogbot.Actions.Appearance
                 NamedParam.CreateParams(
                     NamedParam.Optional("stopall", typeof (bool), "stops all current anims"),
                     NamedParam.Optional("anim_0-N", typeof (SimAnimation), "+/-animuuid"),
-                    NamedParam.Optional("seconds", typeof (int), "how long to pause for")
-                    ));
+                    NamedParam.Optional("seconds", typeof (int), "how long to pause for"),
+                    NamedParam.Optional("gesture_0-N", typeof (SimAnimation), "gesture to play at this step")));
             ResultMap = NamedParam.CreateParams(
-                "ranSteps", typeof (List<string>), "list of ran animsteps",
+                "ranSteps", typeof (List<string>), "list of ran steps",
                 "message", typeof (string), "if success was false, the reason why",
                 "success", typeof (bool), "true if command was successful");
         }
@@ -118,7 +118,11 @@ namespace cogbot.Actions.Appearance
                 }
                 if (anim == UUID.Zero)
                 {
-                    WriteLine("skipping unknown animation " + a);
+                    anim = WorldSystem.GetAssetUUID(a, AssetType.Gesture);
+                }
+                if (anim == UUID.Zero)
+                {
+                    WriteLine("skipping unknown animation/gesture " + a);
                     continue;
                 }
                  if (mode==0)

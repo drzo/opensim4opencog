@@ -15,7 +15,7 @@ namespace cogbot.Actions.Appearance
             TheBotClient = testClient;
             Name = "animinfo";
             Description = "Show debug info about anims.";
-            Usage = "animinfo [match]";
+            Usage = Name + " [match]";
             Category = CommandCategory.Appearance;
             Parameters = NamedParam.CreateParams(NamedParam.Optional("anim", typeof (SimAnimation), "the animation you want info about such as duration"));
             ResultMap = NamedParam.CreateParams(
