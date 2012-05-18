@@ -31,8 +31,8 @@ namespace cogbot.Actions
         Security
     }
     /// <summary>
-    /// An interface for commands is only invoked on Grid mastering bots
-    /// Such as Directory info requests (10 bots doing the command at once will create problems)   
+    /// Ensure the reflection API is not used to load this command
+    /// The command is loaded likely byu the plugin 
     /// </summary>
     public interface NotAutoLoaded : BotCommand
     {
@@ -72,13 +72,12 @@ namespace cogbot.Actions
     /// <summary>
     /// An interface for commands that DO REQUIRE a connected grid client
     /// such as say,jump,movement
-    /// </summary>
+    /// </summary>    
     public interface BotPersonalCommand : BotCommand
     {
     }
     /// <summary>
-    /// An interface for commands that do not require a connected grid client
-    /// such as Login or settings but still targets each bot individually
+    /// An interface for commands that are not recreated per call instance
     /// </summary>
     public interface BotStatefullCommand : BotCommand, IDisposable
     {
@@ -128,6 +127,13 @@ namespace cogbot.Actions
 
         public Command MakeInstance(BotClient client)
         {
+            if (WithBotClient != null)
+            {
+                if (WithBotClient.TheBotClient == client)
+                {
+                    return WithBotClient;
+                }
+            }
             var cmd = (Command) CmdTypeConstructor.Invoke(new object[] {client});
             cmd.TheBotClient = client;
             return cmd;
@@ -153,6 +159,8 @@ namespace cogbot.Actions
         /// Introspective Parameters for calling command from code
         /// </summary>
         public NamedParam[] Parameters;
+        public NamedParam[] ResultMap;
+
 
 
 
