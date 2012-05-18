@@ -1,6 +1,10 @@
 ﻿/*
  * This is the main for the actual headless cogbot processor.
  * Usually it's run by the Radegast cogbot plugin
+ * 
+ *      "you're going to find lots of things in the code that make little sense"
+ *                                             - dmiles, 5/18/2012
+ *                                             
  */
 
 using System;
