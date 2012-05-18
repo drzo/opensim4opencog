@@ -7,19 +7,16 @@ using MushDLR223.ScriptEngines;
 
 namespace cogbot.Actions.System
 {
-    public class ShowEffectsCommand : Command, RegionMasterCommand
+    public class ShowEffectsCommand : Command, RegionMasterCommand, BotStatefullCommand
     {
         bool ShowEffects = false;
 
         public ShowEffectsCommand(BotClient testClient)
+            : base(testClient)
         {
             Name = "showeffects";
             Description = "Prints out information for every viewer effect that is received. Usage: showeffects [on/off]";
             Category = CommandCategory.Other;
-
-            testClient.Avatars.ViewerEffect += new EventHandler<ViewerEffectEventArgs>(Avatars_ViewerEffect);
-            testClient.Avatars.ViewerEffectPointAt += new EventHandler<ViewerEffectPointAtEventArgs>(Avatars_ViewerEffectPointAt);
-            testClient.Avatars.ViewerEffectLookAt += new EventHandler<ViewerEffectLookAtEventArgs>(Avatars_ViewerEffectLookAt);            
         }
 
         void Avatars_ViewerEffectLookAt(object sender, ViewerEffectLookAtEventArgs e)
@@ -60,6 +57,9 @@ namespace cogbot.Actions.System
             {
                 if (args[0] == "on")
                 {
+                    Client.Avatars.ViewerEffect += new EventHandler<ViewerEffectEventArgs>(Avatars_ViewerEffect);
+                    Client.Avatars.ViewerEffectPointAt += new EventHandler<ViewerEffectPointAtEventArgs>(Avatars_ViewerEffectPointAt);
+                    Client.Avatars.ViewerEffectLookAt += new EventHandler<ViewerEffectLookAtEventArgs>(Avatars_ViewerEffectLookAt);
                     ShowEffects = true;
                     return Success("Viewer effects will be shown on the console");
                 }
@@ -75,5 +75,19 @@ namespace cogbot.Actions.System
         }
         }
 
+        #region Implementation of IDisposable
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+            Client.Avatars.ViewerEffect -= new EventHandler<ViewerEffectEventArgs>(Avatars_ViewerEffect);
+            Client.Avatars.ViewerEffectPointAt -= new EventHandler<ViewerEffectPointAtEventArgs>(Avatars_ViewerEffectPointAt);
+            Client.Avatars.ViewerEffectLookAt -= new EventHandler<ViewerEffectLookAtEventArgs>(Avatars_ViewerEffectLookAt);            
+        }
+
+        #endregion
     }
 }

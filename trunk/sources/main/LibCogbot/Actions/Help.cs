@@ -27,8 +27,8 @@ namespace cogbot.Actions.System
                 mustHave = args.str.ToLower();
             }
             int found = 0;
-            SortedDictionary<string, Command> dictionary = new SortedDictionary<string, Command>(TheBotClient.ClientManager.groupActions);
-            foreach (KeyValuePair<string, Command> action in TheBotClient.Commands)
+            var dictionary = new SortedDictionary<string, CommandInfo>(TheBotClient.ClientManager.groupActions);
+            foreach (var action in TheBotClient.Commands)
             {
                 if (dictionary.ContainsKey(action.Key))
                 {

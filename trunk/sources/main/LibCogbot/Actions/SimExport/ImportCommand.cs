@@ -93,7 +93,7 @@ namespace cogbot.Actions.SimExport
     }
 
 
-    public partial class ImportCommand : Command, RegionMasterCommand
+    public partial class ImportCommand : Command, RegionMasterCommand, BotStatefullCommand
     {
         public class LocalSimScene
         {
@@ -205,6 +205,7 @@ namespace cogbot.Actions.SimExport
             return assetUploadsFolder;
         }
         public ImportCommand(BotClient testClient)
+            : base(testClient)
         {
             Name = "simimport";
             Description = "Import prims from an exported xml file. Usage: import inputfile.xml [usegroup]";
@@ -217,6 +218,24 @@ namespace cogbot.Actions.SimExport
             ImportPTCFiles(new ImportSettings(), true, false);
             Importing = this;
         }
+
+
+        #region Implementation of IDisposable
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+            Client.Assets.AssetUploaded -= new EventHandler<AssetUploadEventArgs>(Assets_AssetUploaded);
+            Client.Objects.ObjectPropertiesFamily -= OnObjectPropertiesFamily;
+            Client.Objects.ObjectUpdate -= OnObjectPropertiesNewesh;
+            Client.Objects.ObjectProperties -= OnObjectPropertiesNewesh1;
+            Client.Network.EventQueueRunning -= logged_in;
+        }
+
+        #endregion
 
         private void logged_in(object sender, EventQueueRunningEventArgs e)
         {

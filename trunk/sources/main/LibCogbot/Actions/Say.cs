@@ -4,6 +4,7 @@ using System.Text;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
+using OpenMetaverse.StructuredData;
 
 namespace cogbot.Actions
 {
@@ -47,7 +48,7 @@ namespace cogbot.Actions
                 }
                 TheBotClient.Talk(text);
             }
-            return new CmdResult("said: " + args, true);
+            return new CmdResult("said: " + args, true, new OSDMap());
         }
     }
 }

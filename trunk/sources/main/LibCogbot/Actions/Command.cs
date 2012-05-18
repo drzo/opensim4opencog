@@ -6,6 +6,7 @@ using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using System.Reflection;
+using OpenMetaverse.StructuredData;
 using Simulator = OpenMetaverse.Simulator;
 
 namespace cogbot.Actions
@@ -75,13 +76,86 @@ namespace cogbot.Actions
     public interface BotPersonalCommand : BotCommand
     {
     }
-
+    /// <summary>
+    /// An interface for commands that do not require a connected grid client
+    /// such as Login or settings but still targets each bot individually
+    /// </summary>
+    public interface BotStatefullCommand : BotCommand, IDisposable
+    {
+    }
     public interface BotCommand
     {
     }
 
+    public class  CommandInfo
+    {
+        public bool IsStateFull;
+        public CommandCategory Category;
+        public string Name { get; set; }
+        public string helpString;
+        public string usageString;
+        public bool IsGridClientCommnad = false;
+        /// <summary>
+        /// Introspective Parameters for calling command from code
+        /// </summary>
+        public NamedParam[] Parameters;
+
+        public Type CmdType;
+        public Command WithBotClient;
+        public ConstructorInfo CmdTypeConstructor;
+        public string Description
+        {
+            get { return GetDescription(); }
+        }
+
+        public CommandInfo(Command live)
+        {
+            LoadFromCommand(live);
+        }
+        public void LoadFromCommand(Command live)
+        {
+            IsStateFull = live.IsStateFull || live is BotStatefullCommand;
+            Name = live.Name;
+            usageString = live.Usage;
+            Parameters = live.Parameters;
+            helpString = live.makeHelpString();
+            Category = live.Category;
+            CmdType = live.GetType();
+            CmdTypeConstructor = CmdType.GetConstructors()[0];
+            IsGridClientCommnad = CmdTypeConstructor.GetParameters()[0].ParameterType == typeof(GridClient);
+            if (IsStateFull) WithBotClient = live;
+        }
+
+        public Command MakeInstance(BotClient client)
+        {
+            var cmd = (Command) CmdTypeConstructor.Invoke(new object[] {client});
+            cmd.TheBotClient = client;
+            return cmd;
+        }
+
+        public virtual string GetDescription()
+        {
+            if (!string.IsNullOrEmpty(helpString)) return helpString;
+            return helpString + "  Usage: " + usageString;
+        }
+    }
+
     public abstract class Command : IComparable
     {
+        public bool IsStateFull;
+        public CommandCategory Category;
+        public string Name { get; set; }
+        protected string helpString;
+        protected string usageString;
+
+
+        /// <summary>
+        /// Introspective Parameters for calling command from code
+        /// </summary>
+        public NamedParam[] Parameters;
+
+
+
         private OutputDelegate _writeLine;
         public UUID CallerID = UUID.Zero;
         public OutputDelegate WriteLine
@@ -110,7 +184,10 @@ namespace cogbot.Actions
         public Command()
             : this(null)
         {
-            
+            if (this is BotStatefullCommand)
+            {
+                DLRConsole.DebugWriteLine("" + this + " is not a BotStatefullCommand?!");                
+            }
         } // constructor
 
         private void StaticWriteLine(string s, params object[] args)
@@ -120,9 +197,9 @@ namespace cogbot.Actions
 
         public Command(BotClient bc)
         {
+            _mClient = bc;
             WriteLine = StaticWriteLine;
             Name = GetType().Name.Replace("Command", "");
-            _mClient = bc;
             if (!(this is BotCommand))
             {
                 DLRConsole.DebugWriteLine("" + this + " is not a BotCommand?!");
@@ -209,18 +286,11 @@ namespace cogbot.Actions
             }
         }
 
-        public CommandCategory Category;
         /// <summary>
         /// When set to true, think will be called.
         /// </summary>
         public bool Active;
-        public string Name { get; set; }
-        protected string helpString;
-        protected string usageString;
-        /// <summary>
-        /// Introspective Parameters for calling command from code
-        /// </summary>
-        public NamedParam[] Parameters;
+
         /// <summary>
         /// Called twice per second, when Command.Active is set to true.
         /// </summary>
@@ -249,7 +319,8 @@ namespace cogbot.Actions
             {
                 if (_mClient == null)
                 {
-                    _mClient = cogbot.Listeners.WorldObjects.GridMaster.client;
+                    DLRConsole.DebugWriteLine("" + this + " has no TheBotClient?!");
+                    return cogbot.Listeners.WorldObjects.GridMaster.client;
                 }
                 return _mClient;
             }
@@ -452,13 +523,13 @@ namespace cogbot.Actions
             {
                 message = Name + ": " + message;
             }
-            var cr = new CmdResult(message, tf);
+            var cr = new CmdResult(message, tf, new OSDMap());
             LocalWL(cr.ToString());
             return cr;
         }
         protected CmdResult SuccessOrFailure()
         {
-            var cr = new CmdResult(Name + " " + failure + " failures and " + success + " successes", failure == 0);
+            var cr = new CmdResult(Name + " " + failure + " failures and " + success + " successes", failure == 0, new OSDMap());
             LocalWL(cr.ToString());
             return cr;
         }

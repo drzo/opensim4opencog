@@ -8,7 +8,7 @@ using MushDLR223.ScriptEngines;
 
 namespace cogbot.Actions
 {
-    class Whisper : Command, BotPersonalCommand
+    class Whisper : Command, BotPersonalCommand, BotStatefullCommand
     {
         public UUID currentAvatar = UUID.Zero;
         public UUID currentSession = UUID.Zero;
@@ -63,5 +63,18 @@ namespace cogbot.Actions
                 Client.Self.InstantMessage(currentAvatar, args.objectPhrase);
             return Success("sent message");
         }
+
+        #region Implementation of IDisposable
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+           
+        }
+
+        #endregion
     }
 }
