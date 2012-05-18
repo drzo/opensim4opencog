@@ -178,7 +178,7 @@ need section for multiple av's
 
 
 
-== defining locations ==
+== Locations ==
 
 [13:19] BinaBot Daxeline: location formats      simname/x/y/z  
 [13:19] BinaBot Daxeline: location formats      x/y/z  
