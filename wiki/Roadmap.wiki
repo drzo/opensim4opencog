@@ -38,6 +38,7 @@ with these items
  * AIML interpreter hasn't been worked on in 9 months, needes to be working
  * ABCL interpreter working
  * Sims working
+ * BotCommand parser using CommandInfo to "parse" the commands separately
  
  * PR plan
  * website
