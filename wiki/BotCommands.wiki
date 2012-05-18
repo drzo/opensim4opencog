@@ -199,6 +199,31 @@ match LSL's preferred representation
 [13:20] bungiecord Burnstein: with a space
 [13:21] bungiecord Burnstein: so <4.0, 5.0, 18.0>
 
+== PrimSpec ==
+
+Many commands refer to objects. For example
+
+{{{
+/touch red cube 1 min 3 dist 6
+}}}
+
+causes the bot to touch the nearest red cube that is a minimum of 3 meters away and a maximum of 6 meters distant.
+
+Here's the syntax for specifying an object
+
+{{{
+primspec --> single_primspec.
+primspec --> single_primspec, primspec.
+
+noun_primspec --> <string>.  % The name of the object
+noun_primspec --> <uuid>.  % the UUID of the object
+
+single_primspec --> noun_primspec.
+single_primspec --> 
+
+}}}
+
+
 ==More In Issues==
 
 See  issue 9  for a bit more info about format of args
