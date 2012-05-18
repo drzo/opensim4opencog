@@ -9,23 +9,34 @@ using MushDLR223.ScriptEngines;
 
 namespace cogbot.Actions.Search
 {
-    public class FindObjectsCommand : Command, BotPersonalCommand
+    public class FindObjectsCommand : Command, BotPersonalCommand, IDisposable
     {
         Dictionary<UUID, Primitive> PrimsWaiting = new Dictionary<UUID, Primitive>();
         AutoResetEvent AllPropertiesReceived = new AutoResetEvent(false);
 
         public FindObjectsCommand(BotClient testClient)
         {
-            testClient.Objects.ObjectProperties += new EventHandler<ObjectPropertiesEventArgs>(Objects_OnObjectProperties);
-
+            
             Name = "findobjects";
             Description = "Finds all objects, which name contains search-string. " +
                 "Usage: findobjects [radius] <search-string>";
             Category = CommandCategory.Objects;
         }
+        #region Implementation of IDisposable
 
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+            Client.Objects.ObjectProperties -= new EventHandler<ObjectPropertiesEventArgs>(Objects_OnObjectProperties);
+        }
+
+        #endregion
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
+            Client.Objects.ObjectProperties += new EventHandler<ObjectPropertiesEventArgs>(Objects_OnObjectProperties);
             // *** parse arguments ***
             if ((args.Length < 1) || (args.Length > 2))
                 return ShowUsage();// " findobjects [radius] <search-string>";

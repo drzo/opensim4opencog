@@ -15,11 +15,12 @@ namespace cogbot.Actions.Land
     /// <summary>
     /// Display a list of all agent locations in a specified region
     /// </summary>
-    public class GridHealthCommand : Command, GridMasterCommand
+    public class GridHealthCommand : Command, GridMasterCommand, BotStatefullCommand
     {
         bool registeredPackHandler = false;
         bool needGridRequest = true;
         public GridHealthCommand(BotClient testClient)
+            : base(testClient)
         {
             Name = "gridhealth";
             Description = "Runs a TP check to make sure ALL sims are useable on the grid. Usage: gridhealth [regionhandle]";
@@ -252,5 +253,22 @@ namespace cogbot.Actions.Land
             string filename = region.Name + "_" + region.X + "_" + region.Y + ".tga";
             Client.ExecuteCommand("download " + region.MapImageID + " " + AssetType.Texture + " " + filename + " jp2k", Client, WriteLine);
         }
+
+        #region Implementation of IDisposable
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+            if (registeredPackHandler)
+            {
+                registeredPackHandler = false;
+                Client.Network.UnregisterCallback(PacketType.MapBlockReply, MapBlockReplyHandler);
+            }
+        }
+
+        #endregion
     }
 }

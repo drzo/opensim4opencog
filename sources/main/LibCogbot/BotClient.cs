@@ -48,6 +48,7 @@ namespace cogbot
             return m.gridClient;
         }
 
+        public object GridClientNullLock = new object();
         /// <summary>Networking subsystem</summary>
         public NetworkManager Network { get { return gridClient.Network; } }
         /// <summary>Settings class including constant values and changeable
@@ -171,7 +172,19 @@ namespace cogbot
 
 
         readonly public TaskQueueHandler OneAtATimeQueue;
-        readonly public GridClient gridClient;
+        public GridClient gridClient
+        {
+            get
+            {
+                lock (GridClientNullLock)
+                {
+                    GridClientAccessed = true;
+                    return _gridClient;
+                }
+            }
+        }
+        private bool GridClientAccessed;
+        private GridClient _gridClient;
         // TODO's
         // Play Animations
         // private static UUID type_anim_uuid = UUIDFactory.GetUUID("c541c47f-e0c0-058b-ad1a-d6ae3a4584d9");
@@ -367,7 +380,7 @@ namespace cogbot
                         return;
                     }
                     _masterName = value;
-                    lock (SecurityLevelsByName) SecurityLevelsByName[value] = BotPermissions.Owner;
+                    SetSecurityLevel(OWNERLEVEL, value, BotPermissions.Owner);
                     found = WorldSystem.GetUserID(value);
                     if (found != UUID.Zero)
                     {
@@ -507,7 +520,7 @@ namespace cogbot
         public Dictionary<string, DescribeDelegate> describers;
 
         readonly public Dictionary<string, Listeners.Listener> listeners;
-        public SortedDictionary<string, Command> Commands;
+        public SortedDictionary<string, CommandInfo> Commands;
         public Dictionary<string, Tutorials.Tutorial> tutorials;
         //public Utilities.BotTcpServer UtilitiesTcpServer;
 
@@ -542,7 +555,7 @@ namespace cogbot
         {
             LoginRetries = LoginRetriesFresh;
             ClientManager = manager;
-            gridClient = g;
+            _gridClient = g;
             manager.AddBotClient(this);
             NeedRunOnLogin = true;
             //manager.LastRefBotClient = this;
@@ -639,34 +652,36 @@ namespace cogbot
             //registrationTypes["bump"] = new Listeners.Bump(this);
             //registrationTypes["sound"] = new Listeners.Sound(this);
             //registrationTypes["sound"] = new Listeners.Objects(this);
+            var gc = gridClient;
+            _gridClient = null;
+            Commands = new SortedDictionary<string, CommandInfo>();
+			RegisterCommand("login", new Login(this));
+			RegisterCommand("logout", new Logout(this));
+			RegisterCommand("stop", new Stop(this));
+			RegisterCommand("teleport", new Teleport(this));
+			var desc = newCommandInfo(new Describe(this));
+			Commands["describe"] = desc;
+			Commands["look"] = desc;
+            RegisterCommand("say", new Actions.Say(this));
+            RegisterCommand("whisper", new Actions.Whisper(this));
 
-            Commands = new SortedDictionary<string, Command>();
-            Commands["login"] = new Login(this);
-            Commands["logout"] = new Logout(this);
-            Commands["stop"] = new Stop(this);
-            Commands["teleport"] = new Teleport(this);
-            Command desc = new Describe(this);
-            Commands["describe"] = desc;
-            Commands["look"] = desc;
-            Commands["say"] = new Actions.Say(this);
-            Commands["whisper"] = new Actions.Whisper(this);
-            Commands["help"] = new cogbot.Actions.System.Help(this);
-            Commands["sit"] = new Sit(this);
-            Commands["stand"] = new Stand(this);
-            Commands["jump"] = new Jump(this);
-            Commands["crouch"] = new Crouch(this);
-            Commands["mute"] = new Actions.Mute(this);
-            Commands["unmute"] = new Actions.Mute(this);
-            Commands["move"] = new Actions.Move(this);
-            Commands["use"] = new Use(this);
-            Commands["eval"] = new Eval(this);
+			RegisterCommand("help", new cogbot.Actions.System.Help(this));
+			RegisterCommand("sit", new Sit(this));
+			RegisterCommand("stand", new Stand(this));
+			RegisterCommand("jump", new Jump(this));
+			RegisterCommand("crouch", new Crouch(this));
+			RegisterCommand("mute", new Mute(this));
+			RegisterCommand("unmute", new Mute(this));
+			RegisterCommand("move", new Move(this));
+			RegisterCommand("use", new Use(this));
+			RegisterCommand("eval", new Eval(this));
+			RegisterCommand("fly", new Fly(this));
+			RegisterCommand("stop-flying", new StopFlying(this));
+			RegisterCommand("wear", new Wear(this));
 
-            Commands["fly"] = new Fly(this);
-            Commands["stop-flying"] = new StopFlying(this);
-            Commands["locate"] = Commands["location"] = Commands["where"] = new Actions.Movement.LocationCommand(this);
-            Follow follow = new Follow(this);
+            Commands["locate"] = Commands["location"] = Commands["where"] = newCommandInfo(new Actions.Movement.LocationCommand(this));
+            var follow = newCommandInfo(new Follow(this));
             Commands["follow"] = follow;
-            Commands["wear"] = new Actions.Wear(this);
             //Commands["simexport"] = new cogbot.Actions.SimExport.ExportCommand(this);
             Commands["stop following"] = follow;
             Commands["stop-following"] = follow;
@@ -674,7 +689,7 @@ namespace cogbot
             tutorials = new Dictionary<string, cogbot.Tutorials.Tutorial>();
             tutorials["tutorial1"] = new Tutorials.Tutorial1(manager, this);
 
-
+            _gridClient = gc;
             describeNext = true;
 
             XmlInterp = new XmlScriptInterpreter(this);
@@ -731,6 +746,12 @@ namespace cogbot
             });
 
         }
+
+        public static CommandInfo newCommandInfo(Command describe)
+        {
+            return new CommandInfo(describe);
+        }
+
         void SetLoginName(string firstName, string lastName)
         {
             if (!string.IsNullOrEmpty(firstName) || !string.IsNullOrEmpty(lastName))
@@ -838,7 +859,13 @@ namespace cogbot
             List<Command> actions = new List<Command>();
             lock (Commands)
             {
-                actions.AddRange(Commands.Values);
+                foreach (var cmd in Commands.Values)
+                {
+                    if (cmd.IsStateFull)
+                    {
+                        actions.Add(cmd.WithBotClient);
+                    }
+                }
             }
             foreach (var c in actions)
                 if (c.Active)
@@ -1151,7 +1178,7 @@ namespace cogbot
                     // message from system
                     if (FromAgentName == "System") return;
                     // message from others
-                    Actions.Whisper whisper = (Actions.Whisper) Commands["whisper"];
+                    Actions.Whisper whisper = (Actions.Whisper) Commands["whisper"].WithBotClient;
                     whisper.currentAvatar = FromAgentID;
                     whisper.currentSession = IMSessionID;
                     if (IsOwner)
@@ -1955,28 +1982,38 @@ namespace cogbot
         /// </summary>
         /// <param name="login">The status of the login</param>
         /// <param name="message">Error message on failure, MOTD on success.</param>
-        public void RegisterCommand(string name, cogbot.Actions.Command command)
+        public void RegisterCommand(string name, cogbot.Actions.Command live)
         {
             string orginalName = name;
             name = name.Replace(" ", "").ToLower();
             while (name.EndsWith(".")) name = name.Substring(0, name.Length - 1);
             Monitor.Enter(Commands);
-            Command prev;
+            live.TheBotClient = this;
+            CommandInfo prev;
             if (!Commands.TryGetValue(name, out prev))
             {
+                CommandInfo command = new CommandInfo(live);
                 Commands.Add(name, command);
                 command.Name = orginalName;
-                command.TheBotClient = this;
+                if (command.IsStateFull)
+                {
+                    live.TheBotClient = this;
+                    command.WithBotClient = live;
+                }
             }
             else
             {
-                if (prev.GetType() != command.GetType()) RegisterCommand("!" + orginalName, command);
+                if (prev.CmdType != live.GetType())
+                {
+                    RegisterCommand("!" + orginalName, live);
+                }
             }
             Monitor.Exit(Commands);
         }
 
         public void RegisterCommand(Command command)
         {
+            command.TheBotClient = this;
             RegisterCommand(command.Name, command);
         }
 
@@ -2227,9 +2264,9 @@ namespace cogbot
         {
             var callerID = SessionToCallerId(callerSession);
             string cmdStr = "ExecuteActBotCommand " + verb + " " + args;
-            BotClient robot = command.TheBotClient;
             if (command is BotPersonalCommand)
             {
+                BotClient robot = command.TheBotClient;
                 robot.InvokeJoin(cmdStr);
             }
             return command.acceptInputWrapper(verb, args, callerID, del);
@@ -2241,7 +2278,7 @@ namespace cogbot
             return GetCommand(cmd, true) != null;
         }
 
-        public Command GetCommand(string text, bool clientCmds)
+        public Command GetCommand(string text, bool managerCmds)
         {
             if (string.IsNullOrEmpty(text)) return null;
             text = text.Trim();
@@ -2251,22 +2288,22 @@ namespace cogbot
             }
             if (string.IsNullOrEmpty(text)) return null;
             text = Parser.ParseArguments(text)[0].ToLower();
-            Command fnd;
+            CommandInfo fnd;
             if (Commands == null || Commands.Count == 0)
             {
                 WriteLine("No commands defined yet " + this);
                 return null;
             }
-            if (Commands.TryGetValue(text, out fnd)) return fnd;
-            if (clientCmds)
+            if (Commands.TryGetValue(text, out fnd)) return fnd.MakeInstance(this);
+            if (managerCmds)
             {
-                var bc = ClientManager;
-                if (bc != null)
+                var cm = ClientManager;
+                if (cm != null)
                 {
-                    if (bc.groupActions.TryGetValue(text, out fnd)) return fnd;
+                    if (cm.groupActions.TryGetValue(text, out fnd)) return fnd.MakeInstance(null);
                 }
             }
-            if (text.EndsWith("s")) return GetCommand(text.Substring(0, text.Length - 1), clientCmds);
+            if (text.EndsWith("s")) return GetCommand(text.Substring(0, text.Length - 1), managerCmds);
             return null;
         }
 
@@ -2390,6 +2427,13 @@ namespace cogbot
 
         internal void RegisterType(Type t)
         {
+            lock(GridClientNullLock)
+            {
+                RegisterType0(t);
+            }
+        }
+        internal void RegisterType0(Type t)
+        {
             ClientManager.RegisterType(t);
             if (registeredTypes.Contains(t)) return;
             registeredTypes.Add(t);
@@ -2412,9 +2456,20 @@ namespace cogbot
                             WriteLine("Missing BotClient constructor in " + typename);
                             return;
                         }
+                        var gc = gridClient;
                         try
                         {
                             Command command = null;
+                            GridClientAccessed = false;
+                            bool stateFullCmd = typeof (BotStatefullCommand).IsAssignableFrom(t);
+                            if (!stateFullCmd)
+                            {
+                                _gridClient = null;
+                            }
+                            else
+                            {
+                                _gridClient = gc;
+                            }
                             if (useGridClient)
                             {
                                 command = (Command)info.Invoke(new object[] { gridClient });
@@ -2423,11 +2478,20 @@ namespace cogbot
                             {
                                 command = (Command) info.Invoke(new object[] {this});
                             }
+                            if (GridClientAccessed)
+                            {
+                                command.IsStateFull = true;
+                                GridClientAccessed = false;
+                            }
+                            if (stateFullCmd) command.IsStateFull = true;
                             RegisterCommand(command);
                         }
                         catch (Exception e)
                         {
                             LogException("RegisterCommand " + t.Name, e);
+                        } finally
+                        {
+                            _gridClient = gc;
                         }
                     }
                 }
@@ -3064,7 +3128,7 @@ namespace cogbot
     {
         public UUID CallerAgent;
         public OutputDelegate Output;
-
+        private IDictionary<string, object> Results;
         public CmdRequest(UUID caller)
         {
             CallerAgent = caller;

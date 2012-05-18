@@ -15,7 +15,7 @@ namespace cogbot.Tutorials
         public XmlReader XMLTutorial;
 
         protected ClientManager parent;
-        protected GridClient client;
+        protected BotClient client;
         protected string helpString;
         protected string usageString;
         protected string AcceptableCommand;
@@ -33,7 +33,7 @@ namespace cogbot.Tutorials
                 XMLTutorial = new XmlReader(TutorialPath);
             else { };
             parent = _parent;
-            client = botclient.gridClient;// parent.CurrentClient;                   
+            client = botclient;// parent.CurrentClient;                   
         }
 
         public virtual string makeHelpString()

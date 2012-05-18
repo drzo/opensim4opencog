@@ -12,7 +12,7 @@ using MushDLR223.ScriptEngines;
 
 namespace cogbot.Actions.System
 {
-    public class LoadCommand : Command, SystemApplicationCommand
+    public class LoadCommand : Command, BotSystemCommand //SystemApplicationCommand
     {
         public LoadCommand(BotClient testClient)
         {
@@ -34,11 +34,11 @@ namespace cogbot.Actions.System
             {
                 Assembly assembly = FindAssembly(assemblyName);
                 if (assembly == null) return Failure("failed: load " + assemblyName + " cant find it");
-                ClientManager.SingleInstance.RegisterAssembly(assembly);
-                Client.LoadAssembly(assembly);
                 string cmd = string.Join(" ", args, 1, args.Length - 1).Trim();
+                //ClientManager.SingleInstance.LoadBotAssembly(assembly, cmd);
+                Client.LoadAssembly(assembly);
                 if (!string.IsNullOrEmpty(cmd))
-                    Client.InvokeAssembly(assembly, cmd, WriteLine);
+                  Client.InvokeAssembly(assembly, cmd, WriteLine);
                 return Success("Assembly " + assemblyName + " loaded.");
             }
             catch (ReflectionTypeLoadException e)

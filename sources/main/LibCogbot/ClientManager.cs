@@ -16,6 +16,7 @@ using MushDLR223.Utilities;
 using OpenMetaverse;
 using cogbot.Actions;
 using cogbot.Actions.Scripting;
+using OpenMetaverse.StructuredData;
 using Settings=OpenMetaverse.Settings;
 #if USE_SAFETHREADS
 using Thread = MushDLR223.Utilities.SafeThread;
@@ -134,7 +135,7 @@ namespace cogbot
 
         public List<Type> registrationTypes;
         public List<Type> registeredSystemApplicationCommandTypes = new List<Type>();
-        public SortedDictionary<string, Actions.Command> groupActions;
+        public SortedDictionary<string, CommandInfo> groupActions;
         public Dictionary<string, Tutorials.Tutorial> tutorials;
 
         public bool describeNext;
@@ -184,7 +185,7 @@ namespace cogbot
             {
                 clientManagerHttpServer = MushDLR223.Utilities.HttpServerUtil.CreateHttpServer(this, 5580, "first_robot");
             }
-            groupActions = new SortedDictionary<string, cogbot.Actions.Command>();
+            groupActions = new SortedDictionary<string, cogbot.Actions.CommandInfo>();
             registrationTypes = new List<Type>();
 
             tutorials = new Dictionary<string, cogbot.Tutorials.Tutorial>();
@@ -328,13 +329,13 @@ namespace cogbot
                 }
             if (success == 0)
             {
-                return new CmdResult(res + " " + failure + " failures ", false);
+                return new CmdResult(res + " " + failure + " failures ", false, new OSDMap());
             }
             if (failure > 0)
             {
-                return new CmdResult(res + " " + failure + " failures and " + success + " successes", false);
+                return new CmdResult(res + " " + failure + " failures and " + success + " successes", false, new OSDMap());
             }
-            return new CmdResult(res + " " + success + " successes", true);
+            return new CmdResult(res + " " + success + " successes", true, new OSDMap());
         }
 
         public CmdResult ExecuteSystemCommand(string text, object session, OutputDelegate WriteLine)
@@ -366,7 +367,7 @@ namespace cogbot
             {
                 string newVariable = "ClientManager: " + text + " caused " + e;
                 WriteLine(newVariable);
-                return new CmdResult(newVariable, false);
+                return new CmdResult(newVariable, false, new OSDMap());
             }
         }
 
@@ -1361,7 +1362,7 @@ namespace cogbot
                 {
                     foreach (BotClient client in BotClients)
                     {
-                        WriteLine(client.Commands["help"].ExecuteCmd(args, UUID.Zero, WriteLine).ToString());
+                        client.ExecuteCommand(cmd, fromAgentID, WriteLine);
                         break;
                     }
                 }
@@ -1387,19 +1388,14 @@ namespace cogbot
                         delegate(object state)
                         {
                             BotClient testClient = (BotClient)state;
-                            if (testClient.Commands.ContainsKey(firstToken))
-                                Logger.Log(testClient.Commands[firstToken].ExecuteCmd(args, fromAgentID, WriteLine),
-                                    Helpers.LogLevel.Info, testClient.gridClient);
-                            else
-                                Logger.Log("Unknown command " + firstToken, Helpers.LogLevel.Warning);
-
+                            testClient.ExecuteCommand(cmd, fromAgentID, WriteLine);
                             ++completed;
                         },
                         client);
                 }
-
                 while (completed < BotClients.Count)
                     Thread.Sleep(50);
+
             }
         }
 
@@ -1460,6 +1456,35 @@ namespace cogbot
         }
 
         readonly List<Assembly> KnownAssembies = new List<Assembly>();
+        internal void LoadBotAssembly(Assembly assembly, string args)
+        {
+            RegisterAssembly(assembly);
+
+            Action<BotClient> botClientPostCreationHooks = (Client) =>
+                                                    {
+                                                        Client.LoadAssembly(assembly);
+                                                        if (!string.IsNullOrEmpty(args))
+                                                            Client.InvokeAssembly(assembly, args, Client.WriteLine);
+                                                    };
+            AddBotCreationHooks(botClientPostCreationHooks);
+        }
+
+        private static Action<BotClient> actionOnCreate = (client) => { };
+        private void AddBotCreationHooks(Action<BotClient> action)
+        {
+            foreach (BotClient client in BotClients)
+            {
+                action(client);
+            }
+            var oldAct = actionOnCreate;
+            actionOnCreate = new Action<BotClient>((client) =>
+                                                       {
+                                                           oldAct(client);
+                                                           action(client);
+                                                       });
+        
+        }
+
         internal void RegisterAssembly(Assembly assembly)
         {
             lock (KnownAssembies)
@@ -1486,10 +1511,7 @@ namespace cogbot
                     }
                     if (newTypes)
                     {
-                        foreach (BotClient client in BotClients)
-                        {
-                            AddTypesToBotClient(client);
-                        }
+                        AddBotCreationHooks(AddTypesToBotClient);
                     }
                 }
             }
@@ -1547,7 +1569,7 @@ namespace cogbot
 
             if (!groupActions.ContainsKey(name))
             {
-                groupActions.Add(name, command);
+                groupActions.Add(name, BotClient.newCommandInfo(command));
                 command.Name = orginalName;
             }
             else
@@ -1747,15 +1769,15 @@ namespace cogbot
             }
             if (string.IsNullOrEmpty(text)) return null;
             text = Parser.ParseArguments(text)[0].ToLower();
-            Command fnd;
+            CommandInfo fnd;
 
-            if (groupActions.TryGetValue(text, out fnd)) return fnd;
+            if (groupActions.TryGetValue(text, out fnd)) return fnd.MakeInstance(null);
             if (clientCmds)
             {
                 var bc = LastBotClient;
                 if (bc != null)
                 {
-                    if (bc.Commands.TryGetValue(text, out fnd)) return fnd;
+                    if (bc.Commands.TryGetValue(text, out fnd)) return fnd.MakeInstance(bc);
                 }
             }
             if (text.EndsWith("s")) return GetCommand(text.Substring(0, text.Length - 1), clientCmds);

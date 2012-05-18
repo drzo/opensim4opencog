@@ -18,7 +18,7 @@ using ExportCommand = cogbot.Actions.SimExport.ImportCommand;
 
 namespace cogbot.Actions.SimExport
 {
-    public partial class ExportCommand : Command, RegionMasterCommand
+    public partial class ExportCommand : Command, RegionMasterCommand, BotStatefullCommand
     {
         private readonly TaskQueueHandler slowlyExport = new TaskQueueHandler("slowlyExport", TimeSpan.FromMilliseconds(100),
                                                                     true);
@@ -134,6 +134,7 @@ namespace cogbot.Actions.SimExport
         }
 
         public ExportCommand(BotClient testClient)
+            : base(testClient)
         {
             Exporting = this;
             // testClient.Objects.ObjectPropertiesFamily += new EventHandler<ObjectPropertiesFamilyEventArgs>(Objects_OnObjectPropertiesFamily);
@@ -162,7 +163,24 @@ namespace cogbot.Actions.SimExport
             onlyObjectAt.AddPoint(new Vector3(-256, -256, 90));
             onlyObjectAt.AddPoint(new Vector3(512, 512, 200));
         }
+        #region Implementation of IDisposable
 
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+            Client.Self.ChatFromSimulator -= listen_for_relay;
+            ListenForRelay -= listen_forLinkset;
+            ListenForRelay -= listen_TaskInv;
+            Client.Assets.XferReceived -= Asset_Xfer;
+            Client.Groups.GroupNamesReply -= GroupNames;
+            Client.Avatars.UUIDNameReply -= UserNames;
+            Client.Inventory.ScriptRunningReply -= On_ScriptRunningReply;
+        }
+
+        #endregion
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             Client.Self.Movement.Camera.Far = 1023;

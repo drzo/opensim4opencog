@@ -822,8 +822,8 @@ namespace MushDLR223.ScriptEngines
             var si = LoadScriptInterpreter(lang, seff);
             object so = si.Read("EvalScriptInterpreter read: " + src, new StringReader(src.ToString()), wl);
             if (so is CmdResult) return (CmdResult) so;
-            if (so == null) return new CmdResult("void", true);
-            if (si.Eof(so)) return new CmdResult("EOF " + so, true);
+            if (so == null) return new CmdResult("void", true, new Dictionary<string, object>());
+            if (si.Eof(so)) return new CmdResult("EOF " + so, true, new Dictionary<string, object>());
             object o = si.Eval(so);
             return o;
         }

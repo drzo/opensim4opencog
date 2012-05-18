@@ -30,10 +30,10 @@ namespace cogbot.Actions.System
                     return Failure( "Command " + args[0] + " Does not exist. \"help\" to display all available commands.");
             }
 			StringBuilder result = new StringBuilder();
-            SortedDictionary<CommandCategory, List<Command>> CommandTree = new SortedDictionary<CommandCategory, List<Command>>();
+            var CommandTree = new SortedDictionary<CommandCategory, List<CommandInfo>>();
 
             CommandCategory cc;
-            foreach (Command c in TheBotClient.Commands.Values)
+            foreach (CommandInfo c in TheBotClient.Commands.Values)
 			{
                 if (c.Category.Equals(null))
                     cc = CommandCategory.Unknown;
@@ -44,13 +44,13 @@ namespace cogbot.Actions.System
                     CommandTree[cc].Add(c);
                 else
                 {
-                    List<Command> l = new List<Command>();
+                    var l = new List<CommandInfo>();
                     l.Add(c);
                     CommandTree.Add(cc, l);
                 }
 			}
 
-            foreach (KeyValuePair<CommandCategory, List<Command>> kvp in CommandTree)
+            foreach (var kvp in CommandTree)
             {
                 result.AppendFormat(Environment.NewLine + "* {0} Related Commands:" + Environment.NewLine, kvp.Key.ToString());
                 int colMax = 0;

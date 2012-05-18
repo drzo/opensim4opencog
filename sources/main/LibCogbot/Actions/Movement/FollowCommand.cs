@@ -22,11 +22,11 @@ namespace cogbot.Actions.Movement
             Category = CommandCategory.Movement;
             Parameters = new[] { new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
 
-            testClient.Network.RegisterCallback(PacketType.AlertMessage, AlertMessageHandler);
 		}
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine1)
 		{
+            Client.Network.RegisterCallback(PacketType.AlertMessage, AlertMessageHandler);
             // Construct the target name from the passed arguments
 			string target = String.Empty;
 			for (int ct = 0; ct < args.Length; ct++)

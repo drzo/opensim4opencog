@@ -50,7 +50,7 @@ namespace CogbotRadegastPluginModule
                 lock (ClientManager.SingleInstance.groupActions)
                     foreach (var c in ClientManager.SingleInstance.groupActions.Values)
                     {
-                        if (AddCommand(c)) groupCommands++;
+                        if (AddCommand(c.MakeInstance(TheBotClient))) groupCommands++;
                     }
             }
             if (TheBotClient != null && TheBotClient.Commands != null)
@@ -58,7 +58,7 @@ namespace CogbotRadegastPluginModule
                 lock (TheBotClient.Commands)
                     foreach (var c in TheBotClient.Commands.Values)
                     {
-                        if (AddCommand(c)) botCommands++;
+                        if (AddCommand(c.MakeInstance(TheBotClient))) botCommands++;
                     }
             }
             DebugLog(string.Format("Loaded groupCommands={0} botCommands={1}", groupCommands, botCommands));
