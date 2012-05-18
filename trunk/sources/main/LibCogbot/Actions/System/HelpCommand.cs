@@ -25,7 +25,7 @@ namespace cogbot.Actions.System
             if (args.Length > 0)
             {
                 if (Client.Commands.ContainsKey(args[0]))
-                    return Success(Client.Commands[args[0]].GetDescription());
+                    return Success(Client.Commands[args[0]].Description);
                 else
                     return Failure( "Command " + args[0] + " Does not exist. \"help\" to display all available commands.");
             }

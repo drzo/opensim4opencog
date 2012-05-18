@@ -11,13 +11,14 @@ using MushDLR223.ScriptEngines;
 namespace cogbot.Actions.Movement
 {
     public class GotoCommand : Command, BotPersonalCommand
-    {
+    {
         public GotoCommand(BotClient testClient)
 		{
 			Name = "goto";
 			Description = "Teleport to a location (e.g. \"goto Hooper/100/100/30\")";
             Category = CommandCategory.Movement;
-            Parameters = new[] {  new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
+            Parameters =  NamedParam.CreateParams("location",  typeof(SimPosition)) ;
+            ResultMap = NamedParam.CreateParams("success", typeof (bool), "failureReason", typeof (string));
 		}
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
