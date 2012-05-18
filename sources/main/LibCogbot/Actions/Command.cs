@@ -93,7 +93,7 @@ namespace cogbot.Actions
         public string Name { get; set; }
         public string helpString;
         public string usageString;
-        public bool IsGridClientCommnad = false;
+        public bool IsGridClientCommand = false;
         /// <summary>
         /// Introspective Parameters for calling command from code
         /// </summary>
@@ -125,7 +125,7 @@ namespace cogbot.Actions
             Category = live.Category;
             CmdType = live.GetType();
             CmdTypeConstructor = CmdType.GetConstructors()[0];
-            IsGridClientCommnad = CmdTypeConstructor.GetParameters()[0].ParameterType == typeof(GridClient);
+            IsGridClientCommand = CmdTypeConstructor.GetParameters()[0].ParameterType == typeof(GridClient);
             if (IsStateFull) WithBotClient = live;
         }
 
@@ -152,7 +152,7 @@ namespace cogbot.Actions
         public string Name { get; set; }
         protected string helpString;
         protected string usageString;
-
+       
         virtual public string Description
         {
             get
