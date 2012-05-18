@@ -4478,7 +4478,7 @@ namespace OpenMetaverse.Messages.Linden
                 for (int i = 0; i < FaceMedia.Length; i++)
                 {
                     if (FaceMedia[i] == null)
-                        mediaData.Add(new OSD());
+                        mediaData.Add(new OSDNull());
                     else
                         mediaData.Add(FaceMedia[i].GetOSD());
                 }
@@ -4558,7 +4558,7 @@ namespace OpenMetaverse.Messages.Linden
                 for (int i = 0; i < FaceMedia.Length; i++)
                 {
                     if (FaceMedia[i] == null)
-                        mediaData.Add(new OSD());
+                        mediaData.Add(new OSDNull());
                     else
                         mediaData.Add(FaceMedia[i].GetOSD());
                 }

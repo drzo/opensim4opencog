@@ -265,7 +265,7 @@ namespace OpenMetaverse.StructuredData
             switch ((byte)marker)
             {
                 case undefBinaryValue:
-                    osd = new OSD();
+                    osd = new OSDNull();
                     break;
                 case trueBinaryValue:
                     osd = OSD.FromBoolean(true);

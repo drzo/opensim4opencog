@@ -88,7 +88,7 @@ namespace OpenMetaverse.StructuredData
             }
             catch
             {
-                return new OSD();
+                return new OSDNull(xmlData);
             }
         }
 
@@ -269,12 +269,12 @@ namespace OpenMetaverse.StructuredData
                     if (reader.IsEmptyElement)
                     {
                         reader.Read();
-                        return new OSD();
+                        return new OSDNull();
                     }
 
                     reader.Read();
                     SkipWhitespace(reader);
-                    ret = new OSD();
+                    ret = new OSDNull();
                     break;
                 case "boolean":
                     if (reader.IsEmptyElement)

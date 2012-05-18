@@ -47,7 +47,7 @@ namespace OpenMetaverse.Messages
             if (address != null && address != IPAddress.Any)
                 return OSD.FromBinary(address.GetAddressBytes());
             else
-                return new OSD();
+                return new OSDNull();
         }
 
         public static Dictionary<string, string> ToDictionaryString(OSD osd)

@@ -65,7 +65,7 @@ namespace OpenMetaverse.Http
 
             // Create an EventQueueGet request
             OSDMap request = new OSDMap();
-            request["ack"] = new OSD();
+            request["ack"] = new OSDNull();
             request["done"] = OSD.FromBoolean(false);
 
             byte[] postData = OSDParser.SerializeLLSDXmlBytes(request);
@@ -197,7 +197,7 @@ namespace OpenMetaverse.Http
             {
                 OSDMap osdRequest = new OSDMap();
                 if (ack != 0) osdRequest["ack"] = OSD.FromInteger(ack);
-                else osdRequest["ack"] = new OSD();
+                else osdRequest["ack"] = new OSDNull();
                 osdRequest["done"] = OSD.FromBoolean(_Dead);
 
                 byte[] postData = OSDParser.SerializeLLSDXmlBytes(osdRequest);
