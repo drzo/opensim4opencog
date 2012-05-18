@@ -375,6 +375,36 @@ See all this stuff starting at line 445 of WorldCommandParsing
 @'C#505366584':"saleinfo: sets or prints SaleInfo on a prim."
 @'C#505366584':"saveuuids: Saves resolution of UUID types."
 @'C#505366584':"say: Say a message for everyone to hear."
+}}}
+
+{{{
+/say <message>
+}}}
+
+say a message on channel 0
+
+{{{
+/say #<integer> <message>
+}}}
+
+say a message on channel <integer>
+
+{{{
+/say <....xml...>  
+}}}
+
+Passes text to a text-to-speech generator. 
+The bot then says this speech on the voice channel
+
+The argument should be a valid ssml document, as defined in
+[http://www.w3.org/TR/speech-synthesis/  The SSML Specification], wrapped in <sapi>...</sapi> tags.
+
+DOUG - I'm giving up here. What's with this?
+
+I see it should be surrounded with <sapi>... </sapi> and am puzzled that SSML's root tag is <speak>, and that ultimately it chats rather than voicing the message.
+
+
+{{{
 @'C#505366584':"script: Reads BotClient commands from a file. One command per line, arguments separated by spaces."
 @'C#505366584':"searchclassifieds: Searches Classified Ads."
 @'C#505366584':"searchevents: Searches Events list."
