@@ -368,10 +368,13 @@ namespace MushDLR223.ScriptEngines
         {
             return null;
         }
-
-        public static object[] CreateParm(string name, Type type, string description)
+        public static NamedParam[][] CreateParamVersions(params NamedParam[][] paramz)
         {
-            throw new NotImplementedException();
+            return paramz;
+        }
+        public static object Optional(string name, Type type, string description)
+        {
+            return null;
         }
     }
 }
