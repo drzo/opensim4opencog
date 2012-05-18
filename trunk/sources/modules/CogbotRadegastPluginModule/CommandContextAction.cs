@@ -232,7 +232,7 @@ namespace CogbotRadegastPluginModule
             {
                 lst.Add(new ToolStripMenuItem(act.Name, null, SubHook)
                             {
-                                ToolTipText = act.makeHelpString()
+                                ToolTipText = act.Description
                             });
 
             }
