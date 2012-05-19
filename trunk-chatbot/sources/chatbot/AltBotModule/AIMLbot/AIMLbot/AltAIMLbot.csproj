@@ -126,6 +126,7 @@
     </Compile>
     <Compile Include="Cron.cs">
     </Compile>
+    <Compile Include="MicroThreader.cs" />
     <Compile Include="Qchem.cs">
     </Compile>
     <Compile Include="Qfsm.cs">

@@ -687,6 +687,7 @@ namespace AltAIMLbot
         }
         public void logText(string msg)
         {
+            if (bot == null) return;
             lock (bot.loglock)
             {
                 try
@@ -701,6 +702,7 @@ namespace AltAIMLbot
         }
         public void logNode(string msg, XmlNode myNode)
         {
+            if (bot == null) return;
             lock (bot.loglock)
             {
                 string miniLog = String.Format(@"./aiml/BTTrace.txt");
@@ -840,7 +842,18 @@ namespace AltAIMLbot
                 return RunStatus.Failure;
             }
         }
+        public IEnumerator<RunStatus> getBehaviorEnumerator(string name)
+        {
 
+            BehaviorTree curTree = (BehaviorTree)behaveTrees[name];
+            if (curTree == null)
+            {
+                Console.WriteLine("WARN: Tree '{0}' is null", name);
+                return null;
+            }
+            return curTree.runBehaviorTree(bot).GetEnumerator();
+
+        }
         public void runBotBehaviors(AltBot deBot)
         {
             if (bot != deBot) bot = deBot;

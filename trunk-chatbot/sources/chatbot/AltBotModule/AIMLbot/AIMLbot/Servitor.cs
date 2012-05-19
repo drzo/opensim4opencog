@@ -58,6 +58,7 @@ namespace AltAIMLbot
         public bool savedServitor = false;
         public bool skipPersonalityCheck = false;
         public bool initialCritical = false;
+        public Scheduler myScheduler = null;
 
         public Servitor(string UserID, sayProcessorDelegate outputDelegate)
         {
@@ -79,6 +80,8 @@ namespace AltAIMLbot
             Console.WriteLine("            TickCount:" + Environment.TickCount);
             Console.WriteLine("            UserID:" + UserID);
             AltBot myBot = new AltBot();
+            myScheduler = new Scheduler(this);
+
             myBot.bbSafe = true;
 
             curBot = myBot;
@@ -119,6 +122,7 @@ namespace AltAIMLbot
             curBot.myBehaviors.keepTime("activation", RunStatus.Success);
             curBot.myBehaviors.activationTime("activation", RunStatus.Success);
             WebServitor.beginService(this);
+
             Console.WriteLine(" Servitor startup complete");
         }
 
@@ -310,13 +314,13 @@ namespace AltAIMLbot
             int tickrate = interval;
             while (true)
             {
+                Thread.Sleep(interval);
                 try
                 {
                     if ((curBot.myFSMS != null) && (curBot.isAcceptingUserInput))
                     {
                         curBot.myFSMS.runBotMachines(curBot);
                     }
-                    Thread.Sleep(interval);
                     string tickrateStr = getBBHash("tickrate");
                     tickrate = interval;
 
@@ -356,6 +360,7 @@ namespace AltAIMLbot
             int tickrate = interval;
             while (true)
             {
+                Thread.Sleep(interval);
                 try
                 {
                     
@@ -371,7 +376,6 @@ namespace AltAIMLbot
                             Console.WriteLine("ERR: {0}\n{1}", e.Message, e.StackTrace);
                         }
                     }
-                    Thread.Sleep(interval);
                     string tickrateStr = getBBHash("tickrate");
                     tickrate = interval;
 
@@ -480,7 +484,15 @@ namespace AltAIMLbot
 
             while (true)
             {
-                if ((curBot !=null)&&(curBot.outputQueue.Count > 0))
+                Thread.Sleep(interval);
+                updateTime();
+                // Tick the microThreader
+                if (myScheduler != null)
+                {
+                    myScheduler.Run();
+                }
+
+                if ((curBot != null) && (curBot.outputQueue.Count > 0))
                 {
                     curBot.processOutputQueue();
                 }
@@ -544,8 +556,6 @@ namespace AltAIMLbot
 
                 }
 
-                updateTime();
-                Thread.Sleep(interval);
             }
         }
 

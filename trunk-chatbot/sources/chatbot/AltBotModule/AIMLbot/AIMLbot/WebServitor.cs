@@ -18,6 +18,11 @@ namespace AltAIMLbot
         public static string serverRoot = "http://localhost:8123/";
         public static void beginService(Servitor theServitor)
         {
+            if (!HttpListener.IsSupported)
+            {
+                Console.WriteLine("***** HttpListener is not supported on this platform. *****");
+                return;
+            }
             ourServitor = theServitor;
             listener.Start();
             listener.Prefixes.Add(serverRoot);
@@ -45,16 +50,16 @@ namespace AltAIMLbot
 
         public static void processRequest(object listenerContext)
         {
+                var context = (HttpListenerContext)listenerContext;
             try
             {
-                var context = (HttpListenerContext)listenerContext;
 
                 switch (context.Request.HttpMethod)
                 {
-                     case "POST":
+                    case "POST":
                         CREATE(context);
                         break;
-                   case "GET":
+                    case "GET":
                         READ(context);
                         break;
                     case "PUT":
@@ -67,9 +72,17 @@ namespace AltAIMLbot
                         ERR(context);
                         break;
                 }
+                context.Response.Close();
+
             }
             catch
             {
+                context.Response.Close();
+
+            }
+            finally
+            {
+                context.Response.Close();
             }
         }
         public static string  filenameToBehaviorname(string name)
@@ -93,11 +106,14 @@ namespace AltAIMLbot
             //POST (INSERT to DB)
             // Put the Behavior in the BTX cache
             byte[] msg;
-            string filename = Path.GetFileName(context.Request.RawUrl);
+            string[] sections = context.Request.RawUrl.Split('?');
+            string justURL = sections[0];
+            string filename = Path.GetFileName(justURL);
             string behaviorName = filenameToBehaviorname(filename);
             string behaviorFile = ourServitor.curBot.myBehaviors.behaviorDiskName(behaviorName);
             string behaviorDir = ourServitor.curBot.myBehaviors.persistantDirectory;
             string path = Path.Combine(startUpPath, filename);
+
             if (path.Contains("./behavior/"))
             {
                 path.Replace("./behavior/", behaviorDir);
@@ -138,22 +154,37 @@ namespace AltAIMLbot
         public static void READ(HttpListenerContext context)
         {
             //GET (READ from DB)
-            string filename = Path.GetFileName(context.Request.RawUrl);
+            string [] sections = context.Request.RawUrl.Split('?');
+            string justURL = sections[0];
+            string filename = Path.GetFileName(justURL);
             string behaviorName = filenameToBehaviorname(filename);
             string behaviorFile = ourServitor.curBot.myBehaviors.behaviorDiskName(behaviorName);
             string behaviorDir = ourServitor.curBot.myBehaviors.persistantDirectory;
             //string path = Path.Combine(startUpPath, filename);
             //string path = Path.Combine(startUpPath, context.Request.RawUrl);
-            string path = "."+ context.Request.RawUrl;
+            string path = "." + justURL;
+            string query = context.Request.QueryString["q"];
+            string action = context.Request.QueryString["a"];
+            
+            if (path.Contains("./scheduler/"))
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.OK;
+                using (Stream s = context.Response.OutputStream)
+                using (StreamWriter writer = new StreamWriter(s))
+                    ourServitor.myScheduler.performAction(writer,action,query, behaviorName);
+                return;
+            }
+
             if (path.Contains("./behavior/"))
             {
                 path.Replace("./behavior/", behaviorDir);
             }
             byte[] msg;
-            if ((File.Exists (behaviorFile)) && (!File.Exists (path)))
+                if ((File.Exists(behaviorFile)) && (!File.Exists(path)))
             {
                 path = behaviorFile;
             }
+
             if (!File.Exists(path))
             {
 
@@ -183,7 +214,7 @@ namespace AltAIMLbot
                 else
                 {
                     Console.WriteLine("Client requesed nonexistant file {0} => {1}, sending error ...",
-                        context.Request.RawUrl, path);
+                        justURL, path);
                     context.Response.StatusCode = (int)HttpStatusCode.NotFound;
                     msg = File.ReadAllBytes(startUpPath + "\\webroot\\error.html");
                 }
@@ -202,11 +233,15 @@ namespace AltAIMLbot
         {
             //PUT (Update DB)
             byte[] msg;
-            string filename = Path.GetFileName(context.Request.RawUrl);
+            string[] sections = context.Request.RawUrl.Split('?');
+            string justURL = sections[0];
+            string filename = Path.GetFileName(justURL);
             string path = Path.Combine(startUpPath, filename);
             string behaviorName = filenameToBehaviorname(filename);
             string behaviorFile = ourServitor.curBot.myBehaviors.behaviorDiskName(behaviorName);
             string behaviorDir = ourServitor.curBot.myBehaviors.persistantDirectory;
+            string query = context.Request.QueryString["q"];
+            string action = context.Request.QueryString["a"];
             if (path.Contains("./behavior/"))
             {
                 path.Replace("./behavior/", behaviorDir);
@@ -246,11 +281,15 @@ namespace AltAIMLbot
         public static void DELETE(HttpListenerContext context)
         {
             //DELETE
-            string filename = Path.GetFileName(context.Request.RawUrl);
+            string[] sections = context.Request.RawUrl.Split('?');
+            string justURL = sections[0];
+            string filename = Path.GetFileName(justURL);
             string path = Path.Combine(startUpPath, filename);
             string behaviorName = filenameToBehaviorname(filename);
             string behaviorFile = ourServitor.curBot.myBehaviors.behaviorDiskName(behaviorName);
             string behaviorDir = ourServitor.curBot.myBehaviors.persistantDirectory;
+            string query = context.Request.QueryString["q"];
+            string action = context.Request.QueryString["a"];
             if (path.Contains("./behavior/"))
             {
                 path.Replace("./behavior/", behaviorDir);
