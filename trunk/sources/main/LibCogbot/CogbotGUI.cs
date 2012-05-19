@@ -213,6 +213,7 @@ namespace Cogbot.Library
         static public void SetRadegastLoginForm(RadegastInstance instance, LoginConsole console, LoginOptions options)
         {
             // var instance = TheRadegastInstance;
+            if (console.IsDisposed) return;
             console.cbxUsername.Text = (String.Format("{0} {1}", options.FirstName, options.LastName)).Trim();
 
             switch (options.StartLocation)
