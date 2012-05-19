@@ -232,7 +232,7 @@ namespace cogbot.Listeners
             EnsureSimulator(simulator);
         }
 
-        static bool DidStartupPostLoginQueues = false;
+        bool DidStartupPostLoginQueues = false;
         static readonly object DidStartupPostLoginQueuesLock = new object();
 
         private void StartupPostLoginQueues()
@@ -249,6 +249,7 @@ namespace cogbot.Listeners
             SimAssetStore.TaskQueueStart();
             SlowConnectedQueue.Enqueue(() => SlowConnectedQueue.DebugQueue = false);
             SlowConnectedQueue.Start();
+            client.OneAtATimeQueue.Start();
             TaskInvGrabber.Start();
 
         }
