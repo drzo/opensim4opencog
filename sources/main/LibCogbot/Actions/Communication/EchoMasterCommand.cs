@@ -39,10 +39,12 @@ namespace cogbot.Actions.Communication
 		}
 
         void Self_ChatFromSimulator(object sender, ChatEventArgs e)
-		{
-            if (e.Message.Length > 0 && (Client.MasterKey == e.SourceID || (Client.MasterName == e.FromName && !Client.AllowObjectMaster)))
+        {
+            if (e.Message.Length > 0 &&
+                (Client.MasterKey == e.SourceID || (Client.MasterName == e.FromName && !Client.AllowObjectMaster)))
                 Client.Self.Chat(e.Message, 0, ChatType.Normal);
-		}
+        }
+
 
         #region Implementation of IDisposable
 
