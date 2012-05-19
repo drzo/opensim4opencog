@@ -16,7 +16,7 @@ namespace cogbot.Actions.Communication
             Name = "lure";
             Description = "Send a lure to a user.";
             Category = CommandCategory.Friends;
-            Usage = Name + " [agent-spec]";
+            Usage = Htmlize.Usage(Name + " [agent-spec]", "lure agent-spec to our location");
             Parameters = NamedParam.CreateParams("target", typeof (AgentSpec),
                                                  "the agent you wish to see " + Name +
                                                  " (see meets a specified <a href='wiki/BotCommands#AvatarSpec'>Avatar Spec</a>.)");

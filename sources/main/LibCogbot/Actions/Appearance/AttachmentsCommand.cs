@@ -14,7 +14,7 @@ namespace cogbot.Actions.Appearance
             TheBotClient = testClient;
             Name = "attachments";
             Description = "Prints a list of the currently known agent attachments or on another avatar";
-            Usage = Name + " [agent-spec] // no prim-spec then use $self";
+            Usage = Htmlize.Usage(Name + " [agent-spec]", "no prim-spec then use $self");
             Category = CommandCategory.Appearance;
             Parameters = NamedParam.CreateParams(
                 NamedParam.Optional("target", typeof(AgentSpec),

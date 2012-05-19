@@ -17,7 +17,8 @@ namespace cogbot.Actions.Search
         public SearchGroupsCommand(BotClient testClient)
         {
             Name = "searchgroups";
-            Description = "Searches groups. Usage: searchgroups [search text]";
+            Description = "Searches groups.";
+            Usage = Htmlize.Usage(Name + " [search text]", "searches " + Name.Replace("seaches", ""));
             Category = CommandCategory.Groups;
             Parameters =
                 NamedParam.CreateParams("searchText", typeof(string), "what you are searching for");

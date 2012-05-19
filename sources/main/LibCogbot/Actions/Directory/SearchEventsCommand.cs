@@ -16,7 +16,8 @@ namespace cogbot.Actions.Search
         public SearchEventsCommand(BotClient testClient)
         {
             Name = "searchevents";
-            Description = "Searches Events list. Usage: searchevents [search text]";
+            Description = "Searches Events list.";
+            Usage = Htmlize.Usage(Name + " [search text]", "searches " + Name.Replace("seaches", ""));
             Category = CommandCategory.Search;
             Parameters =
                 NamedParam.CreateParams("searchText", typeof(string), "what you are searching for");

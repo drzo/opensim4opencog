@@ -14,9 +14,11 @@ namespace cogbot.Actions.Appearance
 		public AppearanceCommand(BotClient testClient)
         {
             Name = "appearance";
-            Description = @"Set your current appearance to your last saved appearance. <p>Same as rebaking in a normal client.</p>
+            Description = @"Set your current appearance to your last saved appearance.  Makes sure the bot is not a cloud.
 <p>Adding 'nobake' doesn't rebake the avatar's textures.</p>";
-            Usage = "appearance [nobake]";
+		    Usage = Htmlize.Usage("appearance [nobake]", "tells the server to use the last cached appearence baking or not") +
+		            Htmlize.Example("appearance", "Same as rebaking in a normal client") +
+		            Htmlize.Example("appearance nobake", "fast way to tell the server you are not a cloud");
 		    Parameters = NamedParam.CreateParams(NamedParam.Optional("nobake", typeof (bool), "Do not rebake the avatar's textures"));
             ResultMap = NamedParam.CreateParams(
                  "message", typeof(string), "if success was false, the reason why",

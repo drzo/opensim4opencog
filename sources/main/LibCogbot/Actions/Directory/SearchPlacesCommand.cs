@@ -19,7 +19,8 @@ namespace cogbot.Actions.Search
         public SearchPlacesCommand(BotClient testClient)
         {
             Name = "searchplaces";
-            Description = "Searches Places. Usage: searchplaces [search text]";
+            Description = "Searches Places.";
+            Usage = Htmlize.Usage(Name + " [search text]", "searches " + Name.Replace("seaches", ""));
             Category = CommandCategory.Other;
             Parameters =
                 NamedParam.CreateParams("searchText", typeof (string), "what you are searching for");

@@ -26,10 +26,11 @@ namespace cogbot.Actions.Search
             Name = "searchland";
             Description = "Searches for land for sale. for usage information type: searchland";
             Category = CommandCategory.Search;
-            Usage = "Usage: searchland [type] [max price] [min size]\n" +
-                "\twhere [type] is one of: mainland, auction, estate, all\n" +
-                "\tif [max price] or [min size] are 0 that parameter will be ignored\n\n" +
-                "example: \"searchland mainland 0 512\" // shows the lowest priced mainland that is larger than 512/m2\n\n";
+            Usage = Htmlize.Usage(Name + " [type] [max price] [min size]",
+                                  "\twhere [type] is one of: mainland, auction, estate, all\n" +
+                                  "\tif [max price] or [min size] are 0 that parameter will be ignored") +
+                    Htmlize.Usage(Name + " mainland 0 512",
+                                  "shows the lowest priced mainland that is larger than 512/m2");
             Parameters =
                 NamedParam.CreateParams(
                     "searchText", typeof (DirectoryManager.SearchTypeFlags), "search type flags",
