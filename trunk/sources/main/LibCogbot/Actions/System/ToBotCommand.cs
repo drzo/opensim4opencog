@@ -24,7 +24,7 @@ namespace cogbot.Actions.System
         {
             if (args.Length < 2) return ShowUsage();
             BotClient oBotClient = ClientManager.GetBotByName(args[0]);
-            if (oBotClient == TheBotClient) return Success("not for me");
+            if (oBotClient != TheBotClient) return Success("not for me");
             string botcmd = String.Join(" ", args, 1, args.Length - 1).Trim();
             return Success("tobot " + oBotClient + " " + oBotClient.ExecuteCommand(botcmd, fromAgentID, WriteLine));
         }
