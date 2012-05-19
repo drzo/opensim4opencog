@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using cogbot.TheOpenSims;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
@@ -117,11 +118,43 @@ namespace cogbot.Actions
         {
             get
             {
-                if (!string.IsNullOrEmpty(helpString)) return helpString;
-                return helpString + "  Usage: " + usageString; 
+                return helpString;
             }
         }
+        public String ToPrologString()
+        {
+            return "command(" + ToPLAtomStr(Name) + "," + ToPLAtomStr(Description) + "," + ToPLAtomStr(usageString) +
+                   "," + ToPLAtomStr(ParameterVersions) + "," + ToPLAtomStr(ResultMap) + ")";
+        }
 
+        private string ToPLAtomStr(Array ar)
+        {
+            if (ar.Length == 0) return "[]";
+            StringBuilder sb = new StringBuilder("[" + ToPLAtomStr(ar.GetValue(0)));
+            for (int i = 1; i < ar.Length; i++)
+            {
+                sb.Append("," + ToPLAtomStr(ar.GetValue(i)));
+            }
+            return sb.ToString() + "]";
+        }
+
+        private string ToPLAtomStr(object name)
+        {
+            if (name is Array) return ToPLAtomStr((Array)name);
+            if (name is String) return ToPLAtomStr((String)name);
+            if (name is Type) return ToPLAtomStr(((Type)name).Name);
+            if (name is NamedParam) return ToPLAtomStr(((NamedParam)name));
+            return ToPLAtomStr("" + name);
+        }
+        private string ToPLAtomStr(String name)
+        {
+            return "\"" + name.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+        }
+        private string ToPLAtomStr(NamedParam nvc)
+        {
+            return (nvc.IsOptional ? "o" : "p") + "(" + ToPLAtomStr(nvc.Key) + "," + ToPLAtomStr(nvc.Type) + "," +
+                   ToPLAtomStr(nvc.Comment) + ")";
+        }
         public CommandInfo(Command live)
         {
             LoadFromCommand(live);
