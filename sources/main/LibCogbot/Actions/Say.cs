@@ -13,9 +13,16 @@ namespace cogbot.Actions
         public Say(BotClient Client) 
             : base(Client) 
         {
-            Name = GetType().Name.ToLower().Replace("command", "");
-            Description = "Say a message for everyone to hear.";
-            Usage = "To communicate to everyone, type \"say <message>\"";
+            Description = "chat a message.  If the message starts with #&lt;integer&gt; it is chatted on a channel." +
+                "see <a href='wiki/BotCommands#shout'>shout</a> and <a href='wiki/BotCommands#whisper'>whisper</a> to " +
+                "increase or decrease range. If the message is surrounded by &lt; and &gt; it is interpreted as passed " +
+                "to a physical robot body. See BotClient.cs for details";
+            Usage = "say &lt;message&gt;";
+            Parameters = NamedParam.CreateParams("message", typeof(string),
+    "Message to chat. If it starts with # followed by an integer, chats on channel");
+            ResultMap = NamedParam.CreateParams(
+                 "message", typeof(string), "if we could not chat, the reason why",
+                 "success", typeof(bool), "true if the chat succeeded");
         }
 
         public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
@@ -48,7 +55,7 @@ namespace cogbot.Actions
                 }
                 TheBotClient.Talk(text);
             }
-            return new CmdResult("said: " + args, true, new OSDMap());
+            return new CmdResult("said: " + text, true, new OSDMap());
         }
     }
 }
