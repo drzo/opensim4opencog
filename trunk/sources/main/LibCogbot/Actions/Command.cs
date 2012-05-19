@@ -28,7 +28,7 @@ namespace cogbot.Actions
             return "<p>" + NoEnts(example) + "<i>" + NoEnts(comment) + "</i></p>";
         }
 
-        private static string NoEnts(string example)
+        public static string NoEnts(string example)
         {
             return example.Replace("\"", "&qt;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\r\n", "<br>").Replace("\n", "<br>");
         }
