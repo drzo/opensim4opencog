@@ -18,7 +18,13 @@ namespace cogbot.Actions.Search
         {
             Name = "searchclassifieds";
             Description = "Searches Classified Ads. Usage: searchclassifieds [search text]";
-            Category = CommandCategory.Other;
+            Category = CommandCategory.Search;
+            Parameters =
+                NamedParam.CreateParams("searchText", typeof (string), "what you are searching for");
+            ResultMap = NamedParam.CreateParams(
+                "result", typeof (List<string>), "search results",
+                "message", typeof (string), "if success was false, the reason why",
+                "success", typeof (bool), "true if command was successful");
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
@@ -32,15 +38,14 @@ namespace cogbot.Actions.Search
             searchText = searchText.TrimEnd();
             waitQuery.Reset();
 
-            StringBuilder result = new StringBuilder();
-
+            var result = new List<string>();
             EventHandler<DirClassifiedsReplyEventArgs> callback = delegate(object sender, DirClassifiedsReplyEventArgs e)
             {
-                result.AppendFormat("Your search string '{0}' returned {1} classified ads" + Environment.NewLine,
+                WriteLine("Your search string '{0}' returned {1} classified ads" + Environment.NewLine,
                     searchText, e.Classifieds.Count);
                 foreach (DirectoryManager.Classified ad in e.Classifieds)
                 {
-                    result.AppendLine(ad.ToString());
+                    result.Add(ad.ToString());
                 }
 
                 // classifieds are sent 16 ads at a time
@@ -56,12 +61,11 @@ namespace cogbot.Actions.Search
 
             if (!waitQuery.WaitOne(20000, false) && Client.Network.Connected)
             {
-                result.AppendLine("Timeout waiting for simulator to respond to query.");
+                WriteLine("Timeout waiting for simulator to respond to query.");
             }
-
+            Results["result"] = result;
             Client.Directory.DirClassifiedsReply -= callback;
-
-            return Success(result.ToString()); ;
+            return Success("search yeilded " + result.Count);
         }
     }
 }

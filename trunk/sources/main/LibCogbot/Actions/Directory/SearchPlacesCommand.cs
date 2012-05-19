@@ -21,6 +21,12 @@ namespace cogbot.Actions.Search
             Name = "searchplaces";
             Description = "Searches Places. Usage: searchplaces [search text]";
             Category = CommandCategory.Other;
+            Parameters =
+                NamedParam.CreateParams("searchText", typeof (string), "what you are searching for");
+            ResultMap = NamedParam.CreateParams(
+                "result", typeof (List<string>), "search results",
+                "message", typeof (string), "if success was false, the reason why",
+                "success", typeof (bool), "true if command was successful");
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

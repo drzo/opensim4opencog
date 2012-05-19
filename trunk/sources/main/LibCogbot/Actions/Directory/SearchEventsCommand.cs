@@ -17,8 +17,13 @@ namespace cogbot.Actions.Search
         {
             Name = "searchevents";
             Description = "Searches Events list. Usage: searchevents [search text]";
-            Category = CommandCategory.Other;
-            Parameters = new[] { new NamedParam(typeof(GridClient), null) };
+            Category = CommandCategory.Search;
+            Parameters =
+                NamedParam.CreateParams("searchText", typeof(string), "what you are searching for");
+            ResultMap = NamedParam.CreateParams(
+                "result", typeof(List<string>), "search results",
+                "message", typeof(string), "if success was false, the reason why",
+                "success", typeof(bool), "true if command was successful");
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

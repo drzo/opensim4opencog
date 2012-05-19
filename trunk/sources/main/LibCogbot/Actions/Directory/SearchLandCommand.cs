@@ -30,6 +30,15 @@ namespace cogbot.Actions.Search
                 "\twhere [type] is one of: mainland, auction, estate, all\n" +
                 "\tif [max price] or [min size] are 0 that parameter will be ignored\n\n" +
                 "example: \"searchland mainland 0 512\" // shows the lowest priced mainland that is larger than 512/m2\n\n";
+            Parameters =
+                NamedParam.CreateParams(
+                    "searchText", typeof (DirectoryManager.SearchTypeFlags), "search type flags",
+                    "maxPrice", typeof (int), "max price",
+                    "minSize", typeof (int), "min size");
+            ResultMap = NamedParam.CreateParams(
+                "result", typeof(List<string>), "search results",
+                "message", typeof(string), "if success was false, the reason why",
+                "success", typeof(bool), "true if command was successful");
         }
 
         /// <summary>
