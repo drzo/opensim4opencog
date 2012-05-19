@@ -15,7 +15,8 @@ namespace cogbot.Actions.Appearance
             TheBotClient = testClient;
             Name = "animinfo";
             Description = "Show debug info about anims.";
-            Usage = Name + " [match]";
+            Usage = Htmlize.Usage(Name + " <match>", "shows the info about animation") +
+                    Htmlize.Example(Name + " stand1", "shows that it loops and durration");
             Category = CommandCategory.Appearance;
             Parameters = NamedParam.CreateParams(NamedParam.Optional("anim", typeof (SimAnimation), "the animation you want info about such as duration"));
             ResultMap = NamedParam.CreateParams(

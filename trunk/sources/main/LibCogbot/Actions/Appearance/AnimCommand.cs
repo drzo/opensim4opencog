@@ -16,10 +16,9 @@ namespace cogbot.Actions.Appearance
             TheBotClient = testClient;
             Name = "anim";
             Description = "List or do animation or gesture on Simulator.";
-            Usage =
-                @"Usage: anim // just lists anims currently running
-                  Usage: anim stopall +HOVER 5 +23423423423-4234234234-234234234-23423423 10 -CLAP  " +
-                "// stop all current anims, begin hover, wait 5 seconds, begin clapping, wait 10 seconds, stop clapping ";
+            Usage = Htmlize.Usage("anim", "just lists anims currently running") +
+                    Htmlize.Usage("anim stopall +HOVER 5 +23423423423-4234234234-234234234-23423423 10 -CLAP",
+                                  "stop all current anims, begin hover, wait 5 seconds, begin clapping, wait 10 seconds, stop clapping");
 
             Category = CommandCategory.Appearance;
             ParameterVersions = NamedParam.CreateParamVersions(
