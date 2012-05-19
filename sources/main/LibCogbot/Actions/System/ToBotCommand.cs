@@ -11,7 +11,7 @@ namespace cogbot.Actions.System
         {
             Name = "tobot";
             Description =
-                "Send a command only to one bot.  This is useful when more than one bot is listen to your botcommands on open channel." +
+                "Send a command only to one bot.  This is useful when more than one bot is listening to your botcommands on open channel." +
                 "The bot must be logged on from the same Cogbot instance";
             Usage = 
                 Htmlize.Usage("tobot <avatar> <botcmd>", "Send the command only to avatar") +
