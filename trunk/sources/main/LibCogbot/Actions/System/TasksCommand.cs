@@ -13,7 +13,11 @@ namespace cogbot.Actions.System
     {
         public TasksCommand(BotClient testClient)
         {
-            Description = "Shows the list of task queue statuses.  Usage: tasks";
+            Description = "Shows the list of task queue statuses. SL/Opensim is a streaming system." +
+" Many things happen asynchronously. Each asynch activity is represented by a 'task'. These tasks are" +
+" processed from task queues. This command displays the status of the queues. It is mostly useful for debugging" +
+" cogbot itself, but can also be useful for understanding bot performance.";
+            Usage = Htmlize.Usage("tasks", "show the task queue statuses");
             Category = CommandCategory.BotClient;
         }
 
