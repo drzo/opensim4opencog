@@ -10,7 +10,9 @@ namespace cogbot.Actions.System
         public ToBotCommand(BotClient testClient)
         {
             Name = "tobot";
-            Description = "Send a command only to one bot. The bot must be logged on from the same Cogbot instance";
+            Description =
+                "Send a command only to one bot.  This is useful when more than one bot is listen to your botcommands on open channel." +
+                "The bot must be logged on from the same Cogbot instance";
             Usage = 
                 Htmlize.Usage("tobot <avatar> <botcmd>", "Send the command only to avatar") +
                 Htmlize.Example("tobot \"Nephrael Rae\" anim KISS", "Make Nephrael Rae play the kiss animation");
