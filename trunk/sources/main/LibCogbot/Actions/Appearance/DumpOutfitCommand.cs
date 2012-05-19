@@ -21,8 +21,8 @@ namespace cogbot.Actions.Appearance
             Category = CommandCategory.Inventory;
             Usage = Name + " [avatar-spec] // no avatar-spec then use $self";
             Parameters = NamedParam.CreateParams(
-                NamedParam.Optional("target", typeof(SimAvatar),
-                                    "the prim or agent you wish to see " + Name +
+                NamedParam.Optional("target", typeof(AgentSpec),
+                                    "the agents you wish to see " + Name +
                                     " (see meets a specified <a href='wiki/BotCommands#AgentSpec'>Agent Spec</a>.)"));
             ResultMap = NamedParam.CreateParams(
                 "message", typeof(string), "if success was false, the reason why",
