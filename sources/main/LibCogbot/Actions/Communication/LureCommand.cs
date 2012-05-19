@@ -16,8 +16,8 @@ namespace cogbot.Actions.Communication
             Name = "lure";
             Description = "Send a lure to a user.";
             Category = CommandCategory.Friends;
-            Usage = Name + " [avatar-spec]";
-            Parameters = NamedParam.CreateParams("target", typeof (SimAvatar),
+            Usage = Name + " [agent-spec]";
+            Parameters = NamedParam.CreateParams("target", typeof (AgentSpec),
                                                  "the agent you wish to see " + Name +
                                                  " (see meets a specified <a href='wiki/BotCommands#AvatarSpec'>Avatar Spec</a>.)");
             ResultMap = NamedParam.CreateParams(

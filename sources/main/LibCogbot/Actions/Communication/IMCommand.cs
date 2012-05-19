@@ -17,7 +17,7 @@ namespace cogbot.Actions.Communication
         {
             Name = "im";
             Description = "IM a user.";
-            Usage = "Usage: im [[firstname] [lastname]] [message]";
+            Usage = "Usage: im <agent-spec> [message]";
             Category = CommandCategory.Communication;
             Parameters =
                 NamedParam.CreateParams(
