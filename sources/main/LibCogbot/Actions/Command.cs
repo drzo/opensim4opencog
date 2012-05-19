@@ -206,7 +206,7 @@ namespace cogbot.Actions
         {
             get
             {
-                return helpString + "  Usage: " + Usage;
+                return helpString;
             }
             set
             {
