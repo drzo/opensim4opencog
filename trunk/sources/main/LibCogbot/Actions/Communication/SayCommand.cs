@@ -13,7 +13,7 @@ namespace cogbot.Actions.Communication
 		{
 			Name = "say";
             Description = Name + " something.";
-            Usage = Name + " (optional channel) whatever";
+            Usage = Htmlize.Usage(Name + " (optional channel) whatever", Name + "s whatever (optionally to channel)");
             Category = CommandCategory.Communication;
             Parameters =
                 NamedParam.CreateParams(

@@ -14,7 +14,7 @@ namespace cogbot.Actions.Communication
 		{
 			Name = "echoMaster";
 			Description = "Repeat everything that master says from open channel to open channel.";
-            Usage = "echomaster // toggles this commnand on/off";
+            Usage = Htmlize.Usage("echomaster", "toggles this commnand on/off");
             Category = CommandCategory.Communication;
             Parameters = NamedParam.CreateParams();
             ResultMap = NamedParam.CreateParams(

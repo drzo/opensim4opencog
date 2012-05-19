@@ -17,7 +17,8 @@ namespace cogbot.Actions.Search
         public SearchPeopleCommand(BotClient testClient)
         {
             Name = "searchpeople";
-            Description = "Searches for other avatars. Usage: searchpeople [search text]";
+            Description = "Searches for other avatars.";
+            Usage = Htmlize.Usage(Name + " [search text]", "searches " + Name.Replace("seaches", ""));
             Category = CommandCategory.Friends;
             Parameters =
                 NamedParam.CreateParams("searchText", typeof(string), "what you are searching for");

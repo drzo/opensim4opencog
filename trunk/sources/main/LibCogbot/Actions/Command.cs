@@ -30,7 +30,7 @@ namespace cogbot.Actions
 
         private static string NoEnts(string example)
         {
-            return example.Replace("\"", "&qt;").Replace("<", "&lt;").Replace(">", "&gt;");
+            return example.Replace("\"", "&qt;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\r\n", "<br>").Replace("\n", "<br>");
         }
 
         public static string Example(string typed, string output)

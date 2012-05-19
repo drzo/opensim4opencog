@@ -19,7 +19,7 @@ namespace cogbot.Actions.Appearance
             Name = "dumpoutfit";
             Description = "Dumps all of the textures from an avatars outfit to the hard drive. Usage: dumpoutfit [avatar-spec]";
             Category = CommandCategory.Inventory;
-            Usage = Name + " [avatar-spec] // no avatar-spec then use $self";
+            Usage = Htmlize.Usage(Name + " [agent-spec]", "no prim-spec then use $self");
             Parameters = NamedParam.CreateParams(
                 NamedParam.Optional("target", typeof(AgentSpec),
                                     "the agents you wish to see " + Name +

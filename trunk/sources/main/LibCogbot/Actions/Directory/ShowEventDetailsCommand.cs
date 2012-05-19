@@ -12,7 +12,8 @@ namespace cogbot.Actions.Search
         public ShowEventDetailsCommand(BotClient testClient)
         {
             Name = "showevent";
-            Description = "Shows an Events details. Usage: showevent [eventID]";
+            Description = "Shows an Events details.";
+            Usage = Htmlize.Usage(Name + " [eventID]", "Display SL event with eventID");
             Category = CommandCategory.Other;
             Parameters =
                 NamedParam.CreateParams("eventID", typeof (UUID), "event you want info for");

@@ -15,7 +15,7 @@ namespace cogbot.Actions.Appearance
         {
             Name = "avatarinfo";
             Description = "Print out information on a nearby avatar.";
-            Usage = Name + " [avatar-spec] // no avatar-spec then use $self";
+            Usage = Htmlize.Usage(Name + " [agent-spec]", "no prim-spec then use $self");
             Category = CommandCategory.Appearance;
             Parameters = NamedParam.CreateParams(
                 NamedParam.Optional("target", typeof(AgentSpec),
