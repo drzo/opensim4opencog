@@ -174,6 +174,8 @@ namespace MushDLR223.ScriptEngines
         public MemberInfo info;
         private Type _Type;
         public object memberTarget;
+        public string Comment;
+        public bool IsOptional;
 
         /// <summary>
         /// Used for constructing Cyc-like functions
@@ -366,7 +368,27 @@ namespace MushDLR223.ScriptEngines
 
         public static NamedParam[] CreateParams(params object[] paramz)
         {
-            return null;
+            List<NamedParam> paramsz = new List<NamedParam>();
+            int argNum = 1;
+            for (int i = 0; i < paramz.Length; )
+            {
+                var o = paramz[i++];
+                if (o is NamedParam)
+                {
+                    paramsz.Add((NamedParam) o);
+                    continue;
+                }
+                if (o is string)
+                {
+                    string k = (string) o;
+                    Type t = paramz[i++] as Type;
+                    string comment = "" + paramz[i++];
+                    NamedParam namedParam = new NamedParam(k, t);
+                    namedParam.Comment = comment;
+                    paramsz.Add(namedParam);
+                }
+            }
+            return paramsz.ToArray();
         }
         public static NamedParam[][] CreateParamVersions(params NamedParam[][] paramz)
         {
@@ -374,7 +396,10 @@ namespace MushDLR223.ScriptEngines
         }
         public static NamedParam Optional(string name, Type type, string description)
         {
-            return default(NamedParam);
+            NamedParam namedParam = new NamedParam(name, type);
+            namedParam.Comment = description;
+            namedParam.IsOptional = true;
+            return namedParam;
         }
     }
 }
