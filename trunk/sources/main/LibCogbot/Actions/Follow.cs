@@ -22,7 +22,7 @@ namespace cogbot.Actions.Movement
             Usage = "<p>follow <avatar name></p>" +
                     "<p>stop-following <avatar name>\"</p>";
             Category = CommandCategory.Movement;
-            Parameters = NamedParam.CreateParams("avatar", typeof(SimAvatar), "Avatar to follow");
+            Parameters = NamedParam.CreateParams("avatar", typeof(AgentSpec), "Avatar to follow");
             ResultMap = NamedParam.CreateParams(
                  "message", typeof(string), "if we could not follow, the reason why",
                  "success", typeof(bool), "true if we are following");

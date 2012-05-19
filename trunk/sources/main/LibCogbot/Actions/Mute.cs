@@ -37,11 +37,11 @@ namespace cogbot.Actions
             ParameterVersions = NamedParam.CreateParamVersions(
                 NamedParam.CreateParams(
                    NamedParam.Optional("element", typeof(MuteFlags), "element to not mute"),
-                   "av", typeof(SimAvatar),
+                   "av", typeof(AgentSpec),
                    "Avatar to mute"),
                 NamedParam.CreateParams(
                    NamedParam.Optional("element", typeof(MuteFlags), "element to not mute"),
-                   "object", typeof(SimAvatar),
+                   "object", typeof(PrimSpec),
                    "object to mute"));
             ResultMap = NamedParam.CreateParams(
                  "message", typeof(string), "if success was false, the reason why",
