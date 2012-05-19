@@ -12,7 +12,7 @@ namespace cogbot.Actions.System
             Name = "tobot";
             Description = "Send a command only to one bot. The bot must be logged on from the same Cogbot instance";
             Usage = 
-                Hmtlize.Usage("tobot <avatar> <botcmd>", "Send the command only to avatar") +
+                Htmlize.Usage("tobot <avatar> <botcmd>", "Send the command only to avatar") +
                 Htmlize.Example("tobot \"Nephrael Rae\" anim KISS", "Make Nephrael Rae play the kiss animation");
             Parameters = NamedParam.CreateParams(
                 "avatar", typeof(AgentSpec), "the avatar to perform the command on",
@@ -24,7 +24,7 @@ namespace cogbot.Actions.System
         {
             if (args.Length < 2) return ShowUsage();
             BotClient oBotClient = ClientManager.GetBotByName(args[0]);
-            if (oBotClient == null) return Success("not for me");
+            if (oBotClient == TheBotClient) return Success("not for me");
             string botcmd = String.Join(" ", args, 1, args.Length - 1).Trim();
             return Success("tobot " + oBotClient + " " + oBotClient.ExecuteCommand(botcmd, fromAgentID, WriteLine));
         }
