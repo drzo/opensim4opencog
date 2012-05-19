@@ -452,7 +452,11 @@ namespace cogbot.Actions
         {
             get
             {
-                _mClient = _mClient ?? Client;
+                if (_mClient == null)
+                {
+                    Failure("trying to access an avatar with an unknown client!?");
+                    return WorldSystem.TheSimAvatar;
+                }
                 return _mClient.TheSimAvatar;
             }
         }
