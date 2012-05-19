@@ -37,46 +37,7 @@
         <!-- Libraries -->
 
       <!-- External Libraries -->
- <!--
-    <Project name="ExtensionLoader" path="sources/external/ExtensionLoader" type="Library" guid="F0CCD62E-8055-4419-8171-F2C5FD7C8B6D">
-      <Configuration name="Debug">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
-      <Configuration name="Release">
-        <Options>
-          <OutputPath>../../../bin/</OutputPath>
-        </Options>
-      </Configuration>
 
-      <ReferencePath>../../../bin</ReferencePath>
-      <Reference name="System"/>
-      <Files>
-        <Match pattern="*.cs" recurse="true"/>
-      </Files>
-    </Project>
-
-      <Project name="HttpServer" path="sources/external/HttpServer" type="Library" guid="455E7D70-1C85-4D7F-9F01-DC801B8B8C34">
-        <Configuration name="Debug">
-          <Options>
-            <OutputPath>../../../bin/</OutputPath>
-          </Options>
-        </Configuration>
-        <Configuration name="Release">
-          <Options>
-            <OutputPath>../../../bin/</OutputPath>
-          </Options>
-        </Configuration>
-
-        <ReferencePath>../../../bin</ReferencePath>
-        <Reference name="System"/>
-        <Reference name="System.Web"/>
-        <Files>
-          <Match pattern="*.cs" recurse="true"/>
-        </Files>
-      </Project>
-      -->
       <Project name="LAIR.CommonPort" path="sources/chatbot/LAIR.ResourceAPIs/LAIR.CommonPort" type="Library" rootNamespace="LAIR.CommonPort" frameworkVersion="v3_5">
         <Configuration name="Debug">
           <Options>
@@ -118,11 +79,13 @@
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../../../bin/</OutputPath>
+          <XmlDocFile>Lucene.Net.XML</XmlDocFile>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
           <OutputPath>../../../../../bin/</OutputPath>
+          <XmlDocFile>Lucene.Net.XML</XmlDocFile>
         </Options>
       </Configuration>
       <ReferencePath>../../../../../bin</ReferencePath>
@@ -510,11 +473,13 @@
       <Configuration name="Debug">
         <Options>
             <OutputPath>bin/temp</OutputPath>
+            <XmlDocFile>Swicli.Library.XML</XmlDocFile>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
             <OutputPath>bin/temp</OutputPath>
+            <XmlDocFile>Swicli.Library.XML</XmlDocFile>
         </Options>
       </Configuration>
 
@@ -542,11 +507,13 @@
       <Configuration name="Debug">
         <Options>
             <OutputPath>bin/temp</OutputPath>
+            <XmlDocFile>SWICLITestDLL.XML</XmlDocFile
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
             <OutputPath>bin/temp</OutputPath>
+            <XmlDocFile>SWICLITestDLL.XML</XmlDocFile>
         </Options>
       </Configuration>
 
@@ -681,11 +648,13 @@
         <Configuration name="Debug">
           <Options>
             <OutputPath>../../../../bin/</OutputPath>
+            <XmlDocFile>OpenMetaverse.Rendering.Meshmerizer.XML</XmlDocFile>
           </Options>
         </Configuration>
         <Configuration name="Release">
           <Options>
             <OutputPath>../../../../bin/</OutputPath>
+            <XmlDocFile>OpenMetaverse.Rendering.Meshmerizer.XML</XmlDocFile>
           </Options>
         </Configuration>
 
@@ -751,11 +720,13 @@
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
+          <XmlDocFile>DotLisp.XML</XmlDocFile>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
+          <XmlDocFile>DotLisp.XML</XmlDocFile>
         </Options>
       </Configuration>
 
@@ -773,11 +744,13 @@
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
+          <XmlDocFile>MushDLR223.XML</XmlDocFile>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
+          <XmlDocFile>MushDLR223.XML</XmlDocFile>
         </Options>
       </Configuration>
 
@@ -805,12 +778,13 @@
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
+          <XmlDocFile>AIMLBot.XML</XmlDocFile>
         </Options>
       </Configuration>
       <Configuration name="Release">
-        <Options>
-            
+        <Options>            
           <OutputPath>../../../bin/</OutputPath>
+          <XmlDocFile>AIMLBot.XML</XmlDocFile>
         </Options>
       </Configuration>
 
@@ -850,11 +824,13 @@
   <Configuration name="Debug">
     <Options>
         <OutputPath>../../../../../../bin/</OutputPath>
+        <XmlDocFile>Iesi.Collections.Generic.XML</XmlDocFile>
     </Options>
   </Configuration>
   <Configuration name="Release">
     <Options>
         <OutputPath>../../../../../../bin/</OutputPath>
+        <XmlDocFile>Iesi.Collections.Generic.XML</XmlDocFile>
     </Options>
   </Configuration>
 
@@ -878,12 +854,13 @@
   <Configuration name="Debug">
     <Options>
       <OutputPath>../../../../bin/</OutputPath>
+      <XmlDocFile>Aima.NET.XML</XmlDocFile>
     </Options>
   </Configuration>
   <Configuration name="Release">
     <Options>
-
       <OutputPath>../../../../bin/</OutputPath>
+      <XmlDocFile>Aima.NET.XML</XmlDocFile>
     </Options>
   </Configuration>
 
@@ -908,12 +885,13 @@
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../../../bin/</OutputPath>
+          <XmlDocFile>MiniSatCS.XML</XmlDocFile>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-
           <OutputPath>../../../../../bin/</OutputPath>
+          <XmlDocFile>MiniSatCS.XML</XmlDocFile>
         </Options>
       </Configuration>
 
@@ -936,12 +914,13 @@
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../../../bin/</OutputPath>
+          <XmlDocFile>AltAIMLbot.XML</XmlDocFile>
         </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
-
           <OutputPath>../../../../../bin/</OutputPath>
+          <XmlDocFile>AltAIMLbot.XML</XmlDocFile>
         </Options>
       </Configuration>
 
@@ -970,12 +949,13 @@
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
+          <XmlDocFile>PathSystem3D.XML</XmlDocFile>
         </Options>
       </Configuration>
       <Configuration name="Release">
-        <Options>
-            
+        <Options>            
           <OutputPath>../../../bin/</OutputPath>
+          <XmlDocFile>PathSystem3D.XML</XmlDocFile>
         </Options>
       </Configuration>
 
@@ -1038,12 +1018,14 @@
         <Configuration name="Debug">
             <Options>
                 <OutputPath>../../../bin/</OutputPath>
+                <XmlDocFile>Radegast.XML</XmlDocFile>
             </Options>
         </Configuration>
         <Configuration name="Release">
             <Options>
                 <OutputPath>../../../bin/</OutputPath>
                 <PlatformTarget>AnyCPU</PlatformTarget>
+                <XmlDocFile>Radegast.XML</XmlDocFile>
             </Options>
         </Configuration>
 
@@ -1096,14 +1078,14 @@
        <Configuration name="Debug">
          <Options>
            <OutputPath>../../../bin/</OutputPath>
-           <XmlDocFile>Cogbot.XML</XmlDocFile>
+           <XmlDocFile>Cogbot.Library.XML</XmlDocFile>
          </Options>
        </Configuration>
        <Configuration name="Release">
          <Options>
 
            <OutputPath>../../../bin/</OutputPath>
-           <XmlDocFile>Cogbot.XML</XmlDocFile>
+           <XmlDocFile>Cogbot.Library.XML</XmlDocFile>
          </Options>
        </Configuration>
 
@@ -1158,12 +1140,13 @@
       <Configuration name="Debug">
         <Options>
             <OutputPath>../../../bin/</OutputPath>
+            <XmlDocFile>AIMLBotModule.XML</XmlDocFile>
         </Options>
       </Configuration>
       <Configuration name="Release">
-        <Options>
-            
+        <Options>            
             <OutputPath>../../../bin/</OutputPath>
+            <XmlDocFile>AIMLBotModule.XML</XmlDocFile>
         </Options>
       </Configuration>
 
@@ -1251,11 +1234,13 @@
   <Configuration name="Debug">
     <Options>
         <OutputPath>../../../bin/</OutputPath>
+        <XmlDocFile>PrologBotModule.XML</XmlDocFile>
     </Options>
   </Configuration>
   <Configuration name="Release">
     <Options>
         <OutputPath>../../../bin/</OutputPath>
+        <XmlDocFile>PrologBotModule.XML</XmlDocFile>
     </Options>
   </Configuration>
 
@@ -1282,11 +1267,13 @@
   <Configuration name="Debug">
     <Options>
         <OutputPath>../../../bin/</OutputPath>
+        <XmlDocFile>ABCLInterpreterModule.XML</XmlDocFile>
     </Options>
   </Configuration>
   <Configuration name="Release">
     <Options>
         <OutputPath>../../../bin/</OutputPath>
+        <XmlDocFile>ABCLInterpreterModule.XML</XmlDocFile>
     </Options>
   </Configuration>
 
@@ -1349,12 +1336,13 @@
      <Configuration name="Debug">
        <Options>
            <OutputPath>../../../bin/</OutputPath>
+           <XmlDocFile>TheSimiansModule.XML</XmlDocFile>
        </Options>
      </Configuration>
      <Configuration name="Release">
-       <Options>
-           
+       <Options>           
            <OutputPath>../../../bin/</OutputPath>
+           <XmlDocFile>TheSimiansModule.XML</XmlDocFile>
        </Options>
      </Configuration>
 
@@ -1379,12 +1367,13 @@
      <Configuration name="Debug">
        <Options>
            <OutputPath>../../../bin/</OutputPath>
+           <XmlDocFile>CycWorldModule.XML</XmlDocFile>
        </Options>
      </Configuration>
      <Configuration name="Release">
-       <Options>
-           
+       <Options>           
            <OutputPath>../../../bin/</OutputPath>
+           <XmlDocFile>CycWorldModule.XML</XmlDocFile>
        </Options>
      </Configuration>
 
@@ -1421,12 +1410,13 @@
      <Configuration name="Debug">
        <Options>
            <OutputPath>../../../bin/</OutputPath>
+           <XmlDocFile>FashionBotModule.XML</XmlDocFile>
        </Options>
      </Configuration>
      <Configuration name="Release">
        <Options>
-
            <OutputPath>../../../bin/</OutputPath>
+           <XmlDocFile>FashionBotModule.XML</XmlDocFile>
        </Options>
      </Configuration>
 
@@ -1449,12 +1439,13 @@
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
+          <XmlDocFile>IrcRegionModule.XML</XmlDocFile>
         </Options>
       </Configuration>
       <Configuration name="Release">
-        <Options>
-          
+        <Options>          
           <OutputPath>../../../bin/</OutputPath>
+          <XmlDocFile>IrcRegionModule.XML</XmlDocFile>
         </Options>
       </Configuration>
 
@@ -1479,11 +1470,13 @@
      <Configuration name="Debug">
        <Options>
          <OutputPath>../../../bin/</OutputPath>
+         <XmlDocFile>CogbotRadegastPluginModule.XML</XmlDocFile>
        </Options>
      </Configuration>
      <Configuration name="Release">
        <Options>         
          <OutputPath>../../../bin/</OutputPath>
+         <XmlDocFile>CogbotRadegastPluginModule.XML</XmlDocFile>
        </Options>
      </Configuration>
 
@@ -1511,11 +1504,13 @@
          <Configuration name="Debug">
            <Options>
              <OutputPath>../../../../bin/</OutputPath>
+             <XmlDocFile>Radegast.Plugin.Speech.XML</XmlDocFile>
            </Options>
          </Configuration>
          <Configuration name="Release">
            <Options>
              <OutputPath>../../../../bin/</OutputPath>             
+             <XmlDocFile>Radegast.Plugin.Speech.XML</XmlDocFile>
            </Options>
          </Configuration>
 
@@ -1697,13 +1692,13 @@
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../../../bin/</OutputPath>
-          <XmlDocFile>Cogbot.LAIR.XML</XmlDocFile>
+          <XmlDocFile>SharpWordNet.XML</XmlDocFile>
          </Options>
       </Configuration>
       <Configuration name="Release">
         <Options>
           <OutputPath>../../../../../bin/</OutputPath>
-          <XmlDocFile>Cogbot.LAIR.XML</XmlDocFile>
+          <XmlDocFile>SharpWordNet.XML</XmlDocFile>
         </Options>
       </Configuration>
 
