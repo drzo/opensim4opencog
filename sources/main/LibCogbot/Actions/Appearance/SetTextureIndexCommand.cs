@@ -17,7 +17,7 @@ namespace cogbot.Actions.Appearance
         {
             Name = "SetTexture";
             Description = "Set appearance texture of avatar.";
-            Usage = "Usage: SetTexture [face-index] [texture-uuid]";
+            Usage = Htmlize.Usage(Name + " [face-index] [texture-uuid]", "set the texture on face-index");
             Category = CommandCategory.Appearance;
             Parameters = NamedParam.CreateParams(
                 "textureIndex", typeof (AvatarTextureIndex), "face index of where to set the texture",

@@ -285,7 +285,7 @@ namespace cogbot.TheOpenSims
                 SimRegion R = GetSimRegion(); //
                 if (R == null) return null;
                 var ps = R.GetPathStore(SimPosition);
-                if (IsControllable && IsAvatar && (this is SimMover))
+                if (IsAvatar && (this is SimMover) && IsControllable)
                 {
                     ps.LastSimMover = (SimMover)this;
                 }
@@ -466,6 +466,10 @@ namespace cogbot.TheOpenSims
 
         public virtual bool TurnToward(Vector3d targetPosition)
         {
+            if (!IsControllable)
+            {
+                throw Error("GotoTarget !Client.Self.AgentID == Prim.ID");
+            }
             Vector3 local = GetLocalTo(targetPosition);
             return TurnToward(local);
         }
@@ -488,6 +492,10 @@ namespace cogbot.TheOpenSims
 
         public virtual bool TurnToward(Vector3 target)
         {
+            if (!IsControllable)
+            {
+                throw Error("GotoTarget !Client.Self.AgentID == Prim.ID");
+            } 
             Quaternion parentRot = Quaternion.Identity;
 
             if (!IsRoot)

@@ -966,8 +966,12 @@ namespace cogbot.TheOpenSims
         }
 
         public Thread MovementConsumer;
-        public void OnlyMoveOnThisThread()
+        virtual public void OnlyMoveOnThisThread()
         {
+            if (!IsControllable)
+            {
+                throw Error("GotoTarget !Client.Self.AgentID == Prim.ID");
+            }
             if (MovementConsumer != null)
             {
                 if (MovementConsumer != Thread.CurrentThread && MovementConsumer.IsAlive)
@@ -1061,6 +1065,10 @@ namespace cogbot.TheOpenSims
 
         public override bool TurnToward(Vector3 target)
         {
+            if (!IsControllable)
+            {
+                throw Error("GotoTarget !Client.Self.AgentID == Prim.ID");
+            }
             if (true)
             {
                 Quaternion parentRot = Quaternion.Identity;
