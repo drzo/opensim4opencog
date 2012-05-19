@@ -51,11 +51,11 @@ namespace PathSystem3D.Navigation
         public OdePlugin odePhysics = new OdePlugin();
         public OdeScene odeScene;
 #endif
-        [ConfigSetting]
+        [ConfigSetting(Description="how much debug spew to print from pathfinder. 0=show nothing 9 = show everything")]
         public static int DebugLevel = 0;
-        [ConfigSetting]
+        [ConfigSetting(Description="if true, don't reinforce travelling through points previously travelled by av's")]
         public static bool DisableTravelPoints = false;
-        [ConfigSetting]
+        [ConfigSetting(Description="if true print debug info about travel points")]
         public static bool DebugSetTraveled = false;
 
         public string RegionName { get; set; }

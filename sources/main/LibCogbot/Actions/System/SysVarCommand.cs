@@ -16,7 +16,21 @@ namespace cogbot.Actions.System
         public SysVarCommand(BotClient client)
         {
             Name = "sysvar";
-            Description = "Manipulates system vars. Usage: sysvar CanPhantomize [True]";
+            Description = "Manipulates system variables." +
+                " These are global settings that affect Cogbot." +
+                "Many SysVars contain the word 'Maintain' (eg MaintainSounds). Generally this means" +
+                "Cogbot won't make a special request from the server to get information about this sort of thing" +
+                "and will provide information about it only if available" +
+                "For booleans anything but no or false (case insensitive) is true.";
+            Usage = Htmlize.Usage("sysvar", "List all Sysvars and their settings") +
+                    Htmlize.Usage("sysvar <key>", "List the current value of <key>") +
+                    Htmlize.Usage("sysvar <key> <value>", "set a system variable") +
+                    Htmlize.Example("sysvar CanUseSit True", "allow the bot to sit on things") +
+                    Htmlize.Example("sysvar CanUseSit no", "don't allow the bot to sit on things") +
+                    Htmlize.Example("sysvar Maintain false", "set every sysvar that contains Maintain in it's name to false") +
+                    Htmlize.Example("sysvar MaintainEffectsDistance 8.0", "set the maximum distance to notice effects to 8.0");
+
+
             Category = CommandCategory.BotClient;
         }
 

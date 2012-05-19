@@ -399,7 +399,7 @@ namespace MushDLR223.Utilities
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public static bool AllocedConsole = false;
         public static bool NoConsoleVisible = false;
-        [ConfigSetting]
+        [ConfigSetting(Description="if false, Print method name with error messages. Printing them is expensive.")]
         public static bool SkipStackTraces = true;
         private static readonly object[] NOARGS = new object[0];
         //public static bool PrintToSystemConsole = true;

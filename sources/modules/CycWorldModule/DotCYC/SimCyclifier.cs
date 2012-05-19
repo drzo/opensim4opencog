@@ -32,17 +32,17 @@ namespace CycWorldModule.DotCYC
     {
         // ReSharper disable InconsistentNaming
 
-        [ConfigSetting(SkipSaveOnExit = true)]
+        [ConfigSetting(SkipSaveOnExit = true, Description="Use the Cyc server. Set to false for improved performance.")]
         public static bool UseCyc = true;
-        [ConfigSetting]
+        [ConfigSetting(Description="Erase static Cyc microtheories added by Cogbot between Cogbot Sessions. 'Static' is information that usually won't change (eg an avatar's name)")]
         public static bool ClearGridDataBetweenSessions = false;
-        [ConfigSetting]
+        [ConfigSetting(Description = "Erase dynamic Cyc microtheories added by Cogbot between Cogbot Sessions. 'Dynamic' is information that might change (eg prim positions)")]
         public static bool ClearRegionDataBetweenSessions = false;
-        [ConfigSetting]
+        [ConfigSetting(Description="Erase Cyc knowledge of events that happened during the session (e.g. what someone said)")]
         public static bool ClearHistoryBetweenSessions = true;
-        [ConfigSetting]
+        [ConfigSetting(Description="Add memory of events like connecting, network events that probably aren't interesting to the AI (hence usually false) to the Cyc microtheory")]
         public static bool StoreInfrastructureEvents = false;
-        [ConfigSetting]
+        [ConfigSetting(Description="Add memory of events that target the bot specifically to the Cyc microtheory")]
         public static bool StorePersonalEvents = false;
 
         static public CycAccess cycAccess
@@ -61,7 +61,7 @@ namespace CycWorldModule.DotCYC
         static public CycFort staticStateMt;
         static public int KBTick = 0;
         private CycWorldModule cycWorldModule;
-        [ConfigSetting(SkipSaveOnExit = true)]
+        [ConfigSetting(SkipSaveOnExit = true, Description="If false, disables all event processing in Cyc")]
         static public bool ProcessEvents = true;
         private bool IsDisposing;
 

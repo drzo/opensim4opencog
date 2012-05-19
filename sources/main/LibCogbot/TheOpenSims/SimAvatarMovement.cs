@@ -713,7 +713,7 @@ namespace cogbot.TheOpenSims
         }
 
 
-        [ConfigSetting]
+        [ConfigSetting(Description="When trying to moveto, if you can't move by walking or flying, teleport. If false, fail.")]
         public static bool MoveUseTeleportFallback = true;
         public static bool GotoUseTeleportFallback = !MoveUseTeleportFallback && false;
         static public MovementProceedure SimpleMoveToMovementProceedure = MovementProceedure.CogPusher;
