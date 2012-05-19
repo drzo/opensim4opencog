@@ -129,6 +129,7 @@ namespace cogbot.Actions
 
         private string ToPLAtomStr(Array ar)
         {
+            if (ar == null) return "_";
             if (ar.Length == 0) return "[]";
             StringBuilder sb = new StringBuilder("[" + ToPLAtomStr(ar.GetValue(0)));
             for (int i = 1; i < ar.Length; i++)
@@ -140,6 +141,7 @@ namespace cogbot.Actions
 
         private string ToPLAtomStr(object name)
         {
+            if (name == null) return "_";
             if (name is Array) return ToPLAtomStr((Array)name);
             if (name is String) return ToPLAtomStr((String)name);
             if (name is Type) return ToPLAtomStr(((Type)name).Name);
@@ -148,10 +150,12 @@ namespace cogbot.Actions
         }
         private string ToPLAtomStr(String name)
         {
+            if (name == null) return "_";
             return "\"" + name.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
         }
         private string ToPLAtomStr(NamedParam nvc)
         {
+            if (nvc == null) return "_";
             return (nvc.IsOptional ? "o" : "p") + "(" + ToPLAtomStr(nvc.Key) + "," + ToPLAtomStr(nvc.Type) + "," +
                    ToPLAtomStr(nvc.Comment) + ")";
         }
