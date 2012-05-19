@@ -10,15 +10,23 @@ using MushDLR223.ScriptEngines;
 
 namespace cogbot.Actions.Movement
 {
+    [Obsolete("Use Teleport Command instead")]
     public class GotoCommand : Command, BotPersonalCommand
     {
         public GotoCommand(BotClient testClient)
 		{
 			Name = "goto";
-			Description = "Teleport to a location (e.g. \"goto Hooper/100/100/30\")";
             Category = CommandCategory.Movement;
-            Parameters =  NamedParam.CreateParams("location",  typeof(SimPosition)) ;
-            ResultMap = NamedParam.CreateParams("success", typeof (bool), "failureReason", typeof (string));
+            Description = "goto to a location defined by an avatar, object, or position";
+            Usage = @"<p>goto  &lt;location&gt;</p>
+<p>example: goto Zindra/112.3/114.4/23</p>
+<p>example: goto Fluffybunny Resident</p>
+<p>example: goto nth 3 Ship <i>teleports to 3rd nearest object named Ship</i></p>";
+            Parameters = NamedParam.CreateParams("location", typeof(SimPosition),
+                "Location to TP to. Can be an avatar, object, or position. See <a href='wiki/BotCommands#Location'>Locations</a>");
+            ResultMap = NamedParam.CreateParams(
+                 "message", typeof(string), "if we could not teleport, the reason why",
+                 "success", typeof(bool), "true if the teleport succeeded");
 		}
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
