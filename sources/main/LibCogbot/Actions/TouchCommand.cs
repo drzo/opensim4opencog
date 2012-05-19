@@ -14,6 +14,7 @@ namespace cogbot.Actions
 			Name = "touch";
 			Description = @"Touch a prim that meets a specified <a href='wiki/BotCommands#PrimSpec'>Prim Spec</a>.
 Ignores the object's default action, always touches.";
+            Usage = "touch [primspec]- see <a href='wiki/BotCommands#PrimSpec'>Prim Spec</a>"; 
             Category = CommandCategory.Objects;
             Parameters = NamedParam("object", typeof(SimObject),
                 "The object to touch, as specified in <a href='wiki/BotCommands#PrimSpec'>Prim Spec</a>");

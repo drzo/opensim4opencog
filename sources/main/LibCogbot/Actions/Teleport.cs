@@ -23,9 +23,16 @@ namespace cogbot.Actions.Agent
         {
             TheBotClient = testClient;
             Category = CommandCategory.Movement;
-            Parameters = new[] { new NamedParam("location", typeof(SimPosition), typeof(SimPosition)) };
-            Description = "Teleport to a location.";
-            Usage = "To teleport to a location, type \"teleport to <location name>\"";
+            Description = "Teleport to a location defined by an avatar, object, or position";
+            Usage = @"<p>teleport  &lt;location&gt;</p>
+<p>example: teleport Zindra/112.3/114.4/23</p>
+<p>example: teleport Fluffybunny Resident</p>
+<p>example: teleport nth 3 Ship <i>teleports to 3rd nearest object named Ship</i></p>";
+            Parameters = NamedParam.CreateParams("location", typeof(SimPosition),
+                "Location to TP to. Can be an avatar, object, or position. See <a href='wiki/BotCommands#Location'>Locations</a>");
+            ResultMap = NamedParam.CreateParams(
+                 "message", typeof(string), "if we could not teleport, the reason why",
+                 "success", typeof(bool), "true if the teleport succeeded");
         }
 
                                     //string message, TeleportStatus status, TeleportFlags flags
@@ -63,7 +70,7 @@ namespace cogbot.Actions.Agent
             if (argUsed > 0)
             {
                 Vector3d global = pos.GlobalPosition;
-                WriteLine("Teleporing to " + pos + "...");
+                WriteLine("Teleporting to " + pos + "...");
                 float x, y;
                 TheSimAvatar.StopMoving();
                 bool res =

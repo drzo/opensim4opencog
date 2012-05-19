@@ -18,7 +18,13 @@ namespace cogbot.Actions
         public ThreadCommand(BotClient testClient)
         {
             Name = "thread";
-            Description = "executes a command in its own thread. Usage: thread anim 30 crouch";
+            Description = "Executes a command in its own thread. For example, thread anim 30 crouch returns immediately, but the bot continues to crouch for 30 seconds";
+            Usage = "<p>thread &lt;command&gt;</p><p>example: thread anim 30 crouch</p><p>example: thread moveto FluffyBunny Resident</p>";
+            Parameters = NamedParam.CreateParams("command", typeof(BotCommand),
+                "The command to execute asynchronously");
+            ResultMap = NamedParam.CreateParams(
+                 "message", typeof(string), "if the inner command failed, the reason why",
+                 "success", typeof(bool), "true if the inner command succeeded");
             Category = CommandCategory.BotClient;
         }
 
