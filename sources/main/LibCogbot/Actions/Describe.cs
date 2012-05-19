@@ -16,7 +16,24 @@ namespace cogbot.Actions.Land
         {
             Name = "Describe";
             Category = CommandCategory.Objects;
-            Parameters = new []{ new NamedParam(typeof(SimObject), typeof(UUID))};
+            Description = "Describe an object.";
+            Usage = @"<p>evinfo &lt;primspec&gt;</p><p>example: evinfo tacosofgod  <i>tacosofgod is a nearby plywood cube</i></p>
+<pre>
+[09:18] tacosofgod Box 70b5e8ab-3308-4bc6-bbf8-4f313cd7d518 (localID 2036105563)(ch0)(PrimFlagsFalse InventoryEmpty, ObjectOwnerModify)[](!IsPassable)
+ 1.53m annies haven II/84.77/138.42/21.56
+ GroupLeader: tacosofgod Box 70b5e8ab-3308-4bc6-bbf8-4f313cd7d518 (localID 2036105563)(ch0)(PrimFlagsFalse InventoryEmpty, ObjectOwnerModify)[](!IsPassable)
+ Light: 
+ TextureEntry:
+  Default texture: 89556747-24cb-43ed-920b-47caed15465f
+[09:18] PS.Count==1
+[09:18] Success: describe complete
+[09:18] Success: describe complete
+</pre>";
+            Parameters = NamedParam.CreateParams("object", typeof(SimObject),
+                "The object to describe, as specified in <a href='wiki/BotCommands#PrimSpec'>Prim Spec</a>");
+            ResultMap = NamedParam.CreateParams(
+                 "message", typeof(string), "if success was false, the reason why",
+                 "success", typeof(bool), "true if we got the description");
         }
 
         public override string Description

@@ -18,11 +18,15 @@ namespace cogbot.Actions.Movement
         public Follow(BotClient Client)
             : base(Client)
         {
-            Description = "Start or stop following a user.";
-            Usage = "To start following an avatar, type \"follow <avatar name>\" \r\n" +
-                          "To stop following an avatar, type \"stop-following <avatar name>\"";
+            Description = "Follow an avatar. This command is modeless.";
+            Usage = "<p>follow <avatar name></p>" +
+                    "<p>stop-following <avatar name>\"</p>";
             Category = CommandCategory.Movement;
-            Parameters = new[] { new NamedParam("location", typeof(SimPosition), typeof(SimPosition)) };
+            Parameters = NamedParam.CreateParams("avatar", typeof(SimAvatar), "Avatar to follow");
+            ResultMap = NamedParam.CreateParams(
+                 "message", typeof(string), "if we could not follow, the reason why",
+                 "success", typeof(bool), "true if we are following");
+
             Name = "Follow*";
         }
 

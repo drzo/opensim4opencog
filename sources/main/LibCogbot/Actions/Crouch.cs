@@ -16,15 +16,20 @@ namespace cogbot.Actions
         public Crouch(BotClient Client)
             : base(Client)
         {
-            Description = "crouch [on|off] 'no argumennt=for 500ms' ";
-            Usage = "crouch [on|off] time-ms";
+            Description = "Makes the bot crouch. Yup. Crouching. Important stuff";
+            Usage = @"<p>crouch  - <i>crouch for 1/2 sec</i></p>
+<p>crouch on  - <i>start crouching indefinitely</i></p>
+<p>crouch off - <i>stop crouching</i></p>";
             Name = "Crouch";
             Category = CommandCategory.Movement;
-            Parameters = new[]
-                             {
-                                 new NamedParam("on-off", typeof (string), "on", "on", "off"),
-                                 new NamedParam("time-ms", typeof (TimeSpan), 500)
-                             };
+            ParameterVersions = NamedParam.CreateParamVersions(
+                NamedParam.CreateParams(),
+                NamedParam.CreateParams(NamedParam.Optional("on", typeof(bool), "begin crouching")),
+                NamedParam.CreateParams("off", typeof(bool), "stop crouching")
+               );
+            ResultMap = NamedParam.CreateParams(
+                 "message", typeof(string), "if success was false, the reason why",
+                 "success", typeof(bool), "true if we crouched");
         }
 
         public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)

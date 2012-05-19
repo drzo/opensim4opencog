@@ -12,9 +12,15 @@ namespace cogbot.Actions.System
         public Help(BotClient Client)
             : base(Client)
         {
-            Description = "Print this help message.";
-            Usage = Description;
-            Parameters = new[] { new NamedParam(typeof(GridClient), null) };
+            Description = "Print help on everything, or help on a topic string. The full help text is searched for the string.";
+            Usage = "<p>help</p><p>help &lt;topic&gt;</p>";
+            Parameters = NamedParam.CreateParams(
+                    NamedParam.Optional("topic", typeof(string), "Optional text to search for."));
+
+            ResultMap = NamedParam.CreateParams(
+                 "message", typeof(string), "if success was false, the reason why",
+                 "success", typeof(bool), "true if outfit was worn");
+
             Category = CommandCategory.BotClient;
             Name = "help";
         }
