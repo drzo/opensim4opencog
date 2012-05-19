@@ -117,7 +117,7 @@ namespace cogbot.Listeners
         [ConfigSetting]
         public static bool MaintainOnlyMasterEffects = false;
 
-        [ConfigSetting]
+        [ConfigSetting(Description = "When effects are happening in the simulator how far away does the bot listen for the effect")]
         public static float MaintainEffectsDistance = 80;
 
         [ConfigSetting]
