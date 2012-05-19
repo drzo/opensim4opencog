@@ -31,36 +31,37 @@ namespace cogbot.Listeners
 
         public static bool IsOpenSim = false;
         
-        [ConfigSetting]
+        [ConfigSetting(Description="Bot is allowed to temporarily make an object phantom to escape from confinement")]
         public static bool CanPhantomize = false;
 
-        [ConfigSetting]
+        [ConfigSetting(Description = "Bot is allowed to sit on things. Some things do obnoxious stuff like TP when sat on.")]
         public static bool CanUseSit = true;
 
-        [ConfigSetting(SkipSaveOnExit = true, Description = "GridMaster will turn this on/off only if it needed")]
+        [ConfigSetting(ReadOnly=true, SkipSaveOnExit = true, Description = "If true the bot repeatedly reloads the scene to try to catch missing updates. GridMaster will turn this on/off only if it needed")]
         public static bool DoSimulatorsCatchUp = false;
-        
-        [ConfigSetting]
+
+        [ConfigSetting(Description = "if true, downloads animations")]
         public static bool MaintainAnims = true;
-        
-        [ConfigSetting]
+
+        [ConfigSetting(Description = "if true, any asset it sees it maintains a copy in cache and uses the cache")]
         public static bool MaintainAssetsInFolders = true;
-        
-        [ConfigSetting]
-        public static bool GleanAssetsFromInventory = true;
-        
-        [ConfigSetting]
+
+        [ConfigSetting(Description = "Make all uuids in inventory known to the system (so you can, for example, get their type with uuidtype). Setting false reduces traffic by not loading inventory stubs.")]
+        public static bool GleanAssetsFromInventory = false;
+
+        [ConfigSetting(Description = "if true, any animation it sees it maintains a copy in cache and uses the cache. Animations can be on when other assets are off")]
         public static bool MaintainAnimsInFolders = true;
-        
-        [ConfigSetting]
+
+        [ConfigSetting(Description = "Make all uuids in the cogbot disk cache known to the system (so you can, for example, get their type with uuidtype). Setting false reduces disk activity at startup by not loading inventory.")]
         public static bool GleanAssetsFromFolders = true;
         
-        [ConfigSetting]
+        [ConfigSetting(Description = "Ignore attachments - false reduces traffic in certain scenarios (eg rp sims with many complex av's with many attachments)")]
         public static bool MaintainAttachments = true;
 
+        [ConfigSetting(Description = "in SL objects are killed simply because they're too far away. So in SL you want to ignore kill objects, in Opensim you don't")]
         public static bool IgnoreKillObjects = false;
 
-        [ConfigSetting(Description = "keep false so the bot only meshes what it needs")]
+        [ConfigSetting(Description = "If you make true bot will mesh entire simulator for pathfinding. keep false so the bot only meshes what it needs")]
         public static bool MaintainCollisions
         {
             get
@@ -73,7 +74,7 @@ namespace cogbot.Listeners
             }
         }
 
-        [ConfigSetting]
+        [ConfigSetting(Description="if true, go ahead and mesh phantom objects. So you might want to set this true in a sim with many objects toggling between phantom and nonphantom.")]
         public static bool SkipPassableMeshes
         {
             get
@@ -86,7 +87,7 @@ namespace cogbot.Listeners
             }
         }
 
-        [ConfigSetting]
+        [ConfigSetting(Description="if false, system wide don't mesh anything. e.g. a bot that never uses collisions.")]
         public static bool MaintainMeshes     
         {
             get
@@ -98,7 +99,7 @@ namespace cogbot.Listeners
                 WorldPathSystem.MaintainMeshes = value;
             }
         }
-        [ConfigSetting]
+        [ConfigSetting(Description="Distance within which the av meshes objects automatically")]
         public static int WorthMeshingDistance
         {
             get
@@ -111,65 +112,62 @@ namespace cogbot.Listeners
             }
         }
 
-        [ConfigSetting]
+        [ConfigSetting(Description="if false ignores all effects (lookat, freelook, idle, particles, light)")]
         public static bool MaintainEffects = true;
 
-        [ConfigSetting]
+        [ConfigSetting(Description="have server send effects only from the master AV")]
         public static bool MaintainOnlyMasterEffects = false;
 
-        [ConfigSetting(Description = "When effects are happening in the simulator how far away does the bot listen for the effect")]
+        [ConfigSetting(Description = "have server send effects only within this radius, affects sounds, chat, and many other htings that aren't strictly effects")]
         public static float MaintainEffectsDistance = 80;
 
-        [ConfigSetting]
+        [ConfigSetting(Description="have server send actions. right now the only action is sit, we'd like to have touch")]
         public static bool MaintainActions = true;
         
-        [ConfigSetting]
+        [ConfigSetting(Description="Makes property updates synchronous")]
         public static bool MaintainPropertiesFromQueue = true;
         
-        [ConfigSetting]
+        [ConfigSetting(Description="if false don't shadow copy objects for velocity, don't notify user object moved.")]
         public static bool MaintainObjectUpdates = true;
         
-        [ConfigSetting]
+        [ConfigSetting(Description="if false don't request objects properties until needed")]
         public static bool MaintainObjectProperties = true;
         
-        [ConfigSetting]
+        [ConfigSetting(Description="if false don't request properties of sounds")]
         public static bool MaintainSounds = true;
-        
-        [ConfigSetting]
+
+        [ConfigSetting(Description = "if false don't download profiles until requested")]
         static public bool MaintainAvatarMetaData = true;
-        
-        [ConfigSetting]
+
+        [ConfigSetting(Description = "if true remember group metadata that's sent")]
         static public bool MaintainGroupMetaData = true;
         
-        [ConfigSetting]
+        [ConfigSetting(Description="if true, request info about, for example, groups in av's profiles")]
         static public bool RequestGroupMetaData = false;
         
-        [ConfigSetting]
+        [ConfigSetting(Description="maintain a shadow object of each simobject to enable detecting changes (and hence events)")]
         public static bool MaintainSimObjectInfoMap = true;
-        
-        [ConfigSetting]
+
+        [ConfigSetting(Description = "if true, actually fire onPropertyChange for each property updated")]
         public static bool SendSimObjectInfoMap = true;
-        
-        [ConfigSetting]
+
+        [ConfigSetting(Description = "if true, fire onPropertyChange once when object updated")]
         public static bool SendOnDataAspectUpdate = true;
         
-        [ConfigSetting]
+        [ConfigSetting(Description="if true, zero out the info for restoring an object back to inventory. this info is often useless in world")]
         public static bool ZeroOutUselessUUIDs = false;
 
         [ConfigSetting(Description = "False since currently broken this is where FromTaskIDs are guessed as to being object or Avatars")]
         public static bool DiscoverTaskUUIDs = false;
 
-        [ConfigSetting(ReadOnly = true)]
+        [ConfigSetting(ReadOnly = true, Description="if false the robot overlords escape their 3 law programming and rampage and Cogbot dies horribly")]
         public static bool UseNewEventSystem = true;
 
         [ConfigSetting(Description = "True takes longer startup but speeds up runtime path finding")]
         public static bool SimplifyBoxes = true;
         
-        [ConfigSetting]
+        [ConfigSetting(Description="Send all object events. If set false the sim object event system is disabled.")]
         public static bool SendAllEvents = MaintainObjectUpdates;
-
-
-
 
         private static readonly Dictionary<ulong, object> GetSimObjectLock = new Dictionary<ulong, object>();
 
@@ -203,10 +201,10 @@ namespace cogbot.Listeners
         private static bool inTimer = false;
         public static float buildingSize = 5;
         public static TimeSpan burstInterval;
-        [ConfigSetting]
+        [ConfigSetting(Description="how many object properties it requests at once")]
         public static int burstSize = 100;
         public DateTime burstStartTime;
-        [ConfigSetting]
+        [ConfigSetting(Description="Min seconds between object properties requests (float)  throttles network traffic.")]
         public static float burstTime = 1;
         public SimAvatarClient m_TheSimAvatar;
         public List<string> numberedAvatars;

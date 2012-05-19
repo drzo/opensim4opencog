@@ -14,7 +14,19 @@ namespace cogbot.Actions.Search
         public UUIDTypeCommand(BotClient testClient)
         {
             Name = "UUID Type";
-            Description = "Resolve the type of Object the UUID represents.  Usage: uuidtype b06c0586-da9a-473d-aa94-ee3ab5606e4d";
+            Description = "<p>Given a UUID, describes the thing. Unlike priminfo, uuidtype will describe any sort of uuid" +
+                "- an object, avatar, texture, sound, etc. Note that to get useful info about textures you'll have to set textures" +
+                "to download. You can do it from botcmd via</p><p>sysvar DownloadTextures True</p><p> or by adding</p><pre>" +
+@"(setj  ClientManager:DownloadTextures True)
+(setj SimAssetStore:EnableDownloadAssetDefault  True)" +
+"</pre><p>in botconfig.xml</p>";
+            Usage = Htmlize.Usage("uuidtype <uuid>", "print what sort of  this UUID is") +
+                Htmlize.Example("/uuidtype  3a3e92ed-a94f-46dc-9f92-88c790b5701e",
+@"[12:54] UUID=3a3e92ed-a94f-46dc-9f92-88c790b5701e is of Type='cogbot.TheOpenSims.SimAnimation' toString='3a3e92ed-a94f-46dc-9f92-88c790b5701e NODATA'
+[12:54] UUID Type: Success: Done with UUID 3a3e92ed-a94f-46dc-9f92-88c790b5701e obj= 3a3e92ed-a94f-46dc-9f92-88c790b5701e NODATA
+[12:54] UUID Type: Success: Done with UUID 3a3e92ed-a94f-46dc-9f92-88c790b5701e obj= 3a3e92ed-a94f-46dc-9f92-88c790b5701e NODATA");
+            Parameters = NamedParam.CreateParams("uuid", typeof(UUID), "uuid to resolve to type");
+            ResultMap = NamedParam.CreateParams("description", typeof(string), "string, usually the C# type name");
             Category = CommandCategory.BotClient;
         }
 

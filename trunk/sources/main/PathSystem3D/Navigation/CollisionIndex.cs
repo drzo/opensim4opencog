@@ -19,11 +19,11 @@ namespace PathSystem3D.Navigation
     public class CollisionIndex
     {
 
-        [ConfigSetting]
+        [ConfigSetting(Description="the height of the avatar's collision capsule")]
         public static float AvatarCapsuleZ = 1.79f;
-        [ConfigSetting]
+        [ConfigSetting(Description="Height above the bot's feet to raycast down from to find the surface to walk on or be obstructed by")]
         public static float SearchAboveCeilingZ = 3.3f;
-        [ConfigSetting]
+        [ConfigSetting(Description="in 0.2 meters how much higher could 'floor' have gotten")]
         public static float MaxBumpInOpenPath = 0.33f;
 
         //public Point Point;

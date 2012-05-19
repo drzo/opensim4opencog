@@ -149,8 +149,8 @@ namespace cogbot
 
         public Configuration config;
         //Utilities.BotTcpServer UtilitiesTcpServer;
-        [ConfigSetting]
-        public String taskInterperterType = "DotLispInterpreter";// DotLispInterpreter,CycInterpreter or ABCLInterpreter
+        [ConfigSetting(Description="Allows user to specify lisp interpreter to use with botconfig subsystem and sim object recognition and various other things. Choices are DotLispInterpreter (use this if unsure),CycInterpreter or ABCLInterpreter")]
+        public String taskInterpreterType = "DotLispInterpreter";// DotLispInterpreter,CycInterpreter or ABCLInterpreter
         //static List<LoginDetails> accounts = new List<LoginDetails>();
         ///public static ClientManager this = new ClientManager(accounts, false);
         // public static Simian.Simian simulator = new Simian.Simian();
@@ -515,13 +515,13 @@ namespace cogbot
                     LispTaskInterperterNeedLoad = false;
                     try
                     {
-                        WriteLine("Start Loading Main TaskInterperter ... '" + taskInterperterType + "' \n");
-                        _lispTaskInterperter = ScriptManager.LoadScriptInterpreter(taskInterperterType, this);
+                        WriteLine("Start Loading Main TaskInterperter ... '" + taskInterpreterType + "' \n");
+                        _lispTaskInterperter = ScriptManager.LoadScriptInterpreter(taskInterpreterType, this);
                         _lispTaskInterperter.LoadFile("cogbot.lisp",WriteLine);
                         _lispTaskInterperter.Intern("clientManager", this);
                         _scriptEventListener = new ScriptEventListener(_lispTaskInterperter, null);
                         ///_lispTaskInterperter.Intern("thisClient", this);
-                        WriteLine("Completed Loading TaskInterperter '" + taskInterperterType + "'\n");
+                        WriteLine("Completed Loading TaskInterperter '" + taskInterpreterType + "'\n");
                         // load the initialization string
                     }
                     catch (Exception e)

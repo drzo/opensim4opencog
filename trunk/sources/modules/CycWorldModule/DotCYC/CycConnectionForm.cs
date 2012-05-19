@@ -125,10 +125,10 @@ namespace CycWorldModule.DotCYC
             wasConnected = IsConnected();
         }
 
-        [ConfigSetting]
+        [ConfigSetting(Description="Base port for the cyc server")]
         public static string cycBasePort = "3600";
-        [ConfigSetting]
-        public static string cycServerAddress = "CycServer";
+        [ConfigSetting(Description = "IP address for the cyc server. The default is a public opencyc instance maintained by a Cogbot contributor which you are free to use")]
+        public static string cycServerAddress = "opencyc.kqml.org";
 
         private void disconnect()
         {
