@@ -671,7 +671,7 @@ namespace cogbot
 			RegisterCommand("jump", new Jump(this));
 			RegisterCommand("crouch", new Crouch(this));
 			RegisterCommand("mute", new Mute(this));
-			RegisterCommand("unmute", new Mute(this));
+			RegisterCommand("unmute", new Unmute(this));
 			RegisterCommand("move", new Move(this));
 			RegisterCommand("use", new Use(this));
 			RegisterCommand("eval", new Eval(this));
