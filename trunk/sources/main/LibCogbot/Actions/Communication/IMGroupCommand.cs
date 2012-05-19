@@ -15,7 +15,7 @@ namespace cogbot.Actions.Communication
         {
 
             Name = "imgroup";
-            Description = "Send an instant message to a group."
+            Description = "Send an instant message to a group.";
             Usage = "imgroup <group_uuid> [message]";
             Category = CommandCategory.Groups;
             Parameters =
