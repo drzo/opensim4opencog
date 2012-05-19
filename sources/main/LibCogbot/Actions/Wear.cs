@@ -19,7 +19,7 @@ namespace cogbot.Actions
 <p>See <a href='wiki/BotCommands#Inventory'>Inventory</a> for Inventory FormatException</p>
 <p>If the argument is a folder the entire folder is worn (but not items in contained folders).</p>
 <p>Adding 'nobake' doesn't rebake the avatar's textures.</p>";
-            Usage = "wear [bake] /Clothing/Dance Party";
+            Usage = "wear [nobake] /Clothing/Dance Party";
             ParameterVersions = NamedParam.CreateParamVersions(
                 NamedParam.CreateParams(
                    NamedParam.Optional("nobake", typeof(bool), "Do not rebake the avatar's textures"),
