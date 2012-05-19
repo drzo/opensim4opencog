@@ -52,6 +52,8 @@ namespace MushDLR223.ScriptEngines
         public NamedParam(KeyType k, object v)
         {
             memberTarget = null;
+            IsOptional = false;
+            Comment = null;
             _key = ToKey(k);
             _value = v;
             _Type = null;
@@ -63,6 +65,8 @@ namespace MushDLR223.ScriptEngines
         private NamedParam(string k, Type v)
         {
             memberTarget = null;
+            IsOptional = false;
+            Comment = null;           
             _key = ToKey(k);
             _value = v;
             _Type = null;
@@ -80,6 +84,8 @@ namespace MushDLR223.ScriptEngines
         public NamedParam(KeyType k, Type type, Type v)
         {
             memberTarget = null;
+            IsOptional = false;
+            Comment = null;          
             _key = ToKey(k);
             _value = v;
             _Type = type;
@@ -108,6 +114,8 @@ namespace MushDLR223.ScriptEngines
         public NamedParam(object target, MemberInfo inf, KeyType k, Type type, object v)
         {
             memberTarget = target;
+            IsOptional = false;
+            Comment = null;
             info = inf;
             _key = ToKey(k);
             _value = v;
@@ -126,6 +134,8 @@ namespace MushDLR223.ScriptEngines
         public NamedParam(KeyType k, Type type, object v, params object[] choices)
         {
             memberTarget = null;
+            IsOptional = false;
+            Comment = null;
             _key = ToKey(k);
             _value = v;
             _Type = type;
@@ -185,6 +195,8 @@ namespace MushDLR223.ScriptEngines
         public NamedParam(NamedParam param, object o)
         {
             memberTarget = param.memberTarget;
+            IsOptional = false;
+            Comment = null;
             _Type = param._Type;
             _value = o;
             _key = param._key;
@@ -200,6 +212,8 @@ namespace MushDLR223.ScriptEngines
         public NamedParam(Type type, Type DataType)
         {
             memberTarget = null;
+            IsOptional = false;
+            Comment = null;
             _Type = type;
             _value = NullType.GetNullType(DataType);
             _key = _Type.Name;
