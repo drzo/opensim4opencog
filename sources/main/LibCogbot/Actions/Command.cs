@@ -12,6 +12,15 @@ using Simulator = OpenMetaverse.Simulator;
 
 namespace cogbot.Actions
 {
+    
+    public class PrimSpec : List<SimObject>
+    {
+    }
+
+    public class AgentSpec : List<SimAvatar>
+    {
+    }
+
     public enum CommandCategory : int
     {
         Parcel,
