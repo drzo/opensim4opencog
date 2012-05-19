@@ -20,10 +20,10 @@ namespace cogbot.Actions
             Description = @"If called with args, cancels the current modeless action. 
 If called with no args, cancels all currently running actions.";
 			Usage = "<p>stop</p><p>example:</p><p>move 122/144/12</p><p>stop</p>";
-            ParameterVersions =
+            Parameters = NamedParam.CreateParams(
                NamedParam.Optional("action", typeof(BotCommand), 
                @"in theory the action to stop. In practice, if present the current action is stopped, 
-if absent all actions are stopped.");
+if absent all actions are stopped."));
             ResultMap = NamedParam.CreateParams(
                  "message", typeof(string), "if success was false, the reason why",
                  "success", typeof(bool), "true if outfit was worn");

@@ -16,7 +16,7 @@ namespace cogbot.Actions
 Ignores the object's default action, always touches.";
             Usage = "touch [primspec]- see <a href='wiki/BotCommands#PrimSpec'>Prim Spec</a>"; 
             Category = CommandCategory.Objects;
-            Parameters = NamedParam("object", typeof(SimObject),
+            Parameters = NamedParam.CreateParams("object", typeof(SimObject),
                 "The object to touch, as specified in <a href='wiki/BotCommands#PrimSpec'>Prim Spec</a>");
             ResultMap = NamedParam.CreateParams(
                  "message", typeof(string), "if success was false, the reason why",
