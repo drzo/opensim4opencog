@@ -15,12 +15,12 @@ namespace cogbot.Actions.Appearance
         {
             Name = "avatarinfo";
             Description = "Print out information on a nearby avatar.";
-            Usage = Name + " [prim-spec] // no prim-spec then use $self";
+            Usage = Name + " [avatar-spec] // no avatar-spec then use $self";
             Category = CommandCategory.Appearance;
             Parameters = NamedParam.CreateParams(
                 NamedParam.Optional("target", typeof(SimAvatar),
-                                    "the prim or agent you wish to see " + Name +
-                                    " (see meets a specified <a href='wiki/BotCommands#PrimSpec'>Prim Spec</a>.)"));
+                                    "the agent you wish to see " + Name +
+                                    " (see meets a specified <a href='wiki/BotCommands#AvatarSpec'>Avatar Spec</a>.)"));
             ResultMap = NamedParam.CreateParams(
                 "message", typeof(string), "if success was false, the reason why",
                 "success", typeof(bool), "true if command was successful");

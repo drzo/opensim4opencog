@@ -16,10 +16,16 @@ namespace cogbot.Actions.Communication
         public ImCommand(BotClient testClient)
         {
             Name = "im";
-            Description = "Instant message someone. Usage: im [[firstname] [lastname]] [message]";
+            Description = "IM a user.";
+            Usage = "Usage: im [[firstname] [lastname]] [message]";
             Category = CommandCategory.Communication;
-            Parameters = NamedParam.CreateParams("target", typeof (Avatar), "message", typeof (string));
-            ResultMap = NamedParam.CreateParams("personFound", typeof(bool), "sentCorrect", typeof(bool));
+            Parameters =
+                NamedParam.CreateParams(
+                            "target", typeof(Avatar), "who you are IMing",
+                            "message", typeof(string), "what you IM");
+            ResultMap = NamedParam.CreateParams(
+                "message", typeof(string), "if success was false, the reason why",
+                "success", typeof(bool), "true if command was successful");
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

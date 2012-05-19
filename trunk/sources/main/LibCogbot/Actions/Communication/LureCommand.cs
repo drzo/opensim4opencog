@@ -14,9 +14,15 @@ namespace cogbot.Actions.Communication
         public LureCommand(BotClient testClient)
         {
             Name = "lure";
-            Description = "Send a lure to a user. Usage: lure FirstName LastName";
+            Description = "Send a lure to a user.";
             Category = CommandCategory.Friends;
-            Parameters = new[] { new NamedParam(typeof(SimAvatar), typeof(UUID)) };
+            Usage = Name + " [avatar-spec]";
+            Parameters = NamedParam.CreateParams("target", typeof (SimAvatar),
+                                                 "the agent you wish to see " + Name +
+                                                 " (see meets a specified <a href='wiki/BotCommands#AvatarSpec'>Avatar Spec</a>.)");
+            ResultMap = NamedParam.CreateParams(
+                "message", typeof(string), "if success was false, the reason why",
+                "success", typeof(bool), "true if command was successful");
         }
 
 
