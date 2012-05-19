@@ -17,7 +17,7 @@ namespace cogbot.Actions.Appearance
             Description = @"Set your current appearance to your last saved appearance. <p>Same as rebaking in a normal client.</p>
 <p>Adding 'nobake' doesn't rebake the avatar's textures.</p>";
             Usage = "appearance [nobake]";
-		    Parameters = NamedParam.CreateParams(NamedParam.Optional("nobake", typeof (bool), "Do not rebake the avatar's textures");
+		    Parameters = NamedParam.CreateParams(NamedParam.Optional("nobake", typeof (bool), "Do not rebake the avatar's textures"));
             ResultMap = NamedParam.CreateParams(
                  "message", typeof(string), "if success was false, the reason why",
                  "success", typeof(bool), "true if outfit was worn");

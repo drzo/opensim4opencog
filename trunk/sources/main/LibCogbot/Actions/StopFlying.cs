@@ -12,8 +12,12 @@ namespace cogbot.Actions.Movement
         public StopFlying(BotClient Client)
             : base(Client)
         {
-            Description = "You stop flying.";
-            Usage = "To stop flying type: \"stop-flying\"";
+            Description = "Stop flying. If the bot is in midair it will fall. Will succeed if we weren't flying";
+            Usage = "stop-flying";
+            Parameters = NamedParam.CreateParams();
+            ResultMap = NamedParam.CreateParams(
+                 "message", typeof(string), "if we could not stop flying, the reason why (shouldnt happen)",
+                 "success", typeof(bool), "true if we stopped flying");
             Category = CommandCategory.Movement;
             Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
         }
