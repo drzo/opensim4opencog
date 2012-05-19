@@ -13,16 +13,18 @@ namespace cogbot.Actions.Inventory
         public EventInfoCommand(BotClient Client)
         {
             Name = "evinfo";
-            Description = "Shows the events that have been associated with an object. See <a href='wiki/BotCommands#Events'>Events</a> for info about events.";
+            Description = "Shows the events that have been associated with an object. See <a href='wiki/SimObjectEvents'>Sim Object Events</a>page for info about events.";
             Usage = @"<p>evinfo &lt;primspec&gt;</p><p>example: evinfo tacosofgod  <i>tacosofgod is a nearby plywood cube</i></p>
 <pre>
 [09:12] tacosofgod Box 70b5e8ab-3308-4bc6-bbf8-4f313cd7d518 (localID 2036105563)(ch0)(PrimFlagsFalse InventoryEmpty, ObjectOwnerModify)[](!IsPassable)
 [09:12] evinfo: Success: simEventComplete blanks=1 nonblanks=0
 [09:12] evinfo: Success: simEventComplete blanks=1 nonblanks=0
 </pre>";
-            Parameters = NamedParam.CreateParams("object", typeof(PrimSpec),
-                "The object whose events we want, as specified in <a href='wiki/BotCommands#PrimSpec'>Prim Spec</a>");
+            Parameters = NamedParam.CreateParams(
+                "object", typeof (PrimSpec),
+                "The objects whose events we want, as specified in " + Htmlize.WikiBC("Prim Spec"));
             ResultMap = NamedParam.CreateParams(
+                 "events", typeof(List<SimObjectEvent>), "List of events that transpired on the objects",
                  "message", typeof(string), "if success was false, the reason why",
                  "success", typeof(bool), "true if we got the events");
         }
@@ -33,15 +35,15 @@ namespace cogbot.Actions.Inventory
 
             BotClient Client = TheBotClient;
             string subject = String.Join(" ", args);
+            OutputDelegate wtoList = (f, a) => AppendResults("events", string.Format(f, a));
             if (subject.Length == 0)
             {
-                return Success(TheSimAvatar.DebugInfo());
+                return Success(DebugInfo(TheSimAvatar, wtoList));
             }
             Client.describeNext = false;
             float range;
             int blanks = 0;
             int nonblanks = 0;
-
             if (float.TryParse(subject, out range))
             {
                 SimAvatar simAva = WorldSystem.TheSimAvatar;
@@ -57,7 +59,7 @@ namespace cogbot.Actions.Inventory
                                 blanks++;
                                 if (!(o is SimAvatar)) continue;
                             }
-                            string s = DebugInfo(o);
+                            string s = DebugInfo(o, wtoList);
                             WriteLine(s);
                             nonblanks++;
                         }
@@ -70,7 +72,7 @@ namespace cogbot.Actions.Inventory
                 var PS = WorldSystem.GetPrimitives(Parser.SplitOff(args, argsUsed), out argsUsed);
                 foreach (SimObject o in PS)
                 {
-                    string s = DebugInfo(o);
+                    string s = DebugInfo(o, wtoList);
                     WriteLine(s);
                     if (o.ActionEventQueue == null || o.ActionEventQueue.Count == 0)
                     {
@@ -83,7 +85,7 @@ namespace cogbot.Actions.Inventory
             return Success("simEventComplete blanks=" + blanks + " nonblanks=" + nonblanks);
         }
 
-        private string DebugInfo(SimObject o)
+        private string DebugInfo(SimObject o, OutputDelegate wl)
         {
             var ActionEventQueue = o.ActionEventQueue;
             string s = o.ToString();
@@ -94,7 +96,7 @@ namespace cogbot.Actions.Inventory
                     s += " ActionCount= " + ActionEventQueue.Count;
                     foreach (SimObjectEvent s1 in ActionEventQueue)
                     {
-                        s += "\n " + s1;
+                        wl(s1.ToEventString());
                     }
                 }
             }
