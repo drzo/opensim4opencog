@@ -21,6 +21,24 @@ namespace cogbot.Actions
     {
     }
 
+    static public class Htmlize
+    {
+        static public string Usage(string example, string comment)
+        {
+            return "<p>" + NoEnts(example) + "<i>" + NoEnts(comment) + "</i></p>";
+        }
+
+        private static string NoEnts(string example)
+        {
+            return example.Replace("\"", "&qt;").Replace("<", "&lt;").Replace(">", "&gt;");
+        }
+
+        public static string Example(string typed, string output)
+        {
+            return "<p><pre>" + NoEnts(typed) + "</pre></p>Returns<p><pre>" + NoEnts(output) + "</pre></p>";
+        }
+    }
+
     public enum CommandCategory : int
     {
         Parcel,
