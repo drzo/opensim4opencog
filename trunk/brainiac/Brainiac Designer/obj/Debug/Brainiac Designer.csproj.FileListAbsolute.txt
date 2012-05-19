@@ -1,0 +1,44 @@
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\out\Brainiac Designer.exe.config
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\out\Brainiac Designer.exe
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\out\Brainiac Designer.pdb
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer\obj\Debug\ResolveAssemblyReference.cache
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer\obj\Debug\Brainiac.Design.AboutBox.resources
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer\obj\Debug\Brainiac.Design.BehaviorTreeList.resources
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer\obj\Debug\Brainiac.Design.BehaviorTreeListDock.resources
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer\obj\Debug\Brainiac.Design.BehaviorTreeView.resources
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer\obj\Debug\Brainiac.Design.BehaviorTreeViewDock.resources
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer\obj\Debug\CustomPropertyGridTest.DynamicPropertyGrid.resources
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer\obj\Debug\Brainiac.Design.EditWorkspaceDialog.resources
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer\obj\Debug\Brainiac.Design.ErrorCheckDialog.resources
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer\obj\Debug\Brainiac.Design.ExportDialog.resources
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer\obj\Debug\Brainiac.Design.MainWindow.resources
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer\obj\Debug\Brainiac.Design.MainWindowCloseDialog.resources
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer\obj\Debug\Brainiac.Design.PropertiesDock.resources
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer\obj\Debug\Brainiac.Design.Properties.Resources.resources
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer\obj\Debug\Brainiac.Design.SettingsDialog.resources
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer\obj\Debug\Brainiac.Design.WorkspaceDialog.resources
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer\obj\Debug\Brainiac Designer.csproj.GenerateResource.Cache
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer\obj\Debug\Brainiac Designer.exe
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer\obj\Debug\Brainiac Designer.pdb
+C:\dev\Cogbot2012-04-20\Brainiac\out\Brainiac Designer.exe.config
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer\obj\Debug\Brainiac Designer.exe
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer\obj\Debug\Brainiac Designer.pdb
+C:\dev\Cogbot2012-04-20\Brainiac\out\Brainiac Designer.exe
+C:\dev\Cogbot2012-04-20\Brainiac\out\Brainiac Designer.pdb
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer\obj\Debug\ResolveAssemblyReference.cache
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer\obj\Debug\Brainiac.Design.AboutBox.resources
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer\obj\Debug\Brainiac.Design.BehaviorTreeList.resources
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer\obj\Debug\Brainiac.Design.BehaviorTreeListDock.resources
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer\obj\Debug\Brainiac.Design.BehaviorTreeView.resources
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer\obj\Debug\Brainiac.Design.BehaviorTreeViewDock.resources
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer\obj\Debug\CustomPropertyGridTest.DynamicPropertyGrid.resources
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer\obj\Debug\Brainiac.Design.EditWorkspaceDialog.resources
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer\obj\Debug\Brainiac.Design.ErrorCheckDialog.resources
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer\obj\Debug\Brainiac.Design.ExportDialog.resources
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer\obj\Debug\Brainiac.Design.MainWindow.resources
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer\obj\Debug\Brainiac.Design.MainWindowCloseDialog.resources
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer\obj\Debug\Brainiac.Design.PropertiesDock.resources
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer\obj\Debug\Brainiac.Design.Properties.Resources.resources
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer\obj\Debug\Brainiac.Design.SettingsDialog.resources
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer\obj\Debug\Brainiac.Design.WorkspaceDialog.resources
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer\obj\Debug\Brainiac Designer.csproj.GenerateResource.Cache

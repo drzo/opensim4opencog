@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<workspaces selected="webtest">
+  <workspace name="webtest" folder="C:\RD4541\Acore\BTNotes\BDTest" server="http://localhost:8123" export="C:\RD4541\Acore\BTNotes\Daxout">
+    <plugin>DaxPlugin.dll</plugin>
+  </workspace>
+</workspaces>
