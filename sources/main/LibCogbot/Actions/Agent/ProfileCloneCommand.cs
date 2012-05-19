@@ -26,8 +26,8 @@ namespace cogbot.Actions.Agent
         {
 
             Name = "Profile Clone";
-            Description = "Copy another agent's profile into the bot's";
-            Usage ="profileclone [targetuuid]";
+            Description = "Copies another avatars profile as closely as possible onto your existing profile. WARNING: This command will destroy your existing profile!";
+            Usage = Htmlize.Usage("profileclone [targetuuid]", "copies the profile specified by targetuuid");
             Category = CommandCategory.Other;
             Parameters = NamedParam.CreateParams("agent", typeof(UUID), "agent you are going to clone");
             ResultMap = NamedParam.CreateParams(
