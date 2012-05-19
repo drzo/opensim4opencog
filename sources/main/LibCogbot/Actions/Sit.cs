@@ -23,7 +23,7 @@ namespace cogbot.Actions.Movement
             ParameterVersions = NamedParam.CreateParamVersions(
                NamedParam.CreateParams(),
                NamedParam.CreateParams(
-                   "on", typeof(SimObject),
+                   "on", typeof(PrimSpec),
                    "The object to sit on, as specified in <a href='wiki/BotCommands#PrimSpec'>Prim Spec</a>"));
             ResultMap = NamedParam.CreateParams(
                  "message", typeof(string), "if success was false, the reason why",

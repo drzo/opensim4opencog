@@ -29,7 +29,7 @@ namespace cogbot.Actions.Land
 [09:18] Success: describe complete
 [09:18] Success: describe complete
 </pre>";
-            Parameters = NamedParam.CreateParams("object", typeof(SimObject),
+            Parameters = NamedParam.CreateParams("object", typeof(PrimSpec),
                 "The object to describe, as specified in <a href='wiki/BotCommands#PrimSpec'>Prim Spec</a>");
             ResultMap = NamedParam.CreateParams(
                  "message", typeof(string), "if success was false, the reason why",

@@ -18,10 +18,11 @@ namespace cogbot.Actions
             : base(Client)
         {
             Description = "IM a user. Has nothing to do with SL 'whisper'";
-            Usage = "To whisper a message to an avatar, type \"whisper to <avatar name> <message>\" To reply to the last person who IMed you, type \"whisper <message>\"";
+            Usage = @"<p>whisper to &lt;avatar name&gt; &lt;message&gt;\</p>
+<p>whisper &lt;message&gt;  - <i>reply to the last person who IMed you</i></p>";
             Parameters =
                 NamedParam.CreateParams(
-                            "target", typeof (Avatar), "who you are IMing",
+                            "target", typeof (AgentSpec), "who you are IMing",
                             "message", typeof (string), "what you IM");
             ResultMap = NamedParam.CreateParams(
                             "personFound", typeof(bool), "true iff we found the person to whisper to", 
