@@ -13,8 +13,8 @@ namespace cogbot.Actions.Communication
         public ShoutCommand(BotClient testClient)
         {
             Name = "shout";
-            Description = Name + " something.";
-            Usage = Htmlize.Usage(Name + " (optional channel) whatever", Name + "s whatever (optionally to channel)");
+            Description = Name + "s something (optionally to channel)";
+            Usage = Htmlize.Usage(Name + " [#channel] something", Description);
             Category = CommandCategory.Communication;
             Parameters =
                 NamedParam.CreateParams(

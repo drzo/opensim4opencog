@@ -16,7 +16,7 @@ namespace cogbot.Actions.Appearance
         public CloneCommand(BotClient testClient)
         {
             Name = "clone";
-            Description = "Clone the appearance of a nearby avatar. Usage: clone [name]";
+            Description = "Clone the appearance of a nearby avatar.";
             Usage = Htmlize.Usage(Name + " [agent-spec]", "no prim-spec then use OLD self");
             Category = CommandCategory.Appearance;
             Parameters = NamedParam.CreateParams(
