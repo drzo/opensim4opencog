@@ -18,6 +18,8 @@ namespace cogbot.Actions.System
 " processed from task queues. This command displays the status of the queues. It is mostly useful for debugging" +
 " cogbot itself, but can also be useful for understanding bot performance.";
             Usage = Htmlize.Usage("tasks", "show the task queue statuses");
+            Parameters = NamedParam.CreateParams();
+
             Category = CommandCategory.BotClient;
         }
 
