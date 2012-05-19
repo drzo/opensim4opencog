@@ -14,10 +14,14 @@ namespace cogbot.Actions.Movement
         public Jump(BotClient Client)
             : base(Client)
         {
-            Description = "Jump for 500ms.";
-            Usage = "to Jump type \"jump\"";
+            Description = "Jump for 1/2 second.";
+            Usage = "jump";
             Name = "Jump";
-            Parameters = new[] { new NamedParam(typeof(GridClient), null) };
+            Parameters = NamedParam.CreateParams();
+            ResultMap = NamedParam.CreateParams(
+                 "message", typeof(string), "if we could not why, why (shouldnt happen)",
+                 "success", typeof(bool), "true if we stood up");
+
             Category = CommandCategory.Movement;
         }
 
