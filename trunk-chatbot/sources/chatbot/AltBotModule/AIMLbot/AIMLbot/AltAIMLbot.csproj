@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{59273BD3-ADDD-4912-9BA5-02141A65E25E}</ProjectGuid>
+    <ProjectGuid>{97CECCD4-26B2-44C7-A893-6F1A03E34897}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon>
@@ -44,7 +44,7 @@
     <WarningLevel>3</WarningLevel>
     <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
-    <PlatformTarget>anycpu</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -65,7 +65,7 @@
     <WarningLevel>3</WarningLevel>
     <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
-    <PlatformTarget>anycpu</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System">
@@ -86,40 +86,40 @@
     <Reference Include="System.Drawing">
       <Name>System.Drawing</Name>
     </Reference>
+    <Reference Include="MiniSatCs">
+      <Name>MiniSatCs</Name>
+      <HintPath>..\..\..\..\..\bin\MiniSatCs.dll</HintPath>
+    </Reference>
     <Reference Include="System.Core">
       <Name>System.Core</Name>
     </Reference>
     <Reference Include="DcBus.dll">
       <Name>DcBus.dll</Name>
+      <HintPath>..\..\..\..\..\bin\DcBus.dll</HintPath>
     </Reference>
     <Reference Include="Enyim.Caching.dll">
       <Name>Enyim.Caching.dll</Name>
+      <HintPath>..\..\..\..\..\bin\Enyim.Caching.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Aima.NET\Aima.NET.csproj">
       <Name>Aima.NET</Name>
-      <Project>{22529466-DE11-4482-A95D-A2F56562EC94}</Project>
+      <Project>{73DF0D5B-A5DB-4A85-9EDE-F3001F4B83C8}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\main\MushDLR223\MushDLR223.csproj">
       <Name>MushDLR223</Name>
-      <Project>{3A73EBAF-B060-4C96-A840-0DD63F7D02BE}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
-    <ProjectReference Include="..\..\minisatcs\MinisatCs\MinisatCs.csproj">
-      <Name>MinisatCs</Name>
-      <Project>{D103D87D-7247-47F9-875F-1BC0D576F475}</Project>
+      <Project>{CFF3BC8E-C400-4D61-8C0D-763DDF024751}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\GenericSets\src\Iesi.Collections.Generic\Iesi.Collections.Generic.csproj">
       <Name>Iesi.Collections.Generic</Name>
-      <Project>{35E5C0FD-C02E-4BF0-8670-98D5016C9547}</Project>
+      <Project>{46654418-BFE4-4571-B46F-6F50FC84D3C0}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AIMLTagHandlers\rbehavior.cs" />
     <Compile Include="BehaviorTree.cs">
     </Compile>
     <Compile Include="Bot.cs">
@@ -176,6 +176,8 @@
     </Compile>
     <Compile Include="AIMLTagHandlers\nop.cs">
     </Compile>
+    <Compile Include="AIMLTagHandlers\pannouserver.cs">
+    </Compile>
     <Compile Include="AIMLTagHandlers\person.cs">
     </Compile>
     <Compile Include="AIMLTagHandlers\person2.cs">
@@ -188,11 +190,15 @@
     </Compile>
     <Compile Include="AIMLTagHandlers\random.cs">
     </Compile>
+    <Compile Include="AIMLTagHandlers\rbehavior.cs">
+    </Compile>
     <Compile Include="AIMLTagHandlers\refserver.cs">
     </Compile>
     <Compile Include="AIMLTagHandlers\rnddbl.cs">
     </Compile>
     <Compile Include="AIMLTagHandlers\rndint.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlers\sapi.cs">
     </Compile>
     <Compile Include="AIMLTagHandlers\satisfied.cs">
     </Compile>
@@ -250,6 +256,8 @@
     </Compile>
     <Compile Include="Utils\Gender.cs">
     </Compile>
+    <Compile Include="Utils\JSON.cs">
+    </Compile>
     <Compile Include="Utils\MatchState.cs">
     </Compile>
     <Compile Include="Utils\Node.cs">
@@ -264,6 +272,8 @@
     </Compile>
     <Compile Include="Utils\TextTransformer.cs">
     </Compile>
+    <Compile Include="WebServitor.cs" />
+    <Compile Include="YBtrees.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
   <PropertyGroup>

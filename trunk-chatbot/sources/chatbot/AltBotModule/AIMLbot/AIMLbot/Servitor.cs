@@ -10,6 +10,9 @@ using System.Threading;
 using Aima.Core.Logic.Propositional.Algorithms;
 using Aima.Core.Logic.Propositional.Parsing;
 using Aima.Core.Logic.Propositional.Parsing.AST;
+
+
+
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
 
@@ -74,6 +77,7 @@ namespace AltAIMLbot
             Console.WriteLine("       ProcessorCount:" + Environment.ProcessorCount);
             Console.WriteLine("             UserName:" + Environment.UserName);
             Console.WriteLine("            TickCount:" + Environment.TickCount);
+            Console.WriteLine("            UserID:" + UserID);
             AltBot myBot = new AltBot();
             myBot.bbSafe = true;
 
@@ -81,10 +85,12 @@ namespace AltAIMLbot
             if (outputDelegate == null)
             {
                 myBot.sayProcessor = new sayProcessorDelegate(sayResponse);
+                Console.WriteLine(" using default sayProcessorDelegate");
             }
             else
             {
                 myBot.sayProcessor = outputDelegate;
+                Console.WriteLine(" using external sayProcessorDelegate");
             }
             myBot.loadSettings();
             User myUser = new User(UserID, myBot);
@@ -112,7 +118,8 @@ namespace AltAIMLbot
             startCronEngine();
             curBot.myBehaviors.keepTime("activation", RunStatus.Success);
             curBot.myBehaviors.activationTime("activation", RunStatus.Success);
-
+            WebServitor.beginService(this);
+            Console.WriteLine(" Servitor startup complete");
         }
 
         public bool setGuestEvalObject(object guestObj)
@@ -130,13 +137,16 @@ namespace AltAIMLbot
                 Console.WriteLine(" ************ FOUND ONCHAT ************");
                 curUser.Predicates.updateSetting("lastinput", input);
                 //curBot.lastBehaviorChatInput = input;
+                curBot.isPerformingOutput = false;
+                curBot.myBehaviors.logText("ONCHAT USER INPUT:" + input);
                 curBot.chatInputQueue.Enqueue(input);
-
                 curBot.lastBehaviorUser = curUser;
                 //curBot.myBehaviors.runEventHandler("onchat");
+                curBot.flushOutputQueue();
                 curBot.myBehaviors.queueEvent("onchat");
                 curBot.processOutputQueue();
-
+                curBot.isPerformingOutput = true;
+                curBot.myBehaviors.logText("ONCHAT IMMED RETURN:" + curBot.lastBehaviorChatOutput);
                 return curBot.lastBehaviorChatOutput;
             }
             // else try the named behavior
@@ -144,12 +154,17 @@ namespace AltAIMLbot
             {
                 curUser.Predicates.updateSetting("lastinput", input);
                 //curBot.lastBehaviorChatInput = input;
+                curBot.isPerformingOutput = false;
+                curBot.myBehaviors.logText("CHATROOT USER INPUT:" + curBot.lastBehaviorChatOutput);
                 curBot.chatInputQueue.Enqueue(input);
                 curBot.lastBehaviorUser = curUser;
                 //curBot.myBehaviors.runBotBehavior("chatRoot", curBot);
+                curBot.flushOutputQueue();
                 curBot.myBehaviors.queueEvent("chatRoot");
                 curBot.processOutputQueue();
 
+                curBot.isPerformingOutput = true;
+                curBot.myBehaviors.logText("CHATROOT IMMED RETURN:" + curBot.lastBehaviorChatOutput);
                 return curBot.lastBehaviorChatOutput;
             }
             // else just do it (no other behavior is defined)

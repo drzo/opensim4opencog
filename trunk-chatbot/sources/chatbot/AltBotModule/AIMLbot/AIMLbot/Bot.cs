@@ -146,6 +146,13 @@ namespace AltAIMLbot
         public bool isAcceptingUserInput = true;
 
         /// <summary>
+        /// Flag to show if the bot is producing output
+        /// </summary>
+        public bool isPerformingOutput = true;
+
+        public object loglock = new object();
+
+        /// <summary>
         /// The message to show if a user tries to use the bot whilst it is set to not process user input
         /// </summary>
         private string NotAcceptingUserInputMessage
@@ -730,6 +737,7 @@ namespace AltAIMLbot
 
         public void processOutputQueue()
         {
+            if (!isPerformingOutput) return;
             while (outputQueue.Count > 0)
             {
                 string msg = outputQueue.Dequeue();
@@ -741,16 +749,26 @@ namespace AltAIMLbot
                 {
                     Console.WriteLine("BOT OUTPUT:{0}", msg);
                 }
+                myBehaviors.logText("BOT OUTPUT:" + msg);
+
             }
+        }
+
+        public void flushOutputQueue()
+        {
+            outputQueue.Clear();
+            myBehaviors.logText("BOT flushOutputQueue:");
         }
 
         public void postOutput(string msg)
         {
             // just post output
             outputQueue.Enqueue(msg);
+            myBehaviors.logText("BOT postOutput:" + msg);
         }
         public void sendOutput(string msg)
         {
+            myBehaviors.logText("BOT sendOutput:" + msg);
             // posts and processes
             outputQueue.Enqueue(msg);
             processOutputQueue();
@@ -881,6 +899,9 @@ namespace AltAIMLbot
                     query.Template = ourGraphMaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
                     Console.WriteLine("DEBUG: TemplatePath = " + query.TemplatePath);
                     Console.WriteLine("DEBUG: Template = " + query.Template);
+                    myBehaviors.logText("CHAT TemplatePath:" + query.TemplatePath);
+                    myBehaviors.logText("CHAT Template:\n" + query.Template);
+
                     result.SubQueries.Add(query);
                 }
 
@@ -957,6 +978,8 @@ namespace AltAIMLbot
                         
             // process the node
             string tagName = node.Name.ToLower();
+            myBehaviors.logNode("AIML", node);
+
             if (tagName == "template")
             {
                 StringBuilder templateResult = new StringBuilder();
