@@ -12,8 +12,16 @@ namespace cogbot.Actions.Communication
         public SayCommand(BotClient testClient)
 		{
 			Name = "say";
-			Description = "Say something.  Usage: say (optional channel) whatever)";
+            Description = Name + " something.";
+            Usage = Name + " (optional channel) whatever";
             Category = CommandCategory.Communication;
+            Parameters =
+                NamedParam.CreateParams(
+                            NamedParam.Optional("channel", typeof(int), "the optional channel in which the message goes out"),
+                            "message", typeof(string), "what you output to the simulator");
+            ResultMap = NamedParam.CreateParams(
+                "message", typeof(string), "if success was false, the reason why",
+                "success", typeof(bool), "true if command was successful");
 		}
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
