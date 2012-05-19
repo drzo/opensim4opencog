@@ -420,6 +420,7 @@ namespace cogbot.Actions
             {
                 if (_mClient == null)
                 {
+                    Failure("trying to access TheBotClient with an unknown client!?");
                     DLRConsole.DebugWriteLine("" + this + " has no TheBotClient?!");
                     return cogbot.Listeners.WorldObjects.GridMaster.client;
                 }
@@ -443,7 +444,11 @@ namespace cogbot.Actions
         {
             get
             {
-                if (_mClient == null) return cogbot.Listeners.WorldObjects.GridMaster;
+                if (_mClient == null)
+                {
+                    Failure("trying to access world with an unknown client!?");
+                    return cogbot.Listeners.WorldObjects.GridMaster;
+                }
                 return _mClient.WorldSystem;
             }
         }

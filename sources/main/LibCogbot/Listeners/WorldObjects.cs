@@ -13,15 +13,15 @@ namespace cogbot.Listeners
     public class NamedPrefixThing
     {
         public string prefix;
-        public BotClient getNamed;
-        public NamedPrefixThing(string named, BotClient client)
+        public Func<string> getNamed;
+        public NamedPrefixThing(string named, Func<string> client)
         {
             prefix = named;
             getNamed = client;
         }
         public override string ToString()
         {
-            return prefix + " " + getNamed.GetName();
+            return prefix + " " + getNamed();
         }
     }
 
@@ -278,7 +278,7 @@ namespace cogbot.Listeners
         public WorldObjects(BotClient client)
             : base(client)
         {
-            OnConnectedQueue = new TaskQueueHandler(new NamedPrefixThing("OnConnectedQueue",client),
+            OnConnectedQueue = new TaskQueueHandler(new NamedPrefixThing("OnConnectedQueue", client.GetName),
                                                     TimeSpan.FromMilliseconds(20), false);
             client.WorldSystem = this;
             RegisterAll();
