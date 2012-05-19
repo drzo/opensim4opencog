@@ -14,6 +14,11 @@ namespace cogbot.Actions.Search
             Name = "showevent";
             Description = "Shows an Events details. Usage: showevent [eventID]";
             Category = CommandCategory.Other;
+            Parameters =
+                NamedParam.CreateParams("eventID", typeof (UUID), "event you want info for");
+            ResultMap = NamedParam.CreateParams(
+                "message", typeof (string), "if success was false, the reason why",
+                "success", typeof (bool), "true if command was successful");
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
