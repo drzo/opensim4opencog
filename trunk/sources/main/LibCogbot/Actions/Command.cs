@@ -37,6 +37,16 @@ namespace cogbot.Actions
         {
             return "<p><pre>" + NoEnts(typed) + "</pre></p>Returns<p><pre>" + NoEnts(output) + "</pre></p>";
         }
+
+        public static string WikiBC(string named)
+        {
+            return Wiki("BotCommands#" + named.Replace(" ", ""), named);
+        }
+
+        public static string Wiki(string page, string named)
+        {
+            return "<a href='wiki/" + page + "'>" + named + "</a>";
+        }
     }
 
     public enum CommandCategory : int
@@ -623,9 +633,7 @@ namespace cogbot.Actions
             {
                 if (!string.IsNullOrEmpty(WriteLineResultName))
                 {
-                    string before = "" + Results[WriteLineResultName];
-                    string newstring = before + "\n" + usage;
-                    Results[WriteLineResultName] = newstring.TrimStart();                    
+                    AppendResults(WriteLineResultName, usage);
                 }
                 WriteLine(usage);
             }
@@ -753,6 +761,13 @@ namespace cogbot.Actions
         protected void SetWriteLine(string resultName)
         {
             WriteLineResultName = resultName;
+        }
+
+        protected void AppendResults(string name, string format)
+        {
+            string before = "" + Results[name];
+            string newstring = before + "\n" + format;
+            Results[name] = newstring.TrimStart();                    
         }
     }
 }
