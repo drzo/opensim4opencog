@@ -1,0 +1,32 @@
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer Base\bin\Debug\Brainiac.Design.dll.config
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer Base\bin\Debug\Brainiac.Design.dll
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer Base\bin\Debug\Brainiac.Design.pdb
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer Base\obj\Debug\ResolveAssemblyReference.cache
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer Base\obj\Debug\Brainiac.Design.Attributes.DesignerBooleanEditor.resources
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer Base\obj\Debug\Brainiac.Design.Attributes.DesignerEnumEditor.resources
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer Base\obj\Debug\Brainiac.Design.Attributes.DesignerNumberEditor.resources
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer Base\obj\Debug\Brainiac.Design.Attributes.DesignerPropertyEditor.resources
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer Base\obj\Debug\Brainiac.Design.Attributes.DesignerStringEditor.resources
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer Base\obj\Debug\Brainiac.Design.FlexibleProperties.DesignerAIDefinitionNumberEditor.resources
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer Base\obj\Debug\Brainiac.Design.FlexibleProperties.DesignerRandomNumberEditor.resources
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer Base\obj\Debug\Brainiac.Design.FlexibleProperties.DesignerAIDefinitionEditor.resources
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer Base\obj\Debug\Brainiac.Design.Properties.Resources.resources
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer Base\obj\Debug\Brainiac Designer Base.csproj.GenerateResource.Cache
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer Base\obj\Debug\Brainiac.Design.dll
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Brainiac Designer Base\obj\Debug\Brainiac.Design.pdb
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer Base\bin\Debug\Brainiac.Design.dll.config
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer Base\bin\Debug\Brainiac.Design.dll
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer Base\bin\Debug\Brainiac.Design.pdb
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer Base\obj\Debug\ResolveAssemblyReference.cache
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer Base\obj\Debug\Brainiac.Design.Attributes.DesignerBooleanEditor.resources
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer Base\obj\Debug\Brainiac.Design.Attributes.DesignerEnumEditor.resources
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer Base\obj\Debug\Brainiac.Design.Attributes.DesignerNumberEditor.resources
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer Base\obj\Debug\Brainiac.Design.Attributes.DesignerPropertyEditor.resources
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer Base\obj\Debug\Brainiac.Design.Attributes.DesignerStringEditor.resources
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer Base\obj\Debug\Brainiac.Design.FlexibleProperties.DesignerAIDefinitionNumberEditor.resources
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer Base\obj\Debug\Brainiac.Design.FlexibleProperties.DesignerRandomNumberEditor.resources
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer Base\obj\Debug\Brainiac.Design.FlexibleProperties.DesignerAIDefinitionEditor.resources
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer Base\obj\Debug\Brainiac.Design.Properties.Resources.resources
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer Base\obj\Debug\Brainiac Designer Base.csproj.GenerateResource.Cache
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer Base\obj\Debug\Brainiac.Design.dll
+C:\dev\Cogbot2012-04-20\Brainiac\Brainiac Designer Base\obj\Debug\Brainiac.Design.pdb

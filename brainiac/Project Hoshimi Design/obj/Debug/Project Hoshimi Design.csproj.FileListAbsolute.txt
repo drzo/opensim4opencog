@@ -1,0 +1,16 @@
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\out\plugins\ProjectHoshimi.dll.config
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\out\plugins\ProjectHoshimi.dll
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\out\plugins\ProjectHoshimi.pdb
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Project Hoshimi Design\obj\Debug\ResolveAssemblyReference.cache
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Project Hoshimi Design\obj\Debug\ProjectHoshimi.Properties.Resources.resources
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Project Hoshimi Design\obj\Debug\Project Hoshimi Design.csproj.GenerateResource.Cache
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Project Hoshimi Design\obj\Debug\ProjectHoshimi.dll
+C:\RD4541\Acore\BTNotes\Brainiac Designer v2.1 Source Code\Project Hoshimi Design\obj\Debug\ProjectHoshimi.pdb
+C:\dev\Cogbot2012-04-20\Brainiac\out\plugins\ProjectHoshimi.dll.config
+C:\dev\Cogbot2012-04-20\Brainiac\out\plugins\ProjectHoshimi.dll
+C:\dev\Cogbot2012-04-20\Brainiac\out\plugins\ProjectHoshimi.pdb
+C:\dev\Cogbot2012-04-20\Brainiac\Project Hoshimi Design\obj\Debug\ResolveAssemblyReference.cache
+C:\dev\Cogbot2012-04-20\Brainiac\Project Hoshimi Design\obj\Debug\ProjectHoshimi.Properties.Resources.resources
+C:\dev\Cogbot2012-04-20\Brainiac\Project Hoshimi Design\obj\Debug\Project Hoshimi Design.csproj.GenerateResource.Cache
+C:\dev\Cogbot2012-04-20\Brainiac\Project Hoshimi Design\obj\Debug\ProjectHoshimi.dll
+C:\dev\Cogbot2012-04-20\Brainiac\Project Hoshimi Design\obj\Debug\ProjectHoshimi.pdb
