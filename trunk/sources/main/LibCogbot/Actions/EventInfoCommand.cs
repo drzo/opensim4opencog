@@ -13,14 +13,14 @@ namespace cogbot.Actions.Inventory
         public EventInfoCommand(BotClient Client)
         {
             Name = "evinfo";
-            Description = "Shows the events that have been associated with an object. Mostly useful for debugging Cogbot.";
+            Description = "Shows the events that have been associated with an object. See <a href='wiki/BotCommands#Events'>Events</a> for info about events.";
             Usage = @"<p>evinfo &lt;primspec&gt;</p><p>example: evinfo tacosofgod  <i>tacosofgod is a nearby plywood cube</i></p>
 <pre>
 [09:12] tacosofgod Box 70b5e8ab-3308-4bc6-bbf8-4f313cd7d518 (localID 2036105563)(ch0)(PrimFlagsFalse InventoryEmpty, ObjectOwnerModify)[](!IsPassable)
 [09:12] evinfo: Success: simEventComplete blanks=1 nonblanks=0
 [09:12] evinfo: Success: simEventComplete blanks=1 nonblanks=0
 </pre>";
-            Parameters = NamedParam.CreateParams("object", typeof(SimObject),
+            Parameters = NamedParam.CreateParams("object", typeof(PrimSpec),
                 "The object whose events we want, as specified in <a href='wiki/BotCommands#PrimSpec'>Prim Spec</a>");
             ResultMap = NamedParam.CreateParams(
                  "message", typeof(string), "if success was false, the reason why",
