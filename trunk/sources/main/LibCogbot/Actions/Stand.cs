@@ -13,8 +13,12 @@ namespace cogbot.Actions.Movement
         public Stand(BotClient Client)
             : base(Client)
         {
-            Description = "Stand up.";
-            Usage = "To Stand up, type \"stand\"";
+            Description = "Stand up.  OK to call it if already standing";
+            Usage = "stand";
+            Parameters = NamedParam.CreateParams();
+            ResultMap = NamedParam.CreateParams(
+                 "message", typeof(string), "if we could not stand up, why (shouldnt happen)",
+                 "success", typeof(bool), "true if we stood up");
         }
 
         public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)

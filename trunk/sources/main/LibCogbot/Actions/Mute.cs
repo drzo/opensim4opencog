@@ -8,16 +8,45 @@ using MushDLR223.ScriptEngines;
 
 namespace cogbot.Actions
 {
+    class Unmute : Mute
+    {
+        public Unmute(BotClient Client)
+            : base(Client)
+        {
+            Description = "Remove avatars or objects from the mute list";
+            Usage = "<p>unmute all</p><p>unmute Fluffybunny Resident</p>";
+        }
+    }
+
     class Mute : Command, BotPersonalCommand
     {
         public Mute(BotClient Client)
             : base(Client)
         {
-            Description = "Maniputate hte MuteList on the server";
-            Usage = "To Mute an avatar, type \"mute <avatar name>\"; to Unmute all, type \"ummute all\" \r\n" +
-                          "To mute specially type \"mute Particles <primmask>\"";
-            Parameters = new[] { new NamedParam(typeof(string), typeof(MuteFlags)), new NamedParam(typeof(SimObject), typeof(UUID)) };
-        }
+            Description = "Mute avatars or objects, or display the mute list. unmute unmutes.";
+            Usage = "<p>mute Fluffybunny Resident</p>" +
+"<p>mute Particles &lt;primspec&gt;  mutes all but a specific element from:</p>" +
+@"<ul>
+<li>Default - mute everything</li>
+<li>TextChat - don't mute text chat</li>
+<li>VoiceChat - don't mute voice</li>
+<li>Particles - don't mute particles</li>
+<li>ObjectSounds - don't mute sounds</li>
+<li>All - don't mute anything</li>
+</ul>";
+            ParameterVersions = NamedParam.CreateParamVersions(
+                NamedParam.CreateParams(
+                   NamedParam.Optional("element", typeof(MuteFlags), "element to not mute"),
+                   "av", typeof(SimAvatar),
+                   "Avatar to mute"),
+                NamedParam.CreateParams(
+                   NamedParam.Optional("element", typeof(MuteFlags), "element to not mute"),
+                   "object", typeof(SimAvatar),
+                   "object to mute"));
+            ResultMap = NamedParam.CreateParams(
+                 "message", typeof(string), "if success was false, the reason why",
+                 "success", typeof(bool), "true if we muted the object");
+         }
 
         public override CmdResult acceptInput(string verb, Parser pargs, OutputDelegate WriteLine)
         {
