@@ -10,6 +10,20 @@ using System.Configuration;
 namespace cogbot.Listeners
 {
     public delegate float SimObjectHeuristic(SimObject prim);
+    public class NamedPrefixThing
+    {
+        public string prefix;
+        public BotClient getNamed;
+        public NamedPrefixThing(string named, BotClient client)
+        {
+            prefix = named;
+            getNamed = client;
+        }
+        public override string ToString()
+        {
+            return prefix + " " + getNamed.GetName();
+        }
+    }
 
     public partial class WorldObjects : AllEvents
     {
@@ -172,7 +186,7 @@ namespace cogbot.Listeners
         private static readonly TaskQueueHandler EventQueue = new TaskQueueHandler("World EventQueue");
         private static readonly TaskQueueHandler CatchUpQueue = new TaskQueueHandler("Simulator catchup", TimeSpan.FromSeconds(60), false);
         private static readonly TaskQueueHandler MetaDataQueue = PropertyQueue;//new TaskQueueHandler("MetaData Getter", TimeSpan.FromSeconds(0), false);
-        public readonly TaskQueueHandler OnConnectedQueue = new TaskQueueHandler("OnConnectedQueue", TimeSpan.FromMilliseconds(20), false);
+        public readonly TaskQueueHandler OnConnectedQueue;
         public static readonly TaskQueueHandler SlowConnectedQueue = SimAssetStore.SlowConnectedQueue;
         internal static readonly Dictionary<UUID, object> UUIDTypeObjectReal = new Dictionary<UUID, object>();
         internal static readonly object UUIDTypeObject = UUIDTypeObjectReal;
@@ -264,6 +278,8 @@ namespace cogbot.Listeners
         public WorldObjects(BotClient client)
             : base(client)
         {
+            OnConnectedQueue = new TaskQueueHandler(new NamedPrefixThing("OnConnectedQueue",client),
+                                                    TimeSpan.FromMilliseconds(20), false);
             client.WorldSystem = this;
             RegisterAll();
             DLRConsole.TransparentCallers.Add(typeof (WorldObjects));
