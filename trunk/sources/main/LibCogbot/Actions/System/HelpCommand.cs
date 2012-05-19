@@ -13,7 +13,7 @@ namespace cogbot.Actions.System
         public HelpCommand(BotClient testClient)
 		{
 			Name = "help";
-			Description = "Lists available commands. usage: help [command] to display information on commands";
+			Description = "Lists available commands. usage: help [prolog] [command] to display information on commands";
             Category = CommandCategory.BotClient;
             Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
 		}
@@ -21,7 +21,23 @@ namespace cogbot.Actions.System
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{
             BotClient Client = TheBotClient;
-
+            bool showPLVersionOfHelp = false;
+            if (args.Length == 1)
+            {
+                if (args[0] == "prolog")
+                {
+                    showPLVersionOfHelp = true;
+                    args = Parser.SplitOff(args, 1);
+                }
+                if (showPLVersionOfHelp)
+                {
+                    foreach (var s in Client.Commands.Values)
+                    {
+                        WriteLine(s.ToPrologString() + ".");
+                    }
+                    return Success("showPLVersion(done).");
+                }
+            }
             if (args.Length > 0)
             {
                 if (Client.Commands.ContainsKey(args[0]))
