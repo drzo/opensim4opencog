@@ -1,0 +1,11 @@
+#ways to pay for Cogbot
+
+= Introduction =
+
+For Cogbot to progress, some day it'll be necessary for the coders to get paid.
+
+
+  * Compile the documentation into a book, sell it
+  * Cogbot 'stuff'
+  * Support/custom development for large users
+  * Offer accreditation classes to educators
