@@ -10,7 +10,13 @@ namespace cogbot.Actions.System
         public ToBotCommand(BotClient testClient)
         {
             Name = "tobot";
-            Description = "Send a command only to one bot.  Usage: tobot \"Nephrael Rae\" anim KISS";
+            Description = "Send a command only to one bot. The bot must be logged on from the same Cogbot instance";
+            Usage = 
+                Hmtlize.Usage("tobot <avatar> <botcmd>", "Send the command only to avatar") +
+                Htmlize.Example("tobot \"Nephrael Rae\" anim KISS", "Make Nephrael Rae play the kiss animation");
+            Parameters = NamedParam.CreateParams(
+                "avatar", typeof(AgentSpec), "the avatar to perform the command on",
+                "command", typeof(BotCommand), "the command to perform");
             Category = CommandCategory.BotClient;
         }
 
