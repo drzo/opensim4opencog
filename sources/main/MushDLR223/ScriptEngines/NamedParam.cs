@@ -68,8 +68,8 @@ namespace MushDLR223.ScriptEngines
             IsOptional = false;
             Comment = null;           
             _key = ToKey(k);
-            _value = v;
-            _Type = null;
+            _value = null;
+            _Type = v;
             Choices = null;
             info = null;
             checkKey(k);
