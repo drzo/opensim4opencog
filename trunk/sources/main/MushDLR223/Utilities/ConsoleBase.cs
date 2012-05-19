@@ -2127,7 +2127,7 @@ namespace MushDLR223.Utilities
         }
         public static bool InvokeControlAfterCreated(Control rtb, MethodInvoker invoke)
         {
-
+            if (rtb.IsDisposed) return true;
             if (rtb.InvokeRequired)
             {
                 rtb.Invoke(invoke);
