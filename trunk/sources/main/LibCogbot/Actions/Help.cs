@@ -13,7 +13,8 @@ namespace cogbot.Actions.System
             : base(Client)
         {
             Description = "Print help on everything, or help on a topic string. The full help text is searched for the string.";
-            Usage = "<p>help</p><p>help &lt;topic&gt;</p>";
+            Usage = Htmlize.Usage("help", "shows the overview of all commands") +
+                    Htmlize.Usage("help moveto", "shows overvierw and usage/examples on the moveto command");
             Parameters = NamedParam.CreateParams(
                     NamedParam.Optional("topic", typeof(string), "Optional text to search for."));
 
@@ -28,9 +29,11 @@ namespace cogbot.Actions.System
         public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
             string mustHave = ": "; // everything
+            bool detailed = false;
             if (args.Length > 0)
             {
-                mustHave = args.str.ToLower();
+                mustHave = args.str.ToLower().TrimEnd('s') + ": ";
+                detailed = true;
             }
             int found = 0;
             var dictionary = new SortedDictionary<string, CommandInfo>(TheBotClient.ClientManager.groupActions);
@@ -46,13 +49,19 @@ namespace cogbot.Actions.System
             }
             foreach (string action in dictionary.Keys)
             {
-                string s = action + ": " + dictionary[action].Description;
+                CommandInfo info = dictionary[action];
+                string overview = action.TrimEnd('s') + ": " + info.Description;
+                string s = overview + " " + info.usageString;
                 if (!s.ToLower().Contains(mustHave))
                 {
                     continue;
                 }
                 found++;
-                WriteLine(s);
+                WriteLine(overview);
+                if (detailed)
+                {
+                    WriteLine(info.usageString);
+                }
             }
             dictionary = TheBotClient.Commands;            
 
