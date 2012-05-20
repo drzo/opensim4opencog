@@ -21,9 +21,10 @@ namespace cogbot.Actions.Groups
         public JoinGroupCommand(BotClient testClient)
         {
             Name = "joingroup";
-            Description = "join a group. Usage: joingroup GroupName | joingroup UUID GroupId";
+            Description = "join a group.";
             Category = CommandCategory.Groups;
-            Parameters = new[] { new NamedParam(typeof(Group), typeof(UUID)) };
+            Usage = Htmlize.Usage(Name + " group", Description);
+            Parameters = NamedParam.CreateParams("group", typeof(Group), "group you are going to " + Name);
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

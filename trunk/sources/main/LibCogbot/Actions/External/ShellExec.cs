@@ -28,7 +28,10 @@ namespace cogbot.Actions.External
             : base(Client)
         {
             Name = "ShellExec";
-            Description = "Do an shell exec. Usage: shellexec dir";
+            Description = "Do an shell exec to filename";
+            Usage = Htmlize.Usage(Name + " filename", Description);
+            Category = CommandCategory.Simulator;
+            Parameters = NamedParam.CreateParams("filename", typeof(string), "filename to " + Name);
         }
         public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {

@@ -14,8 +14,13 @@ namespace cogbot.Actions.Groups
         public InviteGroupCommand(BotClient testClient)
         {
             Name = "invitegroup";
-            Description = "invite an avatar into a group. Usage: invitegroup AvatarUUID GroupUUID RoleUUID*";
+            Description = "invite an avatar into a group.";
             Category = CommandCategory.Groups;
+            Usage = Htmlize.Usage(Name + " AvatarUUID GroupUUID RoleUUID", Description);
+            Parameters = NamedParam.CreateParams(
+                "agent", typeof(Group), "agent you are inviting",
+                "groupUUID", typeof(Group), "group uuid",
+                "roleUUID", typeof(GroupRole), "group role");
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

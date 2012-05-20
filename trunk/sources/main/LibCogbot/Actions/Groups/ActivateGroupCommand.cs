@@ -20,9 +20,10 @@ namespace cogbot.Actions.Groups
         public ActivateGroupCommand(BotClient testClient)
         {
             Name = "activategroup";
-            Description = "Set a group as active. Usage: activategroup GroupName";
+            Description = "Set a group as active.";
             Category = CommandCategory.Groups;
-            Parameters = new[] { new NamedParam(typeof(Group), typeof(UUID)) };
+            Usage = Htmlize.Usage(Name + " group", Description);
+            Parameters = NamedParam.CreateParams("group", typeof(Group), "group you are going to " + Name);
         }
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {

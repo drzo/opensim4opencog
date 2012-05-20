@@ -58,7 +58,13 @@ namespace cogbot.Actions.WebUtil
             : base(Client)
         {
             Name = "HttpPost";
-            Description = "Do an http post. Usage: HttpPost http://localhost:5580/ cmd say args hello";
+            Description = "Post the name/value paires the contents of a URL to return result";
+            Usage = Htmlize.Usage(Name + " url [n1 v1 [n2 v2]]", Description) +
+                    Htmlize.Example(Name + " http://localhost:5580/ cmd say args hello",
+                                    "makes the bot say something");
+            Parameters = NamedParam.CreateParams("url", typeof (Uri), "url to post to",
+                                                 "name-value", typeof (string), "name value pairs");
+
         }
         public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {

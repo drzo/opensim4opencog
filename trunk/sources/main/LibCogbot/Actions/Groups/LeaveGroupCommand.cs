@@ -17,8 +17,10 @@ namespace cogbot.Actions.Groups
         public LeaveGroupCommand(BotClient testClient)
         {
             Name = "leavegroup";
-            Description = "Leave a group. Usage: leavegroup GroupName";
+            Description = "Leave a group.";
             Category = CommandCategory.Groups;
+            Usage = Htmlize.Usage(Name + " group", Description);
+            Parameters = NamedParam.CreateParams("group", typeof(Group), "group you are going to " + Name);
         }
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {

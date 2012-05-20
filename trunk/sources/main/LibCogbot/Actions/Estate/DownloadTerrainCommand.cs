@@ -33,9 +33,11 @@ namespace cogbot.Actions.Estate
         public DownloadTerrainCommand(BotClient testClient)
         {
             Name = "downloadterrain";
-            Description = "Download the RAW terrain file for this estate. Usage: downloadterrain [timeout]";
+            Description = "Download the RAW terrain file for this estate.";
+            Usage = Htmlize.Usage("downloadterrain [timeout-seconds]", "download terrain to SimName.raw using timeout (default 2 minutes)");
             Category = CommandCategory.Simulator;
-            Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
+            Parameters =
+                NamedParam.CreateParams(NamedParam.Optional("timeoutSeconds", typeof (int), "timeout in seconds"));
         }
 
         /// <summary>
@@ -48,7 +50,7 @@ namespace cogbot.Actions.Estate
         {
             int argsUsed;
             Simulator CurSim = TryGetSim(args, out argsUsed) ?? Client.Network.CurrentSim;
-            int timeout = 120000; // default the timeout to 2 minutes
+            int timeout = 120; // default the timeout to 2 minutes
             fileName = CurSim.Name + ".raw";
             
             if(args.Length > 0 && int.TryParse(args[0], out timeout) != true)
@@ -75,7 +77,7 @@ namespace cogbot.Actions.Estate
             Client.Estate.EstateOwnerMessage("terrain", parameters);
 
             // wait for (timeout) seconds for the request to complete (defaults 2 minutes)
-            if (!xferTimeout.WaitOne(timeout, false))
+            if (!xferTimeout.WaitOne(timeout * 1000, false))
             {
                 result.Append("Timeout while waiting for terrain data");
             }

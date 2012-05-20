@@ -22,9 +22,10 @@ namespace cogbot.Actions.Groups
         public GroupRolesCommand(BotClient testClient)
         {
             Name = "grouproles";
-            Description = "Dump group roles to console. Usage: grouproles GroupName";
+            Description = "Dump group roles to console.";
             Category = CommandCategory.Groups;
-            Parameters = new[] { new NamedParam(typeof(Group), typeof(UUID)) };
+            Usage = Htmlize.Usage(Name + " group", Description);
+            Parameters = NamedParam.CreateParams("group", typeof(Group), "group you are going to see " + Name);
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
