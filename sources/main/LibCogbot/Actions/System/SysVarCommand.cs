@@ -44,8 +44,7 @@ namespace cogbot.Actions.System
             foreach (var sv in LockInfo.CopyOf(ScriptManager.SysVars))
             {
                 ConfigSettingAttribute svv = sv.Value;
-                sb.AppendLine("<tr><td>" + Htmlize.NoEnts(svv.Name) + "</td><td>" + Htmlize.NoEnts("" + svv.Value) +
-                              "</td><td>" + Htmlize.NoEnts(svv.Comments) + "</td></tr>");              
+                sb.AppendFormat("<tr id='{0}'><td>{0}</td><td>{1}</td><td>{2}</td></tr>", Htmlize.NoEnts(svv.Name), Htmlize.NoEnts("" + svv.Value), Htmlize.NoEnts(svv.Comments));
             }
             sb.Append("</table>");
             return sb.ToString();
