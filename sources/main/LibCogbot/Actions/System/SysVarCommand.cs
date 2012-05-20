@@ -39,14 +39,14 @@ namespace cogbot.Actions.System
 
         public string SysVarHtml()
         {
-            StringBuilder sb = new StringBuilder("");
-            sb.Append("<table><tr><th>Variable Name</th><th>current value</th><th>Description</th></tr>");
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("<table><tr><th>Variable Name</th><th>current value</th><th>Description</th></tr>");
             foreach (var sv in LockInfo.CopyOf(ScriptManager.SysVars))
             {
                 ConfigSettingAttribute svv = sv.Value;
-                sb.AppendFormat("<tr name=\"{0}\" id='{0}'><td>{0}</td><td>{1}</td><td>{2}</td></tr>", Htmlize.NoEnts(svv.Name), Htmlize.NoEnts("" + svv.Value), Htmlize.NoEnts(svv.Comments));
+                sb.AppendLine(string.Format("<tr name=\"{0}\" id='{0}'><td>{0}</td><td>{1}</td><td>{2}</td></tr>", Htmlize.NoEnts(svv.Name), Htmlize.NoEnts("" + svv.Value), Htmlize.NoEnts(svv.Comments)));
             }
-            sb.Append("</table>");
+            sb.AppendLine("</table>");
             return sb.ToString();
         }
 
