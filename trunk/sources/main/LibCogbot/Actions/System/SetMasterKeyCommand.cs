@@ -14,7 +14,12 @@ namespace cogbot.Actions.System
         public SetMasterKeyCommand(BotClient testClient)
         {
             Name = "setMasterKey";
-            Description = "Sets the key of the master user.  The master user can IM to run commands.";
+            Description = "A bot can have a master - another account whose IM's are accepted as botcmds. " +
+                "You can set the master in botconfig.xml or via this command.";
+            Usage = Htmlize.Usage("setmasterkey <uuid>", "Sets the master by UUID") +
+                Htmlize.Usage("setmasterkey <name>", "Sets the master by user name");
+            Parameters = NamedParam.CreateParams("master", typeof(AgentSpec), "name or UUID of master agent");
+
             Category = CommandCategory.Security;
         }
 
