@@ -24,10 +24,10 @@ namespace cogbot.Actions.Friends
         {
             // The name of the command
             Name = "Remove Friend";
-            // A short description of the command with usage instructions
-            Description = "Remove avatar friend. Usage: removefriend <avatar/uuid>";
+            Description = Name + " from agent-spec.";
+            Usage = Htmlize.Usage(Name + " agent", Description);
             Category = CommandCategory.Friends;
-            Parameters = new[] { new NamedParam(typeof(Avatar), typeof(UUID)) };
+            Parameters = NamedParam.CreateParams("agent", typeof(UUID), "agent you are going to " + Name);
         }
 
         /// <summary>

@@ -23,10 +23,10 @@ namespace cogbot.Actions.Friends
         {
             // The name of the command
             Name = "Friends List";
-            // A short description of the command with usage instructions
-            Description = "List avatar friends. Usage: friends";
+            Description = "List avatar friends.";
+            Usage = Htmlize.Usage(Name, Description);
             Category = CommandCategory.Friends;
-            Parameters = new[] { new NamedParam(typeof(Avatar), typeof(UUID)) };
+            Parameters = NamedParam.CreateParams();
         }
 
         /// <summary>

@@ -34,8 +34,12 @@ namespace cogbot.Actions.External
             : base(Client)
         {
             Name = "JarExec";
-            Description = "Do an java exec. Usage: java dir";
+            Description = "Do an java jar exec to filename";
+            Usage = Htmlize.Usage(Name + " filename", Description);
+            Category = CommandCategory.Simulator;
+            Parameters = NamedParam.CreateParams("filename", typeof (string), "filename to " + Name);
         }
+
         public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
             return Success(DoShellExec("java.exe",args.str));

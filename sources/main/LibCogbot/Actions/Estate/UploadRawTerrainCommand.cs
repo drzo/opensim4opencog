@@ -16,8 +16,10 @@ namespace cogbot.Actions.Estate
         public UploadRawTerrainCommand(BotClient testClient)
         {
             Name = "uploadterrain";
-            Description = "Upload a raw terrain file to a simulator. usage: uploadterrain filename";
+            Description = "Upload a raw terrain file to a simulator.";
+            Usage = Htmlize.Usage(Name + " filename", "upload filename");
             Category = CommandCategory.Simulator;
+            Parameters = NamedParam.CreateParams("filename", typeof(string), "filename to upload");
         }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

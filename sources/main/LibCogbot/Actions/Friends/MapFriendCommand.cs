@@ -17,9 +17,10 @@ namespace cogbot.Actions.Friends
         public MapFriendCommand(BotClient testClient)
         {
             Name = "Map Friend";
-            Description = "Show a friends location. Usage: mapfriend UUID";
+            Description = "Show a friends location.";
+            Usage = Htmlize.Usage(Name + " agent", Description);
             Category = CommandCategory.Friends;
-            Parameters = new[] { new NamedParam(typeof(SimAvatar), typeof(UUID)) };
+            Parameters = NamedParam.CreateParams("agent", typeof(UUID), "agent you are going to " + Name);
         }
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {

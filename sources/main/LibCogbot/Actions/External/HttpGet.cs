@@ -19,7 +19,12 @@ namespace cogbot.Actions.WebUtil
             : base(Client)
         {
             Name = "HttpGet";
-            Description = "Do an http get. Usage: HttpGet http://localhost:5580/action?cmd=say&args=hello";
+            Description = "Do an http get.";
+            Usage = Htmlize.Usage(Name + " url", "read the contents of a URL to return result") +
+                    Htmlize.Example(Name + " http://localhost:5580/action?cmd=say&args=hello",
+                                    "makes the bot say something");
+            Parameters = NamedParam.CreateParams("url", typeof(Uri), "url to get");
+            Category = CommandCategory.Simulator;
         }
         public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
