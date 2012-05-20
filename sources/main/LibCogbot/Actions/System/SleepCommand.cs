@@ -14,7 +14,14 @@ namespace cogbot.Actions.System
         public SleepCommand(BotClient testClient)
         {
             Name = "sleep";
-            Description = "Uses AgentPause/AgentResume and sleeps for a given number of seconds. Usage: sleep [seconds]";
+            Description = "Uses AgentPause/AgentResume to sleep the avatar and tell the " +
+                "simulator it won't need packets for a time period in seconds. A typical " + 
+                "use would be to turn off a bot when not needed";
+            Usage = Htmlize.Usage("sleep &lt;seconds&gt;", "sleeps for nn seconds");
+            Parameters = NamedParam.CreateParams("seconds", typeof(int), "seconds to sleep");
+            ResultMap = NamedParam.CreateParams(
+     "message", typeof(string), "if success was false, the reason why",
+     "success", typeof(bool), "true if we slept");
             Category = CommandCategory.BotClient;
         }
 

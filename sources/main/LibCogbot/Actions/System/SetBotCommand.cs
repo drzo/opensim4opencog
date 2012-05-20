@@ -13,7 +13,19 @@ namespace cogbot.Actions.System
             public SetBotCommand(BotClient testClient)
             {
                 Name = "setbot";
-                Description = "Sets one current bot for subsequent textform commands";
+                Description = "Sets the current bot for subsequent botcmd commands.";
+                Usage =
+                    Htmlize.Usage("setmasterkey <name>", "Sets the bot by user name") +
+                    Htmlize.Example(@"
+... log on two bots, Ima Bot and Another Bot
+/setbot Ima Bot
+/say hi, I am Ima Bot
+... Ima Bot says hi, I am Ima Bot in chat
+/setbot Another Bot
+/say hi, I'm not Ima
+... Another Bot says I'm not Ima  in chat
+", "first one bot, then a different one, chats");
+                Parameters = NamedParam.CreateParams("bot", typeof(AgentSpec), "name of bot");
                 Category = CommandCategory.BotClient;
             }
 

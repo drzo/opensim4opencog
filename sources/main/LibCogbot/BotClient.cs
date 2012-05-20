@@ -666,6 +666,8 @@ namespace cogbot
             RegisterCommand("whisper", new Actions.Whisper(this));
 
 			RegisterCommand("help", new cogbot.Actions.System.Help(this));
+            RegisterCommand("setmaster", new cogbot.Actions.System.SetMasterKeyCommand(this));
+            RegisterCommand("setmasterkey", new cogbot.Actions.System.SetMasterKeyCommand(this));
 			RegisterCommand("sit", new Sit(this));
 			RegisterCommand("stand", new Stand(this));
 			RegisterCommand("jump", new Jump(this));
