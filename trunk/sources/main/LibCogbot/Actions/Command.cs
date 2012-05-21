@@ -414,6 +414,7 @@ namespace cogbot.Actions
             WriteLine = writeLine;
             try
             {
+                Results.Clear();
                 return Execute(args.tokens, CallerID, writeLine);
             }
             catch (Exception e)
@@ -505,6 +506,7 @@ namespace cogbot.Actions
 
         public CmdResult acceptInputWrapper(string verb, string args,UUID callerID, OutputDelegate writeLine)
         {
+            Results.Clear();
             CallerID = callerID;
             success = failure = 0;
             this.WriteLine = writeLine;
@@ -513,6 +515,7 @@ namespace cogbot.Actions
 
         public virtual CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate writeLine)
         {
+            Results.Clear();
             CallerID = fromAgentID;
             success = failure = 0;
             var wlpre = this.WriteLine;
