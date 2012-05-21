@@ -144,7 +144,12 @@ namespace MushDLR223.Utilities
             {
                 var m = this.member;
                 object target = null;
-                if (UseSingleton && !IsStatic) target = Singleton;
+                if (UseSingleton && !IsStatic)
+                {
+                    target = Singleton;
+                    if (target == null)
+                        return "lost the race";
+                }
                 try
                 {
                     var v = FindValue(m, target);
