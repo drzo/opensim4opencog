@@ -98,6 +98,18 @@ be_tribal(
 	       [Start, End, Path]),
 	be_tribal(Start, Name, [en_route(Path) | Status]).
 
+%
+% If we haven't gotten our inventory, get it and wear the items
+%
+/*
+be_tribal(
+    Loc,
+    Name,
+    Status) :-
+	\+ memberchk(inited, Status),
+
+	be_tribal(Loc, Name, [inited | Status]).
+*/
 
 %
 % Die if yer starved
