@@ -16,7 +16,7 @@
    current_bot/1, botget/2,
    botcall/1, botcall/2,
 
-   botdo/1,wb_botdo/2,
+   botdo/1,wb_botdo/2,wabdo/1,
 
    botcmd/1, botcmd/2, botcmd/3,   
    wb_botcmd/2, wb_botcmd/3, wb_botcmd/4,
@@ -346,6 +346,9 @@ wb_botcall(BotID,Property,Value):-cli_call(BotID,Property,Value).
 %
 botdo(In):-current_bot(BotID),wb_botdo(BotID,In),!.
 wb_botdo(BotID,In):-wb_botcmd(BotID,In,cli_fmt(botcmd),_).
+
+wabdo(In):-current_bot_db(_,BotID),wb_botdo(BotID,In),fail.
+wabdo(_).
 
 % wrappered execute command in a convenience pred
 % botcmd(say("hi"))
