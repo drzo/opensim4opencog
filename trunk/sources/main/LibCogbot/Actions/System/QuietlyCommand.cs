@@ -11,7 +11,11 @@ namespace cogbot.Actions.System
         public QuietlyCommand(BotClient testClient)
         {
             Name = "quietly";
-            Description = "Invoke a console command with no return results.  Usage: quietly priminfo";
+            Description = "Invoke a botcmd without printing anything.";
+            Usage = Htmlize.Example("quietly priminfo", "run priminfo and discard results");
+            Parameters = NamedParam.CreateParams(
+    "command", typeof(BotCommand), "command to execute quietly");
+
             Category = CommandCategory.BotClient;
         }
 

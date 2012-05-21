@@ -14,6 +14,8 @@ namespace cogbot.Actions.System
 		{
 			Name = "quit";
 			Description = "Log all avatars out and shut down";
+            Usage = Htmlize.Usage("quit", "log out all avatars and shut down");
+            Parameters = NamedParam.CreateParams();
             Category = CommandCategory.BotClient;
 		}
 
