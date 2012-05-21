@@ -107,7 +107,7 @@ last_name('Hillperson').
 %last_name('Dougstribe').
 %
 
-num_bots_to_run(6).
+num_bots_to_run(1).
 
 test_bot(otopopo) :- num_bots_to_run(X), X >= 1.
 test_bot_credentials(otopopo, 'Otopopo', Tribe, PW) :-
@@ -183,7 +183,7 @@ march_down(Name) :-
 	botcmd(waitpos(20, H , 1), WaitStat),
         say_ref('Wait', WaitStat),
 	say_format('went to ~w', [H]),
-	march_down(Name).
+	march_up(Name).
 
 
 %%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
