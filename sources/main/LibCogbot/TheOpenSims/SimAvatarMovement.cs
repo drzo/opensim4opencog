@@ -137,9 +137,11 @@ namespace cogbot.TheOpenSims
             }
         }
 
+        [ConfigSetting(Description = "The pipes and cogpusher channel")]
+        public static int ChatCogPrimChannel = 239846325;
         private void ChatCogPrim(string s)
         {
-            Client.Self.Chat(s, 100, ChatType.Normal);
+            Client.Self.Chat(s, ChatCogPrimChannel, ChatType.Normal);
         }
 
         public void KillPipes()

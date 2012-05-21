@@ -19,7 +19,7 @@ using String=System.String;
 
 namespace cogbot.TheOpenSims
 {
-    public partial class SimAvatarImpl : SimObjectImpl, SimAvatar
+    public abstract partial class SimAvatarImpl : SimObjectImpl, SimAvatar
     {
         protected BotAction _currentAction;
         public BotAction LastAction { get; set; }
@@ -444,12 +444,12 @@ namespace cogbot.TheOpenSims
                 {
                     return ToGlobal(RegionHandle, SimPosition);
                 }
-                var Client = WorldSystem.client;
+                var client1 = this.Client;
                 var fi = FriendshipInfo;
                 if (fi != null && fi.CanSeeThemOnMap)
                 {
-                    Client.Friends.MapFriend(ID);
-                    Client.Friends.TrackFriend(ID);
+                    client1.Friends.MapFriend(ID);
+                    client1.Friends.TrackFriend(ID);
                     //return fi.IsOnline;
                 }
 

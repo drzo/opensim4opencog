@@ -12,7 +12,7 @@
 
 :-set_bot_writeln_delegate(cli_fmt).
 
-lob:-hillpeople:logon_bots.
+lob:-notrace((hillpeople:logon_bots)).
 ebt:-hillpeople:ebt.
 
 % all say their own names
@@ -25,6 +25,18 @@ wab(_Cmd).
 :-use_module(library('dialect/ifprolog')).
 
 iki:-logon_bot('ExampleBot','Resident','pass123', "https://login.agni.lindenlab.com/cgi-bin/login.cgi","last",_).
+
+
+ebt(Name):- once(thread_property(Name,_);thread_create(tribal:be_tribal(Name),_, [alias(Name)])).
+ebtg(Name):- botID(Name,ID),wb_botcmd(ID,showgui),ebt(Name),!.
+
+ebt0 :- ebtg(otopopo),!.
+ebt1 :- ebtg(yuppie),!.
+ebt2 :- ebtg(bignose),!.
+
+ebt3 :- hill_person(Name),ebt(Name),fail.
+ebt3.
+
 
 end_of_file.
 

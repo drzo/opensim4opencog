@@ -261,14 +261,15 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                if (Client0 == null)
+                if (Client0 != null)
                 {
-                    if (RegionHandle != 0)
-                    {
-                        Client0 = ClientManager.GetBotByGridClient(GetSimulator().Client);
-                    }
+                    return Client0;
                 }
-                return Client0 ?? WorldSystem.client;
+                if (RegionHandle != 0)
+                {
+                    return ClientManager.GetBotByGridClient(GetSimulator().Client);
+                }
+                return WorldSystem.client;
             }
         }
         public virtual void Touch(SimObject simObject)
@@ -1263,7 +1264,7 @@ namespace cogbot.TheOpenSims
             get
             {
                 if (WasKilled) return false;
-                var Prim = this.Prim;
+                var Prim = this._Prim0;
                 if (Prim == null || Prim.ParentID == 0) return true;
                 IsParentAccruate(Prim);
                 // _Parent = Parent;
@@ -2006,7 +2007,7 @@ namespace cogbot.TheOpenSims
 
         public Exception Error(string p, params object[] args)
         {
-            string str = String.Format(p, args);
+            string str = DLRConsole.SafeFormat(p, args);
             Debug(str);
             return new ArgumentException(str);
         }

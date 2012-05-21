@@ -62,6 +62,7 @@ app_init_call(Call):-at_initialization(Call),Call.
 app_restore(Did,_Call):-Did,!.
 app_restore(Did,Call):-assert(Did),!,Call.
 
+btrace:-attach_console,trace.
 
 %%:- absolute_file_name('.',X),asserta(prev_dir6(X)),listing(prev_dir6).
 
@@ -168,7 +169,7 @@ cogbot_throw(Error):-throw(cogbot_user_error(Error)).
 logon_bot(First, Last, Password, Loginuri, Location, BotID):-
         create_bot(First, Last, Password, Loginuri, Location, BotID),
         set_current_bot(BotID),
-	cli_call(BotID,'Login',_).
+	cli_call(BotID,'LoginBlocked',_).
 
 %------------------------------------------------------------------------------
 % create a botclient (will call startups (like botconfig.xml) but no call to implicit login)
@@ -586,7 +587,7 @@ position_to_v3d(Obj,Vect):-cli_get(Obj,globalposition,Vect),!.
 position_to_v3(Obj,LV):-position_to_v3d(Obj,Vect),cli_call('SimRegion','GlobalToLocalStatic'(Vect),LV).
 
 %% 
-distance_to(A,R):-position_to_v3d(A,A2),!,botget(['Self','GlobalPosition'],A1),cli_call(A2,distance(A1,A2),R).
+distance_to(A,R):-position_to_v3d(A,A2),!,botget(['Self','GlobalPosition'],A1),cli_get(A1,'Z',Z),cli_set(A2,'Z',Z), cli_call(A2,distance(A1,A2),R).
 
 % ?- moveTo('CyberPunk Buddha - L',4,FD).
 

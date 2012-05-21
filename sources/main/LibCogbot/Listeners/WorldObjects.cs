@@ -292,7 +292,7 @@ namespace cogbot.Listeners
             AddGroupProvider(_defaultProvider);
             lock (WorldObjectsMasterLock)
             {
-                if (GridMaster == null)
+                if (GridMaster == null || true)
                 {
                     GridMaster = this;
                     if (client.Network.CurrentSim != null) DoSimulatorsCatchUp = true;
@@ -306,7 +306,7 @@ namespace cogbot.Listeners
                 else
                 {
                     //only one rpc at a time  (btw broken with OpenSim.. works with Linden)
-                    client.Settings.USE_LLSD_LOGIN = true;
+                    //client.Settings.USE_LLSD_LOGIN = true;
                 }
                 DoSimulatorsCatchUp = false;
                 //new DebugAllEvents(client);
@@ -1646,7 +1646,7 @@ namespace cogbot.Listeners
                     {
                         Debug("SimObj->SimAvatar!?! " + simObj);
                     }
-                    obj0 = new SimAvatarImpl(uuid, objects, simulator);
+                    obj0 = new SimAvatarClient(uuid, objects, simulator);
                     AddAvatar(obj0,uuid);
                     obj0.PollForPrim(this, simulator);
                     return (SimAvatarImpl)obj0;
@@ -1654,19 +1654,59 @@ namespace cogbot.Listeners
             }
         }
 
-        internal void AddAvatar(SimAvatar obj0, UUID uuid)
+        internal void AddAvatar(SimAvatar neu, UUID uuid)
         {
             var from = WorldObjects.SimAvatars;
-            if (obj0 is SimAvatarClient)
+            SimAvatar old = null;
+            bool sameAvatar = false;
+            bool downGrade = false;
+            bool upGrade = false;
+            foreach (SimAvatar avatar in from)
             {
-                from.Remove(obj0);
-                SimObjects.Remove(obj0);
+                if (avatar.ID == uuid)
+                {
+                    old = avatar;
+                    if (!ReferenceEquals(avatar, neu))
+                    {
+                        if (old is SimAvatarClient && neu is SimAvatarClient)
+                        {
+                            throw new NotSupportedException("two Clients!");
+                        }
+                        if (old is SimAvatarClient && neu is SimAvatar)
+                        {
+                            downGrade = true;
+                        }
+                        if (old is SimAvatar && neu is SimAvatarClient)
+                        {
+                            upGrade = true;
+                        }
+                    } else
+                    {
+                        sameAvatar = true;
+                    }
+                }
             }
-            SimAvatars.Add((SimAvatar)obj0);
+            if (downGrade)
+            {
+                throw new NotSupportedException("downGrade!");
+            }
+            if (upGrade)
+            {
+                if (!ReferenceEquals(old.theAvatar,neu.theAvatar))
+                {
+                    throw new NotSupportedException("theAvatar for upgrade is schizoid!");   
+                }
+                SimObjects.Remove(old);
+                SimAvatars.Remove(old);
+            }
+            if (!sameAvatar)
+            {
+                SimAvatars.Add((SimAvatar)neu);
+                SimObjects.AddTo(neu);
+                RegisterUUID(uuid, neu);
+                RequestAvatarMetadata(uuid);
+            }
             //client.Avatars.RequestAvatarPicks(uuid);
-            SimObjects.AddTo(obj0);
-            RegisterUUID(uuid, obj0);
-            RequestAvatarMetadata(uuid);
         }
 
         internal SimObject CreateSimObject(UUID uuid, WorldObjects WO, Simulator simulator)

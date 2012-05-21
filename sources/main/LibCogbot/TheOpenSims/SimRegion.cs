@@ -1697,5 +1697,11 @@ namespace cogbot.TheOpenSims
         {
             return WorldObjects.GetMemberValues("", this);
         }
+
+        public static void GetRegionAndLocal(Vector3d vector3D, out SimRegion region, out Vector3 local)
+        {
+            local = GlobalToLocalStatic(vector3D);
+            region = GetRegion(vector3D);
+        }
     }
 }
