@@ -507,7 +507,7 @@
       <Configuration name="Debug">
         <Options>
             <OutputPath>bin/temp</OutputPath>
-            <XmlDocFile>SWICLITestDLL.XML</XmlDocFile
+            <XmlDocFile>SWICLITestDLL.XML</XmlDocFile>
         </Options>
       </Configuration>
       <Configuration name="Release">
