@@ -659,8 +659,9 @@ namespace cogbot.TheOpenSims
                     bool useNudging = UseNudging || ApproachDistance > 0.8;
 
                     ///  getting close though
-                    if (useNudging && (curXYDist < (ApproachDistance + 3) || curDist < (ApproachDistance + 3)))
+                    if (MaxMoveSpeed==1 || (useNudging && (curXYDist < (ApproachDistance + 3) || curDist < (ApproachDistance + 3))))
                     {
+                        Client.Self.Movement.TurnToward(GetLocalTo(targetPosition), false);
                         ClientMovement.AtPos = false;
                         ClientMovement.NudgeAtPos = true;
                         SendUpdate(10);
