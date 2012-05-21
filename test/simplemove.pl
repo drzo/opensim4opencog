@@ -3,7 +3,9 @@
 		       botID/2,
 		       test_bot/1,
 		       run_test/0,
-                       move_bots/0
+                       move_bots/0,
+                       start_moving_bot/1,
+                       logon_bots/1
 		      ]).
 
 %--------------------------------------------------------
@@ -69,6 +71,8 @@ logon_bots :-
 	    true
 	).
 
+logon_bots(N):-retractall(num_bots_to_run(_)),assert(num_bots_to_run(N)),logon_bots.
+
 %
 % Using dynamic preds allows us to reconsult this file
 % without relogging the bots
@@ -106,6 +110,8 @@ pw('hillpeople').
 last_name('Hillperson').
 %last_name('Dougstribe').
 %
+
+:-dynamic(num_bots_to_run/1).
 
 num_bots_to_run(1).
 
@@ -149,11 +155,15 @@ bot_waypoints(opthamologist, opthamologist1, opthamologist2).
 
 move_bots :-
 	test_bot(Name),
-	thread_create(
-	    march_up_down(Name),
-	    _, [alias(Name)]),
+	start_moving_bot(Name),
 	fail.
 move_bots.
+
+start_moving_bot(Name):- 
+    once((thread_property(TName,_),Name=TName);
+    thread_create(
+	    march_up_down(Name),
+	    _, [alias(Name)])).
 
 run_test :- logon_bots, move_bots.
 
