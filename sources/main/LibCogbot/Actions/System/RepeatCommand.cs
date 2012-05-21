@@ -14,7 +14,12 @@ namespace cogbot.Actions
         public RepeatCommand(BotClient testClient)
         {
             Name = "repeat";
-            Description = "Repeats a command in its own thread. Usage: repeat 30 jump";
+            Description = "Repeats a command in its own thread.";
+            Usage = Htmlize.Example("repeat 30 jump", "jump 30 times");
+            Parameters = NamedParam.CreateParams(
+                "count", typeof(int), "number of times to repeat",
+                "command", typeof(BotCommand), "command to repeat");
+
             Category = CommandCategory.BotClient;
         }
 
