@@ -75,7 +75,7 @@ namespace OpenMetaverse
         public string URI;
         /// <summary>The number of milliseconds to wait before a login is considered
         /// failed due to timeout</summary>
-        public int Timeout;
+        public int Timeout = -1;
         /// <summary>The request method</summary>
         /// <remarks>login_to_simulator is currently the only supported method</remarks>
         public string MethodName;
@@ -148,6 +148,7 @@ namespace OpenMetaverse
             this.Options = options.ToArray();
             this.MethodName = "login_to_simulator";
             this.Start = "last";
+            this.Timeout = -1;
             this.Platform = NetworkManager.GetPlatform();
             this.MAC = NetworkManager.GetMAC();
             this.ViewerDigest = String.Empty;
@@ -835,8 +836,25 @@ namespace OpenMetaverse
         #endregion
 
         #region Private Members
-        private LoginParams CurrentContext = null;
-        private AutoResetEvent LoginEvent = new AutoResetEvent(false);
+
+        private LoginParams _CurrentContext;
+        private LoginParams CurrentContext
+        {
+            get
+            {
+                return _CurrentContext;
+            }
+            set
+            {
+                if (value == null)
+                {
+                    return;
+                }
+                _CurrentContext = value;
+            }
+        }
+
+        private ManualResetEvent LoginEvent = new ManualResetEvent(false);
         private LoginStatus InternalStatusCode = LoginStatus.None;
         private string InternalErrorKey = String.Empty;
         private string InternalLoginMessage = String.Empty;
@@ -922,7 +940,7 @@ namespace OpenMetaverse
 
             LoginEvent.WaitOne(loginParams.Timeout, false);
 
-            if (CurrentContext != null)
+            if (InternalStatusCode == LoginStatus.None && CurrentContext != null)
             {
                 CurrentContext = null; // Will force any pending callbacks to bail out early
                 InternalStatusCode = LoginStatus.Failed;
@@ -936,10 +954,8 @@ namespace OpenMetaverse
         public void BeginLogin(LoginParams loginParams)
         {
             // FIXME: Now that we're using CAPS we could cancel the current login and start a new one
-
             if (CurrentContext != null)
-            //    throw new Exception("Login already in progress");
-                return;
+                return; // throw new Exception("Login already in progress");
 
             LoginEvent.Reset();
             CurrentContext = loginParams;

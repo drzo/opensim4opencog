@@ -112,16 +112,25 @@ namespace MushDLR223.Utilities
         {
             get
             {
-                string comments = "";
-                if (SkipSaveOnExit) comments += " SkipSavedOnExit";
-                if (ReadOnly) comments += " ReadOnly";
-                if (!string.IsNullOrEmpty(_description)) comments += " " + _description;
+                string comments = Comments;
 
                 if (comments.Length != 0)
                 {
                     return Name + " = " + Value + " //" + comments;
                 }
                 return Name + " = " + Value;
+            }
+        }
+
+        public string Comments
+        {
+            get
+            {
+                string comments = "";
+                if (SkipSaveOnExit) comments += " SkipSavedOnExit";
+                if (ReadOnly) comments += " ReadOnly";
+                if (!string.IsNullOrEmpty(_description)) comments += " " + _description;
+                return comments;
             }
         }
 

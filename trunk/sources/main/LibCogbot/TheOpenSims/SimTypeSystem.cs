@@ -165,7 +165,7 @@ namespace cogbot.TheOpenSims
                 {
                     verbs.Add(key);
                 }
-                foreach (SimObjectType st in SuperType)
+                lock (SuperType) foreach (SimObjectType st in SuperType)
                 {
                     foreach (SimTypeUsage v in st.GetTypeUsages())
                     {

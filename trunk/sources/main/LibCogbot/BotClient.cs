@@ -223,11 +223,15 @@ namespace cogbot
             LoginRetries = LoginRetriesFresh;
             Login(false);
         }
-
+        static object OneClientAtATime = new object();
         public void LoginBlocked()
         {
             LoginRetries = LoginRetriesFresh;
-            Login(true);
+            lock (OneClientAtATime) Login(true);
+            if (IsLoggedInAndReady)
+            {
+                RunOnLogin();
+            }
         }
 
         public void Login(bool blocking)
@@ -253,10 +257,11 @@ namespace cogbot
                     return;
                 }
 
-                Settings.USE_LLSD_LOGIN = true;
+                Settings.USE_LLSD_LOGIN = false;
                 if (DLRConsole.IsOnMonoUnix)
                 {
-                    Settings.USE_LLSD_LOGIN = true;
+                    DebugWriteLine("Should use LLSD Login but cant!");
+                    // TODO Settings.USE_LLSD_LOGIN = true;
                 }
                 //SetLoginOptionsFromRadegast();
                 if (!blocking)
@@ -653,7 +658,7 @@ namespace cogbot
             //registrationTypes["sound"] = new Listeners.Sound(this);
             //registrationTypes["sound"] = new Listeners.Objects(this);
             var gc = gridClient;
-            _gridClient = null;
+            //_gridClient = null;
             Commands = new SortedDictionary<string, CommandInfo>();
 			RegisterCommand("login", new Login(this));
 			RegisterCommand("logout", new Logout(this));
@@ -2466,7 +2471,7 @@ namespace cogbot
                             bool stateFullCmd = typeof (BotStatefullCommand).IsAssignableFrom(t);
                             if (!stateFullCmd)
                             {
-                                _gridClient = null;
+                                //_gridClient = null;
                             }
                             else
                             {

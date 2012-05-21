@@ -507,10 +507,10 @@ namespace cogbot.Listeners
                 if (RegisterAllOnce)
                 {
                     RegisterAllOnce = false;
-                    base.UnregisterAll();
                     client.Network.UnregisterCallback(PacketType.ViewerEffect,
                                 new EventHandler<PacketReceivedEventArgs>(ViewerEffectHandler));
-
+                    return;
+                    base.UnregisterAll();
                     client.Objects.ObjectPropertiesUpdated -= Objects_OnPrimitiveProperties;
                     client.Objects.TerseObjectUpdate -= Objects_OnObjectUpdated;
                     client.Objects.ObjectProperties -= Objects_OnObjectProperties;
@@ -620,6 +620,17 @@ namespace cogbot.Listeners
                 client.Settings.OBJECT_TRACKING = isMaster;
                 client.Settings.PARCEL_TRACKING = isMaster;
 
+                client.Settings.MULTIPLE_SIMS = true;
+
+                client.Settings.USE_INTERPOLATION_TIMER = false;
+                client.Settings.ALWAYS_REQUEST_OBJECTS = true;
+                client.Settings.ALWAYS_DECODE_OBJECTS = true;
+                client.Settings.OBJECT_TRACKING = true;
+                client.Settings.ENABLE_SIMSTATS = true;
+                client.Settings.FETCH_MISSING_INVENTORY = true;
+                client.Settings.SEND_AGENT_THROTTLE = true;
+                client.Settings.SEND_AGENT_UPDATES = true;
+                client.Settings.STORE_LAND_PATCHES = true;
                 // client.Settings.OBJECT_TRACKING = isMaster;
 
                 if (isMaster) RegisterAll();

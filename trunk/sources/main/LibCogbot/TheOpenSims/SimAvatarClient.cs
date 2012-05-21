@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using cogbot.Actions.Pathfinder;
 using cogbot.Listeners;
+using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
@@ -251,12 +252,12 @@ namespace cogbot.TheOpenSims
         {
             get
             {
-                var Client = GetGridClient();
-                if (Client == null)
+                var client0 = Client0;
+                if (client0 == null)
                 {
                     return false;
                 }
-                AgentManager ClientSelf = Client.Self;
+                AgentManager ClientSelf = client0.Self;
                 lock (HasPrimLock)
                 {
                     if (!HasPrim)
@@ -546,29 +547,26 @@ namespace cogbot.TheOpenSims
         }
 
 
-
-        //private BotClient Client0;
         public override BotClient Client
         {
             get
             {
-                return Client0 ?? base.Client;
+                if (Client0 != null) return Client0;
+                return base.Client;
             }
         }
 
-        public void SetClient(BotClient Client)
+        public void SetClient(BotClient newClient)
         {
-            lock (Client)
+            lock (newClient)
             {
-                this.Client0 = Client;
+                Client0 = newClient;
                 Client0.Intern("TheBot", this);
-                ///   WorldSystem = Client.WorldSystem;
-                /// if (Client.Self.AgentID == Prim.ID)
+                if (!IsControllable)
                 {
-                    ///                    EnsureTrackerRunning();
+                    Error("SetClient not conttrolalble");
                 }
             }
-            /// WorldSystem.AddTracking(this,Client);
         }
 
 
@@ -586,6 +584,29 @@ namespace cogbot.TheOpenSims
             }
         }
 
+         public override bool TryGetSimPosition(out Vector3 pos, OutputDelegate Debug)
+         {
+             bool gotPos = base.TryGetSimPosition(out pos, Debug);
+             if (IsControllable)
+             {
+                 pos = Client0.Self.SimPosition;
+                 return true;
+             }
+             var theAvatar = _Prim0;
+             if (theAvatar != null)
+             {
+                 if (pos != theAvatar.Position)
+                 {
+                     if (!IsSitting && Vector3.Distance(pos, theAvatar.Position) > 3)
+                     {
+                         Debug("wrong pos");
+                         return false;
+                     }
+                 }
+             }
+             if (gotPos) return true;
+             return false;
+         }
 
         /// public override SimWaypoint GetWaypoint()
         /// {

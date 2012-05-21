@@ -403,6 +403,7 @@ namespace MushDLR223.Utilities
         public static bool SkipStackTraces = true;
         private static readonly object[] NOARGS = new object[0];
         //public static bool PrintToSystemConsole = true;
+        public static DLRConsole SingleInstance = new DLRConsole();
         public static bool HasWinforms = false;
         public static bool IsOnMonoUnix = true;
         public static bool SafelyRun(MethodInvoker call)
@@ -578,10 +579,10 @@ namespace MushDLR223.Utilities
             get { return m_defaultPrompt; }
         }
         protected string m_defaultPrompt;
-        public static DLRConsole SingleInstance = new DLRConsole();
         public DLRConsole()
         {
             SingleInstance = this;
+            IsOnMonoUnix = Type.GetType("Mono.Runtime") != null;
             //Application.VisualStyleState
             //var v0 = InitialConsoleOut;
             //AddOutput(v0);
