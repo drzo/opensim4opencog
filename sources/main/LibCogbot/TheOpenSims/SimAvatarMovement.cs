@@ -293,7 +293,7 @@ namespace cogbot.TheOpenSims
             //ClientMovement.FinishAnim = true;
             ClientMovement.Stop = true;
             //AtoPilotCancle sends update ClientMovement.SendUpdate();
-            Client.Self.AutoPilotCancel();
+            //Client.Self.AutoPilotCancel();
         }
 
         private void ResetMoveContols()
@@ -379,7 +379,8 @@ namespace cogbot.TheOpenSims
 
         private bool IsBlocked = false;
         private double lastDistance = float.MaxValue;
-
+        [ConfigSetting(Description = "Maximum speed to move when more than 3 meters away from target 1=Nudge, 2=Normal, 3=Run")]
+        public static int MaxMoveSpeed = 1;
         private void TrackerLoop()
         {
             Random MyRandom = new Random(DateTime.Now.Millisecond);
@@ -674,14 +675,37 @@ namespace cogbot.TheOpenSims
                         // avoid circling while not changing ones altitude!
                        if (IsFlying) continue;
                     }
-
+                    ClientMovement.ResetControlFlags();
+                    ControlFlags Speed = ControlFlags.AGENT_CONTROL_AT_POS;
+                    switch (MaxMoveSpeed)
+                    {
+                        case 3:
+                            {
+                                Speed |= ControlFlags.AGENT_CONTROL_FAST_AT;
+                                break;
+                            }
+                        case 2:
+                            {
+                                Speed = ControlFlags.AGENT_CONTROL_AT_POS;
+                                break;
+                            }
+                        case 1:
+                            {
+                                Speed = ControlFlags.AGENT_CONTROL_NUDGE_AT_POS;
+                                break;
+                            } 
+                        default:
+                            {
+                                break;
+                            }
+                    }
                     ///  Far away
                     ControlFlags agentControls = ((ControlFlags) ClientMovement.AgentControls & (
                                                                                                     (ControlFlags.AGENT_CONTROL_AWAY |
                                                                                                      ControlFlags.AGENT_CONTROL_FLY |
                                                                                                      ControlFlags.AGENT_CONTROL_MOUSELOOK |
                                                                                                      ControlFlags.AGENT_CONTROL_UP_NEG)))
-                                                 | ControlFlags.AGENT_CONTROL_AT_POS;
+                                                 | Speed;
 
                     Client.Self.Movement.TurnToward(GetLocalTo(targetPosition), false);
                     Client.Self.Movement.SendManualUpdate(agentControls, Client.Self.Movement.Camera.Position,
