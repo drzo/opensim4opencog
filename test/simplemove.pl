@@ -2,7 +2,8 @@
 		       logon_bots/0,
 		       botID/2,
 		       test_bot/1,
-		       run_test/0
+		       run_test/0,
+                       move_bots/0
 		      ]).
 
 %--------------------------------------------------------
@@ -88,7 +89,7 @@ logon_by_name(Name) :-
 logon_a_bot(Name) :-
 	loginuri(Loginuri),
 	test_bot_credentials(Name, First, Last, Password),
-        logon_bot(First, Last, Password, Loginuri, "home", BotID),
+        logon_bot(First, Last, Password, Loginuri, "last", BotID),
         assert(botID(Name, BotID)),
         dbgfmt('made botID ~w~n', [BotID]),
         (thread_self(main)->true;thread_exit(true)).
@@ -169,19 +170,19 @@ march_up_down(Name) :-
 march_up(Name) :-
 	bot_waypoints(Name, H, _),
 	botcmd(moveto(H, 1), MoveStat),
+        say_ref('Move', MoveStat),
 	botcmd(waitpos(20, H , 1), WaitStat),
+        say_ref('Wait', WaitStat),
 	say_format('went to ~w', [H]),
-	say_ref('Move', MoveStat),
-	say_ref('Wait', WaitStat),
 	march_down(Name).
 
 march_down(Name) :-
 	bot_waypoints(Name, _, H),
 	botcmd(moveto(H, 1), MoveStat),
+        say_ref('Move', MoveStat),
 	botcmd(waitpos(20, H , 1), WaitStat),
+        say_ref('Wait', WaitStat),
 	say_format('went to ~w', [H]),
-	say_ref('Move', MoveStat),
-	say_ref('Wait', WaitStat),
 	march_down(Name).
 
 
@@ -189,15 +190,16 @@ march_down(Name) :-
 %                    utilities
 %%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
+
 say_format(Format, Args) :-
-    format(string(Contents), Format, Args),
-    format(string(QContents), '"~w"', [Contents]),
+    'format'(string(Contents), Format, Args),
+    'format'(string(QContents), '"~s"', [Contents]),
     botcmd(say(QContents)).
 
 say_ref(Prompt, Ref) :-
-    (	cli_to_str(Ref, S) ; S = "Darn cli_to_str failed"),
-    format(string(Out), '"~w: ~w"', [Prompt, S]),
-    botcmd(say(Out)).
+    once(cli_to_str(Ref, S) ; S = "Darn cli_to_str failed"),
+    say_format('~w = ~s', [Prompt, S]).
+
 
 
 
