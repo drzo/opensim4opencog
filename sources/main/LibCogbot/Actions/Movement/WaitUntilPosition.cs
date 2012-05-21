@@ -33,7 +33,7 @@ namespace cogbot.Actions.Movement
             float maxSeconds;
             if (!float.TryParse(args[0], out maxSeconds))
             {
-                maxSeconds = -1;
+                maxSeconds = 60000;
             }
             else
             {
