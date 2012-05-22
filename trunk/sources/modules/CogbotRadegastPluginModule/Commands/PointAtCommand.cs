@@ -34,7 +34,7 @@ namespace cogbot.Actions.Agent
             int used;
             if (args.Length == 0)
             {
-                instance.State.UnSetPointing();
+                if (instance != null) instance.State.UnSetPointing();
                 TheSimAvatar.SelectedBeam = !TheSimAvatar.SelectedBeam;
                 return Success("SelectedBeam = " + TheSimAvatar.SelectedBeam);
             }
@@ -58,7 +58,7 @@ namespace cogbot.Actions.Agent
                 info.SetPointing(o, 3);
                 BeamInfos.AddTo(info);
                 Primitive p = o.Prim;
-                if (p != null) instance.State.SetPointing(p, 3);                
+                if (p != null && instance != null) instance.State.SetPointing(p, 3);                
             }
             return Success(Name + " on " + PS.Count);
         }
