@@ -85,6 +85,7 @@ namespace AltAIMLbot
             myBot.bbSafe = true;
 
             curBot = myBot;
+            curBot.myServitor = this;
             if (outputDelegate == null)
             {
                 myBot.sayProcessor = new sayProcessorDelegate(sayResponse);
@@ -143,12 +144,18 @@ namespace AltAIMLbot
                 //curBot.lastBehaviorChatInput = input;
                 curBot.isPerformingOutput = false;
                 curBot.myBehaviors.logText("ONCHAT USER INPUT:" + input);
+                curBot.chatInputQueue.Clear ();
                 curBot.chatInputQueue.Enqueue(input);
                 curBot.lastBehaviorUser = curUser;
                 //curBot.myBehaviors.runEventHandler("onchat");
                 curBot.flushOutputQueue();
-                curBot.myBehaviors.queueEvent("onchat");
-                curBot.processOutputQueue();
+                //curBot.myBehaviors.queueEvent("onchat");
+                //curBot.processOutputQueue();
+
+                curBot.lastBehaviorChatOutput = "";
+                myScheduler.SleepAllTasks(30000);
+                myScheduler.EnqueueEvent("onchat");
+
                 curBot.isPerformingOutput = true;
                 curBot.myBehaviors.logText("ONCHAT IMMED RETURN:" + curBot.lastBehaviorChatOutput);
                 return curBot.lastBehaviorChatOutput;
@@ -160,12 +167,16 @@ namespace AltAIMLbot
                 //curBot.lastBehaviorChatInput = input;
                 curBot.isPerformingOutput = false;
                 curBot.myBehaviors.logText("CHATROOT USER INPUT:" + curBot.lastBehaviorChatOutput);
+                curBot.chatInputQueue.Clear();
                 curBot.chatInputQueue.Enqueue(input);
                 curBot.lastBehaviorUser = curUser;
                 //curBot.myBehaviors.runBotBehavior("chatRoot", curBot);
                 curBot.flushOutputQueue();
-                curBot.myBehaviors.queueEvent("chatRoot");
-                curBot.processOutputQueue();
+                //curBot.myBehaviors.queueEvent("chatRoot");
+                //curBot.processOutputQueue();
+                curBot.lastBehaviorChatOutput = "";
+                myScheduler.SleepAllTasks(30000);
+                myScheduler.ActivateBehaviorTask("chatRoot");
 
                 curBot.isPerformingOutput = true;
                 curBot.myBehaviors.logText("CHATROOT IMMED RETURN:" + curBot.lastBehaviorChatOutput);

@@ -59,6 +59,19 @@ namespace AltAIMLbot
                 Last = task;
             }
         }
+        public int Count
+        {
+            get
+            {
+                int count=0;
+                var en = GetEnumerator();
+                while (en.MoveNext())
+                {
+                    count++;
+                }
+                return count;
+            }
+        }
 
         public void Remove(TaskItem task, TaskItem previous)
         {
@@ -144,6 +157,7 @@ namespace AltAIMLbot
     {
         TaskList active, sleeping;
         Servitor servitor;
+        public bool singular = true; // only one process
 
         public Scheduler(Servitor myServitor)
         {
@@ -163,9 +177,33 @@ namespace AltAIMLbot
                 return;
             }
             // start up a new one
-            if (!servitor.curBot.myBehaviors.definedBehavior(name)) return;
+            if (!servitor.curBot.myBehaviors.definedBehavior(name))
+            {
+                return;
+            }
             IEnumerator<RunStatus> iterator = servitor.curBot.myBehaviors.getBehaviorEnumerator(name);
-            active.Append(new TaskItem(iterator, this,name));
+            
+            if ((singular ==false) || (active.Count ==0))
+            {
+                active.Append(new TaskItem(iterator, this,name));
+            }
+            else
+            {
+                //Put in background if we are single minded
+                sleeping.Append(new TaskItem(iterator, this, name));
+
+            }
+
+        }
+
+        public void EnqueueEvent(string evnt)
+        {
+            string evntBehavior = servitor.curBot.myBehaviors.getEventHandler(evnt);
+            if (evntBehavior == "")
+            {
+                return;
+            }
+            ActivateBehaviorTask(evntBehavior);
         }
 
         public void RemoveBehaviorTask(string name)
@@ -185,6 +223,63 @@ namespace AltAIMLbot
                 {
                     en.RemoveCurrent();
                 }
+            }
+        }
+        public void SleepBehaviorTask(string name)
+        {
+            var en = active.GetEnumerator();
+            while (en.MoveNext())
+            {
+                if (en.Current.name == name)
+                {
+                    en.MoveCurrentToList(sleeping);
+                }
+            }
+        }
+        public void SleepBehaviorTask(string name, long msec)
+        {
+            long nowTicks = DateTime.Now.Ticks;
+            long timeout = nowTicks + (msec * 10000);
+
+            var en = active.GetEnumerator();
+            while (en.MoveNext())
+            {
+                if (en.Current.name == name)
+                {
+                    en.Current.Data = timeout;
+                    en.MoveCurrentToList(sleeping);
+                }
+            }
+        }
+        public void SleepAllTasks()
+        {
+            var en = active.GetEnumerator();
+            while (en.MoveNext())
+            {
+                    en.MoveCurrentToList(sleeping);
+            }
+        }
+
+        public void SleepAllTasks(long msec)
+        {
+            long nowTicks = DateTime.Now.Ticks;
+            long timeout = nowTicks + (msec * 10000);
+
+            var en = active.GetEnumerator();
+            while (en.MoveNext())
+            {
+                en.Current.Data = timeout;
+                en.MoveCurrentToList(sleeping);
+            }
+            
+
+        }
+        public void ReviveAllTasks()
+        {
+            var en = sleeping.GetEnumerator();
+            while (en.MoveNext())
+            {
+                en.MoveCurrentToList(active);
             }
         }
 
@@ -242,14 +337,18 @@ namespace AltAIMLbot
         public void Run()
         {
             //cache this, it's expensive to access DateTime.Now
+            int sleepCount = sleeping.Count;
+            int activeCount = active.Count;
             long nowTicks = DateTime.Now.Ticks;
 
             //move woken tasks back into the active list
             var en = sleeping.GetEnumerator();
-            while (en.MoveNext())
-                if (en.Current.Data < nowTicks)
-                    en.MoveCurrentToList(active);
-
+            if ((singular == false) || (activeCount == 0))
+            {
+                while (en.MoveNext())
+                    if (en.Current.Data < nowTicks)
+                        en.MoveCurrentToList(active);
+            }
             //run all the active tasks
             en = active.GetEnumerator();
             while (en.MoveNext())
@@ -347,6 +446,25 @@ namespace AltAIMLbot
                      tsk = taskStatus(behaviorName);
                      writer.WriteLine("<status id=\"{0}\" idStatus=\"{1}\" taskStatus=\"{2}\" />", behaviorName, ids, tsk);
                     break;
+                case "sleep":
+                    SleepBehaviorTask(behaviorName);
+                    ids = idStatus(behaviorName);
+                    tsk = taskStatus(behaviorName);
+                    writer.WriteLine("<status id=\"{0}\" idStatus=\"{1}\" taskStatus=\"{2}\" />", behaviorName, ids, tsk);
+                    break;
+                case "sleepall":
+                    SleepAllTasks();
+                    ids = idStatus(behaviorName);
+                    tsk = taskStatus(behaviorName);
+                    writer.WriteLine("<status id=\"{0}\" idStatus=\"{1}\" taskStatus=\"{2}\" />", behaviorName, ids, tsk);
+                    break;
+                case "reviveall":
+                    ReviveAllTasks();
+                    ids = idStatus(behaviorName);
+                    tsk = taskStatus(behaviorName);
+                    writer.WriteLine("<status id=\"{0}\" idStatus=\"{1}\" taskStatus=\"{2}\" />", behaviorName, ids, tsk);
+                    break;
+
                 case "status":
                      ids = idStatus(behaviorName);
                      tsk = taskStatus(behaviorName);

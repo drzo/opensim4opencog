@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.IO;
 using System.Threading;
+using System.Xml;
 
 namespace AltAIMLbot
 {
@@ -16,6 +17,15 @@ namespace AltAIMLbot
         public static string startUpPath = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
         public static Servitor ourServitor = null;
         public static string serverRoot = "http://localhost:8123/";
+        public static string kpfile = @".\wikilink\phraseScore";
+        public static string wsfile = @".\wikilink\count.phrase.sense.txt";
+        public static string bslfile = @".\wikilink\behavior.stoplist.txt";
+
+        public static Dictionary <string,double> phraseScore = new Dictionary <string,double >();
+        public static Dictionary<string, int> senseCount = new Dictionary<string, int>();
+        public static Dictionary<string, string> senseLink = new Dictionary<string, string>();
+        public static string[] behaviorStoplist = null;
+
         public static void beginService(Servitor theServitor)
         {
             if (!HttpListener.IsSupported)
@@ -26,6 +36,7 @@ namespace AltAIMLbot
             ourServitor = theServitor;
             listener.Start();
             listener.Prefixes.Add(serverRoot);
+            loadAnalyzer();
             Thread t = new Thread(new ThreadStart(clientListener));
             t.Start();
         }
@@ -174,13 +185,60 @@ namespace AltAIMLbot
                     ourServitor.myScheduler.performAction(writer,action,query, behaviorName);
                 return;
             }
+            if (path.Contains("./analysis/"))
+            {
+                path.Replace("./analysis/", behaviorDir);
+                if ((File.Exists(behaviorFile)) && (!File.Exists(path)))
+                {
+                    path = behaviorFile;
+                }
+
+                context.Response.StatusCode = (int)HttpStatusCode.OK;
+                using (Stream s = context.Response.OutputStream)
+                using (StreamWriter writer = new StreamWriter(s))
+                    analyse(writer, path, behaviorName, justURL);
+                return;
+            }
+
+            if (path.Contains("./analysisllist/"))
+            {
+                string furi = justURL ;
+                using (Stream s = context.Response.OutputStream)
+                using (StreamWriter writer = new StreamWriter(s))
+                try
+                {
+                    context.Response.StatusCode = (int)HttpStatusCode.OK;
+                    string[] fileList = Directory.GetFiles(behaviorDir);
+                    string fileListString = "";
+                    string uriPrefix = serverRoot + "behavior/";
+                    {
+                        foreach (string f in fileList)
+                        {
+                            furi = uriPrefix + Path.GetFileName(f);
+                            string behaviorName2 = filenameToBehaviorname(Path.GetFileName(f));
+                            string justURL2 = "";
+                            analyse(writer, f, behaviorName2, furi);
+                        }
+                        //msg = System.Text.Encoding.ASCII.GetBytes(fileListString);
+                        writer.Close();
+                    }
+                }
+                catch (Exception e)
+                {
+                    writer.WriteLine("<{0}> <hasErrorMessage> \"{1}\"",furi,e.Message);
+                    writer.WriteLine("<{0}> <hasErrorStackTrace> \"{1}\"", furi, 
+                                       e.StackTrace.Replace('\n',' ').Replace ('\r',' '));
+                    writer.Close();
+                }
+                return;
+            }
 
             if (path.Contains("./behavior/"))
             {
                 path.Replace("./behavior/", behaviorDir);
             }
             byte[] msg;
-                if ((File.Exists(behaviorFile)) && (!File.Exists(path)))
+            if ((File.Exists(behaviorFile)) && (!File.Exists(path)))
             {
                 path = behaviorFile;
             }
@@ -201,10 +259,8 @@ namespace AltAIMLbot
                     {
                         foreach (string f in fileList)
                         {
-                            string fout = uriPrefix + Path.GetFileName(f) + "\n";
-                            //fileListString += fout + "\n";
-                            writer.Write(fout);
-                            //writer.Flush();
+                            string fout = uriPrefix + Path.GetFileName(f);
+                            writer.WriteLine(fout);
                         }
                         //msg = System.Text.Encoding.ASCII.GetBytes(fileListString);
                         writer.Close();
@@ -302,6 +358,183 @@ namespace AltAIMLbot
 
         }
 
+        public static void loadAnalyzer()
+        {
+            if (File.Exists(kpfile))
+            {
+                string[] lines = System.IO.File.ReadAllLines(kpfile);
+                foreach (string line in lines)
+                {
+                    string[] toks = line.Split(' ');
+                    double v = double.Parse(toks[0]);
+                    string text = line.Replace(toks[0]+" ","").Trim().ToLower ();
+                    phraseScore[text] = v;
+                }
+            }
+            phraseScore["zeno"] = 8;
+            if (File.Exists(wsfile))
+            {
+                string[] lines = System.IO.File.ReadAllLines(wsfile);
+                foreach (string line in lines)
+                {
+                    string[] toks = line.Split('|');
+                    int num = int.Parse(toks[0]);
+                    string text = toks[1].Trim().ToLower();
+                    string sense = "http://dbpedia.org/resource/" + capitalize(toks[2]).Replace(" ", "_");
 
+                    if (sense.Contains("\'")) continue;
+
+                    if (phraseScore.ContainsKey(text)) 
+                    {
+                        if (!senseCount.ContainsKey(text)) senseCount[text] = 0;
+                        if (senseCount[text] < num)
+                        {
+                            senseCount[text] = num;
+                            senseLink[text] = sense;
+                        }
+                    }
+                }
+            }
+            if (File.Exists(bslfile))
+            {
+                behaviorStoplist = System.IO.File.ReadAllLines(bslfile);
+            }
+
+        }
+        public static string capitalize(string txt)
+        {
+            if ((txt != null) && (txt.Length > 1))
+            {
+                txt = txt.Substring(0, 1).ToUpper() + txt.Substring(1);
+            }
+            return txt;
+        }
+
+        public static void analyse(
+            StreamWriter writer, string path, string behaviorName,string rawURL)
+        {
+            if (!File.Exists(path))
+            {
+                writer.WriteLine("<fin/>");
+                return;
+            }
+            XmlDocument _xmlfile = new XmlDocument();
+            string text = File.ReadAllText(path);
+            if (text.Length >0) _xmlfile.LoadXml(text);
+            //_xmlfile.Load(path);
+            //string text = _xmlfile.OuterXml;
+            text = text.Replace("\"C_", "\" ");
+            text = text.Replace("_", " ");
+
+            foreach (string rkey in behaviorStoplist)
+            {
+                if (rkey.Length > 0)
+                {
+                    text = text.Replace(rkey, " ");
+                }
+            }
+
+            // BTXML stoplist
+            text = text.Replace(" id=\"", " \"");
+            text = text.Replace(" pace=\"", " \"");
+            text = text.Replace(" mark=\"", " \"");
+            text = text.Replace(" restore=\"", " \"");
+
+
+
+            text = text.Replace('"', ' ');
+            text = text.Replace('<', ' ');
+            text = text.Replace('>', ' ');
+            text = text.Replace('=', ' ');
+            text = text.Replace('/', ' ');
+
+            while(text.Contains ("  ")) text = text.Replace("  "," ");
+
+
+            string[] tokens = text.Trim().ToLower().Split(' ');
+            List<string> ngrams = new List<string>();
+            string ng = "";
+            for (int i = 0; i < tokens.Length; i++)
+            {
+                ng = tokens[i];
+                if ((phraseScore.ContainsKey(ng)) && (!ngrams.Contains(ng)))
+                    ngrams.Add(ng);
+            }
+            for (int i = 0; i < tokens.Length-1; i++)
+            {
+                ng = tokens[i]+" "+tokens[i+1];
+                if ((phraseScore.ContainsKey(ng)) && (!ngrams.Contains(ng)))
+                    ngrams.Add(ng);
+            }
+            for (int i = 0; i < tokens.Length-2; i++)
+            {
+                ng = tokens[i] + " " + tokens[i + 1]+" "+tokens[i+2];
+                if ((phraseScore.ContainsKey(ng)) && (!ngrams.Contains(ng)))
+                    ngrams.Add(ng);
+            }
+            for (int i = 0; i < tokens.Length - 3; i++)
+            {
+                ng = tokens[i] + " " + tokens[i + 1] + " " + tokens[i + 2] + " " + tokens[i + 3];
+                if ((phraseScore.ContainsKey(ng)) && (!ngrams.Contains(ng)))
+                    ngrams.Add(ng);
+            }
+            string basicURI = rawURL;
+            basicURI = basicURI.Replace("/analysis/", "/behavior/");
+            ngrams.Sort(phraseSortFunction);
+
+            writer.WriteLine("<{0}> <rdf:type> <dctype:InteractiveResource> .", basicURI);
+            writer.WriteLine("<{0}> <dcterms:title> \"{1}\" .", basicURI, behaviorName);
+            if (ngrams.Count > 1)
+            {
+                writer.WriteLine("<{0}> <rdf:type> <dctype:Text> .", basicURI);
+
+            }
+            foreach (string phrase in ngrams)
+            {
+                double score = phraseScore[phrase];
+                int senseC = 0;
+                string senseL = "";
+                if (senseCount.ContainsKey(phrase))
+                {
+                    senseC = senseCount[phrase];
+                    senseL = senseLink[phrase];
+                }
+                if (score < 0.004) break;
+                writer.WriteLine("<{0}> <rdfs:comment> \"mentions '{1}'\"@en .", basicURI, phrase);
+                if (senseC > 0)
+                {
+                    //writer.WriteLine("<{0}> <http://purl.org/dc/terms/subject> <{1}> .", basicURI, senseL);
+                    writer.WriteLine("<{0}> <dcterms:subject> <{1}> .", basicURI, senseL);
+                    //writer.WriteLine("<\"{0}\"><hasScore> {1} .", senseL, score);
+                }
+            }
+            if (_xmlfile.ChildNodes.Count > 0)
+            {
+                relateToRootParent(writer, _xmlfile, basicURI, "subbehavior", "behavior/", ".BTX",
+                    "dcterms:hasPart");
+                relateToRootParent(writer, _xmlfile, basicURI, "subbehavior", "behavior/", ".BTX",
+                    "dcterms:requires");
+            }
+            writer.WriteLine ("");
+
+        }
+        public static int phraseSortFunction(string obj1, string obj2)
+        {
+            return phraseScore[obj2].CompareTo(phraseScore[obj1]);
+        }
+
+        public static void relateToRootParent(StreamWriter writer, XmlNode xmlNode, string rootURI, string nodeType,string resourcePrefix,string resourceExtension, string relation)
+        {
+            string selfURI = "";
+            if (xmlNode.Name.ToLower() == nodeType)
+            {
+                selfURI = serverRoot + resourcePrefix + xmlNode.Attributes["id"].Value + resourceExtension;
+                writer.WriteLine("<{0}> <{1}> <{2}> .", rootURI, relation, selfURI);
+            }
+            foreach (XmlNode childNode in xmlNode.ChildNodes)
+            {
+                relateToRootParent(writer, childNode, rootURI, nodeType, resourcePrefix, resourceExtension, relation);
+            }
+        }
     }
 }

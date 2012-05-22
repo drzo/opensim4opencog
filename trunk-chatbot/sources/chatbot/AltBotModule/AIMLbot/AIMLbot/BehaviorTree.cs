@@ -604,7 +604,7 @@ namespace AltAIMLbot
             return eventTable.ContainsKey(evnt);
         }
 
-        public void runEventHandler(string evnt)
+        public void runEventHandler0(string evnt)
         {
             if (hasEventHandler(evnt))
             {
@@ -615,6 +615,46 @@ namespace AltAIMLbot
                 if (definedBehavior(evnt)) runBotBehavior(evnt, bot);
             }
 
+        }
+        public void runEventHandler(string evnt)
+        {
+            if ((bot != null) && (bot.myServitor != null) && (bot.myServitor.myScheduler != null))
+            {
+                if (hasEventHandler(evnt))
+                {
+                    bot.myServitor.myScheduler.EnqueueEvent(eventTable[evnt]);
+                }
+                else
+                {
+                    if (definedBehavior(evnt)) 
+                    bot.myServitor.myScheduler.EnqueueEvent(evnt);
+                }
+            }
+            else
+            {
+                if (hasEventHandler(evnt))
+                {
+                    runBotBehavior(eventTable[evnt], bot);
+                }
+                else
+                {
+                    if (definedBehavior(evnt)) runBotBehavior(evnt, bot);
+                }
+            }
+        }
+
+        public string getEventHandler(string evnt)
+        {
+            if (hasEventHandler(evnt))
+            {
+                return eventTable[evnt];
+            }
+            else
+            {
+                if (definedBehavior(evnt)) 
+                    return evnt;
+            }
+            return "";
         }
 
         public void queueEvent(string evnt)
@@ -653,6 +693,7 @@ namespace AltAIMLbot
                     logText(String.Format("EVENTQUEUE: {0}", eventQueue.ToString()));
                     logText(String.Format(" *** processEventQueue : {0}", ourEvent));
                     runEventHandler(ourEvent);
+
                 }
                 catch (Exception e)
                 {

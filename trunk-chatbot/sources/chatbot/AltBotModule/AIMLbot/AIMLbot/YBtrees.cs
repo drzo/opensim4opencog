@@ -2378,6 +2378,7 @@ namespace AltAIMLbot
                 result = RunStatus.Success;
 
             }
+            yield return RunStatus.Running;
             try
             {
                 XmlNode resultTemplateNode = AIMLTagHandler.getNode("<template>" + myNode.InnerXml + "</template>");

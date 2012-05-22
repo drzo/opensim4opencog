@@ -76,6 +76,8 @@ namespace AltAIMLbot
         public object guestEvalObject = null;
         public Queue<string> outputQueue = new Queue<string>();
 
+        public Servitor myServitor = null;
+
         /// <summary>
         /// A dictionary object that looks after all the settings associated with this bot
         /// </summary>
