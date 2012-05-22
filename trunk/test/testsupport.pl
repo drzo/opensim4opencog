@@ -38,6 +38,7 @@
 			onChatTSHook/3, std_end/2, std_end/3,
 			doTest/3 , ppTest/1]).
 :-use_module(library(swicli)).
+:-use_module(library('simulator/cogrobot')).
 
 :- dynamic(current_test/1).
 :- dynamic(chat_hook_installed/0).
@@ -171,10 +172,10 @@ onChatTSHook(_Originator, _Sender, _Event) :-!.
 require_chat_hook :-
 	chat_hook_installed.
 
-require_chat_hook :-
-	asserta(chat_hook_installed),
-	user:gridclient_ref(Obj),
+require_chat_hook :-	
+	gridclient_ref(Obj),
 	cli_get(Obj , 'Self' , S),
+        asserta(chat_hook_installed),
 	cli_add_event_handler(S , 'ChatFromSimulator' , onChatTSHook(_,_,_)).
 
 % string_subst(?S , ?T , ?R , ?NS)
@@ -196,7 +197,7 @@ list_string_subst(S , T , R , NS) :-
 
 list_string_subst(S , _ , _ , S).
 
-botapi(A) :- user:botcmd(A,_).
+botapi(A) :- botcmd(A).
 
 %%user:onChatTSHook(X,Y,Z):-testsupport:onChatTSHook(X,Y,Z).
 
