@@ -24,19 +24,31 @@ namespace cogbot.Actions.Movement
             int argsUsed;
             if (args.Length < 1)
                 return ShowUsage();// " moveto x y z";
+            if (!Client.IsLoggedInAndReady)
+            {
+                return Failure("Not yet logged in!");
+            }
             SimPosition position = WorldSystem.GetVector(args, out argsUsed);
-            if (position==null)
+            if (position == null)
             {
                 return Failure("Coulnd not resolve location: " + string.Join(" ", args));
+            }
+            if (!position.IsRegionAttached)
+            {
+                return Failure("!IsRegionAttached: " + position);
+            }
+            if (position.SimPosition==Vector3.Zero)
+            {
+                return Failure("SimPosition.Zero: " + position);
             }
             Dispose();
             Vector3d g = position.GlobalPosition;
             var TheSimAvatar = this.TheSimAvatar;
             TheSimAvatar.SetClient(TheBotClient);
             TheSimAvatar.SetMoveTarget(position, position.GetSizeDistance());
-            Client.Self.AutoPilot(g.X, g.Y, g.Z);
+            //Client.Self.AutoPilot(g.X, g.Y, g.Z);
            // MoveThread = new Thread(MoveProc);
-            return Success(string.Format("SetMoveTarget: <{0},{1},{2}>", g.X, g.Y, g.Z));
+            return Success(string.Format("SetMoveTarget: {0},{1},{2}", position, g, position.SimPosition));
         }
 
         private Thread MoveThread;
