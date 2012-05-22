@@ -250,7 +250,7 @@ namespace MushDLR223.Utilities
 
         public bool Finds(string find)
         {
-            return string.IsNullOrEmpty(find) || DebugInfo.ToLower().Contains(find);
+            return string.IsNullOrEmpty(find) || Name.ToLower().Contains(find);
         }
 
         public static ConfigSettingAttribute CreateSetting(MemberInfo s)
