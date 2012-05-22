@@ -255,4 +255,3 @@ end_of_file.
 
  current_bot(X),cli_call(X,talk(hi),V)
 
-

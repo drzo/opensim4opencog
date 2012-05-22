@@ -1,11 +1,11 @@
-:- module(simplemove, [
+:- module(acctsupport, [
 		       logon_bots/0,
 		       botID/2,
 		       test_bot/1,
-		       run_test/0,
-                       move_bots/0,
-                       start_moving_bot/1,
-                       logon_bots/1
+                       logon_bots/1,
+                       last_name/1,
+                       set_tribe/1,
+                       set_num_bots/1
 		      ]).
 
 %--------------------------------------------------------
@@ -46,12 +46,19 @@ assertIfNewRC(Gaf):-asserta(Gaf).
 
 :-dynamic
 	botID/2,
+        last_name/1,
+        get_test_waypoints/3,
+        num_bots_to_run/1,
 	bot_ran/1.
+
+
+:-module_transparent
+        num_bots_to_run/1.
 
 :- discontiguous
 	test_bot/1,
-	test_bot_credentials/4,
-	bot_waypoints/3.
+	test_bot_credentials/4.
+
 
 %
 %  Log on the bots and start the test. This is
@@ -108,112 +115,53 @@ loginuri("http://www.pathwayslms.com:9000/").
 %
 pw('hillpeople').
 last_name('Hillperson').
-%last_name('Dougstribe').
+%%last_name('Dougstribe').
 %
 
-:-dynamic(num_bots_to_run/1).
+set_tribe(Lastname):-retractall(last_name(_)),assert(last_name(Lastname)).
+
+
+set_num_bots(Value):-retractall(num_bots_to_run(_)),assert(num_bots_to_run(Value)).
 
 num_bots_to_run(1).
 
-test_bot(otopopo) :- num_bots_to_run(X), X >= 1.
+test_bot(dogbert) :- num_bots_to_run(X), X >= 1,last_name('Dougstribe').
+test_bot_credentials(dogbert, 'Dogbert', 'Miles', 'tek123').
+
+test_bot(otopopo) :- num_bots_to_run(X),  (last_name('Hillperson')-> X >= 1 ; X >= 7).
 test_bot_credentials(otopopo, 'Otopopo', Tribe, PW) :-
     pw(PW),
     last_name(Tribe).
-bot_waypoints(otopopo, otopopo1, otopopo2).
 
 test_bot(yuppie) :- num_bots_to_run(X), X >= 2.
 test_bot_credentials(yuppie, 'Yuppie', Tribe, PW) :-
     pw(PW),
     last_name(Tribe).
-bot_waypoints(yuppie, yuppie1, yuppie2).
-
 
 test_bot(bignose) :- num_bots_to_run(X), X >= 3.
 test_bot_credentials(bignose, 'Bignose', Tribe, PW) :-
     pw(PW),
     last_name(Tribe).
-bot_waypoints(bignose, bignose1, bignose2).
 
 test_bot(onosideboard) :- num_bots_to_run(X), X >= 4.
 test_bot_credentials(onosideboard,
 		 'Onosideboard', Tribe, PW) :-
     pw(PW),
     last_name(Tribe).
-bot_waypoints(onosideboard, onosideboard1, onosideboard2).
 
 test_bot(lemonaide) :- num_bots_to_run(X), X >= 5.
 test_bot_credentials(lemonaide, 'Lemonaide', Tribe, PW) :-
     pw(PW),
     last_name(Tribe).
-bot_waypoints(lemonaide, lemonaide1, lemonaide2).
+
 
 test_bot(opthamologist) :- num_bots_to_run(X), X >= 6.
 test_bot_credentials(opthamologist, 'Opthamologist', Tribe, PW) :-
     pw(PW),
     last_name(Tribe).
-bot_waypoints(opthamologist, opthamologist1, opthamologist2).
-
-move_bots :-
-	test_bot(Name),
-	start_moving_bot(Name),
-	fail.
-move_bots.
-
-start_moving_bot(Name):- 
-    once((thread_property(TName,_),Name=TName);
-    thread_create(
-	    march_up_down(Name),
-	    _, [alias(Name)])).
-
-run_test :- logon_bots, move_bots.
-
-
-%%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                  move the bots around
-%%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-march_up_down(Name) :-
-	botID(Name, ID),
-	set_current_bot(ID),
-	march_up(Name).
-
-march_up(Name) :-
-	bot_waypoints(Name, H, _),
-	botcmd(moveto(H, 1), MoveStat),
-        say_ref('Move', MoveStat),
-	botcmd(waitpos(20, H , 1), WaitStat),
-        say_ref('Wait', WaitStat),
-	say_format('went to ~w', [H]),
-	march_down(Name).
-
-march_down(Name) :-
-	bot_waypoints(Name, _, H),
-	botcmd(moveto(H, 1), MoveStat),
-        say_ref('Move', MoveStat),
-	botcmd(waitpos(20, H , 1), WaitStat),
-        say_ref('Wait', WaitStat),
-	say_format('went to ~w', [H]),
-	march_up(Name).
-
-
+   
 %%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                    utilities
+%                    A default test
 %%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-
-say_format(Format, Args) :-
-    'format'(string(Contents), Format, Args),
-    'format'(string(QContents), '"~s"', [Contents]),
-    botcmd(say(QContents)).
-
-say_ref(Prompt, Ref) :-
-    once(cli_to_str(Ref, S) ; S = "Darn cli_to_str failed"),
-    say_format('~w = ~s', [Prompt, S]).
-
-
-
-
-
-
-
 
