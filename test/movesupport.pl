@@ -2,6 +2,7 @@
                        move_bots/0,
                        start_moving_bot/1,
                        get_test_waypoints/3,
+                       set_moveproc/1,
                        run_test/0
 		      ]).
 
@@ -19,13 +20,12 @@
 
 dbgfmt(F,A):-'format'(F,A).
 
-
-:-use_module('../test/acctsupport').
-
 %
 % Change this line to cd to cogbot/bin directory on your system
 %  the exists_file is so it doesn't do it again when reconsulted
-:- exists_file('simplemove.pl') -> cd('../bin') ; true.
+:- exists_file('movesupport.pl') -> cd('../bin') ; true.
+
+:-use_module('../test/acctsupport').
 
 %% add to search paths
 assertIfNewRC(Gaf):-catch(call(Gaf),_,fail),!.
@@ -103,10 +103,16 @@ do_test_waypoints(_Name,ID,botcmd(H)):-!,ignore(wb_botcmd(ID,H)).
 do_test_waypoints(_Name,_ID,H):-compound(H),!,ignore(call(H)).
 do_test_waypoints(Name,ID,H):-ignore(botmove(Name,ID,H)).
 
+:-dynamic(current_moveproc/1).
+current_moveproc(moveto).
+set_moveproc(Value):-retractall(current_moveproc(_)),assert(current_moveproc(Value)).
+
 botmove(Name,ID,H):-
         set_current_bot(ID),
-	botcmd(moveto(H, 1), MoveStat),
-        say_ref('Move', MoveStat),
+        current_moveproc(PROC),
+        MOVE =.. [PROC,H,1],
+	botcmd(MOVE, MoveStat),
+        say_ref(MOVE, MoveStat),
 	botcmd(waitpos(20, H , 1), WaitStat),
         say_ref('Wait', WaitStat),
 	say_format('~w went to ~w', [Name,H]).
