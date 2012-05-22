@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -72,12 +73,20 @@ namespace cogbot.Actions.System
             {
                 return Success("Found sysvars: " + found);
             }
+            int changed = 0;
             foreach(var one in setThese)
             {
-                one.Value = args[1];
-                Success("Set sysvar: " + one.Name + " to " + one.Value);
+                try
+                {
+                    one.Value = args[1];
+                    Success("Set sysvar: " + one.Name + " to " + one.Value);
+                    changed++;
+                } catch(Exception e)
+                {
+                    
+                }
             }
-            return ShowUsage();
+            return Success("set vars = " + changed);
         }
     }
 }

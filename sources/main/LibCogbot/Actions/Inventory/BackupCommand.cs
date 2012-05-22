@@ -38,7 +38,7 @@ namespace cogbot.Actions.SimExport
         }
     }
 
-    public class BackupCommand : Command, BotPersonalCommand
+    public class BackupCommand : Command, BotPersonalCommand, BotStatefullCommand
     {
         /// <summary>Maximum number of transfer requests to send to the server</summary>
         private const int MAX_TRANSFERS = 10;
@@ -112,9 +112,22 @@ namespace cogbot.Actions.SimExport
         public BackupCommand(BotClient testClient)
         {
             Name = "backuptext";
-            Description = "Backup inventory to a folder on your hard drive. Usage: " + Name + " [to <directory>] | [abort] | [status]";
+            Description = "Backup inventory to a folder on your hard drive.";
+            Usage = Htmlize.Usage(Name + " [to <directory>] | [abort] | [status]", Description);            
         }
 
+        #region Implementation of IDisposable
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+            Execute(new[] {"abort"}, null, WriteLine);       
+        }
+
+        #endregion
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
 

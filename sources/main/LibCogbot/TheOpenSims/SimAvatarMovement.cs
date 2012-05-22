@@ -137,8 +137,7 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        [ConfigSetting(Description = "The pipes and cogpusher channel")]
-        public static int ChatCogPrimChannel = 239846325;
+        [ConfigSetting(Description = "The pipes and cogpusher channel")] public static int ChatCogPrimChannel = 100;// 239846325;
         private void ChatCogPrim(string s)
         {
             Client.Self.Chat(s, ChatCogPrimChannel, ChatType.Normal);
@@ -379,10 +378,24 @@ namespace cogbot.TheOpenSims
 
         private bool IsBlocked = false;
         private double lastDistance = float.MaxValue;
-        [ConfigSetting(Description = "Maximum speed to move when more than 3 meters away from target 1=Nudge, 2=Normal, 3=Run")]
+        [ConfigSetting(Description = "Distance to destination when bot should start slowing down (avoids rubber banding movement)")]
+        public static float SlowDownDist = 3.0f;
+        [ConfigSetting(Description = "Distance to destination when bot should start moving fast when greater than")]
+        public static float SpeedUpDist = 20.0f;
+        [ConfigSetting(Description = "Maximum speed to move when more than SlowDownDist meters away from target 1=Nudge, 2=Normal, 3=Run")]
         public static int MaxMoveSpeed = 1;
+        [ConfigSetting(Description = "How many pulses we can go without a button up")]
+        public static int MaxWideOpens = 5;
+
+        public static string AnimationSpeed0 = "stand1";
+        public static string AnimationSpeed1 = "clap";
+        public static string AnimationSpeed2 = "crouchwalk";
+        public static string AnimationSpeed3 = "crouchwalk";
+        public static string AnimationSpeed4 = "crouchwalk";
         private void TrackerLoop()
         {
+            int wideOpens = MaxWideOpens;
+            bool LastSentButtonUp = false;            
             Random MyRandom = new Random(DateTime.Now.Millisecond);
             //Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = false;
             //Client.Self.Movement.AutoResetControls = true;
@@ -537,7 +550,7 @@ namespace cogbot.TheOpenSims
 
                     double curDist = Vector3d.Distance(worldPosition, targetPosition);
                     IsBlocked = false;
-                    if (lastDistance <= curDist)
+                    if (lastDistance < curDist)
                     {
                         if (HasPrim && Prim.Velocity == Vector3.Zero)
                         {
@@ -546,14 +559,15 @@ namespace cogbot.TheOpenSims
                         }
                         if (true /* || ApproachPosition != null*/)
                         {
+                            LastSentButtonUp = true;
                             // follower should pass by.. but on way point navigation would be ok
                             //TurnToward(targetPosition);
-                            //ClientMovement.Stop = true;
-                            //ClientMovement.FinishAnim = true;
-                            ClientMovement.AtPos = false;
+                            ResetMoveContols();                           
+                            ClientMovement.Stop = true;
+                            ClientMovement.FinishAnim = false;
                             SendUpdate(1);
                             //ClientMovement.Stop = false;
-                            lastDistance = curDist + 1;
+                            lastDistance = curDist + 3;
                             continue;
                         }
                     }
@@ -635,6 +649,7 @@ namespace cogbot.TheOpenSims
                             }
                         }
                     }
+                    
                     /// else
                     /// {
                     ///     if (ClientMovement.Fly)
@@ -644,9 +659,9 @@ namespace cogbot.TheOpenSims
                     ///         ClientMovement.Fly = false;
                     ///     }
                     /// }
-
-
-                    if (curDist < ApproachDistance)
+                    ClientMovement.FinishAnim = false;
+                    ///=== STOPPING
+                    if (curDist < ApproachDistance || curXYDist < ApproachDistance)
                     {
                         ResetMoveContols();
                         //ClientMovement.FinishAnim = true;
@@ -656,65 +671,60 @@ namespace cogbot.TheOpenSims
                         continue;
                     }
 
-                    bool useNudging = UseNudging || ApproachDistance > 0.8;
-
-                    ///  getting close though
-                    if (MaxMoveSpeed==1 || (useNudging && (curXYDist < (ApproachDistance + 3) || curDist < (ApproachDistance + 3))))
-                    {
-                        Client.Self.Movement.TurnToward(GetLocalTo(targetPosition), false);
-                        ClientMovement.AtPos = false;
-                        ClientMovement.NudgeAtPos = true;
-                        SendUpdate(10);
-                        ClientMovement.NudgeAtPos = false;
-                        SendUpdate(1);
-                        //stopNext = true;
-                        continue;
-                    }
-
+                    ///=== NO CIRCLING
                     if (UpDown > curXYDist)
                     {
                         // avoid circling while not changing ones altitude!
-                       if (IsFlying) continue;
+                        if (IsFlying) continue;
                     }
-                    ClientMovement.ResetControlFlags();
-                    ControlFlags Speed = ControlFlags.AGENT_CONTROL_AT_POS;
-                    switch (MaxMoveSpeed)
-                    {
-                        case 3:
-                            {
-                                Speed |= ControlFlags.AGENT_CONTROL_FAST_AT;
-                                break;
-                            }
-                        case 2:
-                            {
-                                Speed = ControlFlags.AGENT_CONTROL_AT_POS;
-                                break;
-                            }
-                        case 1:
-                            {
-                                Speed = ControlFlags.AGENT_CONTROL_NUDGE_AT_POS;
-                                break;
-                            } 
-                        default:
-                            {
-                                break;
-                            }
-                    }
-                    ///  Far away
-                    ControlFlags agentControls = ((ControlFlags) ClientMovement.AgentControls & (
-                                                                                                    (ControlFlags.AGENT_CONTROL_AWAY |
-                                                                                                     ControlFlags.AGENT_CONTROL_FLY |
-                                                                                                     ControlFlags.AGENT_CONTROL_MOUSELOOK |
-                                                                                                     ControlFlags.AGENT_CONTROL_UP_NEG)))
-                                                 | Speed;
 
-                    Client.Self.Movement.TurnToward(GetLocalTo(targetPosition), false);
-                    Client.Self.Movement.SendManualUpdate(agentControls, Client.Self.Movement.Camera.Position,
-                        Client.Self.Movement.Camera.AtAxis, Client.Self.Movement.Camera.LeftAxis, Client.Self.Movement.Camera.UpAxis,
-                        Client.Self.Movement.BodyRotation, Client.Self.Movement.HeadRotation, Client.Self.Movement.Camera.Far, AgentFlags.None,
-                        AgentState.None, true);
-                    // ClientMovement.UpdateInterval = 0;
-                    Thread.Sleep(MyRandom.Next(25, 90));
+                    var myMoveSpeed = SimAvatarClient.MaxMoveSpeed;
+                    if (curXYDist < SlowDownDist)
+                    {
+                        myMoveSpeed = 1;
+                        wideOpens = 0;
+                    }
+                    if (curXYDist > SpeedUpDist)
+                    {
+                        myMoveSpeed++;
+                        wideOpens--;
+                    }
+                    //ClientMovement.UpdateInterval = 100;
+                    //ClientMovement.AutoResetControls = true;
+
+                    var newButtonUp = false;
+                    ///=== SLOWING DOWN
+                    if (false && (!LastSentButtonUp && curXYDist < SpeedUpDist))
+                    {
+                        ResetMoveContols();
+                        SendUpdate(1);
+                        newButtonUp = true;
+                    }
+
+                    MoveAtSpeed(targetPosition, myMoveSpeed);
+                    if (curXYDist < SlowDownDist)
+                    {
+                        SendUpdate(5);
+                        ResetMoveContols();
+                        SendUpdate(1);
+                        newButtonUp = true;
+                    }
+                    else
+                    {
+                        SendUpdate(10);
+                    }
+                    wideOpens--;
+                    if (wideOpens < 0)
+                    {
+                        if (!newButtonUp)
+                        {
+                            ResetMoveContols();
+                            SendUpdate(1);
+                            newButtonUp = true;
+                        }
+                        wideOpens = MaxWideOpens;
+                    }
+                    LastSentButtonUp = newButtonUp;
                     continue;
                 }
                 catch (Exception e)
@@ -722,6 +732,86 @@ namespace cogbot.TheOpenSims
                     Debug("" + e);
                 }
             }
+        }
+
+        public UUID MoveAnimation = UUID.Zero;
+        private void MoveAtSpeed(Vector3d targetPosition, int speed)
+        {
+            AgentManager ClientSelf = Client.Self;
+            AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
+            ClientMovement.ResetControlFlags();
+            string animationName = "";
+            ///=== SET CONTROLS BASED ON SPEED
+            switch (speed)
+            {
+                case -1:
+                case 0:
+                    {
+                        ClientMovement.AlwaysRun = false;
+                        ClientMovement.AtPos = false;
+                        ClientMovement.NudgeAtPos = false;
+                        animationName = AnimationSpeed0;
+                        break;
+                    }
+                case 4:
+                    {
+                        ClientMovement.AlwaysRun = true;
+                        ClientMovement.AtPos = true;
+                        ClientMovement.NudgeAtPos = true;
+                        animationName = AnimationSpeed4;
+                        break;
+                    }
+                case 3:
+                    {
+                        ClientMovement.AlwaysRun = true;
+                        ClientMovement.AtPos = true;
+                        ClientMovement.NudgeAtPos = false;
+                        animationName = AnimationSpeed3;
+                        break;
+                    }
+                case 2:
+                    {
+                        ClientMovement.AlwaysRun = false;
+                        ClientMovement.AtPos = true;
+                        ClientMovement.NudgeAtPos = false;
+                        animationName = AnimationSpeed2;
+                        break;
+                    }
+                case 1:
+                    {
+                        ClientMovement.AlwaysRun = false;
+                        ClientMovement.AtPos = false;
+                        ClientMovement.NudgeAtPos = true;
+                        animationName = AnimationSpeed1;
+                        break;
+                    }
+                default:
+                    {
+                        break;
+                    }
+            }
+
+            ControlFlags agentControls = ((ControlFlags) ClientMovement.AgentControls);
+
+            //LastTTV = GetLocalTo(targetPosition);
+            //Client.Self.Movement.TurnToward(GetLocalTo(targetPosition), false);
+            TurnToward(GetLocalTo(targetPosition));
+            var newAnim = MoveAnimation;
+            var asset = SimAssetStore.TheStore.GetAnimationOrGesture(animationName);
+            if (asset != null)
+            {
+                newAnim = asset.AssetID;
+            }
+            if (newAnim != MoveAnimation)
+            {
+                if (UUIDFactory.IsNullOrZero(MoveAnimation)) Client.Self.AnimationStop(MoveAnimation, true);
+                MoveAnimation = newAnim;
+                if (UUIDFactory.IsNullOrZero(MoveAnimation)) Client.Self.AnimationStart(MoveAnimation, true);
+            }           
+            Client.Self.Movement.SendManualUpdate(agentControls, Client.Self.Movement.Camera.Position,
+                                                  Client.Self.Movement.Camera.AtAxis, Client.Self.Movement.Camera.LeftAxis, Client.Self.Movement.Camera.UpAxis,
+                                                  Client.Self.Movement.BodyRotation, Client.Self.Movement.HeadRotation, Client.Self.Movement.Camera.Far, AgentFlags.None,
+                                                  AgentState.None, true);
         }
 
         private bool CogPush(Vector3 goffset)
@@ -955,7 +1045,7 @@ namespace cogbot.TheOpenSims
             }
             int ms0 = ms * SendUpdateLagMultiplier;
             if (ms0 > 300) ms0 = 300;
-            if (ms0 > 0) Thread.Sleep(ms0);
+            if (ms0 > 4) Thread.Sleep(ms0);
         }
 
         public override bool TeleportTo(SimRegion R, Vector3 local)
@@ -1092,6 +1182,7 @@ namespace cogbot.TheOpenSims
 
         public override bool TurnToward(Vector3 target)
         {
+            //target.Normalize();
             if (!IsControllable)
             {
                 throw Error("GotoTarget !Client.Self.AgentID == Prim.ID");
@@ -1104,7 +1195,7 @@ namespace cogbot.TheOpenSims
                 rot.Normalize();
                 if (rot == LastTT)
                 {
-                    //return true;
+                    return true;
                 }
                 LastTTV = target;
                 LastTT = rot;
@@ -1136,12 +1227,12 @@ namespace cogbot.TheOpenSims
                 try
                 {
                     Client.Settings.SEND_AGENT_UPDATES = true;
-                    Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
+                    Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = false;
                     Client.Self.Movement.TurnToward(target);
                     Client.Self.Movement.UpdateInterval = 250;
                     Client.Self.Movement.AutoResetControls = false;
                     InTurn++;
-                    Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
+                    Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = false;
                     ClientMovement.AutoResetControls = false;
                     ClientMovement.TurnToward(target);
                 }

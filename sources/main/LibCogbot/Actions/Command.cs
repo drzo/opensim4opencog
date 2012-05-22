@@ -506,6 +506,13 @@ namespace cogbot.Actions
 
         public CmdResult acceptInputWrapper(string verb, string args,UUID callerID, OutputDelegate writeLine)
         {
+            if (this is BotPersonalCommand)
+            {
+                if (!Client.IsLoggedInAndReady)
+                {
+                    return Failure("Not yet logged in!");
+                }
+            }
             Results.Clear();
             CallerID = callerID;
             success = failure = 0;
