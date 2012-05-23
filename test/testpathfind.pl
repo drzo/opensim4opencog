@@ -40,20 +40,24 @@ teleportTo(StartName):-
         %% if fallthru floor try to get closer
         (Dist < 3 -> botapi(moveto(Start)) ; ( cogrobot:vectorAdd(Start2,v3d(0,0,1),Start3),botapi(teleport(Start3)) )),!.*/
 
+dbgFmt(F,A):-'format'(F,A),flush_output.
+
 % convenience method that does the 'normal' thing -
 % tp to Start, move using the standard method to
-%  move_test(10 , start_swim_surface , stop_swim_surface).
+%  move_test(N,10 , start_swim_surface , stop_swim_surface).
 
-move_test(Name):-atom_concat('start_',Name,Start),atom_concat('stop_',Name,Stop),move_test(10,Start,Stop).
+move_test(N,Name):-atom_concat('start_',Name,Start),atom_concat('stop_',Name,Stop),move_test(N,10,Start,Stop).
 
-move_test(Time , Start , End) :-
+move_test(N, Time , Start , End) :-
         botapi(stopmoving),
 	teleportTo(Start),
         botapi('remeshprim dist 50'),
         botcall(['TheSimAvatar','KillPipes'],_),
-	goByMethod(End),
-        botapi(waitpos(Time,End)),
-        botapi(stopmoving).
+        name_to_location_ref(End,LocRef),cli_get(LocRef,'GlobalPosition',Loc),
+        dbgFmt('starting test ~w~n',[N]),
+        start_test(N),
+	goByMethod(Loc),
+        botapi(waitpos(Time,End)).        
 
 
 % this is just to debug the test framework with
@@ -67,7 +71,7 @@ test_desc(clear , 'clear path 10 meters').
 test(N) :-
 	N = clear,
 	start_test(N),
-        move_test(15,start_test_1,stop_test_1),
+        move_test(N,15,start_test_1,stop_test_1),
 	std_end(N , 17 ,2).
 
 
@@ -75,7 +79,7 @@ test_desc(zero , 'Zero Distance').
 test(N) :-
 	N = zero,
 	start_test(N),
-	move_test(3 , start_test_2 , stop_test_2),
+	move_test(N,3 , start_test_2 , stop_test_2),
         std_end(N , 2 , 0).
 
 
@@ -83,39 +87,37 @@ test_desc(obstacle , 'Go around obstacle').
 test(N) :-
 	 N = obstacle,
          start_test(N),
-	 move_test(25 , start_test_3 , stop_test_3),
+	 move_test(N,25 , start_test_3 , stop_test_3),
          std_end(N , 27 , 2).
 
 test_desc(other_side_wall , 'Goal Other Side Of Wall').
 test(N) :-
 	N = other_side_wall,
 	start_test(N),
-        move_test(25 , start_test_4 , stop_test_4),
+        move_test(N,25 , start_test_4 , stop_test_4),
         std_end(N , 27 , 1).
 
 test_desc(elev_path , 'On Elevated Path').
 test(N) :-
 	N = elev_path,
 	start_test(N),
-	move_test(15 ,
+	move_test(N,15 ,
 		  start_test_5,
 		  stop_test_5),
 	std_end(N , 17 , 0).
 
-test_desc_redo(ridge , 'On Elevated land Path').
+test_desc(ridge , 'On Elevated land Path').
 test(N) :-
 	N = ridge,
 	start_test(N),
-	move_test(34 ,
-		  'start_ridge',
-		  'stop_ridge'),
+	move_test(N,34 , 'start_ridge','stop_ridge'),
 	std_end(N , 40 , 0).
 
-test_desc_redo(ahill , 'Arround Elevated hill').
+test_desc(ahill , 'Arround Elevated hill').
 test(N) :-
 	N = ahill,
 	start_test(N),
-	move_test(34 ,
+	move_test(N,34 ,
 		  'start_ahill',
 		  'stop_ahill'),
 	std_end(N , 40 , 0).
@@ -125,7 +127,7 @@ test_desc_redo(swim_surface , 'Swim arround the island').
 test(N) :-
 	N = swim_surface,
 	start_test(N),
-	move_test(34 ,
+	move_test(N,34 ,
 		  'start_swim_surface',
 		  'stop_swim_surface'),
 	std_end(N , 40 , 0).
@@ -135,7 +137,7 @@ test_desc(grnd_maze , 'Ground maze simple').
 test(N) :-
 	N = grnd_maze,
 	start_test(N),
-	move_test(30 ,
+	move_test(N,30 ,
 		  start_test_8,
 		  stop_test_8),
 	std_end(N , 34 , 2).
@@ -144,14 +146,14 @@ test_desc(island_hop , 'Island hop').
 test(N) :-
 	N = island_hop,
 	start_test(N),
-	move_test(45 , start_is_land_hop , stop_is_land_hop),
+	move_test(N,45 , start_island_hop , stop_island_hop),
 	std_end(N , 45 , 2).
 
 test_desc_redo(hill_walk , 'Hill Walk').
 test(N) :-
 	N = hill_walk,
 	start_test(N),
-	move_test(60 , start_hill_walk , stop_hill_walk),
+	move_test(N,60 , start_hill_walk , stop_hill_walk),
 	std_end(N , 72 , 1).
 
 
@@ -160,7 +162,7 @@ test_desc_redo(spiral , 'Spiral Tube').
 test1(N) :-
 	N = spiral,
 	start_test(N),
-	move_test(60,
+	move_test(N,60,
 		  'annies haven/188.477066/142.809982/81.559509/',
 		  'annies haven/181.878403/140.768723/101.555061/'),
 	std_end(N , 65 , 1).

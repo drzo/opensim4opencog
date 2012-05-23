@@ -52,6 +52,8 @@
 % debug output
 testDebug(Term):-format(user_error,'  ~q~n',[Term]),flush_output(user_error).
 
+dbgFmt(F,A):-'format'(F,A),flush_output.
+
 % unify if this is the bot's name
 botName(Name) :-
 	Name = 'testbot Ogborn'.  %TODO Douglas, how do I read this from
@@ -102,10 +104,12 @@ std_end(N , NumNeeded) :-
 %
 std_end(N , TimeLimit , NumNeeded) :-
 	time_limit(TimeLimit),
-	std_end(N , NumNeeded).
+        std_end(N , NumNeeded),
+        botapi(stop).
 
 % Call prior to starting a test.
 start_test(Name) :-
+        botapi(stop),
 	\+ var(Name),
 	retractall(current_test(_)),
 	asserta(current_test(Name)),
@@ -118,7 +122,7 @@ start_test(Name) :-
 	retractall(forbidden(_,_)),
 	retractall(obstacle(_)),
 	retractall(failure(_,_)),
-	botapi(stop),!.
+	!.
 
 % call at conclusion of test
 % this only gets there if the test succeeds, so it's pretty suspicious.
@@ -142,7 +146,7 @@ time_limit(Limit) :-
 	    assert(time_limit_exceeded(Limit , Taken)),
 	    true %%!,fail
 	;
-	    true
+	    dbgFmt('Time was ~w~n',[Taken])
 	).
 
 % this is installed as a callback, called when the bot hears chat
@@ -197,7 +201,7 @@ list_string_subst(S , T , R , NS) :-
 
 list_string_subst(S , _ , _ , S).
 
-botapi(A) :- botcmd(A).
+botapi(A) :- notrace(ignore(catch(botdo(A),_,fail))).
 
 %%user:onChatTSHook(X,Y,Z):-testsupport:onChatTSHook(X,Y,Z).
 
