@@ -1,0 +1,23 @@
+#Roadmap of what BotCommand is:
+
+Bot commands wrap complex operations into callable forms.
+
+Examples:
+ (say "hello world")
+ (setmaster "Anne Ogborn")
+ (im "Anne Ogborn" "Hi there!")
+ (sysvar UseMoveSpeed 2)
+ (setbot "Testbot Miles")
+
+Most command may takes strings for arguments. When they do these strings are expected to have a default interpretation.   Like _setmaster_ expects an avatar name.
+
+
+
+
+
+
+
+
+
+
+
