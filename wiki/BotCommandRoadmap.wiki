@@ -75,9 +75,20 @@ What was once...
 {{{
 
         public CmdResult ExecuteRequest(CmdRequest args) {
-
+ 
+             UUID targetID;
              if (!args.TryGetValue("agent", out targetID)) 
                               return ShowUsage();
+             .... do something with targetID ....
+        }
+
+}}}
+or
+{{{
+
+        public CmdResult ExecuteRequest(CmdRequest args) {
+ 
+             UUID targetID = args.GetValue<UUID>("agent");
              .... do something with targetID ....
         }
 
@@ -91,3 +102,7 @@ This is because of the constructor of the command containing
 }}}
 
 That tells us the first argument of the command is named "agent" and the first parameter is expected to be an agent UUID
+
+=The Reason=
+
+It is much easier to maintain CmdRequest coming for various sources such as parser output, prolog, lisp and especially http/restful services
