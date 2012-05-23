@@ -110,4 +110,4 @@ It is much easier to maintain CmdRequest coming for various sources such as pars
 
 =What this takes=
 
-Converting 188 commands.. should take me one day
+Converting 188 commands.. should take me a couple hours.. its almost all find repleace
