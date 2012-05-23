@@ -1,4 +1,4 @@
-=Roadmap of what BotCommand at user interface=
+=BotCommand at user interface=
 
 Bot commands wrap complex operations into callable forms.
 
@@ -106,3 +106,8 @@ That tells us the first argument of the command is named "agent" and the first p
 =The Reason=
 
 It is much easier to maintain CmdRequest coming for various sources such as parser output, prolog, lisp and especially http/restful services
+
+
+=What this takes=
+
+Converting 188 commands.. should take me one day
