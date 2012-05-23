@@ -46,9 +46,12 @@ Some cases you may override the interpretation of strings
 *locate* _primspec_
 {{{
  (locate "yellow cube")
+
 with an avatar name
-{{{
+
  (locate (av "Anne Ogborn"))
-}}}
+
 
 }}}
+
+
