@@ -1,4 +1,4 @@
-#Roadmap of what BotCommand is
+=Roadmap of what BotCommand at user interface=
 
 Bot commands wrap complex operations into callable forms.
 
@@ -50,4 +50,43 @@ Some cases you may override the interpretation of strings
 with an avatar name
 {{{
  (locate (av "Anne Ogborn"))
+}}}
+
+
+=The Implementation=
+
+What was once...
+{{{
+        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        {
+
+            UUID targetID;
+            int argsUsed;
+            if (!UUIDTryParse(args,0, out targetID, out argsUsed))
+				return ShowUsage();
+             .... do something with targetID ....
+
+        }
+
+}}}
+
+ Would become
+
+{{{
+
+        public CmdResult ExecuteRequest(CmdRequest args) {
+
+             UUID targetID = args.GetValue<UUID>("agent");
+             .... do something with targetID ....
+        }
+
+}}}
+
+This is because of
+
+{{{
+      The constructor of the command containing
+            Parameters = NamedParam.CreateParams("agent", typeof(UUID), "agent you are going to " + Name);
+
+
 }}}
