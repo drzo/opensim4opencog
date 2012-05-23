@@ -2,7 +2,7 @@
 
 Bot commands wrap complex operations into callable forms.
 
-Most command may takes strings for arguments. Sometimes, these strings are expected to have a default interpretation.   Like _setmaster_ expects an avatar name.  _say_ uses a free form message string.  _im_ avatar and message.
+Most command may takes strings for arguments. Sometimes, these strings are expected to have a default interpretation.   Like *setmaster* expects an _avatar_ name.  *say* uses a free form _message_ string.  *im* _avatar_ and _message_.
 
 
 
@@ -15,8 +15,6 @@ Examples:
  (sysvar UseMoveSpeed 2)
  (setbot "Testbot Miles")
 }}}
-
-
 
 
 
