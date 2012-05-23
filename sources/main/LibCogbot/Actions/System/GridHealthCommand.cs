@@ -23,9 +23,12 @@ namespace cogbot.Actions.Land
             : base(testClient)
         {
             Name = "gridhealth";
-            Description = "Runs a TP check to make sure ALL sims are useable on the grid. Usage: gridhealth [regionhandle]";
+            Description = "Runs a TP check to make sure ALL sims are useable on the grid.";
+            Usage = Htmlize.Usage("gridhealth [regionhandle]", "test health of one or all regions");
+            Parameters = NamedParam.CreateParams(
+                NamedParam.Optional("regionhandle", typeof(UUID), "UUID of region handle"));
             Category = CommandCategory.Simulator;
-            Parameters = new [] { new NamedParam(typeof(SimRegion), typeof(ulong)) };
+          
             RegisterGridHandler();
             TheBotClient.WorldSystem.OnConnectedQueue.Enqueue("gridhealth", MakeGridRequest);
         }

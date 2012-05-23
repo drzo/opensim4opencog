@@ -13,7 +13,11 @@ namespace cogbot.Actions.System
         public DebugCommand(BotClient testClient)
         {
             Name = "debug";
-            Description = "Turn debug messages on or off. Usage: debug [level] where level is one of None, Debug, Error, Info, Warn";
+            Description = "Turn debug messages on or off.";
+            Usage = Htmlize.Usage("debug <level>", "where level is one of None, Debug, Error, Info, Warn");
+            Parameters = NamedParam.CreateParams(
+                "level", typeof(string), "one of None, Debug, Error, Info, Warn");
+
             Category = CommandCategory.BotClient;
         }
 

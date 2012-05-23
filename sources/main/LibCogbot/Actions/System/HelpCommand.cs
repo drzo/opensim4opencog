@@ -8,14 +8,20 @@ using MushDLR223.ScriptEngines;
 
 namespace cogbot.Actions.System
 {
+    [Obsolete]
     public class HelpCommand: Command ,SystemApplicationCommand
     {
         public HelpCommand(BotClient testClient)
 		{
+            // this version dies
 			Name = "help";
-			Description = "Lists available commands. usage: help [prolog] [command] to display information on commands";
+			Description = "Lists available commands. If given a botcmd verb, lists help for that verb";
+            Usage = Htmlize.Example("help", "prints list of botcmds") +
+                Htmlize.Example("help moveto", "Prints help on the moveto command");
+            Parameters = NamedParam.CreateParams(
+                    NamedParam.Optional("command", typeof(string), "The command to get help on"));
+            
             Category = CommandCategory.BotClient;
-            Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
 		}
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)

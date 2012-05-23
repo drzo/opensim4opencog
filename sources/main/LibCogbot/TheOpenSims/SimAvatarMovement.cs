@@ -372,8 +372,6 @@ namespace cogbot.TheOpenSims
             return (double)Distance(obj);
         }
 
-
-
         private readonly object TrackerLoopLock = new object();
 
         private bool IsBlocked = false;
@@ -434,7 +432,6 @@ namespace cogbot.TheOpenSims
                 /// ApproachDistance = ApproachPosition.GetSizeDistance();
                 try
                 {
-
                     double curDist001 = Vector3d.Distance(worldPosition, targetPosition);
                     if (curDist001 < ApproachDistance)
                     {
@@ -446,8 +443,6 @@ namespace cogbot.TheOpenSims
                             continue;
                         }
                     }
-
-
 
                     Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = false;
 
@@ -1529,5 +1524,7 @@ namespace cogbot.TheOpenSims
                 Client.Settings.SEND_AGENT_UPDATES = SAU;
             }
         }
+
+
     }
 }
