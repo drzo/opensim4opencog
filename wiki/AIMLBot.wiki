@@ -36,4 +36,7 @@ when aimlbot is loaded it has a ton of settings like $favfood $hometown all thes
 [6:51:20 PM] Douglas R. Miles: http://code.google.com/p/opensim4opencog/source/browse/#svn%2Fdata-chatbot%2Falicebot%2Fconfig
 [6:51:44 PM] Douglas R. Miles: oops i meant thbis link: http://code.google.com/p/opensim4opencog/source/browse/data-chatbot/alicebot/config/bot.xml
 
+
+[7:02:21 PM] Douglas R. Miles: every bot loads that default...
+[7:02:45 PM] Douglas R. Miles: then they load aiml/dimebagfurry_resident/*.xml
 }}}
