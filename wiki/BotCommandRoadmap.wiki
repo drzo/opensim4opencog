@@ -40,3 +40,15 @@ _form2_ set the sysvars matching string with the number 2
 {{{
  (sysvar UseMoveSpeed 2)
 }}}
+
+
+Some cases you may override the interpretation of strings
+*locate* _primspec_
+{{{
+ (locate "yellow cube")
+with an avatar name
+{{{
+ (locate (av "Anne Ogborn"))
+}}}
+
+}}}
