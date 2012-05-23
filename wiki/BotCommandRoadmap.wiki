@@ -76,7 +76,8 @@ What was once...
 
         public CmdResult ExecuteRequest(CmdRequest args) {
 
-             UUID targetID = args.GetValue<UUID>("agent");
+             if (!args.TryGetValue("agent", out targetID)) 
+                              return ShowUsage();
              .... do something with targetID ....
         }
 
