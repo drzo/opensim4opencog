@@ -7,6 +7,7 @@ Add your content here.
 
 = Bot Vars =
 
+{{{
 [6:43:16 PM] Anne Ogborn: it's the mechanism I'd use to have Yuppie 'know' in her aiml that she's a woman
 [6:43:34 PM] Anne Ogborn: through some aiml get?
 [6:43:41 PM] Douglas R. Miles: yes exactly 
@@ -34,3 +35,5 @@ when aimlbot is loaded it has a ton of settings like $favfood $hometown all thes
 [6:50:41 PM] Anne Ogborn: brb, potty then do that one
 [6:51:20 PM] Douglas R. Miles: http://code.google.com/p/opensim4opencog/source/browse/#svn%2Fdata-chatbot%2Falicebot%2Fconfig
 [6:51:44 PM] Douglas R. Miles: oops i meant thbis link: http://code.google.com/p/opensim4opencog/source/browse/data-chatbot/alicebot/config/bot.xml
+
+}}}
