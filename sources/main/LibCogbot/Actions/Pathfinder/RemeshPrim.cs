@@ -6,7 +6,7 @@ using MushDLR223.ScriptEngines;
 
 namespace cogbot.Actions.Pathfinder
 {
-    public class RemeshPrim : cogbot.Actions.Command, SystemApplicationCommand
+    public class RemeshPrim : cogbot.Actions.Command, BotPersonalCommand
     {
         public RemeshPrim(BotClient client)
         {

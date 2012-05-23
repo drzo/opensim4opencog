@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using cogbot.Listeners;
@@ -8,7 +9,7 @@ using MushDLR223.ScriptEngines;
 
 namespace cogbot.Actions.Pathfinder
 {
-    class meshinfo : cogbot.Actions.Command, SystemApplicationCommand
+    class meshinfo : cogbot.Actions.Command, SystemApplicationCommand, BotStatefullCommand
     {
         public meshinfo(BotClient client)
         {
@@ -63,5 +64,18 @@ namespace cogbot.Actions.Pathfinder
             }
             return Success("Ran " + Name);
         }
+
+        #region Implementation of IDisposable
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
     }
 }
