@@ -23,6 +23,7 @@ namespace cogbot.Actions.Agent
         bool registeredCallbacks = false;
 
         public ProfileCloneCommand(BotClient testClient)
+            : base(testClient)
         {
 
             Name = "Profile Clone";

@@ -11,16 +11,17 @@ namespace cogbot.Actions.Communication
     public class EchoMasterCommand: Command, BotPersonalCommand, BotStatefullCommand
     {
         public EchoMasterCommand(BotClient testClient)
-		{
-			Name = "echoMaster";
-			Description = "Repeat everything that master says from open channel to open channel.";
+            : base(testClient)
+        {
+            Name = "echoMaster";
+            Description = "Repeat everything that master says from open channel to open channel.";
             Usage = Htmlize.Usage("echomaster", "toggles this commnand on/off");
             Category = CommandCategory.Communication;
             Parameters = NamedParam.CreateParams();
             ResultMap = NamedParam.CreateParams(
-                "message", typeof(string), "if success was false, the reason why",
-                "success", typeof(bool), "true if command was successful");
-		}
+                "message", typeof (string), "if success was false, the reason why",
+                "success", typeof (bool), "true if command was successful");
+        }
 
         public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
 		{

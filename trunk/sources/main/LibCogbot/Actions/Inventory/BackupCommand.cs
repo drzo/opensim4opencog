@@ -110,6 +110,7 @@ namespace cogbot.Actions.SimExport
         #endregion Properties
 
         public BackupCommand(BotClient testClient)
+            : base(testClient)
         {
             Name = "backuptext";
             Description = "Backup inventory to a folder on your hard drive.";

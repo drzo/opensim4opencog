@@ -8,9 +8,10 @@ using MushDLR223.ScriptEngines;
 
 namespace cogbot.Actions.Movement
 {
-    class MovetoCommand : Command, BotPersonalCommand, BotStatefullCommand
+    class MovetoCommand : Command, BotPersonalCommand
     {
         public MovetoCommand(BotClient client)
+            : base(client)
         {
             Name = "moveto";
             Description = "Moves the avatar to the specified global position using robot turnto and walk. Usage: moveto x y z";

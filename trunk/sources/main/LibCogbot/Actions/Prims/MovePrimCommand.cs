@@ -26,7 +26,7 @@ namespace cogbot.Actions.Objects
             List<SimObject> PS = WorldSystem.GetPrimitives(args, out used);
             if (IsEmpty(PS)) return Failure("Cannot find prim: " + string.Join(" ", args));
             string[] to = Parser.SplitOff(args, used);
-            SimPosition aPos = WorldSystem.GetVector(to, out used, TheSimAvatar);
+            SimPosition aPos = WorldSystem.GetVector(to, out used);
             if (aPos == null) return Failure("Cannot find position: " + string.Join(" ", to));
             if (!aPos.IsRegionAttached) return Failure("!IsRegionAttached: " + aPos);
             List<SimObject> TODO = new List<SimObject>();
