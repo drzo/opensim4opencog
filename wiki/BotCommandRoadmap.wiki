@@ -27,6 +27,7 @@ Like *setmaster* expects an _avatar_ name.
 
 
 *sysvar* is variadic taking zero, one or two arguments
+
 _form0_ list all the sysvars
  {{{
  (sysvar)
