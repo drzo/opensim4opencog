@@ -13,8 +13,10 @@ namespace cogbot.Actions
             : base(Client)
         {
             Name = "Logout";
-            Description = "Logout from Secondlife";
-            Usage = "To Logout from Second Life, type \"logout\"";
+            Description = "Logout from grid";
+            Usage = Htmlize.Usage("logout", "logout the targeted bot");
+            Parameters = NamedParam.CreateParams();
+
             Category = CommandCategory.BotClient;
             Parameters = new[] { new NamedParam(typeof(GridClient), null) };
         }

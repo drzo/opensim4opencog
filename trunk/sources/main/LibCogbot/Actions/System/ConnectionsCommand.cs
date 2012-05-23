@@ -12,6 +12,9 @@ namespace cogbot.Actions.System
         {
             Name = GetType().Name;
             Description = "shows simulator connections";
+            Usage = Htmlize.Usage("connections [name]", "if name is present, any simulator whose name includes the string name will be shown");
+            Parameters = NamedParam.CreateParams(
+                NamedParam.Optional("name", typeof(string), "substring of region name(s) to show"));
             Category = CommandCategory.Simulator;
         }
 

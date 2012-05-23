@@ -12,13 +12,16 @@ namespace cogbot.Actions.System
             : base(Client)
         {
             Name = "Login";
-            Description = "Login to World Server";
-            Usage = "login <first name> <last name> <password> [<simurl>] [<location>]";
+            Description = "Log into grid";
+            Usage = Htmlize.Usage("login <first name> <last name> <password> [<loginuri>] [<location>]",
+                "log into a grid");
             Category = CommandCategory.Security;
-            Parameters = new[] { 
-                new NamedParam(typeof(String), typeof(String)), 
-                new NamedParam(typeof(String), typeof(String)),
-                new NamedParam(typeof(String), typeof(String))};
+            Parameters = NamedParam.CreateParams(
+                "first", typeof(string), "first name of bot",
+                "last" , typeof(string), "last name of bot",
+                "password", typeof(string), "password for bot",
+                NamedParam.Optional("loginuri", typeof(Uri), "login uri for grid"),
+                NamedParam.Optional("location", typeof(string), "one of home,last, or a sim name"));
 
         }
 

@@ -13,6 +13,17 @@ namespace cogbot.Actions.System
         {
             Name = "Log";
             Description = "Filters out console messages";
+            /*
+                                                         clear,
+                                                          +*,
+                                                          +ERROR,
+                                                          -dictlog,
+                                                          -settingsdict,
+                                                          -DEBUG9,
+                                                          -simmesh,
+                                            clear,
+                                                              +*,
+             * */
             Usage = "log ui -simmesh";
             Category = CommandCategory.BotClient;
         }

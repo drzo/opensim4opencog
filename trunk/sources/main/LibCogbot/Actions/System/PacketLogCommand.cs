@@ -5,12 +5,13 @@ using MushDLR223.ScriptEngines;
 
 namespace cogbot.Actions.System
 {
+    [Obsolete]
     public class PacketLogCommand : Command, BotSystemCommand
     {
         public PacketLogCommand(BotClient testClient)
         {
             Name = "packetlog";
-            Description = "Logs a given number of packets to an xml file. Usage: packetlog 10 tenpackets.xml";
+            Description = "Unimplemented. Logs a given number of packets to an xml file. Usage: packetlog 10 tenpackets.xml";
             Category = CommandCategory.BotClient;
         }
 
