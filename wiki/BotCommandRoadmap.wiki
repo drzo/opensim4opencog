@@ -82,11 +82,11 @@ What was once...
 
 }}}
 
-This is because of
+This is because of the constructor of the command containing
 
 {{{
-      The constructor of the command containing
             Parameters = NamedParam.CreateParams("agent", typeof(UUID), "agent you are going to " + Name);
 
-
 }}}
+
+That tells us the first argument of the command is named "agent" and the first parameter is expected to be an agent UUID
