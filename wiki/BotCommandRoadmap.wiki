@@ -2,19 +2,40 @@
 
 Bot commands wrap complex operations into callable forms.
 
-Most command may takes strings for arguments. Sometimes, these strings are expected to have a default interpretation.   Like *setmaster* expects an _avatar_ name.  *say* uses a free form _message_ string.  *im* _avatar_ and _message_.
+Most command may takes strings for arguments. Sometimes, these strings are expected to have a default interpretation.
 
-
-
-Examples:
+Like *setmaster* expects an _avatar_ name.
 {{{
  (setmaster "Anne Ogborn")
+}}}
+
+*say* uses a free form _message_ string.
+{{{
  (say "hello world")
+}}}
+
+*im* _avatar_ and _message_.
+{{{
  (im "Anne Ogborn" "Hi there!")
- (moveprim "yellow cube" (v3 34 128 22))
- (sysvar UseMoveSpeed 2)
- (setbot "Testbot Miles")
 }}}
 
 
+*moveprim* _primspec_ and _vector3_.
+{{{
+ (moveprim "yellow cube" (v3 34 128 22))
+}}}
 
+
+*sysvar* is variadic taking zero, one or two arguments
+_form0_ list all the sysvars
+ {{{
+ (sysvar)
+}}}
+_form1_ list sysvars matching string
+{{{
+ (sysvar UseMoveSpeed)
+}}}
+_form2_ set the sysvars matching string with the number 2
+{{{
+ (sysvar UseMoveSpeed 2)
+}}}
