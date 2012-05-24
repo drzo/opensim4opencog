@@ -19,7 +19,7 @@ namespace cogbot.Actions.System
             Category = CommandCategory.Security;
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
             {
@@ -40,7 +40,7 @@ namespace cogbot.Actions.System
             List<SimObject> worldSystemGetPrimitives = WorldSystem.GetPrimitives(args, out argsUsed);
             if (IsEmpty(worldSystemGetPrimitives))
             {
-                return Failure("Cannot find objects from " + string.Join(" ", args));
+                return Failure("Cannot find objects from " + args.str);
             }
             BotPermissions who = BotPermissions.Base;
 

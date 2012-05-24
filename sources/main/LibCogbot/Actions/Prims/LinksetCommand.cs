@@ -24,7 +24,7 @@ namespace cogbot.Actions.Objects
                              };
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length == 0)
             {
@@ -32,7 +32,7 @@ namespace cogbot.Actions.Objects
             }
             int argsUsed;
             List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
-            if (PS.Count != 1) return Failure("Cannot find single object from " + string.Join(" ", args));
+            if (PS.Count != 1) return Failure("Cannot find single object from " + args.str);
             Primitive rootPrim = PS[0].Prim;
             Simulator worldSystemGetSimulator = WorldSystem.GetSimulator(rootPrim);
             if (rootPrim.ParentID != 0)

@@ -16,9 +16,9 @@ namespace cogbot.Actions.System
         {
             Name = "showeffects";
             Description = "Prints out information for every viewer effect that is received. Usage: showeffects [on/off]";
-            Usage = Htmlize.Usage("showeffects on", "Turn on effect listing") +
-                Htmlize.Usage("showeffects off", "Turn off effect listing") +
-                Htmlize.Example(@"/showeffects on
+            Details = AddUsage("showeffects on", "Turn on effect listing") +
+                AddUsage("showeffects off", "Turn off effect listing") +
+                Example(@"/showeffects on
 [14:53] ViewerEffect [LookAt]: SourceID: a910f6af-de58-4106-8b90-37f1fca9695f TargetID: a910f6af-de58-4106-8b90-37f1fca9695f TargetPos: <-0.840918242931366, -0.136444821953774, -0.523678779602051> Type: FreeLook Duration: 2 ID: f263233c-4f93-09e3-cae3-9c8f1675d282
 [14:53] ViewerEffect [LookAt]: SourceID: a910f6af-de58-4106-8b90-37f1fca9695f TargetID: 5d9b2843-cd64-480c-9524-74e607629bae TargetPos: <0, 0, 0> Type: Focus Duration: 1.701412E+38 ID: f263233c-4f93-09e3-cae3-9c8f1675d282
 [14:53] ViewerEffect [LookAt]: SourceID: a910f6af-de58-4106-8b90-37f1fca9695f TargetID: a910f6af-de58-4106-8b90-37f1fca9695f TargetPos: <5, 0, 0> Type: Focus Duration: 1.701412E+38 ID: f263233c-4f93-09e3-cae3-9c8f1675d282
@@ -33,10 +33,10 @@ namespace cogbot.Actions.System
 [14:54] Primitive: Script running
 [14:54] ViewerEffect [LookAt]: SourceID: 8f6ce54e-95f5-46d0-b090-c5361c821232 TargetID: 8f6ce54e-95f5-46d0-b090-c5361c821232 TargetPos: <1.99089336395264, -0.19064100086689, 0> Type: Idle Duration: 3 ID: 65afbdef-6a7c-ed45-bfdc-d322b9690caf
 /showeffects off", "turn effects on, see some, turn off");
-            ParameterVersions = NamedParam.CreateParamVersions(
-                NamedParam.CreateParams("on", typeof(bool), "turn on listing"),
-                NamedParam.CreateParams("off", typeof(bool), "turn off listing"));
-            ResultMap = NamedParam.CreateParams(
+            ParameterVersions = CreateParamVersions(
+                CreateParams("on", typeof(bool), "turn on listing"),
+                CreateParams("off", typeof(bool), "turn off listing"));
+            ResultMap = CreateParams(
                 "message", typeof(string), "if success was false, the reason why",
                 "success", typeof(bool), "true if we showed effects");
             Category = CommandCategory.Other;
@@ -69,7 +69,7 @@ namespace cogbot.Actions.System
                 e.EffectID.ToString());
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length == 0)
             {

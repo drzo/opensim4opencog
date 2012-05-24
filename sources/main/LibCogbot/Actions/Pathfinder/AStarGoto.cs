@@ -29,7 +29,7 @@ namespace cogbot.Actions.Pathfinder
 
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             int argcount;
             SimPosition pos = WorldSystem.GetVector(args, out argcount);

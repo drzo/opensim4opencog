@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,8 +16,8 @@ namespace cogbot.Actions.Search
         {
             Name = "Save UUIDs";
             Description = "Saves resolution of UUID types in a file.";
-            Usage = Htmlize.Usage("saveuuids <filename>", "create file filename") + 
-                Htmlize.Example(
+            Details = AddUsage("saveuuids <filename>", "create file filename") + 
+                Example(
 @"
 /saveuuids c:\somepath\somefile.xml  might produce a file like
 
@@ -45,12 +45,12 @@ namespace cogbot.Actions.Search
 ", @"makes this file
 an asset can have more than one name because the name comes from the containing object (inventory or object)
 and could be expressed in more than one location");
-            Parameters = NamedParam.CreateParams("path", typeof(string), "Path to file to save uuids in");
+            Parameters = CreateParams("path", typeof(string), "Path to file to save uuids in");
 
             Category = CommandCategory.BotClient;
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             string filename = "AssetMapping3.xml";
             if (args.Length >0) filename = String.Join(" ", args, 0, args.Length).Trim();

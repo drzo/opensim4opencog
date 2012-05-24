@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
@@ -15,16 +15,16 @@ namespace cogbot.Actions.Movement
         {
             Name = "fly";
             Description = "Makes the avatar fly";
-            Usage = @"<p>fly  - <i>start flying</i></p>
+            Details = @"<p>fly  - <i>start flying</i></p>
 <p>fly up  - <i>increase height by about 50 meters (one second key press), or jump if on ground</i></p>
 <p>fly down - <i>decrease height by about 50 meters (one second key press). Will not auto-land</i></p>
 <p>stop-flying  - <i>stop flying. Bot will fall if not near ground</i></p>";
-            ParameterVersions = NamedParam.CreateParamVersions(
-                NamedParam.CreateParams(),
-                NamedParam.CreateParams("up", typeof(bool), "increase height by about 50 meters (one second key press), or jump if on ground"),
-                NamedParam.CreateParams("down", typeof(bool), "decrease height by about 50 meters (one second key press). Will not auto-land")
+            ParameterVersions = CreateParamVersions(
+                CreateParams(),
+                CreateParams("up", typeof(bool), "increase height by about 50 meters (one second key press), or jump if on ground"),
+                CreateParams("down", typeof(bool), "decrease height by about 50 meters (one second key press). Will not auto-land")
                );
-            ResultMap = NamedParam.CreateParams(
+            ResultMap = CreateParams(
                  "message", typeof(string), "if success was false, the reason why",
                  "success", typeof(bool), "true if we flew");
         }

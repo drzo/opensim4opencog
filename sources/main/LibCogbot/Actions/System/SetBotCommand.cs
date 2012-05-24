@@ -14,9 +14,9 @@ namespace cogbot.Actions.System
             {
                 Name = "setbot";
                 Description = "Sets the current bot for subsequent botcmd commands.";
-                Usage =
-                    Htmlize.Usage("setmasterkey <name>", "Sets the bot by user name") +
-                    Htmlize.Example(@"
+                Details =
+                    AddUsage("setmasterkey <name>", "Sets the bot by user name") +
+                    Example(@"
 ... log on two bots, Ima Bot and Another Bot
 /setbot Ima Bot
 /say hi, I am Ima Bot
@@ -25,11 +25,11 @@ namespace cogbot.Actions.System
 /say hi, I'm not Ima
 ... Another Bot says I'm not Ima  in chat
 ", "first one bot, then a different one, chats");
-                Parameters = NamedParam.CreateParams("bot", typeof(AgentSpec), "name of bot");
+                Parameters = CreateParams("bot", typeof(AgentSpec), "name of bot");
                 Category = CommandCategory.BotClient;
             }
 
-            public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+            public override CmdResult ExecuteRequest(CmdRequest args)
             {
                 string botname = String.Join(" ",args).Trim();
                 TheBotClient.ClientManager.SetOnlyOneCurrentBotClient(botname);

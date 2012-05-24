@@ -20,7 +20,7 @@ namespace cogbot.Actions.System
             Parameters = new [] {  new NamedParam(typeof(GridClient), null) };
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             string name = Client.ToString();
             return Success("I am " + name + ", Up Since: " + Created + " (" + (DateTime.Now - Created) + ")");

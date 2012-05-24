@@ -15,10 +15,10 @@ namespace cogbot.Actions.Movement
             : base(Client)
         {
             Description = "Jump for 1/2 second.";
-            Usage = "jump";
+            Details = "jump";
             Name = "Jump";
-            Parameters = NamedParam.CreateParams();
-            ResultMap = NamedParam.CreateParams(
+            Parameters = CreateParams();
+            ResultMap = CreateParams(
                  "message", typeof(string), "if we could not why, why (shouldnt happen)",
                  "success", typeof(bool), "true if we stood up");
 

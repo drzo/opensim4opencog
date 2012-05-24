@@ -31,7 +31,7 @@ namespace cogbot.Actions.Movement
             callback = new EventHandler<TerseObjectUpdateEventArgs>(Objects_OnObjectUpdated);
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
                 return ShowUsage();// " FlyTo x y z [seconds]";

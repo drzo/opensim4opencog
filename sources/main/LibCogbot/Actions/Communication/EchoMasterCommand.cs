@@ -15,15 +15,15 @@ namespace cogbot.Actions.Communication
         {
             Name = "echoMaster";
             Description = "Repeat everything that master says from open channel to open channel.";
-            Usage = Htmlize.Usage("echomaster", "toggles this commnand on/off");
+            Details = AddUsage("echomaster", "toggles this commnand on/off");
             Category = CommandCategory.Communication;
-            Parameters = NamedParam.CreateParams();
-            ResultMap = NamedParam.CreateParams(
+            Parameters = CreateParams();
+            ResultMap = CreateParams(
                 "message", typeof (string), "if success was false, the reason why",
                 "success", typeof (bool), "true if command was successful");
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
 		{
 			if (!Active)
 			{

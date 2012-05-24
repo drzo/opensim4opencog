@@ -18,7 +18,7 @@ namespace cogbot.Actions.Objects
             //client.RegisterCommand("deselect", this);
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length == 0)
             {
@@ -30,17 +30,17 @@ namespace cogbot.Actions.Objects
             if (autoDeselect)
             {
                 note += "re";
-                args = Parser.SplitOff(args, 1);
+                args = args.AdvanceArgs(1);
             }
             var deSelect = (args[0] == "de");
             if (deSelect)
             {
                 note += "de";
-                args = Parser.SplitOff(args, 1);
+                args = args.AdvanceArgs(1);
             }
             int used;
             List<SimObject> PS = WorldSystem.GetPrimitives(args, out used);
-            if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
+            if (IsEmpty(PS)) return Failure("Cannot find objects from " + args.str);
             List<uint> selectobjs = new List<uint>();
             var fp = PS[0].RegionHandle;           
             foreach (var P in PS)

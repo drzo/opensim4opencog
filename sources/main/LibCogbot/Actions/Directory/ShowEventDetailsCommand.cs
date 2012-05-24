@@ -13,16 +13,16 @@ namespace cogbot.Actions.Search
         {
             Name = "showevent";
             Description = "Shows an Events details.";
-            Usage = Htmlize.Usage(Name + " [eventID]", "Display SL event with eventID");
+            Details = AddUsage(Name + " [eventID]", "Display SL event with eventID");
             Category = CommandCategory.Other;
             Parameters =
-                NamedParam.CreateParams("eventID", typeof (UUID), "event you want info for");
-            ResultMap = NamedParam.CreateParams(
+                CreateParams("eventID", typeof (UUID), "event you want info for");
+            ResultMap = CreateParams(
                 "message", typeof (string), "if success was false, the reason why",
                 "success", typeof (bool), "true if command was successful");
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
                 return ShowUsage();// " showevent [eventID] (use searchevents to get ID)";

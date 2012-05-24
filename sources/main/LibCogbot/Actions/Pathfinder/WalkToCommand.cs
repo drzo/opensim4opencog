@@ -16,14 +16,14 @@ namespace cogbot.Actions.Pathfinder
             Parameters = new[] {  new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             float distance = 2.0f;
 
             int argsUsed;
             SimPosition simObject = WorldSystem.GetVector(args, out argsUsed);
 
-            if (simObject==null) return Failure("Cannot find " + string.Join(" ", args)); 
+            if (simObject==null) return Failure("Cannot find " + args.str); 
             if (!simObject.IsRegionAttached)
             {
                 return Failure("Cannot get SimPosition of " + simObject);

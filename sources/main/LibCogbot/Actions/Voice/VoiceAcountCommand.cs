@@ -38,7 +38,7 @@ namespace cogbot.Actions.Voice
             return true;
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (!IsVoiceManagerRunning())
                 return Failure(String.Format("VoiceManager not running for {0}", Client.Self.Name));

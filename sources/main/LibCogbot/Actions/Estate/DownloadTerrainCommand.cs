@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Text;
@@ -34,10 +34,10 @@ namespace cogbot.Actions.Estate
         {
             Name = "downloadterrain";
             Description = "Download the RAW terrain file for this estate.";
-            Usage = Htmlize.Usage("downloadterrain [timeout-seconds]", "download terrain to SimName.raw using timeout (default 2 minutes)");
+            Details = AddUsage("downloadterrain [timeout-seconds]", "download terrain to SimName.raw using timeout (default 2 minutes)");
             Category = CommandCategory.Simulator;
             Parameters =
-                NamedParam.CreateParams(NamedParam.Optional("timeoutSeconds", typeof (int), "timeout in seconds"));
+                CreateParams(Optional("timeoutSeconds", typeof (int), "timeout in seconds"));
         }
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace cogbot.Actions.Estate
         /// <param name="args">arguments passed to this module</param>
         /// <param name="fromAgentID">The ID of the avatar sending the request</param>
         /// <returns></returns>
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             int argsUsed;
             Simulator CurSim = TryGetSim(args, out argsUsed) ?? Client.Network.CurrentSim;

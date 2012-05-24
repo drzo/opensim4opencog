@@ -31,7 +31,7 @@ namespace cogbot.Actions.Scripting
         /// <param name="args"></param>
         /// <param name="fromAgentID"></param>
         /// <returns></returns>
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
                 return ShowUsage();// " uploadscript filename.lsl";

@@ -14,22 +14,22 @@ namespace cogbot.Actions.Inventory
         {
             Name = "evinfo";
             Description = "Shows the events that have been associated with an object. See <a href='wiki/SimObjectEvents'>Sim Object Events</a>page for info about events.";
-            Usage = @"<p>evinfo &lt;primspec&gt;</p><p>example: evinfo tacosofgod  <i>tacosofgod is a nearby plywood cube</i></p>
+            Details = @"<p>evinfo &lt;primspec&gt;</p><p>example: evinfo tacosofgod  <i>tacosofgod is a nearby plywood cube</i></p>
 <pre>
 [09:12] tacosofgod Box 70b5e8ab-3308-4bc6-bbf8-4f313cd7d518 (localID 2036105563)(ch0)(PrimFlagsFalse InventoryEmpty, ObjectOwnerModify)[](!IsPassable)
 [09:12] evinfo: Success: simEventComplete blanks=1 nonblanks=0
 [09:12] evinfo: Success: simEventComplete blanks=1 nonblanks=0
 </pre>";
-            Parameters = NamedParam.CreateParams(
+            Parameters = CreateParams(
                 "object", typeof (PrimSpec),
                 "The objects whose events we want, as specified in " + Htmlize.WikiBC("Prim Spec"));
-            ResultMap = NamedParam.CreateParams(
+            ResultMap = CreateParams(
                  "events", typeof(List<SimObjectEvent>), "List of events that transpired on the objects",
                  "message", typeof(string), "if success was false, the reason why",
                  "success", typeof(bool), "true if we got the events");
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             //   base.acceptInput(verb, args);
 

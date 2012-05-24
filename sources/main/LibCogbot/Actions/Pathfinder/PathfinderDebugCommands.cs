@@ -17,7 +17,7 @@ namespace cogbot.Actions.Pathfinder
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length == 0)
             {
@@ -47,7 +47,7 @@ namespace cogbot.Actions.Pathfinder
             Category = cogbot.Actions.CommandCategory.Movement;
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             GraphFormer gf = new GraphFormer(SimGlobalRoutes.Instance);
             gf.Show();
@@ -63,7 +63,7 @@ namespace cogbot.Actions.Pathfinder
     //        Category = cogbot.Actions.CommandCategory.Movement;
     //    }
 
-    //    public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+    //    public override CmdResult ExecuteRequest(CmdRequest args)
     //    {
     //        string[] tokens = args;
     //        if (tokens.Length > 0 && !String.IsNullOrEmpty(tokens[0]))
@@ -113,7 +113,7 @@ namespace cogbot.Actions.Pathfinder
     //        Category = cogbot.Actions.CommandCategory.Movement;
     //    }
 
-    //    public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+    //    public override CmdResult ExecuteRequest(CmdRequest args)
     //    {
     //        int argsused;
     //        SimPosition v3 = WorldSystem.GetVector(args, out argsused);

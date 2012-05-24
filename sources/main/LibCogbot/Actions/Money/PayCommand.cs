@@ -18,14 +18,14 @@ namespace cogbot.Actions.Money
             Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length==0) {
                 return ShowUsage();
             }
             int used;
             SimObject o = WorldSystem.GetSimObjectS(args, out used);
-            if (o == null) return Failure(string.Format("Cant find {0}", string.Join(" ", args)));
+            if (o == null) return Failure(string.Format("Cant find {0}", args.str));
 
             bool isObject = !(o is SimAvatar);
             UUID target = o.ID;

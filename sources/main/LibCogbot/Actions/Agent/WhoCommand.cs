@@ -17,14 +17,14 @@ namespace cogbot.Actions.Agent
             Name = "Who";
             Description = "Lists seen avatars.";
             Category = CommandCategory.Other;
-            Parameters = NamedParam.CreateParams();
-            ResultMap = NamedParam.CreateParams(
+            Parameters = CreateParams();
+            ResultMap = CreateParams(
                 "avatarList", typeof (List<Avatar>), "list of present avatars",
                 "message", typeof(string), "if success was false, the reason why",
                 "success", typeof (bool), "true if command was successful");
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
 		{
 			StringBuilder result = new StringBuilder();
             if (args.Length > 0)

@@ -16,25 +16,25 @@ namespace cogbot.Actions.Appearance
             TheBotClient = testClient;
             Name = "anim";
             Description = "List or do animation or gesture on Simulator.";
-            Usage = Htmlize.Usage("anim", "just lists anims currently running") +
-                    Htmlize.Usage("anim stopall +HOVER 5 +23423423423-4234234234-234234234-23423423 10 -CLAP",
+            Details = AddUsage("anim", "just lists anims currently running") +
+                    AddUsage("anim stopall +HOVER 5 +23423423423-4234234234-234234234-23423423 10 -CLAP",
                                   "stop all current anims, begin hover, wait 5 seconds, begin clapping (used uuid), wait 10 seconds, stop clapping (used name)");
 
             Category = CommandCategory.Appearance;
-            ParameterVersions = NamedParam.CreateParamVersions(
-                NamedParam.CreateParams(),
-                NamedParam.CreateParams(
-                    NamedParam.Optional("stopall", typeof (bool), "stops all current anims"),
-                    NamedParam.Optional("anim_0-N", typeof (SimAnimation), "+/-animuuid"),
-                    NamedParam.Optional("seconds", typeof (int), "how long to pause for"),
-                    NamedParam.Optional("gesture_0-N", typeof (SimGesture), "gesture to play at this step")));
-            ResultMap = NamedParam.CreateParams(
+            ParameterVersions = CreateParamVersions(
+                CreateParams(),
+                CreateParams(
+                    Optional("stopall", typeof (bool), "stops all current anims"),
+                    Optional("anim_0-N", typeof (SimAnimation), "+/-animuuid"),
+                    Optional("seconds", typeof (int), "how long to pause for"),
+                    Optional("gesture_0-N", typeof (SimGesture), "gesture to play at this step")));
+            ResultMap = CreateParams(
                 "ranSteps", typeof (List<string>), "list of ran steps",
                 "message", typeof (string), "if success was false, the reason why",
                 "success", typeof (bool), "true if command was successful");
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
             {
@@ -176,7 +176,7 @@ namespace cogbot.Actions.Appearance
             }
             if (NOSEARCH_ANIM)
             {
-                String str = string.Join(" ", args);
+                String str = args.str;
                 WriteLine("ANIM ECHO " + str);
                 Success("\nStart anim " + str + "\n");
             }

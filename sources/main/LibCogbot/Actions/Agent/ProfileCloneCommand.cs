@@ -28,10 +28,10 @@ namespace cogbot.Actions.Agent
 
             Name = "Profile Clone";
             Description = "Copies another avatars profile as closely as possible onto your existing profile. WARNING: This command will destroy your existing profile!";
-            Usage = Htmlize.Usage("profileclone [targetuuid]", "copies the profile specified by targetuuid");
+            Details = AddUsage("profileclone [targetuuid]", "copies the profile specified by targetuuid");
             Category = CommandCategory.Other;
-            Parameters = NamedParam.CreateParams("agent", typeof(UUID), "agent you are going to " + Name);
-            ResultMap = NamedParam.CreateParams(
+            Parameters = CreateParams("agent", typeof(UUID), "agent you are going to " + Name);
+            ResultMap = CreateParams(
                 "reason", typeof(string), "if success was false, the reason why",
                 "success", typeof(bool), "true if command was successful");
         }
@@ -44,12 +44,21 @@ namespace cogbot.Actions.Agent
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-
+            if (registeredCallbacks)
+            {
+                registeredCallbacks = false;
+                Client.Avatars.AvatarInterestsReply -= new EventHandler<AvatarInterestsReplyEventArgs>(Avatars_AvatarInterestsReply);
+                Client.Avatars.AvatarPropertiesReply -= new EventHandler<AvatarPropertiesReplyEventArgs>(Avatars_AvatarPropertiesReply);
+                Client.Avatars.AvatarGroupsReply -= new EventHandler<AvatarGroupsReplyEventArgs>(Avatars_AvatarGroupsReply);
+                Client.Groups.GroupJoinedReply -= new EventHandler<GroupOperationEventArgs>(Groups_OnGroupJoined);
+                Client.Avatars.AvatarPicksReply -= new EventHandler<AvatarPicksReplyEventArgs>(Avatars_AvatarPicksReply);
+                Client.Avatars.PickInfoReply -= new EventHandler<PickInfoReplyEventArgs>(Avatars_PickInfoReply);
+            }
         }
 
         #endregion
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
                 return ShowUsage();
@@ -69,9 +78,7 @@ namespace cogbot.Actions.Agent
                 Client.Avatars.PickInfoReply += new EventHandler<PickInfoReplyEventArgs>(Avatars_PickInfoReply);
             }
 
-            int argsUsed;
-            if (!UUIDTryParse(args,0, out targetID, out argsUsed))
-				return ShowUsage();
+            if (!args.TryGetValue("agent", out targetID)) return ShowUsage();
 
             // Request all of the packets that make up an avatar profile
             Client.Avatars.RequestAvatarProperties(targetID);

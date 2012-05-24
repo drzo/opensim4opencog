@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using cogbot.Listeners;
 using cogbot.TheOpenSims;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
@@ -23,19 +24,13 @@ namespace cogbot.Actions
 
     static public class Htmlize
     {
-        static public string Usage(string example, string comment)
-        {
-            return "<p>" + NoEnts(example) + "<i>" + NoEnts(comment) + "</i></p>";
-        }
-
         public static string NoEnts(string example)
         {
+            if (example==null)
+            {
+              ///  return null;
+            }
             return example.Replace("\"", "&qt;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\r\n", "<br>").Replace("\n", "<br>");
-        }
-
-        public static string Example(string typed, string output)
-        {
-            return "<p><pre>" + NoEnts(typed) + "</pre></p>Returns<p><pre>" + NoEnts(output) + "</pre></p>";
         }
 
         public static string WikiBC(string named)
@@ -204,7 +199,7 @@ namespace cogbot.Actions
         {
             IsStateFul = live.IsStateFull || live is BotStatefullCommand;
             Name = live.Name;
-            usageString = live.Usage;
+            usageString = live.Details;
             ParameterVersions = live.ParameterVersions;
             helpString = live.Description;
             Category = live.Category;
@@ -259,17 +254,26 @@ namespace cogbot.Actions
                     return;
                 }
                 helpString = value.Substring(0, half).TrimEnd();
-                Usage = value.Substring(half);
+                Details = value.Substring(half);
 
             }
         }
 
-        public virtual string Usage
+        public virtual string Details
         {
             get { return usageString; }
             set
             {
-                usageString = value.Trim().Replace("Usage:", " ").Replace("usage:", " ").Replace("Use:", " ").Trim();
+                value = value.Trim().Replace("Usage:", " ").Replace("usage:", " ").Replace("Use:", " ").Trim();
+                if (string.IsNullOrEmpty(usageString))
+                {
+                    usageString = value;
+                    return;
+                }
+                if (!usageString.Contains(value))
+                {
+                    usageString += value;
+                }
             }
         }
 
@@ -286,13 +290,27 @@ namespace cogbot.Actions
             }
             set
             {
-                if (ParameterVersions == null)
-                {
-                    ParameterVersions = new NamedParam[1][];
-                }
-                ParameterVersions[0] = value;
+                AddVersion(value);
+                AddUsage(value, Description);
             }
         }
+
+        private void AddVersion(NamedParam[] value)
+        {
+            if (ParameterVersions == null || ParameterVersions.Length == 0)
+            {
+                ParameterVersions = new NamedParam[1][];
+                ParameterVersions[0] = value;
+                return;
+            }
+            var copy = new List<NamedParam[]>(ParameterVersions);
+            if (!copy.Contains(value))
+            {
+                copy.Add(value);
+            }
+            ParameterVersions = copy.ToArray();
+        }
+
         public NamedParam[] ResultMap;
 
         /// <summary>
@@ -301,7 +319,7 @@ namespace cogbot.Actions
         /// <returns>CmdResult Failure with a string containing the parameter usage instructions</returns>
         public virtual CmdResult ShowUsage()
         {
-            return ShowUsage(Usage);
+            return ShowUsage(Details);
         }
         public virtual CmdResult ShowUsage(string usg)
         {
@@ -363,10 +381,10 @@ namespace cogbot.Actions
 
         public Command(BotClient bc)
         {
-            ResultMap = NamedParam.CreateParams(
+            ResultMap = CreateParams(
                 "message", typeof(string), "if success was false, the reason why",
                 "success", typeof(bool), "true if command was successful");
-            Parameters = NamedParam.CreateParams("stuff", typeof (string), "this command is missing documentation!");
+           // Parameters = CreateParams("stuff", typeof (string), "this command is missing documentation!");
 
             _mClient = bc;
             WriteLine = StaticWriteLine;
@@ -377,22 +395,22 @@ namespace cogbot.Actions
             }
             if (this is BotPersonalCommand)
             {
-                Parameters = new[] { new NamedParam(typeof(GridClient), null) };
+                //Parameters = new[] { new NamedParam(typeof(GridClient), null) };
                 Category = CommandCategory.Other;
             }
             if (this is BotSystemCommand)
             {
-                Parameters = new[] { new NamedParam(typeof(GridClient), null) };
+                //Parameters = new[] { new NamedParam(typeof(GridClient), null) };
                 Category = CommandCategory.Simulator;
             }
             if (this is RegionMasterCommand)
             {
-                Parameters = new[] { new NamedParam(typeof(Simulator), null) };
+               // Parameters = new[] { new NamedParam(typeof(Simulator), null) };
                 Category = CommandCategory.Simulator;
             }
             if (this is SystemApplicationCommand)
             {
-                Parameters = new[] { new NamedParam(typeof(GridClient), null) };
+               // Parameters = new[] { new NamedParam(typeof(GridClient), null) };
                 Category = CommandCategory.BotClient;
             }
             if (this.GetType().Namespace.ToString() == "cogbot.Actions.Movement")
@@ -460,7 +478,7 @@ namespace cogbot.Actions
                 {
                     Failure("trying to access TheBotClient with an unknown client!?");
                     DLRConsole.DebugWriteLine("" + this + " has no TheBotClient?!");
-                    return cogbot.Listeners.WorldObjects.GridMaster.client;
+                    return WorldObjects.GridMaster.client;
                 }
                 return _mClient;
             }
@@ -485,7 +503,7 @@ namespace cogbot.Actions
                 if (_mClient == null)
                 {
                     Failure("trying to access world with an unknown client!?");
-                    return cogbot.Listeners.WorldObjects.GridMaster;
+                    return WorldObjects.GridMaster;
                 }
                 return _mClient.WorldSystem;
             }
@@ -504,6 +522,11 @@ namespace cogbot.Actions
             }
         }
 
+        protected UUID fromAgentID
+        {
+            get { return CallerID; }
+        }
+
         public CmdResult acceptInputWrapper(string verb, string args,UUID callerID, OutputDelegate writeLine)
         {
             if (this is BotPersonalCommand)
@@ -519,19 +542,26 @@ namespace cogbot.Actions
             this.WriteLine = writeLine;
             return acceptInput(verb, Parser.ParseArgs(args), writeLine);
         }
+            
+        public virtual CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        {
+            this.WriteLine = WriteLine;
+            CallerID = fromAgentID;
+            return ExecuteRequest(new CmdRequest(args, fromAgentID, WriteLine, this));
+        }
 
-        public virtual CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate writeLine)
+        virtual public CmdResult ExecuteRequest(CmdRequest args)
         {
             Results.Clear();
-            CallerID = fromAgentID;
+            CallerID = args.CallerAgent;
             success = failure = 0;
             var wlpre = this.WriteLine;
-            this.WriteLine = writeLine;
-            Parser p = Parser.ParseArgs(String.Join(" ", args));
-            p.tokens = args;
+            this.WriteLine = args.Output;
+            Parser p = args;
+            p.tokens = args.tokens;
             try
             {
-                return acceptInput(Name, p, writeLine);
+                return acceptInput(Name, p, this.WriteLine);
             }
             finally
             {
@@ -641,7 +671,7 @@ namespace cogbot.Actions
         {
             try
             {
-                if (!string.IsNullOrEmpty(WriteLineResultName))
+                if (!String.IsNullOrEmpty(WriteLineResultName))
                 {
                     AppendResults(WriteLineResultName, usage);
                 }
@@ -717,7 +747,7 @@ namespace cogbot.Actions
                     continue;
                 }
                 ulong numd;
-                if (ulong.TryParse(name, out numd))
+                if (UInt64.TryParse(name, out numd))
                 {
                     d += numd;
                     argsUsed++;
@@ -778,6 +808,93 @@ namespace cogbot.Actions
             string before = "" + Results[name];
             string newstring = before + "\n" + format;
             Results[name] = newstring.TrimStart();                    
+        }
+
+        protected static NamedParam[] CreateParams(params object[] paramz)
+        {
+            List<NamedParam> paramsz = new List<NamedParam>();
+            int argNum = 1;
+            for (int i = 0; i < paramz.Length; )
+            {
+                var o = paramz[i++];
+                if (o is NamedParam)
+                {
+                    paramsz.Add((NamedParam) o);
+                    continue;
+                }
+                if (o is string)
+                {
+                    string k = (string) o;
+                    Type t = paramz[i++] as Type;
+                    string comment = "" + paramz[i++];
+                    NamedParam namedParam = new NamedParam(k, t);
+                    namedParam.Comment = comment;
+                    paramsz.Add(namedParam);
+                }
+            }
+            return paramsz.ToArray();
+        }
+
+        protected static NamedParam[][] CreateParamVersions(params NamedParam[][] paramz)
+        {
+            return paramz;
+        }
+
+        protected static NamedParam Optional(string name, Type type, string description)
+        {
+            NamedParam namedParam = new NamedParam(name, type);
+            namedParam.Comment = description;
+            namedParam.IsOptional = true;
+            return namedParam;
+        }
+
+        protected static NamedParam Rest(string name, Type type, string description)
+        {
+            NamedParam namedParam = new NamedParam(name, type);
+            namedParam.Comment = description;
+            namedParam.IsRest = true;
+            return namedParam;
+        }
+
+
+        protected string AddUsage(string example, string comment)
+        {
+            string idea = "<p>" + Htmlize.NoEnts(Name + " " + example) + "<i>" + Htmlize.NoEnts(comment) + "</i></p>";
+            Details = idea;
+            return idea;
+        }
+
+        protected static string Example(string typed, string output)
+        {
+            return "<p><pre>" + Htmlize.NoEnts(typed) + "</pre></p>Returns<p><pre>" + Htmlize.NoEnts(output) + "</pre></p>";
+        }
+
+        protected void AddVersion(NamedParam[] paramSpec, string comment)
+        {
+            AddUsage(paramSpec, comment);
+        }
+        protected string AddUsage(NamedParam[] parameters, string description)
+        {
+            AddVersion(parameters);
+            string usage = Name;
+            if (string.IsNullOrEmpty(usage))
+            {
+                throw new NullReferenceException(GetType().Name);
+            }
+            foreach (var p in parameters)
+            {
+                string argstring = p.Key;
+                if (p.IsOptional)
+                {
+                    argstring = string.Format("[{0}]", argstring);
+                }
+                else
+                {
+                    argstring = string.Format("<{0}>", argstring);                
+                }
+                usage += " " + argstring;
+            }
+            return AddUsage(usage, description);
         }
     }
 }

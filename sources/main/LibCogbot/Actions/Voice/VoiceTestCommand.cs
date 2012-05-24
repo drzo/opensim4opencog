@@ -67,7 +67,7 @@ namespace cogbot.Actions.Voice
             Category = CommandCategory.Voice;
             TheBotClient = testClient;
         }
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length > 4)
             {
@@ -77,12 +77,12 @@ namespace cogbot.Actions.Voice
             if (args.Length == 0)
             {
                 doLogins = false;
-                args = new[]
-                           {
-                               Client.Self.FirstName,
-                               Client.Self.LastName,
-                               Client.BotLoginParams.Password,
-                           };
+                args = new CmdRequest(args, new[]
+                                                {
+                                                    Client.Self.FirstName,
+                                                    Client.Self.LastName,
+                                                    Client.BotLoginParams.Password,
+                                                });
             }
 
             string firstName = args[0];

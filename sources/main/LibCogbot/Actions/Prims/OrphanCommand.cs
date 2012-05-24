@@ -17,7 +17,7 @@ namespace cogbot.Actions.SimExport
             Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             int argsUsed;
             List<SimObject> objs = WorldSystem.GetPrimitives(args, out argsUsed);

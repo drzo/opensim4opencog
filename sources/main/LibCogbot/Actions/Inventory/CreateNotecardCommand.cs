@@ -23,7 +23,7 @@ namespace cogbot.Actions.Inventory
             Category = CommandCategory.Inventory;
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             UUID embedItemID = UUID.Zero, notecardItemID = UUID.Zero, notecardAssetID = UUID.Zero;
             string filename, fileData;

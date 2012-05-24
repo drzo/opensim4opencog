@@ -14,24 +14,24 @@ namespace cogbot.Actions.System
         {
             Name = "debug";
             Description = "Turn debug messages on or off.";
-            Usage = Htmlize.Usage("debug <level>", "where level is one of None, Debug, Error, Info, Warn");
-            Parameters = NamedParam.CreateParams(
+            Details = AddUsage("debug <level>", "where level is one of None, Debug, Error, Info, Warn");
+            Parameters = CreateParams(
                 "level", typeof(string), "one of None, Debug, Error, Info, Warn");
 
             Category = CommandCategory.BotClient;
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length == 0)
                 return Success("Logging is " + Settings.LOG_LEVEL);
 
-            args[0] = args[0].ToLower();
+            string match = args[0].ToLower();
             int level = -1;
             foreach (var s in typeof(Helpers.LogLevel).GetFields(BindingFlags.Static | BindingFlags.Public))
             {
                 level++;
-                if (s.Name.ToLower().StartsWith(args[0]))
+                if (s.Name.ToLower().StartsWith(match))
                 {
                     Settings.LOG_LEVEL = (Helpers.LogLevel) s.GetValue(null);
                     MushDLR223.Utilities.TaskQueueHandler.DebugLevel = level;

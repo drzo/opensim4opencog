@@ -17,7 +17,7 @@ namespace cogbot.Actions.Movement
 
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             int argsUsed;
             TheSimAvatar.StopMoving();

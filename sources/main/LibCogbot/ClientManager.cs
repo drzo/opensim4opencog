@@ -1652,7 +1652,11 @@ namespace cogbot
 
         private void SetIfPresent(object obj, string fname, object s)
         {
-            if (s != null) obj.GetType().GetField(fname).SetValue(obj, s);
+            FieldInfo info = obj.GetType().GetField(fname);
+            if (s != null && s.ToString() != "")
+            {
+                info.SetValue(obj, s);
+            }
         }
 
         private void LoadAcctsFromFile(string file)

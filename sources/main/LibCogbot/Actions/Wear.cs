@@ -15,24 +15,25 @@ namespace cogbot.Actions
         public Wear(BotClient Client)
             : base(Client)
         {
-            Description = @"<p>Same as right clicking and choosing 'replace outfit' in a normal client.</p>
+            Description =
+                @"<p>Same as right clicking and choosing 'replace outfit' in a normal client.</p>
 <p>See <a href='wiki/BotCommands#Inventory'>Inventory</a> for Inventory FormatException</p>
 <p>If the argument is a folder the entire folder is worn (but not items in contained folders).</p>
 <p>Adding 'nobake' doesn't rebake the avatar's textures.</p>";
-            Usage = "wear [nobake] /Clothing/Dance Party";
-            ParameterVersions = NamedParam.CreateParamVersions(
-                NamedParam.CreateParams(
-                   NamedParam.Optional("nobake", typeof(bool), "Do not rebake the avatar's textures"),
-                   "outfit", typeof(InventoryFolder), 
-                   "Folder of items to wear. See <a href='wiki/BotCommands#Inventory'>Inventory</a> for format."),
-                NamedParam.CreateParams(
-                   NamedParam.Optional("nobake", typeof(bool), "Do not rebake the avatar's textures"),
-                   "outfit", typeof(InventoryItem), 
-                   "Item to wear. See <a href='wiki/BotCommands#Inventory'>Inventory</a> for format.")
-               );
-            ResultMap = NamedParam.CreateParams(
-                 "message", typeof(string), "if success was false, the reason why",
-                 "success", typeof(bool), "true if outfit was worn");
+            Details = "wear [nobake] /Clothing/Dance Party";
+            ParameterVersions = CreateParamVersions(
+                CreateParams(
+                    Optional("nobake", typeof (bool), "Do not rebake the avatar's textures"),
+                    "outfit", typeof (InventoryFolder),
+                    "Folder of items to wear. See <a href='wiki/BotCommands#Inventory'>Inventory</a> for format."),
+                CreateParams(
+                    Optional("nobake", typeof (bool), "Do not rebake the avatar's textures"),
+                    "outfit", typeof (InventoryItem),
+                    "Item to wear. See <a href='wiki/BotCommands#Inventory'>Inventory</a> for format.")
+                );
+            ResultMap = CreateParams(
+                "message", typeof (string), "if success was false, the reason why",
+                "success", typeof (bool), "true if outfit was worn");
         }
 
         public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)

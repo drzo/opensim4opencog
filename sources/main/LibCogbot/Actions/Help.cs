@@ -13,12 +13,12 @@ namespace cogbot.Actions.System
             : base(Client)
         {
             Description = "Print help on everything, or help on a topic string. The full help text is searched for the string.";
-            Usage = Htmlize.Usage("help", "shows the overview of all commands") +
-                    Htmlize.Usage("help moveto", "shows overvierw and usage/examples on the moveto command");
-            Parameters = NamedParam.CreateParams(
-                    NamedParam.Optional("topic", typeof(string), "Optional text to search for."));
+            Details = AddUsage("help", "shows the overview of all commands") +
+                    AddUsage("help moveto", "shows overvierw and usage/examples on the moveto command");
+            Parameters = CreateParams(
+                    Optional("topic", typeof(string), "Optional text to search for."));
 
-            ResultMap = NamedParam.CreateParams(
+            ResultMap = CreateParams(
                  "message", typeof(string), "if success was false, the reason why",
                  "success", typeof(bool), "true if outfit was worn");
 
@@ -43,6 +43,17 @@ namespace cogbot.Actions.System
                 {
                     dictionary[action.Key] = action.Value;
                 } else
+                {
+                    dictionary.Add(action.Key, action.Value);
+                }
+            }
+            foreach (var action in ClientManager.groupActions)
+            {
+                if (dictionary.ContainsKey(action.Key))
+                {
+                    dictionary[action.Key] = action.Value;
+                }
+                else
                 {
                     dictionary.Add(action.Key, action.Value);
                 }

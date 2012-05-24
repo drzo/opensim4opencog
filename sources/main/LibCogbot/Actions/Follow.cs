@@ -19,11 +19,11 @@ namespace cogbot.Actions.Movement
             : base(Client)
         {
             Description = "Follow an avatar. This command is modeless.";
-            Usage = "<p>follow <avatar name></p>" +
+            Details = "<p>follow* <avatar name></p>" +
                     "<p>stop-following <avatar name>\"</p>";
             Category = CommandCategory.Movement;
-            Parameters = NamedParam.CreateParams("avatar", typeof(AgentSpec), "Avatar to follow");
-            ResultMap = NamedParam.CreateParams(
+            Parameters = CreateParams("avatar", typeof(AgentSpec), "Avatar to follow");
+            ResultMap = CreateParams(
                  "message", typeof(string), "if we could not follow, the reason why",
                  "success", typeof(bool), "true if we are following");
 

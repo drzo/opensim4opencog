@@ -14,11 +14,14 @@ namespace cogbot.Actions.Movement
         public ForwardCommand(BotClient client)
         {
             Name = "forward";
-            Description = "Sends the move forward command to the server for a single packet or a given number of seconds. Usage: forward [seconds]";
+            Description = "Sends the move forward command to the server for a single packet or a given number of seconds.";
+            Parameters =
+                CreateParams(Optional("seconds", typeof(TimeSpan), "timespan to move for"));
+            Details = AddUsage(Parameters, Description);
             Category = CommandCategory.Movement;
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length > 1)
                 return ShowUsage();// " forward [seconds]";

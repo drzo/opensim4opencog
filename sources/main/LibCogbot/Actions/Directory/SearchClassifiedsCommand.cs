@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -18,17 +18,17 @@ namespace cogbot.Actions.Search
         {
             Name = "searchclassifieds";
             Description = "Searches Classified Ads.";
-            Usage = Htmlize.Usage(Name + " [search text]", "searches " + Name.Replace("seaches", ""));
+            Details = AddUsage(Name + " [search text]", "searches " + Name.Replace("seaches", ""));
             Category = CommandCategory.Search;
             Parameters =
-                NamedParam.CreateParams("searchText", typeof (string), "what you are searching for");
-            ResultMap = NamedParam.CreateParams(
+                CreateParams("searchText", typeof (string), "what you are searching for");
+            ResultMap = CreateParams(
                 "result", typeof (List<string>), "search results",
                 "message", typeof (string), "if success was false, the reason why",
                 "success", typeof (bool), "true if command was successful");
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
                 return ShowUsage();// " searchclassifieds [search text]";

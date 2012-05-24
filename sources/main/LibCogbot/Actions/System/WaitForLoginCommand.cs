@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
@@ -18,21 +18,21 @@ namespace cogbot.Actions.System
             Name = "waitforlogin";
             Description = "Waits until bots that are currently attempting to login have succeeded or failed." + 
                 "If 'all' is included it waits for all bots. By default it waits only for the currently targeted bot.";
-            Usage = @"<p>waitforlogin  -   <i>time out after 10 sec</i></p>
+            Details = @"<p>waitforlogin  -   <i>time out after 10 sec</i></p>
 <p>waitforlogin 20  -  <i>time out after 20 sec</i></p>
 <p>waitforlogin all 20   - <i>wait up to 20 sec for all bots to log in</i></p>";
             Category = CommandCategory.BotClient;
-            Parameters = NamedParam.CreateParams(
-                NamedParam.Optional(
+            Parameters = CreateParams(
+                Optional(
                 "timeout", typeof(int), "max seconds to wait"),
-                NamedParam.Optional(
+                Optional(
                 "all", typeof(bool), "if true, wait for all bots"));
-            ResultMap = NamedParam.CreateParams(
+            ResultMap = CreateParams(
      "message", typeof(string), "if we timed out, who we're waiting for",
      "success", typeof(bool), "true if bots logged in");
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             int time = 10;
             if (args.Length > 0)

@@ -21,7 +21,7 @@ namespace cogbot.Actions.System
             Category = CommandCategory.BotClient;
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             int used = 0;
             if (args.Length == 0)

@@ -13,12 +13,13 @@ namespace cogbot.Actions.Movement
     {
         public SitCommand(BotClient testClient)
 		{
-			Name = "sit";
+			Name = "sitclose";
 			Description = "Attempt to sit on the closest prim";
+            AddVersion(CreateParams(), Description);
             Category = CommandCategory.Movement;
 		}
 			
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
 		{
             Primitive closest = null;
 		    double closestDistance = Double.MaxValue;

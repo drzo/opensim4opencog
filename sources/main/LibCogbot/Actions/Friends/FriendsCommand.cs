@@ -24,9 +24,9 @@ namespace cogbot.Actions.Friends
             // The name of the command
             Name = "Friends List";
             Description = "List avatar friends.";
-            Usage = Htmlize.Usage(Name, Description);
+            Details = AddUsage(Name, Description);
             Category = CommandCategory.Friends;
-            Parameters = NamedParam.CreateParams();
+            Parameters = CreateParams();
         }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace cogbot.Actions.Friends
         /// <param name="fromAgentID">The <seealso cref="OpenMetaverse.UUID"/> 
         /// of the agent making the request</param>
         /// <returns></returns>
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             // initialize a StringBuilder object used to return the results
             return Success(ListFriends(Client));

@@ -17,8 +17,8 @@ namespace cogbot.Actions.System
 " Many things happen asynchronously. Each asynch activity is represented by a 'task'. These tasks are" +
 " processed from task queues. This command displays the status of the queues. It is mostly useful for debugging" +
 " cogbot itself, but can also be useful for understanding bot performance.";
-            Usage = Htmlize.Usage("tasks", "show the task queue statuses");
-            Parameters = NamedParam.CreateParams();
+            Details = AddUsage("tasks", "show the task queue statuses");
+            Parameters = CreateParams();
 
             Category = CommandCategory.BotClient;
         }

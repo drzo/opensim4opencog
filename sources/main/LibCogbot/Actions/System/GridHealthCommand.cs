@@ -24,13 +24,12 @@ namespace cogbot.Actions.Land
         {
             Name = "gridhealth";
             Description = "Runs a TP check to make sure ALL sims are useable on the grid.";
-            Usage = Htmlize.Usage("gridhealth [regionhandle]", "test health of one or all regions");
-            Parameters = NamedParam.CreateParams(
-                NamedParam.Optional("regionhandle", typeof(UUID), "UUID of region handle"));
+            AddVersion(CreateParams(Optional("regionhandle", typeof(UUID), "UUID of region handle")),
+                     "test health of one or all regions");
             Category = CommandCategory.Simulator;
           
             RegisterGridHandler();
-            TheBotClient.WorldSystem.OnConnectedQueue.Enqueue("gridhealth", MakeGridRequest);
+            //TheBotClient.WorldSystem.OnConnectedQueue.Enqueue("gridhealth", MakeGridRequest);
         }
 
         private void MakeGridRequest()
@@ -41,7 +40,7 @@ namespace cogbot.Actions.Land
             Client.Grid.RequestMapBlocks(GridLayerType.Objects, 0, 0, 65535, 65535, false);
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             MakeGridRequest();
             var regions = LockInfo.CopyOf(Regions);

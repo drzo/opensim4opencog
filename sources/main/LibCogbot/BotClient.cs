@@ -674,9 +674,9 @@ namespace cogbot
             RegisterCommand("setmaster", new cogbot.Actions.System.SetMasterKeyCommand(this));
             RegisterCommand("setmasterkey", new cogbot.Actions.System.SetMasterKeyCommand(this));
 			RegisterCommand("sit", new Sit(this));
-			RegisterCommand("stand", new Stand(this));
+			RegisterCommand("stand", new StandCommand(this));
 			RegisterCommand("jump", new Jump(this));
-			RegisterCommand("crouch", new Crouch(this));
+			RegisterCommand("crouch", new CrouchCommand(this));
 			RegisterCommand("mute", new Mute(this));
 			RegisterCommand("unmute", new Unmute(this));
 			RegisterCommand("move", new Move(this));
@@ -3129,17 +3129,6 @@ namespace cogbot
         Group = 0x04,
         /// <summary>Ignore like for bots and users we dont chat with</summary>
         Ignore = 0x80
-    }
-
-    public class CmdRequest
-    {
-        public UUID CallerAgent;
-        public OutputDelegate Output;
-        private IDictionary<string, object> Results;
-        public CmdRequest(UUID caller)
-        {
-            CallerAgent = caller;
-        }
     }
 
 }

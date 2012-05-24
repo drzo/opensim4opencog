@@ -21,13 +21,13 @@ namespace cogbot.Actions.Pathfinder
 
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             int argcount;
             bool asLocal = false;
             if (args.Length > 1 && args[0] == "local")
             {
-                args = Parser.SplitOff(args, 1);
+                args = args.AdvanceArgs(1);
                 asLocal = true;
             }
             SimPosition pos = WorldSystem.GetVector(args, out argcount);
@@ -35,7 +35,7 @@ namespace cogbot.Actions.Pathfinder
             {
                 return Failure(String.Format("Cannot {0} to {1}", Name, String.Join(" ", args)));
             }
-            args = Parser.SplitOff(args, argcount);
+            args = args.AdvanceArgs(argcount);
             Vector3d from, to;
             SimPosition pos2 = WorldSystem.GetVector(args, out argcount);
             if (pos2 == null)

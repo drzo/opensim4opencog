@@ -14,12 +14,12 @@ namespace cogbot.Actions.System
 		{
 			Name = "quit";
 			Description = "Log all avatars out and shut down";
-            Usage = Htmlize.Usage("quit", "log out all avatars and shut down");
-            Parameters = NamedParam.CreateParams();
+            Details = AddUsage("quit", "log out all avatars and shut down");
+            Parameters = CreateParams();
             Category = CommandCategory.BotClient;
 		}
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             // This is a dummy command. Calls to it should be intercepted and handled specially
             CmdResult r = Success("This command should not be executed directly");

@@ -22,12 +22,12 @@ namespace cogbot.Actions.Land
             }
             usage = usage.TrimEnd(new char[] { ',' });
             usage += "]";
-            Usage = usage;
+            Details = usage;
             Category = CommandCategory.Objects;
             Parameters = new[] { new NamedParam(typeof(Tree), typeof(Tree)), new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
 		{
 		    if (args.Length > 0)
 		    {

@@ -15,7 +15,7 @@ namespace cogbot.Actions.Movement
             Name = "waitpos";
             Description = "Block until the robot gets to a certain position for a certain maxwait";
             Category = cogbot.Actions.CommandCategory.Movement;
-            Usage = "waitpos seconds <x,y,z>";
+            Details = "waitpos seconds <x,y,z>";
             Parameters = new[]
                              {
                                  new NamedParam("seconds", typeof (TimeSpan), typeof (float)),
@@ -24,7 +24,7 @@ namespace cogbot.Actions.Movement
 
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 2)
                 return ShowUsage();
@@ -37,7 +37,7 @@ namespace cogbot.Actions.Movement
             }
             else
             {
-                args = Parser.SplitOff(args, 1);
+                args = args.AdvanceArgs(1);
             }
             SimPosition pos = WorldSystem.GetVector(args, out argcount);
             if (pos == null)

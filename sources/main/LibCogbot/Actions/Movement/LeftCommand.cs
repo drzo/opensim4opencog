@@ -14,11 +14,14 @@ namespace cogbot.Actions.Movement
         public LeftCommand(BotClient client)
         {
             Name = "left";
-            Description = "Sends the move left command to the server for a single packet or a given number of seconds. Usage: left [seconds]";
+            Description = "Sends the move left command to the server for a single packet or a given number of seconds.";
+            Parameters =
+                CreateParams(Optional("seconds", typeof(TimeSpan), "timespan to move for"));
+            Details = AddUsage(Parameters, Description);
             Category = CommandCategory.Movement;
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length > 1)
                 return ShowUsage();// " left [seconds]";

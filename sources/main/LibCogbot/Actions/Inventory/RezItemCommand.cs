@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -18,11 +18,12 @@ namespace cogbot.Actions.Inventory.Shell
         {
             Name = "rezitem";
             Description = "Rezs items from the current working directory to an avatar.";
-            Usage = "rezitem [avatar5,prev,sim/123/232/23@360] <item1> [item2] [item3] [...]";
+            Details = "rezitem [avatar5,prev,sim/123/232/23@360] <item1> [item2] [item3] [...]";
             Category = CommandCategory.Inventory;
         }
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args0)
         {
+            var args = args0.tokens;
             if (args.Length < 2)
             {
                 return ShowUsage();// "rezitem [avatar5,prev,sim/123/232/23@360] "fairyverse Goodies" [item2] [item3] [...]";

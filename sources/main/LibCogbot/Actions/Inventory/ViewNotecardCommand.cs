@@ -20,7 +20,7 @@ namespace cogbot.Actions.Inventory
         {
             Name = "viewnote";
             Description = "Downloads and displays a notecard asset";
-			Usage = "viewnote [notecard asset uuid]";
+			Details = "viewnote [notecard asset uuid]";
             Category = CommandCategory.Inventory;
         }
 
@@ -30,7 +30,7 @@ namespace cogbot.Actions.Inventory
         /// <param name="args"></param>
         /// <param name="fromAgentID"></param>
         /// <returns></returns>
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
 
             if (args.Length < 1)

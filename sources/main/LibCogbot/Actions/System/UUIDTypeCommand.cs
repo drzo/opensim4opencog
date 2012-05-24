@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,17 +20,17 @@ namespace cogbot.Actions.Search
 @"(setj  ClientManager:DownloadTextures True)
 (setj SimAssetStore:EnableDownloadAssetDefault  True)" +
 "</pre><p>in botconfig.xml</p>";
-            Usage = Htmlize.Usage("uuidtype <uuid>", "print what sort of  this UUID is") +
-                Htmlize.Example("/uuidtype  3a3e92ed-a94f-46dc-9f92-88c790b5701e",
+            Details = AddUsage("uuidtype <uuid>", "print what sort of  this UUID is") +
+                Example("/uuidtype  3a3e92ed-a94f-46dc-9f92-88c790b5701e",
 @"[12:54] UUID=3a3e92ed-a94f-46dc-9f92-88c790b5701e is of Type='cogbot.TheOpenSims.SimAnimation' toString='3a3e92ed-a94f-46dc-9f92-88c790b5701e NODATA'
 [12:54] UUID Type: Success: Done with UUID 3a3e92ed-a94f-46dc-9f92-88c790b5701e obj= 3a3e92ed-a94f-46dc-9f92-88c790b5701e NODATA
 [12:54] UUID Type: Success: Done with UUID 3a3e92ed-a94f-46dc-9f92-88c790b5701e obj= 3a3e92ed-a94f-46dc-9f92-88c790b5701e NODATA");
-            Parameters = NamedParam.CreateParams("uuid", typeof(UUID), "uuid to resolve to type");
-            ResultMap = NamedParam.CreateParams("description", typeof(string), "string, usually the C# type name");
+            Parameters = CreateParams("uuid", typeof(UUID), "uuid to resolve to type");
+            ResultMap = CreateParams("description", typeof(string), "string, usually the C# type name");
             Category = CommandCategory.BotClient;
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1) return ShowUsage();
             UUID uuid = UUID.Zero;

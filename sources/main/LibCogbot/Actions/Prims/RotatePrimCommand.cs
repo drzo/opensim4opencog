@@ -16,7 +16,7 @@ namespace cogbot.Actions.Objects
             Category = CommandCategory.Objects;
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
 
             if (args.Length < 2)
@@ -24,7 +24,7 @@ namespace cogbot.Actions.Objects
 
             int used;
             List<SimObject> PS = WorldSystem.GetPrimitives(args, out used);
-            if (IsEmpty(PS)) return Failure("Cannot find prim: " + string.Join(" ", args));
+            if (IsEmpty(PS)) return Failure("Cannot find prim: " + args.str);
             string[] to = Parser.SplitOff(args, used);
 
             Quaternion aPos;

@@ -24,10 +24,10 @@ namespace cogbot.Actions.System
                                             clear,
                                                               +*,
              * */
-            Usage = "log ui -simmesh";
+            Details = "log ui -simmesh";
             Category = CommandCategory.BotClient;
         }
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             int start = 0;
             string fname = "UI";

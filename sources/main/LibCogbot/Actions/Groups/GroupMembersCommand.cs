@@ -25,11 +25,11 @@ namespace cogbot.Actions.Groups
             Name = "groupmembers";
             Description = "Dump group members to console.";
             Category = CommandCategory.Groups;
-            Usage = Htmlize.Usage(Name + " group", Description);
-            Parameters = NamedParam.CreateParams("group", typeof(Group), "group you are going to see " + Name);
+            Details = AddUsage(Name + " group", Description);
+            Parameters = CreateParams("group", typeof(Group), "group you are going to see " + Name);
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
                 return ShowUsage();

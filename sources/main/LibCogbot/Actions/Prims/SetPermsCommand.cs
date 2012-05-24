@@ -29,12 +29,12 @@ namespace cogbot.Actions.Objects
             Name = "setperm";
             Description = "Recursively changes all of the permissions for child and task inventory objects.";
             Category = CommandCategory.Security;
-            Usage = "Usage: setperms prim-spec [A][O][G][E][N] [+/-all] [+/-copy] [+/-mod] [+/-xfer] [task] [group [deed] group-spec] [incr]";
+            Details = "Usage: setperms prim-spec [A][O][G][E][N] [+/-all] [+/-copy] [+/-mod] [+/-xfer] [task] [group [deed] group-spec] [incr]";
             // setperms $all A +all who E -all +copy deed group Logicmoo
             // 
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             //opensim drew this line because of clients might be hardcoded to only support 255? or was this trying to copy linden?
             try
@@ -60,7 +60,7 @@ namespace cogbot.Actions.Objects
                     return ShowUsage();
 
                 List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
-                if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
+                if (IsEmpty(PS)) return Failure("Cannot find objects from " + args.str);
 
                 PermissionWho who = 0;
 

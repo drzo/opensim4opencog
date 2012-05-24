@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -29,9 +29,9 @@ namespace cogbot.Actions.External
         {
             Name = "ShellExec";
             Description = "Do an shell exec to filename";
-            Usage = Htmlize.Usage(Name + " filename", Description);
+            Details = AddUsage(Name + " filename", Description);
             Category = CommandCategory.Simulator;
-            Parameters = NamedParam.CreateParams("filename", typeof(string), "filename to " + Name);
+            Parameters = CreateParams("filename", typeof(string), "filename to " + Name);
         }
         public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
@@ -14,8 +14,8 @@ namespace cogbot.Actions
         {
             Name = "Logout";
             Description = "Logout from grid";
-            Usage = Htmlize.Usage("logout", "logout the targeted bot");
-            Parameters = NamedParam.CreateParams();
+            Details = AddUsage("logout", "logout the targeted bot");
+            Parameters = CreateParams();
 
             Category = CommandCategory.BotClient;
             Parameters = new[] { new NamedParam(typeof(GridClient), null) };

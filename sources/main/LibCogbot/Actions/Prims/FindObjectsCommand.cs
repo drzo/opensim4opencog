@@ -34,7 +34,7 @@ namespace cogbot.Actions.Search
         }
 
         #endregion
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             Client.Objects.ObjectProperties += new EventHandler<ObjectPropertiesEventArgs>(Objects_OnObjectProperties);
             // *** parse arguments ***

@@ -19,13 +19,13 @@ namespace cogbot.Actions.Movement
             : base(Client)
         {
             Description = "Sit on the ground or on an object. Sit with no params sits on the ground.";
-            Usage = "<p>sit</p><p>sit on &lt;primspec&gt;</p><p>example: sit   <i>sit on ground</i></p><p>example: sit on chair</p>";
-            ParameterVersions = NamedParam.CreateParamVersions(
-               NamedParam.CreateParams(),
-               NamedParam.CreateParams(
+            Details = "<p>sit</p><p>sit on &lt;primspec&gt;</p><p>example: sit   <i>sit on ground</i></p><p>example: sit on chair</p>";
+            ParameterVersions = CreateParamVersions(
+               CreateParams(),
+               CreateParams(
                    "on", typeof(PrimSpec),
                    "The object to sit on, as specified in <a href='wiki/BotCommands#PrimSpec'>Prim Spec</a>"));
-            ResultMap = NamedParam.CreateParams(
+            ResultMap = CreateParams(
                  "message", typeof(string), "if success was false, the reason why",
                  "success", typeof(bool), "true if we sat");
             Parameters = new[] { new NamedParam("location", typeof(SimPosition), typeof(SimPosition)) };
