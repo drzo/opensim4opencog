@@ -342,6 +342,13 @@
 			ReferencedProjectIdentifier="{79A1FD8D-D6BF-4583-BD6C-C532293728CC}"
 			RelativePathToProject=".\sources\main\SWICLITestDLL\SWICLITestDLL.csproj"
 		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{881E780E-83A0-4562-A86F-9C681CBBFB0C}"
+			CopyLocal="false"
+			CopyLocalDependencies="false"
+			CopyLocalSatelliteAssemblies="false"
+			RelativePathToProject=".\sources\main\Cogbot\Cogbot.csproj"
+		/>
 	</References>
 	<Files>
 		<Filter

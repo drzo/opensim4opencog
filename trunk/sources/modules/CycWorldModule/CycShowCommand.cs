@@ -16,7 +16,7 @@ namespace CycWorldModule
             Name = "CycShow";
             Parameters = new []{ new NamedParam("uri",typeof(SimObject), typeof(UUID))};
         }
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             int argsUsed;
             List<SimObject> target = WorldSystem.GetPrimitives(args, out argsUsed);

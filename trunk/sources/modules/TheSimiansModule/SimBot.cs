@@ -1,4 +1,4 @@
-﻿using cogbot;
+using cogbot;
 using cogbot.Actions;
 using cogbot.TheOpenSims;
 using MushDLR223.ScriptEngines;
@@ -20,7 +20,7 @@ namespace TheSimiansModule
             }
             Name = "simbot";
             Description = "Start theOpenSims type AI.";
-            Usage = "simbot [on|start|stop|off|think|needs|info|load]";
+            Details = "simbot [on|start|stop|off|think|needs|info|load]";
         }
 
         public SimThinker Thinker
@@ -37,7 +37,7 @@ namespace TheSimiansModule
            //set { _thinker = value; }
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (_thinker==null)
             {
@@ -113,7 +113,7 @@ namespace TheSimiansModule
                     return Success("(Re)Loaded " + args[1]);
                 }
             }
-            return Failure(Usage);
+            return Failure(Details);
         }
 
         private SimThinker GetSimAvatar()

@@ -53,6 +53,7 @@ namespace MushDLR223.ScriptEngines
         {
             memberTarget = null;
             IsOptional = false;
+            IsRest = false;
             Comment = null;
             _key = ToKey(k);
             _value = v;
@@ -61,18 +62,11 @@ namespace MushDLR223.ScriptEngines
             info = null;
             checkKey(k);
         }
-        
+
         private NamedParam(string k, Type v)
+            : this(k, (object)null)
         {
-            memberTarget = null;
-            IsOptional = false;
-            Comment = null;           
-            _key = ToKey(k);
-            _value = null;
             _Type = v;
-            Choices = null;
-            info = null;
-            checkKey(k);
         }
 
         /// <summary>
@@ -82,16 +76,9 @@ namespace MushDLR223.ScriptEngines
         /// <param name="type"></param>
         /// <param name="v"></param>
         public NamedParam(KeyType k, Type type, Type v)
+            : this(k, (object)v)
         {
-            memberTarget = null;
-            IsOptional = false;
-            Comment = null;          
-            _key = ToKey(k);
-            _value = v;
             _Type = type;
-            Choices = null;
-            info = null;
-            checkKey(k);
         }
 
         private static void checkKey(object o)
@@ -112,15 +99,11 @@ namespace MushDLR223.ScriptEngines
         /// <param name="type"></param>
         /// <param name="v"></param>
         public NamedParam(object target, MemberInfo inf, KeyType k, Type type, object v)
+            : this(k, (object)v)
         {
             memberTarget = target;
-            IsOptional = false;
-            Comment = null;
             info = inf;
-            _key = ToKey(k);
-            _value = v;
             _Type = type ?? FieldType(inf);
-            Choices = null;
             checkKey(k);
         }
 
@@ -132,12 +115,8 @@ namespace MushDLR223.ScriptEngines
         /// <param name="v"></param>
         /// <param name="choices"></param>
         public NamedParam(KeyType k, Type type, object v, params object[] choices)
+            : this(k, (object)v)
         {
-            memberTarget = null;
-            IsOptional = false;
-            Comment = null;
-            _key = ToKey(k);
-            _value = v;
             _Type = type;
             Choices = choices;
             info = null;
@@ -186,6 +165,7 @@ namespace MushDLR223.ScriptEngines
         public object memberTarget;
         public string Comment;
         public bool IsOptional;
+        public bool IsRest;
 
         /// <summary>
         /// Used for constructing Cyc-like functions
@@ -196,6 +176,7 @@ namespace MushDLR223.ScriptEngines
         {
             memberTarget = param.memberTarget;
             IsOptional = false;
+            IsRest = false;
             Comment = null;
             _Type = param._Type;
             _value = o;
@@ -213,6 +194,7 @@ namespace MushDLR223.ScriptEngines
         {
             memberTarget = null;
             IsOptional = false;
+            IsRest = false;
             Comment = null;
             _Type = type;
             _value = NullType.GetNullType(DataType);
@@ -379,7 +361,6 @@ namespace MushDLR223.ScriptEngines
                 return;
             }
         }
-
         public static NamedParam[] CreateParams(params object[] paramz)
         {
             List<NamedParam> paramsz = new List<NamedParam>();
@@ -389,12 +370,12 @@ namespace MushDLR223.ScriptEngines
                 var o = paramz[i++];
                 if (o is NamedParam)
                 {
-                    paramsz.Add((NamedParam) o);
+                    paramsz.Add((NamedParam)o);
                     continue;
                 }
                 if (o is string)
                 {
-                    string k = (string) o;
+                    string k = (string)o;
                     Type t = paramz[i++] as Type;
                     string comment = "" + paramz[i++];
                     NamedParam namedParam = new NamedParam(k, t);
@@ -414,6 +395,17 @@ namespace MushDLR223.ScriptEngines
             namedParam.Comment = description;
             namedParam.IsOptional = true;
             return namedParam;
+        }
+        public static NamedParam Rest(string name, Type type, string description)
+        {
+            NamedParam namedParam = new NamedParam(name, type);
+            namedParam.Comment = description;
+            namedParam.IsOptional = true;
+            return namedParam;
+        }
+        public static string Usage(String cmdname, NamedParam[] parameters, string description)
+        {
+            throw new NotImplementedException();
         }
     }
 }

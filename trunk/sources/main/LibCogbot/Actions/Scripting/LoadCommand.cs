@@ -17,7 +17,7 @@ namespace cogbot.Actions.System
         public LoadCommand(BotClient testClient)
         {
             Name = "load";
-            Description = "Loads commands from a dll. (Usage: load AssemblyNameWithoutExtension)";
+            Description = "Loads commands from a dll.";
             Category = CommandCategory.BotClient;
             AddUsage(CreateParams("assembly", typeof (string), "filename to " + Name), Description);
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;

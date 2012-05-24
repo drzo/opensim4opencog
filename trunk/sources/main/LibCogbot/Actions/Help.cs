@@ -26,7 +26,7 @@ namespace cogbot.Actions.System
             Name = "help";
         }
 
-        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             string mustHave = ": "; // everything
             bool detailed = false;

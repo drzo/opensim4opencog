@@ -32,6 +32,11 @@ namespace cogbot.Listeners
             return tryGetPrim(Parser.ParseArguments(str), out prim, out argsUsed);
         }
 
+        internal bool tryGetPrim(CmdRequest args, out SimObject prim, out int argsUsed)
+        {
+            return tryGetPrim(args.tokens, out prim, out argsUsed);
+        }
+
         public bool tryGetPrim(string[] splitted, out SimObject prim, out int argsUsed)
         {
             if (splitted == null || splitted.Length == 0)
@@ -416,7 +421,38 @@ namespace cogbot.Listeners
             }
         }
 
+        public delegate T StringParserMethod<T>(string[] args, out int argsUsed);
+        static Dictionary<string, List<SimObject>> GetPrimsCache = new Dictionary<string, List<SimObject>>();
         public List<SimObject> GetPrimitives(string[] args, out int argsUsed)
+        {
+            return WithCache(args, out argsUsed, GetPrimsCache, GetPrimitives0);
+        }
+        public T WithCache<T>(string[] args, out int argsUsed, Dictionary<string, T> cache, StringParserMethod<T> GetPrimitives0)
+        {
+            if (args.Length > 0)
+            {
+                T ret;
+
+                lock (cache)
+                {
+                    if (cache.TryGetValue(args[0], out ret))
+                    {
+                        argsUsed = 1;
+                        return (T)ret;
+                    }
+                }
+            }
+            var val = GetPrimitives0(args, out argsUsed);
+            if (argsUsed == 1)
+            {
+                lock (cache)
+                {
+                    cache[args[0]] = val;           
+                }
+            }
+            return val;
+        }
+        public List<SimObject> GetPrimitives0(string[] args, out int argsUsed)
         {
             var prims = new List<SimObject>();
             if (args.Length == 0)
