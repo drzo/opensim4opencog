@@ -1,0 +1,29 @@
+#Description of (planned) classifier module
+
+= Introduction =
+
+OpenSim/SL is an object oriented system, where assets are immutable and identified by UUID's.
+
+Bots need a way to classify assets -  "this is brick", "this is concrete", "this is a fire particle". Classification is, largely, recognition.  I go into a room and want to sit down, I classify that brownish smudge as a seat, I am ready to use an ontology and a planner to form a plan to sit on the seat.
+
+
+= Architecture =
+
+Classification is a two step process. 
+
+First the actual image data is analyzed by a SalientFeatureExtractor and a SalientVector produced. This is a representation of a set of features of the asset. There can be one SalientVector per asset per SalientFeatureExtractor subclass.  It's expected that for a while there will only be one SalientFeatureExtractor subclass.
+
+The SalientVector is then cached in a database, so it never need be computed again.  The database can be common to many users of cogbot.
+A small server provides a REST interface for querying and adding to the SalientVector tables. DOUG - or should this be in the ontology?
+
+At runtime the SalientVector is then classified by a Classifier, which returns the final classification. This classification occurs on much less data, so should be quick. The final Classification object is returned to the external system.
+
+http://cogbot.logicmoo.com/assetclassifiers.png
+
+= Interaction with the rest of Cogbot =
+
+Because this is a streaming system, all calls are async.
+
+TODO - decide how that works with, for example, AIML matching.  
+
+TODO - decide the syntax of how this stuff gets into botcmd/AIML/whatever
