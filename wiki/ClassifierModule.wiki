@@ -14,11 +14,37 @@ Classification is a two step process.
 First the actual image data is analyzed by a SalientFeatureExtractor and a SalientVector produced. This is a representation of a set of features of the asset. There can be one SalientVector per asset per SalientFeatureExtractor subclass.  It's expected that for a while there will only be one SalientFeatureExtractor subclass.
 
 The SalientVector is then cached in a database, so it never need be computed again.  The database can be common to many users of cogbot.
-A small server provides a REST interface for querying and adding to the SalientVector tables. DOUG - or should this be in the ontology?
+A small server provides a REST interface for querying and adding to the SalientVector tables.
 
 At runtime the SalientVector is then classified by a Classifier, which returns the final classification. This classification occurs on much less data, so should be quick. The final Classification object is returned to the external system.
 
 http://cogbot.logicmoo.com/assetclassifiers.png
+
+= SalientVector by type =
+
+== Image ==
+
+Colors are 8 bit, 0-255, as is alpha
+
+'transparent' is alpha < 0.5
+
+ * mean color, rgba
+ * modal color, rgba, where the modal buckets are per-pixel, not per-channel
+ * % (0-255 mapped) of pixels that are transparent
+ * % (0-255 mapped) of edge pixels that are transparent
+ * RMS error of color channels across the horizontal wrap boundary
+ * RMS error of color channels across the vertical wrap boundary
+ * known names
+ * float proportion of pixels that are adjacent to an edge between transparent and opaque
+ * Number of horizontal lines by hough --> masking --> blob analysis
+ * Number of vertical lines by hough --> masking --> blob analysis
+ * Number of diagonal lines by hough --> masking --> blob analysis
+ * greatest number of transitions of color of > n tracing along the Hough line
+ * circular hough score (float)
+ * float proportion of pixels that are edges by Canny
+ * topology tree of transparent/nontransparent areas
+
+= The Server =
 
 = Interaction with the rest of Cogbot =
 
