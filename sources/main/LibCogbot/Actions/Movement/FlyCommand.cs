@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
@@ -10,27 +11,51 @@ namespace cogbot.Actions.Movement
         public FlyCommand(BotClient testClient)
         {
             Name = "fly";
-            Description = "Starts or stops flying. Usage: fly [start/stop]";
-            Category = CommandCategory.Movement;
+            Description = "Makes the avatar fly";
+            AddVersion(CreateParams(Optional("stop", typeof(bool), "if true stops flying")), "start flying unless stop is specified, Bot will fall if not near ground");
+            AddVersion(CreateParams("up", typeof(bool), ""),
+                       "increase height by about 50 meters (one second key press), or jump if on ground");
+            AddVersion(CreateParams("down", typeof(bool), ""),
+                       "decrease height by about 50 meters (one second key press). Will not auto-land");
+            ResultMap = CreateParams(
+                 "message", typeof(string), "if success was false, the reason why",
+                 "success", typeof(bool), "true if we flew");
         }
 
-        public override CmdResult ExecuteRequest(CmdRequest args)
+        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
         {
-            bool start = true;
+            //  base.acceptInput(verb, args);
 
-            if (args.Length == 1 && args[0].ToLower() == "stop")
-                start = false;
-
-            if (start)
+            Client.describeNext = true;
+            if (args.str == "stop")
             {
-                Client.Self.Fly(true);
-                return Success("Started flying");
+                Client.Self.Fly(false);
+                return Success("stopped flying");
+            }
+            if (args.str == "up")
+            {
+                Client.Self.Movement.UpPos = true;
+                Client.Self.Movement.SendUpdate(true);
+                Thread.Sleep(1000);
+                Client.Self.Movement.UpPos = false;
+                Client.Self.Movement.SendUpdate(true);
+                return Success("flew up");
+            }
+            else if (args.str == "down")
+            {
+                Client.Self.Movement.UpNeg = true;
+                Client.Self.Movement.SendUpdate(true);
+                Thread.Sleep(1000);
+                Client.Self.Movement.UpNeg = false;
+                Client.Self.Movement.SendUpdate(true);
+                return Success("flew down");
             }
             else
             {
-                Client.Self.Fly(false);
-                return Success("Stopped flying");
+                Client.Self.Fly(true);
+                return Success("now flying");
             }
+
         }
     }
 }
