@@ -682,8 +682,6 @@ namespace cogbot
 			RegisterCommand("move", new Move(this));
 			RegisterCommand("use", new Use(this));
 			RegisterCommand("eval", new Eval(this));
-			RegisterCommand("fly", new Fly(this));
-			RegisterCommand("stop-flying", new StopFlying(this));
 			RegisterCommand("wear", new Wear(this));
 
             Commands["locate"] = Commands["location"] = Commands["where"] = newCommandInfo(new Actions.Movement.LocationCommand(this));
