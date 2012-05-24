@@ -21,8 +21,9 @@ namespace cogbot.Actions.System
         }
         internal frmMain PanelGUI;
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args0)
         {
+            var args = args0.tokens;
             if (args==null || args.Length==0) args =new []{"show"};
             if (PanelGUI == null)
             {

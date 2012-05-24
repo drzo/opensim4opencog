@@ -267,12 +267,12 @@ namespace cogbot.Actions
                 value = value.Trim().Replace("Usage:", " ").Replace("usage:", " ").Replace("Use:", " ").Trim();
                 if (string.IsNullOrEmpty(usageString))
                 {
-                    usageString = value;
+                    usageString = value + "<br/>";
                     return;
                 }
                 if (!usageString.Contains(value))
                 {
-                    usageString += value;
+                    usageString += value + "<br/>";
                 }
             }
         }
@@ -342,9 +342,17 @@ namespace cogbot.Actions
 
         private OutputDelegate _writeLine;
         public UUID CallerID = UUID.Zero;
-        public OutputDelegate WriteLine
+        protected void WriteLine(string s, params object[] args)
         {
-            get
+            if (s == null) return;
+            var news = DLRConsole.SafeFormat(s, args);
+            news = news.Replace("<p>", "<br>").Replace("<br/>", "<br>").Replace("<br>", "\r\n").Replace("</p>", " ").
+                Replace("&lt;", "<").Replace("&gt;", ">");
+            WriteLineDelegate(news);
+        }
+        public OutputDelegate WriteLineDelegate
+        {
+            private get
             {
                 if (_writeLine == null)
                 {
@@ -387,7 +395,7 @@ namespace cogbot.Actions
            // Parameters = CreateParams("stuff", typeof (string), "this command is missing documentation!");
 
             _mClient = bc;
-            WriteLine = StaticWriteLine;
+            WriteLineDelegate = StaticWriteLine;
             Name = GetType().Name.Replace("Command", "");
             if (!(this is BotCommand))
             {
@@ -429,7 +437,7 @@ namespace cogbot.Actions
         public virtual CmdResult acceptInput(string verb, Parser args, OutputDelegate writeLine)
         {
             success = failure = 0;
-            WriteLine = writeLine;
+            WriteLineDelegate = writeLine;
             try
             {
                 Results.Clear();
@@ -539,13 +547,13 @@ namespace cogbot.Actions
             Results.Clear();
             CallerID = callerID;
             success = failure = 0;
-            this.WriteLine = writeLine;
+            this.WriteLineDelegate = writeLine;
             return acceptInput(verb, Parser.ParseArgs(args), writeLine);
         }
             
         public virtual CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
-            this.WriteLine = WriteLine;
+            this.WriteLineDelegate = WriteLine;
             CallerID = fromAgentID;
             return ExecuteRequest(new CmdRequest(args, fromAgentID, WriteLine, this));
         }
@@ -555,8 +563,8 @@ namespace cogbot.Actions
             Results.Clear();
             CallerID = args.CallerAgent;
             success = failure = 0;
-            var wlpre = this.WriteLine;
-            this.WriteLine = args.Output;
+            var wlpre = this.WriteLineDelegate;
+            this.WriteLineDelegate = args.Output;
             Parser p = args;
             p.tokens = args.tokens;
             try
@@ -565,7 +573,7 @@ namespace cogbot.Actions
             }
             finally
             {
-                WriteLine = wlpre;
+                WriteLineDelegate = wlpre;
             }
         }
 
@@ -573,7 +581,7 @@ namespace cogbot.Actions
         {
             CallerID = fromAgentID;
             success = failure = 0;
-            this.WriteLine = writeLine;
+            this.WriteLineDelegate = writeLine;
             Parser p = Parser.ParseArgs(String.Join(" ", args));
             p.tokens = args;
             try
@@ -859,14 +867,18 @@ namespace cogbot.Actions
 
         protected string AddUsage(string example, string comment)
         {
-            string idea = "<p>" + Htmlize.NoEnts(Name + " " + example) + "<i>" + Htmlize.NoEnts(comment) + "</i></p>";
+            if (!example.ToLower().Contains(Name.ToLower()))
+            {
+                example = Name + " " + example;
+            }
+            string idea = "<p>" + Htmlize.NoEnts(example) + "  <i>" + Htmlize.NoEnts(comment) + "</i></p>";
             Details = idea;
             return idea;
         }
 
         protected static string Example(string typed, string output)
         {
-            return "<p><pre>" + Htmlize.NoEnts(typed) + "</pre></p>Returns<p><pre>" + Htmlize.NoEnts(output) + "</pre></p>";
+            return "<p><pre>" + Htmlize.NoEnts(typed) + "</pre><br>Returns<br><pre>" + Htmlize.NoEnts(output) + "</pre></p>";
         }
 
         protected void AddVersion(NamedParam[] paramSpec, string comment)

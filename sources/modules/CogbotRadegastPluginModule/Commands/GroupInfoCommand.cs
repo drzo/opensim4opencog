@@ -21,7 +21,7 @@ namespace cogbot.Actions.Groups
             Parameters = new[] { new NamedParam(typeof(Group), typeof(UUID)) };
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
                 return ShowUsage();

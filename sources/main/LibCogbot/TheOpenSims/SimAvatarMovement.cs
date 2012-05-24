@@ -386,10 +386,10 @@ namespace cogbot.TheOpenSims
         public static int MaxWideOpens = 5;
 
         public static string AnimationSpeed0 = "stand1";
-        public static string AnimationSpeed1 = "clap";
-        public static string AnimationSpeed2 = "crouchwalk";
-        public static string AnimationSpeed3 = "crouchwalk";
-        public static string AnimationSpeed4 = "crouchwalk";
+        public static string AnimationSpeed1 = "crouchwalk";
+        public static string AnimationSpeed2 = AnimationSpeed1;
+        public static string AnimationSpeed3 = AnimationSpeed2;
+        public static string AnimationSpeed4 = AnimationSpeed3;
         private void TrackerLoop()
         {
             int wideOpens = MaxWideOpens;

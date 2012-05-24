@@ -24,7 +24,7 @@ namespace TheSimiansModule
         {
             Name = "parrot";
             Description = "Make a bot parrot all actions by another avatar.";
-            Usage = "parrot [touch/sit/uses/effects/move/anims/all [off]] Avatar Name";
+            Details = "parrot [touch/sit/uses/effects/move/anims/all [off]] Avatar Name";
         }
 
         public SimParrotActor Thinker
@@ -41,7 +41,7 @@ namespace TheSimiansModule
             //set { _thinker = value; }
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (_thinker == null)
             {
@@ -129,7 +129,7 @@ namespace TheSimiansModule
                     return Success("(Re)Loaded " + args[1]);
                 }
             }
-            return Failure(Usage);
+            return Failure(Details);
         }
 
         private SimParrotActor GetSimAvatar()

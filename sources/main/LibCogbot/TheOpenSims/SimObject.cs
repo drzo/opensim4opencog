@@ -1329,6 +1329,8 @@ namespace cogbot.TheOpenSims
                 _confirmedObject = true;
                 Debug("Now confirmed!!");
             }
+            toStringNeedsUpdate = true;
+            _TOSRTING = null;
             lock (MostRecentPropertyUpdateLock)
             {
                 if (objectProperties.family)

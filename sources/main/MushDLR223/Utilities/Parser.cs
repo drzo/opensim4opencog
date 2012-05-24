@@ -133,7 +133,7 @@ namespace MushDLR223.ScriptEngines
 
         static string[] preps = { "of", "to", "in", "for", "with", "as", "by", "at", "from", "on", "is" };
 
-        public readonly NameValueCollection prepPhrases;
+        public readonly Dictionary<string,object >/*NameValueCollection*/ prepPhrases;
         public string objectPhrase;
         public string str;
         public string[] tokens;
@@ -151,12 +151,14 @@ namespace MushDLR223.ScriptEngines
             get { return tokens[i]; }
         }
 
-        public string this[string Param]
+        virtual public string this[string Param]
         {
             get
             {
                 Param = ToKey(Param);
-                return prepPhrases[Param];
+                object obj;
+                if (!prepPhrases.TryGetValue(Param, out obj) || ReferenceEquals(null, obj)) return null;
+                return obj.ToString();
             }
             set
             {
@@ -166,15 +168,15 @@ namespace MushDLR223.ScriptEngines
         }
 
         public Parser(string[] Args)
-            : this(string.Join(" ", Args??new string[0]))
+            : this(string.Join(" ", Args ?? new string[0]))
         {
-
+            tokens = Args;
         }
 
         public Parser(string _str)
         {
             str = _str;
-            prepPhrases = new NameValueCollection();
+            prepPhrases = new Dictionary<string, object>();// new NameValueCollection();
             foreach (string prep in preps)
                 prepPhrases[prep] = string.Empty;
             objectPhrase = "";
@@ -449,9 +451,9 @@ namespace MushDLR223.ScriptEngines
             prepPhrases[k] = v;
         }
 
-        static string ToKey(string k)
+        protected static string ToKey(string k)
         {
-            k = k.Trim("-+= \"'".ToCharArray());
+            k = k.Trim("-+= :\"'".ToCharArray());
             return k;
         }
 
@@ -488,7 +490,7 @@ namespace MushDLR223.ScriptEngines
         {
             int i = 0;
             flag = ToKey(flag);
-            foreach(string key in prepPhrases.Keys)
+            foreach(string key in tokens)
             {
                 if (key.Equals(flag)) return i;
                 i++;
@@ -503,11 +505,11 @@ namespace MushDLR223.ScriptEngines
             var p = new List<string>();
             for (int j = 0; j < i; j++)
             {
-                p.Add(prepPhrases[i]);
+                p.Add(tokens[i]);
             }
             for (int j = i + 1; j < Count; j++)
             {
-                p.Add(prepPhrases[i]);
+                p.Add(tokens[i]);
             }
             return p.ToArray();
         }
@@ -538,7 +540,7 @@ namespace MushDLR223.ScriptEngines
             var p = new List<string>();
             for (int j = i + 1; j < Count; j++)
             {
-                p.Add(prepPhrases[i]);
+                p.Add(tokens[i]);
             }
             return p.ToArray();
         }
