@@ -20,7 +20,7 @@ namespace cogbot.Actions.Movement
 
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             int argsUsed;
             if (args.Length < 1)
@@ -32,7 +32,7 @@ namespace cogbot.Actions.Movement
             SimPosition position = WorldSystem.GetVector(args, out argsUsed);
             if (position == null)
             {
-                return Failure("Coulnd not resolve location: " + string.Join(" ", args));
+                return Failure("Coulnd not resolve location: " + args.str);
             }
             if (!position.IsRegionAttached)
             {
@@ -82,7 +82,7 @@ namespace cogbot.Actions.Movement
             SimPosition position = WorldSystem.GetVector(args, out argsUsed);
             if (position == null)
             {
-                return Failure("Coulnd not resolve location: " + string.Join(" ", args));
+                return Failure("Coulnd not resolve location: " + args);
             }
             Vector3d g = position.GlobalPosition;
             var TheSimAvatar = this.TheSimAvatar;

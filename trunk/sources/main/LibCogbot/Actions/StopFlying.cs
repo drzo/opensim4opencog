@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
@@ -13,9 +13,9 @@ namespace cogbot.Actions.Movement
             : base(Client)
         {
             Description = "Stop flying. If the bot is in midair it will fall. Will succeed if we weren't flying";
-            Usage = "stop-flying";
-            Parameters = NamedParam.CreateParams();
-            ResultMap = NamedParam.CreateParams(
+            Details = "stop-flying";
+            Parameters = CreateParams();
+            ResultMap = CreateParams(
                  "message", typeof(string), "if we could not stop flying, the reason why (shouldnt happen)",
                  "success", typeof(bool), "true if we stopped flying");
             Category = CommandCategory.Movement;

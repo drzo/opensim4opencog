@@ -17,10 +17,10 @@ namespace cogbot.Actions
                 "see <a href='wiki/BotCommands#shout'>shout</a> and <a href='wiki/BotCommands#whisper'>whisper</a> to " +
                 "increase or decrease range. If the message is surrounded by &lt; and &gt; it is interpreted as passed " +
                 "to a physical robot body. See BotClient.cs for details";
-            Usage = "say &lt;message&gt;";
-            Parameters = NamedParam.CreateParams("message", typeof(string),
+            Details = "say &lt;message&gt;";
+            Parameters = CreateParams("message", typeof(string),
     "Message to chat. If it starts with # followed by an integer, chats on channel");
-            ResultMap = NamedParam.CreateParams(
+            ResultMap = CreateParams(
                  "message", typeof(string), "if we could not chat, the reason why",
                  "success", typeof(bool), "true if the chat succeeded");
         }

@@ -15,15 +15,15 @@ namespace cogbot.Actions
         {
             Name = "repeat";
             Description = "Repeats a command in its own thread.";
-            Usage = Htmlize.Example("repeat 30 jump", "jump 30 times");
-            Parameters = NamedParam.CreateParams(
+            Details = Example("repeat 30 jump", "jump 30 times");
+            Parameters = CreateParams(
                 "count", typeof(int), "number of times to repeat",
                 "command", typeof(BotCommand), "command to repeat");
 
             Category = CommandCategory.BotClient;
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             //BotClient Client = TheBotClient;
             if (args.Length < 2)
@@ -36,7 +36,7 @@ namespace cogbot.Actions
                 return ShowUsage();
             }
             // remove the time
-            args = Parser.SplitOff(args, 1);
+            args = args.AdvanceArgs(1);
             String cmd = String.Join(" ", args);
             ThreadStart thread = () =>
                                            {

@@ -13,19 +13,19 @@ namespace cogbot.Actions.Objects
         {
             Name = "attach";
             Description = "attach a prim to specified (or default) attachment point from the world";
-            Usage = "attach <prim> [attachmentPoint] [rotation] Example: /attach 98922187 RightHand";
+            Details = "attach <prim> [attachmentPoint] [rotation] Example: /attach 98922187 RightHand";
             Category = CommandCategory.Objects;
             Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
                 return ShowUsage();
 
             int argsUsed;
             List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
-            args = Parser.SplitOff(args, argsUsed);
+            args = args.AdvanceArgs(argsUsed);
             AttachmentPoint attachmentPoint = AttachmentPoint.Default;
             if (args.Length > 0)
             {
@@ -35,7 +35,7 @@ namespace cogbot.Actions.Objects
                     attachmentPoint = (AttachmentPoint) obj;
                 }
             }
-            args = Parser.SplitOff(args, argsUsed);
+            args = args.AdvanceArgs(argsUsed);
             Quaternion rotation = Quaternion.Identity;
             if (args.Length > 0)
             {

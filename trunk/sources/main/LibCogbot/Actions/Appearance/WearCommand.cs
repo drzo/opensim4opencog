@@ -17,23 +17,23 @@ namespace cogbot.Actions.Appearance
 <p>See <a href='wiki/BotCommands#Inventory'>Inventory</a> for Inventory FormatException</p>
 <p>If the argument is a folder the entire folder is worn (but not items in contained folders).</p>
 <p>Adding 'nobake' doesn't rebake the avatar's textures.</p>";
-            Usage = "wear [nobake] /Clothing/Dance Party";
-            ParameterVersions = NamedParam.CreateParamVersions(
-                NamedParam.CreateParams(
-                   NamedParam.Optional("nobake", typeof(bool), "Do not rebake the avatar's textures"),
+            Details = "wear [nobake] /Clothing/Dance Party";
+            ParameterVersions = CreateParamVersions(
+                CreateParams(
+                   Optional("nobake", typeof(bool), "Do not rebake the avatar's textures"),
                    "outfit", typeof(InventoryFolder),
                    "Folder of items to wear. See <a href='wiki/BotCommands#Inventory'>Inventory</a> for format."),
-                NamedParam.CreateParams(
-                   NamedParam.Optional("nobake", typeof(bool), "Do not rebake the avatar's textures"),
+                CreateParams(
+                   Optional("nobake", typeof(bool), "Do not rebake the avatar's textures"),
                    "outfit", typeof(InventoryItem),
                    "Item to wear. See <a href='wiki/BotCommands#Inventory'>Inventory</a> for format.")
                );
-            ResultMap = NamedParam.CreateParams(
+            ResultMap = CreateParams(
                  "message", typeof(string), "if success was false, the reason why",
                  "success", typeof(bool), "true if outfit was worn");
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
                 return ShowUsage();// " wear [outfit name] eg: 'wear /My Outfit/Dance Party";

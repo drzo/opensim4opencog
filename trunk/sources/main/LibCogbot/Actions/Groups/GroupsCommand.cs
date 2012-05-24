@@ -16,11 +16,11 @@ namespace cogbot.Actions.Groups
             Name = "groups";
             Description = "List avatar groups. Usage: groups";
             Category = CommandCategory.Groups;
-            Usage = Htmlize.Usage(Name, Description);
-            Parameters = NamedParam.CreateParams();
+            Details = AddUsage(Name, Description);
+            Parameters = CreateParams();
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             Client.ReloadGroupsCache();
             return getGroupsString();

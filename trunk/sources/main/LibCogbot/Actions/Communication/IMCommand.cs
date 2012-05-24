@@ -17,18 +17,18 @@ namespace cogbot.Actions.Communication
         {
             Name = "im";
             Description = "IM a user.";
-            Usage = "Usage: im <agent-spec> [message]";
+            Details = "Usage: im <agent-spec> [message]";
             Category = CommandCategory.Communication;
             Parameters =
-                NamedParam.CreateParams(
+                CreateParams(
                             "target", typeof(Avatar), "who you are IMing",
                             "message", typeof(string), "what you IM");
-            ResultMap = NamedParam.CreateParams(
+            ResultMap = CreateParams(
                 "message", typeof(string), "if success was false, the reason why",
                 "success", typeof(bool), "true if command was successful");
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 2)
                 return ShowUsage();// " im [firstname] [lastname] [message]";

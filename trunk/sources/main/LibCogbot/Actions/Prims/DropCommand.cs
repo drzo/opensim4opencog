@@ -13,12 +13,12 @@ namespace cogbot.Actions.Objects
         {
             Name = "drop";
             Description = "drops a specified attachment into the world";
-            Usage = "drop <prim|attachmentPoint> example: /drop LeftHand ";
+            Details = "drop <prim|attachmentPoint> example: /drop LeftHand ";
             Category = CommandCategory.Objects;
             Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
                 return ShowUsage();
@@ -46,7 +46,7 @@ namespace cogbot.Actions.Objects
                     }
                     return SuccessOrFailure();
                 }
-                return Failure("Cannot find objects from " + string.Join(" ", args));
+                return Failure("Cannot find objects from " + args.str);
             }
             foreach (var found in PS)
             {

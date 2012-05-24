@@ -17,18 +17,18 @@ namespace cogbot.Actions.Appearance
         {
             Name = "clone";
             Description = "Clone the appearance of a nearby avatar.";
-            Usage = Htmlize.Usage(Name + " [agent-spec]", "no prim-spec then use OLD self");
+            Details = AddUsage(Name + " [agent-spec]", "no prim-spec then use OLD self");
             Category = CommandCategory.Appearance;
-            Parameters = NamedParam.CreateParams(
-                NamedParam.Optional("target", typeof(AgentSpec),
+            Parameters = CreateParams(
+                Optional("target", typeof(AgentSpec),
                                     "the agent you wish to see " + Name +
                                     " (see meets a specified <a href='wiki/BotCommands#AgentSpec'>Agent Spec</a>.)"));
-            ResultMap = NamedParam.CreateParams(
+            ResultMap = CreateParams(
                 "message", typeof(string), "if success was false, the reason why",
                 "success", typeof(bool), "true if command was successful");
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             string targetName = String.Empty;
             bool detatchAll = false;

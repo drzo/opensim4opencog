@@ -14,7 +14,7 @@ namespace cogbot.Actions
             : base(Client)
         {
             Description = "Remove avatars or objects from the mute list";
-            Usage = "<p>unmute all</p><p>unmute Fluffybunny Resident</p>";
+            Details = "<p>unmute all</p><p>unmute Fluffybunny Resident</p>";
         }
     }
 
@@ -24,7 +24,7 @@ namespace cogbot.Actions
             : base(Client)
         {
             Description = "Mute avatars or objects, or display the mute list. unmute unmutes.";
-            Usage = "<p>mute Fluffybunny Resident</p>" +
+            Details = "<p>mute Fluffybunny Resident</p>" +
 "<p>mute Particles &lt;primspec&gt;  mutes all but a specific element from:</p>" +
 @"<ul>
 <li>Default - mute everything</li>
@@ -34,16 +34,16 @@ namespace cogbot.Actions
 <li>ObjectSounds - don't mute sounds</li>
 <li>All - don't mute anything</li>
 </ul>";
-            ParameterVersions = NamedParam.CreateParamVersions(
-                NamedParam.CreateParams(
-                   NamedParam.Optional("element", typeof(MuteFlags), "element to not mute"),
+            ParameterVersions = CreateParamVersions(
+                CreateParams(
+                   Optional("element", typeof(MuteFlags), "element to not mute"),
                    "av", typeof(AgentSpec),
                    "Avatar to mute"),
-                NamedParam.CreateParams(
-                   NamedParam.Optional("element", typeof(MuteFlags), "element to not mute"),
+                CreateParams(
+                   Optional("element", typeof(MuteFlags), "element to not mute"),
                    "object", typeof(PrimSpec),
                    "object to mute"));
-            ResultMap = NamedParam.CreateParams(
+            ResultMap = CreateParams(
                  "message", typeof(string), "if success was false, the reason why",
                  "success", typeof(bool), "true if we muted the object");
          }

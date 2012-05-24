@@ -16,7 +16,7 @@ namespace cogbot.Actions.Pathfinder
             Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             int argsUsed;
             ICollection<SimObject> objs = WorldSystem.GetPrimitives(args, out argsUsed);

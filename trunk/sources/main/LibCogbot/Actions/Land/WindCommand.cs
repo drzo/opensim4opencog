@@ -13,12 +13,12 @@ namespace cogbot.Actions.Land
         {
             Name = "wind";
             Description = "Displays current wind data";
-            Usage = "wind [position]";
+            Details = "wind [position]";
             Category = CommandCategory.Simulator;
             Parameters = new[] { new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             // Get the agent's current "patch" position, where each patch of
             // wind data is a 16x16m square

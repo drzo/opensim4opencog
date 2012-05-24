@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
@@ -17,7 +17,7 @@ namespace cogbot.Actions
             : base(Client)
         {
             Description = "Interface to the OpenSims module. <a href='wiki/TheOpenSims'>Documentation Here</a>";
-            Usage = "DMILES TODO";
+            Details = "DMILES TODO";
             Category = CommandCategory.Objects;
             Parameters = new[] { new NamedParam(typeof(SimPosition), typeof(UUID)) };  //DMILES TODO
             // DMILE
@@ -71,17 +71,17 @@ namespace cogbot.Actions
         {
             Name = GetType().Name.ToLower().Replace("command", "");
             Description = "Tell a bot to do an action on an object";
-            Usage = "Usage: " + Name + " [UseTypeName] [object]";
+            Details = "Usage: " + Name + " [UseTypeName] [object]";
         }
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 2) return ShowUsage();
             SimTypeUsage use = SimTypeSystem.FindObjectUse(args[0]);
             if (use == null) return Failure("Unknown use: " + args[0]);
-            args = Parser.SplitOff(args, 1);
+            args = args.AdvanceArgs(1);
             int argsUsed;
             SimObject O = WorldSystem.GetSimObjectS(args, out argsUsed);
-            if (O == null) return Failure("Cant find simobject " + string.Join(" ", args));
+            if (O == null) return Failure("Cant find simobject " + args.str);
             WriteLine("Doing " + use + " for " + O);
             WorldSystem.TheSimAvatar.Do(use, O);
             return Success("Did " + use + " for " + O);
@@ -94,10 +94,10 @@ namespace cogbot.Actions
         {
             Name = GetType().Name.ToLower().Replace("command","");
             Description = "Manipulates the SimType typesystem";
-            Usage = "Usage: " + Name + " [ini|list|objects|uses|instances|load]";
+            Details = "Usage: " + Name + " [ini|list|objects|uses|instances|load]";
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length > 0)
             {

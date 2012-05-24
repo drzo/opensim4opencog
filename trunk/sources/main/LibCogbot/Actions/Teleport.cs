@@ -24,13 +24,13 @@ namespace cogbot.Actions.Agent
             TheBotClient = testClient;
             Category = CommandCategory.Movement;
             Description = "Teleport to a location defined by an avatar, object, or position";
-            Usage = @"<p>teleport  &lt;location&gt;</p>
+            Details = @"<p>teleport  &lt;location&gt;</p>
 <p>example: teleport Zindra/112.3/114.4/23</p>
 <p>example: teleport Fluffybunny Resident</p>
 <p>example: teleport nth 3 Ship <i>teleports to 3rd nearest object named Ship</i></p>";
-            Parameters = NamedParam.CreateParams("location", typeof(SimPosition),
+            Parameters = CreateParams("location", typeof(SimPosition),
                 "Location to TP to. Can be an avatar, object, or position. See <a href='wiki/BotCommands#Location'>Locations</a>");
-            ResultMap = NamedParam.CreateParams(
+            ResultMap = CreateParams(
                  "message", typeof(string), "if we could not teleport, the reason why",
                  "success", typeof(bool), "true if the teleport succeeded");
         }

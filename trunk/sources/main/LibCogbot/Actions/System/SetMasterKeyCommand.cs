@@ -16,14 +16,14 @@ namespace cogbot.Actions.System
             Name = "setMasterKey";
             Description = "A bot can have a master - another account whose IM's are accepted as botcmds. " +
                 "You can set the master in botconfig.xml or via this command.";
-            Usage = Htmlize.Usage("setmasterkey <uuid>", "Sets the master by UUID") +
-                Htmlize.Usage("setmasterkey <name>", "Sets the master by user name");
-            Parameters = NamedParam.CreateParams("master", typeof(AgentSpec), "name or UUID of master agent");
+            Details = AddUsage("setmasterkey <uuid>", "Sets the master by UUID") +
+                AddUsage("setmasterkey <name>", "Sets the master by user name");
+            Parameters = CreateParams("master", typeof(AgentSpec), "name or UUID of master agent");
 
             Category = CommandCategory.Security;
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             string masterName = String.Empty;
             for (int ct = 0; ct < args.Length; ct++)

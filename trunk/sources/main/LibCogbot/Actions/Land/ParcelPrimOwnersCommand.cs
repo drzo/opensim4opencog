@@ -17,7 +17,7 @@ namespace cogbot.Actions.Land
             Category = CommandCategory.Parcel;
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
                 return ShowUsage();// " primowners parcelID (use parcelinfo to get ID)";

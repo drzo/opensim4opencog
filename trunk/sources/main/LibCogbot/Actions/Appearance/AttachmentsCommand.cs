@@ -14,18 +14,18 @@ namespace cogbot.Actions.Appearance
             TheBotClient = testClient;
             Name = "attachments";
             Description = "Prints a list of the currently known agent attachments or on another avatar";
-            Usage = Htmlize.Usage(Name + " [agent-spec]", "no prim-spec then use $self");
+            Details = AddUsage(Name + " [agent-spec]", "no prim-spec then use $self");
             Category = CommandCategory.Appearance;
-            Parameters = NamedParam.CreateParams(
-                NamedParam.Optional("target", typeof(AgentSpec),
+            Parameters = CreateParams(
+                Optional("target", typeof(AgentSpec),
                                     "the agents you wish to see " + Name +
                                     " (see meets a specified <a href='wiki/BotCommands#PrimSpec'>Prim Spec</a>.)"));
-            ResultMap = NamedParam.CreateParams(
+            ResultMap = CreateParams(
                 "message", typeof(string), "if success was false, the reason why",
                 "success", typeof(bool), "true if command was successful");
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (Client.Network.CurrentSim == null) return Failure("not yet connected");
             int argsUsed;

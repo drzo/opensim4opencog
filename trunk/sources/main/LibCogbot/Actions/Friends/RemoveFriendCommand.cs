@@ -25,9 +25,9 @@ namespace cogbot.Actions.Friends
             // The name of the command
             Name = "Remove Friend";
             Description = Name + " from agent-spec.";
-            Usage = Htmlize.Usage(Name + " agent", Description);
+            Details = AddUsage(Name + " agent", Description);
             Category = CommandCategory.Friends;
-            Parameters = NamedParam.CreateParams("agent", typeof(UUID), "agent you are going to " + Name);
+            Parameters = CreateParams("agent", typeof(UUID), "agent you are going to " + Name);
         }
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace cogbot.Actions.Friends
         /// <param name="fromAgentID">The <seealso cref="OpenMetaverse.UUID"/> 
         /// of the agent making the request</param>
         /// <returns></returns>
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             int argsUsed;
             IEnumerable<SimObject> objs = WorldSystem.GetPrimitives(args, out argsUsed);

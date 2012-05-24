@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Threading;
@@ -17,12 +17,12 @@ namespace cogbot.Actions.Estate
         {
             Name = "uploadterrain";
             Description = "Upload a raw terrain file to a simulator.";
-            Usage = Htmlize.Usage(Name + " filename", "upload filename");
+            Details = AddUsage(Name + " filename", "upload filename");
             Category = CommandCategory.Simulator;
-            Parameters = NamedParam.CreateParams("filename", typeof(string), "filename to upload");
+            Parameters = CreateParams("filename", typeof(string), "filename to upload");
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             string fileName = String.Empty;
 

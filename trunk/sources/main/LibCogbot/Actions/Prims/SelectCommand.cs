@@ -15,7 +15,10 @@ namespace cogbot.Actions.Objects
         public SelectCommand(BotClient client)
         {
             Name = "select";
-            Description = "selects one or more object in world. Usage: select +/-[prim0] +/-[prim1] +/-[prim2]";
+            Description = "selects one or more object in world.";
+            Details = AddUsage("select +/-[prim0] +/-[prim1] +/-[prim2]", "Selects or deslects prims") +
+                      AddUsage("select none", "Clears the select buffer") +
+                      AddUsage("select", "Shows the select buffer");
             Category = cogbot.Actions.CommandCategory.Objects;
             Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
         }

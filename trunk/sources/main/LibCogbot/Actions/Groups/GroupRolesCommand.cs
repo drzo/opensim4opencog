@@ -24,11 +24,10 @@ namespace cogbot.Actions.Groups
             Name = "grouproles";
             Description = "Dump group roles to console.";
             Category = CommandCategory.Groups;
-            Usage = Htmlize.Usage(Name + " group", Description);
-            Parameters = NamedParam.CreateParams("group", typeof(Group), "group you are going to see " + Name);
+            AddUsage(CreateParams("group", typeof (Group), "group you are going to see " + Name), Description);
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
                 return ShowUsage();

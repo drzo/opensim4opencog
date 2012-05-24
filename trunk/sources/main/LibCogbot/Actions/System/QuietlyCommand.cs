@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 
@@ -12,14 +12,14 @@ namespace cogbot.Actions.System
         {
             Name = "quietly";
             Description = "Invoke a botcmd without printing anything.";
-            Usage = Htmlize.Example("quietly priminfo", "run priminfo and discard results");
-            Parameters = NamedParam.CreateParams(
+            Details = Example("quietly priminfo", "run priminfo and discard results");
+            Parameters = CreateParams(
     "command", typeof(BotCommand), "command to execute quietly");
 
             Category = CommandCategory.BotClient;
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1) return ShowUsage();
             string botcmd = String.Join(" ", args, 0, args.Length).Trim();

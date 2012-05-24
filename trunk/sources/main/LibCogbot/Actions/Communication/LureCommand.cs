@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -16,17 +16,17 @@ namespace cogbot.Actions.Communication
             Name = "lure";
             Description = "Send a lure to a user.";
             Category = CommandCategory.Friends;
-            Usage = Htmlize.Usage(Name + " [agent-spec]", "lure agent-spec to our location");
-            Parameters = NamedParam.CreateParams("target", typeof (AgentSpec),
+            Details = AddUsage(Name + " [agent-spec]", "lure agent-spec to our location");
+            Parameters = CreateParams("target", typeof (AgentSpec),
                                                  "the agent you wish to see " + Name +
                                                  " (see meets a specified <a href='wiki/BotCommands#AvatarSpec'>Avatar Spec</a>.)");
-            ResultMap = NamedParam.CreateParams(
+            ResultMap = CreateParams(
                 "message", typeof(string), "if success was false, the reason why",
                 "success", typeof(bool), "true if command was successful");
         }
 
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             int argsUsed;
             List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
@@ -41,7 +41,7 @@ namespace cogbot.Actions.Communication
                 }
                 if (nfound > 0) return Success(Name + " found: " + nfound + " object/agent(s)");
             }
-            string user = string.Join(" ", args);
+            string user = args.str;
             UUID id = WorldSystem.GetUserID(user);
             if (id == UUID.Zero) return Failure("Cannot find " + user);
             Client.Self.SendTeleportLure(id);

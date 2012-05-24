@@ -19,17 +19,17 @@ namespace cogbot.Actions.Appearance
             Name = "dumpoutfit";
             Description = "Dumps all of the textures from an avatars outfit to the hard drive.";
             Category = CommandCategory.Inventory;
-            Usage = Htmlize.Usage(Name + " [agent-spec]", "if not specified then use $self");
-            Parameters = NamedParam.CreateParams(
-                NamedParam.Optional("target", typeof(AgentSpec),
+            Details = AddUsage(Name + " [agent-spec]", "if not specified then use $self");
+            Parameters = CreateParams(
+                Optional("target", typeof(AgentSpec),
                                     "the agents you wish to see " + Name +
                                     " (see meets a specified <a href='wiki/BotCommands#AgentSpec'>Agent Spec</a>.)"));
-            ResultMap = NamedParam.CreateParams(
+            ResultMap = CreateParams(
                 "message", typeof(string), "if success was false, the reason why",
                 "success", typeof(bool), "true if command was successful");
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
                 return ShowUsage(); // " dumpoutfit [avatar-uuid]";
@@ -46,8 +46,8 @@ namespace cogbot.Actions.Appearance
 
 
                     int argsUsed;
-                    List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
-                    if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
+                    List<SimObject> PS; args.TryGetValue("target", out PS);
+                    if (IsEmpty(PS)) return Failure("Cannot find objects from " + args.str);
                     List<UUID> OutfitAssets = new List<UUID>();
                     foreach (var O in PS)
                     {

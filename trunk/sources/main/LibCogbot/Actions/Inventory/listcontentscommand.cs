@@ -17,7 +17,7 @@ namespace cogbot.Actions.Inventory.Shell
             Description = "Lists the contents of the current working inventory folder.";
             Category = CommandCategory.Inventory;
         }
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length > 1)
                 return ShowUsage();// " ls [-l]";

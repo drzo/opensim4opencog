@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -26,17 +26,17 @@ namespace cogbot.Actions.Search
             Name = "searchland";
             Description = "Searches for land for sale. for usage information type: searchland";
             Category = CommandCategory.Search;
-            Usage = Htmlize.Usage(Name + " [type] [max price] [min size]",
+            Details = AddUsage(Name + " [type] [max price] [min size]",
                                   "\twhere [type] is one of: mainland, auction, estate, all\n" +
                                   "\tif [max price] or [min size] are 0 that parameter will be ignored") +
-                    Htmlize.Usage(Name + " mainland 0 512",
+                    AddUsage(Name + " mainland 0 512",
                                   "shows the lowest priced mainland that is larger than 512/m2");
             Parameters =
-                NamedParam.CreateParams(
+                CreateParams(
                     "searchText", typeof (DirectoryManager.SearchTypeFlags), "search type flags",
                     "maxPrice", typeof (int), "max price",
                     "minSize", typeof (int), "min size");
-            ResultMap = NamedParam.CreateParams(
+            ResultMap = CreateParams(
                 "result", typeof(List<string>), "search results",
                 "message", typeof(string), "if success was false, the reason why",
                 "success", typeof(bool), "true if command was successful");
@@ -48,7 +48,7 @@ namespace cogbot.Actions.Search
         /// <param name="args"></param>
         /// <param name="fromAgentID"></param>
         /// <returns></returns>
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             // process command line arguments
             if (args.Length < 3)

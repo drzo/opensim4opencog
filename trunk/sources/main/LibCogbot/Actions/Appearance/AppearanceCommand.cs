@@ -15,48 +15,58 @@ namespace cogbot.Actions.Appearance
         {
             Name = "appearance";
             Description = @"Set your current appearance to your last saved appearance.  Makes sure the bot is not a cloud.
-<p>Adding 'nobake' doesn't rebake the avatar's textures.</p>";
-		    Usage = Htmlize.Usage("appearance [nobake]", "tells the server to use the last cached appearence baking or not") +
-		            Htmlize.Example("appearance", "Same as rebaking in a normal client") +
-		            Htmlize.Example("appearance nobake", "fast way to tell the server you are not a cloud");
-		    Parameters = NamedParam.CreateParams(NamedParam.Optional("nobake", typeof (bool), "Do not rebake the avatar's textures"));
-            ResultMap = NamedParam.CreateParams(
+<p>Adding 'nobake' doesn't rebake the avatar's textures.</p>
+<p>Adding 'wait' blocks until server informs the appreance is set.</p>";
+		    Details = AddUsage("appearance [nobake][wait][send]", "tells the server to use the last cached appearence baking or not") +
+                    Example("appearance", "Same as rebaking in a normal client") +
+                    Example("appearance wait", "Same as rebaking in a normal client") +
+		            Example("appearance nobake", "fast way to tell the server you are not a cloud");
+		    Parameters =
+		        CreateParams(Optional("nobake", typeof (bool), "Do not rebake the avatar's textures"),
+                                        Optional("wait", typeof(bool), "Wait until server informs the appreance is set"),
+                                        Optional("send", typeof(bool), "Let server decide if no baking is needed or not"));
+            ResultMap = CreateParams(
                  "message", typeof(string), "if success was false, the reason why",
                  "success", typeof(bool), "true if outfit was worn");
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
-            bool success = false;
-
-            // Register a handler for the appearance event
-            //AutoResetEvent appearanceEvent = new AutoResetEvent(false);
-            //AppearanceManager.AppearanceUpdatedCallback callback =
-            //    delegate(Primitive.TextureEntry te) { appearanceEvent.Set(); };
-           // Client.Appearance.OnAppearanceUpdated += callback;
+            AutoResetEvent appearanceEvent = new AutoResetEvent(false);
+            EventHandler<AppearanceSetEventArgs> callback = (s, e) => appearanceEvent.Set();
 
             // Start the appearance setting process (with baking enabled or disabled)
-            bool bake = !(args.Length > 0 && args[0].Equals("nobake"));
-            bool send = (args.Length > 0 && args[0].Equals("send"));
+            bool bake = !args.IsTrue("nobake");
+            bool send = args.IsTrue("send");
+            bool wait = args.IsTrue("wait");
+            if (wait)
+            {
+                // Register a handler for the appearance event
+                Client.Appearance.AppearanceSet += callback;
+                
+            }
             if (send)
             {
                 Client.Appearance.RequestSetAppearance();
-                return Success( "Sent Appearance");
             }
-            Client.Appearance.RequestSetAppearance(bake);
-            return Success("Requested SetAppearance bake = " + bake);
-            //// Wait for the process to complete or time out
-            //if (appearanceEvent.WaitOne(1000 * 120, false))
-            //    success = true;
+            else
+            {
+                Client.Appearance.RequestSetAppearance(bake);
+            }
+            if (wait)
+            {
+                bool success = false;
+                //// Wait for the process to complete or time out
+                if (appearanceEvent.WaitOne(1000 * 120, false))
+                    success = true;
 
-            //// Unregister the handler
-            //Client.Appearance.OnAppearanceUpdated -= callback;
+                //// Unregister the handler
+                Client.Appearance.AppearanceSet -= callback;
 
-            //// Return success or failure message
-            //if (success)
-            //    return Success("Successfully set appearance";
-            //else
-            //    return Success("Timed out while setting appearance";
+                //// Return success or failure message
+                if (!success) return Failure("Timed out while setting appearance");
+            }
+            return Success("Successfully set appearance bake=" + bake);
         }
     }
 }

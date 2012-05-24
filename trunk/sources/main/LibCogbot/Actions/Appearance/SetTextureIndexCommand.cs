@@ -17,12 +17,12 @@ namespace cogbot.Actions.Appearance
         {
             Name = "SetTexture";
             Description = "Set appearance texture of avatar.";
-            Usage = Htmlize.Usage(Name + " [face-index] [texture-uuid]", "set the texture on face-index");
+            Details = AddUsage(Name + " [face-index] [texture-uuid]", "set the texture on face-index");
             Category = CommandCategory.Appearance;
-            Parameters = NamedParam.CreateParams(
+            Parameters = CreateParams(
                 "textureIndex", typeof (AvatarTextureIndex), "face index of where to set the texture",
                 "texture", typeof (SimTexture), "texture UUID to set the face");
-            ResultMap = NamedParam.CreateParams(
+            ResultMap = CreateParams(
                 "message", typeof(string), "if success was false, the reason why",
                 "success", typeof(bool), "true if command was successful");
         }
@@ -33,7 +33,7 @@ namespace cogbot.Actions.Appearance
         /// <param name="fromAgentID"></param>
         /// <param name="WriteLine"></param>
         /// <returns></returns>
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             UUID asset = UUID.Zero;
             AvatarTextureIndex index = AvatarTextureIndex.Unknown;

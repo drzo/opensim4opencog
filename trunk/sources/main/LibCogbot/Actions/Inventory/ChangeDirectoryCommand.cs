@@ -18,7 +18,7 @@ namespace cogbot.Actions.Inventory.Shell
             Description = "Changes the current working inventory folder.";
             Category = CommandCategory.Inventory;
         }
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             Manager = Client.Inventory;
             Inventory = Client.Inventory.Store;

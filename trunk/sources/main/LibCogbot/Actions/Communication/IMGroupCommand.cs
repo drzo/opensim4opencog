@@ -16,18 +16,18 @@ namespace cogbot.Actions.Communication
 
             Name = "imgroup";
             Description = "Send an instant message to a group.";
-            Usage = "imgroup <group_uuid> [message]";
+            Details = "imgroup <group_uuid> [message]";
             Category = CommandCategory.Groups;
             Parameters =
-                NamedParam.CreateParams(
+                CreateParams(
                             "group", typeof(Group), "who you are IMing",
                             "message", typeof(string), "what you IM");
-            ResultMap = NamedParam.CreateParams(
+            ResultMap = CreateParams(
                 "message", typeof(string), "if success was false, the reason why",
                 "success", typeof(bool), "true if command was successful");
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
 
             if (args.Length < 2)

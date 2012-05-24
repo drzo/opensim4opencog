@@ -16,7 +16,7 @@ namespace cogbot.Actions.Land
             Description = "Searches for a simulator and returns information about it. Usage: findsim [Simulator Name]";
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
                 return ShowUsage();// " findsim [Simulator Name]";

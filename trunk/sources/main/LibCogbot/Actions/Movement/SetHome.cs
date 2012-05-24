@@ -17,7 +17,7 @@ namespace cogbot.Actions.Movement
             Category = CommandCategory.Movement;
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
 			Client.Self.SetHome();
             return Success("Home Set");

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using cogbot.Listeners;
@@ -20,8 +20,8 @@ namespace cogbot.Actions.Movement
             Name = "Location";
             //From locate: Description = "Gives the coordinates of where $bot is.";
             Description = "Finds out in which direction yourself, an object or a building or a person is.";
-            Usage = "To find out wher an object, building or a person is, type \"where is [object/person name]\"";
-            Usage += "\nTo locate the coordinates of yourself, type in \"locate\"";
+            Details = "To find out wher an object, building or a person is, type \"where is [object/person name]\"";
+            Details += "\nTo locate the coordinates of yourself, type in \"locate\"";
             Parameters = new[] { new NamedParam(typeof(SimPosition), typeof(UUID)) };
         }
 

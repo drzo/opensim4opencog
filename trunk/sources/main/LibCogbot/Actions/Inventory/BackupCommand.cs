@@ -114,7 +114,7 @@ namespace cogbot.Actions.SimExport
         {
             Name = "backuptext";
             Description = "Backup inventory to a folder on your hard drive.";
-            Usage = Htmlize.Usage(Name + " [to <directory>] | [abort] | [status]", Description);            
+            Details = AddUsage(Name + " [to <directory>] | [abort] | [status]", Description);            
         }
 
         #region Implementation of IDisposable
@@ -129,7 +129,7 @@ namespace cogbot.Actions.SimExport
         }
 
         #endregion
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
 
             if (args.Length == 1 && args[0] == "status")

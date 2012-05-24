@@ -18,11 +18,11 @@ namespace cogbot.Actions.Friends
         {
             Name = "Map Friend";
             Description = "Show a friends location.";
-            Usage = Htmlize.Usage(Name + " agent", Description);
+            Details = AddUsage(Name + " agent", Description);
             Category = CommandCategory.Friends;
-            Parameters = NamedParam.CreateParams("agent", typeof(UUID), "agent you are going to " + Name);
+            Parameters = CreateParams("agent", typeof(UUID), "agent you are going to " + Name);
         }
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
                 return ShowUsage();

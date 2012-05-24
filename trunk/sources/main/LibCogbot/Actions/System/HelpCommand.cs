@@ -16,15 +16,15 @@ namespace cogbot.Actions.System
             // this version dies
 			Name = "help";
 			Description = "Lists available commands. If given a botcmd verb, lists help for that verb";
-            Usage = Htmlize.Example("help", "prints list of botcmds") +
-                Htmlize.Example("help moveto", "Prints help on the moveto command");
-            Parameters = NamedParam.CreateParams(
-                    NamedParam.Optional("command", typeof(string), "The command to get help on"));
+            Details = Example("help", "prints list of botcmds") +
+                Example("help moveto", "Prints help on the moveto command");
+            Parameters = CreateParams(
+                    Optional("command", typeof(string), "The command to get help on"));
             
             Category = CommandCategory.BotClient;
 		}
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
 		{
             BotClient Client = TheBotClient;
             bool showPLVersionOfHelp = false;
@@ -33,7 +33,7 @@ namespace cogbot.Actions.System
                 if (args[0] == "prolog")
                 {
                     showPLVersionOfHelp = true;
-                    args = Parser.SplitOff(args, 1);
+                    args = args.AdvanceArgs(1);
                 }
                 if (showPLVersionOfHelp)
                 {

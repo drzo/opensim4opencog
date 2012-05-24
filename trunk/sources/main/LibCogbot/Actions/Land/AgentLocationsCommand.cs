@@ -22,7 +22,7 @@ namespace cogbot.Actions.Land
 
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             ulong regionHandle;
                         

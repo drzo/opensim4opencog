@@ -41,7 +41,7 @@ namespace cogbot.Actions.Movement
             textform> rotate 90
             Second Bot: Turned 90             
         */
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length > 1)
                 return ShowUsage();// " rotate [angle]";

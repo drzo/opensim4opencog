@@ -13,18 +13,18 @@ namespace cogbot.Actions
 		{
 			Name = "me";
             Description = "Emote something.";
-            Usage = Htmlize.Usage(Name + " (optional channel) whatever", "emotes whatever (optionally to channel)");
+            Details = AddUsage(Name + " (optional channel) whatever", "emotes whatever (optionally to channel)");
             Category = CommandCategory.Communication;
             Parameters =
-                NamedParam.CreateParams(
-                            NamedParam.Optional("channel", typeof(int), "the optional channel in which the message goes out"),
+                CreateParams(
+                            Optional("channel", typeof(int), "the optional channel in which the message goes out"),
                             "message", typeof(string), "what you output to the simulator");
-            ResultMap = NamedParam.CreateParams(
+            ResultMap = CreateParams(
                 "message", typeof(string), "if success was false, the reason why",
                 "success", typeof(bool), "true if command was successful");
 		}
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
 		{
             int channel = 0;
             int startIndex = 0;

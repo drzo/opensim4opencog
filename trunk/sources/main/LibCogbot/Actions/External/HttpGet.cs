@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Net;
@@ -20,10 +20,10 @@ namespace cogbot.Actions.WebUtil
         {
             Name = "HttpGet";
             Description = "Do an http get.";
-            Usage = Htmlize.Usage(Name + " url", "read the contents of a URL to return result") +
-                    Htmlize.Example(Name + " http://localhost:5580/action?cmd=say&args=hello",
+            Details = AddUsage(Name + " url", "read the contents of a URL to return result") +
+                    Example(Name + " http://localhost:5580/action?cmd=say&args=hello",
                                     "makes the bot say something");
-            Parameters = NamedParam.CreateParams("url", typeof(Uri), "url to get");
+            Parameters = CreateParams("url", typeof(Uri), "url to get");
             Category = CommandCategory.Simulator;
         }
         public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)

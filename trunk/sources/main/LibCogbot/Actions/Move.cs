@@ -24,8 +24,8 @@ namespace cogbot.Actions
             : base(Client)
         {
             Name = "move";
-            Description = "Move to a person or object, or in a direction: west, east, north or south."; 
-            Usage = "Type \"west/east/north/south\" to move 5 meters in a direction. Or Type \"west distance/east distance/north distance/south distance\" to move a specific distance in that direction.";// Client.RM.GetString("umove");
+            Description = "Move to a person or object, or in a direction: west, east, north or south.";
+            Details = "Type \"west/east/north/south\" to move 5 meters in a direction. Or Type \"west distance/east distance/north distance/south distance\" to move a specific distance in that direction.";// Client.RM.GetString("umove");
             Category = CommandCategory.Movement;
         }
 

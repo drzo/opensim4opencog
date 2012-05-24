@@ -24,15 +24,18 @@ namespace cogbot.Actions.System
                           "Cogbot won't make a special request from the server to get information about this sort of thing" +
                           "and will provide information about it only if available" +
                           "For booleans anything but no or false (case insensitive) is true.";
-            Usage = Htmlize.Usage("sysvar", "List all Sysvars and their settings") +
-                    Htmlize.Usage("sysvar <key>", "List the current value of <key>") +
-                    Htmlize.Usage("sysvar <key> <value>", "set a system variable") +
-                    Htmlize.Example("sysvar CanUseSit True", "allow the bot to sit on things") +
-                    Htmlize.Example("sysvar CanUseSit no", "don't allow the bot to sit on things") +
-                    Htmlize.Example("sysvar Maintain false",
-                                    "set every sysvar that contains Maintain in it's name to false") +
-                    Htmlize.Example("sysvar MaintainEffectsDistance 8.0",
-                                    "set the maximum distance to notice effects to 8.0") + SysVarHtml();
+            AddVersion(CreateParams(), "List all Sysvars and their settings");
+            AddVersion(CreateParams(
+                           "key", typeof (string), "substring to match sysvar names",
+                           Optional("value", typeof (object), "value to set")),
+                       "Show sysvars matching key if value is supplied it tried to set those values");
+
+            Details = Example("sysvar CanUseSit True", "allow the bot to sit on things") +
+                      Example("sysvar CanUseSit no", "don't allow the bot to sit on things") +
+                      Example("sysvar Maintain false",
+                              "set every sysvar that contains Maintain in it's name to false") +
+                      Example("sysvar MaintainEffectsDistance 8.0",
+                              "set the maximum distance to notice effects to 8.0") + SysVarHtml();
 
 
             Category = CommandCategory.BotClient;
@@ -51,11 +54,19 @@ namespace cogbot.Actions.System
             return sb.ToString();
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             int used = 0;
             var sysvars = LockInfo.CopyOf(ScriptManager.SysVars);
-            if (args.Length == 0) args = new[] { "" };
+            if (args.Length == 0)
+            {
+                foreach (var sv in LockInfo.CopyOf(ScriptManager.SysVars))
+                {
+                    ConfigSettingAttribute svv = sv.Value;
+                    WriteLine(string.Format("{0}={1} //{2}", (svv.Name), svv.Value, svv.Comments));
+                }
+                return Success("count=" + ScriptManager.SysVars.Count);
+            }
             List<ConfigSettingAttribute> setThese = new List<ConfigSettingAttribute>();
             int found = 0;
             string find = args[0].ToLower();

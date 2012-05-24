@@ -21,7 +21,7 @@ namespace cogbot.Actions.Objects
         }
 
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length == 0)
             {
@@ -30,7 +30,7 @@ namespace cogbot.Actions.Objects
 
             int argsUsed;
             List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
-            if (IsEmpty(PS)) return Failure("Cannot find objects from " + string.Join(" ", args));
+            if (IsEmpty(PS)) return Failure("Cannot find objects from " + args.str);
 
             foreach (var currentPrim in PS)
             {

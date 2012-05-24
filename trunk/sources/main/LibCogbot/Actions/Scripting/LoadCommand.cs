@@ -19,10 +19,11 @@ namespace cogbot.Actions.System
             Name = "load";
             Description = "Loads commands from a dll. (Usage: load AssemblyNameWithoutExtension)";
             Category = CommandCategory.BotClient;
+            AddUsage(CreateParams("assembly", typeof (string), "filename to " + Name), Description);
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 1)
                 return ShowUsage();// " load AssemblyNameWithoutExtension";

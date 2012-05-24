@@ -13,7 +13,7 @@ namespace cogbot.Actions.System
             : base(Client)
         {
             Description = "Searches the cogbot help system for botcmds containing a specific string";
-            Usage = 
+            Details = 
 @"<p>paramhelp &lt;string&gt;</p>
 <p>Example:</p>
 <pre>
@@ -36,8 +36,8 @@ paramhelp move
 [19:15] paramhelp: Success: Help complete
 [19:15] paramhelp: Success: Help complete
 </pre>";
-            Parameters = NamedParam.CreateParams("term", typeof(string), "term to search for");
-            ResultMap = NamedParam.CreateParams(
+            Parameters = CreateParams("term", typeof(string), "term to search for");
+            ResultMap = CreateParams(
                  "message", typeof(string), "if term not found, will be <i>I don't know about ...</i>",
                  "success", typeof(bool), "true if it found a match");
             Category = CommandCategory.BotClient;

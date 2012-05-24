@@ -23,7 +23,7 @@ namespace cogbot.Actions.Land
             //callback = new NetworkManager.DisconnectedCallback(Network_OnDisconnected);
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             StringBuilder sb = new StringBuilder();
             string result;

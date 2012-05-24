@@ -23,7 +23,7 @@ namespace cogbot.Actions.Inventory.Shell
             Category = CommandCategory.Inventory;
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             // parse the command line
             string target = String.Empty;

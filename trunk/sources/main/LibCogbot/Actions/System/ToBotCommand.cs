@@ -13,16 +13,16 @@ namespace cogbot.Actions.System
             Description =
                 "Send a command only to one bot.  This is useful when more than one bot is listening to your botcommands on open channel." +
                 "The bot must be logged on from the same Cogbot instance";
-            Usage = 
-                Htmlize.Usage("tobot <avatar> <botcmd>", "Send the command only to avatar") +
-                Htmlize.Example("tobot \"Nephrael Rae\" anim KISS", "Make Nephrael Rae play the kiss animation");
-            Parameters = NamedParam.CreateParams(
+            Details = 
+                AddUsage("tobot <avatar> <botcmd>", "Send the command only to avatar") +
+                Example("tobot \"Nephrael Rae\" anim KISS", "Make Nephrael Rae play the kiss animation");
+            Parameters = CreateParams(
                 "avatar", typeof(AgentSpec), "the avatar to perform the command on",
                 "command", typeof(BotCommand), "the command to perform");
             Category = CommandCategory.BotClient;
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 2) return ShowUsage();
             BotClient oBotClient = ClientManager.GetBotByName(args[0]);

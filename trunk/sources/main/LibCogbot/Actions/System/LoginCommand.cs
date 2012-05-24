@@ -13,15 +13,15 @@ namespace cogbot.Actions.System
         {
             Name = "Login";
             Description = "Log into grid";
-            Usage = Htmlize.Usage("login <first name> <last name> <password> [<loginuri>] [<location>]",
+            Details = AddUsage("login <first name> <last name> <password> [<loginuri>] [<location>]",
                 "log into a grid");
             Category = CommandCategory.Security;
-            Parameters = NamedParam.CreateParams(
+            Parameters = CreateParams(
                 "first", typeof(string), "first name of bot",
                 "last" , typeof(string), "last name of bot",
                 "password", typeof(string), "password for bot",
-                NamedParam.Optional("loginuri", typeof(Uri), "login uri for grid"),
-                NamedParam.Optional("location", typeof(string), "one of home,last, or a sim name"));
+                Optional("loginuri", typeof(Uri), "login uri for grid"),
+                Optional("location", typeof(string), "one of home,last, or a sim name"));
 
         }
 

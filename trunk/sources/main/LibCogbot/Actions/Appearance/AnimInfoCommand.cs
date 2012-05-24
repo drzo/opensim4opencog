@@ -15,16 +15,16 @@ namespace cogbot.Actions.Appearance
             TheBotClient = testClient;
             Name = "animinfo";
             Description = "Show debug info about anims.";
-            Usage = Htmlize.Usage(Name + " <match>", "shows the info about animation") +
-                    Htmlize.Example(Name + " stand1", "shows that it loops and durration");
+            Details = AddUsage(Name + " <match>", "shows the info about animation") +
+                    Example(Name + " stand1", "shows that it loops and durration");
             Category = CommandCategory.Appearance;
-            Parameters = NamedParam.CreateParams(NamedParam.Optional("anim", typeof (SimAnimation), "the animation you want info about such as duration"));
-            ResultMap = NamedParam.CreateParams(
+            Parameters = CreateParams(Optional("anim", typeof (SimAnimation), "the animation you want info about such as duration"));
+            ResultMap = CreateParams(
                 "message", typeof(string), "debug infos about the animations",
                 "success", typeof(bool), "true if command was successful");
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
 
             ICollection<SimAsset> list = SimAssetStore.GetAssets(AssetType.Animation);
@@ -33,7 +33,7 @@ namespace cogbot.Actions.Appearance
             lock (list)
             foreach (SimAsset A in list)
             {
-                foreach (string s in args)
+                foreach (string s in args.tokens)
                 {
                    if (A.Matches(s))
                    {
