@@ -555,6 +555,26 @@ I see it should be surrounded with <sapi>... </sapi> and am puzzled that SSML's 
 @'C#505366584':"xfer: Downloads the specified asset using the Xfer system."
 @'C#505366584':"Help complete"
 "Success help"
-
-
 }}}
+
+
+== Getting events ==
+
+This needs done
+
+this is what ChatFromSim looks like..
+require_chat_hook :- 
+ gridclient_ref(Obj),
+ cli_get(Obj , 'Self' , S),
+        asserta(chat_hook_installed),
+ cli_add_event_handler(S , 'ChatFromSimulator' , onChatTSHook(_,_,_)).
+[11:36:03 PM] Douglas R. Miles: the im would be.,..
+[11:36:05 PM] Anne Ogborn: yes, looking at that
+[11:36:57 PM | Edited 11:37:04 PM] Douglas R. Miles:  cli_add_event_handler(S , 'IM' , onIMHook(_,_,_)).
+[11:37:36 PM] Douglas R. Miles: you'll only care about the 3rd arg
+[11:37:43 PM] Douglas R. Miles: oh first arg is BotID
+[11:37:57 PM | Edited 11:38:00 PM] Douglas R. Miles: of onIMHook
+[11:38:30 PM] Anne Ogborn: I *love* shared media
+[11:38:34 PM] Douglas R. Miles: third will be a struvct you need to print out a couple times
+[11:38:38 PM] Anne Ogborn: I got a 1 hour loop of fire sound
+[11:38:57 PM] Douglas R. Miles: print out to know the scructs shape
