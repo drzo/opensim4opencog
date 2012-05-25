@@ -667,15 +667,13 @@ namespace cogbot
 			var desc = newCommandInfo(new Describe(this));
 			Commands["describe"] = desc;
 			Commands["look"] = desc;
-            RegisterCommand("say", new Actions.Say(this));
-            RegisterCommand("whisper", new Actions.Whisper(this));
-
+            RegisterCommand("say", new cogbot.Actions.Communication.SayCommand(this));
 			RegisterCommand("help", new cogbot.Actions.System.Help(this));
             RegisterCommand("setmaster", new cogbot.Actions.System.SetMasterKeyCommand(this));
             RegisterCommand("setmasterkey", new cogbot.Actions.System.SetMasterKeyCommand(this));
 			RegisterCommand("sit", new Sit(this));
 			RegisterCommand("stand", new StandCommand(this));
-			RegisterCommand("jump", new Jump(this));
+			RegisterCommand("jump", new JumpCommand(this));
 			RegisterCommand("crouch", new CrouchCommand(this));
 			RegisterCommand("mute", new Mute(this));
 			RegisterCommand("unmute", new Unmute(this));
@@ -1183,7 +1181,7 @@ namespace cogbot
                     // message from system
                     if (FromAgentName == "System") return;
                     // message from others
-                    Actions.Whisper whisper = (Actions.Whisper) Commands["whisper"].WithBotClient;
+                    var whisper = (cogbot.Actions.Communication.ImCommand)Commands["im"].WithBotClient;
                     whisper.currentAvatar = FromAgentID;
                     whisper.currentSession = IMSessionID;
                     if (IsOwner)

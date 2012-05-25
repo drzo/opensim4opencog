@@ -10,22 +10,25 @@ using MushDLR223.ScriptEngines;
 
 namespace cogbot.Actions.Communication
 {
-    public class ImCommand : Command, BotPersonalCommand
+    public class ImCommand : Command, BotPersonalCommand, BotStatefullCommand
     {
+        public UUID currentAvatar = UUID.Zero;
+        public UUID currentSession = UUID.Zero;
 
         public ImCommand(BotClient testClient)
         {
             Name = "im";
-            Description = "IM a user.";
-            Details = "Usage: im <agent-spec> [message]";
+            Description = "IM a user. Has nothing to do with SL 'whisper'";
+            Details = AddUsage("im to <avatar name> <message>", "IM Avatar with Message") +
+                    AddUsage("im <message>", "reply to the last person who IMed you");
             Category = CommandCategory.Communication;
             Parameters =
                 CreateParams(
-                            "target", typeof(Avatar), "who you are IMing",
+                            "to", typeof(Avatar), "who you are IMing",
                             "message", typeof(string), "what you IM");
             ResultMap = CreateParams(
-                "message", typeof(string), "if success was false, the reason why",
-                "success", typeof(bool), "true if command was successful");
+                            "personFound", typeof(bool), "true iff we found the person to whisper to",
+                            "sentCorrect", typeof(bool), "true iff we successfully sent the message");
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
@@ -69,8 +72,62 @@ namespace cogbot.Actions.Communication
             if (message.Length > 1023) message = message.Remove(1023);
             TheBotClient.InstantMessage(found, message, UUID.Zero);
             return Success("Instant Messaged " + found.ToString() + " with message: " + message);
+        }
 
+        public CmdResult acceptInputOBSOLETE(string verb, Parser args, OutputDelegate WriteLine)
+        {
+            //base.acceptInput(verb, args);
+
+            string to = args["to"];
+
+            if (to.Length > 0)
+            {
+                int argsUsed;
+                List<SimObject> PS =
+                    WorldSystem.GetPrimitives(to.Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries), out argsUsed);
+                if (!IsEmpty(PS))
+                {
+                    foreach (var prim in PS)
+                    {
+                        currentAvatar = prim.ID;
+                        break;
+                    }
+                }
+                else
+                {
+                    SimAvatar avatar;
+                    if (!WorldSystem.tryGetAvatar(to, out avatar))
+                    {
+                        return Failure("I don't know who " + to + "is.");
+                    }
+                    currentAvatar = avatar.ID;
+                }
+
+            }
+            else if (currentAvatar == UUID.Zero)
+            {
+                return Failure("Please provide a name to whisper to.");
+            }
+
+            if (currentSession != UUID.Zero)
+                Client.Self.InstantMessage(currentAvatar, args.objectPhrase, currentSession);
+            else
+                Client.Self.InstantMessage(currentAvatar, args.objectPhrase);
+            return Success("sent message");
+        }
+
+        #region Implementation of IDisposable
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
 
         }
+
+        #endregion
+
     }
 }

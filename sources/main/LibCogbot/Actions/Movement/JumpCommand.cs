@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
@@ -9,15 +10,26 @@ namespace cogbot.Actions.Movement
     {
         public JumpCommand(BotClient testClient)
 		{
-			Name = "jump";
-			Description = "Jumps or flies up";
-            Category = CommandCategory.Movement;
-		}
+           Description = "Jump for 1/2 second.";
+            Name = "Jump";
+            AddVersion(CreateParams(), Description);
+            ResultMap = CreateParams(
+                 "message", typeof(string), "if we could not why, why (shouldnt happen)",
+                 "success", typeof(bool), "true if we jumped up");
 
-        public override CmdResult ExecuteRequest(CmdRequest args)
-		{
+            Category = CommandCategory.Movement;
+        }
+
+        public override CmdResult acceptInput(string verb, Parser args, OutputDelegate WriteLine)
+        {
+          //  base.acceptInput(verb, args);
+
             Client.Self.Jump(true);
-            return Success("Jumped");
-		}
+            Thread.Sleep(500);
+            Client.Self.Jump(false);
+
+            TheBotClient.describeNext = true;
+            return Success("$bot jumped.");
+        }
     }
 }
