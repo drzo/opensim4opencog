@@ -853,16 +853,19 @@ namespace cogbot.TheOpenSims
                         if (!files.EndsWith(".ogg")) continue;
                         byte[] bs = File.ReadAllBytes(files);
                         string name = Path.GetFileNameWithoutExtension(Path.GetFileName(files)).ToLower();
-                        if (nameAsset.ContainsKey(name)) continue;
-                        WriteLine("Sound w/o UUID " + name);
-                        SimSound sound = new SimSound(UUID.Zero, name, AssetType.Sound);
-                        sound.FileName = files;
-                        nameAsset[name] = sound;
+                        lock (nameAsset)
+                        {
+                            if (nameAsset.ContainsKey(name)) continue;
+                            WriteLine("Sound w/o UUID " + name);
+                            SimSound sound = new SimSound(UUID.Zero, name, AssetType.Sound);
+                            sound.FileName = files;
+                            nameAsset[name] = sound;
+                        }
                     }
                 }
 
 
-               // if (uuidAsset.Count > 0) return;
+                // if (uuidAsset.Count > 0) return;
                 /*
                  * need UUIDS for
                         customize.animation
@@ -1092,7 +1095,7 @@ namespace cogbot.TheOpenSims
                         }
                         if (anim != null)
                         {
-                            nameAsset[name] = anim;
+                            lock (nameAsset) nameAsset[name] = anim;
                         } else
                         {
                             WriteLine("NULL Anim w/o UUID " + name);  
@@ -1490,18 +1493,21 @@ namespace cogbot.TheOpenSims
             {
                 return partial;
             }
-            foreach (String name in nameAsset.Keys)
+            lock (nameAsset)
             {
-                String sname = ToAssetName(name);
-                SimAsset aset = nameAsset[name];
-                if (sname.Equals(a))
+                foreach (String name in nameAsset.Keys)
                 {
-                    partial = aset.AssetID;
-                    if (type == aset.AssetType) return partial;
-                }
-                if (partialMatching && sname.Contains(a))
-                {
-                    if (partial == UUID.Zero) partial = aset.AssetID;
+                    String sname = ToAssetName(name);
+                    SimAsset aset = nameAsset[name];
+                    if (sname.Equals(a))
+                    {
+                        partial = aset.AssetID;
+                        if (type == aset.AssetType) return partial;
+                    }
+                    if (partialMatching && sname.Contains(a))
+                    {
+                        if (partial == UUID.Zero) partial = aset.AssetID;
+                    }
                 }
             }
             return partial;

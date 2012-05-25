@@ -385,8 +385,12 @@ namespace cogbot.TheOpenSims
                         WriteLine("SetAssetName: {0} {1}", AssetType, intern);
                     }
                 }
-                if (!SimAssetStore.nameAsset.ContainsKey(intern))
-                    SimAssetStore.nameAsset[intern] = this;
+                var nameAsset = SimAssetStore.nameAsset;
+                lock (nameAsset)
+                {
+                    if (!nameAsset.ContainsKey(intern))
+                        nameAsset[intern] = this;
+                }
             }
         }
 
