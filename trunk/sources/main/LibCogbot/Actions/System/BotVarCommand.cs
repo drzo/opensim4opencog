@@ -17,7 +17,16 @@ namespace cogbot.Actions.System
         public BotVarCommand(BotClient client)
         {
             Name = "botvar";
-            Description = "Maniputlates bot vars. Usage: botvar master";
+            Description = 
+                "Display bot vars. Bot vars are an interface between botcmd and AIML. " +
+                "For more information on bot vars see <a href='wiki/AIML#bot+vars'>Bot Vars</a>";
+            "botvar master";
+            Usage = Htmlize.Usage("botvar <varname>", "display a bot var") +
+                Htmlize.Example("botvar master", "displays the name of the bot's master");
+
+            Parameters = NamedParam.CreateParams(
+                "varname", typeof(string), "bot var to display");
+
             Category = CommandCategory.BotClient;
         }
 
