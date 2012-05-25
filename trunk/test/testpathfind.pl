@@ -238,7 +238,7 @@ tpf :-
 tpf :- !.
 
 %% runs the test suite on all logged in bots in their own threads
-tpfa:-botID(Name,ID),not(running_tpfa(Name)),thread_create(tpfa(Name,ID),_,[detached(true),alias(Name)]),fail.
+tpfa:-logon_bots,botID(Name,ID),not(running_tpfa(Name)),thread_create(tpfa(Name,ID),_,[detached(true),alias(Name)]),fail.
 tpfa:-!.
 
 :-dynamic running_tpfa/1.
