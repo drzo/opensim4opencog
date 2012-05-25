@@ -52,11 +52,11 @@
 % debug output
 testDebug(Term):-format(user_error,'  ~q~n',[Term]),flush_output(user_error).
 
-dbgFmt(F,A):-'format'(F,A),flush_output.
+dbgFmt(F,A):-attach_console,'format'(F,A),flush_output.
 
 % unify if this is the bot's name
-botName(Name) :-
-	Name = 'testbot Ogborn'.  %TODO Douglas, how do I read this from
+botName(Name) :- botget(name,X),string_to_atom(X,Name).
+     %%   Name = 'testbot Ogborn'.  %TODO Douglas, how do I read this from
 % Configuration in clientManager.cs
 
 needed(TestName , Number) :-
@@ -75,13 +75,13 @@ failure(TestName) :-
 	botName(Name),
 	failure(Name , TestName).
 
-all_needed(_ , 0).
+all_needed(_ , 0):-!.
 
 all_needed(N , Num_needed) :-
 	Num_needed > 0,
 	needed(N , Num_needed),
 	NN is Num_needed - 1,
-	all_needed(N , NN).
+	all_needed(N , NN),!.
 
 %
 % Convenience method that performs common end
@@ -154,7 +154,11 @@ time_limit(Limit) :-
 % asserts.
 %
 % Then the test can check these facts.
-onChatTSHook(_Originator, _Sender, Event) :-
+onChatTSHook(Originator, Sender, Event) :-
+        dbgFmt('~nonChatTSHook: ~q.~n',[Event]),
+        ignore(onChatTSHook0(Originator, Sender, Event)).
+
+onChatTSHook0(_Originator, _Sender, Event):-
 	Event = event(
 		      'ChatEventArgs',
 		      _Orig,
@@ -165,9 +169,10 @@ onChatTSHook(_Originator, _Sender, Event) :-
         string_subst(Content , "/me " , Name , Term_As_String),
 	string_to_atom(Term_As_String , Term_As_Atom),
 	catch(atom_to_term(Term_As_Atom , Term , _), SyntaxError,(testDebug(SyntaxError),fail)),
+        dbgFmt('~nAssert: ~q.~n',[Term]),
 	catch(asserta(Term) , _Assert_error , true).
 
-onChatTSHook(_Originator, _Sender, _Event) :-!.
+onChatTSHook0(_Originator, _Sender, _Event) :-!.
 
 % make sure the chat hook is installed
 %
@@ -201,7 +206,7 @@ list_string_subst(S , T , R , NS) :-
 
 list_string_subst(S , _ , _ , S).
 
-botapi(A) :- notrace(ignore(catch(botdo(A),_,fail))).
+botapi(A) :- notrace(ignore(catch(botcmd(A),_,fail))).
 
 %%user:onChatTSHook(X,Y,Z):-testsupport:onChatTSHook(X,Y,Z).
 
@@ -241,11 +246,11 @@ results(Name , R) :-
 %
 doTest(Name , Goal , Results) :-
 	(   catch(once(Goal) , E , (print_message(error , E),fail)) ->
-	    results(Name , R),
-	    Results = [results(success)|R]
+	    (results(Name , R),
+	    Results = [results(success)|R])
 	    ;
-	    results(Name , R),
-	    Results = [results(fail)|R]
+	    (results(Name , R),
+	    Results = [results(fail)|R])
 	),!.
 
 
@@ -274,7 +279,7 @@ ppTest(List) :-
 	member(results(fail) , R), !,
 	(   member(name(N) , List) ;  N = 'no name'),
 	(   member(desc(D) , List) ;  D = ''),
-	concat_options(List , "" , Options),
+	concat_options(List , "" , Options),       
 	writef('****************\nFAIL: test %p %p %p FAILED\n%p\n' ,
 	       [N,D,Options,R]),
 	write_time_limit_exceeded , flush_output, !.
@@ -294,7 +299,8 @@ ppTest(List) :-
 %
 write_time_limit_exceeded :-
 	time_limit_exceeded(Limit , Taken),!,
-	writef('Time limit exceeded, allowed %d, took %d\n' , [Limit,Taken]).
+	writef('Time limit exceeded, allowed %d, took %d\n' , [Limit,Taken]),
+        flush_output.
 
 write_time_limit_exceeded :- !.
 
