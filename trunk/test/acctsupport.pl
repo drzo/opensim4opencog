@@ -10,7 +10,7 @@
 
 %--------------------------------------------------------
 %
-%  simplemove.pl
+%  acctsupport.pl
 %
 %    Testing of multi bot logon and movement
 %
