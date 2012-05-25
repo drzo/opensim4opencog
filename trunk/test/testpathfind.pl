@@ -1,4 +1,4 @@
-:-module(testpathfind, [tpf_method/1, tpf/0, tpf/1, tpf1/0,tpf2/0,tpfi/0, makePipe/2]).
+:-module(testpathfind, [tpf_method/1, tpf/0, tpf/1, tpf1/0,tpf2/0,tpfi/0, makePipe/2, tpfa/0]).
 
 
 :- use_module(test(testsupport)).
@@ -64,7 +64,10 @@ move_test(N, Time , Start , End) :-
 test_desc(easy , 'insanely easy test').
 test(N) :-
 	N = easy,
-	writeq('in easy'),nl.
+        start_test(N),
+	writeq('in easy'),nl,
+	std_end(N , 5 , 0).
+
 
 
 test_desc(clear , 'clear path 10 meters').
@@ -72,7 +75,7 @@ test(N) :-
 	N = clear,
 	start_test(N),
         move_test(N,15,start_test_1,stop_test_1),
-	std_end(N , 17 ,2).
+        std_end(N , 17 ,1).
 
 
 test_desc(zero , 'Zero Distance').
@@ -226,12 +229,22 @@ tpf_method(GoMethod) :-
 
 tpf_method(_) :- !.
 
+%% runs the test suite on current bot
 tpf :-
 	member(Method , [astargoto /* 'follow*' astargoto*/]),
 	tpf_method(Method),
 	fail.
 
 tpf :- !.
+
+%% runs the test suite on all logged in bots in their own threads
+tpfa:-botID(Name,ID),not(running_tpfa(Name)),thread_create(tpfa(Name,ID),_,[detached(true),alias(Name)]),fail.
+tpfa:-!.
+
+:-dynamic running_tpfa/1.
+
+tpfa(Name,_ID):-running_tpfa(Name),!.
+tpfa(Name,ID):-assert(running_tpfa(Name)),!,set_current_bot(ID),tpf,retractall(running_tpfa(Name)).
 
 tpfi :- tpf(island_hop).
 tpf1 :- repeat,once(tpf(island_hop)),sleep(10),fail.
