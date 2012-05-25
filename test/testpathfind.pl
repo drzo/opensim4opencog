@@ -40,7 +40,7 @@ teleportTo(StartName):-
         %% if fallthru floor try to get closer
         (Dist < 3 -> botapi(moveto(Start)) ; ( cogrobot:vectorAdd(Start2,v3d(0,0,1),Start3),botapi(teleport(Start3)) )),!.*/
 
-dbgFmt(F,A):-'format'(F,A),flush_output.
+dbgFmt(F,A):-attach_console,'format'(F,A),flush_output.
 
 % convenience method that does the 'normal' thing -
 % tp to Start, move using the standard method to
@@ -213,14 +213,15 @@ tpf_method(GoMethod) :-
 	retractall(goMethod(_)),
 	asserta(goMethod(GoMethod)),
 	cli_set('SimAvatarClient' , 'GotoUseTeleportFallback' , '@'(false)),
-%	clause(testpathfind:test(Name) , _),
-	test_desc(Name , Desc),
-        'format'('~n~ndoing test: ~q',[test_desc(Name , Desc)]),
+        test_desc(Name , Desc),
+   once((
+        dbgFmt('~n~ndoing test: ~q~n',[test_desc(Name , Desc)]),
 	doTest(Name , testpathfind:test(Name) , Results),
+        numbervars(Results),
 	ppTest([name(Name),
 		desc(Desc) ,
 		results(Results) ,
-		option('goMethod ' , GoMethod)]),
+		option('goMethod ' , GoMethod)]))),
 	fail.
 
 tpf_method(_) :- !.
