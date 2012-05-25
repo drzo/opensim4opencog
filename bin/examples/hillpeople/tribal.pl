@@ -94,7 +94,7 @@ be_tribal(
 	random_member(End, AllWP),
 	End \= Start,
 	waypoint_path(Start, End, Path),
-	say_format('No Path, new ~w to ~w is ~w"',
+	say_format('No Path, new ~w to ~w is ~w',
 	       [Start, End, Path]),
 	be_tribal(Start, Name, [en_route(Path) | Status]).
 

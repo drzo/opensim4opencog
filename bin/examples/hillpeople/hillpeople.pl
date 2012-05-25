@@ -5,7 +5,8 @@
 		       sex/2,
 		       husband_of/2,
 		       hill_person/1,
-		       home/2
+		       home/2,
+		       ebt/0
 		      ]).
 
 %--------------------------------------------------------
@@ -126,6 +127,7 @@ logon_a_bot(Name) :-
 
 
 loginuri("http://www.pathwayslms.com:9000/").
+tribe_size(6).
 
 %%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %            bot credentials
@@ -137,7 +139,7 @@ pw('hillpeople').
 tribe('Hillperson').
 %tribe('Dougstribe').
 
-hill_person(otopopo).
+hill_person(otopopo) :- tribe_size(X), X > 0.
 hill_credentials(otopopo, 'Otopopo', Tribe, PW) :-
     pw(PW),
     tribe(Tribe).
@@ -146,7 +148,7 @@ sex(otopopo, m).
 home(otopopo, hut1).
 husband_of(otopopo, yuppie).
 
-hill_person(yuppie).
+hill_person(yuppie) :- tribe_size(X), X > 1.
 hill_credentials(yuppie, 'Yuppie', Tribe, PW) :-
     pw(PW),
     tribe(Tribe).
@@ -154,7 +156,7 @@ age(yuppie, 21).
 sex(yuppie, f).
 home(yuppie, hut1).
 
-hill_person(bignose).
+hill_person(bignose) :- tribe_size(X), X > 2.
 hill_credentials(bignose, 'Bignose', Tribe, PW) :-
     pw(PW),
     tribe(Tribe).
@@ -163,7 +165,7 @@ sex(bignose, m).
 home(bignose, hut2).
 husband_of(bignose, onosideboard).
 
-%hill_person(onosideboard).
+hill_person(onosideboard)  :- tribe_size(X), X > 3.
 hill_credentials(onosideboard,
 		 'Onosideboard', Tribe, PW) :-
     pw(PW),
@@ -172,7 +174,7 @@ age(onosideboard, 35).
 sex(onosideboard, f).
 home(onosideboard, hut2).
 
-%hill_person(lemonaide).
+hill_person(lemonaide) :- tribe_size(X), X > 4.
 hill_credentials(lemonaide, 'Lemonaide', Tribe, PW) :-
     pw(PW),
     tribe(Tribe).
@@ -181,7 +183,7 @@ sex(lemonaide, f).
 parent_of(onosideboard, lemonaide).
 home(lemonaide, hut2).
 
-%hill_person(opthamologist).
+hill_person(opthamologist) :- tribe_size(X), X > 5.
 hill_credentials(opthamologist, 'Opthamologist', Tribe, PW) :-
     pw(PW),
     tribe(Tribe).
@@ -199,6 +201,12 @@ everybody_be_tribal :-
 	    _, [alias(Name)]),
 	fail.
 everybody_be_tribal.
+
+join_the_tribe :-
+	hill_person(Name),
+	thread_join(Name, _),
+	fail.
+join_the_tribe.
 
 ebt :- everybody_be_tribal.
 
