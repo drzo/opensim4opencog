@@ -130,7 +130,7 @@ namespace cogbot.Listeners
             }
 
             List<SimObject> matches = new List<SimObject>();
-            if (m_TheSimAvatar != null)
+            if (m_TheSimAvatar != null && false)
             {
                 List<SimObject> set = TheSimAvatar.GetKnownObjects().CopyOf();
                 object lockSet = set;
