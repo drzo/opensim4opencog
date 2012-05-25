@@ -1329,8 +1329,11 @@ namespace cogbot.TheOpenSims
                 _confirmedObject = true;
                 Debug("Now confirmed!!");
             }
-            toStringNeedsUpdate = true;
-            _TOSRTING = null;
+            lock (toStringLock)
+            {
+                toStringNeedsUpdate = true;
+                _TOSRTING = null;                
+            }
             lock (MostRecentPropertyUpdateLock)
             {
                 if (objectProperties.family)
@@ -1361,7 +1364,11 @@ namespace cogbot.TheOpenSims
             {
                 Primitive Prim = this.Prim;
                 IsParentAccruate(Prim);
-                toStringNeedsUpdate = true;
+                lock (toStringLock)
+                {
+                    toStringNeedsUpdate = true;
+                    _TOSRTING = null;
+                }
                 if (objectProperties != null)
                 {
                     _propertiesCache = objectProperties;
@@ -1405,13 +1412,21 @@ namespace cogbot.TheOpenSims
                 if (_propertiesCache != null) UpdateProperties(_propertiesCache);
             }
             PathFinding.UpdateCollisions();
-            toStringNeedsUpdate = true;
+            lock (toStringLock)
+            {
+                toStringNeedsUpdate = true;
+                _TOSRTING = null;
+            }
         }
 
 
         private string _TOSRTING;
-
+        private readonly object toStringLock = new object();
         public override string ToString()
+        {
+            lock (toStringLock) return ToStringReal();
+        }
+        public string ToStringReal()
         {
           //  string _TOSRTING = this._TOSRTING;
 
@@ -2619,7 +2634,10 @@ namespace cogbot.TheOpenSims
 
             public void AddSuperTypes(IList<SimObjectType> listAsSet)
             {
-                thiz.toStringNeedsUpdate = true;
+                lock (thiz.toStringLock)
+                {
+                    thiz.toStringNeedsUpdate = true;
+                }
                 //SimObjectType _UNKNOWN = SimObjectType._UNKNOWN;
                 foreach (SimObjectType type in listAsSet)
                 {
