@@ -33,21 +33,21 @@
                         forbidden/1, forbidden/2,
 			obstacle/0, obstacle/1,
 			failure/1, failure/2,
-			current_test/1,
+			current_test/2,
 			botapi/1,
 			onChatTSHook/3, std_end/2, std_end/3,
 			doTest/3 , ppTest/1]).
 :-use_module(library(swicli)).
 :-use_module(library('simulator/cogrobot')).
 
-:- dynamic(current_test/1).
+:- dynamic(current_test/2).
 :- dynamic(chat_hook_installed/0).
 :- dynamic(needed/3).
 :- dynamic(forbidden/2).
 :- dynamic(obstacle/1).
 :- dynamic(failure/2).
-:- dynamic(current_test_started_at_time/1).
-:- dynamic(time_limit_exceeded/2).
+:- dynamic(current_test_started_at_time/2).
+:- dynamic(time_limit_exceeded/3).
 
 % debug output
 testDebug(Term):-format(user_error,'  ~q~n',[Term]),flush_output(user_error).
@@ -109,14 +109,15 @@ std_end(N , TimeLimit , NumNeeded) :-
 
 % Call prior to starting a test.
 start_test(Name) :-
+        botName(BotName),
         botapi(stop),
 	\+ var(Name),
-	retractall(current_test(_)),
-	asserta(current_test(Name)),
-	retractall(current_test_started_at_time(_)),
-	retractall(time_limit_exceeded(_,_)),
+	retractall(current_test(BotName,_)),
+	asserta(current_test(BotName,Name)),
+	retractall(current_test_started_at_time(BotName,_)),
+	retractall(time_limit_exceeded(BotName,_,_)),
 	get_time(Time),
-	assert(current_test_started_at_time(Time)),
+	assert(current_test_started_at_time(BotName,Time)),
 	require_chat_hook,
 	retractall(needed(_,_,_)),
 	retractall(forbidden(_,_)),
@@ -127,9 +128,10 @@ start_test(Name) :-
 % call at conclusion of test
 % this only gets there if the test succeeds, so it's pretty suspicious.
 end_test :-
-	current_test(_Name),
-%	write('Test '),write(Name),write(' succeeded'),nl,flush_output,
-	retractall(current_test(_)).
+	botName(BotName),
+        current_test(BotName,_Name),
+%	write('Test '),write(BotName:Name),write(' succeeded'),nl,flush_output,
+	retractall(current_test(BotName,_)).
 
 % enforce a time limit.
 % unifies only if called within Limit seconds of
@@ -138,15 +140,16 @@ end_test :-
 %
 time_limit(Limit) :-
 	get_time(Time),
-	current_test_started_at_time(Start),
+        botName(BotName),
+	current_test_started_at_time(BotName,Start),
 	Taken is Time - Start,
 	(
 	    Taken > Limit
 	->
-	    assert(time_limit_exceeded(Limit , Taken)),
+	    assert(time_limit_exceeded(BotName, Limit , Taken)),
 	    true %%!,fail
 	;
-	    dbgFmt('Time was ~w~n',[Taken])
+	    dbgFmt('Time for ~w was ~w~n',[BotName,Taken])
 	).
 
 % this is installed as a callback, called when the bot hears chat
@@ -298,7 +301,8 @@ ppTest(List) :-
 % print warning if time limit exceeded
 %
 write_time_limit_exceeded :-
-	time_limit_exceeded(Limit , Taken),!,
+        botName(BotName),
+	time_limit_exceeded(BotName, Limit , Taken),!,
 	writef('Time limit exceeded, allowed %d, took %d\n' , [Limit,Taken]),
         flush_output.
 
