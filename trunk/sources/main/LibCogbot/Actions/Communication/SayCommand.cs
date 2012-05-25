@@ -4,6 +4,7 @@ using System.Text;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
+using OpenMetaverse.StructuredData;
 
 namespace cogbot.Actions.Communication
 {
@@ -12,13 +13,15 @@ namespace cogbot.Actions.Communication
         public SayCommand(BotClient testClient)
 		{
 			Name = "say";
-            Description = Name + "s something (optionally to channel)";
-            Details = AddUsage(Name + " [#channel] something", Description);
+            Description = "chat a message.  If the message starts with #&lt;integer&gt; it is chatted on a channel." +
+                          "see <a href='wiki/BotCommands#shout'>shout</a> and <a href='wiki/BotCommands#whisper'>whisper</a> to " +
+                          "increase or decrease range. If the message is surrounded by &lt; and &gt; it is interpreted as passed " +
+                          "to a physical robot body. See BotClient.cs for details";
             Category = CommandCategory.Communication;
-            Parameters =
-                CreateParams(
-                            Optional("channel", typeof(int), "the optional channel in which the message goes out"),
-                            "message", typeof(string), "what you output to the simulator");
+            AddVersion(CreateParams(
+                           Optional("#channel", typeof (int), "the optional channel in which the message goes out"),
+                           "message", typeof (string), "Message to chat. If it starts with # followed by an integer, chats on channel"),
+                           Description);
             ResultMap = CreateParams(
                 "message", typeof(string), "if success was false, the reason why",
                 "success", typeof(bool), "true if command was successful");
@@ -46,10 +49,21 @@ namespace cogbot.Actions.Communication
                 message.Append(args[i]);
                 if (i != args.Length - 1) message.Append(" ");
             }
-
-			Client.Self.Chat(message.ToString(), channel, ChatType.Normal);
-
-            return Success("Said " + message.ToString());
-		}
+            string text = message.ToString();
+            if (text.StartsWith("<") && text.EndsWith(">"))
+            {
+                TheBotClient.XmlTalk(text, WriteLine);
+                return Success("xmlsaid: " + text);
+            }
+            if (channel == 0)
+            {
+                TheBotClient.Talk(text);
+            }
+            else
+            {
+                TheBotClient.Talk(text, channel, ChatType.Normal);
+            }
+            return new CmdResult("said: " + text, true, Results);
+        }
     }
 }
