@@ -118,11 +118,13 @@ namespace AltAIMLbot.Utils
                 }
                 else
                 {
+                    Console.WriteLine("FileNotFoundException:{0}", pathToSettings);
                     throw new FileNotFoundException();
                 }
             }
             else
             {
+                Console.WriteLine("FileNotFoundException:{0}", pathToSettings);
                 throw new FileNotFoundException();
             }
         }

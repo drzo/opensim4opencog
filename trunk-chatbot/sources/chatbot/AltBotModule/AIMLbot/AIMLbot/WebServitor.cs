@@ -36,6 +36,15 @@ namespace AltAIMLbot
             ourServitor = theServitor;
             listener.Start();
             listener.Prefixes.Add(serverRoot);
+            //listener.Prefixes.Add("http://192.168.2.141:8123/");
+            //listener.Prefixes.Add("http://192.168.0.145:8123/");
+            try
+            {
+                listener.Prefixes.Add("http://+:8123/");
+            }
+            catch(Exception )
+            {
+            }
             loadAnalyzer();
             Thread t = new Thread(new ThreadStart(clientListener));
             t.Start();
@@ -139,6 +148,33 @@ namespace AltAIMLbot
             Encoding encoding = context.Request.ContentEncoding;
 
             StreamReader streamReader = new StreamReader(bodyStream, encoding);
+            if (path.Contains("./interpreter/"))
+            {
+                // Posting to the interperter directory
+                // causes the text to be loaded immediately like a new AIML file
+
+                string infoContentType = context.Request.ContentType;
+                long infoContentLength = context.Request.ContentLength64;
+                string infoBody = streamReader.ReadToEnd();
+                string report = "<ok/>";
+                try
+                {
+                    XmlDocument _xmlfile = new XmlDocument();
+                    if (infoBody.Length > 0) _xmlfile.LoadXml(infoBody);
+                    ourServitor.curBot.loadAIMLFromXML(_xmlfile, "webservice");
+                    context.Response.StatusCode = (int)HttpStatusCode.OK;
+                }
+                catch(Exception e)
+                {
+                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError ;
+                    report = String.Format("<error msg=\"{0}\" />{1}</error>", e.Message, e.StackTrace); 
+                }
+                using (Stream s = context.Response.OutputStream)
+                using (StreamWriter writer = new StreamWriter(s))
+                    writer.WriteLine("<ok/>");
+                return;
+
+            }
             if (context.Request.ContentType != null) 
             {
                 string infoContentType = context.Request.ContentType;
@@ -176,7 +212,8 @@ namespace AltAIMLbot
             string path = "." + justURL;
             string query = context.Request.QueryString["q"];
             string action = context.Request.QueryString["a"];
-            
+            Console.WriteLine("WEBGET path={0},action={1},query={2}", path, action, query);
+
             if (path.Contains("./scheduler/"))
             {
                 context.Response.StatusCode = (int)HttpStatusCode.OK;
@@ -413,6 +450,7 @@ namespace AltAIMLbot
         public static void analyse(
             StreamWriter writer, string path, string behaviorName,string rawURL)
         {
+            Console.WriteLine("analyse path={0},behaviorName={1},rawURL={2}", path, behaviorName, rawURL);
             if (!File.Exists(path))
             {
                 writer.WriteLine("<fin/>");
@@ -515,6 +553,7 @@ namespace AltAIMLbot
                 relateToRootParent(writer, _xmlfile, basicURI, "subbehavior", "behavior/", ".BTX",
                     "dcterms:requires");
             }
+            Console.WriteLine("Analysis complete {0}", behaviorName);
             writer.WriteLine ("");
 
         }

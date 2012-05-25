@@ -51,6 +51,9 @@ namespace AltAIMLbot.AIMLTagHandlers
                     String templateNodeInnerValue = this.templateNode.InnerText;
                     string myUrl = this.templateNode.Attributes["url"].Value;
                     string myAppID = this.templateNode.Attributes["appid"].Value;
+                    if (myUrl == null) { myUrl = bot.GlobalSettings.grabSetting("wolframserverurl"); }
+                    if (myAppID == null) { myAppID = bot.GlobalSettings.grabSetting("wolframserverappid"); }
+
                     string query = templateNodeInnerValue;
                     query = query.Replace('\n', ' ');
                     query = query.Replace('\r', ' ');

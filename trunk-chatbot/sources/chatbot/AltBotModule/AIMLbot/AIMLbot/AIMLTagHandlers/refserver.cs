@@ -47,6 +47,9 @@ namespace AltAIMLbot.AIMLTagHandlers
                 {
                     String templateNodeInnerValue = this.templateNode.InnerText;
                     string myUrl = this.templateNode.Attributes["url"].Value;
+                    if (myUrl == null) { myUrl = bot.GlobalSettings.grabSetting("refserverurl"); }
+
+
                     string query = templateNodeInnerValue;
                     WebClient client = new WebClient();
                     string webAsk = myUrl + query;

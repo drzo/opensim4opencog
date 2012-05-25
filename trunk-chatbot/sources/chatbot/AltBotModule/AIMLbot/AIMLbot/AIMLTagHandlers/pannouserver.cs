@@ -70,6 +70,11 @@ namespace AltAIMLbot.AIMLTagHandlers
                     string myKey = this.templateNode.Attributes["key"].Value;
                     string onFail = this.templateNode.Attributes["onfail"].Value;
                     string query = templateNodeInnerValue;
+
+                    if (myUrl == null) { myUrl = bot.GlobalSettings.grabSetting("pannouserverurl"); }
+                    if (myLogin == null) { myLogin = bot.GlobalSettings.grabSetting("pannouserverlogin"); }
+                    if (myKey == null) { myKey = bot.GlobalSettings.grabSetting("pannouserverkey"); }
+
                     query = query.Replace('\n', ' ');
                     query = query.Replace('\r', ' ');
                     query = query.Trim();

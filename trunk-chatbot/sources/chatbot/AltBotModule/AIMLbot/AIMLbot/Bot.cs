@@ -1111,6 +1111,9 @@ namespace AltAIMLbot
                         case "wolframserver":
                             tagHandler = new AIMLTagHandlers.wolframserver(this, user, query, request, result, node);
                             break;
+                        case "filterqa":
+                            tagHandler = new AIMLTagHandlers.filterqa(this, user, query, request, result, node);
+                            break;
 
                         case "inject":
                             tagHandler = new AIMLTagHandlers.inject(this, user, query, request, result, node);

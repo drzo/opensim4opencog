@@ -93,25 +93,24 @@
     <Reference Include="System.Core">
       <Name>System.Core</Name>
     </Reference>
-    <Reference Include="DcBus.dll">
-      <Name>DcBus.dll</Name>
-      <HintPath>..\..\..\..\..\bin\DcBus.dll</HintPath>
-    </Reference>
     <Reference Include="Enyim.Caching.dll">
       <Name>Enyim.Caching.dll</Name>
       <HintPath>..\..\..\..\..\bin\Enyim.Caching.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Aima.NET\Aima.NET.csproj">
-      <Name>Aima.NET</Name>
-      <Project>{73DF0D5B-A5DB-4A85-9EDE-F3001F4B83C8}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
-    </ProjectReference>
     <ProjectReference Include="..\..\..\..\main\MushDLR223\MushDLR223.csproj">
       <Name>MushDLR223</Name>
       <Project>{CFF3BC8E-C400-4D61-8C0D-763DDF024751}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Aima.NET\Aima.NET.csproj">
+      <Project>{73DF0D5B-A5DB-4A85-9EDE-F3001F4B83C8}</Project>
+      <Name>Aima.NET</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\DcBus\DcBus.csproj">
+      <Project>{ADDC6A24-1EDC-47B3-B3A2-C39BE4A1CF9D}</Project>
+      <Name>DcBus</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\GenericSets\src\Iesi.Collections.Generic\Iesi.Collections.Generic.csproj">
       <Name>Iesi.Collections.Generic</Name>
@@ -120,6 +119,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AIMLTagHandlers\filterqa.cs" />
     <Compile Include="BehaviorTree.cs">
     </Compile>
     <Compile Include="Bot.cs">

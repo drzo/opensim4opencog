@@ -52,6 +52,12 @@ namespace AltAIMLbot.AIMLTagHandlers
                     string myUrl = this.templateNode.Attributes["url"].Value;
                     string myUser = this.templateNode.Attributes["apiuser"].Value;
                     string myPass = this.templateNode.Attributes["apipass"].Value;
+                    if (myUrl == null) { myUrl = bot.GlobalSettings.grabSetting("trueknowledgeserverurl"); }
+                    if (myUser == null) { myUser = bot.GlobalSettings.grabSetting("trueknowledgeserveruser"); }
+                    if (myPass == null) { myPass = bot.GlobalSettings.grabSetting("trueknowledgeserverpass"); }
+
+
+
                     string query = templateNodeInnerValue;
                     query = query.Replace('\n', ' ');
                     query = query.Replace('\r', ' ');

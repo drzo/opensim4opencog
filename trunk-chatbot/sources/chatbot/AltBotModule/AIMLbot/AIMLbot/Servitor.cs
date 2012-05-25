@@ -122,6 +122,11 @@ namespace AltAIMLbot
             startCronEngine();
             curBot.myBehaviors.keepTime("activation", RunStatus.Success);
             curBot.myBehaviors.activationTime("activation", RunStatus.Success);
+            string servRoot = curBot.GlobalSettings.grabSetting("serverRoot");
+            if ((servRoot != null) && (servRoot.Length >7))
+            {
+                WebServitor.serverRoot = servRoot;
+            }
             WebServitor.beginService(this);
 
             Console.WriteLine(" Servitor startup complete");
