@@ -4,9 +4,12 @@
 		       age/2,
 		       sex/2,
 		       husband_of/2,
+		       start_wearing/2,
 		       hill_person/1,
 		       home/2,
-		       ebt/0
+		       ebt/0,
+		       tribal_land/1,
+		       join_the_tribe/0
 		      ]).
 
 %--------------------------------------------------------
@@ -74,7 +77,9 @@ assertIfNewRC(Gaf):-asserta(Gaf).
 	sex/2,
 	age/2,
 	home/2,
-	husband_of/2.
+	husband_of/2,
+	start_wearing/2.
+
 
 %
 %  Log on the bots and start the simulation. This is
@@ -127,6 +132,7 @@ logon_a_bot(Name) :-
 
 
 loginuri("http://www.pathwayslms.com:9000/").
+tribal_land('annies haven II/164/135/21').
 tribe_size(6).
 
 %%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -147,6 +153,11 @@ age(otopopo, 17).
 sex(otopopo, m).
 home(otopopo, hut1).
 husband_of(otopopo, yuppie).
+start_wearing(otopopo, [
+			'otopopo shape',
+			'bald cap',
+			'otopopo skin',
+			'otopopo eyes']).
 
 hill_person(yuppie) :- tribe_size(X), X > 1.
 hill_credentials(yuppie, 'Yuppie', Tribe, PW) :-
@@ -155,6 +166,13 @@ hill_credentials(yuppie, 'Yuppie', Tribe, PW) :-
 age(yuppie, 21).
 sex(yuppie, f).
 home(yuppie, hut1).
+start_wearing(yuppie, [
+		       'yuppie smarter shape',
+		       'bald cap',
+		       'yuppie eyes',
+		       'yuppie skin',
+		       'yuppietopknot',
+		       'yuppieao']).
 
 hill_person(bignose) :- tribe_size(X), X > 2.
 hill_credentials(bignose, 'Bignose', Tribe, PW) :-
@@ -164,8 +182,14 @@ age(bignose, 42).
 sex(bignose, m).
 home(bignose, hut2).
 husband_of(bignose, onosideboard).
+start_wearing(bignose, [
+			'bignose outfit Eyes',
+			'bald cap',
+			'bignose outfit Shape',
+			'bignose outfit Skin'
+		       ]).
 
-hill_person(onosideboard)  :- tribe_size(X), X > 3.
+hill_person(onosideboard) :- tribe_size(X), X > 3.
 hill_credentials(onosideboard,
 		 'Onosideboard', Tribe, PW) :-
     pw(PW),
@@ -173,6 +197,12 @@ hill_credentials(onosideboard,
 age(onosideboard, 35).
 sex(onosideboard, f).
 home(onosideboard, hut2).
+start_wearing(onosideboard, [
+			     'onosideboard outfit Eyes',
+			     'bald cap',
+			     'onosideboard outfit Shape',
+			     'onosideboard outfit Skin'
+			    ]).
 
 hill_person(lemonaide) :- tribe_size(X), X > 4.
 hill_credentials(lemonaide, 'Lemonaide', Tribe, PW) :-
@@ -182,6 +212,13 @@ age(lemonaide, 7).
 sex(lemonaide, f).
 parent_of(onosideboard, lemonaide).
 home(lemonaide, hut2).
+start_wearing(lemonaide, [
+			     'lemonaide outfit Eyes',
+			     'bald cap',
+			     'lemonaide outfit Shape',
+			     'lemonaide outfit Skin'
+			    ]).
+
 
 hill_person(opthamologist) :- tribe_size(X), X > 5.
 hill_credentials(opthamologist, 'Opthamologist', Tribe, PW) :-
@@ -190,6 +227,12 @@ hill_credentials(opthamologist, 'Opthamologist', Tribe, PW) :-
 age(opthamologist, 62).
 sex(opthamologist, f).
 home(opthamologist, hut3).
+start_wearing(opthamologist, [
+			     'opthamologist Eyes',
+			     'opthamologist hair',
+			     'opthamologist Shape',
+			     'opthamologist Skin'
+			    ]).
 
 
 home(_, hut3). % fallback, stay in 3 if you don't know

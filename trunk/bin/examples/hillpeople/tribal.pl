@@ -2,11 +2,15 @@
 	 be_tribal/1
 		  ]).
 
+:-set_prolog_flag(double_quotes,string).
+
 :- use_module(hillpeople(weather)).
 :- use_module(hillpeople(hillpeople)).
 :- use_module(hillpeople(navigation)).
 :- use_module(hillpeople(actions)).
 :- use_module(cogbot(cogrobot)).
+
+:- discontiguous be_tribal/3.
 
 be_tribal(Name) :-
 	botID(Name, ID),
@@ -22,6 +26,64 @@ be_tribal(Name) :-
 		cal(10.0),
 		pro(10.0)
 	    ]).
+
+%%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%            Initialization
+%       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%       get near home
+%
+be_tribal(_,
+	  Name,
+	  Status) :-
+	\+ memberchk(on_sim, Status),
+	% get the current simulator name
+%	botget([self,network,currentsim,name],Sim),
+	tribal_land(Loc),
+	botcmd(teleport(Loc)),
+	be_tribal(home, Name, [on_sim|Status]).
+
+
+%
+%       if we don't have our inventory, get it
+%
+be_tribal(_,
+	  Name,
+	  Status) :-
+	\+ memberchk(requested_inventory, Status),
+	memberchk(on_sim, Status),
+	\+ has_inventory,
+	botcmd(touch('inventory_giver')),
+	sleep(3),
+	be_tribal(home, Name, [requested_inventory|Status]).
+
+%
+%       continue to wait until we get our inventory
+%
+be_tribal(_,
+	  Name,
+	  Status) :-
+	memberchk(requested_inventory, Status),
+	\+ has_inventory,
+	sleep(5),
+	be_tribal(home, Name, Status).
+
+
+%
+%       dress in starter outfit
+%
+be_tribal(_,
+	  Name,
+	  Status) :-
+	\+ memberchk(inited, Status),
+	memberchk(on_sim, Status),
+	has_inventory,
+	remove_all,
+	start_wearing(Name, Items),
+	wear_list(Items),
+	be_tribal(home, Name, [inited|Status]).
+
+
 
 %%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %            Test Wander Mode
