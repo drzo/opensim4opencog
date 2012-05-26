@@ -7,6 +7,7 @@
 		    ]).
 
 :-at_initialization(set_prolog_flag(double_quotes,string)).
+:-set_prolog_flag(double_quotes,string).
 
 :- use_module(cogbot(cogrobot)).
 :- use_module(hillpeople(hillpeople)).
@@ -34,10 +35,7 @@ say_ref(Prompt, Ref) :-
 has_inventory :-
 	bot_has_inventory(["tribal"]),!.
 
-remove_all :-
-	bot_unwear(_),
-	fail.
-remove_all.
+remove_all :- bot_unwearall.
 
 wear_list(Items) :-
 	bot_replaceoutfit(["tribal"], Items).
