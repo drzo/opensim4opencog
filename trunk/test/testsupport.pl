@@ -55,7 +55,7 @@ testDebug(Term):-format(user_error,'  ~q~n',[Term]),flush_output(user_error).
 dbgFmt(F,A):-attach_console,'format'(F,A),flush_output.
 
 % unify if this is the bot's name
-botName(Name) :- botget(name,X),string_to_atom(X,Name).
+botName(Name) :- current_botname(Name).
      %%   Name = 'testbot Ogborn'.  %TODO Douglas, how do I read this from
 % Configuration in clientManager.cs
 
