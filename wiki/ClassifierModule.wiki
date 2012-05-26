@@ -44,6 +44,7 @@ Colors are 8 bit, 0-255, as is alpha
  * float proportion of pixels that are edges by Canny
  * topology tree of transparent/nontransparent areas
  * integrated frequency power of image.
+ * length of longest single edge.
 
 = The Server =
 
