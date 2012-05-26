@@ -1,7 +1,12 @@
 :- module(actions , [
 		     say_format/2,
-		     say_ref/2
+		     say_ref/2,
+		     has_inventory/0,
+		     remove_all/0,
+		     wear_list/1
 		    ]).
+
+:-at_initialization(set_prolog_flag(double_quotes,string)).
 
 :- use_module(cogbot(cogrobot)).
 :- use_module(hillpeople(hillpeople)).
@@ -24,5 +29,36 @@ say_format(_, _).
 say_ref(Prompt, Ref) :-
     once(cli_to_str(Ref, S) ; S = "Darn cli_to_str failed"),
     say_format('~w = ~s', [Prompt, S]).
+
+
+has_inventory :-
+	bot_inventory(['My Inventory', 'tribal'], _),!.
+
+remove_all :-
+	bot_unwear(_),
+	fail.
+remove_all.
+
+wear_list(Items) :-
+	bot_replaceoutfit(['My Inventory', 'tribal'], Items).
+
+
+	/*
+	remove_all,
+	wear_starter_outfit,
+
+has_inventory.
+
+get_inventory
+
+init_setup(Name) :-
+	botcmd(gohome),
+	remove_all_clothing,
+	dress_as_tribal(Name).
+
+remove_all_clothing :-
+	 botget([thesimavatar,children],X),cli_get(X,count,Y).
+*/
+
 
 
