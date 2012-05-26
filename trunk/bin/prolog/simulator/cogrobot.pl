@@ -655,6 +655,7 @@ wbot_ensure_inventory(BotID,StartNode):-cli_get(BotID,['BotInventory'],Inv),cli_
 wbot_has_inventory(BotID,Mask):-wbot_inventory(BotID,Path,_),cli_sublist(Mask,Path).
 wbot_has_inventory(BotID,Mask,Path):-wbot_inventory(BotID,Path,_),cli_sublist(Mask,Path).
 
+wbot_inventory_item(BotID,Mask,Item):-wbot_inventory(BotID,Path,Item),cli_sublist(Mask,Path).
 
 %------------------------------------------------------------------------------
 % ways of manipulating worn (not attached) items (cogbot will rebake w/in 20 seconds of outfit changes)

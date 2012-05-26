@@ -53,10 +53,17 @@ namespace Swicli.Library
 
         public static bool DebugRefs = true;
         public static bool StrictRefs = true;
-        readonly static private Dictionary<object, TrackedObject> ObjToTag = new Dictionary<object, TrackedObject>();
-        readonly static private Dictionary<string, TrackedObject> TagToObj = new Dictionary<string, TrackedObject>();
+        readonly static public Dictionary<object, TrackedObject> ObjToTag = new Dictionary<object, TrackedObject>();
+        readonly static public Dictionary<string, TrackedObject> TagToObj = new Dictionary<string, TrackedObject>();
         public static object tag_to_object(string s)
         {
+            return tag_to_object(s, false);
+        }
+        public static object tag_to_object(string s, bool allowConstants)
+        {
+            if (s == "true") return true;
+            if (s == "false") return true;
+            if (s == "null") return null;
             if (string.IsNullOrEmpty(s) || s == "void" || !s.StartsWith("C#"))
             {
                 Warn("tag_to_object: {0} ", s);
