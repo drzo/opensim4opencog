@@ -49,6 +49,8 @@
    cmdargs_to_atomstr/2,
    set_bot_writeln_delegate/1,
    bot_writeln_delegate/1,
+   prolog_in_thread/3,
+   current_botname/1,
    logon_bot/6,
    create_bot/6,
    wb_botinventory/3,
@@ -153,7 +155,7 @@ set_current_bot(BotID):-thread_self(TID),retractall(current_bot_db(TID,_)),asser
 unset_current_bot(BotID):-thread_self(TID),current_bot_db(TID,OLD), 
     (OLD=BotID -> retract(current_bot_db(TID,OLD)) ; cogbot_throw(unset_current_bot(tid(TID),used(BotID),expected(OLD)))).
 
-
+current_botname(Name) :- botget(name,X),string_to_atom(X,Name).
 %------------------------------------------------------------------------------
 % throws cogbot based exceptions
 % PRIVATE
@@ -366,8 +368,15 @@ wb_botcmd(BotID,StrIn,WriteDelegate,Out):-cmdargs_to_atomstr(StrIn,Str),cli_call
 % cmdargs_to_atomstr(say("hi"),Out)
 %
 cmdargs_to_atomstr([C|Cmd],Out):-toStringableArgs(Cmd,SCmd),!,concat_atom([C|SCmd],' ',Str),cmdargs_to_atomstr(Str,Out).
+cmdargs_to_atomstr(C,Out):-compound(C),C=..[F,A|B],is_movement_proc(F),\+ is_vector(A),\+ cli_is_type(A,'SimPosition'),!,
+    name_to_location_ref(A,AA),CC=..[F,AA|B],cmdargs_to_atomstr(CC,Out).
 cmdargs_to_atomstr(C,Out):-compound(C),!,C=..[F|A],listifyFlat([F|A],FL),cmdargs_to_atomstr(FL,Out).
 cmdargs_to_atomstr(Str,Str):-!. %%toStringableArg(StrIn,Str).
+
+is_movement_proc(astargoto).
+is_movement_proc(moveto).
+
+is_vector(V3):-notrace((compound(V3),functor(V3,F,3),(F==v3;F==v3d))).
 
 toStringableArgs(Var,Var):-var(Var),!.
 toStringableArgs([C|Cmd],[A|Amd]):-toStringableArg(C,A),toStringableArgs(Cmd,Amd),!.
@@ -452,9 +461,12 @@ trim_sim_events(Num):- predicate_property(sim_event_db(_,_,_),number_of_clauses(
 trim_sim_events(Num):- retract(sim_event_db(_,_,_)),predicate_property(sim_event_db(_,_,_),number_of_clauses(N)),Num >= N,!.
 trim_sim_events(_Num).
 
+prolog_in_thread(Named,_,_):-thread_property(N,_),N==Named,!.
+prolog_in_thread(Named,Goal,Options):-thread_create(Goal,_,[alias(Named)|Options]).
+
 %% Every minute trim EventLog to 1000 entries
-clearEvents:-repeat,sleep(60),trim_sim_events(1000),fail.
-:-app_restore(thread_create(clearEvents,_,[])).
+keep_1000_events:-repeat,sleep(60),trim_sim_events(1000),fail.
+:-app_restore(prolog_in_thread(keep_1000_events,keep_1000_events,[detached(true)])).
 
 %%:-module_transparent(first_bot_client_hook/2).
 
@@ -550,7 +562,22 @@ uuid_to_image_parts(UUID,Part):-grid_asset(A),cli_get(A,assetType, enum('AssetTy
 
 request_texture(UUID):-world_ref(Sys),cli_call(Sys,'StartTextureDownload'(UUID),_O).
 
-name_to_location_ref(Name,Object):-cli_call('cogbot.Listeners.WorldObjects','GetSimPositionByName'(string),[Name],Object).
+cache_objects(_Object,DB,_PROC):-call(DB),!.
+cache_objects(Object,DB,PROC):-once(PROC),cli_is_object(Object)->asserta(DB);true.
+
+:-dynamic name_to_location_ref_cache/2.
+
+add_cache_pred(Spec):-assert(cache_pred_db(Spec)).
+expire_caches:-cache_pred_db(Spec),retractall(Spec),fail.
+expire_caches.
+:-add_cache_pred(name_to_location_ref_cache(_,_)).
+
+expire_caches_120:-repeat,sleep(120),expire_caches,fail.
+:-app_restore(prolog_in_thread(expire_caches_120,expire_caches_120,[detached(true)])).
+
+name_to_location_ref(Object,Object):-cli_is_type(Object,'SimPosition'),!.
+name_to_location_ref(Name,Object):-
+   cache_objects(Object,name_to_location_ref_cache(Name,Object), cli_call('cogbot.Listeners.WorldObjects','GetSimPositionByName'(string),[Name],Object)).
 
 sayTo(Speaker,ToWho,What):-to_avatar(ToWho,Listener),cli_call(Speaker,talkto('SimAvatar',string),[Listener,What],_O).
 

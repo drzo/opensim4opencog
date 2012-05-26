@@ -102,8 +102,7 @@ logon_a_bot(Name) :-
 	test_bot_credentials(Name, First, Last, Password),
         logon_bot(First, Last, Password, Loginuri, "last", BotID),
         assert(botID(Name, BotID)),
-        dbgfmt('made botID ~w~n', [BotID]),
-        (thread_self(main)->true;thread_exit(true)).
+        dbgfmt('made botID ~w~n', [BotID]).
 
 loginuri("http://www.pathwayslms.com:9000/").
 
