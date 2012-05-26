@@ -645,7 +645,6 @@ inventory_children(Mid,_MidData,[TopName|Path],NodeData):-
    inventory_children(Top,TopData,Path,NodeData).
       
 inventory_node_name(Node,Name):-cli_get(Node,[data,name],Name),!.
-inventory_node_name(Node,Name):-cli_get(Node,[data,name],Name),!.
 inventory_node_name(_Node,'unk').
 
 wbot_ensure_inventory(BotID,StartNode):-cli_get(BotID,['BotInventory'],Inv),cli_call(Inv,'TraverseNodes'(StartNode),_).
@@ -660,17 +659,21 @@ wbot_inventory_item(BotID,Mask,Item):-wbot_inventory(BotID,Path,Item),cli_sublis
 %------------------------------------------------------------------------------
 % ways of manipulating worn (not attached) items (cogbot will rebake w/in 20 seconds of outfit changes)
 %------------------------------------------------------------------------------
-wbot_is_wearable_item(_BotID,Item):-cli_is_object(Item),cli_get(Item,'InventoryType',enum(_,'Wearable')).
+wbot_is_wearable_item(_BotID,Item):-inv_type(Item,T),memberchk(T,['Object','Attachment','Wearable']).
+wbot_is_attachable_item(_BotID,Item):-inv_type(Item,T),memberchk(T,['Object','Attachment']).
+
+inv_type(Item,T):-cli_is_object(Item),cli_get(Item,'InventoryType',enum(_,T)).
+
 % return clothing matching pathmask
 wbot_is_wearable(BotID,Mask):-wbot_inventory(BotID,Path,Item),cli_sublist(Mask,Path),wbot_is_wearable_item(BotID,Item).
 % return clothing matching pathmask
-wbot_is_wearing(BotID,Mask,Item):-wbot_inventory(BotID,Path,Item),cli_sublist(Mask,Path),wbot_is_worn(BotID,Item).
+wbot_is_wearing(BotID,Mask):-wbot_inventory(BotID,Path,Item),cli_sublist(Mask,Path),wbot_is_worn(BotID,Item).
 % remove clothing matching pathmask
-wbot_unwear(BotID,Mask):-wbot_is_wearing(BotID,Mask,Item),wbotcall(BotID,[appearance,removefromoutfit(Item)],_).
+wbot_unwear(BotID,Mask):-wbot_path_to_item(BotID,Mask,Item),wbotcall(BotID,[appearance,removefromoutfit(Item)],_).
 % remove all clothing
-wbot_unwearall(BotID):-forall(wbot_unwear(BotID,_Item),true),wbot_rebake_appearance(BotID).
+wbot_unwearall(BotID):-forall(wbot_is_wearing(BotID,Path),wbot_unwear(BotID,Path)),wbot_rebake_appearance(BotID).
 % wear clothing matching pathmask
-wbot_wear(BotID,Mask):-wbot_inventory(BotID,What,Item),cli_sublist(Mask,What),wbotcall(BotID,[appearance,addtooutfit(Item)],_).
+wbot_wear(BotID,Mask):-wbot_path_to_item(BotID,Mask,Item),wbotcall(BotID,[appearance,addtooutfit(Item)],_).
 % replace clothing using start path such as a folder
 wbot_replaceoutfit(BotID,StartPath):-findall(ItemName,wbot_inventory(BotID,Path,_),append(StartPath,[ItemName],Path),Items),
      wbot_replaceoutfit(BotID,Path,Items),wbot_send_appearance(BotID).
@@ -678,14 +681,32 @@ wbot_replaceoutfit(BotID,StartPath):-findall(ItemName,wbot_inventory(BotID,Path,
 wbot_replaceoutfit(BotID,StartPath,Items):-findall(Item,((member(It,Items),append(StartPath,It,Path),wbot_inventory(BotID,Path,Item))),Refs),
             cli_make_list(Refs,'OpenMetaverse.InventoryItem',List),wbotcall(BotID,[appearance,replaceoutfit(List)],_).
 
-wbot_is_worn(BotID,Item):-wbot_is_wearable_item(BotID,Item),!,cli_get(BotID,['BotInventory'],Inv),cli_call(Inv,'IsWorn'(Item),@(true)).
+wbot_worn_where(BotID,Mask,Position):-wbot_path_to_item(BotID,Mask,Item),wbot_is_worn_item(BotID,Item),wbot_will_attach_to(BotID,Item,Position).
+
+wbot_wear(BotID,Mask,Position):-wbot_path_to_item(BotID,Mask,Item),
+      wbot_is_attachable_item(BotID,Item),!,wbotcall(BotID,[appearance,attach(Item,Position)],_).
+wbot_wear(BotID,Mask,Position):-wbot_path_to_item(BotID,Mask,Item),wbot_will_attach_to(BotID,Item,Position),wbotcall(BotID,[appearance,addtooutfit(Item)],_).
+
+
+wbot_is_worn(BotID,Mask):-wbot_path_to_item(BotID,Mask,Item),wbot_is_worn_item(BotID,Item).
+wbot_is_worn_item(BotID,Item):-wbot_is_attachable_item(BotID,Item),!,wbot_inv_eval(BotID,'IsAttached'(Item),@(true)).
+wbot_is_worn_item(BotID,Item):-wbot_is_wearable_item(BotID,Item),!,wbot_inv_eval(BotID,'IsWorn'(Item),@(true)).
+
+wbot_inv_eval(BotID,Call,Res):-cli_get(BotID,['BotInventory'],Inv),cli_call(Inv,Call,Res).
+
+wbot_path_to_item(_BotID,'@'(O),'@'(O)):-nonvar(O),!,cli_is_type('@'(O),'OpenMetaverse.InventoryItem'),!.
+wbot_path_to_item(BotID,Mask,Item):-wbot_inventory(BotID,What,Item),cli_sublist(Mask,What).
+
+wbot_will_attach_to(BotID,Wearable,Position):-wbot_path_to_item(BotID,Wearable,Item),wbot_inv_eval(BotID,'AttachesTo'(Item),enum(_,Position)).
 %------------------------------------------------------------------------------
 % ways of sending appearance and rebaking
 %------------------------------------------------------------------------------
 wbot_send_appearance(BotID):-wbotcall(BotID,['Appearance','RequestSetAppearance'],_).
 wbot_rebake_appearance(BotID):-wbotcall(BotID,['Appearance','RequestSetAppearance'(@(true))],_).
 
+%%object_children(OBject,Child):-wbot_inventory(BotID,Path,Item),cli_sublist(Mask,Path),wbot_is_worn(BotID,Item).
 
+%%wbot_attachments(BotID,Attachment,Joint):-
 %------------------------------------------------------------------------------
 % listing functions
 %------------------------------------------------------------------------------
