@@ -20,7 +20,7 @@ say_format(Format, Args) :-
 % DEBUG TODO
 %  Douglas - what's up here? why are we quoting, and why is it failing?
 say_format(Format, Args) :-
-	format(Format, Args),nl.
+	'format'(Format, Args),nl.
 say_format(Format, Args) :-
 	write('Format='),write(Format),nl,
 	write('Args='),write(Args),nl.
@@ -32,7 +32,7 @@ say_ref(Prompt, Ref) :-
 
 
 has_inventory :-
-	bot_inventory(['My Inventory', 'tribal'], _),!.
+	bot_has_inventory(["tribal"]),!.
 
 remove_all :-
 	bot_unwear(_),
@@ -40,7 +40,7 @@ remove_all :-
 remove_all.
 
 wear_list(Items) :-
-	bot_replaceoutfit(['My Inventory', 'tribal'], Items).
+	bot_replaceoutfit(["tribal"], Items).
 
 
 	/*

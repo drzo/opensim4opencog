@@ -16,7 +16,6 @@
    current_bot/1, botget/2,
    botcall/1, botcall/2,
 
-   cli_sublist/2,
    botdo/1,wbotdo/2,wabdo/1,
 
    botcmd/1, botcmd/2, botcmd/3,   
@@ -299,6 +298,9 @@ wbotdo(BotID,In):-wbotcmd(BotID,In,cli_fmt(botcmd),_).
 
 wabdo(In):-current_bot_db(_,BotID),wbotdo(BotID,In),fail.
 wabdo(_).
+
+wabcall(Call):-once(((thread_self(TID),current_bot_db(TID,Save))->TODO=set_current_bot(Save),TODO=true)),
+   forall(bot_client_db(_, _, _, _, _, BotID),(set_current_bot(BotID),Call)),TODO,!.
 
 % wrappered execute command in a convenience pred
 % botcmd(say("hi"))
@@ -675,10 +677,14 @@ wbot_unwearall(BotID):-forall(wbot_is_wearing(BotID,Path),wbot_unwear(BotID,Path
 % wear clothing matching pathmask
 wbot_wear(BotID,Mask):-wbot_path_to_item(BotID,Mask,Item),wbotcall(BotID,[appearance,addtooutfit(Item)],_).
 % replace clothing using start path such as a folder
-wbot_replaceoutfit(BotID,StartPath):-findall(ItemName,wbot_inventory(BotID,Path,_),append(StartPath,[ItemName],Path),Items),
+wbot_replaceoutfit(BotID,Mask):-
+     wbot_path_to_absolute(BotID,Mask,StartPath),
+     findall(ItemName,wbot_inventory(BotID,Path,_),append(StartPath,[ItemName],Path),Items),
      wbot_replaceoutfit(BotID,Path,Items),wbot_send_appearance(BotID).
 % replace clothing using start path + items below
-wbot_replaceoutfit(BotID,StartPath,Items):-findall(Item,((member(It,Items),append(StartPath,It,Path),wbot_inventory(BotID,Path,Item))),Refs),
+wbot_replaceoutfit(BotID,Mask,Items):-
+            wbot_path_to_absolute(BotID,Mask,StartPath),
+            findall(Item,((member(ItA,Items),string_to_atom(It,ItA),append(StartPath,[It],Path),wbot_inventory(BotID,Path,Item))),Refs),
             cli_make_list(Refs,'OpenMetaverse.InventoryItem',List),wbotcall(BotID,[appearance,replaceoutfit(List)],_).
 
 wbot_worn_where(BotID,Mask,Position):-wbot_path_to_item(BotID,Mask,Item),wbot_is_worn_item(BotID,Item),wbot_will_attach_to(BotID,Item,Position).
@@ -693,6 +699,8 @@ wbot_is_worn_item(BotID,Item):-wbot_is_attachable_item(BotID,Item),!,wbot_inv_ev
 wbot_is_worn_item(BotID,Item):-wbot_is_wearable_item(BotID,Item),!,wbot_inv_eval(BotID,'IsWorn'(Item),@(true)).
 
 wbot_inv_eval(BotID,Call,Res):-cli_get(BotID,['BotInventory'],Inv),cli_call(Inv,Call,Res).
+
+wbot_path_to_absolute(BotID,Mask,Absolute):-wbot_inventory(BotID,Absolute,_),cli_sublist(Mask,Absolute).
 
 wbot_path_to_item(_BotID,'@'(O),'@'(O)):-nonvar(O),!,cli_is_type('@'(O),'OpenMetaverse.InventoryItem'),!.
 wbot_path_to_item(BotID,Mask,Item):-wbot_inventory(BotID,What,Item),cli_sublist(Mask,What).
