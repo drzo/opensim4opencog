@@ -1635,7 +1635,7 @@ namespace PathSystem3D.Navigation
             lock (Matrixes) Matrixes.Clear();
         }
       //  float CollisionPlaneHeights = 3.0f;
-        readonly internal IList<CollisionPlane> Matrixes = new List<CollisionPlane>();
+        readonly internal ListAsSet<CollisionPlane> Matrixes = new ListAsSet<CollisionPlane>();
         public byte[,] GetByteMatrix(float Z)
         {
             return GetCollisionPlane(Z).ByteMatrix;
