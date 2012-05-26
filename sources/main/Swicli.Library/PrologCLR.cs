@@ -269,7 +269,7 @@ namespace Swicli.Library
             for (int i = 0; i < arity; i++)
             {
                 PlTerm info = specArray[i];
-                paramz[i] = GetType(info);
+                paramz[i] = GetType(info, true);
             }
             return paramz;
         }

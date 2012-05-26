@@ -95,6 +95,10 @@ namespace Swicli.Library
         }
         public static Type GetType(PlTerm clazzSpec)
         {
+            return GetType(clazzSpec, false);
+        }
+        public static Type GetType(PlTerm clazzSpec, bool canBeObjects)
+        {
             if (clazzSpec.IsVar)
             {
                 Warn("GetType IsVar {0}", clazzSpec);
@@ -105,7 +109,10 @@ namespace Swicli.Library
                 object tagObj = tag_to_object(clazzSpec[1].Name);
                 var r = tagObj as Type;
                 if (r != null) return r;
-                Warn("cant find tagged object as class: {0}=>{1}", clazzSpec, tagObj);
+                if (!canBeObjects)
+                {
+                    Warn("cant find tagged object as class: {0}=>{1}", clazzSpec, tagObj);
+                }
                 if (tagObj != null)
                 {
                     return tagObj.GetType();

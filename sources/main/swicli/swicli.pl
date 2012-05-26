@@ -414,6 +414,19 @@ cli_with_lock(Lock,Call):-setup_call_cleanup(cli_lock_enter(Lock),Call,cli_lock_
 
 cli_with_gc(Call):-setup_call_cleanup(cli_tracker_begin(Mark),Call,cli_tracker_free(Mark)).
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%%% cli_make_list/2,  cli_new_list_1/2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cli_new_list_1(Item,Type,List):-cli_new('System.Collections.Generic.List'(Type),[],List),cli_call(List,add(Item),_).
+cli_make_list(Items,Type,List):-cli_new('System.Collections.Generic.List'(Type),[],List),forall(member(Item,Items),cli_call(List,add(Item),_)).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%%% cli_sublist/2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cli_sublist(What,What):-!.
+cli_sublist(Mask,What):-append(Pre,_,What),append(_,Mask,Pre).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %%% cli_debug/[1,2]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
@@ -466,7 +479,21 @@ cli_getSymbol(Engine,Name,Value):- (cli_interned(Engine,Name,Value);Value=cli_Un
 
 %%:-interactor.
 
-ensureExported:-current_predicate(swicli:F/A),atom_concat(cli_,_,F),export(F/A),fail.
+to_pi(M:F/A,M:PI):-functor(PI,F,A),!.
+to_pi(F/A,M:PI):-context_module(M),functor(PI,F,A),!.
+to_pi(M:PI,M:PI):-!.
+to_pi(PI,M:PI):-context_module(M).
+cli_hide(PIn):-to_pi(PIn,Pred),
+   '$set_predicate_attribute'(Pred, trace, 1),
+   '$set_predicate_attribute'(Pred, noprofile, 1),
+   '$set_predicate_attribute'(Pred, hide_childs, 1).
+
+:-meta_predicate(cli_notrace(0)).
+
+cli_notrace(Call):-tracing,notrace,!,call_cleanup(call(Call),trace).
+cli_notrace(Call):-call(Call).
+
+ensureExported:-current_predicate(swicli:F/A),atom_concat(cli_,_,F),export(F/A),functor(P,F,A),cli_hide(swicli:P),fail.
 ensureExported.
 
 :-ensureExported.

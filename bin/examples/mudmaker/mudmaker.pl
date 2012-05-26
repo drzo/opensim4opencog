@@ -16,10 +16,10 @@ lob:-notrace((hillpeople:logon_bots)).
 ebt:-hillpeople:ebt.
 
 % all say their own names
-say:-botID(Name, BotID),wb_botcmd(BotID,say(Name)),fail.
+say:-botID(Name, BotID),wbotcmd(BotID,say(Name)),fail.
 say.
 
-wab(Cmd):- botID(_Name,ID),wb_botdo(ID,Cmd),fail.
+wab(Cmd):- botID(_Name,ID),wbotdo(ID,Cmd),fail.
 wab(_Cmd).
 
 :-use_module(library('dialect/ifprolog')).
@@ -28,7 +28,7 @@ iki:-logon_bot('ExampleBot','Resident','pass123', "https://login.agni.lindenlab.
 
 
 ebt(Name):- once(thread_property(Name,_);thread_create(tribal:be_tribal(Name),_, [alias(Name)])).
-ebtg(Name):- botID(Name,ID),wb_botcmd(ID,showgui),ebt(Name),!.
+ebtg(Name):- botID(Name,ID),wbotcmd(ID,showgui),ebt(Name),!.
 
 ebt0 :- ebtg(otopopo),!.
 ebt1 :- ebtg(yuppie),!.
