@@ -503,8 +503,7 @@ namespace cogbot.Listeners
         static readonly char[] TrimCollectionStart = new []{' ','\n','$'};
         public ICollection ResolveCollection(string arg0Lower, out int argsUsed, ICollectionProvider skip)
         {
-
-            arg0Lower = arg0Lower.TrimStart(TrimCollectionStart);
+            arg0Lower = arg0Lower.TrimStart(TrimCollectionStart).ToLower();
             lock (simGroupProviders)
             {
                 foreach (ICollectionProvider provider in simGroupProviders)
@@ -713,6 +712,27 @@ namespace cogbot.Listeners
         public List<SimObject> GetAllSimObjects(string name)
         {
             List<SimObject> matches = new List<SimObject>();
+            if (name.StartsWith("$"))
+            {
+                int argsUsed;
+                var v = ResolveCollection(name.Substring(1), out argsUsed, null);
+
+                if (v != null)
+                {
+                    ///argsUsed = 1;
+                    matches.Clear();
+                    AsPrimitives(matches, v);
+                    return matches;
+                }
+            }
+            lock (GetPrimsCache)
+            {
+                List<SimObject> matchesO;
+                if (GetPrimsCache.TryGetValue(name, out matchesO))
+                {
+                    return matchesO;
+                }
+            }
             foreach (SimObject obj in GetAllSimObjects())
             {
                 if (SMatches(obj, name))
@@ -721,6 +741,10 @@ namespace cogbot.Listeners
                 }
             }
             matches.Sort(TheSimAvatar.CompareDistance);
+            lock (GetPrimsCache)
+            {
+                GetPrimsCache[name] = matches;
+            }
             return matches;
         }
 
