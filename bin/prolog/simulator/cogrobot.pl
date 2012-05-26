@@ -657,24 +657,27 @@ wbot_has_inventory(BotID,Mask,Path):-wbot_inventory(BotID,Path,_),cli_sublist(Ma
 
 
 %------------------------------------------------------------------------------
-% ways of manipulating worn items (cogbot will rebake w/in 20 seconds of outfit changes)
+% ways of manipulating worn (not attached) items (cogbot will rebake w/in 20 seconds of outfit changes)
 %------------------------------------------------------------------------------
-wbot_is_wearable(_BotID,Item):-cli_is_object(Item),cli_get(Item,'InventoryType',enum(_,'Wearable')).
+wbot_is_wearable_item(_BotID,Item):-cli_is_object(Item),cli_get(Item,'InventoryType',enum(_,'Wearable')).
 % return clothing matching pathmask
-wbot_is_wearing(BotID,Mask,Item):-wbot_inventory(BotID,Path,Item),cli_sublist(Mask,Path),wbot_is_wearable(BotID,Item).
+wbot_is_wearable(BotID,Mask):-wbot_inventory(BotID,Path,Item),cli_sublist(Mask,Path),wbot_is_wearable_item(BotID,Item).
+% return clothing matching pathmask
+wbot_is_wearing(BotID,Mask,Item):-wbot_inventory(BotID,Path,Item),cli_sublist(Mask,Path),wbot_is_worn(BotID,Item).
 % remove clothing matching pathmask
-wbot_unwear(BotID,Mask):-wbot_is_wearing(BotID,Mask,Item),wbotcall(BotID,[appearance,removefromoutfit(Item)]).
+wbot_unwear(BotID,Mask):-wbot_is_wearing(BotID,Mask,Item),wbotcall(BotID,[appearance,removefromoutfit(Item)],_).
 % remove all clothing
-wbot_unwearall(BotID):-forall(wbot_unwear(BotID,_Item),true),wbot_send_appearance(BotID).
+wbot_unwearall(BotID):-forall(wbot_unwear(BotID,_Item),true),wbot_rebake_appearance(BotID).
 % wear clothing matching pathmask
-wbot_wear(BotID,Mask):-wbot_inventory(BotID,What,Item),cli_sublist(Mask,What),wbotcall(BotID,[appearance,addtooutfit(Item)]).
+wbot_wear(BotID,Mask):-wbot_inventory(BotID,What,Item),cli_sublist(Mask,What),wbotcall(BotID,[appearance,addtooutfit(Item)],_).
 % replace clothing using start path such as a folder
 wbot_replaceoutfit(BotID,StartPath):-findall(ItemName,wbot_inventory(BotID,Path,_),append(StartPath,[ItemName],Path),Items),
      wbot_replaceoutfit(BotID,Path,Items),wbot_send_appearance(BotID).
 % replace clothing using start path + items below
 wbot_replaceoutfit(BotID,StartPath,Items):-findall(Item,((member(It,Items),append(StartPath,It,Path),wbot_inventory(BotID,Path,Item))),Refs),
-            cli_make_list(Refs,'OpenMetaverse.InventoryItem',List),wbotcall(BotID,[appearance,replaceoutfit(List)]).
+            cli_make_list(Refs,'OpenMetaverse.InventoryItem',List),wbotcall(BotID,[appearance,replaceoutfit(List)],_).
 
+wbot_is_worn(BotID,Item):-wbot_is_wearable_item(BotID,Item),!,cli_get(BotID,['BotInventory'],Inv),cli_call(Inv,'IsWorn'(Item),@(true)).
 %------------------------------------------------------------------------------
 % ways of sending appearance and rebaking
 %------------------------------------------------------------------------------
