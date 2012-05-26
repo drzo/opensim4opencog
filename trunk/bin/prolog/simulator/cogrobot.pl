@@ -16,11 +16,12 @@
    current_bot/1, botget/2,
    botcall/1, botcall/2,
 
+   cli_sublist/2,
    botdo/1,wbotdo/2,wabdo/1,
 
    botcmd/1, botcmd/2, botcmd/3,   
    wbotcmd/2, wbotcmd/3, wbotcmd/4,
-
+   to_avatar/2,
    grid_object/1, world_avatar/1, world_object/1,
    grid_asset/1, grid_account/1,
    simAvDistance/3, 
@@ -33,9 +34,6 @@
    sim_event_db/3,
    obj2Npl/2,
    npl2Obj/2,
-   chat/1,
-   chat/2,
-   chat/3,
    %%cli_fmt/3,
    create_write_hook/2,
    create_write_hook/1,
@@ -58,6 +56,7 @@
    ]).
 
 :-set_prolog_flag(double_quotes,string).
+:-at_initialization(set_prolog_flag(double_quotes,string)).
 
 app_restore(Call):-term_to_atom(Call,Atom),atom_concat(Atom,'_done',Did),dynamic(Did),app_init_call(app_restore(Did,Call)).
 app_init_call(Call):-at_initialization(Call),Call.
@@ -200,7 +199,6 @@ app_quit:-write('logoutbots\n'),flush_output,client_manager_ref(CM),cli_call(CM,
 
 :-at_halt(app_quit).
 
-
 %------------------------------------------------------------------------------
 % Refernce to the scene is world_ref
 %------------------------------------------------------------------------------
@@ -283,76 +281,11 @@ client_manager_ref(SingleInstance):-cli_get('cogbot.ClientManager','SingleInstan
 %	     findall(S,(cli_col(Y,Z),cli_get(Z,'children',GC),
 %	     cli_collecton(GC,'children',GCReal),cli_to_str(GCReal,S)),L),writeq(L).
 %
-botget(Property,Value):-current_bot(BotID),wbotget(BotID,Property,Value).
 
 wbotget(BotID,Property,Value):-cli_get(BotID,Property,Value),!.
 
-% wbot_inventory(+BotID,?Path,?NodeDataRef).
-% if just checking for items existence you  _  the third arg
-% (the third arg is the Node contents)
-%
-% ?- current_bot(BotID),wbot_inventory(BotID,[A,'Clothing'],X).
-% BotID = @'C#508280816',
-% A = "My Inventory",
-% X = @'C#598007568' ;
-% BotID = @'C#508280816',
-% A = "Library",
-% X = @'C#598013968' ;
-% false.
-%
-% ?- current_bot(BotID),wbot_inventory(BotID,[A,'Clothing',What],X).
-% BotID = @'C#508280816',
-% A = "Library",
-% What = "Female Shape & Outfit",
-% X = @'C#598060416' ;
-% BotID = @'C#508280816',
-% A = "Library",
-% What = "Gamer Male",
-% X = @'C#598062912' 
-
-wbot_inventory(BotID,[StartName,TopName|Path],Node):-
-   lists:member(Start,['RootNode','LibraryRootNode']),   
-   wbotget(BotID,['Inventory','Store',Start],StartNode),
-   cli_get(StartNode,[nodes,values],StartCol),
-   cli_get(StartNode,[data,name],StartName),
-   cli_col(StartCol,Top),cli_get(Top,data,TopData),
-   cli_get(TopData,name,TopName),
-   inventory_children(Top,TopData,Path,Node).
-
-inventory_children(_Top,TopData,[],NodeData):-cli_unify(NodeData,TopData).
-inventory_children(Mid,_MidData,[TopName|Path],NodeData):-
-   cli_get(Mid,[nodes,values],StartCol),
-   cli_col(StartCol,Top),cli_get(Top,data,TopData),
-   cli_get(TopData,name,TopName),
-   inventory_children(Top,TopData,Path,NodeData).
-      
-inventory_node_name(Node,Name):-cli_get(Node,[data,name],Name),!.
-inventory_node_name(Node,Name):-cli_get(Node,[data,name],Name),!.
-inventory_node_name(_Node,'unk').
-
-wbot_has_inventory(BotID,Mask):-wbot_inventory(BotID,Path,_),subset(Mask,Path).
-
-cli_new_list_1(Item,Type,List):-cli_new('System.Collections.Generic.List'(Type),[],List),cli_call(List,add(Item),_).
-cli_make_list(Items,Type,List):-cli_new('System.Collections.Generic.List'(Type),[],List),forall(member(Item,Items),cli_call(List,add(Item),_)).
-
-wbot_unwear(BotID,Item):-wbot_inventory(BotID,[_,'Clothing'|_What],Item),is_worn(Item),wbotcall(BotID,[appearence,removefromoutfit(Item)]).
-wbot_wear(BotID,Mask,Item):-wbot_inventory(BotID,[_,'Clothing'|What],Item),memberchk(Mask,What),wbotcall(BotID,[appearence,addtooutfit(Item)]).
-wbot_replaceoutfit(BotID,StartPath):-findall(ItemName,wbot_inventory(BotID,Path,_),append(StartPath,[ItemName],Path),Items),
-     wbot_replaceoutfit(BotID,Path,Items).
-
-wbot_replaceoutfit(BotID,StartPath,Items):-findall(Item,((member(It,Items),append(StartPath,It,Path),wbot_inventory(BotID,Path,Item))),Refs),
-            cli_make_list(Refs,'OpenMetaverse.InventoryItem',List),wbotcall(BotID,[appearence,replaceoutfit(List)]).
-
-wbot_unwearall(BotID):-wbot_unwear(BotID,_Item),fail.
-wbot_unwearall(_BotID).
-
-is_worn(Item):-cli_get(Item,'InventoryType',enum(_,'Wearable')).
-
-
 % a way to call a method on c#
 % cli_call('System',printf(32),Y).
-botcall(Call):-current_bot(BotID),wbotcall(BotID,Call).
-botcall(Call,Res):-current_bot(BotID),wbotcall(BotID,Call,Res).
 
 wbotcall(BotID,Call):-wbotcall(BotID,Call,Res),cli_writeln(Res).
 wbotcall(BotID,[P|N],Value):-!,cli_get(BotID,P,Mid),cli_get(Mid,N,Value).
@@ -362,7 +295,6 @@ wbotcall(BotID,Property,Value):-cli_call(BotID,Property,Value).
 % wrappered execute command in a convenience pred
 % botCmd(say("hi"))
 %
-botdo(In):-current_bot(BotID),wbotdo(BotID,In),!.
 wbotdo(BotID,In):-wbotcmd(BotID,In,cli_fmt(botcmd),_).
 
 wabdo(In):-current_bot_db(_,BotID),wbotdo(BotID,In),fail.
@@ -371,10 +303,6 @@ wabdo(_).
 % wrappered execute command in a convenience pred
 % botcmd(say("hi"))
 %
-botcmd(In):-current_bot(BotID),wbotcmd(BotID,In),!.
-botcmd(In,Out):-current_bot(BotID),wbotcmd(BotID,In,Out),!.
-botcmd(Str,WriteDelegate,Out):-current_bot(BotID),wbotcmd(BotID,Str,WriteDelegate,Out).
-
 wbotcmd(BotID,StrIn):-wbotcmd(BotID,StrIn,Out),cli_get(Out,success,@(true)).
 wbotcmd(BotID,StrIn,Out):-cmdargs_to_atomstr(StrIn,Str),wbotcmd(BotID,Str,pluggable_callback(botcmd),Out).
 wbotcmd(BotID,StrIn,WriteDelegate,Out):-cmdargs_to_atomstr(StrIn,Str),cli_call(BotID,executeCommand(Str,BotID,WriteDelegate),Out).
@@ -632,18 +560,126 @@ position_to_v3d(Obj,Vect):-cli_get(Obj,globalposition,Vect),!.
 
 position_to_v3(Obj,LV):-position_to_v3d(Obj,Vect),cli_call('SimRegion','GlobalToLocalStatic'(Vect),LV).
 
-%% 
+%% depricated
 distance_to(A,R):-position_to_v3d(A,A2),!,botget(['Self','GlobalPosition'],A1),cli_get(A1,'Z',Z),cli_set(A2,'Z',Z), cli_call(A2,distance(A1,A2),R).
+%% get the distance of a primspec
+wbot_distance_to(BotID,A,R):-position_to_v3d(A,A2),!,wbotget(BotID,['Self','GlobalPosition'],A1),cli_get(A1,'Z',Z),cli_set(A2,'Z',Z), cli_call(A2,distance(A1,A2),R).
 
-% ?- moveTo('CyberPunk Buddha - L',4,FD).
+% ?- bot_moveto('CyberPunk Buddha - L',4,FD).
 
-moveTo(Dest,Time,FDist):-botcmd(moveto(Dest)),botcmd(waitpos(Time,Dest)),botcmd(stopMoving),distance_to(Dest,FDist).
+wbot_moveto(BotID,Dest,Time,FDist):-wbotcmd(BotID,moveto(Dest)),wbotcmd(BotID,waitpos(Time,Dest)),wbotcmd(BotID,stopMoving),wbot_distance_to(BotID,Dest,FDist).
 
-chat(Msg):-chat(Msg,0).
-chat(Msg,Ch):-chat(Msg,Ch,'Normal').
-chat(Msg,Ch,Type):-current_bot(X),cli_call(X,talk(Msg,Ch,Type),_).
+wbot_chat(BotID,Msg):-wbot_chat(BotID,Msg,0).
+wbot_chat(BotID,Msg,Ch):-wbot_chat(BotID,Msg,Ch,'Normal').
+wbot_chat(BotID,Msg,Ch,Type):-cli_call(BotID,talk(Msg,Ch,Type),_).
 
 %%:-prev_dir6(X),cd(X).
+
+%------------------------------------------------------------------------------
+% ways of examining inventory
+%------------------------------------------------------------------------------
+% wbot_inventory(+BotID,?Path,?NodeDataRef).
+% if just checking for items existence you  _  the third arg
+% (the third arg is the Node contents)
+%
+% ?- current_bot(BotID),wbot_inventory(BotID,[A,'Clothing'],X).
+% BotID = @'C#508280816',
+% A = "My Inventory",
+% X = @'C#598007568' ;
+% BotID = @'C#508280816',
+% A = "Library",
+% X = @'C#598013968' ;
+% false.
+%
+% ?- current_bot(BotID),wbot_inventory(BotID,[A,'Clothing',What],X).
+% BotID = @'C#508280816',
+% A = "Library",
+% What = "Female Shape & Outfit",
+% X = @'C#598060416' ;
+% BotID = @'C#508280816',
+% A = "Library",
+% What = "Gamer Male",
+% X = @'C#598062912' 
+
+%------------------------------------------------------------------------------
+%% Start at 'My Inventory'
+%------------------------------------------------------------------------------
+wbot_my_inventory(BotID,[TopName|Path],Node):-
+   wbotget(BotID,['Inventory','Store','RootNode'],StartNode),
+   wbot_ensure_inventory(BotID,StartNode),
+   cli_get(StartNode,[nodes,values],StartCol),
+   cli_col(StartCol,Top),cli_get(Top,data,TopData),
+   cli_get(TopData,name,TopName),
+   inventory_children(Top,TopData,Path,Node).
+
+%------------------------------------------------------------------------------
+%% Start at 'Library Folder'
+%------------------------------------------------------------------------------
+wbot_lib_inventory(BotID,[TopName|Path],Node):-
+   wbotget(BotID,['Inventory','Store','LibraryRootNode'],StartNode),
+   wbot_ensure_inventory(BotID,StartNode),
+   cli_get(StartNode,[nodes,values],StartCol),
+   cli_col(StartCol,Top),cli_get(Top,data,TopData),
+   cli_get(TopData,name,TopName),
+   inventory_children(Top,TopData,Path,Node).
+
+%------------------------------------------------------------------------------
+%% Start at above 'Library Folder' and 'My Inventory'
+%------------------------------------------------------------------------------
+wbot_inventory(BotID,[StartName,TopName|Path],Node):-
+ cli_notrace((
+   lists:member(Start,['RootNode','LibraryRootNode']),   
+   wbotget(BotID,['Inventory','Store',Start],StartNode),
+   wbot_ensure_inventory(BotID,StartNode),
+   cli_get(StartNode,[nodes,values],StartCol),
+   cli_get(StartNode,[data,name],StartName),
+   cli_col(StartCol,Top),cli_get(Top,data,TopData),
+   cli_get(TopData,name,TopName),
+   inventory_children(Top,TopData,Path,Node))).
+
+inventory_children(_Top,TopData,[],NodeData):-cli_unify(NodeData,TopData).
+inventory_children(Mid,_MidData,[TopName|Path],NodeData):-
+   cli_get(Mid,[nodes,values],StartCol),
+   cli_col(StartCol,Top),cli_get(Top,data,TopData),
+   cli_get(TopData,name,TopName),
+   inventory_children(Top,TopData,Path,NodeData).
+      
+inventory_node_name(Node,Name):-cli_get(Node,[data,name],Name),!.
+inventory_node_name(Node,Name):-cli_get(Node,[data,name],Name),!.
+inventory_node_name(_Node,'unk').
+
+wbot_ensure_inventory(BotID,StartNode):-cli_get(BotID,['BotInventory'],Inv),cli_call(Inv,'TraverseNodes'(StartNode),_).
+%------------------------------------------------------------------------------
+% ways of testing in inventory
+%------------------------------------------------------------------------------
+wbot_has_inventory(BotID,Mask):-wbot_inventory(BotID,Path,_),cli_sublist(Mask,Path).
+wbot_has_inventory(BotID,Mask,Path):-wbot_inventory(BotID,Path,_),cli_sublist(Mask,Path).
+
+
+%------------------------------------------------------------------------------
+% ways of manipulating worn items (cogbot will rebake w/in 20 seconds of outfit changes)
+%------------------------------------------------------------------------------
+wbot_is_wearable(_BotID,Item):-cli_is_object(Item),cli_get(Item,'InventoryType',enum(_,'Wearable')).
+% return clothing matching pathmask
+wbot_is_wearing(BotID,Mask,Item):-wbot_inventory(BotID,Path,Item),cli_sublist(Mask,Path),wbot_is_wearable(BotID,Item).
+% remove clothing matching pathmask
+wbot_unwear(BotID,Mask):-wbot_is_wearing(BotID,Mask,Item),wbotcall(BotID,[appearance,removefromoutfit(Item)]).
+% remove all clothing
+wbot_unwearall(BotID):-forall(wbot_unwear(BotID,_Item),true),wbot_send_appearance(BotID).
+% wear clothing matching pathmask
+wbot_wear(BotID,Mask):-wbot_inventory(BotID,What,Item),cli_sublist(Mask,What),wbotcall(BotID,[appearance,addtooutfit(Item)]).
+% replace clothing using start path such as a folder
+wbot_replaceoutfit(BotID,StartPath):-findall(ItemName,wbot_inventory(BotID,Path,_),append(StartPath,[ItemName],Path),Items),
+     wbot_replaceoutfit(BotID,Path,Items),wbot_send_appearance(BotID).
+% replace clothing using start path + items below
+wbot_replaceoutfit(BotID,StartPath,Items):-findall(Item,((member(It,Items),append(StartPath,It,Path),wbot_inventory(BotID,Path,Item))),Refs),
+            cli_make_list(Refs,'OpenMetaverse.InventoryItem',List),wbotcall(BotID,[appearance,replaceoutfit(List)]).
+
+%------------------------------------------------------------------------------
+% ways of sending appearance and rebaking
+%------------------------------------------------------------------------------
+wbot_send_appearance(BotID):-wbotcall(BotID,['Appearance','RequestSetAppearance'],_).
+wbot_rebake_appearance(BotID):-wbotcall(BotID,['Appearance','RequestSetAppearance'(@(true))],_).
 
 
 %------------------------------------------------------------------------------
@@ -656,10 +692,29 @@ listS(P):-writeq('done'(P)),nl.
 listAvatars:-listS(world_avatar).
 listPrims:-listS(grid_object).
 
+%------------------------------------------------------------------------------
+% scans and export predicates defined from this module.. 
+%  if a predicate has wbot* at the front it is exported..
+%
+% wbot_foo(BotID,Bar)
+%     will create a stub like
+% bot_foo(X):-current_bot(BotID),wbot_foo(BotID,X).
+%------------------------------------------------------------------------------
 make_current_bot_ver(_,N,_,AA):-current_predicate(cogrobot:N/AA),!,export(N/AA).
 make_current_bot_ver(F,N,_,AA):-length(List,AA),Head=..[N|List],Body=..[F,BotID|List],assert((Head:-current_bot(BotID),Body)),export(N/AA).
+
 scan_and_export_wb:-current_predicate(cogrobot:F/A),
    once((atom_concat(wbot,Before,F),export(F/A),atom_concat(bot,Before,New),AA is A-1,make_current_bot_ver(F,New,A,AA))),fail.
+scan_and_export_wb:-current_predicate(cogrobot:F/A),once((atom_concat(bot,_,F),export(F/A))),fail.
+scan_and_export_wb:-current_predicate(cogrobot:F/A),once((atom_concat(sim,_,F),export(F/A))),fail.
+scan_and_export_wb:-current_predicate(cogrobot:F/A),once((atom_concat(cli,_,F),export(F/A))),fail.
 scan_and_export_wb.
 
 :-scan_and_export_wb.
+
+:-cli_hide(cogrobot:current_bot/1).
+:-cli_hide(cogrobot:current_bot_db/2).
+:-cli_hide(cogrobot:wbot_inventory/3).
+:-cli_hide(cogrobot:wbot_my_inventory/3).
+:-cli_hide(cogrobot:wbot_lib_inventory/3).
+
