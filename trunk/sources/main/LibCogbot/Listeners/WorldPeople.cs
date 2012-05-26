@@ -812,7 +812,7 @@ namespace cogbot.Listeners
             if (ToAvatarName.StartsWith("$"))
             {
                 int usedArgs;
-                var col = ResolveCollection(ToAvatarName.ToLower(), out usedArgs, null);
+                var col = ResolveCollection(ToAvatarName, out usedArgs, null);
                 if (col.Count > 0)
                 {
                     foreach (var prim in col)
