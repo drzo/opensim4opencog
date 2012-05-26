@@ -16,10 +16,10 @@
    current_bot/1, botget/2,
    botcall/1, botcall/2,
 
-   botdo/1,wb_botdo/2,wabdo/1,
+   botdo/1,wbotdo/2,wabdo/1,
 
    botcmd/1, botcmd/2, botcmd/3,   
-   wb_botcmd/2, wb_botcmd/3, wb_botcmd/4,
+   wbotcmd/2, wbotcmd/3, wbotcmd/4,
 
    grid_object/1, world_avatar/1, world_object/1,
    grid_asset/1, grid_account/1,
@@ -53,7 +53,7 @@
    current_botname/1,
    logon_bot/6,
    create_bot/6,
-   wb_botinventory/3,
+   wbot_inventory/3,
    inventory_node_name/2
    ]).
 
@@ -283,15 +283,15 @@ client_manager_ref(SingleInstance):-cli_get('cogbot.ClientManager','SingleInstan
 %	     findall(S,(cli_col(Y,Z),cli_get(Z,'children',GC),
 %	     cli_collecton(GC,'children',GCReal),cli_to_str(GCReal,S)),L),writeq(L).
 %
-botget(Property,Value):-current_bot(BotID),wb_botget(BotID,Property,Value).
+botget(Property,Value):-current_bot(BotID),wbotget(BotID,Property,Value).
 
-wb_botget(BotID,Property,Value):-cli_get(BotID,Property,Value),!.
+wbotget(BotID,Property,Value):-cli_get(BotID,Property,Value),!.
 
-% wb_botinventory(+BotID,?Path,?NodeDataRef).
+% wbot_inventory(+BotID,?Path,?NodeDataRef).
 % if just checking for items existence you  _  the third arg
 % (the third arg is the Node contents)
 %
-% ?- current_bot(BotID),wb_botinventory(BotID,[A,'Clothing'],X).
+% ?- current_bot(BotID),wbot_inventory(BotID,[A,'Clothing'],X).
 % BotID = @'C#508280816',
 % A = "My Inventory",
 % X = @'C#598007568' ;
@@ -300,7 +300,7 @@ wb_botget(BotID,Property,Value):-cli_get(BotID,Property,Value),!.
 % X = @'C#598013968' ;
 % false.
 %
-% ?- current_bot(BotID),wb_botinventory(BotID,[A,'Clothing',What],X).
+% ?- current_bot(BotID),wbot_inventory(BotID,[A,'Clothing',What],X).
 % BotID = @'C#508280816',
 % A = "Library",
 % What = "Female Shape & Outfit",
@@ -310,9 +310,9 @@ wb_botget(BotID,Property,Value):-cli_get(BotID,Property,Value),!.
 % What = "Gamer Male",
 % X = @'C#598062912' 
 
-wb_botinventory(BotID,[StartName,TopName|Path],Node):-
+wbot_inventory(BotID,[StartName,TopName|Path],Node):-
    lists:member(Start,['RootNode','LibraryRootNode']),   
-   wb_botget(BotID,['Inventory','Store',Start],StartNode),
+   wbotget(BotID,['Inventory','Store',Start],StartNode),
    cli_get(StartNode,[nodes,values],StartCol),
    cli_get(StartNode,[data,name],StartName),
    cli_col(StartCol,Top),cli_get(Top,data,TopData),
@@ -330,38 +330,54 @@ inventory_node_name(Node,Name):-cli_get(Node,[data,name],Name),!.
 inventory_node_name(Node,Name):-cli_get(Node,[data,name],Name),!.
 inventory_node_name(_Node,'unk').
 
-             
+wbot_has_inventory(BotID,Mask):-wbot_inventory(BotID,Path,_),subset(Mask,Path).
+
+cli_new_list_1(Item,Type,List):-cli_new('System.Collections.Generic.List'(Type),[],List),cli_call(List,add(Item),_).
+cli_make_list(Items,Type,List):-cli_new('System.Collections.Generic.List'(Type),[],List),forall(member(Item,Items),cli_call(List,add(Item),_)).
+
+wbot_unwear(BotID,Item):-wbot_inventory(BotID,[_,'Clothing'|_What],Item),is_worn(Item),wbotcall(BotID,[appearence,removefromoutfit(Item)]).
+wbot_wear(BotID,Mask,Item):-wbot_inventory(BotID,[_,'Clothing'|What],Item),memberchk(Mask,What),wbotcall(BotID,[appearence,addtooutfit(Item)]).
+wbot_replaceoutfit(BotID,StartPath):-findall(ItemName,wbot_inventory(BotID,Path,_),append(StartPath,[ItemName],Path),Items),
+     wbot_replaceoutfit(BotID,Path,Items).
+
+wbot_replaceoutfit(BotID,StartPath,Items):-findall(Item,((member(It,Items),append(StartPath,It,Path),wbot_inventory(BotID,Path,Item))),Refs),
+            cli_make_list(Refs,'OpenMetaverse.InventoryItem',List),wbotcall(BotID,[appearence,replaceoutfit(List)]).
+
+wbot_unwearall(BotID):-wbot_unwear(BotID,_Item),fail.
+wbot_unwearall(_BotID).
+
+is_worn(Item):-cli_get(Item,'InventoryType',enum(_,'Wearable')).
 
 
 % a way to call a method on c#
 % cli_call('System',printf(32),Y).
-botcall(Call):-current_bot(BotID),wb_botcall(BotID,Call).
-botcall(Call,Res):-current_bot(BotID),wb_botcall(BotID,Call,Res).
+botcall(Call):-current_bot(BotID),wbotcall(BotID,Call).
+botcall(Call,Res):-current_bot(BotID),wbotcall(BotID,Call,Res).
 
-wb_botcall(BotID,Call):-wb_botcall(BotID,Call,Res),cli_writeln(Res).
-wb_botcall(BotID,[P|N],Value):-!,cli_get(BotID,P,Mid),cli_get(Mid,N,Value).
-wb_botcall(BotID,Property,Value):-cli_call(BotID,Property,Value).
+wbotcall(BotID,Call):-wbotcall(BotID,Call,Res),cli_writeln(Res).
+wbotcall(BotID,[P|N],Value):-!,cli_get(BotID,P,Mid),cli_get(Mid,N,Value).
+wbotcall(BotID,Property,Value):-cli_call(BotID,Property,Value).
 
 
 % wrappered execute command in a convenience pred
 % botCmd(say("hi"))
 %
-botdo(In):-current_bot(BotID),wb_botdo(BotID,In),!.
-wb_botdo(BotID,In):-wb_botcmd(BotID,In,cli_fmt(botcmd),_).
+botdo(In):-current_bot(BotID),wbotdo(BotID,In),!.
+wbotdo(BotID,In):-wbotcmd(BotID,In,cli_fmt(botcmd),_).
 
-wabdo(In):-current_bot_db(_,BotID),wb_botdo(BotID,In),fail.
+wabdo(In):-current_bot_db(_,BotID),wbotdo(BotID,In),fail.
 wabdo(_).
 
 % wrappered execute command in a convenience pred
 % botcmd(say("hi"))
 %
-botcmd(In):-current_bot(BotID),wb_botcmd(BotID,In),!.
-botcmd(In,Out):-current_bot(BotID),wb_botcmd(BotID,In,Out),!.
-botcmd(Str,WriteDelegate,Out):-current_bot(BotID),wb_botcmd(BotID,Str,WriteDelegate,Out).
+botcmd(In):-current_bot(BotID),wbotcmd(BotID,In),!.
+botcmd(In,Out):-current_bot(BotID),wbotcmd(BotID,In,Out),!.
+botcmd(Str,WriteDelegate,Out):-current_bot(BotID),wbotcmd(BotID,Str,WriteDelegate,Out).
 
-wb_botcmd(BotID,StrIn):-wb_botcmd(BotID,StrIn,Out),cli_get(Out,success,@(true)).
-wb_botcmd(BotID,StrIn,Out):-cmdargs_to_atomstr(StrIn,Str),wb_botcmd(BotID,Str,pluggable_callback(botcmd),Out).
-wb_botcmd(BotID,StrIn,WriteDelegate,Out):-cmdargs_to_atomstr(StrIn,Str),cli_call(BotID,executeCommand(Str,BotID,WriteDelegate),Out).
+wbotcmd(BotID,StrIn):-wbotcmd(BotID,StrIn,Out),cli_get(Out,success,@(true)).
+wbotcmd(BotID,StrIn,Out):-cmdargs_to_atomstr(StrIn,Str),wbotcmd(BotID,Str,pluggable_callback(botcmd),Out).
+wbotcmd(BotID,StrIn,WriteDelegate,Out):-cmdargs_to_atomstr(StrIn,Str),cli_call(BotID,executeCommand(Str,BotID,WriteDelegate),Out).
 
 
 % wrappered execute command in a convenience pred
@@ -640,4 +656,10 @@ listS(P):-writeq('done'(P)),nl.
 listAvatars:-listS(world_avatar).
 listPrims:-listS(grid_object).
 
+make_current_bot_ver(_,N,_,AA):-current_predicate(cogrobot:N/AA),!,export(N/AA).
+make_current_bot_ver(F,N,_,AA):-length(List,AA),Head=..[N|List],Body=..[F,BotID|List],assert((Head:-current_bot(BotID),Body)),export(N/AA).
+scan_and_export_wb:-current_predicate(cogrobot:F/A),
+   once((atom_concat(wbot,Before,F),export(F/A),atom_concat(bot,Before,New),AA is A-1,make_current_bot_ver(F,New,A,AA))),fail.
+scan_and_export_wb.
 
+:-scan_and_export_wb.
