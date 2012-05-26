@@ -125,7 +125,10 @@ namespace Swicli.Library
                 string name = (string)clazzSpec;
                 type = ResolveType(name);
                 if (type != null) return type;
-                Warn("cant find atom/string as class: {0}", clazzSpec);
+                if (!canBeObjects)
+                {
+                    Warn("cant find atom/string as class: {0}", clazzSpec);
+                }
                 return null;
             }
             if (clazzSpec.IsCompound)

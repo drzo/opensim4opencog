@@ -845,11 +845,50 @@ namespace cogbot
                 if (attachments.ContainsKey(item.UUID))
                 {
                     return attachments[item.UUID].Point;
+                } else
+                {
+                    GetAttachments();
+                    if (attachments.ContainsKey(item.UUID))
+                    {
+                        return attachments[item.UUID].Point;
+                    }
                 }
             }
 
             return AttachmentPoint.Default;
         }
+
+        public object AttachesTo(InventoryItem item)
+        {
+            if (item is InventoryAttachment)
+            {
+                var i = (InventoryAttachment)item;
+                return i.AttachmentPoint;
+            }
+            if (item is InventoryWearable)
+            {
+                var i = (InventoryWearable)item;
+                return i.WearableType;
+            }
+            lock (attachments)
+            {
+                if (attachments.ContainsKey(item.UUID))
+                {
+                    return attachments[item.UUID].Point;
+                }
+                else
+                {
+                    GetAttachments();
+                    if (attachments.ContainsKey(item.UUID))
+                    {
+                        return attachments[item.UUID].Point;
+                    }
+                }
+            }
+
+            return AttachmentPoint.Default;
+        }
+
 
         public bool IsAttached(InventoryItem item)
         {
@@ -883,6 +922,40 @@ namespace cogbot
             }
 
             return false;
+        }
+
+
+        public ICollection<AttachmentInfo> GetAttachments()
+        {
+            List<Primitive> myAtt = client.Network.CurrentSim.ObjectsPrimitives.FindAll((Primitive p) => p.ParentID == client.Self.LocalID);
+            foreach (Primitive prim in myAtt)
+            {
+                if (prim.NameValues == null) continue;
+                UUID invID = UUID.Zero;
+                for (int i = 0; i < prim.NameValues.Length; i++)
+                {
+                    if (prim.NameValues[i].Name == "AttachItemID")
+                    {
+                        invID = (UUID)prim.NameValues[i].Value.ToString();
+                        break;
+                    }
+                }
+                var item = Inventory.GetNodeFor(invID).Data as InventoryItem;
+                {
+                    lock (attachments)
+                    {
+                        AttachmentInfo inf = new AttachmentInfo();
+                        inf.InventoryID = invID;
+                        inf.Item = item;
+                        inf.MarkedAttached = true;
+                        inf.Prim = prim;
+                        inf.PrimID = prim.ID;
+                        attachments[invID] = inf;
+                    }
+                }
+            }
+
+            return attachments.Values;
         }
 
         public InventoryItem AttachmentAt(AttachmentPoint point)
