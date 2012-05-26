@@ -124,10 +124,10 @@ set_num_bots(Value):-retractall(num_bots_to_run(_)),assert(num_bots_to_run(Value
 
 num_bots_to_run(1).
 
-test_bot(dogbert) :- num_bots_to_run(X), X >= 1,last_name('Dougstribe').
+%test_bot(dogbert) :- num_bots_to_run(X), X >= 1,last_name('Dougstribe').
 test_bot_credentials(dogbert, 'Dogbert', 'Miles', 'tek123').
 
-test_bot(otopopo) :- num_bots_to_run(X),  (last_name('Hillperson')-> X >= 1 ; X >= 7).
+test_bot(otopopo) :- num_bots_to_run(X), X >= 1. %% (last_name('Hillperson')-> X >= 1 ; X >= 7).
 test_bot_credentials(otopopo, 'Otopopo', Tribe, PW) :-
     pw(PW),
     last_name(Tribe).
