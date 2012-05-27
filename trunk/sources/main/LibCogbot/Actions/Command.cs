@@ -441,6 +441,7 @@ namespace cogbot.Actions
             try
             {
                 Results.Clear();
+                if (args == null) Failure("No Args (Parse error)");
                 return Execute(args.tokens, CallerID, writeLine);
             }
             catch (Exception e)
