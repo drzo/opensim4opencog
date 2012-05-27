@@ -63,7 +63,6 @@ assertIfNewRC(Gaf):-asserta(Gaf).
 :- assertIfNewRC(user:file_search_path(hillpeople, './examples/hillpeople')).
 
 :- use_module(cogbot(cogrobot)).
-:- use_module(hillpeople(slow_planner)).
 :- use_module(hillpeople(actions)).
 :- use_module(hillpeople(tribal)).
 

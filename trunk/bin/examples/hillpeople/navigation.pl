@@ -31,14 +31,15 @@ nearest_waypoint(MinDist, [_|T], Nearest, ResultDist, Result) :-
 	nearest_waypoint(MinDist, T, Nearest, ResultDist, Result).
 
 % inclusive path from A to B
-%
+%    Returns a list of goto actions
+%    [goto(A), ...., goto(B)]
 % waypoint_path(?A, ?B, ?Path)
 %
 waypoint_path(A, B, Path) :-
-	waypoint_path(A, B, [A], Path).
+	waypoint_path(A, B, [goto(A)], Path).
 
-waypoint_path(A, A, _, [A]).
-waypoint_path(A, B, SoFar,[A|T]) :-
+waypoint_path(A, A, _, [goto(A)]).
+waypoint_path(A, B, SoFar,[goto(A)|T]) :-
 	conn(A, X),
 	A \= X, % safety against pathological conn
 	\+ memberchk(X, SoFar),
