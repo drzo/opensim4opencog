@@ -479,7 +479,7 @@ namespace cogbot.Listeners
         }
 
 
-        List<ICollectionProvider> simGroupProviders = new List<ICollectionProvider>();
+        public List<ICollectionProvider> simGroupProviders = new List<ICollectionProvider>();
         private DefaultWorldGroupProvider _defaultProvider;
         public void AddObjectGroup(string selecteditems, Func<IList> func)
         {
@@ -493,11 +493,11 @@ namespace cogbot.Listeners
             }
         }
 
-        public void AddGroupProvider(GetGroupFunc bot)
+        public void AddGroupProvider(string name, GetGroupFunc bot)
         {
             lock (simGroupProviders)
             {
-                simGroupProviders.Add(new GetGroupFuncHolder(bot));
+                simGroupProviders.Add(new GetGroupFuncHolder(name, bot));
             }
         }
         static readonly char[] TrimCollectionStart = new []{' ','\n','$'};

@@ -654,10 +654,23 @@ wbot_ensure_inventory(BotID,StartNode):-cli_get(BotID,['BotInventory'],Inv),cli_
 %------------------------------------------------------------------------------
 % ways of testing in inventory
 %------------------------------------------------------------------------------
-wbot_has_inventory(BotID,Mask):-wbot_inventory(BotID,Path,_),cli_sublist(Mask,Path).
-wbot_has_inventory(BotID,Mask,Path):-wbot_inventory(BotID,Path,_),cli_sublist(Mask,Path).
+wbot_has_inventory(BotID,Mask):-wbot_inv_absolute(BotID,Mask,_).
+wbot_inv_absolute(BotID,Mask,Path):-wbot_inventory(BotID,Path,_),cli_sublist(Mask,Path).
 
-wbot_inventory_item(BotID,Mask,Item):-wbot_inventory(BotID,Path,Item),cli_sublist(Mask,Path).
+%------------------------------------------------------------------------------
+% Renaming an inventory item or folder
+%------------------------------------------------------------------------------
+wbot_inventory_rename(BotID,Mask,NewName):-wbot_find_node(BotID,Mask,Item),
+    wbot_inv_parent(BotID,Item,Folder),
+    wbotcall(BotID,['Inventory','Move'(Item,Folder,NewName)],_).
+
+wbot_inv_parent(BotID,Mask,Folder):-wbot_find_node(BotID,Mask,Item),cli_call(Item,parent,Folder).
+%------------------------------------------------------------------------------
+% Moving an inventory item or folder
+%------------------------------------------------------------------------------
+wbot_inventory_move(BotID,Mask,NewParent):-wbot_find_node(BotID,Mask,Item),wbot_find_node(BotID,NewParent,Folder),
+    inventory_node_name(BotID,Item,Folder),
+    wbotcall(BotID,['Inventory','Move'(Item,Folder,NewName)],_).
 
 %------------------------------------------------------------------------------
 % ways of manipulating worn (not attached) items (cogbot will rebake w/in 20 seconds of outfit changes)
@@ -672,11 +685,11 @@ wbot_is_wearable(BotID,Mask):-wbot_inventory(BotID,Path,Item),cli_sublist(Mask,P
 % return clothing matching pathmask
 wbot_is_wearing(BotID,Mask):-wbot_inventory(BotID,Path,Item),cli_sublist(Mask,Path),wbot_is_worn(BotID,Item).
 % remove clothing matching pathmask
-wbot_unwear(BotID,Mask):-wbot_path_to_item(BotID,Mask,Item),wbotcall(BotID,[appearance,removefromoutfit(Item)],_).
+wbot_unwear(BotID,Mask):-wbot_find_node(BotID,Mask,Item),wbotcall(BotID,[appearance,removefromoutfit(Item)],_).
 % remove all clothing
 wbot_unwearall(BotID):-forall(wbot_is_wearing(BotID,Path),wbot_unwear(BotID,Path)),wbot_rebake_appearance(BotID).
 % wear clothing matching pathmask
-wbot_wear(BotID,Mask):-wbot_path_to_item(BotID,Mask,Item),wbotcall(BotID,[appearance,addtooutfit(Item)],_).
+wbot_wear(BotID,Mask):-wbot_find_node(BotID,Mask,Item),wbotcall(BotID,[appearance,addtooutfit(Item)],_).
 % replace clothing using start path such as a folder
 wbot_replaceoutfit(BotID,Mask):-
      wbot_path_to_absolute(BotID,Mask,StartPath),
@@ -688,14 +701,14 @@ wbot_replaceoutfit(BotID,Mask,Items):-
             findall(Item,((member(ItA,Items),string_to_atom(It,ItA),append(StartPath,[It],Path),wbot_inventory(BotID,Path,Item))),Refs),
             cli_make_list(Refs,'OpenMetaverse.InventoryItem',List),wbotcall(BotID,[appearance,replaceoutfit(List)],_).
 
-wbot_worn_where(BotID,Mask,Position):-wbot_path_to_item(BotID,Mask,Item),wbot_is_worn_item(BotID,Item),wbot_will_attach_to(BotID,Item,Position).
+wbot_worn_where(BotID,Mask,Position):-wbot_find_node(BotID,Mask,Item),wbot_is_worn_item(BotID,Item),wbot_will_attach_to(BotID,Item,Position).
 
-wbot_wear(BotID,Mask,Position):-wbot_path_to_item(BotID,Mask,Item),
+wbot_wear(BotID,Mask,Position):-wbot_find_node(BotID,Mask,Item),
       wbot_is_attachable_item(BotID,Item),!,wbotcall(BotID,[appearance,attach(Item,Position)],_).
-wbot_wear(BotID,Mask,Position):-wbot_path_to_item(BotID,Mask,Item),wbot_will_attach_to(BotID,Item,Position),wbotcall(BotID,[appearance,addtooutfit(Item)],_).
+wbot_wear(BotID,Mask,Position):-wbot_find_node(BotID,Mask,Item),wbot_will_attach_to(BotID,Item,Position),wbotcall(BotID,[appearance,addtooutfit(Item)],_).
 
 
-wbot_is_worn(BotID,Mask):-wbot_path_to_item(BotID,Mask,Item),wbot_is_worn_item(BotID,Item).
+wbot_is_worn(BotID,Mask):-wbot_find_node(BotID,Mask,Item),wbot_is_worn_item(BotID,Item).
 wbot_is_worn_item(BotID,Item):-wbot_is_attachable_item(BotID,Item),!,wbot_inv_eval(BotID,'IsAttached'(Item),@(true)).
 wbot_is_worn_item(BotID,Item):-wbot_is_wearable_item(BotID,Item),!,wbot_inv_eval(BotID,'IsWorn'(Item),@(true)).
 
@@ -703,10 +716,10 @@ wbot_inv_eval(BotID,Call,Res):-cli_get(BotID,['BotInventory'],Inv),cli_call(Inv,
 
 wbot_path_to_absolute(BotID,Mask,Absolute):-wbot_inventory(BotID,Absolute,_),cli_sublist(Mask,Absolute).
 
-wbot_path_to_item(_BotID,'@'(O),'@'(O)):-nonvar(O),!,cli_is_type('@'(O),'OpenMetaverse.InventoryItem'),!.
-wbot_path_to_item(BotID,Mask,Item):-wbot_inventory(BotID,What,Item),cli_sublist(Mask,What).
+wbot_find_node(_BotID,'@'(O),'@'(O)):-nonvar(O),!,cli_is_type('@'(O),'OpenMetaverse.InventoryBase'),!.
+wbot_find_node(BotID,Mask,Item):-wbot_inventory(BotID,What,Item),cli_sublist(Mask,What).
 
-wbot_will_attach_to(BotID,Wearable,Position):-wbot_path_to_item(BotID,Wearable,Item),wbot_inv_eval(BotID,'AttachesTo'(Item),enum(_,Position)).
+wbot_will_attach_to(BotID,Wearable,Position):-wbot_find_node(BotID,Wearable,Item),wbot_inv_eval(BotID,'AttachesTo'(Item),enum(_,Position)).
 %------------------------------------------------------------------------------
 % ways of sending appearance and rebaking
 %------------------------------------------------------------------------------
@@ -716,6 +729,25 @@ wbot_rebake_appearance(BotID):-wbotcall(BotID,['Appearance','RequestSetAppearanc
 %%object_children(OBject,Child):-wbot_inventory(BotID,Path,Item),cli_sublist(Mask,Path),wbot_is_worn(BotID,Item).
 
 %%wbot_attachments(BotID,Attachment,Joint):-
+
+%------------------------------------------------------------------------------
+% sysvar interface
+%------------------------------------------------------------------------------
+wbot_get_sysvar(_BotID,Name,Value):-cli_get('MushDLR223.ScriptEngines.ScriptManager','SysVars',Dict),
+   cli_get(Dict,'Values',Col),cli_col(Col,Var),get_modeless(Var,['Name'=Name,'Value'=Value]).
+wbot_set_sysvar(_BotID,Name,Value):-cli_get('MushDLR223.ScriptEngines.ScriptManager','SysVars',Dict),
+   cli_get(Dict,'Values',Col),cli_col(Col,Var),cli_get(Var,'Name',Name),set_modeless(Var,['Value'=Value]).
+
+get_modeless(Var,List):-forall(member(Member=Value,List),cli_get(Var,Member,Value)).
+
+set_modeless(Var,List):-forall(member(Member=Value,List),cli_set(Var,Member,Value)).
+
+%------------------------------------------------------------------------------
+% botvar interface
+%------------------------------------------------------------------------------
+wbot_get_botvar(_BotID,Name,Value):-wbotget(BotID,['WorldSystem','simGroupProviders'],GPs),
+   cli_get(Dict,'Values',Col),cli_col(Col,Var),get_modeless(Var,['Name'=Name,'Value'=Value]).
+
 %------------------------------------------------------------------------------
 % listing functions
 %------------------------------------------------------------------------------
