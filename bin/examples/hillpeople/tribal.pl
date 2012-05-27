@@ -43,7 +43,6 @@ be_tribal(_,
 	botcmd(teleport(Loc)),
 	be_tribal(home, Name, [on_sim|Status]).
 
-
 %
 %       if we don't have our inventory, get it
 %
@@ -67,7 +66,6 @@ be_tribal(_,
 	\+ has_inventory,
 	sleep(5),
 	be_tribal(home, Name, Status).
-
 
 %
 %       dress in starter outfit
@@ -93,45 +91,19 @@ be_tribal(_,
 %
 test_wander_mode.
 
-%
-% if we have a route, walk to next waypoint
-%
-be_tribal(
-    _,
-    Name,
-    Status) :-
-	test_wander_mode,
-	memberchk(en_route([H|T]), Status),
-	botcmd(moveto(H, 1), MoveStat),
-	botcmd(waitpos(20, H , 1), WaitStat),
-	say_format('en_route went to ~w Remaining: ~w', [H,T]),
-	say_ref('Move', MoveStat),
-	say_ref('Wait', WaitStat),
-	select(en_route(_), Status, en_route(T) , NewStatus),
-	be_tribal(H, Name, NewStatus).
 
 %
-% cope with being done
-%
-be_tribal(
-    Loc,
-    Name,
-    Status) :-
-	test_wander_mode,
-	memberchk(en_route([]), Status),
-	select(en_route([]), Status, NewStatus),
-	say_format('en_route empty, removing it', []),
-	be_tribal(Loc, Name, NewStatus).
-
-%
-% go to the nearest waypoint
+% in test_wander_mode, if we don't have a plan,
+% and are far from a waypoint,
+% go to the nearest
+% waypoint
 %
 be_tribal(
     _Loc,
     Name,
     Status) :-
 	test_wander_mode,
-	\+ memberchk(en_route(_), Status),
+	\+ memberchk(cur_plan(_), Status),
 	nearest_waypoint(WP, Dist),
 	Dist >= 3.0,
 	botcmd(moveto(WP, 1), MoveStat),
@@ -142,14 +114,14 @@ be_tribal(
 	be_tribal(WP, Name, Status).
 
 %
-%  Set up a path
+%  Set up a path in test_wander_mode
 %
 be_tribal(
     _Loc,
     Name,
     Status) :-
 	test_wander_mode,
-	\+ memberchk(en_route(_), Status),
+	\+ memberchk(cur_plan(_), Status),
 	nearest_waypoint(Start, Dist),
 	Dist < 3.0,
 	waypoints(AllWP),
@@ -158,20 +130,67 @@ be_tribal(
 	waypoint_path(Start, End, Path),
 	say_format('No Path, new ~w to ~w is ~w',
 	       [Start, End, Path]),
-	be_tribal(Start, Name, [en_route(Path) | Status]).
+	be_tribal(Start, Name, [cur_plan(Path) | Status]).
+
+
+%%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%        Movement
+%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %
-% If we haven't gotten our inventory, get it and wear the items
+% if we have a route, walk to next waypoint
 %
-/*
+be_tribal(
+    _,
+    Name,
+    Status) :-
+	memberchk(cur_plan([goto(H)|T]), Status),
+	botcmd(moveto(H, 1), MoveStat),
+	botcmd(waitpos(20, H , 1), WaitStat),
+	say_format('cur_plan went to ~w Remaining: ~w', [H,T]),
+	say_ref('Move', MoveStat),
+	say_ref('Wait', WaitStat),
+	select(cur_plan(_), Status, cur_plan(T) , NewStatus),
+	be_tribal(H, Name, NewStatus).
+
+%%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%        Replan
+%
+%        clauses in this section involve creating a new plan
+%
+%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%
+% Remove the plan if we're done with it
+%
 be_tribal(
     Loc,
     Name,
     Status) :-
-	\+ memberchk(inited, Status),
+	memberchk(cur_plan([]), Status),
+	select(cur_plan([]), Status, NewStatus),
+	say_format('cur_plan empty, removing it', []),
+	be_tribal(Loc, Name, NewStatus).
 
-	be_tribal(Loc, Name, [inited | Status]).
+/*
+%
+%  No plan, do something suggested by a nearby affordance
+%
+be_tribal(
+    Loc,
+    Name,
+    Status) :-
+	\+ memberchk(cur_plan(_), Status),
+	nearest_in_list(
+	    [
+	    wumpus,
+	    wumpus_meat,
+	    unplanted_corn,
+	    ripe_corn,
+	    fishball1,
+	    fishball2,
 */
+
 
 %
 % Die if yer starved
