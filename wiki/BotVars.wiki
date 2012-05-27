@@ -17,28 +17,42 @@ bot: what is your favorite movie?
 user: it is Castaway On The Moon
 bot: I haven't seen Castaway On The Moon
 
-The bot remembers user's favorite movie via the set tag in AIML, defined in [http://www.alicebot.org/TR/2001/WD-aiml/#section-set AIML 1.0.1 spec, section 7.4.1], which looks like
+(Note that we also could have used the `<that />` tag) 
+
+The bot remembers the user's favorite movie via the set tag in AIML, defined in [http://www.alicebot.org/TR/2001/WD-aiml/#section-set AIML 1.0.1 spec, section 7.4.1], which looks like
 
 {{{
 <set name="favorite_movie" >
 }}}
 
-so the category might look like
+and recovers it via the [http://www.alicebot.org/TR/2001/WD-aiml/#section-get get tag], so the category might look like
 
 {{{
 <category>
-   <pattern>_ is <set name="favorite movie">*</set></pattern>
+   <pattern>_ is <set name="favorite_movie">*</set></pattern>
    <template>I haven't seen <get name="favorite_movie" /></template>
 </category>
 }}}
 
-this is done via the get tag in AIML, defined in [http://www.alicebot.org/TR/2001/WD-aiml/#section-get AIML 1.0.1 spec, section 7.1.6.1], which looks like
+
+WRONG - not needed, local dictionary is per user.
+
+Notice that favorite_movie refers to the user's favorite movie. If we have several users we might want to keep separate name spaces for them. Get and set take an additional dict parameter.
 
 {{{
-<get name="" />
+<category>
+   <pattern>_ is <set dict="FluffyBunny Resident" name="favorite_movie">*</set></pattern>
+   <template>I haven't seen <get dict="FluffyBunny Resident" name="favorite_movie" /></template>
+</category>
 }}}
 
-which tells the AIML interpreter that it should substitute the contents of a predicate, if that predicate has a value defined. If the predicate has no value defined, the AIML interpreter should substitute the empty string "".
+This of course has the user's name hard coded, a deficiency we'll correct in a moment.
+
+We might also want to record information about the bot itself. This is done in the dictionary 'bot'. AIML contains a shorthand equivilent `<bot name="foo" />`  for `<get dict="bot" name="foo" />`. The dictionary 'user' is the default dict.
+
+Cogbot botvars are effectively AIML vars. So, for example, we can introduce the bot's master's name with   `<get dict="
+
+of course we're more likely to want to store 
 
 now explain how bot is slightly different
 
@@ -49,11 +63,18 @@ dict and user names
 dict and bot names
 
 
+every request in aiml has local dictionary, which is the name of the person making the request to the bot (usually the person who spoke to the bot).  
 
 
+name with dot doesn't use local dictionary
+
+$vars allowed anywhere in aiml
 
 
 == Cogbot defined botvars ==
+
+currentWhom
+
 
 
 == botvars in the default AIML files ==
