@@ -2211,7 +2211,7 @@ namespace cogbot
                 }
                 //            Settings.LOG_LEVEL = Helpers.LogLevel.Debug;
                 text = text.Replace("\"", "").Replace("  ", " ");
-                string verb = Parser.ParseArgs(text)[0];
+                string verb = text.Split(' ')[0];
                 verb = verb.ToLower();
 
                 Command act = GetCommand(verb, false);
