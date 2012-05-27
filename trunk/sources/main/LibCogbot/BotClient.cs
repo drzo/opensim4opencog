@@ -2210,7 +2210,7 @@ namespace cogbot
                     return new CmdResult(evalLispString(text).ToString(), true);
                 }
                 //            Settings.LOG_LEVEL = Helpers.LogLevel.Debug;
-                text = text.Replace("\"", "");
+                text = text.Replace("\"", "").Replace("  ", " ");
                 string verb = Parser.ParseArgs(text)[0];
                 verb = verb.ToLower();
 
