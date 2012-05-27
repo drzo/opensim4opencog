@@ -15,13 +15,16 @@ namespace cogbot.Listeners
         public DefaultWorldGroupProvider(WorldObjects objects)
         {
             world = objects;
+            // set of currently selected objects
             AddObjectGroup("selected", () =>
             {
                 SimActor avatar = this.avatar;
                 if (avatar == null) return null; 
                 return avatar.GetSelectedObjects();
             });
+            // all known accounts
             AddObjectGroup("avatars", () => WorldObjects.SimAvatars.CopyOf());
+            // this bot's master
             AddObjectGroup("master", () =>
                                          {
                                              var v = new List<object>();
@@ -36,12 +39,14 @@ namespace cogbot.Listeners
                                              }
                                              return v;
                                          });
+            // the current bot
             AddObjectGroup("self", () =>
                                        {
                                            SimActor avatar = this.avatar;
                                            if (avatar == null) return null; 
                                            var v = new List<SimObject> { avatar }; return v;
                                        });
+            // list of objects in this region
             AddObjectGroup("region", () =>
                                          {
                                              List<SimObject> here = new List<SimObject>();
@@ -54,13 +59,20 @@ namespace cogbot.Listeners
                                              }
                                              return here;
                                          });
+            // list of all av's, attachments, and objects known to system
             AddObjectGroup("all", () => WorldObjects.SimObjects.CopyOf());
+            // list of all objects that have an affordance
             AddObjectGroup("known", () =>
                                         {
                                             SimActor avatar = this.avatar;
                                             if (avatar == null) return null; 
                                             return avatar.GetKnownObjects();
                                         });
+            // the 'current object' - the current object is determined in a complex way
+            // but is generally the last object acted upon by the av. it's only allowed to be changed every 30 sec
+            // and might be overwritten by aiml. 
+            // the intent is to support the notion of a pronoun 'it'
+            // if the bot's head is free (not being animated) it will look at target
             AddObjectGroup("target", () =>
                                          {
                                              SimActor avatar = this.avatar;
