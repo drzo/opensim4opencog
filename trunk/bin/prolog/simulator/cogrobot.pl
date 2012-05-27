@@ -319,8 +319,9 @@ cmdargs_to_atomstr(C,Out):-compound(C),C=..[F,A|B],is_movement_proc(F),\+ is_vec
 cmdargs_to_atomstr(C,Out):-compound(C),!,C=..[F|A],listifyFlat([F|A],FL),cmdargs_to_atomstr(FL,Out).
 cmdargs_to_atomstr(Str,Str):-!. %%toStringableArg(StrIn,Str).
 
-is_movement_proc(astargoto).
-is_movement_proc(moveto).
+%%is_movement_proc(astargoto).
+%%is_movement_proc(moveto).
+is_movement_proc(_):-fail.
 
 is_vector(V3):-notrace((compound(V3),functor(V3,F,3),(F==v3;F==v3d))).
 

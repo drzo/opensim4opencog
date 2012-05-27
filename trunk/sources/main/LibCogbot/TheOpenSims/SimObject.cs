@@ -1134,11 +1134,15 @@ namespace cogbot.TheOpenSims
             PathFinding = new SimObjectPathFindingImpl { thiz = this };
             if (sim != null) RegionHandle = sim.Handle;
             WorldSystem = objectSystem;
+            var ot = SimTypeSystem.CreateInstanceType(id.ToString());
+            ot.ID = id;
             Affordances = new SimObjectAffordanceImpl
                               {
-                                  ObjectType = SimTypeSystem.CreateInstanceType(id.ToString()),
-                                  thiz = this
+                                  thiz = this,
+                                  ObjectType = ot
                               };
+            ot.IsObjectTop = true;
+                
             //_CurrentRegion = SimRegion.GetRegion(sim);
             // PathStore = GetSimRegion();
             //WorldSystem.EnsureSelected(prim.ParentID,sim);
