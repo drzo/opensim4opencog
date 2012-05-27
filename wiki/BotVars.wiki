@@ -1,0 +1,66 @@
+#description of botvars
+
+= Introduction =
+
+Cogbot is composed of a number of interacting plugins (yay, we love plugins!). The primary semantic way of interchanging information among plugins is botvars.
+
+
+== Using botvars from prolog ==
+
+== using botvars from botcmd ==
+
+== AIML botvars ==
+
+AIML users will be familiar with get and set. Get and set are used to record information about the user during an interaction- e.g. 
+
+bot: what is your favorite movie?
+user: it is Castaway On The Moon
+bot: I haven't seen Castaway On The Moon
+
+The bot remembers user's favorite movie via the set tag in AIML, defined in [http://www.alicebot.org/TR/2001/WD-aiml/#section-set AIML 1.0.1 spec, section 7.4.1], which looks like
+
+{{{
+<set name="favorite_movie" >
+}}}
+
+so the category might look like
+
+{{{
+<category>
+   <pattern>_ is <set name="favorite movie">*</set></pattern>
+   <template>I haven't seen <get name="favorite_movie" /></template>
+</category>
+}}}
+
+this is done via the get tag in AIML, defined in [http://www.alicebot.org/TR/2001/WD-aiml/#section-get AIML 1.0.1 spec, section 7.1.6.1], which looks like
+
+{{{
+<get name="" />
+}}}
+
+which tells the AIML interpreter that it should substitute the contents of a predicate, if that predicate has a value defined. If the predicate has no value defined, the AIML interpreter should substitute the empty string "".
+
+now explain how bot is slightly different
+
+dict="user"   dict="bot"
+
+dict and user names
+
+dict and bot names
+
+
+
+
+
+
+== Cogbot defined botvars ==
+
+
+== botvars in the default AIML files ==
+
+= Details =
+
+Add your content here.  Format your content with:
+  * Text in *bold* or _italic_
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
