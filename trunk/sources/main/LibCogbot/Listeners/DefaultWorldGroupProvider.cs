@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using cogbot.ScriptEngines;
 using cogbot.TheOpenSims;
 using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
@@ -136,6 +137,12 @@ namespace cogbot.Listeners
             return null;
         }
 
+        public IEnumerable<string> SettingNames(int depth)
+        {
+            return GroupNames;
+        }
+
+ 
         readonly Dictionary<string, Func<IList>> ObjectGroups = new Dictionary<string, Func<IList>>();
         public IEnumerable<string> GroupNames
         {
@@ -146,7 +153,7 @@ namespace cogbot.Listeners
         {
             lock (ObjectGroups)
             {
-                ObjectGroups[selecteditems.ToLower()] = func;
+                ObjectGroups[selecteditems.TrimStart(' ', '$').ToLower()] = func;
             }
         }
     }
