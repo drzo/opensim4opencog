@@ -196,6 +196,7 @@ namespace MushDLR223.ScriptEngines
             for (int i = 0; i < tokens.Length; ++i)
             {
                 string prep = tokens[i];
+                if (string.IsNullOrEmpty(prep)) continue;
                 int lenM1 = prep.Length - 1;
                 string splitter = "=";
                 if (prep.Contains("="))
