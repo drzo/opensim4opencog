@@ -23,8 +23,8 @@ namespace cogbot.Listeners
                 return avatar.GetSelectedObjects();
             });
             // all known accounts
-            AddObjectGroup("avatars", () => WorldObjects.SimAvatars.CopyOf());
-            // this bot's master
+            AddObjectGroup("accounts", () => WorldObjects.SimAvatars.CopyOf());
+            // this bot's master(s)
             AddObjectGroup("master", () =>
                                          {
                                              var v = new List<object>();
@@ -46,8 +46,9 @@ namespace cogbot.Listeners
                                            if (avatar == null) return null; 
                                            var v = new List<SimObject> { avatar }; return v;
                                        });
-            // list of objects in this region
-            AddObjectGroup("region", () =>
+            // list of all av's, attachments, and objects in this region
+            // used in "moveprim $regionprims <0,0,-1>
+            AddObjectGroup("regionprims", () =>
                                          {
                                              List<SimObject> here = new List<SimObject>();
                                              SimActor avatar = this.avatar;
@@ -60,9 +61,9 @@ namespace cogbot.Listeners
                                              return here;
                                          });
             // list of all av's, attachments, and objects known to system
-            AddObjectGroup("all", () => WorldObjects.SimObjects.CopyOf());
-            // list of all objects that have an affordance
-            AddObjectGroup("known", () =>
+            AddObjectGroup("allprims", () => WorldObjects.SimObjects.CopyOf());
+            // list of all objects that have an affordance or makes sense for the bot to know about
+            AddObjectGroup("selfknownprims", () =>
                                         {
                                             SimActor avatar = this.avatar;
                                             if (avatar == null) return null; 
@@ -73,7 +74,7 @@ namespace cogbot.Listeners
             // and might be overwritten by aiml. 
             // the intent is to support the notion of a pronoun 'it'
             // if the bot's head is free (not being animated) it will look at target
-            AddObjectGroup("target", () =>
+            AddObjectGroup("lasteventprim", () =>
                                          {
                                              SimActor avatar = this.avatar;
                                              if (avatar == null) return null;
