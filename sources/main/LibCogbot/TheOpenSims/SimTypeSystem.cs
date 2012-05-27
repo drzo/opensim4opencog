@@ -17,15 +17,13 @@ namespace cogbot.TheOpenSims
 {
     public class SimObjectType : BotMentalAspect
     {
+
         public UUID ID
         {
-            get
-            {
-                return UUID.Zero;
-                throw new NotImplementedException("BotMentalAspect.ID " + this);
-            }
+            get;
+            set;
         }
-        
+
         public FirstOrderTerm GetTerm()
         {
             throw new NotImplementedException();
@@ -74,9 +72,12 @@ namespace cogbot.TheOpenSims
         }
 
         public string AspectName;
+        public bool IsObjectTop;
+
         public SimObjectType(string name)
             //: base(name)
         {
+            ID = UUID.Zero;
             AspectName = name;
         }
 
@@ -517,10 +518,13 @@ namespace cogbot.TheOpenSims
         private static bool IsCodeMatch(SimObject obj, object smatch)
         {
             ScriptInterpreter interp = GetScriptInterpreter();
-            interp.Intern("this", obj);
-            string res = interp.Str(interp.Eval(smatch));
-            if (res.ToLower().StartsWith("t")) return true;
-            return false;
+			lock (interp) {
+				interp.Intern("this", obj);
+				interp.Intern("thisClient", WorldObjects.GridMaster.client);
+				string res = interp.Str(interp.Eval(smatch));
+				if (res.ToLower().StartsWith("t")) return true;
+				return false;
+			}
         }
 
         private static ScriptInterpreter ScriptInterpreter0 = null;

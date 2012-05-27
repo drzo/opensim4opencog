@@ -418,8 +418,8 @@ cli_with_gc(Call):-setup_call_cleanup(cli_tracker_begin(Mark),Call,cli_tracker_f
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %%% cli_make_list/2,  cli_new_list_1/2
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cli_new_list_1(Item,Type,List):-cli_new('System.Collections.Generic.List'(Type),[],List),cli_call(List,add(Item),_).
-cli_make_list(Items,Type,List):-cli_new('System.Collections.Generic.List'(Type),[],List),forall(member(Item,Items),cli_call(List,add(Item),_)).
+cli_new_list_1(Item,Type,List):-cli_new('System.Collections.Generic.List'(Type),[],[],List),cli_call(List,add(Item),_).
+cli_make_list(Items,Type,List):-cli_new('System.Collections.Generic.List'(Type),[],[],List),forall(member(Item,Items),cli_call(List,add(Item),_)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %%% cli_sublist/2

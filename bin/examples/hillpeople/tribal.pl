@@ -78,7 +78,7 @@ be_tribal(_,
 	\+ memberchk(inited, Status),
 	memberchk(on_sim, Status),
 	has_inventory,
-	remove_all,
+	%%remove_all,
 	start_wearing(Name, Items),
 	wear_list(Items),
 	be_tribal(home, Name, [inited|Status]).

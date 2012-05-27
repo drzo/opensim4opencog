@@ -128,6 +128,7 @@ namespace Swicli.Library
                 if (!canBeObjects)
                 {
                     Warn("cant find atom/string as class: {0}", clazzSpec);
+                    type = ResolveType(name);
                 }
                 return null;
             }
