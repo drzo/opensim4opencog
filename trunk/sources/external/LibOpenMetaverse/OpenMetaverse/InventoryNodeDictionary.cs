@@ -30,11 +30,50 @@ using System.Text;
 
 namespace OpenMetaverse
 {
-    public class InventoryNodeDictionary
+    public class InventoryNodeDictionary: IComparer<UUID>
     {
-        protected Dictionary<UUID, InventoryNode> Dictionary = new Dictionary<UUID, InventoryNode>();
+        protected SortedDictionary<UUID, InventoryNode> Dictionary;
+        protected Dictionary<UUID, InventoryNode> UDictionary = new Dictionary<UUID, InventoryNode>();
         protected InventoryNode parent;
         protected object syncRoot = new object();
+        public int Compare(UUID id1, UUID id2)
+        {
+            InventoryNode n1 = Get(id1);
+            InventoryNode n2 = Get(id2);
+            int diff = NullCompare(n1, n2);
+            if (diff != 0) return diff;
+            if (n1 == null) return id1.CompareTo(id2);
+            DateTime t1 = n1.ModifyTime;
+            DateTime t2 = n2.ModifyTime;
+            diff = t1.CompareTo(t2);
+            if (diff != 0) return diff;
+            var d1 = n1.Data;
+            var d2 = n2.Data;
+            diff = NullCompare(d1, d2);
+            if (diff != 0) return diff;
+            if (d1 != null)
+            {
+                // both are not null.. due to NullCoimpare code
+                diff = d1.Name.CompareTo(d2.Name);
+                if (diff != 0) return diff;
+            }
+            return id1.CompareTo(id2);
+        }
+
+        private InventoryNode Get(UUID uuid)
+        {
+            InventoryNode val;
+            if (UDictionary.TryGetValue(uuid, out val))
+            {
+                return val;
+            }
+            return null;
+        }
+
+        static int NullCompare(object o1, object o2)
+        {
+            return ReferenceEquals(o1, null).CompareTo(ReferenceEquals(o2, null));
+        }
 
         public InventoryNode Parent
         {
@@ -48,6 +87,7 @@ namespace OpenMetaverse
 
         public InventoryNodeDictionary(InventoryNode parentNode)
         {
+            Dictionary = new SortedDictionary<UUID, InventoryNode>(this);
             parent = parentNode;
         }
 
@@ -57,6 +97,7 @@ namespace OpenMetaverse
             set
             {
                 value.Parent = parent;
+                lock (UDictionary) UDictionary[key] = value;
                 lock (syncRoot) this.Dictionary[key] = value;
             }
         }
@@ -67,6 +108,7 @@ namespace OpenMetaverse
         public void Add(UUID key, InventoryNode value)
         {
             value.Parent = parent;
+            lock (UDictionary) UDictionary[key] = value;
             lock (syncRoot) this.Dictionary.Add(key, value); 
         }
 
@@ -78,6 +120,11 @@ namespace OpenMetaverse
         public bool Contains(UUID key)
         {
             return this.Dictionary.ContainsKey(key);
+        }
+
+        internal void Sort()
+        {
+           //TODO ensure sorted again
         }
     }
 }

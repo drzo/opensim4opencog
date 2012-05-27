@@ -218,6 +218,11 @@ namespace cogbot
         }
         public void TraverseNodes(InventoryNode start, TimeSpan maxTime)
         {
+            TraverseNodesUnsorted(start, maxTime);
+            start.Sort();
+        }
+        public void TraverseNodesUnsorted(InventoryNode start, TimeSpan maxTime)
+        {
             var Inventory = client.Inventory.Store;
             bool has_items = false;
 
