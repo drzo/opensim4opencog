@@ -71,11 +71,18 @@ Please edit this only after some concensus on roadmap
 
 == dmiles ==
 
- # simexport
- # Help Annie get compiling again
- # get low level cogbot movement to use prim pusher - now the default -SOLVED- was bug
- # Make a publically downloadable version of cogbot (small version ) 
-then an overlay pack that has all the chatbot stuff in it
- # revisit RTParser and see if there is a salvageable chatbot in there somewhere - COMPLETED (Kino confirms it's working for Hanson)
+=== first ===
+
+ # prolog API to botvars,sysvars
+ # document manefeto
+ # botcmds using generic parser map
+ # Overview of current set of services: like botvar namespaces
  
+
+=== later ===
+
+ # documentation
+ # Make a publically downloadable bundles for cogbot (small version ) 
+    then an overlay pack that has all the chatbot stuff in it
+ # revisit RTParser and make sure its working as expected (Kino confirms it's working for Hanson)
  # Progress to ProgramK Prolog AIML bot
