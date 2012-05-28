@@ -34,10 +34,13 @@ and recovers it via the [http://www.alicebot.org/TR/2001/WD-aiml/#section-get ge
 </category>
 }}}
 
+Notice that favorite_movie refers to the user's favorite movie. If we have several users we might need to keep separate name spaces for them. 
+Fortunately, Cogbot's AIMLbot keeps a separate "dictionary" for each user. The set and get tags use the dictionary called 'user' by default. This dictionary matches the AV who made the request.
 
-WRONG - not needed, local dictionary is per user.
+Now suppose we want to see if th
 
-Notice that favorite_movie refers to the user's favorite movie. If we have several users we might want to keep separate name spaces for them. Get and set take an additional dict parameter.
+
+Get and set take an additional dict parameter.
 
 {{{
 <category>
