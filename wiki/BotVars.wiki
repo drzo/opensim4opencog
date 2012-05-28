@@ -76,11 +76,32 @@ $vars allowed anywhere in aiml
 
 == Cogbot defined botvars ==
 
-currentWhom
+you  - author of current request
 
+selected - set of currently selected objects
+
+accounts - all known accounts, logged on or not
+
+master - this bot's master(s)  (might have more than one)
+
+self - the current bot
+regionprims - list of all av's, attachments, and objects in this region
+              used in "moveprim $regionprims <0,0,-1>
+allprims - list of all av's, attachments, and objects known to system
+selfknownprims - list of all objects that have an affordance or
+                 makes sense for the bot to know about
+
+lasteventprim - the 'current object' - the current object is
+                determined in a complex way but is generally the last
+                object acted upon by the av.
+                Can be changed by AIML or other plugins.
+                if the bot's head is free (not being animated)
+                it will look at target
 
 
 == botvars in the default AIML files ==
+
+[http://code.google.com/p/opensim4opencog/source/browse/data-chatbot/alicebot/config/bot.xml here they are]
 
 = Details =
 
