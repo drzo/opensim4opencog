@@ -30,10 +30,17 @@ namespace Swicli.Library
     {
         static public IDictionary<string, Object> CreatePrologBackedDictionary(PlTerm pred)
         {
-            return new PrologBackedDictionary<string, object>(null, pred.Name);
+            return new PrologBackedDictionary<string, object>(null, pred.Name,
+                CreatePrologBackedCollection<string>(pred),
+                "assert", "retract","retractall");}
+        static public ICollection<T> CreatePrologBackedCollection<T>(PlTerm pred)
+        {
+            return new PrologBackedCollection<T>(null, pred.Name, "assert", "retract",
+                                                              "retractall");
         }
     }
-    public class PrologBackedDictionary<TKey, TValue> : IDictionary<TKey, TValue>
+
+    public class PrologBacked<TKey, TValue>
     {
         public void InForiegnFrame(Action action)
         {
@@ -47,32 +54,48 @@ namespace Swicli.Library
                 libpl.PL_close_foreign_frame(fid);
             }
         }
-
-        private static PlTerm KeyToTerm(TKey key)
+        public static bool PlCall(string module, string predname, PlTermV termV)
+        {
+            return PrologClient.PlCall(module, predname, termV);
+        }
+        public static PlTerm KeyToTerm(TKey key)
         {
             if (key.Equals(default(TValue))) return PlTerm.PlVar();
             return PrologClient.ToProlog(key);
         }
 
-        private static PlTerm ValueToTerm(TValue value)
+        public static PlTerm ValueToTerm(TValue value)
         {
             if (value.Equals(default(TValue))) return PlTerm.PlVar();
             return PrologClient.ToProlog(value);
         }
 
-        private static PlTermV TermVOf(KeyValuePair<TKey, TValue> item)
+        public static PlTermV TermVOf(KeyValuePair<TKey, TValue> item)
         {
             return new PlTermV(KeyToTerm(item.Key), ValueToTerm(item.Value));
         }
 
+    }
+
+    public class PrologBackedDictionary<TKey, TValue> : PrologBacked<TKey, TValue>, IDictionary<TKey, TValue>
+    {
         private readonly string _module = null;//"user";
         private readonly string _predname;
-        private readonly Type keyType;
+        private ICollection<TKey> Keyz;
         private readonly Type valueType;
-        public PrologBackedDictionary(string module, string predname)
+        private string _assertPred;
+        private string _retractPred;
+        private string _retractall;
+        private Type keyType;
+
+        public PrologBackedDictionary(string module, string predname, ICollection<TKey> keyz, string assertPred, string retractPred, string retractall)
         {
-            //_module = module;
+            _module = module;
             _predname = predname;
+            Keyz = keyz;
+            _assertPred = assertPred;
+            _retractPred = retractPred;
+            _retractall = retractall;
             keyType = typeof(TKey);
             valueType = typeof(TValue);
         }
@@ -204,10 +227,11 @@ namespace Swicli.Library
         ///                 </exception>
         public void Add(KeyValuePair<TKey, TValue> item)
         {
+            if (_assertPred == null) throw new NotSupportedException("add " + this); 
             InForiegnFrame(() =>
             {
                 PlTerm newPlTermV = PrologClient.PlC(_predname, TermVOf(item));
-                PlCall(_module, "assert", new PlTermV(newPlTermV));
+                PlCall(_module, _assertPred, new PlTermV(newPlTermV));
             });
 
         }
@@ -219,10 +243,11 @@ namespace Swicli.Library
         ///                 </exception>
         public void Clear()
         {
+            if (_retractall == null) throw new NotSupportedException("clear " + this);
             InForiegnFrame(() =>
             {
                 PlTerm newPlTermV = PrologClient.PlC(_predname, new PlTermV(2));
-                PlCall(_module, "retractall", new PlTermV(newPlTermV));
+                PlCall(_module, _retractall, new PlTermV(newPlTermV));
             });
         }
 
@@ -238,9 +263,9 @@ namespace Swicli.Library
         {
             bool found = false;
             InForiegnFrame(() =>
-                               {
-                                   found = PlCall(_module, _predname, TermVOf(item));
-                               });
+            {
+                found = PlCall(_module, _predname, TermVOf(item));
+            });
             return found;
         }
 
@@ -279,7 +304,7 @@ namespace Swicli.Library
             InForiegnFrame(() =>
             {
                 PlTerm newPlTermV = PrologClient.PlC(_predname, TermVOf(item));
-                removed = PlCall(_module, "retract", new PlTermV(newPlTermV));
+                removed = PlCall(_module, _retractPred, new PlTermV(newPlTermV));
             });
             return removed;
 
@@ -293,7 +318,7 @@ namespace Swicli.Library
         /// </returns>
         public int Count
         {
-            get { throw new NotImplementedException(); }
+            get { return Keyz.Count; }
         }
 
         /// <summary>
@@ -304,7 +329,7 @@ namespace Swicli.Library
         /// </returns>
         public bool IsReadOnly
         {
-            get { throw new NotImplementedException(); }
+            get { return _retractPred != null; }
         }
 
         #endregion
@@ -322,6 +347,7 @@ namespace Swicli.Library
         ///                 </exception>
         public bool ContainsKey(TKey key)
         {
+            if (Keyz != null) return Keyz.Contains(key);
             bool found = false;
             InForiegnFrame(() =>
                                {
@@ -356,12 +382,17 @@ namespace Swicli.Library
         ///                 </exception>
         public bool Remove(TKey key)
         {
+            if (Keyz != null)
+            {
+                if (!Keyz.IsReadOnly) return Keyz.Remove(key);
+            }
+            if (_retractPred == null) throw new NotSupportedException("remove " + this);
             bool removed = false;
             InForiegnFrame(() =>
                                {
 
                                    PlTerm newPlTermV = PrologClient.PlC(_predname, KeyToTerm(key), PlTerm.PlVar());
-                                   removed = PlCall(_module, "retract", new PlTermV(newPlTermV));
+                                   removed = PlCall(_module, _retractPred, new PlTermV(newPlTermV));
                                });
             return removed;
         }
@@ -396,11 +427,6 @@ namespace Swicli.Library
                                });
             value = value0;
             return res;
-        }
-
-        private bool PlCall(string module, string predname, PlTermV termV)
-        {
-            return PrologClient.PlCall(module, predname, termV);
         }
 
         /// <summary>
@@ -450,7 +476,7 @@ namespace Swicli.Library
         /// </returns>
         public ICollection<TKey> Keys
         {
-            get { throw new NotImplementedException(); }
+            get { return Keyz; }
         }
 
         /// <summary>
@@ -467,4 +493,189 @@ namespace Swicli.Library
         #endregion
     }
 
+
+    public class PrologBackedCollection<T> : PrologBacked<T,object>, ICollection<T>
+    {
+        private readonly string _module = null;//"user";
+        private readonly string _predname;
+        private readonly Type keyType;
+        private readonly Type valueType;
+        private string _assertPred;
+        private string _retractPred;
+        private string _retractall;
+
+        public PrologBackedCollection(string module, string predname, string assertPred, string retractPred, string retractall)
+        {
+            _module = module;
+            _predname = predname;
+            _assertPred = assertPred;
+            _retractPred = retractPred;
+            _retractall = retractall;
+            keyType = typeof (T);
+        }
+
+        #region ICollection<T> Members
+
+        public void Add(T item)
+        {
+            if (_assertPred == null) throw new NotSupportedException("add " + this);
+            InForiegnFrame(() =>
+            {
+                PlTerm newPlTermV = PrologClient.PlC(_predname, new PlTermV(KeyToTerm(item)));
+                PlCall(_module, _assertPred, new PlTermV(newPlTermV));
+            });
+        }
+
+        public void Clear()
+        {
+            InForiegnFrame(() =>
+                               {
+                                   PlTerm newPlTermV = PrologClient.PlC(_predname, new PlTermV(1));
+                                   PlCall(_module, _retractall, new PlTermV(newPlTermV));
+                               });
+        }
+
+        public bool Contains(T item)
+        {
+            bool found = false;
+            InForiegnFrame(() =>
+            {
+                found = PlCall(_module, _predname, new PlTermV(KeyToTerm(item)));
+            });
+            return found;
+        }
+
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Count
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public bool IsReadOnly
+        {
+            get { return _retractPred == null; }
+        }
+
+        public bool Remove(T item)
+        {
+            if (_retractPred == null) throw new NotSupportedException("remove " + this);
+            bool found = false;
+            InForiegnFrame(() =>
+            {
+                found = PlCall(_module, _retractPred, new PlTermV(KeyToTerm(item)));
+            });
+            return found;
+        }
+
+        #endregion
+
+        #region IEnumerable<T> Members
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return new PrologBackedCollectionEnumerator(this);
+        }
+
+        #endregion
+
+        #region IEnumerable Members
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return new PrologBackedCollectionEnumerator(this);
+        }
+
+        public class PrologBackedCollectionEnumerator : IEnumerator<T>
+        {
+            private readonly PrologBackedCollection<T> _dictionary;
+            private uint fframe = 0;
+            private PlTermV termV;
+            private PlQuery plQuery;
+
+            public PrologBackedCollectionEnumerator(PrologBackedCollection<T> dictionary)
+            {
+                _dictionary = dictionary;
+                Reset();
+            }
+
+            #region Implementation of IDisposable
+
+            /// <summary>
+            /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            /// </summary>
+            /// <filterpriority>2</filterpriority>
+            public void Dispose()
+            {
+                if (plQuery != null) plQuery.Dispose();
+                plQuery = null;
+                if (fframe != 0) libpl.PL_close_foreign_frame(fframe);
+                fframe = 0;
+            }
+
+            #endregion
+
+            #region Implementation of IEnumerator
+
+            /// <summary>
+            /// Advances the enumerator to the next element of the collection.
+            /// </summary>
+            /// <returns>
+            /// true if the enumerator was successfully advanced to the next element; false if the enumerator has passed the end of the collection.
+            /// </returns>
+            /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. 
+            ///                 </exception><filterpriority>2</filterpriority>
+            public bool MoveNext()
+            {
+                return plQuery.NextSolution();
+            }
+
+            /// <summary>
+            /// Sets the enumerator to its initial position, which is before the first element in the collection.
+            /// </summary>
+            /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. 
+            ///                 </exception><filterpriority>2</filterpriority>
+            public void Reset()
+            {
+                Dispose();
+                fframe = libpl.PL_open_foreign_frame();
+                termV = new PlTermV(1);
+                plQuery = new PlQuery(_dictionary._module, _dictionary._predname, termV);
+            }
+
+            /// <summary>
+            /// Gets the element in the collection at the current position of the enumerator.
+            /// </summary>
+            /// <returns>
+            /// The element in the collection at the current position of the enumerator.
+            /// </returns>
+            public T Current
+            {
+                get
+                {
+                    return (T)PrologClient.CastTerm(plQuery.Args[0], _dictionary.keyType);
+                }
+            }
+
+            /// <summary>
+            /// Gets the current element in the collection.
+            /// </summary>
+            /// <returns>
+            /// The current element in the collection.
+            /// </returns>
+            /// <exception cref="T:System.InvalidOperationException">The enumerator is positioned before the first element of the collection or after the last element.
+            ///                 </exception><filterpriority>2</filterpriority>
+            object IEnumerator.Current
+            {
+                get { return Current; }
+            }
+
+            #endregion
+        }
+
+        #endregion
+    }
 }

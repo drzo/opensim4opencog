@@ -840,7 +840,7 @@ namespace MushDLR223.ScriptEngines
                 CollectionProviders[func] = provider;
             }
         }
-        public static void AddGroupProvider(string namespaec, ICollectionProvider provider)
+        public static void AddNamedProvider(string namespaec, ICollectionProvider provider)
         {
             lock (CollectionProviders)
             {
@@ -861,7 +861,31 @@ namespace MushDLR223.ScriptEngines
             }
             return null;
         }
-
+        static public IEnumerable<ICollectionProvider> GetProviders(string namespaec)
+        {
+            lock (CollectionProviders)
+            {
+                var all = new List<ICollectionProvider>();
+                foreach (var nv in CollectionProviders)
+                {
+                    if (nv.Key() != namespaec) continue;
+                    all.Add(nv.Value);
+                }
+                return all;
+            }
+        }
+        static public IEnumerable<string> GetNameSpaces()
+        {
+            lock (CollectionProviders)
+            {
+                var all = new List<string>();
+                foreach (var nv in CollectionProviders)
+                {                   
+                    all.Add(nv.Key());
+                }
+                return all;
+            }
+        }
         static public IEnumerable<string> SettingNames(int depth)
         {
             lock (CollectionProviders)
@@ -869,7 +893,8 @@ namespace MushDLR223.ScriptEngines
                 var all = new List<string>();
                 foreach (var nv in CollectionProviders)
                 {
-                    all.Add(nv.Key());
+                    IEnumerable<string> cvol = nv.Value.SettingNames(depth);
+                    if (cvol!=null) all.AddRange(cvol);
                 }
                 return all;
             }
