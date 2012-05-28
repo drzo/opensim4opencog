@@ -53,9 +53,14 @@ namespace OpenMetaverse
             if (diff != 0) return diff;
             if (d1 != null)
             {
-                // both are not null.. due to NullCoimpare code
-                diff = d1.Name.CompareTo(d2.Name);
+                diff = NullCompare(d1.Name, d2.Name);
                 if (diff != 0) return diff;
+                if (d1.Name != null)
+                {
+                    // both are not null.. due to NullCoimpare code
+                    diff = d1.Name.CompareTo(d2.Name);
+                    if (diff != 0) return diff;
+                }
             }
             return id1.CompareTo(id2);
         }
