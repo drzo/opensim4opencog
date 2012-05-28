@@ -18,6 +18,8 @@
 
    botdo/1,wbotdo/2,wabdo/1,
 
+   get_botvar/3,add_botvars/2,
+
    botcmd/1, botcmd/2, botcmd/3,   
    wbotcmd/2, wbotcmd/3, wbotcmd/4,
    to_avatar/2,
@@ -749,17 +751,31 @@ wbot_get_botvar(BotID,Name,ValueO):-wbotget(BotID,['WorldSystem','simGroupProvid
    cli_col(GPs,GP),gp_to_vars(BotID,GP,Var),cli_get(Var,'Key',Name),cli_get(Var,'Value',Value),
    once(value_deref(Value,ValueO)).
 
+get_botvar(NS,Name,ValueO):-
+   cli_call('MushDLR223.ScriptEngines.ScriptManager','GetNameSpaces',[],NSs),
+   cli_col(NSs,NS),
+   cli_call('MushDLR223.ScriptEngines.ScriptManager','GetProviders',[NS],CPs),
+   cli_col(CPs,CP),
+   cli_call(CP,'SettingNames'(int),[1],Names),
+   cli_col(Names,Name),
+   cli_call(CP,'GetGroup'(string),[Name],Value),
+   once(value_deref(Value,ValueO)).
+
 gp_to_vars(_BotID,GP,Var):- cli_call('MushDLR223.ScriptEngines.SingleNameValue','MakeKVP'('MushDLR223.ScriptEngines.ICollectionProvider',int),[GP,2],Col),cli_col(Col,Var).
 value_deref(Value,ValueO):-cli_col(Value,ValueO).
 
 %------------------------------------------------------------------------------
 % adding to the botvar interface
 %------------------------------------------------------------------------------
-wbot_add_botvars(BotID,NameSpace,PredImpl):-wbotget(BotID,'WorldSystem',Wrld),
-      cli_call(Wrld,'Swicli.Library.PrologClient','CreatePrologBackedDictionary',[PredImpl],PBD),
-      cli_call(Wrld,'MushDLR223.ScriptEngines.DictionaryWrapper','CreateDictionaryWrapper',[PBD],Provider),
-      cli_call('MushDLR223.ScriptEngines.ScriptManager','AddGroupProvider',[NameSpace, Provider],_).
+add_botvars(NameSpace,PredImpl):-
+      cli_call('Swicli.Library.PrologClient','CreatePrologBackedDictionary',[PredImpl],PBD),
+      cli_call('MushDLR223.ScriptEngines.DictionaryWrapper','CreateDictionaryWrapper',[PBD],Provider),
+      cli_call('MushDLR223.ScriptEngines.ScriptManager','AddNamedProvider',[NameSpace, Provider],_).
 
+:-add_botvars(fromprolog,prolog_botvar_impl).
+prolog_botvar_impl(a,1).
+prolog_botvar_impl(b,2).
+prolog_botvar_impl(Key):-prolog_botvar_impl(Key,_).
 %------------------------------------------------------------------------------
 % listing functions
 %------------------------------------------------------------------------------
