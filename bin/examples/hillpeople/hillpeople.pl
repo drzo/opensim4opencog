@@ -11,7 +11,8 @@
 		       tribal_land/1,
 		       join_the_tribe/0,
                        set_num_bots/1,
-                       tribe_size/1
+                       tribe_size/1,
+                       set_tribe/1
 		      ]).
 
 %--------------------------------------------------------
@@ -148,8 +149,13 @@ set_num_bots(Value):-retractall(tribe_size(_)),assert(tribe_size(Value)).
 % if you have all the passwords the same this saves some typing
 %
 pw('hillpeople').
+
+:-dyanamic(tribe/1.
+
 tribe('Hillperson').
 %tribe('Dougstribe').
+
+set_tribe(Value):-retractall(tribe(_)),assert(tribe(Value)).
 
 hill_person(otopopo) :- tribe_size(X), X > 0.
 hill_credentials(otopopo, 'Otopopo', Tribe, PW) :-
