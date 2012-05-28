@@ -57,8 +57,10 @@ Please edit this only after some concensus on roadmap
 == Annie == 
 === first ===
 
- # get latest compiling from Doug
- # make a demo project, probably an area populated by some bots
+ # move hillpeople to botvars
+ # make hillpeople do various actions (hunt, fish, etc) triggered by some debug method
+ # make hillpeople trigger actions from aiml and be able to answer questions like 'what are you doing?'  'what do you think Otopopo is doing?'
+ 
 
 === later ===
 
