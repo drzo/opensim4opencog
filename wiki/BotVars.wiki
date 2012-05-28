@@ -17,8 +17,6 @@ bot: what is your favorite movie?
 user: it is Castaway On The Moon
 bot: I haven't seen Castaway On The Moon
 
-(Note that we also could have used the `<that />` tag) 
-
 The bot remembers the user's favorite movie via the set tag in AIML, defined in [http://www.alicebot.org/TR/2001/WD-aiml/#section-set AIML 1.0.1 spec, section 7.4.1], which looks like
 
 {{{
@@ -34,26 +32,22 @@ and recovers it via the [http://www.alicebot.org/TR/2001/WD-aiml/#section-get ge
 </category>
 }}}
 
+(Note that we also could have used the `<that />` tag, but this is an example) 
+
 Notice that favorite_movie refers to the user's favorite movie. If we have several users we might need to keep separate name spaces for them. 
 Fortunately, Cogbot's AIMLbot keeps a separate "dictionary" for each user. The set and get tags use the dictionary called 'user' by default. This dictionary matches the AV who made the request.
 
-Now suppose we want to see if th
+We might also want to store information about the bot itself. For example, suppose we want a bot to be able to remember the flavor of the day. So one user can tell the bot the flavor of the day, and another ask about it. The bot itself has a dictionary.
 
 
-Get and set take an additional dict parameter.
-
-{{{
-<category>
-   <pattern>_ is <set dict="FluffyBunny Resident" name="favorite_movie">*</set></pattern>
-   <template>I haven't seen <get dict="FluffyBunny Resident" name="favorite_movie" /></template>
-</category>
-}}}
 
 This of course has the user's name hard coded, a deficiency we'll correct in a moment.
 
 We might also want to record information about the bot itself. This is done in the dictionary 'bot'. AIML contains a shorthand equivilent `<bot name="foo" />`  for `<get dict="bot" name="foo" />`. The dictionary 'user' is the default dict.
 
 Cogbot botvars are effectively AIML vars. So, for example, we can introduce the bot's master's name with   `<get dict="
+<bot dict="$you"..> == <get ..>
+<bot..> == <get dict="bot" ..>
 
 of course we're more likely to want to store 
 
@@ -65,6 +59,11 @@ dict and user names
 
 dict and bot names
 
+world name space
+
+world/local bots
+
+$somedict.somesubdict.somevar
 
 every request in aiml has local dictionary, which is the name of the person making the request to the bot (usually the person who spoke to the bot).  
 
