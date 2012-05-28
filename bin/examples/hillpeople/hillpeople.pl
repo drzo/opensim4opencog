@@ -150,7 +150,7 @@ set_num_bots(Value):-retractall(tribe_size(_)),assert(tribe_size(Value)).
 %
 pw('hillpeople').
 
-:-dyanamic(tribe/1).
+:-dynamic(tribe/1).
 
 tribe('Hillperson').
 %tribe('Dougstribe').
