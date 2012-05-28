@@ -668,9 +668,9 @@ wbot_inv_parent(BotID,Mask,Folder):-wbot_find_node(BotID,Mask,Item),cli_call(Ite
 %------------------------------------------------------------------------------
 % Moving an inventory item or folder
 %------------------------------------------------------------------------------
-wbot_inventory_move(BotID,Mask,NewParent):-wbot_find_node(BotID,Mask,Item),wbot_find_node(BotID,NewParent,Folder),
-    inventory_node_name(BotID,Item,Folder),
-    wbotcall(BotID,['Inventory','Move'(Item,Folder,NewName)],_).
+wbot_inventory_move(BotID,Mask,NewParent):-wbot_find_node(BotID,Mask,Item),wbot_find_node(BotID,NewParent,NewFolder),
+    inventory_node_name(Item,OldName),
+    wbotcall(BotID,['Inventory','Move'(Item,NewFolder,OldName)],_).
 
 %------------------------------------------------------------------------------
 % ways of manipulating worn (not attached) items (cogbot will rebake w/in 20 seconds of outfit changes)
@@ -733,10 +733,10 @@ wbot_rebake_appearance(BotID):-wbotcall(BotID,['Appearance','RequestSetAppearanc
 %------------------------------------------------------------------------------
 % sysvar interface
 %------------------------------------------------------------------------------
-wbot_get_sysvar(_BotID,Name,Value):-cli_get('MushDLR223.ScriptEngines.ScriptManager','SysVars',Dict),
-   cli_get(Dict,'Values',Col),cli_col(Col,Var),get_modeless(Var,['Name'=Name,'Value'=Value]).
-wbot_set_sysvar(_BotID,Name,Value):-cli_get('MushDLR223.ScriptEngines.ScriptManager','SysVars',Dict),
-   cli_get(Dict,'Values',Col),cli_col(Col,Var),cli_get(Var,'Name',Name),set_modeless(Var,['Value'=Value]).
+wbot_get_sysvar(_BotID,Name,Value):-cli_get('MushDLR223.ScriptEngines.ScriptManager',['SysVars','Values'],Col),
+   cli_col(Col,Var),get_modeless(Var,['Name'=Name,'Value'=Value]).
+wbot_set_sysvar(_BotID,Name,Value):-cli_get('MushDLR223.ScriptEngines.ScriptManager',['SysVars','Values'],Col),
+   cli_col(Col,Var),cli_get(Var,'Key',Name),set_modeless(Var,['Value'=Value]).
 
 get_modeless(Var,List):-forall(member(Member=Value,List),cli_get(Var,Member,Value)).
 
@@ -745,8 +745,20 @@ set_modeless(Var,List):-forall(member(Member=Value,List),cli_set(Var,Member,Valu
 %------------------------------------------------------------------------------
 % botvar interface
 %------------------------------------------------------------------------------
-wbot_get_botvar(_BotID,Name,Value):-wbotget(BotID,['WorldSystem','simGroupProviders'],GPs),
-   cli_get(Dict,'Values',Col),cli_col(Col,Var),get_modeless(Var,['Name'=Name,'Value'=Value]).
+wbot_get_botvar(BotID,Name,ValueO):-wbotget(BotID,['WorldSystem','simGroupProviders'],GPs),
+   cli_col(GPs,GP),gp_to_vars(BotID,GP,Var),cli_get(Var,'Key',Name),cli_get(Var,'Value',Value),
+   once(value_deref(Value,ValueO)).
+
+gp_to_vars(_BotID,GP,Var):- cli_call('MushDLR223.ScriptEngines.SingleNameValue','MakeKVP'('MushDLR223.ScriptEngines.ICollectionProvider',int),[GP,2],Col),cli_col(Col,Var).
+value_deref(Value,ValueO):-cli_col(Value,ValueO).
+
+%------------------------------------------------------------------------------
+% adding to the botvar interface
+%------------------------------------------------------------------------------
+wbot_add_botvars(BotID,NameSpace,PredImpl):-wbotget(BotID,'WorldSystem',Wrld),
+      cli_call(Wrld,'Swicli.Library.PrologClient','CreatePrologBackedDictionary',[PredImpl],PBD),
+      cli_call(Wrld,'MushDLR223.ScriptEngines.DictionaryWrapper','CreateDictionaryWrapper',[PBD],Provider),
+      cli_call('MushDLR223.ScriptEngines.ScriptManager','AddGroupProvider',[NameSpace, Provider],_).
 
 %------------------------------------------------------------------------------
 % listing functions

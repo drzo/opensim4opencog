@@ -20,7 +20,7 @@ namespace cogbot.Listeners
             AddObjectGroup("selected", () =>
             {
                 SimActor avatar = this.avatar;
-                if (avatar == null) return null; 
+                if (avatar == null) return null;
                 return avatar.GetSelectedObjects();
             });
             // all known accounts
@@ -44,7 +44,7 @@ namespace cogbot.Listeners
             AddObjectGroup("self", () =>
                                        {
                                            SimActor avatar = this.avatar;
-                                           if (avatar == null) return null; 
+                                           if (avatar == null) return null;
                                            var v = new List<SimObject> { avatar }; return v;
                                        });
             // list of all av's, attachments, and objects in this region
@@ -67,7 +67,7 @@ namespace cogbot.Listeners
             AddObjectGroup("selfknownprims", () =>
                                         {
                                             SimActor avatar = this.avatar;
-                                            if (avatar == null) return null; 
+                                            if (avatar == null) return null;
                                             return avatar.GetKnownObjects();
                                         });
             // the 'current object' - the current object is determined in a complex way
@@ -110,14 +110,14 @@ namespace cogbot.Listeners
         {
             var ae = ((SimObject)master).ActionEventQueue;
             if (ae != null) foreach (SimObjectEvent e in ae)
-            {
-                var t = e["target"] as SimPosition;
-                if (t != null)
                 {
-                    v.Add(t);
-                    return v;
+                    var t = e["target"] as SimPosition;
+                    if (t != null)
+                    {
+                        v.Add(t);
+                        return v;
+                    }
                 }
-            }
             return null;
         }
 
@@ -128,11 +128,11 @@ namespace cogbot.Listeners
 
         public ICollection GetGroup(string arg0Lower)
         {
-            Func<IList> func;
+            IKeyValuePair<string, object> func;
             if (ObjectGroups.TryGetValue(arg0Lower, out func))
             {
                 if (func == null) return null;
-                return func();
+                return SingleNameValue.AsCollection(func.Value);
             }
             return null;
         }
@@ -142,8 +142,8 @@ namespace cogbot.Listeners
             return GroupNames;
         }
 
- 
-        readonly Dictionary<string, Func<IList>> ObjectGroups = new Dictionary<string, Func<IList>>();
+
+        readonly Dictionary<string, IKeyValuePair<string, object>> ObjectGroups = new Dictionary<string, IKeyValuePair<string, object>>();
         public IEnumerable<string> GroupNames
         {
             get { lock (ObjectGroups) return new List<string>(ObjectGroups.Keys); }
@@ -153,7 +153,7 @@ namespace cogbot.Listeners
         {
             lock (ObjectGroups)
             {
-                ObjectGroups[selecteditems.TrimStart(' ', '$').ToLower()] = func;
+                ObjectGroups[selecteditems.TrimStart(' ', '$').ToLower()] = new SingleNameValue(selecteditems, func);
             }
         }
     }

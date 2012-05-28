@@ -4,7 +4,7 @@ using MushDLR223.ScriptEngines;
 
 namespace MushDLR223.Utilities
 {
-    public class ConfigSettingAttribute : Attribute
+    public class ConfigSettingAttribute : Attribute, IKeyValuePair<string,object>
     {
         private bool HasSingleton
         {
@@ -63,7 +63,7 @@ namespace MushDLR223.Utilities
         }
 
         private string _name;
-        public string Name
+        public string Key
         {
             get
             {
@@ -101,6 +101,18 @@ namespace MushDLR223.Utilities
             if (member == null) return -1;
             return member.GetHashCode();
         }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+            member = null;
+            _singleton = null;
+            initialValue = null;
+        }
+
         public void SetMember(MemberInfo member0)
         {
             member = member0;
@@ -116,9 +128,9 @@ namespace MushDLR223.Utilities
 
                 if (comments.Length != 0)
                 {
-                    return Name + " = " + Value + " //" + comments;
+                    return Key + " = " + Value + " //" + comments;
                 }
-                return Name + " = " + Value;
+                return Key + " = " + Value;
             }
         }
 
@@ -250,7 +262,7 @@ namespace MushDLR223.Utilities
 
         public bool Finds(string find)
         {
-            return string.IsNullOrEmpty(find) || Name.ToLower().Contains(find);
+            return string.IsNullOrEmpty(find) || Key.ToLower().Contains(find);
         }
 
         public static ConfigSettingAttribute CreateSetting(MemberInfo s)
@@ -336,5 +348,11 @@ namespace MushDLR223.Utilities
             if (type.IsVisible && type.IsValueType) return true;
             return false;
         }
+    }
+
+    public interface IKeyValuePair<K,V> : IDisposable
+    {
+        V Value { get; set; }
+        K Key { get; }
     }
 }

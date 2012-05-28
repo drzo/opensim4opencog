@@ -276,6 +276,8 @@ namespace cogbot.Listeners
         public WorldObjects(BotClient client)
             : base(client)
         {
+            simGroupProviders = new List<ICollectionProvider>();
+            MushDLR223.ScriptEngines.ScriptManager.AddGroupProvider(client.GetName, this);
             OnConnectedQueue = new TaskQueueHandler(new NamedPrefixThing("OnConnectedQueue", client.GetName),
                                                     TimeSpan.FromMilliseconds(20), false);
             client.WorldSystem = this;
