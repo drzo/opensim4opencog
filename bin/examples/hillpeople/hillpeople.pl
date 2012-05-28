@@ -9,7 +9,9 @@
 		       home/2,
 		       ebt/0,
 		       tribal_land/1,
-		       join_the_tribe/0
+		       join_the_tribe/0,
+                       set_num_bots/1,
+                       tribe_size/1
 		      ]).
 
 %--------------------------------------------------------
@@ -132,7 +134,12 @@ logon_a_bot(Name) :-
 
 loginuri("http://www.pathwayslms.com:9000/").
 tribal_land('annies haven II/164/135/21').
-tribe_size(6).
+
+:-dynamic(tribe_size/1).
+
+set_num_bots(Value):-retractall(tribe_size(_)),assert(tribe_size(Value)).
+:-set_num_bots(6).
+
 
 %%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %            bot credentials
