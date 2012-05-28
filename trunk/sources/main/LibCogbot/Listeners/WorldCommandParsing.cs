@@ -10,7 +10,7 @@ using PathSystem3D.Navigation;
 namespace cogbot.Listeners
 {
 
-    public partial class WorldObjects : AllEvents
+    public partial class WorldObjects : AllEvents, ICollectionProvider
     {
 
         public BotMentalAspect GetObject(string name)
@@ -479,7 +479,7 @@ namespace cogbot.Listeners
         }
 
 
-        public List<ICollectionProvider> simGroupProviders = new List<ICollectionProvider>();
+        public List<ICollectionProvider> simGroupProviders;
         private DefaultWorldGroupProvider _defaultProvider;
         public void AddObjectGroup(string selecteditems, Func<IList> func)
         {
@@ -500,20 +500,16 @@ namespace cogbot.Listeners
                 simGroupProviders.Add(new GetGroupFuncHolder(name, bot));
             }
         }
+
         static readonly char[] TrimCollectionStart = new []{' ','\n','$'};
         public ICollection ResolveCollection(string arg0Lower, out int argsUsed, ICollectionProvider skip)
         {
             arg0Lower = arg0Lower.TrimStart(TrimCollectionStart).ToLower();
-            lock (simGroupProviders)
+            var col = GetGroup(arg0Lower);
+            if (col != null)
             {
-                foreach (ICollectionProvider provider in simGroupProviders)
-                {
-                    if (skip == provider) continue;
-                    ICollection v = provider.GetGroup(arg0Lower);
-                    if (v == null) continue;
-                    argsUsed = 1;
-                    return v;
-                }
+                argsUsed = 1;
+                return col;
             }
             argsUsed = 0;
             return null;
@@ -758,6 +754,45 @@ namespace cogbot.Listeners
         }
 
 
+
+        #region ICollectionProvider Members
+        public ICollection GetGroup(string name)
+        {
+            return GetGroup(name, this);
+        }
+        public ICollection GetGroup(string name, object skip)
+        {
+            lock (simGroupProviders)
+            {
+                foreach (ICollectionProvider provider in simGroupProviders)
+                {
+                    if (skip == provider) continue;
+                    ICollection v = provider.GetGroup(name);
+                    if (v == null) continue;
+                    return v;
+                }
+            }
+            return null;
+        }
+
+        public IEnumerable<string> SettingNames(int depth)
+        {
+            lock (simGroupProviders)
+            {
+                List<string> all = new List<string>();
+                foreach (ICollectionProvider provider in simGroupProviders)
+                {
+                    var s = provider.SettingNames(depth);
+                    if (s!=null)
+                    {
+                        all.AddRange(s);
+                    }
+                }
+                return all;
+            }
+        }
+
+        #endregion
     }
 
 

@@ -48,7 +48,7 @@ namespace cogbot.Actions.System
             foreach (var sv in LockInfo.CopyOf(ScriptManager.SysVars))
             {
                 ConfigSettingAttribute svv = sv.Value;
-                sb.AppendLine(string.Format("<tr name=\"{0}\" id='{0}'><td>{0}</td><td>{1}</td><td>{2}</td></tr>", Htmlize.NoEnts(svv.Name), Htmlize.NoEnts("" + svv.Value), Htmlize.NoEnts(svv.Comments)));
+                sb.AppendLine(string.Format("<tr name=\"{0}\" id='{0}'><td>{0}</td><td>{1}</td><td>{2}</td></tr>", Htmlize.NoEnts(svv.Key), Htmlize.NoEnts("" + svv.Value), Htmlize.NoEnts(svv.Comments)));
             }
             sb.AppendLine("</table>");
             return sb.ToString();
@@ -63,7 +63,7 @@ namespace cogbot.Actions.System
                 foreach (var sv in LockInfo.CopyOf(ScriptManager.SysVars))
                 {
                     ConfigSettingAttribute svv = sv.Value;
-                    WriteLine(string.Format("{0}={1} //{2}", (svv.Name), svv.Value, svv.Comments));
+                    WriteLine(string.Format("{0}={1} //{2}", (svv.Key), svv.Value, svv.Comments));
                 }
                 return Success("count=" + ScriptManager.SysVars.Count);
             }
@@ -90,7 +90,7 @@ namespace cogbot.Actions.System
                 try
                 {
                     one.Value = args[1];
-                    Success("Set sysvar: " + one.Name + " to " + one.Value);
+                    Success("Set sysvar: " + one.Key + " to " + one.Value);
                     changed++;
                 } catch(Exception e)
                 {

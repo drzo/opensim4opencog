@@ -445,7 +445,8 @@ namespace cogbot.TheOpenSims
                 {
                     if (param.Key.ToLower().Contains(target.ToLower())) return param.ObjectValue;
                 }
-                throw new ArgumentOutOfRangeException(target);
+                return null;
+                //throw new ArgumentOutOfRangeException(target);
             }
         }
     }

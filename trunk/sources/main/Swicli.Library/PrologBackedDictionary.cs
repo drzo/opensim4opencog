@@ -26,6 +26,13 @@ using SbsSW.SwiPlCs;
 
 namespace Swicli.Library
 {
+    public partial class PrologClient
+    {
+        static public IDictionary<string, Object> CreatePrologBackedDictionary(PlTerm pred)
+        {
+            return new PrologBackedDictionary<string, object>(null, pred.Name);
+        }
+    }
     public class PrologBackedDictionary<TKey, TValue> : IDictionary<TKey, TValue>
     {
         public void InForiegnFrame(Action action)

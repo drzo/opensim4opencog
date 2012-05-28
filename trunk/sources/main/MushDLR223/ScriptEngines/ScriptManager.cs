@@ -832,6 +832,49 @@ namespace MushDLR223.ScriptEngines
         {
              return CLSMember.GetTypeArray(argarray);
         }
+        public readonly static Dictionary<Func<string>,ICollectionProvider> CollectionProviders = new Dictionary<Func<string>, ICollectionProvider>();
+        public static void AddGroupProvider(Func<string> func, ICollectionProvider provider)
+        {
+            lock (CollectionProviders)
+            {
+                CollectionProviders[func] = provider;
+            }
+        }
+        public static void AddGroupProvider(string namespaec, ICollectionProvider provider)
+        {
+            lock (CollectionProviders)
+            {
+                CollectionProviders[() => namespaec] = provider;
+            }
+        }
+        static public ICollection GetGroup(string namespaec, string varname)
+        {
+            lock (CollectionProviders)
+            {
+                foreach (var nv in CollectionProviders)
+                {
+                    if (nv.Key()!=namespaec) continue;
+                    ICollection v = nv.Value.GetGroup(varname);
+                    if (v == null) continue;
+                    return v;
+                }
+            }
+            return null;
+        }
+
+        static public IEnumerable<string> SettingNames(int depth)
+        {
+            lock (CollectionProviders)
+            {
+                var all = new List<string>();
+                foreach (var nv in CollectionProviders)
+                {
+                    all.Add(nv.Key());
+                }
+                return all;
+            }
+        }
+
     }
 
     internal class VerifyEx : Exception
