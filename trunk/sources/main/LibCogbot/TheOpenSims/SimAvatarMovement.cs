@@ -44,6 +44,10 @@ namespace cogbot.TheOpenSims
             return WithAnim(SimAssetStore.FindOrCreateAsset(uUID, AssetType.Animation), threadStart);
         }
 
+        [ConfigSetting(Description = "Set this false to disable SimpleMovement's use of Flying")]
+        public static bool MayFlyInSimpleMovement = false;
+        [ConfigSetting(Description = "Set depth of water before swimming starts.")]
+        public static float SwimDepth = 3.0f;
         private DateTime ThisUpdateShown;
         public static int PipesAlive = 0;
         public static int PipesNumberNext = 0;
@@ -137,7 +141,8 @@ namespace cogbot.TheOpenSims
             }
         }
 
-        [ConfigSetting(Description = "The pipes and cogpusher channel")] public static int ChatCogPrimChannel = 100;// 239846325;
+        [ConfigSetting(Description = "The pipes and cogpusher channel")]
+        public static int ChatCogPrimChannel = 100;// 239846325;
         private void ChatCogPrim(string s)
         {
             Client.Self.Chat(s, ChatCogPrimChannel, ChatType.Normal);
@@ -393,7 +398,7 @@ namespace cogbot.TheOpenSims
         private void TrackerLoop()
         {
             int wideOpens = MaxWideOpens;
-            bool LastSentButtonUp = false;            
+            bool LastSentButtonUp = false;
             Random MyRandom = new Random(DateTime.Now.Millisecond);
             //Client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = false;
             //Client.Self.Movement.AutoResetControls = true;
@@ -499,21 +504,28 @@ namespace cogbot.TheOpenSims
                     SimRegion R = GetSimRegion();
                     float WaterHeight = R.WaterHeight();
                     double selfZ = worldPosition.Z;
-                    bool swimming = WaterHeight > selfZ;
-                    if (swimming)
+                    double swimming = WaterHeight - selfZ;
+                    if (swimming > 0)
                     {
-                        realTargetZ = WaterHeight;
+                        if (swimming > SwimDepth)
+                        {
+                            realTargetZ = WaterHeight - 1;
+                        }
+                        else
+                        {
+                            swimming = 0;
+                        }
                     }
                     double UpDown = realTargetZ - selfZ;
 
                     double ZDist = Math.Abs(UpDown);
                     ///  Like water areas
-                    bool airborne =  MovementByFlight && CanFly;
+                    bool airborne = MovementByFlight && CanFly;
 
-                    if (UpDown > 5f && CanFly)
+                    if (UpDown > 5f && CanFly && MayFlyInSimpleMovement)
                     {
                         targetPosition.Z = realTargetZ; ///  selfZ + 0.2f; ///  incline upward
-                        if (!ClientMovement.Fly)
+                        if (!ClientMovement.Fly && MayFlyInSimpleMovement)
                         {
                             Debug("Starting to fly");
                             ClientMovement.Fly = true;
@@ -557,7 +569,7 @@ namespace cogbot.TheOpenSims
                             LastSentButtonUp = true;
                             // follower should pass by.. but on way point navigation would be ok
                             //TurnToward(targetPosition);
-                            ResetMoveContols();                           
+                            ResetMoveContols();
                             ClientMovement.Stop = true;
                             ClientMovement.FinishAnim = false;
                             SendUpdate(1);
@@ -569,82 +581,84 @@ namespace cogbot.TheOpenSims
                     lastDistance = curDist;
 
 
-                    if (swimming || airborne)
+                    if (MayFlyInSimpleMovement)
                     {
-                        double TargetHeight = WaterHeight;
-                        if (MovementByFlight)
+                        if (swimming > 0 || airborne)
                         {
-                            TargetHeight = realTargetZ;
-                        }
-                        if (!ClientMovement.Fly)
-                        {
-                            Debug("Starting to swim MovementByFlight=" + MovementByFlight);
-                            ClientMovement.Fly = true;
-                            SendUpdate(10);
-                        }
-
-                        bool nudgeUpDownMoves = true;
-
-                        if (selfZ > TargetHeight - 0.5)
-                        {
-                            ///  Bob downward
-                            if (nudgeUpDownMoves)
-                                ClientMovement.NudgeUpNeg = true;
-                            else
-                                ClientMovement.UpNeg = true;
-                            SendUpdate(10);
-                            /// 
-                            ///   continue; /// to keep going up
-                        }
-                        else
-                        {
-                            ///   nudge = !nudge;
-                            if (selfZ < TargetHeight - 2.5)
+                            double TargetHeight = WaterHeight;
+                            if (MovementByFlight)
                             {
-                                ///  Bob upward
+                                TargetHeight = realTargetZ;
+                            }
+                            if (!ClientMovement.Fly)
+                            {
+                                Debug("Starting to swim MovementByFlight=" + MovementByFlight);
+                                ClientMovement.Fly = true;
+                                SendUpdate(10);
+                            }
+
+                            bool nudgeUpDownMoves = true;
+
+                            if (selfZ > TargetHeight - 0.5)
+                            {
+                                ///  Bob downward
                                 if (nudgeUpDownMoves)
-                                    ClientMovement.NudgeUpPos = true;
+                                    ClientMovement.NudgeUpNeg = true;
                                 else
-                                    ClientMovement.UpPos = true;
+                                    ClientMovement.UpNeg = true;
                                 SendUpdate(10);
-                                ///    continue; /// to keep going up
+                                /// 
+                                ///   continue; /// to keep going up
                             }
-                        }
-                        targetPosition.Z = TargetHeight - 0.25f;
-                    }
-
-                    /// if ()/// ClientMovement.Fly = swimming;///  todo ||  GetPathStore().IsFlyZone(SimPathStore.GlobalToLocal(worldPosition));
-
-                    if (swimming || airborne)
-                    {
-                        if (!ClientMovement.Fly && CanFly)
-                        {
-                            Debug("Starting to swim again");
-                            ClientMovement.Fly = true;
-                        }
-                        ///  Reset previous Z 
-                        ClientMovement.FastUp = false;
-                        ClientMovement.UpPos = false;
-                        ClientMovement.UpNeg = false;
-                        ClientMovement.NudgeUpPos = false;
-                        ClientMovement.NudgeUpNeg = false;
-                        SendUpdate(10);
-                    }
-
-                    /// //  Little Jumps
-                    if (ZDist * 2 > curDist)
-                    {
-                        if (!ClientMovement.Fly)
-                        {
-                            if (UpDown > 0)
+                            else
                             {
-                                ClientMovement.NudgeUpPos = true;
-                                SendUpdate(10);
-                                ClientMovement.NudgeUpPos = false;
+                                ///   nudge = !nudge;
+                                if (selfZ < TargetHeight - 2.5)
+                                {
+                                    ///  Bob upward
+                                    if (nudgeUpDownMoves)
+                                        ClientMovement.NudgeUpPos = true;
+                                    else
+                                        ClientMovement.UpPos = true;
+                                    SendUpdate(10);
+                                    ///    continue; /// to keep going up
+                                }
+                            }
+                            targetPosition.Z = TargetHeight - 0.25f;
+                        }
+
+                        /// if ()/// ClientMovement.Fly = swimming;///  todo ||  GetPathStore().IsFlyZone(SimPathStore.GlobalToLocal(worldPosition));
+
+                        if (swimming > 0 || airborne)
+                        {
+                            if (!ClientMovement.Fly && CanFly)
+                            {
+                                Debug("Starting to swim again");
+                                ClientMovement.Fly = true;
+                            }
+                            ///  Reset previous Z 
+                            ClientMovement.FastUp = false;
+                            ClientMovement.UpPos = false;
+                            ClientMovement.UpNeg = false;
+                            ClientMovement.NudgeUpPos = false;
+                            ClientMovement.NudgeUpNeg = false;
+                            SendUpdate(10);
+                        }
+
+                        /// //  Little Jumps
+                        if (ZDist * 2 > curDist)
+                        {
+                            if (!ClientMovement.Fly)
+                            {
+                                if (UpDown > 0)
+                                {
+                                    ClientMovement.NudgeUpPos = true;
+                                    SendUpdate(10);
+                                    ClientMovement.NudgeUpPos = false;
+                                }
                             }
                         }
                     }
-                    
                     /// else
                     /// {
                     ///     if (ClientMovement.Fly)
@@ -786,7 +800,7 @@ namespace cogbot.TheOpenSims
                     }
             }
 
-            ControlFlags agentControls = ((ControlFlags) ClientMovement.AgentControls);
+            ControlFlags agentControls = ((ControlFlags)ClientMovement.AgentControls);
 
             //LastTTV = GetLocalTo(targetPosition);
             //Client.Self.Movement.TurnToward(GetLocalTo(targetPosition), false);
@@ -802,7 +816,7 @@ namespace cogbot.TheOpenSims
                 if (UUIDFactory.IsNullOrZero(MoveAnimation)) Client.Self.AnimationStop(MoveAnimation, true);
                 MoveAnimation = newAnim;
                 if (UUIDFactory.IsNullOrZero(MoveAnimation)) Client.Self.AnimationStart(MoveAnimation, true);
-            }           
+            }
             Client.Self.Movement.SendManualUpdate(agentControls, Client.Self.Movement.Camera.Position,
                                                   Client.Self.Movement.Camera.AtAxis, Client.Self.Movement.Camera.LeftAxis, Client.Self.Movement.Camera.UpAxis,
                                                   Client.Self.Movement.BodyRotation, Client.Self.Movement.HeadRotation, Client.Self.Movement.Camera.Far, AgentFlags.None,
@@ -825,7 +839,7 @@ namespace cogbot.TheOpenSims
         }
 
 
-        [ConfigSetting(Description="When trying to moveto, if you can't move by walking or flying, teleport. If false, fail.")]
+        [ConfigSetting(Description = "When trying to moveto, if you can't move by walking or flying, teleport. If false, fail.")]
         public static bool MoveUseTeleportFallback = true;
         public static bool GotoUseTeleportFallback = !MoveUseTeleportFallback && false;
         static public MovementProceedure SimpleMoveToMovementProceedure = MovementProceedure.CogPusher;
@@ -851,7 +865,7 @@ namespace cogbot.TheOpenSims
             if (false)
             {
                 Random MyRand = new Random();
-                if (MyRand.Next(5) < 2) 
+                if (MyRand.Next(5) < 2)
                     Client.Self.LookAtEffect(ID, UUID.Zero, finalTarget, (LookAtType)MyRand.Next(11), ID);
             }
             OnlyMoveOnThisThread();
@@ -1142,7 +1156,7 @@ namespace cogbot.TheOpenSims
         private void AlertMessageHandler(object sender, PacketReceivedEventArgs e)
         {
             Packet packet = e.Packet;
-            
+
             AlertMessagePacket alert = (AlertMessagePacket)packet;
             string message = Utils.BytesToString(alert.AlertData.Message);
 
@@ -1290,7 +1304,7 @@ namespace cogbot.TheOpenSims
                     double ZDir = ZHeading;
                     Vector3 dif = target - lp;
                     double Wanted = (Math.Atan2(-dif.X, -dif.Y) + Math.PI); // 2Pi= N, 1/2Pi = E
-                    double lr = (ZDir - Wanted)*SimPathStore.RAD2DEG;
+                    double lr = (ZDir - Wanted) * SimPathStore.RAD2DEG;
                     while (lr > 180) lr -= 360;
                     while (lr < -180) lr += 360;
                     if (lr < -20)
@@ -1307,9 +1321,9 @@ namespace cogbot.TheOpenSims
                         //ClientMovement.SendUpdate(true);
                         //ClientMovement.TurnRight = true;
                         // Thread.Sleep(10);
-                        double az = (ZHeading*SimPathStore.RAD2DEG + 30)/SimPathStore.RAD2DEG;
-                        float xmul = (float) Math.Cos(az);
-                        float ymul = (float) Math.Sin(az);
+                        double az = (ZHeading * SimPathStore.RAD2DEG + 30) / SimPathStore.RAD2DEG;
+                        float xmul = (float)Math.Cos(az);
+                        float ymul = (float)Math.Sin(az);
                         //target = new Vector3(lp.X + xmul, lp.Y - ymul, lp.Z);
                         // Debug("Need to turn " + lr + " for " + target);
                     }
@@ -1327,9 +1341,9 @@ namespace cogbot.TheOpenSims
                         //// ClientMovement.SendUpdate(true);
                         // ClientMovement.TurnLeft = true;
                         //// Thread.Sleep(10);
-                        double az = (ZHeading*SimPathStore.RAD2DEG - 30)/SimPathStore.RAD2DEG;
-                        float xmul = (float) Math.Cos(az);
-                        float ymul = (float) Math.Sin(az);
+                        double az = (ZHeading * SimPathStore.RAD2DEG - 30) / SimPathStore.RAD2DEG;
+                        float xmul = (float)Math.Cos(az);
+                        float ymul = (float)Math.Sin(az);
                         // target = new Vector3(lp.X + xmul, lp.Y - ymul, lp.Z);
                         // Debug("Need to turn " + lr + " for " + target);
                     }
@@ -1364,7 +1378,7 @@ namespace cogbot.TheOpenSims
 
                 Quaternion between = Vector3.RotationBetween(Vector3.UnitX,
                                                              Vector3.Normalize(target - SimPosition));
-                Quaternion rot = between*(Quaternion.Identity/parentRot);
+                Quaternion rot = between * (Quaternion.Identity / parentRot);
 
                 Quaternion br = ClientMovement.BodyRotation;
                 Quaternion hr = ClientMovement.HeadRotation;
