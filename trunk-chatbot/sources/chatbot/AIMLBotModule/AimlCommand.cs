@@ -19,6 +19,7 @@ namespace AIMLBotModule
         public static string UNKNOWN_PARTENER = "null";
         private string lastKnownUser;
         public AimlCommand(BotClient testClient)
+            : base(testClient)
         {
             Name = "aiml";
             Description = "Usage: aiml [@[[on|off|reload|learn]|text|setuser]] [operands]";
@@ -46,7 +47,7 @@ namespace AIMLBotModule
             }
         }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
+        public override CmdResult ExecuteRequest(CmdRequest args)
         {
             try
             {
@@ -61,7 +62,7 @@ namespace AIMLBotModule
         private CmdResult Execute0(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             string defaultAIMLUser;
-            if (args.Length == 0) return Failure(Usage);
+            if (args.Length == 0) return Failure(Details);
             string s = args[0].ToLower();
             string joined = String.Join(" ", args);
             bool legacyCmd = " on off help reload ".Contains(" " + s + " ");
