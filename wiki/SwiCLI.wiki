@@ -130,7 +130,7 @@ So reading the parameter types  "['Object', 'InstantMessageEventArgs']" lets you
 
 And "F = decl(static(false), 'AgentManager')" says add on extra argument at start for Origin
 
-  *handle_im(Origin,Obj,IM)*
+  handle_im(Origin,Obj,IM)*
 
 So registering the event is done:
 {{{
