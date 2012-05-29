@@ -1181,9 +1181,16 @@ namespace cogbot
                     // message from system
                     if (FromAgentName == "System") return;
                     // message from others
-                    var whisper = (cogbot.Actions.Communication.ImCommand)Commands["im"].WithBotClient;
-                    whisper.currentAvatar = FromAgentID;
-                    whisper.currentSession = IMSessionID;
+                    CommandInfo ci;
+                    if (Commands.TryGetValue("im", out ci))
+                    {
+                        var whisper = ci.WithBotClient as cogbot.Actions.Communication.ImCommand;
+                        if (whisper != null)
+                        {
+                            whisper.currentAvatar = FromAgentID;
+                            whisper.currentSession = IMSessionID;
+                        }
+                    }
                     if (IsOwner)
                     {
                         OutputDelegate WriteLine;
