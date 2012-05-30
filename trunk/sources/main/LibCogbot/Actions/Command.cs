@@ -814,9 +814,20 @@ namespace cogbot.Actions
 
         protected void AppendResults(string name, string format)
         {
-            string before = "" + Results[name];
-            string newstring = before + "\n" + format;
-            Results[name] = newstring.TrimStart();                    
+            lock (Results)
+            {
+                object obj;
+                if (!Results.TryGetValue(name, out obj))
+                {
+                    Results[name] = format;
+                }
+                else
+                {
+                    string before = "" + obj;
+                    string newstring = before + "\n" + format;
+                    Results[name] = newstring.TrimStart();
+                }
+            }
         }
 
         protected static NamedParam[] CreateParams(params object[] paramz)

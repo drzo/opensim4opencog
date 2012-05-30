@@ -1142,8 +1142,12 @@ namespace cogbot.Listeners
 
         public static Dictionary<K, V> DictOf<K, V>(InternalDictionary<K, V>  dictionary)
         {
-            dictionary.GetType().GetField("Dictionary", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).GetValue(
-                dictionary);
+            return
+                (Dictionary<K, V>)
+                dictionary.GetType().GetField("Dictionary",
+                                              BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).
+                    GetValue(
+                    dictionary);
         }
     }
 }
