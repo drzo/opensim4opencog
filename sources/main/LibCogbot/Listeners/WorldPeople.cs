@@ -1122,5 +1122,21 @@ namespace cogbot.Listeners
                     throw new ArgumentOutOfRangeException();
             }
         }
+
+        public static UUID NonZero(UUID u1, UUID u2)
+        {
+            if (IsNullOrZero(u1)) return u2;
+            return u1;
+        }
+
+        internal static UUID GetUUID(string p)
+        {
+            return new UUID(p);
+        }
+
+        public static void ResetControlFlags(AgentManager.AgentMovement movement)
+        {
+            movement.ResetControlFlags();
+        }
     }
 }

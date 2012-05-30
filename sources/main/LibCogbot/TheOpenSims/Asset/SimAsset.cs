@@ -1,3 +1,4 @@
+#undef COGBOT_LIBOMV
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -669,7 +670,7 @@ namespace cogbot.TheOpenSims
         static public string CFileName(UUID assetID, AssetType type)
         {
             var Store = SimAssetStore.TheStore;
-            var cache = Store.Client.WorldSystem.RegionMasterTexturePipeline.Cache;
+            var cache = (AssetCacheWithExtensions)Store.Client.WorldSystem.RegionMasterTexturePipeline.Cache;
             if (cache.ComputeAssetCacheFilename != null)
             {
                 return cache.ComputeAssetCacheFilename(Store.Client.Settings.ASSET_CACHE_DIR, assetID

@@ -16,7 +16,7 @@ using OpenMetaverse.Assets;
 using MushDLR223.ScriptEngines;
 using PathSystem3D.Mesher;
 using ExportCommand = cogbot.Actions.SimExport.ImportCommand;
-
+using UUIDFactory = cogbot.Listeners.CogbotHelpers;
 
 namespace cogbot.Actions.SimExport
 {
@@ -482,10 +482,11 @@ namespace cogbot.Actions.SimExport
         public void KillAllUnpacked(OutputDelegate Failures, bool artifacts)
         {
 
-            UUID into = null;
+            UUID into = UUID.Zero;
             if (!settings.Contains("info"))
             {
-                into = FolderCalled("TaskInvKilled") ?? Client.Inventory.FindFolderForType(AssetType.TrashFolder);
+                into = UUIDFactory.NonZero(FolderCalled("TaskInvKilled"),
+                                           Client.Inventory.FindFolderForType(AssetType.TrashFolder));
             }
             int count = 0;
             lock (fileWriterLock) foreach (string ext in new[] { "*.repack",/* "*.objectAsset"*/ })

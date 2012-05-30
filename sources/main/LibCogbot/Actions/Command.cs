@@ -328,7 +328,7 @@ namespace cogbot.Actions
             return res;
         }
 
-        public IDictionary<string, object> Results = new OSDMap();
+        public IDictionary<string, object> Results = CmdResult.CreateMap();
         protected T GetParamValue<T>(string paramName, Parser parser)
         {
             foreach (NamedParam param in Parameters)

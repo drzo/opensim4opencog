@@ -59,6 +59,7 @@ namespace cogbot.Actions.SimExport
             }
             public string ErrorMessage;
             private ManualResetEvent WaitOnCreate;
+            private UUID QueryID;
 
             public UserOrGroupMapping(UUID id, String name, bool isGroup)
             {
@@ -110,7 +111,7 @@ namespace cogbot.Actions.SimExport
                 WaitOnCreate = WaitOnCreate ?? new ManualResetEvent(false);
                 WaitOnCreate.Reset();
                 Importing.Client.Directory.DirGroupsReply += GroupSearchReply;
-                Importing.Client.Directory.StartGroupSearch(name, 0, OldID);
+                QueryID = Importing.Client.Directory.StartGroupSearch(name, 0);
                 if (!WaitOnCreate.WaitOne(3000))
                 {
                     return Importing.Client.Self.ActiveGroup;
@@ -135,7 +136,7 @@ namespace cogbot.Actions.SimExport
                 // should we use this instead??
                 //    Running.Client.Avatars.RequestAvatarNameSearch(name.Replace(" ", ", "), OldID);
                 Importing.Client.Directory.DirPeopleReply += PeopleSearchReply; 
-                Importing.Client.Directory.StartPeopleSearch(name, 0, OldID);
+                QueryID = Importing.Client.Directory.StartPeopleSearch(name, 0);
                 WaitOnCreate.WaitOne(3000);
                 return base.NewID;
             }
@@ -215,7 +216,7 @@ namespace cogbot.Actions.SimExport
 
             private void PeopleSearchReply(object sender, DirPeopleReplyEventArgs e)
             {
-                if (e.QueryID != OldID) return;
+                if (e.QueryID != QueryID) return;
                 Importing.Client.Directory.DirPeopleReply -= PeopleSearchReply;
                 foreach (var match in e.MatchedPeople)
                 {
@@ -230,7 +231,7 @@ namespace cogbot.Actions.SimExport
 
             private void GroupSearchReply(object sender, DirGroupsReplyEventArgs e)
             {
-                if (e.QueryID != OldID) return;
+                if (e.QueryID != QueryID) return;
                 Importing.Client.Directory.DirGroupsReply -= GroupSearchReply;
                 foreach (var match in e.MatchedGroups)
                 {
