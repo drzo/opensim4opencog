@@ -87,7 +87,7 @@ assertIfNewRC(Gaf):-asserta(Gaf).
 %  Log on the bots and start the simulation. This is
 %  the main entry point for the simulation.
 %
-%  The bot logon is staggered at 30 sec intervals as a
+%  The bot logon is staggered at 1 sec intervals as a
 %  workaround for a bug caused by logging too many bots on
 %  too fast.
 %
@@ -112,17 +112,8 @@ logon_by_name(Name) :-
 	    dbgfmt('making a bot for ~w~n', [Name]),
             logon_a_bot(Name),!.
 
-/*
-logon_by_name(Name) :-
-	    dbgfmt('making a bot for ~w~n', [Name]),
-	    thread_create(logon_a_bot(Name), _, [detached(true)]).
-*/
-
 %
 %%	This logs in a single bot
-%
-%    It should be called in a new thread.
-%    So most users are looking for logon_by_name
 %
 logon_a_bot(Name) :-
 	loginuri(Loginuri),
@@ -131,7 +122,6 @@ logon_a_bot(Name) :-
         assert(botID(Name, BotID)),
         dbgfmt('made botID ~w~n', [BotID]),
         (thread_self(main)->true;thread_exit(true)).
-
 
 loginuri("http://www.pathwayslms.com:9000/").
 tribal_land('annies haven II/164/135/21').
@@ -149,6 +139,7 @@ set_num_bots(Value):-retractall(tribe_size(_)),assert(tribe_size(Value)).
 % if you have all the passwords the same this saves some typing
 %
 pw('hillpeople').
+% Last name of the bots
 
 :-dynamic(tribe/1).
 
