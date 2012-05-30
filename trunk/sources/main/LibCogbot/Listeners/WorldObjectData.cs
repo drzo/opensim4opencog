@@ -108,7 +108,7 @@ namespace cogbot.Listeners
                         uint localID = block.ID;
                         prim.LocalID = localID;
                         prim.ID = block.FullID;
-                        var p = simulator.Client.Objects.GetPrimitive(simulator, block.ID, block.FullID);
+                       // var p = simulator.Client.Objects.GetPrimitive(simulator, block.ID, block.FullID, false);
                        // simulator.GetPrimitive(
                     }
                 }

@@ -1340,7 +1340,7 @@ namespace cogbot.TheOpenSims
             }
             lock (MostRecentPropertyUpdateLock)
             {
-                if (objectProperties.family)
+                if (objectProperties.Name == null)
                 {
                     if (MostRecentPropertyUpdate == null)
                     {
@@ -2529,7 +2529,7 @@ namespace cogbot.TheOpenSims
                         missing += " PrimTextures";
                         requestMedia = true;
                     }
-                    if (Object.Equals(_Prim0.ParticleSys , default(Primitive.ParticleSystem))
+                    if (Object.Equals(_Prim0.ParticleSys , default(Primitive.ParticleSystem)))
                     {
                         missing += " PrimParticleSys";
                         requestMedia = true;

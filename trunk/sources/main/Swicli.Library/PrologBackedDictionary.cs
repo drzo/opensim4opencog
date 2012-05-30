@@ -38,6 +38,30 @@ namespace Swicli.Library
             return new PrologBackedCollection<T>(null, pred.Name, "assert", "retract",
                                                               "retractall");
         }
+        [PrologVisible]
+        static public bool testPbd(PlTerm pred, PlTerm counted)
+        {
+            var id = CreatePrologBackedDictionary(pred);
+            string s = string.Empty;
+            foreach (var o in id)
+            {
+                s += string.Format("{0}={1},", o.Key, o.Value);
+            }
+            counted.UnifyAtom(s);
+            return true;
+        }
+        [PrologVisible]
+        static public bool testPbc(PlTerm pred, PlTerm counted)
+        {
+            var id = CreatePrologBackedCollection<object>(pred);
+            string s = string.Empty;
+            foreach (var o in id)
+            {
+                s += string.Format("{0},", o);
+            }
+            counted.UnifyAtom(s);
+            return true;
+        }
     }
 
     public class PrologBacked<TKey, TValue>
@@ -90,7 +114,7 @@ namespace Swicli.Library
 
         public PrologBackedDictionary(string module, string predname, ICollection<TKey> keyz, string assertPred, string retractPred, string retractall)
         {
-            _module = module;
+            _module = module ?? "user";
             _predname = predname;
             Keyz = keyz;
             _assertPred = assertPred;
@@ -506,7 +530,7 @@ namespace Swicli.Library
 
         public PrologBackedCollection(string module, string predname, string assertPred, string retractPred, string retractall)
         {
-            _module = module;
+            _module = module ?? "user";
             _predname = predname;
             _assertPred = assertPred;
             _retractPred = retractPred;

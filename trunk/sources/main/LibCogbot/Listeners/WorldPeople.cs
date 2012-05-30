@@ -11,6 +11,7 @@ using OpenMetaverse.Interfaces;
 using OpenMetaverse.Packets;
 using PathSystem3D.Navigation;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace cogbot.Listeners
 {
@@ -1137,6 +1138,12 @@ namespace cogbot.Listeners
         public static void ResetControlFlags(AgentManager.AgentMovement movement)
         {
             movement.ResetControlFlags();
+        }
+
+        public static Dictionary<K, V> DictOf<K, V>(InternalDictionary<K, V>  dictionary)
+        {
+            dictionary.GetType().GetField("Dictionary", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).GetValue(
+                dictionary);
         }
     }
 }

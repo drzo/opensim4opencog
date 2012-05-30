@@ -269,5 +269,10 @@ namespace MushDLR223.ScriptEngines
             if (c == '-') return '_';
             return Char.ToLower(c);
         }
+
+        public static IDictionary<string, object> CreateMap()
+        {
+            return new Dictionary<string, object>();
+        }
     }
 }

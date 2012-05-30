@@ -828,7 +828,7 @@ namespace cogbot.TheOpenSims
 
         public ICollection<UUID> GetCurrentAnims()
         {
-            return ExpectedCurrentAnims.Dictionary.Keys;
+            return CogbotHelpers.DictOf(ExpectedCurrentAnims).Keys;
         }
 
         internal static List<UUID> GetAnimUUIDs(List<Animation> anims)
@@ -870,7 +870,7 @@ namespace cogbot.TheOpenSims
         }
         public Dictionary<UUID, int> GetCurrentAnimDict()
         {
-            return ExpectedCurrentAnims.Dictionary;
+            return ExpectedCurrentAnims.Copy();
         }
 
         private InternalDictionary<UUID, int> ExpectedCurrentAnims = new InternalDictionary<UUID, int>();
@@ -887,7 +887,7 @@ namespace cogbot.TheOpenSims
         public void OnAvatarAnimations(List<Animation> anims0)
         {
             var anims = new InternalDictionary<UUID, int>();
-            var animDict = anims.Dictionary;
+            var animDict = CogbotHelpers.DictOf(anims);
             foreach (var list in anims0)
             {
                 animDict[list.AnimationID] = list.AnimationSequence;
@@ -900,7 +900,7 @@ namespace cogbot.TheOpenSims
             {
                 int mostCurrentSequence = int.MinValue;
                 int leastCurrentSequence = int.MaxValue;
-                Dictionary<UUID, int> dictionary = ExpectedCurrentAnims.Dictionary;
+                Dictionary<UUID, int> dictionary =  CogbotHelpers.DictOf(ExpectedCurrentAnims);//.Dictionary;
                 GetSequenceNumbers(dictionary, ref leastCurrentSequence, ref mostCurrentSequence);
 
                 ///  first time so find the lowest number 
@@ -1104,7 +1104,12 @@ namespace cogbot.TheOpenSims
             }
 
             //ExpectedCurrentAnims.Dictionary.Clear(); 
-            ExpectedCurrentAnims.Dictionary = anims.Dictionary;
+            var before = CogbotHelpers.DictOf(ExpectedCurrentAnims);
+            lock (before)
+            {
+                before.Clear();
+                anims.ForEach(kv => before.Add(kv.Key, kv.Value));                
+            }
             /// String newName = WorldSystem.GetAnimationName(mostCurrentAnim); 
             /// { 
             ///     if (oldAnim != mostCurrentAnim) 

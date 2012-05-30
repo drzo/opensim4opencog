@@ -29,7 +29,7 @@ namespace cogbot.Actions.Land
             int argsUsed;
             Simulator CurSim = TryGetSim(args, out argsUsed) ?? Client.Network.CurrentSim;
             Simulator sim = CurSim;
-            Dictionary<uint, Primitive> primitives = sim.ObjectsPrimitives.Dictionary;
+            Dictionary<uint, Primitive> primitives = sim.ObjectsPrimitives.Copy();
             if (len==0)
             {
                 //prep

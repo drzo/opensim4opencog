@@ -66,6 +66,7 @@
           ]).
 
 
+:- push_operators([op(600, fx, ('*'))]).
 
 :-dynamic(shortTypeName/2).
 :-dynamic(cli_subproperty/2).
@@ -112,7 +113,8 @@ onWindows:-current_prolog_flag(arch,ARCH),atomic_list_concat([_,_],'win',ARCH).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %% cli_is_type(+Impl,+Type) tests to see if the Impl Object is assignable to Type
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cli_is_type(Impl,Type):-cli_find_type(Type,RealType),cli_call(RealType,'IsInstanceOfType'(object),[Impl],'@'(true)).
+cli_is_type(Impl,Type):-nonvar(Type),!,cli_find_type(Type,RealType),cli_call(RealType,'IsInstanceOfType'(object),[Impl],'@'(true)).
+cli_is_type(Impl,Type):-cli_get_type(Impl,Type).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
@@ -149,7 +151,7 @@ cli_fmt(WID,String,Args):-cli_fmt(String,Args),cli_free(WID). %% WID will be mad
 cli_fmt(String,Args):-cli_call('System.String','Format'('string','object[]'),[String,Args],Result),cli_writeln(Result).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%% cli_to_str(+Obj,-String) writes an object out to string
+%% cli_to_str(+Obj,-String) writes an object out to .net string
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 cli_to_str(Term,String):-catch(ignore(cli_to_str0(Term,String0)),_,true),copy_term(String0,String),numbervars(String,666,_).
 cli_to_str0(Term,Term):- not(compound(Term)),!.
@@ -159,10 +161,38 @@ cli_to_str0(Term,String):-Term=..[F|A],cli_to_str0(A,AS),String=..[F|AS],!.
 cli_to_str0(Term,Term).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%% cli_is_null(+Obj) is Object null or void or variable
+%% cli_is_null(+Obj) is null or void
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cli_is_null(Obj):-notrace(var(Obj);Obj='@'(null);Obj='@'(void)),!.
-cli_non_null(Obj):-not(cli_is_null(Obj)).
+cli_is_null(Obj):-once(Obj='@'(null);Obj='@'(void)).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%% cli_non_obj(+Obj) is null or void or var
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cli_non_obj(Obj):-once(var(Obj);(Obj='@'(null));(Obj='@'(void))).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%% cli_non_null(+Obj) is not null or void
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cli_non_null(Obj):- \+(cli_is_null(Obj)).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cli_is_true(Obj):- Obj == @(true).
+cli_true(@(true)).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cli_is_false(Obj):- Obj== @(false).
+cli_false(@(false)).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cli_is_void(Obj):- Obj== @(void).
+cli_void(@(void)).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cli_is_type(Obj):-nonvar(Obj),cli_is_type(Obj,'System.Type').
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
@@ -170,14 +200,13 @@ cli_non_null(Obj):-not(cli_is_null(Obj)).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 cli_is_object([_|_]):-!,fail.
 cli_is_object('@'(O)):-!,O\=void,O\=null.
-cli_is_object(enum(_,_)):-!.
-cli_is_object(O):-functor(O,F,_),memberchk(F,[struct,object]).
+cli_is_object(O):-functor(O,F,_),memberchk(F,[struct,enum,object,event]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %% cli_is_taggedObject(+Obj) is Object a tagged object and not null or void
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 cli_is_taggedObject([_|_]):-!,fail.
-cli_is_taggedObject('@'(O)):-!, O\=void,O\=null.
+cli_is_taggedObject('@'(O)):- O\=void,O\=null.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
@@ -185,6 +214,65 @@ cli_is_taggedObject('@'(O)):-!, O\=void,O\=null.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 cli_memb(O,X):-cli_members(O,Y),member(X,Y).
 cli_memb(O,F,X):-cli_memb(O,X),member(F,[f,p, c,m ,e]),functor(X,F,_).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%%% cli_add_event_handler/3
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+/*
+
+ADDING A NEW EVENT HOOK
+
+We already at least know that the object we want to hook is found via our call to
+
+?- botget(['Self'],AM).
+
+So we ask for the e/7 (event handlers of the members)
+
+?- botget(['Self'],AM),cli_memb(AM,e(A,B,C,D,E,F,G)). 
+
+ Press ;;;; a few times until you find the event Name you need (in the B var)
+
+A = 6,                                          % index number
+B = 'IM',                                       % event name
+C = 'System.EventHandler'('InstantMessageEventArgs'),   % the delegation type
+D = ['Object', 'InstantMessageEventArgs'],      % the parameter types (2)
+E = [],                                         % the generic paramters
+F = decl(static(false), 'AgentManager'),        % the static/non staticness.. the declaring class
+G = access_pafv(true, false, false, false)      % the PAFV bits
+
+So reading the parameter types  "['Object', 'InstantMessageEventArgs']" lets you know the pred needs at least two arguments
+And "F = decl(static(false), 'AgentManager')" says add on extra argument at from for Origin
+
+So registering the event is done:
+
+?- botget(['Self'],AM), cli_add_event_handler(AM,'IM',handle_im(_Origin,_Object,_InstantMessageEventArgs))
+
+To target a predicate like 
+
+handle_im(Origin,Obj,IM):-writeq(handle_im(Origin,Obj,IM)),nl.
+
+
+
+*/
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%%% cli_add_tag(Obj,TagName)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%%cli_add_tag(Obj,TagName):-
+/*
+
+?- cli_new(array(string),[int],[32],O),cli_add_tag(O,'string32').
+
+?- cli_get_type(@(string32),T),cli_writeln(T).
+
+*/
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%%% cli_map_element(Map,?Key,?Value).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cli_map_element(Map,Key,Value):-nonvar(Key),!,cli_call(Map,'TryGetValue',[Key,Value],@(true)).
+cli_map_element(Map,Key,Value):-cli_col(Map,Ele),cli_get(Ele,'Key',Key),cli_get(Ele,'Value',Value).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %%% cli_Preserve(TF,Calls)
@@ -200,7 +288,17 @@ cli_Preserve(TF,Calls):-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 cli_with_collection(Calls):-cli_tracker_begin(O),call_cleanup(Calls,cli_tracker_free(O)).
 
+cli_array_to_length(Array,Length):-cli_get(Array,'Length',Length).
 
+/*
+
+?- cli_new(array(string),[int],[32],O),cli_array_to_length(O,L),cli_array_to_term(O,T).
+O = @'C#861856064',
+L = 32,
+T = array('String', values(@null, @null, @null, @null, @null, @null, @null, @null, @null, @null, @null, @null, @null, @null, @null, @null, @null, @null, @null, @null, @null, @null, @null, @null, @null, @null, @null, @null, @null, @null, @null, @null)).
+*/
+
+cli_array_to_list(Array,List):-cli_array_to_term(Array,array(_,Term)),Term=..[_|List].
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %%% cli_new(+X, +Params, -V).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
@@ -244,7 +342,13 @@ cli_with_collection(Calls):-cli_tracker_begin(O),call_cleanup(Calls,cli_tracker_
 
 cli_new(Clazz,ConstArgs,Out):-Clazz=..[BasicType|ParmSpc],cli_new(BasicType,ParmSpc,ConstArgs,Out).
 %%cli_new(ClazzConstArgs,Out):-ClazzConstArgs=..[BasicType|ConstArgs],cli_new(BasicType,ConstArgs,ConstArgs,Out).
+/*
 
+ Make a "new string[32]" and get it's length.
+
+ ?- cli_new(array(string),[int],[32],O),cli_get(O,'Length',L).
+
+*/
 /*
  NOTES
 
@@ -312,12 +416,12 @@ cli_libCall(CallTerm,Out):-cli_call('Swicli.Library.PrologClient',CallTerm,Out).
 %   finally, an attempt will be made to unify V with the retrieved value
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 
-cli_get(Obj,_,_):-cli_is_null(Obj),!,fail.
+cli_get(Obj,_,_):-cli_non_obj(Obj),!,fail.
 cli_get(Obj,[P],Value):-!,cli_get(Obj,P,Value).
 cli_get(Obj,[P|N],Value):-!,cli_get(Obj,P,M),cli_get(M,N,Value),!.
 cli_get(Obj,P,ValueOut):-cli_getOverloaded(Obj,P,Value),!,cli_unify(Value,ValueOut).
 
-cli_getOverloaded(Obj,_,_):-cli_is_null(Obj),!,fail,throw(cli_is_null(Obj)).
+cli_getOverloaded(Obj,_,_):-cli_non_obj(Obj),!,fail,throw(cli_non_obj(Obj)).
 cli_getOverloaded(Obj,P,Value):-cli_getHook(Obj,P,Value),!.
 cli_getOverloaded(Obj,P,Value):-cli_get_raw(Obj,P,Value),!.
 cli_getOverloaded(Obj,P,Value):-not(atom(Obj)),cli_get_type(Obj,CType),!,cli_get_typeSubProps(CType,Sub),cli_get_rawS(Obj,Sub,SubValue),cli_getOverloaded(SubValue,P,Value),!.
@@ -335,12 +439,12 @@ cli_get_typeSubProps(CType,Sub):-cli_subproperty(Type,Sub),cli_subclass(CType,Ty
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %%% cli_set(+Obj, +PropTerm, +NewValue).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cli_set(Obj,_,_):-cli_is_null(Obj),!,fail.
+cli_set(Obj,_,_):-cli_non_obj(Obj),!,fail.
 cli_set(Obj,[P],Value):-!,cli_set(Obj,P,Value).
 cli_set(Obj,[P|N],Value):-!,cli_get(Obj,P,M),cli_set(M,N,Value),!.
 cli_set(Obj,P,Value):-cli_setOverloaded(Obj,P,Value).
 
-cli_setOverloaded(Obj,_,_):-cli_is_null(Obj),!,fail.
+cli_setOverloaded(Obj,_,_):- cli_non_obj(Obj),!,fail.
 cli_setOverloaded(Obj,P,Value):-cli_setHook(Obj,P,Value),!.
 cli_setOverloaded(Obj,P,Value):-cli_subproperty(Type,Sub),cli_is_type(Obj,Type),cli_get_rawS(Obj,Sub,SubValue),cli_setOverloaded(SubValue,P,Value),!.
 cli_setOverloaded(Obj,P,Value):-cli_set_raw(Obj,P,Value),!.
@@ -431,7 +535,7 @@ cli_sublist(Mask,What):-append(Pre,_,What),append(_,Mask,Pre).
 %%% cli_debug/[1,2]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 
-cli_debug(format(Format,Args)):-atom(Format),sformat(S,Format,Args),cli_debug(S).
+cli_debug(format(Format,Args)):-atom(Format),sformat(S,Format,Args),!,cli_debug(S).
 cli_debug(Data):-format(user_error,'~n %% cli_-DEBUG: ~q~n',[Data]),flush_output(user_error).
 
 %%cli_debug(Engine,Data):- format(user_error,'~n %% ENGINE-DEBUG: ~q',[Engine]),cli_debug(Data).

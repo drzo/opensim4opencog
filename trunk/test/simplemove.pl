@@ -27,7 +27,7 @@ get_test_waypoints(Name,loop([Name1,Name2,Name1])):-atom_concat(Name,1,Name1),at
 %
 %--------------------------------------------------------
 :-set_num_bots(2).
-:-set_tribe('Hillperson').
+:-set_lastname('Dougstribe').
 :-set_moveproc(moveto).
 
 :-logon_bots.

@@ -1290,6 +1290,11 @@ namespace Swicli.Library
         private static object CreateInstance(Type type, MemberInfo[] fis, PlTerm orig, int plarg)
         {
             int fisLength = fis.Length;
+            if (orig.Arity < fisLength)
+            {
+                fisLength = orig.Arity;
+                Warn("Struct length mismatch");
+            }
             object[] paramz = new object[fisLength];
             for (int i = 0; i < fisLength; i++)
             {
