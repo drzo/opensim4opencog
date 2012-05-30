@@ -18,7 +18,7 @@
 
    botdo/1,wbotdo/2,wabdo/1,
 
-   get_botvar/3,add_botvars/2,
+   global_get_botvar/3,add_botvars/2,
 
    botcmd/1, botcmd/2, botcmd/3,   
    wbotcmd/2, wbotcmd/3, wbotcmd/4,
@@ -321,8 +321,8 @@ cmdargs_to_atomstr(C,Out):-compound(C),C=..[F,A|B],is_movement_proc(F),\+ is_vec
 cmdargs_to_atomstr(C,Out):-compound(C),!,C=..[F|A],listifyFlat([F|A],FL),cmdargs_to_atomstr(FL,Out).
 cmdargs_to_atomstr(Str,Str):-!. %%toStringableArg(StrIn,Str).
 
-%%is_movement_proc(astargoto).
-%%is_movement_proc(moveto).
+is_movement_proc(astargoto).
+is_movement_proc(moveto).
 is_movement_proc(_):-fail.
 
 is_vector(V3):-notrace((compound(V3),functor(V3,F,3),(F==v3;F==v3d))).
@@ -565,8 +565,8 @@ position_to_v3d(Obj,Vect):-cli_get(Obj,globalposition,Vect),!.
 
 position_to_v3(Obj,LV):-position_to_v3d(Obj,Vect),cli_call('SimRegion','GlobalToLocalStatic'(Vect),LV).
 
-%% depricated
-distance_to(A,R):-position_to_v3d(A,A2),!,botget(['Self','GlobalPosition'],A1),cli_get(A1,'Z',Z),cli_set(A2,'Z',Z), cli_call(A2,distance(A1,A2),R).
+%% deprecated
+distance_to(A,R):-bot_distance_to(A,R).
 %% get the distance of a primspec
 wbot_distance_to(BotID,A,R):-position_to_v3d(A,A2),!,wbotget(BotID,['Self','GlobalPosition'],A1),cli_get(A1,'Z',Z),cli_set(A2,'Z',Z), cli_call(A2,distance(A1,A2),R).
 
@@ -751,7 +751,7 @@ wbot_get_botvar(BotID,Name,ValueO):-wbotget(BotID,['WorldSystem','simGroupProvid
    cli_col(GPs,GP),gp_to_vars(BotID,GP,Var),cli_get(Var,'Key',Name),cli_get(Var,'Value',Value),
    once(value_deref(Value,ValueO)).
 
-get_botvar(NS,Name,ValueO):-
+global_get_botvar(NS,Name,ValueO):-
    cli_call('MushDLR223.ScriptEngines.ScriptManager','GetNameSpaces',[],NSs),
    cli_col(NSs,NS),
    cli_call('MushDLR223.ScriptEngines.ScriptManager','GetProviders',[NS],CPs),
@@ -772,10 +772,20 @@ add_botvars(NameSpace,PredImpl):-
       cli_call('MushDLR223.ScriptEngines.DictionaryWrapper','CreateDictionaryWrapper',[PBD],Provider),
       cli_call('MushDLR223.ScriptEngines.ScriptManager','AddNamedProvider',[NameSpace, Provider],_).
 
-:-add_botvars(fromprolog,prolog_botvar_impl).
-prolog_botvar_impl(a,1).
-prolog_botvar_impl(b,2).
-prolog_botvar_impl(Key):-prolog_botvar_impl(Key,_).
+%%:-add_botvars(fromprolog,prolog_botvar_impl).
+wbotvar_impl(a,1).
+wbotvar_impl(b,2).
+wbotvar_impl(Key):-wbotvar_impl(Key,_).
+
+/*
+wbot_add_botvar(BotID,Var,PredImpl):-wbotget(BotID,['WorldSystem','simGroupProviders'],GPs),
+      cli_call('MushDLR223.ScriptEngines.SingleNameValue','MakeKVP'
+
+      cli_call('Swicli.Library.PrologClient','CreatePrologBackedDictionary',[PredImpl],PBD),
+      cli_call('MushDLR223.ScriptEngines.DictionaryWrapper','CreateDictionaryWrapper',[PBD],Provider),
+      cli_call('MushDLR223.ScriptEngines.ScriptManager','AddNamedProvider',[NameSpace, Provider],_).
+*/
+
 %------------------------------------------------------------------------------
 % listing functions
 %------------------------------------------------------------------------------
@@ -799,9 +809,7 @@ make_current_bot_ver(F,N,_,AA):-length(List,AA),Head=..[N|List],Body=..[F,BotID|
 
 scan_and_export_wb:-current_predicate(cogrobot:F/A),
    once((atom_concat(wbot,Before,F),export(F/A),atom_concat(bot,Before,New),AA is A-1,make_current_bot_ver(F,New,A,AA))),fail.
-scan_and_export_wb:-current_predicate(cogrobot:F/A),once((atom_concat(bot,_,F),export(F/A))),fail.
-scan_and_export_wb:-current_predicate(cogrobot:F/A),once((atom_concat(sim,_,F),export(F/A))),fail.
-scan_and_export_wb:-current_predicate(cogrobot:F/A),once((atom_concat(cli,_,F),export(F/A))),fail.
+scan_and_export_wb:-current_predicate(cogrobot:F/A),once((member(S,[bot,sim,grid,cli]),atom_concat(S,_,F),export(F/A))),fail.
 scan_and_export_wb.
 
 :-scan_and_export_wb.

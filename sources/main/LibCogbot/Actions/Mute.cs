@@ -57,18 +57,14 @@ namespace cogbot.Actions
             {
                 arg1 = args[0].ToLower();
             }
-            Dictionary<string, MuteEntry> dict = null;
-            var cmld = chat.MuteList.Dictionary;
-            lock (cmld)
-            {
-                dict = new Dictionary<string, MuteEntry>(cmld);
-            }
+
+            var cmld = chat.MuteList.Copy();
 
             if (arg1 == "show" || arg1 == "list" || arg1 == "request")
             {
                 if (arg1 == "request") chat.RequestMuteList();
                 int nfound = 0;
-                foreach (var mm in dict)
+                foreach (var mm in cmld)
                 {
                     Success("Mutelist Item: " + mm.Key + " is " + Helpers.StructToString(mm.Value));
                     nfound++;
@@ -88,7 +84,7 @@ namespace cogbot.Actions
                 {
                     int nfound = 0;
 
-                    foreach (var mm in dict)
+                    foreach (var mm in cmld)
                     {
                         MuteEntry me = mm.Value;
                         chat.UpdateMuteListEntry(me.Type, me.ID, me.Name, MuteFlags.All);

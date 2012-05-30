@@ -59,12 +59,57 @@ namespace Swicli.Library
         {
             return tag_to_object(s, false);
         }
+
+        [PrologVisible]
+        public static bool cliAddTag(PlTerm taggedObj, PlTerm tagString)
+        {
+            object o = GetInstance(taggedObj);
+            string tagname = (string) tagString;
+            lock (ObjToTag)
+            {
+
+                TrackedObject s;
+                GCHandle iptr = PinObject(o);
+                long adr = ((IntPtr) iptr).ToInt64();
+                var hc = iptr.GetHashCode();
+
+                s = new TrackedObject(o)
+                        {
+                            TagName = tagname,
+                            Pinned = iptr,
+                            HashCode = hc,
+                            Heaped = true
+                        };
+                ObjToTag[o] = s;
+                TagToObj[tagname] = s;
+
+            }
+            return true;
+        }
+        [PrologVisible]
+        public static bool cliRemoveTag(PlTerm tagString)
+        {
+            string tagname = (string)tagString;
+            TrackedObject to;
+
+            lock (ObjToTag)
+            {
+                if (TagToObj.TryGetValue(tagname, out to))
+                {
+                    TagToObj.Remove(tagname);
+                    ObjToTag.Remove(to.Value);
+                    //TODO?? to.RemoveRef();
+                }
+            }
+            return true;
+        }
+
         public static object tag_to_object(string s, bool allowConstants)
         {
             if (s == "true") return true;
             if (s == "false") return true;
             if (s == "null") return null;
-            if (string.IsNullOrEmpty(s) || s == "void" || !s.StartsWith("C#"))
+            if (string.IsNullOrEmpty(s) || s == "void" /*|| !s.StartsWith("C#")*/)
             {
                 Warn("tag_to_object: {0} ", s);
                 return null;

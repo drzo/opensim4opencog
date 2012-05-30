@@ -221,41 +221,6 @@ namespace CogbotRadegastPluginModule
             return found;
         }
 
-        //private void AddCallback(object target, ToolStripMenuItem item)
-        //{
-        //    if (item.HasDropDownItems)
-        //    {
-        //        foreach (var pair in item.DropDownItems)
-        //        {
-        //            AddCallback(target, item); 
-        //        }
-        //    }
-        //    EventHandler act = (sender, e) =>
-        //           DisplayNotificationInChat(
-        //               string.Format(" sender={0}\ntarget={1}", ToString(sender), ToString(target)));
-        //    item.Click += act;
-
-        //    EventHandler reg = (sender, e) =>
-        //                             {
-                                         
-        //                             };
-        //    EventHandler ureg = (sender, e) =>
-        //    {
-
-        //    };
-        //    //item.OwnerChanged += reg;
-
-                
-        //    EventHandler dereg = (sender, e) =>
-        //                             {
-        //                                 item.Click -= act;
-        //                                 item.Click += act;
-        //                             };
-
-        //    item.OwnerChanged += dereg;
-        //    item.LocationChanged += dereg;
-        //}
-
         private string ToString(object sender)
         {
             string t = sender.GetType().Name + ":";

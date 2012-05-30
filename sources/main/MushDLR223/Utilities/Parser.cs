@@ -168,29 +168,40 @@ namespace MushDLR223.ScriptEngines
         }
 
         public Parser(string[] Args)
-            : this(string.Join(" ", Args ?? new string[0]))
+            : this(Args, string.Join(" ", Args ?? new string[0]))
         {
-            tokens = Args;
+        }
+        public Parser(string Args)
+            : this(SafeParseArgs(Args), Args)
+        {
         }
 
-        public Parser(string _str)
+        public static string[] SafeParseArgs(string str)
+        {
+            try
+            {
+                return ParseArguments(str);
+            }
+            catch (Exception e)
+            {
+                return str.Split(new char[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
+            }
+        }
+
+        public Parser(string[] tokes, string _str)
         {
             str = _str;
+            tokens = tokes;
             prepPhrases = new Dictionary<string, object>();// new NameValueCollection();
             foreach (string prep in preps)
-                prepPhrases[prep] = string.Empty;
+            {
+                EnsurePrepKey(prep);
+            }
             objectPhrase = "";
 
             string currentPrep = "";
             // sometimes ParseArgumetns throw exception
-            try
-            {
-                tokens = ParseArguments(str);
-            }
-            catch (Exception e)
-            {
-                tokens = str.Split(new char[] {' ', ','}, StringSplitOptions.RemoveEmptyEntries);
-            }
+
             bool firstTok = true;
 
             for (int i = 0; i < tokens.Length; ++i)
@@ -261,6 +272,7 @@ namespace MushDLR223.ScriptEngines
                     }
                     else
                     {
+                        EnsurePrepKey(currentPrep);
                         if (!firstTok)
                             prepPhrases[currentPrep] += " ";
                         prepPhrases[currentPrep] += prep;
@@ -268,6 +280,11 @@ namespace MushDLR223.ScriptEngines
                     }
                 }
             }
+        }
+
+        private void EnsurePrepKey(string prep)
+        {
+            if (!prepPhrases.ContainsKey(prep)) prepPhrases[prep] = String.Empty;
         }
 
         public static Parser ParseArgs(string args)

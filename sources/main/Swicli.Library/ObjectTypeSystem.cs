@@ -422,12 +422,12 @@ namespace Swicli.Library
 #endif
         }
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliGetTypename(PlTerm valueIn, PlTerm valueOut)
+        static public bool cliGetTypeFullname(PlTerm valueIn, PlTerm valueOut)
         {
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                return cliGetTypename(valueIn, plvar) && SpecialUnify(valueOut, plvar);
+                return cliGetTypeFullname(valueIn, plvar) && SpecialUnify(valueOut, plvar);
             }
             Type val = CastTerm(valueIn, typeof(Type)) as Type;
             if (val == null) return false;

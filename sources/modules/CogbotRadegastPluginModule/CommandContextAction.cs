@@ -42,7 +42,10 @@ namespace CogbotRadegastPluginModule
 
         private void ScanCogbotMenu()
         {
-            if (act != null) return;
+            if (act != null)
+            {
+                return;
+            }
             int groupCommands = 0, botCommands = 0;
 
             if (ClientManager.SingleInstance.groupActions != null)

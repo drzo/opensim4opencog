@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using cogbot.Listeners;
 using cogbot;
 using OpenMetaverse;
@@ -60,10 +61,18 @@ namespace IrcRegionModule
             var fromname = e.FromName;
             System.Action<int> selfChat = (oo) =>
                                   {
-                                      client.Self.OnChat(new ChatEventArgs(e.Simulator, message, e.AudibleLevel, e.Type,
+                                      client.Self.GetType().GetMethod("OnChat",
+                                                                      BindingFlags.NonPublic | BindingFlags.Instance |
+                                                                      BindingFlags.Public).
+
+                                          Invoke(client.Self,
+                                                 new object[]
+                                                     {
+                                                         new ChatEventArgs(e.Simulator, message, e.AudibleLevel, e.Type,
                                                                            e.SourceType,
                                                                            fromname,
-                                                                           id, e.OwnerID, e.Position));
+                                                                           id, e.OwnerID, e.Position)
+                                                     });
                                   };
             //string message, ChatAudibleLevel audible, ChatType type, ChatSourceType sourcetype, string fromname, UUID id, UUID ownerid, Vector3 position
             if (!client.IsRegionMaster)

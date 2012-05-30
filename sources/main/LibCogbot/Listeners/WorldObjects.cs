@@ -722,7 +722,10 @@ namespace cogbot.Listeners
 
         public override void Objects_OnObjectKilled(object sender, KillObjectEventArgs e)
         {
-            if (!e.ReallyDead) if (IgnoreKillObjects) return;
+#if COGBOT_LIBOMV
+            if (!e.ReallyDead) 
+#endif                
+            if (IgnoreKillObjects) return;
             Simulator simulator = e.Simulator;
             // had to move this out of the closure because the Primitive is gone later
             Primitive p = GetPrimitive(e.ObjectLocalID, simulator);
@@ -832,7 +835,6 @@ namespace cogbot.Listeners
             var simulator = e.Simulator;
             base.Objects_OnObjectPropertiesFamily(sender, e);
             var ep = e.Properties;
-            ep.family = true;
             Objects_OnObjectProperties(sender, new ObjectPropertiesEventArgs(e.Simulator, ep));
             // Properties = new Primitive.ObjectProperties();
             //Properties.SetFamilyProperties(props);
@@ -1147,28 +1149,19 @@ namespace cogbot.Listeners
 
         public Primitive GetLibOMVHostedPrim(uint id, Simulator simulator, bool onlyAvatars)
         {
-            LockInfo.TestLock("simulator.ObjectsPrimitives.Dictionary", simulator.ObjectsPrimitives.Dictionary,
-                  TimeSpan.FromSeconds(30));
+          //  LockInfo.TestLock("simulator.ObjectsPrimitives.Dictionary", simulator.ObjectsPrimitives.Dictionary,
+          //        TimeSpan.FromSeconds(30));
             Avatar av;
-            Dictionary<uint, Avatar> avDict = simulator.ObjectsAvatars.Dictionary;
+            Dictionary<uint, Avatar> avDict = simulator.ObjectsAvatars.Copy();
             lock (avDict)
                 if (avDict.TryGetValue(id, out av))
                 {
                     return av;
                 }
             Primitive prim;
-            if (!onlyAvatars) lock (simulator.ObjectsPrimitives.Dictionary)
-                if (simulator.ObjectsPrimitives.TryGetValue(id, out prim))
-                {
-                    return prim;
-                }
-
-            lock (simulator.ObjectsPrimitives.Dictionary)
+            if (!onlyAvatars)
             {
-                if (simulator.PoolObjects.TryGetValue(id, out prim))
-                {
-                    return prim;
-                }
+                prim = client.Objects.GetPrimitive(simulator, id, UUID.Zero, false);
             }
             simulator.Client.Objects.RequestObject(simulator, id);
             return null;
