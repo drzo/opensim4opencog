@@ -14,6 +14,7 @@ using Object=System.Object;
 using String=System.String;
 using System.Drawing;
 using ControlFlags = OpenMetaverse.AgentManager.ControlFlags;
+using UUIDFactory = cogbot.Listeners.CogbotHelpers;
 #if USE_SAFETHREADS
 using Thread = MushDLR223.Utilities.SafeThread;
 #endif
@@ -748,7 +749,7 @@ namespace cogbot.TheOpenSims
         {
             AgentManager ClientSelf = Client.Self;
             AgentManager.AgentMovement ClientMovement = ClientSelf.Movement;
-            ClientMovement.ResetControlFlags();
+            CogbotHelpers.ResetControlFlags(ClientMovement);
             string animationName = "";
             ///=== SET CONTROLS BASED ON SPEED
             switch (speed)
@@ -1145,7 +1146,7 @@ namespace cogbot.TheOpenSims
                     ApproachThread.Name = "TrackerLoop for " + Client;
                     ApproachThread.Priority = ThreadPriority.Normal;
                     ApproachThread.IsBackground = true;
-                    Client.Self.Movement.UseOnlyThreads.Add(ApproachThread);
+                    //Client.Self.Movement.UseOnlyThreads.Add(ApproachThread);
                     ApproachThread.Start();
 
                     Client.Network.RegisterCallback(PacketType.AlertMessage, AlertMessageHandler);

@@ -75,14 +75,15 @@ namespace cogbot.Actions.SimExport
 
         private bool PingAssetCache(UUID assetID)
         {
+            var cache = (AssetCacheWithExtensions)null;
             AssetType assetType = assetTypeOf(assetID);
-            string file = Path.GetFileName(Client.Assets.Cache.FileName(assetID, assetType));
+            string file = Path.GetFileName(cache.FileName(assetID, assetType));
             lock (fileWriterLock) if (File.Exists(assetDumpDir + file))
             {
                 AssetComplete(assetID);
                 return true;
             }
-            byte[] b = Client.Assets.Cache.GetCachedAssetBytes(assetID, assetType);
+            byte[] b = cache.GetCachedAssetBytes(assetID, assetType);
             if (b != null)
             {
                 lock (fileWriterLock) File.WriteAllBytes(assetDumpDir + file, b);

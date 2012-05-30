@@ -1,3 +1,4 @@
+#undef COGBOT_LIBOMV
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -1164,7 +1165,7 @@ namespace cogbot.Listeners
 
             lock (simulator.ObjectsPrimitives.Dictionary)
             {
-                if (simulator.KilledObjects.TryGetValue(id, out prim))
+                if (simulator.PoolObjects.TryGetValue(id, out prim))
                 {
                     return prim;
                 }

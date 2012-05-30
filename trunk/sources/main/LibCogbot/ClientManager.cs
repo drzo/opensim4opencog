@@ -329,13 +329,13 @@ namespace cogbot
                 }
             if (success == 0)
             {
-                return new CmdResult(res + " " + failure + " failures ", false, new OSDMap());
+                return new CmdResult(res + " " + failure + " failures ", false, CmdResult.CreateMap());
             }
             if (failure > 0)
             {
-                return new CmdResult(res + " " + failure + " failures and " + success + " successes", false, new OSDMap());
+                return new CmdResult(res + " " + failure + " failures and " + success + " successes", false, CmdResult.CreateMap());
             }
-            return new CmdResult(res + " " + success + " successes", true, new OSDMap());
+            return new CmdResult(res + " " + success + " successes", true, CmdResult.CreateMap());
         }
 
         public CmdResult ExecuteSystemCommand(string text, object session, OutputDelegate WriteLine)
@@ -367,7 +367,7 @@ namespace cogbot
             {
                 string newVariable = "ClientManager: " + text + " caused " + e;
                 WriteLine(newVariable);
-                return new CmdResult(newVariable, false, new OSDMap());
+                return new CmdResult(newVariable, false, CmdResult.CreateMap());
             }
         }
 

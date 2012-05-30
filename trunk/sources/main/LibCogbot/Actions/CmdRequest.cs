@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using cogbot.Actions;
+using cogbot.Listeners;
 using MushDLR223.ScriptEngines;
 using OpenMetaverse;
 
@@ -54,7 +55,7 @@ namespace cogbot
         public CmdRequest(CmdRequest other, String[] args)
             : base(args)
         {
-            CallerAgent = other.CallerAgent ?? UUID.Zero;
+            CallerAgent = CogbotHelpers.NonZero(other.CallerAgent, UUID.Zero);
             Output = other.Output;
             Cmd = other.Cmd;
             //ParamMap = new Dictionary<string, object>();
@@ -66,7 +67,7 @@ namespace cogbot
         public CmdRequest(string[] text, UUID callerIDORZero, OutputDelegate writeLine, Command command)
             : base(text)
         {
-            CallerAgent = callerIDORZero ?? UUID.Zero;
+            CallerAgent = CogbotHelpers.NonZero(callerIDORZero, UUID.Zero);
             Output = writeLine;
             this.Cmd = command;
             //ParamMap = new Dictionary<string, object>();

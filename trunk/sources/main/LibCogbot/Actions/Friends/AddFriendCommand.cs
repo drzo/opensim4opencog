@@ -8,6 +8,7 @@ using System.Text;
 
 // the Namespace used for all BotClient commands
 using MushDLR223.ScriptEngines;
+using UUIDFactory = cogbot.Listeners.CogbotHelpers;
 
 namespace cogbot.Actions.Friends
 {

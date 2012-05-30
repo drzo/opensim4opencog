@@ -1,4 +1,5 @@
-﻿using System;
+﻿#undef COGBOT_LIBOMV
+using System;
 using System.Collections.Generic;
 using cogbot.Listeners;
 using MushDLR223.ScriptEngines;
@@ -27,7 +28,9 @@ namespace cogbot.TheOpenSims
 
         public override string ToString()
         {
+#if COGBOT_LIBOMV
             if (group == null) return "Group-" + _id;
+#endif
             if (!string.IsNullOrEmpty(group.Name)) return group.Name;
             return "Group-" + ID;
         }

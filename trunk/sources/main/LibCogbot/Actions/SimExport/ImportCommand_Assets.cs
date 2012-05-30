@@ -13,6 +13,7 @@ using OpenMetaverse.Assets;
 using OpenMetaverse.StructuredData;
 
 using MushDLR223.ScriptEngines;
+using UUIDFactory = cogbot.Listeners.CogbotHelpers;
 
 namespace cogbot.Actions.SimExport
 {
@@ -112,7 +113,7 @@ namespace cogbot.Actions.SimExport
                 {
                     if (_OldItem == null)
                     {
-                        _OldItem = AssetManager.CreateAssetWrapper(assetType);
+                        _OldItem = Importing.Client.Assets.CreateAssetWrapper(assetType);
                         _OldItem.AssetData = AssetData;
                     }
                     return _OldItem;
@@ -566,7 +567,7 @@ namespace cogbot.Actions.SimExport
                 var item = OldItem;
                 try
                 {
-                    item.Decode0();
+                    item.Decode();
                 }
                 catch (Exception)
                 {
@@ -574,7 +575,7 @@ namespace cogbot.Actions.SimExport
                 ReplaceAllMembers(item, typeof(UUID), UUIDReplacer, MissingFromExport);
                 try
                 {
-                    if (AssetType != AssetType.Object) item.Encode0();
+                    if (AssetType != AssetType.Object) item.Encode();
                 }
                 catch (Exception)
                 {

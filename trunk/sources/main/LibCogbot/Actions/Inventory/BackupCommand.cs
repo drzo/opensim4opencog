@@ -125,7 +125,7 @@ namespace cogbot.Actions.SimExport
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            Execute(new[] {"abort"}, null, WriteLine);       
+            Execute(new[] {"abort"}, default(UUID), WriteLine);       
         }
 
         #endregion

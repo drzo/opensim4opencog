@@ -15,6 +15,7 @@ using OpenMetaverse.Assets;
 using MushDLR223.ScriptEngines;
 using PathSystem3D.Mesher;
 using ExportCommand = cogbot.Actions.SimExport.ImportCommand;
+using UUIDFactory = cogbot.Listeners.CogbotHelpers;
 
 namespace cogbot.Actions.SimExport
 {

@@ -1,5 +1,5 @@
 #if COGBOT_LIBOMV
-#define GroupChatLeftEventArgs
+// #define GroupChatLeftEventArgs
 #endif
 using System;
 using System.Collections.Generic;

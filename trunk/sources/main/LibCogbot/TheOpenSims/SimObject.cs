@@ -153,7 +153,7 @@ namespace cogbot.TheOpenSims
                 {
                     if (_Prim0 != null)
                     {
-                        if (value.family)
+                        if (value.Name == null)
                         {
                             if (_Prim0.Properties != null)
                             {
@@ -2529,7 +2529,7 @@ namespace cogbot.TheOpenSims
                         missing += " PrimTextures";
                         requestMedia = true;
                     }
-                    if (_Prim0.ParticleSys == null)
+                    if (Object.Equals(_Prim0.ParticleSys , default(Primitive.ParticleSystem))
                     {
                         missing += " PrimParticleSys";
                         requestMedia = true;

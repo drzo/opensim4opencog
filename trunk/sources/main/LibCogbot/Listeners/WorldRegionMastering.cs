@@ -1,3 +1,4 @@
+#undef COGBOT_LIBOMV
 #if COGBOT_LIBOMV
 #define GroupChatLeftEventArgs
 #endif
