@@ -75,7 +75,7 @@ $vars allowed anywhere in aiml
 
 == Cogbot defined botvars ==
 
-you  - author of current request
+you  - author of current request (the bot may be both 'user' and 'bot')
 
 selected - set of currently selected objects
 
