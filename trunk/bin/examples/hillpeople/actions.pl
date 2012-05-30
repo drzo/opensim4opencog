@@ -41,22 +41,5 @@ wear_list(Items) :-
 	bot_replaceoutfit(["hillpeople example"], Items).
 
 
-	/*
-	remove_all,
-	wear_starter_outfit,
-
-has_inventory.
-
-get_inventory
-
-init_setup(Name) :-
-	botcmd(gohome),
-	remove_all_clothing,
-	dress_as_tribal(Name).
-
-remove_all_clothing :-
-	 botget([thesimavatar,children],X),cli_get(X,count,Y).
-*/
-
 
 
