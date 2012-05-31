@@ -264,6 +264,10 @@ namespace cogbot
                     // TODO Settings.USE_LLSD_LOGIN = true;
                 }
                 //SetLoginOptionsFromRadegast();
+                BotLoginParams.Timeout = -1;
+                BotLoginParams.Channel = "Cogbot";
+                if (BotLoginParams.CalledLoginYet) return;
+                BotLoginParams.CalledLoginYet = true;
                 if (!blocking)
                 {
                     

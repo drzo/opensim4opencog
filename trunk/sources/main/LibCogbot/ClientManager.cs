@@ -1792,6 +1792,7 @@ namespace cogbot
 
     public class LoginDetails
     {
+        public bool CalledLoginYet = false;
         public LoginDetails(LoginDetails defaults)
         {
             if (defaults == null) return;

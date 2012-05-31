@@ -66,6 +66,12 @@ namespace cogbot.Actions.Agent
                 ToS = parser.str;
             }
             int argUsed;
+            if (ToS == "home")
+            {
+                Client.Self.GoHome();
+                Success("teleporting home");
+                return;
+            }
             SimPosition pos = WorldSystem.GetVector(args, out argUsed);
             if (argUsed > 0)
             {
