@@ -127,7 +127,7 @@ add_layouts:-
   cli_add_layout('Vector4',v4('X','Y','Z','W')),
   cli_add_layout('Quaternion',quat('X','Y','Z','W')),
  %%  cli_add_layout('UUID',uuid('_guid')),
- cli_to_from_layout('UUID',uuid('ToString'),'UUIDFromString'),
+ cli_to_from_layout('UUID',uuid('ToString'),'Parse'),
  %%  cli_add_layout('Guid',guid(string)),
   !.
 
