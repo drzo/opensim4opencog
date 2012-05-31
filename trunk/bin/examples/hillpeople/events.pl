@@ -1,6 +1,6 @@
 :- module(events, [
-		   register_listeners/0,
-		   handle_im/3
+		   register_listeners/0
+		   %%handle_im/3
 		  ]).
 
 :- use_module(cogbot(cogrobot)).
@@ -15,12 +15,16 @@ register_listeners :- listeners_registered, !.
 register_listeners :-
 	botget(['Self'], AM),
 	cli_add_event_handler(AM, 'IM',
-			      handle_im(_Origin,
+			      events:handle_im(_Origin,
 					_Object,
 					_InstantMessageEventArgs)),
 	assert(listeners_registered).
 
+
+user:handle_im(A,B,C):-events:handle_im(A,B,C).
+
 handle_im(Origin, Object, IMEventArgs) :-
+        nl,
 	cli_to_str(Origin, OriginStr),
 	cli_to_str(Object, ObjectStr),
 	cli_to_str(IMEventArgs, IMEventArgsStr),
@@ -29,6 +33,7 @@ handle_im(Origin, Object, IMEventArgs) :-
 	writeq(' Object:'),
 	writeq(ObjectStr),
 	writeq(' IMEventArgs:'),
-	writeq(IMEventArgsStr).
+	writeq(IMEventArgsStr),
+        nl,flush_output.
 
 

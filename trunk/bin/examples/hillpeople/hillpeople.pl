@@ -242,11 +242,12 @@ home(_, hut3). % fallback, stay in 3 if you don't know
 
 everybody_be_tribal :-
 	hill_person(Name),
-	thread_create(
-	    be_tribal(Name),
-	    _, [alias(Name)]),
+	ensure_tribal(Name),
 	fail.
 everybody_be_tribal.
+
+ensure_tribal(Name):-thread_property(T,_),T=Name,!.
+ensure_tribal(Name):-thread_create(be_tribal(Name),_, [alias(Name)]).
 
 join_the_tribe :-
 	hill_person(Name),
