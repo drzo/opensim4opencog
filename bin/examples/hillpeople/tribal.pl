@@ -9,11 +9,13 @@
 :- use_module(hillpeople(navigation)).
 :- use_module(hillpeople(actions)).
 :- use_module(cogbot(cogrobot)).
+:- use_module(hillpeople(events)).
 
 :- discontiguous be_tribal/3.
 
 be_tribal(Name) :-
 	botID(Name, ID),
+	register_listeners,
 	set_current_bot(ID),
 	sex(Name, Sex),
 	age(Name, Age),
