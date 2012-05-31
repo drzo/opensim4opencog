@@ -1300,7 +1300,7 @@ namespace Swicli.Library
             {
                 MemberInfo fi = fis[i];
                 PlTerm origArg = orig[plarg];
-                paramz[i] = CastTerm(origArg, FieldType(fi));
+                paramz[i] = CastTerm(origArg, FieldType(fi, true));
                 plarg++;
             }
             object newStruct = null;
@@ -1372,12 +1372,24 @@ namespace Swicli.Library
             if (field is MethodInfo)
             {
                 MethodInfo mi = (MethodInfo)field;
+                ParameterInfo[] pms = mi.GetParameters();
                 if (mi.IsStatic)
                 {
+                    if (pms.Length == 1)
+                    {
+                        mi.Invoke(null, new object[] {value});
+                    }
                     mi.Invoke(null, new object[] { o, value });
                     return;
                 }
-                ((MethodInfo)field).Invoke(o, new object[] { value });
+                if (pms.Length == 1)
+                {
+                    mi.Invoke(o, new object[] { value });
+                }
+                else
+                {
+                    
+                }
                 return;
             }
             throw new IndexOutOfRangeException("" + field);
@@ -1388,7 +1400,7 @@ namespace Swicli.Library
             }
         }
 
-        private static Type FieldType(MemberInfo field)
+        private static Type FieldType(MemberInfo field, bool asSetter)
         {
             if (field is FieldInfo)
             {
@@ -1401,6 +1413,12 @@ namespace Swicli.Library
             if (field is MethodInfo)
             {
                 MethodInfo mi = (MethodInfo)field;
+                if (asSetter)
+                {
+                    var pms = mi.GetParameters();
+                    if (pms.Length == 0) return mi.ReturnType;
+                    return pms[pms.Length - 1].ParameterType;
+                }
                 return mi.ReturnType;
             }
             if (field is ConstructorInfo)
