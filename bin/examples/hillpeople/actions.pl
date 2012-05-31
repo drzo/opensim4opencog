@@ -33,12 +33,12 @@ say_ref(Prompt, Ref) :-
 
 
 has_inventory :-
-	bot_has_inventory(["hillpeople example"]),!.
+	bot_has_inventory(["hillpeople example rev2"]),!.
 
 remove_all :- bot_unwearall.
 
 wear_list(Items) :-
-	bot_replaceoutfit(["hillpeople example"], Items).
+	bot_replaceoutfit(["hillpeople example rev2"], Items).
 
 
 
