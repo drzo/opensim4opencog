@@ -494,7 +494,8 @@
       <Reference name="System.Xml" localCopy="false"/>
       <Files>
         <Match path="." pattern="*.cs"  recurse="true"  subType="Form">
-          <Exclude name="Plugins/"/>
+            <Exclude name="Plugins/"/>
+            <Exclude name="Actions/SimExport//"/>
         </Match>
         <!--<Match path="." pattern="*.resx"  recurse="true" subType="Settings"  buildAction="EmbeddedResource">
           <Exclude name="Plugins/"/>
