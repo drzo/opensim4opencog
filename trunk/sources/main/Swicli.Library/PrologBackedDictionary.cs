@@ -30,12 +30,13 @@ namespace Swicli.Library
     {
         static public IDictionary<string, Object> CreatePrologBackedDictionary(PlTerm pred)
         {
-            return new PrologBackedDictionary<string, object>(null, pred.Name,
+
+            return new PrologBackedDictionary<string, object>(PredicateModule(pred), PredicateName(pred),
                 CreatePrologBackedCollection<string>(pred),
                 "assert", "retract","retractall");}
         static public ICollection<T> CreatePrologBackedCollection<T>(PlTerm pred)
         {
-            return new PrologBackedCollection<T>(null, pred.Name, "assert", "retract",
+            return new PrologBackedCollection<T>(PredicateModule(pred), PredicateName(pred), "assert", "retract",
                                                               "retractall");
         }
         [PrologVisible]

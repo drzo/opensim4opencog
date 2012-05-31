@@ -840,6 +840,56 @@ typedef struct // define a context structure  { ... } context;
                 DeregisterThread(threadCurrentThread);
             }
         }
+
+        private static string PredicateName(PlTerm term)
+        {
+            if (term.Name == ":")
+            {
+                if (term.Arity == 2)
+                {
+                    return PredicateName(term.Arg(1));
+                }
+            }
+            if (term.Name == "/")
+            {
+                if (term.Arity == 2)
+                {
+                    return PredicateName(term.Arg(0));
+                }
+            }
+            return term.Name;
+        }
+
+        private static string PredicateModule(PlTerm term)
+        {
+            if (term.Name == ":")
+            {
+                if (term.Arity == 1)
+                {
+                    return PredicateName(term.Arg(0));
+                }
+            }
+            return "user";
+        }
+
+        private static int PredicateArity(PlTerm term)
+        {
+            if (term.Name == ":")
+            {
+                if (term.Arity == 2)
+                {
+                    return PredicateArity(term.Arg(1));
+                }
+            }
+            if (term.Name == "/")
+            {
+                if (term.Arity == 2)
+                {
+                    return term.Arg(1).intValue();
+                }
+            }
+            return term.Arity;
+        }
     }
     public class ForNext : AbstractNondetMethod
     {

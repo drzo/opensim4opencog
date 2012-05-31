@@ -1191,8 +1191,9 @@ namespace Swicli.Library
             }
             var Key = new EventHandlerInPrologKey
                           {
-                              Name = prologPred.Name,
-                              Arity = prologPred.Arity,
+                              Name = PredicateName(prologPred),
+                              Module = PredicateModule(prologPred),
+                              Arity = PredicateArity(prologPred),
                               Origin = getInstance,
                               Event = fi
                           };
@@ -1225,8 +1226,9 @@ namespace Swicli.Library
             }
             var Key = new EventHandlerInPrologKey
                           {
-                              Name = prologPred.Name,
-                              Arity = prologPred.Arity,
+                              Name = PredicateName(prologPred),
+                              Module = PredicateModule(prologPred),
+                              Arity = PredicateArity(prologPred),
                               Origin = getInstance,
                               Event = fi
                           };
