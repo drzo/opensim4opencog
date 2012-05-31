@@ -864,7 +864,7 @@ typedef struct // define a context structure  { ... } context;
         {
             if (term.Name == ":")
             {
-                if (term.Arity == 1)
+                if (term.Arity == 2)
                 {
                     return PredicateName(term.Arg(0));
                 }
