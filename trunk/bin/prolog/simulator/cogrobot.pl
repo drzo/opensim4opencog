@@ -316,8 +316,8 @@ wbotcmd(BotID,StrIn,WriteDelegate,Out):-cmdargs_to_atomstr(StrIn,Str),cli_call(B
 % cmdargs_to_atomstr(say("hi"),Out)
 %
 cmdargs_to_atomstr([C|Cmd],Out):-toStringableArgs(Cmd,SCmd),!,concat_atom([C|SCmd],' ',Str),cmdargs_to_atomstr(Str,Out).
-cmdargs_to_atomstr(C,Out):-compound(C),C=..[F,A|B],is_movement_proc(F),\+ is_vector(A),\+ cli_is_type(A,'SimPosition'),!,
-    name_to_location_ref(A,AA),CC=..[F,AA|B],cmdargs_to_atomstr(CC,Out).
+%cmdargs_to_atomstr(C,Out):-compound(C),C=..[F,A|B],is_movement_proc(F),\+ is_vector(A),\+ cli_is_type(A,'SimPosition'),
+%    name_to_location_ref(A,AA),cli_get(AA,'ID',AAA),!,CC=..[F,AAA|B],cmdargs_to_atomstr(CC,Out).
 cmdargs_to_atomstr(C,Out):-compound(C),!,C=..[F|A],listifyFlat([F|A],FL),cmdargs_to_atomstr(FL,Out).
 cmdargs_to_atomstr(Str,Str):-!. %%toStringableArg(StrIn,Str).
 
