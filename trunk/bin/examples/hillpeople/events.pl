@@ -15,7 +15,7 @@ register_listeners :- listeners_registered, !.
 register_listeners :-
 	botget(['Self'], AM),
 	cli_add_event_handler(AM, 'IM',
-			      events:handle_im(_Origin,
+			      handle_im(_Origin,
 					_Object,
 					_InstantMessageEventArgs)),
 	assert(listeners_registered).
