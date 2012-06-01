@@ -8,6 +8,7 @@ using System.Reflection;
 using System.IO;
 using System.Threading;
 using System.Xml;
+using System.Web;
 
 namespace AltAIMLbot
 {
@@ -237,6 +238,28 @@ namespace AltAIMLbot
                 return;
             }
 
+            if (path.Contains("./graphmaster/"))
+            {
+                path.Replace("./graphmaster/", behaviorDir);
+                if ((File.Exists(behaviorFile)) && (!File.Exists(path)))
+                {
+                    path = behaviorFile;
+                }
+
+                context.Response.StatusCode = (int)HttpStatusCode.OK;
+                using (Stream s = context.Response.OutputStream)
+                using (StreamWriter writer = new StreamWriter(s))
+                    if (query != null)
+                    {
+                        analyseGraphMaster(writer, query, justURL);
+                    }
+                    else
+                    {
+                        fetchGraphMaster(writer, justURL);
+                    }
+                return;
+            }
+
             if (path.Contains("./analysisllist/"))
             {
                 string furi = justURL ;
@@ -395,6 +418,104 @@ namespace AltAIMLbot
 
         }
 
+        public static void loadAimlIndex()
+        {
+            if (ourServitor.myIndex.Externindex.Count == 0)
+            {
+                List<string> allPaths = new List<string>();
+                ourServitor.curBot.Graphmaster.collectFullPaths("", allPaths);
+                ourServitor.myIndex.LoadGraphMap(allPaths);
+            }
+        }
+        public static string graphMasterToURI(string gmPath)
+        {
+            string gmBase = serverRoot + "graphmaster/";
+            gmPath = gmPath.Replace("<", "{");
+            gmPath = gmPath.Replace(">", "}");
+            return gmBase + gmPath;
+        }
+        public static string URITographMaster(string gmPath)
+        {
+            //gmPath = HttpUtility.HtmlDecode(gmPath.Trim());
+            gmPath = HttpUtility.UrlDecode(gmPath.Trim());
+            string gmBase = serverRoot + @"graphmaster/";
+            gmPath = gmPath.Replace("{", "<");
+            gmPath = gmPath.Replace("}", ">");
+            gmPath = gmPath.Replace(gmBase, "");
+            gmPath = gmPath.Replace(@"/graphmaster/", "");
+            return gmPath;
+        }
+
+        public static void fetchGraphMaster(StreamWriter writer, string rawURL)
+        {
+            //loadAimlIndex();
+            string gmPath = URITographMaster(rawURL);
+            List<string> allPaths = new List<string>();
+            ourServitor.curBot.Graphmaster.searchFullPaths(gmPath, "", allPaths);
+
+            foreach (string frag in allPaths)
+            {
+                writer.WriteLine("");
+                writer.WriteLine("{0}", frag);
+            }
+            writer.WriteLine("");
+            
+        }
+
+        public static void analyseGraphMaster(StreamWriter writer, string query, string rawURL)
+        {
+            loadAimlIndex();
+            Dictionary<string, double> pathResults = ourServitor.myIndex.performTfIdfSearch(query.Split(' ').ToList());
+            pathResults = pathResults.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
+            int resultCount = 0;
+
+            foreach (string path in pathResults.Keys)
+            {
+                double irScore = pathResults[path];
+                List<string> allPaths = new List<string>();
+                ourServitor.curBot.Graphmaster.searchFullPaths(path,"", allPaths);
+                string gmURI = graphMasterToURI(path);
+                foreach (string frag in allPaths)
+                {
+                    writer.WriteLine("");
+                    writer.WriteLine("{0}", frag);
+                    List<string> ngrams = tagify(frag);
+                    writer.WriteLine("<{0}> <queryScore> \"{1}\" .", gmURI, irScore);
+                    writer.WriteLine("<{0}> <query> \"{1}\" .", gmURI, query);
+                    if (ngrams.Count > 1)
+                    {
+                        writer.WriteLine("<{0}> <rdf:type> <dctype:Text> .", gmURI);
+
+                    }
+                    foreach (string phrase in ngrams)
+                    {
+                        double score = phraseScore[phrase];
+                        int senseC = 0;
+                        string senseL = "";
+                        if (senseCount.ContainsKey(phrase))
+                        {
+                            senseC = senseCount[phrase];
+                            senseL = senseLink[phrase];
+                        }
+                        if (score < 0.004) break;
+                        writer.WriteLine("<{0}> <rdfs:comment> \"mentions '{1}'\"@en .", gmURI, phrase);
+                        if (senseC > 0)
+                        {
+                            //writer.WriteLine("<{0}> <http://purl.org/dc/terms/subject> <{1}> .", basicURI, senseL);
+                            writer.WriteLine("<{0}> <dcterms:subject> <{1}> .", gmURI, senseL);
+                            //writer.WriteLine("<\"{0}\"><hasScore> {1} .", senseL, score);
+                        }
+                    }
+                
+                }
+                // Max 100
+                resultCount++;
+                if (resultCount > 100) { break; }
+            }
+            writer.WriteLine("");
+            writer.Close();
+        }
+
         public static void loadAnalyzer()
         {
             if (File.Exists(kpfile))
@@ -446,22 +567,9 @@ namespace AltAIMLbot
             }
             return txt;
         }
-
-        public static void analyse(
-            StreamWriter writer, string path, string behaviorName,string rawURL)
+        public static List<string>  tagify(string text)
         {
-            Console.WriteLine("analyse path={0},behaviorName={1},rawURL={2}", path, behaviorName, rawURL);
-            if (!File.Exists(path))
-            {
-                writer.WriteLine("<fin/>");
-                return;
-            }
-            XmlDocument _xmlfile = new XmlDocument();
-            string text = File.ReadAllText(path);
-            if (text.Length >0) _xmlfile.LoadXml(text);
-            //_xmlfile.Load(path);
-            //string text = _xmlfile.OuterXml;
-            text = text.Replace("\"C_", "\" ");
+             text = text.Replace("\"C_", "\" ");
             text = text.Replace("_", " ");
 
             foreach (string rkey in behaviorStoplist)
@@ -516,12 +624,34 @@ namespace AltAIMLbot
                 if ((phraseScore.ContainsKey(ng)) && (!ngrams.Contains(ng)))
                     ngrams.Add(ng);
             }
+             ngrams.Sort(phraseSortFunction);
+             return ngrams;
+        }
+
+
+
+        public static void analyse(
+            StreamWriter writer, string path, string behaviorName,string rawURL)
+        {
+            Console.WriteLine("analyse path={0},behaviorName={1},rawURL={2}", path, behaviorName, rawURL);
+            if (!File.Exists(path))
+            {
+                writer.WriteLine("<fin/>");
+                return;
+            }
+            XmlDocument _xmlfile = new XmlDocument();
+            string text = File.ReadAllText(path);
+            if (text.Length >0) _xmlfile.LoadXml(text);
+            //_xmlfile.Load(path);
+            //string text = _xmlfile.OuterXml;
+
             string basicURI = rawURL;
             basicURI = basicURI.Replace("/analysis/", "/behavior/");
-            ngrams.Sort(phraseSortFunction);
 
             writer.WriteLine("<{0}> <rdf:type> <dctype:InteractiveResource> .", basicURI);
             writer.WriteLine("<{0}> <dcterms:title> \"{1}\" .", basicURI, behaviorName);
+
+            List<string> ngrams = tagify(text);
             if (ngrams.Count > 1)
             {
                 writer.WriteLine("<{0}> <rdf:type> <dctype:Text> .", basicURI);

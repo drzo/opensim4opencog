@@ -39,12 +39,15 @@ namespace AltAIMLbot.AIMLTagHandlers
             string failurePhrase = "Sorry, I don't understand.";
             string failurePhrase2 = "Sorry. I couldn't understand what you are asking. Please rephrase.";
             string errorPhrase = "Processing caused the following error.";
-            string sepToken ="ANSEP"; 
-            try { sepToken =this.templateNode.Attributes["sep"].Value; }catch {}
+            string sepToken ="ANSEP";
+            try { sepToken = this.templateNode.Attributes["sep"].Value; }
+            catch (Exception e) { }
             string onFail = null;
-            try { onFail = this.templateNode.Attributes["onfail"].Value;}catch {}
+            try { onFail = this.templateNode.Attributes["onfail"].Value; }
+            catch (Exception e) { }
             string onSuccess = null;
-            try { onSuccess = this.templateNode.Attributes["onsuccess"].Value;}catch {}
+            try { onSuccess = this.templateNode.Attributes["onsuccess"].Value; }
+            catch (Exception e) { }
 
             if (this.templateNode.Name.ToLower() == "filterqa")
             {

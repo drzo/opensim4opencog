@@ -59,6 +59,7 @@ namespace AltAIMLbot
         public bool skipPersonalityCheck = false;
         public bool initialCritical = false;
         public Scheduler myScheduler = null;
+        public InvertedIndex myIndex = null;
 
         public Servitor(string UserID, sayProcessorDelegate outputDelegate)
         {
@@ -81,6 +82,7 @@ namespace AltAIMLbot
             Console.WriteLine("            UserID:" + UserID);
             AltBot myBot = new AltBot();
             myScheduler = new Scheduler(this);
+            myIndex = new InvertedIndex();
 
             myBot.bbSafe = true;
 

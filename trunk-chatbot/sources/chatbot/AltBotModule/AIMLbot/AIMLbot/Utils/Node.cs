@@ -169,6 +169,26 @@ namespace AltAIMLbot.Utils
             }
 
         }
+        public void searchFullPaths(string targetPath,string inpath, List<string> collector)
+        {
+            string curWord = this.word;
+            string ourPath = inpath + " " + curWord;
+            if (targetPath.StartsWith(ourPath.Trim()))
+            {
+                if ((template != null) && (template.Length > 1))
+                {
+                    var encoded = HttpUtility.HtmlEncode(ourPath.Trim());
+                    string serTemplate = String.Format("<ser path=\"{0}\"> {1} </ser>", encoded, template);
+                    collector.Add(serTemplate);
+                }
+                foreach (string childWord in children.Keys)
+                {
+                    Node childNode = children[childWord];
+                    childNode.searchFullPaths(targetPath,ourPath, collector);
+                }
+            }
+
+        }
         #endregion
 
         #region Evaluate Node

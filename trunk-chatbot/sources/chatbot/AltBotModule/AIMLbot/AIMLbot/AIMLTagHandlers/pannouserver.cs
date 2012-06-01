@@ -68,7 +68,13 @@ namespace AltAIMLbot.AIMLTagHandlers
                     string myUrl = this.templateNode.Attributes["url"].Value;
                     string myLogin = this.templateNode.Attributes["login"].Value;
                     string myKey = this.templateNode.Attributes["key"].Value;
-                    string onFail = this.templateNode.Attributes["onfail"].Value;
+                    string onFail = null;
+                    try { onFail = this.templateNode.Attributes["onfail"].Value; }
+                    catch(Exception e) { }
+                    string onSuccess = null;
+                    try { onSuccess = this.templateNode.Attributes["onsuccess"].Value; }
+                    catch (Exception e) { }
+
                     string query = templateNodeInnerValue;
 
                     if (myUrl == null) { myUrl = bot.GlobalSettings.grabSetting("pannouserverurl"); }
