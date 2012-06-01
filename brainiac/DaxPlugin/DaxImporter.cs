@@ -266,7 +266,8 @@ namespace DaxPlugin
             int fcount = 0;
             foreach (string f in flist)
             {
-                FileList.Add(f);
+                string f2 = f.Replace("\r", "");
+                FileList.Add(f2);
                 fcount++;
                 //if (fcount > 1000) break;
             }
