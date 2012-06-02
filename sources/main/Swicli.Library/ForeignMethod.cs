@@ -843,6 +843,13 @@ typedef struct // define a context structure  { ... } context;
 
         private static string PredicateName(PlTerm term)
         {
+            if (term.Name == "{}")
+            {
+                if (term.Arity == 1)
+                {
+                    return PredicateName(term.Arg(0));
+                }
+            }
             if (term.Name == ":")
             {
                 if (term.Arity == 2)
@@ -862,6 +869,13 @@ typedef struct // define a context structure  { ... } context;
 
         private static string PredicateModule(PlTerm term)
         {
+            if (term.Name == "{}")
+            {
+                if (term.Arity == 1)
+                {
+                    return PredicateModule(term.Arg(0));
+                }
+            }
             if (term.Name == ":")
             {
                 if (term.Arity == 2)
@@ -874,6 +888,13 @@ typedef struct // define a context structure  { ... } context;
 
         private static int PredicateArity(PlTerm term)
         {
+            if (term.Name == "{}")
+            {
+                if (term.Arity == 1)
+                {
+                    return PredicateArity(term.Arg(0));
+                }
+            } 
             if (term.Name == ":")
             {
                 if (term.Arity == 2)

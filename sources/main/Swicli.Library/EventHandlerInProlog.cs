@@ -24,11 +24,11 @@ using System.Reflection;
 
 namespace Swicli.Library
 {
-    public struct EventHandlerInPrologKey
+    public struct EventHandlerInPrologKey : PrologKey
     {
-        public String Module;
-        public String Name;
-        public int Arity;
+        public String Module { get; set; }
+        public String Name { get; set; }
+        public int Arity { get; set; }
         public EventInfo Event;
         public Object Origin;
         public override string ToString()

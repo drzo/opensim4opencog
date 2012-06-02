@@ -285,12 +285,19 @@ namespace SbsSW.SwiPlCs
         {
             if (_qid > 0 && PlEngine.IsInitialized)
             {
-                if(discardData)
-                    // <"leider werden dann die gebundenen variablen der query wieder frei e.g. in PlCall(goal)"/>
-                    // unfortunately this statement detaches the bound variables of the query e.g. in PlCall(goal)
-                    libpl.PL_close_query(_qid);
-                else
-                    libpl.PL_cut_query(_qid);
+                try
+                {
+                    if (discardData)
+                        // <"leider werden dann die gebundenen variablen der query wieder frei e.g. in PlCall(goal)"/>
+                        // unfortunately this statement detaches the bound variables of the query e.g. in PlCall(goal)
+                        libpl.PL_close_query(_qid);
+                    else
+                        libpl.PL_cut_query(_qid);
+                }
+                catch (Exception e)
+                {
+                    PrologClient.Warn("Free caused: {0}", e);
+                }
             }
             _qid = 0;
         }
@@ -461,6 +468,20 @@ namespace SbsSW.SwiPlCs
         /// <exception cref="PlException">Is thrown if <see href="http://gollem.science.uva.nl/SWI-Prolog/Manual/foreigninclude.html#PL_next_solution()">SWI-Prolog Manual PL_next_solution()</see> returns false </exception>
         public bool NextSolution()
         {
+            EnsureQUID();
+            int rval = libpl.PL_next_solution(_qid);
+            if (0 == rval)
+            {	// error
+                CheckForException();
+            }
+            if(rval <= 0)
+                Free(false);
+
+            return rval > 0;
+        }
+
+        private void EnsureQUID()
+        {
             if (0 == _qid)
             {
                 Check.Require(!string.IsNullOrEmpty(_name), "PlQuery.NextSolution() _name is required");
@@ -468,22 +489,18 @@ namespace SbsSW.SwiPlCs
                 IntPtr p = libpl.PL_predicate(_name, _av.Size, _module);
                 _qid = libpl.PL_open_query((IntPtr)0, libpl.PL_Q_CATCH_EXCEPTION, p, _av.A0);
             }
-            int rval = libpl.PL_next_solution(_qid);
-            if (0 == rval)
-            {	// error
-                uint ex; // term_t
-                if ((ex = libpl.PL_exception(_qid)) > 0)
-                {
-                    PlTerm exceptionTerm = new PlTerm(ex);
-                    PlException etmp = new PlException(exceptionTerm);
-                    _qid = 0; // to avoid an AccessViolationException on Dispose. E.g. if the query is miss spelled.
-                    etmp.Throw();
-                }
-            }
-            if(rval <= 0)
-                Free(false);
+        }
 
-            return rval > 0;
+        private void CheckForException()
+        {
+            uint ex = libpl.PL_exception(_qid); // term_t
+            if (ex > 0)
+            {
+                PlTerm exceptionTerm = new PlTerm(ex);
+                PlException etmp = new PlException(exceptionTerm);
+                _qid = 0; // to avoid an AccessViolationException on Dispose. E.g. if the query is miss spelled.
+                etmp.Throw();
+            }
         }
 
         /// <summary>

@@ -510,7 +510,7 @@ namespace MushDLR223.ScriptEngines
             flag = ToKey(flag);
             foreach(string key in tokens)
             {
-                if (key.Equals(flag)) return i;
+                if (ToKey(key).Equals(flag)) return i;
                 i++;
             }
             return -1;
@@ -556,9 +556,9 @@ namespace MushDLR223.ScriptEngines
         private string[] GetAfterIndex(int i)
         {
             var p = new List<string>();
-            for (int j = i + 1; j < Count; j++)
+            for (int j = i + 1; j < tokens.Length; j++)
             {
-                p.Add(tokens[i]);
+                p.Add(tokens[j]);
             }
             return p.ToArray();
         }

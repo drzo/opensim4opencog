@@ -308,7 +308,7 @@ wabcall(Call):-once(((thread_self(TID),current_bot_db(TID,Save))->TODO=set_curre
 % botcmd(say("hi"))
 %
 wbotcmd(BotID,StrIn):-wbotcmd(BotID,StrIn,Out),cli_get(Out,success,@(true)).
-wbotcmd(BotID,StrIn,Out):-cmdargs_to_atomstr(StrIn,Str),wbotcmd(BotID,Str,pluggable_callback(botcmd),Out).
+wbotcmd(BotID,StrIn,Out):-cmdargs_to_atomstr(StrIn,Str),wbotcmd(BotID,Str,{pluggable_callback(botcmd)},Out).
 wbotcmd(BotID,StrIn,WriteDelegate,Out):-cmdargs_to_atomstr(StrIn,Str),cli_call(BotID,executeCommand(Str,BotID,WriteDelegate),Out).
 
 
@@ -358,7 +358,7 @@ gridclient_ref(Obj):-current_bot(BC),cli_get(BC,'gridClient',Obj).
 %------------------------------------------------------------------------------
 % create a writeline delegate
 %------------------------------------------------------------------------------
-create_write_hook(WID):-create_write_hook(pluggable_callback(cogrobot),WID).
+create_write_hook(WID):-create_write_hook({pluggable_callback(cogrobot)},WID).
 create_write_hook(WriteDelegate,WID):-cli_new_delegate('MushDLR223.ScriptEngines.OutputDelegate',WriteDelegate,WID).
 
 null_callback(_,_,_).
@@ -447,11 +447,11 @@ run_sl:-asserta(ran_sl),!,
 % was previously undefined
 
 %:-retractall(cli_subproperty(_,_)).
-:-assert_once(cli_subproperty('cogbot.TheOpenSims.SimAvatar','ProfileProperties')).
-:-assert_once(cli_subproperty('cogbot.TheOpenSims.SimAvatar','AvatarInterests')).
-:-assert_once(cli_subproperty('cogbot.TheOpenSims.SimAvatar','FriendshipInfo')).
-:-assert_once(cli_subproperty('cogbot.TheOpenSims.SimObject','Prim')).
-:-assert_once(cli_subproperty('cogbot.TheOpenSims.SimObject','Properties')).
+:-assert_once(swicli:cli_subproperty('cogbot.TheOpenSims.SimAvatar','ProfileProperties')).
+:-assert_once(swicli:cli_subproperty('cogbot.TheOpenSims.SimAvatar','AvatarInterests')).
+:-assert_once(swicli:cli_subproperty('cogbot.TheOpenSims.SimAvatar','FriendshipInfo')).
+:-assert_once(swicli:cli_subproperty('cogbot.TheOpenSims.SimObject','Prim')).
+:-assert_once(swicli:cli_subproperty('cogbot.TheOpenSims.SimObject','Properties')).
 
 
 obj2Npl(O,npl(66,O)).
@@ -768,20 +768,21 @@ value_deref(Value,ValueO):-cli_col(Value,ValueO).
 % adding to the botvar interface
 %------------------------------------------------------------------------------
 add_botvars(NameSpace,PredImpl):-
-      cli_call('Swicli.Library.PrologClient','CreatePrologBackedDictionary',[PredImpl],PBD),
+      cli_new_prolog_dictionary(PredImpl,string,object,PBD),
       cli_call('MushDLR223.ScriptEngines.DictionaryWrapper','CreateDictionaryWrapper',[PBD],Provider),
       cli_call('MushDLR223.ScriptEngines.ScriptManager','AddNamedProvider',[NameSpace, Provider],_).
 
-%%:-add_botvars(fromprolog,prolog_botvar_impl).
 wbotvar_impl(a,1).
 wbotvar_impl(b,2).
 wbotvar_impl(Key):-wbotvar_impl(Key,_).
+
+:-add_botvars(fromprolog,wbotvar_impl).
 
 /*
 wbot_add_botvar(BotID,Var,PredImpl):-wbotget(BotID,['WorldSystem','simGroupProviders'],GPs),
       cli_call('MushDLR223.ScriptEngines.SingleNameValue','MakeKVP'
 
-      cli_call('Swicli.Library.PrologClient','CreatePrologBackedDictionary',[PredImpl],PBD),
+      cli_lib_call('CreatePrologBackedDictionary',[PredImpl],PBD),
       cli_call('MushDLR223.ScriptEngines.DictionaryWrapper','CreateDictionaryWrapper',[PBD],Provider),
       cli_call('MushDLR223.ScriptEngines.ScriptManager','AddNamedProvider',[NameSpace, Provider],_).
 */

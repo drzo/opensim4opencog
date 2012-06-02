@@ -23,11 +23,11 @@ using System;
 namespace Swicli.Library
 {
 
-    public struct DelegateObjectInPrologKey
+    public struct DelegateObjectInPrologKey : PrologKey
     {
-        public String Module;
-        public String Name;
-        public int Arity;
+        public String Module { get; set; }
+        public String Name { get; set; }
+        public int Arity { get; set; }
         public Type DelegateType;
         //public PlTerm Origin;
         public override string ToString()
