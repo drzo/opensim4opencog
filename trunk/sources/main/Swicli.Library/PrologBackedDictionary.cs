@@ -22,43 +22,89 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Threading;
 using SbsSW.SwiPlCs;
 
 namespace Swicli.Library
 {
     public partial class PrologClient
     {
-        static public IDictionary<string, Object> CreatePrologBackedDictionary(PlTerm pred)
+        static public IDictionary<TKey, TValue> CreatePrologBackedDictionary<TKey, TValue>(PlTerm pred)
         {
-
-            return new PrologBackedDictionary<string, object>(PredicateModule(pred), PredicateName(pred),
-                CreatePrologBackedCollection<string>(pred),
+            return new PrologBackedDictionary<TKey, TValue>(PredicateModule(pred), PredicateName(pred),
+                CreatePrologBackedCollection<TKey>(pred),
                 "assert", "retract","retractall");}
+
         static public ICollection<T> CreatePrologBackedCollection<T>(PlTerm pred)
         {
             return new PrologBackedCollection<T>(PredicateModule(pred), PredicateName(pred), "assert", "retract",
-                                                              "retractall");
+                                                 "retractall");
         }
+
         [PrologVisible]
-        static public bool testPbd(PlTerm pred, PlTerm counted)
+        static public bool cliTestPbd(PlTerm pred, PlTerm counted)
         {
-            var id = CreatePrologBackedDictionary(pred);
+            var id = CreatePrologBackedDictionary<string, object>(pred);
             string s = string.Empty;
-            foreach (var o in id)
+            var enumer = id.GetEnumerator();
+            while (enumer.MoveNext())
             {
+                var o = enumer.Current;
                 s += string.Format("{0}={1},", o.Key, o.Value);
             }
             counted.UnifyAtom(s);
             return true;
         }
         [PrologVisible]
-        static public bool testPbc(PlTerm pred, PlTerm counted)
+        static public bool cliTestPbdt(PlTerm pred, PlTerm counted)
+        {
+            var id = CreatePrologBackedDictionary<string, object>(pred);
+            string s = string.Empty;
+            AutoResetEvent are = new AutoResetEvent(false);
+            (new Thread(() =>
+                           {
+                               var enumer = id.GetEnumerator();
+                               while (enumer.MoveNext())
+                               {
+                                   var o = enumer.Current;
+                                   s += string.Format("{0}={1},", o.Key, o.Value);
+                               }
+                               are.Set();
+                           })).Start();
+            are.WaitOne();
+            counted.UnifyAtom(s);
+            return true;
+        }
+        [PrologVisible]
+        static public bool cliTestPbct(PlTerm pred, PlTerm counted)
         {
             var id = CreatePrologBackedCollection<object>(pred);
             string s = string.Empty;
-            foreach (var o in id)
+            AutoResetEvent are = new AutoResetEvent(false);
+            (new Thread(() =>
             {
-                s += string.Format("{0},", o);
+                var enumer = id.GetEnumerator();
+                while (enumer.MoveNext())
+                {
+                    var o = enumer.Current;
+                    s += string.Format("{0},", o);
+                }
+                are.Set();
+            })).Start();
+            are.WaitOne();
+            counted.UnifyAtom(s);
+            return true;
+        }
+        [PrologVisible]
+        static public bool cliTestPbc(PlTerm pred, PlTerm counted)
+        {
+            var id = CreatePrologBackedCollection<object>(pred);
+            string s = string.Empty;
+            IEnumerator<object> enumer = id.GetEnumerator();
+            while (enumer.MoveNext())
+            {
+                s += string.Format("{0},", enumer.Current);
             }
             counted.UnifyAtom(s);
             return true;
@@ -69,6 +115,7 @@ namespace Swicli.Library
     {
         public void InForiegnFrame(Action action)
         {
+            PrologClient.RegisterCurrentThread();
             uint fid = libpl.PL_open_foreign_frame();
             try
             {
@@ -76,9 +123,10 @@ namespace Swicli.Library
             }
             finally
             {
-                libpl.PL_close_foreign_frame(fid);
+                if (fid > 0) libpl.PL_close_foreign_frame(fid);
             }
         }
+
         public static bool PlCall(string module, string predname, PlTermV termV)
         {
             return PrologClient.PlCall(module, predname, termV);
@@ -136,6 +184,7 @@ namespace Swicli.Library
         /// <filterpriority>1</filterpriority>
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
+            PrologClient.RegisterCurrentThread();
             return new PrologBackedDictionaryEnumerator(this);
         }
 
@@ -180,7 +229,12 @@ namespace Swicli.Library
             ///                 </exception><filterpriority>2</filterpriority>
             public bool MoveNext()
             {
-                return plQuery.NextSolution();
+                if (!plQuery.NextSolution())
+                {
+                    Dispose();
+                    return false;
+                }
+                return true;
             }
 
             /// <summary>
@@ -191,7 +245,7 @@ namespace Swicli.Library
             public void Reset()
             {
                 Dispose();
-                fframe = libpl.PL_open_foreign_frame();
+                //fframe = libpl.PL_open_foreign_frame();
                 termV = new PlTermV(2);
                 plQuery = new PlQuery(_dictionary._module, _dictionary._predname, termV);
             }
@@ -519,7 +573,7 @@ namespace Swicli.Library
     }
 
 
-    public class PrologBackedCollection<T> : PrologBacked<T,object>, ICollection<T>
+    public class PrologBackedCollection<T> : PrologBacked<T,object>, ICollection<T>, ICollection
     {
         private readonly string _module = null;//"user";
         private readonly string _predname;
@@ -575,7 +629,50 @@ namespace Swicli.Library
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Copies the elements of the <see cref="T:System.Collections.ICollection"/> to an <see cref="T:System.Array"/>, starting at a particular <see cref="T:System.Array"/> index.
+        /// </summary>
+        /// <param name="array">The one-dimensional <see cref="T:System.Array"/> that is the destination of the elements copied from <see cref="T:System.Collections.ICollection"/>. The <see cref="T:System.Array"/> must have zero-based indexing. 
+        ///                 </param><param name="index">The zero-based index in <paramref name="array"/> at which copying begins. 
+        ///                 </param><exception cref="T:System.ArgumentNullException"><paramref name="array"/> is null. 
+        ///                 </exception><exception cref="T:System.ArgumentOutOfRangeException"><paramref name="index"/> is less than zero. 
+        ///                 </exception><exception cref="T:System.ArgumentException"><paramref name="array"/> is multidimensional.
+        ///                     -or- 
+        ///                 <paramref name="index"/> is equal to or greater than the length of <paramref name="array"/>.
+        ///                     -or- 
+        ///                     The number of elements in the source <see cref="T:System.Collections.ICollection"/> is greater than the available space from <paramref name="index"/> to the end of the destination <paramref name="array"/>. 
+        ///                 </exception><exception cref="T:System.ArgumentException">The type of the source <see cref="T:System.Collections.ICollection"/> cannot be cast automatically to the type of the destination <paramref name="array"/>. 
+        ///                 </exception><filterpriority>2</filterpriority>
+        public void CopyTo(Array array, int index)
+        {
+            throw new NotImplementedException();
+        }
+
         public int Count
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        /// <summary>
+        /// Gets an object that can be used to synchronize access to the <see cref="T:System.Collections.ICollection"/>.
+        /// </summary>
+        /// <returns>
+        /// An object that can be used to synchronize access to the <see cref="T:System.Collections.ICollection"/>.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        public object SyncRoot
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether access to the <see cref="T:System.Collections.ICollection"/> is synchronized (thread safe).
+        /// </summary>
+        /// <returns>
+        /// true if access to the <see cref="T:System.Collections.ICollection"/> is synchronized (thread safe); otherwise, false.
+        /// </returns>
+        /// <filterpriority>2</filterpriority>
+        public bool IsSynchronized
         {
             get { throw new NotImplementedException(); }
         }
@@ -602,6 +699,7 @@ namespace Swicli.Library
 
         public IEnumerator<T> GetEnumerator()
         {
+            PrologClient.RegisterCurrentThread(); 
             return new PrologBackedCollectionEnumerator(this);
         }
 
@@ -620,6 +718,8 @@ namespace Swicli.Library
             private uint fframe = 0;
             private PlTermV termV;
             private PlQuery plQuery;
+            private bool nonLeft = true;
+            private object currentValue;
 
             public PrologBackedCollectionEnumerator(PrologBackedCollection<T> dictionary)
             {
@@ -635,8 +735,13 @@ namespace Swicli.Library
             /// <filterpriority>2</filterpriority>
             public void Dispose()
             {
-                if (plQuery != null) plQuery.Dispose();
-                plQuery = null;
+                if (plQuery != null)
+                {
+                    plQuery.Dispose();
+                    plQuery = null;
+                }
+                nonLeft = true;
+                currentValue = null;
                 if (fframe != 0) libpl.PL_close_foreign_frame(fframe);
                 fframe = 0;
             }
@@ -655,7 +760,15 @@ namespace Swicli.Library
             ///                 </exception><filterpriority>2</filterpriority>
             public bool MoveNext()
             {
-                return plQuery.NextSolution();
+                if(!plQuery.NextSolution())
+                {
+                    Dispose();
+                    return false;
+                }
+                nonLeft = false;
+                PlTerm plQueryArgs = plQuery.Args[0];
+                currentValue = PrologClient.CastTerm(plQueryArgs, _dictionary.keyType); ;
+                return true;
             }
 
             /// <summary>
@@ -669,6 +782,7 @@ namespace Swicli.Library
                 fframe = libpl.PL_open_foreign_frame();
                 termV = new PlTermV(1);
                 plQuery = new PlQuery(_dictionary._module, _dictionary._predname, termV);
+                nonLeft = false;
             }
 
             /// <summary>
@@ -681,7 +795,11 @@ namespace Swicli.Library
             {
                 get
                 {
-                    return (T)PrologClient.CastTerm(plQuery.Args[0], _dictionary.keyType);
+                    if (nonLeft)
+                    {
+                        throw new Exception("no current element");
+                    }
+                    return (T) currentValue;
                 }
             }
 

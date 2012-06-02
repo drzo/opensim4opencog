@@ -70,6 +70,7 @@
 
 :-dynamic(shortTypeName/2).
 :-dynamic(cli_subproperty/2).
+:-module_transparent(cli_subproperty/2).
 
 :-set_prolog_flag(double_quotes,string).
 
@@ -113,7 +114,8 @@ onWindows:-current_prolog_flag(arch,ARCH),atomic_list_concat([_,_],'win',ARCH).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %% cli_is_type(+Impl,+Type) tests to see if the Impl Object is assignable to Type
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cli_is_type(Impl,Type):-nonvar(Type),!,cli_find_type(Type,RealType),cli_call(RealType,'IsInstanceOfType'(object),[Impl],'@'(true)).
+cli_is_type(Impl,Type):-not(ground(Impl)),nonvar(Type),!,attach_console,trace,cli_find_type(Type,RealType),cli_call(RealType,'IsInstanceOfType'(object),[Impl],'@'(true)).
+cli_is_type(Impl,Type):-nonvar(Type),cli_find_type(Type,RealType),!,cli_call(RealType,'IsInstanceOfType'(object),[Impl],'@'(true)).
 cli_is_type(Impl,Type):-cli_get_type(Impl,Type).
 
 
@@ -130,7 +132,7 @@ cli_subclass(Sub,Sup):-cli_find_type(Sub,RealSub),cli_find_type(Sup,RealSup),cli
 cli_collection(Error,_Ele):-cli_is_null(Error),!,fail.
 cli_collection([S|Obj],Ele):-!,member(Ele,[S|Obj]).
 cli_collection(Obj,Ele):-
-      cli_memb(Obj,m(_, 'GetEnumerator', _, [], [], _, _)),
+      cli_memb(Obj,m(_, 'GetEnumerator', _, [], [], _, _)),!,
       cli_call(Obj,'GetEnumerator',[],Enum),!,
       call_cleanup(cli_enumerator_element(Enum,Ele),cli_free(Enum)).
 cli_collection(Obj,Ele):-cli_array_to_term(Obj,Vect),!,arg(_,Vect,Ele).
@@ -155,10 +157,21 @@ cli_fmt(String,Args):-cli_call('System.String','Format'('string','object[]'),[St
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 cli_to_str(Term,String):-catch(ignore(cli_to_str0(Term,String0)),_,true),copy_term(String0,String),numbervars(String,666,_).
 cli_to_str0(Term,Term):- not(compound(Term)),!.
-cli_to_str0(Term,String):-cli_is_object(Term),!,cli_to_str_raw(Term,String).
+cli_to_str0(Term,String):-Term='@'(_),cli_is_object(Term),catch(cli_to_str_raw(Term,String),_,Term==String),!.
 cli_to_str0([A|B],[AS|BS]):-!,cli_to_str0(A,AS),cli_to_str0(B,BS).
 cli_to_str0(Term,String):-Term=..[F|A],cli_to_str0(A,AS),String=..[F|AS],!.
 cli_to_str0(Term,Term).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%% cli_new_prolog_dictionary(+PredImpl,+KeyType,+ValueType,-PBD)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cli_new_prolog_dictionary(PredImpl,KeyType,ValueType,PBD):-cli_call('Swicli.Library.PrologClient','CreatePrologBackedDictionary'(KeyType,ValueType),[PredImpl],PBD).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%% cli_new_prolog_collection(+PredImpl,+ElementType,-PBD)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cli_new_prolog_collection(PredImpl,TypeSpec,PBD):-cli_call('Swicli.Library.PrologClient','CreatePrologBackedCollection'(TypeSpec),[PredImpl],PBD).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %% cli_is_null(+Obj) is null or void
@@ -277,7 +290,7 @@ cli_map_element(Map,Key,Value):-cli_col(Map,Ele),cli_get(Ele,'Key',Key),cli_get(
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %%% cli_Preserve(TF,Calls)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cli_Preserve(TF,Calls):-
+cli_preserve(TF,Calls):-
    cli_get('Swicli.Library.PrologClient','PreserveObjectType',O),
    call_cleanup((cli_set('Swicli.Library.PrologClient','PreserveObjectType',TF),Calls),
    cli_set('Swicli.Library.PrologClient','PreserveObjectType',O)).
@@ -382,14 +395,16 @@ ERROR: Cant find constructor [int] on System.Int32
 
 cli_call(Obj,[Prop|CallTerm],Out):-cli_get(Obj,Prop,Mid),!,cli_call(Mid,CallTerm,Out).
 cli_call(Obj,CallTerm,Out):-CallTerm=..[MethodName|Args],cli_call(Obj,MethodName,Args,Out).
+
+%% arity 4
 cli_call(Obj,[Prop|CallTerm],Params,Out):-cli_get(Obj,Prop,Mid),!,cli_call(Mid,CallTerm,Params,Out).
-cli_call(Obj,MethodSpec,Params,Out):-cli_call_raw(Obj,MethodSpec,Params,Out_raw),!,Out=Out_raw.
+cli_call(Obj,MethodSpec,Params,Out):-cli_call_raw(Obj,MethodSpec,Params,Out_raw),!,cli_unify(Out,Out_raw).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %%% cli_libCall(+CallTerm, -Out).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cli_libCall(CallTerm,Out):-cli_call('Swicli.Library.PrologClient',CallTerm,Out).
+cli_lib_call(CallTerm,Out):-cli_call('Swicli.Library.PrologClient',CallTerm,Out).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %%% cli_get(+X, +Fspec, -V).
@@ -423,6 +438,7 @@ cli_get(Obj,P,ValueOut):-cli_getOverloaded(Obj,P,Value),!,cli_unify(Value,ValueO
 
 cli_getOverloaded(Obj,_,_):-cli_non_obj(Obj),!,fail,throw(cli_non_obj(Obj)).
 cli_getOverloaded(Obj,P,Value):-cli_getHook(Obj,P,Value),!.
+cli_getOverloaded(Obj,P,Value):-compound(P),!,cli_call(Obj,P,Value),!.
 cli_getOverloaded(Obj,P,Value):-cli_get_raw(Obj,P,Value),!.
 cli_getOverloaded(Obj,P,Value):-not(atom(Obj)),cli_get_type(Obj,CType),!,cli_get_typeSubProps(CType,Sub),cli_get_rawS(Obj,Sub,SubValue),cli_getOverloaded(SubValue,P,Value),!.
 
@@ -474,8 +490,13 @@ cli_iterator_element(I, E) :- cli_is_type(I,'java.util.Iterator'),!,
 	;   cli_iterator_element(I, E)
 	)
 	).
-cli_enumerator_element(I, E) :- %%cli_is_type('System.Collections.IEnumerator',I),!,
-	(   cli_call(I, 'MoveNext', [], @(true))
+
+cli_enumerator_element(I, _E) :- cli_call_raw(I, 'MoveNext', [], @(false)),!,fail.
+cli_enumerator_element(I, E) :- cli_get(I, 'Current', E).
+cli_enumerator_element(I, E) :- cli_enumerator_element(I, E).
+
+old_cli_enumerator_element(I, E) :- %%cli_is_type('System.Collections.IEnumerator',I),!,
+	(   cli_call_raw(I, 'MoveNext', [], @(true))
 	->  (   cli_get(I, 'Current', E)        % surely it's steadfast...
 	;   cli_enumerator_element(I, E)
 	)

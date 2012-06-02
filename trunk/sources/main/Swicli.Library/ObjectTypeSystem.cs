@@ -122,6 +122,7 @@ namespace Swicli.Library
             Type type = null;
             if (clazzSpec.IsAtom || clazzSpec.IsString)
             {
+                if (canBeObjects) return typeof (string);
                 string name = (string)clazzSpec;
                 type = ResolveType(name);
                 if (type != null) return type;
@@ -143,6 +144,10 @@ namespace Swicli.Library
                 if (clazzName == "static")
                 {
                     return GetType(clazzSpec[1]);
+                }
+                if (clazzName == "{}")
+                {
+                    return typeof (PlTerm);
                 }
                 type = ResolveType(clazzName + "`" + arity);
                 if (type != null)
@@ -175,11 +180,28 @@ namespace Swicli.Library
 
                         if (arity == genr.Length)
                         {
-                            var vt = GetParamSpec(clazzSpec);
+                            var vt = GetParamSpec(clazzSpec, false);
                             return type.MakeGenericType(vt);
                         }
                     }
                     //  return type;
+                }
+                string key = clazzName + "/" + arity;
+                lock (FunctorToLayout)
+                {
+                    PrologTermLayout pltl;
+                    if (FunctorToLayout.TryGetValue(key, out pltl))
+                    {
+                        return pltl.ObjectType;
+                    }
+                }
+                lock (FunctorToRecomposer)
+                {
+                    PrologTermRecomposer layout;
+                    if (FunctorToRecomposer.TryGetValue(key, out layout))
+                    {
+                        return layout.ToType;
+                    }
                 }
                 WarnMissing("cant find compound as class: " + clazzSpec);
             }

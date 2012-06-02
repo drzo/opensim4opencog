@@ -193,6 +193,14 @@ namespace Swicli.Library
             get { return !open; }
         }
     }
+
+    public interface PrologKey
+    {
+        string Name { get; }
+        string Module { get; }
+        int Arity { get; }
+    }
+
     public abstract class PrologGenericDelegate
     {
         public static BlockingQueue<Action> PrologEventQueue = new BlockingQueue<Action>();

@@ -206,6 +206,7 @@ namespace SbsSW.SwiPlCs.Exceptions
             EnsureExFrame();
             Check.Require(term.TermRefIntern != 0);
             _exTerm = new PlTerm(term.TermRef);  // If this line is deleted -> update comment in PlTern(term_ref)
+            _messagePl = "" + _exTerm;
 		}
 
         private void EnsureExFrame()
@@ -256,6 +257,7 @@ namespace SbsSW.SwiPlCs.Exceptions
                 if (q.NextSolution())
                     strRet = av[1].ToString();
                 //q.Free();
+                return strRet;
                 q.Dispose();
 #endif
             }
