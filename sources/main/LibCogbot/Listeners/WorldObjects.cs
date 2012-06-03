@@ -376,8 +376,9 @@ namespace cogbot.Listeners
                         //BotWorld = this;
                         SimTypeSystem.LoadDefaultTypes();
                     }
-                    EnsureSelectedTimer = new Timer(ReallyEnsureSelected_Thread, null, 1000, 2000);
-                    EnsureRequestedTimer = new Timer(ReallyEnsureRequested_Thread, null, 2000, 2000);
+                    const int InterLeave = 3000;
+                    EnsureSelectedTimer = new Timer(ReallyEnsureSelected_Thread, null, InterLeave/2, InterLeave);
+                    EnsureRequestedTimer = new Timer(ReallyEnsureRequested_Thread, null, InterLeave, InterLeave);
                     _SimPaths = new WorldPathSystem(this);
                 }
                 //SetWorldMaster(false);

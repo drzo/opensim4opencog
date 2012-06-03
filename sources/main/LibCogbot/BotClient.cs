@@ -2395,6 +2395,16 @@ namespace cogbot
                 }
                 return;
             }
+            if (str.Length > 800)
+            {
+                int indexOF = str.Substring(750).IndexOfAny(new[] {' ', '<', '\t', '.'});
+                if (indexOF < 0) indexOF = 0;
+                if (indexOF > 60) indexOF = 0;
+                indexOF++;
+                Self.Chat(str.Substring(0, indexOF + 750), channel, type);
+                TalkExact(str.Substring(indexOF + 750), channel, type);
+                return;
+            }
             Self.Chat(str, channel, type);
         }
 
