@@ -174,13 +174,24 @@ namespace cogbot.Listeners
 
         private static readonly Dictionary<ulong, HashSet<uint>> primsSelected = new Dictionary<ulong, HashSet<uint>>();
         private static readonly Dictionary<ulong, List<uint>> primsSelectedOutbox = new Dictionary<ulong, List<uint>>();
+        private static readonly object SelectObjectsTimerLock = new object();
+        private static Timer EnsureSelectedTimer;
+        private static bool inSTimer = false;
+
+
+
+        private static readonly Dictionary<ulong, HashSet<uint>> primsRequested = new Dictionary<ulong, HashSet<uint>>();
+        private static readonly Dictionary<ulong, List<uint>> primsRequestedOutbox = new Dictionary<ulong, List<uint>>();
+        private static readonly object RequestObjectsTimerLock = new object();
+        private static Timer EnsureRequestedTimer;
+        private static bool inRTimer = false;
+
 
         private static readonly TaskQueueHandler PropertyQueue = new TaskQueueHandler("NewObjectQueue", TimeSpan.Zero, true);
         public static readonly TaskQueueHandler UpdateObjectData = new TaskQueueHandler("UpdateObjectData");
         public static readonly TaskQueueHandler ParentGrabber = new TaskQueueHandler("ParentGrabber", TimeSpan.FromSeconds(1), false);
         public static readonly TaskQueueHandler TaskInvGrabber = new TaskQueueHandler("TaskInvGrabber", TimeSpan.FromMilliseconds(100), false);
 
-        private static readonly object SelectObjectsTimerLock = new object();
         private static readonly List<ThreadStart> ShutdownHooks = new List<ThreadStart>();
         private static readonly TaskQueueHandler EventQueue = new TaskQueueHandler("World EventQueue");
         private static readonly TaskQueueHandler CatchUpQueue = new TaskQueueHandler("Simulator catchup", TimeSpan.FromSeconds(60), false);
@@ -198,8 +209,6 @@ namespace cogbot.Listeners
         public static readonly ListAsSet<SimObject> SimRootObjects = new ListAsSet<SimObject>();
         public static readonly ListAsSet<SimObject> SimChildObjects = new ListAsSet<SimObject>();
 
-        private static Timer EnsureSelectedTimer;
-        private static bool inTimer = false;
         public static float buildingSize = 5;
         public static TimeSpan burstInterval;
         [ConfigSetting(Description="how many object properties it requests at once")]
@@ -324,15 +333,15 @@ namespace cogbot.Listeners
                 client.Settings.ENABLE_CAPS = true;
                 client.Settings.ENABLE_SIMSTATS = true;
                 client.Settings.AVATAR_TRACKING = true;
-                client.Settings.THROTTLE_OUTGOING_PACKETS = false;
+                //client.Settings.THROTTLE_OUTGOING_PACKETS = true;
                 client.Settings.MULTIPLE_SIMS = true;
                 client.Settings.SEND_AGENT_THROTTLE = false;
+                client.Settings.LOGIN_TIMEOUT = 10 * 1000;
                 client.Settings.SIMULATOR_TIMEOUT = int.MaxValue;
-                client.Settings.LOGIN_TIMEOUT = 120 * 1000;
 
                 client.Settings.SEND_AGENT_UPDATES = true;
 
-                client.Settings.SEND_PINGS = false;
+                client.Settings.SEND_PINGS = true;
 
                 //client.Settings.DISABLE_AGENT_UPDATE_DUPLICATE_CHECK = true;
                 //client.Self.Movement.AutoResetControls = false;
@@ -367,7 +376,8 @@ namespace cogbot.Listeners
                         //BotWorld = this;
                         SimTypeSystem.LoadDefaultTypes();
                     }
-                    EnsureSelectedTimer = new Timer(ReallyEnsureSelected_Thread, null, 1000, 1000);
+                    EnsureSelectedTimer = new Timer(ReallyEnsureSelected_Thread, null, 1000, 2000);
+                    EnsureRequestedTimer = new Timer(ReallyEnsureRequested_Thread, null, 2000, 2000);
                     _SimPaths = new WorldPathSystem(this);
                 }
                 //SetWorldMaster(false);
@@ -885,7 +895,7 @@ namespace cogbot.Listeners
             SimObject O = GetSimObject(prim, simulator);
             DeclareProperties(prim, prim.Properties, simulator);
             O.ResetPrim(prim, client, simulator);
-            DeclareRequested(simulator, prim.LocalID);
+            EnsureRequested(prim.LocalID, simulator);
             if (MaintainObjectUpdates)
                 lock (LastObjectUpdate) LastObjectUpdate[O] = updatFromPrim0(prim);
         }
@@ -1163,7 +1173,7 @@ namespace cogbot.Listeners
             {
                 prim = client.Objects.GetPrimitive(simulator, id, UUID.Zero, false);
             }
-            simulator.Client.Objects.RequestObject(simulator, id);
+            EnsureRequested(id, simulator);
             return null;
         }
         public Primitive GetPrimitive(UUID id, Simulator simulator)
@@ -1235,7 +1245,7 @@ namespace cogbot.Listeners
         {
             Primitive prim = GetLibOMVHostedPrim(id, simulator, false);
             if (prim != null) return prim;
-            EnsureRequested(simulator, id);
+            EnsureRequested(id, simulator);
             return null;
         }
 
@@ -1429,35 +1439,122 @@ namespace cogbot.Listeners
         //    Primitive prim = GetPrimitive(localID, simulator);
         //    return prim;
         //}
-        readonly static Dictionary<ulong, HashSet<uint>> RequestedObjects = new Dictionary<ulong, HashSet<uint>>();
-
-        internal static void EnsureRequested(Simulator simulator, uint id)
+        public static void EnsureRequested(uint LocalID, Simulator simulator)
         {
-            if (id==0) return;
-            //if (IsOpenSim) return;
-            if (DeclareRequested(simulator, id))
-                simulator.Client.Objects.RequestObject(simulator, id);
+            if (LocalID == 0) return;
+            if (simulator == null)
+            {
+                foreach (var sim in AllSimulators)
+                {
+                    EnsureRequested(LocalID, sim);
+                }
+                return;
+            }
+            if (NeverRequest(LocalID, simulator))
+                ReallyEnsureRequested(simulator, LocalID);
         }
 
-        private static bool DeclareRequested(Simulator simulator, uint id)
+        public static bool NeverRequest(uint LocalID, Simulator simulator)
         {
-            if (id == 0 || simulator == null) return false;
-            HashSet<uint> uints;
-            lock (RequestedObjects)
-            {
-                if (!RequestedObjects.TryGetValue(simulator.Handle, out uints))
+            ulong Handle = simulator.Handle;
+            if (LocalID != 0)
+                lock (primsRequested)
                 {
-                    RequestedObjects[simulator.Handle] = uints = new HashSet<uint>();
+                    if (!primsRequested.ContainsKey(Handle))
+                    {
+                        primsRequested[Handle] = new HashSet<uint>();
+                    }
+                    lock (primsRequested[Handle])
+                    {
+                        if (!primsRequested[Handle].Contains(LocalID))
+                        {
+                            primsRequested[Handle].Add(LocalID);
+                            return true;
+                        } else
+                        {
+                            primsRequested[Handle].Remove(LocalID);
+                            return false;
+                        }
+                    }
+                }
+            return false;
+        }
+
+        private static void ReallyEnsureRequested(Simulator simulator, uint LocalID)
+        {
+            if (LocalID == 0) return;
+            ulong Handle = simulator.Handle;
+            if (Handle == 0)
+            {
+                return;
+                throw new AbandonedMutexException();
+            }
+            List<uint> col = null;
+            lock (primsRequestedOutbox)
+            {
+                if (!primsRequestedOutbox.TryGetValue(Handle, out col))
+                {
+                    col = primsRequestedOutbox[Handle] = new List<uint>();
                 }
             }
-            lock (uints)
+            lock (col)
             {
-                //if (true) return false;
-                if (uints.Contains(id)) return false;
-                uints.Add(id);
-                return true;
+                if (!col.Contains(LocalID))
+                    col.Add(LocalID);
             }
         }
+
+        private static void ReallyEnsureRequested_Thread(object sender)
+        {
+            if (inRTimer)
+            {
+                return;
+            }
+            lock (RequestObjectsTimerLock)
+            {
+                if (inRTimer)
+                {
+                    Logger.DebugLog("ReallyEnsureRequested_Thread getting behind");
+                    return;
+                }
+                inRTimer = true;
+            }
+            lock (primsRequestedOutbox)
+            {
+                foreach (ulong simulator in new List<ulong>(primsRequestedOutbox.Keys))
+                {
+                    List<uint> askFor;
+                    Simulator S = SimRegion.GetRegion(simulator).TheSimulator;
+                    if (S == null)
+                    {
+                        Debug("No sim yet for " + simulator);
+                        continue;
+                    }
+                    lock (primsRequestedOutbox[simulator])
+                    {
+                        List<uint> uints = primsRequestedOutbox[simulator];
+                        if (uints.Count > 200)
+                        {
+                            askFor = uints.GetRange(0, 200);
+                            uints.RemoveRange(0, 200);
+                        }
+                        else if (uints.Count > 0)
+                        {
+                            primsRequestedOutbox[simulator] = new List<uint>();
+                            askFor = uints;
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+                    S.Client.Objects.RequestObjects(S, askFor);
+                }
+            }
+            //lock (RequestObjectsTimerLock)
+            inRTimer = false;
+        }
+
 
         public static void EnsureSelected(uint LocalID, Simulator simulator)
         {
@@ -1491,6 +1588,11 @@ namespace cogbot.Listeners
                             primsSelected[Handle].Add(LocalID);
                             return true;
                         }
+                        else
+                        {
+                            primsSelected[Handle].Remove(LocalID);
+                            return false;
+                        }
                     }
                 }
             return false;
@@ -1505,31 +1607,35 @@ namespace cogbot.Listeners
                 return;
                 throw new AbandonedMutexException();
             }
+            List<uint> col = null;
             lock (primsSelectedOutbox)
             {
-                if (!primsSelectedOutbox.ContainsKey(Handle))
+                if (!primsSelectedOutbox.TryGetValue(Handle, out col))
                 {
-                    primsSelectedOutbox[Handle] = new List<uint>();
+                    col = primsSelectedOutbox[Handle] = new List<uint>();
                 }
-                lock (primsSelectedOutbox[Handle])
-                    primsSelectedOutbox[Handle].Add(LocalID);
+            }
+            lock (col)
+            {
+                if (!col.Contains(LocalID))
+                    col.Add(LocalID);
             }
         }
 
         private static void ReallyEnsureSelected_Thread(object sender)
         {
-            if (inTimer)
+            if (inSTimer)
             {
                 return;
             }
             lock (SelectObjectsTimerLock)
             {
-                if (inTimer)
+                if (inSTimer)
                 {
                     Logger.DebugLog("ReallyEnsureSelected_Thread getting behind");
                     return;
                 }
-                inTimer = true;
+                inSTimer = true;
             }
             lock (primsSelectedOutbox)
             {
@@ -1564,7 +1670,7 @@ namespace cogbot.Listeners
                 }
             }
             //lock (SelectObjectsTimerLock)
-            inTimer = false;
+            inSTimer = false;
         }
 
 
