@@ -67,8 +67,25 @@ namespace cogbot.Actions.Communication
             }
             for (int ct = skip; ct < args.Length; ct++)
                 message += args[ct] + " ";
+
+            if (ToAvatarName.StartsWith("$"))
+            {
+                var col = WorldSystem.ResolveCollection(ToAvatarName, out argsUsed, null);
+                if (col != null)
+                {
+                    foreach (BotMentalAspect c in col)
+                    {
+                        Success("Sent to " + c);
+                        TheBotClient.InstantMessage(c.ID, message, UUID.Zero);
+                    }
+                    return Success("Total Sent to " + col.Count);
+                }
+            }
             UUID found = WorldSystem.GetUserID(ToAvatarName);
-            if (found==UUID.Zero) return Failure( "Name lookup for " + ToAvatarName + " failed");
+            if (found==UUID.Zero)
+            {
+                return Failure( "Name lookup for " + ToAvatarName + " failed");
+            }
             if (message.Length > 1023) message = message.Remove(1023);
             TheBotClient.InstantMessage(found, message, UUID.Zero);
             return Success("Instant Messaged " + found.ToString() + " with message: " + message);

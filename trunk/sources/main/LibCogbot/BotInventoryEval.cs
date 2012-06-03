@@ -726,7 +726,8 @@ namespace cogbot
 
         private void StartTraverseNodes()
         {
-            if (!client.Network.CurrentSim.Caps.IsEventQueueRunning)
+
+            if (client.Network.CurrentSim.Caps==null || !client.Network.CurrentSim.Caps.IsEventQueueRunning)
             {
                 AutoResetEvent EQRunning = new AutoResetEvent(false);
                 EventHandler<EventQueueRunningEventArgs> handler = (sender, e) =>
@@ -738,7 +739,7 @@ namespace cogbot
                 client.Network.EventQueueRunning -= handler;
             }
 
-            if (!client.Network.CurrentSim.Caps.IsEventQueueRunning)
+            if (client.Network.CurrentSim.Caps == null || !client.Network.CurrentSim.Caps.IsEventQueueRunning)
             {
                 return;
             }

@@ -771,6 +771,7 @@ namespace cogbot
                 {
                     BotLoginParams.Start = location;
                 }
+                BotLoginParams.Channel = "Cogbot";
                 return BotLoginParams;
             }
         }
