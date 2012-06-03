@@ -12,7 +12,18 @@ namespace CogbotRadegastPluginModule
 {
     public class CommandContextAction : ContextAction
     {
-        public Object lastObject;
+        private object _lastObject;
+        public Object lastObject
+        {
+            get { return _lastObject; }
+            set
+            {
+                if (value != null && _lastObject == null)
+                {
+                    _lastObject = value;
+                }
+            }
+        }
         public Command act;
         public Type useType;
         public readonly CogbotRadegastPlugin Plugin;
@@ -127,6 +138,7 @@ namespace CogbotRadegastPluginModule
         }
 
         static public readonly Dictionary<String, CommandContextMenu> ActionSubMenu = new Dictionary<String, CommandContextMenu>();
+
         private CommandContextMenu GetCommandContextMenu(String subDir)
         {
             int i = subDir.LastIndexOf(".");
@@ -213,6 +225,11 @@ namespace CogbotRadegastPluginModule
             if (type == useType) return true;
             if (base.ContextType == typeof(SimPosition) || base.ContextType == typeof(SimObject) || base.ContextType == typeof(SimAvatar))
             {
+                if (o is Primitive)
+                {
+                    lastObject = 0;
+                    return true;
+                }
                 if (type == typeof(UUID))
                 {
                     return false;
