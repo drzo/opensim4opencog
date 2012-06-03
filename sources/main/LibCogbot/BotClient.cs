@@ -51,9 +51,10 @@ namespace cogbot
         public object GridClientNullLock = new object();
         /// <summary>Networking subsystem</summary>
         public NetworkManager Network { get { return gridClient.Network; } }
+
         /// <summary>Settings class including constant values and changeable
         /// parameters for everything</summary>
-        public Settings Settings { get { return gridClient.Settings; } }
+        public Settings Settings /* = new Settings(new GridClient());//*/ { get { return gridClient.Settings; } }
         /// <summary>Parcel (subdivided simulator lots) subsystem</summary>
         public ParcelManager Parcels { get { return gridClient.Parcels; } }
         /// <summary>Our own avatars subsystem</summary>
@@ -594,12 +595,12 @@ namespace cogbot
             //   Throttle.Task = 1000000;
             ////Throttle.Total = 250000;
             // Settings.CAPS_TIMEOUT = 6 * 1000;
-            Settings.RESEND_TIMEOUT = 40 * 1000;
+            Settings.RESEND_TIMEOUT = 20 * 1000;
             Settings.MAX_RESEND_COUNT = 10;
             Settings.LOGIN_TIMEOUT = 120 * 1000;
             //Settings.LOGOUT_TIMEOUT = 120 * 1000;
-            Settings.SIMULATOR_TIMEOUT = int.MaxValue;
-            Settings.SEND_PINGS = true;
+            //Settings.SIMULATOR_TIMEOUT = int.MaxValue;
+            //Settings.SEND_PINGS = true;
             Settings.SEND_AGENT_APPEARANCE = true;
             //Settings.USE_LLSD_LOGIN = true;
             ////Settings.MULTIPLE_SIMS = false;

@@ -1080,7 +1080,7 @@ namespace cogbot.TheOpenSims
 
                     if (RegionHandle != 0 && _Prim0 != null)
                     {
-                        WorldObjects.EnsureRequested(GetSimulator(), LocalID);
+                        WorldObjects.EnsureSelected(LocalID, GetSimulator());
                     }
                 }
             }
@@ -1886,7 +1886,7 @@ namespace cogbot.TheOpenSims
                     Parent = WorldSystem.GetSimObject(outerPrim, simu);
                     return;
                 }
-                WorldObjects.EnsureRequested(simu, theLPrimParentID);
+                WorldObjects.EnsureRequested(theLPrimParentID, simu);
                 WorldObjects.EnsureSelected(theLPrimParentID, simu);
                 ParentGrabber.AddFirst(() => TaskGetParent(theLPrimParentID, simu));
             }
