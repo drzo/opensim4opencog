@@ -73,10 +73,15 @@ namespace cogbot.Actions.Communication
                 var col = WorldSystem.ResolveCollection(ToAvatarName, out argsUsed, null);
                 if (col != null)
                 {
-                    foreach (BotMentalAspect c in col)
+                    foreach (object c in col)
                     {
-                        Success("Sent to " + c);
-                        TheBotClient.InstantMessage(c.ID, message, UUID.Zero);
+                        Success("Send to " + c);
+                        string s = "" + c;
+                        if (s.Length > 0)
+                        {
+                            var so = WorldObjects.GetSimAvatarFromNameIfKnown(s);
+                            if (so != null) TheBotClient.InstantMessage(so.ID, message, UUID.Zero);
+                        }
                     }
                     return Success("Total Sent to " + col.Count);
                 }

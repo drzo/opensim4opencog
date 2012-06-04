@@ -1520,9 +1520,13 @@ namespace cogbot.Listeners
                 }
                 inRTimer = true;
             }
+            List<ulong> newList;
             lock (primsRequestedOutbox)
             {
-                foreach (ulong simulator in new List<ulong>(primsRequestedOutbox.Keys))
+                newList = new List<ulong>(primsRequestedOutbox.Keys);
+            }
+            {            
+                foreach (ulong simulator in newList)
                 {
                     List<uint> askFor;
                     Simulator S = SimRegion.GetRegion(simulator).TheSimulator;
@@ -1531,7 +1535,7 @@ namespace cogbot.Listeners
                         Debug("No sim yet for " + simulator);
                         continue;
                     }
-                    const int idsToSend = 195;
+                    const int idsToSend = 100;
                     lock (primsRequestedOutbox[simulator])
                     {
                         List<uint> uints = primsRequestedOutbox[simulator];
