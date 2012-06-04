@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using cogbot;
 using cogbot.Actions;
+using cogbot.Listeners;
 using cogbot.TheOpenSims;
 using OpenMetaverse;
 using Radegast;
@@ -18,7 +19,7 @@ namespace CogbotRadegastPluginModule
             get { return _lastObject; }
             set
             {
-                if (value != null && _lastObject == null)
+                if (value != null)
                 {
                     _lastObject = value;
                 }
@@ -200,7 +201,10 @@ namespace CogbotRadegastPluginModule
             {
                 obj = ((SimPosition)obj).GlobalPosition.ToString();
             }
-
+            if (("" + obj) == UUID.Zero.ToString())
+            {
+                return;                
+            }
             DebugLog(ActName + "=" + obj);
 
             TryCatch(() =>
@@ -223,20 +227,54 @@ namespace CogbotRadegastPluginModule
         public override bool Contributes(object o, Type type)
         {
             if (type == useType) return true;
-            if (base.ContextType == typeof(SimPosition) || base.ContextType == typeof(SimObject) || base.ContextType == typeof(SimAvatar))
+            if (IsObjectType(ContextType))
             {
-                if (o is Primitive)
+                if (o != null)
                 {
-                    lastObject = 0;
-                    return true;
+                    if (ContextType.IsInstanceOfType(o))
+                    {
+                        lastObject = o;
+                        return true;
+                    }
+                    if (o is Primitive)
+                    {
+                        lastObject = o;
+                        return true;
+                    }
+                    {
+
+                        var uuid = ToUUID(o);
+                        if (uuid != UUID.Zero)
+                        {                           
+                            var lo = WorldObjects.GetSimObjectFromUUID(uuid);
+                            if (lo != null)
+                            {
+                                lastObject = lo;
+                                return true;
+                            }
+                            lastObject = uuid;
+                        }
+
+                    }
+                    if (type == typeof (UUID))
+                    {
+                        return false;
+                    }
                 }
-                if (type == typeof(UUID))
-                {
-                    return false;
-                }
+                if (IsObjectType(type)) return true;
                 return !typeof(InventoryBase).IsInstanceOfType(o);
+
             }
+           
             return base.Contributes(o, type);
+        }
+
+        private bool IsObjectType(Type type)
+        {
+            var ContextType = base.ContextType;
+            if (typeof (SimPosition).IsAssignableFrom(ContextType)) return true;
+            if (typeof(Primitive).IsAssignableFrom(ContextType)) return true;
+            return false;
         }
 
         public override bool IsEnabled(object target)
@@ -250,9 +288,9 @@ namespace CogbotRadegastPluginModule
             List<ToolStripMenuItem> lst = new List<ToolStripMenuItem>();
             lastObject = target;
             {
-                lst.Add(new ToolStripMenuItem(act.Name, null, SubHook)
+                lst.Add(new ToolStripMenuItem(LabelFor(target) ?? act.Name, null, SubHook)
                             {
-                                ToolTipText = act.Description
+                                ToolTipText = act.Description + "\r\n" + ToolTipText(target)
                             });
 
             }
@@ -360,7 +398,11 @@ namespace CogbotRadegastPluginModule
                     foreach (var menuItem in its)
                     {
                         item.DropDownItems.Add(menuItem);
-                        if (!list.Contributes(target, type)) menuItem.Enabled = false;
+                        if (!list.Contributes(target, type))
+                        {
+                            // menuItem.Enabled = false;
+                            menuItem.Text = "*" + menuItem.Text;
+                        }
                     }
                 }
                 lst.Add(item);
