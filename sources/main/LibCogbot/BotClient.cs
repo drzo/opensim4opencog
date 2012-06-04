@@ -563,6 +563,7 @@ namespace cogbot
         /// </summary>
         public BotClient(ClientManager manager, GridClient g)
         {
+            OpenMetaverse.Utils.InternStrings = true;
             LoginRetries = LoginRetriesFresh;
             ClientManager = manager;
             _gridClient = g;
