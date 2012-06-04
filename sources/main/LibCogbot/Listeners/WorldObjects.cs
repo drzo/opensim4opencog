@@ -1531,13 +1531,14 @@ namespace cogbot.Listeners
                         Debug("No sim yet for " + simulator);
                         continue;
                     }
+                    const int idsToSend = 195;
                     lock (primsRequestedOutbox[simulator])
                     {
                         List<uint> uints = primsRequestedOutbox[simulator];
-                        if (uints.Count > 200)
+                        if (uints.Count > idsToSend)
                         {
-                            askFor = uints.GetRange(0, 200);
-                            uints.RemoveRange(0, 200);
+                            askFor = uints.GetRange(0, idsToSend);
+                            uints.RemoveRange(0, idsToSend);
                         }
                         else if (uints.Count > 0)
                         {
@@ -1649,13 +1650,14 @@ namespace cogbot.Listeners
                         Debug("No sim yet for " + simulator);
                         continue;
                     }
+                    const int idsToSend = 195;
                     lock (primsSelectedOutbox[simulator])
                     {
                         List<uint> uints = primsSelectedOutbox[simulator];
-                        if (uints.Count > 200)
+                        if (uints.Count > idsToSend)
                         {
-                            askFor = uints.GetRange(0, 200).ToArray();
-                            uints.RemoveRange(0, 200);
+                            askFor = uints.GetRange(0, idsToSend).ToArray();
+                            uints.RemoveRange(0, idsToSend);
                         }
                         else if (uints.Count > 0)
                         {
