@@ -55,6 +55,10 @@
       <Project>{14E63630-E828-446E-AE6F-F6E642DDE36D}</Project>
       <Name>Cogbot.Library</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\main\MushDLR223\MushDLR223.csproj">
+      <Project>{5EC8E3B9-57B8-4D8C-B9CE-C64D53D15D37}</Project>
+      <Name>MushDLR223</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
