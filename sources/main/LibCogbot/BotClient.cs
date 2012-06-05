@@ -625,6 +625,8 @@ namespace cogbot
             Settings.OBJECT_TRACKING = true;
             Settings.AVATAR_TRACKING = true;
             Settings.STORE_LAND_PATCHES = true;
+            Settings.CACHE_PRIMITIVES = true;
+            Settings.POOL_PARCEL_DATA = true;
 
 
             //  Manager = Inventory;

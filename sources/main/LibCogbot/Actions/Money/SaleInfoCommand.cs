@@ -30,7 +30,7 @@ namespace cogbot.Actions.Money
             Primitive.ObjectProperties props = o.Properties;
             if (used == args.Length)
             {
-                WorldObjects.EnsureSelected(currentPrim.LocalID, WorldSystem.GetSimulator(currentPrim));
+                WorldObjects.EnsureSelected(currentPrim, WorldSystem.GetSimulator(currentPrim));
                 if (props == null) return Failure( "no props on " + o + " yet try again");
                 return Success(string.Format("saletype {0} {1} {2}", o.ID, props.SalePrice, props.SaleType));
             }
