@@ -553,7 +553,7 @@ namespace cogbot.Listeners
         {
             if (simulator != null && prim.Properties == null)
             {
-                EnsureSelected(prim.LocalID, simulator);
+                EnsureSelected(prim, simulator);
             }
             obj0.ConfirmedObject = true;
             obj0.ResetPrim(prim, client, simulator);
@@ -702,7 +702,7 @@ namespace cogbot.Listeners
         public static Primitive BlockUntilProperties(Primitive prim, Simulator simulator)
         {
             if (prim.Properties != null) return prim;
-            EnsureSelected(prim.LocalID, simulator);
+            EnsureSelected(prim, simulator);
             while (prim.Properties == null)
             {
                 // TODO maybe add a timer
@@ -715,7 +715,7 @@ namespace cogbot.Listeners
         public static Primitive BlockUntilPrimValid(Primitive prim, Simulator simulator)
         {
             if (prim.Properties != null) return prim;
-            EnsureSelected(prim.LocalID, simulator);
+            EnsureSelected(prim, simulator);
             int maxTimes = 4;
             while (prim.ID == UUID.Zero)
             {
@@ -882,8 +882,8 @@ namespace cogbot.Listeners
                         InternPrim(simulator, prim);
                     }
                     // Make an initial "ObjectUpdate" for later diff-ing
-                    EnsureSelected(prim.LocalID, simulator);
-                    EnsureSelected(prim.ParentID, simulator);
+                    EnsureSelected(prim, simulator);
+                    EnsureSelected(prim, simulator);
                 }
             }
 
@@ -896,7 +896,7 @@ namespace cogbot.Listeners
             SimObject O = GetSimObject(prim, simulator);
             DeclareProperties(prim, prim.Properties, simulator);
             O.ResetPrim(prim, client, simulator);
-            EnsureRequested(prim.LocalID, simulator);
+            EnsureSelected(prim, simulator);
             if (MaintainObjectUpdates)
                 lock (LastObjectUpdate) LastObjectUpdate[O] = updatFromPrim0(prim);
         }
@@ -987,7 +987,7 @@ namespace cogbot.Listeners
             if (sittingOn == 13720000)
             {
             }
-            EnsureSelected(sittingOn, simulator);
+            EnsureRequested(sittingOn, simulator);
             Primitive p = GetPrimitive(sittingOn, simulator);
             int maxTries = 10;
             while (p == null && maxTries-- > 0)
@@ -1173,6 +1173,7 @@ namespace cogbot.Listeners
             if (!onlyAvatars)
             {
                 prim = client.Objects.GetPrimitive(simulator, id, UUID.Zero, false);
+                if (prim != null) return prim;
             }
             EnsureRequested(id, simulator);
             return null;
@@ -1554,14 +1555,17 @@ namespace cogbot.Listeners
                             continue;
                         }
                     }
-                    S.Client.Objects.RequestObjects(S, askFor);
+                    S.Client.Objects.RequestObjects(S, new List<uint>(askFor));
                 }
             }
             //lock (RequestObjectsTimerLock)
             inRTimer = false;
         }
 
-
+        public static void EnsureSelected(Primitive prim, Simulator simulator)
+        {
+            if (prim.Properties == null) EnsureSelected(prim.LocalID, simulator);
+        }
         public static void EnsureSelected(uint LocalID, Simulator simulator)
         {
             if (LocalID == 0) return;

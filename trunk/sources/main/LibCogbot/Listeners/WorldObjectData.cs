@@ -256,7 +256,7 @@ namespace cogbot.Listeners
                 //prim.Acceleration = objectupdate.Acceleration;
                 //prim.Rotation = objectupdate.Rotation;
                 //prim.AngularVelocity = objectupdate.AngularVelocity;
-                EnsureSelected(prim.LocalID, simulator);
+                EnsureSelected(prim, simulator);
                 Objects_OnPrimitiveUpdateReal(simulator, prim, objectupdate0, simulator.Handle, 0);
             }
         }
@@ -366,7 +366,7 @@ namespace cogbot.Listeners
                     }
                     else
                     {
-                        EnsureSelected(objectUpdated.LocalID, simulator);
+                        EnsureSelected(objectUpdated, simulator);
                     }
 
                     // Make a Last Object Update from the Primitive if we knew nothing about it

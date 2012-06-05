@@ -141,7 +141,7 @@ namespace cogbot.TheOpenSims
                     }
                     else
                     {
-                        WorldObjects.EnsureSelected(Prim.LocalID, GetSimulator());
+                        WorldObjects.EnsureSelected(Prim, GetSimulator());
                     }
                 }
                 return _propertiesCache;
@@ -1458,7 +1458,7 @@ namespace cogbot.TheOpenSims
                     // DLRConsole.WriteLine("Reselecting prim " + Prim);
                     Simulator sim = GetSimulator();
                     if (sim != null)
-                        WorldObjects.EnsureSelected(Prim.LocalID, sim);
+                        WorldObjects.EnsureSelected(Prim, sim);
                 }
                 ID = Prim.ID;
                 Primitive.ConstructionData PrimData = Prim.PrimData;
