@@ -505,6 +505,47 @@ namespace AltAIMLbot
                     }
                     break;
 
+                case "block":
+                    servitor.curBot.myBehaviors.makeInvisible(query);
+                    servitor.curBot.myBehaviors.makeInvisible(behaviorName);
+                    RemoveBehaviorTask(behaviorName);
+                    ids = idStatus(behaviorName);
+                    tsk = taskStatus(behaviorName);
+                    writer.WriteLine("<status id=\"{0}\" idStatus=\"{1}\" taskStatus=\"{2}\" />", behaviorName, ids, tsk);
+                    break;
+
+                case "unblock":
+                    servitor.curBot.myBehaviors.makeVisible(query);
+                    ids = idStatus(behaviorName);
+                    tsk = taskStatus(behaviorName);
+                    writer.WriteLine("<status id=\"{0}\" idStatus=\"{1}\" taskStatus=\"{2}\" />", behaviorName, ids, tsk);
+                    break;
+
+                case "unblockall":
+                    servitor.curBot.myBehaviors.invisiblePatterns .Clear();
+                    ids = idStatus(behaviorName);
+                    tsk = taskStatus(behaviorName);
+                    writer.WriteLine("<status id=\"{0}\" idStatus=\"{1}\" taskStatus=\"{2}\" />", behaviorName, ids, tsk);
+                    break;
+
+                case "listblocks":
+                    foreach (string p in servitor.curBot.myBehaviors.invisiblePatterns)
+                    {
+                        writer.WriteLine("<blockBehaviorPattern pattern=\"{0}\" />", p);
+                    }
+                    break;
+
+                case "checkblock":
+                    bool v1 = servitor.curBot.myBehaviors.visibleBehavior(behaviorName);
+                    bool v2 = servitor.curBot.myBehaviors.visibleBehavior(query );
+                    bool v3 = servitor.curBot.myBehaviors.definedBehavior(behaviorName);
+                    bool v4 = servitor.curBot.myBehaviors.definedBehavior(query);
+                    writer.WriteLine("<visible name=\"{0}\" value=\"{1}\"/>", behaviorName, v1);
+                    writer.WriteLine("<visible name=\"{0}\" value=\"{1}\"/>", query, v2);
+                    writer.WriteLine("<defined name=\"{0}\" value=\"{1}\"/>", behaviorName, v3);
+                    writer.WriteLine("<defined name=\"{0}\" value=\"{1}\"/>", query, v4);
+                    break;
+
                  default  :
                     writer.WriteLine("<error action=\"{0}\" query=\"{1}\" behaviorName=\"{2}\" />", action, query, behaviorName);
  

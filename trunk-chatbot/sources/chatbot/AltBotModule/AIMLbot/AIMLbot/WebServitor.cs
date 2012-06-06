@@ -465,7 +465,17 @@ namespace AltAIMLbot
         public static void analyseGraphMaster(StreamWriter writer, string query, string rawURL)
         {
             loadAimlIndex();
-            Dictionary<string, double> pathResults = ourServitor.myIndex.performTfIdfSearch(query.Split(' ').ToList());
+            List<string> rawList = query.Split(' ').ToList();
+            List<string> queryList = query.Split(' ').ToList();
+            foreach (string x in rawList)
+            {
+                string y = ourServitor.myIndex.stemmer.Stem(x);
+                if (y != x) { queryList.Add(y); }
+                string z = DoubleMetaphoneStringExtension.GenerateDoubleMetaphone(x);
+                queryList.Add(z);
+            }
+            
+            Dictionary<string, double> pathResults = ourServitor.myIndex.performTfIdfSearch(queryList);
             pathResults = pathResults.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
             int resultCount = 0;
 

@@ -39,14 +39,25 @@ namespace AltAIMLbot.AIMLTagHandlers
             string failurePhrase = "Sorry, I don't understand.";
             string failurePhrase2 = "Sorry. I couldn't understand what you are asking. Please rephrase.";
             string errorPhrase = "Processing caused the following error.";
+
             string sepToken ="ANSEP";
-            try { sepToken = this.templateNode.Attributes["sep"].Value; }
+            try { 
+                if (this.templateNode.Attributes["sep"] !=null)
+                    sepToken = this.templateNode.Attributes["sep"].Value; }
             catch (Exception e) { }
+
             string onFail = null;
-            try { onFail = this.templateNode.Attributes["onfail"].Value; }
+            try
+            {
+                if (this.templateNode.Attributes["onfail"] != null)
+                    onFail = this.templateNode.Attributes["onfail"].Value; }
             catch (Exception e) { }
+
             string onSuccess = null;
-            try { onSuccess = this.templateNode.Attributes["onsuccess"].Value; }
+            try {
+                if (this.templateNode.Attributes["onsuccess"] != null)
+                    onSuccess = this.templateNode.Attributes["onsuccess"].Value;
+            }
             catch (Exception e) { }
 
             if (this.templateNode.Name.ToLower() == "filterqa")
@@ -88,7 +99,18 @@ namespace AltAIMLbot.AIMLTagHandlers
                         {
                             bot.myBehaviors.queueEvent(onSuccess);
                         }
-                        return valid;
+                        if (valid.Length > 512)
+                        {
+                            TokenRanker myRanker = new TokenRanker();
+                            myRanker.defineRank(valid);
+                            string myRankSummary = myRanker.summaryByRank(512);
+                            string mySeqSummary = myRanker.summaryByOriginalSequence(512);
+                            return myRankSummary;
+                        }
+                        else
+                        {
+                            return valid;
+                        }
                     }
                     else
                     {

@@ -762,17 +762,51 @@ namespace AltAIMLbot
             myBehaviors.logText("BOT flushOutputQueue:");
         }
 
+        Regex SentRegex = new Regex(@"(\S.+?[.!?,\)])(?=\s+|$)");
+
         public void postOutput(string msg)
         {
-            // just post output
-            outputQueue.Enqueue(msg);
-            myBehaviors.logText("BOT postOutput:" + msg);
+            if (msg.Length < 256)
+            {
+                // just post output
+                outputQueue.Enqueue(msg);
+                myBehaviors.logText("BOT postOutput:" + msg);
+            }
+            else
+            {
+                //http://stackoverflow.com/questions/1936388/what-is-a-regular-expression-for-parsing-out-individual-sentences
+                //  a quick splitter better than just using '.'
+                //Regex Sentrx = new Regex(@"(\S.+?[.!?])(?=\s+|$)");
+                foreach (Match match in SentRegex.Matches(msg))
+                {
+                    int i = match.Index;
+                    string s = match.Value;
+                    outputQueue.Enqueue(s);
+                    myBehaviors.logText("BOT postOutput:" + s);
+
+                } 
+
+            }
         }
         public void sendOutput(string msg)
         {
-            myBehaviors.logText("BOT sendOutput:" + msg);
             // posts and processes
-            outputQueue.Enqueue(msg);
+            if (msg.Length < 1024)
+            {
+                // just post output
+                outputQueue.Enqueue(msg);
+                myBehaviors.logText("BOT sendOutput:" + msg);
+            }
+            else
+            {
+                string[] sents = msg.Split('.');
+                foreach (string s in sents)
+                {
+                    outputQueue.Enqueue(s);
+                    myBehaviors.logText("BOT sendOutput:" + s);
+
+                }
+            }
             processOutputQueue();
         }
 

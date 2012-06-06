@@ -514,6 +514,15 @@ namespace AltAIMLbot
                             yield return result;
                         }
                         break;
+                    case "scheduler":
+                        foreach (RunStatus result in ProcessScheduler(myNode))
+                        {
+                            myResult = result;
+                            bot.myBehaviors.runState[nodeID] = myResult;
+                            if (myResult != RunStatus.Running) break;
+                            yield return result;
+                        }
+                        break;
                     case "starttimer":
                         // start a stopwatch
                         bot.myBehaviors.keepTime(nodeID, RunStatus.Success);
@@ -1272,6 +1281,37 @@ namespace AltAIMLbot
             yield return result;
             yield break;
         }
+
+        public IEnumerable<RunStatus> ProcessScheduler(XmlNode myNode)
+        {
+            // talk to the scheduler directly
+            RunStatus result = RunStatus.Success;
+            string behaviorName = "root";
+            string action = "";
+            string query = "";
+            try
+            {
+                //behaviorName = myNode.Attributes["id"].Value;
+                if (myNode.Attributes["action"] != null) action = myNode.Attributes["action"].Value;
+                if (myNode.Attributes["query"] != null) query = myNode.Attributes["query"].Value;
+                if (myNode.Attributes["a"] != null) action = myNode.Attributes["a"].Value;
+                if (myNode.Attributes["q"] != null) query = myNode.Attributes["q"].Value;
+                if (myNode.Attributes["id"] != null) behaviorName = myNode.Attributes["id"].Value;
+                StreamWriter sw = new StreamWriter("procschedtag.txt");
+                bot.myServitor.myScheduler.performAction(sw, action, query, behaviorName);
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERR: ProcessSubBehavior");
+                Console.WriteLine("ERR:" + e.Message);
+                Console.WriteLine("ERR:" + e.StackTrace);
+                Console.WriteLine("ERR XML:" + myNode.OuterXml);
+            }
+            yield return result;
+            yield break;
+        }
+
         public IEnumerable<RunStatus> ProcessEnqueue(XmlNode myNode)
         {
 

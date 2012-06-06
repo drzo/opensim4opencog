@@ -1,12 +1,13 @@
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{334EF861-1D65-4F64-BC08-06BD2E75B63E}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ApplicationIcon></ApplicationIcon>
+    <ApplicationIcon>
+    </ApplicationIcon>
     <AssemblyKeyContainerName>
     </AssemblyKeyContainerName>
     <AssemblyName>AltAIMLbot</AssemblyName>
@@ -16,9 +17,11 @@
     <DelaySign>false</DelaySign>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder></AppDesignerFolder>
+    <AppDesignerFolder>
+    </AppDesignerFolder>
     <RootNamespace>AltAIMLbot</RootNamespace>
-    <StartupObject></StartupObject>
+    <StartupObject>
+    </StartupObject>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
   </PropertyGroup>
@@ -64,40 +67,40 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System">
-        <Name>System</Name>
+      <Name>System</Name>
     </Reference>
     <Reference Include="System.Data">
-        <Name>System.Data</Name>
+      <Name>System.Data</Name>
     </Reference>
     <Reference Include="System.Xml">
-        <Name>System.Xml</Name>
+      <Name>System.Xml</Name>
     </Reference>
     <Reference Include="System.Web">
-        <Name>System.Web</Name>
+      <Name>System.Web</Name>
     </Reference>
     <Reference Include="System.Windows.Forms">
-        <Name>System.Windows.Forms</Name>
+      <Name>System.Windows.Forms</Name>
     </Reference>
     <Reference Include="System.Drawing">
-        <Name>System.Drawing</Name>
-    </Reference>
-    <Reference Include="MiniSatCs">
-        <Name>MiniSatCs</Name>
-      <HintPath>..\..\..\..\..\bin\MiniSatCs.dll</HintPath>
+      <Name>System.Drawing</Name>
     </Reference>
     <Reference Include="System.Core">
-        <Name>System.Core</Name>
+      <Name>System.Core</Name>
     </Reference>
     <Reference Include="DcBus.dll">
-        <Name>DcBus.dll</Name>
+      <Name>DcBus.dll</Name>
       <HintPath>..\..\..\..\..\bin\DcBus.dll</HintPath>
     </Reference>
     <Reference Include="Enyim.Caching.dll">
-        <Name>Enyim.Caching.dll</Name>
+      <Name>Enyim.Caching.dll</Name>
       <HintPath>..\..\..\..\..\bin\Enyim.Caching.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Lucene\src\Lucene.Net\Lucene.Net.csproj">
+      <Project>{D8D88B28-31DC-477D-96DC-10502944D89F}</Project>
+      <Name>Lucene.Net</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Aima.NET\Aima.NET.csproj">
       <Name>Aima.NET</Name>
       <Project>{828F4863-B666-4420-ACFD-62B8F7BA312C}</Project>
@@ -112,6 +115,10 @@
       <Name>Iesi.Collections.Generic</Name>
       <Project>{2C664B9E-4683-452A-B15A-69CB6D5B8FA6}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+    </ProjectReference>
+    <ProjectReference Include="..\..\minisatcs\MinisatCs\MinisatCS.csproj">
+      <Project>{50D8D409-557E-44A8-8BA1-0D0C0EE39589}</Project>
+      <Name>MinisatCS</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -135,6 +142,7 @@
     </Compile>
     <Compile Include="Servitor.cs">
     </Compile>
+    <Compile Include="TextRanker.cs" />
     <Compile Include="User.cs">
     </Compile>
     <Compile Include="WebScriptExecutor.cs">

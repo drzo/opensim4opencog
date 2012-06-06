@@ -290,6 +290,8 @@ namespace AltAIMLbot
         public ValenceSet VSoup;
         public Stack handlerStack;
         public string persistantDirectory;
+        public List<string> invisiblePatterns;
+
 
         public AltBot bot {
                 get { return _bot; }
@@ -321,7 +323,7 @@ namespace AltAIMLbot
             runState = new Dictionary<string, RunStatus>();
             VSoup = new ValenceSet();
             handlerStack = new Stack();
-            
+            invisiblePatterns = new List<string>();
         }
        
         
@@ -350,6 +352,7 @@ namespace AltAIMLbot
                 persistToFile(k);
             }
         }
+
         public string behaviorDiskName(string behaviorName)
         {
             return String.Format("{0}/{1}.BTX", persistantDirectory, behaviorName);
@@ -554,8 +557,33 @@ namespace AltAIMLbot
             return result;
         }
 
+        // tests for if we can see a behavior or not
+        public void makeInvisible(string pattern)
+        {
+            if (pattern.Length == 0) return;
+            invisiblePatterns.Add(pattern);
+        }
+        public void makeVisible(string pattern)
+        {
+            if (invisiblePatterns.Contains(pattern))
+            {
+                invisiblePatterns.Remove(pattern);
+            }
+        }
+        public bool visibleBehavior(string behaviorName)
+        {
+            
+            foreach (string pattern in invisiblePatterns)
+            {
+                if (Regex.IsMatch(behaviorName,pattern )) return false;
+            }
+            return true;
+        }
+
+
         public bool definedBehavior(string behaviorName)
         {
+            if (!visibleBehavior(behaviorName)) return false;
             if (behaveTrees.ContainsKey(behaviorName)) return true;
             string diskName = String.Format("{0}/{1}.BTX", persistantDirectory, behaviorName);
             if (!File.Exists(diskName))
@@ -1302,6 +1330,10 @@ namespace AltAIMLbot
                     case "subbehavior":
                         result = ProcessSubBehavior(myNode);
                         break;
+                    case "scheduler":
+                        result = ProcessScheduler(myNode);
+                        break;
+                        
                     case "starttimer":
                         // start a stopwatch
                         bot.myBehaviors.keepTime(nodeID, RunStatus.Success);
@@ -1877,6 +1909,36 @@ namespace AltAIMLbot
             }
             return result;
         }
+
+        public RunStatus ProcessScheduler(XmlNode myNode)
+        {
+            // talk to the scheduler directly
+            RunStatus result = RunStatus.Running;
+            string behaviorName = "root";
+            string action = "";
+            string query = "";
+            try
+            {
+                //behaviorName = myNode.Attributes["id"].Value;
+                if (myNode.Attributes["action"] != null) action = myNode.Attributes["action"].Value;
+                if (myNode.Attributes["query"] != null) query = myNode.Attributes["query"].Value;
+                if (myNode.Attributes["a"] != null) action = myNode.Attributes["a"].Value;
+                if (myNode.Attributes["q"] != null) query = myNode.Attributes["q"].Value;
+                if (myNode.Attributes["id"] != null) behaviorName = myNode.Attributes["id"].Value;
+                StreamWriter sw = new StreamWriter("procschedtag.txt");
+                bot.myServitor.myScheduler.performAction(sw, action, query, behaviorName);
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERR: ProcessSubBehavior");
+                Console.WriteLine("ERR:" + e.Message);
+                Console.WriteLine("ERR:" + e.StackTrace);
+                Console.WriteLine("ERR XML:" + myNode.OuterXml);
+            }
+            return result;
+        }
+
         public RunStatus ProcessSubBehavior(XmlNode myNode)
         {
 

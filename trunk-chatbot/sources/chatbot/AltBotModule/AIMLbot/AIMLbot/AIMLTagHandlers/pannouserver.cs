@@ -68,11 +68,19 @@ namespace AltAIMLbot.AIMLTagHandlers
                     string myUrl = this.templateNode.Attributes["url"].Value;
                     string myLogin = this.templateNode.Attributes["login"].Value;
                     string myKey = this.templateNode.Attributes["key"].Value;
+
                     string onFail = null;
-                    try { onFail = this.templateNode.Attributes["onfail"].Value; }
+                    try {
+                        if (this.templateNode.Attributes["onfail"] != null)
+                            onFail = this.templateNode.Attributes["onfail"].Value;
+                    }
                     catch(Exception e) { }
+
                     string onSuccess = null;
-                    try { onSuccess = this.templateNode.Attributes["onsuccess"].Value; }
+                    try {
+                        if (this.templateNode.Attributes["onsuccess"] != null)
+                            onSuccess = this.templateNode.Attributes["onsuccess"].Value;
+                    }
                     catch (Exception e) { }
 
                     string query = templateNodeInnerValue;

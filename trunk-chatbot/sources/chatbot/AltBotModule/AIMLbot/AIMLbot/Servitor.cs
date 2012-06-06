@@ -642,7 +642,11 @@ namespace AltAIMLbot
         #region Serialization
         public void loadAIMLFromFile(string path)
         {
-            if (skiploading) return;
+            Thread.Sleep(10);
+            if (skiploading)
+            {
+                return;
+            }
             if (curBot != null)
             {
                 curBot.loadAIMLFromFile(path);
@@ -650,7 +654,11 @@ namespace AltAIMLbot
         }
         public void loadAIMLFromFiles(string path)
         {
-            if (skiploading) return;
+            Thread.Sleep(10);
+            if (skiploading)
+            {
+                return;
+            }
             if (curBot != null)
             {
                 curBot.loadAIMLFromFiles(path);
