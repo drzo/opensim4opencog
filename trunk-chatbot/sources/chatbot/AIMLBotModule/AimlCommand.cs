@@ -14,7 +14,7 @@ using AIMLbot;
 
 namespace AIMLBotModule
 {
-    public class AimlCommand : Cogbot.Actions.Command, BotPersonalCommand
+    public class AimlCommand : Cogbot.Actions.Command, BotStatefullCommand, BotSystemCommand
     {
         public static string UNKNOWN_PARTENER = "null";
         private string lastKnownUser;
@@ -181,6 +181,19 @@ namespace AIMLBotModule
             DLRConsole.DebugWriteLine("-> SetUser=" + user + " lastKnownUser=" + lastKnownUser);
             WorldSystemModule.SetDefaultUser(user);
         }
+
+        #region Implementation of IDisposable
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+           
+        }
+
+        #endregion
     }
 
     public class AIMLEventSubscriber : SimEventSubscriber

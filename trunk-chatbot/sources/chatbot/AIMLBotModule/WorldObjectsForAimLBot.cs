@@ -418,6 +418,12 @@ namespace AIMLBotModule
             if (string.IsNullOrEmpty(myName)) return;
             NeedPersonalConfig = false;
             LoadPersonalDirectories(myName);
+            client.WorldSystem.AddGroupProvider(myName, BotVars_Personal);
+        }
+
+        private ICollection BotVars_Personal(string name)
+        {
+            return SingleNameValue.AsCollection(MyBot.GlobalSettings.grabSetting(name));
         }
 
         private void LoadPersonalDirectories(string myName)

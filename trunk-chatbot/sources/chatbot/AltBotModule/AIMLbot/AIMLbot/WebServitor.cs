@@ -15,7 +15,8 @@ namespace AltAIMLbot
     public class WebServitor
     {
         public static HttpListener listener = new HttpListener();
-        public static string startUpPath = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+
+        public static string startUpPath = null;
         public static Servitor ourServitor = null;
         public static string serverRoot = "http://localhost:8123/";
         public static string kpfile = @".\wikilink\phraseScore";
@@ -29,6 +30,10 @@ namespace AltAIMLbot
 
         public static void beginService(Servitor theServitor)
         {
+            startUpPath = startUpPath ??
+                          System.IO.Path.GetDirectoryName(
+                              (Assembly.GetEntryAssembly() ?? typeof (WebServitor).Assembly).Location);
+
             if (!HttpListener.IsSupported)
             {
                 Console.WriteLine("***** HttpListener is not supported on this platform. *****");
