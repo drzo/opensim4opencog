@@ -1132,7 +1132,7 @@
            <Match path="Properties" pattern="*.cs" recurse="true"/>
            <Match path="Tutorials" pattern="*.cs" recurse="true"/>
            <Match path="ScriptEngines" pattern="*.cs" recurse="true"/>
-           <Match path="TheOpenSims" pattern="*.cs" recurse="true"/>
+           <Match path="World" pattern="*.cs" recurse="true"/>
        </Files>
  </Project>
 
