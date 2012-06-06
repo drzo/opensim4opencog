@@ -2,19 +2,19 @@ using System;
 using System.Collections;
 using System.Reflection;
 using System.Threading;
-using cogbot;
-using cogbot.Actions;
-using cogbot.Listeners;
+using Cogbot;
+using Cogbot.Actions;
+using Cogbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using RTParser;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
 using AIMLbot;
 
 namespace AIMLBotModule
 {
-    public class AimlCommand : cogbot.Actions.Command, BotPersonalCommand
+    public class AimlCommand : Cogbot.Actions.Command, BotPersonalCommand
     {
         public static string UNKNOWN_PARTENER = "null";
         private string lastKnownUser;
@@ -32,7 +32,7 @@ namespace AIMLBotModule
             {
                 String mn = "AIMLBotModule";
                 Listener wmab;
-                var dict = Client.listeners;
+                var dict = Client.Cogbot;
                 while (true)
                 {
                     lock (dict)
