@@ -67,7 +67,8 @@ namespace RTParser.Database
             }
         }
 
-        private bool UseCyc = true;
+        public static bool AllUseCyc = false;
+        private bool UseCyc = AllUseCyc;
         static object UseCycLock = new object();
 
         public CycAccess GetCycAccess
@@ -100,6 +101,7 @@ namespace RTParser.Database
                         catch (Exception e)
                         {
                             writeToLog("UseCyc==false " + e.Message + "\n " + e.StackTrace + "\n " + e.InnerException);
+                            CycAccess.setSharedCycAccessInstance(null);
                             UseCyc = false;
                         }
                         //if (cycAccess.isClosed()) cycAccess.persistentConnection = true;
