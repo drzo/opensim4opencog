@@ -356,6 +356,7 @@ namespace Cogbot
             //Settings.SIMULATOR_TIMEOUT = int.MaxValue;
             //Settings.SEND_PINGS = true;
             Settings.SEND_AGENT_APPEARANCE = true;
+            Settings.LOG_DISKCACHE = false;
             //Settings.USE_LLSD_LOGIN = true;
             ////Settings.MULTIPLE_SIMS = false;
 
