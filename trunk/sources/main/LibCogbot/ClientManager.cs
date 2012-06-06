@@ -1278,7 +1278,7 @@ namespace Cogbot
 
         public static void GlobalWriteLine0(string check)
         {
-            if (check.Contains("Effect"))
+            if (check.Contains("effecttype") || check.Contains("pointattype"))
             {
                 return;
             }
