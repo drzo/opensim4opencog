@@ -27,6 +27,8 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Windows.Forms;
 using System.Xml;
+using Cogbot.Actions.Appearance;
+using Cogbot.Actions.Communication;
 using Cogbot.Actions.Land;
 using Cogbot.Actions.Movement;
 using Cogbot.Actions.Scripting;
@@ -421,7 +423,7 @@ namespace Cogbot
             Commands = new SortedDictionary<string, CommandInfo>();
 			RegisterCommand("login", new Login(this));
 			RegisterCommand("logout", new Logout(this));
-			RegisterCommand("stop", new Stop(this));
+			RegisterCommand("stop", new StopCommand(this));
 			RegisterCommand("teleport", new Teleport(this));
 			var desc = newCommandInfo(new Describe(this));
 			Commands["describe"] = desc;
@@ -434,8 +436,8 @@ namespace Cogbot
 			RegisterCommand("stand", new StandCommand(this));
 			RegisterCommand("jump", new JumpCommand(this));
 			RegisterCommand("crouch", new CrouchCommand(this));
-			RegisterCommand("mute", new Mute(this));
-			RegisterCommand("unmute", new Unmute(this));
+			RegisterCommand("mute", new MuteCommand(this));
+			RegisterCommand("unmute", new UnmuteCommand(this));
 			RegisterCommand("move", new Move(this));
 			RegisterCommand("use", new Use(this));
 			RegisterCommand("eval", new Eval(this));
