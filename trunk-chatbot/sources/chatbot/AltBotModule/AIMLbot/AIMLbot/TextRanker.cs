@@ -56,19 +56,22 @@ namespace AltAIMLbot
         Dictionary<int, NodeData> tokenData = new Dictionary<int, NodeData>();
         List<int> nodesToRank = new List<int>();
         List<string> definingSentences = new List<string>();
-        Regex SentRegex = new Regex(@"(\S.+?[.!?,\)])(?=\s+|$)");
+        Regex SentRegex = new Regex(@"(\S.+?[.!?])(?=\s+|$)");
+        Regex SepRegex = new Regex(@"([a-z\)])\.([A-Za-z])");
+        Regex AlphaRegex = new Regex(@"[^A-za-z0-9 \.]");
+
         public string stoplist = " a an the this that and of for in to at by with so it on but as uh or";
         public double changeLim = 0.000001;
         public int maxIterations = 50;
         public double lamda = 0.15;
 
-        public void TokenRanker()
-        {
-        }
+
 
         public double scoreText(string text)
         {
             double sum = 0;
+            text = SepRegex.Replace(text, @"$1. $2");
+            text = AlphaRegex.Replace(text, @" ");
             string[] tokens = text.Split(' ');
             foreach (string w in tokens)
             {
@@ -77,6 +80,11 @@ namespace AltAIMLbot
                 if (tokenData.ContainsKey(id)) v=tokenData[id].PageRank;
                 sum += v;
             }
+        // Note: another idea is "centrality per token" to get an importance density
+            // a short sentence with many key tems may have a lower score than 
+           // a long sentence that mentions everything.
+        // cpt = sum / tokens.Length;
+             
             return sum;
         }
 
@@ -86,7 +94,14 @@ namespace AltAIMLbot
             foreach (string sent in definingSentences)
             {
                 double v = scoreText(sent);
-                summaryOrder.Add(sent, v);
+                if (summaryOrder.ContainsKey(sent))
+                {
+                    summaryOrder[sent] = summaryOrder[sent] + v;
+                }
+                else
+                {
+                    summaryOrder.Add(sent, v);
+                }
             }
             summaryOrder = summaryOrder.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
             
@@ -105,7 +120,14 @@ namespace AltAIMLbot
             foreach (string sent in definingSentences)
             {
                 double v = scoreText(sent);
-                summaryOrder.Add(sent, v);
+                if (summaryOrder.ContainsKey(sent))
+                {
+                    summaryOrder[sent] = summaryOrder[sent] + v;
+                }
+                else
+                {
+                    summaryOrder.Add(sent, v);
+                }
             }
             summaryOrder = summaryOrder.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
 
@@ -166,124 +188,133 @@ namespace AltAIMLbot
         {
             //Expects sentences
             // Will create a ranking after skipping stopwords
-
-          List<string> sl = stoplist.ToLower().Split(' ').ToList<string>();
-            
-
-        // Create all the word tokens first
-        foreach (Match match in SentRegex.Matches(text))
-        {
-            int i = match.Index;
-            string s = match.Value;
-            definingSentences.Add(s);
-
-            string[] tokens = s.Split(' ');
-            foreach (string t in tokens)
+            try
             {
-                string word = t.ToLower();
-                if (sl.Contains (word)) continue;
-                int id = word.GetHashCode();
-                if (!tokenData.ContainsKey(id))
+                text = SepRegex.Replace(text, @"$1. $2");
+                List<string> sl = stoplist.ToLower().Split(' ').ToList<string>();
+
+
+                // Create all the word tokens first
+                foreach (Match match in SentRegex.Matches(text))
                 {
-                    NodeData D = new NodeData ();
-                    D.token = word;
-                    tokenData.Add(id, D);
+                    int i = match.Index;
+                    string s = match.Value;
+                    definingSentences.Add(s);
+
+                    s = AlphaRegex.Replace(s, @" ");
+                    string[] tokens = s.Split(' ');
+                    foreach (string t in tokens)
+                    {
+                        string word = t.ToLower();
+                        if (sl.Contains(word)) continue;
+                        int id = word.GetHashCode();
+                        if (!tokenData.ContainsKey(id))
+                        {
+                            NodeData D = new NodeData();
+                            D.token = word;
+                            tokenData.Add(id, D);
+                        }
+
+                    }
                 }
 
-            }
-        }
-
-        // Remove stoplist words
-        foreach (string s in sl)
-        {
-            int id = s.GetHashCode();
-            if (tokenData.ContainsKey(id))
-            {
-                tokenData.Remove(id);
-            }
-        }
-
-        double startPageRank = 1.0 / tokenData.Count;
-
-        /* Book -> aproaches 1 as lamda aproaches 1 */
-        double PR = lamda / tokenData.Count;
-        double Q = 1 - lamda;
-
-        /* Wikipedia -> aproaches 1 as lamda aproaches 0 */
-        //double PR = (1.0 - lamda) / siteNodes.Count;
-        //double Q = lamda;
-
-        /* Wikipedia -> aproaches N as lamda aproaches 0 */
-        //double PR = (1.0 - lamda);
-        //double Q = lamda
-
-       //Add all the links between words in a sentence
-        foreach (Match match in SentRegex.Matches(text))
-        {
-            int i = match.Index;
-            string s = match.Value;
-            string[] tokens = s.Split(' ');
-
-            for (int j = 0; j < tokens.Length-1; j++)
-            {
-                string word1 = tokens[j].ToLower();
-                if (!sl.Contains(word1))
+                // Remove stoplist words
+                foreach (string s in sl)
                 {
-                    // Find next non-stop-list word
-                    bool ifound = false;
-                    for (int k = j + 1; k < tokens.Length && !ifound; k++)
+                    int id = s.GetHashCode();
+                    if (tokenData.ContainsKey(id))
                     {
-                        string word2 = tokens[k].ToLower();
-                        if (!sl.Contains(word2))
+                        tokenData.Remove(id);
+                    }
+                }
+
+                double startPageRank = 1.0 / tokenData.Count;
+
+                /* Book -> aproaches 1 as lamda aproaches 1 */
+                double PR = lamda / tokenData.Count;
+                double Q = 1 - lamda;
+
+                /* Wikipedia -> aproaches 1 as lamda aproaches 0 */
+                //double PR = (1.0 - lamda) / siteNodes.Count;
+                //double Q = lamda;
+
+                /* Wikipedia -> aproaches N as lamda aproaches 0 */
+                //double PR = (1.0 - lamda);
+                //double Q = lamda
+
+                //Add all the links between words in a sentence
+
+
+                foreach (string s in definingSentences) 
+                {
+                    string s2 = AlphaRegex.Replace(s, @" ");
+                    string[] tokens = s2.Split(' ');
+
+                    for (int j = 0; j < tokens.Length - 1; j++)
+                    {
+                        string word1 = tokens[j].ToLower();
+                        if (!sl.Contains(word1))
                         {
-                            int id1 = word1.GetHashCode();
-                            int id2 = word2.GetHashCode();
-                            tokenData[id2].LinksIn.Add(id1);
-                            tokenData[id1].LinksOutCount++;
-                            ifound = true;
+                            // Find next non-stop-list word
+                            bool ifound = false;
+                            for (int k = j + 1; k < tokens.Length && !ifound; k++)
+                            {
+                                string word2 = tokens[k].ToLower();
+                                if (!sl.Contains(word2))
+                                {
+                                    int id1 = word1.GetHashCode();
+                                    int id2 = word2.GetHashCode();
+                                    tokenData[id2].LinksIn.Add(id1);
+                                    tokenData[id1].LinksOutCount++;
+                                    ifound = true;
+                                }
+                            }
                         }
                     }
                 }
+
+                // Complete initialization
+                foreach (int k in tokenData.Keys)
+                {
+                    nodesToRank.Add(k);
+                    tokenData[k].PageRank = startPageRank;
+                }
+
+                // Page rank algorithm
+                double MaxChange = 1;
+                int iterations = 0;
+                while ((MaxChange > changeLim) && (iterations < maxIterations))
+                {
+                    //Console.WriteLine(MaxChange);
+                    MaxChange = 0;
+
+                    foreach (int id in nodesToRank)
+                    {
+                        double newPageRank = 0.0;
+
+                        // Add all the ranks of pages linking to the site
+                        foreach (int pageid in tokenData[id].LinksIn)
+                        {
+                            newPageRank += (tokenData[pageid].PageRank / tokenData[pageid].LinksOutCount);
+                        }
+
+                        newPageRank = newPageRank * Q + PR; // Calculate new page rank
+
+                        double difference = Math.Abs(newPageRank - tokenData[id].PageRank);
+                        if (difference > MaxChange)
+                        {
+                            MaxChange = difference;
+                        }
+
+                        tokenData[id].PageRank = newPageRank; //set the new rank to this document
+                    }
+                    iterations++;
+                }
             }
-        }
-
-        // Complete initialization
-        foreach (int k in tokenData.Keys)
-        {
-            nodesToRank.Add(k);
-            tokenData[k].PageRank = startPageRank;
-        }
-
-        // Page rank algorithm
-        double MaxChange = 1;
-        int iterations = 0;
-        while ((MaxChange > changeLim)&&(iterations <maxIterations ))
-        {
-            //Console.WriteLine(MaxChange);
-            MaxChange = 0;
-
-            foreach (int id in nodesToRank)
+            catch (Exception e)
             {
-                double newPageRank = 0.0;
-
-                // Add all the ranks of pages linking to the site
-                foreach (int pageid in tokenData[id].LinksIn)
-                {
-                    newPageRank += (tokenData[pageid].PageRank / tokenData[pageid].LinksOutCount);
-                }
-
-                newPageRank = newPageRank * Q + PR; // Calculate new page rank
-
-                double difference = Math.Abs(newPageRank - tokenData[id].PageRank);
-                if (difference > MaxChange)
-                {
-                    MaxChange = difference;
-                }
-
-                tokenData[id].PageRank = newPageRank; //set the new rank to this document
+                Console.WriteLine("TEXTRANK ERROR:{0} {1}", e.Message, e.StackTrace);
             }
-            iterations++;
-        }
       }
 
     }

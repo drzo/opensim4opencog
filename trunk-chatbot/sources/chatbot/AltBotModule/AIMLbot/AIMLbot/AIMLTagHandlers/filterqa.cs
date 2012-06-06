@@ -99,13 +99,13 @@ namespace AltAIMLbot.AIMLTagHandlers
                         {
                             bot.myBehaviors.queueEvent(onSuccess);
                         }
-                        if (valid.Length > 512)
+                        if (valid.Length > 256)
                         {
                             TokenRanker myRanker = new TokenRanker();
                             myRanker.defineRank(valid);
                             string myRankSummary = myRanker.summaryByRank(512);
                             string mySeqSummary = myRanker.summaryByOriginalSequence(512);
-                            return myRankSummary;
+                            return mySeqSummary;
                         }
                         else
                         {
