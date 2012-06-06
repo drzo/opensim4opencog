@@ -8,9 +8,9 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.Communication
 {
-    class Unmute : Mute
+    class UnmuteCommand : MuteCommand
     {
-        public Unmute(BotClient Client)
+        public UnmuteCommand(BotClient Client)
             : base(Client)
         {
             Description = "Remove avatars or objects from the mute list";
@@ -18,9 +18,9 @@ namespace Cogbot.Actions.Communication
         }
     }
 
-    class Mute : Command, BotPersonalCommand
+    class MuteCommand : Command, BotPersonalCommand
     {
-        public Mute(BotClient Client)
+        public MuteCommand(BotClient Client)
             : base(Client)
         {
             Description = "Mute avatars or objects, or display the mute list. unmute unmutes.";
