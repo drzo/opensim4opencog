@@ -5,13 +5,13 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using cogbot;
+using Cogbot;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using Radegast;
 using Radegast.Netcom;
 
-namespace Cogbot.Library
+namespace Cogbot
 {
     public class CogbotGUI
     {

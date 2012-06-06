@@ -11,7 +11,7 @@ using OpenMetaverse.Imaging;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.SimExport
+namespace Cogbot.Actions.SimExport
 {
     public class UploadImageCommand : Command, BotPersonalCommand
     {

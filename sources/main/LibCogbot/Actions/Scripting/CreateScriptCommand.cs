@@ -7,7 +7,7 @@ using System.Diagnostics;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Scripting
+namespace Cogbot.Actions.Scripting
 {
     public class CreateScriptCommand : Command, BotPersonalCommand
     {

@@ -8,7 +8,7 @@ using System.Net;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.External
+namespace Cogbot.Actions.External
 {
     public class JarExec : Command, SystemApplicationCommand
     {

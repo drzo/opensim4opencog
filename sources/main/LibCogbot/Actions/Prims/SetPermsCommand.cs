@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Objects
+namespace Cogbot.Actions.Objects
 {
     public class SetPermsCommand : Command, RegionMasterCommand
     {

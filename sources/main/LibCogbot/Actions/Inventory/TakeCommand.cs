@@ -1,19 +1,19 @@
 using System.Collections.Generic;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
+using Cogbot;
+using Cogbot.World;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Objects
+namespace Cogbot.Actions.Objects
 {
-    public class TakeCommand : cogbot.Actions.Command, RegionMasterCommand
+    public class TakeCommand : Cogbot.Actions.Command, RegionMasterCommand
     {
         public TakeCommand(BotClient client)
         {
             Name = "Take";
             Description = "Takes from a prim. Usage: Take [prim]";
-            Category = cogbot.Actions.CommandCategory.Objects;
+            Category = Cogbot.Actions.CommandCategory.Objects;
             Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 

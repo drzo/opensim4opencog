@@ -1,6 +1,6 @@
 ﻿using System;
-using cogbot;
-using cogbot.Listeners;
+using Cogbot;
+using Cogbot;
 using CycWorldModule.DotCYC;
 using MushDLR223.Utilities;
 using Radegast;

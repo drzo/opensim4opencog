@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using cogbot;
-using cogbot.Actions;
+using Cogbot;
+using Cogbot.Actions;
 using OpenMetaverse;
 
 // the Namespace used for all BotClient commands
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Search
+namespace Cogbot.Actions.Search
 {
     class SearchPlacesCommand : Command, GridMasterCommand
     {

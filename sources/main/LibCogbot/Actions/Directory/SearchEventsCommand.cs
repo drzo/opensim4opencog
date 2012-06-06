@@ -6,7 +6,7 @@ using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Search
+namespace Cogbot.Actions.Search
 {
     class SearchEventsCommand : Command, GridMasterCommand
     {

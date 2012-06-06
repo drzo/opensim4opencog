@@ -5,15 +5,15 @@ using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
-using cogbot.Listeners;
-using cogbot.ScriptEngines;
-using cogbot.Utilities;
+using Cogbot;
+using Cogbot.ScriptEngines;
+using Cogbot.Utilities;
 using DotLisp;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     public class SimObjectType : BotMentalAspect
     {

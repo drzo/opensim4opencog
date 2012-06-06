@@ -10,7 +10,7 @@ using OpenMetaverse.Packets;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Inventory.Shell
+namespace Cogbot.Actions.Inventory.Shell
 {
     public class InventoryCommand : Command, BotPersonalCommand
     {

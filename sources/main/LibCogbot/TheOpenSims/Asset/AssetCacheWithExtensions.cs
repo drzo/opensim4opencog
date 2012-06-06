@@ -29,7 +29,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using OpenMetaverse.Assets;
-using cogbot.Listeners;
+using Cogbot;
 
 namespace OpenMetaverse
 {

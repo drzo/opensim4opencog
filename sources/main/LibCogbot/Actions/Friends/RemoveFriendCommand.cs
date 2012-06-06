@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System.Text;
@@ -9,7 +9,7 @@ using System.Text;
 // the Namespace used for all BotClient commands
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Friends
+namespace Cogbot.Actions.Friends
 {
     /// <summary>
     /// Shows a list of friends

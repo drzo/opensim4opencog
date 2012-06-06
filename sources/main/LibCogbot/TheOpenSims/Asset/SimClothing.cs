@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using OpenMetaverse;
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     public class SimClothing : SimAsset
     {

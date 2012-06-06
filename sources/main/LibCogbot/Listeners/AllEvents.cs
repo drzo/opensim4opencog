@@ -17,7 +17,7 @@ using OpenMetaverse.Assets;
 //using AgentFlags = OpenMetaverse.AgentManager.AgentFlags;
 //using AgentState = OpenMetaverse.AgentManager.AgentState;
 
-namespace cogbot.Listeners
+namespace Cogbot
 {
 #pragma warning disable 0168
     public abstract class AllEvents : AListener

@@ -6,7 +6,7 @@ using Thread = MushDLR223.Utilities.SafeThread;
 #endif
 
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     public class AssetThread
     {

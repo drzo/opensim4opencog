@@ -1,13 +1,13 @@
 using System.Collections.Generic;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Objects
+namespace Cogbot.Actions.Objects
 {
-    public class RotatePrimCommand : cogbot.Actions.Command, RegionMasterCommand
+    public class RotatePrimCommand : Cogbot.Actions.Command, RegionMasterCommand
     {
         public RotatePrimCommand(BotClient client)
         {

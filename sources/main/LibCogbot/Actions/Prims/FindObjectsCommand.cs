@@ -7,7 +7,7 @@ using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Search
+namespace Cogbot.Actions.Search
 {
     public class FindObjectsCommand : Command, BotPersonalCommand, IDisposable
     {

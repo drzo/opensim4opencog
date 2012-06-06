@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
-namespace Cogbot.Library.TheOpenSims
+namespace Cogbot.Library.World
 {
     public partial class MovementDebugForm : Form
     {

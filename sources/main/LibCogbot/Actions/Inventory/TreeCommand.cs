@@ -7,7 +7,7 @@ using PathSystem3D.Navigation;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Land
+namespace Cogbot.Actions.Land
 {
     public class TreeCommand: Command, RegionMasterCommand
     {

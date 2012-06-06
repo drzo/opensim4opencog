@@ -1,3 +1,25 @@
+/******************************************************************************************
+  Cogbot -- Copyright (c) 2008-2012, Douglas Miles, Kino Coursey, Daxtron Labs, Logicmoo
+      and the Cogbot Development Team.
+   
+  Major contributions from (and special thanks to):
+      Latif Kalif, Anne Ogborn and Openmeteverse Foundation
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+associated documentation files (the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or
+substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
+OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+**************************************************************************************************/
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -5,28 +27,27 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Windows.Forms;
 using System.Xml;
-using cogbot.Actions.Land;
-using cogbot.Actions.Movement;
-using cogbot.Actions.Scripting;
-using cogbot.Actions.System;
-using cogbot.Actions.WebUtil;
+using Cogbot.Actions.Land;
+using Cogbot.Actions.Movement;
+using Cogbot.Actions.Scripting;
+using Cogbot.Actions.System;
+using Cogbot.Actions.WebUtil;
 using Cogbot.Library;
-using cogbot.Utilities;
+using Cogbot.Utilities;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.Utilities;
-using cogbot.Actions;
+using Cogbot.Actions;
 using System.Threading;
 using System.Collections;
-using cogbot.ScriptEngines;
+using Cogbot.ScriptEngines;
 using System.IO;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using System.Drawing;
 using Settings=OpenMetaverse.Settings;
-using cogbot.Actions.Agent;
+using Cogbot.Actions.Agent;
 using System.Text;
 using Type=System.Type;
 #if USE_SAFETHREADS
@@ -38,9 +59,9 @@ using Thread = MushDLR223.Utilities.SafeThread;
 //using TeleportFlags = OpenMetaverse.AgentManager.TeleportFlags;
 //using TeleportStatus = OpenMetaverse.AgentManager.TeleportStatus;
 
-namespace cogbot
+namespace Cogbot
 {
-    public class BotClient : SimEventSubscriber, IDisposable, ScriptExecutor
+    public partial class BotClient : SimEventSubscriber, IDisposable, ScriptExecutor
     {
 
         public static implicit operator GridClient(BotClient m)
@@ -89,51 +110,6 @@ namespace cogbot
         public AgentThrottle Throttle { get { return gridClient.Throttle; } }
 
 
-        /// <summary>The event subscribers. null if no subcribers</summary>
-        private EventHandler<SimObjectEvent> m_EachSimEvent;
-
-        /// <summary>Raises the EachSimEvent event</summary>
-        /// <param name="e">An EachSimEventEventArgs object containing the
-        /// data returned from the data server</param>
-        protected virtual void OnEachSimEvent(SimObjectEvent e)
-        {
-            if (e.Verb == "On-Log-Message") return;
-            if (ExpectConnected == false) return;
-            EventHandler<SimObjectEvent> handler = m_EachSimEvent;
-            if (handler == null) return;
-            List<Delegate> todo = new List<Delegate>();
-            lock (m_EachSimEventLock)
-            {
-                handler = m_EachSimEvent;
-                if (handler == null) return;
-                AddTodo(handler.GetInvocationList(), todo);
-            }
-            bool async = todo.Count > 3;
-
-            foreach (var d in todo)
-            {
-                var del = (EventHandler<SimObjectEvent>) d;
-                ThreadStart task = () =>
-                                       {
-                                           try
-                                           {
-                                               del(this, e);
-                                           }
-                                           catch (Exception ex)
-                                           {
-                                               LogException("OnEachSimEvent Worker", ex);
-                                           }
-                                       };
-                if (async)
-                {
-                    ThreadPool.QueueUserWorkItem(sync => task());
-                } else
-                {
-                    task();
-                }
-            }
-        }
-
         static void AddTodo(Delegate[] lst, List<Delegate> todo)
         {
             if (lst == null || lst.Length == 0) return;
@@ -159,18 +135,6 @@ namespace cogbot
             }
         }
 
-        /// <summary>Thread sync lock object</summary>
-        private readonly object m_EachSimEventLock = new object();
-
-        /// <summary>Triggered when Each Sim Event packet is received,
-        /// telling us what our avatar is currently wearing
-        /// <see cref="RequestAgentWearables"/> request.</summary>
-        public event EventHandler<SimObjectEvent> EachSimEvent
-        {
-            add { lock (m_EachSimEventLock) { m_EachSimEvent += value; } }
-            remove { lock (m_EachSimEventLock) { m_EachSimEvent -= value; } }
-        }
-
 
         readonly public TaskQueueHandler OneAtATimeQueue;
         public GridClient gridClient
@@ -186,145 +150,7 @@ namespace cogbot
         }
         private bool GridClientAccessed;
         private GridClient _gridClient;
-        // TODO's
-        // Play Animations
-        // private static UUID type_anim_uuid = UUIDFactory.GetUUID("c541c47f-e0c0-058b-ad1a-d6ae3a4584d9");
-        // Client.Self.AnimationStart(type_anim_uuid,false);
-        // Client.Self.AnimationStop(type_anim_uuid,false);
-
-        // animationFolder = Client.Inventory.FindFolderForType(AssetType.Animation);
-        // animationUUID = Client.Inventory.FindObjectByPath(animationFolder, Client.Self.AgentID, AnimationPath, 500);
-        // Client.Self.AnimationStart(animationLLUUID,false);
-        // Client.Self.AnimationStop(animationLLUUID,false);
-
-        public bool IsLoggedInAndReady {
-            get
-            {
-                var gridClient = this.gridClient;
-                if (gridClient == null) return false;
-                var net = gridClient.Network;
-                if (net == null) return false;
-                if (net != Network) return false;
-                if (net.CurrentSim == null) return false;
-                if (!Network.Connected) return false;
-                if (gridClient.Self.AgentID == UUID.Zero) return false;
-                //something is oput of date!?
-                if (gridClient != this.gridClient) return false; 
-                return true;
-            }
-        }
-                
-        // Reflect events into lisp
-        //        
-        int LoginRetriesFresh = 2; // for the times we are "already logged in"
-        int LoginRetries; // set to Fresh in constructor
-        public bool ExpectConnected;
-        public void Login()
-        {
-            LoginRetries = LoginRetriesFresh;
-            Login(false);
-        }
-        static object OneClientAtATime = new object();
-        public void LoginBlocked()
-        {
-            LoginRetries = LoginRetriesFresh;
-            lock (OneClientAtATime) Login(true);
-            if (IsLoggedInAndReady)
-            {
-                RunOnLogin();
-            }
-        }
-
-        public void Login(bool blocking)
-        {
-            if (IsLoggedInAndReady) return;
-            if (ExpectConnected) return;
-            if (Network.CurrentSim != null)
-            {
-                if (Network.CurrentSim.Connected) return;
-            }
-            //if (ClientManager.simulator.periscopeClient == null)
-            //{
-            //    ClientManager.simulator.periscopeClient = this;
-            //    ClientManager.simulator.Start();
-            //    Settings.LOG_LEVEL = Helpers.LogLevel.Info;
-            //}
-            try
-            {
-                Settings.LOGIN_SERVER = BotLoginParams.URI;
-                if (TheRadegastInstance != null)
-                {
-                    LoginViaRadegast(blocking);
-                    return;
-                }
-
-                Settings.USE_LLSD_LOGIN = false;
-                if (DLRConsole.IsOnMonoUnix)
-                {
-                    DebugWriteLine("Should use LLSD Login but cant!");
-                    // TODO Settings.USE_LLSD_LOGIN = true;
-                }
-                //SetLoginOptionsFromRadegast();
-                BotLoginParams.Timeout = -1;
-                BotLoginParams.Channel = "Cogbot";
-                if (BotLoginParams.CalledLoginYet) return;
-                BotLoginParams.CalledLoginYet = true;
-                if (!blocking)
-                {
-                    
-                    Network.BeginLogin(BotLoginParams.loginParams);
-                } else
-                {
-                    Network.Login(BotLoginParams.loginParams);
-                }
-            }
-            catch (Exception ex)
-            {
-                LogException("Login", ex);
-            }
-
-        }
-
-        private void LoginViaRadegast(bool blocking)
-        {
-            CogbotGUI.SetRadegastLoginOptions(TheRadegastInstance, this);
-            var LoginEvent = BotLoginParams.LoginEvent;
-            LoginEvent.Reset();
-            // non blocking
-            CogbotGUI.InvokeGUI(TheRadegastInstance.MainForm, TheRadegastInstance.Netcom.Login);
-
-            if (blocking)
-            {
-                bool madeIt = LoginEvent.WaitOne(BotLoginParams.loginParams.Timeout, false);
-
-            }
-        }
-
-        private void LogException(string p, Exception ex)
-        {
-            Logger.Log(GetName() + ": Exception " + p + "\n" + ex, Helpers.LogLevel.Error, ex);
-            StringWriter sw = new StringWriter();
-            sw.WriteLine("ERROR !Exception: " + ex.GetBaseException().Message);
-            sw.WriteLine("error occured: " + ex.Message);
-            sw.WriteLine("        Stack: " + ex.StackTrace.ToString());
-            Exception inner = ex.InnerException;
-            if (inner!=null && inner!=ex)
-            {
-                LogException("Inner of " + p, inner);
-            }
-            WriteLine("{0}", sw.ToString());
-        }
-
-        readonly int thisTcpPort;
-        public LoginDetails BotLoginParams
-        {
-            get
-            {
-                return _BotLoginParams;
-            }
-        }
-
-        private LoginDetails _BotLoginParams = null;
+     
         private readonly SimEventPublisher botPipeline;
         public IList<Thread> GetBotCommandThreads()
         {
@@ -369,77 +195,6 @@ namespace cogbot
             }
         }
 
-        public string MasterName
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(_masterName) && UUID.Zero != _masterKey)
-                {
-                    MasterName = WorldSystem.GetUserName(_masterKey);
-                }
-                return _masterName;
-            }
-            set
-            {
-                if (!string.IsNullOrEmpty(value))
-                {
-                    UUID found;                   
-                    if (UUID.TryParse(value, out found))
-                    {
-                        MasterKey = found;
-                        return;
-                    }
-                    _masterName = value;
-                    SetSecurityLevel(OWNERLEVEL, value, BotPermissions.Owner);
-                    found = WorldSystem.GetUserID(value);
-                    if (found != UUID.Zero)
-                    {
-                        MasterKey = found;
-                    }
-                }
-            }
-        }
-
-        // permissions "NextOwner" means banned "Wait until they are an owner before doing anything!"
-        public Dictionary<UUID, BotPermissions> SecurityLevels = new Dictionary<UUID, BotPermissions>();
-        public Dictionary<string, BotPermissions> SecurityLevelsByName = new Dictionary<string, BotPermissions>();
-
-        private UUID _masterKey = UUID.Zero;
-        public UUID MasterKey
-        {
-            get
-            {
-                if (UUID.Zero == _masterKey && !string.IsNullOrEmpty(_masterName))
-                {
-                    UUID found = WorldSystem.GetUserID(_masterName);
-                    if (found != UUID.Zero)
-                    {
-                        MasterKey = found;
-                    }
-                }
-                return _masterKey;
-            }
-            set
-            {
-                if (UUID.Zero != value)
-                {
-                    _masterKey = value;
-                    if (string.IsNullOrEmpty(_masterName))
-                    {
-                        string maybe = WorldSystem.GetUserName(value);
-                        if (!string.IsNullOrEmpty(maybe)) MasterName = maybe;
-                    }
-                    lock (SecurityLevels) SecurityLevels[value] = BotPermissions.Owner;
-                }
-            }
-        }
-        public bool AllowObjectMaster
-        {
-            get
-            {
-                return _masterKey != UUID.Zero;
-            }
-        }
 
         public bool IsRegionMaster
         {
@@ -512,15 +267,14 @@ namespace cogbot
         private Vector3 up = new Vector3(0, 0, 0.9999f);
         readonly private System.Timers.Timer updateTimer;
 
-        public Listeners.WorldObjects WorldSystem;
+        public Cogbot.WorldObjects WorldSystem;
         static public BotClient SingleInstance
         {
-            get { return cogbot.ClientManager.SingleInstance.LastBotClient; }
+            get { return ClientManager.SingleInstance.LastBotClient; }
         }
         public static int debugLevel = 2;
-        public bool GetTextures = cogbot.ClientManager.DownloadTextures;
-
-        //  public cogbot.ClientManager ClientManager;
+        public bool GetTextures = ClientManager.DownloadTextures;
+        //  public Cogbot.ClientManager ClientManager;
         //  public VoiceManager VoiceManager;
         // Shell-like inventory commands need to be aware of the 'current' inventory folder.
 
@@ -529,7 +283,7 @@ namespace cogbot
         ///public DotCYC.CycConnectionForm cycConnection;
         public Dictionary<string, DescribeDelegate> describers;
 
-        readonly public Dictionary<string, Listeners.Listener> listeners;
+        readonly public Dictionary<string, Cogbot.Listener> Cogbot;
         public SortedDictionary<string, CommandInfo> Commands;
         public Dictionary<string, Tutorials.Tutorial> tutorials;
         //public Utilities.BotTcpServer UtilitiesTcpServer;
@@ -538,21 +292,18 @@ namespace cogbot
         private int describePos;
         private string currTutorial;
 
-        public int BoringNamesCount = 0;
-        public int GoodNamesCount = 0;
         public int RunningMode = (int)Modes.normal;
         public UUID AnimationFolder = UUID.Zero;
 
         public BotInventoryEval BotInventory = null; // new InventoryEval(this);
-        //public Inventory Inventory;
-        //public InventoryManager Manager;
-        // public Configuration config;
+
         public String taskInterperterType = "DotLispInterpreter";// DotLispInterpreter,CycInterpreter or ABCLInterpreter
+
+        [ConfigSetting(Description = "If log messages are to be treated as Client Events or not")]
+        static public bool SendLogMessages = false;
+
         ScriptEventListener scriptEventListener = null;
         readonly public ClientManager ClientManager;
-
-        //public List<string> muteList;
-        public bool muted = false;
 
         private UUID GroupMembersRequestID = UUID.Zero;
         public Dictionary<UUID, Group> GroupsCache = null;
@@ -655,16 +406,16 @@ namespace cogbot
 
             describePos = 0;
 
-            listeners = new Dictionary<string, cogbot.Listeners.Listener>();
-            //registrationTypes["avatars"] = new Listeners.Avatars(this);
-            //registrationTypes["chat"] = new Listeners.Chat(this);
-            WorldSystem = new Listeners.WorldObjects(this);
-            //registrationTypes["teleport"] = new Listeners.Teleport(this);
-            //registrationTypes["whisper"] = new Listeners.Whisper(this);
-            //ObjectSystem = new Listeners.Objects(this);
-            //registrationTypes["bump"] = new Listeners.Bump(this);
-            //registrationTypes["sound"] = new Listeners.Sound(this);
-            //registrationTypes["sound"] = new Listeners.Objects(this);
+            Cogbot = new Dictionary<string, Cogbot.Listener>();
+            //registrationTypes["avatars"] = new Cogbot.Avatars(this);
+            //registrationTypes["chat"] = new Cogbot.Chat(this);
+            WorldSystem = new Cogbot.WorldObjects(this);
+            //registrationTypes["teleport"] = new Cogbot.Teleport(this);
+            //registrationTypes["whisper"] = new Cogbot.Whisper(this);
+            //ObjectSystem = new Cogbot.Objects(this);
+            //registrationTypes["bump"] = new Cogbot.Bump(this);
+            //registrationTypes["sound"] = new Cogbot.Sound(this);
+            //registrationTypes["sound"] = new Cogbot.Objects(this);
             var gc = gridClient;
             //_gridClient = null;
             Commands = new SortedDictionary<string, CommandInfo>();
@@ -675,10 +426,10 @@ namespace cogbot
 			var desc = newCommandInfo(new Describe(this));
 			Commands["describe"] = desc;
 			Commands["look"] = desc;
-            RegisterCommand("say", new cogbot.Actions.Communication.SayCommand(this));
-			RegisterCommand("help", new cogbot.Actions.System.Help(this));
-            RegisterCommand("setmaster", new cogbot.Actions.System.SetMasterKeyCommand(this));
-            RegisterCommand("setmasterkey", new cogbot.Actions.System.SetMasterKeyCommand(this));
+            RegisterCommand("say", new Cogbot.Actions.Communication.SayCommand(this));
+			RegisterCommand("help", new Cogbot.Actions.System.Help(this));
+            RegisterCommand("setmaster", new Cogbot.Actions.System.SetMasterKeyCommand(this));
+            RegisterCommand("setmasterkey", new Cogbot.Actions.System.SetMasterKeyCommand(this));
 			RegisterCommand("sit", new Sit(this));
 			RegisterCommand("stand", new StandCommand(this));
 			RegisterCommand("jump", new JumpCommand(this));
@@ -688,16 +439,16 @@ namespace cogbot
 			RegisterCommand("move", new Move(this));
 			RegisterCommand("use", new Use(this));
 			RegisterCommand("eval", new Eval(this));
-			RegisterCommand("wear", new Wear(this));
+			RegisterCommand("wear", new ReplaceOutfitCommand(this));
 
             Commands["locate"] = Commands["location"] = Commands["where"] = newCommandInfo(new Actions.Movement.LocationCommand(this));
             var follow = newCommandInfo(new Follow(this));
             Commands["follow"] = follow;
-            //Commands["simexport"] = new cogbot.Actions.SimExport.ExportCommand(this);
+            //Commands["simexport"] = new Cogbot.Actions.SimExport.ExportCommand(this);
             Commands["stop following"] = follow;
             Commands["stop-following"] = follow;
 
-            tutorials = new Dictionary<string, cogbot.Tutorials.Tutorial>();
+            tutorials = new Dictionary<string, Cogbot.Tutorials.Tutorial>();
             tutorials["tutorial1"] = new Tutorials.Tutorial1(manager, this);
 
             _gridClient = gc;
@@ -758,110 +509,6 @@ namespace cogbot
 
         }
 
-        public static CommandInfo newCommandInfo(Command describe)
-        {
-            return new CommandInfo(describe);
-        }
-
-        void SetLoginName(string firstName, string lastName)
-        {
-            if (!string.IsNullOrEmpty(firstName) || !string.IsNullOrEmpty(lastName))
-            {
-                var details = ClientManager.FindOrCreateAccount(firstName, lastName);
-                SetLoginAcct(details);
-            }
-            else
-            {
-                DebugWriteLine("nameless still");
-            }
-        }
-
-        public void SetLoginAcct(LoginDetails details)
-        {
-            details.Client = this;
-            _BotLoginParams = details;
-            ClientManager.OnBotClientUpdatedName(GetName(), this);
-        }
-
-        private MethodInvoker CatchUpInterns = () => { };
-
-        private void LoadTaskInterpreter()
-        {
-            lock (LispTaskInterperterLock)
-                try
-                {
-                    if (_LispTaskInterperter != null) return;
-                    //WriteLine("Start Loading TaskInterperter ... '" + TaskInterperterType + "' \n");
-                    _LispTaskInterperter = ScriptManager.LoadScriptInterpreter(taskInterperterType, this);
-                    _LispTaskInterperter.LoadFile("cogbot.lisp", DebugWriteLine);
-                    Intern("clientManager", ClientManager);
-                    Intern("client", this);
-                    if (scriptEventListener == null)
-                    {
-                        scriptEventListener = new ScriptEventListener(_LispTaskInterperter, this);
-                        botPipeline.AddSubscriber(scriptEventListener);
-                    }
-
-                    //  WriteLine("Completed Loading TaskInterperter '" + TaskInterperterType + "'\n");
-                    // load the initialization string
-                    CatchUpInterns();
-                }
-                catch (Exception e)
-                {
-                    LogException("LoadTaskInterperter", e);
-                }
-        }
-
-        private bool useLispEventProducer = false;
-        private LispEventProducer lispEventProducer;
-        public bool RunStartupClientLisp = true;
-        public object RunStartupClientLisplock = new object();
-        public void StartupClientLisp()
-        {
-            lock (RunStartupClientLisplock)
-            {
-                if (!RunStartupClientLisp) return;
-                RunStartupClientLisp = false;
-                DebugWriteLine("Running StartupClientLisp");
-                string startupClientLisp = ClientManager.config.startupClientLisp;
-                if (startupClientLisp.Length > 1)
-                {
-                    try
-                    {
-                        LoadTaskInterpreter();
-                        //InvokeJoin("Waiting on StartupClientLisp");
-                        evalLispString("(progn " + ClientManager.config.startupClientLisp + ")");
-                    }
-                    catch (Exception ex)
-                    {
-                        LogException("StartupClientLisp", ex);
-                    }
-                }
-                DebugWriteLine("Ran StartupClientLisp");
-            }
-        }
-        public void RunOnLogin()
-        {
-            //lock (RunStartupClientLisplock)
-            {
-                StartupClientLisp();
-                InvokeJoin("Waiting on RunOnLogin");
-                if (!NeedRunOnLogin) return;
-                NeedRunOnLogin = false;
-                string onLogin = ClientManager.config.onLogin;
-                if (onLogin.Length > 1)
-                {
-                    try
-                    {
-                        evalLispString("(progn " + onLogin + ")");
-                    }
-                    catch (Exception ex)
-                    {
-                        LogException("RunOnLogin: " + onLogin, ex);
-                    }
-                }
-            }
-        }
         //breaks up large responses to deal with the max IM size
 
 
@@ -971,300 +618,11 @@ namespace cogbot
             {
                 OutputDelegate WriteLine = DisplayNotificationInChat;
                 WriteLine("Teleport " + status);
-                //if (!cogbot.Actions.SimExport.ExportCommand.IsExporting) describeSituation(WriteLine);
+                //if (!Cogbot.Actions.SimExport.ExportCommand.IsExporting) describeSituation(WriteLine);
             }
         }
 
 
-        void Self_OnChat(object sender, ChatEventArgs e)
-        {
-            InstantMessageDialog Dialog = InstantMessageDialog.MessageFromAgent;
-            switch (e.SourceType)
-            {
-                case ChatSourceType.System:
-                    break;
-                case ChatSourceType.Agent:
-                    break;
-                case ChatSourceType.Object:
-                    Dialog = InstantMessageDialog.MessageFromObject;
-                    break;
-            }
-            UUID regionID = UUID.Zero;
-            if (e.Simulator!=null)
-            {
-                regionID = e.Simulator.RegionID;
-            }
-            Self_OnMessage(e.FromName, e.SourceID, e.OwnerID,
-                           e.Message, UUID.Zero, false,
-                           regionID, e.Position,
-                           Dialog, e.Type, e);
-            ;
-           
-        }
-
-        private void Self_OnInstantMessage(object sender, InstantMessageEventArgs e)
-        {
-            InstantMessage im = e.IM;
-            ChatType Type = ChatType.Normal;
-            switch (im.Dialog)
-            {
-                case InstantMessageDialog.StartTyping:
-                    Type = ChatType.StartTyping;
-                    break;
-                case InstantMessageDialog.StopTyping:
-                    Type = ChatType.StopTyping;
-                    break;
-            }
-            Self_OnMessage(im.FromAgentName, im.FromAgentID, im.ToAgentID,
-                           im.Message, im.IMSessionID, im.GroupIM,
-                           im.RegionID, im.Position,
-                           im.Dialog, Type, e);
-        }
-
-        private void Self_OnMessage(string FromAgentName, UUID FromAgentID, UUID ToAgentID,
-            string Message, UUID IMSessionID, bool GroupIM,
-            UUID RegionID, Vector3 Position,
-            InstantMessageDialog Dialog, ChatType Type, EventArgs origin)
-        {
-            bool IsOwner = (Type == ChatType.OwnerSay);
-            if (Dialog == InstantMessageDialog.GroupNotice)
-            {
-                GroupIM = true;
-            }
-
-            // Received an IM from someone that is authenticated
-            if (FromAgentID == MasterKey || FromAgentName == MasterName)
-            {
-                IsOwner = true;
-            }
-            BotPermissions perms = GetSecurityLevel(FromAgentID, FromAgentName);
-
-            if (perms == BotPermissions.Owner)
-            {
-                IsOwner = true;
-            }
-
-            bool displayedMessage = false;
-            if (origin is ChatEventArgs && Message.Length > 0 && Dialog == InstantMessageDialog.MessageFromAgent)
-            {
-                WriteLine(String.Format("{0} says, \"{1}\".", FromAgentName, Message));
-                PosterBoard["/posterboard/onchat"] = Message;
-                if (FromAgentName == Self.Name)
-                {
-                    PosterBoard["/posterboard/onchat-said"] = Message;
-                }
-                else
-                {
-                    PosterBoard["/posterboard/onchat-heard"] = Message;
-                }
-            }
-
-            bool groupIM = GroupIM && GroupMembers != null && GroupMembers.ContainsKey(FromAgentID) ? true : false;
-
-
-            switch (Dialog)
-            {
-                case InstantMessageDialog.MessageBox:
-                    break;
-                case InstantMessageDialog.GroupInvitation:
-                    if (IsOwner)
-                    {
-                        string groupName = Message;
-                        int found = groupName.IndexOf("Group:");
-                        if (found > 0) groupName = groupName.Substring(found + 6);
-                        Self.InstantMessage(Self.Name, FromAgentID, string.Empty, IMSessionID,
-                                            InstantMessageDialog.GroupInvitationAccept, InstantMessageOnline.Offline,
-                                            Self.SimPosition,
-                                            UUID.Zero, new byte[0]);
-                        found = groupName.IndexOf(":");
-                        if (found > 0)
-                        {
-                            groupName = groupName.Substring(0, found).Trim();
-                            ExecuteCommand("joingroup " + groupName);
-                        }
-                    }
-                    break;
-                case InstantMessageDialog.InventoryOffered:
-                    break;
-                case InstantMessageDialog.InventoryAccepted:
-                    break;
-                case InstantMessageDialog.InventoryDeclined:
-                    break;
-                case InstantMessageDialog.GroupVote:
-                    break;
-                case InstantMessageDialog.TaskInventoryOffered:
-                    break;
-                case InstantMessageDialog.TaskInventoryAccepted:
-                    break;
-                case InstantMessageDialog.TaskInventoryDeclined:
-                    break;
-                case InstantMessageDialog.NewUserDefault:
-                    break;
-                case InstantMessageDialog.SessionAdd:
-                    break;
-                case InstantMessageDialog.SessionOfflineAdd:
-                    break;
-                case InstantMessageDialog.SessionGroupStart:
-                    break;
-                case InstantMessageDialog.SessionCardlessStart:
-                    break;
-                case InstantMessageDialog.SessionSend:
-                    break;
-                case InstantMessageDialog.SessionDrop:
-                    break;
-                case InstantMessageDialog.BusyAutoResponse:
-                    break;
-                case InstantMessageDialog.ConsoleAndChatHistory:
-                    break;
-                case InstantMessageDialog.Lure911:
-                case InstantMessageDialog.RequestTeleport:
-                    if (IsOwner)
-                    {
-                        TheSimAvatar.StopMoving();
-                        if (RegionID != UUID.Zero)
-                        {
-                            if (!displayedMessage)
-                            {
-                                DisplayNotificationInChat("TP to Lure from " + FromAgentName);
-                                displayedMessage = true;
-                            }
-                            SimRegion R = SimRegion.GetRegion(RegionID, gridClient);
-                            if (R != null)
-                            {
-                                Self.Teleport(R.RegionHandle, Position);
-                                return;
-                            }
-                        }
-                        DisplayNotificationInChat("Accepting TP Lure from " + FromAgentName);
-                        displayedMessage = true;
-                        Self.TeleportLureRespond(FromAgentID, IMSessionID, true);
-                    }
-                    break;
-                case InstantMessageDialog.AcceptTeleport:
-                    break;
-                case InstantMessageDialog.DenyTeleport:
-                    break;
-                case InstantMessageDialog.GodLikeRequestTeleport:
-                    break;
-                case InstantMessageDialog.CurrentlyUnused:
-                    break;
-                case InstantMessageDialog.GotoUrl:
-                    break;
-                case InstantMessageDialog.Session911Start:
-                    break;
-                case InstantMessageDialog.FromTaskAsAlert:
-                    break;
-                case InstantMessageDialog.GroupNotice:
-                    break;
-                case InstantMessageDialog.GroupNoticeInventoryAccepted:
-                    break;
-                case InstantMessageDialog.GroupNoticeInventoryDeclined:
-                    break;
-                case InstantMessageDialog.GroupInvitationAccept:
-                    break;
-                case InstantMessageDialog.GroupInvitationDecline:
-                    break;
-                case InstantMessageDialog.GroupNoticeRequested:
-                    break;
-                case InstantMessageDialog.FriendshipOffered:
-                    if (IsOwner)
-                    {
-                        DisplayNotificationInChat("Accepting Friendship from " + FromAgentName);
-                        Friends.AcceptFriendship(FromAgentID, IMSessionID);
-                        displayedMessage = true;
-                    }
-                    break;
-                case InstantMessageDialog.FriendshipAccepted:
-                    break;
-                case InstantMessageDialog.FriendshipDeclined:
-                    break;
-                case InstantMessageDialog.StartTyping:
-                    break;
-                case InstantMessageDialog.StopTyping:
-                    break;
-                case InstantMessageDialog.MessageFromObject:
-                case InstantMessageDialog.MessageFromAgent:                    
-                    // message from self
-                    if (FromAgentName == GetName()) return;
-                    // message from system
-                    if (FromAgentName == "System") return;
-                    // message from others
-                    CommandInfo ci;
-                    if (Commands.TryGetValue("im", out ci))
-                    {
-                        var whisper = ci.WithBotClient as cogbot.Actions.Communication.ImCommand;
-                        if (whisper != null)
-                        {
-                            whisper.currentAvatar = FromAgentID;
-                            whisper.currentSession = IMSessionID;
-                        }
-                    }
-                    if (IsOwner)
-                    {
-                        OutputDelegate WriteLine;
-                        if (origin is InstantMessageEventArgs)
-                        {
-                            WriteLine = new OutputDelegate((string text, object[] ps) =>
-                            {
-                                string reply0 = DLRConsole.SafeFormat(text, ps);
-                                InstantMessage(FromAgentID, reply0, IMSessionID);
-                            });
-                        }
-                        else
-                        {
-                            WriteLine = new OutputDelegate((string text, object[] ps) =>
-                            {
-                                string reply0 = DLRConsole.SafeFormat(text, ps);
-                                Talk(reply0, 0, Type);
-                            });
-                        }
-                        string cmd = Message;
-
-                        if (cmd.StartsWith("cmcmd "))
-                        {
-                            cmd = cmd.Substring(6);
-                            WriteLine("");
-                            WriteLine(string.Format("invokecm='{0}'", cmd));
-                            ClientManager.DoCommandAll(cmd, FromAgentID, WriteLine);
-                        }
-                        else if (cmd.StartsWith("cmd "))
-                        {
-                            cmd = cmd.Substring(4);
-                            WriteLine(string.Format("invoke='{0}'", cmd));
-                            var res = ExecuteCommand(cmd, FromAgentID, WriteLine);
-                            WriteLine("iresult='" + res + "'");
-                        }
-                        else if (cmd.StartsWith("/") || cmd.StartsWith("@"))
-                        {
-                            cmd = cmd.Substring(1);
-                            WriteLine("");
-                            WriteLine(string.Format("invoke='{0}'", cmd));
-                            var res = ExecuteCommand(cmd, FromAgentID, WriteLine);
-                            WriteLine("iresult='" + res + "'");
-                        }
-                    }
-                    break;
-                default:
-                    break;
-            }
-            if (Dialog != InstantMessageDialog.MessageFromAgent && Dialog != InstantMessageDialog.MessageFromObject)
-            {
-                string debug = String.Format("{0} {1} {2} {3} {4}: {5}",
-                                             IsOwner ? "IsOwner" : "NonOwner",
-                                             groupIM ? "GroupIM" : "IM", Dialog, Type, perms,
-                                             Helpers.StructToString(origin));
-                if (!displayedMessage)
-                {
-                    DisplayNotificationInChat(debug);
-                    displayedMessage = true;
-                }
-            }
-        }
-
-        protected UUID TheAvatarID
-        {
-            get { return Self.AgentID; }
-        }
         public void DisplayNotificationInChat(string str)
         {
             DisplayNotificationInChatReal(str);
@@ -1273,115 +631,6 @@ namespace cogbot
         {
             DisplayNotificationInChatReal(DLRConsole.SafeFormat(str, args));
         }
-
-        private void Inventory_OnInventoryObjectReceived(object sender, InventoryObjectOfferedEventArgs e)
-        {
-            if (true)
-            {
-                e.Accept = true;
-                return; // accept everything}
-            }
-            if (_masterKey != UUID.Zero)
-            {
-                if (e.Offer.FromAgentID != _masterKey)
-                {
-                    e.Accept = false;
-                    return;
-                }
-            }
-            else if (GroupMembers != null && !GroupMembers.ContainsKey(e.Offer.FromAgentID))
-            {
-                e.Accept = false;
-                return;
-            }
-
-            e.Accept = true;
-        }
-
-        // EVENT CALLBACK SECTION
-        void Network_OnDisconnected(object sender, DisconnectedEventArgs e)
-        {
-            var message = e.Message;
-            var reason = e.Reason;
-            try
-            {
-                if (message.Length > 0)
-                    WriteLine("Disconnected from server. Reason is " + message + ". " + reason);
-                else
-                    WriteLine("Disconnected from server. " + reason);
-
-                SendNetworkEvent("On-Network-Disconnected", reason, message);
-
-                WriteLine("Bad Names: " + BoringNamesCount);
-                WriteLine("Good Names: " + GoodNamesCount);
-            }
-            catch (Exception ex)
-            {
-                LogException("Network_OnDisconnected", ex);
-            }
-            EnsureConnectedCheck(reason);
-        }
-
-        private void EnsureConnectedCheck(NetworkManager.DisconnectType reason)
-        {
-            if (ExpectConnected && reason != NetworkManager.DisconnectType.ClientInitiated)
-            {
-                return;
-                List<Simulator> sims = new List<Simulator>();
-                lock (Network.Simulators)
-                {
-                    sims.AddRange(Network.Simulators);
-                }
-                return;
-                ExpectConnected = false;
-                foreach (var s in sims)
-                {
-                    //lock (s)
-                    {
-                        if (s.Connected) s.Disconnect(true);
-                    }
-
-                }
-                //gridClient = new GridClient();
-                //Settings.USE_LLSD_LOGIN = true;
-                new Thread(() =>
-                {
-                    Thread.Sleep(10000);
-                    Login(true);
-                }).Start();
-            }
-        }
-
-        void Network_OnConnected(object sender)
-        {
-            try
-            {
-
-                //System.Threading.Thread.Sleep(3000);
-
-                //  describeAll();
-                //  describeSituation();
-                SendNetworkEvent("On-Network-Connected");
-                ExpectConnected = true;
-            }
-            catch (Exception e)
-            {
-                LogException("Network-On-Connected", e);
-            }
-        }
-
-
-        void Network_OnSimDisconnected(object sender, SimDisconnectedEventArgs e)
-        {
-            var simulator = e.Simulator;
-            var reason = e.Reason;
-            SendNetworkEvent("On-Sim-Disconnected", this, simulator, reason);
-            if (simulator == Network.CurrentSim)
-            {
-                EnsureConnectedCheck(reason);
-            }
-        }
-
         void client_OnLogMessage(object message, Helpers.LogLevel level)
         {                 
             string mes = "" + message;
@@ -1400,44 +649,8 @@ namespace cogbot
                     }
                 }
             }
+            if (!SendLogMessages) return;
             SendNetworkEvent("On-Log-Message", message, level);
-        }
-
-        void Network_OnEventQueueRunning(object sender, EventQueueRunningEventArgs e)
-        {
-            var simulator = e.Simulator;
-            SendNetworkEvent("On-Event-Queue-Running", simulator);
-        }
-
-        void Network_OnSimConnected(object sender, SimConnectedEventArgs e)
-        {
-            ExpectConnected = true;
-            var simulator = e.Simulator;
-            if (simulator == Network.CurrentSim)
-            {
-                if (!Settings.SEND_AGENT_APPEARANCE)
-                {
-                    Appearance.RequestAgentWearables();
-                }
-                Self.RequestMuteList();
-            }
-            if (Self.AgentID != UUID.Zero)
-            {
-                SetSecurityLevel(Self.AgentID, Self.Name, BotPermissions.Owner);
-            }
-            SendNetworkEvent("On-Simulator-Connected", simulator);
-            //            SendNewEvent("on-simulator-connected",simulator);
-        }
-
-        bool Network_OnSimConnecting(Simulator simulator)
-        {
-            SendNetworkEvent("On-Simulator-Connecing", simulator);
-            return true;
-        }
-
-        void Network_OnLogoutReply(object sender, LoggedOutEventArgs e)
-        {
-            SendNetworkEvent("On-Logout-Reply", e.InventoryItems);
         }
 
         //=====================
@@ -1543,13 +756,6 @@ namespace cogbot
 
         }
 
-
-        public void logout()
-        {
-            ExpectConnected = false;
-            if (Network.Connected)
-                Network.Logout();
-        }
 
         public void WriteLineReal(string str)
         {
@@ -1692,354 +898,6 @@ namespace cogbot
         }
 
 
-
-        public ScriptInterpreter _LispTaskInterperter;
-        public ScriptInterpreter LispTaskInterperter
-        {
-            get
-            {
-                if (_LispTaskInterperter == null)
-                {
-                    LoadTaskInterpreter();
-                }
-                return _LispTaskInterperter;
-            }
-        }
-
-        public readonly object LispTaskInterperterLock = new object();
-        readonly private List<Type> registeredTypes = new List<Type>();
-
-        public void enqueueLispTask(object p)
-        {
-            scriptEventListener.enqueueLispTask(p);
-        }
-
-        public Object evalLispReader(TextReader stringCodeReader)
-        {
-            try
-            {
-                Object r = LispTaskInterperter.Read("evalLispString", stringCodeReader, WriteLine);
-                if (LispTaskInterperter.Eof(r))
-                    return r.ToString();
-                return evalLispCode(r);
-            }
-            catch (Exception e)
-            {
-                LogException("evalLispInterp stringCodeReader", e);
-                throw e;
-            }
-        }
-
-        public string evalLispReaderString(TextReader reader)
-        {
-            return LispTaskInterperter.Str(evalLispReader(reader));
-        }
-
-
-        public string evalXMLString(TextReader reader)
-        {
-            return XmlInterp.evalXMLString(reader);
-        }
-
-        /// <summary>
-        /// (thisClient.XML2Lisp2 "http://myserver/myservice/?q=" chatstring) 
-        /// </summary>
-        /// <param name="URL"></param>
-        /// <param name="args"></param>
-        /// <returns></returns>
-        public string XML2Lisp2(string URL, string args)
-        {
-            return XmlInterp.XML2Lisp2(URL, args);
-        } // method: XML2Lisp2
-
-
-        public string XML2Lisp(string xcmd)
-        {
-            return XmlInterp.XML2Lisp(xcmd);
-        }
-
-        public string evalLispString(string lispCode)
-        {
-            try
-            {
-                if (lispCode == null || lispCode.Length == 0) return null;
-                Object r = null;
-                //lispCode = "(load-assembly \"libsecondlife\")\r\n" + lispCode;                
-                StringReader stringCodeReader = new StringReader(lispCode);
-                return evalLispReaderString(stringCodeReader);
-            }
-            catch (Exception e)
-            {
-                LogException("evalLispInterp lispCode=" + lispCode, e);
-                throw e;
-            }
-        }
-
-        public Object evalLispCode(Object lispCode)
-        {
-            try
-            {
-                if (lispCode == null) return null;
-                if (lispCode is String)
-                {
-                    StringReader stringCodeReader = new StringReader(lispCode.ToString());
-                    lispCode = LispTaskInterperter.Read("evalLispString", stringCodeReader, WriteLine);
-                }
-                WriteLine("Eval> " + lispCode);
-                if (LispTaskInterperter.Eof(lispCode))
-                    return lispCode.ToString();
-                return LispTaskInterperter.Eval(lispCode);
-            }
-            catch (Exception e)
-            {
-                LogException("evalLispInterp lispCode=" + lispCode, e);
-                throw e;
-            }
-        }
-
-        public override string ToString()
-        {
-            return "'(thisClient \"" + GetName() + "\")";
-        }
-
-        /// <summary>
-        /// Initialize everything that needs to be initialized once we're logged in.
-        /// </summary>
-        /// <param name="login">The status of the login</param>
-        /// <param name="message">Error message on failure, MOTD on success.</param>
-        public void Network_OnLogin(object sender, LoginProgressEventArgs e)
-        {
-            var message = e.Message;
-            var login = e.Status;
-            if (_BotLoginParams == null)
-            {
-                SetLoginName(gridClient.Self.FirstName, gridClient.Self.LastName);
-            } else
-            {
-                _BotLoginParams.Status = login;
-            }
-            if (login == LoginStatus.Success)
-            {
-                // Start in the inventory root folder.
-                if (Inventory.Store != null)
-                    CurrentDirectory = Inventory.Store.RootFolder; //.RootFolder;
-                else
-                {
-                    Logger.Log("Cannot get Inventory.Store.RootFolder", OpenMetaverse.Helpers.LogLevel.Error);
-                    CurrentDirectory = null;
-                }
-                OneAtATimeQueue.Enqueue(RunOnLogin);
-            } // anyhitng other than success NeedRunOnLogin
-            else
-            {
-                NeedRunOnLogin = true;
-            }
-            //            WriteLine("ClientManager Network_OnLogin : [" + login.ToString() + "] " + message);
-            //SendNewEvent("On-Login", login, message);
-
-            if (login == LoginStatus.Failed)
-            {
-                ExpectConnected = false;
-                SendNetworkEvent("On-Login-Fail", login, message);
-                WriteLine("Login Failed " + message + " LoginRetries: " + LoginRetries);
-                if (LoginRetries <= 0)
-                {
-                    if (_BotLoginParams != null)
-                    {
-                        _BotLoginParams.LoginEvent.Set();
-                    }
-                    return;
-                }
-                LoginRetries--;
-                Login(false);
-            }
-            else if (login == LoginStatus.Success)
-            {
-                if (!ClientManager.StarupLispCreatedBotClients)
-                {
-                    CogbotGUI.GetLoginOptionsFromRadegast(TheRadegastInstance, this);
-                }
-                LoginRetries = 0; // maybe LoginRetriesFresh??
-                WriteLine("Logged in successfully");
-                ExpectConnected = true;
-                SendNetworkEvent("On-Login-Success", login, message);
-                //                SendNewEvent("on-login-success",login,message);
-                if (_BotLoginParams != null)
-                {
-                    _BotLoginParams.LoginEvent.Set();
-                }
-            }
-            else
-            {
-                SendNetworkEvent("On-Login", login, message);
-            }
-
-        }
-
-        readonly Dictionary<Assembly, List<Listener>> KnownAssembies = new Dictionary<Assembly, List<Listener>>();
-        public void InvokeAssembly(Assembly assembly, string args, OutputDelegate output)
-        {
-            LoadAssembly(assembly);
-            List<Listener> items = null;
-            lock (KnownAssembies)
-            {
-                if (!KnownAssembies.TryGetValue(assembly, out items))
-                {
-                    items = new List<Listener>();
-                    KnownAssembies.Add(assembly, items);
-                }
-            }
-            lock (items)
-            {
-                foreach (Listener item in items)
-                {
-                    item.InvokeCommand(args, output);
-                }
-            }
-        }
-
-        private bool ConstructType(Assembly assembly, Type type, string name, Predicate<Type> when, Action<Type> action)
-        {
-            bool found = false;
-            foreach (Type t in assembly.GetTypes())
-            {
-                try
-                {
-                    if (t.IsSubclassOf(type) && when(t))
-                    {
-                        try
-                        {
-                            found = true;
-                            Type type1 = t;
-                            InvokeNext(name + " " + t, () => action(type1));
-                        }
-                        catch (Exception e)
-                        {
-                            e = ScriptManager.InnerMostException(e);
-                            LogException("ERROR!  " + name + " " + t + " " + e + "\n In " + t.Name, e);
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    WriteLine(e.ToString());
-                }
-            }
-            return found;
-        }
-
-        public Dictionary<Assembly, List<Listener>> AssemblyListeners =   new Dictionary<Assembly, List<Listener>>();
-
-        public List<Listener> LoadAssembly(Assembly assembly)
-        {
-            ClientManager.RegisterAssembly(assembly);
-            List<Listener> items = null;
-            lock (KnownAssembies)
-            {
-                if (KnownAssembies.TryGetValue(assembly, out items))
-                {
-                    return items;
-                }
-                items = new List<Listener>();
-                KnownAssembies.Add(assembly, items);
-            }
-            bool found = false;
-            foreach (Type t in assembly.GetTypes()) RegisterType(t);
-            foreach (Type t in assembly.GetTypes())
-            {
-                try
-                {
-                    if (t.IsSubclassOf(typeof(WorldObjectsModule)))
-                    {
-                        if (t.Name.Contains("Prolog"))
-                        {
-                            continue;
-                        }
-                        ConstructorInfo info = t.GetConstructor(new Type[] { typeof(BotClient) });
-                        try
-                        {
-                            found = true;
-                            InvokeNext("LoadAssembly " + assembly, () =>
-                                       {
-
-                                           try
-                                           {
-                                               Listener command = (Listener)info.Invoke(new object[] { this });
-                                               RegisterListener(command);
-                                               items.Add(command);
-                                           }
-                                           catch (Exception e1)
-                                           {
-                                               e1 = ScriptManager.InnerMostException(e1);
-                                               LogException("ERROR! RegisterListener: " + e1 + "\n In " + Thread.CurrentThread.Name, e1);   
-                                           }
-                                       });
-
-                        }
-                        catch (Exception e)
-                        {
-                            e = ScriptManager.InnerMostException(e);
-                            LogException("ERROR! RegisterListener: " + e + "\n In " + t.Name, e);
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    WriteLine(e.ToString());
-                }
-            }
-            if (!found)
-            {
-                // throw new Exception("missing entry point " + assembly);
-            }
-            return items;
-        }
-
-        /// <summary>
-        /// Initialize everything that needs to be initialized once we're logged in.
-        /// </summary>
-        /// <param name="login">The status of the login</param>
-        /// <param name="message">Error message on failure, MOTD on success.</param>
-        public void RegisterCommand(string name, cogbot.Actions.Command live)
-        {
-            string orginalName = name;
-            name = name.Replace(" ", "").ToLower();
-            while (name.EndsWith(".")) name = name.Substring(0, name.Length - 1);
-            Monitor.Enter(Commands);
-            live.TheBotClient = this;
-            CommandInfo prev;
-            if (!Commands.TryGetValue(name, out prev))
-            {
-                CommandInfo command = new CommandInfo(live);
-                Commands.Add(name, command);
-                command.Name = orginalName;
-                if (command.IsStateFul)
-                {
-                    live.TheBotClient = this;
-                    command.WithBotClient = live;
-                }
-            }
-            else
-            {
-                if (prev.CmdType != live.GetType())
-                {
-                    RegisterCommand("!" + orginalName, live);
-                }
-            }
-            Monitor.Exit(Commands);
-        }
-
-        public void RegisterCommand(Command command)
-        {
-            command.TheBotClient = this;
-            RegisterCommand(command.Name, command);
-        }
-
-        internal void DoCommandAll(string line, UUID uUID, OutputDelegate outputDelegate)
-        {
-            ClientManager.DoCommandAll(line, uUID, outputDelegate);
-        }
-
         //internal void LogOut(GridClient Client)
         //{
         //Client.Network.Logout();
@@ -2072,7 +930,7 @@ namespace cogbot
                 //lock (lBotMsgSubscribers)
                 //{   
                 if (_LispTaskInterperter != null) _LispTaskInterperter.Dispose();
-                foreach (var ms in listeners.Values)
+                foreach (var ms in Cogbot.Values)
                 {
                     ms.Dispose();
                 }
@@ -2080,293 +938,6 @@ namespace cogbot
             }
         }
 
-        //List<BotMessageSubscriber> lBotMsgSubscribers = new List<BotMessageSubscriber>();
-        public interface BotMessageSubscriber
-        {
-            void msgClient(string serverMessage);
-            void ShuttingDown();
-        }
-        public void AddBotMessageSubscriber(SimEventSubscriber tcpServer)
-        {
-            botPipeline.AddSubscriber(tcpServer);
-        }
-        public void RemoveBotMessageSubscriber(SimEventSubscriber tcpServer)
-        {
-            botPipeline.RemoveSubscriber(tcpServer);
-        }
-
-        public void SendNetworkEvent(string eventName, params object[] args)
-        {
-            SendPersonalEvent(SimEventType.NETWORK, eventName, args);
-        }
-
-
-        public void SendPersonalEvent(SimEventType type, string eventName, params object[] args)
-        {
-            if (args.Length > 0)
-            {
-                if (args[0] is BotClient)
-                {
-                    args[0] = ((BotClient)args[0]).GetAvatar();
-                }
-            }
-            SimObjectEvent evt = botPipeline.CreateEvent(type, SimEventClass.PERSONAL, eventName, args);
-            evt.AddParam("recipientOfInfo", GetAvatar());
-            SendPipelineEvent(evt);
-        }
-
-        public void SendPipelineEvent(SimObjectEvent evt)
-        {
-            OnEachSimEvent(evt);
-            botPipeline.SendEvent(evt);
-        }
-
-
-        internal string argsListString(IEnumerable list)
-        {
-            if (scriptEventListener == null) return "" + list;
-            return ScriptEventListener.argsListString(list);
-        }
-
-        internal string argString(object p)
-        {
-            if (scriptEventListener == null) return "" + p;
-            return ScriptEventListener.argString(p);
-        }
-
-        public CmdResult ExecuteCommand(string text)
-        {
-            // done inside the callee InvokeJoin("ExecuteCommand " + text);
-            OutputDelegate WriteLine = DisplayNotificationInChat;
-            return ExecuteCommand(text, this, WriteLine);
-        }
-
-        private bool InvokeJoin(string s)
-        {
-           // return InvokeJoin(s, -1);
-            return true;
-        }
-        private bool InvokeJoin(string s, int millisecondsTimeout)
-        {
-            return OneAtATimeQueue.InvokeJoin(s, millisecondsTimeout);
-        }
-        internal bool InvokeJoin(string s, int millisecondsTimeout, ThreadStart task1, ThreadStart task2)
-        {
-            return OneAtATimeQueue.InvokeJoin(s, millisecondsTimeout, task1, task2);
-        }
-
-        public void InvokeNext(string s, ThreadStart e)
-        {
-            OneAtATimeQueue.Enqueue(s, () =>
-                                        {
-                                            e();
-                                        });
-        }
-
-        public CmdResult ExecuteCommand(string text, object session, OutputDelegate WriteLine)
-        {
-            if (string.IsNullOrEmpty(text)) return null;
-            text = text.Trim();
-            while (text.StartsWith("/"))
-            {
-                text = text.Substring(1).TrimStart();
-            }
-            if (string.IsNullOrEmpty(text)) return null;
-            CmdResult res = ExecuteBotCommand(text, session, WriteLine);
-            if (res != null) return res;
-            res = ClientManager.ExecuteSystemCommand(text, session, WriteLine);
-            if (res != null) return res;
-            string verb = Parser.ParseArguments(text)[0];
-            Command act = GetCommand(verb, false);
-            if (act != null)
-            {
-                if (act is GridMasterCommand)
-                {
-                    if (!WorldSystem.IsGridMaster)
-                    {
-                        WriteLine("I am not gridMaster " + text + ".");
-                        return null;
-                    }
-                }
-                if (act is RegionMasterCommand)
-                {
-                    if (!IsRegionMaster)
-                    {
-                        WriteLine("I am not regionMaster " + text + ".");
-                    }
-                }
-                string pargs = (text.Length > verb.Length) ? text.Substring(verb.Length + 1) : "";
-                return BotClient.DoCmdAct(act, verb, pargs, BotClient.SessionToCallerId(session),
-                                          WriteLine);
-            }
-            WriteLine("I don't understand the ExecuteCommand " + text + ".");
-            return null;
-        }
-
-
-        public CmdResult ExecuteBotCommand(string text, object session, OutputDelegate WriteLine)
-        {
-            if (text == null)
-            {
-                return null;
-            }
-            text = text.Trim();
-            while (text.StartsWith("/")) text = text.Substring(1).TrimStart();
-            if (text.Length == 0)
-            {
-                return null;
-            }
-            try
-            {
-
-                if (text.StartsWith("("))
-                {
-                    InvokeJoin("ExecuteBotCommand " + text);
-                    return new CmdResult(evalLispString(text).ToString(), true);
-                }
-                //            Settings.LOG_LEVEL = Helpers.LogLevel.Debug;
-                text = text.Replace("\"", "").Replace("  ", " ");
-                string verb = text.Split(' ')[0];
-                verb = verb.ToLower();
-
-                Command act = GetCommand(verb, false);
-                if (act != null)
-                {
-                    if (act is GridMasterCommand)
-                    {
-                        if (!WorldSystem.IsGridMaster)
-                        {
-                            return null;
-                        }
-                    }
-                    if (act is RegionMasterCommand)
-                    {
-                        if (!IsRegionMaster)
-                        {
-                            return null;
-                        }
-                    }
-                    try
-                    {
-                        CmdResult res;
-                        if (text.Length > verb.Length)
-                            return DoCmdAct(act, verb, text.Substring(verb.Length + 1), session, WriteLine);
-                        else
-                            return DoCmdAct(act, verb, "", session, WriteLine);
-                    }
-                    catch (Exception e)
-                    {
-                        LogException("ExecuteBotCommand " + text, e);
-                        return new CmdResult("ExecuteBotCommand " + text + "cuased " + e, false);
-                    }
-                }
-                else
-                {
-                    if (WorldSystem == null || WorldSystem.SimAssetSystem == null)
-                        return new CmdResult("no world yet for gesture", false);
-                    UUID assetID = WorldSystem.SimAssetSystem.GetAssetUUID(text, AssetType.Gesture);
-                    if (assetID != UUID.Zero) return ExecuteBotCommand("gesture " + assetID, session, WriteLine);
-                    assetID = WorldSystem.SimAssetSystem.GetAssetUUID(text, AssetType.Animation);
-                    if (assetID != UUID.Zero) return ExecuteBotCommand("anim " + assetID, session, WriteLine);
-                    return null;
-                }
-            }
-            catch (Exception e)
-            {
-                LogException("ExecuteBotCommand " + text, e);
-                return null;
-            }
-        }
-
-        static public CmdResult DoCmdAct(Command command, string verb, string args, object callerSession, OutputDelegate del)
-        {
-            var callerID = SessionToCallerId(callerSession);
-            string cmdStr = "ExecuteActBotCommand " + verb + " " + args;
-            if (command is BotPersonalCommand)
-            {
-                BotClient robot = command.TheBotClient;
-                robot.InvokeJoin(cmdStr);
-            }
-            return command.acceptInputWrapper(verb, args, callerID, del);
-            //robot.OneAtATimeQueue.Enqueue(cmdStr, () => command.acceptInputWrapper(verb, args, callerID, del));
-        }
-
-        public bool IsValidCommand(string cmd)
-        {
-            return GetCommand(cmd, true) != null;
-        }
-
-        public Command GetCommand(string text, bool managerCmds)
-        {
-            if (string.IsNullOrEmpty(text)) return null;
-            text = text.Trim();
-            while (text.StartsWith("/"))
-            {
-                text = text.Substring(1).TrimStart();
-            }
-            if (string.IsNullOrEmpty(text)) return null;
-            text = Parser.ParseArguments(text)[0].ToLower();
-            CommandInfo fnd;
-            if (Commands == null || Commands.Count == 0)
-            {
-                WriteLine("No commands defined yet " + this);
-                return null;
-            }
-            if (Commands.TryGetValue(text, out fnd)) return fnd.MakeInstance(this);
-            if (managerCmds)
-            {
-                var cm = ClientManager;
-                if (cm != null)
-                {
-                    if (cm.groupActions.TryGetValue(text, out fnd)) return fnd.MakeInstance(null);
-                }
-            }
-            if (text.EndsWith("s")) return GetCommand(text.Substring(0, text.Length - 1), managerCmds);
-            return null;
-        }
-
-        public readonly static UUID OWNERLEVEL = UUID.Parse("ffffffff-ffff-ffff-ffff-ffffffffffff");
- 
-        public static UUID SessionToCallerId(object callerSession)
-        {
-            if (callerSession is BotClient) return OWNERLEVEL;
-            if (callerSession == null)
-            {
-                return UUID.Zero;
-            }
-            UUID callerId = UUID.Zero;
-            if (callerSession is UUID) callerId = (UUID)callerSession;
-            if (callerId != UUID.Zero) return callerId;
-            CmdRequest request = callerSession as CmdRequest;
-            if (request != null) return SessionToCallerId(request.CallerAgent);
-            return OWNERLEVEL; 
-            throw new NotImplementedException();
-        }
-
-        public string GetName()
-        {
-            string n = Self.Name;
-            if (n != null && !String.IsNullOrEmpty(n.Trim())) return n;
-            if (_BotLoginParams == null)
-            {
-                return "Noname" + GetHashCode();
-            }
-            if (String.IsNullOrEmpty(BotLoginParams.FirstName))
-            {
-                return string.Format("Unnamed Robot: {0} {1}", BotLoginParams.FirstName, BotLoginParams.LastName);
-                throw new NullReferenceException("GEtName");
-            }
-            return string.Format("{0} {1}", BotLoginParams.FirstName, BotLoginParams.LastName);
-        }
-
-
-        void SimEventSubscriber.OnEvent(SimObjectEvent evt)
-        {
-            if (evt.GetVerb() == "On-Execute-Command")
-            {
-                ExecuteCommand(evt.GetArgs()[0].ToString(), null, WriteLine);
-            }
-        }
 
         void SimEventSubscriber.Dispose()
         {
@@ -2411,30 +982,10 @@ namespace cogbot
             Self.Chat(str, channel, type);
         }
 
-        public void Intern(string n, object v)
-        {
-            if (_LispTaskInterperter != null)
-            {
-                _LispTaskInterperter.Intern(n, v);
-            }
-            var PrevCode = CatchUpInterns;
-            CatchUpInterns = () =>
-                                 {
-                                     PrevCode();
-                                     _LispTaskInterperter.Intern(n, v);
-                                 };
-        }
-
-
-        public void InternType(Type t)
-        {
-//          LispTaskInterperter.InternType(t);
-            ScriptManager.AddType(t);
-        }
 
         private void RegisterListener(Listener listener)
         {
-            // listeners[listener.GetModuleName()] = listener;
+            // Cogbot[listener.GetModuleName()] = listener;
 
             string mname = listener.GetModuleName();
             string taskName = "LISTENER STARTUP: " + mname;
@@ -2453,185 +1004,8 @@ namespace cogbot
                                         });
         }
 
-        internal void RegisterType(Type t)
-        {
-            lock(GridClientNullLock)
-            {
-                RegisterType0(t);
-            }
-        }
-        internal void RegisterType0(Type t)
-        {
-            ClientManager.RegisterType(t);
-            if (registeredTypes.Contains(t)) return;
-            registeredTypes.Add(t);
-            try
-            {
-                if (t.IsSubclassOf(typeof(Command)))
-                {
-                    if (!typeof(SystemApplicationCommand).IsAssignableFrom(t) && !typeof(NotAutoLoaded).IsAssignableFrom(t))
-                    {
-                        string typename = t.Name;
-                        bool useGridClient = false;
-                        ConstructorInfo info = t.GetConstructor(new Type[] { typeof(BotClient) });
-                        if (info == null)
-                        {
-                            useGridClient = true;
-                            info = t.GetConstructor(new Type[] { typeof(GridClient) });
-                        }
-                        if (info == null)
-                        {
-                            WriteLine("Missing BotClient constructor in " + typename);
-                            return;
-                        }
-                        var gc = gridClient;
-                        try
-                        {
-                            Command command = null;
-                            GridClientAccessed = false;
-                            bool stateFullCmd = typeof (BotStatefullCommand).IsAssignableFrom(t);
-                            if (!stateFullCmd)
-                            {
-                                //_gridClient = null;
-                            }
-                            else
-                            {
-                                _gridClient = gc;
-                            }
-                            if (useGridClient)
-                            {
-                                command = (Command)info.Invoke(new object[] { gridClient });
-                            }
-                            else
-                            {
-                                command = (Command) info.Invoke(new object[] {this});
-                            }
-                            if (GridClientAccessed)
-                            {
-                                command.IsStateFull = true;
-                                GridClientAccessed = false;
-                            }
-                            if (stateFullCmd) command.IsStateFull = true;
-                            RegisterCommand(command);
-                        }
-                        catch (Exception e)
-                        {
-                            LogException("RegisterCommand " + t.Name, e);
-                        } finally
-                        {
-                            _gridClient = gc;
-                        }
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                LogException("RegisterType! " + t, e);
-            }
-        }
 
-        public SimAvatarClient TheSimAvatar
-        {
-            get
-            {
-                return (SimAvatarClient)WorldSystem.TheSimAvatar;
-            }
-        }
-        internal object GetAvatar()
-        {
-            if (gridClient.Self.AgentID != UUID.Zero)
-            {
-                if (WorldSystem.m_TheSimAvatar != null) return TheSimAvatar;
-            }
-            return this;
-        }
-
-        public void FakeEvent(Object target, String infoName, params object[] parameters)
-        {
-
-            Type type = target.GetType();
-            EventInfo eventInfo = type.GetEvent(infoName, BindingFlags.Instance | BindingFlags.Public |
-                                                          BindingFlags.NonPublic | BindingFlags.IgnoreCase);
-            MethodInfo m = null;
-            if (eventInfo != null)
-            {
-                infoName = eventInfo.Name;
-                m = eventInfo.GetRaiseMethod(true);
-            }
-            
-            Exception lastException = null;
-            if (m != null)
-            {
-                try
-                {
-
-
-                    m.Invoke(target, parameters);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    lastException = e;
-                }
-            }
-            else
-            {
-                {
-                    foreach (var o in new[] {"", "_", "m_"})
-                    {
-
-
-                        FieldInfo fieldInfo = type.GetField(o + infoName,
-                                                            BindingFlags.Instance | BindingFlags.NonPublic) ??
-                                              type.GetField(o + infoName,
-                                                            BindingFlags.Instance | BindingFlags.Public)
-                                              ?? type.GetField(o + infoName,
-                                                               BindingFlags.Instance | BindingFlags.Public |
-                                                               BindingFlags.NonPublic | BindingFlags.IgnoreCase);
-
-                        if (fieldInfo != null)
-                        {
-                            Delegate del = fieldInfo.GetValue(target) as Delegate;
-
-                            if (del != null)
-                            {
-                                del.DynamicInvoke(parameters);
-                                return;
-                            }
-                        }
-                    }
-                }
-                if (eventInfo != null)
-                {
-                    m = eventInfo.EventHandlerType.GetMethod("Invoke");
-
-                    if (m != null)
-                    {
-                        Type dt = m.DeclaringType;
-                        try
-                        {
-
-
-                            m.Invoke(target, parameters);
-                            return;
-                        }
-                        catch (Exception e)
-                        {
-                            lastException = e;
-                        }
-                    }
-                }
-                var ms = eventInfo.GetOtherMethods(true);
-                foreach (MethodInfo info in ms)
-                {
-                }
-            }
-
-            if (lastException != null) throw lastException;
-            //MethodInfo m = eventInfo.GetOtherMethods(true);
-            throw new NotSupportedException();
-        }
-
+   
         public List<InventoryItem> GetFolderItems(string target)
         {
             if (Inventory.Store == null)
@@ -2716,78 +1090,7 @@ namespace cogbot
             InvokeGUI(o);
         }
 
-        public BotPermissions GetSecurityLevel(UUID uuid, string name)
-        {
-            BotPermissions bp;
-            if (uuid != UUID.Zero)
-            {
-                lock (SecurityLevels)
-                    if (SecurityLevels.TryGetValue(uuid, out bp))
-                    {
-                        return bp;
-                    }
-            }
-            if (!string.IsNullOrEmpty(name))
-            {
-                lock (SecurityLevelsByName)
-                    if (SecurityLevelsByName.TryGetValue(name, out bp))
-                    {
-                        return bp;
-                    }
-            }
-            return BotPermissions.Base;
-        }
-
-        public void SetSecurityLevel(UUID uuid, string name, BotPermissions perms)
-        {
-            BotPermissions bp;
-            if (uuid != UUID.Zero)
-            {
-                lock (SecurityLevels) SecurityLevels[uuid] = perms;
-            }
-            if (!string.IsNullOrEmpty(name))
-            {
-                // dont take whitepaces
-                name = name.Trim();
-                if (name != "") lock (SecurityLevelsByName) SecurityLevelsByName[name] = perms;
-            }
-        }
-
-        public CmdResult ExecuteTask(string scripttype, TextReader reader, OutputDelegate WriteLine)
-        {
-            var si = ScriptManager.LoadScriptInterpreter(scripttype, this);
-            object o = si.Read(scripttype, reader, WriteLine);
-            if (o is CmdResult) return (CmdResult)o;
-            if (o == null) return new CmdResult("void", true);
-            if (si.Eof(o)) return new CmdResult("EOF " + o, true);
-            o = si.Eval(o);
-            if (o is CmdResult) return (CmdResult)o;
-            if (o == null) return new CmdResult("void", true);
-            if (si.Eof(o)) return new CmdResult("EOF " + o, true);
-            return new CmdResult("" + o, true);
-        }
-
-        public string DoHttpGet(string url)
-        {
-            return Encoding.UTF8.GetString((new System.Net.WebClient()).DownloadData(url)); ;
-        }
-
-        public string DoHttpPost(Object[] args)
-        {
-            NameValueCollection dict = new NameValueCollection();
-            for (int i = 1; i < args.Length; i++)
-            {
-                dict.Add(args[i++].ToString(), args[i].ToString());
-            }
-            return HttpPost.DoHttpPost(args[0].ToString(), dict);
-        }
-
-
-        public CmdResult ExecuteXmlCommand(string cmd, object session, OutputDelegate line)
-        {
-            return XmlInterp.ExecuteXmlCommand(cmd, session, line);
-        }
-
+  
 
         /// <summary>
         /// Example text: <sapi> <silence msec="100" /> <bookmark mark="anim:hello.csv"/> Hi there </sapi>
@@ -2999,24 +1302,7 @@ namespace cogbot
             return BotLoginParams.BotLName;
         }
 
-        #region SimEventSubscriber Members
-
-        private bool _EventsEnabled = true;
-        public bool EventsEnabled
-        {
-            get
-            {
-                return _EventsEnabled;// throw new NotImplementedException();
-            }
-            set
-            {
-                _EventsEnabled = value;
-            }
-        }
-
-        #endregion
-
-        BotClient TheBot
+            BotClient TheBot
         {
             get { return this; }
         }
@@ -3135,21 +1421,4 @@ namespace cogbot
             get { return timestamp; }
         }
     }
-
-    /// <summary>
-    ///  
-    /// </summary>
-    [Flags]
-    public enum BotPermissions : byte
-    {
-        /// <summary>Recognise</summary>
-        Base = 0x01,
-        /// <summary>Execute owner commands</summary>
-        Owner = 0x02,
-        /// <summary>Execute group level perms</summary>
-        Group = 0x04,
-        /// <summary>Ignore like for bots and users we dont chat with</summary>
-        Ignore = 0x80
-    }
-
 }

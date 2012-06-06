@@ -41,13 +41,13 @@ namespace SbsSW.DesignByContract
     ///
     /// You can direct output to a Trace listener. For example, you could insert
     /// <code>
-    /// Trace.Listeners.Clear();
-    /// Trace.Listeners.Add(new TextWriterTraceListener(Console.Out));
+    /// Trace.Cogbot.Clear();
+    /// Trace.Cogbot.Add(new TextWriterTraceListener(Console.Out));
     /// </code>
     /// 
     /// or direct output to a file or the Event Log.
     /// 
-    /// (Note: For ASP.NET clients use the Listeners collection
+    /// (Note: For ASP.NET clients use the Cogbot collection
     /// of the Debug, not the Trace, object and, for a Release build, only exception-handling
     /// is possible.)
     /// </remarks>

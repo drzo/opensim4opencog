@@ -7,7 +7,7 @@ using PathSystem3D.Navigation;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Movement
+namespace Cogbot.Actions.Movement
 {
     public class GotoLandmarkCommand : Command, BotPersonalCommand
     {

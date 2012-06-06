@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
-using cogbot;
-using cogbot.Actions;
+using Cogbot;
+using Cogbot.Actions;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using PathSystem3D.Navigation;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.SimExport
+namespace Cogbot.Actions.SimExport
 {
     public class XferCommand : Command, GridMasterCommand
     {

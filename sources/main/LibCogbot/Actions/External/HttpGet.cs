@@ -6,7 +6,7 @@ using System.Net;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.WebUtil
+namespace Cogbot.Actions.WebUtil
 {
     public class HttpGet : Command, SystemApplicationCommand
     {

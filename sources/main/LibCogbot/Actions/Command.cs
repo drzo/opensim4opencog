@@ -2,8 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
+using Cogbot;
+using Cogbot.World;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
@@ -11,7 +11,7 @@ using System.Reflection;
 using OpenMetaverse.StructuredData;
 using Simulator = OpenMetaverse.Simulator;
 
-namespace cogbot.Actions
+namespace Cogbot.Actions
 {
     
     public class PrimSpec : List<SimObject>
@@ -421,7 +421,7 @@ namespace cogbot.Actions
                // Parameters = new[] { new NamedParam(typeof(GridClient), null) };
                 Category = CommandCategory.BotClient;
             }
-            if (this.GetType().Namespace.ToString() == "cogbot.Actions.Movement")
+            if (this.GetType().Namespace.ToString() == "Cogbot.Actions.Movement")
             {
                 Category = CommandCategory.Movement;
             }
@@ -505,7 +505,7 @@ namespace cogbot.Actions
             }
         }
 
-        public cogbot.Listeners.WorldObjects WorldSystem
+        public Cogbot.WorldObjects WorldSystem
         {
             get
             {

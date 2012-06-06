@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
+using Cogbot;
+using Cogbot.World;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Communication
+namespace Cogbot.Actions.Communication
 {
     public class ImCommand : Command, BotPersonalCommand, BotStatefullCommand
     {

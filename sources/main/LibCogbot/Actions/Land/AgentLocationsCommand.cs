@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Land
+namespace Cogbot.Actions.Land
 {
     /// <summary>
     /// Display a list of all agent locations in a specified region

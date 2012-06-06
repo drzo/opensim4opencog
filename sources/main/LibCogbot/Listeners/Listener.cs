@@ -4,7 +4,7 @@ using System.Text;
 using MushDLR223.ScriptEngines;
 using OpenMetaverse; //using libsecondlife;
 
-namespace cogbot.Listeners
+namespace Cogbot
 {
     abstract public class AListener : Listener, IDisposable
     {
@@ -15,7 +15,7 @@ namespace cogbot.Listeners
         {
             //botclient = _parent;
             client = _parent;//.CurrentClient;
-            client.listeners[this.GetModuleName()] = this;
+            client.Cogbot[this.GetModuleName()] = this;
         }
 
         /// <summary>

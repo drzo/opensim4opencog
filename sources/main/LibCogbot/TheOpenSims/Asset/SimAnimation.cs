@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using cogbot.Listeners;
+using Cogbot;
 using OpenMetaverse;
 using MushDLR223.Utilities;
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     internal class SimAnimation : SimAsset
     {

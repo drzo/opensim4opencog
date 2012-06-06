@@ -5,15 +5,15 @@ using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Pathfinder
+namespace Cogbot.Actions.Pathfinder
 {
-    public class MapImagePaths : cogbot.Actions.Command, SystemApplicationCommand
+    public class MapImagePaths : Cogbot.Actions.Command, SystemApplicationCommand
     {
         public MapImagePaths(BotClient client)
         {
             Name = GetType().Name;
             Description = "Reads the sim map for improving routes";
-            Category = cogbot.Actions.CommandCategory.Movement;
+            Category = Cogbot.Actions.CommandCategory.Movement;
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

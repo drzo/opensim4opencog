@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     /// <summary>
     /// An Afforance in Secondlife

@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using cogbot;
-using cogbot.Actions;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
+using Cogbot;
+using Cogbot.Actions;
+using Cogbot;
+using Cogbot.World;
 using OpenMetaverse;
 using Radegast;
 using PathSystem3D.Navigation;

@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
-using cogbot.Listeners;
+using Cogbot;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Search
+namespace Cogbot.Actions.Search
 {
     public class SaveUUIDsCommand : Command, GridMasterCommand
     {

@@ -35,7 +35,7 @@ using System.Security.Permissions;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
-﻿using cogbot.TheOpenSims;
+﻿using Cogbot.World;
 ﻿using CycWorldModule.DotCYC;
 ﻿using OpenMetaverse;
 ﻿using org.opencyc.api;

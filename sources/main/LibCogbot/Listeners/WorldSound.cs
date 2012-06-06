@@ -1,7 +1,7 @@
 ﻿using OpenMetaverse.Packets;
 using OpenMetaverse;
 
-namespace cogbot.Listeners
+namespace Cogbot
 {
     public partial class WorldObjects
     {

@@ -1,14 +1,14 @@
 using System.Collections.Generic;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
+using Cogbot;
+using Cogbot.World;
 using OpenMetaverse;
 using Radegast;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Money
+namespace Cogbot.Actions.Money
 {
-    public class PayCommand : cogbot.Actions.Command, RegionMasterCommand
+    public class PayCommand : Cogbot.Actions.Command, RegionMasterCommand
     {
         public PayCommand(BotClient client)
         {

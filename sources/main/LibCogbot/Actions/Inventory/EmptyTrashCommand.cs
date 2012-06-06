@@ -5,7 +5,7 @@ using OpenMetaverse.Packets;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Inventory
+namespace Cogbot.Actions.Inventory
 {
     public class EmptyTrashCommand : Command, BotPersonalCommand
     {

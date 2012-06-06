@@ -3,7 +3,7 @@ using System.Threading;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     public class BotSocialAction : BotAction
     {

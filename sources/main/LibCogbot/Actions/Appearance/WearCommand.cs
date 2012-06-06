@@ -4,7 +4,7 @@ using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Appearance
+namespace Cogbot.Actions.Appearance
 {
     public class WearCommand : Command, BotPersonalCommand
     {

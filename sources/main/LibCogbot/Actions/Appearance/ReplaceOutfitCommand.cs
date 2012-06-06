@@ -7,12 +7,12 @@ using OpenMetaverse; //using libsecondlife;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions
+namespace Cogbot.Actions.Appearance
 {
     [Obsolete]
-    class Wear : Command, BotPersonalCommand
+    class ReplaceOutfitCommand : Command, BotPersonalCommand
     {
-        public Wear(BotClient Client)
+        public ReplaceOutfitCommand(BotClient Client)
             : base(Client)
         {
             Description =

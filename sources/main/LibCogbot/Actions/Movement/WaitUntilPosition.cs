@@ -5,16 +5,16 @@ using PathSystem3D.Navigation;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Movement
+namespace Cogbot.Actions.Movement
 {
 
-    public class WaitUntilPosition : cogbot.Actions.Command, BotPersonalCommand
+    public class WaitUntilPosition : Cogbot.Actions.Command, BotPersonalCommand
     {
         public WaitUntilPosition(BotClient client)
         {
             Name = "waitpos";
             Description = "Block until the robot gets to a certain position for a certain maxwait";
-            Category = cogbot.Actions.CommandCategory.Movement;
+            Category = Cogbot.Actions.CommandCategory.Movement;
             Details = "waitpos seconds <x,y,z>";
             Parameters = new[]
                              {

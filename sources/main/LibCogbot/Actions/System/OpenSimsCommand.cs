@@ -2,21 +2,21 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using OpenMetaverse;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using System.Threading;
-using cogbot.Listeners; //using libsecondlife;
+using Cogbot; //using libsecondlife;
 
 using MushDLR223.ScriptEngines;
 using PathSystem3D.Navigation;
 
-namespace cogbot.Actions
+namespace Cogbot.Actions
 {
     class Use : Command, BotPersonalCommand
     {
         public Use(BotClient Client)
             : base(Client)
         {
-            Description = "Interface to the OpenSims module. <a href='wiki/TheOpenSims'>Documentation Here</a>";
+            Description = "Interface to the OpenSims module. <a href='wiki/World'>Documentation Here</a>";
             Details = "DMILES TODO";
             Category = CommandCategory.Objects;
             Parameters = new[] { new NamedParam(typeof(SimPosition), typeof(UUID)) };  //DMILES TODO

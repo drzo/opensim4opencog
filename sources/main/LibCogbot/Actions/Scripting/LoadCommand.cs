@@ -10,7 +10,7 @@ using OpenMetaverse.Packets;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.System
+namespace Cogbot.Actions.System
 {
     public class LoadCommand : Command, BotSystemCommand //SystemApplicationCommand
     {

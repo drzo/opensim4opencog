@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using cogbot;
-using cogbot.Listeners;
+using Cogbot;
+using Cogbot;
 using OpenMetaverse;
 
 namespace FashionBotModule

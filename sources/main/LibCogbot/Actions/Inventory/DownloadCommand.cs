@@ -3,14 +3,14 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-using cogbot.Listeners;
+using Cogbot;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 
 using MushDLR223.ScriptEngines;
 using OpenMetaverse.Imaging;
 
-namespace cogbot.Actions.SimExport
+namespace Cogbot.Actions.SimExport
 {
     public class DownloadCommand : Command, GridMasterCommand
     {

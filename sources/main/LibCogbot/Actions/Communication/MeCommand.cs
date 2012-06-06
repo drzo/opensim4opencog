@@ -5,7 +5,7 @@ using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions
+namespace Cogbot.Actions.Communication
 {
     public class MeCommand : Command, BotPersonalCommand
     {

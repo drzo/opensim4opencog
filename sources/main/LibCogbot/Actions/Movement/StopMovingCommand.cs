@@ -4,7 +4,7 @@ using PathSystem3D.Navigation;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Movement
+namespace Cogbot.Actions.Movement
 {
     class StopMovingCommand : Command, BotPersonalCommand
     {

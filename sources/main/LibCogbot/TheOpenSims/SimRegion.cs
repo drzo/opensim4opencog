@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
 using System.Threading;
-using cogbot.Listeners;
-using cogbot.ScriptEngines;
+using Cogbot;
+using Cogbot.ScriptEngines;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
@@ -14,7 +14,7 @@ using PathSystem3D.Navigation;
 using Thread = MushDLR223.Utilities.SafeThread;
 #endif
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     public enum NESW : int
     {

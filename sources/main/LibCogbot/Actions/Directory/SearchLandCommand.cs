@@ -7,7 +7,7 @@ using OpenMetaverse;
 // the Namespace used for all BotClient commands
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Search
+namespace Cogbot.Actions.Search
 {
     /// <summary>
     /// 

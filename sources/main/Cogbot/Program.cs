@@ -13,7 +13,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
-using cogbot;
+using Cogbot;
 using CommandLine;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
@@ -42,7 +42,7 @@ namespace ABuildStartup
                 string arg0 = use[0].ToLower();
                 if (arg0.EndsWith(".vshost.exe"))
                 {
-                    cogbot.ClientManager.IsVisualStudio = true;
+                    Cogbot.ClientManager.IsVisualStudio = true;
                     arg0 = arg0.Replace(".vshost.exe", ".exe");
                 }
                 if (arg0.EndsWith(Application.ExecutablePath.ToLower()))
@@ -323,7 +323,7 @@ namespace ABuildStartup
                               if (ClientManager.noGUI)
                               {
                                   Configuration.UsingRadgastFromCogbot = true;
-                                  cogbot.Program.MainRun(args);
+                                  Cogbot.Program.MainRun(args);
                               }
                               else
                               {
@@ -391,7 +391,7 @@ namespace ABuildStartup
                 Environment.Exit(0);
             }
 
-            if (false) cogbot.ClientManager.SingleInstance.ProcessCommandArgs();
+            if (false) Cogbot.ClientManager.SingleInstance.ProcessCommandArgs();
             ClientManager.InSTAThread(StartRadegast, "StartExtraRadegast").Join();
             //StartRadegast();
         }

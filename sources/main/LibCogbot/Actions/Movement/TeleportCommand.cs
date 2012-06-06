@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
 using System.Threading;
 using PathSystem3D.Navigation; //using libsecondlife;
@@ -11,7 +11,7 @@ using PathSystem3D.Navigation; //using libsecondlife;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Agent
+namespace Cogbot.Actions.Agent
 {
 #pragma warning disable 0168
     class Teleport : Command, BotPersonalCommand

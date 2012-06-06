@@ -5,17 +5,17 @@ using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 using System.Threading;
-using cogbot;
-using cogbot.Actions.Agent;
+using Cogbot;
+using Cogbot.Actions.Agent;
 using Cogbot.Library;
-using cogbot.ScriptEngines;
-using cogbot.Utilities;
+using Cogbot.ScriptEngines;
+using Cogbot.Utilities;
 using log4net.Core;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
-using cogbot.Actions;
-using cogbot.Actions.Scripting;
+using Cogbot.Actions;
+using Cogbot.Actions.Scripting;
 using OpenMetaverse.StructuredData;
 using Settings=OpenMetaverse.Settings;
 #if USE_SAFETHREADS
@@ -23,7 +23,7 @@ using Thread = MushDLR223.Utilities.SafeThread;
 #endif
 
 //using Radegast;
-namespace cogbot
+namespace Cogbot
 {
     public delegate void DescribeDelegate(bool detailed, OutputDelegate WriteLine);
     enum Modes { normal, tutorial };
@@ -174,8 +174,8 @@ namespace cogbot
                 col.Add(typeof(BotClient));
                 col.Add(typeof(Command));
                 col.Add(typeof(ClientManager));
-                col.Add(typeof(cogbot.Listeners.SimEventMulticastPipeline));
-                col.Add(typeof(cogbot.Listeners.SimEventTextSubscriber));
+                col.Add(typeof(Cogbot.SimEventMulticastPipeline));
+                col.Add(typeof(Cogbot.SimEventTextSubscriber));
             }
             config = new Configuration();
             config.loadConfig();
@@ -185,10 +185,10 @@ namespace cogbot
             {
                 clientManagerHttpServer = MushDLR223.Utilities.HttpServerUtil.CreateHttpServer(this, 5580, "first_robot");
             }
-            groupActions = new SortedDictionary<string, cogbot.Actions.CommandInfo>();
+            groupActions = new SortedDictionary<string, Cogbot.Actions.CommandInfo>();
             registrationTypes = new List<Type>();
 
-            tutorials = new Dictionary<string, cogbot.Tutorials.Tutorial>();
+            tutorials = new Dictionary<string, Cogbot.Tutorials.Tutorial>();
             describeNext = true;
             RegisterAssembly(Assembly.GetExecutingAssembly());
             RegisterAssembly(GetType().Assembly);
@@ -1278,7 +1278,10 @@ namespace cogbot
 
         public static void GlobalWriteLine0(string check)
         {
-
+            if (check.Contains("Effect"))
+            {
+                return;
+            }
             var cb = Program.consoleBase;
             if (cb != null)
             {
@@ -1562,7 +1565,7 @@ namespace cogbot
             return newType;
         }
 
-        public void RegisterType(string name, cogbot.Actions.Command command)
+        public void RegisterType(string name, Cogbot.Actions.Command command)
         {
             string orginalName = name;
             name = name.Replace(" ", "").ToLower();

@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.SimExport
+namespace Cogbot.Actions.SimExport
 {
     public class ExportParticlesCommand : Command, RegionMasterCommand
     {

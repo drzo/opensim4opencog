@@ -6,7 +6,7 @@ using OpenMetaverse.Packets;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Money
+namespace Cogbot.Actions.Money
 {
     public class BalanceCommand : Command, BotPersonalCommand
     {

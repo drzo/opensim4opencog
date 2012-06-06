@@ -7,7 +7,7 @@ using System.Text;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Groups
+namespace Cogbot.Actions.Groups
 {
     /// <summary>
     /// Changes Avatars currently active group

@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
+using Cogbot;
+using Cogbot.World;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
@@ -10,7 +10,7 @@ using PathSystem3D.Navigation;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Movement
+namespace Cogbot.Actions.Movement
 {
     class LocationCommand : Command, BotSystemCommand
     {

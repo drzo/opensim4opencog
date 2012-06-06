@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System.Drawing;
 using System.Collections;
 
-namespace cogbot.Listeners
+namespace Cogbot
 {
     partial class WorldObjects
     {

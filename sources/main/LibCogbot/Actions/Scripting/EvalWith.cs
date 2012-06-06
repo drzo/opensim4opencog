@@ -6,7 +6,7 @@ using System.Text;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Scripting
+namespace Cogbot.Actions.Scripting
 {
     class EvalWith : Command, SystemApplicationCommand
     {

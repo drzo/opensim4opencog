@@ -1,18 +1,18 @@
 using System.Collections.Generic;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Pathfinder
+namespace Cogbot.Actions.Pathfinder
 {
-    public class UnmeshPrim : cogbot.Actions.Command, SystemApplicationCommand
+    public class UnmeshPrim : Cogbot.Actions.Command, SystemApplicationCommand
     {
         public UnmeshPrim(BotClient client)
         {
             Name = GetType().Name;
             Description = "Unmeshes all prims and removes collision planes. Usage: UnmeshPrim [prims] ";
-            Category = cogbot.Actions.CommandCategory.Movement;
+            Category = Cogbot.Actions.CommandCategory.Movement;
             Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 

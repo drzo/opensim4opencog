@@ -5,7 +5,7 @@ using System.IO;
 using OpenMetaverse;
 using textsl.Utilities.XMLInterpreter;
 
-namespace cogbot.Tutorials
+namespace Cogbot.Tutorials
 {
     class Tutorial1 : Tutorial
     {

@@ -6,7 +6,7 @@ using OpenMetaverse.Packets;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Land
+namespace Cogbot.Actions.Land
 {
     public class FindSimCommand : Command, GridMasterCommand
     {

@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Reflection;
 using OpenMetaverse;
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     public static class SimImageUtils
     {

@@ -3,7 +3,7 @@ using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using Radegast;
 
-namespace cogbot.Actions.System
+namespace Cogbot.Actions.System
 {
     class Login : Command, BotSystemCommand
     {

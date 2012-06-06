@@ -1,144 +1,81 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using MushDLR223.Utilities;
-using OpenMetaverse;
-using OpenMetaverse.Packets;
+using OpenMetaverse; //using libsecondlife;
+using System.Threading;
+using System.Windows.Forms;
+using Cogbot.World;
 using PathSystem3D.Navigation;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Movement
+namespace Cogbot.Actions.Movement
 {
-    public class FollowCommand: Command, BotPersonalCommand
+    class Follow : Command, BotPersonalCommand
     {
-        const float DISTANCE_BUFFER = 3.0f;
-        uint targetLocalID = 0;
 
-		public FollowCommand(BotClient testClient)
-		{
-			Name = "Linden follow";
-			Description = "Follow another avatar. Usage: follow [FirstName LastName]/off.";
+
+        public Follow(BotClient Client)
+            : base(Client)
+        {
+            Description = "Follow an avatar. This command is modeless.";
+            Details = "<p>follow* <avatar name></p>" +
+                    "<p>stop-following <avatar name>\"</p>";
             Category = CommandCategory.Movement;
-            Parameters = new[] { new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
+            Parameters = CreateParams("avatar", typeof(AgentSpec), "Avatar to follow");
+            ResultMap = CreateParams(
+                 "message", typeof(string), "if we could not follow, the reason why",
+                 "success", typeof(bool), "true if we are following");
 
-		}
+            Name = "Follow*";
+        }
 
-        public override CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine1)
-		{
-            Client.Network.RegisterCallback(PacketType.AlertMessage, AlertMessageHandler);
-            // Construct the target name from the passed arguments
-			string target = String.Empty;
-			for (int ct = 0; ct < args.Length; ct++)
-				target = target + args[ct] + " ";
-			target = target.TrimEnd();
 
-            if (target.Length == 0 || target == "off")
+        public override CmdResult acceptInput(string verb, Parser pargs, OutputDelegate WriteLine)
+        {
+            TheBotClient.describeNext = true;
+            // base.acceptInput(verb, args);
+            string[] args = pargs.tokens;
+            UUID primID = UUID.Zero;
+            SimActor TheSimAvatar = this.TheSimAvatar;
+            if (verb == "stop-following")
             {
-                Active = false;
-                targetLocalID = 0;
-                Client.Self.AutoPilotCancel();
-                return Success("Following is off");
+
+               // SimPosition ap = TheSimAvatar.ApproachPosition;
+                if (TheSimAvatar.CurrentAction is MoveToLocation)
+                {
+                    TheSimAvatar.CurrentAction = null;
+                }
+                TheSimAvatar.SetMoveTarget(null, 10);
+                TheSimAvatar.StopMoving();
             }
-            else
+            else if (args.Length > 0)
             {
-                if (Follow(target))
-                    return Success("Following " + target);
+
+                string name = pargs.objectPhrase;
+                if (String.IsNullOrEmpty(name.Trim())) name = "avatar 1";
+                int argsUsed;
+                SimPosition position = WorldSystem.GetVector(pargs.tokens, out argsUsed);
+
+                Primitive avatar;
+                if (position != null)
+                {
+                    String str = "" + Client + " start to follow " + position + ".";
+                    WriteLine(str);
+                    // The thread that accepts the Client and awaits messages
+                    TheSimAvatar.CurrentAction = new FollowerAction(TheSimAvatar, position);
+                    return Success("$bot started following " + position);
+                }
                 else
-                    return Failure("Unable to follow " + target + ".  Client may not be able to see that avatar.");
-            }
-		}
-
-        bool Follow(string name)
-        {
-            foreach (Simulator sim in LockInfo.CopyOf(Client.Network.Simulators))
-            {
-                Avatar target = sim.ObjectsAvatars.Find(
-                    delegate(Avatar avatar)
-                        {
-                            return avatar.Name == name;
-                        }
-                    );
-
-                if (target != null)
                 {
-                    targetLocalID = target.LocalID;
-                    Active = true;
-                    return true;
+                    return Failure("$bot don't know who " + name + " is.");
                 }
             }
-
-
-            if (Active)
             {
-                Client.Self.AutoPilotCancel();
-                Active = false;
+                return Success("$bot ApproachPosition: " + TheSimAvatar.CurrentAction);
             }
 
-            return false;
         }
 
-		public override void Think()
-		{
-            if (Active)
-            {
-                // Find the target position
-                {
-                    foreach (Simulator sim in LockInfo.CopyOf(Client.Network.Simulators))
-                    {
-                        Avatar targetAv;
-
-                        if (sim.ObjectsAvatars.TryGetValue(targetLocalID, out targetAv))
-                        {
-                            float distance = 0.0f;
-
-                            if (sim == Client.Network.CurrentSim)
-                            {
-                                distance = Vector3.Distance(targetAv.Position, Client.Self.SimPosition);
-                            }
-                            else
-                            {
-                                // FIXME: Calculate global distances
-                            }
-
-                            if (distance > DISTANCE_BUFFER)
-                            {
-                                uint regionX, regionY;
-                                Utils.LongToUInts(sim.Handle, out regionX, out regionY);
-
-                                double xTarget = (double)targetAv.Position.X + (double)regionX;
-                                double yTarget = (double)targetAv.Position.Y + (double)regionY;
-                                double zTarget = targetAv.Position.Z - 2f;
-
-                                Logger.DebugLog(String.Format("[Autopilot] {0} meters away from the target, starting autopilot to <{1},{2},{3}>",
-                                    distance, xTarget, yTarget, zTarget), Client);
-
-                                Client.Self.AutoPilot(xTarget, yTarget, zTarget);
-                            }
-                            else
-                            {
-                                // We are in range of the target and moving, stop moving
-                                Client.Self.AutoPilotCancel();
-                            }
-                        }
-                    }
-                }
-            }
-
-			base.Think();
-		}
-
-        private void AlertMessageHandler(object sender, PacketReceivedEventArgs e)
-        {
-            Packet packet = e.Packet;
-            
-            AlertMessagePacket alert = (AlertMessagePacket)packet;
-            string message = Utils.BytesToString(alert.AlertData.Message);
-
-            if (message.Contains("Autopilot cancel"))
-            {
-                Logger.Log("FollowCommand: " + message, Helpers.LogLevel.Info, Client);
-            }
-        }
     }
 }

@@ -4,14 +4,14 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Xml;
-using cogbot.Listeners;
-using cogbot.Utilities;
+using Cogbot;
+using Cogbot.Utilities;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     public class SimAssetStore
     {

@@ -10,7 +10,7 @@ using System.Web;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.WebUtil
+namespace Cogbot.Actions.WebUtil
 {
     public class HttpPost : Command, SystemApplicationCommand
     {

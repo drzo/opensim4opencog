@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using System.Threading;
 using MushDLR223.Utilities;
 using OpenMetaverse;
@@ -9,7 +9,7 @@ using PathSystem3D.Navigation;
 using Thread = MushDLR223.Utilities.SafeThread;
 #endif
 
-namespace cogbot.Listeners
+namespace Cogbot
 {
     public class WorldPathSystem: IDisposable
     {

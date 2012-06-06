@@ -3,20 +3,20 @@ using OpenMetaverse;
 using PathSystem3D.Navigation;
 
 using MushDLR223.ScriptEngines;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 
-namespace cogbot.Actions.Pathfinder
+namespace Cogbot.Actions.Pathfinder
 {
 
 
-    public class AStarPath : cogbot.Actions.Command, BotPersonalCommand
+    public class AStarPath : Cogbot.Actions.Command, BotPersonalCommand
     {
         // http://logicmoo.dyndns.org:5580/?cmd=astarpath&args=%22Douglas%20Miles%22%20%22Nephrael%20Rae%22
         public AStarPath(BotClient client)
         {
             Name = GetType().Name;
             Description = "Return the path that would be used by A* Pathfinding to get to object";
-            Category = cogbot.Actions.CommandCategory.Movement;
+            Category = Cogbot.Actions.CommandCategory.Movement;
             Parameters = new[] { new NamedParam( typeof(SimPosition), typeof(Vector3d)) };
 
         }

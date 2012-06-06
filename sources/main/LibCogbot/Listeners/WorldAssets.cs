@@ -9,7 +9,7 @@ using System.Net.Mime;
 using System.Threading;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
@@ -17,7 +17,7 @@ using OpenMetaverse.Imaging;
 using Object=System.Object;
 using Settings=OpenMetaverse.Settings;
 
-namespace cogbot.Listeners
+namespace Cogbot
 {
     public partial class WorldObjects
     {

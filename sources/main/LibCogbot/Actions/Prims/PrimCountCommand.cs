@@ -1,11 +1,11 @@
 using System;
-using cogbot.Listeners;
+using Cogbot;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Land
+namespace Cogbot.Actions.Land
 {
     public class PrimCountCommand : Command, RegionMasterCommand
     {

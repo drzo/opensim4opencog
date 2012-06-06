@@ -1,20 +1,20 @@
 using System;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 using PathSystem3D.Navigation.Debug;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Pathfinder
+namespace Cogbot.Actions.Pathfinder
 {
-    public class pfdebug : cogbot.Actions.Command, SystemApplicationCommand
+    public class pfdebug : Cogbot.Actions.Command, SystemApplicationCommand
     {
         public pfdebug(BotClient client)
         {
             Name = GetType().Name;
             Description = "Starts the pathfinder debuger";
-            Category = cogbot.Actions.CommandCategory.Movement;
+            Category = Cogbot.Actions.CommandCategory.Movement;
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
@@ -38,13 +38,13 @@ namespace cogbot.Actions.Pathfinder
             return Success("Ran " + Name);
         }
     }
-    class srdebug : cogbot.Actions.Command, SystemApplicationCommand
+    class srdebug : Cogbot.Actions.Command, SystemApplicationCommand
     {
         public srdebug(BotClient client)
         {
             Name = GetType().Name;
             Description = "Starts the waypoint debuger";
-            Category = cogbot.Actions.CommandCategory.Movement;
+            Category = Cogbot.Actions.CommandCategory.Movement;
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
@@ -54,13 +54,13 @@ namespace cogbot.Actions.Pathfinder
             return Success("Ran " + Name);
         }
     }
-    //class ideal : cogbot.Actions.Command
+    //class ideal : Cogbot.Actions.Command
     //{
     //    public ideal(BotClient client)
     //    {
     //        Name = GetType().Name;
     //        Description = "Starts the GUI debugger";
-    //        Category = cogbot.Actions.CommandCategory.Movement;
+    //        Category = Cogbot.Actions.CommandCategory.Movement;
     //    }
 
     //    public override CmdResult ExecuteRequest(CmdRequest args)
@@ -104,13 +104,13 @@ namespace cogbot.Actions.Pathfinder
     //}
 
 
-    //class srpath : cogbot.Actions.Command
+    //class srpath : Cogbot.Actions.Command
     //{
     //    public srpath(BotClient client)
     //    {
     //        Name = GetType().Name;
     //        Description = "Show the route to the object";
-    //        Category = cogbot.Actions.CommandCategory.Movement;
+    //        Category = Cogbot.Actions.CommandCategory.Movement;
     //    }
 
     //    public override CmdResult ExecuteRequest(CmdRequest args)

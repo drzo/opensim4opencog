@@ -1,12 +1,12 @@
 using System;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.System
+namespace Cogbot.Actions.System
 {
-    public class ConnectionsCommand : cogbot.Actions.Command, SystemApplicationCommand
+    public class ConnectionsCommand : Cogbot.Actions.Command, SystemApplicationCommand
     {
         public ConnectionsCommand(BotClient client)
         {

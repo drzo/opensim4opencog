@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Inventory
+namespace Cogbot.Actions.Inventory
 {
     class EventInfoCommand : Command, RegionMasterCommand
     {

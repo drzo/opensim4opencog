@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using PathSystem3D.Navigation;
 using Exception=System.Exception;
 using String=System.String;

@@ -3,9 +3,9 @@ using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Land
+namespace Cogbot.Actions.Land
 {
-    class SimCatchUp : cogbot.Actions.Command, SystemApplicationCommand
+    class SimCatchUp : Cogbot.Actions.Command, SystemApplicationCommand
     {
         public SimCatchUp(BotClient client)
         {
@@ -18,7 +18,7 @@ namespace cogbot.Actions.Land
             ResultMap = CreateParams(
                  "message", typeof(string), "if success was false, the reason why",
                  "success", typeof(bool), "true if we crouched");
-            Category = cogbot.Actions.CommandCategory.Simulator;
+            Category = Cogbot.Actions.CommandCategory.Simulator;
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

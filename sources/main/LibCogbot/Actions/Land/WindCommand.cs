@@ -1,11 +1,11 @@
 using System;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Land
+namespace Cogbot.Actions.Land
 {
     public class WindCommand : Command, RegionMasterCommand
     {

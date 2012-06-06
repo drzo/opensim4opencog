@@ -9,7 +9,7 @@ using MushDLR223.ScriptEngines;
 using Thread = MushDLR223.Utilities.SafeThread;
 #endif
 
-namespace cogbot.Actions.System
+namespace Cogbot.Actions.System
 {
     public class WaitForLoginCommand : Command, BotSystemCommand
     {

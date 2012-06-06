@@ -433,7 +433,7 @@ namespace Swicli.Library
                 PlTermV tv = (PlTermV)enumerable;
                 return tv.ToArray();
             }
-            if (false && enumerable is PlTerm)
+            if (enumerable is PlTerm)
             {
                 // I guess IsList makes a copy
                 PlTerm tlist = (PlTerm)enumerable;
@@ -1220,6 +1220,11 @@ namespace Swicli.Library
                         var res = cliGet0(arg1, orig.Arg(1), o1.GetType(), out found);
                         if (found) return res;
                     }
+                    if (pt == null)
+                    {
+                        // Return as array?
+                        return CreateArrayOfType(orig, typeof(object));
+                    }
                 }
             }
             if (pt != null && pt.IsArray)
@@ -1229,8 +1234,8 @@ namespace Swicli.Library
             Type t = ResolveType(name);
             if (t == null)
             {
-                Warn("Cant GetInstance from {0}", orig);
-                return (string)orig;
+                WarnMissing(String.Format("Cant GetInstance from {0}", orig));
+                return orig;
             }
             if (pt == null || pt.IsAssignableFrom(t))
             {

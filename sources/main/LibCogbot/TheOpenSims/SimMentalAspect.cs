@@ -4,7 +4,7 @@ using System.Reflection;
 using MushDLR223.ScriptEngines;
 using OpenMetaverse;
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     // Mental Aspects
     public interface BotMentalAspect

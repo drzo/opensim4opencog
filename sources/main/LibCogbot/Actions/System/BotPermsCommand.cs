@@ -4,11 +4,11 @@ using System.Text;
 using System.Threading;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.System
+namespace Cogbot.Actions.System
 {
     public class BotPermsCommand : Command, BotSystemCommand
     {
@@ -42,7 +42,7 @@ namespace cogbot.Actions.System
             {
                 return Failure("Cannot find objects from " + args.str);
             }
-            BotPermissions who = BotPermissions.Base;
+            BotPermissions who = BotPermissions.Stranger;
 
             object value;
             if (TryEnumParse(typeof (BotPermissions), args, argsUsed, out argsUsed, out value))

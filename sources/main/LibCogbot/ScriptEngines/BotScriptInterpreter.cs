@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using cogbot.Actions;
+using Cogbot.Actions;
 using DotLisp;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 
-namespace cogbot.ScriptEngines
+namespace Cogbot.ScriptEngines
 {
     public class BotScriptInterpreter : CommonScriptInterpreter, ScriptInterpreter
     {

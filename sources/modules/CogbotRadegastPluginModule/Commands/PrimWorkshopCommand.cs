@@ -1,21 +1,21 @@
 using System.Collections.Generic;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
+using Cogbot;
+using Cogbot.World;
 using OpenMetaverse;
 using Radegast;
 
 using MushDLR223.ScriptEngines;
 using Radegast.Rendering;
 
-namespace cogbot.Actions
+namespace Cogbot.Actions
 {
-    public class PrimWorkshopCommand : cogbot.Actions.Command, RegionMasterCommand
+    public class PrimWorkshopCommand : Cogbot.Actions.Command, RegionMasterCommand
     {
         public PrimWorkshopCommand(BotClient client)
         {
             Name = "Prim Workshop";
             Description = "Runs PrimWorkshop on a prim. Usage: PrimWorkshop [prim]";
-            Category = cogbot.Actions.CommandCategory.Objects;
+            Category = Cogbot.Actions.CommandCategory.Objects;
             Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 

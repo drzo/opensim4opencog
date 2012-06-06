@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Agent
+namespace Cogbot.Actions.Agent
 {
     public class ProfileCommand : Command, GridMasterCommand
     {

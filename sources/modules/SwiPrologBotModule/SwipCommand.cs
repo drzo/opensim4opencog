@@ -5,7 +5,7 @@ using PrologScriptEngine;
 using SbsSW.SwiPlCs;
 using Swicli.Library;
 
-namespace cogbot.Actions.System
+namespace Cogbot.Actions.System
 {
     public class SwipCommand : Command, RegionMasterCommand
     {

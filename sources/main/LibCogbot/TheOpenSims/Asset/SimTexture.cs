@@ -5,7 +5,7 @@ using OpenMetaverse;
 using OpenMetaverse.Assets;
 using OpenMetaverse.Imaging;
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     public class SimTexture : SimAsset
     {

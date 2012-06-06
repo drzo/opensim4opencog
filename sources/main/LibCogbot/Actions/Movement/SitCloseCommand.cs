@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse; //using libsecondlife;
 
 using MushDLR223.ScriptEngines;
 using PathSystem3D.Navigation;
 
-namespace cogbot.Actions.Movement
+namespace Cogbot.Actions.Movement
 {
     class Sit : Command, BotPersonalCommand
     {

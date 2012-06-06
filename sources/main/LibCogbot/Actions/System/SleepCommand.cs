@@ -5,7 +5,7 @@ using System.Threading;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.System
+namespace Cogbot.Actions.System
 {
     public class SleepCommand : Command, BotSystemCommand
     {

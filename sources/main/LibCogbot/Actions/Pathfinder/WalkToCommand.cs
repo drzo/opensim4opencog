@@ -4,15 +4,15 @@ using PathSystem3D.Navigation;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Pathfinder
+namespace Cogbot.Actions.Pathfinder
 {
-    public class WalkToCommand : cogbot.Actions.Command, BotPersonalCommand
+    public class WalkToCommand : Cogbot.Actions.Command, BotPersonalCommand
     {
         public WalkToCommand(BotClient client)
         {
             Name = "WalkTo";
             Description = "Go to the avatar toward the specified position for a maximum of seconds. Usage: WalkTo [prim | [x y]] [dist]";
-            Category = cogbot.Actions.CommandCategory.Movement;
+            Category = Cogbot.Actions.CommandCategory.Movement;
             Parameters = new[] {  new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
         }
 

@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Text;
 using MushDLR223.Utilities;
 using OpenMetaverse;
-using cogbot.TheOpenSims; //using libsecondlife;
+using Cogbot.World; //using libsecondlife;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Land
+namespace Cogbot.Actions
 {
     class Describe : Command, BotPersonalCommand
     {

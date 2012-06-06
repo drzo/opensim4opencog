@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
-using cogbot.Utilities;
+using Cogbot;
+using Cogbot.World;
+using Cogbot.Utilities;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using Radegast;
@@ -9,15 +9,15 @@ using PathSystem3D.Navigation;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Agent
+namespace Cogbot.Actions.Agent
 {
-    public class PointAtCommand : cogbot.Actions.Command, BotSystemCommand
+    public class PointAtCommand : Cogbot.Actions.Command, BotSystemCommand
     {
         public PointAtCommand(BotClient client)
         {
             Name = "PointAt";
             Description = "PointAts from a prim. Usage: PointAt [prim]";
-            Category = cogbot.Actions.CommandCategory.Objects;
+            Category = Cogbot.Actions.CommandCategory.Objects;
             Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 

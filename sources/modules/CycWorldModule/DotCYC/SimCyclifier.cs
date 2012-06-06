@@ -6,10 +6,10 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Xml.Linq;
-using cogbot;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
-using cogbot.Utilities;
+using Cogbot;
+using Cogbot;
+using Cogbot.World;
+using Cogbot.Utilities;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -2070,7 +2070,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
             return FindOrCreateCycFort(client.Self.AgentID);
         }
 
-        public object FindOrCreateCycFort(cogbot.BotClient client)
+        public object FindOrCreateCycFort(Cogbot.BotClient client)
         {
             return FindOrCreateCycFort(client.WorldSystem);
         }

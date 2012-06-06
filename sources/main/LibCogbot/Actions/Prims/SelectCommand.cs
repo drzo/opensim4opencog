@@ -1,16 +1,16 @@
 using System.Collections.Generic;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
-using cogbot.Utilities;
+using Cogbot;
+using Cogbot.World;
+using Cogbot.Utilities;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Objects
+namespace Cogbot.Actions.Objects
 {
-    public class SelectCommand : cogbot.Actions.Command, BotPersonalCommand
+    public class SelectCommand : Cogbot.Actions.Command, BotPersonalCommand
     {
         public SelectCommand(BotClient client)
         {
@@ -19,7 +19,7 @@ namespace cogbot.Actions.Objects
             Details = AddUsage("select +/-[prim0] +/-[prim1] +/-[prim2]", "Selects or deslects prims") +
                       AddUsage("select none", "Clears the select buffer") +
                       AddUsage("select", "Shows the select buffer");
-            Category = cogbot.Actions.CommandCategory.Objects;
+            Category = Cogbot.Actions.CommandCategory.Objects;
             Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 

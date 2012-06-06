@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using cogbot.Actions.Pathfinder;
-using cogbot.Listeners;
+using Cogbot.Actions.Pathfinder;
+using Cogbot;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
@@ -14,13 +14,13 @@ using Object=System.Object;
 using String=System.String;
 using System.Drawing;
 using ControlFlags = OpenMetaverse.AgentManager.ControlFlags;
-using UUIDFactory = cogbot.Listeners.CogbotHelpers;
+using UUIDFactory = Cogbot.CogbotHelpers;
 #if USE_SAFETHREADS
 using Thread = MushDLR223.Utilities.SafeThread;
 #endif
 
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     public partial class SimAvatarClient : SimMover, SimControllableAvatar
     {

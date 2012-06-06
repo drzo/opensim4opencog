@@ -10,7 +10,7 @@ using System.IO;
 using Settings=OpenMetaverse.Settings;
 using Console = MushDLR223.Utilities.DLRConsole;
 
-namespace cogbot
+namespace Cogbot
 {
     public class Program
     {

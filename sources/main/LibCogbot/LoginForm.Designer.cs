@@ -1,4 +1,4 @@
-namespace cogbot
+namespace Cogbot
 {
     partial class LoginForm
     {

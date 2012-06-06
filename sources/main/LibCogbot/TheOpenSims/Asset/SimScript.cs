@@ -2,7 +2,7 @@ using System;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     public class SimScript : SimAsset
     {
