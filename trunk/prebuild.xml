@@ -939,6 +939,7 @@
       <Reference name="System.Core" localCopy="false" />
       <Reference name="DcBus.dll" localCopy="false" />
       <Reference name="Enyim.Caching.dll"  localCopy="false"/>
+      <Reference name="Lucene.Net"  localCopy="false"/>
 
       <Files>
           <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="NEVERUSE.cs"/></Match>
