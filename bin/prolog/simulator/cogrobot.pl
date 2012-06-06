@@ -108,8 +108,8 @@ load_cogbot_assembly:-assert(loaded_cogbot_assembly),current_prolog_flag(address
 % prevents us having to use long names for things like SimAvatar
 %
 cache_cogbot_types:-
-  cli_members('cogbot.TheOpenSims.SimAvatar',_),
-  cli_members('cogbot.Listeners.WorldObjects',_),
+  cli_members('Cogbot.World.SimAvatar',_),
+  cli_members('Cogbot.WorldObjects',_),
   cli_members('OpenMetaverse.Primitive',_).
 
 :-app_restore(cache_cogbot_types).
@@ -155,7 +155,7 @@ set_current_bot(BotID):-thread_self(TID),retractall(current_bot_db(TID,_)),asser
 unset_current_bot(BotID):-thread_self(TID),current_bot_db(TID,OLD), 
     (OLD=BotID -> retract(current_bot_db(TID,OLD)) ; cogbot_throw(unset_current_bot(tid(TID),used(BotID),expected(OLD)))).
 
-current_botname(Name) :- botget(name,X),string_to_atom(X,Name).
+current_botname(Name) :- botcall('GetName',X),string_to_atom(X,Name).
 %------------------------------------------------------------------------------
 % throws cogbot based exceptions
 % PRIVATE
@@ -203,7 +203,7 @@ app_quit:-write('logoutbots\n'),flush_output,client_manager_ref(CM),cli_call(CM,
 %------------------------------------------------------------------------------
 % Refernce to the scene is world_ref
 %------------------------------------------------------------------------------
-world_ref(Sys):-cli_get('cogbot.Listeners.WorldObjects','GridMaster',Sys).
+world_ref(Sys):-cli_get('Cogbot.WorldObjects','GridMaster',Sys).
 
 % gets some property of the GridMaster
 %  world_get(+Field, -Value)
@@ -241,7 +241,7 @@ grid_account(Ele):-world_get('SimAvatars',Objs),cli_col(Objs,Ele).
 %
 % a grid_region returns all regions known to cogbot
 %
-grid_region(Ele):-cli_get('cogbot.TheOpenSims.SimRegion','CurrentRegions',Objs),cli_col(Objs,Ele).
+grid_region(Ele):-cli_get('Cogbot.World.SimRegion','CurrentRegions',Objs),cli_col(Objs,Ele).
 
 grid_parcels(Ele):-grid_region(Sim),cli_get(Sim,parcels,Objs),cli_col(Objs,Ele).
 
@@ -252,7 +252,7 @@ grid_parcels(Ele):-grid_region(Sim),cli_get(Sim,parcels,Objs),cli_col(Objs,Ele).
 %
 %  Clientmanager binds radegast to the Client
 %  botconfig is run from Clientmanager
-client_manager_ref(SingleInstance):-cli_get('cogbot.ClientManager','SingleInstance',SingleInstance).
+client_manager_ref(SingleInstance):-cli_get('Cogbot.ClientManager','SingleInstance',SingleInstance).
 
 % given an object and a property returns value for the avatar
 %
@@ -427,7 +427,7 @@ user:first_bot_client_hook(A,B):- %%%attach_console,trace,
    cli_to_str(first_bot_client_hook(A-B-Obj),Objs),writeq(Objs),nl.
 
 %% register first_bot_client_hook
-register_on_first_bot_client:- cli_add_event_handler('cogbot.ClientManager','BotClientCreated',first_bot_client_hook(_,_)).
+register_on_first_bot_client:- cli_add_event_handler('Cogbot.ClientManager','BotClientCreated',first_bot_client_hook(_,_)).
 :-app_restore(register_on_first_bot_client).
 
 %------------------------------------------------------------------------------
@@ -440,32 +440,32 @@ run_sl:-ran_sl,!.
 run_sl:-asserta(ran_sl),!,
    cli_set('MushDLR223.Utilities.DLRConsole','NoConsoleVisible','@'(true)),
    cli_set('ABuildStartup.Program','UseApplicationExit','@'(false)),
-   cli_set('cogbot.ClientManager','noGUI','@'(true)),
+   cli_set('Cogbot.ClientManager','noGUI','@'(true)),
    cli_call('ABuildStartup.Program','Main',[],_).
 
 % assert_once is assert a new grounded atomic fact only if the predicate
 % was previously undefined
 
 %:-retractall(cli_subproperty(_,_)).
-:-assert_once(swicli:cli_subproperty('cogbot.TheOpenSims.SimAvatar','ProfileProperties')).
-:-assert_once(swicli:cli_subproperty('cogbot.TheOpenSims.SimAvatar','AvatarInterests')).
-:-assert_once(swicli:cli_subproperty('cogbot.TheOpenSims.SimAvatar','FriendshipInfo')).
-:-assert_once(swicli:cli_subproperty('cogbot.TheOpenSims.SimObject','Prim')).
-:-assert_once(swicli:cli_subproperty('cogbot.TheOpenSims.SimObject','Properties')).
+:-assert_once(swicli:cli_subproperty('Cogbot.World.SimAvatar','ProfileProperties')).
+:-assert_once(swicli:cli_subproperty('Cogbot.World.SimAvatar','AvatarInterests')).
+:-assert_once(swicli:cli_subproperty('Cogbot.World.SimAvatar','FriendshipInfo')).
+:-assert_once(swicli:cli_subproperty('Cogbot.World.SimObject','Prim')).
+:-assert_once(swicli:cli_subproperty('Cogbot.World.SimObject','Properties')).
 
 
 obj2Npl(O,npl(66,O)).
 npl2Obj(npl(66,O),O).
 
 registerNamedParamRecomposer:-!.
-registerNamedParamRecomposer:-cli_to_from_recomposer('System.Collections.Generic.IList'('cogbot.NamedParam'),'npl'(_,_),obj2Npl,npl2Obj).
+registerNamedParamRecomposer:-cli_to_from_recomposer('System.Collections.Generic.IList'('MushDLR223.ScriptEngines.NamedParam'),'npl'(_,_),obj2Npl,npl2Obj).
 
 :-app_restore(registerNamedParamRecomposer).
 
 %------------------------------------------------------------------------------
 % CLR Introspection of event handlers
 %------------------------------------------------------------------------------
-grid_asset(Asset):-  cli_get('cogbot.TheOpenSims.SimAssetStore','SimAssets',Assets),cli_col(Assets,Asset).
+grid_asset(Asset):-  cli_get('Cogbot.World.SimAssetStore','SimAssets',Assets),cli_col(Assets,Asset).
 
 
 gridCliientEvents(E):-cli_memb('OpenMetaverse.GridClient',f,M),arg(3,M,Type),cli_memb(Type,e,E).
@@ -480,13 +480,13 @@ listMembs. % so pred doesnt fail
 % coerces anything to avatar object
 to_avatar(Name,Name):-cli_is_object(Name),cli_is_type(Name,'SimAvatar'),!.
 to_avatar(Name,Object):-cli_is_object(Name),cli_to_str(Name,String),!,to_avatar(String,Object).
-to_avatar(Name,Object):-cli_call('cogbot.Listeners.WorldObjects','GetSimAvatarFromNameIfKnown'(string),[Name],Object).
+to_avatar(Name,Object):-cli_call('Cogbot.WorldObjects','GetSimAvatarFromNameIfKnown'(string),[Name],Object).
 
 %% name_to_location_ref(start_hill_walk,O),object_color(O,C),cli_writeln(C).
-%% cli_call(static('cogbot.TheOpenSims.SimImageUtils'),'ToNamedColors'('OpenMetaverse.Color4'),[struct('Color4',1,0,1,0)],Named),cli_col(Named,NamedE),cli_writeln(NamedE).
-object_color(A,NamedE):-grid_object(A),cli_call(static('cogbot.TheOpenSims.SimImageUtils'),'ToNamedColors'('cogbot.TheOpenSims.SimObject'),[A],Named),cli_col(Named,NamedE).
+%% cli_call(static('Cogbot.World.SimImageUtils'),'ToNamedColors'('OpenMetaverse.Color4'),[struct('Color4',1,0,1,0)],Named),cli_col(Named,NamedE),cli_writeln(NamedE).
+object_color(A,NamedE):-grid_object(A),cli_call(static('Cogbot.World.SimImageUtils'),'ToNamedColors'('Cogbot.World.SimObject'),[A],Named),cli_col(Named,NamedE).
 object_color(A,NamedE):-fail,grid_object(A),cli_get(A,textures,B),cli_get(B,faceTextures,C),cli_col(C,E),E\=='@'(null),cli_get(E,rgba,CC),
-  cli_call(static('cogbot.TheOpenSims.SimImageUtils'),'ToNamedColors'('OpenMetaverse.Color4'),[CC],Named),cli_col(Named,NamedE).
+  cli_call(static('Cogbot.World.SimImageUtils'),'ToNamedColors'('OpenMetaverse.Color4'),[CC],Named),cli_col(Named,NamedE).
 
 /*
 
@@ -504,7 +504,7 @@ T = @'C#664150520' .
 %%b2img('@'(null),'@'(null)):-!.
 b2img(Data,Image):-Data\=='@'(null),cli_call('OpenMetaverse.Imaging.OpenJPEG','DecodeToImage'(Data,_O1,Image),_).
 
-uuid_to_cli_image(UUID,Image):-nonvar(UUID),!,cli_call('cogbot.Listeners.WorldObjects',['GridMaster','TextureBytesForUUID'(UUID)],Bytes),b2img(Bytes,Image).
+uuid_to_cli_image(UUID,Image):-nonvar(UUID),!,cli_call('Cogbot.WorldObjects',['GridMaster','TextureBytesForUUID'(UUID)],Bytes),b2img(Bytes,Image).
 uuid_to_cli_image(UUID,Image):-var(UUID),!,grid_asset(A),cli_get(A,assetType, enum('AssetType', 'Texture')),cli_get(A,id,UUID),cli_get(A,assetData,Data),b2img(Data,Image).
 uuid_to_image_parts(UUID,Part):-grid_asset(A),cli_get(A,assetType, enum('AssetType', 'Texture')),cli_get(A,id,UUID),cli_get(A,imageStats,Parts),cli_array_to_termlist(Parts,List),List=[_|_],member(Part,List).
 
@@ -526,7 +526,7 @@ expire_caches_120:-repeat,sleep(120),expire_caches,fail.
 
 name_to_location_ref(Object,Object):-cli_is_type(Object,'SimPosition'),!.
 name_to_location_ref(Name,Object):-
-   cache_objects(Object,name_to_location_ref_cache(Name,Object), cli_call('cogbot.Listeners.WorldObjects','GetSimPositionByName'(string),[Name],Object)).
+   cache_objects(Object,name_to_location_ref_cache(Name,Object), cli_call('Cogbot.WorldObjects','GetSimPositionByName'(string),[Name],Object)).
 
 sayTo(Speaker,ToWho,What):-to_avatar(ToWho,Listener),cli_call(Speaker,talkto('SimAvatar',string),[Listener,What],_O).
 
