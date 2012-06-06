@@ -90,7 +90,7 @@ namespace Cogbot.Actions.System
             return Success("Help complete");
         }
 
-        public override CmdResult ExecuteRequestTree(CmdRequest args)
+        public CmdResult ExecuteRequestTree(CmdRequest args)
         {
             BotClient Client = TheBotClient;
             bool showPLVersionOfHelp = false;
