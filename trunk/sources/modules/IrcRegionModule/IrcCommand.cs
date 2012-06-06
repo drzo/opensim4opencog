@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using cogbot;
-using cogbot.Actions;
-using cogbot.Listeners;
+using Cogbot;
+using Cogbot.Actions;
+using Cogbot;
 using Meebey.SmartIrc4net;
 using MushDLR223.ScriptEngines;
 using OpenMetaverse;

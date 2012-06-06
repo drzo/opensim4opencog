@@ -1,13 +1,13 @@
 using System.Reflection;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
+using Cogbot;
+using Cogbot.World;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Money
+namespace Cogbot.Actions.Money
 {
-    public class SaleInfoCommand : cogbot.Actions.Command, RegionMasterCommand
+    public class SaleInfoCommand : Cogbot.Actions.Command, RegionMasterCommand
     {
         public SaleInfoCommand(BotClient client)
         {

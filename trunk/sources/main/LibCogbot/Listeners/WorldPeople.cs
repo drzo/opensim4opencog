@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
@@ -13,7 +13,7 @@ using PathSystem3D.Navigation;
 using System.Diagnostics;
 using System.Reflection;
 
-namespace cogbot.Listeners
+namespace Cogbot
 {
     partial class WorldObjects
     {

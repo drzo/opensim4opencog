@@ -1,4 +1,4 @@
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     public interface FirstOrderTerm
     {

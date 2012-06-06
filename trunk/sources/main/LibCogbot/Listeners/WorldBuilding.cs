@@ -6,12 +6,12 @@ using DotLisp;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse.StructuredData;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
 using System.Reflection;
 using PathSystem3D.Navigation;
 
-namespace cogbot.Listeners
+namespace Cogbot
 {
 
     public partial class WorldObjects

@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using PathSystem3D.Navigation;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Movement
+namespace Cogbot.Actions.Movement
 {
     [Obsolete("Use Teleport Command instead")]
     public class GotoCommand : Command, BotPersonalCommand

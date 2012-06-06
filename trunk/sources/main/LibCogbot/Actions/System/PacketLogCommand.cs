@@ -3,7 +3,7 @@ using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.System
+namespace Cogbot.Actions.System
 {
     [Obsolete]
     public class PacketLogCommand : Command, BotSystemCommand

@@ -2,7 +2,7 @@ using System;
 using MushDLR223.ScriptEngines;
 using OpenMetaverse;
 
-namespace cogbot.Actions.Movement
+namespace Cogbot.Actions.Movement
 {
     public class GoHomeCommand : Command, BotPersonalCommand
     {

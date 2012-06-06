@@ -2,14 +2,14 @@ using System;
 using System.Text;
 using System.IO;
 using System.Collections.Generic;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 using OpenMetaverse.Imaging;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Appearance
+namespace Cogbot.Actions.Appearance
 {
     public class DumpOutfitCommand : Command, BotPersonalCommand
     {

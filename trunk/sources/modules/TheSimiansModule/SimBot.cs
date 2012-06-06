@@ -1,6 +1,6 @@
-using cogbot;
-using cogbot.Actions;
-using cogbot.TheOpenSims;
+using Cogbot;
+using Cogbot.Actions;
+using Cogbot.World;
 using MushDLR223.ScriptEngines;
 using OpenMetaverse;
 
@@ -19,7 +19,7 @@ namespace TheSimiansModule
                 Client.DisplayNotificationInChat("SimBot: make sure you set SimObjectImpl:AffordinancesGuessSimObjectTypes = true;");
             }
             Name = "simbot";
-            Description = "Start theOpenSims type AI.";
+            Description = "Start World type AI.";
             Details = "simbot [on|start|stop|off|think|needs|info|load]";
         }
 

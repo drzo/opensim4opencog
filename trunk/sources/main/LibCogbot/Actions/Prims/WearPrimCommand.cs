@@ -1,22 +1,22 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
+using Cogbot;
+using Cogbot.World;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Objects
+namespace Cogbot.Actions.Objects
 {
-    public class WearPrimCommand : cogbot.Actions.Command, BotPersonalCommand
+    public class WearPrimCommand : Cogbot.Actions.Command, BotPersonalCommand
     {
 
         public WearPrimCommand(BotClient client)
         {
             Name = "WearPrim";
             Description = "Takes (derez to inventory) and wears a prim. Usage: wearprim [prim]";
-            Category = cogbot.Actions.CommandCategory.Objects;
+            Category = Cogbot.Actions.CommandCategory.Objects;
             Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 

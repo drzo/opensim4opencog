@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using cogbot.Listeners;
+using Cogbot;
 using System.Threading;
 using System.IO;
 using System.Collections;
@@ -9,13 +9,13 @@ using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using System.Reflection;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse.Assets;
 #if USE_SAFETHREADS
 using Thread = MushDLR223.Utilities.SafeThread;
 #endif
 
-namespace cogbot.ScriptEngines
+namespace Cogbot.ScriptEngines
 {
     public class ScriptEventListener : SimEventSubscriber, IDisposable
     {

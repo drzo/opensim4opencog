@@ -5,7 +5,7 @@ using System.Drawing;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using cogbot;
+using Cogbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using Exception=System.Exception;

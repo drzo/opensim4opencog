@@ -2,11 +2,11 @@ using System;
 using OpenMetaverse;
 using System.Collections.Generic;
 using System.Threading;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Appearance
+namespace Cogbot.Actions.Appearance
 {
     public class GestureCommand : Command, BotPersonalCommand
     {

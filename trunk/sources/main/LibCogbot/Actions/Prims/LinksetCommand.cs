@@ -1,22 +1,22 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
+using Cogbot;
+using Cogbot.World;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Objects
+namespace Cogbot.Actions.Objects
 {
-    public class LinksetCommand : cogbot.Actions.Command, RegionMasterCommand
+    public class LinksetCommand : Cogbot.Actions.Command, RegionMasterCommand
     {
         public LinksetCommand(BotClient client)
         {
             Name = "Linkset";
             Description = "Takes from a prim. Usage: Take [prim]";
-            Category = cogbot.Actions.CommandCategory.Objects;
+            Category = Cogbot.Actions.CommandCategory.Objects;
             Parameters = new[]
                              {
                                  new NamedParam(typeof (SimObject), typeof (UUID)),

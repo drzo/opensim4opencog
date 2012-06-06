@@ -1,11 +1,11 @@
 ﻿#undef COGBOT_LIBOMV
 using System;
 using System.Collections.Generic;
-using cogbot.Listeners;
+using Cogbot;
 using MushDLR223.ScriptEngines;
 using OpenMetaverse;
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     public class SimGroup : BotMentalAspect
     {

@@ -1,6 +1,6 @@
 using System;
 using System.Threading;
-using cogbot.Actions.Pathfinder;
+using Cogbot.Actions.Pathfinder;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
@@ -8,7 +8,7 @@ using PathSystem3D.Navigation;
 using Thread = MushDLR223.Utilities.SafeThread;
 #endif
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
 
     public class TrialProc

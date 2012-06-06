@@ -4,7 +4,7 @@ using System.Reflection;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     internal class SimSound : SimAsset
     {

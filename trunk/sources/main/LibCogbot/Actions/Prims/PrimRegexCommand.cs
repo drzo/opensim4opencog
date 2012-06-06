@@ -4,7 +4,7 @@ using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Objects
+namespace Cogbot.Actions.Objects
 {
     public class PrimRegexCommand : Command, RegionMasterCommand
     {

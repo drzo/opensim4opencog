@@ -3,14 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Xml.Serialization;
-using cogbot.Listeners;
-using cogbot.ScriptEngines;
+using Cogbot;
+using Cogbot.ScriptEngines;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     public enum SimEventClass
     {

@@ -4,7 +4,7 @@ using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Movement
+namespace Cogbot.Actions.Movement
 {
     public class FlyCommand : Command, BotPersonalCommand
     {

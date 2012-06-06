@@ -3,10 +3,10 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
-using cogbot;
+using Cogbot;
 using Cogbot.Library;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
+using Cogbot;
+using Cogbot.World;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using Radegast;
@@ -61,6 +61,15 @@ namespace CogbotRadegastPluginModule
         public void StartPlugin(RadegastInstance inst)
         { 
             RadegastInstance = inst;
+            inst.Client.Settings.MULTIPLE_SIMS = true;
+            OpenMetaverse.Settings.LOG_LEVEL = Helpers.LogLevel.Debug;
+            //inst.Client.Settings.THROTTLE_OUTGOING_PACKETS = true;
+            if (Assembly.GetEntryAssembly() == typeof(RadegastInstance).Assembly)
+            {
+                return;
+            }
+            //inst.MainForm.AddMenuItem(new string[] {"World", "Cogbot"}, cogWorld);
+          //  return;
             try
             {
                 //inst.MainForm.Invoke(new MethodInvoker(() => StartPlugin0(inst)));                 
@@ -71,6 +80,11 @@ namespace CogbotRadegastPluginModule
             {
                 Logger.Log("[COGBOT PLUGIN] exception " + ex, Helpers.LogLevel.Error, ex);
             }
+        }
+
+        private void cogWorld(object sender, EventArgs e)
+        {
+            
         }
 
         private void AddRadegastEvents()

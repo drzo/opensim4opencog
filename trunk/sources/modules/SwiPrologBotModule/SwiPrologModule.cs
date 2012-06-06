@@ -3,10 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using cogbot;
-using cogbot.Actions.System;
-using cogbot.Listeners;
-using cogbot.ScriptEngines;
+using Cogbot;
+using Cogbot.Actions.System;
+using Cogbot;
+using Cogbot.ScriptEngines;
 using MushDLR223.ScriptEngines;
 #if RTPARSER_INCLUDED
 using RTParser.Utils;

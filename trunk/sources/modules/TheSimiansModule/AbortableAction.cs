@@ -1,5 +1,5 @@
 using System;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 

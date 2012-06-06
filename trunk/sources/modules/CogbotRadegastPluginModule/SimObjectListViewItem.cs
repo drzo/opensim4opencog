@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Windows.Forms;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 

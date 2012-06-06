@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using OpenMetaverse;
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     public class SimObjectUsage : SimUsage
     {

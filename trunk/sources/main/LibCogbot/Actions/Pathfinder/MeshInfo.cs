@@ -1,21 +1,21 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
+using Cogbot;
+using Cogbot.World;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Pathfinder
+namespace Cogbot.Actions.Pathfinder
 {
-    class meshinfo : cogbot.Actions.Command, SystemApplicationCommand, BotStatefullCommand
+    class meshinfo : Cogbot.Actions.Command, SystemApplicationCommand, BotStatefullCommand
     {
         public meshinfo(BotClient client)
         {
             Name = GetType().Name;
             Description = "Shows meshinfo";
-            Category = cogbot.Actions.CommandCategory.Movement;
+            Category = Cogbot.Actions.CommandCategory.Movement;
             Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 

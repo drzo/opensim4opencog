@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using System.Threading;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
-namespace cogbot.Listeners
+namespace Cogbot
 {
     partial class WorldObjects
     {

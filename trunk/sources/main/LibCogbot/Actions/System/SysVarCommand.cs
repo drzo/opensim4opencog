@@ -2,18 +2,18 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
-using cogbot.Utilities;
+using Cogbot;
+using Cogbot.World;
+using Cogbot.Utilities;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.System
+namespace Cogbot.Actions.System
 {
-    public class SysVarCommand : cogbot.Actions.Command, BotSystemCommand
+    public class SysVarCommand : Cogbot.Actions.Command, BotSystemCommand
     {
         public SysVarCommand(BotClient client)
         {

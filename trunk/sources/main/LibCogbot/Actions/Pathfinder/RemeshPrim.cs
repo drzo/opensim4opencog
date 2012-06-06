@@ -1,18 +1,18 @@
 using System.Collections.Generic;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Pathfinder
+namespace Cogbot.Actions.Pathfinder
 {
-    public class RemeshPrim : cogbot.Actions.Command, BotPersonalCommand
+    public class RemeshPrim : Cogbot.Actions.Command, BotPersonalCommand
     {
         public RemeshPrim(BotClient client)
         {
             Name = GetType().Name;
             Description = "Reads the sim prims for improving routes then bakes the region (was called srprim). Usage: remeshprim [prims] ";
-            Category = cogbot.Actions.CommandCategory.Movement;
+            Category = Cogbot.Actions.CommandCategory.Movement;
             Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 
@@ -45,7 +45,7 @@ namespace cogbot.Actions.Pathfinder
                 SimRegion.BakeRegions();
             } else
             {
-                cogbot.Listeners.WorldPathSystem.MeshingQueue.Enqueue(SimRegion.BakeRegions);
+                Cogbot.WorldPathSystem.MeshingQueue.Enqueue(SimRegion.BakeRegions);
             }
 
             return TheBotClient.ExecuteCommand("meshinfo", fromAgentID, WriteLine);

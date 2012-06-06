@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using cogbot.Listeners;
+using Cogbot;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Mesher;
@@ -16,7 +16,7 @@ using THIRDPARTY.OpenSim.Region.Physics.OdePlugin;
 //using THIRDPARTY.OpenSim.Framework;
 //using THIRDPARTY.OpenSim.Region.Physics.Manager;
 #endif
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
 
     // from IdealistViewer

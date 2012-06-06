@@ -8,7 +8,7 @@ using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using Radegast;
 
-namespace cogbot
+namespace Cogbot
 {
     public class BotInventoryEval
     {

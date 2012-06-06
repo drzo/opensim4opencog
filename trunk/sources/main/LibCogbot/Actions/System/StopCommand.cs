@@ -10,11 +10,11 @@ using MushDLR223.ScriptEngines;
 using Thread = MushDLR223.Utilities.SafeThread;
 #endif
 
-namespace cogbot.Actions
+namespace Cogbot.Actions
 {
-    class Stop : Command, BotSystemCommand
+    class StopCommand : Command, BotSystemCommand
     {
-        public Stop(BotClient Client)
+        public StopCommand(BotClient Client)
             : base(Client)
         {
             Description = @"If called with args, cancels the current modeless action. 

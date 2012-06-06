@@ -3,7 +3,7 @@ using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Groups
+namespace Cogbot.Actions.Groups
 {
     /// <summary>
     /// Shows group info Dialog using Radegast UI

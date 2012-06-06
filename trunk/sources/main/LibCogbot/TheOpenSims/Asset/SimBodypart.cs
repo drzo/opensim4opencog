@@ -1,7 +1,7 @@
 using System;
 using OpenMetaverse;
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     public class SimBodypart : SimAsset
     {

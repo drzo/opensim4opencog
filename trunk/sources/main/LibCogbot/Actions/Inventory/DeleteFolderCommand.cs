@@ -9,7 +9,7 @@ using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Inventory.Shell
+namespace Cogbot.Actions.Inventory.Shell
 {
     /// <summary>
     /// Inventory Example, Moves a folder to the Trash folder

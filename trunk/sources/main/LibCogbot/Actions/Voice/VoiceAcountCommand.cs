@@ -7,7 +7,7 @@ using OpenMetaverse.Packets;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Voice
+namespace Cogbot.Actions.Voice
 {
     public class VoiceAccountCommand : Command, RegionMasterCommand
     {

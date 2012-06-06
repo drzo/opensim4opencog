@@ -1,7 +1,7 @@
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     abstract public class BotAction : SimUsage
     {

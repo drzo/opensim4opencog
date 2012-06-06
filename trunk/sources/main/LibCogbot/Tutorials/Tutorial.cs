@@ -8,7 +8,7 @@ using textsl.Utilities.XMLInterpreter;
 //using libsecondlife;
 
 
-namespace cogbot.Tutorials
+namespace Cogbot.Tutorials
 {
     public class Tutorial
     {

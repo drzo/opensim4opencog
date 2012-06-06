@@ -11,7 +11,7 @@ using Thread = MushDLR223.Utilities.SafeThread;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions
+namespace Cogbot.Actions
 {
     public class ThreadCommand : Command, BotSystemCommand
     {

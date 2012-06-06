@@ -3,13 +3,13 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-using cogbot.Listeners;
+using Cogbot;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Scripting
+namespace Cogbot.Actions.Scripting
 {
     public class DownloadScriptCommand : Command, GridMasterCommand
     {

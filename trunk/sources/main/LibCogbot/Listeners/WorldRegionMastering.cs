@@ -8,17 +8,17 @@ using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
-using cogbot.Actions;
-using cogbot.TheOpenSims;
+using Cogbot.Actions;
+using Cogbot.World;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
 using PathSystem3D.Navigation;
-using cogbot.Utilities;
+using Cogbot.Utilities;
 
-namespace cogbot.Listeners
+namespace Cogbot
 {
 
     public partial class WorldObjects

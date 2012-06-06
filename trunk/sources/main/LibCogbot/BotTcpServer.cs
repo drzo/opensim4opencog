@@ -7,15 +7,15 @@ using System.IO;
 using System.Net.Sockets;
 using System.Net;
 using System.Xml;
-using cogbot.Actions;
-using cogbot.ScriptEngines;
-using cogbot.TheOpenSims;
+using Cogbot.Actions;
+using Cogbot.ScriptEngines;
+using Cogbot.World;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
-using cogbot.Listeners;
+using Cogbot;
 
-namespace cogbot.Utilities
+namespace Cogbot.Utilities
 {
 
     public class TcpServerCommand : Command, BotSystemCommand

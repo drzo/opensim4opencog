@@ -1,19 +1,19 @@
 using System.Collections.Generic;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
+using Cogbot;
+using Cogbot.World;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Inventory
+namespace Cogbot.Actions.Inventory
 {
-    public class CopyCommand : cogbot.Actions.Command, RegionMasterCommand
+    public class CopyCommand : Cogbot.Actions.Command, RegionMasterCommand
     {
         public CopyCommand(BotClient client)
         {
             Name = "Copy";
             Description = "Copys from a prim. Usage: Copy [prim]";
-            Category = cogbot.Actions.CommandCategory.Objects;
+            Category = Cogbot.Actions.CommandCategory.Objects;
             Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
         }
 

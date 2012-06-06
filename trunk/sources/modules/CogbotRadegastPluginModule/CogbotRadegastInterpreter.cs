@@ -1,4 +1,4 @@
-using cogbot;
+using Cogbot;
 using MushDLR223.ScriptEngines;
 using Radegast;
 

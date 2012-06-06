@@ -1,12 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using cogbot.Actions;
-using cogbot.Listeners;
+using Cogbot.Actions;
+using Cogbot;
 using MushDLR223.ScriptEngines;
 using OpenMetaverse;
 
-namespace cogbot
+namespace Cogbot
 {
     public class CmdRequest : Parser
     {

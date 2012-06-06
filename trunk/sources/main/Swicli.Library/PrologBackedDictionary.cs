@@ -188,6 +188,11 @@ namespace Swicli.Library
             return new PrologBackedDictionaryEnumerator(this);
         }
 
+        public Dictionary<TKey, TValue> Copy()
+        {
+            return new Dictionary<TKey, TValue>(this);
+        }
+
         public class PrologBackedDictionaryEnumerator : IEnumerator<KeyValuePair<TKey, TValue>>
         {
             private readonly PrologBackedDictionary<TKey, TValue> _dictionary;
@@ -694,6 +699,11 @@ namespace Swicli.Library
         }
 
         #endregion
+
+        public List<T> Copy()
+        {
+            return new List<T>(this);
+        }
 
         #region IEnumerable<T> Members
 

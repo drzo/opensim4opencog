@@ -8,7 +8,7 @@ using System.Text;
 // the Namespace used for all BotClient commands
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Friends
+namespace Cogbot.Actions.Friends
 {
     /// <summary>
     /// Shows a list of friends

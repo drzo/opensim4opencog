@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 
@@ -10,7 +10,7 @@ using MushDLR223.ScriptEngines;
 using OpenMetaverse.Packets;
 using System.Windows.Forms;
 
-namespace cogbot.Actions.Land
+namespace Cogbot.Actions.Land
 {
     /// <summary>
     /// Display a list of all agent locations in a specified region

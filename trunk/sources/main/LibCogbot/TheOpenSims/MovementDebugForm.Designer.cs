@@ -1,4 +1,4 @@
-﻿namespace Cogbot.Library.TheOpenSims
+﻿namespace Cogbot.Library.World
 {
     partial class MovementDebugForm
     {

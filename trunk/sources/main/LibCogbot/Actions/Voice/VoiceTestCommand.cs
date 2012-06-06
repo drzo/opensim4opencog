@@ -33,7 +33,7 @@ using OpenMetaverse.Packets;
 using MushDLR223.ScriptEngines;
 using OpenMetaverse.Utilities;
 
-namespace cogbot.Actions.Voice
+namespace Cogbot.Actions.Voice
 {
     public class VoiceException: Exception
     {

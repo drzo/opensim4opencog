@@ -4,14 +4,14 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
-using cogbot.Listeners;
+using Cogbot;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 using Radegast;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.SimExport
+namespace Cogbot.Actions.SimExport
 {
     public class ShowImageCommand : Command, GridMasterCommand
     {

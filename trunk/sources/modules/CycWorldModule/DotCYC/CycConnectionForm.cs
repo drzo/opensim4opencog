@@ -4,7 +4,7 @@
 #endif
 using System;
 using System.Windows.Forms;
-using cogbot;
+using Cogbot;
 using java.net;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;

@@ -1,12 +1,12 @@
 using System;
 using System.Text;
-using cogbot.Actions;
-using cogbot.TheOpenSims;
+using Cogbot.Actions;
+using Cogbot.World;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.System
+namespace Cogbot.Actions.System
 {
     public class RegionInfoCommand : Command, RegionMasterCommand
     {

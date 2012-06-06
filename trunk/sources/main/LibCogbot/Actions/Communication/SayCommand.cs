@@ -6,7 +6,7 @@ using OpenMetaverse;
 using MushDLR223.ScriptEngines;
 using OpenMetaverse.StructuredData;
 
-namespace cogbot.Actions.Communication
+namespace Cogbot.Actions.Communication
 {
     public class SayCommand : Command, BotPersonalCommand
     {

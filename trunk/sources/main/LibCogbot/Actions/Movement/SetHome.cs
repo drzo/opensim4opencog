@@ -6,7 +6,7 @@ using OpenMetaverse.Packets;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Movement
+namespace Cogbot.Actions.Movement
 {
     public class SetHomeCommand : Command, BotPersonalCommand
     {

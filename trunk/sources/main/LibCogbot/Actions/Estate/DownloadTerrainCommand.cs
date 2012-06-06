@@ -7,7 +7,7 @@ using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Estate
+namespace Cogbot.Actions.Estate
 {
     /// <summary>
     /// Request the raw terrain file from the simulator, save it as a file.

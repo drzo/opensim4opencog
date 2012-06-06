@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using cogbot.TheOpenSims;
-using cogbot.Utilities;
+using Cogbot.World;
+using Cogbot.Utilities;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
@@ -11,7 +11,7 @@ using System.Threading;
 using Thread = MushDLR223.Utilities.SafeThread;
 #endif
 
-namespace cogbot.Listeners
+namespace Cogbot
 {
     public class SimEventFilterSubscriber : SimEventSubscriber
     {

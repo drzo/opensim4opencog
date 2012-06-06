@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using OpenMetaverse;
-using cogbot.Listeners;
+using Cogbot;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Search
+namespace Cogbot.Actions.Search
 {
     public class UUIDTypeCommand : Command, GridMasterCommand
     {
@@ -22,7 +22,7 @@ namespace cogbot.Actions.Search
 "</pre><p>in botconfig.xml</p>";
             Details = AddUsage("uuidtype <uuid>", "print what sort of  this UUID is") +
                 Example("/uuidtype  3a3e92ed-a94f-46dc-9f92-88c790b5701e",
-@"[12:54] UUID=3a3e92ed-a94f-46dc-9f92-88c790b5701e is of Type='cogbot.TheOpenSims.SimAnimation' toString='3a3e92ed-a94f-46dc-9f92-88c790b5701e NODATA'
+@"[12:54] UUID=3a3e92ed-a94f-46dc-9f92-88c790b5701e is of Type='cogbot.World.SimAnimation' toString='3a3e92ed-a94f-46dc-9f92-88c790b5701e NODATA'
 [12:54] UUID Type: Success: Done with UUID 3a3e92ed-a94f-46dc-9f92-88c790b5701e obj= 3a3e92ed-a94f-46dc-9f92-88c790b5701e NODATA
 [12:54] UUID Type: Success: Done with UUID 3a3e92ed-a94f-46dc-9f92-88c790b5701e obj= 3a3e92ed-a94f-46dc-9f92-88c790b5701e NODATA");
             Parameters = CreateParams("uuid", typeof(UUID), "uuid to resolve to type");

@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using cogbot.Listeners;
-using cogbot.Utilities;
+using Cogbot;
+using Cogbot.Utilities;
 using MushDLR223.ScriptEngines;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     /// <summary>
     /// An Afforance in Secondlife

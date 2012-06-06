@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using cogbot.Listeners;
+using Cogbot;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     internal class SimGesture : SimAsset
     {

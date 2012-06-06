@@ -11,7 +11,7 @@ using MushDLR223.Utilities;
 using OpenMetaverse; //using libsecondlife;
 using System.Threading;
 
-namespace cogbot
+namespace Cogbot
 {
 #pragma warning disable 0168
     public partial class LoginForm : Form

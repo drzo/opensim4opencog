@@ -4,7 +4,7 @@ using System.Text;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 
-namespace cogbot.Listeners
+namespace Cogbot
 {
     sealed public class DebugAllEvents: AllEvents
     {

@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
 
-namespace cogbot.Listeners
+namespace Cogbot
 {
 
     public partial class WorldObjects

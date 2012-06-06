@@ -1,13 +1,13 @@
 using System;
 using System.IO;
 using System.Threading;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.SimExport
+namespace Cogbot.Actions.SimExport
 {
 
     public class DownloadTextureCommand : Command, RegionMasterCommand

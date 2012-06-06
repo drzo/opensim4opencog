@@ -2,13 +2,13 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using System.Configuration;
 
-namespace cogbot.Listeners
+namespace Cogbot
 {
     public delegate float SimObjectHeuristic(SimObject prim);
     public class NamedPrefixThing
@@ -272,6 +272,7 @@ namespace cogbot.Listeners
         {
 
             if (eventName.EndsWith("On-Image-Receive-Progress")) return true;
+            if (eventName.EndsWith("On-Log-Message")) return true;
             if (eventName.EndsWith("Look-At")) return true;
             var parms = new NamedParam[paramNames.Length];
             for (int i = 0; i < paramNames.Length; i++)
@@ -1254,14 +1255,6 @@ namespace cogbot.Listeners
         public void SendNewRegionEvent(SimEventType type, string eventName, params object[] args)
         {
             client.SendPipelineEvent(new SimObjectEvent(type, SimEventClass.REGIONAL, eventName, args));
-        }
-
-        public void CalcStats(SimObject prim)
-        {
-            if (boringNamesHeuristic(prim) == 0)
-                client.BoringNamesCount++;
-            else
-                client.GoodNamesCount++;
         }
 
         public string describePrim(Primitive target, bool detailed)

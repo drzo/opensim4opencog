@@ -1,10 +1,10 @@
 using System;
 using OpenMetaverse;
-using cogbot.Listeners;
+using Cogbot;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Movement
+namespace Cogbot.Actions.Movement
 {
 
     class RotateCommand : Command, BotPersonalCommand

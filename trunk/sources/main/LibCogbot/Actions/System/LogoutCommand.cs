@@ -5,7 +5,7 @@ using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions
+namespace Cogbot.Actions
 {
     class Logout : Command, BotSystemCommand
     {

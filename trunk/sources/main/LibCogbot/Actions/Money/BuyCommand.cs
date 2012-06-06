@@ -1,13 +1,13 @@
 using System.Collections.Generic;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
+using Cogbot;
+using Cogbot.World;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Money
+namespace Cogbot.Actions.Money
 {
-    public class BuyCommand : cogbot.Actions.Command, RegionMasterCommand
+    public class BuyCommand : Cogbot.Actions.Command, RegionMasterCommand
     {
         public BuyCommand(BotClient client)
         {

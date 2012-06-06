@@ -4,7 +4,7 @@ using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Scripting
+namespace Cogbot.Actions.Scripting
 {
     public class ScriptCommand : Command, BotPersonalCommand
     {

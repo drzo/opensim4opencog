@@ -10,12 +10,12 @@ using System.IO;
 using System.Text;
 using System.Xml;
 using System.Xml.Schema;
-using cogbot.Actions;
+using Cogbot.Actions;
 using DotLisp;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 
-namespace cogbot.ScriptEngines
+namespace Cogbot.ScriptEngines
 {
     public class XmlScriptInterpreter : CommonScriptInterpreter, ScriptInterpreter
     {

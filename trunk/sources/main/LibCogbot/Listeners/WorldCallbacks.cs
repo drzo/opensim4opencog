@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using cogbot.Actions;
-using cogbot.TheOpenSims;
+using Cogbot.Actions;
+using Cogbot.World;
 using OpenMetaverse;
 using OpenMetaverse.Assets;
 using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
 using PathSystem3D.Navigation;
 
-namespace cogbot.Listeners
+namespace Cogbot
 {
 
     public delegate void OnAddSimObjectCallback(SimObject obj);

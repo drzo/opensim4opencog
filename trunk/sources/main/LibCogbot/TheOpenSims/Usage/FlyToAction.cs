@@ -7,7 +7,7 @@ using PathSystem3D.Navigation;
 using Thread = MushDLR223.Utilities.SafeThread;
 #endif
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     class FlyToAction : MoveToLocation
     {

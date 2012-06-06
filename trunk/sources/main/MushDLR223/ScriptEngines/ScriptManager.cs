@@ -833,11 +833,11 @@ namespace MushDLR223.ScriptEngines
              return CLSMember.GetTypeArray(argarray);
         }
         public readonly static Dictionary<Func<string>,ICollectionProvider> CollectionProviders = new Dictionary<Func<string>, ICollectionProvider>();
-        public static void AddGroupProvider(Func<string> func, ICollectionProvider provider)
+        public static void AddGroupProvider(Func<string> funcReturningNameSpace, ICollectionProvider provider)
         {
             lock (CollectionProviders)
             {
-                CollectionProviders[func] = provider;
+                CollectionProviders[funcReturningNameSpace] = provider;
             }
         }
         public static void AddNamedProvider(string namespaec, ICollectionProvider provider)

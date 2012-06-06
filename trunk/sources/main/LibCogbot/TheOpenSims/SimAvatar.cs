@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
-using cogbot.Actions;
-using cogbot.Listeners;
-using cogbot.Utilities;
+using Cogbot.Actions;
+using Cogbot;
+using Cogbot.Utilities;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
@@ -17,7 +17,7 @@ using String=System.String;
 /// Those complexities that turn out to have simple causes can be simulated and studied, 
 /// thus increasing our knowledge without needing direct observation.
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     public abstract partial class SimAvatarImpl : SimObjectImpl, SimAvatar
     {

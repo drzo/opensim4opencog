@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
-using cogbot.Listeners;
-using cogbot;
+using Cogbot;
+using Cogbot;
 using OpenMetaverse;
 
 namespace IrcRegionModule

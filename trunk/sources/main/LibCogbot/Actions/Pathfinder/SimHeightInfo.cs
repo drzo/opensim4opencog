@@ -3,15 +3,15 @@ using PathSystem3D.Navigation;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Pathfinder
+namespace Cogbot.Actions.Pathfinder
 {
-    public class simhinfo : cogbot.Actions.Command, RegionMasterCommand
+    public class simhinfo : Cogbot.Actions.Command, RegionMasterCommand
     {
         public simhinfo(BotClient client)
         {
             Name = GetType().Name;
             Description = "Calculates the Height (Z) level of walking at point. Usage: simzinfo 120 123 30";
-            Category = cogbot.Actions.CommandCategory.Movement;
+            Category = Cogbot.Actions.CommandCategory.Movement;
             Parameters = new[] {  new NamedParam(typeof(SimPosition),typeof(SimPosition)) };
         }
 
@@ -31,13 +31,13 @@ namespace cogbot.Actions.Pathfinder
         }
     }
 
-    public class simzinfo : cogbot.Actions.Command, RegionMasterCommand
+    public class simzinfo : Cogbot.Actions.Command, RegionMasterCommand
     {
         public simzinfo(BotClient client)
         {
             Name = GetType().Name;
             Description = "Calculates the Z level of walking at point. Usage: simzinfo 120 123";
-            Category = cogbot.Actions.CommandCategory.Movement;
+            Category = Cogbot.Actions.CommandCategory.Movement;
             Parameters = new[] { new NamedParam(typeof(SimPosition), typeof(SimPosition)) };
         }
 

@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 using PathSystem3D.Navigation;
 
-namespace cogbot.Actions.Inventory.Shell
+namespace Cogbot.Actions.Inventory.Shell
 {
     class RezItemCommand : Command, BotPersonalCommand
     {

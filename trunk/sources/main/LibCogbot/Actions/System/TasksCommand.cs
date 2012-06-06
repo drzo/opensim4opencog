@@ -1,12 +1,12 @@
 using System.Collections.Generic;
 using System.Threading;
-using cogbot.Utilities;
+using Cogbot.Utilities;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.System
+namespace Cogbot.Actions.System
 {
 
     public class TasksCommand : Command, BotSystemCommand

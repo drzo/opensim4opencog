@@ -1,14 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using cogbot.ScriptEngines;
-using cogbot.TheOpenSims;
+using Cogbot.ScriptEngines;
+using Cogbot.World;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
-namespace cogbot.Listeners
+namespace Cogbot
 {
     public class DefaultWorldGroupProvider : ICollectionProvider
     {

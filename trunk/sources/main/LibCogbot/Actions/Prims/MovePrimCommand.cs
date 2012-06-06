@@ -1,19 +1,19 @@
 using System.Collections.Generic;
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
 using PathSystem3D.Navigation;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Objects
+namespace Cogbot.Actions.Objects
 {
-    public class MovePrimCommand : cogbot.Actions.Command, RegionMasterCommand
+    public class MovePrimCommand : Cogbot.Actions.Command, RegionMasterCommand
     {
         public MovePrimCommand(BotClient client)
         {
             Name = "moveprim";
             Description = "move prim to the relative specified position. Usage: moveprim <prim> <position>";
-            Category = cogbot.Actions.CommandCategory.Objects;
+            Category = Cogbot.Actions.CommandCategory.Objects;
         }
 
         public override CmdResult ExecuteRequest(CmdRequest args)

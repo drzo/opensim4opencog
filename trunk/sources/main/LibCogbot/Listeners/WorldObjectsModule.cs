@@ -1,7 +1,7 @@
-using cogbot.TheOpenSims;
+using Cogbot.World;
 using OpenMetaverse;
 
-namespace cogbot.Listeners
+namespace Cogbot
 {
     abstract public class WorldObjectsModule : AListener
     {

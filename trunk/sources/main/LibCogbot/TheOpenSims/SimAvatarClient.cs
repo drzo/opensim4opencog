@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using cogbot.Actions.Pathfinder;
-using cogbot.Listeners;
+using Cogbot.Actions.Pathfinder;
+using Cogbot;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 using OpenMetaverse;
@@ -15,7 +15,7 @@ using String=System.String;
 using Thread=System.Threading.Thread;
 using System.Drawing;
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     public partial class SimAvatarClient : SimAvatarImpl, SimMover, SimAvatar, SimActor, SimControllableAvatar
     {
@@ -626,7 +626,7 @@ namespace cogbot.TheOpenSims
     {
         //new SimPosition ApproachPosition { get; set; }
         double Approach(SimObject obj, double maxDistance);
-        cogbot.TheOpenSims.BotAction CurrentAction { get; set; }
+        Cogbot.World.BotAction CurrentAction { get; set; }
         void Do(SimTypeUsage use, SimObject someObject);
         void Eat(SimObject target);
         void ExecuteLisp(SimObjectUsage botObjectAction, object lisp);

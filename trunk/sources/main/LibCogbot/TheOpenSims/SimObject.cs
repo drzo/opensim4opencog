@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
-using cogbot.Listeners;
-using cogbot.Utilities;
+using Cogbot;
+using Cogbot.Utilities;
 using MushDLR223.Utilities;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -16,7 +16,7 @@ using MushDLR223.ScriptEngines;
 using Thread = MushDLR223.Utilities.SafeThread;
 #endif
 
-namespace cogbot.TheOpenSims
+namespace Cogbot.World
 {
     //TheSims-like object
     public class SimObjectImpl : SimPosition, BotMentalAspect,  SimObject, MeshableObject, IEquatable<SimObjectImpl>
@@ -2919,7 +2919,7 @@ namespace cogbot.TheOpenSims
                     if (!IsMeshingQueued)
                     {
                         IsMeshingQueued = true;
-                        cogbot.Listeners.WorldPathSystem.MeshingQueue.AddFirst("mesh " + ToString(), () => { AddCollisionsNow(); });
+                        Cogbot.WorldPathSystem.MeshingQueue.AddFirst("mesh " + ToString(), () => { AddCollisionsNow(); });
                     }
                     return wasMeshUpdated;
 

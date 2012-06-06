@@ -6,7 +6,7 @@ using OpenMetaverse.Packets;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Communication
+namespace Cogbot.Actions.Communication
 {
     public class WhisperCommand : Command, BotPersonalCommand
     {

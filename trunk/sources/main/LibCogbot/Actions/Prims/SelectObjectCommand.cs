@@ -1,19 +1,19 @@
 using System.Collections.Generic;
-using cogbot.Listeners;
-using cogbot.TheOpenSims;
+using Cogbot;
+using Cogbot.World;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions.Objects
+namespace Cogbot.Actions.Objects
 {
-    public class SelectObjectCommand : cogbot.Actions.Command, RegionMasterCommand
+    public class SelectObjectCommand : Cogbot.Actions.Command, RegionMasterCommand
     {
         public SelectObjectCommand(BotClient client)
         {
             Name = "selectobject";
             Description = "Re selectobject [re|de] [prim]";
-            Category = cogbot.Actions.CommandCategory.Objects;
+            Category = Cogbot.Actions.CommandCategory.Objects;
             Parameters = new[] {  new NamedParam(typeof(SimObject), typeof(UUID)) };
             //client.RegisterCommand("deselect", this);
         }

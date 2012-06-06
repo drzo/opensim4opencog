@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using cogbot.ScriptEngines;
+using Cogbot.ScriptEngines;
 using System.IO;
 using DotLisp;
 using System.Reflection;
@@ -9,7 +9,7 @@ using System.Reflection.Emit;
 using MushDLR223.ScriptEngines;
 using MushDLR223.Utilities;
 
-namespace cogbot.Listeners
+namespace Cogbot
 {
     public class LispEventProducer : AllEvents
     {

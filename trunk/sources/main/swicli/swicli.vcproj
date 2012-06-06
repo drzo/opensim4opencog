@@ -335,19 +335,22 @@
 			MinFrameworkVersion="131072"
 		/>
 		<ProjectReference
-			ReferencedProjectIdentifier="{6B5C93A4-FB73-45E4-ACB9-F53AD45202ED}"
+			ReferencedProjectIdentifier="{6AD86707-006D-412F-A907-6928CD0A6A1A}"
 			RelativePathToProject=".\sources\main\Swicli.Library\Swicli.Library.csproj"
 		/>
 		<ProjectReference
-			ReferencedProjectIdentifier="{79A1FD8D-D6BF-4583-BD6C-C532293728CC}"
-			RelativePathToProject=".\sources\main\SWICLITestDLL\SWICLITestDLL.csproj"
-		/>
-		<ProjectReference
-			ReferencedProjectIdentifier="{881E780E-83A0-4562-A86F-9C681CBBFB0C}"
+			ReferencedProjectIdentifier="{E039BBEB-C58D-4161-AE09-1C2781EF1AEF}"
 			CopyLocal="false"
 			CopyLocalDependencies="false"
 			CopyLocalSatelliteAssemblies="false"
-			RelativePathToProject=".\sources\main\Cogbot\Cogbot.csproj"
+			RelativePathToProject=".\sources\main\LibCogbot\Cogbot.Library.csproj"
+		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{560139A0-F728-4568-B3AE-535074F3C8CB}"
+			CopyLocal="false"
+			CopyLocalDependencies="false"
+			CopyLocalSatelliteAssemblies="false"
+			RelativePathToProject=".\sources\external\LibOpenMetaverse\OpenMetaverse\OpenMetaverse.csproj"
 		/>
 	</References>
 	<Files>

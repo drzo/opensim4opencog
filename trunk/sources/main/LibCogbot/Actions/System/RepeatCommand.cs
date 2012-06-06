@@ -7,7 +7,7 @@ using OpenMetaverse.Packets;
 
 using MushDLR223.ScriptEngines;
 
-namespace cogbot.Actions
+namespace Cogbot.Actions
 {
     public class RepeatCommand : Command, BotSystemCommand
     {
