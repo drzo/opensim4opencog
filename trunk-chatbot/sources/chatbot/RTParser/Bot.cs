@@ -616,6 +616,17 @@ namespace RTParser
         }
         public void saveServitor()
         {
+            try
+            {
+                saveServitor0();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERROR: saveServitor()" + e);
+            }
+        }
+        public void saveServitor0()
+        {
             List<string> allPaths = new List<string>();
             List<string> allCrons = new List<string>();
             List<string> allBehaviors = new List<string>();

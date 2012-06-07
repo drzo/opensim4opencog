@@ -217,6 +217,10 @@ namespace RTParser.Utils
             relPath = HostSystem.ActualExistingPathIfExists(relPath);
             if (!HostSystem.FileOrDirExists(relPath))
             {
+                if (HostSystem.FileOrDirExists(pathIn) && !HostSystem.IsWildPath(pathIn))
+                {
+                    return pathIn;
+                }
                 if (!relPath.Contains("*")) RTPBot.writeDebugLine("WARNING PATH NOT EXIST ERROR: " + relPath);
             }
             return relPath;

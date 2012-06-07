@@ -403,7 +403,9 @@ namespace AIMLBotModule
             MyBot.GlobalSettings.addSetting("master", client.MasterName);
             client.WorldSystem.TheSimAvatar["AIMLBotModule"] = this;
             client.WorldSystem.TheSimAvatar["MyBot"] = MyBot;
-            client.WorldSystem.AddGroupProvider(this);
+            MushDLR223.ScriptEngines.ScriptManager.AddGroupProvider(this);
+            MushDLR223.ScriptEngines.ScriptManager.AddGroupProvider(MyBot.GlobalSettings);
+            MushDLR223.ScriptEngines.ScriptManager.AddGroupProvider(MyBot.BotAsUser.Predicates);
 
 
             LoadPersonalConfig();
@@ -418,12 +420,6 @@ namespace AIMLBotModule
             if (string.IsNullOrEmpty(myName)) return;
             NeedPersonalConfig = false;
             LoadPersonalDirectories(myName);
-            client.WorldSystem.AddGroupProvider(myName, BotVars_Personal);
-        }
-
-        private ICollection BotVars_Personal(string name)
-        {
-            return SingleNameValue.AsCollection(MyBot.GlobalSettings.grabSetting(name));
         }
 
         private void LoadPersonalDirectories(string myName)
@@ -1250,9 +1246,10 @@ namespace AIMLBotModule
             return false;
         }
 
+        public static bool FakeClientVars = false;
         public Unifiable grabSetting(string name)
         {
-            if (name == "botmod") return "botmody";
+            if (FakeClientVars) if (name == "cogvar") return "botmody";
             int argsUsed;
             ICollection v = WorldSystem.ResolveCollection(name.ToLower(), out argsUsed, this);
             if (v == null) return String.Empty;
@@ -1279,14 +1276,14 @@ namespace AIMLBotModule
 
         public bool containsLocalCalled(string name)
         {
-            return name == "botmod";
+            if (FakeClientVars) return name == "cogvar";
             int argsUsed;
             var v = WorldSystem.ResolveCollection(name.ToLower(), out argsUsed, this);
             return (v != null && v.Count > 0);
         }
         public bool containsSettingCalled(string name)
         {
-            return name == "botmod";
+            if (FakeClientVars) return name == "cogvar";
             int argsUsed;
             var v = WorldSystem.ResolveCollection(name.ToLower(), out argsUsed, this);
             return (v != null && v.Count > 0);
@@ -1294,7 +1291,11 @@ namespace AIMLBotModule
 
         public string NameSpace
         {
-            get { return "botmod"; }
+            get
+            {
+                if (FakeClientVars) return "botmod";
+                return client.GetName();
+            }
         }
 
         public RTParser.User MyUser
@@ -1388,5 +1389,19 @@ namespace AIMLBotModule
             client.WriteLine("WARNING! MyBOt NULL");
             return true;
         }
+
+        #region Implementation of ICollectionProviderSettable
+
+        public void SetValue(string name, object value)
+        {
+            
+        }
+
+        public bool AcceptsNewKeys
+        {
+            get { return false;  }
+        }
+
+        #endregion
     }
 }

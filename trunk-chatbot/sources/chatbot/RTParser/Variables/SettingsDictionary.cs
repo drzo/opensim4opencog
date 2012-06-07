@@ -60,7 +60,7 @@ namespace RTParser.Variables
     /// A bespoke Dictionary<,> for loading, adding, checking, removing and extracting
     /// settings.
     /// </summary>
-    public class SettingsDictionary : ISettingsDictionary, IDictionary<string, Unifiable>
+    public class SettingsDictionary : ISettingsDictionary, IDictionary<string, Unifiable>, ICollectionProvider
     {
         #region Attributes
 
@@ -2549,6 +2549,29 @@ namespace RTParser.Variables
             console("addSetting: " + addSetting(var, value));
             return true;
         }
+
+        #region ICollectionProvider Members
+
+        public ICollection GetGroup(string name)
+        {
+            return SingleNameValue.AsCollection(grabSetting(name));
+        }
+
+        #endregion
+
+        #region Implementation of ICollectionProviderSettable
+
+        public void SetValue(string name, object value)
+        {
+            addSetting(name, Unifiable.Create(value));
+        }
+
+        public bool AcceptsNewKeys
+        {
+            get { return true; }
+        }
+
+        #endregion
     }
     public class SettingsDictionaryEnumerator : IEnumerator<KeyValuePair<string, Unifiable>>
     {
