@@ -875,7 +875,7 @@ namespace MushDLR223.ScriptEngines
                     c = v;
                 }
             }
-            if (fc==0) return null;
+            if (fc == 0) return null;
             if (fc == 1) return c;
             return rv;
         }

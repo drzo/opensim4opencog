@@ -116,7 +116,7 @@ namespace Swicli.Library
         public void InForiegnFrame(Action action)
         {
             PrologClient.RegisterCurrentThread();
-            uint fid = libpl.PL_open_foreign_frame();
+            uint fid = 0;// libpl.PL_open_foreign_frame();
             try
             {
                 action();
