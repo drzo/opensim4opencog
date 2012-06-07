@@ -841,41 +841,73 @@ namespace MushDLR223.ScriptEngines
                 CollectionProviders.Add(provider);
             }
         }
+
         static public ICollection GetGroup(string namespaec, string varname)
         {
+            List<object> rv = new List<object>();
+            ICollection c = null;
+            int fc = 0;
             lock (CollectionProviders)
             {
                 foreach (var nv in GetProviders(namespaec))
                 {
                     ICollection v = nv.GetGroup(varname);
                     if (v == null) continue;
-                    return v;
+                    fc++;
+                    if (fc == 2)
+                    {
+                        foreach (var e in c)
+                        {
+                            if (rv.Contains(e)) rv.Add(e);
+                        }
+                        foreach (var e in v)
+                        {
+                            if (rv.Contains(e)) rv.Add(e);
+                        }
+                    }
+                    else if (fc > 2)
+                    {
+                        foreach (var e in v)
+                        {
+                            if (rv.Contains(e)) rv.Add(e);
+                        }
+                    }
+                    c = v;
                 }
             }
-            return null;
+            if (fc==0) return null;
+            if (fc == 1) return c;
+            return rv;
         }
+
         static public IEnumerable<ICollectionProvider> GetProviders(string namespaec)
         {
-            var namespaec0 = Parser.ToKey(namespaec);
+            var namespaec0 = ToKey(namespaec);
             lock (CollectionProviders)
             {
                 var all = new List<ICollectionProvider>();
                 foreach (var nv in CollectionProviders)
                 {
-                    if (Parser.ToKey(nv.NameSpace) != namespaec0) continue;
+                    if (ToKey(nv.NameSpace) != namespaec0) continue;
                     all.Add(nv);
                 }
                 return all;
             }
         }
+
+        public static string ToKey(string namespaec)
+        {
+            return Parser.ToKey(namespaec);
+        }
+
         static public IEnumerable<string> GetNameSpaces()
         {
             lock (CollectionProviders)
             {
-                var all = new List<string>();
+                var all = new HashSet<string>();
                 foreach (var nv in CollectionProviders)
                 {                   
-                    all.Add(nv.NameSpace);
+                    all.Add(ToKey(nv.NameSpace));
                 }
                 return all;
             }
@@ -884,11 +916,18 @@ namespace MushDLR223.ScriptEngines
         {
             lock (CollectionProviders)
             {
-                var all = new List<string>();
+                var all = new HashSet<string>();
                 foreach (var nv in CollectionProviders)
                 {
+                    string ns = ToKey(nv.NameSpace);
                     IEnumerable<string> cvol = nv.SettingNames(depth);
-                    if (cvol!=null) all.AddRange(cvol);
+                    if (cvol != null)
+                    {
+                        foreach (var c in cvol)
+                        {
+                            all.Add(ns + "." + ToKey(c));
+                        }
+                    }
                 }
                 return all;
             }
