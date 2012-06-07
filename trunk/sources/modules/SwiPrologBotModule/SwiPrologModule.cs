@@ -151,5 +151,19 @@ namespace PrologScriptEngine
         }
 
         #endregion
+
+        #region Implementation of ICollectionProviderSettable
+
+        public void SetValue(string name, object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool AcceptsNewKeys
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        #endregion
     }
 }
