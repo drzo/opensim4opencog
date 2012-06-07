@@ -102,6 +102,45 @@ lasteventprim - the 'current object' - the current object is
 
 [http://code.google.com/p/opensim4opencog/source/browse/data-chatbot/alicebot/config/bot.xml here they are]
 
+= Command output of //botvars --vars =
+{{{
+[12:30] Success: fromprolog.a .1 = 1
+[12:30] Success: fromprolog.b .1 = 2
+[12:30] Success: otopopo_dougstribe.selected .Count == 0
+[12:30] Success: otopopo_dougstribe.accounts .1 = Otopopo Dougstribe
+[12:30] Success: otopopo_dougstribe.accounts .2 = Douglas Miles
+[12:30] Success: otopopo_dougstribe.accounts .3 = Dogbert Miles
+[12:30] Success: otopopo_dougstribe.accounts .4 = Anniebot Ogborn
+[12:30] Success: otopopo_dougstribe.accounts .5 = Anne Ogborn
+[12:30] Success: otopopo_dougstribe.accounts .Count == 7
+[12:30] Success: otopopo_dougstribe.master .1 = Douglas Miles
+[12:30] Success: otopopo_dougstribe.self .1 = Otopopo Dougstribe
+[12:30] Success: otopopo_dougstribe.regionprims .1 = Otopopo Dougstribe
+[12:30] Success: otopopo_dougstribe.regionprims .2 = Douglas Miles
+[12:30] Success: otopopo_dougstribe.regionprims .3 = bowl2 Torus 90cbb984-00c3-4ed0-8d27-bbb61b63d3f9 (localID 2944258497)(ch0)(PrimFlagsFalse InventoryEmpty, ObjectOwnerModify)[](!IsPassable)(hollow 0.99)
+[12:30] Success: otopopo_dougstribe.regionprims .4 = Primitive Cylinder 6a9e9cb7-05ad-4d20-9660-49c598775c84 (localID 2944258471)(ch0)(PrimFlagsTrue Scripted)(PrimFlagsFalse InventoryEmpty, ObjectOwnerModify)[](!IsPassable)
+[12:30] Success: otopopo_dougstribe.regionprims .5 = Primitive Cylinder 55596f84-05ee-42c6-b46d-41861d902c73 | Listening on 100
+touch to stop (localID 2944258470)(ch0)(PrimFlagsTrue Scripted, Touch)(PrimFlagsFalse InventoryEmpty, ObjectOwnerModify)[](IsTouchDefined)(!IsPassable)
+[12:30] Success: otopopo_dougstribe.regionprims .Count == 454
+[12:30] Success: otopopo_dougstribe.allprims .1 = Otopopo Dougstribe
+[12:30] Success: otopopo_dougstribe.allprims .2 = Douglas Miles
+[12:30] Success: otopopo_dougstribe.allprims .3 = bowl2 Torus 90cbb984-00c3-4ed0-8d27-bbb61b63d3f9 (localID 2944258497)(ch0)(PrimFlagsFalse InventoryEmpty, ObjectOwnerModify)[](!IsPassable)(hollow 0.99)
+[12:30] Success: otopopo_dougstribe.allprims .4 = Primitive Cylinder 6a9e9cb7-05ad-4d20-9660-49c598775c84 (localID 2944258471)(ch0)(PrimFlagsTrue Scripted)(PrimFlagsFalse InventoryEmpty, ObjectOwnerModify)[](!IsPassable)
+[12:30] Success: otopopo_dougstribe.allprims .5 = Primitive Cylinder 55596f84-05ee-42c6-b46d-41861d902c73 | Listening on 100
+touch to stop (localID 2944258470)(ch0)(PrimFlagsTrue Scripted, Touch)(PrimFlagsFalse InventoryEmpty, ObjectOwnerModify)[](IsTouchDefined)(!IsPassable)
+[12:30] Success: otopopo_dougstribe.allprims .Count == 742
+[12:30] Success: otopopo_dougstribe.selfknownprims .1 = Atmosphere Tube bb12f9bc-1273-4005-934d-cbc167011a60 | 0.780000 (localID 2944258688)(ch0)(PrimFlagsTrue Scripted, Touch)(PrimFlagsFalse InventoryEmpty, ObjectOwnerModify)[](IsTouchDefined)(!IsPassable)
+[12:30] Success: otopopo_dougstribe.selfknownprims .2 = Primitive Box c3ef7796-b41f-4107-9dd0-8aac2544ce26 | 0.680000 (localID 2944258692)(ch0)(PrimFlagsTrue Scripted, Touch)(PrimFlagsFalse InventoryEmpty, ObjectOwnerModify)[](IsTouchDefined)(!IsPassable)
+[12:30] Success: otopopo_dougstribe.selfknownprims .3 = yuppie skirt Torus a2ad0a23-c1f3-40a9-9a04-3ad57157321c (localID 2944259031)(childs 8)(PrimFlagsTrue Phantom)(PrimFlagsFalse InventoryEmpty, ObjectOwnerModify)[]
+[12:30] Success: otopopo_dougstribe.selfknownprims .4 = Douglas Miles
+[12:30] Success: otopopo_dougstribe.selfknownprims .5 = Primitive Cylinder 6a9e9cb7-05ad-4d20-9660-49c598775c84 (localID 2944258471)(ch0)(PrimFlagsTrue Scripted)(PrimFlagsFalse InventoryEmpty, ObjectOwnerModify)[](!IsPassable)
+[12:30] Success: otopopo_dougstribe.selfknownprims .Count == 207
+[12:30] botvar: Success: otopopo_dougstribe.lasteventprim= NULL
+[12:30] Success: otopopo_dougstribe.selectedobjects .Count == 0
+[12:30] Success: otopopo_dougstribe.favfood .1 = corn
+[12:30] botvar 0 failures and 32 successes
+[12:30] botvar 0 failures and 32 successes
+}}}
 = Details =
 
 Add your content here.  Format your content with:
