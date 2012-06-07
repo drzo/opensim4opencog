@@ -6,11 +6,9 @@ using MushDLR223.Utilities;
 namespace MushDLR223.ScriptEngines
 {
     public delegate ICollection GetGroupFunc(string name);
-    public interface ICollectionProvider
+    public interface ICollectionProvider : ITreeable
     {
-        string NameSpace { get; }
         ICollection GetGroup(string name);
-        IEnumerable<string> SettingNames(int depth);
     }
 
     public class GetGroupFuncHolder : ICollectionProvider
