@@ -146,7 +146,7 @@ namespace Cogbot.Actions.SimExport
 
                     #endregion Particle System to LSL
 
-                    Success(lsl.ToString());
+                    return Success(lsl.ToString());
                 }
                 else
                 {

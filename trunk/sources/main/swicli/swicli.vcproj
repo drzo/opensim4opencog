@@ -345,6 +345,13 @@
 			ReferencedProjectIdentifier="{DF2EEDB7-F40D-44DD-B145-7AB989B10300}"
 			RelativePathToProject=".\sources\main\Swicli.Library\Swicli.Library.csproj"
 		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{13146BC9-3BC9-41AD-B896-992166D5189E}"
+			CopyLocal="false"
+			CopyLocalDependencies="false"
+			CopyLocalSatelliteAssemblies="false"
+			RelativePathToProject=".\sources\chatbot\AIMLBotModule\AIMLBotModule.csproj"
+		/>
 	</References>
 	<Files>
 		<Filter

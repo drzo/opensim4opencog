@@ -90,7 +90,7 @@ namespace Cogbot.Actions.System
                 try
                 {
                     one.Value = args[1];
-                    Success("Set sysvar: " + one.Key + " to " + one.Value);
+                    AddSuccess("Set sysvar: " + one.Key + " to " + one.Value);
                     changed++;
                 } catch(Exception e)
                 {

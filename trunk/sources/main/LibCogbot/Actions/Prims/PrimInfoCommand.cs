@@ -36,7 +36,7 @@ namespace Cogbot.Actions.Objects
             foreach (var target in PS)
             {
                 WriteLine("\n {0}", WorldSystem.describePrim(target.Prim, true));
-                Success("Done.");
+                AddSuccess("Done.");
             }
             return SuccessOrFailure();
         }

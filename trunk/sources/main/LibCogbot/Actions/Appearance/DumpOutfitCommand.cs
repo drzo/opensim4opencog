@@ -92,14 +92,14 @@ namespace Cogbot.Actions.Appearance
                                                                                {
                                                                                    string newVariable = assettexture.AssetID + ".jp2";
                                                                                    File.WriteAllBytes(newVariable, assettexture.AssetData);
-                                                                                   Success("Wrote JPEG2000 image " + newVariable);
+                                                                                   AddSuccess("Wrote JPEG2000 image " + newVariable);
 
                                                                                    ManagedImage imgData;
                                                                                    if (OpenJPEG.DecodeToImage(assettexture.AssetData, out imgData))
                                                                                    {
                                                                                        byte[] tgaFile = imgData.ExportTGA();
                                                                                        File.WriteAllBytes(assettexture.AssetID + ".tga", tgaFile);
-                                                                                       Success("Wrote TGA image " + assettexture.AssetID + ".tga");
+                                                                                       AddSuccess("Wrote TGA image " + assettexture.AssetID + ".tga");
                                                                                    } else
                                                                                    {
                                                                                        Failure("Failed decode of " + newVariable);
@@ -124,7 +124,7 @@ namespace Cogbot.Actions.Appearance
                             }
                         }
 
-                        Success(output.ToString());
+                        AddSuccess(output.ToString());
                     }
                 }
             }

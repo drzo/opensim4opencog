@@ -992,7 +992,7 @@ namespace Cogbot
 
             string mname = listener.GetModuleName();
             string taskName = "LISTENER STARTUP: " + mname;
-            OneAtATimeQueue.Enqueue(taskName, () =>
+            OneAtATimeQueue.NamedTask(taskName, () =>
                                         {
                                             try
                                             {
@@ -1004,7 +1004,7 @@ namespace Cogbot
                                             {
                                                 WriteLine("LISTENER STARTUP FAILED: " + listener.GetModuleName() + " " + e);
                                             }
-                                        });
+                                        })();
         }
 
 

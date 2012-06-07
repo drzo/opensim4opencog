@@ -31,7 +31,7 @@ namespace Cogbot.Actions.Agent
                 if (p is SimAvatar)
                 {
                     SimAvatar a = (SimAvatar)p;
-                    Success("Showing " + a);
+                    AddSuccess("Showing " + a);
                     TheBotClient.InvokeGUI(() =>
                                         new Radegast.frmProfile(TheBotClient.TheRadegastInstance, a.GetName(), a.ID).Show());
                 }

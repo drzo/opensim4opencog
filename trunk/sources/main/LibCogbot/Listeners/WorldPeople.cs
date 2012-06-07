@@ -568,7 +568,10 @@ namespace Cogbot
                 }
                 finally
                 {
-                    RequestGroupInfo(uuid);
+                    if (RequestGroupMetaData)
+                    {
+                        RequestGroupInfo(uuid);
+                    }
 
                 }
             }

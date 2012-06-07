@@ -469,9 +469,9 @@ namespace MushDLR223.ScriptEngines
             prepPhrases[k] = v;
         }
 
-        protected static string ToKey(string k)
+        public static string ToKey(string k)
         {
-            k = k.Trim("-+= :\"'".ToCharArray());
+            k = k.Trim("-+= :\"'".ToCharArray()).Replace(" ", "_").ToLower();
             return k;
         }
 

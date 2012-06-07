@@ -36,7 +36,7 @@ namespace Cogbot.Actions.Communication
                 foreach (var prim in PS)
                 {
                     Client.Self.SendTeleportLure(prim.ID);
-                    Success(Name + ": " + prim);
+                    AddSuccess(Name + ": " + prim);
                     nfound++;
                 }
                 if (nfound > 0) return Success(Name + " found: " + nfound + " object/agent(s)");

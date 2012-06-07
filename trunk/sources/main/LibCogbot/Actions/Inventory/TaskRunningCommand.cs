@@ -127,7 +127,7 @@ namespace Cogbot.Actions.Objects
                         }
                     }
                     Client.Inventory.ScriptRunningReply -= callback;
-                    Success(result);
+                    AddSuccess(result);
                 }
                 else
                 {

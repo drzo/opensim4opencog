@@ -48,7 +48,7 @@ namespace Cogbot.Actions.Objects
             foreach (var found in PS)
             {
                 Client.Objects.AttachObject(found.GetSimulator(), found.LocalID, attachmentPoint, rotation);
-                Success("attaching " + found + " to " + attachmentPoint + " with rotation " + rotation);
+                AddSuccess("attaching " + found + " to " + attachmentPoint + " with rotation " + rotation);
             }
             return SuccessOrFailure();
         }

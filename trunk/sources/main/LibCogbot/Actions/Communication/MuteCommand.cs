@@ -66,7 +66,7 @@ namespace Cogbot.Actions.Communication
                 int nfound = 0;
                 foreach (var mm in cmld)
                 {
-                    Success("Mutelist Item: " + mm.Key + " is " + Helpers.StructToString(mm.Value));
+                    AddSuccess("Mutelist Item: " + mm.Key + " is " + Helpers.StructToString(mm.Value));
                     nfound++;
                 }
                 return Success(verb + " found: " + nfound + " object/agent(s)");
@@ -89,7 +89,7 @@ namespace Cogbot.Actions.Communication
                         MuteEntry me = mm.Value;
                         chat.UpdateMuteListEntry(me.Type, me.ID, me.Name, MuteFlags.All);
                         chat.RemoveMuteListEntry(me.ID, me.Name);
-                        Success("Unmuted " + Helpers.StructToString(me) + ".");
+                        AddSuccess("Unmuted " + Helpers.StructToString(me) + ".");
                         nfound++;
                     }
                     chat.RequestMuteList();
@@ -131,7 +131,7 @@ namespace Cogbot.Actions.Communication
                     if (mf == MuteFlags.All) chat.RemoveMuteListEntry(id, null); else chat.UpdateMuteListEntry(mt, id, null, mf);
                     
                     nfound++;
-                    Success(verb + " " + muteName + " " + prim + " " + id + ".");
+                    AddSuccess(verb + " " + muteName + " " + prim + " " + id + ".");
                 }                
                 if (nfound > 0)
                 {

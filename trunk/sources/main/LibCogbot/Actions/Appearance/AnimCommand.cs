@@ -178,7 +178,7 @@ namespace Cogbot.Actions.Appearance
             {
                 String str = args.str;
                 WriteLine("ANIM ECHO " + str);
-                Success("\nStart anim " + str + "\n");
+                AddSuccess("\nStart anim " + str + "\n");
             }
             return Success("Ran " + amins.Count + " steps");
         }

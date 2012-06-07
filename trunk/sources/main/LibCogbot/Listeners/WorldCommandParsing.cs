@@ -10,7 +10,7 @@ using PathSystem3D.Navigation;
 namespace Cogbot
 {
 
-    public partial class WorldObjects : AllEvents, ICollectionProvider
+    public partial class WorldObjects : AllEvents
     {
 
         public BotMentalAspect GetObject(string name)
@@ -479,33 +479,12 @@ namespace Cogbot
         }
 
 
-        public List<ICollectionProvider> simGroupProviders;
         private DefaultWorldGroupProvider _defaultProvider;
-        public void AddObjectGroup(string selecteditems, Func<IList> func)
-        {
-            _defaultProvider.AddObjectGroup(selecteditems, func);
-        }
-        public void AddGroupProvider(ICollectionProvider bot)
-        {
-            lock (simGroupProviders)
-            {
-                simGroupProviders.Add(bot);
-            }
-        }
-
-        public void AddGroupProvider(string name, GetGroupFunc bot)
-        {
-            lock (simGroupProviders)
-            {
-                simGroupProviders.Add(new GetGroupFuncHolder(name, bot));
-            }
-        }
-
         static readonly char[] TrimCollectionStart = new []{' ','\n','$'};
         public ICollection ResolveCollection(string arg0Lower, out int argsUsed, ICollectionProvider skip)
         {
             arg0Lower = arg0Lower.TrimStart(TrimCollectionStart).ToLower();
-            var col = GetGroup(arg0Lower);
+            var col = ScriptManager.GetGroup(client.GetName(), arg0Lower);
             if (col != null)
             {
                 argsUsed = 1;
@@ -752,14 +731,33 @@ namespace Cogbot
             s = s.ToLower();
             return s.Contains(name) || name.Contains(s);
         }
-
-
-
-        #region ICollectionProvider Members
+        public void AddObjectGroup(string selecteditems, Func<IList> func)
+        {
+            _defaultProvider.AddObjectGroup(selecteditems, func);
+        }
+        /*
         public ICollection GetGroup(string name)
         {
             return GetGroup(name, this);
         }
+
+        public void AddGroupProvider(ICollectionProvider bot)
+        {
+            lock (CollectionProviders)
+            {
+                CollectionProviders.Add(bot);
+            }
+        }
+
+        public void AddGroupProvider(string name, GetGroupFunc bot)
+        {
+            lock (simGroupProviders)
+            {
+                simGroupProviders.Add(name, new GetGroupFuncHolder(name, bot));
+            }
+        }
+
+
         public ICollection GetGroup(string name, object skip)
         {
             lock (simGroupProviders)
@@ -773,26 +771,7 @@ namespace Cogbot
                 }
             }
             return null;
-        }
-
-        public IEnumerable<string> SettingNames(int depth)
-        {
-            lock (simGroupProviders)
-            {
-                List<string> all = new List<string>();
-                foreach (ICollectionProvider provider in simGroupProviders)
-                {
-                    var s = provider.SettingNames(depth);
-                    if (s!=null)
-                    {
-                        all.AddRange(s);
-                    }
-                }
-                return all;
-            }
-        }
-
-        #endregion
+        }*/
     }
 
 

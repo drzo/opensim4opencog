@@ -287,8 +287,8 @@ namespace Cogbot
         public WorldObjects(BotClient client)
             : base(client)
         {
-            simGroupProviders = new List<ICollectionProvider>();
-            MushDLR223.ScriptEngines.ScriptManager.AddGroupProvider(client.GetName, this);
+            _defaultProvider = new DefaultWorldGroupProvider(this);
+            MushDLR223.ScriptEngines.ScriptManager.AddGroupProvider(_defaultProvider);
             OnConnectedQueue = new TaskQueueHandler(new NamedPrefixThing("OnConnectedQueue", client.GetName),
                                                     TimeSpan.FromMilliseconds(20), false);
             client.WorldSystem = this;
@@ -301,8 +301,7 @@ namespace Cogbot
             ///client.Settings.USE_LLSD_LOGIN = true;
 
             // TODO client.Network.PacketEvents.SkipEvent += Network_SkipEvent;
-            _defaultProvider = new DefaultWorldGroupProvider(this);
-            AddGroupProvider(_defaultProvider);
+
             lock (WorldObjectsMasterLock)
             {
                 if (GridMaster == null || true)

@@ -29,7 +29,7 @@ namespace Cogbot.Actions.Objects
             GridClient client = TheBotClient;
             foreach (var currentPrim in PS)
             {
-                Success(Name + " on " + currentPrim);
+                AddSuccess(Name + " on " + currentPrim);
                 if (TheSimAvatar.TakeObject(currentPrim)==null) Failure("Cannot Take " + currentPrim);
             }
             return SuccessOrFailure();

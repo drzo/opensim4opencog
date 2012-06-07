@@ -83,7 +83,7 @@ namespace Cogbot.Actions.Inventory.Shell
 
             foreach (var v in found)
             {
-                Success("found=" + Fullpath(Manager, v));
+                AddSuccess("found=" + Fullpath(Manager, v));
             }
             if (found.Count != expected)
             {
@@ -93,7 +93,7 @@ namespace Cogbot.Actions.Inventory.Shell
             Simulator sim = Client.Network.CurrentSim;
             foreach (var v in found)
             {
-                Success("found=" + v.Name);
+                AddSuccess("found=" + v.Name);
                 if (dest == null)
                 {
                   //  Manager.RequestRestoreRezFromInventory(sim, v, UUID.Random());

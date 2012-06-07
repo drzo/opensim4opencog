@@ -29,7 +29,7 @@ namespace Cogbot.Actions.Inventory
             GridClient client = TheBotClient;
             foreach (var currentPrim in PS)
             {
-                Success(Name + " on " + currentPrim);
+                AddSuccess(Name + " on " + currentPrim);
                 client.Inventory.RequestDeRezToInventory(currentPrim.LocalID, DeRezDestination.AgentInventoryCopy,
                                                          client.Inventory.FindFolderForType(AssetType.Object), UUID.Zero);
             }

@@ -32,7 +32,7 @@ namespace Cogbot.Actions.Objects
             {
                 WorldSystem.DeletePrim(target.Prim);
                 WriteLine("\n {0}", target);
-                Success("Done.");
+                AddSuccess("Done.");
             }
             return SuccessOrFailure();
         }

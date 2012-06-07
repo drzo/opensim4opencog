@@ -33,7 +33,7 @@ Ignores the object's default action, always touches.";
             GridClient client = TheBotClient;
             foreach (var targetPrim in PS)
             {
-                Success(Name + " on " + targetPrim);
+                AddSuccess(Name + " on " + targetPrim);
                 Client.Self.Touch(targetPrim.LocalID);
             }
             return SuccessOrFailure();

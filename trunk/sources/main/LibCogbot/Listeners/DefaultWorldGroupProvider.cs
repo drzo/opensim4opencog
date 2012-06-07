@@ -126,6 +126,11 @@ namespace Cogbot
             get { return world.TheSimAvatar; }
         }
 
+        public string NameSpace
+        {
+            get { return world.client.GetName(); }
+        }
+
         public ICollection GetGroup(string arg0Lower)
         {
             IKeyValuePair<string, object> func;

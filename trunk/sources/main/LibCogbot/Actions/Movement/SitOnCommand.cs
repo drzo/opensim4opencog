@@ -30,7 +30,7 @@ namespace Cogbot.Actions.Movement
             foreach (var targetPrim in PS)
             {
                 WorldSystem.TheSimAvatar.SitOn(targetPrim);
-                Success("Requested to sit on prim " + targetPrim.ID.ToString() +
+                AddSuccess("Requested to sit on prim " + targetPrim.ID.ToString() +
                        " (" + targetPrim.LocalID + ")");
             }
             return SuccessOrFailure();

@@ -27,12 +27,12 @@ namespace Cogbot.Actions.Movement
             SimActor sitter = WorldSystem.TheSimAvatar;
             if (!sitter.IsSitting)
             {
-                Success("$bot is already standing.");
+                AddSuccess("$bot is already standing.");
             }
             else
             {
                 sitter.StandUp();
-                Success("Standing up.");  ;
+                AddSuccess("Standing up."); ;
             }
             Client.Self.Stand();
             return SuccessOrFailure();
