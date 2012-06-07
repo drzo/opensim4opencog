@@ -34,7 +34,7 @@ namespace Cogbot.Actions.Objects
 
             foreach (var currentPrim in PS)
             {
-                Success(Name + " on " + currentPrim);
+                AddSuccess(Name + " on " + currentPrim);
                 if (!TheSimAvatar.AttachToSelf(currentPrim)) Failure("Cannot Attach " + currentPrim);
 
             }

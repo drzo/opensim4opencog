@@ -8,6 +8,7 @@ namespace MushDLR223.ScriptEngines
     public delegate ICollection GetGroupFunc(string name);
     public interface ICollectionProvider
     {
+        string NameSpace { get; }
         ICollection GetGroup(string name);
         IEnumerable<string> SettingNames(int depth);
     }
@@ -15,10 +16,16 @@ namespace MushDLR223.ScriptEngines
     public class GetGroupFuncHolder : ICollectionProvider
     {
         private GetGroupFunc ggf;
+        public string NameSpace
+        {
+            get { return  _namespace(); } 
+        }
+        private Func<string> _namespace;
         private string Name;
 
-        public GetGroupFuncHolder(string name, GetGroupFunc func)
+        public GetGroupFuncHolder(Func<string> ns, string name, GetGroupFunc func)
         {
+            _namespace = ns;
             this.Name = name;
             ggf = func;
         }
@@ -49,6 +56,8 @@ namespace MushDLR223.ScriptEngines
         {
             Dict = dict;
         }
+
+        public string NameSpace { get; set; }
 
         public ICollection GetGroup(string name)
         {

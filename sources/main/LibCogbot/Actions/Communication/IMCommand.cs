@@ -49,7 +49,7 @@ namespace Cogbot.Actions.Communication
                 //foreach (var prim in PS)
                 {
                     TheBotClient.InstantMessage(prim.ID, message, UUID.Zero);
-                    Success(Name + ": " + prim);
+                    AddSuccess(Name + ": " + prim);
                     nfound++;
                 }
                 if (nfound > 0) return Success(Name + " found: " + nfound + " object/agent(s)");
@@ -75,7 +75,7 @@ namespace Cogbot.Actions.Communication
                 {
                     foreach (object c in col)
                     {
-                        Success("Send to " + c);
+                        AddSuccess("Send to " + c);
                         string s = "" + c;
                         if (s.Length > 0)
                         {

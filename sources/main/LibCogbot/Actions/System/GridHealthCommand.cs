@@ -44,12 +44,12 @@ namespace Cogbot.Actions.Land
         {
             MakeGridRequest();
             var regions = LockInfo.CopyOf(Regions);
-            Success("Testing " + regions.Count);
+            AddSuccess("Testing " + regions.Count);
             int passes = 0, failures = 0, tested = 0;
             var skipRegions = new[] { "sttc_0013" };
             foreach (var r in regions.Values)
             {
-                Success("Region: " + r.Name + ": (" + r.X + "," + r.Y + ") " + r.Access);
+                AddSuccess("Region: " + r.Name + ": (" + r.X + "," + r.Y + ") " + r.Access);
                 Client.Grid.RequestMapRegion(r.Name, GridLayerType.Terrain);
                 DownloadRegionImage(r);
                 continue;
@@ -70,18 +70,18 @@ namespace Cogbot.Actions.Land
                 Simulator sim = Client.Network.CurrentSim;
                 if (r.X == 0 || r.Y == 0 || (sim != null && sim.Name.ToLower() == r.Name.ToLower()))
                 {
-                    Success("Skipping: " + r.Name + ": (" + r.X + "," + r.Y + ") " + r.Access);
+                    AddSuccess("Skipping: " + r.Name + ": (" + r.X + "," + r.Y + ") " + r.Access);
                     continue;
                 }
                 tested++;
                 if (RegionTest(r))
                 {
-                    Success("PASS: " + r.Name + ": (" + r.X + "," + r.Y + ") " + r.Access);
+                    AddSuccess("PASS: " + r.Name + ": (" + r.X + "," + r.Y + ") " + r.Access);
                     passes++;
                 }
                 else
                 {
-                    Success("FAIL: " + r.Name + ": (" + r.X + "," + r.Y + ") " + r.Access);
+                    AddSuccess("FAIL: " + r.Name + ": (" + r.X + "," + r.Y + ") " + r.Access);
                     failures++;
                    // break;
                 }
@@ -93,10 +93,10 @@ namespace Cogbot.Actions.Land
         private bool RegionTest(GridRegion r)
         {
             Control.CheckForIllegalCrossThreadCalls = false;
-            Success("Testing: " + r.Name + ": (" + r.X + "," + r.Y + ") " + r.Access);
+            AddSuccess("Testing: " + r.Name + ": (" + r.X + "," + r.Y + ") " + r.Access);
             //return TestViaLogin(r);
             bool t1 =  MiniMapTest(r);
-            Success("MINIMAP " + (t1 ? "PASS" : "FAIL") + ": " + r.Name + ": (" + r.X + "," + r.Y + ") " + r.Access);
+            AddSuccess("MINIMAP " + (t1 ? "PASS" : "FAIL") + ": " + r.Name + ": (" + r.X + "," + r.Y + ") " + r.Access);
             return TeleportTest(r);
         }
         /*
@@ -164,7 +164,7 @@ namespace Cogbot.Actions.Land
                                                                            case TeleportStatus.None:
                                                                            case TeleportStatus.Start:
                                                                            case TeleportStatus.Progress:
-                                                                               Success("status " + e.Status);
+                                                                               AddSuccess("status " + e.Status);
                                                                                break;
                                                                            case TeleportStatus.Failed:
                                                                                passfail = false;
@@ -191,7 +191,7 @@ namespace Cogbot.Actions.Land
                 int ms = Client.Settings.TELEPORT_TIMEOUT;
                 if (!are.WaitOne(ms + 1000))
                 {
-                    Success("TimeOut: " + r.Name + ": (" + r.X + "," + r.Y + ") " + r.Access);
+                    AddSuccess("TimeOut: " + r.Name + ": (" + r.X + "," + r.Y + ") " + r.Access);
                     return false;
                 }
             }

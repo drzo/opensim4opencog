@@ -68,7 +68,7 @@ namespace Cogbot.Actions.Appearance
                             output.AppendLine();
                         }
                     }
-                Success(output.ToString());
+                AddSuccess(output.ToString());
             }
             return SuccessOrFailure();
         }

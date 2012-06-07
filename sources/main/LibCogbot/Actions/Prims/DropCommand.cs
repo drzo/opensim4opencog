@@ -38,7 +38,7 @@ namespace Cogbot.Actions.Objects
                         {
                             if (s.Prim.PrimData.AttachmentPoint == detachFrom)
                             {
-                                Success(string.Format("[dropping @ {0} Offset: {1}] {2}", prim.PrimData.AttachmentPoint,
+                                AddSuccess(string.Format("[dropping @ {0} Offset: {1}] {2}", prim.PrimData.AttachmentPoint,
                                                       prim.Position, s));
                                 Client.Objects.DropObject(s.GetSimulator(), s.LocalID);
                             }
@@ -51,7 +51,7 @@ namespace Cogbot.Actions.Objects
             foreach (var found in PS)
             {
                 Client.Objects.DropObject(found.GetSimulator(), found.LocalID);
-                Success("dropping " + found);
+                AddSuccess("dropping " + found);
             }
             return SuccessOrFailure();
         }

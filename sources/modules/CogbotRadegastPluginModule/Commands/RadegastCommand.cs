@@ -138,7 +138,7 @@ namespace Cogbot.Actions.System
         {
             if (!PanelGUI.InvokeRequired)
             {
-                Success("No invoke required ");
+                AddSuccess("No invoke required ");
                 invoker();
             }
             else

@@ -181,7 +181,7 @@ namespace Cogbot.Actions.Objects
                         }
                     }
 
-                    Success("Set permissions to " + perms.ToString() + " on " + localIDs.Count + " objects and " +
+                    AddSuccess("Set permissions to " + perms.ToString() + " on " + localIDs.Count + " objects and " +
                             taskItems + " inventory items");
                 } 
             } finally

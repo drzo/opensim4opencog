@@ -50,7 +50,7 @@ namespace Cogbot.Actions.Appearance
                     // TODO: Done? Fetch properties for the objects with missing property sets so we can show names
                     WriteLine("[Attachment @ {0}] {1}", point, s);
                 }
-                Success("Found " + count + " attachments");
+                return Success("Found " + count + " attachments");
             }
             return Success("Found " + OS.Count + " attachments");
         }

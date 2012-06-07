@@ -39,7 +39,7 @@ namespace Cogbot.Actions.Money
                 client.Objects.BuyObject(o.GetSimulator(), o.LocalID, Properties.SaleType,
                                          Properties.SalePrice, client.Self.ActiveGroup,
                                          client.Inventory.FindFolderForType(AssetType.Object));
-                Success(Name + " on " + o);
+                AddSuccess(Name + " on " + o);
             }
             return SuccessOrFailure();
         }

@@ -39,7 +39,7 @@ namespace Cogbot.Actions.Objects
                 return
                     Failure("Root Prim Has Parent "
                             + WorldSystem.GetSimObject(rootPrim.ParentID, worldSystemGetSimulator));
-            Success(Name + " on " + WorldSystem.GetSimObject(rootPrim));
+            AddSuccess(Name + " on " + WorldSystem.GetSimObject(rootPrim));
             PS = WorldSystem.GetPrimitives(Parser.SplitOff(args, argsUsed), out argsUsed);
             try
             {

@@ -27,12 +27,12 @@ namespace Cogbot.Actions.System
                 foreach (var sl in TheBotClient.SecurityLevels)
                 {
                     nfound++;
-                    Success(string.Format("{0}={1}", sl.Key, sl.Value));
+                    AddSuccess(string.Format("{0}={1}", sl.Key, sl.Value));
                 }
                 foreach (var sl in TheBotClient.SecurityLevelsByName)
                 {
                     nfound++;
-                    Success(string.Format("{0}={1}", sl.Key, sl.Value));
+                    AddSuccess(string.Format("{0}={1}", sl.Key, sl.Value));
                 }
                 return Success(nfound + " entries found");
             }
@@ -56,10 +56,10 @@ namespace Cogbot.Actions.System
                 BotPermissions perms = TheBotClient.GetSecurityLevel(p.ID, null);
                 if (argsUsed==0)
                 {
-                    Success("Perms for " + p + " was " + perms);
+                    AddSuccess("Perms for " + p + " was " + perms);
                     continue;    
                 }
-                Success("Perms for " + p + " was " + perms + " now setting to " + who);
+                AddSuccess("Perms for " + p + " was " + perms + " now setting to " + who);
                 TheBotClient.SetSecurityLevel(p.ID, null, who);
             }
             return SuccessOrFailure();

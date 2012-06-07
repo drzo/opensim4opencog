@@ -117,9 +117,9 @@ namespace Cogbot.Actions
                         }
                         return;
                     }
-                    Success("looked at range " + range + " and saw " + objs.Count);
+                    WriteLine("looked at range " + range + " and saw " + objs.Count);
                 }
-                Success("We have no body yet");
+                WriteLine("We have no body yet");
             }
             else
             {

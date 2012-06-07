@@ -69,7 +69,7 @@ namespace Cogbot.Actions.System
                 }
                 else
                 {
-                    Success(bot.GetName() + ": " + net.CurrentSim);
+                    AddSuccess(bot.GetName() + ": " + net.CurrentSim);
                 }
             }
             return SuccessOrFailure();

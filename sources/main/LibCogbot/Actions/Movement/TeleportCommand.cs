@@ -69,7 +69,7 @@ namespace Cogbot.Actions.Agent
             if (ToS == "home")
             {
                 Client.Self.GoHome();
-                Success("teleporting home");
+                AddSuccess("teleporting home");
                 return;
             }
             SimPosition pos = WorldSystem.GetVector(args, out argUsed);
@@ -85,7 +85,7 @@ namespace Cogbot.Actions.Agent
                         pos.SimPosition, pos.SimPosition);
                 if (res)
                 {
-                    Success("Teleported to " + pos);
+                    AddSuccess("Teleported to " + pos);
                 }
                 else
                 {

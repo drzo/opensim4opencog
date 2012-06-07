@@ -52,7 +52,7 @@ namespace Cogbot.Actions.Objects
                         }
                     }
 
-                    Success(result);
+                    AddSuccess(result);
                 }
                 else
                 {

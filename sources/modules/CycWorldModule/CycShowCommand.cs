@@ -22,7 +22,7 @@ namespace CycWorldModule
             List<SimObject> target = WorldSystem.GetPrimitives(args, out argsUsed);
             foreach (var o in target)
             {
-                Success(""+o);
+                AddSuccess("" + o);
                 CycWorldModule.CycModule.Show(target);                
             }
             return SuccessOrFailure();

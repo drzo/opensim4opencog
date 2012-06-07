@@ -345,10 +345,13 @@ namespace Cogbot.Actions
         protected void WriteLine(string s, params object[] args)
         {
             if (s == null) return;
-            var news = DLRConsole.SafeFormat(s, args);
-            news = news.Replace("<p>", "<br>").Replace("<br/>", "<br>").Replace("<br>", "\r\n").Replace("</p>", " ").
-                Replace("&lt;", "<").Replace("&gt;", ">");
-            WriteLineDelegate(news);
+            var message = DLRConsole.SafeFormat(s, args);
+
+            if (!String.IsNullOrEmpty(WriteLineResultName))
+            {
+                AppendResults(WriteLineResultName, message);
+            }
+            LocalWL(message);
         }
         public OutputDelegate WriteLineDelegate
         {
@@ -675,16 +678,24 @@ namespace Cogbot.Actions
             success++;
             return Result(message, true);
         }
-
-        public void LocalWL(string usage)
+        public void AddSuccess(string message)
+        {
+            var Name = "Success";
+            if (!message.ToLower().Contains(Name.ToLower()))
+            {
+                message = Name + ": " + message;
+            }
+            success++;
+            LocalWL(message);
+        }
+        public void LocalWL(string message)
         {
             try
             {
-                if (!String.IsNullOrEmpty(WriteLineResultName))
-                {
-                    AppendResults(WriteLineResultName, usage);
-                }
-                WriteLine(usage);
+                message = message.Replace("<p>", "<br>").Replace("<br/>", "<br>").Replace("<br>", "\r\n").Replace(
+                    "</p>", " ").
+                    Replace("&lt;", "<").Replace("&gt;", ">");
+                WriteLineDelegate(message);
             }
             catch (Exception e)
             {
@@ -692,7 +703,7 @@ namespace Cogbot.Actions
             }
             try
             {
-                DLRConsole.DebugWriteLine(usage);
+                DLRConsole.DebugWriteLine(message);
             }
             catch (Exception e)
             {
@@ -707,7 +718,7 @@ namespace Cogbot.Actions
                 message = Name + ": " + message;
             }
             var cr = new CmdResult(message, tf, Results);
-            LocalWL(cr.ToString());
+            LocalWL(message);
             return cr;
         }
         protected CmdResult SuccessOrFailure()
