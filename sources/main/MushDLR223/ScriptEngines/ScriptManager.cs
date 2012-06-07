@@ -933,6 +933,38 @@ namespace MushDLR223.ScriptEngines
             }
         }
 
+        public static bool HasSetting(ICollectionProvider provider, string name)
+        {
+            name = ToKey(name);
+            foreach (var settingName in provider.SettingNames(1))
+            {
+                if (ToKey(settingName) == name) return true;
+            }
+            return false;
+        }
+
+        public static bool AddSetting(string namespac, string name, object valeu)
+        {
+            bool somethngTookIt = false;
+            foreach (ICollectionProvider provider in GetProviders(namespac))
+            {
+                if (!HasSetting(provider, name))
+                {
+                    if (!provider.AcceptsNewKeys) continue;
+                }
+                try
+                {
+                    provider.SetValue(name, valeu);
+                    somethngTookIt = true;
+
+                }
+                catch (Exception e)
+                {
+                    DLRConsole.DebugWriteLine("AddSetting " + e);
+                }
+            }
+            return somethngTookIt;
+        }
     }
 
     internal class VerifyEx : Exception

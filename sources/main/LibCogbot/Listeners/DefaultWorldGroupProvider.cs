@@ -147,6 +147,20 @@ namespace Cogbot
             return GroupNames;
         }
 
+        public void SetValue(string name, object value)
+        {
+            if (!ScriptManager.HasSetting(this, name)) return;
+            //@TODO dmiles
+        }
+
+        public bool AcceptsNewKeys
+        {
+            get
+            {
+                return false;
+            }
+        }
+
 
         readonly Dictionary<string, IKeyValuePair<string, object>> ObjectGroups = new Dictionary<string, IKeyValuePair<string, object>>();
         public IEnumerable<string> GroupNames

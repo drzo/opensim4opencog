@@ -6,9 +6,14 @@ using MushDLR223.Utilities;
 namespace MushDLR223.ScriptEngines
 {
     public delegate ICollection GetGroupFunc(string name);
-    public interface ICollectionProvider : ITreeable
+    public interface ICollectionProvider : ITreeable, ICollectionProviderSettable
     {
         ICollection GetGroup(string name);
+    }
+    public interface ICollectionProviderSettable : ITreeable
+    {
+        void SetValue(string name, object value);
+        bool AcceptsNewKeys { get; }
     }
 
     public class GetGroupFuncHolder : ICollectionProvider
@@ -38,9 +43,29 @@ namespace MushDLR223.ScriptEngines
             if (Name == null) return null;
             return new [] { Name };
         }
+
+        public void SetValue(string name, object value)
+        {
+            if (Name == null) return;
+        }
+
+        public bool AcceptsNewKeys
+        {
+            get { return false; }
+        }
     }
     public class DictionaryWrapper : ICollectionProvider
     {
+        public void SetValue(string name, object value)
+        {
+            Dict[name] = value;
+        }
+
+        public bool AcceptsNewKeys
+        {
+            get { return !Dict.IsReadOnly; }
+        }
+
         static public DictionaryWrapper CreateDictionaryWrapper(IDictionary<string,object> dict)
         {
             return new DictionaryWrapper(dict);
