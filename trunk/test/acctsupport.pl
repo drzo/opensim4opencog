@@ -47,7 +47,6 @@ assertIfNewRC(Gaf):-asserta(Gaf).
 :-dynamic
 	botID/2,
         last_name/1,
-        get_test_waypoints/3,
         num_bots_to_run/1,
 	bot_ran/1.
 
@@ -68,6 +67,7 @@ assertIfNewRC(Gaf):-asserta(Gaf).
 %  too fast.
 %
 logon_bots :-
+        num_bots_to_run(Max),
 	repeat,
 	(
 	    test_bot(Name),
@@ -78,7 +78,8 @@ logon_bots :-
 	    true
 	).
 
-logon_bots(N):-retractall(num_bots_to_run(_)),assert(num_bots_to_run(N)),logon_bots.
+
+logon_bots(N):-set_num_bots(N),logon_bots.
 
 %
 % Using dynamic preds allows us to reconsult this file
@@ -127,7 +128,7 @@ num_bots_to_run(1).
 %test_bot(dogbert) :- num_bots_to_run(X), X >= 1,last_name('Dougstribe').
 test_bot_credentials(dogbert, 'Dogbert', 'Miles', 'tek123').
 
-test_bot(otopopo) :- num_bots_to_run(X), X >= 1. %% (last_name('Hillperson')-> X >= 1 ; X >= 7).
+test_bot(otopopo) :- num_bots_to_run(X), X >= 1.
 test_bot_credentials(otopopo, 'Otopopo', Tribe, PW) :-
     pw(PW),
     last_name(Tribe).
