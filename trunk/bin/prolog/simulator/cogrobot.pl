@@ -156,6 +156,7 @@ unset_current_bot(BotID):-thread_self(TID),current_bot_db(TID,OLD),
     (OLD=BotID -> retract(current_bot_db(TID,OLD)) ; cogbot_throw(unset_current_bot(tid(TID),used(BotID),expected(OLD)))).
 
 current_botname(Name) :- botcall('GetName',X),string_to_atom(X,Name).
+wbotname(BotID,Name) :- wbotcall(BotID,'GetName',X),string_to_atom(X,Name).
 %------------------------------------------------------------------------------
 % throws cogbot based exceptions
 % PRIVATE
@@ -747,9 +748,8 @@ set_modeless(Var,List):-forall(member(Member=Value,List),cli_set(Var,Member,Valu
 %------------------------------------------------------------------------------
 % botvar interface
 %------------------------------------------------------------------------------
-wbot_get_botvar(BotID,Name,ValueO):-wbotget(BotID,['WorldSystem','simGroupProviders'],GPs),
-   cli_col(GPs,GP),gp_to_vars(BotID,GP,Var),cli_get(Var,'Key',Name),cli_get(Var,'Value',Value),
-   once(value_deref(Value,ValueO)).
+wbot_get_botvar(BotID,Name,ValueO):-wbotname(BotID,NS),global_get_botvar(NS,Name,ValueO).
+wbot_set_botvar(BotID,Name,ValueO):-wbotname(BotID,NS),global_set_botvar(NS,Name,ValueO).
 
 global_get_botvar(NS,Name,ValueO):-
    cli_call('MushDLR223.ScriptEngines.ScriptManager','GetNameSpaces',[],NSs),
@@ -761,7 +761,10 @@ global_get_botvar(NS,Name,ValueO):-
    cli_call(CP,'GetGroup'(string),[Name],Value),
    once(value_deref(Value,ValueO)).
 
+global_set_botvar(NS,Name,ValueO):- cli_call('MushDLR223.ScriptEngines.ScriptManager','AddSetting',[NS,Name,ValueO],_).
+
 gp_to_vars(_BotID,GP,Var):- cli_call('MushDLR223.ScriptEngines.SingleNameValue','MakeKVP'('MushDLR223.ScriptEngines.ICollectionProvider',int),[GP,2],Col),cli_col(Col,Var).
+
 value_deref(Value,ValueO):-cli_col(Value,ValueO).
 
 %------------------------------------------------------------------------------
@@ -769,8 +772,8 @@ value_deref(Value,ValueO):-cli_col(Value,ValueO).
 %------------------------------------------------------------------------------
 add_botvars(NameSpace,PredImpl):-
       cli_new_prolog_dictionary(PredImpl,string,object,PBD),
-      cli_call('MushDLR223.ScriptEngines.DictionaryWrapper','CreateDictionaryWrapper',[PBD],Provider),
-      cli_call('MushDLR223.ScriptEngines.ScriptManager','AddNamedProvider',[NameSpace, Provider],_).
+      cli_call('MushDLR223.ScriptEngines.DictionaryWrapper','CreateDictionaryWrapper',[NameSpace, PBD],Provider),
+      cli_call('MushDLR223.ScriptEngines.ScriptManager','AddGroupProvider',[ Provider],_).
 
 wbotvar_impl(a,1).
 wbotvar_impl(b,2).
@@ -786,6 +789,8 @@ wbot_add_botvar(BotID,Var,PredImpl):-wbotget(BotID,['WorldSystem','simGroupProvi
       cli_call('MushDLR223.ScriptEngines.DictionaryWrapper','CreateDictionaryWrapper',[PBD],Provider),
       cli_call('MushDLR223.ScriptEngines.ScriptManager','AddNamedProvider',[NameSpace, Provider],_).
 */
+
+
 
 %------------------------------------------------------------------------------
 % listing functions
@@ -810,7 +815,7 @@ make_current_bot_ver(F,N,_,AA):-length(List,AA),Head=..[N|List],Body=..[F,BotID|
 
 scan_and_export_wb:-current_predicate(cogrobot:F/A),
    once((atom_concat(wbot,Before,F),export(F/A),atom_concat(bot,Before,New),AA is A-1,make_current_bot_ver(F,New,A,AA))),fail.
-scan_and_export_wb:-current_predicate(cogrobot:F/A),once((member(S,[bot,sim,grid,cli]),atom_concat(S,_,F),export(F/A))),fail.
+scan_and_export_wb:-current_predicate(cogrobot:F/A),once((member(S,[bot,sim,grid,cli,glob,world]),atom_concat(S,_,F),export(F/A))),fail.
 scan_and_export_wb.
 
 :-scan_and_export_wb.

@@ -66,9 +66,10 @@ namespace MushDLR223.ScriptEngines
             get { return !Dict.IsReadOnly; }
         }
 
-        static public DictionaryWrapper CreateDictionaryWrapper(IDictionary<string,object> dict)
+        static public DictionaryWrapper CreateDictionaryWrapper(string namespce, IDictionary<string,object> dict)
         {
-            return new DictionaryWrapper(dict);
+            return new DictionaryWrapper(dict) {NameSpace = namespce};
+                
         }
 
         #region Implementation of ICollectionProvider
