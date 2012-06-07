@@ -102,7 +102,7 @@ lasteventprim - the 'current object' - the current object is
 
 [http://code.google.com/p/opensim4opencog/source/browse/data-chatbot/alicebot/config/bot.xml here they are]
 
-= Command output of //botvars --vars =
+== Command output of //botvars --vars ==
 {{{
 [12:30] Success: fromprolog.a .1 = 1
 [12:30] Success: fromprolog.b .1 = 2
@@ -141,6 +141,21 @@ touch to stop (localID 2944258470)(ch0)(PrimFlagsTrue Scripted, Touch)(PrimFlags
 [12:30] botvar 0 failures and 32 successes
 [12:30] botvar 0 failures and 32 successes
 }}}
+
+= Registering Botvars with prolog =
+
+{{{
+%% decleare the botvar predicate
+:-dynamic(oto_impl/2).
+%% create a arity 1 version to gather the keys
+oto_impl(N):-oto_impl(N,_).
+%% declare some values in arity 2 predicate
+oto_impl("favfood",corn).
+%% register the arity 2 version
+:-bot_add_varpred(oto_impl).
+}}}
+
+
 = Details =
 
 Add your content here.  Format your content with:
