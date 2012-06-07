@@ -148,6 +148,10 @@ namespace Swicli.Library
             return new PlTermV(KeyToTerm(item.Key), ValueToTerm(item.Value));
         }
 
+        protected Exception NewNotImplementedException()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class PrologBackedDictionary<TKey, TValue> : PrologBacked<TKey, TValue>, IDictionary<TKey, TValue>
@@ -370,7 +374,7 @@ namespace Swicli.Library
         ///                 </exception>
         public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
-            throw new NotImplementedException();
+            throw NewNotImplementedException();
         }
 
         /// <summary>
@@ -571,7 +575,7 @@ namespace Swicli.Library
         /// </returns>
         public ICollection<TValue> Values
         {
-            get { throw new NotImplementedException(); }
+            get { throw NewNotImplementedException(); }
         }
 
         #endregion
@@ -631,7 +635,7 @@ namespace Swicli.Library
 
         public void CopyTo(T[] array, int arrayIndex)
         {
-            throw new NotImplementedException();
+            throw NewNotImplementedException();
         }
 
         /// <summary>
@@ -650,12 +654,12 @@ namespace Swicli.Library
         ///                 </exception><filterpriority>2</filterpriority>
         public void CopyTo(Array array, int index)
         {
-            throw new NotImplementedException();
+            throw NewNotImplementedException();
         }
 
         public int Count
         {
-            get { throw new NotImplementedException(); }
+            get { return Copy().Count; }
         }
 
         /// <summary>
@@ -667,7 +671,7 @@ namespace Swicli.Library
         /// <filterpriority>2</filterpriority>
         public object SyncRoot
         {
-            get { throw new NotImplementedException(); }
+            get { throw base.NewNotImplementedException(); }
         }
 
         /// <summary>
@@ -679,7 +683,7 @@ namespace Swicli.Library
         /// <filterpriority>2</filterpriority>
         public bool IsSynchronized
         {
-            get { throw new NotImplementedException(); }
+            get { throw NewNotImplementedException(); }
         }
 
         public bool IsReadOnly

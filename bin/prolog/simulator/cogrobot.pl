@@ -18,7 +18,7 @@
 
    botdo/1,wbotdo/2,wabdo/1,
 
-   global_botvar/3,add_botvars/2,
+   global_getvar/3,add_botvars/2,
 
    botcmd/1, botcmd/2, botcmd/3,   
    wbotcmd/2, wbotcmd/3, wbotcmd/4,
@@ -748,24 +748,29 @@ set_modeless(Var,List):-forall(member(Member=Value,List),cli_set(Var,Member,Valu
 %------------------------------------------------------------------------------
 % botvar interface
 %------------------------------------------------------------------------------
-wbot_get_botvar(BotID,Name,ValueO):-wbotname(BotID,NS),global_botvar(NS,Name,ValueO).
-wbot_set_botvar(BotID,Name,ValueO):-wbotname(BotID,NS),global_set_botvar(NS,Name,ValueO).
+wbot_getvar(BotID,Name,ValueO):-wbotname(BotID,NS),global_getvar(NS,Name,ValueO).
+wbot_setvar(BotID,Name,ValueO):-wbotname(BotID,NS),global_setvar(NS,Name,ValueO).
 
-global_botvar(NS,Name,ValueO):-cli_call('MushDLR223.ScriptEngines.ScriptManager','GetGroup',[NS,Name],Value),once(value_deref(Value,ValueO)).
-global_botvar(NS,Name,ValueO):-
-   global_botvar_names(NS,Name,CP),
+global_getvar(NS,Name,ValueO):-ground(NS+Name),!,
+   cli_call('MushDLR223.ScriptEngines.ScriptManager','GetGroup',[NS,Name],Value),once(value_deref(Value,ValueO)).
+global_getvar(NS,Name,ValueO):- global_varnames(NS,Name,CP),
    cli_call(CP,'GetGroup'(string),[Name],Value),once(value_deref(Value,ValueO)).
 
 global_tokey(Name,Key):-cli_call('MushDLR223.ScriptEngines.ScriptManager','ToKey',[Name],Key).
 
-global_botvar_names(NS,Name,CP):-
-   cli_call('MushDLR223.ScriptEngines.ScriptManager','GetNameSpaces',[],NSs),cli_col(NSs,NS),
-   cli_call('MushDLR223.ScriptEngines.ScriptManager','GetProviders',[NS],CPs),cli_col(CPs,CP),
-   cli_call(CP,'SettingNames'(int),[1],Names),
-   cli_col(Names,Name).
+global_samekey(Name,Name):-!.
+global_samekey(Name1,Name2):-ground(Name1+Name2),global_tokey(Name1,Key1),global_tokey(Name2,Key2),!,cli_unify(Key1,Key2).
+
+global_varnamespaces(NSO):-cli_call('MushDLR223.ScriptEngines.ScriptManager','GetNameSpaces',[],NSs),cli_col(NSs,NS),global_samekey(NS,NSO).
+
+global_varnames(NSO,NameO,CP):-
+   global_varnamespaces(NSO),cli_call('MushDLR223.ScriptEngines.ScriptManager','GetProviders',[NSO],CPs),cli_col(CPs,CP),
+   cli_call(CP,'SettingNames'(int),[1],Names),cli_col(Names,Name),global_samekey(Name,NameO).
 
 
-global_set_botvar(NS,Name,ValueO):- cli_call('MushDLR223.ScriptEngines.ScriptManager','AddSetting',[NS,Name,ValueO],_).
+
+
+global_setvar(NS,Name,ValueO):- cli_call('MushDLR223.ScriptEngines.ScriptManager','AddSetting',[NS,Name,ValueO],_).
 
 gp_to_vars(_BotID,GP,Var):- cli_call('MushDLR223.ScriptEngines.SingleNameValue','MakeKVP'('MushDLR223.ScriptEngines.ICollectionProvider',int),[GP,2],Col),cli_col(Col,Var).
 
