@@ -52,7 +52,7 @@
 % debug output
 testDebug(Term):-format(user_error,'  ~q~n',[Term]),flush_output(user_error).
 
-dbgFmt(F,A):-attach_console,'format'(F,A),flush_output.
+dbgFmt(F,A):-'format'(user_error,F,A),flush_output.
 
 % unify if this is the bot's name
 botName(Name) :- current_botname(Name).

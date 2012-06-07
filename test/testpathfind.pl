@@ -40,7 +40,7 @@ teleportTo(StartName):-
         %% if fallthru floor try to get closer
         (Dist < 3 -> botapi(moveto(Start)) ; ( cogrobot:vectorAdd(Start2,v3d(0,0,1),Start3),botapi(teleport(Start3)) )),!.*/
 
-dbgFmt(F,A):-attach_console,'format'(F,A),flush_output.
+dbgFmt(F,A):-'format'(user_error,F,A),flush_output.
 
 % convenience method that does the 'normal' thing -
 % tp to Start, move using the standard method to
@@ -238,7 +238,7 @@ tpf :-
 tpf :- !.
 
 %% runs the test suite on all logged in bots in their own threads
-tpfa:-logon_bots,botID(Name,ID),not(running_tpfa(Name)),thread_create(tpfa(Name,ID),_,[detached(true),alias(Name)]),sleep(25),fail.
+tpfa:-botID(Name,ID),not(running_tpfa(Name)),thread_create(tpfa(Name,ID),_,[detached(true),alias(Name)]),sleep(25),fail.
 tpfa:-!.
 
 :-dynamic running_tpfa/1.

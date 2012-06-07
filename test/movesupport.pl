@@ -1,7 +1,7 @@
 :- module(movesupport, [
                        move_bots/0,
                        start_moving_bot/1,
-                       get_test_waypoints/3,
+                       get_test_waypoints/2,
                        set_moveproc/1,
                        run_test/0
 		      ]).
@@ -45,16 +45,13 @@ assertIfNewRC(Gaf):-asserta(Gaf).
 :- use_module(cogbot(cogrobot)).
 
 :-dynamic
-	botID/2,
-        last_name/1,
-        get_test_waypoints/3,
-	bot_ran/1.
+        get_test_waypoints/2.
 
 :-multifile
-        get_test_waypoints/3.
+        get_test_waypoints/2.
 
 :-module_transparent
-        get_test_waypoints/3.
+        get_test_waypoints/2.
 
 :- discontiguous
 	bot_waypoints/3.
@@ -99,7 +96,7 @@ do_test_waypoints(Name,ID,loop(N,List)):-!,foreach(between(1,N,_), do_test_waypo
 do_test_waypoints(Name,ID,List):-is_list(List),!,foreach(member(X,List),do_test_waypoints(Name,ID,X)).
 do_test_waypoints(Name,_ID,stop_test):-assert(stop_test(Name)),!.
 do_test_waypoints(_Name,_ID,call(H)):-!,ignore(call(H)).
-do_test_waypoints(_Name,ID,botcmd(H)):-!,ignore(wb_botcmd(ID,H)).
+do_test_waypoints(_Name,ID,botcmd(H)):-!,ignore(wbotcmd(ID,H)).
 do_test_waypoints(_Name,_ID,H):-compound(H),!,ignore(call(H)).
 do_test_waypoints(Name,ID,H):-ignore(botmove(Name,ID,H)).
 
