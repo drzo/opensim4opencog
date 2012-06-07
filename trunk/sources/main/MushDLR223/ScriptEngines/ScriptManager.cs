@@ -858,18 +858,18 @@ namespace MushDLR223.ScriptEngines
                     {
                         foreach (var e in c)
                         {
-                            if (rv.Contains(e)) rv.Add(e);
+                            if (!rv.Contains(e)) rv.Add(e);
                         }
                         foreach (var e in v)
                         {
-                            if (rv.Contains(e)) rv.Add(e);
+                            if (!rv.Contains(e)) rv.Add(e);
                         }
                     }
                     else if (fc > 2)
                     {
                         foreach (var e in v)
                         {
-                            if (rv.Contains(e)) rv.Add(e);
+                            if (!rv.Contains(e)) rv.Add(e);
                         }
                     }
                     c = v;

@@ -784,11 +784,12 @@ add_botvars(NameSpace,PredImpl):-
       cli_call('MushDLR223.ScriptEngines.DictionaryWrapper','CreateDictionaryWrapper',[NameSpace, PBD],Provider),
       cli_call('MushDLR223.ScriptEngines.ScriptManager','AddGroupProvider',[ Provider],_).
 
-wbotvar_impl(a,1).
-wbotvar_impl(b,2).
-wbotvar_impl(Key):-wbotvar_impl(Key,_).
+:-dynamic(global_impl2/2).
+global_impl2("a",1).
+global_impl2("b",2).
+global_impl2(Key):-user:global_impl2(Key,_).
 
-:-add_botvars(fromprolog,wbotvar_impl).
+:-add_botvars(fromprolog,global_impl2).
 
 /*
 wbot_add_botvar(BotID,Var,PredImpl):-wbotget(BotID,['WorldSystem','simGroupProviders'],GPs),
