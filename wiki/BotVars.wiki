@@ -144,21 +144,31 @@ touch to stop (localID 2944258470)(ch0)(PrimFlagsTrue Scripted, Touch)(PrimFlags
 
 = Registering Botvars with prolog =
 
+decleare the botvar predicate
 {{{
-%% decleare the botvar predicate
 :-dynamic(oto_impl/2).
-%% create a arity 1 version to gather the keys
+}}}
+create a arity 1 version to gather the keys
+{{{
 oto_impl(N):-oto_impl(N,_).
-%% declare some values in arity 2 predicate
+}}}
+declare some values in arity 2 predicate
+{{{
 oto_impl("favfood",corn).
-%% register the arity 2 version
+}}}
+Register the arity 2 version
+{{{
 :-bot_add_varpred(oto_impl).
 }}}
 
+This will export "favfood" var to AIML and other modules
 
-= Details =
+change the value
+{{{
+:-bot_setvar("favfood",bread).
+}}}
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+retrieve the value 
+{{{
+:-bot_getvar("favfood",What).
+}}}
