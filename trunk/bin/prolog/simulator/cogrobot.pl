@@ -779,17 +779,23 @@ value_deref(Value,ValueO):-cli_col(Value,ValueO).
 %------------------------------------------------------------------------------
 % adding to the botvar interface
 %------------------------------------------------------------------------------
-add_botvars(NameSpace,PredImpl):-
-      cli_new_prolog_dictionary(PredImpl,string,object,PBD),
-      cli_call('MushDLR223.ScriptEngines.DictionaryWrapper','CreateDictionaryWrapper',[NameSpace, PBD],Provider),
-      cli_call('MushDLR223.ScriptEngines.ScriptManager','AddGroupProvider',[ Provider],_).
+add_botvars(NameSpace,PredImpl):-module_functor(PredImpl,Module,Pred,Arity),
+   cli_new_prolog_dictionary(Module:Pred/Arity,string,object,PBD),
+   cli_call('MushDLR223.ScriptEngines.DictionaryWrapper','CreateDictionaryWrapper',[NameSpace, PBD],Provider),
+   cli_call('MushDLR223.ScriptEngines.ScriptManager','AddGroupProvider',[ Provider],_).
+
+
+
+wbot_addvar_dynpred(BotID,PredImpl):-wbotname(BotID,NameSpace),add_botvars(NameSpace,PredImpl).
 
 :-dynamic(global_impl2/2).
 global_impl2("a",1).
 global_impl2("b",2).
-global_impl2(Key):-user:global_impl2(Key,_).
+global_impl2(Key):-global_impl2(Key,_).
 
-:-add_botvars(fromprolog,global_impl2).
+
+
+%%:-add_botvars(global_impl2,global_impl2).
 
 /*
 wbot_add_botvar(BotID,Var,PredImpl):-wbotget(BotID,['WorldSystem','simGroupProviders'],GPs),

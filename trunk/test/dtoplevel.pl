@@ -48,7 +48,7 @@ oto_impl(N):-oto_impl(N,_).
 %% declare some values in arity 2 predicate
 oto_impl("favfood",corn).
 %% register the arity 2 version
-:-bot_add_varpred(oto_impl).
+:-bot_addvar_dynpred(oto_impl).
 
 
 
