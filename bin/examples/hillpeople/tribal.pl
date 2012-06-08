@@ -10,6 +10,7 @@
 :- use_module(hillpeople(actions)).
 :- use_module(cogbot(cogrobot)).
 :- use_module(hillpeople(events)).
+:- use_module(hillpeople(actionselection)).
 
 :- discontiguous be_tribal/3.
 
