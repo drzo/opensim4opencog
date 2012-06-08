@@ -62,7 +62,8 @@
             cli_tracker_begin/1,
             cli_tracker_free/1,
 
-            cli_free/1
+            cli_free/1,
+            module_functor/4
           ]).
 
 
@@ -142,6 +143,12 @@ cli_collection(Obj,Ele):-cli_array_to_termlist(Obj,Vect),!,member(Ele,Vect).
 cli_col(X,Y):-cli_collection(X,Y).
 
 
+cli_col_add(Col,Value):-cli_call(Col,'Add'(Value),_).
+cli_col_contains(Col,Value):-cli_call(Col,'Contains'(Value),_).
+cli_col_remove(Col,Value):-cli_call(Col,'Remove'(Value),_).
+cli_col_removeall(Col):-cli_call(Col,'Clear',_).
+cli_col_size(Col,Count):-cli_call(Col,'Count',Count).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %% cli_writeln(+Obj) writes an object out
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
@@ -162,16 +169,145 @@ cli_to_str0([A|B],[AS|BS]):-!,cli_to_str0(A,AS),cli_to_str0(B,BS).
 cli_to_str0(Term,String):-Term=..[F|A],cli_to_str0(A,AS),String=..[F|AS],!.
 cli_to_str0(Term,Term).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%% cli_new_prolog_collection(+PredImpl,+ElementType,-PBD)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cli_new_prolog_collection(PredImpl,TypeSpec,PBC):-
+   module_functor(PredImpl,Module,Pred,_),
+   atom_concat(Pred,'_get',GET),atom_concat(Pred,'_add',ADD),atom_concat(Pred,'_remove',REM),atom_concat(Pred,'_clear',CLR),
+   PANON =..[Pred,_],PGET =..[GET,Val],PADD =..[ADD,Val],PREM =..[REM,Val],PDYN =..[Pred,Val],
+   asserta(( PGET :- PDYN )),
+   asserta(( PADD :- assert(PDYN) )),
+   asserta(( PREM :- retract(PDYN) )),
+   asserta(( CLR :- retractall(PANON) )),
+   cli_new('Swicli.Library.PrologBackedCollection'(TypeSpec),0,
+      [Module,GET,ADD,REM,CLR],PBC).
+
+module_functor(PredImpl,Module,Pred,Arity):-strip_module(PredImpl,Module,NewPredImpl),strip_arity(NewPredImpl,Pred,Arity).
+strip_arity(Pred/Arity,Pred,Arity).
+strip_arity(PredImpl,Pred,Arity):-functor(PredImpl,Pred,Arity).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %% cli_new_prolog_dictionary(+PredImpl,+KeyType,+ValueType,-PBD)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cli_new_prolog_dictionary(PredImpl,KeyType,ValueType,PBD):-cli_call('Swicli.Library.PrologClient','CreatePrologBackedDictionary'(KeyType,ValueType),[PredImpl],PBD).
+cli_new_prolog_dictionary(PredImpl,KeyType,ValueType,PBD):-
+   cli_new_prolog_collection(PredImpl,KeyType,PBC),
+   module_functor(PredImpl,Module,Pred,_),
+   atom_concat(Pred,'_get',GET),atom_concat(Pred,'_set',SET),atom_concat(Pred,'_remove',REM),atom_concat(Pred,'_clear',CLR),
+   PANON =..[Pred,_,_],PGET =..[GET,Key,Val], PSET =..[SET,Key,Val],PREM =..[REM,Val],PDYN =..[Pred,Key,Val],
+   asserta(( PGET :- PDYN )),
+   asserta(( PSET :- assert(PDYN) )),
+   asserta(( PREM :- retract(PDYN) )),
+   asserta(( CLR :- retractall(PANON) )),
+   cli_new('Swicli.Library.PrologBackedDictionary'(KeyType,ValueType),0,
+      [Module,GET,PBC,SET,REM,CLR],PBD).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%% cli_new_prolog_collection(+PredImpl,+ElementType,-PBD)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cli_new_prolog_collection(PredImpl,TypeSpec,PBD):-cli_call('Swicli.Library.PrologClient','CreatePrologBackedCollection'(TypeSpec),[PredImpl],PBD).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55555
+/* EXAMPLE: How to turn current_prolog_flag/2 into a PrologBacked dictionary
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55555
+
+Here is the webdocs:
+
+create_prolog_flag(+Key, +Value, +Options)                         [YAP]
+    Create  a  new Prolog  flag.    The ISO  standard does  not  foresee
+    creation  of  new flags,  but many  libraries  introduce new  flags.
+
+current_prolog_flag(?Key, -Value)    
+    Get system configuration parameters
+
+set_prolog_flag(:Key, +Value)                                      [ISO]
+    Define  a new  Prolog flag or  change its value.   
+
+
+It has most of the makings of a "PrologBackedDictionary"  but first we need a 
+PrologBackedCollection to produce keys
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55555
+% First we'll need a conveinence predicate add_new_flag/1  for adding new flags for the collection
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55555
+
+?- asserta(( add_new_flag(Flag):- create_prolog_flag(Flag,_,[access(read_write),type(term)])   )).
+
+?- asserta(( current_pl_flag(Flag):- current_prolog_flag(Flag,_)   )).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55555
+% Next we'll use the add_new_flag/1 in our PrologBackedCollection
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55555
+?- context_module(Module),cli_new('Swicli.Library.PrologBackedCollection'(string),0,[Module,current_pl_flag,add_new_flag,@(null),@(null)],PBC).
+
+% meaning:
+       %% 'Swicli.Library.PrologBackedCollection'(string) ==> Type of object it returs to .NET is System.String
+       %% 0 ==> First (only) constructor
+       %% Module ==> user
+       %% current_pl_flag ==> use current_pl_flag/1 for our GETTER of Items
+       %% add_new_flag ==> Our Adder(Item) (defined in previous section)
+       %% @(null) ==> No Remover(Item) 
+       %% @(null) ==> No clearer
+       %% PBC ==> Our newly created .NET ICollection<string>
+
+% by nulls in the last two we've created a partially ReadOnly ICollection wexcept we can add keys
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55555
+% Now we have a Keys collection let us declare the Dictionary (our intial objective)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55555
+?- context_module(Module), cli_new('Swicli.Library.PrologBackedDictionary'(string,string),0,
+           [Module,current_prolog_flag,$PBC,set_prolog_flag,@(null),@(null)],PBD).
+
+       %% 'Swicli.Library.PrologBackedDictionary'(string) ==> Type of Key,Value it returns to .NET are System.Strings
+       %% 0 ==> First (only) constructor
+       %% Module ==> user
+       %% current_prolog_flag ==> use current_prolog_flag/2 is a GETTER.
+       %% $PBC ==> Our Key Maker from above
+       %% set_prolog_flag/2 ==> our SETTER(Key,ITem)
+       %% @(null) ==> No Remover(Key,Value) 
+       %% @(null) ==> No clearer
+       %% PBD ==> Our newly created .NET IDictionary<string,string>
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55555
+% Now we have a have a PrologBackedDictionary in $PBD
+% so let us play with it
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55555
+
+%% is there a key named foo?
+
+?- current_pl_flag(foo).
+No.
+
+%% Add a value to the Dictionanry
+?- cli_map_add($PBD,foo,bar).
+Yes.
+
+%% set if there is a proper side effect
+?- current_pl_flag(foo).
+Yes.
+
+?- current_prolog_flag(foo,X).
+X = bar.
+Yes.
+
+?- cli_map($PBD,foo,X).
+X = bar.
+Yes.
+
+?- cli_call($PBD,'ContainsKey'(foo),X).
+X = @true.
+
+
+
+%% iterate the Dictionary
+?- cli_map($PBD,K,V).
+
+
+
+*/
+
+cli_demo(PBC,PBD):- asserta(( add_new_flag(Flag) :- create_prolog_flag(Flag,_,[access(read_write),type(term)])   )),
+   asserta(( current_pl_flag(Flag):- current_prolog_flag(Flag,_)   )),
+   context_module(Module),cli_new('Swicli.Library.PrologBackedCollection'(string),0,[Module,current_pl_flag,add_new_flag,@(null),@(null)],PBC),
+   cli_new('Swicli.Library.PrologBackedDictionary'(string,string),0,[Module,current_prolog_flag,PBC,set_prolog_flag,@(null),@(null)],PBD).
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %% cli_is_null(+Obj) is null or void
@@ -282,10 +418,15 @@ handle_im(Origin,Obj,IM):-writeq(handle_im(Origin,Obj,IM)),nl.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-%%% cli_map_element(Map,?Key,?Value).
+%%% cli_map(Map,?Key,?Value).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-cli_map_element(Map,Key,Value):-nonvar(Key),!,cli_call(Map,'TryGetValue',[Key,Value],@(true)).
-cli_map_element(Map,Key,Value):-cli_col(Map,Ele),cli_get(Ele,'Key',Key),cli_get(Ele,'Value',Value).
+cli_map(Map,Key,Value):-nonvar(Key),!,cli_call(Map,'TryGetValue',[Key,Value],@(true)).
+cli_map(Map,Key,Value):-cli_col(Map,Ele),cli_get(Ele,'Key',Key),cli_get(Ele,'Value',Value).
+cli_map_set(Map,Key,Value):-cli_call(Map,'[]'(typeof(Key)),[Key,Value],_).
+cli_map_add(Map,Key,Value):-cli_call(Map,'Add'(Key,Value),_).
+cli_map_remove(Map,Key,Value):-cli_map(Map,Key,Value),!,cli_call(Map,'Remove'(Key),_).
+cli_map_removeall(Map):-cli_call(Map,'Clear',_).
+cli_map_size(Map,Count):-cli_call(Map,'Count',Count).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %%% cli_Preserve(TF,Calls)
