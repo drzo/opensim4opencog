@@ -32,14 +32,19 @@ namespace Swicli.Library
     {
         static public IDictionary<TKey, TValue> CreatePrologBackedDictionary<TKey, TValue>(PlTerm pred)
         {
-            return new PrologBackedDictionary<TKey, TValue>(PredicateModule(pred), PredicateName(pred),
+            string p = PredicateName(pred);
+            return new PrologBackedDictionary<TKey, TValue>(
+                PredicateModule(pred), p + "_get",
                 CreatePrologBackedCollection<TKey>(pred),
-                "assert", "retract","retractall");}
+                p + "_set", p + "_remove", p + "_clear");
+        }
 
         static public ICollection<T> CreatePrologBackedCollection<T>(PlTerm pred)
         {
-            return new PrologBackedCollection<T>(PredicateModule(pred), PredicateName(pred), "assert", "retract",
-                                                 "retractall");
+            string p = PredicateName(pred);
+            return new PrologBackedCollection<T>(
+                PredicateModule(pred), p + "_get",
+                p + "_add", p + "_remove", p + "_clear");
         }
 
         [PrologVisible]
@@ -111,25 +116,25 @@ namespace Swicli.Library
         }
     }
 
-    public class PrologBacked<TKey, TValue>
+    public abstract class PrologBacked<TKey, TValue>
     {
         public void InForiegnFrame(Action action)
         {
             PrologClient.RegisterCurrentThread();
-            uint fid = 0;// libpl.PL_open_foreign_frame();
+            uint fid = libpl.PL_open_foreign_frame();
             try
             {
                 action();
             }
             finally
             {
-                if (fid > 0) libpl.PL_close_foreign_frame(fid);
+               // if (fid > 0) libpl.PL_close_foreign_frame(fid);
             }
         }
 
-        public static bool PlCall(string module, string predname, PlTermV termV)
+        public static bool PlCall(string module, string querypred, PlTermV termV)
         {
-            return PrologClient.PlCall(module, predname, termV);
+            return PrologClient.PlCall(module, querypred, termV);
         }
         public static PlTerm KeyToTerm(TKey key)
         {
@@ -152,12 +157,14 @@ namespace Swicli.Library
         {
             throw new NotImplementedException();
         }
+
+        public abstract string ToDebugString();
     }
 
     public class PrologBackedDictionary<TKey, TValue> : PrologBacked<TKey, TValue>, IDictionary<TKey, TValue>
     {
         private readonly string _module = null;//"user";
-        private readonly string _predname;
+        private readonly string _getvalue;
         private ICollection<TKey> Keyz;
         private readonly Type valueType;
         private string _assertPred;
@@ -165,10 +172,10 @@ namespace Swicli.Library
         private string _retractall;
         private Type keyType;
 
-        public PrologBackedDictionary(string module, string predname, ICollection<TKey> keyz, string assertPred, string retractPred, string retractall)
+        public PrologBackedDictionary(string module, string get_value, ICollection<TKey> keyz, string assertPred, string retractPred, string retractall)
         {
             _module = module ?? "user";
-            _predname = predname;
+            _getvalue = get_value;
             Keyz = keyz;
             _assertPred = assertPred;
             _retractPred = retractPred;
@@ -194,7 +201,12 @@ namespace Swicli.Library
 
         public Dictionary<TKey, TValue> Copy()
         {
-            return new Dictionary<TKey, TValue>(this);
+            var copy = new Dictionary<TKey, TValue>();
+            foreach (var e in this)
+            {
+                copy.Add(e.Key,e.Value);
+            }
+            return copy;
         }
 
         public class PrologBackedDictionaryEnumerator : IEnumerator<KeyValuePair<TKey, TValue>>
@@ -256,7 +268,7 @@ namespace Swicli.Library
                 Dispose();
                 //fframe = libpl.PL_open_foreign_frame();
                 termV = new PlTermV(2);
-                plQuery = new PlQuery(_dictionary._module, _dictionary._predname, termV);
+                plQuery = new PlQuery(_dictionary._module, _dictionary._getvalue, termV);
             }
 
             /// <summary>
@@ -318,7 +330,7 @@ namespace Swicli.Library
             if (_assertPred == null) throw new NotSupportedException("add " + this); 
             InForiegnFrame(() =>
             {
-                PlTerm newPlTermV = PrologClient.PlC(_predname, TermVOf(item));
+                PlTerm newPlTermV = PrologClient.PlC(_getvalue, TermVOf(item));
                 PlCall(_module, _assertPred, new PlTermV(newPlTermV));
             });
 
@@ -334,7 +346,7 @@ namespace Swicli.Library
             if (_retractall == null) throw new NotSupportedException("clear " + this);
             InForiegnFrame(() =>
             {
-                PlTerm newPlTermV = PrologClient.PlC(_predname, new PlTermV(2));
+                PlTerm newPlTermV = PrologClient.PlC(_getvalue, new PlTermV(2));
                 PlCall(_module, _retractall, new PlTermV(newPlTermV));
             });
         }
@@ -352,7 +364,7 @@ namespace Swicli.Library
             bool found = false;
             InForiegnFrame(() =>
             {
-                found = PlCall(_module, _predname, TermVOf(item));
+                found = PlCall(_module, _getvalue, TermVOf(item));
             });
             return found;
         }
@@ -391,7 +403,7 @@ namespace Swicli.Library
             bool removed = false;
             InForiegnFrame(() =>
             {
-                PlTerm newPlTermV = PrologClient.PlC(_predname, TermVOf(item));
+                PlTerm newPlTermV = PrologClient.PlC(_getvalue, TermVOf(item));
                 removed = PlCall(_module, _retractPred, new PlTermV(newPlTermV));
             });
             return removed;
@@ -439,7 +451,7 @@ namespace Swicli.Library
             bool found = false;
             InForiegnFrame(() =>
                                {
-                                   found = PlCall(_module, _predname, new PlTermV(KeyToTerm(key), PlTerm.PlVar()));
+                                   found = PlCall(_module, _getvalue, new PlTermV(KeyToTerm(key), PlTerm.PlVar()));
                                });
             return found;
         }
@@ -479,7 +491,7 @@ namespace Swicli.Library
             InForiegnFrame(() =>
                                {
 
-                                   PlTerm newPlTermV = PrologClient.PlC(_predname, KeyToTerm(key), PlTerm.PlVar());
+                                   PlTerm newPlTermV = PrologClient.PlC(_getvalue, KeyToTerm(key), PlTerm.PlVar());
                                    removed = PlCall(_module, _retractPred, new PlTermV(newPlTermV));
                                });
             return removed;
@@ -503,7 +515,7 @@ namespace Swicli.Library
                                {
                                    PlTerm plTermPlVar = PlTerm.PlVar();
                                    PlTermV newPlTermV = new PlTermV(KeyToTerm(key), plTermPlVar);
-                                   res = PlCall(_module, _predname, newPlTermV);
+                                   res = PlCall(_module, _getvalue, newPlTermV);
                                    if (res)
                                    {
                                        value0 = (TValue)PrologClient.CastTerm(newPlTermV[1], valueType);
@@ -535,8 +547,8 @@ namespace Swicli.Library
                 TValue tvalue = default(TValue);
                 InForiegnFrame(() =>
                 {
-                    PlTerm newPlTermV = PrologClient.PlC(_predname, KeyToTerm(key), PlTerm.PlVar());
-                    bool res = PlCall(_module, _predname, new PlTermV(newPlTermV));
+                    PlTerm newPlTermV = PrologClient.PlC(_getvalue, KeyToTerm(key), PlTerm.PlVar());
+                    bool res = PlCall(_module, _getvalue, new PlTermV(newPlTermV));
                     if (res)
                     {
                         tvalue = (TValue)PrologClient.CastTerm(newPlTermV.Arg(1), valueType);
@@ -579,23 +591,37 @@ namespace Swicli.Library
         }
 
         #endregion
+
+        #region Overrides of PrologBacked<TKey,TValue>
+
+        public override string ToDebugString()
+        {
+            string ds = "" + Count;
+            foreach (var kv in this)
+            {
+                ds += "," + kv.Key + "=" + kv.Value;
+            }
+            return ds;
+        }
+
+        #endregion
     }
 
 
     public class PrologBackedCollection<T> : PrologBacked<T,object>, ICollection<T>, ICollection
     {
         private readonly string _module = null;//"user";
-        private readonly string _predname;
+        private readonly string _querypred;
         private readonly Type keyType;
         private readonly Type valueType;
         private string _assertPred;
         private string _retractPred;
         private string _retractall;
 
-        public PrologBackedCollection(string module, string predname, string assertPred, string retractPred, string retractall)
+        public PrologBackedCollection(string module, string querypred, string assertPred, string retractPred, string retractall)
         {
             _module = module ?? "user";
-            _predname = predname;
+            _querypred = querypred;
             _assertPred = assertPred;
             _retractPred = retractPred;
             _retractall = retractall;
@@ -609,7 +635,7 @@ namespace Swicli.Library
             if (_assertPred == null) throw new NotSupportedException("add " + this);
             InForiegnFrame(() =>
             {
-                PlTerm newPlTermV = PrologClient.PlC(_predname, new PlTermV(KeyToTerm(item)));
+                PlTerm newPlTermV = PrologClient.PlC(_querypred, new PlTermV(KeyToTerm(item)));
                 PlCall(_module, _assertPred, new PlTermV(newPlTermV));
             });
         }
@@ -618,7 +644,7 @@ namespace Swicli.Library
         {
             InForiegnFrame(() =>
                                {
-                                   PlTerm newPlTermV = PrologClient.PlC(_predname, new PlTermV(1));
+                                   PlTerm newPlTermV = PrologClient.PlC(_querypred, new PlTermV(1));
                                    PlCall(_module, _retractall, new PlTermV(newPlTermV));
                                });
         }
@@ -628,7 +654,7 @@ namespace Swicli.Library
             bool found = false;
             InForiegnFrame(() =>
             {
-                found = PlCall(_module, _predname, new PlTermV(KeyToTerm(item)));
+                found = PlCall(_module, _querypred, new PlTermV(KeyToTerm(item)));
             });
             return found;
         }
@@ -659,7 +685,15 @@ namespace Swicli.Library
 
         public int Count
         {
-            get { return Copy().Count; }
+            get
+            {
+                var copy = 0;
+                foreach (var e in this)
+                {
+                    copy++;
+                }
+                return copy;
+            }
         }
 
         /// <summary>
@@ -671,7 +705,7 @@ namespace Swicli.Library
         /// <filterpriority>2</filterpriority>
         public object SyncRoot
         {
-            get { throw base.NewNotImplementedException(); }
+            get { return this; }
         }
 
         /// <summary>
@@ -706,9 +740,23 @@ namespace Swicli.Library
 
         public List<T> Copy()
         {
-            return new List<T>(this);
+            var copy = new List<T>();
+            foreach (var e in this)
+            {
+                copy.Add(e);
+            }
+            return copy;
         }
 
+        public override string ToDebugString()
+        {
+            string ds = "" + Count;
+            foreach (var kv in this)
+            {
+                ds += "," + kv;
+            }
+            return ds;
+        }
         #region IEnumerable<T> Members
 
         public IEnumerator<T> GetEnumerator()
@@ -795,7 +843,7 @@ namespace Swicli.Library
                 Dispose();
                 fframe = libpl.PL_open_foreign_frame();
                 termV = new PlTermV(1);
-                plQuery = new PlQuery(_dictionary._module, _dictionary._predname, termV);
+                plQuery = new PlQuery(_dictionary._module, _dictionary._querypred, termV);
                 nonLeft = false;
             }
 
