@@ -141,6 +141,10 @@ namespace Swicli.Library
                 {
                     return GetType(clazzSpec[1]).MakeArrayType();
                 }
+                if (clazzName == "typeof")
+                {
+                    return (GetInstance(clazzSpec[1]) ?? NEW_OBJECTFORTYPE).GetType();
+                }
                 if (clazzName == "static")
                 {
                     return GetType(clazzSpec[1]);
@@ -285,6 +289,8 @@ namespace Swicli.Library
 
         private static IDictionary<string, Type> ShortNameType;
         private static readonly Dictionary<Type, string> TypeShortName = new Dictionary<Type, string>();
+        private static object NEW_OBJECTFORTYPE = new object();
+
         private static PlTerm typeToSpec(Type type)
         {
             if (type.IsArray && type.HasElementType)

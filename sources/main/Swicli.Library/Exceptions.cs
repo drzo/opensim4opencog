@@ -234,6 +234,8 @@ namespace SbsSW.SwiPlCs.Exceptions
         /// <returns></returns>
 		override public string ToString()
 		{
+            if (_messagePl != null) return GetType() + ": " + _messagePl;
+
             if (!PlEngine.IsInitialized)
                 return "A PlException was thrown but it can't formatted because PlEngine is not Initialized.";
 
