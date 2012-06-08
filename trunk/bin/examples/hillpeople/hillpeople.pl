@@ -157,6 +157,12 @@ sex(otopopo, m).
 home(otopopo, hut1).
 husband_of(otopopo, yuppie).
 start_wearing(otopopo, [
+			'otopopo necklace',
+			'otopopo hair',
+			'otopopo bone',
+			'otopopo diaper',
+			'R Tribal sandal',
+			'L Tribal sandal',
 			'otopopo shape',
 			'bald cap',
 			'otopopo skin',
@@ -170,6 +176,9 @@ age(yuppie, 21).
 sex(yuppie, f).
 home(yuppie, hut1).
 start_wearing(yuppie, [
+		       'yuppie skirt',
+		       'R Tribal sandal',
+		       'L Tribal sandal',
 		       'yuppie smarter shape',
 		       'bald cap',
 		       'yuppie eyes',
@@ -189,7 +198,12 @@ start_wearing(bignose, [
 			'bignose outfit Eyes',
 			'bald cap',
 			'bignose outfit Shape',
-			'bignose outfit Skin'
+			'bignose outfit Skin',
+			'bignose diaper',
+			'bignose bracelet',
+			'bignose diaper',
+			'R Tribal sandal',
+			'L Tribal sandal'
 		       ]).
 
 hill_person(onosideboard) :- tribe_size(X), X > 3.
@@ -201,6 +215,13 @@ age(onosideboard, 35).
 sex(onosideboard, f).
 home(onosideboard, hut2).
 start_wearing(onosideboard, [
+			     'R Tribal sandal',
+			     'L Tribal sandal',
+			     'onosideboard R earring',
+			     'onosideboard L earring',
+			     'onosideboard skirt',
+			     'onosideboard shirt',
+			     'onosideboard hair',
 			     'onosideboard outfit Eyes',
 			     'bald cap',
 			     'onosideboard outfit Shape',

@@ -32,13 +32,17 @@ say_ref(Prompt, Ref) :-
     say_format('~w = ~s', [Prompt, S]).
 
 
+inventory_folder_name("hillpeople example rev3").
+
 has_inventory :-
-	bot_has_inventory(["hillpeople example rev2"]),!.
+	inventory_folder_name(Folder),
+	bot_has_inventory([Folder]),!.
 
 remove_all :- bot_unwearall.
 
 wear_list(Items) :-
-	bot_replaceoutfit(["hillpeople example rev2"], Items).
+	inventory_folder_name(Folder),
+	bot_replaceoutfit([Folder], Items).
 
 
 

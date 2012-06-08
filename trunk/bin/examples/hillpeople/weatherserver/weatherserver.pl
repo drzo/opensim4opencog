@@ -35,6 +35,7 @@
 :- use_module(library('http/http_dispatch')).
 :- use_module(library('http/http_parameters')).
 :- use_module(climate).
+:- use_module(windlight).
 
 :- http_handler('/weather', weather_handler, []).
 
@@ -65,13 +66,13 @@ weather_handler(Request) :-
     ),
     format('Content-type: text/css\r\n\r\n~w', [Output]).
 
-temperature(Date, Temp) :-
+temperature(_, 25).
 
 
 weather_for_day(Day,
 	weather(Sun, Temperature, SnowAccum, Snowing, Raining)) :-
 	Date =:= floor(Day),
-	Sun =:= 24.0 * (Date rem 1.0),
+	Sun =:= 24.0 * (Day rem 1.0),
 	temperature(Date, Temperature),
 	snow_accumulation(Date, SnowAccum),
 	is_snowing(Date, Snowing),
