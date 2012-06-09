@@ -82,9 +82,15 @@ bv:hook_botvar_key(_,bot,'isSittingGround').
 b:hook_botvar_desc(_,bot,'isSittingGround', "ReadWrite - setting Yes makes the bot sit on the ground, setting No makes the bot stand up").
 }}}
 
-Sometimes you want to dynamically add botvars. So, for instance, if you want to allow the user to tell the bot facts about itself, you don't want to have to pre-define what the facts are.
+This is an example of a generally useful pattern for using botvars.
 
-Doing this by simply asserting it somewhere.  Remember that assert/1 retract/1 uses the current *context_module* so you want to make sure you are asserting/retracting your dynamic predicates somewhere you might find them again. (Every dynamic predicate in prolog works this way (not related to Cogbot))
+Sometimes you want to dynamically add botvars. So, for instance, if you want to allow the user to tell the bot facts about itself, you don't want to have to pre-define what the facts are in Prolog.
+
+We might also want to have a lower friction way to define botvars in prolog. This snippet lets us set an undeclared botvar and it will automatically be declared. 
+
+Bit of Prolog advice:
+
+If you are implementing something like this snippet, be aware that assert/1 retract/1 uses the current *context_module* so you want to make sure you are asserting/retracting your dynamic predicates somewhere you might find them again. (Every dynamic predicate in prolog works this way (not related to Cogbot)).
 
 {{{
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -105,6 +111,19 @@ bv:hook_botvar_key(_BotID,NS,Key):-dyn_store_botvar(NS,Key,_).
 
 realize_we_are_doomed :-
       botvar_set(bot, 'doomed', "Yes").
+
+panic :-
+      botvar_get(bot, 'doomed', "Yes"),
+      format('We are doomed~n', []).
+
+
+... from botcmd ...
+
+/botvar doomed Yes
+
+/botvar doomed
+=>Yes
+
 }}}
 
 == Using botvars from prolog ==
