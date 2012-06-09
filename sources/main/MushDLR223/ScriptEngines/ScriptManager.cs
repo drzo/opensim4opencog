@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
 using MushDLR223.Utilities;
 using Exception=System.Exception;
 using Thread = System.Threading.Thread;
@@ -833,7 +834,8 @@ namespace MushDLR223.ScriptEngines
              return CLSMember.GetTypeArray(argarray);
         }
 
-        public static readonly List<ICollectionProvider> CollectionProviders = new List<ICollectionProvider>();
+        public static readonly List<ICollectionProvider> CollectionProviders = new List<ICollectionProvider>();       
+
         public static void AddGroupProvider(ICollectionProvider provider)
         {
             lock (CollectionProviders)
@@ -942,6 +944,30 @@ namespace MushDLR223.ScriptEngines
             }
             return false;
         }
+        static public void AquireSettingsLock()
+        {
+            Monitor.Enter(CollectionProviders);
+        }
+        static public void ReleaseSettingsLock()
+        {
+            Monitor.Exit(CollectionProviders);
+        }
+        public static bool SendSettingsChange(object sender, string namespac, string name, object valeu)
+        {
+            foreach (ICollectionProvider provider in GetProviders(namespac))
+            {
+                if (ReferenceEquals(provider, sender)) continue;
+                provider.SetValue(name, valeu);
+                lock (VarListeners)
+                {
+                    foreach (var action in VarListeners)
+                    {
+                        action(sender, namespac, name, valeu);   
+                    }
+                }
+            }
+            return true;
+        }
 
         public static bool AddSetting(string namespac, string name, object valeu)
         {
@@ -964,6 +990,23 @@ namespace MushDLR223.ScriptEngines
                 }
             }
             return somethngTookIt;
+        }
+
+        public static HashSet<Action<object, string, string, object>> VarListeners =
+            new HashSet<Action<object, string, string, object>>();
+        public static void RegisterVarListener(Action<object, string, string, object> action)
+        {
+            lock (VarListeners)
+            {
+                VarListeners.Add(action);
+            }
+        }
+        public static void UnregisterVarListener(Action<object, string, string, object> action)
+        {
+            lock (VarListeners)
+            {
+                VarListeners.Remove(action);
+            }
         }
     }
 

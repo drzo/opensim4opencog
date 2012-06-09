@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -11,6 +12,121 @@ using Swicli.Library;
 
 namespace PrologScriptEngine
 {
+    public class BotVarProvider : ICollectionProvider
+    {
+        public static BotVarProvider CreateBotVarProvider(PlTerm nameSpace, PlTerm getter, PlTerm setter, PlTerm keyGetter)
+        {
+            BotVarProvider provider = new BotVarProvider(nameSpace, getter, setter, keyGetter, PlTerm.PlVar());
+            ScriptManager.AddGroupProvider(provider);
+            return provider;
+        }
+
+        private PlQuery AllCallbacks;
+        public static bool DiscardFrames;
+
+        public BotVarProvider(PlTerm nameSpace, PlTerm getter, PlTerm setter, PlTerm keyGetter, PlTerm setNotifier)
+        {
+
+            uint fid = libpl.PL_open_foreign_frame();
+            NameSpace = nameSpace.Name;
+            AllCallbacks = new PlQuery(NameSpace, new PlTermV(getter, setter, keyGetter, setNotifier));
+            AllCallbacks.EnsureQUID();
+            MushDLR223.ScriptEngines.ScriptManager.RegisterVarListener(OnVarSet);
+        }
+
+        void OnVarSet(object sender, string namespaec, string name, object value)
+        {
+            PrologClient.InvokeFromC(
+                () =>
+                    {
+                        if (sender == this) return false;
+                        PlTerm callback = AllCallbacks.Args[3];
+                        if (IsEmpty(callback)) return false;
+                        var query = new PlQuery("call",
+                                                new PlTermV(callback, PlTerm.PlString(namespaec), PlTerm.PlString(name),
+                                                            PrologClient.ToProlog(value)));
+                        return query.NextSolution();
+                    }, DiscardFrames);
+        }
+
+        #region Implementation of ITreeable
+
+        public string NameSpace { get; set;}
+
+        public IEnumerable<string> SettingNames(int depth)
+        {
+            return PrologClient.InvokeFromC(
+                () =>
+                    {
+                        PlTerm callback = AllCallbacks.Args[2];
+                        List<string> names = new List<string>();
+                        if (IsEmpty(callback)) return null;
+                        var plVar = PlTerm.PlVar();
+                        var query = new PlQuery("call",
+                                                new PlTermV(callback,
+                                                            PlTerm.PlString(NameSpace),
+                                                            plVar));
+                        while (query.NextSolution())
+                        {
+                            string res = (string) query.Args[2];
+                            if (!names.Contains(res)) names.Add(res);
+                        }
+                        return names.ToArray();
+                    }, DiscardFrames);
+        }        
+
+        #endregion
+
+        #region Implementation of ICollectionProviderSettable
+
+        public void SetValue(string name, object value)
+        {
+            PrologClient.InvokeFromC(
+                () =>
+                    {
+                        PlTerm callback = AllCallbacks.Args[1];
+                        if (IsEmpty(callback)) return false;
+                        var plVar = PlTerm.PlVar();
+                        var query = new PlQuery("call",
+                                                new PlTermV(callback, PlTerm.PlString(NameSpace), PlTerm.PlString(name),
+                                                            PrologClient.ToProlog(value)));
+                        return query.NextSolution();
+                    }, DiscardFrames);
+        }
+
+        private static bool IsEmpty(PlTerm callback)
+        {
+            return callback.IsVar || callback.Name == "@";
+        }
+
+        public bool AcceptsNewKeys
+        {
+            get { return true; }
+        }
+
+        public ICollection GetGroup(string name)
+        {
+            return PrologClient.InvokeFromC(
+                () =>
+                    {
+                        PlTerm callback = AllCallbacks.Args[0];
+                        if (IsEmpty(callback)) return null;
+                        var plVar = PlTerm.PlVar();
+                        List<object> results = new List<object>();
+                        var query = new PlQuery("call",
+                                                new PlTermV(callback, PlTerm.PlString(NameSpace), PlTerm.PlString(name),
+                                                            plVar));
+                        while (query.NextSolution())
+                        {
+                            object res = PrologClient.GetInstance(query.Args[3]);
+                            if (!results.Contains(res)) results.Add(res);
+                        }
+                        return results.Count == 0 ? null : results;
+                    }, DiscardFrames);
+        }
+
+        #endregion
+    }
     public class PrologScriptInterpreter : CommonScriptInterpreter, ScriptInterpreter
     {
         public static bool AutoInternMethods = false;

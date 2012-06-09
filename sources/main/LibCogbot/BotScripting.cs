@@ -329,10 +329,6 @@ namespace Cogbot
                 {
                     if (t.IsSubclassOf(typeof(WorldObjectsModule)))
                     {
-                        if (t.Name.Contains("Prolog"))
-                        {
-                            continue;
-                        }
                         ConstructorInfo info = t.GetConstructor(new Type[] { typeof(BotClient) });
                         try
                         {

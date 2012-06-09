@@ -18,8 +18,6 @@
 
    botdo/1,wbotdo/2,wabdo/1,
 
-   global_getvar/3,add_botvars/2,
-
    botcmd/1, botcmd/2, botcmd/3,   
    wbotcmd/2, wbotcmd/3, wbotcmd/4,
    to_avatar/2,
@@ -89,6 +87,9 @@ assert_once(Gaf):-assert(Gaf).
 
 %:-app_restore(cli_load_assembly('AForge.Imaging.dll')).
 %:-app_restore(cli_load_assembly('AForge.Imaging.Formats.dll')).
+
+% needed for botvars
+:-app_restore(cli_load_assembly('PrologBotModule')).
 %------------------------------------------------------------------------------
 
 %% load needed modules
@@ -779,23 +780,37 @@ value_deref(Value,ValueO):-cli_col(Value,ValueO).
 %------------------------------------------------------------------------------
 % adding to the botvar interface
 %------------------------------------------------------------------------------
-add_botvars(NameSpace,PredImpl):-module_functor(PredImpl,Module,Pred,Arity),
-   cli_new_prolog_dictionary(Module:Pred/Arity,string,object,PBD),
+wbot_addvars_dynpred(_BotID,NameSpace,PredImpl):-module_functor(PredImpl,_Module,Pred,_Arity),
+   atom_concat(Pred,'_get',GET),atom_concat(Pred,'_set',SET),atom_concat(Pred,'_remove',REM),atom_concat(Pred,'_clear',CLR),atom_concat(Pred,'_keys',KEYS),
+   PANON =..[Pred,NameSpace,_,_],PGET =..[GET,NameSpace,Key,Val], PSET =..[SET,NameSpace,Key,Val],PREM =..[REM,NameSpace,Val],
+   PDYN =..[Pred,NameSpace,Key,Val],
+   PKEYSHEAD =..[KEYS,NameSpace,Key],
+   PKEYSBODY =..[Pred,NameSpace,Key,_],
+   asserta(( PGET :- PDYN )),
+   asserta(( PSET :- assert(PDYN) )),
+   asserta(( PREM :- retract(PDYN) )),
+   asserta(( CLR :- retractall(PANON) )),
+   asserta(( PKEYSHEAD :- retractall(PKEYSBODY) )),  
+   global_addvars(NameSpace,GET,SET,KEYS).
+
+   /*cli_new_prolog_dictionary(Module:Pred/Arity,string,object,PBD),
    cli_call('MushDLR223.ScriptEngines.DictionaryWrapper','CreateDictionaryWrapper',[NameSpace, PBD],Provider),
-   cli_call('MushDLR223.ScriptEngines.ScriptManager','AddGroupProvider',[ Provider],_).
+   */
+
+global_addvars(NameSpace,GET,SET,KEYS):-
+   cli_new('PrologScriptEngine.BotVarProvider',0,[NameSpace,GET,SET,KEYS,'@'(null)],Provider),
+   cli_call('MushDLR223.ScriptEngines.ScriptManager','AddGroupProvider',[Provider],_).
 
 
-
-wbot_addvar_dynpred(BotID,PredImpl):-wbotname(BotID,NameSpace),add_botvars(NameSpace,PredImpl).
+wbot_addvars_dynpred(BotID,PredImpl):-wbotname(BotID,NameSpace),wbot_addvars_dynpred(BotID,NameSpace,PredImpl).
 
 :-dynamic(global_impl2/2).
-global_impl2("a",1).
-global_impl2("b",2).
+global_impl2(_,"a",1).
+global_impl2(_,"b",2).
 global_impl2(Key):-global_impl2(Key,_).
 
 
-
-%%:-add_botvars(global_impl2,global_impl2).
+%%:-bot_addvar_dynpred(global_impl2,global_impl2).
 
 /*
 wbot_add_botvar(BotID,Var,PredImpl):-wbotget(BotID,['WorldSystem','simGroupProviders'],GPs),

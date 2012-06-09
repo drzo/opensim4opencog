@@ -42,13 +42,13 @@ l2:-logon_bot('Nephrael','Rae','abc123', "https://login.agni.lindenlab.com/cgi-b
 :-botdo('setmaster Douglas Miles').
 
 %% decleare the botvar predicate
-:-dynamic(oto_impl/2).
-%% create a arity 1 version to gather the keys
-oto_impl(N):-oto_impl(N,_).
+:-dynamic(oto_impl/3).
+%% create a arity 2 version to gather the keys
+oto_impl(_,N):-oto_impl(_,N,_).
 %% declare some values in arity 2 predicate
-oto_impl("favfood",corn).
+oto_impl(_,"favfood",corn).
 %% register the arity 2 version
-:-bot_addvar_dynpred(oto_impl).
+:-bot_addvars_dynpred(oto_impl).
 
 
 
