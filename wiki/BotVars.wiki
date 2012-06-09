@@ -6,6 +6,13 @@ Cogbot is composed of a number of interacting plugins (yay, we love plugins!). T
 
 
 == Using botvars from prolog ==
+
+These are working examples
+
+(All three hook predicates start in the module *bv*)
+
+They may be registered from any module merly by including htem in the source files like below
+
 {{{
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% BOTVAR EXAMPLE: Dynamic predicates 
