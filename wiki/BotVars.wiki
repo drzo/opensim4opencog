@@ -142,7 +142,7 @@ Z = "Yes".
 
 ==Important Note==
 
-All get hooks are called in _any_ _unexpected_ order.  This means the use of cuts to stop prolog from exploring more sources is not possible.
+All get/set/key hooks are called in _any_ _unexpected_ order.  This means the use of cuts to stop prolog from exploring more sources is not possible.
 
 Here is a example of this problem:
 
