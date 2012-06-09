@@ -767,17 +767,18 @@ wbotvar_get(BotID,NS,Name,ValueO):- wbotvar_keys(BotID,NS,Name,CP),
 wbot_safe_namespace(BotID,bot,NS1):-!,wbotname(BotID,NS),wbot_safe_namespace(BotID,NS,NS1).
 wbot_safe_namespace(_,NS,NS1):-global_tokey(NS,NS1).
 
+global_tokey(Name,Key):-var(Name),trace,Key=Name.
 global_tokey(Name,Key):-cli_call('MushDLR223.ScriptEngines.ScriptManager','ToKey',[Name],Key),!.
 
-global_samekey(Name,Name):-!.
-global_samekey(Name1,Name2):-member(Wild,["",bot]),member(Wild,[Name1,Name2]),!.
-global_samekey(Name1,Name2):-ground(Name1+Name2),global_tokey(Name1,Key),global_tokey(Name2,Key).
+wbot_samekey(_BotID,Name1,Name2):-ground(Name1),Name1=Name2,!.
+wbot_samekey(BotID,Name1,Name2):-member(Wild,["",bot]),member(Wild,[Name1,Name2]),wbotname(BotID,Name),ignore(wbot_safe_namespace(BotID,Name2,Name)),!.
+wbot_samekey(_BotID,Name1,Name2):-ground(Name1+Name2),global_tokey(Name1,Key),global_tokey(Name2,Key).
 
-wbotvar_namespaces(BotID,NSO):-cli_call('MushDLR223.ScriptEngines.ScriptManager','GetNameSpaces',[BotID],NSs),cli_col(NSs,NS),global_samekey(NS,NSO).
+wbotvar_namespaces(BotID,NSO):-cli_call('MushDLR223.ScriptEngines.ScriptManager','GetNameSpaces',[BotID],NSs),cli_col(NSs,NS),wbot_samekey(BotID,NS,NSO).
 
 wbotvar_keys(BotID,NSO,NameO,CP):-
    wbotvar_namespaces(BotID,NSO),cli_call('MushDLR223.ScriptEngines.ScriptManager','GetProviders',[BotID,NSO],CPs),cli_col(CPs,CP),
-   cli_call(CP,'SettingNames'('MushDLR223.ScriptEngines.ICollectionRequester',int),[BotID,1],Names),cli_col(Names,Name),global_samekey(Name,NameO).
+   cli_call(CP,'SettingNames'('MushDLR223.ScriptEngines.ICollectionRequester',int),[BotID,1],Names),cli_col(Names,Name),wbot_samekey(BotID,Name,NameO).
 
 
 wbot_gp_to_vars(_BotID,GP,Var):- cli_call('MushDLR223.ScriptEngines.SingleNameValue','MakeKVP'('MushDLR223.ScriptEngines.ICollectionProvider',int),[GP,2],Col),cli_col(Col,Var).
@@ -795,9 +796,9 @@ wbot_addvars(BotID,NameSpace,GET,SET,KEYS):-
 
 
 % register a small helper for ourselves
-wbotkey_same(_BotID,"",Key,MyKey):-global_samekey(Key,MyKey),!.
-wbotkey_same(BotID,NameSpace,Key,MyKey):-wbotname(BotID,BotName),global_samekey(NameSpace,BotName),!,global_samekey(Key,MyKey),!.
-wbotkey_same(BotID,BotID,Key,MyKey):-global_samekey(Key,MyKey),!.
+wbotkey_match(BotID,"",Key,MyKey):-wbot_samekey(BotID,Key,MyKey),!.
+wbotkey_match(BotID,NameSpace,Key,MyKey):-wbotname(BotID,BotName),wbot_samekey(BotID,NameSpace,BotName),!,wbot_samekey(BotID,Key,MyKey),!.
+wbotkey_match(BotID,BotID,Key,MyKey):-wbot_samekey(BotID,Key,MyKey),!.
 
 % Need freedom to declare in multiple codeblocks
 :- PREDS = (bv:hook_botvar_get/4,bv:hook_botvar_set/4,bv:hook_botvar_key/3),
@@ -807,16 +808,23 @@ wbotkey_same(BotID,BotID,Key,MyKey):-global_samekey(Key,MyKey),!.
    dynamic(PREDS).
 
 wbot_to_namespace(BotID,"",BotName):-wbotname(BotID,Name),global_tokey(Name,BotName),!.
+wbot_to_namespace(BotID,bot,BotName):-wbotname(BotID,Name),global_tokey(Name,BotName),!.
 wbot_to_namespace(_BotID,NameSpaceS,NameSpace):-global_tokey(NameSpaceS,NameSpace).
 
-ahook_botvar_get(BotID,NameSpace,Key,Value):- clause(bv:hook_botvar_get(BotID,MNameSpace,MKey,Value),BODY),
-   once((global_samekey(NameSpace,MNameSpace),global_samekey(Key,MKey))), catch(user:(BODY),_,fail).
+ahook_botvar_get(BotID,NameSpace0,Key0,Value):-
+   wbot_to_namespace(BotID,NameSpace0,NameSpace),global_tokey(Key0,Key),
+   clause(bv:hook_botvar_get(BotID,MNameSpace,MKey,Value),BODY),
+   once((wbot_samekey(BotID,NameSpace,MNameSpace),wbot_samekey(BotID,Key,MKey))), catch(user:(BODY),_,fail).
 
-ahook_botvar_set(BotID,NameSpace,Key,Value):- clause(bv:hook_botvar_set(BotID,MNameSpace,MKey,Value),BODY),
-   once((global_samekey(NameSpace,MNameSpace),global_samekey(Key,MKey))), catch(user:(BODY),_,fail).
+ahook_botvar_set(BotID,NameSpace0,Key0,Value):-trace,
+   wbot_to_namespace(BotID,NameSpace0,NameSpace),global_tokey(Key0,Key),
+   clause(bv:hook_botvar_set(BotID,MNameSpace,MKey,Value),BODY),
+   once((wbot_samekey(BotID,NameSpace,MNameSpace),wbot_samekey(BotID,Key,MKey))), catch(user:(BODY),_,fail).
 
-ahook_botvar_key(BotID,NameSpace,Key):- clause(bv:hook_botvar_key(BotID,MNameSpace,MKey),BODY),
-   once((global_samekey(NameSpace,MNameSpace),global_samekey(Key,MKey))), catch(user:(BODY),_,fail).
+ahook_botvar_key(BotID,NameSpace0,Key):-
+   wbot_to_namespace(BotID,NameSpace0,NameSpace),
+   clause(bv:hook_botvar_key(BotID,MNameSpace,MKey),BODY),
+   once((wbot_samekey(BotID,NameSpace,MNameSpace),wbot_samekey(BotID,Key,MKey))), catch(user:(BODY),_,fail).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
