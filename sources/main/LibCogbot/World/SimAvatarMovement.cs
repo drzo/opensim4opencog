@@ -1087,7 +1087,7 @@ namespace Cogbot.World
             // if (ApproachPosition != target)
             {
                 lastDistance = float.MaxValue;
-                SetMoveTarget(target.GlobalPosition);
+                SetMoveTarget(target.UsePosition.GlobalPosition);
                 ApproachDistance = maxDist;
             }
         }
