@@ -46,7 +46,8 @@ bv:hook_botvar_key(_,bot,'isNight').
 %... other Prolog code asserts and retracts isNight...
 }}}
 
-Some AIML that uses isNight to say '
+Some AIML that uses isNight to say something appropriate to the
+time of day
 
 {{{
 <category>
@@ -54,7 +55,7 @@ Some AIML that uses isNight to say '
     <template>
         <condition name="isNight">
          <li value="Yes">The stars look pretty tonight</li>
-         <li>nice day today</li>
+         <li>Nice day today</li>
     </template>
 </category>
 }}}
