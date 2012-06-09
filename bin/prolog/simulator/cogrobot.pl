@@ -821,12 +821,12 @@ wbotkey_same(BotID,BotID,Key,MyKey):-global_samekey(Key,MyKey),!.
 :- module_transparent hook_botvar_get/3,hook_botvar_set/3,hook_botvar_key/2.
 :- dynamic hook_botvar_get/3,hook_botvar_set/3,hook_botvar_key/2.
 
-
+namespace_to_bot("",BotID):-current_bot(BotID),!.
 namespace_to_bot(NameSpace,BotID):-botname(BotName),global_samekey(NameSpace,BotName),current_bot(BotID).
 
 ahook_botvar_get(NameSpace,Key,Value):-namespace_to_bot(NameSpace,Bot),hook_botvar_get(Bot,Key,Value).
 ahook_botvar_set(NameSpace,Key,Value):-namespace_to_bot(NameSpace,Bot),hook_botvar_set(Bot,Key,Value).
-ahook_botvar_key(NameSpace,Key):-hook_botvar_key(_,Key).
+ahook_botvar_key(NameSpace,Key):-namespace_to_bot(NameSpace,Bot),hook_botvar_key(Bot,Key).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % register our examples
