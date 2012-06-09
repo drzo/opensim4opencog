@@ -759,7 +759,6 @@ wbotvar_set(BotID,Name,ValueO):-wbotname(BotID,NS),wbotvar_set(BotID,NS,Name,Val
 wbotvar_set(BotID,NS,Name,ValueO):- cli_call('MushDLR223.ScriptEngines.ScriptManager','AddSetting',[BotID,NS,Name,ValueO],_).
 
 wbotvar_get(BotID,Name,ValueO):-wbotname(BotID,NS),wbotvar_get(BotID,NS,Name,ValueO).
-
 wbotvar_get(BotID,NS,Name,ValueO):-ground(NS+Name),!,
    cli_call('MushDLR223.ScriptEngines.ScriptManager','GetGroup',[BotID,NS,Name],Value),once(value_deref(Value,ValueO)).
 wbotvar_get(BotID,NS,Name,ValueO):- wbotvar_keys(BotID,NS,Name,CP),
