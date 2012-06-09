@@ -44,7 +44,7 @@ bv:hook_botvar_key(_,bot,'isNight').
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 bv:hook_botvar_get(BotID,bot,'isSittingGround',Value):- 
      wbotget(BotID,['Self','Movement','SitOnGround'],Result),!,
-    (cli_is_true(Result)-> Value="Yes" ; Value="No").
+        (cli_is_true(Result)-> Value="Yes" ; Value="No").
 
 bv:hook_botvar_set(BotID,bot,'isSittingGround',Value):- 
    Value="Yes" -> wbotcall(BotID,['Self','SitOnGround'],_) ; wbotcall(BotID,['Self','Stand'],_).
