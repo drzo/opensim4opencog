@@ -1,5 +1,6 @@
 
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Cogbot;
@@ -46,50 +47,57 @@ namespace Cogbot.Actions.System
                     }
                     return SuccessOrFailure();
                 }
-                if (args.ContainsFlag("vars"))
+                if (args.ContainsFlag("vars") || args.ContainsFlag("list"))
                 {
-                    foreach (var c in MushDLR223.ScriptEngines.ScriptManager.GetNameSpaces(TheBotClient))
+                    foreach (var c in ScriptManager.GetNameSpaces(TheBotClient))
                     {
                         foreach (var s in ScriptManager.GetProviders(TheBotClient, c))
                         {
                             foreach (var s1 in s.SettingNames(TheBotClient, 1))
                             {
-                                var col = ScriptManager.GetGroup(TheBotClient, c, s1);
-                                if (col == null)
-                                {
-                                    Success(c + "." + s1 + "= NULL");
-                                    continue;
-                                }
-                                if (col.Count == 0)
-                                {
-                                    AddSuccess(c + "." + s1 + " .Count == 0");
-                                    continue;
-                                }
-                                int f = 0;
-                                foreach (var v in col)
-                                {
-                                    f++;
-                                    AddSuccess(c + "." + s1 + " ." + f + " = " + v);
-                                    if (f >= 5)
-                                    {
-                                        AddSuccess(c + "." + s1 + " .Count == " + col.Count);
-                                        break;
-                                    }
-                                }
+                                GetValue(c, s1, AddSuccess);
                             }
                         }
                     }
                     return SuccessOrFailure();
                 }
-                var PS = WorldSystem.ResolveCollection(args[0], out used, null);
-                if (PS == null) return Success("argsUsed " + used + " botvar was NULL");
-                int found = 0;
-                foreach (var o in PS)
+
+                string nss = TheBotClient.GetName();
+                string varname = args[0];
+                if (args.tokens.Length > 1)
                 {
-                    found++;
-                    WriteLine("" + o);
+                    string[] sa = Parser.SplitOff(args.tokens, 1);
+                    string value = string.Join(" ", sa);
+                    ScriptManager.AddSetting(TheBotClient, nss, varname, value);
                 }
-                return Success("argsUsed " + used + " found set with " + found);
+                GetValue(nss, varname, AddSuccess);
+                return SuccessOrFailure();
+            }
+        }
+
+        private void GetValue(string namespaec, string name, Action<string> AddSuccess)
+        {
+            var col = ScriptManager.GetGroup(TheBotClient, namespaec, name);
+            if (col == null)
+            {
+                AddSuccess(namespaec + "." + name + "= NULL");
+                return;
+            }
+            if (col.Count == 0)
+            {
+                AddSuccess(namespaec + "." + name + " .Count == 0");
+                return;
+            }
+            int f = 0;
+            foreach (var v in col)
+            {
+                f++;
+                AddSuccess(namespaec + "." + name + " ." + f + " = " + v);
+                if (f >= 5)
+                {
+                    AddSuccess(namespaec + "." + name + " .Count == " + col.Count);
+                    break;
+                }
             }
         }
     }
