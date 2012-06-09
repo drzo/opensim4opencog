@@ -14,6 +14,44 @@
 
 :- discontiguous be_tribal/3.
 
+%%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%            Botvar support
+%       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+:- dynamic tribal_dyn:current_action/2.
+
+%
+% Set the botvar for the current bot action
+%
+set_current_action(Name, Action) :-
+	with_output_to(string(S), writeq(Action)),
+	retractall(tribal_dyn:current_action(Name, _)),
+	assert(tribal_dyn:current_action(Name, S)).
+
+% as for format/2
+set_current_action(Name, ActionFormat, Args) :-
+	format(string(S), ActionFormat, Args),!,
+	retractall(tribal_dyn:current_action(Name, _)),
+	assert(tribal_dyn:current_action(Name, S)).
+set_current_action(_, ActionFormat, Args) :-
+	format('Illegal: set_current_action/3 requires 2nd and 3rd arg as for format/2, you supplied ~w  ~w~n', [ActionFormat, Args]).
+
+bv:hook_botvar_get(BotID, bot, current_action, X) :-
+	get_current_action(BotID, X).
+
+get_current_action(BotID, X) :-
+	botID(Name, BotID),
+	tribal_dyn:current_action(Name, X),!.
+get_current_action(_, "nothing").
+
+bv:hook_botvar_set(_, bot, current_action, _) :-
+	format('the botvar current_action is readonly~n', []).
+
+bv:hook_botvar_key(_, bot, current_action).
+
+bv:hook_botvar_desc(_, bot, current_action,
+     "ReadOnly - The current action performed by the bot").
+
 be_tribal(Name) :-
 	botID(Name, ID),
 	register_listeners,
@@ -42,6 +80,7 @@ be_tribal(_,
 	\+ memberchk(on_sim, Status),
 	% get the current simulator name
 %	botget([self,network,currentsim,name],Sim),
+        set_current_action(Name, "teleporting to start location"),
 	tribal_land(Loc),
 	botcmd(teleport(Loc)),
 	be_tribal(home, Name, [on_sim|Status]).
@@ -55,6 +94,7 @@ be_tribal(_,
 	\+ memberchk(requested_inventory, Status),
 	memberchk(on_sim, Status),
 	\+ has_inventory,
+	set_current_action(Name, "getting starting inventory"),
 	botcmd(touch('inventory_giver')),
 	sleep(3),
 	be_tribal(home, Name, [requested_inventory|Status]).
@@ -66,6 +106,7 @@ be_tribal(_,
 	  Name,
 	  Status) :-
 	memberchk(requested_inventory, Status),
+	set_current_action(Name, "waiting for inventory to arrive"),
 	\+ has_inventory,
 	sleep(5),
 	be_tribal(home, Name, Status).
@@ -80,6 +121,7 @@ be_tribal(_,
 	memberchk(on_sim, Status),
 	has_inventory,
 	%%remove_all,
+	set_current_action(Name, "getting dressed in starter outfit"),
 	start_wearing(Name, Items),
 	wear_list(Items),
 	be_tribal(home, Name, [inited|Status]).
@@ -111,6 +153,8 @@ be_tribal(
 	Dist >= 3.0,
 	botcmd(moveto(WP, 1), MoveStat),
 	botcmd(waitpos(10, WP, 1), WaitStat),
+	set_current_action(Name,
+		   'too far from nearest waypoint, moving to~w',[WP]),
 	say_format('too far from nearest waypoint, moving to~w',[WP]),
 	say_ref('Move', MoveStat),
 	say_ref('Wait', WaitStat),
@@ -125,6 +169,7 @@ be_tribal(
     Status) :-
 	test_wander_mode,
 	\+ memberchk(cur_plan(_), Status),
+	set_current_action(Name, "Creating a new test wander path"),
 	nearest_waypoint(Start, Dist),
 	Dist < 3.0,
 	waypoints(AllWP),
@@ -148,8 +193,11 @@ be_tribal(
     Name,
     Status) :-
 	memberchk(cur_plan([goto(H)|T]), Status),
+	set_current_action(Name, 'Walking to ~w', [H]),
 	botcmd(moveto(H, 1), MoveStat),
+	set_current_action(Name, 'Waiting to arrive at ~w', [H]),
 	botcmd(waitpos(20, H , 1), WaitStat),
+	set_current_action(Name, 'Processing after arriving at waypoint ~w', [H]),
 	say_format('cur_plan went to ~w Remaining: ~w', [H,T]),
 	say_ref('Move', MoveStat),
 	say_ref('Wait', WaitStat),
