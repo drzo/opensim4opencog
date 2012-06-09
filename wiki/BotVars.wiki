@@ -7,13 +7,17 @@ Cogbot is composed of a number of interacting plugins (yay, we love plugins!). T
 
 == Producing botvars from prolog ==
 
-
+For your Prolog code to provide a botvar you must define 3
+dynamic hook predicates.
 
 Three hook predicates start in the module *bv*:
 
+{{{
 bv:hook_botvar_get/4
 bv:hook_botvar_set/4
 bv:hook_botvar_keys/3
+bv:hook_botvar_desc/4
+}}}
 
 Arg 1 = The BotID ref (like current_bot/1)
 
@@ -21,24 +25,41 @@ Arg 2 = The Namespace submitted ( there is a special namespace called "bot" )
 
 Arg 3 = The Key Name = "is Good" matches "is_good"
 
-Arg 4 = The Value for Set or Get (bv:hook_botvar_keys does not use this)
-  
+Arg 4 = The Value for Set or Get (bv:hook_botvar_keys does not use this). For hook_botvar_desc this unifies with a string description of the botvar
 
 These 3 predicates may be registered from any module merely by including them (in the prolog source files) like below as long as they use the module prefix "bv:"
 
 _These are working examples_
 {{{
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% BOTVAR EXAMPLE: set up a isNight (readonly based example)
+%%% BOTVAR EXAMPLE: provide isNight, a readonly botvar that
+%%% is "Yes" if the bot thinks it's night
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 :-dynamic isNight/0.
 
 bv:hook_botvar_get(_,bot,'isNight',Value):- isNight -> Value="Yes" ; Value="No".
 
-bv:hook_botvar_set(_,bot,'isNight',Value):- 'format'(user_error,'Someone request isNight=~w~n',Value).
+bv:hook_botvar_set(_,bot,'isNight',Value):- 'format'(user_error,'Cannot set isNight=~w~n',Value).
 
 bv:hook_botvar_key(_,bot,'isNight').
 
+%... other Prolog code asserts and retracts isNight...
+}}}
+
+Some AIML that uses isNight to say '
+
+{{{
+<category>
+    <pattern>IDLE COMMENT</pattern>
+    <template>
+        <condition name="isNight">
+         <li value="Yes">The stars look pretty tonight</li>
+         <li>nice day today</li>
+    </template>
+</category>
+}}}
+
+{{{
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% BOTVAR EXAMPLE: Set up sitting on ground based botvar (Side effect based example)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -80,6 +101,9 @@ Z = "Yes".
 
 == using botvars from botcmd ==
 
+{{{
+/say $isNight
+}}}
 
 === Command output of //botvars --vars ===
 {{{
