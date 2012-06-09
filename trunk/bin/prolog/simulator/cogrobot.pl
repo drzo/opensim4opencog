@@ -764,11 +764,11 @@ wbotvar_get(BotID,NS,Name,ValueO):-ground(NS+Name),!,
 wbotvar_get(BotID,NS,Name,ValueO):- wbotvar_keys(BotID,NS,Name,CP),
    cli_call(CP,'GetGroup'(string),[BotID,Name],Value),once(value_deref(Value,ValueO)).
 
-global_tokey(Name,Key):-cli_call('MushDLR223.ScriptEngines.ScriptManager','ToKey',[Name],Key).
+global_tokey(Name,Key):-cli_call('MushDLR223.ScriptEngines.ScriptManager','ToKey',[Name],Key),!.
 
 global_samekey(Name,Name):-!.
 global_samekey(Name1,Name2):-member("",[Name1,Name2]),!.
-global_samekey(Name1,Name2):-ground(Name1+Name2),global_tokey(Name1,Key1),global_tokey(Name2,Key2),!,cli_unify(Key1,Key2).
+global_samekey(Name1,Name2):-ground(Name1+Name2),global_tokey(Name1,Key1),global_tokey(Name2,Key2),!,cli_unify(Key1,Key2),!.
 
 wbotvar_namespaces(BotID,NSO):-cli_call('MushDLR223.ScriptEngines.ScriptManager','GetNameSpaces',[BotID],NSs),cli_col(NSs,NS),global_samekey(NS,NSO).
 
@@ -816,7 +816,7 @@ wbot_addvars(BotID,NameSpace,GET,SET,KEYS):-
 
 % register a small helper for ourselves
 wbotkey_same(_BotID,"",Key,MyKey):-global_samekey(Key,MyKey),!.
-wbotkey_same(BotID,NameSpace,Key,MyKey):-wbotname(BotID,BotName),global_samekey(NameSpace,BotName),global_samekey(Key,MyKey),!.
+wbotkey_same(BotID,NameSpace,Key,MyKey):-wbotname(BotID,BotName),global_samekey(NameSpace,BotName),!,global_samekey(Key,MyKey),!.
 wbotkey_same(BotID,BotID,Key,MyKey):-global_samekey(Key,MyKey),!.
 
 % Need freedom to declare in multiple codeblocks

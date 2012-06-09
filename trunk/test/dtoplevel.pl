@@ -58,8 +58,8 @@ bv:hook_botvar_key(_BotID,NS,Key):-hook_botvar2(NS,Key,_).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% BOTVAR EXAMPLE: Set up sitting on ground based botvar (Side effect based example)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-bv:hook_botvar_get(BotID,NS,Key,Value):-botkey_same(NS,Key,'isSittingGround'),!,
-   wbotget(BotID,['Self','Movement','SitOnGround'],Result), (cli_is_true(Result)-> Value="Yes" ; Value="No").
+bv:hook_botvar_get(BotID,NS,Key,ValueO):-botkey_same(NS,Key,'isSittingGround'),!,
+   wbotget(BotID,['Self','Movement','SitOnGround'],Result),!, (cli_is_true(Result)-> Value="Yes" ; Value="No"),!,cli_unify(Value,ValueO).
 
 bv:hook_botvar_set(BotID,NS,Key,Value):-botkey_same(NS,Key,'isSittingGround'),!,
    (Value="Yes" -> wbotcall(BotID,['Self','SitOnGround'],_) ; botcall(['Self','StandUp'],_)).
