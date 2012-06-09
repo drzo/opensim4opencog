@@ -112,6 +112,16 @@ namespace Cogbot
             }
             return BotPermissions.Stranger;
         }
+        
+        private BotPermissions GetSecurityLevel(InstantMessage im)
+        {
+            BotPermissions perms = GetSecurityLevel(im.FromAgentID, im.FromAgentName);
+            if (im.Dialog==InstantMessageDialog.InventoryOffered)
+            {
+                
+            }
+            return perms;
+        }
 
         public void SetSecurityLevel(UUID uuid, string name, BotPermissions perms)
         {
@@ -444,10 +454,10 @@ namespace Cogbot
                 e.Accept = true;
                 return; // accept everything}
             }
-            BotPermissions them = GetSecurityLevel(e.Offer.FromAgentID, e.Offer.FromAgentName);
+            BotPermissions them = GetSecurityLevel(e.Offer);
             if (HasPermission(them, BotPermissions.AcceptInventory))
             {
-                e.Accept = false;
+                e.Accept = true;
                 return;
             }
             if (_masterKey != UUID.Zero)
