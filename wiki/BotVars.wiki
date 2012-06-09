@@ -202,35 +202,3 @@ lasteventprim - the 'current object' - the current object is
 == botvars in the default AIML files ==
 
 [http://code.google.com/p/opensim4opencog/source/browse/data-chatbot/alicebot/config/bot.xml here they are]
-
-
-= Registering Botvars with prolog =
-
-decleare the botvar predicate
-{{{
-:-dynamic(oto_impl/2).
-}}}
-create a arity 1 version to gather the keys
-{{{
-oto_impl(N):-oto_impl(N,_).
-}}}
-declare some values in arity 2 predicate
-{{{
-oto_impl("favfood",corn).
-}}}
-Register the arity 2 version
-{{{
-:-bot_add_varpred(oto_impl).
-}}}
-
-This will export "favfood" var to AIML and other modules
-
-change the value
-{{{
-:-bot_setvar("favfood",bread).
-}}}
-
-retrieve the value 
-{{{
-:-bot_getvar("favfood",What).
-}}}
