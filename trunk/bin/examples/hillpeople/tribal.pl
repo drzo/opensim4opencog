@@ -1,5 +1,6 @@
 :- module(tribal, [
-	 be_tribal/1
+	 be_tribal/1,
+		   get_current_action/2
 		  ]).
 
 :-set_prolog_flag(double_quotes,string).
@@ -37,7 +38,7 @@ set_current_action(_, ActionFormat, Args) :-
 	format('Illegal: set_current_action/3 requires 2nd and 3rd arg as for format/2, you supplied ~w  ~w~n', [ActionFormat, Args]).
 
 bv:hook_botvar_get(BotID, bot, current_action, X) :-
-	get_current_action(BotID, X).
+	@(get_current_action(BotID, X), tribal).
 
 get_current_action(BotID, X) :-
 	botID(Name, BotID),
