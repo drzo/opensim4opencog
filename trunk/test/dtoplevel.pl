@@ -43,32 +43,9 @@ l2:-logon_bot('Nephrael','Rae','abc123', "https://login.agni.lindenlab.com/cgi-b
 :-app_init(botdo(showgui)).
 :-app_init(botdo('setmaster Douglas Miles')).
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% BOTVAR EXAMPLE: Dynamic predicates 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-:-dynamic(hook_botvar2/2).
-hook_botvar2(_,"a",1).
-hook_botvar2(_,"b",2).
-
-bv:hook_botvar_get(_BotID,NS,Key,Value):-hook_botvar2(NS,Key,Value).
-bv:hook_botvar_set(_BotID,NS,Key,Value):-retractall(hook_botvar2(NS,Key,_)),assert(hook_botvar2(NS,Key,Value)).
-bv:hook_botvar_key(_BotID,NS,Key):-hook_botvar2(NS,Key,_).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% BOTVAR EXAMPLE: Set up sitting on ground based botvar (Side effect based example)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-bv:hook_botvar_get(BotID,bot,'isSittingGround',Value):- wbotget(BotID,['Self','Movement','SitOnGround'],Result),!,
-    (cli_is_true(Result)-> Value="Yes" ; Value="No").
-
-bv:hook_botvar_set(BotID,bot,'isSittingGround',Value):- Value="Yes" -> wbotcall(BotID,['Self','SitOnGround'],_) ; wbotcall(BotID,['Self','Stand'],_).
-
-bv:hook_botvar_key(_,bot,'isSittingGround').
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% BOTVAR EXAMPLE: set up a isNight (readonly based example)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 :-dynamic isNight/0.
 
 bv:hook_botvar_get(_,bot,'isNight',Value):- isNight -> Value="Yes" ; Value="No".
@@ -76,6 +53,30 @@ bv:hook_botvar_get(_,bot,'isNight',Value):- isNight -> Value="Yes" ; Value="No".
 bv:hook_botvar_set(_,bot,'isNight',Value):- 'format'(user_error,'Someone request isNight=~w~n',Value).
 
 bv:hook_botvar_key(_,bot,'isNight').
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% BOTVAR EXAMPLE: Set up sitting on ground based botvar (Side effect based example)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+bv:hook_botvar_get(BotID,bot,'isSittingGround',Value):- 
+     wbotget(BotID,['Self','Movement','SitOnGround'],Result),!,
+        (cli_is_true(Result)-> Value="Yes" ; Value="No").
+
+bv:hook_botvar_set(BotID,bot,'isSittingGround',Value):- 
+   Value="Yes" -> wbotcall(BotID,['Self','SitOnGround'],_) ; wbotcall(BotID,['Self','Stand'],_).
+
+bv:hook_botvar_key(_,bot,'isSittingGround').
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% BOTVAR EXAMPLE: Dynamic predicates 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+:-dynamic(dyn_store_botvar/3).
+dyn_store_botvar(_,"a",1).
+dyn_store_botvar(_,"b",2).
+
+bv:hook_botvar_get(_BotID,NS,Key,Value):-dyn_store_botvar(NS,Key,Value).
+bv:hook_botvar_set(_BotID,NS,Key,Value):-
+    retractall(dyn_store_botvar(NS,Key,_)),assert(dyn_store_botvar(NS,Key,Value)).
+bv:hook_botvar_key(_BotID,NS,Key):-dyn_store_botvar(NS,Key,_).
 
 
 %%:-ebt.
