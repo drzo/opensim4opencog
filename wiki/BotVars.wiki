@@ -24,7 +24,7 @@ Arg 3 = The Key Name = "is Good" matches "is_good"
 Arg 4 = The Value for Set or Get (bv:hook_botvar_keys does not use this)
   
 
-These 3 predicates may be registered from any module merely by including them (in the prolog source files) like below as long as they use the module prefix bv:  (hook_botvar2/3 is in the current context module)
+These 3 predicates may be registered from any module merely by including them (in the prolog source files) like below as long as they use the module prefix "bv:"
 
 _These are working examples_
 {{{
@@ -52,7 +52,7 @@ bv:hook_botvar_set(BotID,bot,'isSittingGround',Value):-
 bv:hook_botvar_key(_,bot,'isSittingGround').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% BOTVAR EXAMPLE: Dynamic predicates 
+%%% BOTVAR EXAMPLE: Dynamic predicates (in current context module)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 :-dynamic(dyn_store_botvar/3).
 dyn_store_botvar(_,"a",1).
