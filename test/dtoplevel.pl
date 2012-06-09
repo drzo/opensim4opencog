@@ -72,11 +72,11 @@ bv:hook_botvar_key(_,_,'isSittingGround').
 
 :-dynamic isNight/0.
 
-bv:hook_botvar_get(NS,Key,Value):-botkey_same(NS,Key,'isNight'),!, ( isNight -> Value="Yes" ; Value="No").
+bv:hook_botvar_get(_,NS,Key,Value):-botkey_same(NS,Key,'isNight'),!, ( isNight -> Value="Yes" ; Value="No").
 
-bv:hook_botvar_set(NS,Key,Value):-botkey_same(NS,Key,'isNight'),!, 'format'(user_error,'Someone request isNight=~w~n',Value).
+bv:hook_botvar_set(_,NS,Key,Value):-botkey_same(NS,Key,'isNight'),!, 'format'(user_error,'Someone request isNight=~w~n',Value).
 
-bv:hook_botvar_key(_,'isNight').
+bv:hook_botvar_key(_,_,'isNight').
 
 
 %%:-ebt.
