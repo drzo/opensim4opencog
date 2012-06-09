@@ -140,6 +140,45 @@ Z = "Yes".
 
 }}}
 
+==Important Note==
+
+All get hooks are called in _any_ _unexpected_ order.  This means the use of cuts to stop prolog from exploring more sources is not possible.
+
+Here is a example of this problem:
+
+{{{
+bv:hook_botvar_get(BotID, bot, current_action, X) :-
+ botID(Name, BotID),
+ tribal_dyn:current_action(Name, X),!.
+bv:hook_botvar_get(_, bot, current_action, "nothing").
+}}}
+
+The code could be rewritten as thus:
+
+{{{
+bv:hook_botvar_get(BotID, bot, current_action, X) :-
+ botID(Name, BotID), 
+  once(tribal_dyn:current_action(Name, X) ; X = "nothing")
+}}}
+
+or as:
+
+{{{
+bv:hook_botvar_get(BotID, bot, current_action, X) :- 
+  hook_current_action(BotID,X).
+
+
+hook_current_action(BotID,X):- botID(Name, BotID),
+  tribal_dyn:current_action(Name, X),!.
+
+hook_current_action(_BotID,"nothing").
+
+}}}
+
+
+
+
+
 == using botvars from botcmd ==
 
 {{{
