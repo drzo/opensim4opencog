@@ -11,7 +11,9 @@ These are working examples
 
 (All three hook predicates start in the module *bv*)
 
-They may be registered from any module merly by including htem in the source files like below
+They may be registered from any module merely by including them in the source files like below as long as they use the module prefix bv:  (hook_botvar2/3 is in the current context module)
+
+NS (or NameSpace) is called with the BotID reference of the caller bot.
 
 {{{
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
