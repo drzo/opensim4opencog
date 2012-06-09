@@ -771,6 +771,7 @@ global_tokey(Name,Key):-var(Name),trace,Key=Name.
 global_tokey(Name,Key):-cli_call('MushDLR223.ScriptEngines.ScriptManager','ToKey',[Name],Key),!.
 
 wbot_samekey(_BotID,Name1,Name2):-ground(Name1),Name1=Name2,!.
+wbot_samekey(_BotID,Name1,Name2):-var(Name1),ground(Name2),Name1=Name2,!.
 wbot_samekey(BotID,Name1,Name2):-member(Wild,["",bot]),member(Wild,[Name1,Name2]),wbotname(BotID,Name),ignore(wbot_safe_namespace(BotID,Name2,Name)),!.
 wbot_samekey(_BotID,Name1,Name2):-ground(Name1+Name2),global_tokey(Name1,Key),global_tokey(Name2,Key).
 
