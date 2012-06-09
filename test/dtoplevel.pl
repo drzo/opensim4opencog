@@ -51,20 +51,20 @@ l2:-logon_bot('Nephrael','Rae','abc123', "https://login.agni.lindenlab.com/cgi-b
 hook_botvar2(_,"a",1).
 hook_botvar2(_,"b",2).
 
-cogrobot:hook_botvar_get(NS,Key,Value):-hook_botvar2(NS,Key,Value).
-cogrobot:hook_botvar_set(NS,Key,Value):-retractall(hook_botvar2(NS,Key,_)),assert(hook_botvar2(NS,Key,Value)).
-cogrobot:hook_botvar_key(NS,Key):-hook_botvar2(NS,Key,_).
+bv:hook_botvar_get(_BotID,NS,Key,Value):-hook_botvar2(NS,Key,Value).
+bv:hook_botvar_set(_BotID,NS,Key,Value):-retractall(hook_botvar2(NS,Key,_)),assert(hook_botvar2(NS,Key,Value)).
+bv:hook_botvar_key(_BotID,NS,Key):-hook_botvar2(NS,Key,_).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% BOTVAR EXAMPLE: Set up sitting on ground based botvar (Side effect based example)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-cogrobot:hook_botvar_get(NS,Key,Value):-botkey_same(NS,Key,'isSittingGround'),!,
-   botget(['Self','Movement','SitOnGround'],Result), (cli_is_true(Result)-> Value="Yes" ; Value="No").
+bv:hook_botvar_get(BotID,NS,Key,Value):-botkey_same(NS,Key,'isSittingGround'),!,
+   wbotget(BotID,['Self','Movement','SitOnGround'],Result), (cli_is_true(Result)-> Value="Yes" ; Value="No").
 
-cogrobot:hook_botvar_set(NS,Key,Value):-botkey_same(NS,Key,'isSittingGround'),!,
-   (Value="Yes" -> botcall(['Self','SitOnGround'],_) ; botcall(['Self','StandUp'],_)).
+bv:hook_botvar_set(BotID,NS,Key,Value):-botkey_same(NS,Key,'isSittingGround'),!,
+   (Value="Yes" -> wbotcall(BotID,['Self','SitOnGround'],_) ; botcall(['Self','StandUp'],_)).
 
-cogrobot:hook_botvar_key(_,'isSittingGround').
+bv:hook_botvar_key(_,_,'isSittingGround').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% BOTVAR EXAMPLE: set up a isNight (readonly based example)
@@ -72,11 +72,11 @@ cogrobot:hook_botvar_key(_,'isSittingGround').
 
 :-dynamic isNight/0.
 
-cogrobot:hook_botvar_get(NS,Key,Value):-botkey_same(NS,Key,'isNight'),!, ( isNight -> Value="Yes" ; Value="No").
+bv:hook_botvar_get(NS,Key,Value):-botkey_same(NS,Key,'isNight'),!, ( isNight -> Value="Yes" ; Value="No").
 
-cogrobot:hook_botvar_set(NS,Key,Value):-botkey_same(NS,Key,'isNight'),!, 'format'(user_error,'Someone request isNight=~w~n',Value).
+bv:hook_botvar_set(NS,Key,Value):-botkey_same(NS,Key,'isNight'),!, 'format'(user_error,'Someone request isNight=~w~n',Value).
 
-cogrobot:hook_botvar_key(_,'isNight').
+bv:hook_botvar_key(_,'isNight').
 
 
 %%:-ebt.

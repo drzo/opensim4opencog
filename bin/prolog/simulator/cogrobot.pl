@@ -182,7 +182,12 @@ logon_bot(First, Last, Password, Loginuri, Location, BotID):-
 create_bot(First, Last, Password, Loginuri, Location, BotID):-        
 	client_manager_ref(CM),
 	cli_call(CM,'CreateBotClient'(First, Last, Password, Loginuri, Location), BotID),
-        asserta(bot_client_db(First, Last, Password, Loginuri, Location, BotID)).
+        asserta(bot_client_db(First, Last, Password, Loginuri, Location, BotID)),
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      % register our examples
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      wbot_addvars(BotID,'@'(null), ahook_botvar_get, ahook_botvar_set, ahook_botvar_key).
+
 
 
 %------------------------------------------------------------------------------
@@ -749,13 +754,16 @@ set_modeless(Var,List):-forall(member(Member=Value,List),cli_set(Var,Member,Valu
 %------------------------------------------------------------------------------
 % botvar interface
 %------------------------------------------------------------------------------
-wbot_getvar(BotID,Name,ValueO):-wbotname(BotID,NS),global_getvar(NS,Name,ValueO).
-wbot_setvar(BotID,Name,ValueO):-wbotname(BotID,NS),global_setvar(NS,Name,ValueO).
 
-global_getvar(NS,Name,ValueO):-ground(NS+Name),!,
-   cli_call('MushDLR223.ScriptEngines.ScriptManager','GetGroup',[NS,Name],Value),once(value_deref(Value,ValueO)).
-global_getvar(NS,Name,ValueO):- global_varnames(NS,Name,CP),
-   cli_call(CP,'GetGroup'(string),[Name],Value),once(value_deref(Value,ValueO)).
+wbotvar_set(BotID,Name,ValueO):-wbotname(BotID,NS),wbotvar_set(BotID,NS,Name,ValueO).
+wbotvar_set(BotID,NS,Name,ValueO):- cli_call('MushDLR223.ScriptEngines.ScriptManager','AddSetting',[BotID,NS,Name,ValueO],_).
+
+wbotvar_get(BotID,Name,ValueO):-wbotname(BotID,NS),wbotvar_get(BotID,NS,Name,ValueO).
+
+wbotvar_get(BotID,NS,Name,ValueO):-ground(NS+Name),!,
+   cli_call('MushDLR223.ScriptEngines.ScriptManager','GetGroup',[BotID,NS,Name],Value),once(value_deref(Value,ValueO)).
+wbotvar_get(BotID,NS,Name,ValueO):- wbotvar_keys(BotID,NS,Name,CP),
+   cli_call(CP,'GetGroup'(string),[BotID,Name],Value),once(value_deref(Value,ValueO)).
 
 global_tokey(Name,Key):-cli_call('MushDLR223.ScriptEngines.ScriptManager','ToKey',[Name],Key).
 
@@ -763,16 +771,14 @@ global_samekey(Name,Name):-!.
 global_samekey(Name1,Name2):-member("",[Name1,Name2]),!.
 global_samekey(Name1,Name2):-ground(Name1+Name2),global_tokey(Name1,Key1),global_tokey(Name2,Key2),!,cli_unify(Key1,Key2).
 
-global_varnamespaces(NSO):-cli_call('MushDLR223.ScriptEngines.ScriptManager','GetNameSpaces',[],NSs),cli_col(NSs,NS),global_samekey(NS,NSO).
+wbotvar_namespaces(BotID,NSO):-cli_call('MushDLR223.ScriptEngines.ScriptManager','GetNameSpaces',[BotID],NSs),cli_col(NSs,NS),global_samekey(NS,NSO).
 
-global_varnames(NSO,NameO,CP):-
-   global_varnamespaces(NSO),cli_call('MushDLR223.ScriptEngines.ScriptManager','GetProviders',[NSO],CPs),cli_col(CPs,CP),
-   cli_call(CP,'SettingNames'(int),[1],Names),cli_col(Names,Name),global_samekey(Name,NameO).
+wbotvar_keys(BotID,NSO,NameO,CP):-
+   wbotvar_namespaces(BotID,NSO),cli_call('MushDLR223.ScriptEngines.ScriptManager','GetProviders',[BotID,NSO],CPs),cli_col(CPs,CP),
+   cli_call(CP,'SettingNames'('MushDLR223.ScriptEngines.ICollectionRequester',int),[BotID,1],Names),cli_col(Names,Name),global_samekey(Name,NameO).
 
 
-global_setvar(NS,Name,ValueO):- cli_call('MushDLR223.ScriptEngines.ScriptManager','AddSetting',[NS,Name,ValueO],_).
-
-gp_to_vars(_BotID,GP,Var):- cli_call('MushDLR223.ScriptEngines.SingleNameValue','MakeKVP'('MushDLR223.ScriptEngines.ICollectionProvider',int),[GP,2],Col),cli_col(Col,Var).
+wbot_gp_to_vars(_BotID,GP,Var):- cli_call('MushDLR223.ScriptEngines.SingleNameValue','MakeKVP'('MushDLR223.ScriptEngines.ICollectionProvider',int),[GP,2],Col),cli_col(Col,Var).
 
 value_deref(Value,ValueO):-cli_col(Value,ValueO).
 
@@ -782,7 +788,7 @@ value_deref(Value,ValueO):-cli_col(Value,ValueO).
 %------------------------------------------------------------------------------
 wbot_addvars_dynpred(BotID,PredImpl):-wbotname(BotID,NameSpace),wbot_addvars_dynpred(BotID,NameSpace,PredImpl).
 
-wbot_addvars_dynpred(_BotID,NameSpace,PredImpl):-module_functor(PredImpl,_Module,Pred,_Arity),
+wbot_addvars_dynpred(BotID,NameSpace,PredImpl):-module_functor(PredImpl,_Module,Pred,_Arity),
    atom_concat(Pred,'_get',GET),atom_concat(Pred,'_set',SET),atom_concat(Pred,'_remove',REM),atom_concat(Pred,'_clear',CLR),atom_concat(Pred,'_keys',KEYS),
    PANON =..[Pred,NameSpace,_,_],PGET =..[GET,NameSpace,Key,Val], PSET =..[SET,NameSpace,Key,Val],PREM =..[REM,NameSpace,Val],
    PDYN =..[Pred,NameSpace,Key,Val],
@@ -793,16 +799,16 @@ wbot_addvars_dynpred(_BotID,NameSpace,PredImpl):-module_functor(PredImpl,_Module
    asserta(( PREM :- retract(PDYN) )),
    asserta(( CLR :- retractall(PANON) )),
    asserta(( PKEYSHEAD :- retractall(PKEYSBODY) )),  
-   global_addvars(NameSpace,GET,SET,KEYS).
+   wbot_addvars(BotID,NameSpace,GET,SET,KEYS).
 
    /*cli_new_prolog_dictionary(Module:Pred/Arity,string,object,PBD),
    cli_call('MushDLR223.ScriptEngines.DictionaryWrapper','CreateDictionaryWrapper',[NameSpace, PBD],Provider),
    */
 
-global_addvars(NameSpace,GET,SET,KEYS):-
+wbot_addvars(BotID,NameSpace,GET,SET,KEYS):-
    strip_module(GET,Module,_),
    cli_new('PrologScriptEngine.BotVarProvider',0,[Module,NameSpace,GET,SET,KEYS],Provider),
-   cli_call('MushDLR223.ScriptEngines.ScriptManager','AddGroupProvider',[Provider],_).
+   cli_call('MushDLR223.ScriptEngines.ScriptManager','AddGroupProvider',[BotID,Provider],_).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -815,23 +821,17 @@ wbotkey_same(BotID,NameSpace,Key,MyKey):-wbotname(BotID,BotName),global_samekey(
 wbotkey_same(BotID,BotID,Key,MyKey):-global_samekey(Key,MyKey),!.
 
 % Need freedom to declare in multiple codeblocks
+:- discontiguous bv:hook_botvar_get/4,bv:hook_botvar_set/4,bv:hook_botvar_key/3.
+:- module_transparent bv:hook_botvar_get/4,bv:hook_botvar_set/4,bv:hook_botvar_key/3.
+:- dynamic bv:hook_botvar_get/4,bv:hook_botvar_set/4,bv:hook_botvar_key/3.
 
-% Need freedom to declare in multiple codeblocks
-:- discontiguous hook_botvar_get/3,hook_botvar_set/3,hook_botvar_key/2.
-:- module_transparent hook_botvar_get/3,hook_botvar_set/3,hook_botvar_key/2.
-:- dynamic hook_botvar_get/3,hook_botvar_set/3,hook_botvar_key/2.
+wbot_to_namespace(BotID,"",BotName):-wbotname(BotID,Name),global_tokey(Name,BotName),!.
+wbot_to_namespace(_BotID,NameSpaceS,NameSpace):-global_tokey(NameSpaceS,NameSpace).
 
-namespace_to_bot("",BotID):-current_bot(BotID),!.
-namespace_to_bot(NameSpace,BotID):-botname(BotName),global_samekey(NameSpace,BotName),current_bot(BotID).
+ahook_botvar_get(BotID,NameSpace,Key,Value):-wbot_to_namespace(BotID,NameSpace,Bot),bv:hook_botvar_get(BotID,Bot,Key,Value).
+ahook_botvar_set(BotID,NameSpace,Key,Value):-wbot_to_namespace(BotID,NameSpace,Bot),bv:hook_botvar_set(BotID,Bot,Key,Value).
+ahook_botvar_key(BotID,NameSpace,Key):-wbot_to_namespace(BotID,NameSpace,Bot),bv:hook_botvar_key(BotID,Bot,Key).
 
-ahook_botvar_get(NameSpace,Key,Value):-namespace_to_bot(NameSpace,Bot),hook_botvar_get(Bot,Key,Value).
-ahook_botvar_set(NameSpace,Key,Value):-namespace_to_bot(NameSpace,Bot),hook_botvar_set(Bot,Key,Value).
-ahook_botvar_key(NameSpace,Key):-namespace_to_bot(NameSpace,Bot),hook_botvar_key(Bot,Key).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% register our examples
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-:-app_init(global_addvars('@'(null), ahook_botvar_get, ahook_botvar_set, ahook_botvar_key)).
 
 /*
 wbot_add_botvar(BotID,Var,PredImpl):-wbotget(BotID,['WorldSystem','simGroupProviders'],GPs),

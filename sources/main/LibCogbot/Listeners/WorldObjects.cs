@@ -288,7 +288,7 @@ namespace Cogbot
             : base(client)
         {
             _defaultProvider = new DefaultWorldGroupProvider(this);
-            MushDLR223.ScriptEngines.ScriptManager.AddGroupProvider(_defaultProvider);
+            MushDLR223.ScriptEngines.ScriptManager.AddGroupProvider(client, _defaultProvider);
             OnConnectedQueue = new TaskQueueHandler(new NamedPrefixThing("OnConnectedQueue", client.GetName),
                                                     TimeSpan.FromMilliseconds(20), false);
             client.WorldSystem = this;

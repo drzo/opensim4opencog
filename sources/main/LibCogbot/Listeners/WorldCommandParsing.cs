@@ -484,7 +484,7 @@ namespace Cogbot
         public ICollection ResolveCollection(string arg0Lower, out int argsUsed, ICollectionProvider skip)
         {
             arg0Lower = arg0Lower.TrimStart(TrimCollectionStart).ToLower();
-            var col = ScriptManager.GetGroup(client.GetName(), arg0Lower);
+            var col = ScriptManager.GetGroup(client, client.GetName(), arg0Lower);
             if (col != null)
             {
                 argsUsed = 1;

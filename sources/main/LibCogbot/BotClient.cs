@@ -63,7 +63,7 @@ using Thread = MushDLR223.Utilities.SafeThread;
 
 namespace Cogbot
 {
-    public partial class BotClient : SimEventSubscriber, IDisposable, ScriptExecutor
+    public partial class BotClient : SimEventSubscriber, IDisposable, ScriptExecutor, ICollectionRequester
     {
 
         public static implicit operator GridClient(BotClient m)

@@ -131,7 +131,7 @@ namespace Cogbot
             get { return world.client.GetName(); }
         }
 
-        public ICollection GetGroup(string arg0Lower)
+        public ICollection GetGroup(ICollectionRequester requester, string arg0Lower)
         {
             IKeyValuePair<string, object> func;
             if (ObjectGroups.TryGetValue(arg0Lower, out func))
@@ -142,14 +142,14 @@ namespace Cogbot
             return null;
         }
 
-        public IEnumerable<string> SettingNames(int depth)
+        public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
         {
             return GroupNames;
         }
 
-        public void SetValue(string name, object value)
+        public void SetValue(ICollectionRequester requester, string name, object value)
         {
-            if (!ScriptManager.HasSetting(this, name)) return;
+           // if (!ScriptManager.HasSetting(this, name)) return;
             //@TODO dmiles
         }
 

@@ -23,7 +23,7 @@ namespace PrologScriptEngine
     {
         #region ISettingsDictionary Members
         public bool IsTraced { get; set; }
-        public IEnumerable<string> SettingNames(int depth)
+        public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
         {
             //get 
             {
@@ -143,7 +143,7 @@ namespace PrologScriptEngine
         ///<param name="name"></param>
         ///<returns></returns>
         ///<exception cref="NotImplementedException"></exception>
-        public ICollection GetGroup(string name)
+        public ICollection GetGroup(ICollectionRequester requester, string name)
         {
 
             return null;
@@ -154,7 +154,7 @@ namespace PrologScriptEngine
 
         #region Implementation of ICollectionProviderSettable
 
-        public void SetValue(string name, object value)
+        public void SetValue(ICollectionRequester requester, string name, object value)
         {
             throw new NotImplementedException();
         }

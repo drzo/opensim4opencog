@@ -834,26 +834,42 @@ namespace MushDLR223.ScriptEngines
              return CLSMember.GetTypeArray(argarray);
         }
 
-        public static readonly List<ICollectionProvider> CollectionProviders = new List<ICollectionProvider>();       
+        public static readonly Dictionary<object, List<ICollectionProvider>> _CollectionProviders = new Dictionary<object, List<ICollectionProvider>>();
 
-        public static void AddGroupProvider(ICollectionProvider provider)
+        public static void AddGroupProvider(object requester, ICollectionProvider provider)
         {
+            var CollectionProviders = GetCollectionProviders(requester);
             lock (CollectionProviders)
             {
                 CollectionProviders.Add(provider);
             }
         }
 
-        static public ICollection GetGroup(string namespaec, string varname)
+        private static List<ICollectionProvider> GetCollectionProviders(object requester)
+        {
+            List<ICollectionProvider> providers;
+            lock (_CollectionProviders)
+            {
+                if (!_CollectionProviders.TryGetValue(requester, out providers))
+                {
+                    return _CollectionProviders[requester] = new List<ICollectionProvider>();
+                }
+                return providers;
+            }
+
+        }
+
+        static public ICollection GetGroup(ICollectionRequester requester, string namespaec, string varname)
         {
             List<object> rv = new List<object>();
             ICollection c = null;
             int fc = 0;
+            var CollectionProviders = GetCollectionProviders(requester);
             lock (CollectionProviders)
             {
-                foreach (var nv in GetProviders(namespaec))
+                foreach (var nv in GetProviders(requester, namespaec))
                 {
-                    ICollection v = nv.GetGroup(varname);
+                    ICollection v = nv.GetGroup(requester, varname);
                     if (v == null) continue;
                     fc++;
                     if (fc == 2)
@@ -882,9 +898,11 @@ namespace MushDLR223.ScriptEngines
             return rv;
         }
 
-        static public IEnumerable<ICollectionProvider> GetProviders(string namespaec)
+        static public IEnumerable<ICollectionProvider> GetProviders(ICollectionRequester requester, string namespaec)
         {
             var namespaec0 = ToKey(namespaec);
+            var CollectionProviders = GetCollectionProviders(requester);
+
             lock (CollectionProviders)
             {
                 var all = new List<ICollectionProvider>();
@@ -903,8 +921,9 @@ namespace MushDLR223.ScriptEngines
             return Parser.ToKey(namespaec);
         }
 
-        static public IEnumerable<string> GetNameSpaces()
+        static public IEnumerable<string> GetNameSpaces(object requester)
         {
+            var CollectionProviders = GetCollectionProviders(requester);
             lock (CollectionProviders)
             {
                 var all = new HashSet<string>();
@@ -915,15 +934,16 @@ namespace MushDLR223.ScriptEngines
                 return all;
             }
         }
-        static public IEnumerable<string> SettingNames(int depth)
+        static public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
         {
+            var CollectionProviders = GetCollectionProviders(requester);
             lock (CollectionProviders)
             {
                 var all = new HashSet<string>();
                 foreach (var nv in CollectionProviders)
                 {
                     string ns = ToKey(nv.NameSpace);
-                    IEnumerable<string> cvol = nv.SettingNames(depth);
+                    IEnumerable<string> cvol = nv.SettingNames(requester, depth);
                     if (cvol != null)
                     {
                         foreach (var c in cvol)
@@ -936,10 +956,10 @@ namespace MushDLR223.ScriptEngines
             }
         }
 
-        public static bool HasSetting(ICollectionProvider provider, string name)
+        public static bool HasSetting(ICollectionRequester requester, ICollectionProvider provider, string name)
         {
             name = ToKey(name);
-            foreach (var settingName in provider.SettingNames(1))
+            foreach (var settingName in provider.SettingNames(requester,1))
             {
                 if (ToKey(settingName) == name) return true;
             }
@@ -947,41 +967,41 @@ namespace MushDLR223.ScriptEngines
         }
         static public void AquireSettingsLock()
         {
-            Monitor.Enter(CollectionProviders);
+            Monitor.Enter(_CollectionProviders);
         }
         static public void ReleaseSettingsLock()
         {
-            Monitor.Exit(CollectionProviders);
+            Monitor.Exit(_CollectionProviders);
         }
-        public static bool SendSettingsChange(object sender, string namespac, string name, object valeu)
+        public static bool SendSettingsChange(ICollectionRequester requester, string namespac, string name, object valeu)
         {
-            foreach (ICollectionProvider provider in GetProviders(namespac))
+            foreach (ICollectionProvider provider in GetProviders(requester, namespac))
             {
-                if (ReferenceEquals(provider, sender)) continue;
-                provider.SetValue(name, valeu);
+                if (ReferenceEquals(provider, requester)) continue;
+                provider.SetValue(requester, name, valeu);
                 lock (VarListeners)
                 {
                     foreach (var action in VarListeners)
                     {
-                        action(sender, namespac, name, valeu);   
+                        action(requester, namespac, name, valeu);   
                     }
                 }
             }
             return true;
         }
 
-        public static bool AddSetting(string namespac, string name, object valeu)
+        public static bool AddSetting(ICollectionRequester requester, string namespac, string name, object valeu)
         {
             bool somethngTookIt = false;
-            foreach (ICollectionProvider provider in GetProviders(namespac))
+            foreach (ICollectionProvider provider in GetProviders(requester,namespac))
             {
-                if (!HasSetting(provider, name))
+                if (!HasSetting(requester, provider, name))
                 {
                     if (!provider.AcceptsNewKeys) continue;
                 }
                 try
                 {
-                    provider.SetValue(name, valeu);
+                    provider.SetValue(requester,name, valeu);
                     somethngTookIt = true;
 
                 }
