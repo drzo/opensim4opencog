@@ -43,6 +43,8 @@ bv:hook_botvar_set(_,bot,'isNight',Value):- 'format'(user_error,'Cannot set isNi
 
 bv:hook_botvar_key(_,bot,'isNight').
 
+bv:hook_botvar_key(_,bot,'isNight',"Readonly- Yes if bot thinks it is night").
+
 %... other Prolog code asserts and retracts isNight...
 }}}
 
@@ -62,7 +64,8 @@ time of day
 
 {{{
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% BOTVAR EXAMPLE: Set up sitting on ground based botvar (Side effect based example)
+%%% BOTVAR EXAMPLE: Set up sitting on ground based botvar 
+%%% Setting this variable makes the bot sit on the ground
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 bv:hook_botvar_get(BotID,bot,'isSittingGround',Value):- 
      wbotget(BotID,['Self','Movement','SitOnGround'],Result),!,
@@ -72,6 +75,8 @@ bv:hook_botvar_set(BotID,bot,'isSittingGround',Value):-
    Value="Yes" -> wbotcall(BotID,['Self','SitOnGround'],_) ; wbotcall(BotID,['Self','Stand'],_).
 
 bv:hook_botvar_key(_,bot,'isSittingGround').
+
+b:hook_botvar_desc(_,bot,'isSittingGround', "ReadWrite - setting Yes makes the bot sit on the ground, setting No makes the bot stand up").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% BOTVAR EXAMPLE: Dynamic predicates (in current context module)
