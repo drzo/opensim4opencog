@@ -780,6 +780,8 @@ value_deref(Value,ValueO):-cli_col(Value,ValueO).
 %------------------------------------------------------------------------------
 % adding to the botvar interface
 %------------------------------------------------------------------------------
+wbot_addvars_dynpred(BotID,PredImpl):-wbotname(BotID,NameSpace),wbot_addvars_dynpred(BotID,NameSpace,PredImpl).
+
 wbot_addvars_dynpred(_BotID,NameSpace,PredImpl):-module_functor(PredImpl,_Module,Pred,_Arity),
    atom_concat(Pred,'_get',GET),atom_concat(Pred,'_set',SET),atom_concat(Pred,'_remove',REM),atom_concat(Pred,'_clear',CLR),atom_concat(Pred,'_keys',KEYS),
    PANON =..[Pred,NameSpace,_,_],PGET =..[GET,NameSpace,Key,Val], PSET =..[SET,NameSpace,Key,Val],PREM =..[REM,NameSpace,Val],
@@ -798,19 +800,9 @@ wbot_addvars_dynpred(_BotID,NameSpace,PredImpl):-module_functor(PredImpl,_Module
    */
 
 global_addvars(NameSpace,GET,SET,KEYS):-
-   cli_new('PrologScriptEngine.BotVarProvider',0,[NameSpace,GET,SET,KEYS,'@'(null)],Provider),
+   cli_new('PrologScriptEngine.BotVarProvider',0,[NameSpace,GET,SET,KEYS],Provider),
    cli_call('MushDLR223.ScriptEngines.ScriptManager','AddGroupProvider',[Provider],_).
 
-
-wbot_addvars_dynpred(BotID,PredImpl):-wbotname(BotID,NameSpace),wbot_addvars_dynpred(BotID,NameSpace,PredImpl).
-
-:-dynamic(global_impl2/2).
-global_impl2(_,"a",1).
-global_impl2(_,"b",2).
-global_impl2(Key):-global_impl2(Key,_).
-
-
-%%:-bot_addvar_dynpred(global_impl2,global_impl2).
 
 /*
 wbot_add_botvar(BotID,Var,PredImpl):-wbotget(BotID,['WorldSystem','simGroupProviders'],GPs),
