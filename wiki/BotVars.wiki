@@ -84,11 +84,11 @@ b:hook_botvar_desc(_,bot,'isSittingGround', "ReadWrite - setting Yes makes the b
 
 Sometimes you want to dynamically add botvars. So, for instance, if you want to allow the user to tell the bot facts about itself, you don't want to have to pre-define what the facts are.
 
-Doing this by simply asserting DOUG FIX ME.
+Doing this by simply asserting it somewhere.  Remember that assert/1 retract[all]/1 _may_ use the current *context_module* so you want to make sure you are asserting/retracting your dynamic predicates somewhere you might find them again.
 
 {{{
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% BOTVAR EXAMPLE: Dynamic predicates (in current context module)
+%%% BOTVAR EXAMPLE: Dynamic predicates
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 :-dynamic(dyn_store_botvar/3).
 dyn_store_botvar(_,"a",1).
