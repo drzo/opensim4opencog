@@ -767,7 +767,7 @@ wbotvar_get(BotID,NS,Name,ValueO):- wbotvar_keys(BotID,NS,Name,CP),
 global_tokey(Name,Key):-cli_call('MushDLR223.ScriptEngines.ScriptManager','ToKey',[Name],Key),!.
 
 global_samekey(Name,Name):-!.
-global_samekey(Name1,Name2):-member("",[Name1,Name2]),!.
+global_samekey(Name1,Name2):-member(Wild,["",bot]),member(Wild,[Name1,Name2]),!.
 global_samekey(Name1,Name2):-ground(Name1+Name2),global_tokey(Name1,Key1),global_tokey(Name2,Key2),!,cli_unify(Key1,Key2),!.
 
 wbotvar_namespaces(BotID,NSO):-cli_call('MushDLR223.ScriptEngines.ScriptManager','GetNameSpaces',[BotID],NSs),cli_col(NSs,NS),global_samekey(NS,NSO).
@@ -827,9 +827,14 @@ wbotkey_same(BotID,BotID,Key,MyKey):-global_samekey(Key,MyKey),!.
 wbot_to_namespace(BotID,"",BotName):-wbotname(BotID,Name),global_tokey(Name,BotName),!.
 wbot_to_namespace(_BotID,NameSpaceS,NameSpace):-global_tokey(NameSpaceS,NameSpace).
 
-ahook_botvar_get(BotID,NameSpace,Key,Value):-wbot_to_namespace(BotID,NameSpace,Bot),bv:hook_botvar_get(BotID,Bot,Key,Value).
-ahook_botvar_set(BotID,NameSpace,Key,Value):-wbot_to_namespace(BotID,NameSpace,Bot),bv:hook_botvar_set(BotID,Bot,Key,Value).
-ahook_botvar_key(BotID,NameSpace,Key):-wbot_to_namespace(BotID,NameSpace,Bot),bv:hook_botvar_key(BotID,Bot,Key).
+ahook_botvar_get(BotID,NameSpace,Key,Value):- clause(bv:hook_botvar_get(BotID,MNameSpace,MKey,Value),BODY),
+   once((global_samekey(NameSpace,MNameSpace),global_samekey(Key,MKey))), catch(BODY,_,fail).
+
+ahook_botvar_set(BotID,NameSpace,Key,Value):- clause(bv:hook_botvar_set(BotID,MNameSpace,MKey,Value),BODY),
+   once((global_samekey(NameSpace,MNameSpace),global_samekey(Key,MKey))), catch(BODY,_,fail).
+
+ahook_botvar_key(BotID,NameSpace,Key):- clause(bv:hook_botvar_key(BotID,MNameSpace,MKey),BODY),
+   once((global_samekey(NameSpace,MNameSpace),global_samekey(Key,MKey))), catch(BODY,_,fail).
 
 
 /*

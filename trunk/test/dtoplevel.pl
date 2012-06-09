@@ -58,13 +58,12 @@ bv:hook_botvar_key(_BotID,NS,Key):-hook_botvar2(NS,Key,_).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% BOTVAR EXAMPLE: Set up sitting on ground based botvar (Side effect based example)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-bv:hook_botvar_get(BotID,NS,Key,ValueO):-botkey_same(NS,Key,'isSittingGround'),!,
-   wbotget(BotID,['Self','Movement','SitOnGround'],Result),!, (cli_is_true(Result)-> Value="Yes" ; Value="No"),!,cli_unify(Value,ValueO).
+bv:hook_botvar_get(BotID,bot,'isSittingGround',Value):- wbotget(BotID,['Self','Movement','SitOnGround'],Result),!,
+    (cli_is_true(Result)-> Value="Yes" ; Value="No").
 
-bv:hook_botvar_set(BotID,NS,Key,Value):-botkey_same(NS,Key,'isSittingGround'),!,
-   (Value="Yes" -> wbotcall(BotID,['Self','SitOnGround'],_) ; botcall(['Self','StandUp'],_)).
+bv:hook_botvar_set(BotID,bot,'isSittingGround',Value):- Value="Yes" -> wbotcall(BotID,['Self','SitOnGround'],_) ; wbotcall(BotID,['Self','Stand'],_).
 
-bv:hook_botvar_key(_,_,'isSittingGround').
+bv:hook_botvar_key(_,bot,'isSittingGround').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% BOTVAR EXAMPLE: set up a isNight (readonly based example)
@@ -72,11 +71,11 @@ bv:hook_botvar_key(_,_,'isSittingGround').
 
 :-dynamic isNight/0.
 
-bv:hook_botvar_get(_,NS,Key,Value):-botkey_same(NS,Key,'isNight'),!, ( isNight -> Value="Yes" ; Value="No").
+bv:hook_botvar_get(_,bot,'isNight',Value):- isNight -> Value="Yes" ; Value="No".
 
-bv:hook_botvar_set(_,NS,Key,Value):-botkey_same(NS,Key,'isNight'),!, 'format'(user_error,'Someone request isNight=~w~n',Value).
+bv:hook_botvar_set(_,bot,'isNight',Value):- 'format'(user_error,'Someone request isNight=~w~n',Value).
 
-bv:hook_botvar_key(_,_,'isNight').
+bv:hook_botvar_key(_,bot,'isNight').
 
 
 %%:-ebt.
