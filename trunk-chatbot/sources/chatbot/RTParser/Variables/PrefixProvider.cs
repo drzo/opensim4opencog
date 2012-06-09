@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MushDLR223.ScriptEngines;
 
 namespace RTParser.Variables
 {
@@ -199,7 +200,7 @@ namespace RTParser.Variables
             return null;
         }
 
-        public IEnumerable<string> SettingNames(int depth)
+        public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
         {
             //get
             {
@@ -208,7 +209,7 @@ namespace RTParser.Variables
                 foreach (var prefix in _prefixes.Values)
                 {
                     ISettingsDictionary child = prefix();
-                    foreach (var cn in child.SettingNames(depth - 1))
+                    foreach (var cn in child.SettingNames(requester, depth - 1))
                     {
                         list.Add(prefix + cn);
                     }

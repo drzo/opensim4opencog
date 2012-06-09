@@ -1709,11 +1709,11 @@ namespace RTParser
             get { return bot.pMSM; }
         }
 
-        public IEnumerable<string> SettingNames(int depth)
+        public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
         {
             //get 
             {
-                return Predicates.SettingNames(depth);
+                return Predicates.SettingNames(requester, depth);
             }
         }
 

@@ -63,7 +63,7 @@ namespace RTParser.Normalize
 
         private static string SubstituteResults(ISettingsDictionary dictionary, string marker, string markerSP, string result, bool backwards)
         {
-            System.Collections.Generic.IEnumerable<string> dictionarySettingNames = dictionary.SettingNames(0);
+            System.Collections.Generic.IEnumerable<string> dictionarySettingNames = dictionary.SettingNames(null, 0);
 
             int did = 0;
             foreach (string settingName in dictionarySettingNames)

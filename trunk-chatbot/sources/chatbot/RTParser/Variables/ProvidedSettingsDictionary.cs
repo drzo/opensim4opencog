@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using MushDLR223.ScriptEngines;
 using RTParser.Variables;
 
 namespace RTParser.Variables
@@ -131,10 +132,10 @@ namespace RTParser.Variables
             set;
         }
 
-        public IEnumerable<string> SettingNames(int depth)
+        public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
         {
             if (!IsAvailable) return new string[0];
-            return Inner.SettingNames(depth);
+            return Inner.SettingNames(requester, depth);
         }
 
         #endregion

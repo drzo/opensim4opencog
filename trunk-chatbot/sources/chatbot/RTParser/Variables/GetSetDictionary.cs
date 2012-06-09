@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using MushDLR223.ScriptEngines;
 using RTParser.Variables;
 
 namespace RTParser.Variables
@@ -8,7 +9,7 @@ namespace RTParser.Variables
     internal class GetSetDictionary : ISettingsDictionary
     {
         public bool IsTraced { get; set; }
-        public IEnumerable<string> SettingNames(int depth)
+        public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
         {
          //   get 
             { return new[] { named }; }

@@ -300,7 +300,7 @@ namespace RTParser.GUI
             else
             {
                 variablesOutput.Text = "";
-                var dictnames = idict.SettingNames(1);
+                var dictnames = idict.SettingNames(robot.ObjectRequester, 1);
                 foreach (string s in dictnames)
                 {
                     Unifiable value = idict.grabSetting(s);

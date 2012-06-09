@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Xml;
+using MushDLR223.ScriptEngines;
 using RTParser.Database;
 using RTParser.Variables;
 using UPath = RTParser.Unifiable;
@@ -227,14 +228,13 @@ namespace RTParser.Utils
 
         public bool IsTraced { get; set; }
 
-        public IEnumerable<string> SettingNames(int depth)
+        public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
         {
             //get 
             {
-                return Request.TargetSettings.SettingNames(depth);
+                return Request.TargetSettings.SettingNames(requester, depth);
             }
         }
-
 
         /// <summary>
         /// Removes the named setting from this class

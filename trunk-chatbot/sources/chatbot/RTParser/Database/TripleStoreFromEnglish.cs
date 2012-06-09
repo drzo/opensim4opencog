@@ -140,7 +140,7 @@ namespace RTParser.Database
         public int assertDictionary(string subject, SettingsDictionary dictionary)
         {
             int asserts = 0;
-            foreach (var relation in dictionary.SettingNames(1))
+            foreach (var relation in dictionary.SettingNames(dictionary.ObjectRequester, 1))
             {
                 Unifiable value = dictionary.grabSettingNoDebug(relation);
                 asserts += updateTriple(subject, relation, value);

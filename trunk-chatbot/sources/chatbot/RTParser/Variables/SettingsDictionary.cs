@@ -163,7 +163,7 @@ namespace RTParser.Variables
         ///                 </exception>
         public bool Remove(KeyValuePair<string, Unifiable> item)
         {
-            foreach (var hash in SettingNames(1))
+            foreach (var hash in SettingNames(ObjectRequester,1))
             {
                 if (IsKeyMatch(item.Key, hash))
                 {
@@ -394,6 +394,7 @@ namespace RTParser.Variables
         /// <param name="bot">The bot for whom this is a settings dictionary</param>
         public SettingsDictionary(String name, RTPBot bot, ParentProvider parent)
         {
+            ObjectRequester = bot.ObjectRequester;
             theNameSpace = name;
             IsSubsts = name.Contains("subst");
             TrimKeys = !name.Contains("subst");
@@ -1885,13 +1886,13 @@ namespace RTParser.Variables
         /// Returns a collection of the names of all the settings defined in the dictionary
         /// </summary>
         /// <returns>A collection of the names of all the settings defined in the dictionary</returns>
-        public IEnumerable<string> SettingNames(int depth)
+        public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
         {
             //       get
             {
                 lock (orderedKeys)
                 {
-                    IEnumerable<string> prefixProviderSettingNames = prefixProvider.SettingNames(depth);
+                    IEnumerable<string> prefixProviderSettingNames = prefixProvider.SettingNames(requester, depth);
                     var list = prefixProviderSettingNames as List<string>;
                     if (list == null)
                     {
@@ -2180,6 +2181,7 @@ namespace RTParser.Variables
         public List<ParentProvider> MetaProviders = new List<ParentProvider>();
         public static bool NoSettingsAliaes = true;
         public static bool UseUndoPush = false;
+        public ICollectionRequester ObjectRequester;
 
         public Unifiable GetSetReturn(string name, out string realName)
         {
@@ -2552,7 +2554,7 @@ namespace RTParser.Variables
 
         #region ICollectionProvider Members
 
-        public ICollection GetGroup(string name)
+        public ICollection GetGroup(ICollectionRequester requester, string name)
         {
             return SingleNameValue.AsCollection(grabSetting(name));
         }
@@ -2561,7 +2563,7 @@ namespace RTParser.Variables
 
         #region Implementation of ICollectionProviderSettable
 
-        public void SetValue(string name, object value)
+        public void SetValue(ICollectionRequester requester, string name, object value)
         {
             addSetting(name, Unifiable.Create(value));
         }

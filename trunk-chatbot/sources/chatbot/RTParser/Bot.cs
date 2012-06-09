@@ -2400,6 +2400,7 @@ The AIMLbot program.
         private PrologScriptInterpreter swiInterpreter;
 #endif
         private List<string> _RuntimeDirectories;
+        public ICollectionRequester ObjectRequester;
 
         #region Overrides of QuerySettings
 

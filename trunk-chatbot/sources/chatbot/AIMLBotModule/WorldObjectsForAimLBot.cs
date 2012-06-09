@@ -36,7 +36,7 @@ namespace AIMLBotModule
         }
 
         public bool IsTraced { get; set; }
-        public IEnumerable<string> SettingNames(int depth)
+        public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
         {
             //get
             { return WorldSystem.GroupNames; }
@@ -272,6 +272,7 @@ namespace AIMLBotModule
             try
             {
                 var MyBot = new Bot();
+                MyBot.ObjectRequester = client;
                 MyBot.outputDelegate = WriteLine;
                 MyBot.isAcceptingUserInput = false;
                 MyBot.useServitor = true;
@@ -403,9 +404,9 @@ namespace AIMLBotModule
             MyBot.GlobalSettings.addSetting("master", client.MasterName);
             client.WorldSystem.TheSimAvatar["AIMLBotModule"] = this;
             client.WorldSystem.TheSimAvatar["MyBot"] = MyBot;
-            MushDLR223.ScriptEngines.ScriptManager.AddGroupProvider(this);
-            MushDLR223.ScriptEngines.ScriptManager.AddGroupProvider(MyBot.GlobalSettings);
-            MushDLR223.ScriptEngines.ScriptManager.AddGroupProvider(MyBot.BotAsUser.Predicates);
+            MushDLR223.ScriptEngines.ScriptManager.AddGroupProvider(client, this);
+            MushDLR223.ScriptEngines.ScriptManager.AddGroupProvider(client, MyBot.GlobalSettings);
+            MushDLR223.ScriptEngines.ScriptManager.AddGroupProvider(client, MyBot.BotAsUser.Predicates);
 
 
             LoadPersonalConfig();
@@ -1212,7 +1213,7 @@ namespace AIMLBotModule
             //todo throw new NotImplementedException();
         }
 
-        public ICollection GetGroup(string name)
+        public ICollection GetGroup(ICollectionRequester requester, string name)
         {
             SUnifiable v = null;
             if (MyUser != null) v = MyUser.Predicates.grabSetting(name);
@@ -1392,7 +1393,7 @@ namespace AIMLBotModule
 
         #region Implementation of ICollectionProviderSettable
 
-        public void SetValue(string name, object value)
+        public void SetValue(ICollectionRequester requester, string name, object value)
         {
             
         }
