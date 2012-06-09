@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
+using MushDLR223.ScriptEngines;
 using LineInfoElement = MushDLR223.Utilities.LineInfoElementImpl;
 
 namespace MushDLR223.Utilities
@@ -17,7 +18,7 @@ namespace MushDLR223.Utilities
     public interface ITreeable
     {
         string NameSpace { get; }
-        IEnumerable<string> SettingNames(int depth);
+        IEnumerable<string> SettingNames(ICollectionRequester requester, int depth);
     }
 
     public class StaticXMLUtils

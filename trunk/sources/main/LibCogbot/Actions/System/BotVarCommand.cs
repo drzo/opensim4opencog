@@ -40,7 +40,7 @@ namespace Cogbot.Actions.System
             {
                 if (args.ContainsFlag("listns"))
                 {
-                    foreach (var c in MushDLR223.ScriptEngines.ScriptManager.GetNameSpaces())
+                    foreach (var c in MushDLR223.ScriptEngines.ScriptManager.GetNameSpaces(TheBotClient))
                     {
                         AddSuccess(c);
                     }
@@ -48,13 +48,13 @@ namespace Cogbot.Actions.System
                 }
                 if (args.ContainsFlag("vars"))
                 {
-                    foreach (var c in MushDLR223.ScriptEngines.ScriptManager.GetNameSpaces())
+                    foreach (var c in MushDLR223.ScriptEngines.ScriptManager.GetNameSpaces(TheBotClient))
                     {
-                        foreach (var s in ScriptManager.GetProviders(c))
+                        foreach (var s in ScriptManager.GetProviders(TheBotClient, c))
                         {
-                            foreach (var s1 in s.SettingNames(1))
+                            foreach (var s1 in s.SettingNames(TheBotClient, 1))
                             {
-                                var col = ScriptManager.GetGroup(c, s1);
+                                var col = ScriptManager.GetGroup(TheBotClient, c, s1);
                                 if (col == null)
                                 {
                                     Success(c + "." + s1 + "= NULL");

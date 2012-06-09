@@ -8,12 +8,15 @@ namespace MushDLR223.ScriptEngines
     public delegate ICollection GetGroupFunc(string name);
     public interface ICollectionProvider : ITreeable, ICollectionProviderSettable
     {
-        ICollection GetGroup(string name);
+        ICollection GetGroup(ICollectionRequester requester, string name);
     }
     public interface ICollectionProviderSettable : ITreeable
     {
-        void SetValue(string name, object value);
+        void SetValue(ICollectionRequester requester, string name, object value);
         bool AcceptsNewKeys { get; }
+    }
+    public interface ICollectionRequester 
+    {
     }
 
     public class GetGroupFuncHolder : ICollectionProvider
@@ -33,18 +36,18 @@ namespace MushDLR223.ScriptEngines
             ggf = func;
         }
 
-        public ICollection GetGroup(string name)
+        public ICollection GetGroup(ICollectionRequester requester, string name)
         {
             return ggf(name);
         }
 
-        public IEnumerable<string> SettingNames(int depth)
+        public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
         {
             if (Name == null) return null;
             return new [] { Name };
         }
 
-        public void SetValue(string name, object value)
+        public void SetValue(ICollectionRequester requester, string name, object value)
         {
             if (Name == null) return;
         }
@@ -56,7 +59,7 @@ namespace MushDLR223.ScriptEngines
     }
     public class DictionaryWrapper : ICollectionProvider
     {
-        public void SetValue(string name, object value)
+        public void SetValue(ICollectionRequester requester, string name, object value)
         {
             Dict[name] = value;
         }
@@ -83,7 +86,7 @@ namespace MushDLR223.ScriptEngines
 
         public string NameSpace { get; set; }
 
-        public ICollection GetGroup(string name)
+        public ICollection GetGroup(ICollectionRequester requester, string name)
         {
             object val;
             lock (Dict)
@@ -96,7 +99,7 @@ namespace MushDLR223.ScriptEngines
             return null;
         }
 
-        public IEnumerable<string> SettingNames(int depth)
+        public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
         {
             lock (Dict) return Dict.Keys;
         }
@@ -115,13 +118,13 @@ namespace MushDLR223.ScriptEngines
             }
             return list;
         }
-        public static IList<IKeyValuePair<string, object>> MakeKVP(ICollectionProvider dict, int depth)
+        public static IList<IKeyValuePair<string, object>> MakeKVP(ICollectionRequester requester, ICollectionProvider dict, int depth)
         {
             var list = new List<IKeyValuePair<string, object>>();
-            foreach (var p in dict.SettingNames(depth))
+            foreach (var p in dict.SettingNames(requester, depth))
             {
                 string key = p;
-                list.Add(new SingleNameValue(p, () => AsCollection(dict.GetGroup(key))));
+                list.Add(new SingleNameValue(p, () => AsCollection(dict.GetGroup(requester, key))));
             }
             return list;
         }

@@ -15,10 +15,10 @@ namespace PrologScriptEngine
 {
     public class BotVarProvider : ICollectionProvider
     {
-        public static BotVarProvider CreateBotVarProvider(PlTerm nameSpace, PlTerm getter, PlTerm setter, PlTerm keyGetter)
+        public static BotVarProvider CreateBotVarProvider(PlTerm bot, PlTerm nameSpace, PlTerm getter, PlTerm setter, PlTerm keyGetter)
         {
             BotVarProvider provider = new BotVarProvider("user", nameSpace.Name, getter.Name, setter.Name, keyGetter.Name);
-            ScriptManager.AddGroupProvider(provider);
+            ScriptManager.AddGroupProvider(PrologClient.GetInstance(bot), provider);
             return provider;
         }
 
@@ -42,7 +42,7 @@ namespace PrologScriptEngine
 
         public string NameSpace { get; set;}
 
-        public IEnumerable<string> SettingNames(int depth)
+        public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
         {
             return PrologClient.InvokeFromC(
                 () =>
@@ -51,11 +51,11 @@ namespace PrologScriptEngine
                         List<string> names = new List<string>();
                         var plVar = PlTerm.PlVar();
                         var query = new PlQuery(Module, KeyGetter,
-                                                new PlTermV(PlTerm.PlString(NameSpace),
+                                                new PlTermV(PrologClient.ToProlog(requester), PlTerm.PlString(NameSpace),
                                                             plVar));
                         while (query.NextSolution())
                         {
-                            string res = (string) query.Args[1];
+                            string res = (string) query.Args[2];
                             if (!names.Contains(res)) names.Add(res);
                         }
                         return names.ToArray();
@@ -66,7 +66,7 @@ namespace PrologScriptEngine
 
         #region Implementation of ICollectionProviderSettable
 
-        public void SetValue(string name, object value)
+        public void SetValue(ICollectionRequester requester, string name, object value)
         {
             PrologClient.InvokeFromC(
                 () =>
@@ -74,7 +74,7 @@ namespace PrologScriptEngine
                         if (IsEmpty(Setter)) return false;
                         var plVar = PlTerm.PlVar();
                         var query = new PlQuery(Module, Setter,
-                                                new PlTermV(PlTerm.PlString(NameSpace), PlTerm.PlString(name),
+                                                new PlTermV(PrologClient.ToProlog(requester), PlTerm.PlString(NameSpace), PlTerm.PlString(name),
                                                             PrologClient.ToProlog(value)));
                         while (query.NextSolution())
                         {
@@ -94,7 +94,7 @@ namespace PrologScriptEngine
             get { return true; }
         }
 
-        public ICollection GetGroup(string name)
+        public ICollection GetGroup(ICollectionRequester requester, string name)
         {
             return PrologClient.InvokeFromC(
                 () =>
@@ -103,7 +103,7 @@ namespace PrologScriptEngine
                         var plVar = PlTerm.PlVar();
                         List<object> results = new List<object>();
                         var query = new PlQuery(Module, Getter,
-                                                new PlTermV(PlTerm.PlString(NameSpace), PlTerm.PlString(name),
+                                                new PlTermV(PrologClient.ToProlog(requester), PlTerm.PlString(NameSpace), PlTerm.PlString(name),
                                                             plVar));
                         while (query.NextSolution())
                         {
@@ -118,10 +118,10 @@ namespace PrologScriptEngine
     }
     public class BotVarProviderCallN : ICollectionProvider
     {
-        public static ICollectionProvider CreateBotVarProvider(PlTerm nameSpace, PlTerm getter, PlTerm setter, PlTerm keyGetter)
+        public static ICollectionProvider CreateBotVarProvider(PlTerm bot, PlTerm nameSpace, PlTerm getter, PlTerm setter, PlTerm keyGetter)
         {
             var provider = new BotVarProviderCallN(nameSpace, getter, setter, keyGetter);
-            ScriptManager.AddGroupProvider(provider);
+            ScriptManager.AddGroupProvider(PrologClient.GetInstance(bot), provider);
             return provider;
         }
 
@@ -143,7 +143,7 @@ namespace PrologScriptEngine
 
         public string NameSpace { get; set; }
 
-        public IEnumerable<string> SettingNames(int depth)
+        public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
         {
             return PrologClient.InvokeFromC(
                 () =>
@@ -169,7 +169,7 @@ namespace PrologScriptEngine
 
         #region Implementation of ICollectionProviderSettable
 
-        public void SetValue(string name, object value)
+        public void SetValue(ICollectionRequester requester, string name, object value)
         {
             PrologClient.InvokeFromC(
                 () =>
@@ -194,7 +194,7 @@ namespace PrologScriptEngine
             get { return true; }
         }
 
-        public ICollection GetGroup(string name)
+        public ICollection GetGroup(ICollectionRequester requester, string name)
         {
             return PrologClient.InvokeFromC(
                 () =>
