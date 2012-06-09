@@ -278,9 +278,9 @@ namespace Swicli.Library
             {
                 PlTerm info = specArray[i];
                 var t = GetType(info, isObjects);
-                if (t==null)
+                if (t == null)
                 {
-                    
+                    t = typeof (object);
                 }
                 paramz[i] = t;
             }

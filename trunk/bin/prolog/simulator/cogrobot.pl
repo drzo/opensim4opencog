@@ -828,13 +828,13 @@ wbot_to_namespace(BotID,"",BotName):-wbotname(BotID,Name),global_tokey(Name,BotN
 wbot_to_namespace(_BotID,NameSpaceS,NameSpace):-global_tokey(NameSpaceS,NameSpace).
 
 ahook_botvar_get(BotID,NameSpace,Key,Value):- clause(bv:hook_botvar_get(BotID,MNameSpace,MKey,Value),BODY),
-   once((global_samekey(NameSpace,MNameSpace),global_samekey(Key,MKey))), catch(BODY,_,fail).
+   once((global_samekey(NameSpace,MNameSpace),global_samekey(Key,MKey))), catch(user:(BODY),_,fail).
 
 ahook_botvar_set(BotID,NameSpace,Key,Value):- clause(bv:hook_botvar_set(BotID,MNameSpace,MKey,Value),BODY),
-   once((global_samekey(NameSpace,MNameSpace),global_samekey(Key,MKey))), catch(BODY,_,fail).
+   once((global_samekey(NameSpace,MNameSpace),global_samekey(Key,MKey))), catch(user:(BODY),_,fail).
 
 ahook_botvar_key(BotID,NameSpace,Key):- clause(bv:hook_botvar_key(BotID,MNameSpace,MKey),BODY),
-   once((global_samekey(NameSpace,MNameSpace),global_samekey(Key,MKey))), catch(BODY,_,fail).
+   once((global_samekey(NameSpace,MNameSpace),global_samekey(Key,MKey))), catch(user:(BODY),_,fail).
 
 
 /*
