@@ -32,7 +32,7 @@ say_ref(Prompt, Ref) :-
     say_format('~w = ~s', [Prompt, S]).
 
 
-inventory_folder_name("hillpeople example rev3").
+inventory_folder_name("hillpeople example rev4").
 
 has_inventory :-
 	inventory_folder_name(Folder),
