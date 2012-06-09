@@ -15,7 +15,7 @@ Three hook predicates start in the module *bv*:
 {{{
 bv:hook_botvar_get/4
 bv:hook_botvar_set/4
-bv:hook_botvar_keys/3
+bv:hook_botvar_key/3
 bv:hook_botvar_desc/4
 }}}
 
@@ -25,7 +25,7 @@ Arg 2 = The Namespace submitted ( there is a special namespace called "bot" )
 
 Arg 3 = The Key Name = "is Good" matches "is_good"
 
-Arg 4 = The Value for Set or Get (bv:hook_botvar_keys does not use this). For hook_botvar_desc this unifies with a string description of the botvar
+Arg 4 = The Value for Set or Get (bv:hook_botvar_key does not use this). For hook_botvar_desc this unifies with a string description of the botvar
 
 These 3 predicates may be registered from any module merely by including them (in the prolog source files) like below as long as they use the module prefix "bv:"
 
