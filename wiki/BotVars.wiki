@@ -7,14 +7,23 @@ Cogbot is composed of a number of interacting plugins (yay, we love plugins!). T
 
 == Producing botvars from prolog ==
 
-These are working examples
 
-(All three hook predicates start in the module *bv*)
 
-They may be registered from any module merely by including them in the source files like below as long as they use the module prefix bv:  (hook_botvar2/3 is in the current context module)
+Three hook predicates start in the module *bv*:
 
-NS (or NameSpace) is called with the BotID reference of the caller bot.
+bv:hook_botvar_get/4
+bv:hook_botvar_set/4
+bv:hook_botvar_keys/3
 
+Arg 1 = The BotID ref (like current_bot/1)
+Arg 2 = The Namespace submitted ( there is a special namespace called "bot" )
+Arg 3 = The Key Name = "is Good" matches "is_good"
+Arg 4 = The Value for Set or Get (bv:hook_botvar_keys does not use this)
+  
+
+These 3 predicates may be registered from any module merely by including them (in the prolog source files) like below as long as they use the module prefix bv:  (hook_botvar2/3 is in the current context module)
+
+_These are working examples_
 {{{
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% BOTVAR EXAMPLE: Dynamic predicates 
@@ -30,12 +39,12 @@ bv:hook_botvar_key(_BotID,NS,Key):-hook_botvar2(NS,Key,_).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% BOTVAR EXAMPLE: Set up sitting on ground based botvar (Side effect based example)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-bv:hook_botvar_get(BotID,_,'isSittingGround',Value):- wbotget(BotID,['Self','Movement','SitOnGround'],Result),!,
+bv:hook_botvar_get(BotID,bot,'isSittingGround',Value):- wbotget(BotID,['Self','Movement','SitOnGround'],Result),!,
     (cli_is_true(Result)-> Value="Yes" ; Value="No").
 
-bv:hook_botvar_set(BotID,NS,'isSittingGround',Value):- Value="Yes" -> wbotcall(BotID,['Self','SitOnGround'],_) ; wbotcall(BotID,['Self','Stand'],_).
+bv:hook_botvar_set(BotID,bot,'isSittingGround',Value):- Value="Yes" -> wbotcall(BotID,['Self','SitOnGround'],_) ; wbotcall(BotID,['Self','Stand'],_).
 
-bv:hook_botvar_key(_,_,'isSittingGround').
+bv:hook_botvar_key(_,bot,'isSittingGround').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% BOTVAR EXAMPLE: set up a isNight (readonly based example)
@@ -43,11 +52,11 @@ bv:hook_botvar_key(_,_,'isSittingGround').
 
 :-dynamic isNight/0.
 
-bv:hook_botvar_get(_,_,'isNight',Value):- isNight -> Value="Yes" ; Value="No".
+bv:hook_botvar_get(_,bot,'isNight',Value):- isNight -> Value="Yes" ; Value="No".
 
-bv:hook_botvar_set(_,_,'isNight',Value):- 'format'(user_error,'Someone request isNight=~w~n',Value).
+bv:hook_botvar_set(_,bot,'isNight',Value):- 'format'(user_error,'Someone request isNight=~w~n',Value).
 
-bv:hook_botvar_key(_,_,'isNight').
+bv:hook_botvar_key(_,bot,'isNight').
 
 }}}
 
