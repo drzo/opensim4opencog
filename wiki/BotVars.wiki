@@ -43,7 +43,7 @@ bv:hook_botvar_set(_,bot,'isNight',Value):- 'format'(user_error,'Cannot set isNi
 
 bv:hook_botvar_key(_,bot,'isNight').
 
-bv:hook_botvar_key(_,bot,'isNight',"Readonly- Yes if bot thinks it is night").
+bv:hook_botvar_desc(_,bot,'isNight',"Readonly- Yes if bot thinks it is night").
 
 %... other Prolog code asserts and retracts isNight...
 }}}
