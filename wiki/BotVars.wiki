@@ -90,6 +90,8 @@ Doing this by simply asserting it somewhere.  Remember that assert/1 retract/1 u
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% BOTVAR EXAMPLE: Dynamic predicates
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+:- module(mymodule, [do_my_thing/0]).
+
 :-dynamic(dyn_store_botvar/3).
 dyn_store_botvar(_,"a",1).
 dyn_store_botvar(_,"b",2).
@@ -98,6 +100,11 @@ bv:hook_botvar_get(_BotID,NS,Key,Value):-dyn_store_botvar(NS,Key,Value).
 bv:hook_botvar_set(_BotID,NS,Key,Value):-
     retractall(dyn_store_botvar(NS,Key,_)),assert(dyn_store_botvar(NS,Key,Value)).
 bv:hook_botvar_key(_BotID,NS,Key):-dyn_store_botvar(NS,Key,_).
+
+.... elsewhere in prolog code ...
+
+realize_we_are_doomed :-
+      botvar_set(bot, 'doomed', "Yes").
 }}}
 
 == Using botvars from prolog ==
