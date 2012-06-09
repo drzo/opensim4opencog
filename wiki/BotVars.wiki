@@ -5,7 +5,7 @@
 Cogbot is composed of a number of interacting plugins (yay, we love plugins!). The primary semantic way of interchanging information among plugins is botvars.
 
 
-== Using botvars from prolog ==
+== Producing botvars from prolog ==
 
 These are working examples
 
@@ -51,10 +51,28 @@ bv:hook_botvar_set(BotID,NS,Key,Value):-botkey_same(NS,Key,'isNight'),!, 'format
 bv:hook_botvar_key(_,_,'isNight').
 
 }}}
+
+== Using botvars from prolog ==
+
+?- botvar_get(X,'isSittingGround',Z).
+X = "otopopo_dougstribe",
+Z = "No" .
+Yes.
+
+?- botvar_set("otopopo_dougstribe",'isSittingGround', "Yes").
+Yes.
+
+
+?- botvar_get(X,'isSittingGround',Z).
+X = "otopopo_dougstribe",
+Z = "Yes" .
+Yes.
+
+
 == using botvars from botcmd ==
 
 
-== Command output of //botvars --vars ==
+=== Command output of //botvars --vars ===
 {{{
 [12:30] Success: fromprolog.a .1 = 1
 [12:30] Success: fromprolog.b .1 = 2
