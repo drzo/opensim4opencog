@@ -16,8 +16,11 @@ bv:hook_botvar_set/4
 bv:hook_botvar_keys/3
 
 Arg 1 = The BotID ref (like current_bot/1)
+
 Arg 2 = The Namespace submitted ( there is a special namespace called "bot" )
+
 Arg 3 = The Key Name = "is Good" matches "is_good"
+
 Arg 4 = The Value for Set or Get (bv:hook_botvar_keys does not use this)
   
 
