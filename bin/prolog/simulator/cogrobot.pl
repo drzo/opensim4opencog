@@ -816,7 +816,7 @@ ahook_botvar_get(BotID,NameSpace0,Key0,Value):-
    clause(bv:hook_botvar_get(BotID,MNameSpace,MKey,Value),BODY),
    once((wbot_samekey(BotID,NameSpace,MNameSpace),wbot_samekey(BotID,Key,MKey))), catch(user:(BODY),_,fail).
 
-ahook_botvar_set(BotID,NameSpace0,Key0,Value):-trace,
+ahook_botvar_set(BotID,NameSpace0,Key0,Value):-
    wbot_to_namespace(BotID,NameSpace0,NameSpace),global_tokey(Key0,Key),
    clause(bv:hook_botvar_set(BotID,MNameSpace,MKey,Value),BODY),
    once((wbot_samekey(BotID,NameSpace,MNameSpace),wbot_samekey(BotID,Key,MKey))), catch(user:(BODY),_,fail).
