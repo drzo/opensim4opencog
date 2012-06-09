@@ -804,7 +804,7 @@ wbotkey_match(BotID,BotID,Key,MyKey):-wbot_samekey(BotID,Key,MyKey),!.
 % Need freedom to declare in multiple codeblocks
 :- PREDS = (bv:hook_botvar_get/4,bv:hook_botvar_set/4,bv:hook_botvar_desc/4,bv:hook_botvar_props/4,bv:hook_botvar_key/3),
    discontiguous(PREDS),
-   module_transparent(PREDS),
+   %%module_transparent(PREDS),
    multifile(PREDS),
    dynamic(PREDS).
 
