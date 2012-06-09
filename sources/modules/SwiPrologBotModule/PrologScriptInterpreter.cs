@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using Cogbot;
 using Cogbot.ScriptEngines;
 using MushDLR223.ScriptEngines;
@@ -16,7 +17,7 @@ namespace PrologScriptEngine
     {
         public static BotVarProvider CreateBotVarProvider(PlTerm nameSpace, PlTerm getter, PlTerm setter, PlTerm keyGetter)
         {
-            BotVarProvider provider = new BotVarProvider(nameSpace, getter, setter, keyGetter, PlTerm.PlVar());
+            BotVarProvider provider = new BotVarProvider(nameSpace, getter, setter, keyGetter);
             ScriptManager.AddGroupProvider(provider);
             return provider;
         }
@@ -24,29 +25,15 @@ namespace PrologScriptEngine
         private PlQuery AllCallbacks;
         public static bool DiscardFrames;
 
-        public BotVarProvider(PlTerm nameSpace, PlTerm getter, PlTerm setter, PlTerm keyGetter, PlTerm setNotifier)
+        public BotVarProvider(PlTerm nameSpace, PlTerm getter, PlTerm setter, PlTerm keyGetter)
         {
 
             uint fid = libpl.PL_open_foreign_frame();
             NameSpace = nameSpace.Name;
-            AllCallbacks = new PlQuery(NameSpace, new PlTermV(getter, setter, keyGetter, setNotifier));
+            AllCallbacks = new PlQuery("call", new PlTermV(getter, setter, keyGetter));
             AllCallbacks.EnsureQUID();
-            MushDLR223.ScriptEngines.ScriptManager.RegisterVarListener(OnVarSet);
-        }
-
-        void OnVarSet(object sender, string namespaec, string name, object value)
-        {
-            PrologClient.InvokeFromC(
-                () =>
-                    {
-                        if (sender == this) return false;
-                        PlTerm callback = AllCallbacks.Args[3];
-                        if (IsEmpty(callback)) return false;
-                        var query = new PlQuery("call",
-                                                new PlTermV(callback, PlTerm.PlString(namespaec), PlTerm.PlString(name),
-                                                            PrologClient.ToProlog(value)));
-                        return query.NextSolution();
-                    }, DiscardFrames);
+            GCHandle.Alloc(AllCallbacks);
+            GCHandle.Alloc(this);
         }
 
         #region Implementation of ITreeable
