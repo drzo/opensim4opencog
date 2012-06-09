@@ -107,7 +107,7 @@ namespace PrologScriptEngine
                                                             plVar));
                         while (query.NextSolution())
                         {
-                            object res = PrologClient.GetInstance(query.Args[2]);
+                            object res = PrologClient.GetInstance(query.Args[3]);
                             if (!results.Contains(res)) results.Add(res);
                         }
                         return results.Count == 0 ? null : results;
