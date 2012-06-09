@@ -35,61 +35,48 @@ swt0:-cli_new('System.Collections.Generic.List'(string),[],[],O),cli_call(O,add(
 
 l1:-logon_bot('ExampleBot','Resident','pass123', "https://login.agni.lindenlab.com/cgi-bin/login.cgi","last",_).
 l2:-logon_bot('Nephrael','Rae','abc123', "https://login.agni.lindenlab.com/cgi-bin/login.cgi","last",_).
+
+
 :-set_num_bots(1).
 :-set_tribe('Dougstribe').
 :-logon_bots.
-:-botdo(showgui).
-:-botdo('setmaster Douglas Miles').
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% USING BOTVAR EXAMPLES
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% register a small helper for ourselves
-same_botkey(NameSpace,Key,MyKey):-botname(BotName),global_samekey(NameSpace,BotName),global_samekey(Key,MyKey).
-
-% Need freedom to declare in multiple codeblocks
-:- discontiguous global_impl_get/3,global_impl_set/3,global_impl_keys/2.
+:-app_init(botdo(showgui)).
+:-app_init(botdo('setmaster Douglas Miles')).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Dynamic predicate example 
+%%% BOTVAR EXAMPLE: Dynamic predicates 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-:-dynamic(global_impl2/2).
-global_impl2(_,"a",1).
-global_impl2(_,"b",2).
+:-dynamic(hook_botvar2/2).
+hook_botvar2(_,"a",1).
+hook_botvar2(_,"b",2).
 
-global_impl_get(NameSpace,Key,Value):-global_impl2(NameSpace,Key,Value).
-global_impl_set(NameSpace,Key,Value):-retractall(global_impl2(NameSpace,Key,_)),assert(global_impl2(NameSpace,Key,Value)).
-global_impl_keys(NameSpace,Key):-global_impl2(NameSpace,Key,_).
+cogrobot:hook_botvar_get(NS,Key,Value):-hook_botvar2(NS,Key,Value).
+cogrobot:hook_botvar_set(NS,Key,Value):-retractall(hook_botvar2(NS,Key,_)),assert(hook_botvar2(NS,Key,Value)).
+cogrobot:hook_botvar_key(NS,Key):-hook_botvar2(NS,Key,_).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Set up sitting on ground based botvar (Side effect based example)
+%%% BOTVAR EXAMPLE: Set up sitting on ground based botvar (Side effect based example)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-global_impl_get(NameSpace,Key,Value):-same_botkey(NameSpace,Key,'isSittingGround'),!,
+cogrobot:hook_botvar_get(NS,Key,Value):-botkey_same(NS,Key,'isSittingGround'),!,
    botget(['Self','Movement','SitOnGround'],Result), (cli_is_true(Result)-> Value="Yes" ; Value="No").
 
-global_impl_set(NameSpace,Key,Value):-same_botkey(NameSpace,Key,'isSittingGround'),!,
+cogrobot:hook_botvar_set(NS,Key,Value):-botkey_same(NS,Key,'isSittingGround'),!,
    (Value="Yes" -> botcall(['Self','SitOnGround'],_) ; botcall(['Self','StandUp'],_)).
 
-global_impl_keys(_NameSpace,'isSittingGround').
+cogrobot:hook_botvar_key(_,'isSittingGround').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% set up a isNight example (readonly based example)
+%%% BOTVAR EXAMPLE: set up a isNight (readonly based example)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-global_impl_get(NameSpace,Key,Value):-same_botkey(NameSpace,Key,'isNight'),!, ( isNight -> Value="Yes" ; Value="No").
 
-global_impl_set(NameSpace,Key,Value):-same_botkey(NameSpace,Key,'isNight'),!, 'format'(user_error,'Someone request isNight=~w~n',Value).
+:-dynamic isNight/0.
 
-global_impl_keys(_NameSpace,'isNight').
+cogrobot:hook_botvar_get(NS,Key,Value):-botkey_same(NS,Key,'isNight'),!, ( isNight -> Value="Yes" ; Value="No").
 
+cogrobot:hook_botvar_set(NS,Key,Value):-botkey_same(NS,Key,'isNight'),!, 'format'(user_error,'Someone request isNight=~w~n',Value).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% register our examples
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-:-global_addvars("Otopopo Dougstribe", global_impl_get, global_impl_set, global_impl_keys).
+cogrobot:hook_botvar_key(_,'isNight').
 
 
 %%:-ebt.

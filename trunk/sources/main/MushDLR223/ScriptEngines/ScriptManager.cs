@@ -890,7 +890,8 @@ namespace MushDLR223.ScriptEngines
                 var all = new List<ICollectionProvider>();
                 foreach (var nv in CollectionProviders)
                 {
-                    if (ToKey(nv.NameSpace) != namespaec0) continue;
+                    var nsp = nv.NameSpace;
+                    if (!string.IsNullOrEmpty(nsp) && ToKey(nv.NameSpace) != namespaec0) continue;
                     all.Add(nv);
                 }
                 return all;

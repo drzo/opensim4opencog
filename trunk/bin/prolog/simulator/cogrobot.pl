@@ -57,10 +57,10 @@
 :-set_prolog_flag(double_quotes,string).
 :-at_initialization(set_prolog_flag(double_quotes,string)).
 
-app_restore(Call):-term_to_atom(Call,Atom),atom_concat(Atom,'_done',Did),dynamic(Did),app_init_call(app_restore(Did,Call)).
+app_init(Call):-term_to_atom(Call,Atom),atom_concat(Atom,'_done',Did),dynamic(arestore:Did),app_init_call(app_init(arestore:Did,Call)).
 app_init_call(Call):-at_initialization(Call),Call.
-app_restore(Did,_Call):-Did,!.
-app_restore(Did,Call):-assert(Did),!,Call.
+app_init(Did,_Call):-Did,!.
+app_init(Did,Call):-assert(Did),!,Call.
 
 btrace:-attach_console,trace.
 
@@ -85,11 +85,11 @@ assert_once(Gaf):-assert(Gaf).
 :-use_module(library(swicli)).
 
 
-%:-app_restore(cli_load_assembly('AForge.Imaging.dll')).
-%:-app_restore(cli_load_assembly('AForge.Imaging.Formats.dll')).
+%:-app_init(cli_load_assembly('AForge.Imaging.dll')).
+%:-app_init(cli_load_assembly('AForge.Imaging.Formats.dll')).
 
 % needed for botvars
-:-app_restore(cli_load_assembly('PrologBotModule')).
+:-app_init(cli_load_assembly('PrologBotModule')).
 %------------------------------------------------------------------------------
 
 %% load needed modules
@@ -103,7 +103,7 @@ assert_once(Gaf):-assert(Gaf).
 :-dynamic(loaded_cogbot_assembly/0).
 load_cogbot_assembly:-loaded_cogbot_assembly,!.
 load_cogbot_assembly:-assert(loaded_cogbot_assembly),current_prolog_flag(address_bits,32) -> cli_load_assembly('Cogbot32.exe') ; cli_load_assembly('Cogbot.exe').
-:-app_restore(load_cogbot_assembly).
+:-app_init(load_cogbot_assembly).
 
 %% cache the type names
 % prevents us having to use long names for things like SimAvatar
@@ -113,7 +113,7 @@ cache_cogbot_types:-
   cli_members('Cogbot.WorldObjects',_),
   cli_members('OpenMetaverse.Primitive',_).
 
-:-app_restore(cache_cogbot_types).
+:-app_init(cache_cogbot_types).
 %------------------------------------------------------------------------------
 % some type layout conversions (to make cleaner code)
 %
@@ -132,7 +132,7 @@ add_layouts:-
  %%  cli_add_layout('Guid',guid(string)),
   !.
 
-:-app_restore(add_layouts).
+:-app_init(add_layouts).
 
 %------------------------------------------------------------------------------
 % much code uses current_bot(Me) like botcmd and say/n  
@@ -417,7 +417,7 @@ prolog_in_thread(Named,Goal,Options):-thread_create(Goal,_,[alias(Named)|Options
 
 %% Every minute trim EventLog to 1000 entries
 keep_1000_events:-repeat,sleep(60),trim_sim_events(1000),fail.
-:-app_restore(prolog_in_thread(keep_1000_events,keep_1000_events,[detached(true)])).
+:-app_init(prolog_in_thread(keep_1000_events,keep_1000_events,[detached(true)])).
 
 %%:-module_transparent(first_bot_client_hook/2).
 
@@ -430,7 +430,7 @@ user:first_bot_client_hook(A,B):- %%%attach_console,trace,
 
 %% register first_bot_client_hook
 register_on_first_bot_client:- cli_add_event_handler('Cogbot.ClientManager','BotClientCreated',first_bot_client_hook(_,_)).
-:-app_restore(register_on_first_bot_client).
+:-app_init(register_on_first_bot_client).
 
 %------------------------------------------------------------------------------
 % start Radegast!
@@ -462,7 +462,7 @@ npl2Obj(npl(66,O),O).
 registerNamedParamRecomposer:-!.
 registerNamedParamRecomposer:-cli_to_from_recomposer('System.Collections.Generic.IList'('MushDLR223.ScriptEngines.NamedParam'),'npl'(_,_),obj2Npl,npl2Obj).
 
-:-app_restore(registerNamedParamRecomposer).
+:-app_init(registerNamedParamRecomposer).
 
 %------------------------------------------------------------------------------
 % CLR Introspection of event handlers
@@ -524,7 +524,7 @@ expire_caches.
 :-add_cache_pred(name_to_location_ref_cache(_,_)).
 
 expire_caches_120:-repeat,sleep(120),expire_caches,fail.
-:-app_restore(prolog_in_thread(expire_caches_120,expire_caches_120,[detached(true)])).
+:-app_init(prolog_in_thread(expire_caches_120,expire_caches_120,[detached(true)])).
 
 name_to_location_ref(Object,Object):-cli_is_type(Object,'SimPosition'),!.
 name_to_location_ref(Name,Object):-
@@ -760,6 +760,7 @@ global_getvar(NS,Name,ValueO):- global_varnames(NS,Name,CP),
 global_tokey(Name,Key):-cli_call('MushDLR223.ScriptEngines.ScriptManager','ToKey',[Name],Key).
 
 global_samekey(Name,Name):-!.
+global_samekey(Name1,Name2):-member("",[Name1,Name2]),!.
 global_samekey(Name1,Name2):-ground(Name1+Name2),global_tokey(Name1,Key1),global_tokey(Name2,Key2),!,cli_unify(Key1,Key2).
 
 global_varnamespaces(NSO):-cli_call('MushDLR223.ScriptEngines.ScriptManager','GetNameSpaces',[],NSs),cli_col(NSs,NS),global_samekey(NS,NSO).
@@ -769,13 +770,12 @@ global_varnames(NSO,NameO,CP):-
    cli_call(CP,'SettingNames'(int),[1],Names),cli_col(Names,Name),global_samekey(Name,NameO).
 
 
-
-
 global_setvar(NS,Name,ValueO):- cli_call('MushDLR223.ScriptEngines.ScriptManager','AddSetting',[NS,Name,ValueO],_).
 
 gp_to_vars(_BotID,GP,Var):- cli_call('MushDLR223.ScriptEngines.SingleNameValue','MakeKVP'('MushDLR223.ScriptEngines.ICollectionProvider',int),[GP,2],Col),cli_col(Col,Var).
 
 value_deref(Value,ValueO):-cli_col(Value,ValueO).
+
 
 %------------------------------------------------------------------------------
 % adding to the botvar interface
@@ -800,9 +800,38 @@ wbot_addvars_dynpred(_BotID,NameSpace,PredImpl):-module_functor(PredImpl,_Module
    */
 
 global_addvars(NameSpace,GET,SET,KEYS):-
-   cli_new('PrologScriptEngine.BotVarProvider',0,[NameSpace,GET,SET,KEYS],Provider),
+   strip_module(GET,Module,_),
+   cli_new('PrologScriptEngine.BotVarProvider',0,[Module,NameSpace,GET,SET,KEYS],Provider),
    cli_call('MushDLR223.ScriptEngines.ScriptManager','AddGroupProvider',[Provider],_).
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% USING BOTVAR HOOKS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% register a small helper for ourselves
+wbotkey_same(_BotID,"",Key,MyKey):-global_samekey(Key,MyKey),!.
+wbotkey_same(BotID,NameSpace,Key,MyKey):-wbotname(BotID,BotName),global_samekey(NameSpace,BotName),global_samekey(Key,MyKey),!.
+wbotkey_same(BotID,BotID,Key,MyKey):-global_samekey(Key,MyKey),!.
+
+% Need freedom to declare in multiple codeblocks
+
+% Need freedom to declare in multiple codeblocks
+:- discontiguous hook_botvar_get/3,hook_botvar_set/3,hook_botvar_key/2.
+:- module_transparent hook_botvar_get/3,hook_botvar_set/3,hook_botvar_key/2.
+:- dynamic hook_botvar_get/3,hook_botvar_set/3,hook_botvar_key/2.
+
+
+namespace_to_bot(NameSpace,BotID):-botname(BotName),global_samekey(NameSpace,BotName),current_bot(BotID).
+
+ahook_botvar_get(NameSpace,Key,Value):-namespace_to_bot(NameSpace,Bot),hook_botvar_get(Bot,Key,Value).
+ahook_botvar_set(NameSpace,Key,Value):-namespace_to_bot(NameSpace,Bot),hook_botvar_set(Bot,Key,Value).
+ahook_botvar_key(NameSpace,Key):-hook_botvar_key(_,Key).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% register our examples
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+:-app_init(global_addvars('@'(null), ahook_botvar_get, ahook_botvar_set, ahook_botvar_key)).
 
 /*
 wbot_add_botvar(BotID,Var,PredImpl):-wbotget(BotID,['WorldSystem','simGroupProviders'],GPs),
@@ -838,7 +867,7 @@ make_current_bot_ver(F,N,_,AA):-length(List,AA),Head=..[N|List],Body=..[F,BotID|
 
 scan_and_export_wb:-current_predicate(cogrobot:F/A),
    once((atom_concat(wbot,Before,F),export(F/A),atom_concat(bot,Before,New),AA is A-1,make_current_bot_ver(F,New,A,AA))),fail.
-scan_and_export_wb:-current_predicate(cogrobot:F/A),once((member(S,[bot,sim,grid,cli,glob,world]),atom_concat(S,_,F),export(F/A))),fail.
+scan_and_export_wb:-current_predicate(cogrobot:F/A),once((member(S,[ahook,bot,sim,grid,cli,glob,world,hook,app]),atom_concat(S,_,F),export(F/A))),fail.
 scan_and_export_wb.
 
 :-scan_and_export_wb.
