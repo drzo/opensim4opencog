@@ -66,13 +66,13 @@ bv:hook_botvar_key(_,bot,'isNight').
 == Using botvars from prolog ==
 
 {{{
-1 ?- botvar_get("otopopo_dougstribe",'isSittingGround',Z).
+1 ?- botvar_get(bot,'isSittingGround',Z).
 Z = "No".
 
-2 ?- botvar_set("otopopo_dougstribe",'isSittingGround',"Yes").
+2 ?- botvar_set(bot,'isSittingGround',"Yes").
 true.
 
-3 ?- botvar_get("otopopo_dougstribe",'isSittingGround',Z).
+3 ?- botvar_get(bot,'isSittingGround',Z).
 Z = "Yes".
 
 }}}
