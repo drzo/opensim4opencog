@@ -186,7 +186,7 @@ namespace SbsSW.SwiPlCs
         /// <summary>
         /// The standard SWI-Prolog streams ( inout output error )
         /// </summary>
-        internal enum StreamsFunction
+        public enum StreamsFunction
         {
             /// <summary>0 - Sread_function.</summary>
             Read = 0,
@@ -194,12 +194,12 @@ namespace SbsSW.SwiPlCs
             Write = 1
         }
 
-        internal static bool Is64Bit()
+        public static bool Is64Bit()
         {
             int bits = IntPtr.Size * 8;
             return bits == 64;
         }
-        internal static void SetStreamFunction(Streams.PlStreamType streamType, StreamsFunction functionType, Delegate function)
+        public static void SetStreamFunction(Streams.PlStreamType streamType, StreamsFunction functionType, Delegate function)
         {
             //int size_of_IOSTREAM = 136;
 
@@ -255,7 +255,7 @@ namespace SbsSW.SwiPlCs
         private static bool LoadedLibPl = false;
         private static bool TryLoadedLibPl = false;
 
-        internal static void LoadLibPl()
+        public static void LoadLibPl()
         {
             if (LoadedLibPl || TryLoadedLibPl) return;
             try
@@ -271,7 +271,7 @@ namespace SbsSW.SwiPlCs
             }
         }
 
-        internal static int PL_initialise(int argc, String[] argv)
+        public static int PL_initialise(int argc, String[] argv)
         {
             LoadLibPl();
             return SafeNativeMethods.PL_initialise(argc, argv);
@@ -285,7 +285,7 @@ namespace SbsSW.SwiPlCs
         /// <param name="argc"></param>
         /// <param name="argv"></param>
         /// <returns></returns>
-        internal static int PL_is_initialised(ref int argc, ref String[] argv)
+        public static int PL_is_initialised(ref int argc, ref String[] argv)
         {
             int iRet = 0;
             if (IsValid)
@@ -295,7 +295,7 @@ namespace SbsSW.SwiPlCs
             return iRet;
         }
 
-        internal static int PL_is_initialised(IntPtr argc, IntPtr argv)
+        public static int PL_is_initialised(IntPtr argc, IntPtr argv)
         {
             int iRet = 0;
             if (IsValid)
@@ -305,7 +305,7 @@ namespace SbsSW.SwiPlCs
             return iRet;
         }
 
-        internal static int PL_halt(int i)
+        public static int PL_halt(int i)
         {
             int iRet = 0;
             if (IsValid)
@@ -318,7 +318,7 @@ namespace SbsSW.SwiPlCs
             return iRet;
         }
 
-        internal static int PL_cleanup(int status)
+        public static int PL_cleanup(int status)
         {
             int iRet = 0;
             if (IsValid)
@@ -334,17 +334,17 @@ namespace SbsSW.SwiPlCs
         }
 
         // see http://www.codeproject.com/KB/dotnet/Cdecl_CSharp_VB.aspx
-        internal static int PL_register_foreign_in_module(string module, string name, int arity, Delegate function, int flags)
+        public static int PL_register_foreign_in_module(string module, string name, int arity, Delegate function, int flags)
         { return SafeNativeMethods.PL_register_foreign_in_module(module, name, arity, function, flags); }
 
 
-        internal static IntPtr PL_create_engine(IntPtr attr)
+        public static IntPtr PL_create_engine(IntPtr attr)
         { return SafeNativeMethods.PL_create_engine(attr); }
 
-        internal static int PL_set_engine(IntPtr engine, ref IntPtr old)
+        public static int PL_set_engine(IntPtr engine, ref IntPtr old)
         { return SafeNativeMethods.PL_set_engine(engine, ref old); }
 
-        internal static int PL_destroy_engine(IntPtr engine)
+        public static int PL_destroy_engine(IntPtr engine)
         { return SafeNativeMethods.PL_destroy_engine(engine); }
 
         public static int PL_thread_at_exit(Delegate function, IntPtr closure, int global)
@@ -352,20 +352,20 @@ namespace SbsSW.SwiPlCs
             return SafeNativeMethods.PL_thread_at_exit(function, closure, global);
         }
 
-        internal static uint PL_new_atom(string text)
+        public static uint PL_new_atom(string text)
         { return SafeNativeMethods.PL_new_atom(text); }
 
-        internal static String PL_atom_chars(uint t_atom)
+        public static String PL_atom_chars(uint t_atom)
         {
             // see http://www.mycsharp.de/wbb2/thread.php?threadid=51100
             return Marshal.PtrToStringAnsi(SafeNativeMethods.PL_atom_chars(t_atom));
         }
 
-        internal static uint PL_new_atom_wchars(int len, string text)
+        public static uint PL_new_atom_wchars(int len, string text)
         {
             return SafeNativeMethods.PL_new_atom_wchars(len, text);
         }
-        internal static String PL_atom_wchars(uint t_atom)
+        public static String PL_atom_wchars(uint t_atom)
         {
             int len = 0;
             IntPtr iptr = SafeNativeMethods.PL_atom_wchars(t_atom, ref len);
@@ -396,40 +396,40 @@ namespace SbsSW.SwiPlCs
 
 
         // get information from Prolog
-        internal static uint PL_query(uint query_type)
+        public static uint PL_query(uint query_type)
         { return SafeNativeMethods.PL_query(query_type); }
 
 
         // PlFrame
-        internal static uint PL_open_foreign_frame()
+        public static uint PL_open_foreign_frame()
         { return SafeNativeMethods.PL_open_foreign_frame(); }
 
-        internal static void PL_close_foreign_frame(uint fid_t)
+        public static void PL_close_foreign_frame(uint fid_t)
         {
             if (IsValid)
                 SafeNativeMethods.PL_close_foreign_frame(fid_t);
         }
-        internal static void PL_discard_foreign_frame(uint fid_t)
+        public static void PL_discard_foreign_frame(uint fid_t)
         {
             if (IsValid)
                 SafeNativeMethods.PL_discard_foreign_frame(fid_t);
         }
 
-        internal static void PL_rewind_foreign_frame(uint fid_t)
+        public static void PL_rewind_foreign_frame(uint fid_t)
         { SafeNativeMethods.PL_close_foreign_frame(fid_t); }
 
         // record erase
-        internal static uint PL_record(uint term_t)
+        public static uint PL_record(uint term_t)
         { return SafeNativeMethods.PL_record(term_t); }
 
-        internal static void PL_recorded(uint record_t, [Out]uint term_t)    // term_t - ( ausgabe )
+        public static void PL_recorded(uint record_t, [Out]uint term_t)    // term_t - ( ausgabe )
         { SafeNativeMethods.PL_recorded(record_t, term_t); }
 
-        internal static void PL_erase(uint record_t)
+        public static void PL_erase(uint record_t)
         { SafeNativeMethods.PL_erase(record_t); }
 
         // PlQuery
-        internal static int PL_next_solution(uint qid_t)
+        public static int PL_next_solution(uint qid_t)
         {
             try
             {
@@ -442,13 +442,13 @@ namespace SbsSW.SwiPlCs
             }
         }
 
-        internal static IntPtr PL_predicate(string name, int arity, string module)
+        public static IntPtr PL_predicate(string name, int arity, string module)
         { return SafeNativeMethods.PL_predicate(name, arity, module); }
 
-        internal static uint PL_open_query(IntPtr module, int flags, IntPtr pred, uint term)
+        public static uint PL_open_query(IntPtr module, int flags, IntPtr pred, uint term)
         { return SafeNativeMethods.PL_open_query(module, flags, pred, term); }
 
-        internal static void PL_cut_query(uint qid)
+        public static void PL_cut_query(uint qid)
         {
             try
             {
@@ -460,7 +460,7 @@ namespace SbsSW.SwiPlCs
                 InternalError("PL_cut_query", e);
             }
         }
-        internal static void PL_close_query(uint qid)
+        public static void PL_close_query(uint qid)
         {
             try
             {
@@ -473,17 +473,17 @@ namespace SbsSW.SwiPlCs
             }
         }
 
-        internal static void InternalError(string cause, Exception exception)
+        public static void InternalError(string cause, Exception exception)
         {
             PrologClient.ConsoleTrace(cause+" " + exception);
             throw exception;
         }
 
         // PlTerm
-        internal static void PL_put_atom_chars(uint term, string chars)
+        public static void PL_put_atom_chars(uint term, string chars)
         { SafeNativeMethods.PL_put_atom_chars(term, chars); }
 
-        internal static uint PL_new_term_ref()
+        public static uint PL_new_term_ref()
         {
             TermRefCount++;
             if (TermRefCount % 1000 == 0)
@@ -493,18 +493,18 @@ namespace SbsSW.SwiPlCs
             return SafeNativeMethods.PL_new_term_ref();
         }
 
-        internal static void PL_put_integer(uint term, long i)
+        public static void PL_put_integer(uint term, long i)
         { SafeNativeMethods.PL_put_integer(term, i); }
 
-        internal static void PL_put_float(uint term, double i)
+        public static void PL_put_float(uint term, double i)
         { SafeNativeMethods.PL_put_float(term, i); }
 
-        internal static void PL_put_atom(uint term, uint atom_handle)
+        public static void PL_put_atom(uint term, uint atom_handle)
         { SafeNativeMethods.PL_put_atom(term, atom_handle); }
 
-        //internal static int PL_get_chars(uint term, ref string s, uint flags)
+        //public static int PL_get_chars(uint term, ref string s, uint flags)
         //{ return SafeNativeMethods.PL_get_chars(term, ref s, flags); }
-        internal static int PL_get_chars(uint term, ref string s, uint flags)
+        public static int PL_get_chars(uint term, ref string s, uint flags)
         {
             IntPtr ps = IntPtr.Zero;
             int iRet = SafeNativeMethods.PL_get_chars(term, ref ps, flags);
@@ -512,38 +512,38 @@ namespace SbsSW.SwiPlCs
             return iRet;
         }
 
-        internal static int PL_get_int64(uint term, ref long i)
+        public static int PL_get_int64(uint term, ref long i)
         { return SafeNativeMethods.PL_get_int64(term, ref i); }
 
-        internal static int PL_get_pointer(uint term, ref IntPtr i)
+        public static int PL_get_pointer(uint term, ref IntPtr i)
         { return SafeNativeMethods.PL_get_pointer(term, ref i); }
 
-        internal static int PL_get_intptr(uint term, ref IntPtr i)
+        public static int PL_get_intptr(uint term, ref IntPtr i)
         { return SafeNativeMethods.PL_get_intptr(term, ref i); }
 
-        internal static int PL_get_integer(uint term, ref int i)
+        public static int PL_get_integer(uint term, ref int i)
         { return SafeNativeMethods.PL_get_integer(term, ref i); }
 
-        internal static int PL_get_long(uint term, ref long i)
+        public static int PL_get_long(uint term, ref long i)
         { return SafeNativeMethods.PL_get_long(term, ref i); }
 
-        internal static int PL_get_float(uint term, ref double i)
+        public static int PL_get_float(uint term, ref double i)
         { return SafeNativeMethods.PL_get_float(term, ref i); }
 
-        internal static int PL_get_atom(uint term, ref uint atom_t)
+        public static int PL_get_atom(uint term, ref uint atom_t)
         { return SafeNativeMethods.PL_get_atom(term, ref atom_t); }
 
-        internal static int PL_term_type(uint t)
+        public static int PL_term_type(uint t)
         { return SafeNativeMethods.PL_term_type(t); }
 
         // COMPARE
-        internal static int PL_compare(uint term1, uint term2)
+        public static int PL_compare(uint term1, uint term2)
         { return SafeNativeMethods.PL_compare(term1, term2); }
 
 
 
         // PlTermV
-        internal static uint PL_new_term_refs(int n)
+        public static uint PL_new_term_refs(int n)
         {
             //PrologClient.RegisterThread(Thread.CurrentThread);
             int nn = n;
@@ -560,116 +560,116 @@ namespace SbsSW.SwiPlCs
             return SafeNativeMethods.PL_new_term_refs(n);
         }
 
-        internal static void PL_put_term(uint t1, uint t2)
+        public static void PL_put_term(uint t1, uint t2)
         { SafeNativeMethods.PL_put_term(t1, t2); }
 
         // PlCompound
-        internal static int PL_chars_to_term(string chars, uint term)
+        public static int PL_chars_to_term(string chars, uint term)
         { return SafeNativeMethods.PL_chars_to_term(chars, term); }
 
-        internal static void PL_cons_functor_v(uint term, uint functor_t, uint term_a0)
+        public static void PL_cons_functor_v(uint term, uint functor_t, uint term_a0)
         {
             //PrologClient.RegisterThread(Thread.CurrentThread);
             SafeNativeMethods.PL_cons_functor_v(term, functor_t, term_a0);
         }
 
-        internal static uint PL_new_functor(uint atom_a, int a)
+        public static uint PL_new_functor(uint atom_a, int a)
         { return SafeNativeMethods.PL_new_functor(atom_a, a); }
 
-        internal static void PL_put_string_chars(uint term_t, string chars)
+        public static void PL_put_string_chars(uint term_t, string chars)
         { SafeNativeMethods.PL_put_string_chars(term_t, chars); }
 
-        internal static void PL_put_string_nchars(uint term_t, int len, string chars)
+        public static void PL_put_string_nchars(uint term_t, int len, string chars)
         { SafeNativeMethods.PL_put_string_nchars(term_t, len, chars); }
 
-        internal static void PL_put_list_codes(uint term_t, string chars)
+        public static void PL_put_list_codes(uint term_t, string chars)
         { SafeNativeMethods.PL_put_list_codes(term_t, chars); }
 
-        internal static void PL_put_list_chars(uint term_t, string chars)
+        public static void PL_put_list_chars(uint term_t, string chars)
         { SafeNativeMethods.PL_put_list_chars(term_t, chars); }
 
-        internal static void PL_put_list(uint term_t)
+        public static void PL_put_list(uint term_t)
         { SafeNativeMethods.PL_put_list(term_t); }
 
         // Testing the type of a term
         // all return non zero if condition succeed
-        internal static int PL_is_variable(uint term_t)
+        public static int PL_is_variable(uint term_t)
         { return SafeNativeMethods.PL_is_variable(term_t); }
 
-        internal static int PL_is_ground(uint term_t)
+        public static int PL_is_ground(uint term_t)
         { return SafeNativeMethods.PL_is_ground(term_t); }
 
-        internal static int PL_is_atom(uint term_t)
+        public static int PL_is_atom(uint term_t)
         { return SafeNativeMethods.PL_is_atom(term_t); }
 
-        internal static int PL_is_string(uint term_t)
+        public static int PL_is_string(uint term_t)
         { return SafeNativeMethods.PL_is_string(term_t); }
 
-        internal static int PL_is_integer(uint term_t)
+        public static int PL_is_integer(uint term_t)
         { return SafeNativeMethods.PL_is_integer(term_t); }
 
-        internal static int PL_is_float(uint term_t)
+        public static int PL_is_float(uint term_t)
         { return SafeNativeMethods.PL_is_float(term_t); }
 
-        internal static int PL_is_compound(uint term_t)
+        public static int PL_is_compound(uint term_t)
         { return SafeNativeMethods.PL_is_compound(term_t); }
 
-        internal static int PL_is_list(uint term_t)
+        public static int PL_is_list(uint term_t)
         { return SafeNativeMethods.PL_is_list(term_t); }
 
-        internal static int PL_is_atomic(uint term_t)
+        public static int PL_is_atomic(uint term_t)
         { return SafeNativeMethods.PL_is_atomic(term_t); }
 
-        internal static int PL_is_number(uint term_t)
+        public static int PL_is_number(uint term_t)
         { return SafeNativeMethods.PL_is_number(term_t); }
 
         // LISTS (PlTail)
-        internal static uint PL_copy_term_ref(uint term_t)
+        public static uint PL_copy_term_ref(uint term_t)
         { return SafeNativeMethods.PL_copy_term_ref(term_t); }
 
-        internal static int PL_unify_list(uint term_t_l, uint term_t_h, uint term_t_t)
+        public static int PL_unify_list(uint term_t_l, uint term_t_h, uint term_t_t)
         { return SafeNativeMethods.PL_unify_list(term_t_l, term_t_h, term_t_t); }
 
-        internal static int PL_unify_nil(uint term_t)
+        public static int PL_unify_nil(uint term_t)
         { return SafeNativeMethods.PL_unify_nil(term_t); }
 
-        internal static int PL_get_list(uint term_t_l, uint term_t_h, uint term_t_t)
+        public static int PL_get_list(uint term_t_l, uint term_t_h, uint term_t_t)
         { return SafeNativeMethods.PL_get_list(term_t_l, term_t_h, term_t_t); }
 
-        internal static int PL_get_nil(uint term_t)
+        public static int PL_get_nil(uint term_t)
         { return SafeNativeMethods.PL_get_nil(term_t); }
 
-        internal static int PL_unify(uint t1, uint t2)
+        public static int PL_unify(uint t1, uint t2)
         { return SafeNativeMethods.PL_unify(t1, t2); }
 
-        internal static int PL_unify_atom_chars(uint t1, string atom)
+        public static int PL_unify_atom_chars(uint t1, string atom)
         { return SafeNativeMethods.PL_unify_atom_chars(t1, atom); }
 
-        internal static int PL_unify_string_chars(uint t1, string atom)
+        public static int PL_unify_string_chars(uint t1, string atom)
         { return SafeNativeMethods.PL_unify_string_chars(t1, atom); }
 
 
-        internal static int PL_unify_list_chars(uint t1, string atom)
+        public static int PL_unify_list_chars(uint t1, string atom)
         { return SafeNativeMethods.PL_unify_list_chars(t1, atom); }
 
-        internal static int PL_unify_integer(uint t1, Int32 n)
+        public static int PL_unify_integer(uint t1, Int32 n)
         { return SafeNativeMethods.PL_unify_integer(t1, n); }
 
-        internal static int PL_unify_integer(uint t1, Int64 n)
+        public static int PL_unify_integer(uint t1, Int64 n)
         { return SafeNativeMethods.PL_unify_integer(t1, n); }
 
-        internal static int PL_unify_float(uint t1, double n)
+        public static int PL_unify_float(uint t1, double n)
         { return SafeNativeMethods.PL_unify_float(t1, n); }
 
 
 
         // Exceptions
         // Handling exceptions
-        internal static uint PL_exception(uint qid)
+        public static uint PL_exception(uint qid)
         { return SafeNativeMethods.PL_exception(qid); }
 
         // Handling exceptions
-        internal static int PL_warning(string text, params IntPtr[] varargs)
+        public static int PL_warning(string text, params IntPtr[] varargs)
         {
             try
             {
@@ -681,25 +681,25 @@ namespace SbsSW.SwiPlCs
             } 
         }
 
-        internal static int PL_raise_exception(uint exception_term)
+        public static int PL_raise_exception(uint exception_term)
         { return SafeNativeMethods.PL_raise_exception(exception_term); }
 
-        internal static int PL_get_arg(int index, uint t, uint a)
+        public static int PL_get_arg(int index, uint t, uint a)
         { return SafeNativeMethods.PL_get_arg(index, t, a); }
 
-        internal static int PL_get_name_arity(uint t, ref uint name, ref int arity)
+        public static int PL_get_name_arity(uint t, ref uint name, ref int arity)
         { return SafeNativeMethods.PL_get_name_arity(t, ref name, ref arity); }
 
         // ******************************
         // *	  PROLOG THREADS		*
         // ******************************
-        internal static int PL_thread_self()
+        public static int PL_thread_self()
         { return SafeNativeMethods.PL_thread_self(); }
 
-        internal static int PL_thread_attach_engine(IntPtr attr)
+        public static int PL_thread_attach_engine(IntPtr attr)
         { return SafeNativeMethods.PL_thread_attach_engine(attr); }
 
-        internal static int PL_thread_destroy_engine()
+        public static int PL_thread_destroy_engine()
         { return SafeNativeMethods.PL_thread_destroy_engine(); }
 
 
@@ -707,10 +707,10 @@ namespace SbsSW.SwiPlCs
         // *	  PROLOG STREAM's		*
         // ******************************
 
-        internal static int Slinesize()
+        public static int Slinesize()
         { return SafeNativeMethods.Slinesize(); }
 
-        internal static IntPtr S__getiob()
+        public static IntPtr S__getiob()
         { return SafeNativeMethods.S__getiob(); }
 
 
@@ -718,13 +718,13 @@ namespace SbsSW.SwiPlCs
         /// 
         /// </summary>
         /// <returns> a SWI-PROLOG IOSTREAM defined in spl-stream.h</returns>
-        internal static IntPtr Snew()
+        public static IntPtr Snew()
         { return SafeNativeMethods.Snew(IntPtr.Zero, 0, IntPtr.Zero); }
 
 
         // from pl-itf.h
         // PL_EXPORT(int)  	PL_unify_stream(term_t t, IOSTREAM *s);
-        internal static int PL_unify_stream(uint term_t, IntPtr iostream)
+        public static int PL_unify_stream(uint term_t, IntPtr iostream)
         { return SafeNativeMethods.PL_unify_stream(term_t, iostream); }
 
         public const int PL_WRT_QUOTED = 0x01;	// quote atoms 
@@ -753,7 +753,7 @@ PL_EXPORT(int) PL_write_term(IOSTREAM *s,
                   int flags);
          * 
          */
-        internal static int PL_write_term(IntPtr iostream, uint term_t, int precedence, int flags)
+        public static int PL_write_term(IntPtr iostream, uint term_t, int precedence, int flags)
         {
             return SafeNativeMethods.PL_write_term(iostream, term_t, precedence, flags);
         }

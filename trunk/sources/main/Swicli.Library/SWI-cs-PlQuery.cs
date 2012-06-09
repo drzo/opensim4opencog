@@ -72,10 +72,10 @@ namespace SbsSW.SwiPlCs
     public class PlQueryVar
     {
         /// <summary>The name of a variable in a Query</summary>
-        public string Name { get; internal set; }
+        public string Name { get; set; }
         /// <summary>The ManagedObject (PlTerm) of a variable in a Query</summary>
-        public PlTerm Value { get; internal set; }
-        internal PlQueryVar(string name, PlTerm val)
+        public PlTerm Value { get; set; }
+        public PlQueryVar(string name, PlTerm val)
         {
             Name = name;
             Value = val;
@@ -96,7 +96,7 @@ namespace SbsSW.SwiPlCs
     {
         private List<PlQueryVar> _vars = new List<PlQueryVar>();
 
-        internal void Add(PlQueryVar var)
+        public void Add(PlQueryVar var)
         {
             _vars.Add(var);
         }
@@ -123,7 +123,7 @@ namespace SbsSW.SwiPlCs
             }
         }
 
-        internal PlQueryVar this[int idx]
+        public PlQueryVar this[int idx]
         {
             get
             {
@@ -453,7 +453,7 @@ namespace SbsSW.SwiPlCs
 
 
 
-        // TODO: make  it internal or private
+        // TODO: make  it public or private
         /// <summary>Provide access to the Argument vector for the query</summary>
         public PlTermV Args { get { return _av; } }
 
@@ -480,7 +480,7 @@ namespace SbsSW.SwiPlCs
             return rval > 0;
         }
 
-        private void EnsureQUID()
+        public void EnsureQUID()
         {
             if (0 == _qid)
             {
