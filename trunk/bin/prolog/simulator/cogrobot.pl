@@ -751,10 +751,9 @@ get_modeless(Var,List):-forall(member(Member=Value,List),cli_get(Var,Member,Valu
 
 set_modeless(Var,List):-forall(member(Member=Value,List),cli_set(Var,Member,Value)).
 
-%------------------------------------------------------------------------------
-% botvar interface
-%------------------------------------------------------------------------------
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% BOTVAR INTERFACE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 wbotvar_set(BotID,Name,ValueO):-wbotname(BotID,NS),wbotvar_set(BotID,NS,Name,ValueO).
 wbotvar_set(BotID,NS,Name,ValueO):- cli_call('MushDLR223.ScriptEngines.ScriptManager','AddSetting',[BotID,NS,Name,ValueO],_).
 
@@ -782,9 +781,43 @@ wbot_gp_to_vars(_BotID,GP,Var):- cli_call('MushDLR223.ScriptEngines.SingleNameVa
 value_deref(Value,ValueO):-cli_col(Value,ValueO).
 
 
-%------------------------------------------------------------------------------
-% adding to the botvar interface
-%------------------------------------------------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% BOTVAR HOOKS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+wbot_addvars(BotID,NameSpace,GET,SET,KEYS):-
+   strip_module(GET,Module,_),
+   cli_new('PrologScriptEngine.BotVarProvider',0,[Module,NameSpace,GET,SET,KEYS],Provider),
+   cli_call('MushDLR223.ScriptEngines.ScriptManager','AddGroupProvider',[BotID,Provider],_).
+
+
+% register a small helper for ourselves
+wbotkey_same(_BotID,"",Key,MyKey):-global_samekey(Key,MyKey),!.
+wbotkey_same(BotID,NameSpace,Key,MyKey):-wbotname(BotID,BotName),global_samekey(NameSpace,BotName),!,global_samekey(Key,MyKey),!.
+wbotkey_same(BotID,BotID,Key,MyKey):-global_samekey(Key,MyKey),!.
+
+% Need freedom to declare in multiple codeblocks
+:- PREDS = (bv:hook_botvar_get/4,bv:hook_botvar_set/4,bv:hook_botvar_key/3),
+   discontiguous(PREDS),
+   module_transparent(PREDS),
+   multifile(PREDS),
+   dynamic(PREDS).
+
+wbot_to_namespace(BotID,"",BotName):-wbotname(BotID,Name),global_tokey(Name,BotName),!.
+wbot_to_namespace(_BotID,NameSpaceS,NameSpace):-global_tokey(NameSpaceS,NameSpace).
+
+ahook_botvar_get(BotID,NameSpace,Key,Value):- clause(bv:hook_botvar_get(BotID,MNameSpace,MKey,Value),BODY),
+   once((global_samekey(NameSpace,MNameSpace),global_samekey(Key,MKey))), catch(user:(BODY),_,fail).
+
+ahook_botvar_set(BotID,NameSpace,Key,Value):- clause(bv:hook_botvar_set(BotID,MNameSpace,MKey,Value),BODY),
+   once((global_samekey(NameSpace,MNameSpace),global_samekey(Key,MKey))), catch(user:(BODY),_,fail).
+
+ahook_botvar_key(BotID,NameSpace,Key):- clause(bv:hook_botvar_key(BotID,MNameSpace,MKey),BODY),
+   once((global_samekey(NameSpace,MNameSpace),global_samekey(Key,MKey))), catch(user:(BODY),_,fail).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% BOTVAR DYNAMIC HOOKS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 wbot_addvars_dynpred(BotID,PredImpl):-wbotname(BotID,NameSpace),wbot_addvars_dynpred(BotID,NameSpace,PredImpl).
 
 wbot_addvars_dynpred(BotID,NameSpace,PredImpl):-module_functor(PredImpl,_Module,Pred,_Arity),
@@ -800,43 +833,6 @@ wbot_addvars_dynpred(BotID,NameSpace,PredImpl):-module_functor(PredImpl,_Module,
    asserta(( PKEYSHEAD :- retractall(PKEYSBODY) )),  
    wbot_addvars(BotID,NameSpace,GET,SET,KEYS).
 
-   /*cli_new_prolog_dictionary(Module:Pred/Arity,string,object,PBD),
-   cli_call('MushDLR223.ScriptEngines.DictionaryWrapper','CreateDictionaryWrapper',[NameSpace, PBD],Provider),
-   */
-
-wbot_addvars(BotID,NameSpace,GET,SET,KEYS):-
-   strip_module(GET,Module,_),
-   cli_new('PrologScriptEngine.BotVarProvider',0,[Module,NameSpace,GET,SET,KEYS],Provider),
-   cli_call('MushDLR223.ScriptEngines.ScriptManager','AddGroupProvider',[BotID,Provider],_).
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% USING BOTVAR HOOKS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% register a small helper for ourselves
-wbotkey_same(_BotID,"",Key,MyKey):-global_samekey(Key,MyKey),!.
-wbotkey_same(BotID,NameSpace,Key,MyKey):-wbotname(BotID,BotName),global_samekey(NameSpace,BotName),!,global_samekey(Key,MyKey),!.
-wbotkey_same(BotID,BotID,Key,MyKey):-global_samekey(Key,MyKey),!.
-
-% Need freedom to declare in multiple codeblocks
-:- discontiguous bv:hook_botvar_get/4,bv:hook_botvar_set/4,bv:hook_botvar_key/3.
-:- module_transparent bv:hook_botvar_get/4,bv:hook_botvar_set/4,bv:hook_botvar_key/3.
-:- dynamic bv:hook_botvar_get/4,bv:hook_botvar_set/4,bv:hook_botvar_key/3.
-
-wbot_to_namespace(BotID,"",BotName):-wbotname(BotID,Name),global_tokey(Name,BotName),!.
-wbot_to_namespace(_BotID,NameSpaceS,NameSpace):-global_tokey(NameSpaceS,NameSpace).
-
-ahook_botvar_get(BotID,NameSpace,Key,Value):- clause(bv:hook_botvar_get(BotID,MNameSpace,MKey,Value),BODY),
-   once((global_samekey(NameSpace,MNameSpace),global_samekey(Key,MKey))), catch(user:(BODY),_,fail).
-
-ahook_botvar_set(BotID,NameSpace,Key,Value):- clause(bv:hook_botvar_set(BotID,MNameSpace,MKey,Value),BODY),
-   once((global_samekey(NameSpace,MNameSpace),global_samekey(Key,MKey))), catch(user:(BODY),_,fail).
-
-ahook_botvar_key(BotID,NameSpace,Key):- clause(bv:hook_botvar_key(BotID,MNameSpace,MKey),BODY),
-   once((global_samekey(NameSpace,MNameSpace),global_samekey(Key,MKey))), catch(user:(BODY),_,fail).
-
-
 /*
 wbot_add_botvar(BotID,Var,PredImpl):-wbotget(BotID,['WorldSystem','simGroupProviders'],GPs),
       cli_call('MushDLR223.ScriptEngines.SingleNameValue','MakeKVP'
@@ -844,9 +840,10 @@ wbot_add_botvar(BotID,Var,PredImpl):-wbotget(BotID,['WorldSystem','simGroupProvi
       cli_lib_call('CreatePrologBackedDictionary',[PredImpl],PBD),
       cli_call('MushDLR223.ScriptEngines.DictionaryWrapper','CreateDictionaryWrapper',[PBD],Provider),
       cli_call('MushDLR223.ScriptEngines.ScriptManager','AddNamedProvider',[NameSpace, Provider],_).
+
+               cli_new_prolog_dictionary(Module:Pred/Arity,string,object,PBD),
+               cli_call('MushDLR223.ScriptEngines.DictionaryWrapper','CreateDictionaryWrapper',[NameSpace, PBD],Provider),
 */
-
-
 
 %------------------------------------------------------------------------------
 % listing functions
