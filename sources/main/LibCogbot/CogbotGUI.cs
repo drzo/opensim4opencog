@@ -142,6 +142,7 @@ namespace Cogbot
 
         static public void SetRadegastLoginOptions(RadegastInstance instance, BotClient TheBot)
         {
+            if (instance == null) return;           
             var BotLoginParams = TheBot.BotLoginParams;
             EnsureRadegastForm(TheBot, instance, "EnsureRadegastForm from SetRadegastLoginOptions " + TheBot.GetName());
             var to = instance.Netcom.LoginOptions;
