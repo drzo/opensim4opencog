@@ -90,6 +90,7 @@ Now the connecting AIML code:
         <condition name="isSittingGround">
         <li value="Yes">Yes I am sitting tell me DO STAND</li>
         <li>Nope, tell me DO SIT</li>
+        </condition>
     </template>
 </category>
 
@@ -102,6 +103,7 @@ Now the connecting AIML code:
     <pattern>DO STAND</pattern>
     <template>I will try to stand <think><set dict="bot" name="isSittingGround">No</set></think> <srai>SITTING</srai></template>
 </category>
+
 }}}
 
 This is an example of a generally useful pattern for using botvars.
