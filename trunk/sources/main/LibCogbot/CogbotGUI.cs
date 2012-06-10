@@ -191,7 +191,15 @@ namespace Cogbot
                 tab.AllowMerge = false;
                 tab.AllowHide = false;
                 LoginConsole form = (LoginConsole)tab.Control;
-                DLRConsole.InvokeControl((Control) form, (MethodInvoker) (() => SetRadegastLoginForm(instance, form, to)));
+                try
+                {
+                    if (form.IsDisposed) return;
+                    DLRConsole.InvokeControl((Control)instance.MainForm, (MethodInvoker)(() => SetRadegastLoginForm(instance, form, to)));                    
+                }
+                catch (Exception e) 
+                {
+                    TheBot.LogException("Set Radegast Login Form", e);
+                }
             }
         }
 

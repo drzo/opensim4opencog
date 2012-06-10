@@ -66,6 +66,7 @@ bv:hook_botvar_set(BotID,bot,'isSittingGround',Value):-
 
 bv:hook_botvar_key(_,bot,'isSittingGround').
 
+/*
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% BOTVAR EXAMPLE: Dynamic predicates 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -77,8 +78,7 @@ bv:hook_botvar_get(_BotID,NS,Key,Value):-dyn_store_botvar(NS,Key,Value).
 bv:hook_botvar_set(_BotID,NS,Key,Value):-
     retractall(dyn_store_botvar(NS,Key,_)),assert(dyn_store_botvar(NS,Key,Value)).
 bv:hook_botvar_key(_BotID,NS,Key):-dyn_store_botvar(NS,Key,_).
-
-
+*/
 %%:-ebt.
 
 end_of_file.

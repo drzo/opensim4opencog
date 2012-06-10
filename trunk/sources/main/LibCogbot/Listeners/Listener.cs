@@ -15,7 +15,7 @@ namespace Cogbot
         {
             //botclient = _parent;
             client = _parent;//.CurrentClient;
-            client.Cogbot[this.GetModuleName()] = this;
+            client.Plugins[this.GetModuleName()] = this;
         }
 
         /// <summary>
