@@ -82,6 +82,30 @@ bv:hook_botvar_key(_,bot,'isSittingGround').
 b:hook_botvar_desc(_,bot,'isSittingGround', "ReadWrite - setting Yes makes the bot sit on the ground, setting No makes the bot stand up").
 }}}
 
+Now the connecting AIML code:
+{{{
+    <category>
+       <pattern>SITTING</pattern>
+       <template>
+           <condition name="isSittingGround">
+            <li value="Yes">Yes I am sitting tell me DO STAND</li>
+            <li>Nope, tell me DO SIT</li>
+       </template>
+   </category>
+
+       <category>
+              <pattern>DO SIT</pattern>
+              <template>
+                  <template>I will try to sit <think><set dict="bot" name="isSittingGround">Yes</set></think> <srai>SITTING</srai></template>
+              </template>
+        </category>
+
+       <category>
+              <pattern>DO STAND</pattern>
+              <template>I will try to stand <think><set dict="bot" name="isSittingGround">No</set></think> <srai>SITTING</srai></template>
+        </category>
+}}}
+
 This is an example of a generally useful pattern for using botvars.
 
 Sometimes you want to dynamically add botvars. So, for instance, if you want to allow the user to tell the bot facts about itself, you don't want to have to pre-define what the facts are in Prolog.
