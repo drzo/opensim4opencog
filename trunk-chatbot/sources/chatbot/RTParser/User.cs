@@ -1280,7 +1280,7 @@ namespace RTParser
                 {
                     bot.writeToLog(s, objects);
                 }
-                if (userTrace != null)
+                if (userTrace != null && userTrace != WriteToUserTrace)
                 {
                     userTrace(s);
                     return;
@@ -1750,7 +1750,18 @@ namespace RTParser
             //depth = 0;
             MasterRequest request;
 
-            target = target ?? LastResponder.Value;
+            if (target == null)
+            {
+                if (LastResponder != null)
+                {
+                    target = LastResponder.Value;
+
+                }
+                else
+                {
+                    target = this;
+                }
+            }
             Unifiable targetJustSaid = said ?? ResponderJustSaid;
             if (target != null && !Unifiable.IsNull(said)) targetJustSaid = target.JustSaid;
             if (parentRequest == null)

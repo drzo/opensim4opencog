@@ -32,7 +32,7 @@ namespace AIMLBotModule
             {
                 String mn = "AIMLBotModule";
                 Listener wmab;
-                var dict = Client.Cogbot;
+                var dict = Client.Plugins;
                 while (true)
                 {
                     lock (dict)
