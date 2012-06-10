@@ -147,7 +147,7 @@ namespace Cogbot
             }
         }
 
-        private void LogException(string p, Exception ex)
+        public void LogException(string p, Exception ex)
         {
             Logger.Log(GetName() + ": Exception " + p + "\n" + ex, Helpers.LogLevel.Error, ex);
             StringWriter sw = new StringWriter();

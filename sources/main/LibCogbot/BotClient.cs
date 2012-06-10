@@ -285,7 +285,7 @@ namespace Cogbot
         ///public DotCYC.CycConnectionForm cycConnection;
         public Dictionary<string, DescribeDelegate> describers;
 
-        readonly public Dictionary<string, Cogbot.Listener> Cogbot;
+        readonly public Dictionary<string, Cogbot.Listener> Plugins;
         public SortedDictionary<string, CommandInfo> Commands;
         public Dictionary<string, Tutorials.Tutorial> tutorials;
         //public Utilities.BotTcpServer UtilitiesTcpServer;
@@ -409,7 +409,7 @@ namespace Cogbot
 
             describePos = 0;
 
-            Cogbot = new Dictionary<string, Cogbot.Listener>();
+            Plugins = new Dictionary<string, Cogbot.Listener>();
             //registrationTypes["avatars"] = new Cogbot.Avatars(this);
             //registrationTypes["chat"] = new Cogbot.Chat(this);
             WorldSystem = new Cogbot.WorldObjects(this);
@@ -933,7 +933,7 @@ namespace Cogbot
                 //lock (lBotMsgSubscribers)
                 //{   
                 if (_LispTaskInterperter != null) _LispTaskInterperter.Dispose();
-                foreach (var ms in Cogbot.Values)
+                foreach (var ms in LockInfo.CopyOf(Plugins).Values)
                 {
                     ms.Dispose();
                 }
