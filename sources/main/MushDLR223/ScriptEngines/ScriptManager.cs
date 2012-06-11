@@ -836,7 +836,7 @@ namespace MushDLR223.ScriptEngines
 
         public static readonly Dictionary<object, List<ICollectionProvider>> _CollectionProviders = new Dictionary<object, List<ICollectionProvider>>();
 
-        public static void AddGroupProvider(object requester, ICollectionProvider provider)
+        public static void AddGroupProvider(ICollectionRequester requester, ICollectionProvider provider)
         {
             var CollectionProviders = GetCollectionProviders(requester);
             lock (CollectionProviders)
@@ -845,12 +845,13 @@ namespace MushDLR223.ScriptEngines
             }
         }
 
-        private static List<ICollectionProvider> GetCollectionProviders(object requester)
+        private static List<ICollectionProvider> GetCollectionProviders(ICollectionRequester requester)
         {
             List<ICollectionProvider> providers;
+            if (requester.SessionMananger == null) requester.SessionMananger = new RequesterSession(requester);
             lock (_CollectionProviders)
             {
-                if (!_CollectionProviders.TryGetValue(requester, out providers))
+                if (!_CollectionProviders.TryGetValue(requester.RequesterID, out providers))
                 {
                     return _CollectionProviders[requester] = new List<ICollectionProvider>();
                 }
@@ -905,12 +906,17 @@ namespace MushDLR223.ScriptEngines
 
             lock (CollectionProviders)
             {
+                var sp = requester.SessionMananger.SkippedProviders;
                 var all = new List<ICollectionProvider>();
                 foreach (var nv in CollectionProviders)
                 {
                     var nsp = nv.NameSpace;
                     if (!string.IsNullOrEmpty(nsp) && ToKey(nv.NameSpace) != namespaec0) continue;
-                    all.Add(nv);
+                    if (!sp.Contains(nv))
+                    {
+                        all.Add(nv);
+                     //   sp.Add(nv);
+                    }
                 }
                 return all;
             }
@@ -921,7 +927,7 @@ namespace MushDLR223.ScriptEngines
             return Parser.ToKey(namespaec);
         }
 
-        static public IEnumerable<string> GetNameSpaces(object requester)
+        static public IEnumerable<string> GetNameSpaces(ICollectionRequester requester)
         {
             var CollectionProviders = GetCollectionProviders(requester);
             lock (CollectionProviders)

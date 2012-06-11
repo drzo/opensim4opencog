@@ -62,7 +62,7 @@ using Thread = MushDLR223.Utilities.SafeThread;
 
 namespace Cogbot
 {
-    public partial class BotClient : SimEventSubscriber, IDisposable, ScriptExecutor
+    public partial class BotClient : ScriptExecutor, ICollectionRequester
     {
 
         public static CommandInfo newCommandInfo(Command describe)
@@ -823,5 +823,22 @@ namespace Cogbot
             });
         }
 
+        #region Implementation of ICollectionRequester
+
+        public object RequesterID
+        {
+            get { return this; }
+        }
+
+        private object _RequesterLock = new object();
+        public object SessionLock
+        {
+            get { return _RequesterLock; }
+        }
+        public RequesterSession SessionMananger { get; set; }
+
+        #endregion
     }
+
+
 }
