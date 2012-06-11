@@ -40,7 +40,7 @@ using Thread = MushDLR223.Utilities.SafeThread;
 
 namespace Cogbot
 {
-    public partial class BotClient : SimEventSubscriber, IDisposable, ScriptExecutor
+    public partial class BotClient
     {
         public bool IsLoggedInAndReady
         {

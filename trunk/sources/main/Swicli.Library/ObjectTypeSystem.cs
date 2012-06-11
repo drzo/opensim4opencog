@@ -527,7 +527,21 @@ namespace Swicli.Library
             return null;
         }
 
+        static readonly private Dictionary<string, Type> typeCache = new Dictionary<string, Type>();
         private static Type ResolveType(string name)
+        {
+            lock (typeCache)
+            {
+                Type type;
+                if (!typeCache.TryGetValue(name, out type))
+                {
+                    return typeCache[name] = ResolveType0(name);
+                }
+                return type;
+            }
+        }
+
+        private static Type ResolveType0(string name)
         {
             if (name == "@" || name == "[]" || name == "$cli_object" || name == "array" || name == null) return null;
             if (name.EndsWith("[]"))
@@ -549,24 +563,24 @@ namespace Swicli.Library
                 Type t = ResolveType(name.Substring(0, name.Length - 1));
                 return t.MakePointerType();
             }
-            var s1 = ResolveType0(name);
+            var s1 = ResolveType1(name);
             if (s1 != null) return s1;
             var name2 = name.Replace("/", ".");
             if (name2 != name)
             {
-                s1 = ResolveType0(name2);
+                s1 = ResolveType1(name2);
                 if (s1 != null) return s1;
             }
             name2 = name.Replace("cli.", "");
             if (name2 != name)
             {
-                s1 = ResolveType0(name2);
+                s1 = ResolveType1(name2);
                 if (s1 != null) return s1;
             }
             return null;
         }
 
-        public static Type ResolveType0(string typeName)
+        public static Type ResolveType1(string typeName)
         {
             Type type = null;
             if (!typeName.Contains("."))

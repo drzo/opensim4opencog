@@ -17,6 +17,45 @@ namespace MushDLR223.ScriptEngines
     }
     public interface ICollectionRequester 
     {
+        object RequesterID { get; }
+        object SessionLock { get; }
+        RequesterSession SessionMananger { get; set; }
+    }
+
+    public class RequesterSession : ICollectionRequester
+    {
+        public RequesterSession(ICollectionRequester requester)
+        {
+            TheRequester = requester;
+            SkippedProviders = new HashSet<object>();
+        }
+
+        public override string ToString()
+        {
+            return TheRequester.ToString() + " session" + GetHashCode();
+        }
+        public ICollectionRequester TheRequester;
+        public HashSet<object> SkippedProviders { get; set; }
+
+        #region Implementation of ICollectionRequester
+
+        public object RequesterID
+        {
+            get { return TheRequester.RequesterID; }
+        }
+
+        public object SessionLock
+        {
+            get { return this; }
+        }
+
+        public RequesterSession SessionMananger
+        {
+            get { return this; }
+            set { TheRequester.SessionMananger = value; }
+        }
+
+        #endregion
     }
 
     public class GetGroupFuncHolder : ICollectionProvider

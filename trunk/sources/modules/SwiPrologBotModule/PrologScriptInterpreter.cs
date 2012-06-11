@@ -18,7 +18,7 @@ namespace PrologScriptEngine
         public static BotVarProvider CreateBotVarProvider(PlTerm bot, PlTerm nameSpace, PlTerm getter, PlTerm setter, PlTerm keyGetter)
         {
             BotVarProvider provider = new BotVarProvider("user", nameSpace.Name, getter.Name, setter.Name, keyGetter.Name);
-            ScriptManager.AddGroupProvider(PrologClient.GetInstance(bot), provider);
+            ScriptManager.AddGroupProvider((ICollectionRequester) PrologClient.GetInstance(bot), provider);
             return provider;
         }
 
@@ -121,7 +121,7 @@ namespace PrologScriptEngine
         public static ICollectionProvider CreateBotVarProvider(PlTerm bot, PlTerm nameSpace, PlTerm getter, PlTerm setter, PlTerm keyGetter)
         {
             var provider = new BotVarProviderCallN(nameSpace, getter, setter, keyGetter);
-            ScriptManager.AddGroupProvider(PrologClient.GetInstance(bot), provider);
+            ScriptManager.AddGroupProvider((ICollectionRequester) PrologClient.GetInstance(bot), provider);
             return provider;
         }
 
