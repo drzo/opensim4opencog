@@ -395,7 +395,7 @@ namespace RTParser.Variables
         public SettingsDictionary(String name, RTPBot bot, ParentProvider parent)
         {
             ObjectRequester = bot.ObjectRequester;
-            theNameSpace = name;
+            theNameSpace = ScriptManager.ToKey(name);
             IsSubsts = name.Contains("subst");
             TrimKeys = !name.Contains("subst");
             this.bot = bot;
@@ -1652,7 +1652,7 @@ namespace RTParser.Variables
                     return v;
                 }
             }
-            lock (orderedKeys)
+            //lock (orderedKeys)
             {
                 string normalizedName = TransformKey(name);
 

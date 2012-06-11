@@ -27,20 +27,18 @@ using SUnifiable=System.String;
 
 namespace AIMLBotModule
 {
-    public class WorldObjectsForAimLBot : WorldObjectsModule, ICollectionProvider, ISettingsDictionary
+    public class WorldObjectsForAimLBot : WorldObjectsModule
     {
-
+        private readonly ICollectionProvider provideAIMLVars;
+        private readonly ISettingsDictionary provideWorldUserVars;
+        private readonly ISettingsDictionary provideWorldBotVars;
+ 
         public override void InvokeCommand(string cmd, OutputDelegate output)
         {
             output("NotImplemented: " + this + " " + cmd);
         }
 
-        public bool IsTraced { get; set; }
-        public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
-        {
-            //get
-            { return WorldSystem.GroupNames; }
-        }
+        public static bool UseServitorEngine = true;
 
         private static int _DefaultMaxRespondToChatPerMinute = 20;
         public static int DefaultMaxRespondToChatPerMinute
@@ -225,14 +223,15 @@ namespace AIMLBotModule
 
         readonly TaskQueueHandler AimlBotReadSimData = new TaskQueueHandler("AIMLBot ReadSim");
         readonly TaskQueueHandler AimlBotRespond = new TaskQueueHandler("AIMLBot ChatRespond");
-		public static bool StartupBlocking = true;
+        public static bool StartupBlocking = true;
 
         public override void StartupListener()
         {
-			if (StartupBlocking) {
-				StartupListener0();
-				return;
-			}
+            if (StartupBlocking)
+            {
+                StartupListener0();
+                return;
+            }
             AimlBotReadSimData.Enqueue(StartupListener0);
             AimlBotReadSimData.Enqueue(() => AimlBotRespond.Start());
             AimlBotReadSimData.Start();
@@ -275,10 +274,10 @@ namespace AIMLBotModule
                 MyBot.ObjectRequester = client;
                 MyBot.outputDelegate = WriteLine;
                 MyBot.isAcceptingUserInput = false;
-                MyBot.useServitor = true;
+                MyBot.useServitor = UseServitorEngine;
 
                 MyBot.AddExcuteHandler("bot", BotExecHandler);
-                MyBot.AddExcuteHandler("lisp",(SystemExecHandler) LispExecHandler);
+                MyBot.AddExcuteHandler("lisp", (SystemExecHandler)LispExecHandler);
                 MyBot.loadGlobalBotSettings();
                 //MyBot.GlobalSettings.addSetting("name", client.BotLoginParams.FirstName+ " " + client.BotLoginParams.LastName);
                 MyBot.loadAIMLFromDefaults();
@@ -404,10 +403,7 @@ namespace AIMLBotModule
             MyBot.GlobalSettings.addSetting("master", client.MasterName);
             client.WorldSystem.TheSimAvatar["AIMLBotModule"] = this;
             client.WorldSystem.TheSimAvatar["MyBot"] = MyBot;
-            MushDLR223.ScriptEngines.ScriptManager.AddGroupProvider(client, this);
-            MushDLR223.ScriptEngines.ScriptManager.AddGroupProvider(client, MyBot.GlobalSettings);
-            MushDLR223.ScriptEngines.ScriptManager.AddGroupProvider(client, MyBot.BotAsUser.Predicates);
-
+            ScriptManager.AddGroupProvider(client, this.provideAIMLVars);
 
             LoadPersonalConfig();
 
@@ -427,6 +423,8 @@ namespace AIMLBotModule
         {
             if (MyBotNullWarning()) return;
             MyBot.SetName(myName);
+            MyBot.BotAsUser.Predicates.InsertOverrides(() => provideWorldBotVars);
+            MyBot.BotAsUser.Predicates.InsertListener(() => provideWorldBotVars);
         }
 
         public void SetChatOnOff(string username, bool value)
@@ -450,7 +448,7 @@ namespace AIMLBotModule
             RTParser.User user = MyBot.FindOrCreateUser(fromname, out newlyCreated);
             if (newlyCreated)
             {
-                user.InsertProvider(() => this);
+                user.InsertProvider(() => this.provideWorldUserVars);
                 user.RespondToChat = RespondToChatByDefaultAllUsers;
             }
             user.MaxRespondToChatPerMinute = DefaultMaxRespondToChatPerMinute;
@@ -617,14 +615,14 @@ namespace AIMLBotModule
                         }, "AIML_OnInstantMessage: " + myUser + ": " + message);
         }
 
-    /*    IEnumerable<Thread> ThreadList
-        {
-            get
+        /*    IEnumerable<Thread> ThreadList
             {
-                return WorldSystem.client.GetBotCommandThreads();
+                get
+                {
+                    return WorldSystem.client.GetBotCommandThreads();
+                }
             }
-        }
-        */
+            */
         private void RunTask(ThreadStart action, string name)
         {
             Enqueue(name, () => client.InvokeThread(name, action));
@@ -633,6 +631,8 @@ namespace AIMLBotModule
         public WorldObjectsForAimLBot(BotClient testClient)
             : base(testClient)
         {
+            provideWorldUserVars = provideWorldBotVars = new ProvideWorldVars(this);
+            provideAIMLVars = new ProvideAIMLVars(this);
         }
 
         private DateTime lastFollow = DateTime.Now;
@@ -647,7 +647,7 @@ namespace AIMLBotModule
             var sourcetype = e.SourceType;
 
             if (String.IsNullOrEmpty(message) || message.Length < 2) return;
-            if (sourcetype == ChatSourceType.System) return;          
+            if (sourcetype == ChatSourceType.System) return;
             if (fromname == GetName())
             {
                 HeardMyselfSay(UUID.Zero, message);
@@ -845,7 +845,7 @@ namespace AIMLBotModule
                 return;
             }
             Vector3 aSimPos, tSimPos;
-            if (!a.TryGetSimPosition(out aSimPos) || !talker.TryGetSimPosition(out tSimPos)) return ;
+            if (!a.TryGetSimPosition(out aSimPos) || !talker.TryGetSimPosition(out tSimPos)) return;
 
             if (Math.Abs(aSimPos.Z - aSimPos.Z) > MaxZDistance)
             {
@@ -896,7 +896,8 @@ namespace AIMLBotModule
             }
             if (Monitor.TryEnter(writeLock, 2000))
             {
-                writeLock.Enqueue(() => {
+                writeLock.Enqueue(() =>
+                {
                     if (logAimlToClient && client != null) client.DebugWriteLine(s, args);
                     Logger.DebugLog(DLRConsole.SafeFormat(DLRConsole.SafeFormat("[AIMLBOT] {0} {1}", GetName(), s), args));
                 });
@@ -996,7 +997,7 @@ namespace AIMLBotModule
             if (MyBot.useServitor)
             {
                 AddedToNextResponse = "";
-                MyBot.DefaultPredicates.updateSetting("name",myUser.UserName);
+                MyBot.DefaultPredicates.updateSetting("name", myUser.UserName);
                 MyBot.updateRTP2Sevitor(myUser);
                 MyBot.servitor.curBot.sayProcessor = new sayProcessorDelegate(TalkActive);
 
@@ -1105,7 +1106,7 @@ namespace AIMLBotModule
             {
                 if (input.Contains(" "))
                 {
-                    string[] split = input.Split(new char[] {' '}, StringSplitOptions.RemoveEmptyEntries);
+                    string[] split = input.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     if (myName.StartsWith(split[0].ToLower()))
                     {
                         input = string.Join(" ", split, 1, split.Length - 1);
@@ -1213,92 +1214,6 @@ namespace AIMLBotModule
             //todo throw new NotImplementedException();
         }
 
-        public ICollection GetGroup(ICollectionRequester requester, string name)
-        {
-            SUnifiable v = null;
-            if (MyUser != null) v = MyUser.Predicates.grabSetting(name);
-            if (v == null)
-            {
-                if (MyBot != null) v = MyBot.GlobalSettings.grabSetting(name);
-                if (v == null) return null;
-            }
-            if (SUnifiable.IsNullOrEmpty(v)) return null;
-            if (name.ToString() == v.ToString())
-            {
-                return null;
-            }
-            var list = new List<string>();
-            list.Add(v);
-            return list;
-        }
-
-        public bool addSetting(string name, Unifiable value)
-        {
-            return false;
-        }
-
-        public bool removeSetting(string name)
-        {
-            return false;
-        }
-
-        public bool updateSetting(string name, Unifiable value)
-        {
-            return false;
-        }
-
-        public static bool FakeClientVars = false;
-        public Unifiable grabSetting(string name)
-        {
-            if (FakeClientVars) if (name == "cogvar") return "botmody";
-            int argsUsed;
-            ICollection v = WorldSystem.ResolveCollection(name.ToLower(), out argsUsed, this);
-            if (v == null) return String.Empty;
-            if (v.Count == 0) return SUnifiable.Empty;
-            SUnifiable uu = null;
-            int c = 0;
-            List<Unifiable> List = new List<Unifiable>();
-            foreach (var u in v)
-            {
-                c++;
-                uu = ObjectUnifiable(u);
-                List.Add(uu);
-            }
-            if (c == 1) return List[0];
-            return new BestUnifiable(List);
-        }
-
-        private SUnifiable ObjectUnifiable(object o)
-        {
-            if (o is SimObject) o = ((SimObject)o).ID;
-            //            if (o is SimPosition) o = ((SimPosition) o).GlobalPosition;
-            return new StringUnifiable(o.ToString());
-        }
-
-        public bool containsLocalCalled(string name)
-        {
-            if (FakeClientVars) return name == "cogvar";
-            int argsUsed;
-            var v = WorldSystem.ResolveCollection(name.ToLower(), out argsUsed, this);
-            return (v != null && v.Count > 0);
-        }
-        public bool containsSettingCalled(string name)
-        {
-            if (FakeClientVars) return name == "cogvar";
-            int argsUsed;
-            var v = WorldSystem.ResolveCollection(name.ToLower(), out argsUsed, this);
-            return (v != null && v.Count > 0);
-        }
-
-        public string NameSpace
-        {
-            get
-            {
-                if (FakeClientVars) return "botmod";
-                return client.GetName();
-            }
-        }
-
         public RTParser.User MyUser
         {
             get
@@ -1356,13 +1271,13 @@ namespace AIMLBotModule
         internal bool DoBotDirective(string[] args, UUID fromAgentID, OutputDelegate writeLine)
         {
             string s = args[0];
-            if (s == "@wait" )
+            if (s == "@wait")
             {
                 return true;
             }
             if (s == "on" || s == "@on")
             {
-                 RespondToChatByDefaultAllUsers = true;
+                RespondToChatByDefaultAllUsers = true;
                 SetChatOnOff(String.Join(" ", args, 1, args.Length - 1), true);
                 writeLine("WorldObjects.RespondToChatByDefaultAllUsers = true;");
                 return true;
@@ -1391,18 +1306,198 @@ namespace AIMLBotModule
             return true;
         }
 
-        #region Implementation of ICollectionProviderSettable
-
-        public void SetValue(ICollectionRequester requester, string name, object value)
+        /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        public class ProvideAIMLVars : ICollectionProvider
         {
-            
-        }
+            public Bot MyBot
+            {
+                get { return PluginModule.MyBot; }
+            }
+            public ProvideAIMLVars(WorldObjectsForAimLBot param1)
+            {
+                PluginModule = param1;
+            }
+            public WorldObjectsForAimLBot PluginModule { get; set; }
 
-        public bool AcceptsNewKeys
+            #region Implementation of ITreeable
+
+            public string NameSpace
+            {
+                get { return MyBot.BotID;  }
+            }
+
+            public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
+            {
+                return MyBot.BotAsUser.Predicates.SettingNames(requester, depth);
+            }
+
+            #endregion
+
+            #region Implementation of ICollectionProviderSettable
+
+            public void SetValue(ICollectionRequester requester, string name, object value)
+            {
+                MyBot.BotAsUser.Predicates.SetValue(requester, name, value);
+            }
+
+            public bool AcceptsNewKeys
+            {
+                get { return true;  }
+            }
+
+            public ICollection GetGroup(ICollectionRequester requester, string name)
+            {
+                SUnifiable v = null;
+                v = MyBot.BotAsUser.Predicates.grabSetting(name);
+                if (v == null)
+                {
+                    if (MyBot != null) v = MyBot.GlobalSettings.grabSetting(name);
+                    if (v == null) return null;
+                }
+                if (SUnifiable.IsNullOrEmpty(v)) return null;
+                if (name.ToString() == v.ToString())
+                {
+                    return null;
+                }
+                var list = new List<string>();
+                list.Add(v);
+                return list;
+            }
+
+            #endregion
+        }
+        public class ProvideWorldVars : ISettingsDictionary
         {
-            get { return false;  }
-        }
+            public bool IsTraced { get; set; }
 
-        #endregion
+            public ProvideWorldVars(WorldObjectsForAimLBot param1)
+            {
+                PluginModule = param1;
+            }
+            public WorldObjectsForAimLBot PluginModule { get; set; }
+
+            public static bool FakeClientVars = false;
+
+            public BotClient client
+            {
+                get { return PluginModule.client; }
+            }
+
+            public WorldObjects WorldSystem
+            {
+                get { return PluginModule.WorldSystem; }
+            }
+            public Bot MyBot
+            {
+                get { return PluginModule.MyBot; }
+            }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="requester"></param>
+            /// <param name="depth"></param>
+            /// <returns></returns>        
+            public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
+            {
+                //get
+                {
+                    return WorldSystem.GroupNames;
+                }
+            }
+
+
+            public ICollection GetGroup(ICollectionRequester requester, string name)
+            {
+                return ScriptManager.GetGroup(requester, NameSpace, name);
+            }
+
+            public bool addSetting(string name, Unifiable value)
+            {
+                return ScriptManager.AddSetting(client, NameSpace, name, FromUnifiable(name, value));
+            }
+
+            public bool removeSetting(string name)
+            {
+                return ScriptManager.AddSetting(client, NameSpace, name, null);
+            }
+
+            public bool updateSetting(string name, Unifiable value)
+            {
+                return ScriptManager.AddSetting(client, NameSpace, name, FromUnifiable(name, value));
+            }
+
+            private object FromUnifiable(string named, Unifiable unifiable)
+            {
+                string ret = unifiable.AsString();
+                CheckName(named);
+                return ret;
+            }
+
+            private void CheckName(string named)
+            {
+                if (!named.ToLower().Contains("sitt")) return;
+                named.ToLower();
+            }
+
+            public Unifiable grabSetting(string name)
+            {
+                CheckName(name); 
+                if (FakeClientVars) if (name == "cogvar") return "botmody";
+                int argsUsed;
+                ICollection v = WorldSystem.ResolveCollection(name.ToLower(), out argsUsed, PluginModule.provideAIMLVars);
+                if (v == null) return String.Empty;
+                if (v.Count == 0) return SUnifiable.Empty;
+                SUnifiable uu = null;
+                int c = 0;
+                List<Unifiable> List = new List<Unifiable>();
+                foreach (var u in v)
+                {
+                    c++;
+                    uu = ObjectUnifiable(u);
+                    List.Add(uu);
+                }
+                if (c == 1) return List[0];
+                return new BestUnifiable(List);
+            }
+
+            private SUnifiable ObjectUnifiable(object o)
+            {
+                if (o is SimObject) o = ((SimObject)o).ID;
+                //            if (o is SimPosition) o = ((SimPosition) o).GlobalPosition;
+                return new StringUnifiable(o.ToString());
+            }
+
+            public bool containsLocalCalled(string name)
+            {
+                CheckName(name);
+                if (FakeClientVars) return name == "cogvar";
+                int argsUsed;
+                var v = WorldSystem.ResolveCollection(name.ToLower(), out argsUsed, PluginModule.provideAIMLVars);
+                return (v != null && v.Count > 0);
+            }
+            public bool containsSettingCalled(string name)
+            {
+                CheckName(name);
+                if (FakeClientVars) return name == "cogvar";
+                int argsUsed;
+                var v = WorldSystem.ResolveCollection(name.ToLower(), out argsUsed, PluginModule.provideAIMLVars);
+                return (v != null && v.Count > 0);
+            }
+
+            public string NameSpace
+            {
+                get
+                {
+                    if (FakeClientVars) return "botmod";
+                    return client.GetName();
+                }
+            }
+        }
     }
 }

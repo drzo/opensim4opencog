@@ -639,6 +639,10 @@ namespace RTParser
         {
             unifiable = Trim(unifiable).Replace("\n", " ").Replace("\r", " ");
             string[] sentNow = unifiable.Split(new[] { "<br/>", "&p;", "<p/>" }, StringSplitOptions.RemoveEmptyEntries);
+            if (AlreadyUsed.Contains(unifiable))
+            {
+                return;
+            }
             if (sentNow.Length == 1)
             {
                 unifiable = sentNow[0];
@@ -656,10 +660,6 @@ namespace RTParser
             else
             {
                 AddOutputs(sentNow, addToFront);
-                return;
-            }
-            if (AlreadyUsed.Contains(unifiable))
-            {
                 return;
             }
 

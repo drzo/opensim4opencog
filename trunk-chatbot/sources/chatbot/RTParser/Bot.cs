@@ -636,7 +636,7 @@ namespace RTParser
             if (File.Exists(graphcache))
             {
                 Console.WriteLine("***** saveServitor():{0} SKIPPING ******", graphcache);
-                servitor.skiploading = true;
+                if (servitor != null) servitor.skiploading = true;
                 return;
             }
             string[] header = { "<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "<aiml version=\"1.0\">", " <state name=\"*\">" };
