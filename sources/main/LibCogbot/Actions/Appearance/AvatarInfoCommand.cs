@@ -40,8 +40,6 @@ namespace Cogbot.Actions.Appearance
                 return Success("Avatars shown: " + count);
             }
 
-            string targetName = String.Join(" ", args);
-
             int argsUsed;
             List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
             if (IsEmpty(PS)) return Failure("Cannot find objects from " + args.str);
@@ -49,25 +47,27 @@ namespace Cogbot.Actions.Appearance
             {
                 Primitive foundAv = O.Prim;
                 StringBuilder output = new StringBuilder();
-                targetName = String.Join(" ", args, 0, argsUsed);
-                output.AppendFormat("{0} ({1})", targetName, foundAv.ID);
+                string targetName = String.Join(" ", args, 0, argsUsed);
+                output.AppendFormat("{0} ({1})", targetName, O.ID);
                 output.AppendLine();
-                if (foundAv.Textures != null)
+                if (foundAv.Textures == null)
                 {
                     output.AppendLine("No textures yet");
                 }
                 else
+                {
                     for (int i = 0; i < foundAv.Textures.FaceTextures.Length; i++)
                     {
                         if (foundAv.Textures.FaceTextures[i] != null)
                         {
                             Primitive.TextureEntryFace face = foundAv.Textures.FaceTextures[i];
-                            AvatarTextureIndex type = (AvatarTextureIndex)i;
+                            AvatarTextureIndex type = (AvatarTextureIndex) i;
 
                             output.AppendFormat("{0}: {1}", type, face.TextureID);
                             output.AppendLine();
                         }
                     }
+                }
                 AddSuccess(output.ToString());
             }
             return SuccessOrFailure();
