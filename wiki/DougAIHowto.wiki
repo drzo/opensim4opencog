@@ -1,7 +1,6 @@
-#summary One-sentence summary of this page.
 
 = Introduction =
-This document will attempt to layout according to Douglas R. Miles how AI will work and then be built.
+This document will attempt to layout according to myself Douglas R. Miles how AI will work and then be built.
 
 = Assumptions =
 
@@ -11,5 +10,45 @@ The programs SAM/PAM by Roger Schank was indeed one of the first most viable sta
 
 "Inner self" means that we exist in some (game?) world that is separate from the outer environment.  It probably has objects and actions not defined or restricted by spatial coordinates.  It probably has bio-rythemy (dictated by some bio-chemistry) weather like system that is control autonomic-ally and may even be irrelevant to the situation a self-aware being is in. 
 
+= More assumptions =
 
-= Details =
+Starting with the restaurant script by Schank we might have an inner script called "the first things we think about at the start of the day".  For some of us in order for items to make it on the list they have to first be qualified by "what is relevant for us to think about", "what do we have time to think about", "what deserves our attention" and "what things do I already think about each morning no mater what".  My point is that we have definite rules (personality) in which we use to keep our inner self compliant.  First this may sound like some phase of goal based planning, but that is not the point of this paragraph the goal is to point out is there is a sense of ontoligising our inner world simply as on the outside.  Imagine how simple it would be to write a flowchart of diagnosing why an engine wont start and realize it'd be just as simple as picking out what the first things we need to think about the start of the day would be.  Again not for a planner but just to understand how we label the rules of such an enterprise.   This meta language can have vague operators such as "this is more important than that" or "i want to talk to this person" and "each day I have to put gas in the car"..  The reason I declare this stuff as "easy" is because if someone was to as "why?"  We'd be able to explain in some ready made language script.  The point where some things are harder to explain is when we've either formed a postulate that cannot be further be simplified ("i am hungry"  "chicken tastes great and I cant explain it") or when the explanation is something that came from the autonomic instant weather system like: "it just came to my mind".   Things will come to mind often because they by tradition just do.  
+
+In Sci-fi, we like thinking androids will solve everything in life the same way they would play a game of chess.  We imagine them short circuiting when they encounter unexplainable emotions, situations or people.  So it that AI useful?  I wont say short circuiting is useful but say such an AI is exactly what we all want.  We want a tireless logic machine taking in the big and small picture and computing the most brilliant "act" or "hypothesis" for the moment that it is in.  We want to sit by it's side and explain how we think and feel so that it can inherit those same behaviors.  We hope to do that in English.  Answering many questions it has for us about the exciting new world we have brought it into.  How far is that from a reality?  Initially very very far.  It is important to define the types of questions we'd enjoy answering because those are the exact ones we think "make us human."
+
+= Steps =
+
+# Define an outside world model in STRIPS notation using Schanks C.D. language of anything/everything that we'd like the robot to be able to do.
+"here is how to gather wood and build a fire to achieve warmth" "you want warmth because it makes you feel good"
+
+# Simply these models into the most concise featureless version possible.
+"do X, then do Y to achieve Z"  "wanting Z because it makes you feel A"  "A is good"
+
+# Extract the stop-words that are left: "do" "then" "wanting" "makes you" "feel" "is".  Even: "good"
+
+# decide the ontology of X,Y,Z,A
+
+# Create the mbuild rules for even considering the population of such variables.
+
+# Define these mbuild rules in the original way you did step 1 and repeat until you get back to this rule.
+
+# Now do the same steps for your stop-words.
+
+# put your rules of legal construction of such sentences back into STRIPS form as so that only valid sentences can be generated. 
+
+out comes:  "do sit then do sit" ..
+
+# find and create ways of stopping such exceptions (make a DSL)
+
+# simplify your exceptions language created for detecting 
+
+# this new "exceptions language" repeat steps 1-4 on it
+
+
+
+ 
+
+
+
+
+ 
