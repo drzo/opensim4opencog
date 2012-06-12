@@ -1,4 +1,3 @@
-
 = Introduction =
 This document will attempt to layout according to myself Douglas R. Miles how AI will work and then be built.
 
@@ -44,7 +43,24 @@ out comes:  "do sit then do sit" ..
 
 # this new "exceptions language" repeat steps 1-4 on it
 
+# run the sentence generator again.. When i say "sentence generator": i mean really it is a "rule generator".. hopefully generating infinite numbers of rules.
 
+# reduce the X,Y,Z,A into only a small set of literals and see if you can ever make the generator ever stop.  You should be able to.
+
+# rewrite the generator to allow yourself to predict exactly how many rules it can produce at any given time if you haven't already done so.
+
+# invent new sets of X,Y,Z,As that together make good sense.  Determine what ontological basis you went by. example: GoCabin->Sitting->Comfort->Good  ontologically:  "chairs are comfortable and found in cabins"
+
+# Again steps: 1-4..  on step 3:  "foundIn" "is" .. remember, step 3 before had found "is".  
+
+
+# Are you creating new language yet? or have you been reusing the same language you did the very first time?  Decide your stop-word generation is not the same as the first time.. create new versions of "is"
+
+# define a program that will have generated everything you have done up to now.. including generating forking the definition if "is"...  based in a DSL with no more than candidate items per datatype.   (the limit imposed is for debugging)
+
+# rewrite this program now entirely in a STRIPS format that will generate exactly the kind of template you just created.
+
+_bed time more to come.._
 
  
 
