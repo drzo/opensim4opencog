@@ -24,15 +24,16 @@ In Sci-fi, we like thinking androids will solve everything in life the same way 
  # Create the mbuild rules for even considering the population of such variables.
  # Define these mbuild rules in the original way you did step 1 and repeat until you get back to this rule.
  # Now do the same steps 1-4 for your stop-words.
+ # save this off as a new STRIPS notation
  # put your rules of legal construction of such sentences back into STRIPS form as so that only valid sentences can be generated. out comes:  "do sit then do sit" ..
  # find and create ways of stopping such exceptions (make a DSL)
  # simplify your exceptions language created for detecting 
- #  this new "exceptions language" repeat steps 1-7 on it
+ #  this new "exceptions language" repeat steps 1-8 on it
  # run the sentence generator again.. When i say "sentence generator": i mean really it is a "rule generator".. hopefully generating infinite numbers of rules.
  # reduce the X,Y,Z,A into only a small set of literals and see if you can ever make the generator ever stop.  You should be able to.
  # rewrite the generator to allow yourself to predict exactly how many rules it can produce at any given time if you haven't already done so.
  # invent new sets of X,Y,Z,As that together make good sense.  Determine what ontological basis you went by. example: GoCabin->Sitting->Comfort->Good  ontologically:  "chairs are comfortable and found in cabins"
- # Again steps: 1-7..  on step 3:  "foundIn" "is" .. remember, step 5 before had found "is".  
+ # Again steps: 1-8..  on step 7.3:  "foundIn" "is" .. remember, step 5 before had found "is".  
  # Are you creating new language yet? or have you been reusing the same language you did the very first time?  Decide your stop-word generation is not the same as the first time.. create new versions of "is"
  # define a program that will have generated everything you have done up to now.. including generating forking the definition if "is"...  based in a DSL with no more than candidate items per datatype.   (the limit imposed is for debugging)
  # rewrite this program now entirely in a STRIPS format that will generate exactly the kind of template you just created.
