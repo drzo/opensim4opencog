@@ -27,16 +27,16 @@ with these items
 
 needed for development release
 
-    Build system sane
-    installer finished
-    Complete regression test coverage
-    setup and run pathfinding unit tests
-    Bug list reasonably clean
-    Every component currently in the installer's cvomponent list must work well enough to be useable.
-    ABCL interpreter working
-    BotCommand? parser using CommandInfo? to "parse" the commands separately 
-    Example files made
-    Some level of documentation of everything
+ * Build system sane
+ * installer finished
+ * Complete regression test coverage
+ * setup and run pathfinding unit tests
+ * Bug list reasonably clean
+ * Every component currently in the installer's cvomponent list must work well enough to be useable.
+ * ABCL interpreter working
+ * BotCommand? parser using CommandInfo? to "parse" the commands separately 
+ * Example files made
+ * Some level of documentation of everything
 
 == needed for public release ==
 
