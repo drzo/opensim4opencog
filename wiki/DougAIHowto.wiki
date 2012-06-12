@@ -17,50 +17,50 @@ In Sci-fi, we like thinking androids will solve everything in life the same way 
 
 = Steps =
 
-# Define an outside world model in STRIPS notation using Schanks C.D. language of anything/everything that we'd like the robot to be able to do.
+ # Define an outside world model in STRIPS notation using Schanks C.D. language of anything/everything that we'd like the robot to be able to do.
 "here is how to gather wood and build a fire to achieve warmth" "you want warmth because it makes you feel good"
 
-# Simply these models into the most concise featureless version possible.
+ # Simply these models into the most concise featureless version possible.
 "do X, then do Y to achieve Z"  "wanting Z because it makes you feel A"  "A is good"
 
-# Extract the stop-words that are left: "do" "then" "wanting" "makes you" "feel" "is".  Even: "good"
+ # Extract the stop-words that are left: "do" "then" "wanting" "makes you" "feel" "is".  Even: "good"
 
-# decide the ontology of X,Y,Z,A
+ # decide the ontology of X,Y,Z,A
 
-# Create the mbuild rules for even considering the population of such variables.
+ # Create the mbuild rules for even considering the population of such variables.
 
-# Define these mbuild rules in the original way you did step 1 and repeat until you get back to this rule.
+ # Define these mbuild rules in the original way you did step 1 and repeat until you get back to this rule.
 
-# Now do the same steps for your stop-words.
+ # Now do the same steps 1-4 for your stop-words.
 
-# put your rules of legal construction of such sentences back into STRIPS form as so that only valid sentences can be generated. 
+ # put your rules of legal construction of such sentences back into STRIPS form as so that only valid sentences can be generated. 
 
 out comes:  "do sit then do sit" ..
 
-# find and create ways of stopping such exceptions (make a DSL)
+ # find and create ways of stopping such exceptions (make a DSL)
 
-# simplify your exceptions language created for detecting 
+ # simplify your exceptions language created for detecting 
 
-# this new "exceptions language" repeat steps 1-4 on it
+#  this new "exceptions language" repeat steps 1-7 on it
 
-# run the sentence generator again.. When i say "sentence generator": i mean really it is a "rule generator".. hopefully generating infinite numbers of rules.
+ # run the sentence generator again.. When i say "sentence generator": i mean really it is a "rule generator".. hopefully generating infinite numbers of rules.
 
-# reduce the X,Y,Z,A into only a small set of literals and see if you can ever make the generator ever stop.  You should be able to.
+ # reduce the X,Y,Z,A into only a small set of literals and see if you can ever make the generator ever stop.  You should be able to.
 
-# rewrite the generator to allow yourself to predict exactly how many rules it can produce at any given time if you haven't already done so.
+ # rewrite the generator to allow yourself to predict exactly how many rules it can produce at any given time if you haven't already done so.
 
-# invent new sets of X,Y,Z,As that together make good sense.  Determine what ontological basis you went by. example: GoCabin->Sitting->Comfort->Good  ontologically:  "chairs are comfortable and found in cabins"
+ # invent new sets of X,Y,Z,As that together make good sense.  Determine what ontological basis you went by. example: GoCabin->Sitting->Comfort->Good  ontologically:  "chairs are comfortable and found in cabins"
 
-# Again steps: 1-4..  on step 3:  "foundIn" "is" .. remember, step 3 before had found "is".  
+ # Again steps: 1-7..  on step 3:  "foundIn" "is" .. remember, step 5 before had found "is".  
 
 
-# Are you creating new language yet? or have you been reusing the same language you did the very first time?  Decide your stop-word generation is not the same as the first time.. create new versions of "is"
+ # Are you creating new language yet? or have you been reusing the same language you did the very first time?  Decide your stop-word generation is not the same as the first time.. create new versions of "is"
 
-# define a program that will have generated everything you have done up to now.. including generating forking the definition if "is"...  based in a DSL with no more than candidate items per datatype.   (the limit imposed is for debugging)
+ # define a program that will have generated everything you have done up to now.. including generating forking the definition if "is"...  based in a DSL with no more than candidate items per datatype.   (the limit imposed is for debugging)
 
-# rewrite this program now entirely in a STRIPS format that will generate exactly the kind of template you just created.
+ # rewrite this program now entirely in a STRIPS format that will generate exactly the kind of template you just created.
 
-_bed time more to come.._
+_not yet finished explaining..._
 
  
 
