@@ -17,10 +17,8 @@ In Sci-fi, we like thinking androids will solve everything in life the same way 
 
 = Steps =
 
- # Define an outside world model in STRIPS notation using Schanks C.D. language of anything/everything that we'd like the robot to be able to do.
-"here is how to gather wood and build a fire to achieve warmth" "you want warmth because it makes you feel good"
- # Simply these models into the most concise featureless version possible.
-"do X, then do Y to achieve Z"  "wanting Z because it makes you feel A"  "A is good"
+ # Define an outside world model in STRIPS notation using Schanks C.D. language of anything/everything that we'd like the robot to be able to do. "here is how to gather wood and build a fire to achieve warmth" "you want warmth because it makes you feel good"
+ # Simply these models into the most concise featureless version possible. "do X, then do Y to achieve Z"  "wanting Z because it makes you feel A"  "A is good"
  # Extract the stop-words that are left: "do" "then" "wanting" "makes you" "feel" "is".  Even: "good"
  # decide the ontology of X,Y,Z,A
  # Create the mbuild rules for even considering the population of such variables.
