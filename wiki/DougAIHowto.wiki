@@ -1,0 +1,15 @@
+#summary One-sentence summary of this page.
+
+= Introduction =
+This document will attempt to layout according to Douglas R. Miles how AI will work and then be built.
+
+= Assumptions =
+
+The programs SAM/PAM by Roger Schank was indeed one of the first most viable starts of AI.  His theory may be viewed as one version of the Language of Thought hypothesis (which Schank calls 'Conceptual Dependency' theory, abbreviated as CD). Although much of his work was based on natural language "understanding".  He defined, at minimum, what the tenants what "understanding" might look like.  From this very start opponents will use the the Chinese Room argument against this language.  I'll ignore this because we've agreed "Artificial" is fine when it comes to machine intelligence. Those who have seen the source code of SAM realize that it is a system who's job is to find a "best fit" on programmed patterns.   What it does is create a language that "best fit" can exist.  We see that to take that initial program really into our world, millions of facts and rules are required to be put into the system.  Before we attempt to add these millions of facts and rules we have to define a very clear meta language (above C.D.).. I believe CycL is the perfect language for this.   And the millions of common sense facts have already been written in CycL!   
+
+"Self awareness" means that in order for a program to operate it must be forced to "observe" its execution transcript in the same language in which it interacts with it's environment.  One's own thoughts and plans are just as much part of the world we live in as the outside environment.  The inner environment has many cause-effect rules as the outside does of physics.  We (and the program) strive for control (satisfaction of goals) of the inner world as much as the outside. One definition of "Personality" I learned in school was "The manner of skill in which a person exerts their intentions to the control of their environment" We say a person has a well developed personality when they have found a way to make their environment (others around them) comfortable while they are satisfying their immediate goals.  I believe that in order for a person to function at a high skill level here the must master and win at the games of their inner self.   The concept of "inner self" is what is supposedly so hard to define for AI scientists.  So before defining what "it is" we are better off implementing the framework in which an inner self could operate in.  I think that C.D. representation or CycL might provide sufficient data types for whatever processor we define in this document.
+
+"Inner self" means that we exist in some (game?) world that is separate from the outer environment.  It probably has objects and actions not defined or restricted by spatial coordinates.  It probably has bio-rythemy (dictated by some bio-chemistry) weather like system that is control autonomic-ally and may even be irrelevant to the situation a self-aware being is in. 
+
+
+= Details =
