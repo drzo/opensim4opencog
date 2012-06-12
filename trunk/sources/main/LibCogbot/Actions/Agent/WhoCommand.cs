@@ -40,7 +40,7 @@ namespace Cogbot.Actions.Agent
             Name = "Who";
             Description = "Lists seen avatars.";
             Category = CommandCategory.Other;
-            Parameters = CreateParams();
+            AddVersion(CreateParams(), Description);
             ResultMap = CreateParams(
                 "avatarList", typeof (List<Avatar>), "list of present avatars",
                 "message", typeof(string), "if success was false, the reason why",

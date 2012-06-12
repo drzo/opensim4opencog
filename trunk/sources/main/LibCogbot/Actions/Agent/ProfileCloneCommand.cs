@@ -51,9 +51,9 @@ namespace Cogbot.Actions.Agent
 
             Name = "Profile Clone";
             Description = "Copies another avatars profile as closely as possible onto your existing profile. WARNING: This command will destroy your existing profile!";
-            Details = AddUsage("profileclone [targetuuid]", "copies the profile specified by targetuuid");
             Category = CommandCategory.Other;
-            Parameters = CreateParams("agent", typeof(UUID), "agent you are going to " + Name);
+            AddVersion(CreateParams("agent", typeof(UUID), "agent you are going to " + Name),
+                       "copies the profile specified by agent's uuid");
             ResultMap = CreateParams(
                 "reason", typeof(string), "if success was false, the reason why",
                 "success", typeof(bool), "true if command was successful");
