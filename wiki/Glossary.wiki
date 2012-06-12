@@ -37,7 +37,7 @@ If you add entries please keep them alphabetized
 
   * opensim4opencog - what we're building. We're migrating away from this name and towards Cogbot.
 
-  * ProgramK - Cogbot's current AIML interpreter. Scheduled to be phased out by BTML.
+  * ProgramK - All Prolog AIML interpreter. Not used in cogbot, 
 
   * Second Life - A large virtual world service operated by Linden Labs
 
