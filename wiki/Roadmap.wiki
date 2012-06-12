@@ -49,7 +49,7 @@ with these items
 
 = The ongoing roadmap =
 
-Please edit this only after some concensus on roadmap
+Please edit this only after some consensus on roadmap
 
 
 = Direction =
@@ -65,7 +65,7 @@ Please edit this only after some concensus on roadmap
 === later ===
 
  # documentation
- # Add 'not' to the adjectives
+ # finishing out hill people
  # Look for other improvements to the command language
 
 
@@ -74,8 +74,9 @@ Please edit this only after some concensus on roadmap
 === first ===
 
  # prolog API to botvars,sysvars
- # document manefeto
+ # get AIML module ready for installer
  # botcmds using generic parser map
+ # document manifesto
  # Overview of current set of services: like botvar namespaces
  
 
