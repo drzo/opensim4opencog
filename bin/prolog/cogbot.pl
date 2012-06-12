@@ -135,14 +135,14 @@ mud:-ensure_loaded(library('startrek/mudreader.pl')).
 :-dynamic(ike1Ran).
 ike1:-ike1Ran,!.
 ike1:-assert(ike1Ran),fail.
-ike1:-logon_bot('ike','Testbot','060788', "http://www.pathwayslms.com:9000/","home",Y).
+ike1:-logon_bot('ike','Testbot','060788', "http://www.pathwayslms.com:9000/","home",_Y).
 %ike1:-logon_bot('ExampleBot','Resident','abc123', "https://login.agni.lindenlab.com/cgi-bin/login.cgi","last",_).
 ike:-thread_create(ike1,_,[]).
 
 :-dynamic(raphe1Ran).
 raphe1:- raphe1Ran,!.
 raphe1:-assert(raphe1Ran),fail.
-raphe1:-logon_bot('raphe','Testbot','060788', "http://www.pathwayslms.com:9000/","home"),_Y).
+raphe1:-logon_bot('raphe','Testbot','060788', "http://www.pathwayslms.com:9000/","home",_Y).
 raphe:-thread_create(raphe1,_,[]).
 
 gui:-thread_create(botcmd(showgui),_,[]).

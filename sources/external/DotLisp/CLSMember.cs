@@ -87,6 +87,10 @@ namespace DotLisp
 
         internal static CLSMember FindMember0(String name, Type type, Boolean isStatic)
         {
+            if (type == null)
+            {
+                throw new Exception("No type!");
+            }
             //lookup name in type, create approriate derivee
             MemberInfo[] members = type.GetMember(name,
                                                               BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy |
@@ -267,10 +271,20 @@ namespace DotLisp
         internal CLSMember found = null;
         private readonly Type _Type;
         internal bool _Static;
-        public FindMemberLaterNoSymtab(string s, Type typename, bool @static)
+
+        public FindMemberLaterNoSymtab()
         {
+            
+        }
+
+        public FindMemberLaterNoSymtab(string s, Type typename, bool @static)
+       {
             name = s;
             _Type = typename;
+            if (_Type == null)
+            {
+                throw new Exception("No type!");
+            }
             _Static = @static;
             
         }
@@ -284,6 +298,10 @@ namespace DotLisp
         {
             if (found == null)
             {
+                if (_Type == null)
+                {
+                    throw new Exception("No type!");
+                }
                 found = FindMember0(name, _Type, _Static);
             }
             return found;
@@ -310,11 +328,15 @@ namespace DotLisp
         private readonly SymbolTable _Symtab;
         private readonly string _Typename;
         public FindMemberLater(string s, SymbolTable symtab, string typename, bool @static)
-            : base(s, null, @static)
+            : base()
         {
             name = s;
             _Symtab = symtab;
             _Typename = typename;
+            if (_Typename == null)
+            {
+                throw new Exception("No type!");
+            }
             _Static = @static;
         }
 

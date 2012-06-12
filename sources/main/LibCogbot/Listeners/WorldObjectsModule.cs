@@ -5,6 +5,7 @@ namespace Cogbot
 {
     abstract public class WorldObjectsModule : AListener
     {
+        public string startupOptions;
         public WorldObjects WorldSystem
         {
             get
