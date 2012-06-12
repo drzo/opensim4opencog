@@ -1463,14 +1463,7 @@ namespace Cogbot
         internal void LoadBotAssembly(Assembly assembly, string args)
         {
             RegisterAssembly(assembly);
-
-            Action<BotClient> botClientPostCreationHooks = (Client) =>
-                                                    {
-                                                        Client.LoadAssembly(assembly);
-                                                        if (!string.IsNullOrEmpty(args))
-                                                            Client.InvokeAssembly(assembly, args, Client.WriteLine);
-                                                    };
-            AddBotCreationHooks(botClientPostCreationHooks);
+            AddBotCreationHooks((Action<BotClient>)(Client => Client.InvokeAssembly(assembly, args, Client.WriteLine)));
         }
 
         private static Action<BotClient> actionOnCreate = (client) => { };

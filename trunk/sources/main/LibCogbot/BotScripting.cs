@@ -257,23 +257,15 @@ namespace Cogbot
         readonly Dictionary<Assembly, List<Listener>> KnownAssembies = new Dictionary<Assembly, List<Listener>>();
         public void InvokeAssembly(Assembly assembly, string args, OutputDelegate output)
         {
-            LoadAssembly(assembly);
-            List<Listener> items = null;
-            lock (KnownAssembies)
-            {
-                if (!KnownAssembies.TryGetValue(assembly, out items))
-                {
-                    items = new List<Listener>();
-                    KnownAssembies.Add(assembly, items);
-                }
-            }
-            lock (items)
-            {
-                foreach (Listener item in items)
-                {
-                    item.InvokeCommand(args, output);
-                }
-            }
+            RegisterAssembly(assembly);
+            InvokeNext("", () =>
+                               {
+                                   foreach (Listener item in RegisterAssembly(assembly))
+                                   {
+                                       item.InvokeCommand(args, output);
+                                       RegisterListener(item);
+                                   }
+                               });
         }
 
         private bool ConstructType(Assembly assembly, Type type, string name, Predicate<Type> when, Action<Type> action)
@@ -306,9 +298,7 @@ namespace Cogbot
             return found;
         }
 
-        public Dictionary<Assembly, List<Listener>> AssemblyCogbot = new Dictionary<Assembly, List<Listener>>();
-
-        public List<Listener> LoadAssembly(Assembly assembly)
+        public List<Listener> RegisterAssembly(Assembly assembly)
         {
             ClientManager.RegisterAssembly(assembly);
             List<Listener> items = null;
@@ -335,11 +325,9 @@ namespace Cogbot
                             found = true;
                             InvokeNext("LoadAssembly " + assembly, () =>
                             {
-
                                 try
                                 {
                                     Listener command = (Listener)info.Invoke(new object[] { this });
-                                    RegisterListener(command);
                                     items.Add(command);
                                 }
                                 catch (Exception e1)

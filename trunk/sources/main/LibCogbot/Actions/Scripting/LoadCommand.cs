@@ -37,9 +37,9 @@ namespace Cogbot.Actions.System
                 if (assembly == null) return Failure("failed: load " + assemblyName + " cant find it");
                 string cmd = string.Join(" ", args, 1, args.Length - 1).Trim();
                 //ClientManager.SingleInstance.LoadBotAssembly(assembly, cmd);
-                Client.LoadAssembly(assembly);
-                if (!string.IsNullOrEmpty(cmd))
-                  Client.InvokeAssembly(assembly, cmd, WriteLine);
+                //Client.LoadAssembly(assembly);
+                //if (!string.IsNullOrEmpty(cmd))
+                Client.InvokeAssembly(assembly, cmd, WriteLine);
                 return Success("Assembly " + assemblyName + " loaded.");
             }
             catch (ReflectionTypeLoadException e)
