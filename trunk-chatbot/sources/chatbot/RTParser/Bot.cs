@@ -1012,7 +1012,7 @@ namespace RTParser
         public void loadAIMLFromDefaults0()
         {
             loadConfigs(this, PathToConfigFiles, GetBotRequest("-loadAimlFromDefaults-"));
-            loadAIMLAndSettings(PathToAIML);
+            loadAIMLAndSettings(HostSystem.Combine(PathToAIML, "shared_aiml"));
         }
 
         /// <summary>
@@ -2213,7 +2213,7 @@ The AIMLbot program.
             //var OnTaskAtATimeHandler = HeardSelfSayQueue = thisBotAsUser.OnTaskAtATimeHandler;
             //OnTaskAtATimeHandler.Name = "TaskQueue For " + myName;
 
-            thisBotAsUser.SaveDirectory(thisBotAsUser.UserDirectory);
+            //thisBotAsUser.SaveDirectory(thisBotAsUser.UserDirectory);
             string dgn = "default_to_" + NamePath;
             string n2n = NamePath + "_to_" + NamePath;
             string hgn = "heardselfsay_to_" + NamePath;
@@ -2317,6 +2317,11 @@ The AIMLbot program.
             if (string.IsNullOrEmpty(loaded))
             {
                 myName = ToScriptableName(myName);
+                loaded = LoadPersonalDirectory(myName);
+            }
+            if (string.IsNullOrEmpty(loaded))
+            {
+                myName = "default_bot";
                 loaded = LoadPersonalDirectory(myName);
             }
             if (string.IsNullOrEmpty(loaded))
