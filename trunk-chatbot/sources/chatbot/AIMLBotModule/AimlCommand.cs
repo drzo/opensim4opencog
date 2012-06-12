@@ -46,6 +46,17 @@ namespace AIMLBotModule
                 }
             }
         }
+        public bool IsBotLoaded
+        {
+            get
+            {
+                String mn = "AIMLBotModule";
+                Listener wmab;
+                var dict = Client.Plugins;
+                lock (dict)
+                    return (dict.TryGetValue(mn, out wmab));
+            }
+        }
 
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
@@ -76,6 +87,7 @@ namespace AIMLBotModule
                     string oldUser = defaultAIMLUser.Substring(lastIndex + 1).Trim();
                     defaultAIMLUser = defaultAIMLUser.Substring(0, lastIndex - 1);
                 }
+                if (!IsBotLoaded) return Failure("AIML Module Not ready yet");
                 SetUser(defaultAIMLUser);
                 if (s == "@chuser")
                 {
@@ -100,6 +112,7 @@ namespace AIMLBotModule
             {
                 try
                 {
+                    if (!IsBotLoaded) return Failure("AIML Module Not ready yet");
                     if (legacyCmd) args[0] = "@" + s;
                     bool res = WorldSystemModule.DoBotDirective(args, fromAgentID, WriteLine);
                     if (!res)
@@ -120,6 +133,7 @@ namespace AIMLBotModule
             }
 
             double ratng;
+            if (!IsBotLoaded) return Failure("AIML Module Not ready yet");
             var MyBot = WorldSystemModule.MyBot;
             var myUser = MyBot.FindOrCreateUser(lastKnownUser);
             //lock (myUser.QueryLock)

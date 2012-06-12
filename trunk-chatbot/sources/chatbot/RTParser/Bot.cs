@@ -627,6 +627,7 @@ namespace RTParser
         }
         public void saveServitor0()
         {
+            if (servitor == null) return;
             List<string> allPaths = new List<string>();
             List<string> allCrons = new List<string>();
             List<string> allBehaviors = new List<string>();

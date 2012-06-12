@@ -35,7 +35,8 @@ namespace AIMLBotModule
  
         public override void InvokeCommand(string cmd, OutputDelegate output)
         {
-            output("NotImplemented: " + this + " " + cmd);
+            if (string.IsNullOrEmpty(cmd)) return;
+            if (cmd.Contains("noserv")) UseServitorEngine = false;
         }
 
         public static bool UseServitorEngine = true;
