@@ -29,7 +29,7 @@ In Sci-fi, we like thinking androids will solve everything in life the same way 
  # find and create ways of stopping such exceptions (make a DSL)
  # simplify your exceptions language created for detecting 
  #  this new "exceptions language" repeat steps 1-8 on it
- # run the sentence generator again.. When i say "sentence generator": i mean really it is a "rule generator".. hopefully generating infinite numbers of rules.
+ # run the sentence generator again.. When i say "sentence generator": i mean really it is a "rule generator".. hopefully _seemingly_ generating a great numbers of rules.
  # reduce the X,Y,Z,A into only a small set of literals and see if you can ever make the generator ever stop.  You should be able to.
  # rewrite the generator to allow yourself to predict exactly how many rules it can produce at any given time if you haven't already done so.
  # invent new sets of X,Y,Z,As that together make good sense.  Determine what ontological basis you went by. example: GoCabin->Sitting->Comfort->Good  ontologically:  "chairs are comfortable and found in cabins"
