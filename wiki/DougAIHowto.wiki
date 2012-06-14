@@ -51,12 +51,14 @@ In step 5 "write a small system to create new X,Y,Z,A's"  This was not using a d
 
 Dialog phases (pre as well):
 
-# A was observed in some way and has not yet been in system.
-# "I have recognition A.. may we discuss A?"
-# wait for confirmation
-# Ask initial categorizations "is A an action i can do?"
+ # A was observed in some way and has not yet been in system.
+ # "I have recognition A.. may we discuss A?"
+ # wait for confirmation
+ # Ask initial categorizations "is A an action i can do?"
   "is A an object that exists in the world?"
-# store the results of A
+ # store the results of A
+
+
 
 
 
