@@ -12,3 +12,5 @@ Cogbot is a server written for .NET that connects several avatars acting as "bot
    * Systems that let developers participate in an ecosystem of plugins and tools.
 
    * Coders getting paid. We won't force collaborators into open sourcing their components when that would limit their ability to contribute.
+
+ # Serve a wide variety of users outside the immediate AGI community, as a robust, flexible, intelligent tool for constructing automatic 'bots' in virtual worlds.
