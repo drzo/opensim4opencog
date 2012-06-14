@@ -21,14 +21,14 @@ In Sci-fi, we like thinking androids will solve everything in life the same way 
  # Simply these models into the most concise featureless version possible. "do X, then do Y to achieve Z"  "wanting Z because it makes you feel A"  "A is good"
  # Extract the stop-words that are left: "do" "then" "wanting" "makes you" "feel" "is".  Even: "good"
  # decide the ontology of X,Y,Z,A
- # Create the mbuild rules for even considering the population of such variables.
+ # write a small system to create new X,Y,Z,A's variables.
  # Define these mbuild rules in the original way you did step 1 and repeat until you get back to this rule.
  # Now do the same steps 1-4 for your stop-words.
  # save this off as a new STRIPS notation
  # put your rules of legal construction of such sentences back into STRIPS form as so that only valid sentences can be generated. out comes:  "do sit then do sit" ..
  # find and create ways of stopping such exceptions (make a DSL)
  # simplify your exceptions language created for detecting 
- #  this new "exceptions language" repeat steps 1-8 on it
+ # this new "exceptions language" repeat steps 1-8 on it
  # run the sentence generator again.. When i say "sentence generator": i mean really it is a "rule generator".. hopefully _seemingly_ generating a great numbers of rules.
  # reduce the X,Y,Z,A into only a small set of literals and see if you can ever make the generator ever stop.  You should be able to.
  # rewrite the generator to allow yourself to predict exactly how many rules it can produce at any given time if you haven't already done so.
@@ -43,7 +43,22 @@ In Sci-fi, we like thinking androids will solve everything in life the same way 
  # figure out if you've created an optimization problem (size and scope of data) If so, find solutions shaped like "taxonomic pairs solution".  Decide these "shapes" are in fact tenants of your language.  
 
 Taking a break but will resume the steps shortly
-Much of this Workflow sounds like writing a prolog program that is domain specific.. then rewriting the program to remove the domain..  In a way it very much is except ontologising is added same way as required in CycL..  Correct, the point of this initial bit is to flex the C.D. representation into something more semantic than what Schank initially taught.  The reason he stayed away from this is he needed to build a working NL representation based on his 7-10 primitives (which are easily anglified to explanation (see XP) ).. You are doing the same.  Except you are designing the the base primitives that have no definition other than to dictate the discourse of representation.  It wasn't the solidness of the primitives that made his work easy, it was the fact that XP (explanation patterns) make absolute sense (they are intended to do so!)  You are going to make a system that can not "think" but in the Chinese room sense is stuck only transcribing things that can make sense.  No mater how many random number generators are used, the system will be _incapable_ of a non lucid thought.  "Thought?" yes, we are building a program that is forced into pretending it is always thinking. The internal representation of Schank's forced it to tell detailed and lucid descriptions of scenes.  The process of explanation of A,B,C,D,E,F proved the listener rather have heard A,B,D,E steps and assumed to create in their own mind the missing pieces.  The user became impressed then they asked how did you get from B->D and the program this time around doesn't leave out C.  I believe the dialog of the mind is a similar implementation.  We have some very long thought chains but only have to deal with partial descriptions at a time.  We are optimized to hide away C and the robot would be well off to emulate that same behavior.  These scripts or macros are 
+Much of this Workflow sounds like writing a prolog program that is domain specific.. then rewriting the program to remove the domain..  In a way it very much is except ontologising is added same way as required in CycL..  Correct, the point of this initial bit is to flex the C.D. representation into something more semantic than what Schank initially taught.  The reason he stayed away from this is he needed to build a working NL representation based on his 7-10 primitives (which are easily anglified to explanation (see XP) ).. You are doing the same.  Except you are designing the the base primitives that have no definition other than to dictate the discourse of representation.  It wasn't the solidness of the primitives that made his work easy, it was the fact that XP (explanation patterns) make absolute sense (they are intended to do so!)  You are going to make a system that can not "think" but in the Chinese room sense is stuck only transcribing things that can make sense.  No mater how many random number generators are used, the system will be _incapable_ of a non lucid thought.  "Thought?" yes, we are building a program that is forced into pretending it is always thinking. The internal representation of Schank's forced it to tell detailed and lucid descriptions of scenes.  The process of explanation of A,B,C,D,E,F proved the listener rather have heard A,B,D,E steps and assumed to create in their own mind the missing pieces.  The user became impressed then they asked how did you get from B->D and the program this time around doesn't leave out C.  I believe the dialog of the mind is a similar implementation.  We have some very long thought chains but only have to deal with partial descriptions at a time.  We are optimized to hide away C and the robot would be well off to emulate that same behavior. _not yet finished explaining..._
+
+Back to some more steps...
+
+In step 5 "write a small system to create new X,Y,Z,A's"  This was not using a dialog based model.   It would be time to explore what a dialog for this system would look like.  It would also be good to next ontoligizing the phases of such dialog.  
+
+Dialog phases (pre as well):
+
+# A was observed in some way and has not yet been in system.
+# "I have recognition A.. may we discuss A?"
+# wait for confirmation
+# Ask initial categorizations "is A an action i can do?"
+  "is A an object that exists in the world?"
+# store the results of A
+
+
 
 _not yet finished explaining..._
 
