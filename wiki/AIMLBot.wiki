@@ -16,7 +16,7 @@ load AIMLBotModule
 This can be done in botconfig.xml like
 {{{
 (thisClient.ExecuteCommand "load AIMLBotModule)
-}}}}
+}}}
 
 = Configuration =
 
