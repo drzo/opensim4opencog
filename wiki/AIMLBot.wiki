@@ -10,12 +10,12 @@ It might even be enough if the AIML author is ambitious enough to facilitate wri
 
 is done via the botcmd: 
 {{{
-load AIMLBotModule
+load AIMLBotModule noserv
 }}}
 
 This can be done in botconfig.xml like
 {{{
-(thisClient.ExecuteCommand "load AIMLBotModule")
+(thisClient.ExecuteCommand "load AIMLBotModule noserv")
 }}}
 
 = Configuration =
