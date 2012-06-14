@@ -4,12 +4,12 @@ Cogbot is a server written for .NET that connects several avatars acting as "bot
 
 = Principles =
 
-# Cogbot's intent to be a to be Lego(tm) System for AI developers.
-# We believe that AGI is more likely to come from a confluence of many people's efforts than from a single new theory. Accordingly, we value:
+ # Cogbot's intent to be a to be Lego(tm) System for AI developers.
+ # We believe that AGI is more likely to come from a confluence of many people's efforts than from a single new theory. Accordingly, we value:
 
    * Tools for collaboration over isolated demonstrations of AI techniques.
 
    * Systems that let developers participate in an ecosystem of plugins and tools.
 
    * Coders getting paid. We won't force collaborators into open sourcing their components when that would limit their ability to contribute.
-# Will 
+ # Will 
