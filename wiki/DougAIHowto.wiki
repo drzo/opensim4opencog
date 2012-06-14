@@ -58,6 +58,17 @@ Dialog phases (pre as well):
   "is A an object that exists in the world?"
  # store the results of A
 
+Convert this to a STRIPS notation:
+{{{
+(always-rule
+ (preconds
+  (At ?User1)
+  (Unknown ?ConceptA))
+(postconds 
+  (stable-system)
+  (knownAbout ?ConceptA)))
+...
+}}}
 
 
 
