@@ -43,6 +43,7 @@ namespace AltAIMLbot.Utils
         /// </summary>
         public List<string> TopicStar = new List<string>();
         public List<string> StateStar = new List<string>();
+        public List<string> StateStar2 = new List<string>();
 
         #endregion
 

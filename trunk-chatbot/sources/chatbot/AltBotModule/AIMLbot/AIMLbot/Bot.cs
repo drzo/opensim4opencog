@@ -15,6 +15,8 @@ using DcBus;
 using Aima.Core.Logic.Propositional.Algorithms;
 using Aima.Core.Logic.Propositional.Parsing;
 using Aima.Core.Logic.Propositional.Parsing.AST;
+using LAIR.ResourceAPIs.WordNet;
+
 /******************************************************************************************
 AltAIMLBot -- Copyright (c) 2011-2012,Kino Coursey, Daxtron Labs
 
@@ -60,6 +62,8 @@ namespace AltAIMLbot
         public Cron myCron = null;
         public bool inCritical = false;
         public RandomMemory myRandMem = new RandomMemory();
+
+        public WordNetEngine wordNetEngine =null;
 
         [NonSerialized ]
         public KnowledgeBase myKB = new KnowledgeBase();
@@ -130,6 +134,9 @@ namespace AltAIMLbot
         /// A buffer to hold log messages to be written out to the log file when a max size is reached
         /// </summary>
         private List<string> LogBuffer = new List<string>();
+
+
+        public string rapStoreDirectory = ".\\rapstore\\";
 
         /// <summary>
         /// How big to let the log buffer get before writing to disk
@@ -868,6 +875,11 @@ namespace AltAIMLbot
                 AltAIMLbot.Normalize.SplitIntoSentences splitter = new AltAIMLbot.Normalize.SplitIntoSentences(this);
                 string[] rawSentences = splitter.Transform(request.rawInput);
 
+                ExternDB pathDB = null;
+                if (rapStoreDirectory != null)
+                {
+                    pathDB = new ExternDB(rapStoreDirectory);
+                }
                 if (request.user.Qstate.Count == 0)
                 {
                     Console.WriteLine("DEBUG:Using Normal Search");
@@ -931,14 +943,32 @@ namespace AltAIMLbot
                 foreach (string path in result.NormalizedPaths)
                 {
                     Utils.SubQuery query = new SubQuery(path);
+                    if (pathDB == null)
+                    {
+                        query.Template = ourGraphMaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
+                    }
+                    else
+                    {
+                        Node dbGraphMaster = pathDB.fetchNode("");
+                        query.Template = dbGraphMaster.evaluateDB(path, query, request, MatchState.UserInput, new StringBuilder(), "", pathDB);
+                    }
                     //query.Template = this.Graphmaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
-                    query.Template = ourGraphMaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
+                    //query.Template = ourGraphMaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
                     Console.WriteLine("DEBUG: TemplatePath = " + query.TemplatePath);
                     Console.WriteLine("DEBUG: Template = " + query.Template);
+                    myBehaviors.logText("CHAT QueryPath:" + path);
                     myBehaviors.logText("CHAT TemplatePath:" + query.TemplatePath);
                     myBehaviors.logText("CHAT Template:\n" + query.Template);
-
+                    
                     result.SubQueries.Add(query);
+                }
+                if (rapStoreDirectory != null)
+                {
+                    if (pathDB != null)
+                    {
+                        pathDB.Close();
+                        pathDB = null;
+                    }
                 }
 
                 // process the templates into appropriate output
@@ -1147,6 +1177,9 @@ namespace AltAIMLbot
                             break;
                         case "filterqa":
                             tagHandler = new AIMLTagHandlers.filterqa(this, user, query, request, result, node);
+                            break;
+                        case "summerize":
+                            tagHandler = new AIMLTagHandlers.summerize(this, user, query, request, result, node);
                             break;
 
                         case "inject":

@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{334EF861-1D65-4F64-BC08-06BD2E75B63E}</ProjectGuid>
+    <ProjectGuid>{5AFE6982-20A6-4992-965B-A98193CF8DDA}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon>
@@ -66,6 +66,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="LAIR.Collections, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
     <Reference Include="System">
       <Name>System</Name>
     </Reference>
@@ -84,6 +85,10 @@
     <Reference Include="System.Drawing">
       <Name>System.Drawing</Name>
     </Reference>
+    <Reference Include="MiniSatCs">
+      <Name>MiniSatCs</Name>
+      <HintPath>..\..\..\..\..\bin\MiniSatCs.dll</HintPath>
+    </Reference>
     <Reference Include="System.Core">
       <Name>System.Core</Name>
     </Reference>
@@ -97,28 +102,33 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Lucene\src\Lucene.Net\Lucene.Net.csproj">
-      <Project>{D8D88B28-31DC-477D-96DC-10502944D89F}</Project>
-      <Name>Lucene.Net</Name>
+    <ProjectReference Include="..\..\..\LAIR.ResourceAPIs\WordNet\WordNet\LAIR.ResourceAPIs.WordNet.csproj">
+      <Project>{1C0249DB-9D1A-4E9A-8F49-5AA9B4244F63}</Project>
+      <Name>LAIR.ResourceAPIs.WordNet</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\RaptorDB\RaptorDB.csproj">
+      <Project>{45F6BE30-989A-4749-B6A0-69099C8661F4}</Project>
+      <Name>RaptorDB</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Aima.NET\Aima.NET.csproj">
       <Name>Aima.NET</Name>
-      <Project>{828F4863-B666-4420-ACFD-62B8F7BA312C}</Project>
+      <Project>{835BABDA-BC19-4053-9BB8-9C8C5F949796}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\main\MushDLR223\MushDLR223.csproj">
       <Name>MushDLR223</Name>
-      <Project>{FC1C01C5-F8F7-4706-BCF3-AA7AC16D61BB}</Project>
+      <Project>{051653B0-9AA4-4F6A-83DE-FD70FBA2BC61}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\..\GenericSets\src\Iesi.Collections.Generic\Iesi.Collections.Generic.csproj">
       <Name>Iesi.Collections.Generic</Name>
-      <Project>{2C664B9E-4683-452A-B15A-69CB6D5B8FA6}</Project>
+      <Project>{B2B9B913-67A9-4CB2-9A31-8C8372C21BDD}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
-    <ProjectReference Include="..\..\minisatcs\MinisatCs\MinisatCS.csproj">
-      <Project>{50D8D409-557E-44A8-8BA1-0D0C0EE39589}</Project>
-      <Name>MinisatCS</Name>
+    <ProjectReference Include="..\..\..\Lucene\src\Lucene.Net\Lucene.Net.csproj">
+      <Name>Lucene.Net</Name>
+      <Project>{A9969E15-B044-45C8-BE5E-79165B823C05}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -142,7 +152,8 @@
     </Compile>
     <Compile Include="Servitor.cs">
     </Compile>
-    <Compile Include="TextRanker.cs" />
+    <Compile Include="TextRanker.cs">
+    </Compile>
     <Compile Include="User.cs">
     </Compile>
     <Compile Include="WebScriptExecutor.cs">
@@ -232,6 +243,8 @@
     <Compile Include="AIMLTagHandlers\star.cs">
     </Compile>
     <Compile Include="AIMLTagHandlers\subaiml.cs">
+    </Compile>
+    <Compile Include="AIMLTagHandlers\summerize.cs">
     </Compile>
     <Compile Include="AIMLTagHandlers\system.cs">
     </Compile>

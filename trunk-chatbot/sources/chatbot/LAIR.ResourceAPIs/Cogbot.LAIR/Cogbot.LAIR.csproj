@@ -3,7 +3,7 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{D3863C01-95B6-4734-9AFB-4EDE0759E438}</ProjectGuid>
+    <ProjectGuid>{2065CF9A-3E39-4E9E-AA0C-8353EE9B3CB3}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon>
@@ -43,7 +43,7 @@
     <WarningLevel>3</WarningLevel>
     <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -51,7 +51,7 @@
     <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
-    <DefineConstants>TRACE;DEBUG;VISUAL_STUDIO</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;COGBOT_LIBOMV;VISUAL_STUDIO</DefineConstants>
     <DocumentationFile>Cogbot.LAIR.XML</DocumentationFile>
     <DebugSymbols>True</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
@@ -63,31 +63,7 @@
     <WarningLevel>3</WarningLevel>
     <NoStdLib>False</NoStdLib>
     <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
-    <PlatformTarget>x86</PlatformTarget>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
-    <OutputPath>bin\x64\Release\</OutputPath>
-    <DefineConstants>TRACE;VISUAL_STUDIO</DefineConstants>
-    <BaseAddress>285212672</BaseAddress>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DocumentationFile>Cogbot.LAIR.XML</DocumentationFile>
-    <Optimize>true</Optimize>
-    <WarningLevel>3</WarningLevel>
-    <FileAlignment>4096</FileAlignment>
-    <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
-    <PlatformTarget>x64</PlatformTarget>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x64\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;VISUAL_STUDIO</DefineConstants>
-    <BaseAddress>285212672</BaseAddress>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DocumentationFile>Cogbot.LAIR.XML</DocumentationFile>
-    <WarningLevel>3</WarningLevel>
-    <FileAlignment>4096</FileAlignment>
-    <NoWarn>1591,1574,0419,0618,0414,0169,0436,0219,1587,0162,0108,0612,1572,1573,1570,0168,0429,3001,3002,3003,3009,0105</NoWarn>
-    <PlatformTarget>x64</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System">
@@ -113,53 +89,61 @@
     </Reference>
     <Reference Include="log4net.dll">
       <Name>log4net.dll</Name>
+      <HintPath>..\..\..\..\bin\log4net.dll</HintPath>
     </Reference>
     <Reference Include="MySql.Data.dll">
       <Name>MySql.Data.dll</Name>
+      <HintPath>..\..\..\..\bin\MySql.Data.dll</HintPath>
     </Reference>
     <Reference Include="LAIR.Collections">
       <Name>LAIR.Collections</Name>
+      <HintPath>..\..\..\..\bin\LAIR.Collections.dll</HintPath>
     </Reference>
     <Reference Include="LAIR.Extensions">
       <Name>LAIR.Extensions</Name>
+      <HintPath>..\..\..\..\bin\LAIR.Extensions.dll</HintPath>
     </Reference>
     <Reference Include="LAIR.GraphViz">
       <Name>LAIR.GraphViz</Name>
+      <HintPath>..\..\..\..\bin\LAIR.GraphViz.dll</HintPath>
     </Reference>
     <Reference Include="LAIR.IO">
       <Name>LAIR.IO</Name>
+      <HintPath>..\..\..\..\bin\LAIR.IO.dll</HintPath>
     </Reference>
     <Reference Include="LAIR.MachineLearning">
       <Name>LAIR.MachineLearning</Name>
+      <HintPath>..\..\..\..\bin\LAIR.MachineLearning.dll</HintPath>
     </Reference>
     <Reference Include="LAIR.XML">
       <Name>LAIR.XML</Name>
+      <HintPath>..\..\..\..\bin\LAIR.XML.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PennBank\PennBank\LAIR.ResourceAPIs.PennBank.csproj">
       <Name>LAIR.ResourceAPIs.PennBank</Name>
-      <Project>{FD50FE06-D022-4306-8C5F-A4781C8C5BAC}</Project>
+      <Project>{CBDD6F0E-FBA0-494D-9858-660794AC1271}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\FrameNet\FrameNet\LAIR.ResourceAPIs.FrameNet.csproj">
       <Name>LAIR.ResourceAPIs.FrameNet</Name>
-      <Project>{88499248-1ED4-4782-98EC-76304D75CDD4}</Project>
+      <Project>{F06684AA-79F2-44B8-BB42-6182F63FEB42}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\WordNet\WordNet\LAIR.ResourceAPIs.WordNet.csproj">
       <Name>LAIR.ResourceAPIs.WordNet</Name>
-      <Project>{62C1127C-E30E-475E-8F4A-EB17A12CB169}</Project>
+      <Project>{1C0249DB-9D1A-4E9A-8F49-5AA9B4244F63}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\NomBank\NomBank\LAIR.ResourceAPIs.NomBank.csproj">
       <Name>LAIR.ResourceAPIs.NomBank</Name>
-      <Project>{23821935-04BD-4CCF-8F2A-690399DAE600}</Project>
+      <Project>{5E588F6E-B8A9-4C1E-A6B0-23FEEDCBDC2F}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="..\LAIR.CommonPort\LAIR.CommonPort.csproj">
       <Name>LAIR.CommonPort</Name>
-      <Project>{2905F940-6FA5-4E6F-B017-A7E0D601FFC2}</Project>
+      <Project>{E3359448-DD3E-4B5B-8F5D-CD8E29A23997}</Project>
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
   </ItemGroup>
@@ -191,9 +175,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <EmbeddedResource Include="TestFormPennBank.resx">
       <DependentUpon>TestFormPennBank.cs</DependentUpon>

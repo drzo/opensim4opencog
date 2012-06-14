@@ -41,9 +41,16 @@ namespace AltAIMLbot
             }
             ourServitor = theServitor;
             listener.Start();
-            listener.Prefixes.Add(serverRoot);
+            
             //listener.Prefixes.Add("http://192.168.2.141:8123/");
             //listener.Prefixes.Add("http://192.168.0.145:8123/");
+            try
+            {
+                listener.Prefixes.Add(serverRoot);
+            }
+            catch (Exception)
+            {
+            }
             try
             {
                 listener.Prefixes.Add("http://+:8123/");

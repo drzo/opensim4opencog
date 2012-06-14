@@ -690,6 +690,7 @@ namespace RTParser
             {
                 servitor = new Servitor(this.UserID, null);
                 servitor.curBot.sayProcessor = new sayProcessorDelegate(sayConsole);
+                servitor.curBot.wordNetEngine = wordNetEngine;
                 reloadServitor();
             }
             updateServitor2RTP();
@@ -730,6 +731,7 @@ namespace RTParser
             {
                 servitor = new Servitor(this.UserID, null);
                 servitor.curBot.sayProcessor = new sayProcessorDelegate(sayConsole);
+                servitor.curBot.wordNetEngine = wordNetEngine;
                 reloadServitor();
             }
 
@@ -741,6 +743,7 @@ namespace RTParser
             {
                 servitor = new Servitor(this.UserID, null);
                 servitor.curBot.sayProcessor = new sayProcessorDelegate(sayConsole);
+                servitor.curBot.wordNetEngine = wordNetEngine;
                 reloadServitor();
             }
             updateRTP2Sevitor();
@@ -788,6 +791,7 @@ namespace RTParser
             {
                 servitor = new Servitor(this.UserID, null);
                 servitor.curBot.sayProcessor = new sayProcessorDelegate(sayConsole);
+                servitor.curBot.wordNetEngine = wordNetEngine;
                 reloadServitor();
 
 

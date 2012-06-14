@@ -20,6 +20,7 @@ namespace AltAIMLbot.Utils
         /// </summary>
         private AltAIMLbot.AltBot bot;
         public string graphName="*";
+        ExternDB extDB = null;
         #endregion
 
         /// <summary>
@@ -80,7 +81,18 @@ namespace AltAIMLbot.Utils
         public void loadAIMLFile(string filename)
         {
             this.bot.writeToLog("Processing AIML file: " + filename);
-           
+            if (this.bot.rapStoreDirectory != null)
+            {
+                if (extDB != null)
+                {
+                    extDB.Close();
+                    extDB = null;
+                }
+                if (extDB == null)
+                {
+                    extDB = new ExternDB(this.bot.rapStoreDirectory);
+                }
+            }
            XmlTextReader reader = new XmlTextReader(filename);
            XmlDocument doc = new XmlDocument();
            try
@@ -143,6 +155,12 @@ namespace AltAIMLbot.Utils
                 }
                 Thread.Sleep(5000);
             }       
+           //extDB.SaveIndex();
+           if (extDB != null)
+           {
+               extDB.Close();
+               extDB = null;
+           }
         }
 
         /// <summary>
@@ -152,6 +170,18 @@ namespace AltAIMLbot.Utils
         /// <param name="filename">Where the XML document originated</param>
         public void loadAIMLFromXML(XmlDocument doc, string filename)
         {
+            if (this.bot.rapStoreDirectory != null)
+            {
+                if (extDB != null)
+                {
+                    //     extDB.Close();
+                    //     extDB = null;
+                }
+                if (extDB == null)
+                {
+                    extDB = new ExternDB(this.bot.rapStoreDirectory);
+                }
+            }
             // Get a list of the nodes that are children of the <aiml> tag
             // these nodes should only be either <topic> or <category>
             // the <topic> nodes will contain more <category> nodes
@@ -164,7 +194,16 @@ namespace AltAIMLbot.Utils
                 graphName = doc.Attributes["name"].Value;
                 this.graphName =graphName;
             }
-
+            if (this.bot.rapStoreDirectory != null)
+            {
+                if ((filename.Contains(Path.DirectorySeparatorChar.ToString())) && (extDB.wasLoaded(filename)))
+                {
+                    // We loaded that file
+                    extDB.Close();
+                    extDB = null;
+                    return;
+                }
+            }
             // process each of these child nodes
             foreach (XmlNode currentNode in rootChildren)
             {
@@ -205,6 +244,13 @@ namespace AltAIMLbot.Utils
                 {
                     processImmediate(currentNode, filename);
                 }
+            }
+
+            if (this.bot.rapStoreDirectory != null)
+            {
+                extDB.rememberLoaded(filename);
+                extDB.Close();
+                extDB = null;
             }
         }
 
@@ -445,7 +491,14 @@ namespace AltAIMLbot.Utils
                 try
                 {
                     //this.bot.Graphmaster.addCategory(categoryPath, template.OuterXml, filename, 1, 1);
-                    ourGraphMaster.addCategory(categoryPath, template.OuterXml, filename, 1, 1);
+                    if(this.bot.rapStoreDirectory !=null)
+                    {
+                    Node.addCategoryDB("",categoryPath, template.OuterXml, filename, 1, 1, "", extDB);
+                    }
+                    else
+                    {
+                        ourGraphMaster.addCategory(categoryPath, template.OuterXml, filename, 1, 1);
+                    }
                     // keep count of the number of categories that have been processed
                     this.bot.Size++;
                 }

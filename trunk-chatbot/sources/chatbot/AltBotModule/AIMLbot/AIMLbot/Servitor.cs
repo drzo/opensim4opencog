@@ -10,7 +10,7 @@ using System.Threading;
 using Aima.Core.Logic.Propositional.Algorithms;
 using Aima.Core.Logic.Propositional.Parsing;
 using Aima.Core.Logic.Propositional.Parsing.AST;
-
+using LAIR.ResourceAPIs.WordNet;
 
 
 /******************************************************************************************
@@ -117,6 +117,7 @@ namespace AltAIMLbot
                     //myBot.loadAIMLFromFiles();
                 }
             }
+
             myBot.isAcceptingUserInput = true;
 
             startFSMEngine();
@@ -134,6 +135,11 @@ namespace AltAIMLbot
             Console.WriteLine(" Servitor startup complete");
         }
 
+        public void initWordNet(string wordNetPath)
+        {
+            Console.WriteLine("*** Servitor init WN-Load ***");
+            curBot.wordNetEngine = new WordNetEngine(wordNetPath, true);
+        }
         public bool setGuestEvalObject(object guestObj)
         {
             if (curBot == null) return false;

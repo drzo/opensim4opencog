@@ -99,6 +99,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                         {
                             bot.myBehaviors.queueEvent(onSuccess);
                         }
+                        /*
                         if (valid.Length > 256)
                         {
                             TokenRanker myRanker = new TokenRanker();
@@ -111,6 +112,8 @@ namespace AltAIMLbot.AIMLTagHandlers
                         {
                             return valid;
                         }
+                        */
+                        return valid;
                     }
                     else
                     {
