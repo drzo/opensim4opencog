@@ -2,34 +2,55 @@ AIMLBotModulde
 
 = Introduction =
 
-AIML Bot module alows basic system debugging and loading of AIML files.
+AIML Bot module alows basic system loading of AIML files for the ends of controlling cogbot using a controlled natural language interface such as: "follow me" "stay there"  "sit on the blue chair".
+
+It might even be enough if the AIML author is ambitious enough to facilitate writing a shop keeping virtual world bot.
 
 = Installation =
 
-botcmd: load AIMLBotModule
+is done via the botcmd: 
+{{{
+load AIMLBotModule
+}}}
+
+This can be done in botconfig.xml like
+{{{
+(thisClient.ExecuteCommand "load AIMLBotModule)
+}}}}
 
 = Configuration =
 
-When cogbot loads the AIMLBotModule it loads some aiml files from 2 dirrecotries
+When cogbot loads the AIMLBotModule it loads some aiml files from 2 directories
 
-
+{{{
 $cogbin/aiml/shared_aiml/*.*
+}}}
+and
+{{{
 $cogbin/aiml/firstname_lastname/*.*
+}}}
 
-if firstname_lastname is not present then it loads from instead $cogbin/aiml/default_bot
+Our intial bot is examplebot_resident
+
+if firstname_lastname is not present then it loads from instead 
+{{{
+$cogbin/aiml/default_bot/*.*
+}}}
+
+One of these two directories ($cogbin/aiml/firstname_lastname/*.* or $cogbin/aiml/default_bot/*.*) become the personal directory of the bot.
 
 
-one of the4se two direcotties ($cogbin/aiml/firstname_lastname/*.* or $cogbin/aiml/default_bot/*.*) become the personal directory of the bot.
-
-
-IF both the shared_aiml dir and personal dir was empty, then no aiml files are loaded.
+If both the shared_aiml dir and personal dir was empty, then no aiml files are loaded.   This is probably is ideal.
 
 
 = Use =
 
 At any time a botcmd of 
 
-aiml @load pathto/aimlfile.aiml can be used to load AIML files
+{{{
+aiml @load pathto/aimlfile.aiml
+}}}
+To load AIML files
 
 
 = Bot Vars =
