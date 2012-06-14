@@ -56,3 +56,41 @@ Because this is a streaming system, all calls are async.
 TODO - decide how that works with, for example, AIML matching.  
 
 TODO - decide the syntax of how this stuff gets into botcmd/AIML/whatever
+
+
+This is a copy of the old machinevision wiki page
+
+
+= Machine Vision =
+
+Cogbot would benefit from being able to characterize surfaces.
+
+= Features =
+
+  * ratio of edges between transparent and nontransparent areas - eg. plants wil have high values for this. 
+  * Topology of transparent areas - Solid on the edges withmany holes in the center is probably a window with mullions
+  * Hough transform - this finds lines
+  * FFT - this can probably be used to sort out 'textures' from 'images'
+
+
+
+= Packages =
+
+This is notes about available machine vision/image processing packages that might be suitable for doing texture analysis
+
+
+
+  * AForge - a nice, easy to use package in C#  The Hough transform is slow, we need to run some performance tests
+
+  * cIMg  - C++ library with nice support.
+            Name is really "CoolImage", but many places refer to it as cImg (even on the project website).
+            It appears to be quite simple to use, and the demo program seems more performant.  
+     5/5/2012 - AO - I've written hough/inverse hough and it runs at video rates.
+
+  * eyepatch - this is what Kino originally was going to use. It seems more an application than a library, and seems really oriented towards camera analysis.
+
+  * ImageJ - seems quite slow, and more of a toy app than a library
+
+  * Neatvision - I've used this for a project. Sadly, it's dead, because it was exactly what we needed. It had a GUI dataflow / visual programming pipeline builder, and a very wide variety of transforms. Unofrtunately it's closed source, dead, and depends on Java 1.4.  The offered replacement depends on matlab
+
+  * OpenCV - this seems to be the closest there is to a standard machine vision package. However, it is complex, extremely poorly documented, and seems to be in disarray - I couldn't even find coherent build instructions or get it to build.
