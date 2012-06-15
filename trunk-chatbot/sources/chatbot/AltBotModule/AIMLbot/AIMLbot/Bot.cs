@@ -401,6 +401,9 @@ namespace AltAIMLbot
         /// </summary>
         public bool saySapi = false;
 
+
+        public ExternDB chatDB = null;
+
         #endregion
 
         #region Delegates
@@ -875,10 +878,13 @@ namespace AltAIMLbot
                 AltAIMLbot.Normalize.SplitIntoSentences splitter = new AltAIMLbot.Normalize.SplitIntoSentences(this);
                 string[] rawSentences = splitter.Transform(request.rawInput);
 
-                ExternDB pathDB = null;
+               
                 if (rapStoreDirectory != null)
                 {
-                    pathDB = new ExternDB(rapStoreDirectory);
+                    if (chatDB == null)
+                    {
+                        chatDB = new ExternDB(rapStoreDirectory);
+                    }
                 }
                 if (request.user.Qstate.Count == 0)
                 {
@@ -943,14 +949,14 @@ namespace AltAIMLbot
                 foreach (string path in result.NormalizedPaths)
                 {
                     Utils.SubQuery query = new SubQuery(path);
-                    if (pathDB == null)
+                    if (chatDB == null)
                     {
                         query.Template = ourGraphMaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
                     }
                     else
                     {
-                        Node dbGraphMaster = pathDB.fetchNode("");
-                        query.Template = dbGraphMaster.evaluateDB(path, query, request, MatchState.UserInput, new StringBuilder(), "", pathDB);
+                        Node dbGraphMaster = chatDB.fetchNode("", true);
+                        query.Template = dbGraphMaster.evaluateDB(path, query, request, MatchState.UserInput, new StringBuilder(), "", chatDB);
                     }
                     //query.Template = this.Graphmaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
                     //query.Template = ourGraphMaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
@@ -964,10 +970,11 @@ namespace AltAIMLbot
                 }
                 if (rapStoreDirectory != null)
                 {
-                    if (pathDB != null)
+                    if (chatDB != null)
                     {
-                        pathDB.Close();
-                        pathDB = null;
+                        chatDB.prune(1024);
+                        //chatDB.Close();
+                        //chatDB = null;
                     }
                 }
 

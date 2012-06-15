@@ -8,11 +8,11 @@ namespace RaptorDB
     {
         public static int BitmapOffsetSwitchOverCount = 10;
 
-        public static ushort PageItemCount = 1543; //10000; (primes: 769,1543,3079,6151,12289,24593)
+        public static ushort PageItemCount = 6151; //10000; (primes: 769,1543,3079,6151,12289,24593)
 
         public static int SaveTimerSeconds = 3000;
 
-        public static byte DefaultStringKeySize = 64; //60;
+        public static byte DefaultStringKeySize = 128; //60;
 
         public static bool FlushStorageFileImmetiatley = true; //false;
 

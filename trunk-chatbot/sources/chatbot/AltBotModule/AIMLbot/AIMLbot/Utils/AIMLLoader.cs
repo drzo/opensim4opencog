@@ -502,9 +502,10 @@ namespace AltAIMLbot.Utils
                     // keep count of the number of categories that have been processed
                     this.bot.Size++;
                 }
-                catch
+                catch(Exception e)
                 {
-                    this.bot.writeToLog("ERROR! Failed to load a new category into the graphmaster where the path = " + categoryPath + " and template = " + template.OuterXml + " produced by a category in the file: " + filename);
+                    this.bot.writeToLog("ERROR! Failed to load a new category into the graphmaster where the path = " + categoryPath + " and template = " + template.OuterXml + " produced by a category in the file: " + filename+ "because "+e.Message+ " "+e.StackTrace);
+
                 }
             }
             else
