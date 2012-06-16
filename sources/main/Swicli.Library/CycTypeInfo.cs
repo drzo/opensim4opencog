@@ -21,12 +21,452 @@
 *********************************************************/
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
-
+using System.Xml.Serialization;
+using SbsSW.SwiPlCs;
 using CycFort = SbsSW.SwiPlCs.PlTerm;
+using XElement = System.Xml.XmlNode;
+using XDocument = System.Xml.XmlDocument;
 
 namespace Swicli.Library
 {
+    public partial class PrologClient
+    {
+
+        [PrologVisible(ModuleName = ExportModule)]
+        static public bool cliPropsForType(PlTerm clazzSpec, PlTerm memberSpecs)
+        {
+            Type type = GetType(clazzSpec);
+            var props = GetPropsForTypes(type);
+            var value = props.Key.ToArray();
+            int len = value.Length;
+            var termv = ATOM_NIL;
+            for (int i = len - 1; i >= 0; i--)
+            {
+                termv = PlC(".", ToProlog((value[i].Name)), termv);
+            }
+            var value2 = props.Value.ToArray();
+            len = value2.Length;
+            for (int i = len - 1; i >= 0; i--)
+            {
+                termv = PlC(".", ToProlog((value2[i].Name)), termv);
+            }
+            return memberSpecs.Unify(termv);
+        }
+
+        static readonly Dictionary<Type, KeyValuePair<List<PropertyInfo>, List<FieldInfo>>> PropForTypes = new Dictionary<Type, KeyValuePair<List<PropertyInfo>, List<FieldInfo>>>();
+
+        private static KeyValuePair<List<PropertyInfo>, List<FieldInfo>> GetPropsForTypes(Type t)
+        {
+            KeyValuePair<List<PropertyInfo>, List<FieldInfo>> kv;
+
+            if (PropForTypes.TryGetValue(t, out kv)) return kv;
+
+            lock (PropForTypes)
+            {
+                if (!PropForTypes.TryGetValue(t, out kv))
+                {
+                    kv = new KeyValuePair<List<PropertyInfo>, List<FieldInfo>>(new List<PropertyInfo>(),
+                                                                               new List<FieldInfo>());
+                    var ta = t.GetCustomAttributes(typeof(XmlTypeAttribute), false);
+                    bool specialXMLType = false;
+                    if (ta != null && ta.Length > 0)
+                    {
+                        XmlTypeAttribute xta = (XmlTypeAttribute)ta[0];
+                        specialXMLType = true;
+                    }
+                    HashSet<string> lowerProps = new HashSet<string>();
+                    BindingFlags flags = BindingFlags.Instance | BindingFlags.Public; //BindingFlags.NonPublic
+                    foreach (
+                        PropertyInfo o in t.GetProperties(flags))
+                    {
+                        if (o.CanRead)
+                        {
+
+                            if (o.Name.StartsWith("_")) continue;
+                            if (o.DeclaringType == typeof(Object)) continue;
+                            if (!lowerProps.Add(o.Name.ToLower())) continue;
+                            if (o.GetIndexParameters().Length > 0)
+                            {
+                                continue;
+                            }
+                            if (specialXMLType)
+                            {
+                                var use = o.GetCustomAttributes(typeof(XmlArrayItemAttribute), false);
+                                if (use == null || use.Length < 1) continue;
+                            }
+                            kv.Key.Add(o);
+
+                        }
+                    }
+                    foreach (FieldInfo o in t.GetFields(flags))
+                    {
+                        if (o.Name.StartsWith("_")) continue;
+                        if (o.DeclaringType == typeof(Object)) continue;
+                        if (!lowerProps.Add(o.Name.ToLower())) continue;
+                        if (specialXMLType)
+                        {
+                            var use = o.GetCustomAttributes(typeof(XmlArrayItemAttribute), false);
+                            if (use == null || use.Length < 1) continue;
+                        }
+                        kv.Value.Add(o);
+                    }
+                }
+                return kv;
+            }
+        }
+
+        [PrologVisible(ModuleName = ExportModule)]
+        static public bool cliMembers(PlTerm clazzOrInstance, PlTerm membersOut)
+        {
+            Type c = GetTypeFromInstance(null, clazzOrInstance);
+            MemberInfo[] members = c.GetMembers(BindingFlagsALL);
+            List<PlTerm> list = new List<PlTerm>();
+            string cname = c.Name;
+            List<MemberInfo> exclude = new List<MemberInfo>();
+            int ordinal = 0;
+            foreach (var info in c.GetFields(BindingFlagsALL))
+            {
+                AddMemberToList(info, list, cname, ordinal++);
+                exclude.Add(info);
+            }
+            ordinal = 0;
+            foreach (var info in c.GetProperties(BindingFlagsALL))
+            {
+                AddMemberToList(info, list, cname, ordinal++);
+                exclude.Add(info);
+            }
+            ordinal = 0;
+            foreach (var info in c.GetMethods(BindingFlagsALL))
+            {
+                AddMemberToList(info, list, cname, ordinal++);
+                exclude.Add(info);
+            }
+            ordinal = 0;
+            foreach (var info in c.GetConstructors(BindingFlagsALL))
+            {
+                AddMemberToList(info, list, cname, ordinal++);
+                exclude.Add(info);
+            }
+            ordinal = 0;
+            foreach (var info in c.GetEvents(BindingFlagsALL))
+            {
+                AddMemberToList(info, list, cname, ordinal++);
+                exclude.Add(info);
+            }
+
+            foreach (MemberInfo info in members)
+            {
+                break;
+                try
+                {
+                    if (exclude.Contains(info)) continue;
+                }
+                catch (Exception e)
+                {
+                    Debug("Warn exclude.Contains " + info + ": " + e);
+                    continue;
+                }
+                AddMemberToList(info, list, cname, ordinal++);
+                exclude.Add(info);
+            }
+
+            return membersOut.Unify(ToPlList(list.ToArray()));
+        }
+
+        private static void AddMemberToList(MemberInfo info, List<PlTerm> list, string cname, int ordinal)
+        {
+
+            PlTerm memb = MemberTerm(info, cname, ordinal);
+            if (memb.TermRef != 0) list.Add(memb);
+        }
+
+        private static PlTerm MemberTerm(MemberInfo info, string cname, int ordinal)
+        {
+            string mn = info.Name;
+            switch (info.MemberType)
+            {
+                case MemberTypes.Constructor:
+                    {
+                        var fi = (ConstructorInfo)info;
+                        var mi = fi;
+                        return PlC("c", new PlTerm(ordinal), PlTerm.PlAtom(mn),
+                                   ToPlListParams(fi.GetParameters()),
+                                   (mi.IsGenericMethodDefinition ? ToPlListTypes(mi.GetGenericArguments()) : ATOM_NIL),
+
+                                   PlC("decl",
+                                       AFlag(mi.IsStatic, "static"),
+                                       typeToSpec(fi.DeclaringType)),
+                                   PlC("access_pafv",
+                                       AFlag(mi.IsPublic),
+                                       AFlag(mi.IsAssembly),
+                                       AFlag(mi.IsFamily),
+                                       AFlag(mi.IsPrivate)),
+                                   ToProlog(info));
+                    }
+                    break;
+                case MemberTypes.Event:
+                    {
+                        var fi = (EventInfo)info;
+                        MethodInfo mi = (fi.GetRaiseMethod() ??
+                                         (fi.EventHandlerType != null ? fi.EventHandlerType.GetMethod("Invoke") : null) ??
+                                         fi.GetAddMethod() ?? fi.GetRemoveMethod());
+                        ParameterInfo[] parme = GetParmeters(fi);
+                        return PlC("e", new PlTerm(ordinal), PlTerm.PlAtom(mn),
+                                   typeToSpec(fi.EventHandlerType),
+                                   ToPlListParams(parme),
+                                   (mi.IsGenericMethodDefinition ? ToPlListTypes(mi.GetGenericArguments()) : ATOM_NIL),
+
+                                   PlC("decl",
+                                       AFlag(mi.IsStatic, "static"),
+                                       typeToSpec(fi.DeclaringType)),
+                                   PlC("access_pafv",
+                                       AFlag(mi.IsPublic),
+                                       AFlag(mi.IsAssembly),
+                                       AFlag(mi.IsFamily),
+                                       AFlag(mi.IsPrivate)),
+                                   ToProlog(info));
+                    }
+                    break;
+                case MemberTypes.Field:
+                    {
+                        var fi = (FieldInfo)info;
+                        var mi = fi;
+                        return PlC("f", new PlTerm(ordinal), PlTerm.PlAtom(mn),
+                                   typeToSpec(fi.FieldType),
+
+                                   PlC("decl",
+                                       AFlag(mi.IsStatic, "static"),
+                                       typeToSpec(fi.DeclaringType)),
+                                   PlC("access_pafv",
+                                       AFlag(mi.IsPublic),
+                                       AFlag(mi.IsAssembly),
+                                       AFlag(mi.IsFamily),
+                                       AFlag(mi.IsPrivate)),
+                                   ToProlog(info));
+                    }
+                    break;
+                case MemberTypes.Method:
+                    {
+                        var fi = (MethodInfo)info;
+                        var mi = fi;
+                        return PlC("m", new PlTerm(ordinal), PlTerm.PlAtom(mn),
+                                   typeToSpec(fi.ReturnParameter.ParameterType),
+                                   ToPlListParams(fi.GetParameters()),
+                                   (mi.IsGenericMethodDefinition ? ToPlListTypes(mi.GetGenericArguments()) : ATOM_NIL),
+
+                                   PlC("decl",
+                                       AFlag(mi.IsStatic, "static"),
+                                       typeToSpec(fi.DeclaringType)),
+                                   PlC("access_pafv",
+                                       AFlag(mi.IsPublic),
+                                       AFlag(mi.IsAssembly),
+                                       AFlag(mi.IsFamily),
+                                       AFlag(mi.IsPrivate)),
+                                   ToProlog(info));
+                    }
+                    break;
+                case MemberTypes.Property:
+                    {
+                        var fi = (PropertyInfo)info;
+                        MethodInfo mi = (fi.CanRead ? fi.GetGetMethod(true) : fi.GetSetMethod(true));
+                        return PlC("p", new PlTerm(ordinal), PlTerm.PlAtom(mn),
+                                   typeToSpec(fi.PropertyType),
+                                   ToPlListParams(fi.GetIndexParameters()),
+                                   (mi.IsGenericMethodDefinition ? ToPlListTypes(mi.GetGenericArguments()) : ATOM_NIL),
+                                   AFlag(fi.CanRead, "CanRead"),
+                                   AFlag(fi.CanWrite, "CanWrite"),
+
+                                   PlC("decl",
+                                       AFlag(mi.IsStatic, "static"),
+                                       typeToSpec(fi.DeclaringType)),
+                                   PlC("access_pafv",
+                                       AFlag(mi.IsPublic),
+                                       AFlag(mi.IsAssembly),
+                                       AFlag(mi.IsFamily),
+                                       AFlag(mi.IsPrivate)),
+                                   ToProlog(info));
+                    }
+                    break;
+                case MemberTypes.TypeInfo:
+                    break;
+                case MemberTypes.Custom:
+                    break;
+                case MemberTypes.NestedType:
+                    break;
+                case MemberTypes.All:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            return default(PlTerm);
+        }
+
+        public static PlTerm PlC(string decl, params PlTerm[] plTerms)
+        {
+            return PlTerm.PlCompound(decl, plTerms);
+        }
+        public static PlTerm PlC(string decl, PlTermV termV)
+        {
+            return PlTerm.PlCompound(decl, termV);
+        }
+
+        private static PlTerm AFlag(bool tf, string name)
+        {
+            PlTerm plTermPlAtom = PlTerm.PlAtom(tf ? "true" : "false");
+            return PlC(name, plTermPlAtom);
+        }
+        private static PlTerm AFlag(bool tf)
+        {
+            PlTerm plTermPlAtom = PlTerm.PlAtom(tf ? "true" : "false");
+            return plTermPlAtom;
+        }
+
+        static public Dictionary<Assembly, XElement> AssmblyXDoics = new Dictionary<Assembly, XElement>();
+
+        public static XElement GetXmlDocMembers(Assembly typeAssembly)
+        {
+            XElement ele;
+            lock (AssmblyXDoics)
+                if (!AssmblyXDoics.TryGetValue(typeAssembly, out ele))
+                {
+                    try
+                    {
+                        AssmblyXDoics[typeAssembly] = ele = GetXmlDocMembers0(typeAssembly);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug("Cannot doc " + typeAssembly + " " + e);
+                        AssmblyXDoics[typeAssembly] = ele = null;
+                    }
+                }
+            return ele;
+        }
+
+        public static XElement GetXmlDocMembers0(Assembly typeAssembly)
+        {
+            var file = GetXmlDocFile(typeAssembly);
+            if (file == null) return null;
+            XDocument f = new XDocument();
+            f.Load(file.FullName);
+            if (f.FirstChild == null) return null;
+            foreach (XElement mn in f.ChildNodes)
+            {
+                if (mn.Name.ToLower() == "members") return mn;
+                foreach (XElement mn0 in mn.ChildNodes)
+                {
+                    if (mn0.Name.ToLower() == "members") return mn0;
+                }
+            }
+            return null;
+        }
+
+        public static XElement GetXmlDocMembers(Type type)
+        {
+            return GetXmlDocMembers(type.Assembly);
+        }
+
+
+        private static FileInfo GetXmlDocFile(Assembly assembly)
+        {
+            string assemblyDirPath = Path.GetDirectoryName(assembly.Location);
+            string fileName = String.Format("{0}.xml", Path.GetFileNameWithoutExtension(assembly.Location).ToLower());
+            foreach (string file in Directory.GetFiles(assemblyDirPath))
+            {
+                if (Path.GetFileName(file).ToLower().Equals(fileName))
+                {
+                    return new FileInfo(file);
+                }
+            }
+            return null;
+        }
+
+        static string GetMemberId(MemberInfo member)
+        {
+            char memberKindPrefix = GetMemberPrefix(member);
+            string memberName = GetMemberFullName(member);
+            return memberKindPrefix + ":" + memberName;
+        }
+
+        static char GetMemberPrefix(MemberInfo member)
+        {
+            return member.GetType().Name
+              .Replace("Runtime", "")[0];
+        }
+
+        static string GetMemberFullName(MemberInfo member)
+        {
+            string memberScope = "";
+            if (member.DeclaringType != null)
+                memberScope = GetMemberFullName(member.DeclaringType);
+            else if (member is Type)
+                memberScope = ((Type)member).Namespace;
+
+            memberScope = memberScope + "." + member.Name;
+            if (member is MethodBase)
+            {
+                memberScope += "(";
+                var mi = member as MethodBase;
+                var ps = mi.GetParameters();
+                bool needsComma = false;
+                foreach (ParameterInfo info in ps)
+                {
+                    if (needsComma)
+                    {
+                        memberScope += ",";
+                    }
+                    else
+                    {
+                        needsComma = true;
+                    }
+                    memberScope += "" + info.ParameterType;
+                }
+                memberScope += ")";
+            }
+            return memberScope;
+        }
+
+        [PrologVisible]
+        static public bool cliMemberDoc(PlTerm memb, PlTerm doc, PlTerm xml)
+        {
+            var mi = GetInstance(memb) as MemberInfo;
+            if (mi != null)
+            {
+                XElement xmls = GetDocString(mi);
+                return xml.Unify(ToProlog(xmls)) && doc.Unify(PlTerm.PlString(xmls == null ? "" : xmls.InnerXml));
+            }
+            return true;
+        }
+
+        static public XElement GetDocString(MemberInfo memberInfo)
+        {
+            var docMembers = GetXmlDocMembers(memberInfo.DeclaringType.Assembly);
+            return GetDocString(docMembers, memberInfo);
+        }
+
+        public static XElement GetDocString(XElement docMembers, MemberInfo info)
+        {
+            if (docMembers == null) return null;
+            string memberId = GetMemberId(info).ToLower();
+            foreach (XElement e in docMembers.ChildNodes)
+            {
+                var anme = e.Attributes["name"];
+                if (anme != null)
+                {
+                    string matchWith = anme.Value.ToLower();
+                    if (matchWith.StartsWith(memberId))
+                    {
+                        return e;
+                    }
+                }
+            }
+            return null;
+        }
+
+    }
+
+
     public class CycTypeInfo
     {
         readonly public CycFort cycFort;
