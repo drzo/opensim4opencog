@@ -572,6 +572,9 @@ namespace RTParser
         }
         public void reloadServitor()
         {
+            string rapDir = GlobalSettings.grabSetting("rapstore");
+            servitor.rapStoreDirectory = rapDir;
+
             string behaviorcache = GlobalSettings.grabSetting("behaviorcache");
             if ((behaviorcache != null) && (behaviorcache.Length > 0))
             {
@@ -628,6 +631,9 @@ namespace RTParser
         public void saveServitor0()
         {
             if (servitor == null) return;
+            string rapDir = GlobalSettings.grabSetting("rapstore");
+            servitor.rapStoreDirectory = rapDir;
+
             List<string> allPaths = new List<string>();
             List<string> allCrons = new List<string>();
             List<string> allBehaviors = new List<string>();

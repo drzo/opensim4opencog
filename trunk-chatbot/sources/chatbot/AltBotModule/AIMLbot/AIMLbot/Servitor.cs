@@ -61,6 +61,20 @@ namespace AltAIMLbot
         public Scheduler myScheduler = null;
         public InvertedIndex myIndex = null;
 
+        public string _rapStoreDirectory;
+        public string rapStoreDirectory
+        {
+            get { return _rapStoreDirectory; }
+            set
+            {
+                if (curBot != null)
+                {
+                    curBot.rapStoreDirectory = value;
+                    _rapStoreDirectory = value;
+                }
+            }
+        }
+
         public Servitor(string UserID, sayProcessorDelegate outputDelegate)
         {
             Start(UserID, outputDelegate);
@@ -80,10 +94,11 @@ namespace AltAIMLbot
             Console.WriteLine("             UserName:" + Environment.UserName);
             Console.WriteLine("            TickCount:" + Environment.TickCount);
             Console.WriteLine("            UserID:" + UserID);
+            
             AltBot myBot = new AltBot();
             myScheduler = new Scheduler(this);
             myIndex = new InvertedIndex();
-
+            rapStoreDirectory = ".//rapstore//";
             myBot.bbSafe = true;
 
             curBot = myBot;

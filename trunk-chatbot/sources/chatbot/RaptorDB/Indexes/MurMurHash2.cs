@@ -9,7 +9,8 @@ namespace RaptorDB
         public UInt32 Hash(Byte[] data)
         {
             //return Hash(data, 0xc58f1a7b);
-            return KMurmurHash3(data, 0xc58f1a7b);
+            //return KMurmurHash3(data, 0xde14f0ce);
+            return OneAtATime(data, 0xde14f0ce);
         }
         const UInt32 m = 0x5bd1e995;
         const Int32 r = 24;
@@ -22,6 +23,7 @@ namespace RaptorDB
             a = a * 0x27d4eb2d;
             a = a ^ (a >> 15);
             return a;
+            
         }
 
         public static UInt32 Hash0(UInt32 a)
@@ -172,6 +174,30 @@ namespace RaptorDB
             {
                 return (UInt32)(Int32)h1;
             }
+        }
+        //http://www.team5150.com/~andrew/noncryptohashzoo/
+        public unsafe UInt32 OneAtATime(Byte[] data, UInt32 seed)
+        {
+            int curLength = data.Length;
+            if (curLength == 0)
+                return 0;
+            UInt32 hash = seed + (UInt32)curLength;
+            fixed (byte* firstByte = &(data[0]))
+            {
+
+                byte* realData = (byte*)firstByte;
+                while (curLength>0)
+                {
+                    hash += (*realData++);
+                    hash += (hash << 10);
+                    hash ^= (hash >> 6);
+                    curLength--;
+                }
+                hash += (hash << 3);
+                hash ^= (hash >> 11);
+                hash += (hash << 15);
+            }
+            return hash;
         }
 
         public unsafe UInt32 KMurmurHash3(Byte[] data, UInt32 seed)

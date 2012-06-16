@@ -8,7 +8,7 @@ namespace RaptorDB
     {
         public static int BitmapOffsetSwitchOverCount = 10;
 
-        public static ushort PageItemCount = 6151; //10000; (primes: 769,1543,3079,6151,12289,24593)
+        public static ushort PageItemCount = 24593; //10000; (primes: 769,1543,3079,6151,12289,24593)
 
         public static int SaveTimerSeconds = 3000;
 
