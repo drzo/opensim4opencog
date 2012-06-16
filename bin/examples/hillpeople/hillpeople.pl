@@ -68,6 +68,7 @@ assertIfNewRC(Gaf):-asserta(Gaf).
 :- use_module(cogbot(cogrobot)).
 :- use_module(hillpeople(actions)).
 :- use_module(hillpeople(tribal)).
+:- use_module(hillpeople(aimlbot)).
 
 :-dynamic
 	botID/2,
