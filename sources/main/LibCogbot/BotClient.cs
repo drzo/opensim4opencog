@@ -454,6 +454,12 @@ namespace Cogbot
             tutorials = new Dictionary<string, Cogbot.Tutorials.Tutorial>();
             tutorials["tutorial1"] = new Tutorials.Tutorial1(manager, this);
 
+            // ensure all commands are registered when this constructor completes
+            foreach (Type type in GetType().Assembly.GetTypes())
+            {
+                RegisterType(type);
+            }
+            
             _gridClient = gc;
             describeNext = true;
 
