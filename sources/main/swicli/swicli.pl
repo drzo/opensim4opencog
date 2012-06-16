@@ -129,19 +129,20 @@ cli_subclass(Sub,Sup):-cli_find_type(Sub,RealSub),cli_find_type(Sup,RealSup),cli
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %% cli_col(+Col,-Elem) iterates out Elems for Collection
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-% old version:s cli_collection(Obj,Ele):-cli_call(Obj,'ToArray',[],Array),cli_array_to_term(Array,Vect),!,arg(_,Vect,Ele).
+% old version:s cli_collection(Obj,Ele):-cli_call(Obj,'ToArray',[],Array),cli_array_to_term_args(Array,Vect),!,arg(_,Vect,Ele).
 cli_collection(Error,_Ele):-cli_is_null(Error),!,fail.
 cli_collection([S|Obj],Ele):-!,member(Ele,[S|Obj]).
 cli_collection(Obj,Ele):-
       cli_memb(Obj,m(_, 'GetEnumerator', _, [], [], _, _)),!,
       cli_call(Obj,'GetEnumerator',[],Enum),!,
       call_cleanup(cli_enumerator_element(Enum,Ele),cli_free(Enum)).
-cli_collection(Obj,Ele):-cli_array_to_term(Obj,Vect),!,arg(_,Vect,Ele).
-cli_collection(Obj,Ele):-cli_memb(Obj,m(_, 'ToArray', _, [], [], _, _)),cli_call(Obj,'ToArray',[],Array),cli_array_to_term(Array,Vect),!,arg(_,Vect,Ele).
+cli_collection(Obj,Ele):-cli_array_to_term_args(Obj,Vect),!,arg(_,Vect,Ele).
+cli_collection(Obj,Ele):-cli_memb(Obj,m(_, 'ToArray', _, [], [], _, _)),cli_call(Obj,'ToArray',[],Array),cli_array_to_term_args(Array,Vect),!,arg(_,Vect,Ele).
 cli_collection(Obj,Ele):-cli_array_to_termlist(Obj,Vect),!,member(Ele,Vect).
 
 cli_col(X,Y):-cli_collection(X,Y).
 
+cli_array_to_term_args(Array,Term):-cli_array_to_term(Array,array(_,Term)).
 
 cli_col_add(Col,Value):-cli_call(Col,'Add'(Value),_).
 cli_col_contains(Col,Value):-cli_call(Col,'Contains'(Value),_).
