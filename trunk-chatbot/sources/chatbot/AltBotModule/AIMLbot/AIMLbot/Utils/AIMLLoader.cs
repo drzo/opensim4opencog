@@ -91,6 +91,7 @@ namespace AltAIMLbot.Utils
                 if (extDB == null)
                 {
                     extDB = new ExternDB(this.bot.rapStoreDirectory);
+                    extDB.bot = this.bot;
                 }
             }
            XmlTextReader reader = new XmlTextReader(filename);
@@ -180,6 +181,7 @@ namespace AltAIMLbot.Utils
                 if (extDB == null)
                 {
                     extDB = new ExternDB(this.bot.rapStoreDirectory);
+                    extDB.bot = this.bot;
                 }
             }
             // Get a list of the nodes that are children of the <aiml> tag

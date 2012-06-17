@@ -60,10 +60,10 @@ namespace AltAIMLbot.AIMLTagHandlers
                     query = query.Trim();
 
                     string webAsk = myUrl + "?format=plaintext&appid=" + myAppID + "&input=" + query;
-                    Console.WriteLine("WEBQUERY:{0}", webAsk);
+                    bot.logText(String.Format("WEBQUERY:{0}", webAsk));
                     WebClient client = new WebClient();
                     string response = client.DownloadString(webAsk);
-                    Console.WriteLine("WEBResponse:{0}", response);
+                    bot.logText(String.Format("WEBResponse:{0}", response));
                     response = response.Replace('\n', '.');
                     response = response.Replace('\r', ' ');
 
@@ -99,12 +99,12 @@ namespace AltAIMLbot.AIMLTagHandlers
                     {
                             webAns = "Sorry, I don't understand.";
                     }
-                    Console.WriteLine("wolframserver :" + webAns);
+                    bot.logText(String.Format("wolframserver :" + webAns));
                     return webAns;
                 }
                 catch(Exception e)
                 {
-                    Console.WriteLine("ERR: {0} {1}", e.Message, e.StackTrace);
+                    bot.logText(String.Format("ERR: {0} {1}", e.Message, e.StackTrace));
                     webAns = "Processing caused the following error. " + e.Message;
                     return webAns;
                 }

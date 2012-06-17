@@ -1317,19 +1317,21 @@ namespace AltAIMLbot.Utils
         //http://www.codeproject.com/Articles/190504/RaptorDB
         //http://www.codeproject.com/Articles/316816/RaptorDB-The-Key-Value-Store-V2
 
-        public RaptorDB.RaptorDBString templatedb;
-        public RaptorDB.RaptorDBString childdb;
-        public RaptorDB.RaptorDBString childtrunkdb;
-        public RaptorDB.RaptorDBString childcntdb;
-        public RaptorDB.RaptorDBString scoredb;
-        public RaptorDB.RaptorDBString filenamedb;
-        public RaptorDB.RaptorDBString worddb;
+        public RaptorDB.RaptorDBString[] templatedb = new RaptorDBString[slices];
+        public RaptorDB.RaptorDBString[] childdb = new RaptorDBString[slices];
+        public RaptorDB.RaptorDBString[] childtrunkdb = new RaptorDBString[slices];
+        public RaptorDB.RaptorDBString[] childcntdb = new RaptorDBString[slices];
+        public RaptorDB.RaptorDBString[] scoredb = new RaptorDBString[slices];
+        public RaptorDB.RaptorDBString[] filenamedb = new RaptorDBString[slices];
+        public RaptorDB.RaptorDBString[] worddb = new RaptorDBString[slices];
         public RaptorDB.RaptorDBString loadeddb;
         public Dictionary<string, string> childcache = new Dictionary<string, string>();
         public Dictionary<string, Node> nodecache = new Dictionary<string, Node>();
 
-        public const int trunkLevel = 9;
-
+        public const int slices = 13;
+        public const int trunkLevel = 4;
+        public bool verify = true;
+        public AltBot bot = null;
 
         public ExternDB()
         {
@@ -1337,14 +1339,16 @@ namespace AltAIMLbot.Utils
             string dbdirectory = ".\\rapstore\\";
             string ourPath = Directory.CreateDirectory(dbdirectory).FullName;
             string ourDirectory = Path.GetDirectoryName(ourPath);
-
-            templatedb = new RaptorDB.RaptorDBString(ourDirectory + "\\templatedb", false);
-            childdb = new RaptorDB.RaptorDBString(ourDirectory + "\\childdb", false);
-            childtrunkdb = new RaptorDB.RaptorDBString(ourDirectory + "\\childtrunkdb", false);
-            childcntdb = new RaptorDB.RaptorDBString(ourDirectory + "\\childcntdb", false);
-            scoredb = new RaptorDB.RaptorDBString(ourDirectory + "\\scoredb", false);
-            filenamedb = new RaptorDB.RaptorDBString(ourDirectory + "\\filenamedb", false);
-            worddb = new RaptorDB.RaptorDBString(ourDirectory + "\\worddb", false);
+            for (int i = 0; i < slices; i++)
+            {
+                templatedb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\templatedb"+i.ToString (), false);
+                childdb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\childdb" + i.ToString(), false);
+                childtrunkdb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\childtrunkdb" + i.ToString(), false);
+                childcntdb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\childcntdb" + i.ToString(), false);
+                scoredb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\scoredb" + i.ToString(), false);
+                filenamedb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\filenamedb" + i.ToString(), false);
+                worddb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\worddb" + i.ToString(), false);
+            }
             loadeddb = new RaptorDB.RaptorDBString(ourDirectory + "\\loadeddb", false);
         }
 
@@ -1353,26 +1357,48 @@ namespace AltAIMLbot.Utils
             string ourPath = Directory.CreateDirectory(dbdirectory).FullName;
             string ourDirectory = Path.GetDirectoryName(ourPath);
 
-            templatedb = new RaptorDB.RaptorDBString(ourDirectory + "\\templatedb", false);
-            childdb = new RaptorDB.RaptorDBString(ourDirectory + "\\childdb", false);
-            childtrunkdb = new RaptorDB.RaptorDBString(ourDirectory + "\\childtrunkdb", false);
-            childcntdb = new RaptorDB.RaptorDBString(ourDirectory + "\\childcntdb", false);
-            scoredb = new RaptorDB.RaptorDBString(ourDirectory + "\\scoredb", false);
-            filenamedb = new RaptorDB.RaptorDBString(ourDirectory + "\\filenamedb", false);
-            worddb = new RaptorDB.RaptorDBString(ourDirectory + "\\worddb", false);
+            for (int i = 0; i < slices; i++)
+            {
+                templatedb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\templatedb" + i.ToString(), false);
+                childdb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\childdb" + i.ToString(), false);
+                childtrunkdb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\childtrunkdb" + i.ToString(), false);
+                childcntdb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\childcntdb" + i.ToString(), false);
+                scoredb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\scoredb" + i.ToString(), false);
+                filenamedb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\filenamedb" + i.ToString(), false);
+                worddb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\worddb" + i.ToString(), false);
+            }
             loadeddb = new RaptorDB.RaptorDBString(ourDirectory + "\\loadeddb", false);
         }
 
         public void SaveIndex()
         {
-            templatedb.SaveIndex();
-            childdb.SaveIndex();
-            childtrunkdb.SaveIndex();
-            childcntdb.SaveIndex();
-            scoredb.SaveIndex();
-            filenamedb.SaveIndex();
-            worddb.SaveIndex();
+            for (int i = 0; i < slices; i++)
+            {
+                templatedb[i].SaveIndex();
+                childdb[i].SaveIndex();
+                childtrunkdb[i].SaveIndex();
+                childcntdb[i].SaveIndex();
+                scoredb[i].SaveIndex();
+                filenamedb[i].SaveIndex();
+                worddb[i].SaveIndex();
+            }
             loadeddb.Shutdown();
+        }
+
+        public void logText(string msg)
+        {
+            if (bot == null) return;
+            lock (bot.loglock)
+            {
+                try
+                {
+                    string miniLog = String.Format(@"./aiml/BTTrace.txt");
+                    System.IO.File.AppendAllText(miniLog, msg + "\n");
+                    Console.WriteLine(msg);
+                }
+                catch
+                { }
+            }
         }
 
         public void Close()
@@ -1403,13 +1429,17 @@ namespace AltAIMLbot.Utils
                 }
             }
             */
-            templatedb.Shutdown();
-            childdb.Shutdown();
-            childtrunkdb.Shutdown();
-            childcntdb.Shutdown();
-            scoredb.Shutdown();
-            filenamedb.Shutdown();
-            worddb.Shutdown();
+
+            for (int i = 0; i < slices; i++)
+            {
+                templatedb[i].Shutdown();
+                childdb[i].Shutdown();
+                childtrunkdb[i].Shutdown();
+                childcntdb[i].Shutdown();
+                scoredb[i].Shutdown();
+                filenamedb[i].Shutdown();
+                worddb[i].Shutdown();
+            }
             loadeddb.Shutdown();
             GC.Collect();
         }
@@ -1451,19 +1481,27 @@ namespace AltAIMLbot.Utils
         public bool isTrunk(string absPath)
         {
             string[] s = absPath.Split(' ');
-            return (s.Length < trunkLevel);
+            return (s.Length <= trunkLevel);
         }
-
+        public int pathToSlice(string absPath)
+        {
+            int v = Math.Abs(absPath.GetHashCode() % slices);
+            return v;
+        }
         public bool containsNode(string absPath)
         {
             string cntStr = null;
-            childcntdb.Get(absPath, out cntStr);
+            int pslice = pathToSlice(absPath);
+            childcntdb[pslice].Get(absPath, out cntStr);
             return (cntStr != null);
         }
         public Node fetchNode(string absPath,bool full)
         {
             try
             {
+                int pslice = pathToSlice(absPath);
+
+
                 if (nodecache.ContainsKey(absPath))
                 {
                     return nodecache[absPath];
@@ -1479,14 +1517,14 @@ namespace AltAIMLbot.Utils
                 myNode.childnum = 0;
                 myNode.childmax = 0;
 
-                scoredb.Get(absPath, out scoreStr);
-                templatedb.Get(absPath, out myNode.template);
-                filenamedb.Get(absPath, out  myNode.filename);
+                scoredb[pslice].Get(absPath, out scoreStr);
+                templatedb[pslice].Get(absPath, out myNode.template);
+                filenamedb[pslice].Get(absPath, out  myNode.filename);
                 //worddb.Get(absPath, out  myNode.word);
-                childcntdb.Get(absPath, out cntStr);
+                childcntdb[pslice].Get(absPath, out cntStr);
                 if (absPath.Length == 0)
                 {
-                    childcntdb.Get(absPath, out cntStr);
+                    childcntdb[pslice].Get(absPath, out cntStr);
                     trunk = trunk;
                     if (full) cntStr = "1";
                 }
@@ -1528,11 +1566,11 @@ namespace AltAIMLbot.Utils
                             {
                                 if (trunk)
                                 {
-                                    childtrunkdb.Get(childkey, out  childtxt);
+                                    childtrunkdb[pslice].Get(childkey, out  childtxt);
                                 }
                                 else
                                 {
-                                    childdb.Get(childkey, out childtxt);
+                                    childdb[pslice].Get(childkey, out childtxt);
                                 }
                             }
 
@@ -1556,7 +1594,7 @@ namespace AltAIMLbot.Utils
                             {
                                 byte[] bkey = Encoding.Unicode.GetBytes(childkey);
                                 int hc = (int)RaptorDB.Helper.MurMur.Hash(bkey);
-                                Console.WriteLine("WARNING: Get({0} ({1}) ) returns null", childkey, hc);
+                                logText(String.Format("WARNING: Get({0} ({1}) ) returns null", childkey, hc));
 
                             }
                         }
@@ -1606,6 +1644,7 @@ namespace AltAIMLbot.Utils
         {
             try
             {
+                int pslice = pathToSlice(absPath);
                 bool trunk = isTrunk(absPath);
                 if ((flushing == false) && (trunk == true))
                 {
@@ -1639,7 +1678,7 @@ namespace AltAIMLbot.Utils
                // if ((childrenStr != myNode.childrenStr) && 
                 if ((myNode.childnum + myNode.children.Count) != myNode.childmax )
                 {
-                    Console.WriteLine("WARNING : {0} myNode.childnum({1}) + myNode.children.Count({2}) != myNode.childmax({3})", absPath, myNode.childnum, myNode.children.Count, myNode.childmax);
+                    logText(String.Format("WARNING : {0} myNode.childnum({1}) + myNode.children.Count({2}) != myNode.childmax({3})", absPath, myNode.childnum, myNode.children.Count, myNode.childmax));
                     if ((myNode.childnum + myNode.children.Count) > myNode.childmax) myNode.childmax = (myNode.childnum + myNode.children.Count);
                 }
                 if (myNode.children.Count  > 0)
@@ -1659,13 +1698,13 @@ namespace AltAIMLbot.Utils
                             {
                             if (trunk)
                             {
-                                childtrunkdb.RemoveKey(childkey);
-                                childtrunkdb.Set(childkey, childtxt);
+                                childtrunkdb[pslice].RemoveKey(childkey);
+                                childtrunkdb[pslice].Set(childkey, childtxt);
                             }
                             else
                             {
-                                childdb.RemoveKey(childkey);
-                                childdb.Set(childkey, childtxt);
+                                childdb[pslice].RemoveKey(childkey);
+                                childdb[pslice].Set(childkey, childtxt);
                             }
                             if (childcache.ContainsKey(childkey))
                             {
@@ -1674,6 +1713,28 @@ namespace AltAIMLbot.Utils
                             else
                             {
                                 childcache.Add(childkey, childtxt);
+                            }
+                            if (verify)
+                            {
+                                string vstr = "";
+                                if (trunk)
+                                {
+                                    childtrunkdb[pslice].Get(childkey, out vstr);
+                                }
+                                else
+                                {
+                                    childdb[pslice].Get(childkey, out vstr);
+                                }
+                                if (vstr != childtxt)
+                                {
+
+                                    logText(String.Format("WARNING : Childkey({0}) returns ({1}) when set was ({2})",childkey,vstr,childtxt));
+                                }
+                                if (childkey.Contains("<STATE> * <PATTERN>#"))
+                                {
+                                    logText(String.Format("TRACE : Childkey({0}) set to ({1})",childkey,childtxt));
+
+                                }
                             }
 
                         }
@@ -1688,12 +1749,12 @@ namespace AltAIMLbot.Utils
                 {
                     trunk = trunk;
                 }
-                if (myNode.template.Length > 0) templatedb.Set(absPath, myNode.template);
-                if (myNode.filename.Length > 0) filenamedb.Set(absPath, myNode.filename);
+                if (myNode.template.Length > 0) templatedb[pslice].Set(absPath, myNode.template);
+                if (myNode.filename.Length > 0) filenamedb[pslice].Set(absPath, myNode.filename);
                 //if (myNode.word.Length > 0) worddb.Set(absPath, myNode.word);
-                if (myNode.score != 1.0) scoredb.Set(absPath, myNode.score.ToString());
+                if (myNode.score != 1.0) scoredb[pslice].Set(absPath, myNode.score.ToString());
                 //if (myNode.childnum > 0) 
-                childcntdb.Set(absPath, myNode.childmax.ToString());
+                childcntdb[pslice].Set(absPath, myNode.childmax.ToString());
                 //Save to local if it's needed
                 if ((trunk) || (myNode.childmax > 8))
                 {

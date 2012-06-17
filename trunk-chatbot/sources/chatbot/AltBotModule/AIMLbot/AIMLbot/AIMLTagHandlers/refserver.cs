@@ -69,7 +69,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                     }
                     //webAns = "refserv sez " + webAns;
                     webAns = webAns.Replace("LSA sez", "");
-                    Console.WriteLine("refserver :" + webAns);
+                    bot.logText(String.Format("refserver :" + webAns));
                     return webAns;
                 }
                 catch

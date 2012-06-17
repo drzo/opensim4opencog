@@ -476,6 +476,23 @@ namespace AltAIMLbot
             loader.loadAIMLFromXML(newAIML, filename);
         }
 
+        public void logText(string msg)
+        {
+
+            lock (loglock)
+            {
+                try
+                {
+                    string miniLog = String.Format(@"./aiml/BTTrace.txt");
+                    System.IO.File.AppendAllText(miniLog, msg + "\n");
+                    Console.WriteLine(msg);
+                }
+                catch
+                { }
+            }
+        }
+
+
         /// <summary>
         /// Instantiates the dictionary objects and collections associated with this class
         /// </summary>
@@ -884,6 +901,7 @@ namespace AltAIMLbot
                     if (chatDB == null)
                     {
                         chatDB = new ExternDB(rapStoreDirectory);
+                        chatDB.bot = this;
                     }
                 }
                 if (request.user.Qstate.Count == 0)

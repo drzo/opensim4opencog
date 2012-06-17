@@ -94,10 +94,10 @@ namespace AltAIMLbot.AIMLTagHandlers
                     query = query.Trim();
 
                     string webAsk = myUrl + "?clientFeatures=say&login=" + myLogin + "&key=" + myKey + "&input=" + query;
-                    Console.WriteLine("WEBQUERY:{0}", webAsk);
+                    bot.logText(String.Format("WEBQUERY:{0}", webAsk));
                     WebClient client = new WebClient();
                     string response = client.DownloadString(webAsk);
-                    Console.WriteLine("WEBResponse:{0}", response);
+                    bot.logText(String.Format("WEBResponse:{0}", response));
                     // We want <tk:text_result>(OUR ANSWER) </tk:result>
                     string finalSay = "";
                     Hashtable top = (Hashtable)JSON.JsonDecode(response);
@@ -149,7 +149,7 @@ namespace AltAIMLbot.AIMLTagHandlers
                             }
 
                     }
-                    Console.WriteLine("pannouserver :" + webAns);
+                    bot.logText(String.Format("pannouserver :" + webAns));
                     return webAns;
                 }
                 catch(Exception e)

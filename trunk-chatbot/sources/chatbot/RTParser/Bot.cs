@@ -575,6 +575,12 @@ namespace RTParser
             string rapDir = GlobalSettings.grabSetting("rapstore");
             servitor.rapStoreDirectory = rapDir;
 
+            string servRoot = GlobalSettings.grabSetting("serverRoot");
+            if ((servRoot != null) && (servRoot.Length > 7))
+            {
+                WebServitor.serverRoot = servRoot;
+            }
+
             string behaviorcache = GlobalSettings.grabSetting("behaviorcache");
             if ((behaviorcache != null) && (behaviorcache.Length > 0))
             {

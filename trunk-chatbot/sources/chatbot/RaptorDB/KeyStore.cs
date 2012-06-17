@@ -32,7 +32,9 @@ namespace RaptorDB
         {
             string str = (_caseSensitive ? key : key.ToLower());
             byte[] bkey = Encoding.Unicode.GetBytes(str);
-            int hc = (int)Helper.MurMur.Hash(bkey);
+            //int hc = (int)Helper.MurMur.Hash(bkey);
+            int hc = key.GetHashCode();
+
             MemoryStream ms = new MemoryStream();
             ms.Write(Helper.GetBytes(bkey.Length, false), 0, 4);
             ms.Write(bkey, 0, bkey.Length);
@@ -58,7 +60,8 @@ namespace RaptorDB
             string str = (_caseSensitive ? key : key.ToLower());
             val = null;
             byte[] bkey = Encoding.Unicode.GetBytes(str);
-            int hc = (int)Helper.MurMur.Hash(bkey);
+            //int hc = (int)Helper.MurMur.Hash(bkey);
+            int hc = key.GetHashCode();
 
             if (_db.Get(hc, out val))
             {
@@ -121,8 +124,9 @@ namespace RaptorDB
         public bool RemoveKey(string key)
         {
             string str = (_caseSensitive ? key : key.ToLower());
-            byte[] bkey = Encoding.Unicode.GetBytes(str);
-            int hc = (int)Helper.MurMur.Hash(bkey);
+           // byte[] bkey = Encoding.Unicode.GetBytes(str);
+           // int hc = (int)Helper.MurMur.Hash(bkey);
+            int hc = key.GetHashCode();
             return _db.RemoveKey(hc);
         }
     }
