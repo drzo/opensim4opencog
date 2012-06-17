@@ -1,8 +1,10 @@
-/*********************************************************
-* 
-*  Project: Swicli.Library - Two Way Interface to .NET and MONO 
+/*  $Id$
+*  
+*  Project: Swicli.Library - Two Way Interface for .NET and MONO to SWI-Prolog
 *  Author:        Douglas R. Miles
-*  Copyright (C): 2008, Logicmoo - http://www.kqml.org
+*  E-mail:        logicmoo@gmail.com
+*  WWW:           http://www.logicmoo.com
+*  Copyright (C):  2010-2012 LogicMOO Developement
 *
 *  This library is free software; you can redistribute it and/or
 *  modify it under the terms of the GNU Lesser General Public
@@ -20,7 +22,9 @@
 *
 *********************************************************/
 using System;
+using System.Collections.Generic;
 using System.Reflection;
+using SbsSW.SwiPlCs;
 
 namespace Swicli.Library
 {
@@ -35,6 +39,82 @@ namespace Swicli.Library
         {
             return (Module ?? "user") + ":" + Name + "/" + Arity + " " + Event;
         }
+    }
+
+    public partial class PrologClient
+    {
+        public static Dictionary<EventHandlerInPrologKey, EventHandlerInProlog> PrologEventHandlers =
+            new Dictionary<EventHandlerInPrologKey, EventHandlerInProlog>();
+
+#if USE_MUSHDLR
+        public static TaskQueueHandler PrologEventQueue = new TaskQueueHandler("PrologEventHandler");
+#endif
+
+        [PrologVisible(ModuleName = ExportModule)]
+        static public bool cliAddEventHandler(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm prologPred)
+        {
+            object getInstance = GetInstance(clazzOrInstance);
+            Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
+            Type[] paramz = null;
+            EventInfo fi = findEventInfo(memberSpec, c, ref paramz);
+            if (fi == null)
+            {
+                return Error("Cant find event {0} on {1}", memberSpec, c);
+            }
+            var Key = new EventHandlerInPrologKey
+            {
+                Name = PredicateName(prologPred),
+                Module = PredicateModule(prologPred),
+                Arity = PredicateArity(prologPred),
+                Origin = getInstance,
+                Event = fi
+            };
+
+            lock (PrologEventHandlers)
+            {
+                EventHandlerInProlog handlerInProlog;
+                if (PrologEventHandlers.TryGetValue(Key, out handlerInProlog))
+                {
+                    fi.RemoveEventHandler(getInstance, handlerInProlog.Delegate);
+                    PrologEventHandlers.Remove(Key);
+                }
+                handlerInProlog = new EventHandlerInProlog(Key);
+                PrologEventHandlers.Add(Key, handlerInProlog);
+                PinObject(handlerInProlog.Delegate);
+                fi.AddEventHandler(getInstance, handlerInProlog.Delegate);
+            }
+            return true;
+        }
+        [PrologVisible(ModuleName = ExportModule)]
+        static public bool cliRemoveEventHandler(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm prologPred)
+        {
+            object getInstance = GetInstance(clazzOrInstance);
+            Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
+            Type[] paramz = null;
+            EventInfo fi = findEventInfo(memberSpec, c, ref paramz);//
+            if (fi == null)
+            {
+                return Error("Cant find event {0} on {1}", memberSpec, c);
+            }
+            var Key = new EventHandlerInPrologKey
+            {
+                Name = PredicateName(prologPred),
+                Module = PredicateModule(prologPred),
+                Arity = PredicateArity(prologPred),
+                Origin = getInstance,
+                Event = fi
+            };
+            EventHandlerInProlog handlerInProlog;
+            lock (PrologEventHandlers) if (PrologEventHandlers.TryGetValue(Key, out handlerInProlog))
+                {
+                    UnPinObject(handlerInProlog.Delegate);
+                    fi.RemoveEventHandler(getInstance, handlerInProlog.Delegate);
+                    PrologEventHandlers.Remove(Key);
+                    return true;
+                }
+            return Error("Cant find registered handler {0} for {1} on {2}", prologPred, memberSpec, c);
+        }
+
     }
 
     public class EventHandlerInProlog : PrologGenericDelegate

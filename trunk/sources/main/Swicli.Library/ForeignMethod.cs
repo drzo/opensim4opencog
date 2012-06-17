@@ -1,8 +1,10 @@
-/*********************************************************
-* 
-*  Project: Swicli - Two Way Interface to .NET and MONO 
+/*  $Id$
+*  
+*  Project: Swicli.Library - Two Way Interface for .NET and MONO to SWI-Prolog
 *  Author:        Douglas R. Miles
-*  Copyright (C): 2008, Logicmoo - http://www.kqml.org
+*  E-mail:        logicmoo@gmail.com
+*  WWW:           http://www.logicmoo.com
+*  Copyright (C):  2010-2012 LogicMOO Developement
 *
 *  This library is free software; you can redistribute it and/or
 *  modify it under the terms of the GNU Lesser General Public
@@ -19,17 +21,12 @@
 *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *
 *********************************************************/
+
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using System.Xml.Serialization;
 using SbsSW.SwiPlCs;
 using SbsSW.SwiPlCs.Callback;
 using SbsSW.SwiPlCs.Exceptions;
@@ -533,7 +530,7 @@ typedef struct // define a context structure  { ... } context;
 
         static private PinnedObject<NonDetTest> ndtp;
         // foo(X,Y),writeq(f(X,Y)),nl,X=5.
-        public static int Foo(PlTerm t0, PlTerm term2, IntPtr control)
+        public static int Foo(CycFort t0, CycFort term2, IntPtr control)
         {
             callNum++;
             if (callNum > 10)
@@ -663,7 +660,7 @@ typedef struct // define a context structure  { ... } context;
 
         // test with (foo2(X,Y)->writeln(p(X,Y));writeln(p(X,Y))),!.
         // test with (foo2(X,Y) *->writeln(p(X,Y));writeln(p(X,Y)),!).
-        public static int FooTwo(PlTerm a0, PlTerm a1, IntPtr control)
+        public static int FooTwo(CycFort a0, CycFort a1, IntPtr control)
         {
             var handle = control;
             FRG fc = (FRG)(libpl.PL_foreign_control(control));
@@ -710,7 +707,7 @@ typedef struct // define a context structure  { ... } context;
             }
         }
 
-        public static int FooThree(PlTerm a0, int arity, IntPtr control)
+        public static int FooThree(CycFort a0, int arity, IntPtr control)
         {
             var handle = control;
             FRG fc = (FRG)(libpl.PL_foreign_control(control));
@@ -758,7 +755,7 @@ typedef struct // define a context structure  { ... } context;
             }
         }
 
-        private static int CountTo(PlTerm term, PlTerm term2, ref NonDetTest o)
+        private static int CountTo(CycFort term, CycFort term2, ref NonDetTest o)
         {
             try
             {
@@ -841,7 +838,7 @@ typedef struct // define a context structure  { ... } context;
             }
         }
 
-        private static string PredicateName(PlTerm term)
+        private static string PredicateName(CycFort term)
         {
             if (term.Name == "{}")
             {
@@ -867,7 +864,7 @@ typedef struct // define a context structure  { ... } context;
             return term.Name;
         }
 
-        private static string PredicateModule(PlTerm term)
+        private static string PredicateModule(CycFort term)
         {
             if (term.Name == "{}")
             {
@@ -886,7 +883,7 @@ typedef struct // define a context structure  { ... } context;
             return "user";
         }
 
-        private static int PredicateArity(PlTerm term)
+        private static int PredicateArity(CycFort term)
         {
             if (term.Name == "{}")
             {

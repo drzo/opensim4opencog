@@ -1,19 +1,36 @@
-/*
- * The original code comes from Kevin McFarlane. see
- * http://www.codeproject.com/KB/cs/designbycontract.aspx
- * 
- * It was modified by Billy McCafferty for his NHibernate sample see
- * http://www.codeproject.com/KB/architecture/NHibernateBestPractices.aspx
- * 
- * And was modified to this version by Uwe Lesta
- * 
- */
+/*  $Id$
+*  
+*  Project: Swicli.Library - Two Way Interface for .NET and MONO to SWI-Prolog
+*  Author:        Douglas R. Miles
+*                 Uwe Lesta (SbsSW.SwiPlCs classes)
+*  E-mail:        logicmoo@gmail.com
+*  WWW:           http://www.logicmoo.com
+*  Copyright (C): 2008, Uwe Lesta SBS-Softwaresysteme GmbH, 
+*     2010-2012 LogicMOO Developement
+*
+*  This library is free software; you can redistribute it and/or
+*  modify it under the terms of the GNU Lesser General Public
+*  License as published by the Free Software Foundation; either
+*  version 2.1 of the License, or (at your option) any later version.
+*
+*  This library is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+*  Lesser General Public License for more details.
+*
+*  You should have received a copy of the GNU Lesser General Public
+*  License along with this library; if not, write to the Free Software
+*  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*
+*********************************************************/
 
 using System;
 using System.Diagnostics;
+using System.Runtime.Serialization;
+using System.Security.Permissions;
+// Exception implementation 
 
-using System.Runtime.Serialization;	// Exception implementation 
-using System.Security.Permissions;	// SecurityPermissionAttribute for GetObjectData
+// SecurityPermissionAttribute for GetObjectData
 
 namespace SbsSW.DesignByContract
 {
@@ -270,7 +287,7 @@ namespace SbsSW.DesignByContract
 
 		// see http://msdnwiki.microsoft.com/en-us/mtpswiki/f1d0010b-14fb-402f-974f-16318f0bc19f.aspx
         /// <inheritdoc />
-        [SecurityPermissionAttribute(SecurityAction.Demand, SerializationFormatter = true)]
+        [SecurityPermission(SecurityAction.Demand, SerializationFormatter = true)]
 		public override void GetObjectData(SerializationInfo info, StreamingContext context)
 		{
 			if (info == null)
@@ -305,7 +322,7 @@ namespace SbsSW.DesignByContract
         protected PreconditionException(SerializationInfo info, StreamingContext context) : base(info, context) { }
 
         /// <inheritdoc />
-        [SecurityPermissionAttribute(SecurityAction.Demand, SerializationFormatter = true)]
+        [SecurityPermission(SecurityAction.Demand, SerializationFormatter = true)]
 		public override void GetObjectData(SerializationInfo info, StreamingContext context)
 		{
 			base.GetObjectData(info, context);
@@ -337,7 +354,7 @@ namespace SbsSW.DesignByContract
         protected PostConditionException(SerializationInfo info, StreamingContext context) : base(info, context) { }
 
         /// <inheritdoc />
-        [SecurityPermissionAttribute(SecurityAction.Demand, SerializationFormatter = true)]
+        [SecurityPermission(SecurityAction.Demand, SerializationFormatter = true)]
 		public override void GetObjectData(SerializationInfo info, StreamingContext context)
 		{
 			base.GetObjectData(info, context);
@@ -369,7 +386,7 @@ namespace SbsSW.DesignByContract
         protected InvariantException(SerializationInfo info, StreamingContext context) : base(info, context) { }
 
         /// <inheritdoc />
-        [SecurityPermissionAttribute(SecurityAction.Demand, SerializationFormatter = true)]
+        [SecurityPermission(SecurityAction.Demand, SerializationFormatter = true)]
 		public override void GetObjectData(SerializationInfo info, StreamingContext context)
 		{
 			base.GetObjectData(info, context);
@@ -401,7 +418,7 @@ namespace SbsSW.DesignByContract
         protected AssertionException(SerializationInfo info, StreamingContext context) : base(info, context) { }
 
         /// <inheritdoc />
-        [SecurityPermissionAttribute(SecurityAction.Demand, SerializationFormatter = true)]
+        [SecurityPermission(SecurityAction.Demand, SerializationFormatter = true)]
 		public override void GetObjectData(SerializationInfo info, StreamingContext context)
 		{
 			base.GetObjectData(info, context);

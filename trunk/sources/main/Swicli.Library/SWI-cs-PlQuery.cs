@@ -1,9 +1,12 @@
-/*********************************************************
-* 
-*  Project: Swicli.Library - Two Way Interface to .NET and MONO 
+/*  $Id$
+*  
+*  Project: Swicli.Library - Two Way Interface for .NET and MONO to SWI-Prolog
 *  Author:        Douglas R. Miles
-*  Author:        Uwe Lesta
-*  Copyright (C): 2008, Uwe Lesta SBS-Softwaresysteme GmbH
+*                 Uwe Lesta (SbsSW.SwiPlCs classes)
+*  E-mail:        logicmoo@gmail.com
+*  WWW:           http://www.logicmoo.com
+*  Copyright (C): 2008, Uwe Lesta SBS-Softwaresysteme GmbH, 
+*     2010-2012 LogicMOO Developement
 *
 *  This library is free software; you can redistribute it and/or
 *  modify it under the terms of the GNU Lesser General Public
@@ -21,16 +24,12 @@
 *
 *********************************************************/
 using System;
-using System.Collections;		        // IEnumerable PlTail
-using System.Collections.Generic;		// IEnumerable ( PlQuery )
-using System.Text;						// ToStringAsListFormat
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using SbsSW.DesignByContract;
 using SbsSW.SwiPlCs.Exceptions;
 using SbsSW.SwiPlCs.Streams;
-using System.Collections.ObjectModel;
 using Swicli.Library;
-
-// The namespace summary is above class NamespaceDoc
 namespace SbsSW.SwiPlCs
 {
 
@@ -181,7 +180,7 @@ namespace SbsSW.SwiPlCs
         public bool DiscardData = true;  
 
         /// <summary>
-        /// Gets a <see cref="Collection&lt;T&gt;"/> of the variable names if the query was built by a string.
+        /// Gets a <see cref="Collection{T}"/> of the variable names if the query was built by a string.
         /// </summary>
         public Collection<string> VariableNames
         {

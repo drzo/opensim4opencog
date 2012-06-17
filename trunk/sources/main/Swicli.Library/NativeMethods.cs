@@ -1,10 +1,13 @@
 #define USESAFELIB
-/*********************************************************
-* 
-*  Project: Swicli.Library - Two Way Interface to .NET and MONO 
+/*  $Id$
+*  
+*  Project: Swicli.Library - Two Way Interface for .NET and MONO to SWI-Prolog
 *  Author:        Douglas R. Miles
-*  Author:        Uwe Lesta
-*  Copyright (C): 2008, Uwe Lesta SBS-Softwaresysteme GmbH
+*                 Uwe Lesta (SbsSW.SwiPlCs classes)
+*  E-mail:        logicmoo@gmail.com
+*  WWW:           http://www.logicmoo.com
+*  Copyright (C): 2008, Uwe Lesta SBS-Softwaresysteme GmbH, 
+*     2010-2012 LogicMOO Developement
 *
 *  This library is free software; you can redistribute it and/or
 *  modify it under the terms of the GNU Lesser General Public
@@ -35,19 +38,14 @@ http://www.codeproject.com/csharp/legacyplugins.asp
  * */
 
 
-
 using System;
-using System.ComponentModel;
 using System.IO;
-using System.Runtime.InteropServices;
-
-using System.Security.Permissions;
-
-using Microsoft.Win32.SafeHandles;
-
-//using System.Runtime.CompilerServices;
 using System.Runtime.ConstrainedExecution;
+using System.Runtime.InteropServices;
+using System.Security.Permissions;
+using Microsoft.Win32.SafeHandles;
 using Swicli.Library;
+//using System.Runtime.CompilerServices;
 
 
 namespace SbsSW.SwiPlCs
@@ -137,7 +135,7 @@ namespace SbsSW.SwiPlCs
 	//    full security review to ensure that the usage is secure because no stack walk will be performed.
 
 
-	[ System.Security.SuppressUnmanagedCodeSecurityAttribute ]
+	[ System.Security.SuppressUnmanagedCodeSecurity ]
 	public static class SafeNativeMethods
 	{
 		//private const string DllFileName = @"D:\Lesta\swi-pl\pl\bin\LibPl.dll";

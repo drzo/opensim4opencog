@@ -1,31 +1,8 @@
-ï»¿/*********************************************************
-* 
-*  Project: Swicli.Library - Two Way Interface to .NET and MONO 
-*  Author:        Douglas R. Miles
-*  Author:        Uwe Lesta
-*  Copyright (C): 2008, Uwe Lesta SBS-Softwaresysteme GmbH
-*
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
-*
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-*  Lesser General Public License for more details.
-*
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-*
-*********************************************************/
-
-using System;           // CLSCompliant
+using System;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Permissions;
+// CLSCompliant
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
@@ -35,7 +12,7 @@ using System.Security.Permissions;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Logicmoo/SBS-Softwaresysteme written by Uwe Lesta/Douglas Miles")]
 [assembly: AssemblyProduct("Swicli.Library")]
-[assembly: AssemblyCopyright("Copyright Â© 2010 under LGPL 2.1")]
+[assembly: AssemblyCopyright("Copyright © 2010 under LGPL 2.1")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -72,7 +49,7 @@ using System.Security.Permissions;
 // To use the InternalsVisibleTo Attribute:
 // 1.  Run sn.exe -p MyStrongNameKey.snk MyStrongNameKey.PublicKey
 // This will extract to public key to a file with the .PublicKey extension.  
-// (I hate using the .pub extension because it is seen as a Microsoft Publisher fileâ€¦)
+// (I hate using the .pub extension because it is seen as a Microsoft Publisher file…)
 // 2.  run sn.exe -tp MyStrongNameKey.PublicKey
 // This will display your public key for you.  Copy this key. 
 

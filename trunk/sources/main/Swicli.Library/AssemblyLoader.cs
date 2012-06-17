@@ -1,8 +1,10 @@
-/*********************************************************
-* 
-*  Project: Swicli.Library - Two Way Interface to .NET and MONO 
+/*  $Id$
+*  
+*  Project: Swicli.Library - Two Way Interface for .NET and MONO to SWI-Prolog
 *  Author:        Douglas R. Miles
-*  Copyright (C): 2008, Logicmoo - http://www.kqml.org
+*  E-mail:        logicmoo@gmail.com
+*  WWW:           http://www.logicmoo.com
+*  Copyright (C):  2010-2012 LogicMOO Developement
 *
 *  This library is free software; you can redistribute it and/or
 *  modify it under the terms of the GNU Lesser General Public
@@ -19,20 +21,6 @@
 *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *
 *********************************************************/
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Windows.Forms;
-using System.Xml.Serialization;
-using SbsSW.SwiPlCs;
-using SbsSW.SwiPlCs.Callback;
-using SbsSW.SwiPlCs.Exceptions;
 #if USE_IKVM
 using ikvm.extensions;
 using IKVM.Internal;
@@ -47,9 +35,14 @@ using Class = java.lang.Class;
 using sun.reflect.misc;
 using Util = ikvm.runtime.Util;
 #else
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Reflection.Emit;
+using SbsSW.SwiPlCs;
 using Class = System.Type;
 #endif
-using ArrayList = System.Collections.ArrayList;
 using CycFort = SbsSW.SwiPlCs.PlTerm;
 using PrologCli = Swicli.Library.PrologClient;
 
@@ -61,7 +54,7 @@ namespace Swicli.Library
         {
             try
             {
-                PrologCli.IsPLWin = Type.GetType("Mono.Runtime") == null;
+                PrologClient.IsPLWin = Type.GetType("Mono.Runtime") == null;
                 PrologClient.RedirectStreams = false;
                 PrologClient.SetupProlog();
                 PrologClient.ConsoleWriteLine(typeof(Embedded).FullName + ".install suceeded");
@@ -345,7 +338,7 @@ namespace Swicli.Library
         /// </summary>
         /// <param name="term1"></param>
         /// <returns></returns>
-        public static bool cliLoadAssembly(PlTerm term1)
+        public static bool cliLoadAssembly(CycFort term1)
         {
             PingThreadFactories();
             try
@@ -363,7 +356,7 @@ namespace Swicli.Library
         /// </summary>
         /// <param name="term1"></param>
         /// <returns></returns>
-        public static bool cliAddAssemblySearchPath(PlTerm term1)
+        public static bool cliAddAssemblySearchPath(CycFort term1)
         {
             PingThreadFactories();
             try
@@ -386,7 +379,7 @@ namespace Swicli.Library
         /// </summary>
         /// <param name="term1"></param>
         /// <returns></returns>
-        public static bool cliRemoveAssemblySearchPath(PlTerm term1)
+        public static bool cliRemoveAssemblySearchPath(CycFort term1)
         {
             PingThreadFactories();
             try
@@ -405,7 +398,7 @@ namespace Swicli.Library
             return true;
         }
 
-        private static string AsString(PlTerm term1)
+        private static string AsString(CycFort term1)
         {
             if (term1.IsVar)
             {
@@ -423,7 +416,7 @@ namespace Swicli.Library
             return (string)term1;
         }
 
-        public static bool cliLoadAssemblyUncaught(PlTerm term1)
+        public static bool cliLoadAssemblyUncaught(CycFort term1)
         {
             try
             {

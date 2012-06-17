@@ -1,8 +1,10 @@
-﻿/*********************************************************
-* 
-*  Project: Swicli.Library - Two Way Interface to .NET and MONO 
+﻿/*  $Id$
+*  
+*  Project: Swicli.Library - Two Way Interface for .NET and MONO to SWI-Prolog
 *  Author:        Douglas R. Miles
-*  Copyright (C): 2008, Logicmoo - http://www.kqml.org
+*  E-mail:        logicmoo@gmail.com
+*  WWW:           http://www.logicmoo.com
+*  Copyright (C):  2010-2012 LogicMOO Developement
 *
 *  This library is free software; you can redistribute it and/or
 *  modify it under the terms of the GNU Lesser General Public
@@ -46,13 +48,6 @@
 
 -------------------------------------------------------------------------------------------*/
 
-using System;
-using System.Globalization;
-using System.Reflection;
-using System.Text;
-using System.Collections;
-using System.Collections.Specialized;
-using System.Data;
 #if USE_IKVM
 using java.lang;
 #endif
@@ -61,10 +56,11 @@ using Class = java.lang.Class;
 #else
 using Class = System.Type;
 #endif
-using Exception=System.Exception;
-using Object=System.Object;
-using String=System.String;
+using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Reflection;
 using PrologEngine = Swicli.Library.PrologClient;
 using CONTEXT = Swicli.Library.PrologClient;//SbsSW.SwiPlCs.PrologEngine;
 using Term = SbsSW.SwiPlCs.PlTerm;
@@ -89,7 +85,7 @@ namespace Swicli.Library
     public class Ext
 #endif
     {
-        private static readonly Dictionary<Type, Func<Term, /*CONTEXT,*/ Object>> TermTypeConvertor =
+        private static readonly Dictionary<Class, Func<Term, /*CONTEXT,*/ Object>> TermTypeConvertor =
             new Dictionary<Type, Func<Term,  /*CONTEXT,*/ object>>();
 
         static Binder defaultBinder = System.Type.DefaultBinder;
@@ -183,7 +179,7 @@ namespace Swicli.Library
             Type type = Type.GetType(typeName);
             if (type == null)
             {
-                Class obj = null;
+                Type obj = null;
                 try
                 {
 #if USE_IKVM
@@ -240,7 +236,7 @@ namespace Swicli.Library
                                                                      "java.util",
                                                                  };
 
-        public bool JCALL0(Term term, CONTEXT engine)
+        public bool JCALL0(Term term, PrologClient engine)
         {
             throw new NotImplementedException();
             return JCALL0(term.Name, term.Args/*ctx*/);
@@ -558,7 +554,7 @@ namespace Swicli.Library
                                                      target, args);
         }
 
-        public bool JPRED0(Term term, CONTEXT engine)
+        public bool JPRED0(Term term, PrologClient engine)
         {
             return true;
         }

@@ -1,7 +1,10 @@
-/*********************************************************
-* 
+/*  $Id$
+*  
+*  Project: Swicli.Library - Two Way Interface for .NET and MONO to SWI-Prolog
 *  Author:        Douglas R. Miles
-*  Copyright (C): 2008, Logicmoo - http://www.kqml.org
+*  E-mail:        logicmoo@gmail.com
+*  WWW:           http://www.logicmoo.com
+*  Copyright (C):  2010-2012 LogicMOO Developement
 *
 *  This library is free software; you can redistribute it and/or
 *  modify it under the terms of the GNU Lesser General Public
@@ -18,6 +21,7 @@
 *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *
 *********************************************************/
+
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -377,7 +381,7 @@ namespace Swicli.Library
             CallPrologV(a, b, c, d, e, f, g, h);
         }
 
-        public /*virtual*/ void CallPrologV(params object[] paramz)
+        public virtual void CallPrologV(params object[] paramz)
         {
             if (!IsUsingGlobalQueue)
             {
@@ -389,7 +393,7 @@ namespace Swicli.Library
             PrologEventQueue.Enqueue(threadName, () => CallProlog0(paramz));
             EnsureStated();
         }
-        public /*virtual*/ object CallProlog(params object[] paramz)
+        public virtual object CallProlog(params object[] paramz)
         {
             if (!IsUsingGlobalQueue) return CallProlog0(paramz);
             string threadName = null;//"CallProlog " + Thread.CurrentThread.Name;

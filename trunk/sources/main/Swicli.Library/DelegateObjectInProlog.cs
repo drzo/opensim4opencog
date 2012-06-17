@@ -1,7 +1,10 @@
-/*********************************************************
-* 
+/*  $Id$
+*  
+*  Project: Swicli.Library - Two Way Interface for .NET and MONO to SWI-Prolog
 *  Author:        Douglas R. Miles
-*  Copyright (C): 2008, Logicmoo - http://www.kqml.org
+*  E-mail:        logicmoo@gmail.com
+*  WWW:           http://www.logicmoo.com
+*  Copyright (C):  2010-2012 LogicMOO Developement
 *
 *  This library is free software; you can redistribute it and/or
 *  modify it under the terms of the GNU Lesser General Public
@@ -19,6 +22,8 @@
 *
 *********************************************************/
 using System;
+using System.Collections.Generic;
+using SbsSW.SwiPlCs;
 
 namespace Swicli.Library
 {
@@ -36,6 +41,75 @@ namespace Swicli.Library
         }
     }
 
+    public partial class PrologClient
+    {
+
+        public static Dictionary<DelegateObjectInPrologKey, DelegateObjectInProlog> PrologDelegateHandlers =
+            new Dictionary<DelegateObjectInPrologKey, DelegateObjectInProlog>();
+
+        //cliNewDelegate
+        [PrologVisible(ModuleName = ExportModule)]
+        static public bool cliNewDelegate(PlTerm delegateClass, PlTerm prologPred, PlTerm valueOut)
+        {
+            if (!valueOut.IsVar)
+            {
+                var plvar = PlTerm.PlVar();
+                return cliNewDelegate(delegateClass, prologPred, plvar) && SpecialUnify(valueOut, plvar);
+            }
+            object retval = cliDelegateTerm(GetTypeThrowIfMissing(delegateClass), prologPred, true);
+            return valueOut.FromObject(retval);
+        }
+        [PrologVisible(ModuleName = ExportModule)]
+        static public Delegate cliDelegateTerm(Type fi, PlTerm prologPred, bool saveKey)
+        {
+            if (prologPred.IsCompound)
+            {
+                if (prologPred.Name == "delegate")
+                {
+                    if (prologPred.Arity == 1)
+                    {
+                        return cliDelegateTerm(fi, prologPred.Arg(0), saveKey);
+                    }
+                    Type dt = GetTypeThrowIfMissing(prologPred.Arg(0));
+                    var obj = cliDelegateTerm(dt, prologPred.Arg(1), saveKey);
+                    return (Delegate)RecastObject(fi, obj, dt);
+                }
+                if (prologPred.Name == "@")
+                {
+                    return (Delegate)RecastObject(fi, tag_to_object((string)prologPred.Arg(0)), null);
+                }
+            }
+            string pn = prologPred.Name;
+            if (pn == "." || pn == "{}")
+            {
+                // Warn("Delegate term = " + pn);
+            }
+            var Key = new DelegateObjectInPrologKey
+            {
+                Name = PredicateName(prologPred),
+                Arity = PredicateArity(prologPred),
+                Module = PredicateModule(prologPred),
+                DelegateType = fi
+            };
+            //uint fid = libpl.PL_open_foreign_frame();
+            //Key.Origin = prologPred.Copy();
+
+            DelegateObjectInProlog handlerInProlog;
+            lock (PrologDelegateHandlers)
+            {
+                if (PrologDelegateHandlers.TryGetValue(Key, out handlerInProlog))
+                {
+                    //   fi.RemoveEventHandler(getInstance, handlerInProlog.Delegate);
+                    PrologDelegateHandlers.Remove(Key);
+                }
+                handlerInProlog = new DelegateObjectInProlog(Key);
+                if (saveKey) PrologDelegateHandlers.Add(Key, handlerInProlog);
+                // fi.AddEventHandler(getInstance, handlerInProlog.Delegate);
+            }
+            return handlerInProlog.Delegate;
+
+        }
+    }
     public class DelegateObjectInProlog : PrologGenericDelegate
     {
         public static bool UseCallN = false;

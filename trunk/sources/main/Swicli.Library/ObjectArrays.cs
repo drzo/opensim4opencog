@@ -1,7 +1,12 @@
-/*********************************************************
-* 
+/*  $Id$
+*  
+*  Project: Swicli.Library - Two Way Interface for .NET and MONO to SWI-Prolog
 *  Author:        Douglas R. Miles
-*  Copyright (C): 2008, Logicmoo - http://www.kqml.org
+*                 Uwe Lesta (SbsSW.SwiPlCs classes)
+*  E-mail:        logicmoo@gmail.com
+*  WWW:           http://www.logicmoo.com
+*  Copyright (C): 2008, Uwe Lesta SBS-Softwaresysteme GmbH, 
+*     2010-2012 LogicMOO Developement
 *
 *  This library is free software; you can redistribute it and/or
 *  modify it under the terms of the GNU Lesser General Public
@@ -18,13 +23,6 @@
 *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *
 *********************************************************/
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Xml.Serialization;
 #if USE_MUSHDLR
 using MushDLR223.Utilities;
 #endif
@@ -32,10 +30,14 @@ using MushDLR223.Utilities;
 using jpl;
 using Class = java.lang.Class;
 #else
-using SbsSW.SwiPlCs;
 using Class = System.Type;
 #endif
-using ArrayList = System.Collections.ArrayList;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using SbsSW.SwiPlCs;
+
 using CycFort = SbsSW.SwiPlCs.PlTerm;
 using PrologCli = Swicli.Library.PrologClient;
 
@@ -51,11 +53,11 @@ namespace Swicli.Library
         /// <param name="valueOut"></param>
         /// <returns></returns>
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliArrayToTerm(PlTerm arrayValue, PlTerm valueOut)
+        static public bool cliArrayToTerm(CycFort arrayValue, CycFort valueOut)
         {
             if (!valueOut.IsVar)
             {
-                var plvar = PlTerm.PlVar();
+                var plvar = CycFort.PlVar();
                 return cliArrayToTerm(arrayValue, plvar) && SpecialUnify(valueOut, plvar);
             }
             object getInstance = GetInstance(arrayValue);
@@ -106,18 +108,18 @@ namespace Swicli.Library
 
         [PrologVisible]
         [PrologTest]
-        static public bool cliTestArrayToTerm1(PlTerm valueOut)
+        static public bool cliTestArrayToTerm1(CycFort valueOut)
         {
             return cliArrayToTerm(ToProlog(new[] { 1, 2, 3, 4, }), valueOut);
         }
         [PrologVisible]
         [PrologTest]
-        static public bool cliTestArrayToTerm2(PlTerm valueOut)
+        static public bool cliTestArrayToTerm2(CycFort valueOut)
         {
             return cliArrayToTerm(ToProlog(new[, ,] { { { 1, 2 }, { 3, 4 } }, { { 5, 6 }, { 7, 8 } } }), valueOut);
         }
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliArrayToTermlist(PlTerm arrayValue, PlTerm valueOut)
+        static public bool cliArrayToTermlist(CycFort arrayValue, CycFort valueOut)
         {
             if (!valueOut.IsVar)
             {
@@ -148,7 +150,7 @@ namespace Swicli.Library
             return valueOut.Unify(termv);
         }
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliTermToArray(PlTerm arrayValue, PlTerm valueOut)
+        static public bool cliTermToArray(CycFort arrayValue, CycFort valueOut)
         {
             if (!valueOut.IsVar)
             {
@@ -260,7 +262,7 @@ namespace Swicli.Library
             }
         }
        
-        private static PlTerm[] ToTermArray(IEnumerable<PlTerm> enumerable)
+        private static CycFort[] ToTermArray(IEnumerable<CycFort> enumerable)
         {
             if (enumerable is PlTerm[]) return (PlTerm[])enumerable;
             if (enumerable is PlTermV)
@@ -298,7 +300,7 @@ namespace Swicli.Library
         /// <param name="arrayValue"></param>
         /// <param name="arrayType">The parent array type .. not the Element type</param>
         /// <returns></returns>
-        private static Array CreateArrayOfType(PlTerm arrayValue, PlTerm indexes, Type arrayType)
+        private static Array CreateArrayOfType(CycFort arrayValue, CycFort indexes, Type arrayType)
         {
             if (!arrayType.IsArray)
             {
@@ -324,7 +326,7 @@ namespace Swicli.Library
             }
             return al;
         }
-        private static Array CreateArrayOfType(PlTerm arrayValue, Type arrayType)
+        private static Array CreateArrayOfType(CycFort arrayValue, Type arrayType)
         {
             if (!arrayType.IsArray)
             {
