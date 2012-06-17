@@ -551,11 +551,6 @@ namespace Swicli.Library
             return libpl.PL_create_engine(IntPtr.Zero);
         }
 
-        public static void Debug(object plthreadhasdifferntthread)
-        {
-
-        }
-
         public static int CheckEngine()
         {
             IntPtr _iEngineNumber;
