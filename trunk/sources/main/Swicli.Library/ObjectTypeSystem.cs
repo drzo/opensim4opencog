@@ -145,11 +145,11 @@ namespace Swicli.Library
                     }
                     return GetType(clazzSpec[1]).MakeArrayType();
                 }
-                if (clazzName == "typeof")
+                if (clazzName == "type")
                 {
                     return (GetInstance(clazzSpec[1]) ?? NEW_OBJECTFORTYPE).GetType();
                 }
-                if (clazzName == "static")
+                if (clazzName == "static" || clazzName == "typeof")
                 {
                     return GetType(clazzSpec[1]);
                 }
