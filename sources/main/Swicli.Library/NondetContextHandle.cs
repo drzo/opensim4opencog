@@ -40,7 +40,15 @@ namespace Swicli.Library
 
         }
     }
+    public class PrologTest : Attribute
+    {
+        public string ModuleName;
+        public string Name;
+        public PrologTest()
+        {
 
+        }
+    }
     public interface SCCH
     {
         bool Setup(PlTermV a0);

@@ -105,17 +105,189 @@ namespace Swicli.Library
             }
             int len = value.Length;
             Type arrayType = value.GetType();
-            if (arrayType.GetArrayRank() != 1)
-            {
-                Error("Non rank==1 " + arrayType);
-            }
             var termv = NewPlTermV(len);
-            for (int i = 0; i < len; i++)
+            int rank = arrayType.GetArrayRank();
+            if (rank != 1)
             {
-                bool pf = termv[i].FromObject((value.GetValue(i)));
+                var indexesv = new PlTermV(rank);
+                for (int i = 0; i < rank; i++)
+                {
+                    indexesv[i].Put(value.GetLength(i));   
+                }
+                var idxIter = new ArrayIndexEnumerator(value);
+                int putAt = 0;
+                while (idxIter.MoveNext())
+                {
+                    bool pf = termv[putAt++].FromObject((value.GetValue(idxIter.Current)));
+                    if (!pf)
+                    {
+                        return false;
+                    }                    
+                }
+                return /// array/3 
+                    valueOut.Unify(PlC("array", typeToSpec(arrayType), PlC("indexes", indexesv), PlC("values", termv)));
             }
-            Type et = arrayType;
-            return valueOut.Unify(PlC("array", typeToSpec(et), PlC("values", termv)));
+            else
+            {
+                for (int i = 0; i < len; i++)
+                {
+                    bool pf = termv[i].FromObject((value.GetValue(i)));
+                    if (!pf)
+                    {
+                        return false;
+                    }
+                }
+                return valueOut.Unify(PlC("array", typeToSpec(arrayType.GetElementType()), PlC("values", termv)));
+            }
+        }
+        public class ArrayIndexEnumerator: IEnumerator<int[]>
+        {
+            private int rank;
+            private int[] lowers;
+            private int[] uppers;
+            private int[] idx;
+            private int[] rankSize;
+            private int len = 1;
+            private int at = -1;
+
+            public ArrayIndexEnumerator(Array value)
+            {
+                Type arrayType = value.GetType();
+                this.rank = arrayType.GetArrayRank();
+                this.uppers = new int[rank];
+                this.lowers = new int[rank];
+                this.idx = new int[rank];
+                this.rankSize = new int[rank];
+                this.len = 1;
+                for (int i = 0; i < rank; i++)
+                {
+                    int high = uppers[i] = value.GetUpperBound(i);
+                    int low = lowers[i] = value.GetLowerBound(i);
+                    if (low != 0)
+                    {
+                        Error("LowerBound !=0 in " + arrayType);
+                    }
+                    int lenSize = (high - low + 1);
+                    rankSize[i] = lenSize;
+                    len *= lenSize;
+                }
+            }
+
+            #region Implementation of IDisposable
+
+            /// <summary>
+            /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            /// </summary>
+            /// <filterpriority>2</filterpriority>
+            public void Dispose()
+            {
+                
+            }
+
+            #endregion
+
+            #region Implementation of IEnumerator
+
+            /// <summary>
+            /// Advances the enumerator to the next element of the collection.
+            /// </summary>
+            /// <returns>
+            /// true if the enumerator was successfully advanced to the next element; false if the enumerator has passed the end of the collection.
+            /// </returns>
+            /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. 
+            ///                 </exception><filterpriority>2</filterpriority>
+            public bool MoveNext()
+            {
+                bool ret = MoveNext0();
+                var bef = IndexFromAt(at);                
+                return ret;
+            }
+            public bool MoveNext0()
+            {
+                at++;
+                if (at == 0)
+                {
+                    return true;
+                }
+                if (at >= len) return false;
+                for (int i = rank - 1; i >= 0; i--)
+                {
+                    if (idx[i] < uppers[i])
+                    {
+                        idx[i]++;
+                        return true;
+                    }
+                    idx[i] = lowers[i];
+                }
+                return true;
+            }
+
+            public int[] IndexFromAt(int tat)
+            {
+                int[] dex = new int[rank];
+                for (int i = rank - 1; i >= 0; i--)
+                {
+                    int num = dex[i] = tat%rankSize[i];
+                    tat = tat - num*rankSize[i];
+                }
+                return dex;
+            }
+
+            /// <summary>
+            /// Sets the enumerator to its initial position, which is before the first element in the collection.
+            /// </summary>
+            /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. 
+            ///                 </exception><filterpriority>2</filterpriority>
+            public void Reset()
+            {
+                for (int i = 0; i < rank; i++)
+                {
+                    idx[i] = 0;
+                }
+                at = -1;
+            }
+
+            /// <summary>
+            /// Gets the element in the collection at the current position of the enumerator.
+            /// </summary>
+            /// <returns>
+            /// The element in the collection at the current position of the enumerator.
+            /// </returns>
+            public int[] Current
+            {
+                get
+                {
+                    if (at < 0) throw new InvalidOperationException("forgot MoveNext");
+                    return idx;
+                }
+            }
+
+            /// <summary>
+            /// Gets the current element in the collection.
+            /// </summary>
+            /// <returns>
+            /// The current element in the collection.
+            /// </returns>
+            /// <exception cref="T:System.InvalidOperationException">The enumerator is positioned before the first element of the collection or after the last element.
+            ///                 </exception><filterpriority>2</filterpriority>
+            object IEnumerator.Current
+            {
+                get { return Current; }
+            }
+
+            #endregion
+        }
+        [PrologVisible]
+        [PrologTest]
+        static public bool cliTestArrayToTerm1(PlTerm valueOut)
+        {
+            return cliArrayToTerm(ToProlog(new[] { 1, 2, 3, 4, }), valueOut);
+        }
+        [PrologVisible]
+        [PrologTest]
+        static public bool cliTestArrayToTerm2(PlTerm valueOut)
+        {
+            return cliArrayToTerm(ToProlog(new[,,] {{{1, 2}, {3, 4}}, {{5, 6}, {7, 8}}}), valueOut);
         }
         [PrologVisible(ModuleName = ExportModule)]
         static public bool cliArrayToTermlist(PlTerm arrayValue, PlTerm valueOut)
@@ -451,6 +623,19 @@ namespace Swicli.Library
                 if (tlist.IsList)
                 {
                     enumerable = tlist.Copy();
+                }
+                if (tlist.Name == "{}")
+                {
+                    var t = tlist.Arg(0);
+                    var terms = new System.Collections.Generic.List<PlTerm>();
+                    while (t.Arity == 2)
+                    {
+                        terms.Add(t.Arg(0));
+                        t = t.Arg(1);
+                    }
+                    // last Item
+                    terms.Add(t);
+                    return terms.ToArray();
                 }
             }
             return enumerable.ToArray();
@@ -1046,6 +1231,32 @@ namespace Swicli.Library
         /// <param name="arrayValue"></param>
         /// <param name="arrayType">The parent array type .. not the Element type</param>
         /// <returns></returns>
+        private static Array CreateArrayOfType(PlTerm arrayValue,PlTerm indexes, Type arrayType)
+        {
+            if (!arrayType.IsArray)
+            {
+                Error("Not Array Type! " + arrayType);
+            }
+            Type elementType = arrayType.GetElementType();
+            int rank = arrayType.GetArrayRank();
+            PlTerm[] iterms = ToTermArray(indexes);
+            int[] lengths = new int[rank];
+            for (int i = 0; i < rank; i++)
+            {
+                lengths[i] = iterms[i].intValue();
+            }
+            PlTerm[] terms = ToTermArray(arrayValue);
+            int termsLength = terms.Length;
+            Array al = Array.CreateInstance(elementType, lengths);
+            var idxIter = new ArrayIndexEnumerator(al);
+            for (int i = 0; i < termsLength; i++)
+            {
+                idxIter.MoveNext();
+                PlTerm term = terms[i];
+                al.SetValue(CastTerm(term, elementType), idxIter.Current);
+            }
+            return al;
+        }
         private static Array CreateArrayOfType(PlTerm arrayValue, Type arrayType)
         {
             if (!arrayType.IsArray)
@@ -1216,7 +1427,12 @@ namespace Swicli.Library
             if (key == "array/2")
             {
                 Type type = GetType(arg1);
-                return CreateArrayOfType(orig.Arg(1), type);
+                return CreateArrayOfType(orig.Arg(1), type.MakeArrayType());
+            }
+            if (key == "array/3")
+            {
+                Type type = GetType(arg1);
+                return CreateArrayOfType(orig.Arg(2), orig.Arg(1), type);
             }
             if (name == "values")
             {
