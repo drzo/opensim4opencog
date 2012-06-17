@@ -452,8 +452,61 @@ namespace Swicli.Library
                 }
                 return false;
             }
+        }                
+        private static int PlObject(uint TermRef, object o)
+        {
+            var tag = object_to_tag(o);
+            AddTagged(TermRef, tag);
+            return libpl.PL_succeed;
+#if plvar_pins
+                PlRef oref;
+                if (!objectToPlRef.TryGetValue(o, out oref))
+                {
+                    objectToPlRef[o] = oref = new PlRef();
+                    oref.Value = o;
+                    oref.CSType = o.GetType();
+                    oref.Tag = tag;
+                    lock (atomToPlRef)
+                    {
+                        PlRef oldValue;
+                        if (atomToPlRef.TryGetValue(tag, out oldValue))
+                        {
+                            Warn("already a value for tag=" + oldValue);
+                        }
+                        atomToPlRef[tag] = oref;
+                    }
+#if PLVARBIRTH
+                    Term jplTerm = JPL.newJRef(o);
+                    oref.JPLRef = jplTerm;
+
+                    Int64 ohandle = TopOHandle++;
+                    oref.OHandle = ohandle;
+                    // how do we track the birthtime?
+                    var plvar = oref.Variable = PlTerm.PlVar();
+                    lock (termToObjectPins)
+                    {
+                        PlRef oldValue;
+                        if (termToObjectPins.TryGetValue(ohandle, out oldValue))
+                        {
+                            Warn("already a value for ohandle=" + oldValue);
+                        }
+                        termToObjectPins[ohandle] = oref;
+                    }
+                    //PL_put_integer
+                    oref.Term = comp("$cli_object", new PlTerm((long) ohandle), plvar);
+#else
+                    oref.Term = comp("@", PlTerm.PlAtom(tag));
+#endif
+                    return -1; // oref.Term;
+                }
+                else
+                {
+                    oref.Term = comp("@", PlTerm.PlAtom(tag));
+                    return -1; // oref.Term;
+                }
+#endif
         }
-    }
+
 
     public class TrackedObject: IComparable<TrackedObject>
     {
@@ -622,5 +675,22 @@ namespace Swicli.Library
                 return false;
             }
         }
+#if plvar_pins
+        public static Dictionary<Int64, PlRef> termToObjectPins = new Dictionary<Int64, PlRef>();
+        public static Dictionary<object, PlRef> objectToPlRef = new Dictionary<object, PlRef>();
+        public static Dictionary<string, PlRef> atomToPlRef = new Dictionary<string, PlRef>();
+#endif
     }
+#if plvar_pins
+    public class PlRef
+    {
+        public object Value;
+        public PlTerm Term;
+        public Int64 OHandle;
+        public PlTerm Variable;
+        public Type CSType;
+        public Term JPLRef;
+        public string Tag;
+    }
+#endif
 }
