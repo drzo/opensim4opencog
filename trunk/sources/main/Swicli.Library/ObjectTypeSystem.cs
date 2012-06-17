@@ -139,6 +139,10 @@ namespace Swicli.Library
                 int arity = clazzSpec.Arity;
                 if (clazzName == "arrayOf")
                 {
+                    if (arity != 1)
+                    {
+                        return GetType(clazzSpec[1]).MakeArrayType(clazzSpec[2].intValue());
+                    }
                     return GetType(clazzSpec[1]).MakeArrayType();
                 }
                 if (clazzName == "typeof")
@@ -293,8 +297,13 @@ namespace Swicli.Library
 
         private static PlTerm typeToSpec(Type type)
         {
+            if (type == null) return PLNULL;
             if (type.IsArray && type.HasElementType)
             {
+                if (type.GetArrayRank() != 1)
+                {
+                    return PlC("arrayOf", typeToSpec(type.GetElementType()), ToProlog(type.GetArrayRank()));
+                }
                 return PlC("arrayOf", typeToSpec(type.GetElementType()));
             }
             if (type.IsGenericParameter)
