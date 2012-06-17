@@ -423,7 +423,7 @@ handle_im(Origin,Obj,IM):-writeq(handle_im(Origin,Obj,IM)),nl.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 cli_map(Map,Key,Value):-nonvar(Key),!,cli_call(Map,'TryGetValue',[Key,Value],@(true)).
 cli_map(Map,Key,Value):-cli_col(Map,Ele),cli_get(Ele,'Key',Key),cli_get(Ele,'Value',Value).
-cli_map_set(Map,Key,Value):-cli_call(Map,'[]'(typeof(Key)),[Key,Value],_).
+cli_map_set(Map,Key,Value):-cli_call(Map,'[]'(type(Key)),[Key,Value],_).
 cli_map_add(Map,Key,Value):-cli_call(Map,'Add'(Key,Value),_).
 cli_map_remove(Map,Key,Value):-cli_map(Map,Key,Value),!,cli_call(Map,'Remove'(Key),_).
 cli_map_removeall(Map):-cli_call(Map,'Clear',_).
