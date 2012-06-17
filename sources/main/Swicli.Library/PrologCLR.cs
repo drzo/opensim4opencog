@@ -1,8 +1,10 @@
-/*********************************************************
-* 
-*  Project: Swicli.Library - Two Way Interface to .NET and MONO 
+/*  $Id$
+*  
+*  Project: Swicli.Library - Two Way Interface for .NET and MONO to SWI-Prolog
 *  Author:        Douglas R. Miles
-*  Copyright (C): 2008, Logicmoo - http://www.kqml.org
+*  E-mail:        logicmoo@gmail.com
+*  WWW:           http://www.logicmoo.com
+*  Copyright (C):  2010-2012 LogicMOO Developement
 *
 *  This library is free software; you can redistribute it and/or
 *  modify it under the terms of the GNU Lesser General Public
@@ -19,19 +21,17 @@
 *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *
 *********************************************************/
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Threading;
-using System.Xml.Serialization;
 #if USE_MUSHDLR
 using MushDLR223.Utilities;
 #endif
 #if USE_IKVM
 using Class = java.lang.Class;
 #endif
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
 using SbsSW.SwiPlCs;
 using CycFort = SbsSW.SwiPlCs.PlTerm;
 using PrologCli = Swicli.Library.PrologClient;
@@ -111,8 +111,6 @@ namespace Swicli.Library
 
         private static string PlStringFormat(string text, params object[] ps)
         {
-            ulong prologEvents = EventHandlerInProlog.PrologEvents;
-            ulong refCount = libpl.TermRefCount;
             RegisterCurrentThread();
             try
             {
@@ -125,7 +123,7 @@ namespace Swicli.Library
             return text;
         }
 
-        private static PlTerm ToPlList(PlTerm[] terms)
+        private static CycFort ToPlList(CycFort[] terms)
         {
             int termLen = terms.Length;
             if (termLen == 0) return ATOM_NIL;
@@ -162,7 +160,7 @@ namespace Swicli.Library
             }
             return tv;
         }
-        private static CycFort ToPlListParams(ParameterInfo[] terms)
+        private static PlTerm ToPlListParams(ParameterInfo[] terms)
         {
             PlTerm listOf = ATOM_NIL;
             for (int i = terms.Length - 1; i >= 0; i--)
@@ -915,69 +913,6 @@ namespace Swicli.Library
             return valueOut.FromObject(retval ?? VoidOrNull(mi));
         }
 
-        //cliNewDelegate
-        [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliNewDelegate(PlTerm delegateClass, PlTerm prologPred, PlTerm valueOut)
-        {
-            if (!valueOut.IsVar)
-            {
-                var plvar = PlTerm.PlVar();
-                return cliNewDelegate(delegateClass, prologPred, plvar) && SpecialUnify(valueOut, plvar);
-            }
-            object retval = cliDelegateTerm(GetTypeThrowIfMissing(delegateClass), prologPred, true);
-            return valueOut.FromObject(retval);
-        }
-        [PrologVisible(ModuleName = ExportModule)]
-        static public Delegate cliDelegateTerm(Type fi, PlTerm prologPred, bool saveKey)
-        {
-            if (prologPred.IsCompound)
-            {
-                if (prologPred.Name == "delegate")
-                {
-                    if (prologPred.Arity == 1)
-                    {
-                        return cliDelegateTerm(fi, prologPred.Arg(0), saveKey);
-                    }
-                    Type dt = GetTypeThrowIfMissing(prologPred.Arg(0));
-                    var obj = cliDelegateTerm(dt, prologPred.Arg(1), saveKey);
-                    return (Delegate)RecastObject(fi, obj, dt);
-                }
-                if (prologPred.Name == "@")
-                {
-                    return (Delegate)RecastObject(fi, tag_to_object((string)prologPred.Arg(0)), null);
-                }
-            }
-            string pn = prologPred.Name;
-            if (pn == "." || pn == "{}")
-            {
-               // Warn("Delegate term = " + pn);
-            }
-            var Key = new DelegateObjectInPrologKey
-                          {
-                              Name = PredicateName(prologPred),
-                              Arity = PredicateArity(prologPred),
-                              Module = PredicateModule(prologPred),                              
-                              DelegateType = fi
-                          };
-            //uint fid = libpl.PL_open_foreign_frame();
-            //Key.Origin = prologPred.Copy();
-
-            DelegateObjectInProlog handlerInProlog;
-            lock (PrologDelegateHandlers)
-            {
-                if (PrologDelegateHandlers.TryGetValue(Key, out handlerInProlog))
-                {
-                    //   fi.RemoveEventHandler(getInstance, handlerInProlog.Delegate);
-                    PrologDelegateHandlers.Remove(Key);
-                }
-                handlerInProlog = new DelegateObjectInProlog(Key);
-                if (saveKey) PrologDelegateHandlers.Add(Key, handlerInProlog);
-                // fi.AddEventHandler(getInstance, handlerInProlog.Delegate);
-            }
-            return handlerInProlog.Delegate;
-
-        }
-
         private static int Arglen(PlTerm valueIn)
         {
             if (valueIn.IsList)
@@ -1077,81 +1012,6 @@ namespace Swicli.Library
         private static object VoidOrNull(MethodInfo info)
         {
             return info.ReturnType == typeof(void) ? (object)PLVOID : PLNULL;
-        }
-
-        public static Dictionary<DelegateObjectInPrologKey, DelegateObjectInProlog> PrologDelegateHandlers =
-    new Dictionary<DelegateObjectInPrologKey, DelegateObjectInProlog>();
-
-        public static Dictionary<EventHandlerInPrologKey, EventHandlerInProlog> PrologEventHandlers =
-            new Dictionary<EventHandlerInPrologKey, EventHandlerInProlog>();
-
-#if USE_MUSHDLR
-        public static TaskQueueHandler PrologEventQueue = new TaskQueueHandler("PrologEventHandler");
-#endif
-
-        [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliAddEventHandler(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm prologPred)
-        {
-            object getInstance = GetInstance(clazzOrInstance);
-            Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
-            Type[] paramz = null;
-            EventInfo fi = findEventInfo(memberSpec, c, ref paramz);
-            if (fi == null)
-            {
-                return Error("Cant find event {0} on {1}", memberSpec, c);
-            }
-            var Key = new EventHandlerInPrologKey
-                          {
-                              Name = PredicateName(prologPred),
-                              Module = PredicateModule(prologPred),
-                              Arity = PredicateArity(prologPred),
-                              Origin = getInstance,
-                              Event = fi
-                          };
-
-            lock (PrologEventHandlers)
-            {
-                EventHandlerInProlog handlerInProlog;
-                if (PrologEventHandlers.TryGetValue(Key, out handlerInProlog))
-                {
-                    fi.RemoveEventHandler(getInstance, handlerInProlog.Delegate);
-                    PrologEventHandlers.Remove(Key);
-                }
-                handlerInProlog = new EventHandlerInProlog(Key);
-                PrologEventHandlers.Add(Key, handlerInProlog);
-                PinObject(handlerInProlog.Delegate);
-                fi.AddEventHandler(getInstance, handlerInProlog.Delegate);
-            }
-            return true;
-        }
-        [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliRemoveEventHandler(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm prologPred)
-        {
-            object getInstance = GetInstance(clazzOrInstance);
-            Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
-            Type[] paramz = null;
-            EventInfo fi = findEventInfo(memberSpec, c, ref paramz);//
-            if (fi == null)
-            {
-                return Error("Cant find event {0} on {1}", memberSpec, c);
-            }
-            var Key = new EventHandlerInPrologKey
-                          {
-                              Name = PredicateName(prologPred),
-                              Module = PredicateModule(prologPred),
-                              Arity = PredicateArity(prologPred),
-                              Origin = getInstance,
-                              Event = fi
-                          };
-            EventHandlerInProlog handlerInProlog;
-            lock (PrologEventHandlers) if (PrologEventHandlers.TryGetValue(Key, out handlerInProlog))
-                {
-                    UnPinObject(handlerInProlog.Delegate);
-                    fi.RemoveEventHandler(getInstance, handlerInProlog.Delegate);
-                    PrologEventHandlers.Remove(Key);
-                    return true;
-                }
-            return Error("Cant find registered handler {0} for {1} on {2}", prologPred, memberSpec, c);
         }
 
         [PrologVisible(ModuleName = ExportModule)]

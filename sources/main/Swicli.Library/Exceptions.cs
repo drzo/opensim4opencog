@@ -1,9 +1,12 @@
-/*********************************************************
-* 
-*  Project: Swicli.Library - Two Way Interface to .NET and MONO 
+/*  $Id$
+*  
+*  Project: Swicli.Library - Two Way Interface for .NET and MONO to SWI-Prolog
 *  Author:        Douglas R. Miles
-*  Author:        Uwe Lesta
-*  Copyright (C): 2008, Uwe Lesta SBS-Softwaresysteme GmbH
+*                 Uwe Lesta (SbsSW.SwiPlCs classes)
+*  E-mail:        logicmoo@gmail.com
+*  WWW:           http://www.logicmoo.com
+*  Copyright (C): 2008, Uwe Lesta SBS-Softwaresysteme GmbH, 
+*     2010-2012 LogicMOO Developement
 *
 *  This library is free software; you can redistribute it and/or
 *  modify it under the terms of the GNU Lesser General Public
@@ -21,15 +24,13 @@
 *
 *********************************************************/
 
-
-//#define USE_PRINT_MESSAGE
-
-
 using System;
-using System.Runtime.Serialization;	// Exception implementation 
-using System.Security.Permissions;	// SecurityPermissionAttribute for GetObjectData
+using System.Runtime.Serialization;
+using System.Security.Permissions;
 using SbsSW.DesignByContract;
 using Swicli.Library;
+// Exception implementation 
+    // SecurityPermissionAttribute for GetObjectData
 
 namespace SbsSW.SwiPlCs.Exceptions
 {
@@ -54,7 +55,7 @@ namespace SbsSW.SwiPlCs.Exceptions
     /// </remarks>
     /// <todo>To throw an exception, create an instance of PlException and use throw() or cppThrow(). The latter refines the C# exception class according to the represented Prolog exception before calling throw(). 
     /// </todo>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated()]
     class NamespaceDoc
     {
     }
@@ -109,7 +110,7 @@ namespace SbsSW.SwiPlCs.Exceptions
 
 		// see http://msdnwiki.microsoft.com/en-us/mtpswiki/f1d0010b-14fb-402f-974f-16318f0bc19f.aspx
         /// <inheritdoc />
-        [SecurityPermissionAttribute(SecurityAction.Demand, SerializationFormatter = true)]
+        [SecurityPermission(SecurityAction.Demand, SerializationFormatter = true)]
 		public override void GetObjectData(SerializationInfo info, StreamingContext context)
 		{
 			if (info == null)
@@ -183,7 +184,7 @@ namespace SbsSW.SwiPlCs.Exceptions
 
 		// see http://msdnwiki.microsoft.com/en-us/mtpswiki/f1d0010b-14fb-402f-974f-16318f0bc19f.aspx
         /// <inheritdoc />
-        [SecurityPermissionAttribute(SecurityAction.Demand, SerializationFormatter = true)]
+        [SecurityPermission(SecurityAction.Demand, SerializationFormatter = true)]
 		public override void GetObjectData(SerializationInfo info, StreamingContext context)
 		{
 			if (info == null)

@@ -1,8 +1,10 @@
-/*********************************************************
-* 
-*  Project: Swicli.Library - Two Way Interface to .NET and MONO 
+/*  $Id$
+*  
+*  Project: Swicli.Library - Two Way Interface for .NET and MONO to SWI-Prolog
 *  Author:        Douglas R. Miles
-*  Copyright (C): 2008, Logicmoo - http://www.kqml.org
+*  E-mail:        logicmoo@gmail.com
+*  WWW:           http://www.logicmoo.com
+*  Copyright (C):  2010-2012 LogicMOO Developement
 *
 *  This library is free software; you can redistribute it and/or
 *  modify it under the terms of the GNU Lesser General Public
@@ -19,6 +21,7 @@
 *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *
 *********************************************************/
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -35,7 +38,7 @@ namespace Swicli.Library
     {
 
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliPropsForType(PlTerm clazzSpec, PlTerm memberSpecs)
+        static public bool cliPropsForType(CycFort clazzSpec, CycFort memberSpecs)
         {
             Type type = GetType(clazzSpec);
             var props = GetPropsForTypes(type);
@@ -118,7 +121,7 @@ namespace Swicli.Library
         }
 
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliMembers(PlTerm clazzOrInstance, PlTerm membersOut)
+        static public bool cliMembers(CycFort clazzOrInstance, CycFort membersOut)
         {
             Type c = GetTypeFromInstance(null, clazzOrInstance);
             MemberInfo[] members = c.GetMembers(BindingFlagsALL);
@@ -175,14 +178,14 @@ namespace Swicli.Library
             return membersOut.Unify(ToPlList(list.ToArray()));
         }
 
-        private static void AddMemberToList(MemberInfo info, List<PlTerm> list, string cname, int ordinal)
+        private static void AddMemberToList(MemberInfo info, List<CycFort> list, string cname, int ordinal)
         {
 
             PlTerm memb = MemberTerm(info, cname, ordinal);
             if (memb.TermRef != 0) list.Add(memb);
         }
 
-        private static PlTerm MemberTerm(MemberInfo info, string cname, int ordinal)
+        private static CycFort MemberTerm(MemberInfo info, string cname, int ordinal)
         {
             string mn = info.Name;
             switch (info.MemberType)
@@ -303,11 +306,11 @@ namespace Swicli.Library
             return default(PlTerm);
         }
 
-        public static PlTerm PlC(string decl, params PlTerm[] plTerms)
+        public static CycFort PlC(string decl, params CycFort[] plTerms)
         {
             return PlTerm.PlCompound(decl, plTerms);
         }
-        public static PlTerm PlC(string decl, PlTermV termV)
+        public static CycFort PlC(string decl, PlTermV termV)
         {
             return PlTerm.PlCompound(decl, termV);
         }
@@ -469,7 +472,7 @@ namespace Swicli.Library
 
     public class CycTypeInfo
     {
-        readonly public CycFort cycFort;
+        readonly public PlTerm cycFort;
         readonly Type CType;
         public static Dictionary<Type, CycTypeInfo> typeFort = new Dictionary<Type, CycTypeInfo>();
 
@@ -483,7 +486,7 @@ namespace Swicli.Library
             get; set;
         }
 
-        public CycTypeInfo(CycFort fort, Type type)
+        public CycTypeInfo(PlTerm fort, Type type)
         {
             cycFort = fort;
             CType = type;
@@ -527,7 +530,7 @@ namespace Swicli.Library
 //                    Enum ev = (Enum) fort.GetValue(null);
   //                  var tc= ev.GetTypeCode();
                     string v = string.Format("{0}-{1}", CType.Name, fort.Name);
-                    CycFort cv = C(v);
+                    PlTerm cv = C(v);
                    /* simCyclifier.assertIsa(cv, C("Collection"));
                     simCyclifier.assertVocabGafNow(C("genls"), cv, cycFort);
                     simCyclifier.assertVocabGaf(CycAccess.comment, cv, "The sim enum value for: " + fort);
@@ -572,7 +575,7 @@ namespace Swicli.Library
             //}
         }
 
-        private CycFort C(string collection)
+        private PlTerm C(string collection)
         {
             return PrologClient.C(collection);
         }

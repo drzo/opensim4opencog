@@ -1,8 +1,10 @@
-﻿/*********************************************************
-* 
-*  Project: Swicli.Library - Two Way Interface to .NET and MONO 
+/*  $Id$
+*  
+*  Project: Swicli.Library - Two Way Interface for .NET and MONO to SWI-Prolog
 *  Author:        Douglas R. Miles
-*  Copyright (C): 2008, Logicmoo - http://www.kqml.org
+*  E-mail:        logicmoo@gmail.com
+*  WWW:           http://www.logicmoo.com
+*  Copyright (C):  2010-2012 LogicMOO Developement
 *
 *  This library is free software; you can redistribute it and/or
 *  modify it under the terms of the GNU Lesser General Public
@@ -20,12 +22,9 @@
 *
 *********************************************************/
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Swicli.Library
 {

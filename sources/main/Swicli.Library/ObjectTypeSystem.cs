@@ -1,8 +1,10 @@
-/*********************************************************
-* 
-*  Project: Swicli - Two Way Interface to .NET and MONO 
+/*  $Id$
+*  
+*  Project: Swicli.Library - Two Way Interface for .NET and MONO to SWI-Prolog
 *  Author:        Douglas R. Miles
-*  Copyright (C): 2008, Logicmoo - http://www.kqml.org
+*  E-mail:        logicmoo@gmail.com
+*  WWW:           http://www.logicmoo.com
+*  Copyright (C):  2010-2012 LogicMOO Developement
 *
 *  This library is free software; you can redistribute it and/or
 *  modify it under the terms of the GNU Lesser General Public
@@ -19,19 +21,6 @@
 *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *
 *********************************************************/
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Xml.Serialization;
-using SbsSW.SwiPlCs;
-using SbsSW.SwiPlCs.Callback;
-using SbsSW.SwiPlCs.Exceptions;
 #if USE_IKVM
 using ikvm.extensions;
 using IKVM.Internal;
@@ -46,10 +35,13 @@ using Class = java.lang.Class;
 using sun.reflect.misc;
 using Util = ikvm.runtime.Util;
 #else
-using Swicli.Library;
 using Class = System.Type;
 #endif
-using ArrayList = System.Collections.ArrayList;
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+using SbsSW.SwiPlCs;
+using SbsSW.SwiPlCs.Exceptions;
 using CycFort = SbsSW.SwiPlCs.PlTerm;
 using PrologCli = Swicli.Library.PrologClient;
 
@@ -58,7 +50,7 @@ namespace Swicli.Library
     public partial class PrologClient
     {
         [PrologVisible(Name = "cli_load_type", Arity = 1, TypeOf = null)]
-        private static void LoadType(Type t)
+        private static void LoadType(Class t)
         {
             lock (TypesLoaded)
             {
@@ -84,7 +76,7 @@ namespace Swicli.Library
             }
         }
 
-        public static Type GetTypeThrowIfMissing(CycFort clazzSpec)
+        public static Class GetTypeThrowIfMissing(CycFort clazzSpec)
         {
             Type fi = GetType(clazzSpec);
             if (fi == null)
@@ -93,11 +85,11 @@ namespace Swicli.Library
             }
             return fi;
         }
-        public static Type GetType(PlTerm clazzSpec)
+        public static Class GetType(CycFort clazzSpec)
         {
             return GetType(clazzSpec, false);
         }
-        public static Type GetType(PlTerm clazzSpec, bool canBeObjects)
+        public static Class GetType(CycFort clazzSpec, bool canBeObjects)
         {
             if (clazzSpec.IsVar)
             {
@@ -155,7 +147,7 @@ namespace Swicli.Library
                 }
                 if (clazzName == "{}")
                 {
-                    return typeof (PlTerm);
+                    return typeof (CycFort);
                 }
                 type = ResolveType(clazzName + "`" + arity);
                 if (type != null)
@@ -225,7 +217,7 @@ namespace Swicli.Library
         }
 
         [PrologVisible(ModuleName = ExportModule)]
-        public static bool cliFindType(PlTerm term1, PlTerm term2)
+        public static bool cliFindType(CycFort term1, CycFort term2)
         {
             //            if (term1.IsAtom)
             {
@@ -261,12 +253,12 @@ namespace Swicli.Library
         }
 
         [PrologVisible(ModuleName = ExportModule)]
-        public static bool cliFindClass(PlTerm clazzName, PlTerm clazzObjectOut)
+        public static bool cliFindClass(CycFort clazzName, CycFort clazzObjectOut)
         {
             if (clazzName.IsAtom)
             {
                 string className = clazzName.Name;
-                Class c = ResolveClass(className);
+                Type c = ResolveClass(className);
                 if (c != null)
                 {
                     ConsoleTrace("cliFindClass:" + className + " class:" + c);
@@ -279,7 +271,7 @@ namespace Swicli.Library
             Type t = GetType(clazzName);
             if (t != null)
             {
-                Class c = null;
+                Type c = null;
 #if USE_IKVM
                 c = ikvm.runtime.Util.getFriendlyClassFromType(t);
 #else
@@ -291,11 +283,11 @@ namespace Swicli.Library
             return false;
         }
 
-        private static IDictionary<string, Type> ShortNameType;
-        private static readonly Dictionary<Type, string> TypeShortName = new Dictionary<Type, string>();
+        private static IDictionary<string, Class> ShortNameType;
+        private static readonly Dictionary<Class, string> TypeShortName = new Dictionary<Class, string>();
         private static object NEW_OBJECTFORTYPE = new object();
 
-        private static PlTerm typeToSpec(Type type)
+        private static CycFort typeToSpec(Class type)
         {
             if (type == null) return PLNULL;
             if (type.IsArray && type.HasElementType)
@@ -333,7 +325,7 @@ namespace Swicli.Library
         }
 
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliGetType(PlTerm valueIn, PlTerm valueOut)
+        static public bool cliGetType(CycFort valueIn, CycFort valueOut)
         {
             if (!valueOut.IsVar)
             {
@@ -350,7 +342,7 @@ namespace Swicli.Library
         }
 
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliGetClass(PlTerm valueIn, PlTerm valueOut)
+        static public bool cliGetClass(CycFort valueIn, CycFort valueOut)
         {
             if (!valueOut.IsVar)
             {
@@ -366,7 +358,7 @@ namespace Swicli.Library
 #endif
         }
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliClassFromType(PlTerm valueIn, PlTerm valueOut)
+        static public bool cliClassFromType(CycFort valueIn, CycFort valueOut)
         {
             if (!valueOut.IsVar)
             {
@@ -383,14 +375,14 @@ namespace Swicli.Library
 #endif
         }
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliTypeFromClass(PlTerm valueIn, PlTerm valueOut)
+        static public bool cliTypeFromClass(CycFort valueIn, CycFort valueOut)
         {
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
                 return cliTypeFromClass(valueIn, plvar) && SpecialUnify(valueOut, plvar);
             }
-            Class val = GetType(valueIn);
+            Type val = GetType(valueIn);
             if (val == null) return false;
 #if USE_IKVM
             Type c = ikvm.runtime.Util.getInstanceTypeFromClass(val);
@@ -400,7 +392,7 @@ namespace Swicli.Library
 #endif
         }
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliShorttype(PlTerm valueName, PlTerm valueIn)
+        static public bool cliShorttype(CycFort valueName, CycFort valueIn)
         {
             if (!valueName.IsString && !valueName.IsAtom) return Warn("valueName must be string or atom {0}", valueName);
             string name = valueName.Name;
@@ -442,14 +434,14 @@ namespace Swicli.Library
             }
         }
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliGetClassname(PlTerm valueIn, PlTerm valueOut)
+        static public bool cliGetClassname(CycFort valueIn, CycFort valueOut)
         {
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
                 return cliGetClassname(valueIn, plvar) && SpecialUnify(valueOut, plvar);
             }
-            Class val = CastTerm(valueIn, typeof(Class)) as Class;
+            Type val = CastTerm(valueIn, typeof(Type)) as Type;
             if (val == null) return false;
 
 #if USE_IKVM
@@ -459,7 +451,7 @@ namespace Swicli.Library
 #endif
         }
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliGetTypeFullname(PlTerm valueIn, PlTerm valueOut)
+        static public bool cliGetTypeFullname(CycFort valueIn, CycFort valueOut)
         {
             if (!valueOut.IsVar)
             {
@@ -471,7 +463,7 @@ namespace Swicli.Library
             return valueOut.Unify(val.FullName);
         }
 
-        private static string typeToName(Type type)
+        private static string typeToName(Class type)
         {
             if (type.IsArray && type.HasElementType)
             {
@@ -512,7 +504,7 @@ namespace Swicli.Library
 #endif
 
         }
-        private static Type ResolveClassAsType(string name)
+        private static Class ResolveClassAsType(string name)
         {
             Type s1 = ResolveType(name);
             if (s1 != null) return s1;
@@ -536,8 +528,8 @@ namespace Swicli.Library
             return null;
         }
 
-        static readonly private Dictionary<string, Type> typeCache = new Dictionary<string, Type>();
-        private static Type ResolveType(string name)
+        static readonly private Dictionary<string, Class> typeCache = new Dictionary<string, Class>();
+        private static Class ResolveType(string name)
         {
             lock (typeCache)
             {
@@ -550,7 +542,7 @@ namespace Swicli.Library
             }
         }
 
-        private static Type ResolveType0(string name)
+        private static Class ResolveType0(string name)
         {
             if (name == "@" || name == "[]" || name == "$cli_object" || name == "array" || name == null) return null;
             if (name.EndsWith("[]"))
@@ -589,7 +581,7 @@ namespace Swicli.Library
             return null;
         }
 
-        public static Type ResolveType1(string typeName)
+        public static Class ResolveType1(string typeName)
         {
             Type type = null;
             if (!typeName.Contains("."))
@@ -610,7 +602,7 @@ namespace Swicli.Library
                     Type t = loaded.GetType(typeName, false);
                     if (t != null) return t;
                 }
-                Class obj = null;
+                Type obj = null;
 #if USE_IKVM
                 try
                 {
@@ -639,7 +631,7 @@ namespace Swicli.Library
             return type;
         }
 
-        public static Type getPrimitiveType(String name)
+        public static Class getPrimitiveType(String name)
         {
             if (name.StartsWith("["))
             {

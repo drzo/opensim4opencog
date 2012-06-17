@@ -1,9 +1,12 @@
-/*********************************************************
-* 
-*  Project: Swicli.Library - Two Way Interface to .NET and MONO 
+/*  $Id$
+*  
+*  Project: Swicli.Library - Two Way Interface for .NET and MONO to SWI-Prolog
 *  Author:        Douglas R. Miles
-*  Author:        Uwe Lesta
-*  Copyright (C): 2008, Uwe Lesta SBS-Softwaresysteme GmbH
+*                 Uwe Lesta (SbsSW.SwiPlCs classes)
+*  E-mail:        logicmoo@gmail.com
+*  WWW:           http://www.logicmoo.com
+*  Copyright (C): 2008, Uwe Lesta SBS-Softwaresysteme GmbH, 
+*     2010-2012 LogicMOO Developement
 *
 *  This library is free software; you can redistribute it and/or
 *  modify it under the terms of the GNU Lesser General Public
@@ -20,61 +23,17 @@
 *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *
 *********************************************************/
-
-/*
- * XML comments see:
- * 
- * ++ http://thoughtpad.net/alan-dean/cs-xml-documentation.html
- * http://www.microsoft.com/downloads/details.aspx?familyid=E82EA71D-DA89-42EE-A715-696E3A4873B2&displaylang=en
- * http://www.codeplex.com/Wiki/View.aspx?ProjectName=SHFB
- * 
- * 
- * German : http://www.galileocomputing.de/openbook/visual_csharp/visual_csharp_06_005.htm#mje2e442064f253d6adeaa29bb3ca57032
- * nice example of the formatting possibilities http://www.winnershtriangle.com/w/Articles.XMLCommentsInCSharp.asp
- *    see also http://www.codeproject.com/KB/XML/csharpcodedocumentation.aspx
- * 
- * http://www.codeplex.com/SHFB
- * http://www.codeplex.com/DocProject
- * 
- * <code>
-<!--
- * for a good spellchecker tool see Mikhail Arkhipov's blog at
-    * http://blogs.msdn.com/mikhailarkhipov/archive/2006/04/17/577471.aspx
--->
- * </code>
- * Intelligence: copy XML file (bin/SwiPlCs.XML) to beside SwiPLCs.dll
- */
-
-/*
- * Changes
- * 
- * 08.05.14 CHANGED Framework version 3.5 
- *          FIX Marshalling bug
- * 
- * 02.11.29 ADDED static PlCall in Class PlQuery
- *			FIXED NextSolution throw PlException
- *			ADDED PlString, PlCodeList, PlCharList  
- * 02.12.08 ADDED Class PlTail to support LISTS
- * 
- * 03.08.16 ADDED to DllImport - PL_is_initialised  
- *				PL_create_engine, PlSetEngine, PL_destroy_engine
- *          ADDED to PlEngine - IsInitialized  
- *          ADDED Class PlMtEngine
- */
-
-using System;
-using System.Collections;		        // IEnumerable PlTail
-using System.Collections.Generic;		// IEnumerable ( PlQuery )
-using System.Runtime.InteropServices;
-using System.Text;						// ToStringAsListFormat
-using System.Threading;
-using SbsSW.DesignByContract;
-using SbsSW.SwiPlCs.Exceptions;
-using SbsSW.SwiPlCs.Streams;
-using System.Collections.ObjectModel;
 #if USE_IKVM
 using Class=java.lang.Class;
 #else
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Text;
+using SbsSW.DesignByContract;
+using SbsSW.SwiPlCs.Exceptions;
+using SbsSW.SwiPlCs.Streams;
 using Swicli.Library;
 using Class = System.Type;
 #endif
@@ -124,7 +83,7 @@ namespace SbsSW.SwiPlCs.Callback
     /// <note>It is only possible to call <see langword="static"/> methods</note>
     /// </remarks>
     /// <seealso cref="SbsSW.SwiPlCs.PlEngine.RegisterForeign(string, System.Delegate)"/>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated()]
     class NamespaceDoc
     {
     }
@@ -135,7 +94,7 @@ namespace SbsSW.SwiPlCs.Callback
     /// <summary>
     /// Flags that are responsible for the foreign predicate parameters 
     /// </summary>
-    [FlagsAttribute]
+    [Flags]
     public enum PlForeignSwitches:uint 
     {
         /// <summary>0 - PL_FA_NOTHING: no flags. </summary>
@@ -162,7 +121,7 @@ namespace SbsSW.SwiPlCs.Callback
     #region delagates for C# callbacks
     /// <inheritdoc cref="DelegateParameter2" />
     /// 
-    [System.Runtime.InteropServices.UnmanagedFunctionPointerAttribute(System.Runtime.InteropServices.CallingConvention.Cdecl)]
+    [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.Cdecl)]
     public delegate bool DelegateParameter0();
 
 
@@ -172,7 +131,7 @@ namespace SbsSW.SwiPlCs.Callback
     ///     <code source="..\..\TestSwiPl\CallbackForeigenPredicate.cs" region="t_creating_a_list_doc" />
     /// </example>
     /// <param name="term"></param>
-    [System.Runtime.InteropServices.UnmanagedFunctionPointerAttribute(System.Runtime.InteropServices.CallingConvention.Cdecl)]
+    [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.Cdecl)]
     public delegate bool DelegateParameter1(PlTerm term);
 
 
@@ -189,28 +148,28 @@ namespace SbsSW.SwiPlCs.Callback
     /// <returns>true for succeeding otherwise false for fail</returns>
     /// <seealso cref="M:SbsSW.SwiPlCs.PlEngine.RegisterForeign(System.Delegate)"/>
     /// <seealso cref="M:SbsSW.SwiPlCs.PlEngine"/>
-    [System.Runtime.InteropServices.UnmanagedFunctionPointerAttribute(System.Runtime.InteropServices.CallingConvention.Cdecl)]
+    [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.Cdecl)]
     public delegate bool DelegateParameter2(PlTerm term1, PlTerm term2);
 
     /// <inheritdoc cref="DelegateParameter2" />
     /// <param name="term1"></param>
     /// <param name="term2"></param>
     /// <param name="term3"></param>
-    [System.Runtime.InteropServices.UnmanagedFunctionPointerAttribute(System.Runtime.InteropServices.CallingConvention.Cdecl)]
+    [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.Cdecl)]
     public delegate bool DelegateParameter3(PlTerm term1, PlTerm term2, PlTerm term3);
 
     /// <inheritdoc cref="DelegateParameter2" />
     /// <param name="term1"></param>
     /// <param name="term2"></param>
     /// <param name="term3"></param>
-    [System.Runtime.InteropServices.UnmanagedFunctionPointerAttribute(System.Runtime.InteropServices.CallingConvention.Cdecl)]
+    [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.Cdecl)]
     public delegate bool DelegateParameter4(PlTerm term1, PlTerm term2, PlTerm term3, PlTerm term4);
 
     /// <inheritdoc cref="DelegateParameter2" />
     /// <param name="term1"></param>
     /// <param name="term2"></param>
     /// <param name="term3"></param>
-    [System.Runtime.InteropServices.UnmanagedFunctionPointerAttribute(System.Runtime.InteropServices.CallingConvention.Cdecl)]
+    [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.Cdecl)]
     public delegate bool DelegateParameter5(PlTerm term1, PlTerm term2, PlTerm term3, PlTerm term4, PlTerm term5);
     /// <summary>
     /// <para>With this delegate you can build a call-back predicate with a variable amount of parameters.</para>
@@ -222,7 +181,7 @@ namespace SbsSW.SwiPlCs.Callback
     /// indexer of PlTermV see <see cref="PlTermV"/>. The amount of parameters is in <see cref="PlTermV.Size"/>
     /// </param>
     /// <returns>True for succeeding otherwise false for fail</returns>
-    [System.Runtime.InteropServices.UnmanagedFunctionPointerAttribute(System.Runtime.InteropServices.CallingConvention.Cdecl)]
+    [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.Cdecl)]
     public delegate bool DelegateParameterVarArgs(PlTermV termVector);
 
 
@@ -238,13 +197,13 @@ namespace SbsSW.SwiPlCs.Callback
     /// <example>TODO
     /// <para>See "t_backtrack" in TestSwiPl.CallbackForeigenPredicate.cs</para>
     /// </example>
-    [System.Runtime.InteropServices.UnmanagedFunctionPointerAttribute(System.Runtime.InteropServices.CallingConvention.Cdecl)]
+    [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.Cdecl)]
     public delegate int DelegateParameterBacktrack1(PlTerm term1, IntPtr control);
 
-    [System.Runtime.InteropServices.UnmanagedFunctionPointerAttribute(System.Runtime.InteropServices.CallingConvention.Cdecl)]
+    [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.Cdecl)]
     public delegate int DelegateParameterBacktrack2(PlTerm term1, PlTerm term2, IntPtr control);
 
-    [System.Runtime.InteropServices.UnmanagedFunctionPointerAttribute(System.Runtime.InteropServices.CallingConvention.Cdecl)]
+    [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.Cdecl)]
     public delegate int DelegateParameterBacktrackVarArgs(PlTerm term1, int arity, IntPtr control);
 
     #endregion delagates for C# callbacks
@@ -270,7 +229,7 @@ namespace SbsSW.SwiPlCs.Streams
     /// <code source="..\swi-cs.cs" region="default_io_doc" />
     /// </example>
     /// <seealso cref="PlEngine.SetStreamFunctionRead"/>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated()]
     class NamespaceDoc
     {
     }
@@ -299,7 +258,7 @@ namespace SbsSW.SwiPlCs.Streams
     /// <param name="buffer">A pointer to a string buffer</param>
     /// <param name="bufferSize">The size of the string buffer</param>
     /// <returns>A <see cref="System.Delegate"/></returns>
-    [System.Runtime.InteropServices.UnmanagedFunctionPointerAttribute(System.Runtime.InteropServices.CallingConvention.Cdecl)]
+    [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.Cdecl)]
     public delegate long DelegateStreamReadFunction(IntPtr handle, System.IntPtr buffer, long bufferSize);
 
     /// <summary>
@@ -309,7 +268,7 @@ namespace SbsSW.SwiPlCs.Streams
     /// <param name="buffer">A pointer to a string buffer</param>
     /// <param name="bufferSize">The size of the string buffer</param>
     /// <returns>A <see cref="System.Delegate"/></returns>
-    [System.Runtime.InteropServices.UnmanagedFunctionPointerAttribute(System.Runtime.InteropServices.CallingConvention.Cdecl)]
+    [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.Cdecl)]
     public delegate long DelegateStreamWriteFunction(IntPtr handle, string buffer, long bufferSize);
 
     /*
@@ -419,7 +378,7 @@ namespace SbsSW.SwiPlCs
     ///         PrologClient.ConsoleTrace(s.A);
     /// </code>
     /// </example>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated()]
     class NamespaceDoc
     {
     }

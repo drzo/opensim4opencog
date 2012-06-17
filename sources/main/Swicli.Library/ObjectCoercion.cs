@@ -1,7 +1,10 @@
-/*********************************************************
-* 
+/*  $Id$
+*  
+*  Project: Swicli.Library - Two Way Interface for .NET and MONO to SWI-Prolog
 *  Author:        Douglas R. Miles
-*  Copyright (C): 2008, Logicmoo - http://www.kqml.org
+*  E-mail:        logicmoo@gmail.com
+*  WWW:           http://www.logicmoo.com
+*  Copyright (C):  2010-2012 LogicMOO Developement
 *
 *  This library is free software; you can redistribute it and/or
 *  modify it under the terms of the GNU Lesser General Public
@@ -18,13 +21,6 @@
 *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *
 *********************************************************/
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Xml.Serialization;
 #if USE_MUSHDLR
 using MushDLR223.Utilities;
 #endif
@@ -32,10 +28,15 @@ using MushDLR223.Utilities;
 using jpl;
 using Class = java.lang.Class;
 #else
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Xml.Serialization;
 using SbsSW.SwiPlCs;
 using Class = System.Type;
 #endif
-using ArrayList = System.Collections.ArrayList;
 using CycFort = SbsSW.SwiPlCs.PlTerm;
 using PrologCli = Swicli.Library.PrologClient;
 
@@ -44,7 +45,7 @@ namespace Swicli.Library
     public partial class PrologClient
     {
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliGetterm(PlTerm valueCol, PlTerm valueIn, PlTerm valueOut)
+        static public bool cliGetterm(CycFort valueCol, CycFort valueIn, CycFort valueOut)
         {
             List<object> objs;
             if (valueCol.IsVar)
@@ -58,7 +59,7 @@ namespace Swicli.Library
             }
             if (!valueOut.IsVar)
             {
-                var plvar = PlTerm.PlVar();
+                var plvar = CycFort.PlVar();
                 return cliGetterm(valueCol, valueIn, plvar) && SpecialUnify(valueOut, plvar);
             }
             if (IsTaggedObject(valueIn))
@@ -82,7 +83,7 @@ namespace Swicli.Library
 
 
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliCast(PlTerm valueIn, PlTerm clazzSpec, PlTerm valueOut)
+        static public bool cliCast(CycFort valueIn, CycFort clazzSpec, CycFort valueOut)
         {
             if (!valueOut.IsVar)
             {
@@ -103,7 +104,7 @@ namespace Swicli.Library
         }
 
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliCastImmediate(PlTerm valueIn, PlTerm clazzSpec, PlTerm valueOut)
+        static public bool cliCastImmediate(CycFort valueIn, CycFort clazzSpec, CycFort valueOut)
         {
             if (valueIn.IsVar)
             {
@@ -120,12 +121,12 @@ namespace Swicli.Library
         }
 
         [PrologVisible(ModuleName = ExportModule)]
-        private static object[] PlListToCastedArray(IEnumerable<PlTerm> term, ParameterInfo[] paramInfos, out Action todo)
+        private static object[] PlListToCastedArray(IEnumerable<CycFort> term, ParameterInfo[] paramInfos, out Action todo)
         {
             return PlListToCastedArray(0, term, paramInfos, out todo);
         }
         [PrologVisible(ModuleName = ExportModule)]
-        private static object[] PlListToCastedArray(int skip, IEnumerable<PlTerm> term, ParameterInfo[] paramInfos, out Action todo)
+        private static object[] PlListToCastedArray(int skip, IEnumerable<CycFort> term, ParameterInfo[] paramInfos, out Action todo)
         {
             todo = Do_NOTHING;
             int len = paramInfos.Length;
@@ -260,7 +261,7 @@ namespace Swicli.Library
         private static void Do_NOTHING()
         {
         }
-        public static Object CastTerm(PlTerm o, Type pt)
+        public static Object CastTerm(CycFort o, Type pt)
         {
             if (pt == typeof(object)) pt = null;
             object r = CastTerm0(o, pt);
@@ -556,7 +557,7 @@ namespace Swicli.Library
             return double.Parse(value);
 #endif        
         }
-        public static Object CastTerm0(PlTerm o, Type pt)
+        public static Object CastTerm0(CycFort o, Type pt)
         {
             if (pt == typeof(PlTerm)) return o;
             if (pt == typeof(string))
@@ -758,7 +759,7 @@ namespace Swicli.Library
         }
 
 
-        public static int ToFieldLayout(string named, string arg1, object o, Type t, PlTerm term, bool childs, bool addNames)
+        public static int ToFieldLayout(string named, string arg1, object o, Type t, CycFort term, bool childs, bool addNames)
         {
 
             MemberInfo[] tGetFields = GetStructFormat(t);
@@ -789,7 +790,7 @@ namespace Swicli.Library
             return libpl.PL_unify(termTermRef, temp);
         }
 
-        private static int ToVMNumber(object o, PlTerm term)
+        private static int ToVMNumber(object o, CycFort term)
         {
             if (o is int)
                 return libpl.PL_unify_integer(term.TermRef, (int)Convert.ToInt32(o));
@@ -840,7 +841,7 @@ namespace Swicli.Library
 	Y \== true.     % not a ref
          
          */
-        private static object CastCompoundTerm(string name, int arity, PlTerm arg1, PlTerm orig, Type pt)
+        private static object CastCompoundTerm(string name, int arity, CycFort arg1, CycFort orig, Type pt)
         {
             string key = name + "/" + arity;
             lock (FunctorToLayout)
@@ -1098,7 +1099,7 @@ namespace Swicli.Library
             return typeof(object);
         }
 
-        private static object CreateInstance(Type type, MemberInfo[] fis, PlTerm orig, int plarg)
+        private static object CreateInstance(Type type, MemberInfo[] fis, CycFort orig, int plarg)
         {
             int fisLength = fis.Length;
             if (orig.Arity < fisLength)
@@ -1239,7 +1240,7 @@ namespace Swicli.Library
             throw new IndexOutOfRangeException("" + field);
         }
 
-        private static int FillArray(IList fis, Type elementType, PlTerm orig, int plarg)
+        private static int FillArray(IList fis, Type elementType, CycFort orig, int plarg)
         {
             int elements = 0;
             for (int i = 0; i < fis.Count; i++)
@@ -1251,13 +1252,13 @@ namespace Swicli.Library
             return elements;
         }
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliTypespec(PlTerm clazzSpec, PlTerm valueOut)
+        static public bool cliTypespec(CycFort clazzSpec, CycFort valueOut)
         {
             return valueOut.Unify(typeToSpec(GetType(clazzSpec)));
         }
 
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliToFromLayout(PlTerm clazzSpec, PlTerm memberSpec, PlTerm toSpec)
+        static public bool cliToFromLayout(CycFort clazzSpec, CycFort memberSpec, CycFort toSpec)
         {
             Type type = GetType(clazzSpec);
             string name = memberSpec.Name;
@@ -1274,7 +1275,7 @@ namespace Swicli.Library
         }
 
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliAddLayout(PlTerm clazzSpec, PlTerm memberSpec)
+        static public bool cliAddLayout(CycFort clazzSpec, CycFort memberSpec)
         {
             Type type = GetType(clazzSpec);
             string name = memberSpec.Name;
@@ -1313,7 +1314,7 @@ namespace Swicli.Library
         }
 
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliToFromRecomposer(PlTerm clazzSpec, PlTerm memberSpec, PlTerm obj2r, PlTerm r2obj)
+        static public bool cliToFromRecomposer(CycFort clazzSpec, CycFort memberSpec, CycFort obj2r, CycFort r2obj)
         {
             Type type = GetType(clazzSpec);
             string name = memberSpec.Name;
@@ -1341,7 +1342,7 @@ namespace Swicli.Library
             }
         }
 
-        public static object GetInstance(PlTerm classOrInstance)
+        public static object GetInstance(CycFort classOrInstance)
         {
             if (classOrInstance.IsVar)
             {
@@ -1386,7 +1387,7 @@ namespace Swicli.Library
         /// <param name="instanceMaybe"></param>
         /// <param name="classOrInstance"></param>
         /// <returns></returns>
-        private static Type GetTypeFromInstance(object instanceMaybe, PlTerm classOrInstance)
+        private static Type GetTypeFromInstance(object instanceMaybe, CycFort classOrInstance)
         {
             if (classOrInstance.IsAtom)
             {
@@ -1500,7 +1501,7 @@ namespace Swicli.Library
             return results;
         }
 
-        private static bool SpecialUnify(PlTerm valueOut, CycFort plvar)
+        private static bool SpecialUnify(CycFort valueOut, CycFort plvar)
         {
             bool b = valueOut.Unify(plvar);
             if (b) return true;
@@ -1528,7 +1529,7 @@ namespace Swicli.Library
         }
 
         public static Object ToFromConvertLock = new object();
-        public static int UnifyToProlog(object o, PlTerm term)
+        public static int UnifyToProlog(object o, CycFort term)
         {
             if (!term.IsVar)
             {
@@ -1591,7 +1592,7 @@ namespace Swicli.Library
                 return AddTagged(TermRef, "null");
             }
 
-            if (o is Type || o is Class)
+            if (o is Type || o is Type)
             {
                 if (true)
                 {
@@ -1748,7 +1749,7 @@ namespace Swicli.Library
             return layout;// default(T);
         }
 
-        public static PlTerm C(string collection)
+        public static CycFort C(string collection)
         {
             return PlTerm.PlAtom(collection);
         }
@@ -1790,7 +1791,7 @@ namespace Swicli.Library
             Type pType = p.GetType();
             if (!CycTypeInfo.IsFlagType(pType))
             {
-                CycFort fort = (CycFort)ToFort(p);
+                PlTerm fort = (PlTerm)ToFort(p);
                 withValue(fort);
                 return;
             }
@@ -1802,7 +1803,7 @@ namespace Swicli.Library
                 byte b = (byte)p;
                 if (b == 0)
                 {
-                    withValue((CycFort)ToFort(p));
+                    withValue((PlTerm)ToFort(p));
                     return;
                 }
                 foreach (object v in pTypeValues)
@@ -1810,7 +1811,7 @@ namespace Swicli.Library
                     byte bv = (byte)v;
                     if (bv >= b)
                     {
-                        withValue((CycFort)ToFort(v));
+                        withValue((PlTerm)ToFort(v));
                         b -= bv;
                     }
                     if (b == 0) return;
@@ -1822,7 +1823,7 @@ namespace Swicli.Library
                 sbyte b = (sbyte)p;
                 if (b == 0)
                 {
-                    withValue((CycFort)ToFort(p));
+                    withValue((PlTerm)ToFort(p));
                     return;
                 }
                 foreach (object v in pTypeValues)
@@ -1830,7 +1831,7 @@ namespace Swicli.Library
                     sbyte bv = (sbyte)v;
                     if (bv >= b)
                     {
-                        withValue((CycFort)ToFort(v));
+                        withValue((PlTerm)ToFort(v));
                         b -= bv;
                     }
                     if (b == 0) return;
@@ -1842,7 +1843,7 @@ namespace Swicli.Library
                 ushort b = (UInt16)p;
                 if (b == 0)
                 {
-                    withValue((CycFort)ToFort(p));
+                    withValue((PlTerm)ToFort(p));
                     return;
                 }
                 foreach (object v in pTypeValues)
@@ -1850,7 +1851,7 @@ namespace Swicli.Library
                     ushort bv = (ushort)v;
                     if (bv >= b)
                     {
-                        withValue((CycFort)ToFort(v));
+                        withValue((PlTerm)ToFort(v));
                         b -= bv;
                     }
                     if (b == 0) return;
@@ -1862,7 +1863,7 @@ namespace Swicli.Library
                 short b = (Int16)p;
                 if (b == 0)
                 {
-                    withValue((CycFort)ToFort(p));
+                    withValue((PlTerm)ToFort(p));
                     return;
                 }
                 foreach (object v in pTypeValues)
@@ -1870,7 +1871,7 @@ namespace Swicli.Library
                     short bv = (short)v;
                     if (bv >= b)
                     {
-                        withValue((CycFort)ToFort(v));
+                        withValue((PlTerm)ToFort(v));
                         b -= bv;
                     }
                     if (b == 0) return;
@@ -1882,7 +1883,7 @@ namespace Swicli.Library
                 uint b = (UInt32)p;
                 if (b == 0)
                 {
-                    withValue((CycFort)ToFort(p));
+                    withValue((PlTerm)ToFort(p));
                     return;
                 }
                 foreach (object v in pTypeValues)
@@ -1890,7 +1891,7 @@ namespace Swicli.Library
                     uint bv = (uint)v;
                     if (bv >= b)
                     {
-                        withValue((CycFort)ToFort(v));
+                        withValue((PlTerm)ToFort(v));
                         b -= bv;
                     }
                     if (b == 0) return;
@@ -1902,7 +1903,7 @@ namespace Swicli.Library
                 int b = (Int32)p;
                 if (b == 0)
                 {
-                    withValue((CycFort)ToFort(p));
+                    withValue((PlTerm)ToFort(p));
                     return;
                 }
                 foreach (object v in pTypeValues)
@@ -1910,7 +1911,7 @@ namespace Swicli.Library
                     int bv = (int)v;
                     if (bv >= b)
                     {
-                        withValue((CycFort)ToFort(v));
+                        withValue((PlTerm)ToFort(v));
                         b -= bv;
                     }
                     if (b == 0) return;
@@ -1922,7 +1923,7 @@ namespace Swicli.Library
                 ulong b = (UInt64)p;
                 if (b == 0)
                 {
-                    withValue((CycFort)ToFort(p));
+                    withValue((PlTerm)ToFort(p));
                     return;
                 }
                 foreach (object v in pTypeValues)
@@ -1930,7 +1931,7 @@ namespace Swicli.Library
                     ulong bv = (ulong)v;
                     if (bv >= b)
                     {
-                        withValue((CycFort)ToFort(v));
+                        withValue((PlTerm)ToFort(v));
                         b -= bv;
                     }
                     if (b == 0) return;
@@ -1942,7 +1943,7 @@ namespace Swicli.Library
                 long b = (Int64)p;
                 if (b == 0)
                 {
-                    withValue((CycFort)ToFort(p));
+                    withValue((PlTerm)ToFort(p));
                     return;
                 }
                 foreach (object v in pTypeValues)
@@ -1950,7 +1951,7 @@ namespace Swicli.Library
                     long bv = (long)v;
                     if (bv >= b)
                     {
-                        withValue((CycFort)ToFort(v));
+                        withValue((PlTerm)ToFort(v));
                         b -= bv;
                     }
                     if (b == 0) return;
@@ -1961,23 +1962,23 @@ namespace Swicli.Library
             bool unfolded;
             foreach (var unfold in Unfold(p, out unfolded))
             {
-                withValue((CycFort)ToFort(unfold));
+                withValue((PlTerm)ToFort(unfold));
                 //return;
             }
             if (unfolded) return;
             Trace();
             if (p is IConvertible)
             {
-                withValue((CycFort)ToFort(p));
+                withValue((PlTerm)ToFort(p));
                 return;
             }
 
             if (p is Enum)
             {
-                withValue((CycFort)ToFort(p));
+                withValue((PlTerm)ToFort(p));
                 return;
             }
-            withValue((CycFort)ToFort(p));
+            withValue((PlTerm)ToFort(p));
         }
     }
 
@@ -1991,7 +1992,7 @@ namespace Swicli.Library
         {
             return "" + from;
         }
-        static public Type ToType(PlTerm typeSpec)
+        static public Type ToType(CycFort typeSpec)
         {
             return PrologClient.GetType(typeSpec);
         }

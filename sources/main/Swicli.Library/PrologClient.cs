@@ -1,8 +1,10 @@
-/*********************************************************
-* 
-*  Project: Swicli.Library - Two Way Interface to .NET and MONO 
+/*  $Id$
+*  
+*  Project: Swicli.Library - Two Way Interface for .NET and MONO to SWI-Prolog
 *  Author:        Douglas R. Miles
-*  Copyright (C): 2008, Logicmoo - http://www.kqml.org
+*  E-mail:        logicmoo@gmail.com
+*  WWW:           http://www.logicmoo.com
+*  Copyright (C):  2010-2012 LogicMOO Developement
 *
 *  This library is free software; you can redistribute it and/or
 *  modify it under the terms of the GNU Lesser General Public
@@ -19,30 +21,27 @@
 *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *
 *********************************************************/
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Threading;
 #if USE_IKVM
 using IKVM.Internal;
 using ikvm.runtime;
 using java.net;
 using jpl;
 #endif
-using SbsSW.SwiPlCs;
-using SbsSW.SwiPlCs.Callback;
-using SbsSW.SwiPlCs.Exceptions;
-using SbsSW.SwiPlCs.Streams;
-using System.Windows.Forms;
 #if USE_IKVM
 using Hashtable = java.util.Hashtable;
 using ClassLoader = java.lang.ClassLoader;
 using Class = java.lang.Class;
 using sun.reflect.misc;
 #endif
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Threading;
+using System.Windows.Forms;
+using SbsSW.SwiPlCs;
+using SbsSW.SwiPlCs.Callback;
 using CycFort = SbsSW.SwiPlCs.PlTerm;
 using PrologCli = Swicli.Library.PrologClient;
 
@@ -149,7 +148,7 @@ namespace Swicli.Library
 
         private static object GetField(object term, string s)
         {
-            return term.GetType().GetField(s, PrologCli.BindingFlagsALL).GetValue(term);
+            return term.GetType().GetField(s, PrologClient.BindingFlagsALL).GetValue(term);
         }
 
 #if USE_IKVM
@@ -277,7 +276,7 @@ namespace Swicli.Library
             }
             PlTerm termout = PlTerm.PlVar();
             if (!ModuleCall("Eval", termin, termout)) return null;
-            return PrologCli.CastTerm(termout, typeof(System.Object));
+            return PrologClient.CastTerm(termout, typeof(System.Object));
         }
 
         public void Intern(string varname, object value)
@@ -297,7 +296,7 @@ namespace Swicli.Library
         {
             PlTerm termout = PlTerm.PlVar();
             if (!ModuleCall("GetSymbol", PlNamed(name), termout)) return null;
-            return PrologCli.CastTerm(termout, typeof(System.Object));
+            return PrologClient.CastTerm(termout, typeof(System.Object));
         }
 
         public object Read(string line, TextWriter @delegate)
@@ -886,7 +885,7 @@ namespace Swicli.Library
             Fn015.Register();
             PlEngine.RegisterForeign(null, "foo2", 2, new DelegateParameterBacktrack2(FooTwo), Nondeterministic);
             //PlEngine.RegisterForeign(null, "cliFindClass", 2, new DelegateParameter2(PrologCli.cliFindClass), PlForeignSwitches.None);
-            PlEngine.RegisterForeign(ExportModule, "cli_load_assembly", 1, new DelegateParameter1(PrologCli.cliLoadAssembly), PlForeignSwitches.None);
+            PlEngine.RegisterForeign(ExportModule, "cli_load_assembly", 1, new DelegateParameter1(PrologClient.cliLoadAssembly), PlForeignSwitches.None);
             ConsoleWriteLine("RegisterPLCSForeigns");
             PlEngine.RegisterForeign(null, "foo3", 3, new DelegateParameterBacktrackVarArgs(FooThree), Nondeterministic | PlForeignSwitches.VarArgs);
 
@@ -1275,7 +1274,7 @@ jpl_jlist_demo :-
         }
     }
 
-    [System.Security.SuppressUnmanagedCodeSecurityAttribute]
+    [System.Security.SuppressUnmanagedCodeSecurity]
     public static class JplSafeNativeMethods
     {
         //private const string DllFileName = @"D:\Lesta\swi-pl\pl\bin\LibPl.dll";
