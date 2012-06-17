@@ -1428,20 +1428,20 @@ namespace SbsSW.SwiPlCs
              libpl.PL_put_atom_chars(this.TermRef, atom);
         }
 
-        public void Put(long atom)
+        public void Put(long integer)
         {
-             libpl.PL_put_integer(this.TermRef, atom);
+            libpl.PL_put_integer(this.TermRef, integer);
         }
 
-        public void Put(ulong atom)
+        public void Put(ulong integer)
         {
-            if (atom > long.MaxValue)
+            if (integer > long.MaxValue)
             {
                 // slow but works
-                Put(new PlTerm("" + atom));
+                Put(new PlTerm("" + integer));
                 return;
             }
-             libpl.PL_put_integer(this.TermRef, (long)atom);
+            libpl.PL_put_integer(this.TermRef, (long)integer);
         }
 
         public void Put(double atom)
