@@ -200,7 +200,7 @@ namespace Swicli.Library
         {
             if (valueIn.IsVar)
             {
-               if (StrictRefs) return Warn("Cant find instance {0}", valueIn);
+                if (StrictRefs) return Error("Cant find instance {0}", valueIn);
                 return valueIn.Unify(valueOut);
             }
             if (!valueOut.IsVar)

@@ -75,7 +75,7 @@ namespace Swicli.Library
                         }
                         catch (Exception e)
                         {
-                            Warn(m + " caused " + e);
+                            Error(m + " caused " + e);
                         }
                     }
                 }
@@ -101,7 +101,7 @@ namespace Swicli.Library
         {
             if (clazzSpec.IsVar)
             {
-                Warn("GetType IsVar {0}", clazzSpec);
+                Error("GetType IsVar {0}", clazzSpec);
                 return null;
             }
             if (IsTaggedObject(clazzSpec))
@@ -343,7 +343,7 @@ namespace Swicli.Library
             object val = GetInstance(valueIn);
             if (val == null)
             {
-                Warn("Cannot get object for {0}", valueIn);
+                Error("Cannot get object for {0}", valueIn);
                 return true;
             }
             return valueOut.FromObject((val.GetType()));

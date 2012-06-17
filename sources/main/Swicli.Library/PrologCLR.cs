@@ -89,6 +89,25 @@ namespace Swicli.Library
             text = PlStringFormat(text, ps);
             return libpl.PL_warning(text) != 0;
         }
+        public static bool Error(string text, params object[] ps)
+        {
+            text = PlStringFormat(text, ps);
+            return libpl.PL_warning(text) != 0;
+        }
+        private static bool WarnMissing(string text, params object[] ps)
+        {
+            text = PlStringFormat(text, ps);
+            if (true)
+            {
+                Debug(text);
+                return false;
+            }
+            return Warn(text);
+        }
+        public static void Debug(object plthreadhasdifferntthread)
+        {
+
+        }
 
         private static string PlStringFormat(string text, params object[] ps)
         {
@@ -291,7 +310,7 @@ namespace Swicli.Library
         {
             if (memberSpec.IsVar)
             {
-                Warn("findEventInfo IsVar {0} on type {1}", memberSpec, c);
+                WarnMissing("findEventInfo IsVar {0} on type {1}", memberSpec, c);
                 return null;
             }
             if (memberSpec.IsInteger)
@@ -358,12 +377,12 @@ namespace Swicli.Library
         {
             if (c == null)
             {
-                Warn("findField no class for {0}", memberSpec);
+                Error("findField no class for {0}", memberSpec);
                 return null;
             }
             if (memberSpec.IsVar)
             {
-                Warn("findField IsVar {0} on type {1}", memberSpec, c);
+                Error("findField IsVar {0} on type {1}", memberSpec, c);
                 return null;
             }
             if (memberSpec.IsInteger)
@@ -403,12 +422,12 @@ namespace Swicli.Library
         {
             if (c == null)
             {
-                Warn("findProperty no class for {0}", memberSpec);
+                Error("findProperty no class for {0}", memberSpec);
                 return null;
             }
             if (memberSpec.IsVar)
             {
-                Warn("findProperty IsVar {0} on type {1}", memberSpec, c);
+                Error("findProperty IsVar {0} on type {1}", memberSpec, c);
                 return null;
             }
             if (memberSpec.IsInteger)
@@ -723,7 +742,7 @@ namespace Swicli.Library
             Type c = GetType(clazzSpec);
             if (c == null)
             {
-                Warn("Cant resolve clazzSpec {0}", clazzSpec);
+                Error("Cant resolve clazzSpec {0}", clazzSpec);
                 return false;
             }
             Type[] paramz = GetParamSpec(memberSpec, false);
@@ -758,7 +777,7 @@ namespace Swicli.Library
             }
             if (mi == null)
             {
-                Warn("Cant find constructor {0} on {1}", memberSpec, c);
+                Error("Cant find constructor {0} on {1}", memberSpec, c);
                 return false;
             }
             Action postCallHook;
@@ -1084,7 +1103,7 @@ namespace Swicli.Library
             EventInfo fi = findEventInfo(memberSpec, c, ref paramz);
             if (fi == null)
             {
-                return Warn("Cant find event {0} on {1}", memberSpec, c);
+                return Error("Cant find event {0} on {1}", memberSpec, c);
             }
             var Key = new EventHandlerInPrologKey
                           {
@@ -1119,7 +1138,7 @@ namespace Swicli.Library
             EventInfo fi = findEventInfo(memberSpec, c, ref paramz);//
             if (fi == null)
             {
-                return Warn("Cant find event {0} on {1}", memberSpec, c);
+                return Error("Cant find event {0} on {1}", memberSpec, c);
             }
             var Key = new EventHandlerInPrologKey
                           {
@@ -1137,7 +1156,7 @@ namespace Swicli.Library
                     PrologEventHandlers.Remove(Key);
                     return true;
                 }
-            return Warn("Cant find registered handler {0} for {1} on {2}", prologPred, memberSpec, c);
+            return Error("Cant find registered handler {0} for {1} on {2}", prologPred, memberSpec, c);
         }
 
         [PrologVisible(ModuleName = ExportModule)]
@@ -1145,7 +1164,7 @@ namespace Swicli.Library
         {
             if (clazzOrInstance.IsVar)
             {
-                return Warn("Cant find instance {0}", clazzOrInstance);
+                return Error("Cant find instance {0}", clazzOrInstance);
             }
             if (!valueOut.IsVar)
             {
@@ -1156,7 +1175,7 @@ namespace Swicli.Library
             Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
             if (getInstance == null && c == null)
             {
-                Warn("Cant find instance {0}", clazzOrInstance);
+                Error("Cant find instance {0}", clazzOrInstance);
                 return false;
             }
             bool found;
@@ -1231,7 +1250,7 @@ namespace Swicli.Library
         {
             if (clazzOrInstance.IsVar)
             {
-                return Warn("Cant find instance {0}", clazzOrInstance);
+                return Error("Cant find instance {0}", clazzOrInstance);
             }
             if (!valueOut.IsVar)
             {
@@ -1242,14 +1261,14 @@ namespace Swicli.Library
             Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
             if (getInstance == null && c == null)
             {
-                Warn("Cant find instance {0}", clazzOrInstance);
+                Error("Cant find instance {0}", clazzOrInstance);
                 return false;
             }
             Type[] paramz = null;
             var pi = findPropertyInfo(memberSpec, c, false, true, ref paramz);
             if (pi == null)
             {
-                Warn("Cant find property {0} on {1}", memberSpec, c);
+                Error("Cant find property {0} on {1}", memberSpec, c);
                 return false;
             }
             Action postCallHook;
@@ -1257,16 +1276,6 @@ namespace Swicli.Library
             object cliGet01 = pi.GetValue(getInstance, ps);
             if (postCallHook != null) postCallHook();
             return valueOut.FromObject(cliGet01);
-        }
-
-        private static bool WarnMissing(string s)
-        {
-            if (true)
-            {
-                Debug(s);
-                return false;
-            }
-            return Warn(s);
         }
 
         private static MethodInfo GetMethod(Type type, string s, BindingFlags flags)

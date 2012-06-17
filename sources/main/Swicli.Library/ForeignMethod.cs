@@ -358,7 +358,7 @@ typedef struct // define a context structure  { ... } context;
                 var pe = ToPlException(ex);
                 var ie = InnerMostException(ex);
                 string s = ie.ToString() + "\n" + ie.StackTrace;
-                Warn("ex: {0}", s);
+                Error("ex: {0}", s);
                 //throw pe;
                 return false;// pe;
             } finally

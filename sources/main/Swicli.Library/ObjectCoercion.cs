@@ -100,16 +100,21 @@ namespace Swicli.Library
             Array value = GetArrayValue(getInstance);
             if (value == null)
             {
-                Warn("Cant find array from {0} as {1}", arrayValue, getInstance.GetType());
+                Error("Cant find array from {0} as {1}", arrayValue, getInstance.GetType());
                 return false;
             }
             int len = value.Length;
+            Type arrayType = value.GetType();
+            if (arrayType.GetArrayRank() != 1)
+            {
+                Error("Non rank==1 " + arrayType);
+            }
             var termv = NewPlTermV(len);
             for (int i = 0; i < len; i++)
             {
                 bool pf = termv[i].FromObject((value.GetValue(i)));
             }
-            Type et = value.GetType().GetElementType();
+            Type et = arrayType;
             return valueOut.Unify(PlC("array", typeToSpec(et), PlC("values", termv)));
         }
         [PrologVisible(ModuleName = ExportModule)]
@@ -126,8 +131,13 @@ namespace Swicli.Library
             Array value = GetArrayValue(getInstance);
             if (value == null)
             {
-                Warn("Cant find array from {0} as {1}", arrayValue, getInstance.GetType());
+                Error("Cant find array from {0} as {1}", arrayValue, getInstance.GetType());
                 return false;
+            }
+            Type arrayType = value.GetType();
+            if (arrayType.GetArrayRank() != 1)
+            {
+                Error("Non rank==1 " + arrayType);
             }
             int len = value.Length;
             var termv = ATOM_NIL;
@@ -146,20 +156,17 @@ namespace Swicli.Library
                 var plvar = PlTerm.PlVar();
                 return cliTermToArray(arrayValue, plvar) && SpecialUnify(valueOut, plvar);
             }
+            if (arrayValue.Name == "array")
+            {
+                return valueOut.FromObject(GetInstance(arrayValue));
+            }
             Type elementType = ResolveType(arrayValue.Name);
             if (elementType == null)
             {
-                Warn("Cant find vector from {0}", arrayValue);
+                Error("Cant find vector from {0}", arrayValue);
                 return false;
             }
-            int arrayValueArity = arrayValue.Arity;
-            var value = Array.CreateInstance(elementType, arrayValueArity);
-            int argn = 1;
-            for (int i = 0; i < arrayValueArity; i++)
-            {
-                value.SetValue(GetInstance(arrayValue[argn]), i);
-                argn++;
-            }
+            var value = CreateArrayOfType(arrayValue, elementType.MakeArrayType());
             return valueOut.FromObject((value));
         }
 
@@ -257,16 +264,20 @@ namespace Swicli.Library
         [PrologVisible(ModuleName = ExportModule)]
         static public bool cliCast(PlTerm valueIn, PlTerm clazzSpec, PlTerm valueOut)
         {
-            if (valueIn.IsVar)
-            {
-                return Warn("Cant find instance {0}", valueIn);
-            }
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
                 return cliCast(valueIn, clazzSpec, plvar) && SpecialUnify(valueOut, plvar);
             }
             Type type = GetType(clazzSpec);
+            if (type == null)
+            {
+                return Error("Cant find class {0}", clazzSpec);
+            }
+            if (valueIn.IsVar)
+            {
+                return Error("Cant find instance {0}", valueIn);
+            }
             object retval = CastTerm(valueIn, type);
             return UnifyTagged(retval, valueOut);
         }
@@ -1028,16 +1039,31 @@ namespace Swicli.Library
 	Y \== true.     % not a ref
          
          */
-
-        private static object CreateArrayOfType(PlTerm orig, Type arrayType)
+        /// <summary>
+        /// Construct an array of some type
+        /// @TODO Make it deal with non 1 Ranks!
+        /// </summary>
+        /// <param name="arrayValue"></param>
+        /// <param name="arrayType">The parent array type .. not the Element type</param>
+        /// <returns></returns>
+        private static Array CreateArrayOfType(PlTerm arrayValue, Type arrayType)
         {
-            PlTerm[] terms = ToTermArray(orig);
+            if (!arrayType.IsArray)
+            {
+                Error("Not Array Type! " + arrayType);
+            }
+            Type elementType = arrayType.GetElementType();
+            if (arrayType.GetArrayRank() != 1)
+            {
+                Warn("Non rank==1 " + arrayType);
+            }
+            PlTerm[] terms = ToTermArray(arrayValue);
             int termsLength = terms.Length;
-            Array al = Array.CreateInstance(arrayType, termsLength);
+            Array al = Array.CreateInstance(elementType, termsLength);
             for (int i = 0; i < termsLength; i++)
             {
                 PlTerm term = terms[i];
-                al.SetValue(CastTerm(term, arrayType), i);
+                al.SetValue(CastTerm(term, elementType), i);
             }
             return al;
         }
@@ -1187,12 +1213,14 @@ namespace Swicli.Library
                 if (value == null) Warn("cant parse enum: {0} for type {1}", arg2, type);
                 return value;
             }
-            if (name == "array")
+            if (key == "array/2")
             {
                 Type type = GetType(arg1);
-                var arry = Array.CreateInstance(type, arity - 1);
-                int copied = FillArray(arry, type, orig, 2);
-                return arry;
+                return CreateArrayOfType(orig.Arg(1), type);
+            }
+            if (name == "values")
+            {
+                Warn("Values array");
             }
             if (name == "struct" || name == "event" || name == "object")
             {
@@ -1204,7 +1232,7 @@ namespace Swicli.Library
             {
                 if (pt != null && pt.IsArray)
                 {
-                    return CreateArrayOfType(orig, pt.GetElementType());
+                    return CreateArrayOfType(orig, pt);
                 }
                 if (arg1.IsInteger || arg1.IsAtom)
                 {
@@ -1223,13 +1251,13 @@ namespace Swicli.Library
                     if (pt == null)
                     {
                         // Return as array?
-                        return CreateArrayOfType(orig, typeof(object));
+                        return CreateArrayOfType(orig, typeof(object[]));
                     }
                 }
             }
             if (pt != null && pt.IsArray)
             {
-                return CreateArrayOfType(orig, pt.GetElementType());
+                return CreateArrayOfType(orig, pt);
             }
             Type t = ResolveType(name);
             if (t == null)
@@ -1438,7 +1466,8 @@ namespace Swicli.Library
             int elements = 0;
             for (int i = 0; i < fis.Count; i++)
             {
-                fis[i] = CastTerm(orig[i], elementType);
+                fis[i] = CastTerm(orig[plarg], elementType);
+                plarg++;
                 elements++;
             }
             return elements;
