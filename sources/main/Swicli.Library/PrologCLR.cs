@@ -203,11 +203,6 @@ namespace Swicli.Library
             get { return PlTerm.PlAtom("[]"); }
         }
 
-#if plvar_pins
-        public static Dictionary<Int64, PlRef> termToObjectPins = new Dictionary<Int64, PlRef>();
-        public static Dictionary<object, PlRef> objectToPlRef = new Dictionary<object, PlRef>();
-        public static Dictionary<string, PlRef> atomToPlRef = new Dictionary<string, PlRef>();
-#endif
         public static PlTerm PLNULL { get { return PlTerm.PlCompound("@", PlTerm.PlAtom("null")); } }
         public static PlTerm PLVOID { get { return PlTerm.PlCompound("@", PlTerm.PlAtom("void")); } }
         public static PlTerm PLTRUE { get { return PlTerm.PlCompound("@", PlTerm.PlAtom("true")); } }
@@ -1426,16 +1421,4 @@ namespace Swicli.Library
             return p ? libpl.PL_succeed : libpl.PL_fail;
         }
     }
-#if plvar_pins
-    public class PlRef
-    {
-        public object Value;
-        public PlTerm Term;
-        public Int64 OHandle;
-        public PlTerm Variable;
-        public Type CSType;
-        public Term JPLRef;
-        public string Tag;
-    }
-#endif
 }
