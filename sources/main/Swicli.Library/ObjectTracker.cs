@@ -34,7 +34,7 @@ namespace Swicli.Library
 {
     public partial class PrologClient
     {
-        [ThreadStatic] 
+        [ThreadStatic]
         public static bool PreserveObjectType;
 
         [ThreadStatic]
@@ -64,13 +64,13 @@ namespace Swicli.Library
         public static bool cliAddTag(PlTerm taggedObj, PlTerm tagString)
         {
             object o = GetInstance(taggedObj);
-            string tagname = (string) tagString;
+            string tagname = (string)tagString;
             lock (ObjToTag)
             {
 
                 TrackedObject s;
                 GCHandle iptr = PinObject(o);
-                long adr = ((IntPtr) iptr).ToInt64();
+                long adr = ((IntPtr)iptr).ToInt64();
                 var hc = iptr.GetHashCode();
 
                 s = new TrackedObject(o)
@@ -153,10 +153,10 @@ namespace Swicli.Library
                     return s.TagName;
                 }
                 GCHandle iptr = PinObject(o);
-                long adr = ((IntPtr) iptr).ToInt64();
+                long adr = ((IntPtr)iptr).ToInt64();
                 var hc = iptr.GetHashCode();
                 string tagname = "C#" + adr;
-                
+
                 s = new TrackedObject(o)
                         {
                             TagName = tagname,
@@ -367,7 +367,7 @@ namespace Swicli.Library
             lock (TagToObj)
             {
                 TrackedObject oref;
-                if (TagToObj.TryGetValue(tag,out oref))
+                if (TagToObj.TryGetValue(tag, out oref))
                 {
                     oref.Heaped = true;
                     return true;
@@ -423,7 +423,7 @@ namespace Swicli.Library
             {
                 GCHandle gch = GCHandle.Alloc(pinme, GCHandleType.Normal);
                 gch.Free();
-            } 
+            }
             return pinme;
         }
 
@@ -452,7 +452,7 @@ namespace Swicli.Library
                 }
                 return false;
             }
-        }                
+        }
         private static int PlObject(uint TermRef, object o)
         {
             var tag = object_to_tag(o);
@@ -506,7 +506,7 @@ namespace Swicli.Library
                 }
 #endif
         }
-
+    }
 
     public class TrackedObject: IComparable<TrackedObject>
     {
