@@ -1970,6 +1970,11 @@ namespace SbsSW.SwiPlCs
             }
             return this[p0 + 1];
         }
+
+        public PlTerm Shift(int i)
+        {
+            return new PlTerm((uint) (_termRef + i));
+        }
     } // class PlTerm
     #endregion
 

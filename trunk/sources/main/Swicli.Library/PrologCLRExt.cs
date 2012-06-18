@@ -176,7 +176,7 @@ namespace Swicli.Library
 
         public static Type ResolveType0(string typeName)
         {
-            Type type = Type.GetType(typeName);
+            Type type = Type.GetType(typeName, false, false) ?? Type.GetType(typeName, false, true);
             if (type == null)
             {
                 Type obj = null;
@@ -198,6 +198,20 @@ namespace Swicli.Library
                 if (type == null && !PrologClient.IsLinux)
                 {
                     type = Type.GetTypeFromProgID(typeName);
+                }
+                if (type == null)
+                {
+                    type = PrologClient.getPrimitiveType(typeName);
+                }               
+                if (type == null)
+                {
+                    try
+                    {
+                        type = Type.GetTypeFromCLSID(new Guid(typeName));
+                    }
+                    catch (FormatException)
+                    {
+                    }
                 }
             }
             return type;

@@ -1,3 +1,35 @@
+/*
+Linux: Compile with: 
+ 	  swipl-ld -shared -o ../../../bin/swicli.so swicli.c `pkg-config --cflags --libs mono-2` -lm
+      swipl-ld -m32 -shared -o ../../../bin/swicli32.so swicli.c `pkg-config --cflags --libs mono-2` -lm
+Windows: remember "Not Using Precompiled Headers"
+          and compile this file as .cpp
+
+*/
+/*  $Id$
+
+    Part of SWICLI - Bi-Directional Interface to .NET
+
+    Author:        Douglas R. Miles
+    E-mail:        logicmoo@gmail.com
+    WWW:           http://www.logicmoo.com
+    Copyright (C): 2010-2012, Logicmoo Developement
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or (at your option) any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+*/
 #if defined(_MSC_VER) && !defined(WINDOWS_CPP)
 #define WINDOWS_CPP 1
 #endif
@@ -16,16 +48,6 @@ typedef char gchar;
 
 #include "SWI-Prolog.h"
 #include "stdafx.h"
-
-/*
-
-Linux: Compile with: 
- 	  swipl-ld -shared -o ../../../bin/swicli.so swicli.c `pkg-config --cflags --libs mono-2` -lm
-      swipl-ld -m32 -shared -o ../../../bin/swicli32.so swicli.c `pkg-config --cflags --libs mono-2` -lm
-Windows: remember "Not Using Precompiled Headers"
-          and compile this file as .cpp
-
-*/
 
 #ifdef WINDOWS_CPP
 extern "C" {

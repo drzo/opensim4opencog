@@ -26,9 +26,183 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
+using SbsSW.SwiPlCs;
+using SbsSW.SwiPlCs.Callback;
+using SbsSW.SwiPlCs.Exceptions;
 
 namespace Swicli.Library
 {
+    public partial class PrologClient
+    {
+        /// <summary>
+        /// ?- current_bot(Obj),cli_add_event_handler(Obj,'EachSimEvent',c(A,format(user_error,'EV = ~q.~n',[A])),Out).
+        /// </summary>
+        /// <param name="clazzOrInstance"></param>
+        /// <param name="memberSpec"></param>
+        /// <param name="closureTerm"></param>
+        /// <param name="blockOn"></param>
+        /// <param name="control"></param>
+        /// <returns></returns>
+        [NonDet(Arity = 4, ForeignSwitches = (PlForeignSwitches.Nondeterministic | PlForeignSwitches.VarArgs), DelegateType = typeof(DelegateParameterBacktrackVarArgs))]
+        internal static int cliAddEventHandler(PlTerm term1, int arity, IntPtr control)
+        {
+            return cliAddEventHandler0(term1, term1.Shift(1), term1.Shift(2), term1.Shift(3), control);
+        }
+
+        public static int cliAddEventHandler0(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm closureTerm, PlTerm blockOn, IntPtr control)
+        {
+            
+            var handle = control;
+            FRG fc = (FRG)(libpl.PL_foreign_control(control));
+            switch (fc)
+            {
+                case FRG.PL_FIRST_CALL:
+                    {
+                        object getInstance = GetInstance(clazzOrInstance);
+                        Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
+                        Type[] paramz = null;
+                        EventInfo fi = findEventInfo(memberSpec, c, ref paramz);
+                        if (fi == null)
+                        {
+                            return Error("Cant find event {0} on {1}", memberSpec, (object)c ?? clazzOrInstance) ? 3 : 0;
+                        }
+                        ClosureDelegate newClosureDelegate = new ClosureDelegate(fi, getInstance, closureTerm);
+                        var v = NondetContextHandle.ObtainHandle(control, newClosureDelegate);
+                        bool res = v.Setup(new PlTermV(closureTerm, blockOn));
+                        blockOn.FromObject(newClosureDelegate);
+                        bool more = v.HasMore();
+                        if (more)
+                        {
+                            libpl.PL_retry(v.Handle);
+                            return res ? 3 : 0;
+                        }
+                        return res ? 1 : 0;
+                    } break;
+                case FRG.PL_REDO:
+                    {
+                        var v = NondetContextHandle.FindHandle(control);
+                        bool res = v.Call(new PlTermV(closureTerm, blockOn));
+                        bool more = v.HasMore();
+                        if (more)
+                        {
+                            libpl.PL_retry(v.Handle);
+                            return res ? 3 : 0;
+                        }
+                        return res ? 1 : 0;
+                    } break;
+                case FRG.PL_CUTTED:
+                    {
+                        var v = NondetContextHandle.FindHandle(control);
+                        bool res = v.Close(new PlTermV(closureTerm, blockOn));
+                        NondetContextHandle.ReleaseHandle(v);
+                        return res ? 1 : 0;
+                    } break;
+                default:
+                    {
+                        throw new PlException("no frg");
+                        return libpl.PL_fail;
+                    }
+                    break;
+            }
+
+
+        }
+    }
+
+    public class ClosureDelegate : PrologGenericDelegate, IDisposable, SCCH
+    {
+        private object[] Result;
+        private readonly EventInfo Event;
+        private readonly object Instance;
+        private uint closureTerm;
+
+        /// <summary>
+        ///  ?- closure(v(V1,V2),format('I was called with ~q ~q ...',[V1,V2]).
+        /// </summary>
+        /// <param name="info"></param>
+        /// <param name="instance"></param>
+        /// <param name="closureTerm"></param>
+        public ClosureDelegate(EventInfo info, object instance, PlTerm clousreTerm)
+        {
+            Event = info;
+            Instance = instance;
+            SetInstanceOfDelegateType(info.EventHandlerType);
+            PlTerm plC = PlTerm.PlVar();
+            PrologClient.PlCall("system", "copy_term", new PlTermV(clousreTerm, plC));
+            this.closureTerm = libpl.PL_record(clousreTerm.TermRef);
+            Event.AddEventHandler(instance, Delegate);
+        }
+
+        public override object CallProlog(params object[] paramz)
+        {
+            return CallPrologFast(paramz);
+        }
+        public override void CallPrologV(params object[] paramz)
+        {
+            CallPrologFast(paramz);
+        }
+
+        public override object CallPrologFast(object[] paramz)
+        {
+            PrologClient.RegisterCurrentThread();
+            var results = paramz;
+            PlTerm plC = PlTerm.PlVar();
+            libpl.PL_recorded(closureTerm, plC.TermRef);
+            PlTerm ctestVars = plC.Arg(0);
+            PlTerm ctestCode = plC.Arg(1);
+            PlTerm[] terms = PrologClient.ToTermArray(ctestVars);
+            int idx = terms.Length - 1;
+            int resdex = results.Length - 1;;
+            while (idx >= 0 && resdex >= 0)
+            {
+                terms[idx--].FromObject(results[resdex--]);
+            }
+            PrologClient.PlCall("user", "call", new PlTermV(ctestCode, 1));
+            return null;
+        }
+
+        #region Implementation of IDisposable
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
+        public void Dispose()
+        {
+            Event.RemoveEventHandler(Instance, Delegate);
+            if (closureTerm != 0) libpl.PL_erase(closureTerm);
+            closureTerm = 0;
+        }
+
+        #endregion
+
+        #region Implementation of SCCH
+
+        public bool Setup(PlTermV a0)
+        {
+            return true;
+        }
+
+        public bool Call(PlTermV a0)
+        {
+           // throw new NotImplementedException();
+            return true;
+        }
+
+        public bool Close(PlTermV a0)
+        {
+            //throw new NotImplementedException();
+            return true;
+        }
+
+        public bool HasMore()
+        {
+           // throw new NotImplementedException();
+            return false;
+        }
+
+        #endregion
+    }
 
     /// <summary>
     /// Same as Queue except Dequeue function blocks until there is an object to return.

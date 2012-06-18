@@ -35,6 +35,7 @@ using Class = java.lang.Class;
 using sun.reflect.misc;
 using Util = ikvm.runtime.Util;
 #else
+using SbsSW.SwiPlCs.Callback;
 using Class = System.Type;
 #endif
 using System;
@@ -56,21 +57,7 @@ namespace Swicli.Library
             {
                 if (TypesLoaded.Contains(t) || TypesLoading.Contains(t)) return;
                 TypesLoading.Add(t);
-                foreach (var m in t.GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static))
-                {
-                    object[] f = m.GetCustomAttributes(typeof(PrologVisible), false);
-                    if (f != null && f.Length > 0)
-                    {
-                        try
-                        {
-                            LoadMethod(m, (PrologVisible) f[0]);
-                        }
-                        catch (Exception e)
-                        {
-                            Error(m + " caused " + e);
-                        }
-                    }
-                }
+                AddForeignMethods(t);
                 TypesLoading.Remove(t);
                 TypesLoaded.Add(t);
             }
@@ -148,6 +135,18 @@ namespace Swicli.Library
                 if (clazzName == "{}")
                 {
                     return typeof (CycFort);
+                }
+                if (clazzName == "pointer")
+                {
+                    return GetType(clazzSpec[1]).MakePointerType();
+                }
+                if (clazzName == "byref")
+                {
+                    return GetType(clazzSpec[1]).MakeByRefType();
+                }
+                if (clazzName == "nullable")
+                {
+                    return typeof(Nullable<>).MakeGenericType(new[] { GetType(clazzSpec[1]) });
                 }
                 type = ResolveType(clazzName + "`" + arity);
                 if (type != null)
@@ -303,7 +302,25 @@ namespace Swicli.Library
                 Type[] gt = type.GetGenericParameterConstraints();
                 return PlC("<" + type.FullName ?? type.Name + ">", ToPlTermVSpecs(gt));
             }
-            if (type.IsGenericType)
+            if (type.IsPointer)
+            {
+                Type gt = type.GetElementType();
+                return PlC("pointer", typeToSpec(gt));
+            }
+            if (type.IsByRef)
+            {
+                Type gt = type.GetElementType();
+                return PlC("byref", typeToSpec(gt));
+            }
+            // @todo if false , use IsGenericType
+            if (false) if (typeof(Nullable<>).IsAssignableFrom(type))
+            {
+                Error("@todo Not Implemented NULLABLE");
+                Type gt = type.GetElementType();
+                return PlC("nullable", typeToSpec(gt));
+            }
+
+            if (type.IsGenericType )
             {
                 Type gt = type.GetGenericTypeDefinition();
                 Type[] gtp = type.GetGenericArguments();
@@ -320,6 +337,22 @@ namespace Swicli.Library
                     Debug("cant chop arity " + gtpLength + " off string '" + typeName + "' ");
                 }
                 return PlC(typeName, vt);
+            }
+            if (type.HasElementType)
+            {
+                string named = typeToName(type);
+                Error("@todo Not Implemented " + named);
+                Type gt = type.GetElementType();
+                if (gt == type) gt = typeof(object);
+                return PlC("elementType", PlTerm.PlAtom(named), typeToSpec(gt));
+            }
+            if (type.IsSpecialName || string.IsNullOrEmpty(type.Name) || string.IsNullOrEmpty(type.FullName) || string.IsNullOrEmpty(type.Namespace))
+            {
+                string named = typeToName(type);
+                Error("@todo Not Implemented " + named);
+                Type gt = type.UnderlyingSystemType;
+                if (gt == type) gt = typeof (object);
+                return PlC("static", PlTerm.PlAtom(named), typeToSpec(gt));
             }
             return PlTerm.PlAtom(typeToName(type));
         }
@@ -594,7 +627,7 @@ namespace Swicli.Library
                     }
                 }
             }
-            type = type ?? Type.GetType(typeName);
+            type = type ?? Type.GetType(typeName, false, false) ?? Type.GetType(typeName, false, true);
             if (type == null)
             {
                 foreach (Assembly loaded in AssembliesLoaded)
@@ -626,6 +659,15 @@ namespace Swicli.Library
                 if (type == null)
                 {
                     type = Type.GetTypeFromProgID(typeName);
+                } if (type == null)
+                {
+                    try
+                    {
+                        type = Type.GetTypeFromCLSID(new Guid(typeName));
+                    }
+                    catch (FormatException)
+                    {
+                    }
                 }
             }
             return type;
@@ -697,34 +739,6 @@ namespace Swicli.Library
                 default:
                     return null;
             }
-        }
-
-
-        private static void LoadMethod(MethodInfo m, PrologVisible pm)
-        {
-            if (pm.Name == null)
-            {
-                if (char.IsLower(m.Name[0]))
-                {
-                    string mName = m.Name;
-                    if (ForceJanCase)
-                    {
-                        pm.Name = ToPrologCase(mName);
-                    } else
-                    {
-                        pm.Name = mName;
-                    }
-                }
-                else
-                {
-                    string mName = m.Name;
-                    pm.Name = ToPrologCase(mName);
-                }
-            } else
-            {
-                if (ForceJanCase) pm.Name = ToPrologCase(pm.Name);
-            }
-            InternMethod(pm.ModuleName, pm.Name, m);
         }
     }
 }
