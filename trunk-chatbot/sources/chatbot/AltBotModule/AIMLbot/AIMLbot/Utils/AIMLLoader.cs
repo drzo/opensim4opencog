@@ -198,12 +198,17 @@ namespace AltAIMLbot.Utils
             }
             if (this.bot.rapStoreDirectory != null)
             {
-                if ((filename.Contains(Path.DirectorySeparatorChar.ToString())) && (extDB.wasLoaded(filename)))
+                if ((filename.Contains("\\") || filename.Contains("/")) && (extDB.wasLoaded(filename)))
                 {
                     // We loaded that file
                     extDB.Close();
                     extDB = null;
                     return;
+                }
+                else
+                {
+                    extDB._dbdir = this.bot.rapStoreDirectory;
+                    extDB.OpenAll();
                 }
             }
             // process each of these child nodes
@@ -426,8 +431,19 @@ namespace AltAIMLbot.Utils
             {
                 try
                 {
-                    //this.bot.Graphmaster.addCategory(categoryPath, template.OuterXml, filename, 1, 1);
-                    ourGraphMaster.addCategory(categoryPath, template.OuterXml, filename, 1, 1);
+                    // //this.bot.Graphmaster.addCategory(categoryPath, template.OuterXml, filename, 1, 1);
+                    //ourGraphMaster.addCategory(categoryPath, template.OuterXml, filename, 1, 1);
+
+                    if (this.bot.rapStoreDirectory != null)
+                    {
+                        Node.addCategoryDB("", categoryPath, template.OuterXml, filename, 1, 1, "", extDB);
+                    }
+                    else
+                    {
+                        ourGraphMaster.addCategory(categoryPath, template.OuterXml, filename, 1, 1);
+                    }
+
+                    
                     // keep count of the number of categories that have been processed
                     this.bot.Size++;
                 }

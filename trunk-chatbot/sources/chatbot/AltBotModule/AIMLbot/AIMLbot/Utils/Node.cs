@@ -1328,32 +1328,35 @@ namespace AltAIMLbot.Utils
         public Dictionary<string, string> childcache = new Dictionary<string, string>();
         public Dictionary<string, Node> nodecache = new Dictionary<string, Node>();
 
-        public const int slices = 13;
-        public const int trunkLevel = 4;
+        public const int slices = 17;
+        public const int trunkLevel = 5;
         public bool verify = true;
         public AltBot bot = null;
+        public string _dbdir = "";
 
         public ExternDB()
         {
 
             string dbdirectory = ".\\rapstore\\";
+            string _dbdir = dbdirectory;
+
             string ourPath = Directory.CreateDirectory(dbdirectory).FullName;
             string ourDirectory = Path.GetDirectoryName(ourPath);
-            for (int i = 0; i < slices; i++)
-            {
-                templatedb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\templatedb"+i.ToString (), false);
-                childdb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\childdb" + i.ToString(), false);
-                childtrunkdb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\childtrunkdb" + i.ToString(), false);
-                childcntdb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\childcntdb" + i.ToString(), false);
-                scoredb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\scoredb" + i.ToString(), false);
-                filenamedb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\filenamedb" + i.ToString(), false);
-                worddb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\worddb" + i.ToString(), false);
-            }
             loadeddb = new RaptorDB.RaptorDBString(ourDirectory + "\\loadeddb", false);
         }
 
         public ExternDB(string dbdirectory)
         {
+            string _dbdir = dbdirectory ;
+            string ourPath = Directory.CreateDirectory(dbdirectory).FullName;
+            string ourDirectory = Path.GetDirectoryName(ourPath);
+
+            loadeddb = new RaptorDB.RaptorDBString(ourDirectory + "\\loadeddb", false);
+        }
+
+        public void OpenAll()
+        {
+            string dbdirectory = _dbdir;
             string ourPath = Directory.CreateDirectory(dbdirectory).FullName;
             string ourDirectory = Path.GetDirectoryName(ourPath);
 
@@ -1367,20 +1370,22 @@ namespace AltAIMLbot.Utils
                 filenamedb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\filenamedb" + i.ToString(), false);
                 worddb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\worddb" + i.ToString(), false);
             }
-            loadeddb = new RaptorDB.RaptorDBString(ourDirectory + "\\loadeddb", false);
-        }
 
+        }
         public void SaveIndex()
         {
             for (int i = 0; i < slices; i++)
             {
-                templatedb[i].SaveIndex();
-                childdb[i].SaveIndex();
-                childtrunkdb[i].SaveIndex();
-                childcntdb[i].SaveIndex();
-                scoredb[i].SaveIndex();
-                filenamedb[i].SaveIndex();
-                worddb[i].SaveIndex();
+                if (templatedb[i] != null)
+                {
+                    templatedb[i].SaveIndex();
+                    childdb[i].SaveIndex();
+                    childtrunkdb[i].SaveIndex();
+                    childcntdb[i].SaveIndex();
+                    scoredb[i].SaveIndex();
+                    filenamedb[i].SaveIndex();
+                    worddb[i].SaveIndex();
+                }
             }
             loadeddb.Shutdown();
         }
@@ -1432,6 +1437,8 @@ namespace AltAIMLbot.Utils
 
             for (int i = 0; i < slices; i++)
             {
+                if( templatedb[i] !=null)
+                {
                 templatedb[i].Shutdown();
                 childdb[i].Shutdown();
                 childtrunkdb[i].Shutdown();
@@ -1439,6 +1446,7 @@ namespace AltAIMLbot.Utils
                 scoredb[i].Shutdown();
                 filenamedb[i].Shutdown();
                 worddb[i].Shutdown();
+                }
             }
             loadeddb.Shutdown();
             GC.Collect();
@@ -1732,7 +1740,7 @@ namespace AltAIMLbot.Utils
                                 }
                                 if (childkey.Contains("<STATE> * <PATTERN>#"))
                                 {
-                                    logText(String.Format("TRACE : Childkey({0}) set to ({1})",childkey,childtxt));
+                                    //logText(String.Format("TRACE : Childkey({0}) set to ({1})",childkey,childtxt));
 
                                 }
                             }

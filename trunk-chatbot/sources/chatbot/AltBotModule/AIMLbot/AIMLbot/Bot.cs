@@ -902,6 +902,8 @@ namespace AltAIMLbot
                     {
                         chatDB = new ExternDB(rapStoreDirectory);
                         chatDB.bot = this;
+                        chatDB._dbdir = rapStoreDirectory;
+                        chatDB.OpenAll();
                     }
                 }
                 if (request.user.Qstate.Count == 0)

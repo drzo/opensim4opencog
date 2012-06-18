@@ -109,61 +109,65 @@ namespace RaptorDB
             {
                 while (_que.Count > 0)
                 {
-                    object o = _que.Dequeue();
-                    if (_output != null && o != null)
+                    try
                     {
-                        if (_sizeLimit > 0)
+                        object o = _que.Dequeue();
+                        if (_output != null && o != null)
                         {
-                            // implement size limited logs
-                            // implement rolling logs
-                            #region [  rolling size limit ]
-                            _lastSize += ("" + o).Length;
-                            if (_lastSize > _sizeLimit * 1000)
+                            if (_sizeLimit > 0)
                             {
+                                // implement size limited logs
+                                // implement rolling logs
+                                #region [  rolling size limit ]
+                                _lastSize += ("" + o).Length;
+                                if (_lastSize > _sizeLimit * 1000)
+                                {
+                                    _output.Flush();
+                                    _output.Close();
+                                    int count = 1;
+                                    while (File.Exists(_FilePath + Path.GetFileNameWithoutExtension(_filename) + "." + count.ToString("0000")))
+                                        count++;
+
+                                    File.Move(_filename,
+                                        _FilePath +
+                                        Path.GetFileNameWithoutExtension(_filename) +
+                                        "." + count.ToString("0000"));
+                                    _output = new StreamWriter(_filename, true);
+                                    _lastSize = 0;
+                                }
+                                #endregion
+                            }
+                            if (DateTime.Now.Subtract(_lastFileDate).Days > 0)
+                            {
+                                // implement date logs
+                                #region [  rolling dates  ]
                                 _output.Flush();
                                 _output.Close();
                                 int count = 1;
                                 while (File.Exists(_FilePath + Path.GetFileNameWithoutExtension(_filename) + "." + count.ToString("0000")))
+                                {
+                                    File.Move(_FilePath + Path.GetFileNameWithoutExtension(_filename) + "." + count.ToString("0000"),
+                                       _FilePath +
+                                       Path.GetFileNameWithoutExtension(_filename) +
+                                       "." + count.ToString("0000") +
+                                       "." + _lastFileDate.ToString("yyyy-MM-dd"));
                                     count++;
-
+                                }
                                 File.Move(_filename,
-                                    _FilePath +
-                                    Path.GetFileNameWithoutExtension(_filename) +
-                                    "." + count.ToString("0000"));
-                                _output = new StreamWriter(_filename, true);
-                                _lastSize = 0;
-                            }
-                            #endregion
-                        }
-                        if (DateTime.Now.Subtract(_lastFileDate).Days > 0)
-                        {
-                            // implement date logs
-                            #region [  rolling dates  ]
-                            _output.Flush();
-                            _output.Close();
-                            int count = 1;
-                            while (File.Exists(_FilePath + Path.GetFileNameWithoutExtension(_filename) + "." + count.ToString("0000")))
-                            {
-                                File.Move(_FilePath + Path.GetFileNameWithoutExtension(_filename) + "." + count.ToString("0000"),
                                    _FilePath +
                                    Path.GetFileNameWithoutExtension(_filename) +
                                    "." + count.ToString("0000") +
                                    "." + _lastFileDate.ToString("yyyy-MM-dd"));
-                                count++;
-                            }
-                            File.Move(_filename,
-                               _FilePath +
-                               Path.GetFileNameWithoutExtension(_filename) +
-                               "." + count.ToString("0000") +
-                               "." + _lastFileDate.ToString("yyyy-MM-dd"));
 
-                            _output = new StreamWriter(_filename, true);
-                            _lastFileDate = DateTime.Now;
-                            _lastSize = 0;
-                            #endregion
+                                _output = new StreamWriter(_filename, true);
+                                _lastFileDate = DateTime.Now;
+                                _lastSize = 0;
+                                #endregion
+                            }
+                            _output.Write(o);
                         }
-                        _output.Write(o);
                     }
+                    catch { }
                 }
                 if (_output != null)
                     try

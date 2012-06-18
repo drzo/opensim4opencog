@@ -8,9 +8,9 @@ namespace RaptorDB
     {
         public UInt32 Hash(Byte[] data)
         {
-            //return Hash(data, 0xc58f1a7b);
+            return Hash(data, 0xc58f1a7b);
             //return KMurmurHash3(data, 0xde14f0ce);
-            return OneAtATime(data, 0xde14f0ce);
+            //return OneAtATime(data, 0xde14f0ce);
         }
         const UInt32 m = 0x5bd1e995;
         const Int32 r = 24;
