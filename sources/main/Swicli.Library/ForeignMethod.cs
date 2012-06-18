@@ -84,6 +84,59 @@ typedef struct // define a context structure  { ... } context;
     public partial class PrologClient
     {
 
+        private static void AddForeignMethods(Type t)
+        {
+            foreach (var m in t.GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static))
+            {
+                object[] f = m.GetCustomAttributes(typeof(PrologVisible), false);
+                if (f != null && f.Length > 0)
+                {
+                    PrologVisible f1 = (PrologVisible)f[0];
+                    f1.Method = m;
+                    try
+                    {
+                        LoadMethod(m, f1);
+                    }
+                    catch (Exception e)
+                    {
+                        Error(m + " caused " + e);
+                    }
+                }
+            }
+        }
+        public static void LoadMethod(MethodInfo m, PrologVisible pm)
+        {
+            if (pm.Name == null)
+            {
+                if (char.IsLower(m.Name[0]))
+                {
+                    string mName = m.Name;
+                    if (ForceJanCase)
+                    {
+                        pm.Name = ToPrologCase(mName);
+                    }
+                    else
+                    {
+                        pm.Name = mName;
+                    }
+                }
+                else
+                {
+                    string mName = m.Name;
+                    pm.Name = ToPrologCase(mName);
+                }
+            }
+            else
+            {
+                if (ForceJanCase) pm.Name = ToPrologCase(pm.Name);
+            }
+            if (pm.DelegateType != null)
+            {
+                PlEngine.RegisterForeign(pm.ModuleName, pm.Name, pm.Arity, pm.Delegate, pm.ForeignSwitches);
+                return;
+            }
+            InternMethod(pm.ModuleName, pm.Name, m);
+        }
         public static void InternMethod(string module, string pn, AnyMethod d)
         {
             if (!PlEngine.PinDelegate(module, pn.ToString(), -1, d)) return;

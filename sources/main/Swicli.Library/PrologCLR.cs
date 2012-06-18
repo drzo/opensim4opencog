@@ -289,12 +289,15 @@ namespace Swicli.Library
             for (int i = start; i < end; i++)
             {
                 PlTerm info = specArray[i];
-                var t = GetType(info, isObjects);
-                if (t == null)
+                if (!info.IsVar)
                 {
-                    t = typeof (object);
+                    var t = GetType(info, isObjects);
+                    if (t == null)
+                    {
+                        t = typeof (object);
+                    }
+                    paramz[i] = t;
                 }
-                paramz[i] = t;
             }
             return paramz;
         }

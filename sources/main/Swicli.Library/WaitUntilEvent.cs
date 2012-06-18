@@ -30,8 +30,15 @@ namespace Swicli.Library
 {
     public partial class PrologClient
     {
+        /// <summary>
+        /// Create a Event Handler with a ResetEvent
+        /// </summary>
+        /// <param name="clazzOrInstance"></param>
+        /// <param name="memberSpec"></param>
+        /// <param name="blockOn"></param>
+        /// <returns></returns>
         [PrologVisible]
-        public static bool cliUntilEventHandler(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm blockOn)
+        public static bool cliNewEventWaiter(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm blockOn)
         {
             object getInstance = GetInstance(clazzOrInstance);
             Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
@@ -43,39 +50,67 @@ namespace Swicli.Library
             }
             return blockOn.FromObject(new WaitUntilDelegate(fi, getInstance));
         }
+
+        /// <summary>
+        /// Block until ResetEvent occures and run the prolog code.. if it fails.. wait again for the reset event
+        ///  if over maxTime return time_limit_exceeded
+        /// </summary>
+        /// <param name="blockOn"></param>
+        /// <param name="maxTime"></param>
+        /// <param name="testVarsCode"></param>
+        /// <param name="exitCode"></param>
+        /// <returns></returns>
         [PrologVisible]
-        public static bool cliBlockUntilEvent(PlTerm blockOn, PlTerm testVars, PlTerm testCode)
+        public static bool cliBlockUntilEvent(PlTerm blockOn, PlTerm maxTime, PlTerm testVarsCode, PlTerm exitCode)
         {
-            var getInstance = GetInstance(blockOn) as WaitUntilDelegate;
-            if (getInstance == null)
+            var wud = GetInstance(blockOn) as WaitUntilDelegate;
+            if (wud == null)
             {
-                return Error("Not an instanceo of WaitUntilDelegate: " + blockOn);
+                return Error("Not an instance of WaitUntilDelegate: " + blockOn);
             }
-            while (true)
+            var timeSpan = TimeSpan.FromDays(3650);
+            if (maxTime.IsInteger)
             {
-                var results = getInstance.WaitOne();
-                PlTermV copyTo = new PlTermV(2);
-                PlCall(null, "copy_term", new PlTermV(PlC("c", testVars, testCode), PlC("c", copyTo)));
-                PlTerm ctestVars = copyTo[0];
-                PlTerm ctestCode = copyTo[1];
+                timeSpan = TimeSpan.FromMilliseconds(maxTime.intValue());
+            }
+            else if (!maxTime.IsVar)
+            {
+                timeSpan = (TimeSpan) CastTerm(maxTime, typeof (TimeSpan));
+            }
+
+            DateTime expireyTime = DateTime.Now.Add(timeSpan);
+            while (DateTime.Now < expireyTime)
+            {
+                var results = wud.WaitOne(timeSpan);
+                if (results == null)
+                {
+                    return exitCode.UnifyAtom("time_limit_exceeded");
+                }
+                PlTerm copyTo = PlTerm.PlVar();
+                PlTermV newPlTermV = new PlTermV(testVarsCode, copyTo);
+                PlCall("system", "copy_term", newPlTermV);
+                PlTerm ctestVars = copyTo.Arg(0);
+                PlTerm ctestCode = copyTo.Arg(1);
                 PlTerm[] terms = ToTermArray(ctestVars);
                 int idx = terms.Length - 1;
-                for (int i = results.Length - 1; i >= 0; i--)
+                int resdex = results.Length - 1;                
+                while (idx >= 0 && resdex >= 0)
                 {
-                    terms[idx--].FromObject(results[i]);
+                    terms[idx--].FromObject(results[resdex--]);
                 }
-                if (PlCall(null, testCode.Name, new PlTermV(ctestCode.Arg(0), ctestCode.Arity)))
-                    return PlCall(null, "=", new PlTermV(PlC("c", testVars, testCode), PlC("c", copyTo)));
+                if (PlCall("user", "call", new PlTermV(ctestCode)))
+                    return UnifyToProlog(PlCall(null, "=", newPlTermV), exitCode) != 0;
             }
+            return exitCode.UnifyAtom("time_limit_exceeded");
         }
     }
 
     public class WaitUntilDelegate : PrologGenericDelegate, IDisposable
     {
-        readonly ManualResetEvent mre = new ManualResetEvent(false);
-        private object[] Result;
-        private EventInfo Event;
-        private object Instance;
+        public ManualResetEvent mre = new ManualResetEvent(false);
+        public object[] Result;
+        public EventInfo Event;
+        public object Instance;
 
         public WaitUntilDelegate(EventInfo info, object instance)
         {
@@ -100,10 +135,17 @@ namespace Swicli.Library
             mre.Set();
             return null;
         }
-        
-        public object[] WaitOne()
+
+        public object[] WaitOne(int ts)
         {
-            mre.WaitOne();
+            if (!mre.WaitOne(ts)) return null;
+            mre.Reset();
+            return Result;
+        }
+
+        public object[] WaitOne(TimeSpan ts)
+        {
+            if (!mre.WaitOne(ts)) return null;
             mre.Reset();
             return Result;
         }
@@ -117,6 +159,7 @@ namespace Swicli.Library
         public void Dispose()
         {
             Event.RemoveEventHandler(Instance, Delegate);
+            mre.Close();
         }
 
         #endregion

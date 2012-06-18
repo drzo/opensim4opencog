@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using SbsSW.SwiPlCs;
 using SbsSW.SwiPlCs.Callback;
 using SbsSW.SwiPlCs.Exceptions;
@@ -37,10 +38,30 @@ namespace Swicli.Library
         public int Arity = -1;
         public Type TypeOf;
         public PlForeignSwitches ForeignSwitches = PlForeignSwitches.None;
+        public Delegate Delegate
+        {
+            get
+            {
+                if (_delegate == null) _delegate = Delegate.CreateDelegate(DelegateType, Method);
+                return _delegate;
+            }
+            set { this._delegate = value; }
+        }
+
+        public MethodInfo Method;
+        public Type DelegateType;
+        private Delegate _delegate;
 
         public PrologVisible()
         {
 
+        }
+    }
+    public class NonDet : PrologVisible
+    {
+        public NonDet()
+        {
+            ForeignSwitches = PlForeignSwitches.Nondeterministic;
         }
     }
     public class PrologTest : Attribute
@@ -199,7 +220,7 @@ namespace Swicli.Library
                 ContextHandle hnd;
                 if (NonDetHandles.Count == 0)
                 {
-                    hnd = new NondetContextHandle();
+                    hnd = new NondetContextHandle(value);
                 }
                 else
                 {
@@ -227,9 +248,9 @@ namespace Swicli.Library
             lock (NondetContextHandle.HandleToObject) return NondetContextHandle.ContextToObject[context];
         }
 
-        public NondetContextHandle()
+        public NondetContextHandle(SCCH scch)
         {
-            ManagedObject = new ForNext(1, 20);
+            ManagedObject = scch;
         }
 
         #region Overrides of AbstractNondetMethod
