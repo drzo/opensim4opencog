@@ -262,7 +262,7 @@ namespace Swicli.Library
             }
         }
        
-        private static CycFort[] ToTermArray(IEnumerable<CycFort> enumerable)
+        public static CycFort[] ToTermArray(IEnumerable<CycFort> enumerable)
         {
             if (enumerable is PlTerm[]) return (PlTerm[])enumerable;
             if (enumerable is PlTermV)
@@ -274,6 +274,7 @@ namespace Swicli.Library
             {
                 // I guess IsList makes a copy
                 PlTerm tlist = (PlTerm)enumerable;
+                if (tlist.IsVar) return new PlTerm[] { tlist };
                 if (tlist.IsList)
                 {
                     enumerable = tlist.Copy();
@@ -291,6 +292,11 @@ namespace Swicli.Library
                     terms.Add(t);
                     return terms.ToArray();
                 }
+                if (tlist.IsAtomic)
+                {
+                    if (tlist.IsAtom && tlist.Name == "[]") return new PlTerm[0];
+                    return new PlTerm[] { tlist };
+                } 
             }
             return enumerable.ToArray();
         }
