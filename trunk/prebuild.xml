@@ -911,6 +911,29 @@
       </Files>
   </Project>
 
+
+    <Project name="RaptorDB" path="sources/chatbot/RaptorDB" type="Library" frameworkVersion="v3_5">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../../../../bin/</OutputPath>
+          <XmlDocFile>AltAIMLbot.XML</XmlDocFile>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../../../../../bin/</OutputPath>
+          <XmlDocFile>RaptorDB.XML</XmlDocFile>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../../../../bin/</ReferencePath>
+      <Reference name="System" localCopy="false"/>
+
+      <Files>
+          <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="NEVERUSE.cs"/></Match>
+      </Files>
+  </Project>
+
     <Project name="AltAIMLbot" path="sources/chatbot/AltBotModule/AIMLBot/AIMLBot" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
@@ -940,6 +963,9 @@
       <Reference name="DcBus.dll" localCopy="false" />
       <Reference name="Enyim.Caching.dll"  localCopy="false"/>
       <Reference name="Lucene.Net"  localCopy="false"/>
+      <Reference name="LAIR.ResourceAPIs.WordNet"  localCopy="false"/>
+      <Reference name="LAIR.Collections" localCopy="false"/>
+      <Reference name="RaptorDB"  localCopy="false"/>
 
       <Files>
           <Match path="." pattern="*.cs" recurse="true" subType="Code"><Exclude name="NEVERUSE.cs"/></Match>
