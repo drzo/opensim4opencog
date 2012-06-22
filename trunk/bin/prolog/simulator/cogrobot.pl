@@ -15,6 +15,7 @@
    world_ref/1, world_get/2, client_manager_ref/1,
    current_bot/1, botget/2,
    botcall/1, botcall/2,
+   pcall/1,
 
    botdo/1,wbotdo/2,wabdo/1,
 
@@ -174,6 +175,13 @@ logon_bot(First, Last, Password, Loginuri, Location, BotID):-
         create_bot(First, Last, Password, Loginuri, Location, BotID),
         set_current_bot(BotID),
 	cli_call(BotID,'LoginBlocked',_).
+
+
+ahook_bot_created(BotID):-forall(bv:hook_bot_created(BotID),true).
+
+ahook_bot_loggedin(BotID):-forall(catch(bv:hook_bot_loggedin(BotID),_,true),true).
+
+ahook_bot_event(BotID,B,C):-forall(catch(bv:hook_bot_event(BotID,B,C),_,true),true).
 
 %------------------------------------------------------------------------------
 % create a botclient (will call startups (like botconfig.xml) but no call to implicit login)
@@ -404,10 +412,12 @@ nop(_).
 
 
 %% print some events
-on_sim_event(_A,_B,_C):-!. % comment out this first line to print them
 :-dynamic(sim_event_db/3).
 on_sim_event(_A,B,C):-contains_var("On-Log-Message",a(B,C)),!.
 on_sim_event(_A,B,C):-contains_var('DATA_UPDATE',a(B,C)),!.
+on_sim_event(A,B,C):-once(ahook_bot_event(A,B,C)),fail.
+on_sim_event(A,B,C):-contains_var("On-Login-Success",a(B,C)),once(ahook_bot_loggedin(A)),fail.
+on_sim_event(_A,_B,_C):-!. % comment out this first line to print them
 on_sim_event(A,B,C):-!,nop(assertz(sim_event_db(A,B,C))),!,robot_to_str(C,AS),!,writeq(on_sim_event(AS)),nl.
 
 user:on_sim_event(A,B,C):-cogrobot:on_sim_event(A,B,C).
@@ -431,7 +441,8 @@ user:first_bot_client_hook(A,B):- %%%attach_console,trace,
  current_bot(Obj),
   % uncomment the next line if you want all commands to run thru the universal event handler
    cli_add_event_handler(Obj,'EachSimEvent',on_sim_event(_,_,_)),
-   cli_to_str(first_bot_client_hook(A-B-Obj),Objs),writeq(Objs),nl.
+   cli_to_str(first_bot_client_hook(A-B-Obj),Objs),writeq(Objs),nl,
+   ahook_bot_created(Obj).
 
 %% register first_bot_client_hook
 register_on_first_bot_client:- cli_add_event_handler('Cogbot.ClientManager','BotClientCreated',first_bot_client_hook(_,_)).
@@ -802,7 +813,8 @@ wbotkey_match(BotID,NameSpace,Key,MyKey):-wbotname(BotID,BotName),wbot_samekey(B
 wbotkey_match(BotID,BotID,Key,MyKey):-wbot_samekey(BotID,Key,MyKey),!.
 
 % Need freedom to declare in multiple codeblocks
-:- PREDS = (bv:hook_botvar_get/4,bv:hook_botvar_set/4,bv:hook_botvar_desc/4,bv:hook_botvar_props/4,bv:hook_botvar_key/3),
+:- PREDS = (bv:hook_botvar_get/4,bv:hook_botvar_set/4,bv:hook_botvar_desc/4,bv:hook_botvar_props/4,bv:hook_botvar_key/3,
+   bv:hook_bot_created/1, bv:hook_bot_loggedin/1, bv:hook_bot_event/3),
    discontiguous(PREDS),
    %%module_transparent(PREDS),
    multifile(PREDS),
@@ -868,6 +880,175 @@ listS(P):-writeq('done'(P)),nl.
 listAvatars:-listS(world_avatar).
 listPrims:-listS(grid_object).
 
+bot_apiname(N):- \+ atom_concat(_,'Handler',N),\+ atom_concat('On',_,N),\+ sub_atom(N,_,_,_,'_').
+
+bot_cms0(N,Y,P):-cli_memb('OpenMetaverse.GridClient',f,M),arg(3,M,Type),cli_memb(Type,m,Y),arg(6,Y,decl(_,Type)),arg(7,Y,access_pafv(true, _, _, _)),arg(2,Y,N),bot_apiname(N),arg(8,Y,P).
+bot_cms(N,Doc,PP):-bot_cms0(N,_Y,P),cli_get(P,'GetParameters',PPs),bot_params_to_list(PPs,PP),cli_member_doc(P,Doc,_XML).
+
+bot_params_to_list(PPs,PNs):-findall(T:N,(cli_col(PPs,PI),bot_param(PI,T,N)),PNs).
+
+bot_param(PI,T,N):-cli_get(PI,'ParameterType',TR),cli_typespec(TR,T),cli_get(PI,'Name',N).
+
+
+%------------------------------------------------------------------------------
+% Event Waiting Code Idioms
+%  waits 10 seconds by default
+%------------------------------------------------------------------------------
+
+wbot_with_manager(BotID,Manager,Request,Event:Vars,EventCheck,CreateResult):-   
+   once((wbotget(BotID,Manager,AvMan),
+   cli_new_event_waiter(AvMan,Event,WaitOn),
+   request_break(Request,PreCall,LRequest),
+   pcall(PreCall),
+   cli_call(AvMan,LRequest,_))),
+   cli_block_until_event(WaitOn, 10000, lambda(Vars,EventCheck)),
+   pcall(CreateResult).
+
+/*
+%% Example of what the above code idiom does 
+findUUIDForName00(NameString,Found):-
+   botget('Avatars',AvMan),          % get the AvatarManager object
+   cli_new_event_waiter(AvMan,'AvatarPickerReply',WaitOn),  % create a new event handler object (and register it)
+   cli_call('UUID','Random',QID),      % make a random UUID
+   cli_call(AvMan,'RequestAvatarNameSearch'(NameString,QID),_),   % make the request to the server
+   cli_block_until_event(WaitOn, 10000, lambda(Evt,cli_get(Evt,'QueryID',QID)), _),  %  wait for up to 10 seconds for the right the QueryID
+   cli_get(Evt,'Avatars',U2SDict),  % get the UUID2Name dictionary
+   cli_map(U2SDict,Found,NameString),   % Search that dictionary for the UUID by matching the String
+   cli_call(WaitOn,'Dispose',_).  % unregister the handler and dispose
+*/
+
+
+wbot_with_manager_requestavatar_reply(BotID,AvatarID,Found,WhatNot,WhatNots):-
+   concat_atom(['RequestAvatar',WhatNot],'',RequestAvatarWhatNot),
+   RequestAvatarWhatNotWID=..[RequestAvatarWhatNot,AvatarID],
+   concat_atom(['Avatar',WhatNot,'Reply'],'',AvatarWhatNotReply),
+   wbot_with_manager(BotID,'Avatars',
+        RequestAvatarWhatNotWID,
+        AvatarWhatNotReply:Evt,
+        cli_get(Evt,'AvatarID',AvatarID),
+        cli_get(Evt,WhatNots,Found)).
+
+pcall(A+B):-!,pcall(A),pcall(B).
+pcall((A,B)):-!,pcall(A),pcall(B).
+pcall({Call}):-!,call(Call).
+pcall(Call):-call(Call).
+
+
+request_break(PreCall:Request,PreCall,Request).
+request_break(Request,true,Request).
+
+prim_to_uuid(UUID,UUID):-cli_is_type(UUID,'OpenMetaverse.UUID'),!.
+prim_to_uuid(Prim,UUID):-cli_get(Prim,'ID',UUID),!.
+prim_to_uuid(Prim,UUID):-name_to_location_ref(Prim,Obj),cli_get(Obj,'ID',UUID),!.
+prim_to_uuid(Prim,_):-cogbot_throw('Cant get UUID from'(Prim)).
+
+%------------------------------------------------------------------------------
+%% Agent Manager Methods
+%------------------------------------------------------------------------------
+/*
+        public void RequestScriptSensor(string name, UUID searchID, ScriptSensorTypeFlags type, float range, float arc, UUID requestID, Simulator sim)
+        {
+            ScriptSensorRequestPacket request = new ScriptSensorRequestPacket();
+            request.Requester.Arc = arc;
+            request.Requester.Range = range;
+            request.Requester.RegionHandle = sim.Handle;
+            request.Requester.RequestID = requestID;
+            request.Requester.SearchDir = Quaternion.Identity; // TODO: this needs to be tested
+            request.Requester.SearchID = searchID;
+            request.Requester.SearchName = Utils.StringToBytes(name);
+            request.Requester.SearchPos = Vector3.Zero;
+            request.Requester.SearchRegions = 0; // TODO: ?
+            request.Requester.SourceID = Client.Self.AgentID;
+            request.Requester.Type = (int)type;
+
+            Client.Network.SendPacket(request, sim);
+        }
+
+        /// <summary>Get the ID of the primitive sending the sensor</summary>
+        public UUID RequestorID { get { return m_RequestorID; } }
+        /// <summary>Get the ID of the group associated with the primitive</summary>
+        public UUID GroupID { get { return m_GroupID; } }
+        /// <summary>Get the name of the primitive sending the sensor</summary>
+        public string Name { get { return m_Name; } }
+        /// <summary>Get the ID of the primitive sending the sensor</summary>
+        public UUID ObjectID { get { return m_ObjectID; } }
+        /// <summary>Get the ID of the owner of the primitive sending the sensor</summary>
+        public UUID OwnerID { get { return m_OwnerID; } }
+        /// <summary>Get the position of the primitive sending the sensor</summary>
+        public Vector3 Position { get { return m_Position; } }
+        /// <summary>Get the range the primitive specified to scan</summary>
+        public float Range { get { return m_Range; } }
+        /// <summary>Get the rotation of the primitive sending the sensor</summary>
+        public Quaternion Rotation { get { return m_Rotation; } }
+        /// <summary>Get the type of sensor the primitive sent</summary>
+        public ScriptSensorTypeFlags Type { get { return m_Type; } }
+        /// <summary>Get the velocity of the primitive sending the sensor</summary>
+        public Vector3 Velocity { get { return m_Velocity; } }
+
+wbot_script_sensor(BotID,NameString,Evt):-
+   cli_call('UUID','Random',QID),
+   cli_new('ScriptSensorRequestPacket',[],Packet),
+   wbotget(BotID,'Self',AvMan),
+   wbotget(BotID,['Network','CurrentSim','Handle'],RegionHandle),
+   cli_get(AvMan,{'AgentID'=AgentID}
+   cli_set(Packet,{'Arc'=Arc,'Range'=Range,
+                  'RegionHandle'=eval(wbotget(BotID,['Network','CurrentSim','Handle'])),
+                  'SourceID'=AgentID})
+   cli_new_event_waiter(AvMan,'ScriptSensorReply',WaitOn),
+   wbotcall(BotID,['Network','SendPacket'(Packet)],_),
+   cli_block_until_event(WaitOn, 10000, lambda(Evt,cli_get(Evt,'RequestorID',QID))).
+
+*/
+wbot_tf(_,CallAct,TF):-once((call(CallAct),TF='@'(true));TF='@'(false)).
+
+wbot_sit(BotID,'ground',TF):-wbotget(BotID,'Self',AvMan),cli_call(AvMan,'SitOnGround',[],_),TF='@'(true),!.
+wbot_sit(BotID,Prim,TF):-prim_to_uuid(Prim,PrimUUID),wbot_request_sit(BotID,PrimUUID,v3(0,0,0),TF).
+    
+
+wbot_request_sit(BotID,PrimUUID,OffsetV3,TF):-
+   wbotget(BotID,'Self',AvMan),
+   cli_new_event_waiter(AvMan,'AvatarSitResponse',WaitOn),
+   cli_add_event_waiter(WaitOn,AvMan,'AlertMessage',NewWaitOn),
+   cli_call(AvMan,'RequestSit'(PrimUUID,OffsetV3),_),
+   cli_block_until_event(NewWaitOn, 10000, lambda(Evt,pass_or_fail_sit(PrimUUID,Evt,TF))),
+   (cli_is_true(TF)->cli_call(AvMan,'Sit',[],_);true).
+
+pass_or_fail_sit(PrimUUID,Evt,TF):-cli_is_type(Evt,'AvatarSitResponseEventArgs'),!,cli_get(Evt,'ObjectID',PrimUUID),
+   cli_get(Evt,'AutoPilot',AP),((cli_is_true(AP)->cli_false(TF);cli_true(TF))).
+pass_or_fail_sit(_,Evt,TF):-cli_is_type(Evt,'AlertMessageEventArgs'),cli_get(Evt,'Message',Message),!,
+   cli_call(Message,'Contains'("enough room"),'@'(true)),cli_false(TF).
+   
+
+%------------------------------------------------------------------------------
+%% Avatar Manager Methods
+%------------------------------------------------------------------------------
+
+findUUIDForName(NameString,AvatarID):-
+   bot_with_manager('Avatars',
+        cli_call('UUID','Random',QID):'RequestAvatarNameSearch'(NameString,QID),
+        'AvatarPickerReply':Evt,
+        cli_get(Evt,'QueryID',QID),
+        {cli_get(Evt,'Avatars',U2SDict),
+          once(cli_map(U2SDict,AvatarID,NameString);cli_get('UUID','Zero',AvatarID))}).
+
+findNameForUUID(AvatarID,NameString):-
+   bot_with_manager('Avatars',
+        'RequestAvatarName'(AvatarID),
+        'UUIDNameReply':Evt,
+        ((cli_get(Evt,'Names',U2SDict),cli_map(U2SDict,AvatarID,NameString))),
+        true).
+
+
+
+findAvatarProperties(AvatarID,Found):-bot_with_manager_requestavatar_reply(AvatarID,Found,'Properties','Properties').
+
+findAvatarPicks(AvatarID,Found):-bot_with_manager_requestavatar_reply(AvatarID,Found,'Picks','Picks').
+
+findAvatarClassified(AvatarID,Found):-bot_with_manager_requestavatar_reply(AvatarID,Found,'Classified','Classifieds').
+
+findAvatarName(AvatarID,Found):-bot_with_manager_requestavatar_reply(AvatarID,Found,'Classified','Classifieds').
+
+
 %------------------------------------------------------------------------------
 % scans and export predicates defined from this module.. 
 %  if a predicate has wbot* at the front it is exported..
@@ -881,7 +1062,7 @@ make_current_bot_ver(F,N,_,AA):-length(List,AA),Head=..[N|List],Body=..[F,BotID|
 
 scan_and_export_wb:-current_predicate(cogrobot:F/A),
    once((atom_concat(wbot,Before,F),export(F/A),atom_concat(bot,Before,New),AA is A-1,make_current_bot_ver(F,New,A,AA))),fail.
-scan_and_export_wb:-current_predicate(cogrobot:F/A),once((member(S,[ahook,bot,sim,grid,cli,glob,world,hook,app]),atom_concat(S,_,F),export(F/A))),fail.
+scan_and_export_wb:-current_predicate(cogrobot:F/A),once((member(S,[ahook,bot,find,sim,grid,cli,glob,world,hook,app]),atom_concat(S,_,F),export(F/A))),fail.
 scan_and_export_wb.
 
 :-scan_and_export_wb.

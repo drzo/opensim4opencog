@@ -1611,8 +1611,15 @@ namespace Cogbot.World
                 }
                 lock (HasPrimLock)
                 {
-                    return _Parent == this || (_Parent != null && _Parent.IsRegionAttached);
-                }
+                    try
+                    {
+                        return _Parent == this || (_Parent != null && _Parent.IsRegionAttached);
+                    }
+                    catch (StackOverflowException)
+                    {
+                        return false;
+                    }
+                } 
             }
         }
 
