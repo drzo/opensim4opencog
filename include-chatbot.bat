@@ -11,3 +11,4 @@ svn co https://opensim4opencog.googlecode.com/svn/trunk-logicmoo/prolog/hyhtn bi
 xcopy /y /c bin-chatbot\?*.* bin\
 @echo Dont forget to: runprebuild.bat!
 
+PAUSE
