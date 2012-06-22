@@ -22,6 +22,7 @@
 *
 *********************************************************/
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using SbsSW.SwiPlCs;
@@ -48,7 +49,44 @@ namespace Swicli.Library
             {
                 return Error("Cant find event {0} on {1}", memberSpec, (object) c ?? clazzOrInstance);
             }
-            return blockOn.FromObject(new WaitUntilDelegate(fi, getInstance));
+            WaitUntilDelegateList list = new WaitUntilDelegateList();
+            list.WaitOns.Add(new WaitUntilDelegate(list, fi, getInstance));
+            return blockOn.FromObject(list);
+        }
+
+        /// <summary>
+        /// Add another event to be waited on
+        /// </summary>
+        /// <param name="clazzOrInstance"></param>
+        /// <param name="memberSpec"></param>
+        /// <param name="blockOn"></param>
+        /// <returns></returns>
+        [PrologVisible]
+        public static bool cliAddEventWaiter(PlTerm blockOn, PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm newBlockOn)
+        {
+            WaitUntilDelegateList list = null;
+            object getInstance1 = GetInstance(blockOn);
+            var wud = getInstance1 as WaitUntilDelegate;
+            if (wud == null)
+            {
+                if (!(getInstance1 is WaitUntilDelegateList)) return Error("Not an instance of WaitUntilDelegate: " + blockOn);
+                list = getInstance1 as WaitUntilDelegateList;
+            }
+            else
+            {
+                list = wud.parent;
+            }
+            object getInstance = GetInstance(clazzOrInstance);
+            Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
+            Type[] paramz = null;
+            EventInfo fi = findEventInfo(memberSpec, c, ref paramz);
+            if (fi == null)
+            {
+                return Error("Cant find event {0} on {1}", memberSpec, (object)c ?? clazzOrInstance);
+            }
+            var wud2 = new WaitUntilDelegate(list, fi, getInstance);
+            list.WaitOns.Add(wud2);
+            return newBlockOn.FromObject(list);
         }
 
         /// <summary>
@@ -63,11 +101,19 @@ namespace Swicli.Library
         [PrologVisible]
         public static bool cliBlockUntilEvent(PlTerm blockOn, PlTerm maxTime, PlTerm testVarsCode, PlTerm exitCode)
         {
-            var wud = GetInstance(blockOn) as WaitUntilDelegate;
+            WaitUntilDelegateList list = null;
+            object getInstance1 = GetInstance(blockOn);
+            var wud = getInstance1 as WaitUntilDelegate;
             if (wud == null)
             {
-                return Error("Not an instance of WaitUntilDelegate: " + blockOn);
+                if (!(getInstance1 is WaitUntilDelegateList)) return Error("Not an instance of WaitUntilDelegate: " + blockOn);
+                list = getInstance1 as WaitUntilDelegateList;
             }
+            else
+            {
+                list = wud.parent;
+            }
+
             var timeSpan = TimeSpan.FromDays(3650);
             if (maxTime.IsInteger)
             {
@@ -81,7 +127,7 @@ namespace Swicli.Library
             DateTime expireyTime = DateTime.Now.Add(timeSpan);
             while (DateTime.Now < expireyTime)
             {
-                var results = wud.WaitOne(timeSpan);
+                var results = list.WaitOne(timeSpan, out wud);
                 if (results == null)
                 {
                     return exitCode.UnifyAtom("time_limit_exceeded");
@@ -98,22 +144,70 @@ namespace Swicli.Library
                 {
                     terms[idx--].FromObject(results[resdex--]);
                 }
-                if (PlCall("user", "call", new PlTermV(ctestCode)))
-                    return UnifyToProlog(PlCall(null, "=", newPlTermV), exitCode) != 0;
+                try
+                {
+                    if (PlCall("user", "call", new PlTermV(ctestCode)))
+                        return UnifyToProlog(PlCall(null, "=", newPlTermV), exitCode) != 0;
+                }
+                finally
+                {
+                    list.Reset();
+                }
             }
             return exitCode.UnifyAtom("time_limit_exceeded");
         }
     }
+    public class WaitUntilDelegateList: IDisposable
+    {
+        public List<WaitUntilDelegate> WaitOns = new List<WaitUntilDelegate>();
+        public ManualResetEvent mre = new ManualResetEvent(false);
+        public object[] WaitOne(TimeSpan ts, out WaitUntilDelegate wud0)
+        {
+            wud0 = null;
+            if (!mre.WaitOne(ts)) return null;
+            foreach (WaitUntilDelegate wud in WaitOns)
+            {
+                var tr = wud.Result;
+                if (tr != null)
+                {
+                    wud0 = wud;
+                    return tr;
+                }
+            }
+            return null;
+        }
 
+        internal void Set()
+        {
+            mre.Set();
+        }
+        internal void Reset()
+        {
+            mre.Reset();
+        }
+        #region IDisposable Members
+
+        public void Dispose()
+        {
+            foreach (WaitUntilDelegate wud in WaitOns)
+            {
+                wud.Dispose();
+            }
+            mre.Close();
+        }
+
+        #endregion
+    }
     public class WaitUntilDelegate : PrologGenericDelegate, IDisposable
     {
-        public ManualResetEvent mre = new ManualResetEvent(false);
+        public WaitUntilDelegateList parent;
         public object[] Result;
         public EventInfo Event;
         public object Instance;
 
-        public WaitUntilDelegate(EventInfo info, object instance)
+        public WaitUntilDelegate(WaitUntilDelegateList re, EventInfo info, object instance)
         {
+            parent = re;
             Event = info;
             Instance = instance;
             SetInstanceOfDelegateType(info.EventHandlerType);
@@ -132,23 +226,10 @@ namespace Swicli.Library
         public override object CallPrologFast(object[] paramz)
         {
             Result = paramz;
-            mre.Set();
+            parent.Set();
             return null;
         }
 
-        public object[] WaitOne(int ts)
-        {
-            if (!mre.WaitOne(ts)) return null;
-            mre.Reset();
-            return Result;
-        }
-
-        public object[] WaitOne(TimeSpan ts)
-        {
-            if (!mre.WaitOne(ts)) return null;
-            mre.Reset();
-            return Result;
-        }
 
         #region Implementation of IDisposable
 
@@ -159,7 +240,6 @@ namespace Swicli.Library
         public void Dispose()
         {
             Event.RemoveEventHandler(Instance, Delegate);
-            mre.Close();
         }
 
         #endregion
