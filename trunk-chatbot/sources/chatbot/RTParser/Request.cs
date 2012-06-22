@@ -1692,6 +1692,7 @@ namespace RTParser
 
         public CommitQueue ExitQueue { get; set; }
         private bool HasExited;
+        public bool NoImmediate = true;
 
         public string SraiGraph
         {

@@ -842,12 +842,21 @@ namespace RTParser.Utils
                     // skip fo now
                     return 0;
                 }
+                else if (currentNodeName == "#text")
+                {
+                    writeDebugLine("skipping #text: " + currentNode);
+                    return 0;
+                }
+                else if (currentNodeName == "template")
+                {
+                    loadOpts.RProcessor.ImmediateAiml(currentNode, request, this);
+                    total += 1;
+                }
                 ISettingsDictionary dict = IsSettingsTag(currentNodeName, request);
                 if (dict != null)
                 {
                     SettingsDictionary.loadSettingNode(dict, currentNode, true, false,
                                                        request);
-                    return 1;
                 }
                 else
                 {
@@ -860,6 +869,7 @@ namespace RTParser.Utils
                     }
                     else
                     {
+                        if (request.NoImmediate) return 0;
                         loadOpts.RProcessor.ImmediateAiml(currentNode, request, this);
                         total += 1;
                     }

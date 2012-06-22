@@ -103,6 +103,10 @@ namespace RaptorDB
         object _writelock = new object();
         private void WriteData()
         {
+            lock (this) WriteData0();
+        }
+        private void WriteData0()
+        {
             if (_output == null)
                 return;
             lock (_writelock)
@@ -197,6 +201,10 @@ namespace RaptorDB
 
         public void Log(string logtype, string type, string meth, string msg, params object[] objs)
         {
+            if (objs != null && objs.Length == 1 && objs[0] is object[])
+            {
+                objs = (object[])objs[0];
+            }
             _que.Enqueue(FormatLog(logtype, type, meth, msg, objs));
         }
     }
@@ -210,8 +218,14 @@ namespace RaptorDB
         }
 
         private string typename = "";
-
         private void log(string logtype, string msg, params object[] objs)
+        {
+            lock (FileLogger.Instance)
+            {
+                log0(logtype, msg, objs);
+            }
+        }
+        private void log0(string logtype, string msg, object[] objs)
         {
             string meth = "";
             if (FileLogger.Instance.ShowMethodNames)
@@ -261,12 +275,12 @@ namespace RaptorDB
 
         public static void Configure(string filename, int sizelimitKB, bool showmethodnames)
         {
-            FileLogger.Instance.Init(filename, sizelimitKB, showmethodnames);
+            lock (FileLogger.Instance) FileLogger.Instance.Init(filename, sizelimitKB, showmethodnames);
         }
 
         public static void Shutdown()
         {
-            FileLogger.Instance.ShutDown();
+            lock (FileLogger.Instance) FileLogger.Instance.ShutDown();
         }
     }
 }
