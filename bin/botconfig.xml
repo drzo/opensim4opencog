@@ -82,12 +82,12 @@
   <startupClientLisp>
 
   
-    (setj UseAIMLBotModule True)
+    (setj UseAIMLBotModule False)
     (setj UseCycWorldModule False)
     (setj UseTheSimiansModule False)
     (setj UseIRCModule False)
     (setj UsePrologScripting False)
-    (setj UseAutoLogin True)
+    (setj UseAutoLogin False)
     (setj UseGUI  False)
     '(setj MasterName "Nephrael Rajesh")
 
@@ -175,7 +175,7 @@
     (thisClient.ExecuteCommand (@ "im $master I am located in {0}" (str thisClient.Network.CurrentSim.Name)) )
     ))
 
-   (if UseAIMLBotModule (thisClient.ExecuteCommand "aiml @on")) ;; turns on/off aiml for all users
+   ;;(if UseAIMLBotModule (thisClient.ExecuteCommand "aiml @on")) ;; turns on/off aiml for all users
    (thisClient.ExecuteCommand "appearance nobake")
 
     (thisClient.ExecuteCommand "thread setmaster Nephrael Rae") ;; change this to your name on AGNI
@@ -201,8 +201,8 @@
   (if UseAIMLBotModule 
     (progn
     '(thisClient.ExecuteCommand "aiml @log -DICT") ;; turns off subsitution reporting
-    (thisClient.ExecuteCommand "aiml @log -dict +graph -user -asset +aimltrace") ;; turns off subsitution reporting
-    (thisClient.ExecuteCommand "aiml @on")
+    ;;(thisClient.ExecuteCommand "aiml @log -dict +graph -user -asset +aimltrace") ;; turns off subsitution reporting
+    ;;(thisClient.ExecuteCommand "aiml @on")
   ))
     (thisClient.ExecuteCommand (@ "im $master I am located in {0}" (str thisClient.Network.CurrentSim.Name)) )
     (thisClient.ExecuteCommand "say Cilent Startup complete!")
