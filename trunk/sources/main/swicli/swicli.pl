@@ -63,7 +63,8 @@
             cli_tracker_free/1,
 
             cli_free/1,
-            module_functor/4
+            module_functor/4,
+            member_elipse/2
           ]).
 
 
@@ -548,6 +549,14 @@ cli_call(Obj,MethodSpec,Params,Out):-cli_call_raw(Obj,MethodSpec,Params,Out_raw)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 cli_lib_call(CallTerm,Out):-cli_call('Swicli.Library.PrologClient',CallTerm,Out).
 
+
+member_elipse(NV,{NVs}):-!,member_elipse(NV,NVs).
+member_elipse(NV,(A,B)):-!,(member_elipse(NV,A);member_elipse(NV,B)).
+member_elipse(NV,NV).
+
+cli_expand(eval(Call),Result):-nonvar(Call),!,call(Call,Result).
+cli_expand(Value,Value).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %%% cli_get(+X, +Fspec, -V).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
@@ -572,6 +581,7 @@ cli_lib_call(CallTerm,Out):-cli_call('Swicli.Library.PrologClient',CallTerm,Out)
 %
 %   finally, an attempt will be made to unify V with the retrieved value
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cli_get(Obj,NVs):-forall(member_elipse(N=V,NVs),cli_get(Obj,N,V)).
 
 cli_get(Obj,_,_):-cli_non_obj(Obj),!,fail.
 cli_get(Obj,[P],Value):-!,cli_get(Obj,P,Value).
@@ -597,12 +607,15 @@ cli_get_typeSubProps(CType,Sub):-cli_subproperty(Type,Sub),cli_subclass(CType,Ty
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %%% cli_set(+Obj, +PropTerm, +NewValue).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cli_set(Obj,NVs):-forall(member_elipse(N=V,NVs),cli_set(Obj,N,V)).
+
 cli_set(Obj,_,_):-cli_non_obj(Obj),!,fail.
 cli_set(Obj,[P],Value):-!,cli_set(Obj,P,Value).
 cli_set(Obj,[P|N],Value):-!,cli_get(Obj,P,M),cli_set(M,N,Value),!.
 cli_set(Obj,P,Value):-cli_setOverloaded(Obj,P,Value).
 
 cli_setOverloaded(Obj,_,_):- cli_non_obj(Obj),!,fail.
+cli_setOverloaded(Obj,P,ValueI):-cli_expand(ValueI,Value),ValueI \== Value,!,cli_setOverloaded(Obj,P,Value).
 cli_setOverloaded(Obj,P,Value):-cli_setHook(Obj,P,Value),!.
 cli_setOverloaded(Obj,P,Value):-cli_subproperty(Type,Sub),cli_is_type(Obj,Type),cli_get_rawS(Obj,Sub,SubValue),cli_setOverloaded(SubValue,P,Value),!.
 cli_setOverloaded(Obj,P,Value):-cli_set_raw(Obj,P,Value),!.
@@ -617,6 +630,8 @@ cli_setOverloaded(Obj,P,Value):-cli_set_raw(Obj,P,Value),!.
 cli_unify(OE,PE):-OE=PE,!.
 cli_unify(enum(_,O1),O2):-!,cli_unify(O1,O2).
 cli_unify(O2,enum(_,O1)):-!,cli_unify(O1,O2).
+cli_unify(eval(O1),O2):-cli_expand(O1,O11),!,cli_unify(O11,O2).
+cli_unify(O2,eval(O1)):-cli_expand(O1,O11),!,cli_unify(O11,O2).
 cli_unify(O1,O2):-atomic(O1),atomic(O2),string_to_atom(S1,O1),string_to_atom(S2,O2),!,S1==S2.
 cli_unify([O1|ARGS1],[O2|ARGS2]):-!,cli_unify(O1,O2),cli_unify(ARGS1,ARGS2).
 cli_unify(O1,O2):-cli_is_taggedObject(O1),cli_to_str(O1,S1),!,cli_unify(O2,S1).
@@ -681,6 +696,11 @@ cli_with_lock(Lock,Call):-setup_call_cleanup(cli_lock_enter(Lock),Call,cli_lock_
 
 cli_with_gc(Call):-setup_call_cleanup(cli_tracker_begin(Mark),Call,cli_tracker_free(Mark)).
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%%% cli_block_until_event/3 use Foriegnly defined cli_block_until_event/4 and Dispose.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+cli_block_until_event(WaitOn,Time,Lambda):-setup_call_cleanup(true,cli_block_until_event(WaitOn,Time,Lambda,_),cli_call(WaitOn,'Dispose',_)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %%% cli_make_list/2,  cli_new_list_1/2
