@@ -1008,7 +1008,7 @@ namespace MushDLR223.ScriptEngines
         {                        
             StackFrame[] st = new StackTrace(false).GetFrames();
             int newStackTraceGetFramesLength = st == null ? 501 : st.Length;
-            if (newStackTraceGetFramesLength > 100)
+            if (newStackTraceGetFramesLength > 250)
             {
                 return false;
             }
