@@ -953,7 +953,7 @@ namespace AltAIMLbot.Utils
                         if (matchesWildSense(wildSense, firstWord, request))
                         {
                             // Treat like matching a wildcard
-
+                             Console.WriteLine ("A matchesWildSense({0},{1},{2})==true",wildSense, firstWord, request);
                             // o.k. look for the path in the child node denoted by "*"
                             //Node childNode = (Node)this.children[s];
                             Node childNode = fetchChild(absPath, s, pathDB);
@@ -1064,6 +1064,7 @@ namespace AltAIMLbot.Utils
                         string wildSense = s.Replace("*", "");
                         if (matchesWildSense(wildSense, multiWord, request))
                         {
+                            Console.WriteLine("B matchesWildSense({0},{1},{2})==true", wildSense, multiWord, request);
                             // We found one so treat like the expanding multi-word "*" case
                             this.storeWildCard(splitPath[0], wildcard);
 
@@ -1122,6 +1123,7 @@ namespace AltAIMLbot.Utils
         }
         bool matchesWildSense(string sense, string queryWord,Request request)
         {
+            if (sense.Length == 0) return false;
             AltBot contextBot = request.bot;
 
             // ported from unifying AIML bot's <lexis> tag
@@ -1145,9 +1147,15 @@ namespace AltAIMLbot.Utils
             if (senseArgs.Length >= 3) wnPos = senseArgs[2];
             if (senseArgs.Length >= 4) negation = senseArgs[3].ToLower().Contains("~");
 
+            Console.WriteLine("MWS:{0},{1},{2},{3} [{4}]", wnWord, wnRelation, wnPos, negation, queryWord);
+
             // Can you find a match inside (using regex while we're here)?
             var matcher = new Regex(wnWord);
-            if (matcher.IsMatch(wnWord)) return ( true ^ negation );
+            if (matcher.IsMatch(queryWord))
+            {
+                Console.WriteLine("MWS:Regex Match");
+                return (true ^ negation);
+            }
 
             // bot settings check
 
@@ -1156,7 +1164,10 @@ namespace AltAIMLbot.Utils
                 string val = contextBot.GlobalSettings.grabSetting(wnWord);
                 if (val == null) return (false ^ negation);
                 if (queryWord.ToLower().Contains(val.ToLower()))
+                {
+                    Console.WriteLine("MWS:bot pred Match");
                     return (true ^ negation);
+                }
                 return (false ^ negation);
             }
 
@@ -1165,7 +1176,10 @@ namespace AltAIMLbot.Utils
                 string val = request.user.Predicates.grabSetting(wnWord);
                 if (val == null) return (false ^ negation);
                 if (queryWord.ToLower().Contains(val.ToLower()))
+                {
+                    Console.WriteLine("MWS:user pred Match");
                     return (true ^ negation);
+                }
                 return (false ^ negation);
             }
 
@@ -1259,7 +1273,11 @@ namespace AltAIMLbot.Utils
                         linkageList = synDstSet.GetShortestPathTo(synSrcSet, vlist);
                         if ((linkageList != null) && (linkageList.Count > 0))
                         {
-
+                            Console.WriteLine("MWS:WordNetMatch Match");
+                            foreach (SynSet link in linkageList)
+                            {
+                                Console.WriteLine("MWS: link({0})", link.ToString());
+                            }
                             return (true ^ negation);
                         }
                     }
@@ -1317,19 +1335,19 @@ namespace AltAIMLbot.Utils
         //http://www.codeproject.com/Articles/190504/RaptorDB
         //http://www.codeproject.com/Articles/316816/RaptorDB-The-Key-Value-Store-V2
 
-        public RaptorDB.RaptorDBString[] templatedb = new RaptorDBString[slices];
-        public RaptorDB.RaptorDBString[] childdb = new RaptorDBString[slices];
-        public RaptorDB.RaptorDBString[] childtrunkdb = new RaptorDBString[slices];
-        public RaptorDB.RaptorDBString[] childcntdb = new RaptorDBString[slices];
-        public RaptorDB.RaptorDBString[] scoredb = new RaptorDBString[slices];
-        public RaptorDB.RaptorDBString[] filenamedb = new RaptorDBString[slices];
-        public RaptorDB.RaptorDBString[] worddb = new RaptorDBString[slices];
+        public RaptorDB.RaptorDBString[] templatedb = null;
+        public RaptorDB.RaptorDBString[] childdb = null;
+        public RaptorDB.RaptorDBString[] childtrunkdb = null;
+        public RaptorDB.RaptorDBString[] childcntdb = null;
+        public RaptorDB.RaptorDBString[] scoredb = null;
+        public RaptorDB.RaptorDBString[] filenamedb = null;
+        public RaptorDB.RaptorDBString[] worddb = null;
         public RaptorDB.RaptorDBString loadeddb;
         public Dictionary<string, string> childcache = new Dictionary<string, string>();
         public Dictionary<string, Node> nodecache = new Dictionary<string, Node>();
 
-        public const int slices = 17;
-        public const int trunkLevel = 5;
+        public int slices = 7; //17;
+        public int trunkLevel = 7; //5;
         public bool verify = true;
         public AltBot bot = null;
         public string _dbdir = "";
@@ -1337,55 +1355,80 @@ namespace AltAIMLbot.Utils
         public ExternDB()
         {
 
+            Console.WriteLine("ExternDB()");
             string dbdirectory = ".\\rapstore\\";
             string _dbdir = dbdirectory;
-
+            
             string ourPath = Directory.CreateDirectory(dbdirectory).FullName;
             string ourDirectory = Path.GetDirectoryName(ourPath);
-            loadeddb = new RaptorDB.RaptorDBString(ourDirectory + "\\loadeddb", false);
+            loadeddb = new RaptorDB.RaptorDBString(ourDirectory + Path.DirectorySeparatorChar+"loadeddb", false);
+            templatedb = new RaptorDBString[slices];
+            childdb = new RaptorDBString[slices];
+            childtrunkdb = new RaptorDBString[slices];
+            childcntdb = new RaptorDBString[slices];
+            scoredb = new RaptorDBString[slices];
+            filenamedb = new RaptorDBString[slices];
+            worddb = new RaptorDBString[slices];
         }
 
         public ExternDB(string dbdirectory)
         {
-            string _dbdir = dbdirectory ;
+            Console.WriteLine("ExternDB({0})", dbdirectory);
+            string _dbdir = dbdirectory;
             string ourPath = Directory.CreateDirectory(dbdirectory).FullName;
             string ourDirectory = Path.GetDirectoryName(ourPath);
 
-            loadeddb = new RaptorDB.RaptorDBString(ourDirectory + "\\loadeddb", false);
+            loadeddb = new RaptorDB.RaptorDBString(ourDirectory + Path.DirectorySeparatorChar + "loadeddb", false);
+            templatedb = new RaptorDBString[slices];
+            childdb = new RaptorDBString[slices];
+            childtrunkdb = new RaptorDBString[slices];
+            childcntdb = new RaptorDBString[slices];
+            scoredb = new RaptorDBString[slices];
+            filenamedb = new RaptorDBString[slices];
+            worddb = new RaptorDBString[slices];
         }
 
         public void OpenAll()
         {
+            Console.WriteLine("OpenAll()");
             string dbdirectory = _dbdir;
             string ourPath = Directory.CreateDirectory(dbdirectory).FullName;
             string ourDirectory = Path.GetDirectoryName(ourPath);
 
-            for (int i = 0; i < slices; i++)
+            if (bot != null)
             {
-                templatedb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\templatedb" + i.ToString(), false);
-                childdb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\childdb" + i.ToString(), false);
-                childtrunkdb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\childtrunkdb" + i.ToString(), false);
-                childcntdb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\childcntdb" + i.ToString(), false);
-                scoredb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\scoredb" + i.ToString(), false);
-                filenamedb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\filenamedb" + i.ToString(), false);
-                worddb[i] = new RaptorDB.RaptorDBString(ourDirectory + "\\worddb" + i.ToString(), false);
+               if (bot.rapStoreSlices>0) slices = bot.rapStoreSlices;
+               if (bot.rapStoreTrunkLevel > 0) trunkLevel = bot.rapStoreTrunkLevel;
             }
 
+
+            for (int i = 0; i < slices; i++)
+            {
+                templatedb[i] = new RaptorDB.RaptorDBString(ourDirectory + Path.DirectorySeparatorChar + "templatedb" + i.ToString(), false);
+                childdb[i] = new RaptorDB.RaptorDBString(ourDirectory + Path.DirectorySeparatorChar + "childdb" + i.ToString(), false);
+                childtrunkdb[i] = new RaptorDB.RaptorDBString(ourDirectory + Path.DirectorySeparatorChar + "childtrunkdb" + i.ToString(), false);
+                childcntdb[i] = new RaptorDB.RaptorDBString(ourDirectory + Path.DirectorySeparatorChar + "childcntdb" + i.ToString(), false);
+                scoredb[i] = new RaptorDB.RaptorDBString(ourDirectory + Path.DirectorySeparatorChar + "scoredb" + i.ToString(), false);
+                filenamedb[i] = new RaptorDB.RaptorDBString(ourDirectory + Path.DirectorySeparatorChar + "filenamedb" + i.ToString(), false);
+                worddb[i] = new RaptorDB.RaptorDBString(ourDirectory + Path.DirectorySeparatorChar + "worddb" + i.ToString(), false);
+
+                Console.WriteLine("OpenAll {0}:'{1}'", i,ourDirectory + Path.DirectorySeparatorChar + "templatedb" + i.ToString());
+            }
+            
         }
         public void SaveIndex()
         {
             for (int i = 0; i < slices; i++)
             {
-                if (templatedb[i] != null)
-                {
-                    templatedb[i].SaveIndex();
-                    childdb[i].SaveIndex();
-                    childtrunkdb[i].SaveIndex();
-                    childcntdb[i].SaveIndex();
-                    scoredb[i].SaveIndex();
-                    filenamedb[i].SaveIndex();
-                    worddb[i].SaveIndex();
-                }
+
+                if (templatedb[i] != null) templatedb[i].SaveIndex();
+                if (childdb[i] != null) childdb[i].SaveIndex();
+                if (childtrunkdb[i] != null) childtrunkdb[i].SaveIndex();
+                if (childcntdb[i] != null) childcntdb[i].SaveIndex();
+                if (scoredb[i] != null) scoredb[i].SaveIndex();
+                if (filenamedb[i] != null) filenamedb[i].SaveIndex();
+                if (worddb[i] != null) worddb[i].SaveIndex();
+
             }
             loadeddb.Shutdown();
         }
@@ -1410,14 +1453,22 @@ namespace AltAIMLbot.Utils
         {
             //flush our cache out
             List <string> trunklist =new List<string> ();
-            foreach (string k in nodecache.Keys)
+            if (nodecache != null)
             {
-                trunklist.Add (k);
+                foreach (string k in nodecache.Keys)
+                {
+                    if (trunklist != null)  trunklist.Add(k);
+                }
             }
-            foreach (string k in trunklist)
+            if (trunklist != null)
             {
-                saveNode(k, nodecache[k], true);
+                foreach (string k in trunklist)
+                {
+                    saveNode(k, nodecache[k], true);
+                }
             }
+            if (nodecache != null) nodecache.Clear();
+            if (trunklist != null) trunklist.Clear();
             /*
             foreach (string childkey in childcache.Keys)
             {
@@ -1437,18 +1488,32 @@ namespace AltAIMLbot.Utils
 
             for (int i = 0; i < slices; i++)
             {
-                if( templatedb[i] !=null)
+               //Console.WriteLine("Close {0}", i);
+                int dbp = 0;
+                try
                 {
-                templatedb[i].Shutdown();
-                childdb[i].Shutdown();
-                childtrunkdb[i].Shutdown();
-                childcntdb[i].Shutdown();
-                scoredb[i].Shutdown();
-                filenamedb[i].Shutdown();
-                worddb[i].Shutdown();
+                    if (templatedb[i] != null) templatedb[i].Shutdown();
+                    dbp++;
+                    if (childdb[i] != null) childdb[i].Shutdown();
+                    dbp++;
+                    if (childtrunkdb[i] != null) childtrunkdb[i].Shutdown();
+                    dbp++;
+                    if (childcntdb[i] != null) childcntdb[i].Shutdown();
+                    dbp++;
+                    if (scoredb[i] != null) scoredb[i].Shutdown();
+                    dbp++;
+                    if (filenamedb[i] != null) filenamedb[i].Shutdown();
+                    dbp++;
+                    if (worddb[i] != null) worddb[i].Shutdown();
+                }
+                catch (Exception e)
+                {
+                    
+                    logText("ERR index=" + i +"("+ dbp+"):" + e.Message);
+                    logText("ERR STK:" + e.StackTrace);
                 }
             }
-            loadeddb.Shutdown();
+            if (loadeddb != null) loadeddb.Shutdown();
             GC.Collect();
         }
         public void prune(int prunelimit)

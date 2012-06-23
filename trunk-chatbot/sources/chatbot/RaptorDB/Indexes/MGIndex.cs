@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.IO;
 
 namespace RaptorDB
 {
@@ -77,8 +78,9 @@ namespace RaptorDB
 
         public MGIndex(string path, string filename, byte keysize, ushort maxcount, bool allowdups)
         {
+            string dirSep = "" + Path.DirectorySeparatorChar; // "\\";
             _AllowDuplicates = allowdups;
-            _index = new IndexFile<T>(path + "\\" + filename, keysize, maxcount);
+            _index = new IndexFile<T>(path + dirSep + filename, keysize, maxcount);
 
             // load page list
             _index.GetPageList(_pageListDiskPages, _pageList, out _LastIndexedRecordNumber);

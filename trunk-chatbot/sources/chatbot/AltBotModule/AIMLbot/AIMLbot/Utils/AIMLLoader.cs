@@ -208,6 +208,8 @@ namespace AltAIMLbot.Utils
                 else
                 {
                     extDB._dbdir = this.bot.rapStoreDirectory;
+                    if (this.bot.rapStoreSlices > 0) extDB.slices = this.bot.rapStoreSlices;
+                    if (this.bot.rapStoreTrunkLevel > 0) extDB.trunkLevel = this.bot.rapStoreTrunkLevel;
                     extDB.OpenAll();
                 }
             }

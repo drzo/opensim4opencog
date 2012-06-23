@@ -62,6 +62,9 @@ namespace AltAIMLbot
         public InvertedIndex myIndex = null;
 
         public string _rapStoreDirectory;
+        public int _rapStoreSlices;
+        public int _rapStoreTrunkLevel;
+
         public string rapStoreDirectory
         {
             get { return _rapStoreDirectory; }
@@ -73,6 +76,16 @@ namespace AltAIMLbot
                     _rapStoreDirectory = value;
                 }
             }
+        }
+        public int rapStoreSlices
+        {
+            get { return _rapStoreSlices; }
+            set { _rapStoreSlices = value; }
+        }
+        public int rapStoreTrunkLevel
+        {
+            get { return _rapStoreTrunkLevel; }
+            set { _rapStoreTrunkLevel = value; }
         }
 
         public Servitor(string UserID, sayProcessorDelegate outputDelegate)
@@ -550,7 +563,7 @@ namespace AltAIMLbot
                     }
                     catch (Exception e) { }
                     if (uutid == lastuutid) { continue; }
-
+                    if (!curBot.isAcceptingUserInput) { continue; }
                     try
                     {
                         lastuutid = uutid;
@@ -558,8 +571,21 @@ namespace AltAIMLbot
                         string myInput = (getBBHash("speechhyp"));
 
                         //Get lastTTS output as <that>
+                            // Other output sources may post a short acknowledgement
+                            // We want only real sentences or direct yes/no/ok
                         string myThat = (getBBHash("TTSText"));
-                        curUser.blackBoardThat = myThat;
+                        if ((myThat.Length > 4)
+                            || (myThat.ToLower().Contains("yes"))
+                            || (myThat.ToLower().Contains("no"))
+                            || (myThat.ToLower().Contains("ok"))
+                            )
+                        {
+                            curUser.blackBoardThat = myThat;
+                        }
+                        else
+                        {
+                            curUser.blackBoardThat = "";
+                        }
                         //Get fsmstate output as <state>
                         string myState = (getBBHash("fsmstate"));
                         curUser.Predicates.updateSetting("state",myState);

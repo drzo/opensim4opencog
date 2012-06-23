@@ -137,6 +137,8 @@ namespace AltAIMLbot
 
 
         public string rapStoreDirectory = ".\\rapstore\\";
+        public int rapStoreSlices = 0;
+        public int rapStoreTrunkLevel = 0;
 
         /// <summary>
         /// How big to let the log buffer get before writing to disk
@@ -903,6 +905,8 @@ namespace AltAIMLbot
                         chatDB = new ExternDB(rapStoreDirectory);
                         chatDB.bot = this;
                         chatDB._dbdir = rapStoreDirectory;
+                        if (rapStoreSlices > 0) chatDB.slices = rapStoreSlices;
+                        if (rapStoreSlices > 0) chatDB.trunkLevel = rapStoreTrunkLevel;
                         chatDB.OpenAll();
                     }
                 }

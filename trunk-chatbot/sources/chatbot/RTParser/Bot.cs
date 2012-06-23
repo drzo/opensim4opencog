@@ -581,6 +581,18 @@ namespace RTParser
                 WebServitor.serverRoot = servRoot;
             }
 
+            string rapstorSL = GlobalSettings.grabSetting("rapstoreslices");
+            if ((rapstorSL != null))
+            {
+                servitor.rapStoreSlices = int.Parse(rapstorSL); 
+            }
+            string rapstorTL = GlobalSettings.grabSetting("rapstoretrunklevel");
+            if ((rapstorTL != null))
+            {
+                servitor.rapStoreTrunkLevel = int.Parse(rapstorTL);
+            }
+
+
             string behaviorcache = GlobalSettings.grabSetting("behaviorcache");
             if ((behaviorcache != null) && (behaviorcache.Length > 0))
             {

@@ -425,12 +425,13 @@ namespace RaptorDB
 
             _Path = Path.GetDirectoryName(filename);
             Directory.CreateDirectory(_Path);
+            string dirSep = ""+Path.DirectorySeparatorChar; // "\\";
 
             _FileName = Path.GetFileNameWithoutExtension(filename);
-            string db = _Path + "\\" + _FileName + _datExtension;
-            string idx = _Path + "\\" + _FileName + _idxExtension;
+            string db = _Path + dirSep + _FileName + _datExtension;
+            string idx = _Path + dirSep + _FileName + _idxExtension;
 
-            LogManager.Configure(_Path + "\\" + _FileName + ".txt", 500, false);
+            LogManager.Configure(_Path + dirSep + _FileName + ".txt", 500, false);
 
             _index = new MGIndex<T>(_Path, _FileName + _idxExtension, _MaxKeySize, Global.PageItemCount, AllowDuplicateKeys);
 
