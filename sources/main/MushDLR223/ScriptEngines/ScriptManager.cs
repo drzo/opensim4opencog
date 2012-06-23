@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -854,7 +853,7 @@ namespace MushDLR223.ScriptEngines
             {
                 if (!_CollectionProviders.TryGetValue(requester.RequesterID, out providers))
                 {
-                    return _CollectionProviders[requester] = new List<ICollectionProvider>();
+                    return _CollectionProviders[requester.RequesterID] = new List<ICollectionProvider>();
                 }
                 return providers;
             }
@@ -907,24 +906,17 @@ namespace MushDLR223.ScriptEngines
 
             lock (CollectionProviders)
             {
-                HashSet<object> sp = null;
-                if (requester != null && requester.SessionMananger != null)
-                {
-                    sp = requester.SessionMananger.SkippedProviders;
-                }
+                var sp = requester.SessionMananger.SkippedProviders;
                 var all = new List<ICollectionProvider>();
                 foreach (var nv in CollectionProviders)
                 {
                     var nsp = nv.NameSpace;
-                    if (!string.IsNullOrEmpty(nsp) && ToKey(nv.NameSpace) != namespaec0)
+                    if (!string.IsNullOrEmpty(nsp) && ToKey(nv.NameSpace) != namespaec0) continue;
+                    if (!sp.Contains(nv))
                     {
-                        continue;
+                        all.Add(nv);
+                     //   sp.Add(nv);
                     }
-                    if (sp != null && sp.Contains(nv))
-                    {
-                        continue;
-                    }
-                    all.Add(nv);
                 }
                 return all;
             }
@@ -1005,13 +997,7 @@ namespace MushDLR223.ScriptEngines
         }
 
         public static bool AddSetting(ICollectionRequester requester, string namespac, string name, object valeu)
-        {                        
-            StackFrame[] st = new StackTrace(false).GetFrames();
-            int newStackTraceGetFramesLength = st == null ? 501 : st.Length;
-            if (newStackTraceGetFramesLength > 250)
-            {
-                return false;
-            }
+        {
             bool somethngTookIt = false;
             foreach (ICollectionProvider provider in GetProviders(requester,namespac))
             {
