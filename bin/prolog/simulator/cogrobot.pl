@@ -797,6 +797,18 @@ wbot_gp_to_vars(_BotID,GP,Var):- cli_call('MushDLR223.ScriptEngines.SingleNameVa
 
 value_deref(Value,ValueO):-cli_col(Value,ValueO).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% AIMLBOT VAR Interface
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+wbot_aimlbot_ref(BotID,AIMLBot):-wbotget(BotID,'Plugins',Plugs),cli_map(Plugs,"AIMLBotModule",AIMLBotModule),cli_get(AIMLBotModule,'MyBot',AIMLBot),!.
+
+wbot_aimlvars_get(BotID,NameSpace,VarName,Value):-wbot_aimlbot_ref(BotID,AIMLBot),var(NameSpace),!,cli_get(AIMLBot,'AllDictionaries',ADS),
+   cli_map(ADS,NameSpace,BVs),cli_map(BVs,VarName,Value).
+wbot_aimlvars_get(BotID,NameSpace,VarName,Value):-wbot_aimlbot_ref(BotID,AIMLBot),cli_get(AIMLBot,'GetDictionary'(NameSpace),BVs),cli_map(BVs,VarName,Value).
+
+wbot_aimlvars_set(BotID,NameSpace,VarName,Value):-wbot_aimlbot_ref(BotID,AIMLBot),var(NameSpace),!,cli_get(AIMLBot,'AllDictionaries',ADS),
+   cli_map(ADS,NameSpace,BVs),cli_set(BVs,VarName,Value).
+wbot_aimlvars_set(BotID,NameSpace,VarName,Value):-wbot_aimlbot_ref(BotID,AIMLBot),cli_get(AIMLBot,'GetDictionary'(NameSpace),BVs),cli_set(BVs,VarName,Value).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% BOTVAR HOOKS
