@@ -488,6 +488,7 @@ namespace Cogbot
             req.SkippedProviders.Add(skip);
             client.SessionMananger = req;
             var col = ScriptManager.GetGroup(client, client.GetName(), arg0Lower);
+            client.SessionMananger = null;
             if (col != null)
             {
                 argsUsed = 1;
