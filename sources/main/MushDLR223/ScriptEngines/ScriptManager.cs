@@ -907,7 +907,11 @@ namespace MushDLR223.ScriptEngines
 
             lock (CollectionProviders)
             {
-                var sp = requester.SessionMananger.SkippedProviders;
+                HashSet<object> sp = new HashSet<object>();
+                if (requester != null && requester.SessionMananger != null)
+                {
+                    sp = requester.SessionMananger.SkippedProviders;
+                }
                 var all = new List<ICollectionProvider>();
                 foreach (var nv in CollectionProviders)
                 {
@@ -1004,7 +1008,10 @@ namespace MushDLR223.ScriptEngines
         {                        
             StackFrame[] st = new StackTrace(false).GetFrames();
             int newStackTraceGetFramesLength = st == null ? 501 : st.Length;
-            if (newStackTraceGetFramesLength > 100) return false;
+            if (newStackTraceGetFramesLength > 100)
+            {
+                return false;
+            }
             bool somethngTookIt = false;
             foreach (ICollectionProvider provider in GetProviders(requester,namespac))
             {
