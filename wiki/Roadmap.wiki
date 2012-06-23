@@ -85,3 +85,8 @@ Please edit this only after some consensus on roadmap
     then an overlay pack that has all the chatbot stuff in it
  # revisit RTParser and make sure its working as expected (Kino confirms it's working for Hanson)
  # Progress to ProgramK Prolog AIML bot
+
+
+= 0.2a release =
+
+ # fix botconfig architecture to support installs with multiple projects
