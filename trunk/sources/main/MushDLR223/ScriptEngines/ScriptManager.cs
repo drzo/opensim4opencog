@@ -907,7 +907,7 @@ namespace MushDLR223.ScriptEngines
 
             lock (CollectionProviders)
             {
-                HashSet<object> sp = new HashSet<object>();
+                HashSet<object> sp = null;
                 if (requester != null && requester.SessionMananger != null)
                 {
                     sp = requester.SessionMananger.SkippedProviders;
@@ -920,7 +920,7 @@ namespace MushDLR223.ScriptEngines
                     {
                         continue;
                     }
-                    if (sp.Contains(nv))
+                    if (sp != null && sp.Contains(nv))
                     {
                         continue;
                     }
