@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -911,12 +912,15 @@ namespace MushDLR223.ScriptEngines
                 foreach (var nv in CollectionProviders)
                 {
                     var nsp = nv.NameSpace;
-                    if (!string.IsNullOrEmpty(nsp) && ToKey(nv.NameSpace) != namespaec0) continue;
-                    if (!sp.Contains(nv))
+                    if (!string.IsNullOrEmpty(nsp) && ToKey(nv.NameSpace) != namespaec0)
                     {
-                        all.Add(nv);
-                     //   sp.Add(nv);
+                        continue;
                     }
+                    if (sp.Contains(nv))
+                    {
+                        continue;
+                    }
+                    all.Add(nv);
                 }
                 return all;
             }
@@ -997,7 +1001,10 @@ namespace MushDLR223.ScriptEngines
         }
 
         public static bool AddSetting(ICollectionRequester requester, string namespac, string name, object valeu)
-        {
+        {                        
+            StackFrame[] st = new StackTrace(false).GetFrames();
+            int newStackTraceGetFramesLength = st == null ? 501 : st.Length;
+            if (newStackTraceGetFramesLength > 100) return false;
             bool somethngTookIt = false;
             foreach (ICollectionProvider provider in GetProviders(requester,namespac))
             {
