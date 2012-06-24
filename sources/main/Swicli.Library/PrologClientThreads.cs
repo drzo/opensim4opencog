@@ -48,7 +48,14 @@ namespace Swicli.Library
     public partial class PrologClient
     {
 		static public bool ClientReady = false;
-		static public object ThreadRegLock = new object();
+        static public object _ThreadRegLock = new object();
+        static public object ThreadRegLock
+        {
+            get
+            {
+                return LockInfo.Watch(_ThreadRegLock);
+            }
+        }
         public static bool SaneThreadWorld = true;
         public static Dictionary<Thread, int> ThreadRegisterations = new Dictionary<Thread, int>();
         public static Dictionary<Thread, int> ForiegnFrameCounts = new Dictionary<Thread, int>();
@@ -215,12 +222,7 @@ namespace Swicli.Library
                 lock (ThreadRegLock) unregisteredThreads.Remove(thread);
                 IntPtr _iEngineNumber;
                 IntPtr _iEngineNumberReally = IntPtr.Zero;
-                bool threadHasSelf = SafeThreads.TryGetValue(thread.ManagedThreadId, out _iEngineNumber);
-                if (threadHasSelf)
-                {
-                   // EnsureEngine(_iEngineNumber);
-                    return;
-                }
+                lock (SafeThreads) if (SafeThreads.TryGetValue(thread.ManagedThreadId, out _iEngineNumber)) return;
                 if (0 != libpl.PL_is_initialised(IntPtr.Zero, IntPtr.Zero))
                 {
                     try
@@ -228,7 +230,7 @@ namespace Swicli.Library
                         //_iEngineNumber = libpl.PL_create_engine(IntPtr.Zero);
                         var self = libpl.PL_thread_attach_engine(_iEngineNumber);
                         var ce = GetCurrentEngine();
-                        SafeThreads.Add(thread.ManagedThreadId, ce);
+                        lock (SafeThreads) SafeThreads.Add(thread.ManagedThreadId, ce);
                         threadToEngine.Add(thread.ManagedThreadId, self);
                         libpl.PL_thread_at_exit((DelegateParameter0)PrologThreadAtExit, IntPtr.Zero, 0);
                         return;
@@ -416,7 +418,7 @@ namespace Swicli.Library
                 {
                     ThreadRegisterations[thread] = regs + 1;
                 }
-                lock (ThreadRegLock) unregisteredThreads.Remove(thread);
+                lock (unregisteredThreads) unregisteredThreads.Remove(thread);
                 int self = libpl.PL_thread_self();
                 IntPtr _iEngineNumber;
                 IntPtr _oiEngineNumber;
@@ -455,13 +457,13 @@ namespace Swicli.Library
                     int self0 = libpl.PL_thread_self();
                     if (ret == self0)
                     {
-                        SafeThreads.Add(thread.ManagedThreadId, IntPtr.Zero);
+                        lock (SafeThreads) SafeThreads.Add(thread.ManagedThreadId, IntPtr.Zero);
                         engineToThread[self0] = thread;
                         //RegisterThread(thread);
                         return;
                     }
                     _iEngineNumber = GetFreeEngine();
-                    SafeThreads.Add(thread.ManagedThreadId, _iEngineNumber);
+                    lock (SafeThreads) SafeThreads.Add(thread.ManagedThreadId, _iEngineNumber);
                     int self2 = libpl.PL_thread_self();
                     if (self2 == -1)
                     {
@@ -598,12 +600,12 @@ namespace Swicli.Library
             {
                 int self = libpl.PL_thread_self();
                 IntPtr _iEngineNumber;
-                if (!SafeThreads.TryGetValue(thread.ManagedThreadId, out _iEngineNumber))
+                lock (SafeThreads) if (!SafeThreads.TryGetValue(thread.ManagedThreadId, out _iEngineNumber))
                 {
                     return;
                 }
                 //  if (_iEngineNumber == IntPtr.Zero) return;
-                SafeThreads.Remove(thread.ManagedThreadId);
+                lock (SafeThreads) SafeThreads.Remove(thread.ManagedThreadId);
                 var rnull = IntPtr.Zero;
                 if (libpl.PL_set_engine(IntPtr.Zero, ref rnull) != 0)
                 {
@@ -635,7 +637,7 @@ namespace Swicli.Library
         {
             lock (ThreadRegLock)
             {
-                foreach (KeyValuePair<int, IntPtr> engine in SafeThreads)
+                lock (SafeThreads) foreach (KeyValuePair<int, IntPtr> engine in SafeThreads)
                 {
                     IntPtr ptr = engine.Value;
                     if (ptr.ToInt64() > PL_ENGINE_CURRENT_PTR.ToInt64())

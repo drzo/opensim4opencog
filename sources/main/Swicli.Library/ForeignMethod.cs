@@ -841,7 +841,7 @@ typedef struct // define a context structure  { ... } context;
         {
             Thread threadCurrentThread = Thread.CurrentThread;
             int fidCount = IncrementUseCount(threadCurrentThread, ForiegnFrameCounts);
-            lock (SafeThreads)
+            //lock (SafeThreads)
             {
                 try
                 {
