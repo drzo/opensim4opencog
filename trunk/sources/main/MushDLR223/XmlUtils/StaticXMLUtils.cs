@@ -27,9 +27,17 @@ namespace MushDLR223.Utilities
 
         public static R WithoutTrace<R>(ITraceable itrac, Func<R> func)
         {
-            if (!System.Threading.Monitor.TryEnter(itrac,TimeSpan.FromSeconds(2)))
+            bool needExit = false;
+            if (false)
             {
-                return func();
+                if (!System.Threading.Monitor.TryEnter(itrac, TimeSpan.FromSeconds(2)))
+                {
+                    return func();
+                }
+                else
+                {
+                    needExit = true;
+                }
             }
             try
             {
@@ -48,7 +56,7 @@ namespace MushDLR223.Utilities
             }
             finally
             {
-                System.Threading.Monitor.Exit(itrac);
+                if (needExit) System.Threading.Monitor.Exit(itrac);
             }
         }
 

@@ -9,12 +9,28 @@ namespace Swicli.Library
 {
     public class LockInfo
     {
+        public class WaiterThread
+        {
+            public DateTime StartTime;
+            public DateTime EndTime;
+            public ManualResetEvent mre = new ManualResetEvent(false);
+            public Thread Thread;
+            public int depth = 0;
+
+            public WaiterThread(string name, Thread ct)
+            {
+                Thread = ct;
+            }
+        }
+
+        private static object oneSmarty = new object();
+        private static bool DisabledWatcher = true;
         public static TimeSpan WatcherMax = TimeSpan.FromSeconds(40);
         public class Watcher //: LockInfo
         {
             private string Named;
-            private DateTime StartTime;
-            private DateTime EndTime;
+            public Queue<WaiterThread> Waiters = new Queue<WaiterThread>();
+            public Dictionary<Thread,WaiterThread> WaiterThreads = new Dictionary<Thread, WaiterThread>();
 
             public Watcher(string type)
             //  : base(type)
@@ -22,17 +38,58 @@ namespace Swicli.Library
                 Named = type;
             }
 
-            public void ExitLock(Thread ct)
+            public void ExitLock(WaiterThread ct)
             {
-                this.EndTime = DateTime.Now;
-                if ((EndTime - StartTime) > WatcherMax)
+                if (ct.depth > 0)
+                {
+                    ct.depth--;
+                    return;
+                }
+                ct.EndTime = DateTime.Now;
+                TimeSpan time = ct.EndTime - ct.StartTime;
+                if ((time) > WatcherMax)
                 {
                     throw new InvalidOperationException("Over time on watcher=" + Named + " for thread=" + ct);   
                 }
+                //if (Waiters.Count==0) return;
+                var prev = Waiters.Peek();
+                if (prev.Thread == ct.Thread)
+                {
+                    WaiterThreads.Remove(ct.Thread);
+                    RemoveFirst();
+                }
             }
-            public void EnterLock(Thread ct)
+
+            private void RemoveFirst()
             {
-                this.StartTime = DateTime.Now;
+                Waiters.Dequeue();
+                if (Waiters.Count == 0) return;
+                Waiters.Peek().mre.Set();
+            }
+
+            public void EnterLock(WaiterThread ct)
+            {
+                ct.StartTime = DateTime.Now;
+            }
+
+
+            public WaiterThread AquireWaiter(string name, Thread ct)
+            {
+                if (Waiters.Count == 0)
+                {
+                    var wt = new WaiterThread(name, ct);
+                    Waiters.Enqueue(wt);
+                    wt.mre.Set();
+                    return wt;
+                }
+                WaiterThread wt2;
+                if (!WaiterThreads.TryGetValue(ct, out wt2))
+                {
+                    WaiterThreads[ct] = wt2 = new WaiterThread(name, ct);
+                    Waiters.Enqueue(wt2);
+                }
+                wt2.depth++;
+                return wt2;
             }
         }
         private static readonly Dictionary<object, Watcher> Watchers = new Dictionary<object, Watcher>();
@@ -51,44 +108,49 @@ namespace Swicli.Library
         }
         public static object Watch(object o, params string[] named)
         {
-            return SmartWatcher0(o, named);
+            if (DisabledWatcher) return o;
+            string name = (named != null && named.Length > 0)
+                              ? named[0]
+                              : "SmartWatcher:" + o;
+            WaiterThread waiter;
+            object locker;
+            lock (oneSmarty)
+            {
+                locker = SmartWatcher0(o, name, out waiter);
+            }
+            if (!waiter.mre.WaitOne(WatcherMax))
+            {
+                throw new InvalidOperationException("Over time on " + name);
+            }
+            return locker;
         }
-        public static object SmartWatcher0(object o, params string[] named)
+
+        public static object SmartWatcher0(object o, string name, out WaiterThread waiter)
         {
-            string name = (named != null && named.Length > 0) ? named[0] : "SmartWatcher:" + o;
+            string sts = GetStackTraceString();
+
             Watcher info = CreateWatcher(name, o);
-            var lockO = o;
-            bool entered = Monitor.TryEnter(lockO);
-            if (entered)
-            {
-                var ct = Thread.CurrentThread;
-                info.EnterLock(ct);
-                new Thread(() =>
+            var ct = Thread.CurrentThread;
+            waiter = info.AquireWaiter(name, ct);
+            var watchLock = new object();
+            WaiterThread waiter1 = waiter;
+            new Thread(() =>
+                           {
+                               string osts = sts;
+                               lock (oneSmarty) info.EnterLock(waiter1);
+                               Thread.Sleep(5000);
+                               if (!Monitor.TryEnter(watchLock, WatcherMax))
                                {
-                                   if (!Monitor.TryEnter(lockO, WatcherMax))
-                                   {
-                                       throw new InvalidOperationException("Over time on " + name);  
-                                   }
-                                   else
-                                   {
-                                       Monitor.Exit(lockO);
-                                   }
-                                   info.ExitLock(ct);
-                                   Monitor.Pulse(lockO);
-                               }).Start();
-                return info;
-            }
-            else
-            {
-                DateTime startTime = DateTime.Now;
-                if (!Monitor.TryEnter(lockO, WatcherMax))
-                {
-                    throw new InvalidOperationException("Over time on " + name);   
-                }               
-                SmartWatcher0(info);
-                Monitor.Exit(lockO);
-            }
-            return lockO;
+                                   throw new InvalidOperationException("Over time on " + name);
+                               }
+                               else
+                               {
+                                   Monitor.Exit(watchLock);
+                               }
+                               lock (oneSmarty) info.ExitLock(waiter1);
+
+                           }).Start();
+            return watchLock;
         }
 
         public static IList<T> CopyOf<T>(List<T> list)

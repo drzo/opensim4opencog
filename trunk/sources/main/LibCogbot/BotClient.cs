@@ -1045,37 +1045,42 @@ namespace Cogbot
         }
 
 
-        public Thread InvokeThread(String name, ThreadStart action)
+        public void InvokeThread(String name, ThreadStart action)
         {
-            lock (botCommandThreads)
+            ThreadPool.QueueUserWorkItem((o) => NamedAction(name, action));
+        }
+
+        private void NamedAction(string name, ThreadStart action)
+        {
+            Thread ct = Thread.CurrentThread;
+            try
             {
-                Thread tr = new Thread(() =>
-                                           {
-                                               try
-                                               {
-                                                   try
-                                                   {
-                                                       action();
-                                                   }
-                                                   catch (Exception e)
-                                                   {
-                                                       WriteLine("Exception in " + name + ": " + e);                                                      
-                                                   }
-                                               } 
-                                               finally
-                                               {
-                                                   try
-                                                   {
-                                                       RemoveThread(Thread.CurrentThread);
-                                                   }
-                                                   catch (OutOfMemoryException) { }
-                                                   catch (StackOverflowException) { }
-                                                   catch (Exception) { } 
-                                               }
-                                           }) {Name = name};
-                AddThread(tr);
-                tr.Start();
-                return tr;
+                try
+                {
+                    AddThread(ct);
+                    ct.Name = name;
+                    action();
+                }
+                catch (Exception e)
+                {
+                    WriteLine("Exception in " + name + ": " + e);
+                }
+            }
+            finally
+            {
+                try
+                {
+                    RemoveThread(ct);
+                }
+                catch (OutOfMemoryException)
+                {
+                }
+                catch (StackOverflowException)
+                {
+                }
+                catch (Exception)
+                {
+                }
             }
         }
 
