@@ -9,6 +9,14 @@ namespace MushDLR223.Utilities
 {
     public class LockInfo
     {
+
+        public static object Watch(object o, params string[] named)
+        {
+            return o;
+            //return Swicli.Library.LockInfo.Watch(o, named);
+        }
+    
+
         public static IList<T> CopyOf<T>(List<T> list)
         {
             if (list == null) return new List<T>();
@@ -91,18 +99,18 @@ namespace MushDLR223.Utilities
             }
         }
 
-        public static Action MonitorTryEnter(string lockType, object botUsers, TimeSpan maxWaitTryEnter)
+        public static Action MonitorTryEnter(string lockType, object codeLock, TimeSpan maxWaitTryEnter)
         {
             //lock (LockInfos)
             {
                 Thread currentThread = Thread.CurrentThread;
-                bool needsExit = Monitor.TryEnter(botUsers, maxWaitTryEnter);
+                bool needsExit = Monitor.TryEnter(codeLock, maxWaitTryEnter);
 
                 if (!needsExit)
                 {
                     lock (LockInfos)
                     {
-                        LockInfo made = CantEnterUserThread(lockType, currentThread, botUsers);
+                        LockInfo made = CantEnterUserThread(lockType, currentThread, codeLock);
                         return () => { };
                     }
                 }
@@ -110,20 +118,20 @@ namespace MushDLR223.Utilities
                 {
                     lock (LockInfos)
                     {
-                        LockInfo made = LockInfo.EnterUserThread(lockType, currentThread, botUsers);
+                        LockInfo made = LockInfo.EnterUserThread(lockType, currentThread, codeLock);
                         return () =>
                                    {
                                        lock (LockInfos)
                                        {
                                            try
                                            {
-                                               LockInfo.ExitUserThread(lockType, made, botUsers);
+                                               LockInfo.ExitUserThread(lockType, made, codeLock);
                                            }
                                            finally
                                            {
-                                               if (botUsers != null)
+                                               if (codeLock != null)
                                                {
-                                                   Monitor.Exit(botUsers);
+                                                   Monitor.Exit(codeLock);
                                                }
                                            }
                                        }
@@ -133,9 +141,9 @@ namespace MushDLR223.Utilities
             }
         }
 
-        private static LockInfo CantEnterUserThread(string lockType, Thread currentThread, object botUsers)
+        private static LockInfo CantEnterUserThread(string lockType, Thread currentThread, object codeLock)
         {
-            LockInfo info = LockInfo.FindLockInfo(botUsers);
+            LockInfo info = LockInfo.FindLockInfo(codeLock);
             string infostring = "Cannot get lock " + lockType;
             string newVariable = infostring + "in " + (info.StartTime - DateTime.Now) + " on " + info;
             writeDebugLine(newVariable);
@@ -143,23 +151,23 @@ namespace MushDLR223.Utilities
             return info;
         }
 
-        public static LockInfo FindLockInfo(object botUsers)
+        public static LockInfo FindLockInfo(object codeLock)
         {
             LockInfo info = null;
             lock (LockInfos)
             {
-                if (LockInfos.TryGetValue(botUsers, out info))
+                if (LockInfos.TryGetValue(codeLock, out info))
                 {
                 }
             }
             return info;
         }
         
-        public static LockInfo EnterUserThread(string lockType, Thread currentThread, object botUsers)
+        public static LockInfo EnterUserThread(string lockType, Thread currentThread, object codeLock)
         {
             lock (LockInfos)
             {
-                LockInfo info = FindLockInfo(botUsers);
+                LockInfo info = FindLockInfo(codeLock);
                 if (info != null)
                 {
                     if (info.FirstThread == Thread.CurrentThread)
@@ -185,7 +193,7 @@ namespace MushDLR223.Utilities
                         return info;
                     }
                 }
-                info = CreateLockInfo(lockType, currentThread, botUsers);
+                info = CreateLockInfo(lockType, codeLock);
                 info.needsUnlock++;
                 return info;
             }
@@ -196,17 +204,17 @@ namespace MushDLR223.Utilities
             DLRConsole.DebugWriteLine(s);
         }
 
-        public static LockInfo ExitUserThread(string lockType, LockInfo lockInfo, object botUsers)
+        public static LockInfo ExitUserThread(string lockType, LockInfo lockInfo, object codeLock)
         {
             lock (LockInfos)
             {
-                LockInfo info = FindLockInfo(botUsers);
+                LockInfo info = FindLockInfo(codeLock);
 
                 if (info != null)
                 {
                     if (info.IsLockerCurrentThread)
                     {
-                        if (botUsers != null)
+                        if (codeLock != null)
                         {
                             info.needsUnlock--;
                             //if (info.needsUnlock==0)
@@ -233,14 +241,14 @@ namespace MushDLR223.Utilities
             }
         }
         private static readonly Dictionary<object, LockInfo> LockInfos = new Dictionary<object, LockInfo>();
-        public static LockInfo CreateLockInfo(string lockType, Thread currentThread, object botUsers)
+        public static LockInfo CreateLockInfo(string lockType, object codeLock)
         {
             lock (LockInfos)
             {
                 LockInfo lockinfo;
-                if (!LockInfos.TryGetValue(botUsers, out lockinfo))
+                if (!LockInfos.TryGetValue(codeLock, out lockinfo))
                 {
-                    return LockInfos[botUsers] = new LockInfo(lockType);
+                    return LockInfos[codeLock] = new LockInfo(lockType);
                 }
                 return lockinfo;
             }
@@ -319,4 +327,5 @@ namespace MushDLR223.Utilities
                 Waiters.Add(p);
         }
     }
+
 }
