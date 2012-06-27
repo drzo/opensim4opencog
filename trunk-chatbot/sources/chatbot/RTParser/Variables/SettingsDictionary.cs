@@ -1324,8 +1324,16 @@ namespace RTParser.Variables
             }
         }
 
-        private Dictionary<string, Dictionary<string, int>> checkingFallbacksOfN = new Dictionary<string, Dictionary<string, int>>();
+        private readonly Dictionary<string, Dictionary<string, int>> checkingFallbacksOfN = new Dictionary<string, Dictionary<string, int>>();
         public bool LoopingOn(string name, string type)
+        {
+            if (LoopingOn0(name,type))
+            {
+                return LoopingOn0(name, type + "1");
+            }
+            return false;
+        }
+        public bool LoopingOn0(string name, string type)
         {
             Dictionary<string, int> fallbacksOf;
             lock (checkingFallbacksOfN)
