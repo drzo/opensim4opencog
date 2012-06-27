@@ -881,13 +881,9 @@ namespace Swicli.Library
             ShortNameType["object"] = typeof(Object);
             ShortNameType["sbyte"] = typeof(sbyte);
             //ShortNameType = new PrologBackedDictionary<string, Type>(null, "shortTypeName");
-            PlForeignSwitches Nondeterministic = PlForeignSwitches.Nondeterministic;
-            Fn015.Register();
-            PlEngine.RegisterForeign(null, "foo2", 2, new DelegateParameterBacktrack2(FooTwo), Nondeterministic);
             //PlEngine.RegisterForeign(null, "cliFindClass", 2, new DelegateParameter2(PrologCli.cliFindClass), PlForeignSwitches.None);
             PlEngine.RegisterForeign(ExportModule, "cli_load_assembly", 1, new DelegateParameter1(PrologClient.cliLoadAssembly), PlForeignSwitches.None);
             ConsoleWriteLine("RegisterPLCSForeigns");
-            PlEngine.RegisterForeign(null, "foo3", 3, new DelegateParameterBacktrackVarArgs(FooThree), Nondeterministic | PlForeignSwitches.VarArgs);
 
             InternMethod(ExportModule, "load_assembly", typeof(PrologClient).GetMethod("LoadAssembly"));
             InternMethod(null, "cwl", typeof(Console).GetMethod("WriteLine", new Type[] { typeof(string) }));

@@ -2409,7 +2409,7 @@ namespace SbsSW.SwiPlCs
         /// <summary>
         /// Dictionary to pin foriegn method delegates so that are not GC'd
         /// </summary>
-        private static readonly Dictionary<string, Delegate> SavedRegisterForeign = new Dictionary<string, Delegate>();
+        public static readonly Dictionary<string, Delegate> SavedRegisterForeign = new Dictionary<string, Delegate>();
 
         public static bool PinDelegate(string module, string name, int arity, Delegate method)
         {
