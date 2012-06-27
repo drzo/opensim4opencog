@@ -234,9 +234,19 @@ namespace RTParser
         //public string lastDefState;
 
         public Stack<string> conversationStack = new Stack<string>();
-        public Hashtable wordAttributeHash = new Hashtable();
+        static public Hashtable _wordAttributeHash = new Hashtable();
+        public Hashtable wordAttributeHash
+        {
+            get { return _wordAttributeHash; }
+        }
 
-        public WordNetEngine wordNetEngine;
+
+        static public WordNetEngine _wordNetEngine;
+        public WordNetEngine wordNetEngine
+        {
+            get { return _wordNetEngine; }
+        }
+
         // = new WordNetEngine(HostSystem.Combine(Environment.CurrentDirectory, this.GlobalSettings.grabSetting("wordnetdirectory")), true);
 
         //public string indexDir = @"C:\dev\Lucene\";
@@ -455,18 +465,19 @@ namespace RTParser
             SettingsDictionary userPredicates = user.Predicates;
             bool isTraced = request.IsTraced | request.IsToplevelRequest;
 
-            UndoStack undoStack = UndoStack.GetStackFor(request);
+            UndoStack undoStackSession = UndoStack.GetStackFor(new object());
+            bool queryFailed = true;
             Unifiable requestrawInput = request.rawInput.Trim();
 
-            undoStack.pushValues(userPredicates, "i", user.UserName);
-            undoStack.pushValues(userPredicates, "rawinput", requestrawInput);
-            undoStack.pushValues(userPredicates, "input", requestrawInput);
+            undoStackSession.pushValues(userPredicates, "i", user.UserName);
+            undoStackSession.pushValues(userPredicates, "rawinput", requestrawInput);
+            undoStackSession.pushValues(userPredicates, "input", requestrawInput);
             if (target != null && target.UserName != null)
             {
-                undoStack.pushValues(userPredicates, "you", target.UserName);
+                undoStackSession.pushValues(userPredicates, "you", target.UserName);
                 SettingsDictionary targetPredicates = target.Predicates;
-                undoStack.pushValues(targetPredicates, "you", user.UserName);
-                undoStack.pushValues(targetPredicates, "i", target.UserName);
+                undoStackSession.pushValues(targetPredicates, "you", user.UserName);
+                undoStackSession.pushValues(targetPredicates, "i", target.UserName);
 
             }
             //lock (user.QueryLock)
@@ -496,6 +507,7 @@ namespace RTParser
                                 target.JustSaid = user.ResponderJustSaid; //.Output;
                         }
                     }
+                    queryFailed = false;
                     return allResults;
                 }
                 catch (ChatSignalOverBudget e)
@@ -514,8 +526,11 @@ namespace RTParser
                     AddHeardPreds(parentResultIn.RawOutput, HeardPredicates);
                     request.CommitSideEffects(false);
                     label.PopScope();
-                    undoStack.UndoAll();
+                    undoStackSession.UndoAll();
+                    if (queryFailed)
+                    {
                     request.UndoAll();
+                    }
                     request.CommitSideEffects(true);
                     request.Exit();
                     request.SetSpeakerAndResponder(user, parentResultIn.Responder.Value);
@@ -1475,7 +1490,7 @@ namespace RTParser
                 }
             }
             Console.WriteLine("*** Start WN-Load ***");
-            wordNetEngine = new WordNetEngine(PathToWordNet, true);
+            if (_wordNetEngine == null) _wordNetEngine = new WordNetEngine(PathToWordNet, true);
             Console.WriteLine("*** DONE WN-Load ***");
 
             Console.WriteLine("*** Start Lucene ***");

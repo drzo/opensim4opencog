@@ -31,6 +31,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using SbsSW.SwiPlCs;
 using CycFort = SbsSW.SwiPlCs.PlTerm;
@@ -107,6 +108,17 @@ namespace Swicli.Library
         public static void Debug(object plthreadhasdifferntthread)
         {
 
+        }
+
+        [PrologVisible]
+        public static bool cliThrow(PlTerm ex)
+        {
+            throw (Exception) CastTerm(ex, typeof (Exception));
+        }
+        [PrologVisible]
+        public static bool cliBreak(PlTerm ex)
+        {
+            return WarnMissing((string)ex) || true;
         }
 
         private static string PlStringFormat(string text, params object[] ps)

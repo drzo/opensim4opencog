@@ -643,7 +643,7 @@ namespace RTParser
                 UserName = userID;
                 SetMeMyselfAndI(UserName);
                 //this.Predicates.addSetting("topic", "NOTOPIC");
-                if (SaveTimer == null)
+                if (false && SaveTimer == null)
                 {
                     SaveTimer = new Thread(() =>
                                                {

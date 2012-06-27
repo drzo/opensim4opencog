@@ -259,7 +259,7 @@ namespace RTParser.Variables
                 result.AppendChild(dec);
                 XmlNode root = result.CreateNode(XmlNodeType.Element, "root", "");
                 XmlAttribute newAttr = result.CreateAttribute("name");
-                lock (orderedKeys)
+                lock (orderedKeyLock)
                 {
                     string dupeCheck = "";
                     newAttr.Value = NameSpace;
@@ -435,7 +435,7 @@ namespace RTParser.Variables
             pathToSettings = HostSystem.ResolveToExistingPath(pathToSettings);
             OutputDelegate writeToLog = request.writeToLog;
             if (pathToSettings == null) return;
-            lock (orderedKeys)
+            lock (orderedKeyLock)
             {
                 if (pathToSettings.Length > 0)
                 {
@@ -489,7 +489,7 @@ namespace RTParser.Variables
             // ReSharper disable ConstantNullColescingCondition
             writeToLog = writeToLog ?? request.writeToLog;
             // ReSharper restore ConstantNullColescingCondition
-            lock (dict.orderedKeys)
+            lock (LockInfo.Watch(dict.orderedKeys))
             {
                 if (pathToSettings.Length > 0)
                 {
@@ -556,7 +556,7 @@ namespace RTParser.Variables
         /// <param name="settingsAsXML">The settings as an XML document</param>
         public void loadSettings(XmlDocument settingsAsXML, Request request)
         {
-            lock (orderedKeys)
+            lock (orderedKeyLock)
             {
                 if (settingsAsXML.DocumentElement == null)
                 {
@@ -698,7 +698,7 @@ namespace RTParser.Variables
 
         static public void loadSettingNode(ISettingsDictionary dict, XmlNode myNode, bool overwriteExisting, bool onlyIfUnknown, Request request)
         {
-            lock (dict)
+            lock (LockInfo.Watch(dict))
             {
 
                 SettingsDictionary settingsDict = ToSettingsDictionary(dict);
@@ -1060,7 +1060,7 @@ namespace RTParser.Variables
             if (fromFile == null) fromFile = tofile;
             HostSystem.BackupFile(tofile);
             XmlDocument xmldoc;
-            lock (orderedKeys)
+            lock (orderedKeyLock)
             {
                 var restore = NameSpace;
                 try
@@ -1107,7 +1107,7 @@ namespace RTParser.Variables
         public bool addSetting0(string name, Unifiable value)
         {
             bool found = true;
-            lock (orderedKeys)
+            lock (orderedKeyLock)
             {
                 name = TransformName(name);
                 string normalizedName = TransformKey(name);
@@ -1303,14 +1303,57 @@ namespace RTParser.Variables
         private void updateListeners(string name, Unifiable value, bool locally, bool addedNew)
         {
             if (SuspendUpdates) return;
-            foreach (var list in _listeners)
+            if (LoopingOn(name, "update"))
             {
-                var l = list();
+                return;
+            }
+            foreach (var l in Listeners)
+            {
                 if (addedNew) l.addSetting(name, value);
                 else
                     l.updateSetting(name, value);
             }
         }
+
+
+        public static int generation
+        {
+            get
+            {
+                return MushDLR223.ScriptEngines.ScriptManager.Generation;
+            }
+        }
+
+        private Dictionary<string, Dictionary<string, int>> checkingFallbacksOfN = new Dictionary<string, Dictionary<string, int>>();
+        public bool LoopingOn(string name, string type)
+        {
+            Dictionary<string, int> fallbacksOf;
+            lock (checkingFallbacksOfN)
+            {
+                if (!checkingFallbacksOfN.TryGetValue(type, out fallbacksOf))
+                {
+                    fallbacksOf = checkingFallbacksOfN[type] = new Dictionary<string, int>();
+                }
+            }
+            int gen, ggen = generation;
+            lock (fallbacksOf)
+            {
+                if (!fallbacksOf.TryGetValue(name, out gen))
+                {
+                    fallbacksOf[name] = ggen;
+                }
+                else if (gen == generation)
+                {
+                    return true;
+                }
+                else
+                {
+                    fallbacksOf[name] = ggen;
+                }
+            }
+            return false;
+        }
+
         public Unifiable TransformValueIn(Unifiable value)
         {
             string s = TransformValue0(value);
@@ -1394,7 +1437,7 @@ namespace RTParser.Variables
 
         public bool addListSetting(string name, Unifiable value)
         {
-            lock (orderedKeys)
+            lock (orderedKeyLock)
             {
                 name = TransformName(name);
                 value = TransformValueIn(value);
@@ -1426,7 +1469,7 @@ namespace RTParser.Variables
 
         public bool removeSettingReal(string name)
         {
-            lock (orderedKeys)
+            lock (orderedKeyLock)
             {
                 if (SuspendUpdates) return true;
                 name = TransformName(name);
@@ -1477,7 +1520,7 @@ namespace RTParser.Variables
         /// <param name="name">the key for the Dictionary<,></param>
         private void removeFromHash(string name)
         {
-            lock (orderedKeys)
+            lock (orderedKeyLock)
             {
                 name = TransformName(name);
                 string normalizedName = TransformKey(name);
@@ -1504,9 +1547,8 @@ namespace RTParser.Variables
         public bool updateSetting0(string name, Unifiable value)
         {
             bool overriden = false;
-            foreach (var parent in _overides)
+            foreach (var p in Overides)
             {
-                var p = parent();
                 if (p.updateSetting(name, value))
                 {
                     SettingsLog("OVERRIDDEN UPDATE " + p + " '" + name + "'=" + str(value));
@@ -1517,7 +1559,7 @@ namespace RTParser.Variables
             {
                 return true;
             }
-            lock (orderedKeys)
+            lock (orderedKeyLock)
             {
                 name = TransformName(name);
                 string normalizedName = TransformKey(name);
@@ -1575,7 +1617,7 @@ namespace RTParser.Variables
         /// </summary>
         public void clearSettings()
         {
-            lock (orderedKeys)
+            lock (orderedKeyLock)
             {
                 this.orderedKeys.Clear();
                 this.settingsHash.Clear();
@@ -1583,7 +1625,7 @@ namespace RTParser.Variables
         }
         public void clearHierarchy()
         {
-            lock (orderedKeys)
+            lock (orderedKeyLock)
             {
                 _overides.Clear();
                 _fallbacks.Clear();
@@ -1604,7 +1646,7 @@ namespace RTParser.Variables
             name = TransformName(name);
             name = TransformKey(name);
             writeToLog("MASKING: " + name);
-            lock (orderedKeys) makedvars.Add(name);
+            lock (orderedKeyLock) makedvars.Add(name);
         }
 
         /// <summary>
@@ -1652,7 +1694,7 @@ namespace RTParser.Variables
                     return v;
                 }
             }
-            //lock (orderedKeys)
+            lock (orderedKeyLock)
             {
                 string normalizedName = TransformKey(name);
 
@@ -1691,11 +1733,16 @@ namespace RTParser.Variables
 
         private Unifiable CheckFallbacks(HashSet<ISettingsDictionary> noGo, IEnumerable<ISettingsDictionary> fallbacks, string name, string normalizedName, ref ISettingsDictionary firstFallBack, out bool returnIt)
         {
+            if (LoopingOn(name, "fallback"))
+            {
+                returnIt = false;
+                return null;
+            }
             foreach (ISettingsDictionary list in fallbacks)
             {
                 if (!noGo.Add(list)) continue;
                 firstFallBack = firstFallBack ?? list;
-                lock (list)
+                lock (LockInfo.Watch(list))
                 {
                     bool prev = list.IsTraced;
                     list.IsTraced = false;
@@ -1725,24 +1772,30 @@ namespace RTParser.Variables
 
         private string grabSettingOrDefault(ISettingsDictionary dictionary, string name, string o)
         {
-            if (dictionary.containsLocalCalled(name)) return dictionary.grabSetting(name);
-            if (dictionary.containsSettingCalled(name)) return dictionary.grabSetting(name);
+            if (dictionary.containsSettingCalled(name)) { return dictionary.grabSetting(name);}
             return o;
-
         }
 
         public Unifiable grabSetting0(string name)
         {
-            HashSet<ISettingsDictionary> noGo = new HashSet<ISettingsDictionary>() {this};
-            foreach (ParentProvider overide in GraphMaster.CopyOf(_overides))
+            bool mayUseOverides = true;
+            if (LoopingOn(name, "override"))
             {
-                ISettingsDictionary dict = overide();
-                if (!noGo.Add(dict)) continue;
-                if (dict.containsSettingCalled(name))
+                mayUseOverides = false;
+            }
+            HashSet<ISettingsDictionary> noGo = new HashSet<ISettingsDictionary>() {this};
+            if (this.mayUseOverides)
+            {
+                foreach (ParentProvider overide in GraphMaster.CopyOf(_overides))
                 {
-                    Unifiable v = dict.grabSetting(name);
-                    SettingsLog("OVERRIDE '" + name + "'=" + str(v));
-                    return v;
+                    ISettingsDictionary dict = overide();
+                    if (!noGo.Add(dict)) continue;
+                    if (dict.containsSettingCalled(name))
+                    {
+                        Unifiable v = dict.grabSetting(name);
+                        SettingsLog("OVERRIDE '" + name + "'=" + str(v));
+                        return v;
+                    }
                 }
             }
             bool needsUnlock = System.Threading.Monitor.TryEnter(orderedKeys, TimeSpan.FromSeconds(2));
@@ -1878,8 +1931,20 @@ namespace RTParser.Variables
 
         public bool containsSettingCalled(string name)
         {
-            var value = grabSettingNoDebug(name);
-            return !IsMissing(value);
+            if (containsLocalCalled(name)) return true;
+            foreach (ISettingsDictionary dictionary in Overides)
+            {
+                if (dictionary.containsLocalCalled(name)) return true;
+            }
+            if (LoopingOn(name, "contains"))
+            {
+                return false;
+            }
+            foreach (ISettingsDictionary dictionary in Fallbacks)
+            {
+                if (dictionary.containsSettingCalled(name)) return true;
+            }
+            return false;
         }
 
         /// <summary>
@@ -1890,7 +1955,7 @@ namespace RTParser.Variables
         {
             //       get
             {
-                lock (orderedKeys)
+                lock (orderedKeyLock)
                 {
                     IEnumerable<string> prefixProviderSettingNames = prefixProvider.SettingNames(requester, depth);
                     var list = prefixProviderSettingNames as List<string>;
@@ -1909,6 +1974,11 @@ namespace RTParser.Variables
                     return result;
                 }
             }
+        }
+
+        protected object orderedKeyLock
+        {
+            get { return LockInfo.Watch(orderedKeys); }
         }
 
         public List<ISettingsDictionary> Fallbacks
@@ -2091,7 +2161,7 @@ namespace RTParser.Variables
                 writeToLog("ERROR: should not place inside self");
                 return false;
             }
-            lock (cols)
+            lock (LockInfo.Watch(cols))
             {
                 foreach (var deep in cols)
                 {
@@ -2182,6 +2252,7 @@ namespace RTParser.Variables
         public static bool NoSettingsAliaes = true;
         public static bool UseUndoPush = false;
         public ICollectionRequester ObjectRequester;
+        private bool mayUseOverides;
 
         public Unifiable GetSetReturn(string name, out string realName)
         {
@@ -2208,7 +2279,7 @@ namespace RTParser.Variables
 
             }
             var found = new List<ISettingsDictionary>();
-            lock (providers)
+            lock (LockInfo.Watch(providers))
             {
                 foreach (var list in providers)
                 {
@@ -2251,11 +2322,11 @@ namespace RTParser.Variables
         public void Clone(ISettingsDictionary target)
         {
             var dt = ToSettingsDictionary(target);
-            lock (MetaProviders) foreach (var pp in MetaProviders)
+            lock (LockInfo.Watch(MetaProviders)) foreach (var pp in MetaProviders)
                 {
                     dt.InsertMetaProvider(pp);
                 }
-            lock (orderedKeys)
+            lock (orderedKeyLock)
             {
                 foreach (string name in this.orderedKeys)
                 {
@@ -2270,7 +2341,7 @@ namespace RTParser.Variables
         /// <param name="target">The target to recieve the values from this SettingsDictionary</param>
         public void AddMissingKeys(ISettingsDictionary target)
         {
-            lock (orderedKeys)
+            lock (orderedKeyLock)
             {
                 foreach (string name in this.orderedKeys)
                 {
@@ -2422,7 +2493,7 @@ namespace RTParser.Variables
 
         public static bool TryGetValue<T>(IDictionary<string, T> dictionary, string search, out T value)
         {
-            lock (dictionary)
+            lock (LockInfo.Watch(dictionary))
             {
                 if (dictionary.TryGetValue(search, out value))
                 {

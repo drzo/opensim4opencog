@@ -792,6 +792,7 @@ namespace RTParser
         public override int GetHashCode()
         {
             if (IsWildCard) return -1;
+            if (str == null) return 0;
             return str.GetHashCode();
         }
 

@@ -1707,7 +1707,7 @@ namespace RTParser
                 this.HasExited = true;
             }
             CommitSideEffects(false);
-            UndoAll();
+            if (HasSuceeded == 0) UndoAll();
             if (CurrentResult != null) CurrentResult.Exit();
             //if (CatchLabel != null) CatchLabel.PopScope();
             CommitSideEffects(true);

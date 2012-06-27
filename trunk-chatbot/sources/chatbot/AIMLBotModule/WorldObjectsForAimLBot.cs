@@ -24,6 +24,7 @@ using String=System.String;
 using Thread=System.Threading.Thread;
 using PathSystem3D.Navigation;
 using SUnifiable=System.String;
+using User=RTParser.User;
 
 namespace AIMLBotModule
 {
@@ -536,11 +537,13 @@ namespace AIMLBotModule
             HandleIM(im, myUser, groupName, message, UseThrottle);
 
         }
-
         private void HandleIM(InstantMessage im, RTParser.User myUser, string groupName, string message, bool UseThrottle)
         {
-            RunTask(() => // this can be long running
+            RunTask(()=>HandleIM0(im,myUser,groupName,message,UseThrottle), "AIML_OnInstantMessage: " + myUser + ": " + message);
+        }
+        private void HandleIM0(InstantMessage im, RTParser.User myUser, string groupName, string message, bool UseThrottle)
                         {
+
                             UUID toSession = im.ToAgentID ^ im.IMSessionID;
                             string resp = AIMLInterp(message, myUser);
                             // if (im.Offline == InstantMessageOnline.Offline) return;
@@ -613,20 +616,19 @@ namespace AIMLBotModule
 
                             }
                             myUser.StampResponseGiven();
-                        }, "AIML_OnInstantMessage: " + myUser + ": " + message);
         }
 
-        /*    IEnumerable<Thread> ThreadList
-            {
-                get
-                {
-                    return WorldSystem.client.GetBotCommandThreads();
-                }
-            }
-            */
+        public static bool RunInThreadPool = false;
         private void RunTask(ThreadStart action, string name)
-        {
-            Enqueue(name, () => client.InvokeThread(name, action));
+            {
+            if (RunInThreadPool)
+                {
+                Enqueue(name, () => client.InvokeThread(name, action));
+                }
+            else
+            {
+                Enqueue(name, action);
+            }
         }
 
         public WorldObjectsForAimLBot(BotClient testClient)
@@ -692,7 +694,10 @@ namespace AIMLBotModule
 
             UseRealism = true;
 
-            RunTask(() => // this can be long running
+            RunTask(() => OnChatTaskItem(message, myUser, type), "AIML_OnChat: " + myUser + ": " + message);
+        }
+
+        private void OnChatTaskItem(string message, User myUser, ChatType type)
                         {
                             string resp = AIMLInterp(message, myUser);
                             if (String.IsNullOrEmpty(resp)) return;
@@ -700,7 +705,7 @@ namespace AIMLBotModule
                             {
                                 WriteLine("AIML_OnChat Reply is too fast {0}: {1}->{2}", myUser, message, resp);
 
-                                return; //too early to respond.. but still listened
+                return;
                             }
                             if (!myUser.RespondToChat)
                             {
@@ -714,7 +719,6 @@ namespace AIMLBotModule
                             }
                             StringChat(resp, type);
                             myUser.StampResponseGiven();
-                        }, "AIML_OnChat: " + myUser + ": " + message);
         }
 
         public void HeardMyselfSay(UUID uuid, string message)

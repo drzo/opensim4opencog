@@ -817,7 +817,7 @@ namespace Cogbot
             {
                 int usedArgs;
                 var col = ResolveCollection(ToAvatarName, out usedArgs, null);
-                if (col.Count > 0)
+                if (col != null && col.Count > 0)
                 {
                     foreach (var prim in col)
                     {

@@ -64,7 +64,7 @@ namespace RTParser.Utils
         public UndoStack(object o)
         {
             objext = o;
-            UndoStackHolder holder = o as UndoStackHolder;
+            UndoStackHolder holder = AsUndoStackHolder(o);
             holder.UndoStackValue = this;           
             if (holder != null)
             {
@@ -169,9 +169,9 @@ namespace RTParser.Utils
             }
         }
 
-        public static UndoStack GetStackFor(UndoStackHolder o)
+        public static UndoStack GetStackFor(object o)
         {
-            UndoStackHolder holder = o as UndoStackHolder;
+            UndoStackHolder holder = AsUndoStackHolder(o);
             //holder.ToString();
             UndoStack u;
             if (holder != null)
@@ -195,7 +195,7 @@ namespace RTParser.Utils
         {
             if (o == null) return null;
             UndoStack u;
-            UndoStackHolder holder = o as UndoStackHolder;
+            UndoStackHolder holder = AsUndoStackHolder(o);
             holder.ToString();
             if (remove)
             {
@@ -217,9 +217,28 @@ namespace RTParser.Utils
             return null;
         }
 
+        private static UndoStackHolder AsUndoStackHolder(object o)
+        {
+            if (o is UndoStackHolder) return (UndoStackHolder) o;
+            lock(AnyUndoStackHolders)
+            {
+                UndoStackHolder holder;
+                if (!AnyUndoStackHolders.TryGetValue(o, out holder))
+                {
+                    holder = AnyUndoStackHolders[o] = new AnyUndoStackHolder();
+                    holder.UndoStackValue = new UndoStack(holder);
+                }
+                return holder;
+            }
+        }
+
+        private static readonly Dictionary<object, UndoStackHolder> AnyUndoStackHolders =
+            new Dictionary<object, UndoStackHolder>();
+
+
         public static void FindUndoAll(object o, bool remove)
         {
-            UndoStackHolder holder = o as UndoStackHolder;
+            UndoStackHolder holder = AsUndoStackHolder(o);
             UndoStack u;
             if (holder != null)
             {
@@ -243,6 +262,10 @@ namespace RTParser.Utils
     public interface UndoStackHolder
     {
         UndoStack UndoStackValue { get; set; }
+    }
+    public class AnyUndoStackHolder:UndoStackHolder
+    {
+        public UndoStack UndoStackValue { get; set; }
     }
    
 }
