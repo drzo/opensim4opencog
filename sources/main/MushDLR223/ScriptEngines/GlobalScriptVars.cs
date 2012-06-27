@@ -208,7 +208,8 @@ namespace MushDLR223.ScriptEngines
         {
             get
             {
-                return DateTime.Now.Millisecond/100;
+                DateTime now = DateTime.Now;
+                return now.Millisecond/100 + now.Second*100;
             }
         }
 
