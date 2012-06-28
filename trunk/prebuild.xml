@@ -469,7 +469,7 @@
     </Project>
 
 
-    <Project name="Swicli.Library" path="sources/main/Swicli.Library" type="Library" frameworkVersion="v3_5">
+    <Project name="Swicli.Library" path="sources/main/swicli/Swicli.Library" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
             <OutputPath>bin/temp</OutputPath>
@@ -483,7 +483,7 @@
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../bin</ReferencePath>
+      <ReferencePath>../../../../bin</ReferencePath>
       <Reference name="System" localCopy="false"/>
       <Reference name="System.Core" localCopy="false"/>
       <Reference name="System.Data" localCopy="false"/>
@@ -504,7 +504,7 @@
       </Files>
     </Project>
 
-    <Project name="SWICLITestDLL" path="sources/main/SWICLITestDLL" type="Library" frameworkVersion="v3_5">
+    <Project name="SWICLITestDLL" path="sources/main/swicli/SWICLITestDLL" type="Library" frameworkVersion="v3_5">
       <Configuration name="Debug">
         <Options>
             <OutputPath>bin/temp</OutputPath>
@@ -518,7 +518,7 @@
         </Options>
       </Configuration>
 
-      <ReferencePath>../../../bin</ReferencePath>
+      <ReferencePath>../../../../bin</ReferencePath>
       <Reference name="System" localCopy="false"/>
       <Reference name="System.Core" localCopy="false"/>
       <Reference name="System.Data" localCopy="false"/>
