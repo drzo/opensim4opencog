@@ -23,6 +23,7 @@
 *********************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -188,6 +189,7 @@ typedef struct // define a context structure  { ... } context;
             {
                 if (isVanilla)
                 {
+                    RegisterInfo(pn, paramlen, list);
                     Delegate d = null;
                     switch (paramlen)
                     {
@@ -238,13 +240,29 @@ typedef struct // define a context structure  { ... } context;
             }
             int plarity = paramlen + (hasReturnValue ? 1 : 0) + (isStatic ? 0 : 1);
 
+            RegisterInfo(pn, plarity, list);
             DelegateParameterVarArgs del = GetDelV(list, type, nonvoid, isbool, isStatic, plarity, defaultInstanceWhenMissing);
             PlEngine.RegisterForeign(module, pn, plarity, del, PlForeignSwitches.VarArgs);
             while (maxOptionals > 0)
             {
+                RegisterInfo(pn, plarity - maxOptionals, list); 
                 del = GetDelV(list, type, nonvoid, isbool, isStatic, plarity - maxOptionals, defaultInstanceWhenMissing);
                 PlEngine.RegisterForeign(module, pn, plarity - maxOptionals, del, PlForeignSwitches.VarArgs);
                 maxOptionals--;
+            }
+        }
+
+        public static Dictionary<string, MethodInfo> AutoDocInfos = new Dictionary<string, MethodInfo>();
+        public static void RegisterInfo(string pn, int paramlen, MethodInfo info)
+        {
+            string key = pn + "/" + paramlen;
+            MethodInfo minfo;
+            lock (AutoDocInfos)
+            {
+                if (!AutoDocInfos.TryGetValue(key, out minfo))
+                {
+                    AutoDocInfos[key] = info;
+                }
             }
         }
 

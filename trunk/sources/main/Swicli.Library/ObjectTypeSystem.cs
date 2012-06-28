@@ -216,19 +216,19 @@ namespace Swicli.Library
         }
 
         [PrologVisible(ModuleName = ExportModule)]
-        public static bool cliFindType(CycFort term1, CycFort term2)
+        public static bool cliFindType(CycFort clazzSpec, CycFort classRef)
         {
             //            if (term1.IsAtom)
             {
-                string className = (string)term1;//.Name;
-                Type s1 = GetType(term1);
+                string className = (string)clazzSpec;//.Name;
+                Type s1 = GetType(clazzSpec);
                 if (s1 != null)
                 {
                     var c = s1;// ikvm.runtime.Util.getFriendlyClassFromType(s1);
                     if (c != null)
                     {
                        // ConsoleTrace("name:" + className + " type:" + s1.FullName + " class:" + c);
-                        return UnifyTagged(c, term2);
+                        return UnifyTagged(c, classRef);
                     }
                     ConsoleTrace("cant getFriendlyClassFromType " + s1.FullName);
                     return false;
@@ -236,7 +236,7 @@ namespace Swicli.Library
                 ConsoleTrace("cant ResolveType " + className);
                 return false;
             }
-            ConsoleTrace("cant IsAtom " + term1);
+            ConsoleTrace("cant IsAtom " + clazzSpec);
             return false;
         }
 

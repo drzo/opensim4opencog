@@ -37,8 +37,14 @@ namespace Swicli.Library
     public partial class PrologClient
     {
 
+        /// <summary>
+        /// Retreves the ClazzSpec Fields and Properties into a MemberSpecList
+        /// </summary>
+        /// <param name="clazzSpec"></param>
+        /// <param name="memberSpecs"></param>
+        /// <returns></returns>
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliPropsForType(CycFort clazzSpec, CycFort memberSpecs)
+        static public bool cliPropsForType(CycFort clazzSpec, CycFort memberSpecList)
         {
             Type type = GetType(clazzSpec);
             var props = GetPropsForTypes(type);
@@ -55,7 +61,7 @@ namespace Swicli.Library
             {
                 termv = PlC(".", ToProlog((value2[i].Name)), termv);
             }
-            return memberSpecs.Unify(termv);
+            return memberSpecList.Unify(termv);
         }
 
         static readonly Dictionary<Type, KeyValuePair<List<PropertyInfo>, List<FieldInfo>>> PropForTypes = new Dictionary<Type, KeyValuePair<List<PropertyInfo>, List<FieldInfo>>>();
@@ -120,8 +126,16 @@ namespace Swicli.Library
             }
         }
 
+        /// <summary>
+        /// Retreves the clazzOrInstance Members into MemberSpec List
+        /// 
+        /// used by cli_memb/2
+        /// </summary>
+        /// <param name="clazzOrInstance"></param>
+        /// <param name="membersSpecListOut"></param>
+        /// <returns></returns>
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliMembers(CycFort clazzOrInstance, CycFort membersOut)
+        static public bool cliMembers(CycFort clazzOrInstance, CycFort membersSpecListOut)
         {
             Type c = GetTypeFromInstance(null, clazzOrInstance);
             MemberInfo[] members = c.GetMembers(BindingFlagsALL);
@@ -175,7 +189,7 @@ namespace Swicli.Library
                 exclude.Add(info);
             }
 
-            return membersOut.Unify(ToPlList(list.ToArray()));
+            return membersSpecListOut.Unify(ToPlList(list.ToArray()));
         }
 
         private static void AddMemberToList(MemberInfo info, List<CycFort> list, string cname, int ordinal)
@@ -430,14 +444,21 @@ namespace Swicli.Library
             return memberScope;
         }
 
+        /// <summary>
+        /// =Attempt to find assembly doc of member
+        /// </summary>
+        /// <param name="memb"></param>
+        /// <param name="doc"></param>
+        /// <param name="xml"></param>
+        /// <returns></returns>
         [PrologVisible]
-        static public bool cliMemberDoc(PlTerm memb, PlTerm doc, PlTerm xml)
+        static public bool cliMemberDoc(PlTerm membIn, PlTerm docOut, PlTerm xmlOut)
         {
-            var mi = GetInstance(memb) as MemberInfo;
+            var mi = GetInstance(membIn) as MemberInfo;
             if (mi != null)
             {
                 XElement xmls = GetDocString(mi);
-                return xml.Unify(ToProlog(xmls)) && doc.Unify(PlTerm.PlString(xmls == null ? "" : xmls.InnerXml));
+                return xmlOut.Unify(ToProlog(xmls)) && docOut.Unify(PlTerm.PlString(xmls == null ? "" : xmls.InnerXml));
             }
             return true;
         }

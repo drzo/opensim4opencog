@@ -736,16 +736,16 @@ namespace Swicli.Library
         /// ?- cliNew('java.lang.Long',[long],[44],Out),cliToString(Out,Str).
         /// </summary>
         /// <param name="memberSpec"></param>
-        /// <param name="valueIn"></param>
+        /// <param name="paramIn"></param>
         /// <param name="valueOut"></param>
         /// <returns></returns>
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliNew(PlTerm clazzSpec, PlTerm memberSpec, PlTerm valueIn, PlTerm valueOut)
+        static public bool cliNew(PlTerm clazzSpec, PlTerm memberSpec, PlTerm paramIn, PlTerm valueOut)
         {
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                return cliNew(clazzSpec, memberSpec, valueIn, plvar) && SpecialUnify(valueOut, plvar);
+                return cliNew(clazzSpec, memberSpec, paramIn, plvar) && SpecialUnify(valueOut, plvar);
             }
             Type c = GetType(clazzSpec);
             if (c == null)
@@ -773,7 +773,7 @@ namespace Swicli.Library
                         if (c.IsPrimitive)
                         {
                             //Warn("Trying to constuct a primitive type");
-                            return valueOut.FromObject(Convert.ChangeType(GetInstance(valueIn.Arg(0)), c));
+                            return valueOut.FromObject(Convert.ChangeType(GetInstance(paramIn.Arg(0)), c));
                         }
                     }
                 }
@@ -789,7 +789,7 @@ namespace Swicli.Library
                 return false;
             }
             Action postCallHook;
-            object[] values = PlListToCastedArray(valueIn, mi.GetParameters(), out postCallHook);
+            object[] values = PlListToCastedArray(paramIn, mi.GetParameters(), out postCallHook);
             object res;
 
             // mono doesnt mind..
@@ -901,39 +901,39 @@ namespace Swicli.Library
 
 
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliCallRaw(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm valueIn, PlTerm valueOut)
+        static public bool cliCallRaw(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm paramsIn, PlTerm valueOut)
         {
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                return cliCallRaw(clazzOrInstance, memberSpec, valueIn, plvar) && SpecialUnify(valueOut, plvar);
+                return cliCallRaw(clazzOrInstance, memberSpec, paramsIn, plvar) && SpecialUnify(valueOut, plvar);
             }
             object getInstance = GetInstance(clazzOrInstance);
             Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
-            int arity = Arglen(valueIn);
-            Type[] paramz = GetParamSpec(valueIn, true);
+            int arity = Arglen(paramsIn);
+            Type[] paramz = GetParamSpec(paramsIn, true);
             var mi = findMethodInfo(memberSpec, arity, c, ref paramz);
             if (mi == null)
             {
                 var ei = findEventInfo(memberSpec, c, ref paramz);
-                if (ei != null) return RaiseEvent(getInstance, memberSpec, valueIn, valueOut, ei, c);
-                if (valueIn.IsAtom && valueIn.Name == "[]") return cliGetRaw(clazzOrInstance, memberSpec, valueOut);
+                if (ei != null) return RaiseEvent(getInstance, memberSpec, paramsIn, valueOut, ei, c);
+                if (paramsIn.IsAtom && paramsIn.Name == "[]") return cliGetRaw(clazzOrInstance, memberSpec, valueOut);
                 Warn("Cant find method {0} on {1}", memberSpec, c);
                 return false;
             }
             Action postCallHook;
-            object[] value = PlListToCastedArray(valueIn, mi.GetParameters(), out postCallHook);
+            object[] value = PlListToCastedArray(paramsIn, mi.GetParameters(), out postCallHook);
             object target = mi.IsStatic ? null : getInstance;
             object retval = InvokeCaught(mi, target, value, postCallHook);
             return valueOut.FromObject(retval ?? VoidOrNull(mi));
         }
 
-        private static int Arglen(PlTerm valueIn)
+        private static int Arglen(PlTerm paramIn)
         {
-            if (valueIn.IsList)
+            if (paramIn.IsList)
             {
                 int len = 0;
-                PlTerm each = valueIn;
+                PlTerm each = paramIn;
                 while (each.IsList && !each.IsAtom)
                 {
                     each = each.Arg(1);
@@ -941,27 +941,27 @@ namespace Swicli.Library
                 }
                 return len;
             }
-            if (valueIn.IsCompound) return valueIn.Arity;
-            if (valueIn.IsAtom) return 0;
+            if (paramIn.IsCompound) return paramIn.Arity;
+            if (paramIn.IsAtom) return 0;
             return -1;
         }
 
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliRaiseEventHandler(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm valueIn, PlTerm valueOut)
+        static public bool cliRaiseEventHandler(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm paramIn, PlTerm valueOut)
         {
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                return cliRaiseEventHandler(clazzOrInstance, memberSpec, valueIn, plvar) && SpecialUnify(valueOut, plvar);
+                return cliRaiseEventHandler(clazzOrInstance, memberSpec, paramIn, plvar) && SpecialUnify(valueOut, plvar);
             }
             object getInstance = GetInstance(clazzOrInstance);
             Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
             Type[] paramz = null;
             EventInfo evi = findEventInfo(memberSpec, c, ref paramz);
-            return RaiseEvent(getInstance, memberSpec, valueIn, valueOut, evi, c);
+            return RaiseEvent(getInstance, memberSpec, paramIn, valueOut, evi, c);
         }
 
-        public static bool RaiseEvent(object getInstance, PlTerm memberSpec, PlTerm valueIn, PlTerm valueOut, EventInfo evi, Type c)
+        public static bool RaiseEvent(object getInstance, PlTerm memberSpec, PlTerm paramIn, PlTerm valueOut, EventInfo evi, Type c)
         {
             if (evi == null)
             {
@@ -980,7 +980,7 @@ namespace Swicli.Library
                     {
                         Action postCallHook;
                         var ret = valueOut.FromObject((del.DynamicInvoke(
-                                                          PlListToCastedArray(valueIn, paramInfos,
+                                                          PlListToCastedArray(paramIn, paramInfos,
                                                                               out postCallHook))));
                         postCallHook();
                         return ret;
@@ -999,7 +999,7 @@ namespace Swicli.Library
                             {
                                 Action postCallHook;
                                 var ret = valueOut.FromObject((del.DynamicInvoke(
-                                                                  PlListToCastedArray(valueIn, paramInfos,
+                                                                  PlListToCastedArray(paramIn, paramInfos,
                                                                                       out postCallHook))));
                                 postCallHook();
                                 return ret;
@@ -1019,7 +1019,7 @@ namespace Swicli.Library
                 return false;
             }
             Action postCallHook0;
-            object[] value = PlListToCastedArray(valueIn, mi.GetParameters(), out postCallHook0);
+            object[] value = PlListToCastedArray(paramIn, mi.GetParameters(), out postCallHook0);
             object target = mi.IsStatic ? null : getInstance;
             return valueOut.FromObject(InvokeCaught(mi, target, value, postCallHook0) ?? VoidOrNull(mi));
         }
@@ -1169,20 +1169,20 @@ namespace Swicli.Library
         }
 
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliSetRaw(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm valueIn)
+        static public bool cliSetRaw(PlTerm clazzOrInstance, PlTerm memberSpec, PlTerm paramIn)
         {
             object getInstance = GetInstance(clazzOrInstance);
             Type c = GetTypeFromInstance(getInstance, clazzOrInstance);
-            return cliSet0(getInstance, memberSpec, valueIn, c);
+            return cliSet0(getInstance, memberSpec, paramIn, c);
         }
 
-        static public bool cliSet0(object getInstance, PlTerm memberSpec, PlTerm valueIn, Type c)
+        static public bool cliSet0(object getInstance, PlTerm memberSpec, PlTerm paramIn, Type c)
         {
 
             FieldInfo fi = findField(memberSpec, c);
             if (fi != null)
             {
-                object value = CastTerm(valueIn, fi.FieldType);
+                object value = CastTerm(paramIn, fi.FieldType);
                 object target = fi.IsStatic ? null : getInstance;
                 fi.SetValue(target, value);
                 return true;
@@ -1194,7 +1194,7 @@ namespace Swicli.Library
                 var mi = pi.GetSetMethod();
                 if (mi != null)
                 {
-                    object value = CastTerm(valueIn, pi.PropertyType);
+                    object value = CastTerm(paramIn, pi.PropertyType);
                     object target = mi.IsStatic ? null : getInstance;
                     InvokeCaught(mi, target, new[] { value });
                     return true;
@@ -1214,7 +1214,7 @@ namespace Swicli.Library
                     return false;
                 }
                 Action postCallHook;
-                object[] value = PlListToCastedArray(valueIn, mi.GetParameters(), out postCallHook);
+                object[] value = PlListToCastedArray(paramIn, mi.GetParameters(), out postCallHook);
                 object target = mi.IsStatic ? null : getInstance;
                 object retval = InvokeCaught(mi, target, value, postCallHook);
                 return true;// valueOut.FromObject(retval);
@@ -1257,14 +1257,14 @@ namespace Swicli.Library
         }
 
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliJavaToString(PlTerm valueIn, PlTerm valueOut)
+        static public bool cliJavaToString(PlTerm paramIn, PlTerm valueOut)
         {
             if (!valueOut.IsVar)
             {
                 var plvar = PlTerm.PlVar();
-                return cliJavaToString(valueIn, plvar) && SpecialUnify(valueOut, plvar);
+                return cliJavaToString(paramIn, plvar) && SpecialUnify(valueOut, plvar);
             }
-            object getInstance = GetInstance(valueIn);
+            object getInstance = GetInstance(paramIn);
             if (getInstance == null) return valueOut.Unify(PlTerm.PlString("null"));
 #if USE_IKVM
             object val = getInstance as java.lang.Object;
