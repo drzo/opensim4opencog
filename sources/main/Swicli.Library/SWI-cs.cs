@@ -2415,6 +2415,7 @@ namespace SbsSW.SwiPlCs
         {
             Delegate prev;
             string key = (module ?? "user") + ":" + (name ?? "_NONAME_") + "/" + arity;
+            PrologClient.RegisterInfo(name, arity, method.Method);
             lock (SavedRegisterForeign)
             {
                 if (!SavedRegisterForeign.TryGetValue(key, out prev))

@@ -47,7 +47,13 @@ namespace Swicli.Library
         public static Dictionary<DelegateObjectInPrologKey, DelegateObjectInProlog> PrologDelegateHandlers =
             new Dictionary<DelegateObjectInPrologKey, DelegateObjectInProlog>();
 
-        //cliNewDelegate
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="delegateClass"></param>
+        /// <param name="prologPred"></param>
+        /// <param name="valueOut"></param>
+        /// <returns></returns>
         [PrologVisible(ModuleName = ExportModule)]
         static public bool cliNewDelegate(PlTerm delegateClass, PlTerm prologPred, PlTerm valueOut)
         {

@@ -283,16 +283,16 @@ namespace Swicli.Library
         }
 
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliTrackerBegin(PlTerm tracker)
+        static public bool cliTrackerBegin(PlTerm trackerOut)
         {
             var newTracking = LocallyTrackedObjects.CreateFrame();
-            return UnifyTagged(newTracking, tracker);
+            return UnifyTagged(newTracking, trackerOut);
         }
 
         [PrologVisible(ModuleName = ExportModule)]
-        static public bool cliTrackerFree(PlTerm tracker)
+        static public bool cliTrackerFree(PlTerm trackerIn)
         {
-            TrackedFrame tc0 = (TrackedFrame)GetInstance(tracker);
+            TrackedFrame tc0 = (TrackedFrame)GetInstance(trackerIn);
             if (tc0 != null)
             {
                 LocallyTrackedObjects.RemoveFrame(tc0);

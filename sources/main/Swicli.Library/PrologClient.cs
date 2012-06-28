@@ -997,7 +997,7 @@ jpl_jlist_demo :-
             }
         }
 
-        private static bool link_swiplcs(PlTerm term)
+        private static bool link_swiplcs(PlTerm pathName)
         {
             try
             {
@@ -1006,11 +1006,11 @@ jpl_jlist_demo :-
                 {
                     bool enabled = !JplSafeNativeMethodsDisabled;
                     SafelyRun(
-                        () => ConsoleTrace("JplSafeNativeMethods called again from " + term + " result=" + enabled));
+                        () => ConsoleTrace("JplSafeNativeMethods called again from " + pathName + " result=" + enabled));
                     return enabled;
                 }
                 JplSafeNativeMethodsCalled = true;
-                SafelyRun(() => ConsoleTrace("JplSafeNativeMethods call first time from " + term));
+                SafelyRun(() => ConsoleTrace("JplSafeNativeMethods call first time from " + pathName));
                 JplSafeNativeMethods.install();
                 //var v = new PlTerm("_1");
                 //JplSafeNativeMethods.jpl_c_lib_version_1_plc(v.TermRef);
