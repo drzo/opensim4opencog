@@ -121,7 +121,7 @@ namespace Cogbot
                 if (!RunStartupClientLisp) return;
                 RunStartupClientLisp = false;
                 DebugWriteLine("Running StartupClientLisp");
-                string startupClientLisp = "" + ClientManager.config["startupClientLisp"];
+                string startupClientLisp = ClientManager.config.GetValue("startupClientLisp", String.Empty);
                 if (startupClientLisp.Length > 1)
                 {
                     try
@@ -146,7 +146,7 @@ namespace Cogbot
                 InvokeJoin("Waiting on RunOnLogin");
                 if (!NeedRunOnLogin) return;
                 NeedRunOnLogin = false;
-                string onLogin = ClientManager.config.GetValue("onLogin", string.Empty);
+                string onLogin = ClientManager.config.GetValue("onLogin", String.Empty);
                 if (onLogin.Length > 1)
                 {
                     try

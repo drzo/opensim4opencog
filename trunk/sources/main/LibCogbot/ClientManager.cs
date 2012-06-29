@@ -2053,7 +2053,12 @@ namespace Cogbot
             URI = "" + config["simURL"]; //config.simURL;
             foreach (var o in type.GetProperties())
             {
-
+                if (!o.CanWrite) continue;                
+                object sv;
+                if (config.TryGetValue(o.Name, out sv))
+                {
+                    o.SetValue(this, sv, null);
+                }
             }
         }
 
