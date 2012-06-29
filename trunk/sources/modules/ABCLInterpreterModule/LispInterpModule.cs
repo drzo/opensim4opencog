@@ -3,10 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using cogbot;
-using cogbot.Actions.System;
-using cogbot.Listeners;
-using cogbot.ScriptEngines;
+using Cogbot;
 using MushDLR223.ScriptEngines;
 #if RTPARSER_INCLUDED
 using RTParser.Utils;
@@ -105,6 +102,11 @@ namespace ABCLScriptEngine
             get { return "plugin." + GetModuleName(); }
         }
 
+        public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
 
         #region Overrides of Listener
@@ -149,6 +151,25 @@ namespace ABCLScriptEngine
 
             return null;
           //  throw new NotImplementedException();
+        }
+
+        #endregion
+
+        #region Implementation of ICollectionProviderSettable
+
+        public void SetValue(ICollectionRequester requester, string name, object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool AcceptsNewKeys
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public ICollection GetGroup(ICollectionRequester requester, string name)
+        {
+            throw new NotImplementedException();
         }
 
         #endregion
