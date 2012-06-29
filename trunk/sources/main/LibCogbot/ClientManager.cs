@@ -179,11 +179,32 @@ namespace Cogbot
             }
             config = new Configuration();
             config.loadConfig();
+            var ct = config.GetType();
+            foreach (var arg in arguments.prepPhrases)
+            {
+                if (arg.Key.ToLower().Equals("httpd"))
+                {
+                    config.tcpPort = int.Parse("" + arg.Value);
+                    continue;
+                    
+                }
+                string value;
+                if (arguments.TryGetValue(arg.Key, out value))
+                {
+                    var fi = ct.GetField("_" + arg.Key,
+                                         BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.NonPublic |
+                                         BindingFlags.Public);
+                    if (fi != null)
+                    {
+                        fi.SetValue(config, Convert.ChangeType(value, fi.FieldType));
+                    }
+                }
+            }
             DefaultAccount.LoadFromConfig(config);
             nextTcpPort = config.tcpPort;
             if (clientManagerHttpServer == null)
             {
-                clientManagerHttpServer = MushDLR223.Utilities.HttpServerUtil.CreateHttpServer(this, 5580, "first_robot");
+                clientManagerHttpServer = MushDLR223.Utilities.HttpServerUtil.CreateHttpServer(this, nextTcpPort, "first_robot");
             }
             groupActions = new SortedDictionary<string, Cogbot.Actions.CommandInfo>();
             registrationTypes = new List<Type>();
