@@ -5,6 +5,7 @@ using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 using System.Threading;
+using System.Xml;
 using Cogbot;
 using Cogbot.Actions.Agent;
 using Cogbot.Library;
@@ -21,12 +22,36 @@ using Settings=OpenMetaverse.Settings;
 #if USE_SAFETHREADS
 using Thread = MushDLR223.Utilities.SafeThread;
 #endif
-
+using LoginDetails = System.Collections.Generic.IDictionary<string, string>;
 //using Radegast;
 namespace Cogbot
 {
     public delegate void DescribeDelegate(bool detailed, OutputDelegate WriteLine);
     enum Modes { normal, tutorial };
+    public static class ClientManagerConfig
+    {
+        public static bool UsingCogbotFromRadgast = false;
+        public static bool UsingRadgastFromCogbot = false;
+        public static bool IsVisualStudio;
+
+        public static Parser arguments
+        {
+            get
+            {
+                if(_arguments==null)
+                {
+                    string[] use = Environment.GetCommandLineArgs() ?? new string[0];
+                    _arguments = new Parser(use);
+                }
+                return _arguments;
+            }
+            set { _arguments = value; }
+        }
+
+        private static Parser _arguments;
+        public static bool noGUI = false;
+        public static bool GlobalRadegastInstanceGCUsed;
+    }
 
     public class ClientManager : IDisposable,ScriptExecutorGetter
     {
@@ -58,7 +83,7 @@ namespace Cogbot
         public static void addSetting(string name, string value)
         {
             name = name.ToLower().Replace(" ", "_");
-            arguments[name] = value;
+            ClientManagerConfig.arguments[name] = value;
         }
 
 
@@ -66,7 +91,7 @@ namespace Cogbot
         {
             name = name.ToLower().Replace(" ", "_");
             string value = null;
-            if (arguments.TryGetValue(name, out value))
+            if (ClientManagerConfig.arguments.TryGetValue(name, out value))
             {
                 return value;
             }
@@ -147,7 +172,7 @@ namespace Cogbot
         public int RunningMode = (int)Modes.normal;
         public UUID AnimationFolder = UUID.Zero;
 
-        public Configuration config;
+        readonly public static SysVarsDict config = MushDLR223.ScriptEngines.ScriptManager.SysVarsAsDict();
         //Utilities.BotTcpServer UtilitiesTcpServer;
         [ConfigSetting(Description="Allows user to specify lisp interpreter to use with botconfig subsystem and sim object recognition and various other things. Choices are DotLispInterpreter (use this if unsure),CycInterpreter or ABCLInterpreter")]
         public String taskInterpreterType = "DotLispInterpreter";// DotLispInterpreter,CycInterpreter or ABCLInterpreter
@@ -177,34 +202,21 @@ namespace Cogbot
                 col.Add(typeof(Cogbot.SimEventMulticastPipeline));
                 col.Add(typeof(Cogbot.SimEventTextSubscriber));
             }
-            config = new Configuration();
-            config.loadConfig();
-            var ct = config.GetType();
-            foreach (var arg in arguments.prepPhrases)
+
+            LoadConfigFile(ClientManagerConfig.arguments.GetValue("botconfig", "botconfig.xml"));
+            foreach (var arg in ClientManagerConfig.arguments.prepPhrases)
             {
-                if (arg.Key.ToLower().Equals("httpd"))
-                {
-                    config.tcpPort = int.Parse("" + arg.Value);
-                    continue;
-                    
-                }
                 string value;
-                if (arguments.TryGetValue(arg.Key, out value))
+                if (ClientManagerConfig.arguments.TryGetValue(arg.Key, out value))
                 {
-                    var fi = ct.GetField("_" + arg.Key,
-                                         BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.NonPublic |
-                                         BindingFlags.Public);
-                    if (fi != null)
-                    {
-                        fi.SetValue(config, Convert.ChangeType(value, fi.FieldType));
-                    }
+                    config[arg.Key] = value;
                 }
             }
             DefaultAccount.LoadFromConfig(config);
-            nextTcpPort = config.tcpPort;
+            nextTcpPort = config.GetValue("tcpPort", 5555);
             if (clientManagerHttpServer == null)
             {
-                clientManagerHttpServer = MushDLR223.Utilities.HttpServerUtil.CreateHttpServer(this, nextTcpPort, "first_robot");
+                clientManagerHttpServer = MushDLR223.Utilities.HttpServerUtil.CreateHttpServer(this, config.GetValue("httpd",5580), "first_robot");
             }
             groupActions = new SortedDictionary<string, Cogbot.Actions.CommandInfo>();
             registrationTypes = new List<Type>();
@@ -215,6 +227,24 @@ namespace Cogbot
             RegisterAssembly(GetType().Assembly);
             RegisterAssembly(typeof(DLRConsole).Assembly);
             RegisterAssembly(typeof(PathSystem3D.Navigation.SimPathStore).Assembly);
+        }
+
+        public static void LoadConfigFile(string botconfig)
+        { 
+            XmlDocumentLineInfo li = new XmlDocumentLineInfo();
+            li.Load(botconfig);
+            var root = li.FirstChild;
+            while (!(root is XmlElement))
+            {
+                if (root == null) return; 
+                root = root.NextSibling;
+            }         
+            foreach (XmlNode info in root.ChildNodes)
+            {
+                string key = Parser.ToKey(info.Name);
+                string value = info.InnerText;
+                config[key] = value;
+            }
         }
 
 
@@ -701,7 +731,7 @@ namespace Cogbot
                                                if (bc.InvokedMakeRunning) return;
                                                bc.InvokedMakeRunning = true;
                                            }
-                                           if (Configuration.UsingCogbotFromRadgast)
+                                           if (ClientManagerConfig.UsingCogbotFromRadgast)
                                                CogbotGUI.SetRadegastLoginOptions(bc.TheRadegastInstance, bc);
                                            AddTypesToBotClient(bc);
                                            bc.StartupClientLisp();
@@ -709,7 +739,7 @@ namespace Cogbot
                                        };
             PostAutoExecEnqueue(() =>
                                      {
-                                         if (Configuration.UsingCogbotFromRadgast) CogbotGUI.SetRadegastLoginOptions(bc.TheRadegastInstance, bc);
+                                         if (ClientManagerConfig.UsingCogbotFromRadgast) CogbotGUI.SetRadegastLoginOptions(bc.TheRadegastInstance, bc);
                                          // in-case someoine hits the login button
                                          bc.Network.LoginProgress += (s, e) =>
                                                                          {
@@ -858,22 +888,7 @@ namespace Cogbot
 
         string version = "1.0.0";
         public bool StarupLispCreatedBotClients;
-        public static bool IsVisualStudio;
-        public static Parser arguments
-        {
-            get
-            {
-                if(_arguments==null)
-                {
-                    string[] use = Environment.GetCommandLineArgs() ?? new string[0];
-                    _arguments = new Parser(use);
-                }
-                return _arguments;
-            }
-            set { _arguments = value; }
-        }
 
-        private static Parser _arguments;
         public static bool DoNotCreateBotClientsFromLispScript = false;
 
         /// <summary>
@@ -989,12 +1004,12 @@ namespace Cogbot
                     account.Client = client;
                 }
                 GridClient gc = null;
-                if (Configuration.UsingCogbotFromRadgast)
+                if (ClientManagerConfig.UsingCogbotFromRadgast)
                 {
-                    if (!GlobalRadegastInstanceGCUsed)
+                    if (!ClientManagerConfig.GlobalRadegastInstanceGCUsed)
                     {
                         gc = CogbotGUI.GlobalRadegastInstance.Client;
-                        GlobalRadegastInstanceGCUsed = true;
+                        ClientManagerConfig.GlobalRadegastInstanceGCUsed = true;
                         foreach (BotClient c in BotClients)
                         {
                             if (c.gridClient == gc)
@@ -1162,7 +1177,6 @@ namespace Cogbot
 
         public static bool AllocedConsole;
         public static bool dosBox;
-        public static bool noGUI = false;
 
         private static void VeryRealWriteLine(string s, params object[] args)
         {
@@ -1211,7 +1225,6 @@ namespace Cogbot
             };
 
         readonly static Dictionary<string,Color> Name2Color = new Dictionary<string, Color>();
-        private static bool GlobalRadegastInstanceGCUsed;
         private static bool _StartedUpLisp;
         static public bool StartedUpLisp
         {
@@ -1329,10 +1342,10 @@ namespace Cogbot
                 ClientManager manager = this;
                 manager.initTaskInterperter();
                 //manager.StartUpLisp();
-                var config = manager.config;
-                if (config.startupLisp.Length > 1)
+                string config1 = config.GetValue("startupLisp", string.Empty);
+                if (config1.Length > 1)
                 {
-                   if (!NoLoadConfig) manager.evalLispString("(progn " + config.startupLisp + ")");
+                    if (!NoLoadConfig) manager.evalLispString("(progn " + config1 + ")");
                 }
             }
         }
@@ -1603,38 +1616,38 @@ namespace Cogbot
 
         public bool ProcessCommandArgs()
         {
-            SetIfPresent(DefaultAccount, "FirstName", arguments["first"]);
-            if (arguments["last"] != null) DefaultAccount.LastName = arguments["last"];
-            if (arguments["pass"] != null) DefaultAccount.Password = arguments["pass"];
+            SetIfPresent(DefaultAccount, "FirstName", ClientManagerConfig.arguments["first"]);
+            if (ClientManagerConfig.arguments["last"] != null) DefaultAccount.LastName = ClientManagerConfig.arguments["last"];
+            if (ClientManagerConfig.arguments["pass"] != null) DefaultAccount.Password = ClientManagerConfig.arguments["pass"];
             DefaultAccount.GroupCommands = true;
 
-            if (arguments["masterkey"] != null)
-                DefaultAccount.MasterKey = UUID.Parse(arguments["masterkey"]);
-            if (arguments["master"] != null)
-                DefaultAccount.MasterName = arguments["master"];
+            if (ClientManagerConfig.arguments["masterkey"] != null)
+                DefaultAccount.MasterKey = UUID.Parse(ClientManagerConfig.arguments["masterkey"]);
+            if (ClientManagerConfig.arguments["master"] != null)
+                DefaultAccount.MasterName = ClientManagerConfig.arguments["master"];
 
-            if (arguments["loginuri"] != null)
-                DefaultAccount.URI = LoginURI = arguments["loginuri"];
+            if (ClientManagerConfig.arguments["loginuri"] != null)
+                DefaultAccount.URI = LoginURI = ClientManagerConfig.arguments["loginuri"];
 
             if (string.IsNullOrEmpty(LoginURI))
                 LoginURI = Settings.AGNI_LOGIN_SERVER;
 
             Logger.Log("Using login URI " + LoginURI, Helpers.LogLevel.Info);
 
-            arguments.GetBoolean("gettextures", ref GetTextures);
+            ClientManagerConfig.arguments.GetBoolean("gettextures", ref GetTextures);
 
-            if (arguments["startpos"] != null)
+            if (ClientManagerConfig.arguments["startpos"] != null)
             {
                 char sep = '/';
-                string[] startbits = arguments["startpos"].Split(sep);
+                string[] startbits = ClientManagerConfig.arguments["startpos"].Split(sep);
                 DefaultAccount.Start = NetworkManager.StartLocation(startbits[0], Int32.Parse(startbits[1]),
                         Int32.Parse(startbits[2]), Int32.Parse(startbits[3]));
             }
 
-            if (arguments["scriptfile"] != null)
+            if (ClientManagerConfig.arguments["scriptfile"] != null)
             {
                 string scriptFile = String.Empty;
-                scriptFile = arguments["scriptfile"];
+                scriptFile = ClientManagerConfig.arguments["scriptfile"];
                 if (!File.Exists(scriptFile))
                 {
                     Logger.Log(String.Format("File {0} Does not exist", scriptFile), Helpers.LogLevel.Error);
@@ -1646,19 +1659,19 @@ namespace Cogbot
             }
 
 
-            if (arguments["file"] != null)
+            if (ClientManagerConfig.arguments["file"] != null)
             {
                 DoNotCreateBotClientsFromLispScript = true;
                 string file = String.Empty;
-                file = arguments["file"];
+                file = ClientManagerConfig.arguments["file"];
                 LoadAcctsFromFile(file);
-            } else if (arguments["first"] != null && arguments["last"] != null && arguments["pass"] != null)
+            } else if (ClientManagerConfig.arguments["first"] != null && ClientManagerConfig.arguments["last"] != null && ClientManagerConfig.arguments["pass"] != null)
             {
                 ClientManager.DoNotCreateBotClientsFromLispScript = true;
                 // Taking a single login off the command-line
-                var account = FindOrCreateAccount(arguments["first"], arguments["last"]);
+                var account = FindOrCreateAccount(ClientManagerConfig.arguments["first"], ClientManagerConfig.arguments["last"]);
             }
-            else if (arguments["help"] != null)
+            else if (ClientManagerConfig.arguments["help"] != null)
             {
                 return false;
             } else
@@ -1839,9 +1852,9 @@ namespace Cogbot
 
         readonly internal AutoResetEvent LoginEvent = new AutoResetEvent(false);
         readonly internal LoginParams loginParams = new LoginParams();
-        public bool GroupCommands;
-        public string MasterName;
-        public UUID MasterKey = UUID.Zero;
+        public bool GroupCommands { get; set; }
+        public string MasterName { get; set; }
+        public UUID MasterKey { get; set; }
         public BotClient Client;        
 
 
@@ -2031,12 +2044,17 @@ namespace Cogbot
             Status = LoginStatus.None;
         }
 
-        public void LoadFromConfig(Configuration config)
+        public void LoadFromConfig(IDictionary<string, object> config)
         {
-            FirstName = config.firstName;
-            LastName = config.lastName;
-            Password = config.password;
-            URI = config.simURL;
+            var type = GetType();
+            FirstName = "" + config["firstName"];
+            LastName = "" + config["lastName"];// config.lastName;
+            Password = "" + config["password"];// config.password;
+            URI = "" + config["simURL"]; //config.simURL;
+            foreach (var o in type.GetProperties())
+            {
+
+            }
         }
 
         public bool Equals(LoginDetails other)

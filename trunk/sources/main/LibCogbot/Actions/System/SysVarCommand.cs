@@ -47,7 +47,7 @@ namespace Cogbot.Actions.System
             sb.AppendLine("<table><tr><th>Variable Name</th><th>current value</th><th>Description</th></tr>");
             foreach (var sv in LockInfo.CopyOf(ScriptManager.SysVars))
             {
-                ConfigSettingAttribute svv = sv.Value;
+                IKeyValuePair<string,object> svv = sv;
                 sb.AppendLine(string.Format("<tr name=\"{0}\" id='{0}'><td>{0}</td><td>{1}</td><td>{2}</td></tr>", Htmlize.NoEnts(svv.Key), Htmlize.NoEnts("" + svv.Value), Htmlize.NoEnts(svv.Comments)));
             }
             sb.AppendLine("</table>");
@@ -62,21 +62,21 @@ namespace Cogbot.Actions.System
             {
                 foreach (var sv in LockInfo.CopyOf(ScriptManager.SysVars))
                 {
-                    ConfigSettingAttribute svv = sv.Value;
+                    var svv = sv;
                     WriteLine(string.Format("{0}={1} //{2}", (svv.Key), svv.Value, svv.Comments));
                 }
                 return Success("count=" + ScriptManager.SysVars.Count);
             }
-            List<ConfigSettingAttribute> setThese = new List<ConfigSettingAttribute>();
+            List<IKeyValuePair<string,object>> setThese = new List<IKeyValuePair<string, object>>();
             int found = 0;
             string find = args[0].ToLower();
             foreach (var sv in sysvars)
             {
-                var svv = sv.Value;
-                if (svv.Finds(find))
+                var svv = sv;
+                if (svv.Key.ToLower().Contains(find))
                 {
                     found++;
-                    WriteLine("" + svv.DebugInfo);
+                    WriteLine(svv.Key + ": " + svv.DebugInfo);
                     setThese.Add(svv);
                 }
             }

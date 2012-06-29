@@ -50,7 +50,7 @@ namespace Cogbot
                 if (ClientManager._wasFirstGridClient)
                 {
                     ClientManager._wasFirstGridClient = false;
-                    if (Configuration.UsingCogbotFromRadgast)
+                    if (ClientManagerConfig.UsingCogbotFromRadgast)
                     {
                         inst = GlobalRadegastInstance;
                     }

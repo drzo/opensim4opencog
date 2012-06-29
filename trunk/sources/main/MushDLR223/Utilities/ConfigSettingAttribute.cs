@@ -260,11 +260,6 @@ namespace MushDLR223.Utilities
             return null;
         }
 
-        public bool Finds(string find)
-        {
-            return string.IsNullOrEmpty(find) || Key.ToLower().Contains(find);
-        }
-
         public static ConfigSettingAttribute CreateSetting(MemberInfo s)
         {
             ConfigSettingAttribute attr = new ConfigSettingAttribute();
@@ -350,9 +345,11 @@ namespace MushDLR223.Utilities
         }
     }
 
-    public interface IKeyValuePair<K,V> : IDisposable
+    public interface IKeyValuePair<K, V> : IDisposable
     {
         V Value { get; set; }
         K Key { get; }
+        K Comments { get; }
+        string DebugInfo { get; }
     }
 }

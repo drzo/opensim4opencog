@@ -599,5 +599,16 @@ namespace MushDLR223.ScriptEngines
         {
            // throw new NotImplementedException();
         }
+
+        public T GetValue<T>(string key, T i)
+        {
+            string value;
+            if (TryGetValue(key, out value))
+            {
+                return (T)Convert.ChangeType(value, typeof(T));
+            }
+            return i;
+        }
+
     }
 }

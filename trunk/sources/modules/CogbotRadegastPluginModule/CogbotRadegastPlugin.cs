@@ -121,7 +121,7 @@ namespace CogbotRadegastPluginModule
             AddRadegastEvents();
             CogbotContextMenuListener = new CogbotContextMenuListener();
             CogbotNoticeuListener = new CogbotNotificationListener();
-            if (Configuration.UsingRadgastFromCogbot)
+            if (ClientManagerConfig.UsingRadgastFromCogbot)
             {
                 // just unregister events for now
                 inst.Netcom.Dispose();
@@ -134,7 +134,7 @@ namespace CogbotRadegastPluginModule
                 {
                     CogbotGUI.GlobalRadegastInstance = inst;
                 }
-                Configuration.UsingCogbotFromRadgast = true;
+                ClientManagerConfig.UsingCogbotFromRadgast = true;
                 clientManager = ClientManager.SingleInstance ?? new ClientManager();
             }
             BotClient bc = clientManager.EnsureBotByGridClient(inst.Client);

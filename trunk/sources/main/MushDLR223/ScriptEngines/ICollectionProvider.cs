@@ -187,6 +187,17 @@ namespace MushDLR223.ScriptEngines
 
         public string Key
         { get; private set; }
+
+        public string Comments
+        {
+            get { return ""; }
+        }
+
+        public string DebugInfo
+        {
+            get { return Key + " = " + Value; }
+        }
+
         #endregion
 
         #region Implementation of IDisposable

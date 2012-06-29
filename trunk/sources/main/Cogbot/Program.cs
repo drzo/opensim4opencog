@@ -42,7 +42,7 @@ namespace ABuildStartup
                 string arg0 = use[0].ToLower();
                 if (arg0.EndsWith(".vshost.exe"))
                 {
-                    Cogbot.ClientManager.IsVisualStudio = true;
+                    ClientManagerConfig.IsVisualStudio = true;
                     arg0 = arg0.Replace(".vshost.exe", ".exe");
                 }
                 if (arg0.EndsWith(Application.ExecutablePath.ToLower()))
@@ -240,25 +240,25 @@ namespace ABuildStartup
                 ClientManager.MainThread = Thread.CurrentThread;
             }
 
-            ClientManager.arguments = new Parser(args);
+            ClientManagerConfig.arguments = new Parser(args);
             string[] oArgs;
             // Change current working directory to Program install dir?
-            if (ClientManager.arguments.GetAfter("--lcd", out oArgs))
+            if (ClientManagerConfig.arguments.GetAfter("--lcd", out oArgs))
             {
                 Directory.SetCurrentDirectory(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
             }
-            if (!ClientManager.arguments.GetAfter("--noexcpt", out oArgs))
+            if (!ClientManagerConfig.arguments.GetAfter("--noexcpt", out oArgs))
             {
                 SetExceptionHandlers(true);
             }
-            if (ClientManager.arguments.GetAfter("--aiml", out oArgs))
+            if (ClientManagerConfig.arguments.GetAfter("--aiml", out oArgs))
             {
                 string[] newArgs = oArgs;
                 AllocConsole();
                 RunType("AIMLbot:RTParser.RTPBot", args);
                 return;
             }
-            if (ClientManager.arguments.GetAfter("--plwin", out oArgs))
+            if (ClientManagerConfig.arguments.GetAfter("--plwin", out oArgs))
             {
                 DoAndExit(() =>
                               {
@@ -273,34 +273,34 @@ namespace ABuildStartup
                               });                
                 return;
             }     
-            if (ClientManager.arguments.GetAfter("--swipl", out oArgs))
+            if (ClientManagerConfig.arguments.GetAfter("--swipl", out oArgs))
             {
                 string[] newArgs = oArgs;
                 if (newArgs.Length == 0) newArgs = new string[] { "-f", "cynd/cogbot.pl" };
                 RunType("PrologBotModule:PrologScriptEngine.PrologScriptInterpreter", newArgs);
                 return;
             }
-            if (ClientManager.arguments.GetAfter("--main", out oArgs))
+            if (ClientManagerConfig.arguments.GetAfter("--main", out oArgs))
             {
                 string[] newArgs = oArgs;
                 AllocConsole();
-                string c = ClientManager.arguments["--main"];
+                string c = ClientManagerConfig.arguments["--main"];
                 RunType(c, newArgs);
                 return;
             }
-            if (ClientManager.arguments.GetWithout("--noconfig", out oArgs))
+            if (ClientManagerConfig.arguments.GetWithout("--noconfig", out oArgs))
             {
-                ClientManager.arguments = new Parser(oArgs);
+                ClientManagerConfig.arguments = new Parser(oArgs);
                 ClientManager.NoLoadConfig = true;
             }
-            if (ClientManager.arguments.GetWithout("--console", out oArgs))
+            if (ClientManagerConfig.arguments.GetWithout("--console", out oArgs))
             {
                 ClientManager.dosBox = true;
-                ClientManager.arguments = new Parser(oArgs);
+                ClientManagerConfig.arguments = new Parser(oArgs);
             }
-            if (ClientManager.arguments.GetWithout("--nogui", out oArgs))
+            if (ClientManagerConfig.arguments.GetWithout("--nogui", out oArgs))
             {
-                ClientManager.noGUI = true;
+                ClientManagerConfig.noGUI = true;
             } else
             {
                 try
@@ -311,7 +311,7 @@ namespace ABuildStartup
                 catch (Exception)
                 {
                     // X windows missing
-                    ClientManager.noGUI = true;
+                    ClientManagerConfig.noGUI = true;
                 }
             }
             if (ClientManager.dosBox) AllocConsole();
@@ -319,15 +319,15 @@ namespace ABuildStartup
             DoAndExit(() =>
                           {
                               MainProgram.CommandLine = new Radegast.CommandLine();
-                              ClientManager.arguments = new Parser(args);
-                              if (ClientManager.noGUI)
+                              ClientManagerConfig.arguments = new Parser(args);
+                              if (ClientManagerConfig.noGUI)
                               {
-                                  Configuration.UsingRadgastFromCogbot = true;
+                                  ClientManagerConfig.UsingRadgastFromCogbot = true;
                                   Cogbot.Program.MainRun(args);
                               }
                               else
                               {
-                                  Configuration.UsingCogbotFromRadgast = true;
+                                  ClientManagerConfig.UsingCogbotFromRadgast = true;
                                   RadegastMain(args);
                               }
                           });
