@@ -17,15 +17,15 @@
 === MS windows _requires .NET 2.0 or above_ ===
 Copy these two directories onto your Prolog Install Dir.
 {{{
-./bin/   
-./library/
+pl//bin/   
+pl/library/
 }}}
 
 === Linux OS/X _requires Mono (2.10.8+)_ ===
 Copy these two directories onto your Prolog Install Dir
 {{{
-./lib/  
-./library/
+pl/lib/  
+pl/library/
 }}}
 
 == Running / Examples ==
