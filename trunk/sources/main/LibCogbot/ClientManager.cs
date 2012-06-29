@@ -231,7 +231,8 @@ namespace Cogbot
 
         public static void LoadConfigFile(string botconfig)
         { 
-            XmlDocumentLineInfo li = new XmlDocumentLineInfo();
+            XmlDocument li = new XmlDocument();
+            li.PreserveWhitespace = true;
             li.Load(botconfig);
             var root = li.FirstChild;
             while (!(root is XmlElement))
@@ -1345,7 +1346,19 @@ namespace Cogbot
                 string config1 = config.GetValue("startupLisp", string.Empty);
                 if (config1.Length > 1)
                 {
-                    if (!NoLoadConfig) manager.evalLispString("(progn " + config1 + ")");
+                    if (!NoLoadConfig)
+                    {
+                        try
+                        {
+                            manager.evalLispString("(progn " + config1 + " )");
+
+                        }
+                        catch (Exception e)
+                        {
+                           
+                            throw;
+                        }
+                    }
                 }
             }
         }
