@@ -61,8 +61,8 @@ namespace Cogbot
         }
 
         public static bool StartLispThreadAtPluginInit = false;
-        public static readonly TaskQueueHandler OneAtATimeQueue = new TaskQueueHandler("ClientManager OneAtATime", new TimeSpan(0, 0, 0, 0, 10), true, false);
-        public static readonly TaskQueueHandler PostAutoExec = new TaskQueueHandler("PostExec", new TimeSpan(0, 0, 0, 0, 10), false, false);
+        public static readonly TaskQueueHandler OneAtATimeQueue = new TaskQueueHandler("ClientManager.OneAtATime", new TimeSpan(0, 0, 0, 0, 10), true, false);
+        public static readonly TaskQueueHandler PostAutoExec = new TaskQueueHandler("ClientManager.PostAutoExec", new TimeSpan(0, 0, 0, 0, 10), false, false);
         public static object SingleInstanceLock = new object();
         public static event Action<BotClient> BotClientCreated;
         private bool InvokeJoin(string s)
@@ -242,7 +242,7 @@ namespace Cogbot
             foreach (XmlNode info in root.ChildNodes)
             {
                 string key = Parser.ToKey(info.Name);
-                string value = info.InnerText;
+                string value = info.InnerXml;
                 config[key] = value;
             }
         }
