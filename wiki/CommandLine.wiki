@@ -26,8 +26,7 @@ The cogbot server is usually started from Radegast
  * --noexcpt   Ignore exceptions
  * --aiml      Only the aiml interpretor
  * --plwin     Display a prolog top level
- * --swipl     DOUG?
- * --main      DOUG?
+ * --main      `<`StringNameOfClassWithMain`>`
  * --noconfig 
  * --console
  * --nogui     don't start Radegast
