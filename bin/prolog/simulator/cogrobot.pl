@@ -58,6 +58,8 @@
 :-set_prolog_flag(double_quotes,string).
 :-at_initialization(set_prolog_flag(double_quotes,string)).
 
+%% app_init(+Call)
+% On app load run Call
 app_init(Call):-term_to_atom(Call,Atom),atom_concat(Atom,'_done',Did),dynamic(arestore:Did),app_init_call(app_init(arestore:Did,Call)).
 app_init_call(Call):-at_initialization(Call),Call.
 app_init(Did,_Call):-Did,!.
@@ -93,20 +95,20 @@ assert_once(Gaf):-assert(Gaf).
 :-app_init(cli_load_assembly('PrologBotModule')).
 %------------------------------------------------------------------------------
 
-%% load needed modules
+% % load needed modules
 
 :-use_module(library(swicli)).
 %%:-use_module(library(jpl)).
 
 %------------------------------------------------------------------------------
 
-%% load the cogbot assembly
+% % load the cogbot assembly
 :-dynamic(loaded_cogbot_assembly/0).
 load_cogbot_assembly:-loaded_cogbot_assembly,!.
 load_cogbot_assembly:-assert(loaded_cogbot_assembly),current_prolog_flag(address_bits,32) -> cli_load_assembly('Cogbot32.exe') ; cli_load_assembly('Cogbot.exe').
 :-app_init(load_cogbot_assembly).
 
-%% cache the type names
+% % cache the type names
 % prevents us having to use long names for things like SimAvatar
 %
 cache_cogbot_types:-
@@ -225,7 +227,7 @@ world_ref(Sys):-cli_get('Cogbot.WorldObjects','GridMaster',Sys).
 %
 world_get(Field,Value):-world_ref(Sys),cli_get(Sys,Field,Value).
 
-%% get each SimObject
+% % get each SimObject
 % this is every primitive, linked or not, as a complex term
 % it's a partially marshalled object from the simulator
 % cli_col iterates thru elements
@@ -238,7 +240,7 @@ world_object(Ele):-grid_object(Ele),cli_get(Ele,isattachment,@(false)).
 
 world_root_object(Ele):-world_get('SimRootObjects',Objs),cli_col(Objs,Ele).
 
-%% get each SimAvatar
+% % get each SimAvatar
 %
 % this is the set of av's that are known to the simulator, they are only
 % actually present if they have a prim
@@ -260,8 +262,8 @@ grid_region(Ele):-cli_get('Cogbot.World.SimRegion','CurrentRegions',Objs),cli_co
 
 grid_parcels(Ele):-grid_region(Sim),cli_get(Sim,parcels,Objs),cli_col(Objs,Ele).
 
-%% get the client_manager_ref Instance
-%%
+%% client_manager_ref(-SingleInstance)
+% get the client_manager_ref/1 Instance
 %  A class that holds all the static singletons
 %  A Client is a logged on acct in this context
 %
@@ -365,8 +367,9 @@ listifyFlat(v3(X,Y,Z),[v3(X,Y,Z)]).
 listifyFlat(C,FA):-compound(C),!,C=..[F|A],!,listifyFlat([F|A],FA).
 listifyFlat(C,[C]).
 
-%% get the GridClient Instance
-%  libOMV's version of gridclient_ref, in case you want the direct one
+%% gridclient_ref(+Obj)
+% get the GridClient Instance 
+% libOMV's version of gridclient_ref/1, in case you want the direct one
 gridclient_ref(Obj):-current_bot(BC),cli_get(BC,'gridClient',Obj).
 
 
@@ -411,7 +414,7 @@ user:robot_to_str(A,B):-cogrobot:robot_to_str(A,B).
 nop(_).
 
 
-%% print some events
+% print some events
 :-dynamic(sim_event_db/3).
 on_sim_event(_A,B,C):-contains_var("On-Log-Message",a(B,C)),!.
 on_sim_event(_A,B,C):-contains_var('DATA_UPDATE',a(B,C)),!.
@@ -422,7 +425,7 @@ on_sim_event(A,B,C):-!,nop(assertz(sim_event_db(A,B,C))),!,robot_to_str(C,AS),!,
 
 user:on_sim_event(A,B,C):-cogrobot:on_sim_event(A,B,C).
 
-%% trim_sim_events(NumToLeave):- predicate_property(sim_event_db(_,_,_),number_of_clauses(N)),Remove is N-Num, (Remove<=0->true;( ... )).
+% trim_sim_events(NumToLeave):- predicate_property(sim_event_db(_,_,_),number_of_clauses(N)),Remove is N-Num, (Remove<=0->true;( ... )).
 trim_sim_events(Num):- predicate_property(sim_event_db(_,_,_),number_of_clauses(N)),Num>=N,!.
 trim_sim_events(Num):- retract(sim_event_db(_,_,_)),predicate_property(sim_event_db(_,_,_),number_of_clauses(N)),Num >= N,!.
 trim_sim_events(_Num).
@@ -430,13 +433,13 @@ trim_sim_events(_Num).
 prolog_in_thread(Named,_,_):-thread_property(N,_),N==Named,!.
 prolog_in_thread(Named,Goal,Options):-thread_create(Goal,_,[alias(Named)|Options]).
 
-%% Every minute trim EventLog to 1000 entries
+% Every minute trim EventLog to 1000 entries
 keep_1000_events:-repeat,sleep(60),trim_sim_events(1000),fail.
 :-app_init(prolog_in_thread(keep_1000_events,keep_1000_events,[detached(true)])).
 
 %%:-module_transparent(first_bot_client_hook/2).
 
-%% on first bot Client created register the global event handler
+% on first bot Client created register the global event handler
 user:first_bot_client_hook(A,B):- %%%attach_console,trace,
  current_bot(Obj),
   % uncomment the next line if you want all commands to run thru the universal event handler
@@ -444,7 +447,7 @@ user:first_bot_client_hook(A,B):- %%%attach_console,trace,
    cli_to_str(first_bot_client_hook(A-B-Obj),Objs),writeq(Objs),nl,
    ahook_bot_created(Obj).
 
-%% register first_bot_client_hook
+% register first_bot_client_hook
 register_on_first_bot_client:- cli_add_event_handler('Cogbot.ClientManager','BotClientCreated',first_bot_client_hook(_,_)).
 :-app_init(register_on_first_bot_client).
 
@@ -500,8 +503,8 @@ to_avatar(Name,Name):-cli_is_object(Name),cli_is_type(Name,'SimAvatar'),!.
 to_avatar(Name,Object):-cli_is_object(Name),cli_to_str(Name,String),!,to_avatar(String,Object).
 to_avatar(Name,Object):-cli_call('Cogbot.WorldObjects','GetSimAvatarFromNameIfKnown'(string),[Name],Object).
 
-%% name_to_location_ref(start_hill_walk,O),object_color(O,C),cli_writeln(C).
-%% cli_call(static('Cogbot.World.SimImageUtils'),'ToNamedColors'('OpenMetaverse.Color4'),[struct('Color4',1,0,1,0)],Named),cli_col(Named,NamedE),cli_writeln(NamedE).
+% name_to_location_ref(start_hill_walk,O),object_color(O,C),cli_writeln(C).
+% cli_call(static('Cogbot.World.SimImageUtils'),'ToNamedColors'('OpenMetaverse.Color4'),[struct('Color4',1,0,1,0)],Named),cli_col(Named,NamedE),cli_writeln(NamedE).
 object_color(A,NamedE):-grid_object(A),cli_call(static('Cogbot.World.SimImageUtils'),'ToNamedColors'('Cogbot.World.SimObject'),[A],Named),cli_col(Named,NamedE).
 object_color(A,NamedE):-fail,grid_object(A),cli_get(A,textures,B),cli_get(B,faceTextures,C),cli_col(C,E),E\=='@'(null),cli_get(E,rgba,CC),
   cli_call(static('Cogbot.World.SimImageUtils'),'ToNamedColors'('OpenMetaverse.Color4'),[CC],Named),cli_col(Named,NamedE).
@@ -573,11 +576,11 @@ vectorAdd(A1,A2,R):-cli_call(A1,add(A1,A2),R).
 % already global vect!
 position_to_v3d(Vect,Vect):-functor(Vect,v3d,3),!.
 position_to_v3d(v3(A,B,C),Vect):-botget(['Network','CurrentSim','Handle'],S),cli_call('SimRegion','HandleLocalToGlobal'(S,v3(A,B,C)),Vect),!.
-%% ?- position_to_v3d('annies haven/129.044327/128.206070/81.519630',D).
+% ?- position_to_v3d('annies haven/129.044327/128.206070/81.519630',D).
 position_to_v3d(A,Vect):-atom(A),concat_atom([R,X,Y,Z|_],'/',A),!,gridclient_ref(BC),cli_call('SimRegion','GetRegionByName'(R,BC),Reg),cli_call(Reg,'LocalToGlobal'(v3(X,Y,Z)),Vect).
-%% ?- position_to_v3d('129.044327/128.206070/81.519630',D).
+% ?- position_to_v3d('129.044327/128.206070/81.519630',D).
 position_to_v3d(A,Vect):-atom(A),concat_atom([X,Y,Z],'/',A),!,position_to_v3d(v3(X,Y,Z),Vect).
-%% ?- position_to_v3d('CyberPunk Buddha - L',D).
+% ?- position_to_v3d('CyberPunk Buddha - L',D).
 position_to_v3d(A,Vect):-atom(A),!,name_to_location_ref(A,Obj),cli_get(Obj,globalposition,Vect),!.
 position_to_v3d(Obj,Vect):-cli_get(Obj,globalposition,Vect),!.
 
@@ -585,7 +588,7 @@ position_to_v3(Obj,LV):-position_to_v3d(Obj,Vect),cli_call('SimRegion','GlobalTo
 
 %% deprecated
 distance_to(A,R):-bot_distance_to(A,R).
-%% get the distance of a primspec
+% % get the distance of a primspec
 wbot_distance_to(BotID,A,R):-position_to_v3d(A,A2),!,wbotget(BotID,['Self','GlobalPosition'],A1),cli_get(A1,'Z',Z),cli_set(A2,'Z',Z), cli_call(A2,distance(A1,A2),R).
 
 % ?- bot_moveto('CyberPunk Buddha - L',4,FD).
@@ -625,7 +628,7 @@ wbot_chat(BotID,Msg,Ch,Type):-cli_call(BotID,talk(Msg,Ch,Type),_).
 % X = @'C#598062912' 
 
 %------------------------------------------------------------------------------
-%% Start at 'My Inventory'
+% Start at 'My Inventory'
 %------------------------------------------------------------------------------
 wbot_my_inventory(BotID,[TopName|Path],Node):-
    wbotget(BotID,['Inventory','Store','RootNode'],StartNode),
@@ -636,7 +639,7 @@ wbot_my_inventory(BotID,[TopName|Path],Node):-
    inventory_children(Top,TopData,Path,Node).
 
 %------------------------------------------------------------------------------
-%% Start at 'Library Folder'
+% Start at 'Library Folder'
 %------------------------------------------------------------------------------
 wbot_lib_inventory(BotID,[TopName|Path],Node):-
    wbotget(BotID,['Inventory','Store','LibraryRootNode'],StartNode),
@@ -647,7 +650,7 @@ wbot_lib_inventory(BotID,[TopName|Path],Node):-
    inventory_children(Top,TopData,Path,Node).
 
 %------------------------------------------------------------------------------
-%% Start at above 'Library Folder' and 'My Inventory'
+% Start at above 'Library Folder' and 'My Inventory'
 %------------------------------------------------------------------------------
 wbot_inventory(BotID,[StartName,TopName|Path],Node):-
  cli_notrace((
@@ -801,6 +804,8 @@ value_deref(Value,ValueO):-cli_col(Value,ValueO).
 %%% AIMLBOT VAR Interface
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 wbot_aimlbot_ref(BotID,AIMLBot):-wbotget(BotID,'Plugins',Plugs),cli_map(Plugs,"AIMLBotModule",AIMLBotModule),cli_get(AIMLBotModule,'MyBot',AIMLBot),!.
+
+% ?-  bot_aimlvars_get("bot",Y,Z),cli_to_str(Z,S).
 
 wbot_aimlvars_get(BotID,NameSpace,VarName,Value):-wbot_aimlbot_ref(BotID,AIMLBot),var(NameSpace),!,cli_get(AIMLBot,'AllDictionaries',ADS),
    cli_map(ADS,NameSpace,BVs),cli_map(BVs,VarName,Value).
@@ -1060,6 +1065,45 @@ findAvatarClassified(AvatarID,Found):-bot_with_manager_requestavatar_reply(Avata
 
 findAvatarName(AvatarID,Found):-bot_with_manager_requestavatar_reply(AvatarID,Found,'Classified','Classifieds').
 
+cap_word(In,Out):-atom_codes(In,[L|Rest]),code_type(U,to_upper(L)),atom_codes(Out,[U|Rest]).
+
+ppList2Args(PP,Args):-ppList2Args0(PP,Args).
+
+ppList2Args0([],[]):-!.
+ppList2Args0([P|PP],[A|Args]):-
+   ppList2Arg(P,A),
+   ppList2Args0(PP,Args).
+
+ppList2Arg('PlTerm':A,AA):-!,ppList2Arg(A,AA).
+ppList2Arg('Int32':A,AA):-!,ppList2Arg(A,AA).
+ppList2Arg(A:B,AA):-ppList2Arg(A,A1),ppList2Arg(B,B1),atom_concat(A1,B1,AB),!,ppList2Arg(AB,AA).
+ppList2Arg(F,B):-compound(F),F=..List,concat_atom(List,A),!,ppList2Arg(A,B).
+ppList2Arg(A,BB):- concat_atom([B,''],"Out",A),!,cap_word(B,BB1),concat_atom([-,BB1],'',BB).
+ppList2Arg(A,BB):- concat_atom([B,''],"In",A),!,cap_word(B,BB1),concat_atom([+,BB1],'',BB).
+ppList2Arg(A,BB):- concat_atom([_,_|_],"Byref",A),!,A=B,cap_word(B,BB1),concat_atom([?,BB1],'',BB).
+ppList2Arg(A,BB):- concat_atom([_,_|_],"Out",A),!,A=B,cap_word(B,BB1),concat_atom([-,BB1],'',BB).
+ppList2Arg(A,BB):- concat_atom([_,_|_],"In",A),A=B,!,cap_word(B,BB1),concat_atom([+,BB1],'',BB).
+ppList2Arg(A,BB):-concat_atom([A],'',B),cap_word(B,BB).
+
+:-use_module(library(pldoc)).
+:-doc_server(4000).
+:-portray_text(true). 
+
+
+% cli_docs:- predicate_property(swicli:P,file(_)),P=P,!.
+cli_docs:- cli_find_type('Swicli.Library.PrologClient',T),
+   cli_get(static(T),'AutoDocInfos',SRF),cli_map(SRF,K,V),P=V,cli_get(P,'GetParameters',PPs),
+   bot_params_to_list(PPs,PP),cli_member_doc(P,Doc,_XML),
+    concat_atom([FC,AC],"/",K),atom_number(AC,A),string_to_atom(FC,F),
+    ppList2Args(PP,Args),PRED=..[F|Args],A=A,
+    cli_to_str(V,VS),
+   %% cli_to_str(F/A=eval(cli_get(V,name)):PRED:Doc,TSTR),
+    %%term_to_atom(TSTR,ASTR),string_to_atom(STR,ASTR),
+    'format'('~n%% ~w',[PRED]),
+    %%'format'('% ~w~n',[Doc]),
+    VS==VS, %%'format'('%       Foreign call to ~w~n',[VS]),
+    fail.
+
 
 %------------------------------------------------------------------------------
 % scans and export predicates defined from this module.. 
@@ -1084,4 +1128,11 @@ scan_and_export_wb.
 :-cli_hide(cogrobot:wbot_inventory/3).
 :-cli_hide(cogrobot:wbot_my_inventory/3).
 :-cli_hide(cogrobot:wbot_lib_inventory/3).
+
+end_of_file.
+
+?- cli_find_type('SbsSW.SwiPlCs.PlEngine',T),cli_get(static(T),'SavedRegisterForeign',SRF),cli_map(SRF,K,V),cli_get(V,'Method',M),cli_writeln(V=M).
+cli_find_type('Swicli.Library.PrologClient',T),cli_get(static(T),'AutoDocInfos',SRF),cli_map(SRF,K,V),cli_writeln(K=V),fail.
+
+
 

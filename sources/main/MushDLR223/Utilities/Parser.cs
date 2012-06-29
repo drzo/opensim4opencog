@@ -204,6 +204,7 @@ namespace MushDLR223.ScriptEngines
 
             bool firstTok = true;
 
+            string lastPrep = null;
             for (int i = 0; i < tokens.Length; ++i)
             {
                 string prep = tokens[i];
@@ -238,8 +239,17 @@ namespace MushDLR223.ScriptEngines
                     if (prep.StartsWith("--"))
                     {
                         Add(ToKey(prep), "True");
+                        lastPrep = ToKey(prep);
                         continue;
-                    }                    
+                    }
+                    else
+                    {
+                        if (lastPrep != null)
+                        {
+                            Add(lastPrep, prep);
+                        }
+                    }
+                    lastPrep = null;
                 }
                 
 
