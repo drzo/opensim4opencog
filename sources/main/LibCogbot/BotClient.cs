@@ -471,12 +471,13 @@ namespace Cogbot
             // Start the server
             lock (ClientManager.config)
             {
+                int poff = ClientManager.config.GetValue("tcpPortOffset", 10);
                 thisTcpPort = ClientManager.nextTcpPort;
-                ClientManager.nextTcpPort += ClientManager.config.tcpPortOffset;
+                ClientManager.nextTcpPort += poff;
                 ClientManager.PostAutoExecEnqueue(() =>
                 {
                     Utilities.BotTcpServer UtilitiesTcpServer = new Utilities.BotTcpServer(thisTcpPort, this);
-                    UtilitiesTcpServer.ServerPortIncr = ClientManager.config.tcpPortOffset;
+                    UtilitiesTcpServer.ServerPortIncr = poff;
                     UtilitiesTcpServer.startSocketListener();
                     ClientManager.nextTcpPort = UtilitiesTcpServer.ServerPort + UtilitiesTcpServer.ServerPortIncr;
                 });

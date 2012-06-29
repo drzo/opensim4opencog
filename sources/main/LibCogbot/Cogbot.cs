@@ -26,8 +26,8 @@ namespace Cogbot
         [STAThread]
         internal static void Main(string[] args)
         {
-            Configuration.UsingCogbotFromRadgast = false;
-            Configuration.UsingRadgastFromCogbot = true;
+            ClientManagerConfig.UsingCogbotFromRadgast = false;
+            ClientManagerConfig.UsingRadgastFromCogbot = true;
            // MainProgram.CommandLine = new CommandLine {DisableSound = false};
 
             if (!ClientManager.AllocedConsole)
@@ -47,7 +47,7 @@ namespace Cogbot
 
         public static void MainRun(string[] args)
         {
-            ClientManager.arguments = new Parser(args);
+            ClientManagerConfig.arguments = new Parser(args);
             consoleBase = new DLRConsole("textform");
             ClientManager manager = ClientManager.SingleInstance;
             manager.outputDelegate = new OutputDelegate(WriteLine);
