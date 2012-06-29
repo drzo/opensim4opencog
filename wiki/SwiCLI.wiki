@@ -2,6 +2,8 @@
 
 == [http://code.google.com/p/opensim4opencog/downloads/list Download] ==
 
+== [https://github.com/logicmoo/swicli Sourcecode] ==
+
 == Introduction ==
 
   * Provides SWI-Prolog full control of the Common Language Infrastructure.
