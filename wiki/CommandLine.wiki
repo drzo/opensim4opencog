@@ -6,23 +6,23 @@ Cogbot.exe [opts]
 
  * -aiml          Runs just the AIML interpretor")]
  * -swipl         Runs just the SWIPL interpretor
- * -httpd <port>  Start bot HTTPD on Port
+ * -httpd `<`port`>`  Start bot HTTPD on Port
  * -nogui         Headless daemon operation
  * -lcd           Locally change the directory
- * --firstname <name>  Username first name
- * --lastname <name> Username last name
- * --password <password> User password
- * --tcpPort  <portnum> for the tcp (telnet) port
- * --tcpPortOffset <int> amount to increase the telnet prot for each successive bot
- * --tcpIPAddress <ip addr>  
- * simURL    <loginuri>   login URI for grid
+ * --firstname `<`name`>`  Username first name
+ * --lastname `<`name`>` Username last name
+ * --password `<`password`>` User password
+ * --tcpPort  `<`portnum`>` for the tcp (telnet) port
+ * --tcpPortOffset `<`int`>` amount to increase the telnet port when retrying (if cant bind to first port #). This allows multiple bots to bind to different ports (and avoid other services).
+ * --tcpIPAddress `<`ip addr`>`  defaults to 0.0.0.0 - needed if you have multiple adapters
+ * simURL    `<`loginuri`>`   login URI for grid
 
 
 = Headless server command line (from Program.cs) =
 
 The cogbot server is usually started from Radegast
 
- * --lcd [Dir] Change the working directory
+ * --lcd `<`Dir`>` Change the working directory
  * --noexcpt   Ignore exceptions
  * --aiml      Only the aiml interpretor
  * --plwin     Display a prolog top level
