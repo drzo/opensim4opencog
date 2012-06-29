@@ -9,6 +9,14 @@ Cogbot.exe [opts]
  * -httpd <port>  Start bot HTTPD on Port
  * -nogui         Headless daemon operation
  * -lcd           Locally change the directory
+ * --firstname <name>  Username first name
+ * --lastname <name> Username last name
+ * --password <password> User password
+ * --tcpPort  <portnum> for the tcp (telnet) port
+ * --tcpPortOffset <int> amount to increase the telnet prot for each successive bot
+ * --tcpIPAddress <ip addr>  
+ * simURL    <loginuri>   login URI for grid
+
 
 = Headless server command line (from Program.cs) =
 
