@@ -23,7 +23,7 @@ with these items
  * pathfinding (to level we've seen)
  * headless mode
  * mono - works fine on Redhat with BUGs on Ubuntu
- * AIML interpreter hasn't been worked on in 9 months, needs to be working - COMPLETED (need Docs?)
+ * AIML interpreter needs to be working - (need Docs?)
 
 ==== DELAYED ====
  * Complete regression test coverage 
