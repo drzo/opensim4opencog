@@ -1095,7 +1095,7 @@ ppList2Arg(A,BB):-concat_atom([A],'',B),cap_word(B,BB).
 % cli_docs:- predicate_property(swicli:P,file(_)),P=P,!.
 cli_docs:- cli_find_type('Swicli.Library.PrologClient',T),
    cli_get(static(T),'AutoDocInfos',SRF),cli_map(SRF,K,V),P=V,cli_get(P,'GetParameters',PPs),
-   bot_params_to_list(PPs,PP),cli_member_doc(P,Doc,_XML),
+   bot_params_to_list(PPs,PP),cli_member_doc(P,_Doc,_XML),
     concat_atom([FC,AC],"/",K),atom_number(AC,A),string_to_atom(FC,F),
     ppList2Args(PP,Args),PRED=..[F|Args],A=A,
     cli_to_str(V,VS),
