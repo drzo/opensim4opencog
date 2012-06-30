@@ -50,7 +50,9 @@ with these items
 
 ==== TODO DOUG ====
  # get AIML module ready for installer
- # easy deployment - Installer needs Cogbot integration (Doug)
+
+ # easy deployment - Installer needs Cogbot integration 
+  * Make a publicly downloadable bundles for cogbot (small version )     then an overlay pack that has all the chatbot stuff in it
  # ABCL interpreter working
  # document manifesto MORE
  # Overview of current set of services: like botvar namespaces - INPROGRESS
@@ -76,9 +78,7 @@ Please edit this only after some consensus on roadmap
 === later ===
 
  # documentation
- # Make a publically downloadable bundles for cogbot (small version ) 
-    then an overlay pack that has all the chatbot stuff in it
- # revisit RTParser and make sure its working as expected (Kino confirms it's working for Hanson)
+ # incorperate Cyc inference
  # Progress to ProgramK Prolog AIML bot
 
 
