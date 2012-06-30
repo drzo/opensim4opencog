@@ -55,29 +55,25 @@ with these items
  # ABCL interpreter working
  # document manifesto MORE
  # Overview of current set of services: like botvar namespaces - INPROGRESS
- # BotCommand parser using CommandInfo to "parse" the commands separately - TODO
+ # BotCommand parser using CommandInfo to "parse" the commands separately
  
 
 
-= The ongoing roadmap =
+= The ongoing roadmap (1-year) =
 
 Please edit this only after some consensus on roadmap
 
-== Annie == 
-
-=== later ===
-
- # documentation
- # finishing out hill people
+==== TODO GENERAL ====
+ # continue the development and support cogbot
+ # Pone file compiler
+ # PDDL executor for cogbot
  # Look for other improvements to the command language
+ # Look to incorporate Cyc inference if needed for Ontology support
+
+=== ANNIE TODO ===
 
 
-== dmiles ==
-
-=== later ===
-
- # documentation
- # incorperate Cyc inference
+=== DOUG TODO ===
  # Progress to ProgramK Prolog AIML bot
 
 
