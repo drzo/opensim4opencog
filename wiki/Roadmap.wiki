@@ -71,22 +71,14 @@ Please edit this only after some consensus on roadmap
  # PDDL executor for cogbot
  # Look for other improvements to the command language
  # Look to incorporate Cyc inference if needed for Ontology support
-
-
-
-Our intent is to develop the hillpeople example into a full fledged platform for writing 'real' AI.
-
-We will develop a compiler/interpreter/IDE environment that makes building afghan village/
-     hillpeople/18th cent london projects easy. It will do this by providing an expressive 
-declarative language for relationships, plan fragments, and utility, and an efficient executor
-that will behave intelligently within the scope of the microenvironment.
-
-We will develop a microenvironment in which all significant actions are constrained by the world
+ # Develop the hillpeople example into a full fledged platform for writing 'real' AI.
+ # Make building afghan village/hillpeople/18th cent london projects easy. 
+   * It will do this by providing an expressive 
+   Develop a compiler/interpreter/IDE environment that makes 
+declarative language for relationships, plan fragments, and utility, and an efficient executor that will behave intelligently within the scope of the microenvironment.
+* We will develop a microenvironment in which all significant actions are constrained by the world
 with realistic constraints (eg you must have the hoe to hoe the cornfield).
-
-We will publicly announce cogbot and attract a community as a way of forcing what has til now been
-a research type project into a more streamlined, finisshed project suitable as a building block.
-Additionally, public announcement will attract other resources (programmers, builders, and institutional users).
+ # publicly announce cogbot and attract a community as a way of forcing what has til now been a research type project into a more streamlined, finisshed project suitable as a building block. Additionally, public announcement will attract other resources (programmers, builders, and institutional users).
 
 === ANNIE TODO ===
 
