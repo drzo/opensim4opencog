@@ -461,7 +461,7 @@ run_sl:-ran_sl,!.
 run_sl:-asserta(ran_sl),!,
    cli_set('MushDLR223.Utilities.DLRConsole','NoConsoleVisible','@'(true)),
    cli_set('ABuildStartup.Program','UseApplicationExit','@'(false)),
-   cli_set('Cogbot.ClientManager','noGUI','@'(true)),
+   cli_set('Cogbot.ClientManagerConfig','noGUI','@'(true)),
    cli_call('ABuildStartup.Program','Main',[],_).
 
 % assert_once is assert a new grounded atomic fact only if the predicate
@@ -1086,7 +1086,7 @@ ppList2Arg(A,BB):- concat_atom([_,_|_],"In",A),A=B,!,cap_word(B,BB1),concat_atom
 ppList2Arg(A,BB):-concat_atom([A],'',B),cap_word(B,BB).
 
 :-use_module(library(pldoc)).
-:-doc_server(4000).
+:-doc_server(57007,[workers(5)]).
 :-portray_text(true). 
 
 

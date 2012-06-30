@@ -313,7 +313,7 @@ namespace Cogbot
         {
             if (DiscoverTaskUUIDs)
             {
-                lock (UUIDTypeObject)
+                lock (UUIDTypeObjectLock)
                 {
                     object g;
                     if (!UUIDTypeObjectTryGetValue(uuid, out g))
@@ -512,7 +512,7 @@ namespace Cogbot
             if (UUIDTypeObjectTryGetValue(uuid, out g))
                 if (g is SimGeneric) return g as SimGeneric;
 
-            lock (UUIDTypeObject)
+            lock (UUIDTypeObjectLock)
             {
                 if (UUIDTypeObjectTryGetValue(uuid, out g))
                 {

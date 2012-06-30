@@ -201,6 +201,14 @@ namespace Cogbot
         internal static readonly Dictionary<UUID, object> UUIDTypeObjectReal = new Dictionary<UUID, object>();
         internal static readonly object UUIDTypeObject = UUIDTypeObjectReal;
         private static readonly object WorldObjectsMasterLock = new object();
+        public static object UUIDTypeObjectLock
+        {
+            get { return LockInfo.Watch(UUIDTypeObject); }
+        }
+        public static object UUIDTypeObjectRealLock
+        {
+            get { return LockInfo.Watch(UUIDTypeObjectReal); }
+        }
 
         private static int CountnumAvatars;
 
@@ -425,7 +433,7 @@ namespace Cogbot
                             impl.AspectName = client.GetName();
                         }
                     }
-                    if (m_TheSimAvatar == null) lock (UUIDTypeObject)
+                    if (m_TheSimAvatar == null) lock (UUIDTypeObjectLock)
                     {
                         Avatar av = GetAvatar(id, client.Network.CurrentSim);
                         if (av != null) TheSimAvatar = (SimAvatarClient)GetSimObject(av, client.Network.CurrentSim);
@@ -458,7 +466,7 @@ namespace Cogbot
             }
             set
             {
-                lock (UUIDTypeObject)
+                lock (UUIDTypeObjectLock)
                 {
                     if (value == null) return;
                     if (value == m_TheSimAvatar) return;
@@ -470,7 +478,6 @@ namespace Cogbot
             }
 
         }
-
 
         public static implicit operator GridClient(WorldObjects m)
         {
@@ -795,7 +802,7 @@ namespace Cogbot
         {
             object before;
             if (UUIDTypeObjectTryGetValue(id, out before)) return;
-            lock (UUIDTypeObject)
+            lock (UUIDTypeObjectLock)
             {
                 if (!UUIDTypeObjectTryGetValue(id, out before))
                 {
@@ -811,10 +818,10 @@ namespace Cogbot
                 Debug("cant register " + type);
             }
             //if (type is SimObject)
-            //    lock (UUIDTypeObject) UUIDTypeObjectSetValue(id, type);
+            //    lock (UUIDTypeObjectLock) UUIDTypeObjectSetValue(id, type);
             //else
             {
-                lock (UUIDTypeObject)
+                lock (UUIDTypeObjectLock)
                 {
                     object before;
                     if (UUIDTypeObjectTryGetValue(id, out before))
@@ -1740,7 +1747,7 @@ namespace Cogbot
             object getSimLock = GetSimLock(simulator ?? client.Network.CurrentSim);
             lock (getSimLock)
             {
-                lock (UUIDTypeObject)
+                lock (UUIDTypeObjectLock)
                     //lock (SimObjects)
                     //  lock (SimAvatars)
                 {
@@ -1825,7 +1832,7 @@ namespace Cogbot
             if (obj0 != null) return obj0;
             simulator = simulator ?? client.Network.CurrentSim;
             lock (GetSimLock(simulator ?? client.Network.CurrentSim))
-                lock (UUIDTypeObject)
+                lock (UUIDTypeObjectLock)
                    // lock (SimObjects)
                      //   lock (SimAvatars)
                         {
@@ -1844,7 +1851,7 @@ namespace Cogbot
             obj = uuid.ExternalData;
             if (obj != null) return true;
 #endif
-            lock (UUIDTypeObjectReal) return UUIDTypeObjectReal.TryGetValue(uuid, out obj);
+            lock (UUIDTypeObjectRealLock) return UUIDTypeObjectReal.TryGetValue(uuid, out obj);
         }
         public static bool UUIDTypeObjectContainsKey(UUID uuid)
         {
@@ -1855,13 +1862,13 @@ namespace Cogbot
             //return uuid.ExternalData;
             //if (!b) return uuidTypeObject.TryGetValue(uuid, out o);
             //lock (WorldObjects.uuidTypeObject)
-            lock (UUIDTypeObjectReal) return UUIDTypeObjectReal.ContainsKey(uuid);
+            lock (UUIDTypeObjectRealLock) return UUIDTypeObjectReal.ContainsKey(uuid);
         }
         public static object UUIDTypeObjectSetValue(UUID uuid, object value)
         {
             //if (!b) return uuidTypeObject.TryGetValue(uuid, out o);
             //lock (WorldObjects.uuidTypeObject)
-            lock (UUIDTypeObjectReal) UUIDTypeObjectReal[uuid] = value;
+            lock (UUIDTypeObjectRealLock) UUIDTypeObjectReal[uuid] = value;
 #if COGBOT_LIBOMV
             return uuid.ExternalData = value;
 #endif

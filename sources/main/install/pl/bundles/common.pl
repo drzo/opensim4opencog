@@ -57,7 +57,7 @@ bundle(ask_filelocs,
 	    ])]) :-
         win_folder(appdata, AppDir),
 	prolog_to_os_filename(AppDir, OSAppDir),
-	format(atom(TempDir), '~w\\Cogbot\\InstallerFiles\\', [OSAppDir]),
+	'format'(atom(TempDir), '~w\\Cogbot\\InstallerFiles\\', [OSAppDir]),
 	(   architecture(64) ->
 	    getenv('programW6432', InstallBase) ;
 	    getenv('programFiles(x86)', InstallBase)),

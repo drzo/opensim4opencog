@@ -89,13 +89,23 @@ namespace CogbotRadegastPluginModule
 
         private void AddRadegastEvents()
         {
-            RadegastInstance.GlobalSettings.OnSettingChanged -= new Settings.SettingChangedCallback(GlobalSettings_OnSettingChanged);            
+            RadegastInstance.GlobalSettings.OnSettingChanged -= new Settings.SettingChangedCallback(GlobalSettings_OnSettingChanged);
             RadegastInstance.MainForm.Closing += MainForm_Closing;
+            RadegastInstance.MainForm.Shown += MainForm_Shown;
+            RadegastInstance.MainForm.ResizeEnd += MainForm_Shown;
             var netcom = RadegastInstance.Netcom;
             netcom.ClientLoggingIn += new EventHandler<OverrideEventArgs>(netcom_ClientLoggingIn);
             netcom.ClientLoginStatus += new EventHandler<LoginProgressEventArgs>(netcom_ClientLoginStatus);
             netcom.ClientLoggingOut += new EventHandler<OverrideEventArgs>(netcom_ClientLoggingOut);
             netcom.ClientLoggedOut += new EventHandler(netcom_ClientLoggedOut);
+        }
+
+        private void MainForm_Shown(object sender, EventArgs e)
+        {
+            if (ClientManager.StartLispThreadAtPluginInit)
+            {
+                RunClientManagerStartupLisp();
+            }
         }
 
         private void RemoveRadegastEvents()
@@ -143,6 +153,7 @@ namespace CogbotRadegastPluginModule
             cogbotRadegastInterpreter = new CogbotRadegastInterpreter(this);
             RadegastInstance.CommandsManager.LoadInterpreter(cogbotRadegastInterpreter);
             _commandContextAction = new CommandContextAction(inst, this);
+            _commandContextAction.ScanCogbotMenu();
             inst.TabConsole.RegisterContextAction(_commandContextAction);
             _aspectContextAction = new AspectContextAction(inst, this);
             inst.TabConsole.RegisterContextAction(_aspectContextAction);
@@ -155,18 +166,23 @@ namespace CogbotRadegastPluginModule
             inst.MainForm.Invoke(new MethodInvoker(() => SetupRadegastGUI(inst)));
             DLRConsole.SafelyRun(() => clientManager.ProcessCommandArgs());
             chatConsole.StartWriter();
-            if (bc.IsLoggedInAndReady) return;
-            TheBot.InvokeNext("Re-enable login button", () =>
-                                                            {
-                                                                TheBot.DebugWriteLine("SetLoginButton = r-enabled");
-                                                                SetLoginButton(OldLoginText, true);
-                                                            });
+            if (!bc.IsLoggedInAndReady)
+            {
+                TheBot.InvokeNext("Re-enable login button", () =>
+                                                                {
+                                                                    TheBot.DebugWriteLine("SetLoginButton = r-enabled");
+                                                                    SetLoginButton(OldLoginText, true);
+                                                                });
+            }
             if (plugInitCalledEver)
             {
                 return;
             }
             plugInitCalledEver = true;
-            if (ClientManager.StartLispThreadAtPluginInit) RunClientManagerStartupLisp();
+            if (ClientManager.StartLispThreadAtPluginInit)
+            {
+                RunClientManagerStartupLisp();
+            }
         }
     
         public void RunClientManagerStartupLisp() {
@@ -197,7 +213,10 @@ namespace CogbotRadegastPluginModule
         private void netcom_ClientLoggingIn(object sender, OverrideEventArgs e)
         {
             if (!AllowRadegastUIControl) e.Cancel = true;
-            if (ClientManager.StartLispThreadAtPluginInit)RunClientManagerStartupLisp();
+            if (ClientManager.StartLispThreadAtPluginInit)
+            {
+                RunClientManagerStartupLisp();
+            }
         }
 
         private void netcom_ClientLoggingOut(object sender, OverrideEventArgs e)
