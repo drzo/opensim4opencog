@@ -26,10 +26,10 @@ with these items
  * AIML interpreter hasn't been worked on in 9 months, needs to be working - COMPLETED (need Docs?)
 
 ==== DELAYED ====
- * Complete regression test coverage - DELAYED
- * setup and run pathfinding unit tests  - DELAYED (good enough)
+ * Complete regression test coverage 
+ * setup and run pathfinding unit tests (good enough)
  * Bug list reasonably clean 
- * Sims working - DELAYED
+ * Sims working
  * some tale-spinnish thing
 
 ==== TODO GENERAL ====
@@ -40,7 +40,6 @@ with these items
  * Example files made
  * Some level of documentation of everything
  * Every component currently in the installer's component list must work well enough to be useable.
- * ABCL interpreter working - 
 
 
 ==== TODO ANNIE ====
@@ -49,14 +48,14 @@ with these items
  # make hillpeople trigger actions from aiml and be able to answer questions like 'what are you doing?'  'what do you think Otopopo is doing?'
 
 ==== TODO DOUG ====
- # prolog API to botvars,sysvars
  # get AIML module ready for installer
+ # easy deployment - Installer needs Cogbot integration (Doug)
+ # prolog API to botvars,sysvars
+ # ABCL interpreter working
  # botcmds using generic parser map
  # document manifesto
  # Overview of current set of services: like botvar namespaces
-
  # BotCommand parser using CommandInfo to "parse" the commands separately - TODO
- # easy deployment - Installer needs Cogbot integration (Doug)
  
 
 
