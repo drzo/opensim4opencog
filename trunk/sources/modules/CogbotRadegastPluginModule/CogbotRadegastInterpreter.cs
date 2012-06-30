@@ -70,8 +70,12 @@ namespace CogbotRadegastPluginModule
             }
 
             if (result != null)
-                WriteLine(result.ToString());
-            else WriteLine("No result returned: {0}", cmdline);
+            {
+                //WriteLine(result.ToString());
+            } else
+            {
+                WriteLine("No result returned: {0}", cmdline);
+            }
         }
 
         public void Help(string helpArgs, ConsoleWriteLine WriteLine)
