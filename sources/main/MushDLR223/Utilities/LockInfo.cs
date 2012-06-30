@@ -12,8 +12,8 @@ namespace MushDLR223.Utilities
 
         public static object Watch(object o, params string[] named)
         {
-            //return o;
-            return Swicli.Library.LockInfo.Watch(o, named);
+            return o;
+            //return Swicli.Library.LockInfo.Watch(o, named);
         }
     
 
