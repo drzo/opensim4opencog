@@ -27,16 +27,16 @@ with these items
 
 == needed for public release ==
 
- * Build system sane
- * installer finished
- * Complete regression test coverage
- * setup and run pathfinding unit tests
- * Bug list reasonably clean
- * Every component currently in the installer's cvomponent list must work well enough to be useable.
- * AIML interpreter hasn't been worked on in 9 months, needes to be working
- * ABCL interpreter working
- * Sims working
- * BotCommand parser using CommandInfo to "parse" the commands separately
+ * Build system sane - COMPLETED
+ * installer finished - INPROGRESS
+ * Complete regression test coverage - DELAYED
+ * setup and run pathfinding unit tests  - DELAYED (good enough)
+ * Bug list reasonably clean 
+ * Every component currently in the installer's component list must work well enough to be useable.
+ * AIML interpreter hasn't been worked on in 9 months, needes to be working - COMPLETED (need Docs?)
+ * ABCL interpreter working - TODO
+ * Sims working - DELAYED
+ * BotCommand parser using CommandInfo to "parse" the commands separately - TODO
  
  * PR plan
  * website
@@ -55,9 +55,9 @@ Please edit this only after some consensus on roadmap
 == Annie == 
 === first ===
 
- # move hillpeople to botvars
- # make hillpeople do various actions (hunt, fish, etc) triggered by some debug method
- # make hillpeople trigger actions from aiml and be able to answer questions like 'what are you doing?'  'what do you think Otopopo is doing?'
+ # move hillpeople to botvars - 
+ # make hillpeople do various actions (hunt, fish, etc) triggered by some debug method - 
+ # make hillpeople trigger actions from aiml and be able to answer questions like 'what are you doing?'  'what do you think Otopopo is doing?' - 
  
 
 === later ===
