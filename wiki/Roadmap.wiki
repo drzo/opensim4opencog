@@ -13,15 +13,6 @@ with these items
 
  # Public Release - roughly Sept 15.  Having all the existing components working well enough, and cogbot well enough packaged, documented, etc. that we can begin to attract users, make public announcements, and be 'alpha'.
 
-== needed for demo project ==
-
- * multiple AV's - COMPLETED
- * easy deployment - Installer needs Cogbot integration (Doug)
- * pathfinding (to level we've seen) COMPLETED
- * some aiml or aiml-ish implementation integrated - INPROGRESS - Kino
- * some tale-spinnish thing
- * headless mode - COMPLETED
- * mono - COMPLETED works fine on Redhat with BUGs on Ubuntu 
 
 === Components to be in the release ===
 
@@ -43,6 +34,15 @@ with these items
  * Example files made
  * Some level of documentation of everything
 
+== needed for demo project ==
+
+ * multiple AV's - COMPLETED
+ * easy deployment - Installer needs Cogbot integration (Doug)
+ * pathfinding (to level we've seen) COMPLETED
+ * some aiml or aiml-ish implementation integrated - INPROGRESS - Kino
+ * some tale-spinnish thing
+ * headless mode - COMPLETED
+ * mono - COMPLETED works fine on Redhat with BUGs on Ubuntu 
 
 
 = The ongoing roadmap =
@@ -55,9 +55,9 @@ Please edit this only after some consensus on roadmap
 == Annie == 
 === first ===
 
- # move hillpeople to botvars - 
- # make hillpeople do various actions (hunt, fish, etc) triggered by some debug method - 
- # make hillpeople trigger actions from aiml and be able to answer questions like 'what are you doing?'  'what do you think Otopopo is doing?' - 
+ # move hillpeople to botvars
+ # make hillpeople do various actions (hunt, fish, etc) triggered by some debug method
+ # make hillpeople trigger actions from aiml and be able to answer questions like 'what are you doing?'  'what do you think Otopopo is doing?'
  
 
 === later ===
