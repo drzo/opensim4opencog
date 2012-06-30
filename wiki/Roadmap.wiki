@@ -50,7 +50,6 @@ with these items
 
 ==== TODO DOUG ====
  # get AIML module ready for installer
-
  # easy deployment - Installer needs Cogbot integration 
   * Make a publicly downloadable bundles for cogbot (small version )     then an overlay pack that has all the chatbot stuff in it
  # ABCL interpreter working
