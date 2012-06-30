@@ -33,9 +33,6 @@ with these items
  * ABCL interpreter working - TODO
  * Sims working - DELAYED
  * BotCommand parser using CommandInfo to "parse" the commands separately - TODO
- 
-=== needed for demo project ===
-
  * multiple AV's - COMPLETED
  * easy deployment - Installer needs Cogbot integration (Doug)
  * pathfinding (to level we've seen) COMPLETED
