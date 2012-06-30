@@ -18,6 +18,11 @@ with these items
 
 == needed for public release ==
 
+ * PR plan
+ * website
+ * Example files made
+ * Some level of documentation of everything
+
  * Build system sane - COMPLETED
  * installer finished - INPROGRESS
  * Complete regression test coverage - DELAYED
@@ -29,12 +34,7 @@ with these items
  * Sims working - DELAYED
  * BotCommand parser using CommandInfo to "parse" the commands separately - TODO
  
- * PR plan
- * website
- * Example files made
- * Some level of documentation of everything
-
-== needed for demo project ==
+=== needed for demo project ===
 
  * multiple AV's - COMPLETED
  * easy deployment - Installer needs Cogbot integration (Doug)
