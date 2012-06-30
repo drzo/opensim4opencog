@@ -1750,7 +1750,8 @@ namespace RTParser.Variables
             {
                 if (!noGo.Add(list)) continue;
                 firstFallBack = firstFallBack ?? list;
-                lock (LockInfo.Watch(list))
+                object watch = LockInfo.Watch(list);
+                lock (watch)
                 {
                     bool prev = list.IsTraced;
                     list.IsTraced = false;
@@ -2169,7 +2170,8 @@ namespace RTParser.Variables
                 writeToLog("ERROR: should not place inside self");
                 return false;
             }
-            lock (LockInfo.Watch(cols))
+            object watch = LockInfo.Watch(cols);
+            lock (watch)
             {
                 foreach (var deep in cols)
                 {
@@ -2287,7 +2289,8 @@ namespace RTParser.Variables
 
             }
             var found = new List<ISettingsDictionary>();
-            lock (LockInfo.Watch(providers))
+            object watch = LockInfo.Watch(providers);
+            lock (watch)
             {
                 foreach (var list in providers)
                 {
@@ -2501,7 +2504,8 @@ namespace RTParser.Variables
 
         public static bool TryGetValue<T>(IDictionary<string, T> dictionary, string search, out T value)
         {
-            lock (LockInfo.Watch(dictionary))
+            object watch = LockInfo.Watch(dictionary);
+            lock (watch)
             {
                 if (dictionary.TryGetValue(search, out value))
                 {

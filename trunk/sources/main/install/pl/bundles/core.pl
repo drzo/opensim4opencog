@@ -88,19 +88,26 @@ write_config_stream(_, []).
 write_config_stream(Out, [HK=HV|T]) :-
 	uri_encoded(path, HK, UHK),
 	uri_encoded(path, HV, UHV),
-	format(Out, ' ("~w" "~w") ', [UHK, UHV]),
+	'format'(Out, ' ("~w" "~w") ', [UHK, UHV]),
 	write_config_stream(Out, T).
 
 :- use_module(component, [component_will_install/1]).
 
 write_components(Out) :-
 	setof(Name, component_will_install(Name), ComponentList),
-	format(user_error, 'ComponentList ~w~n', [ComponentList]),
+	'format'(user_error, 'ComponentList ~w~n', [ComponentList]),
 	write_component_list(Out, ComponentList).
 
 write_component_list(_Out, []).
 write_component_list(Out, [H|T]) :-
-	format(Out, ' "~w" ', [H]),
+	'format'(Out, ' "~w" ', [H]),
 	write_component_list(Out, T).
+
+
+bundle(aiml, files,
+       'Cogbot AIML Big Files',
+       [from(temp('cogbot-aiml.zip')),
+	url(logicmoo('cogbot-aiml.zip')),
+	to(program(.))]).
 
 

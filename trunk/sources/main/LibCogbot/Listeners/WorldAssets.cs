@@ -31,7 +31,7 @@ namespace Cogbot
 
         public Asset GetAsset(UUID id)
         {
-            lock (UUIDTypeObject)
+            lock (UUIDTypeObjectLock)
             {
                 Object assetObject;
                 UUIDTypeObjectTryGetValue(id, out assetObject);
@@ -110,7 +110,7 @@ namespace Cogbot
                         }
                     }
                 }
-                lock (UUIDTypeObject)
+                lock (UUIDTypeObjectLock)
                 {
                     UUIDTypeObjectSetValue(uUID, ID);
                 }
