@@ -1085,9 +1085,11 @@ ppList2Arg(A,BB):- concat_atom([_,_|_],"Out",A),!,A=B,cap_word(B,BB1),concat_ato
 ppList2Arg(A,BB):- concat_atom([_,_|_],"In",A),A=B,!,cap_word(B,BB1),concat_atom([+,BB1],'',BB).
 ppList2Arg(A,BB):-concat_atom([A],'',B),cap_word(B,BB).
 
+/*
 :-use_module(library(pldoc)).
 :-doc_server(57007,[workers(5)]).
 :-portray_text(true). 
+*/
 
 
 % cli_docs:- predicate_property(swicli:P,file(_)),P=P,!.
