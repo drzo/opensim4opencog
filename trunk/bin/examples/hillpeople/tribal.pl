@@ -100,7 +100,7 @@ be_tribal(
     Loc,
     Name,
     Status) :-
-	\+ botvar_get(bot, 'super plan', rest),
+	\+ botvar_get(bot, 'superPlan', rest),
 	on_bed(Name),
 	botcmd('standup'),
 	set_current_action(Name, "getting up from sleep"),
@@ -173,7 +173,7 @@ be_tribal(_,
 %  In test_wander_mode they just wander from point to point
 %
 test_wander_mode :-
-	botvar_get(bot, 'super plan', "wander").
+	botvar_get(bot, 'superPlan', "wander").
 
 %
 % in test_wander_mode, if we don't have a plan,
@@ -273,7 +273,7 @@ be_tribal(
     _Loc,
     Name,
     Status) :-
-	botvar_get(bot, 'super plan', rest),
+	botvar_get(bot, 'superPlan', rest),
 	\+ botvar_get(bot, going_home, "true"),
 	botvar_set(bot, going_home, "true"),
 	home(Name, Home),
@@ -294,7 +294,7 @@ be_tribal(
     Loc,
     Name,
     Status) :-
-	botvar_get(bot, 'super plan', rest),
+	botvar_get(bot, 'superPlan', rest),
 	home(Name, Home),
 	name_to_location_ref(Home, Obj),
 	distance_to(Obj, D),
@@ -321,7 +321,7 @@ be_tribal(
     Loc,
     Name,
     Status) :-
-	botvar_get(bot, 'super plan' , rest),
+	botvar_get(bot, 'superPlan' , rest),
 	on_bed(Name),
 	sleep(10),
 	be_tribal(Loc, Name, Status).
@@ -454,6 +454,7 @@ be_tribal(
     Status) :-
     say_format('~w in trouble, no valid action at ~w~n~w~n',
 	   [Name, Location, Status]),
-    sleep(10).
+    sleep(10),
+       be_tribal(Location, Name, Status).
 
 
