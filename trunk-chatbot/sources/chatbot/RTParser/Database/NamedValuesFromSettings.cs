@@ -31,18 +31,23 @@ namespace RTParser.Database
             string realName0;
 
 
-            var vv = ScriptManager.GetGroup(query.TargetBot.ObjectRequester, subject, name);
+            var vv = ScriptManager.GetGroup(query.TargetBot.ObjectRequester, dictName, name);
             {
                 if (vv != null)
+                {
                     if (vv.Count == 0)
                     {
                         succeed = true;
                         realName = name;
                         return "";
                     }
-                succeed = true;
-                realName = name;
-                return Unifiable.Create(vv);
+                    succeed = true;
+                    realName = name;
+                    foreach (var e in vv)
+                    {
+                        return Unifiable.Create(e);
+                    }
+                }
             }
             Unifiable resultGet = SettingsDictionary.grabSettingDefaultDict(udict, name, out realName0);
 
