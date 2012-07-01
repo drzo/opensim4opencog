@@ -44,5 +44,10 @@ Overarching design principles:
 == Utility ==
 
 
+== IDE ==
+
+Skein - like Inform 7  (how do we 'reset')?
+
+GUI tool to observe sysvars, botvars
 
 
