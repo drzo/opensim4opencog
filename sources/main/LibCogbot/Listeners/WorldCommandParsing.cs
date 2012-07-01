@@ -479,13 +479,13 @@ namespace Cogbot
         }
 
 
-        private DefaultWorldGroupProvider _defaultProvider;
+        private readonly DefaultWorldGroupProvider _defaultProvider;
         static readonly char[] TrimCollectionStart = new []{' ','\n','$'};
         public ICollection ResolveCollection(string arg0Lower, out int argsUsed, ICollectionProvider skip)
         {
             arg0Lower = arg0Lower.TrimStart(TrimCollectionStart).ToLower();
             var req = new RequesterSession(client);
-            req.SkippedProviders.Add(skip);
+            //req.SkippedProviders.Add(skip);
             client.SessionMananger = req;
             var col = ScriptManager.GetGroup(client, client.GetName(), arg0Lower);
             if (col != null)
