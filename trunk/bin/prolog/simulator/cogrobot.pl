@@ -778,7 +778,7 @@ wbotvar_get(BotID,Name,ValueO):- wbotvar_get(BotID,bot,Name,ValueO).
 wbotvar_get(BotID,NS,Name,ValueO):-ground(NS+Name),!,wbot_safe_namespace(BotID,NS,NS1),
    cli_call('MushDLR223.ScriptEngines.ScriptManager','GetGroup',[BotID,NS1,Name],Value),once(value_deref(Value,ValueO)).
 wbotvar_get(BotID,NS,Name,ValueO):- wbotvar_keys(BotID,NS,Name,CP),
-   cli_call(CP,'GetGroup'(string),[BotID,Name],Value),once(value_deref(Value,ValueO)).
+   cli_call(CP,'GetGroup'(object,string),[BotID,Name],Value),once(value_deref(Value,ValueO)).
 
 
 wbot_safe_namespace(BotID,bot,NS1):-!,wbotname(BotID,NS),wbot_safe_namespace(BotID,NS,NS1).
@@ -810,19 +810,19 @@ wbot_aimlbot_ref(BotID,AIMLBot):-wbotget(BotID,'Plugins',Plugs),cli_map(Plugs,"A
 
 % ?-  bot_aimlvars_get("bot",Y,Z),cli_to_str(Z,S).
 
-wbot_aimlvars_get(BotID,NameSpace,VarName,Value):- wbot_aimlvars_get_0(BotID,NameSpace,VarName,ValueU),aimlvar_value(ValueU,Value).
+wbot_aimlvar_get(BotID,NameSpace,VarName,Value):- hwbot_aimlvar_get_0(BotID,NameSpace,VarName,ValueU),aimlvar_value(ValueU,Value).
 
 aimlvar_value(MISSING, ""):- cli_is_void(MISSING),!.
 aimlvar_value(MISSING, ""):- cli_is_null(MISSING),!.
 aimlvar_value(ValueU,Value):- cli_get(ValueU,'ToString',Value).
 
-wbot_aimlvars_get_0(BotID,NameSpace,VarName,Value):-wbot_aimlbot_ref(BotID,AIMLBot),var(NameSpace),!,cli_get(AIMLBot,'AllDictionaries',ADS),
+hwbot_aimlvar_get_0(BotID,NameSpace,VarName,Value):-wbot_aimlbot_ref(BotID,AIMLBot),var(NameSpace),!,cli_get(AIMLBot,'AllDictionaries',ADS),
    cli_map(ADS,NameSpace,BVs),cli_map(BVs,VarName,Value).
-wbot_aimlvars_get_0(BotID,NameSpace,VarName,Value):-wbot_aimlbot_ref(BotID,AIMLBot),cli_get(AIMLBot,'GetDictionary'(NameSpace),BVs),cli_map(BVs,VarName,Value).
+hwbot_aimlvar_get_0(BotID,NameSpace,VarName,Value):-wbot_aimlbot_ref(BotID,AIMLBot),cli_get(AIMLBot,'GetDictionary'(NameSpace),BVs),cli_map(BVs,VarName,Value).
 
-wbot_aimlvars_set(BotID,NameSpace,VarName,Value):-wbot_aimlbot_ref(BotID,AIMLBot),var(NameSpace),!,cli_get(AIMLBot,'AllDictionaries',ADS),
+wbot_aimlvar_set(BotID,NameSpace,VarName,Value):-wbot_aimlbot_ref(BotID,AIMLBot),var(NameSpace),!,cli_get(AIMLBot,'AllDictionaries',ADS),
    cli_map(ADS,NameSpace,BVs),cli_set(BVs,VarName,Value).
-wbot_aimlvars_set(BotID,NameSpace,VarName,Value):-wbot_aimlbot_ref(BotID,AIMLBot),cli_get(AIMLBot,'GetDictionary'(NameSpace),BVs),cli_set(BVs,VarName,Value).
+wbot_aimlvar_set(BotID,NameSpace,VarName,Value):-wbot_aimlbot_ref(BotID,AIMLBot),cli_get(AIMLBot,'GetDictionary'(NameSpace),BVs),cli_set(BVs,VarName,Value).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% BOTVAR HOOKS
