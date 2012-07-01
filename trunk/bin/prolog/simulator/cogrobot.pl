@@ -756,6 +756,8 @@ wbot_rebake_appearance(BotID):-wbotcall(BotID,['Appearance','RequestSetAppearanc
 
 %%wbot_attachments(BotID,Attachment,Joint):-
 
+wbot_sitting_on(BotID,What):-wbotget(BotID,['TheSimAvatar'],Self),cli_call(Self,'Parent',What),!,Self \= What.
+
 %------------------------------------------------------------------------------
 % sysvar interface
 %------------------------------------------------------------------------------
@@ -771,6 +773,22 @@ set_modeless(Var,List):-forall(member(Member=Value,List),cli_set(Var,Member,Valu
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% BOTVAR INTERFACE
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% botvar_get(?Name,?Value).
+%% botvar_get(?NameSpace,?Name,?Value).
+%% botvar_set(+Name,+Value).
+%% botvar_set(+NameSpace,+Name,+Value).
+%
+% get/set a system botvar
+%
+%  NameSpace is 'bot' (equiv to "examplebot_resident" ) or some other string 
+%
+%  Name is "favfood"
+%
+%  Value can be any datatpye (except a Prolog term?!)
+%    Well is can be a prolog term but obeys the same semanticsa of setting a CLR Field of type System.Object
+
+
 wbotvar_set(BotID,Name,ValueO):- wbotvar_set(BotID,bot,Name,ValueO).
 wbotvar_set(BotID,NS,Name,ValueO):-wbot_safe_namespace(BotID,NS,NS1),cli_call('MushDLR223.ScriptEngines.ScriptManager','AddSetting',[BotID,NS1,Name,ValueO],_).
 
