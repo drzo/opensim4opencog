@@ -13,15 +13,43 @@ namespace MushDLR223.ScriptEngines
 {
     public partial class ScriptManager
     {
+        public static readonly Dictionary<object, Dictionary<string, ICollectionProvider>> _CodeRegistrars = new Dictionary<object, Dictionary<string, ICollectionProvider>>();
         public static readonly Dictionary<object, List<ICollectionProvider>> _CollectionProviders = new Dictionary<object, List<ICollectionProvider>>();
 
-
-        public static void AddGroupProvider(ICollectionRequester requester, ICollectionProvider provider)
+        /// <summary>
+        /// Returns an enumeration of Settings that Others have Overridden
+        /// </summary>
+        /// <param name="requester"></param>
+        /// <param name="provider"></param>
+        /// <returns></returns>
+        public static ICollection<string> AddGroupProvider(ICollectionRequester requester, ICollectionProvider provider)
         {
+            var CodeRegistrars = FOCCodeRegistrars(requester);
             var CollectionProviders = FOCCollectionProviders(requester);
             lock (CollectionProviders)
             {
-                if (!CollectionProviders.Contains(provider)) CollectionProviders.Add(provider);
+                if (!CollectionProviders.Contains(provider))
+                {
+                    CollectionProviders.Add(provider);
+                    foreach(string sn in provider.SettingNames(requester, 1))
+                    {
+                        CodeRegistrars[ToKey(sn)] = provider; 
+                    }
+                }
+            }
+            return new List<string>();
+        }
+
+        private static Dictionary<string, ICollectionProvider> FOCCodeRegistrars(ICollectionRequester requester)
+        {
+            Dictionary<string, ICollectionProvider> providers;
+            lock (_CodeRegistrars)
+            {
+                if (!_CodeRegistrars.TryGetValue(requester.RequesterID, out providers))
+                {
+                    return _CodeRegistrars[requester.RequesterID] = new Dictionary<string, ICollectionProvider>();
+                }
+                return providers;
             }
         }
         private static List<ICollectionProvider> FOCCollectionProviders(ICollectionRequester requester)
@@ -36,6 +64,7 @@ namespace MushDLR223.ScriptEngines
                 return providers;
             }
         }
+
         private static IEnumerable<ICollectionProvider> GetCollectionProviders(ICollectionRequester requester)
         {
             requester.SessionMananger = new RequesterSession(requester);
@@ -73,7 +102,7 @@ namespace MushDLR223.ScriptEngines
                 {
                     fallbacksOf[name] = ggen;
                 }
-                else if (gen == Generation)
+                else if (gen == ggen)
                 {
                     return true;
                 }
@@ -90,6 +119,23 @@ namespace MushDLR223.ScriptEngines
             {
                 return null;
             }
+            var CodeRegistrars = FOCCodeRegistrars(requester);
+            
+            ICollectionProvider defaultProvider;
+            if (varname.ToLower() == "currentaction")
+            {
+
+            }
+            if (CodeRegistrars.TryGetValue(varname, out defaultProvider) && defaultProvider != null)
+            {
+                ICollection v = defaultProvider.GetGroup(requester, varname);
+                if (varname.ToLower() == "currentaction")
+                {
+                    
+                }
+                return v;
+            }
+
             List<object> rv = new List<object>();
             ICollection c = null;
             int fc = 0;
