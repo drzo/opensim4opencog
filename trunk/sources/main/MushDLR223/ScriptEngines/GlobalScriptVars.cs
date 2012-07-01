@@ -42,8 +42,54 @@ namespace MushDLR223.ScriptEngines
             return LockInfo.CopyOf(FOCCollectionProviders(requester));
         }
 
+        [ThreadStatic]
+        static private Dictionary<string, Dictionary<string, int>> checkingFallbacksOfN = null;
+        static public bool LoopingOn(string name, string type)
+        {
+            if (LoopingOn0(name, type))
+            {
+                return LoopingOn0(name, type + "1");
+            }
+            return false;
+        }
+        static public bool LoopingOn0(string name, string type)
+        {
+            Dictionary<string, int> fallbacksOf;
+            if (checkingFallbacksOfN == null)
+            {
+                checkingFallbacksOfN = new Dictionary<string, Dictionary<string, int>>();
+            }
+            lock (checkingFallbacksOfN)
+            {
+                if (!checkingFallbacksOfN.TryGetValue(type, out fallbacksOf))
+                {
+                    fallbacksOf = checkingFallbacksOfN[type] = new Dictionary<string, int>();
+                }
+            }
+            int gen, ggen = Generation;
+            lock (fallbacksOf)
+            {
+                if (!fallbacksOf.TryGetValue(name, out gen))
+                {
+                    fallbacksOf[name] = ggen;
+                }
+                else if (gen == Generation)
+                {
+                    return true;
+                }
+                else
+                {
+                    fallbacksOf[name] = ggen;
+                }
+            }
+            return false;
+        }
         static public ICollection GetGroup(ICollectionRequester requester, string namespaec, string varname)
         {
+            if (LoopingOn(namespaec + "." + varname, "GetGroup"))
+            {
+                return null;
+            }
             List<object> rv = new List<object>();
             ICollection c = null;
             int fc = 0;
@@ -88,13 +134,14 @@ namespace MushDLR223.ScriptEngines
 
             lock (CollectionProviders)
             {
-                var sp = requester.SessionMananger.SkippedProviders;
+                HashSet<object> sp = null;
+                if (requester.SessionMananger != null) sp = requester.SessionMananger.SkippedProviders;
                 var all = new List<ICollectionProvider>();
                 foreach (var nv in CollectionProviders)
                 {
                     var nsp = nv.NameSpace;
                     if (!string.IsNullOrEmpty(nsp) && ToKey(nv.NameSpace) != namespaec0) continue;
-                    if (!sp.Contains(nv))
+                    if (sp == null || !sp.Contains(nv))
                     {
                         all.Add(nv);
                         //   sp.Add(nv);
@@ -180,6 +227,10 @@ namespace MushDLR223.ScriptEngines
 
         public static bool AddSetting(ICollectionRequester requester, string namespac, string name, object valeu)
         {
+            if (LoopingOn(namespac + "." + name, "update"))
+            {
+                return false;
+            }
             bool somethngTookIt = false;
             foreach (ICollectionProvider provider in GetProviders(requester, namespac))
             {
