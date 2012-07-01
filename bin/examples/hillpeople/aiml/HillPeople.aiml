@@ -32,7 +32,7 @@
 
 <category>
     <pattern>SET SUPER PLAN *</pattern>
-    <template>Setting superplan <star/><think><set dict="bot" name="super_plan"><star/></set></think></template>
+    <template>Setting superplan <star/><think><set dict="bot" name="superPlan"><star/></set></think></template>
 </category>
 
 <category>
