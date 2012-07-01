@@ -41,7 +41,7 @@
 set_current_action(Name, Action) :-
 	writeq(Action),nl,
 	with_output_to(string(S), writeq(Action)),
-	set_botvar(bot, 'current action', S),
+	botvar_set(bot, 'currentAction', S),
 	retractall(tribal_dyn:current_action(Name, _)),
 	assert(tribal_dyn:current_action(Name, S)).
 
@@ -49,13 +49,13 @@ set_current_action(Name, Action) :-
 set_current_action(Name, ActionFormat, Args) :-
 	format(string(S), ActionFormat, Args),!,
 	writeln(S),
-	set_botvar(bot, 'current action', S),
+	botvar_set(bot, 'currentAction', S),
 	retractall(tribal_dyn:current_action(Name, _)),
 	assert(tribal_dyn:current_action(Name, S)).
 set_current_action(_, ActionFormat, Args) :-
 	format('Illegal: set_current_action/3 requires 2nd and 3rd arg as for format/2, you supplied ~w  ~w~n', [ActionFormat, Args]).
 
-bv:hook_botvar_get(BotID, bot, 'current action', X) :-
+bv:hook_botvar_get(BotID, bot, 'currentAction', X) :-
 	@(get_current_action(BotID, X), tribal).
 
 get_current_action(BotID, X) :-
@@ -63,13 +63,13 @@ get_current_action(BotID, X) :-
 	tribal_dyn:current_action(Name, X),!.
 get_current_action(_, "nothing").
 
-bv:hook_botvar_set(_, bot, 'current action', _) :-
-	format('the botvar \'current action\' is readonly~n', []).
+bv:hook_botvar_set(_, bot, 'currentAction', _) :-
+	format('the botvar \'currentAction\' is readonly~n', []).
 
-bv:hook_botvar_key(_, bot, 'current action').
+bv:hook_botvar_key(_, bot, 'currentAction').
 
-bv:hook_botvar_desc(_, bot, 'current action',
-     "ReadOnly - The current action performed by the bot").
+bv:hook_botvar_desc(_, bot, 'currentAction',
+     "ReadOnly - The currentAction performed by the bot").
 
 be_tribal(Name) :-
 	botID(Name, ID),
@@ -284,7 +284,7 @@ be_tribal(
 	waypoint_path(WPName, Home, Path),
 	select(cur_plan(_), Status, cur_plan(Path) , NewStatus),
 	set_current_action(Name, 'Planning to go rest at ~w', [Home]),
-	botcmd(say("Aborting my current action, heading home to rest")),
+	botcmd(say("Aborting my currentAction, heading home to rest")),
 	be_tribal(WPName, Name, NewStatus).
 
 %

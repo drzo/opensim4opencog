@@ -36,6 +36,11 @@
 </category>
 
 <category>
+    <pattern>TGCA</pattern>
+    <template>GCA  <bot  name="currentAction" /> </template>
+</category>
+
+<category>
     <pattern>WHAT IS YOUR *</pattern>
     <template>My <star /> is  <get dict="bot"><star /></get></template>
 </category>
