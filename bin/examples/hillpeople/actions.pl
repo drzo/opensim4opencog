@@ -34,6 +34,8 @@ say_ref(Prompt, Ref) :-
 
 inventory_folder_name("hillpeople example rev5").
 
+%  has_inventory, remove_all, and wear_list will have
+%  red preds because they're external
 has_inventory :-
 	inventory_folder_name(Folder),
 	bot_has_inventory([Folder]),!.

@@ -3,6 +3,19 @@
 		   get_current_action/2
 		  ]).
 
+%%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%	tribal.pl
+%
+%	A bot has a current_action, what it's currently doing
+%	and a cur_plan, which is a list of actions it intends
+%	to take.
+%
+%	On a larger level, the bot has a super_plan, which is
+%	a single botvar that is it's overall goal, like 'go fishing'
+%
+%%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 :-set_prolog_flag(double_quotes,string).
 
 :- use_module(hillpeople(weather)).
@@ -25,6 +38,7 @@
 % Set the botvar for the current bot action
 %
 set_current_action(Name, Action) :-
+	writeq(Action),nl,
 	with_output_to(string(S), writeq(Action)),
 	retractall(tribal_dyn:current_action(Name, _)),
 	assert(tribal_dyn:current_action(Name, S)).
@@ -32,6 +46,7 @@ set_current_action(Name, Action) :-
 % as for format/2
 set_current_action(Name, ActionFormat, Args) :-
 	format(string(S), ActionFormat, Args),!,
+	writeln(S),
 	retractall(tribal_dyn:current_action(Name, _)),
 	assert(tribal_dyn:current_action(Name, S)).
 set_current_action(_, ActionFormat, Args) :-
@@ -79,8 +94,6 @@ be_tribal(_,
 	  Name,
 	  Status) :-
 	\+ memberchk(on_sim, Status),
-	% get the current simulator name
-%	botget([self,network,currentsim,name],Sim),
         set_current_action(Name, "teleporting to start location"),
 	tribal_land(Loc),
 	botcmd(teleport(Loc)),
@@ -135,8 +148,8 @@ be_tribal(_,
 %
 %  In test_wander_mode they just wander from point to point
 %
-test_wander_mode.
-
+test_wander_mode :-
+	botvar_get(bot, super_plan, wander).
 
 %
 % in test_wander_mode, if we don't have a plan,
@@ -224,25 +237,100 @@ be_tribal(
 	say_format('cur_plan empty, removing it', []),
 	be_tribal(Loc, Name, NewStatus).
 
-/*
+%%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%        Rest
+%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-%  No plan, do something suggested by a nearby affordance
+% if we're far from home, and not planning to go hom,
+% plan to go home
+%
+be_tribal(
+    _Loc,
+    Name,
+    Status) :-
+	botvar_get(bot, super_plan, rest),
+	\+ memberchk(headed_home, Status),
+	home(Name, Home),
+	name_to_location_ref(Home, Obj),
+	distance_to(Obj, D),
+	D > 8.0,
+	nearest_waypoint(WPName, _),
+	waypoint_path(WPName, Home, Path),
+	append(Path,
+	       [remove(headed_home),
+		lay_down,
+		add(fatigue(20)),
+		sleep_until_rested,
+		remove(fatigue(_))], NewPlan),
+	select(cur_plan(_), Status, cur_plan(NewPlan) , NewStatus),
+	set_current_action(Name, 'Planning to go rest at ~w', [Home]),
+	botcmd(say("Aborting my current action, heading home to rest")),
+	be_tribal(WPName, Name, [headed_home | NewStatus]).
+
+%
+% lay down
 %
 be_tribal(
     Loc,
     Name,
     Status) :-
-	\+ memberchk(cur_plan(_), Status),
-	nearest_in_list(
-	    [
-	    wumpus,
-	    wumpus_meat,
-	    unplanted_corn,
-	    ripe_corn,
-	    fishball1,
-	    fishball2,
-*/
+	home(Name, Loc),
+	memberchk(cur_plan([lay_down|T]), Status),
+	botcmd(anim("sleep")),
+	set_current_action(Name, "laying down to sleep"),
+	select(cur_plan(_), Status, cur_plan(T), NewStatus),
+	be_tribal(Loc, Name, NewStatus).
 
+%
+% sleep_until_rested
+%
+be_tribal(
+    Loc,
+    Name,
+    Status) :-
+	memberchk(cur_plan([sleep_until_rested|T]), Status),
+	memberchk(fatigue(0), Status),
+	set_current_action(Name, "getting up from sleep"),
+	botcmd(stop("sleep")),
+	select(fatigue(_), Status, NewStatus),
+	select(cur_plan(_), NewStatus, cur_plan(T), NNStatus),
+	be_tribal(Loc, Name, NNStatus).
+
+%
+% sleep_until_rested
+%
+be_tribal(
+    Loc,
+    Name,
+    Status) :-
+	memberchk(cur_plan([sleep_until_rested|_]), Status),
+	memberchk(fatigue(Fatigue), Status),
+	set_current_action(Name, "sleeping"),
+	LessFatigue is Fatigue - 1,
+	select(fatigue(_), Status, fatigue(LessFatigue), NewStatus),
+	sleep(10),
+	be_tribal(Loc, Name, NewStatus).
+
+%
+% add something to status
+%
+be_tribal(
+    Loc,
+    Name,
+    Status) :-
+	memberchk(cur_plan([add(Atom)|_]), Status),
+	be_tribal(Loc, Name, [Atom | Status]).
+
+%
+%  remove statuses with the remove action
+%
+be_tribal(
+    Loc,
+    Name,
+    Status) :-
+	memberchk(cur_plan([remove(Atom)|_]), Status),
+	select(Atom, Status, NewStatus),
+	be_tribal(Loc, Name, NewStatus).
 
 %
 % Die if yer starved
@@ -265,7 +353,7 @@ be_tribal(
 %
 be_tribal(
     _,
-    _Name,
+    Name,
     status(
 	_,
 	_,
@@ -273,6 +361,7 @@ be_tribal(
 	Pro)) :-
     Pro < -4.0,
     botcmd(anim(die)),
+    set_current_action(Name, "dieing of protein deficiency"),
     sleep(30),
     botcmd(logout).
 
