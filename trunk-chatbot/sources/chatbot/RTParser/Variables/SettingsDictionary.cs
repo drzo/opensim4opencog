@@ -1324,7 +1324,7 @@ namespace RTParser.Variables
             }
         }
 
-        private readonly Dictionary<string, Dictionary<string, int>> checkingFallbacksOfN = new Dictionary<string, Dictionary<string, int>>();
+        [ThreadStatic] private Dictionary<string, Dictionary<string, int>> checkingFallbacksOfN = null;
         public bool LoopingOn(string name, string type)
         {
             if (LoopingOn0(name,type))
@@ -1336,6 +1336,10 @@ namespace RTParser.Variables
         public bool LoopingOn0(string name, string type)
         {
             Dictionary<string, int> fallbacksOf;
+            if (checkingFallbacksOfN == null)
+            {
+                checkingFallbacksOfN = new Dictionary<string, Dictionary<string, int>>();
+            }
             lock (checkingFallbacksOfN)
             {
                 if (!checkingFallbacksOfN.TryGetValue(type, out fallbacksOf))
