@@ -1,0 +1,48 @@
+#Design for a hillpeople world understanding authoring system
+
+= Introduction =
+
+   Cogbot is a server written for .NET that connects several avatars
+   acting as "bots" to OpenSim or Second Life. The system is intended
+   to provide basic features programmers need to populate a prebuilt
+   virtual environments with non player characters doing "interesting"
+   things. 
+
+Interesting, in human terms, means that the actions have meaning and make sense.  This requires some 'intelligence' tools.
+
+As of this writing we've taken the Hill People example as far as we can without a more powerful tool. AngloBot will be that tool.
+
+= Name =
+ 
+Anglobot is a working title.
+
+= Manifesto =
+
+Overarching design principles:
+  * Development is a total activity. We want a system that supports running test runs, updating, and debugging as an integrated, humane activity.
+  * Better tools are needed to build a palace than a garden shed.
+  * Formal power and semantics are interesting, but so is ease of use.
+  * We appreciate the design decisions that lead to Inform 7, but recognize that their design solutions are for their domain, not ours.
+  * Our users come first
+  * Including technical details and requirements, making the learning curve more formidable, affects not only non/less technical users, but busy technical users as well. Complexity has a cost.
+  * To understand is to relate actions to utility. This is the Papertian view and Gibson's ecological view.
+  * PDDL is our machine code.
+  * Our interpreter is opinionated. It understands some fundamental things that are awkward to encode in the user's language, e.g. that carrying a thing means it moves with the carrier.
+
+= What we tell the system =
+
+  * Snippets - sections of a plan that a planner can combine to create plans by HTN.
+  * Ontology - facts about the nature of the world, in a form that can be converted to snippets.
+  * Utility - facts about the value of doing things.
+
+== Snippets ==
+
+
+== Ontology ==
+
+
+== Utility ==
+
+
+
+
