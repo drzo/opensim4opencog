@@ -12,7 +12,8 @@
 		       join_the_tribe/0,
                        set_num_bots/1,
                        tribe_size/1,
-                       set_tribe/1
+                       set_tribe/1,
+		       bed_for_name/2
 		      ]).
 
 %--------------------------------------------------------
@@ -106,7 +107,7 @@ logon_bots :-
 	    sleep(1),
 	    fail
 	;
-	    true
+	    botdo('setmaster Anne Ogborn')
 	).
 
 %
@@ -267,6 +268,10 @@ start_wearing(opthamologist, [
 
 
 home(_, hut3). % fallback, stay in 3 if you don't know
+
+% fallback, people's beds are named af_otopopo_bed
+bed_for_name(Name, BedName) :-
+	format(string(BedName), 'af_~w_bed', [Name]).
 
 everybody_be_tribal :-
 	hill_person(Name),
