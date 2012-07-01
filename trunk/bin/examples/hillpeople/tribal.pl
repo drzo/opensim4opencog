@@ -25,6 +25,7 @@
 :- use_module(cogbot(cogrobot)).
 :- use_module(hillpeople(events)).
 :- use_module(hillpeople(actionselection)).
+:- use_module(library(swicli)).
 
 :- discontiguous be_tribal/3.
 
@@ -40,6 +41,7 @@
 set_current_action(Name, Action) :-
 	writeq(Action),nl,
 	with_output_to(string(S), writeq(Action)),
+	set_botvar(bot, 'current action', S),
 	retractall(tribal_dyn:current_action(Name, _)),
 	assert(tribal_dyn:current_action(Name, S)).
 
@@ -47,12 +49,13 @@ set_current_action(Name, Action) :-
 set_current_action(Name, ActionFormat, Args) :-
 	format(string(S), ActionFormat, Args),!,
 	writeln(S),
+	set_botvar(bot, 'current action', S),
 	retractall(tribal_dyn:current_action(Name, _)),
 	assert(tribal_dyn:current_action(Name, S)).
 set_current_action(_, ActionFormat, Args) :-
 	format('Illegal: set_current_action/3 requires 2nd and 3rd arg as for format/2, you supplied ~w  ~w~n', [ActionFormat, Args]).
 
-bv:hook_botvar_get(BotID, bot, current_action, X) :-
+bv:hook_botvar_get(BotID, bot, 'current action', X) :-
 	@(get_current_action(BotID, X), tribal).
 
 get_current_action(BotID, X) :-
@@ -60,12 +63,12 @@ get_current_action(BotID, X) :-
 	tribal_dyn:current_action(Name, X),!.
 get_current_action(_, "nothing").
 
-bv:hook_botvar_set(_, bot, current_action, _) :-
-	format('the botvar current_action is readonly~n', []).
+bv:hook_botvar_set(_, bot, 'current action', _) :-
+	format('the botvar \'current action\' is readonly~n', []).
 
-bv:hook_botvar_key(_, bot, current_action).
+bv:hook_botvar_key(_, bot, 'current action').
 
-bv:hook_botvar_desc(_, bot, current_action,
+bv:hook_botvar_desc(_, bot, 'current action',
      "ReadOnly - The current action performed by the bot").
 
 be_tribal(Name) :-
@@ -83,6 +86,27 @@ be_tribal(Name) :-
 		cal(10.0),
 		pro(10.0)
 	    ]).
+
+
+%%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                  Termination actions
+%                  actions that are needed to 'get out of' a superplan
+%      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%
+% get up when not tired
+%
+be_tribal(
+    Loc,
+    Name,
+    Status) :-
+	\+ botvar_get(bot, 'super plan', rest),
+	on_bed(Name),
+	botcmd('standup'),
+	set_current_action(Name, "getting up from sleep"),
+	be_tribal(Loc, Name, Status).
+
+
 
 %%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %            Initialization
@@ -149,7 +173,7 @@ be_tribal(_,
 %  In test_wander_mode they just wander from point to point
 %
 test_wander_mode :-
-	botvar_get(bot, super_plan, wander).
+	botvar_get(bot, 'super plan', "wander").
 
 %
 % in test_wander_mode, if we don't have a plan,
@@ -242,30 +266,26 @@ be_tribal(
 %	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % if we're far from home, and not planning to go hom,
-% plan to go home
+% plan to go home. This is so we don't keep adding more
+% go home
 %
 be_tribal(
     _Loc,
     Name,
     Status) :-
-	botvar_get(bot, super_plan, rest),
-	\+ memberchk(headed_home, Status),
+	botvar_get(bot, 'super plan', rest),
+	\+ botvar_get(bot, going_home, "true"),
+	botvar_set(bot, going_home, "true"),
 	home(Name, Home),
 	name_to_location_ref(Home, Obj),
 	distance_to(Obj, D),
-	D > 8.0,
+	D > 5.0,
 	nearest_waypoint(WPName, _),
 	waypoint_path(WPName, Home, Path),
-	append(Path,
-	       [remove(headed_home),
-		lay_down,
-		add(fatigue(20)),
-		sleep_until_rested,
-		remove(fatigue(_))], NewPlan),
-	select(cur_plan(_), Status, cur_plan(NewPlan) , NewStatus),
+	select(cur_plan(_), Status, cur_plan(Path) , NewStatus),
 	set_current_action(Name, 'Planning to go rest at ~w', [Home]),
 	botcmd(say("Aborting my current action, heading home to rest")),
-	be_tribal(WPName, Name, [headed_home | NewStatus]).
+	be_tribal(WPName, Name, NewStatus).
 
 %
 % lay down
@@ -274,42 +294,37 @@ be_tribal(
     Loc,
     Name,
     Status) :-
-	home(Name, Loc),
-	memberchk(cur_plan([lay_down|T]), Status),
-	botcmd(anim("sleep")),
+	botvar_get(bot, 'super plan', rest),
+	home(Name, Home),
+	name_to_location_ref(Home, Obj),
+	distance_to(Obj, D),
+	D =< 5.0,
+	\+ on_bed(Name),
 	set_current_action(Name, "laying down to sleep"),
-	select(cur_plan(_), Status, cur_plan(T), NewStatus),
-	be_tribal(Loc, Name, NewStatus).
+	botvar_set(bot, going_home, "false"),
+	bed_for_name(Name, BedName),
+	format(string(S), 'sit ~w 1', [BedName]),
+	botcmd(S),
+	be_tribal(Loc, Name, Status).
+
+on_bed(Name) :-
+	bed_for_name(Name, BedName),
+	botID(Name, ID),
+	wbot_sitting_on(ID, BedRef),
+	cli_get(BedRef, [properties, name], BedNameO),
+	cli_unify(BedName, BedNameO).
 
 %
-% sleep_until_rested
+% sleep
 %
 be_tribal(
     Loc,
     Name,
     Status) :-
-	memberchk(cur_plan([sleep_until_rested|T]), Status),
-	memberchk(fatigue(0), Status),
-	set_current_action(Name, "getting up from sleep"),
-	botcmd(stop("sleep")),
-	select(fatigue(_), Status, NewStatus),
-	select(cur_plan(_), NewStatus, cur_plan(T), NNStatus),
-	be_tribal(Loc, Name, NNStatus).
-
-%
-% sleep_until_rested
-%
-be_tribal(
-    Loc,
-    Name,
-    Status) :-
-	memberchk(cur_plan([sleep_until_rested|_]), Status),
-	memberchk(fatigue(Fatigue), Status),
-	set_current_action(Name, "sleeping"),
-	LessFatigue is Fatigue - 1,
-	select(fatigue(_), Status, fatigue(LessFatigue), NewStatus),
+	botvar_get(bot, 'super plan' , rest),
+	on_bed(Name),
 	sleep(10),
-	be_tribal(Loc, Name, NewStatus).
+	be_tribal(Loc, Name, Status).
 
 %
 % add something to status
@@ -430,7 +445,15 @@ be_tribal(
 %
 
 
-
-
+%
+%  fallback if you can't do anything else
+%
+be_tribal(
+    Location,
+    Name,
+    Status) :-
+    say_format('~w in trouble, no valid action at ~w~n~w~n',
+	   [Name, Location, Status]),
+    sleep(10).
 
 
