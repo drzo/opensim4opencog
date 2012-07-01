@@ -29,4 +29,14 @@
     <pattern>DO STAND</pattern>
     <template>I will try to stand <think><set dict="bot" name="isSittingGround">No</set></think> <srai>SITTING</srai></template>
 </category>
+
+<category>
+    <pattern>SET SUPER PLAN *</pattern>
+    <template>Setting superplan <star/><think><set dict="bot" name="super_plan"><star/></set></think></template>
+</category>
+
+<category>
+    <pattern>WHAT IS YOUR *</pattern>
+    <template>My <star /> is  <get dict="bot"><star /></get></template>
+</category>
 </aiml>
