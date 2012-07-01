@@ -777,11 +777,12 @@ wbotvar_set(BotID,NS,Name,ValueO):-wbot_safe_namespace(BotID,NS,NS1),cli_call('M
 wbotvar_get(BotID,Name,ValueO):- wbotvar_get(BotID,bot,Name,ValueO).
 wbotvar_get(BotID,NS,Name,ValueO):-ground(NS+Name),!,wbot_safe_namespace(BotID,NS,NS1),
    cli_call('MushDLR223.ScriptEngines.ScriptManager','GetGroup',[BotID,NS1,Name],Value),once(value_deref(Value,ValueO)).
-wbotvar_get(BotID,NS,Name,ValueO):- wbotvar_keys(BotID,NS,Name,CP),
+wbotvar_get(BotID,NS,Name,ValueO):- wbot_safe_namespace(BotID,NS,NS1),wbotvar_keys(BotID,NS1,Name,CP),
    cli_call(CP,'GetGroup'(object,string),[BotID,Name],Value),once(value_deref(Value,ValueO)).
 
 
 wbot_safe_namespace(BotID,bot,NS1):-!,wbotname(BotID,NS),wbot_safe_namespace(BotID,NS,NS1).
+wbot_safe_namespace(BotID,"bot",NS1):-!,wbotname(BotID,NS),wbot_safe_namespace(BotID,NS,NS1).
 wbot_safe_namespace(_,NS,NS1):-global_tokey(NS,NS1).
 
 global_tokey(Name,Key):-var(Name),trace,Key=Name.
