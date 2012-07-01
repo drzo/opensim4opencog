@@ -151,7 +151,7 @@ namespace Cogbot
                 {
                     try
                     {
-                        evalLispString("(progn " + onLogin + ")");
+                        evalLispString("(progn \n" + onLogin + "\n)");
                     }
                     catch (Exception ex)
                     {

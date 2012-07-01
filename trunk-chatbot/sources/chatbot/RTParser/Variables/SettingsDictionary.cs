@@ -1987,7 +1987,11 @@ namespace RTParser.Variables
 
         protected object orderedKeyLock
         {
-            get { return LockInfo.Watch(orderedKeys); }
+            get
+            {
+                return new object();
+                return LockInfo.Watch(orderedKeys);
+            }
         }
 
         public List<ISettingsDictionary> Fallbacks

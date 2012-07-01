@@ -243,7 +243,9 @@ namespace Cogbot
             foreach (XmlNode info in root.ChildNodes)
             {
                 string key = Parser.ToKey(info.Name);
-                string value = info.InnerXml;
+                string value =
+                    info.InnerXml.Replace("&gt;", ">").Replace("&lt;", "<").Replace("&quote;", "\"").Replace("&amp;",
+                                                                                                             "&");
                 config[key] = value;
             }
         }
