@@ -718,10 +718,13 @@ wbot_replaceoutfit(BotID,Mask):-
      wbot_path_to_absolute(BotID,Mask,StartPath),
      findall(ItemName,wbot_inventory(BotID,Path,_),append(StartPath,[ItemName],Path),Items),
      wbot_replaceoutfit(BotID,Path,Items),wbot_send_appearance(BotID).
+
+%wbot_replaceoutfit(+BotID,+Mask,+Items).
 % replace clothing using start path + items below
 wbot_replaceoutfit(BotID,Mask,Items):-
-            wbot_path_to_absolute(BotID,Mask,StartPath),
+            wbot_path_to_absolute(BotID,Mask,StartPath),!,
             findall(Item,((member(ItA,Items),string_to_atom(It,ItA),append(StartPath,[It],Path),wbot_inventory(BotID,Path,Item))),Refs),
+            Refs=[_|_],
             cli_make_list(Refs,'OpenMetaverse.InventoryItem',List),wbotcall(BotID,[appearance,replaceoutfit(List)],_).
 
 wbot_worn_where(BotID,Mask,Position):-wbot_find_node(BotID,Mask,Item),wbot_is_worn_item(BotID,Item),wbot_will_attach_to(BotID,Item,Position).
@@ -807,9 +810,15 @@ wbot_aimlbot_ref(BotID,AIMLBot):-wbotget(BotID,'Plugins',Plugs),cli_map(Plugs,"A
 
 % ?-  bot_aimlvars_get("bot",Y,Z),cli_to_str(Z,S).
 
-wbot_aimlvars_get(BotID,NameSpace,VarName,Value):-wbot_aimlbot_ref(BotID,AIMLBot),var(NameSpace),!,cli_get(AIMLBot,'AllDictionaries',ADS),
+wbot_aimlvars_get(BotID,NameSpace,VarName,Value):- wbot_aimlvars_get_0(BotID,NameSpace,VarName,ValueU),aimlvar_value(ValueU,Value).
+
+aimlvar_value(MISSING, ""):- cli_is_void(MISSING),!.
+aimlvar_value(MISSING, ""):- cli_is_null(MISSING),!.
+aimlvar_value(ValueU,Value):- cli_get(ValueU,'ToString',Value).
+
+wbot_aimlvars_get_0(BotID,NameSpace,VarName,Value):-wbot_aimlbot_ref(BotID,AIMLBot),var(NameSpace),!,cli_get(AIMLBot,'AllDictionaries',ADS),
    cli_map(ADS,NameSpace,BVs),cli_map(BVs,VarName,Value).
-wbot_aimlvars_get(BotID,NameSpace,VarName,Value):-wbot_aimlbot_ref(BotID,AIMLBot),cli_get(AIMLBot,'GetDictionary'(NameSpace),BVs),cli_map(BVs,VarName,Value).
+wbot_aimlvars_get_0(BotID,NameSpace,VarName,Value):-wbot_aimlbot_ref(BotID,AIMLBot),cli_get(AIMLBot,'GetDictionary'(NameSpace),BVs),cli_map(BVs,VarName,Value).
 
 wbot_aimlvars_set(BotID,NameSpace,VarName,Value):-wbot_aimlbot_ref(BotID,AIMLBot),var(NameSpace),!,cli_get(AIMLBot,'AllDictionaries',ADS),
    cli_map(ADS,NameSpace,BVs),cli_set(BVs,VarName,Value).
