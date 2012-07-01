@@ -1446,7 +1446,7 @@ namespace AIMLBotModule
 
             private void CheckName(string named)
             {
-                if (!named.ToLower().Contains("sitt")) return;
+                if (!named.ToLower().Contains("current")) return;
                 named.ToLower();
             }
 
@@ -1481,10 +1481,21 @@ namespace AIMLBotModule
             public bool containsLocalCalled(string name)
             {
                 CheckName(name);
+                name = Parser.ToKey(name);
                 if (FakeClientVars) return name == "cogvar";
-                int argsUsed;
-                var v = WorldSystem.ResolveCollection(name.ToLower(), out argsUsed, PluginModule.provideAIMLVars);
-                return (v != null && v.Count > 0);
+                var provs = ScriptManager.GetProviders(client, NameSpace);
+                foreach (ICollectionProvider prov in provs)
+                {
+                    if (PluginModule.provideAIMLVars == prov) continue;
+                    foreach (var sn in prov.SettingNames(client,1))
+                    {
+                        if (Parser.ToKey(sn) == name)
+                        {
+                            return true;
+                        }
+                    }
+                }
+                return false;
             }
             public bool containsSettingCalled(string name)
             {

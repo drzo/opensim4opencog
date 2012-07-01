@@ -346,7 +346,7 @@ namespace RTParser.Variables
                         item.Attributes.Append(name);
                         root.AppendChild(item);
                     }
-                    foreach (var normalizedName in this.makedvars)
+                    foreach (var normalizedName in LockInfo.CopyOf(this.maskedVars))
                     {
                         XmlNode item = result.CreateNode(XmlNodeType.Element, "maskedvar", "");
                         XmlAttribute name = result.CreateAttribute("name");
@@ -1115,8 +1115,9 @@ namespace RTParser.Variables
                 {
                     IsSubsts = TextPatternUtils.IsTrue(value);
                 }
-                if (makedvars.Contains(normalizedName))
+                if (IsMaskedVar(normalizedName))
                 {
+                    updateListeners(name, value, true, !found);
                     SettingsLog("ERROR MASKED ADD SETTING '" + name + "'=" + str(value) + " ");
                     return false;
                 }
@@ -1143,6 +1144,23 @@ namespace RTParser.Variables
                 }
             }
             return !found;
+        }
+
+        private bool IsMaskedVar(string name)
+        {
+            lock (maskedVars) if (maskedVars.Contains(name)) return true;
+            foreach (ParentProvider list in _overides)
+            {
+                var p = list();
+                if (p != null)
+                {
+                    if (p.containsLocalCalled(name))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         private Unifiable MakeLocalValue(string name, Unifiable value)
@@ -1579,13 +1597,13 @@ namespace RTParser.Variables
                 {
                     var old = this.settingsHash[normalizedName];
 
-                    if (makedvars.Contains(normalizedName))
+                    updateListeners(name, value, true, false);
+                    if (IsMaskedVar(normalizedName))
                     {
                         SettingsLog("MASKED Not Update Local '" + name + "'=" + str(value) + " keeped " + str(old));
                     }
                     else
                     {
-                        updateListeners(name, value, true, false);
                         if (AllowedNameValue(name, value))
                         {
                             value = MakeLocalValue(name, value);
@@ -1601,7 +1619,7 @@ namespace RTParser.Variables
                     }
                 }
                 // before fallbacks
-                if (makedvars.Contains(normalizedName))
+                if (IsMaskedVar(normalizedName))
                 {
                     SettingsLog("MASKED NOT UPDATE FALLBACKS '" + name + "'=" + str(value));
                     return false;
@@ -1642,7 +1660,7 @@ namespace RTParser.Variables
                 _overides.Clear();
                 _fallbacks.Clear();
                 _fallbacks.Add(() => prefixProvider);
-                makedvars.Clear();
+                lock (maskedVars) maskedVars.Clear();
             }
         }
 
@@ -1652,13 +1670,13 @@ namespace RTParser.Variables
             _listeners.Add(() => prefixProvider);
         }
 
-        private HashSet<string> makedvars = new HashSet<string>();
+        private HashSet<string> maskedVars = new HashSet<string>();
         public void maskSetting(string name)
         {
             name = TransformName(name);
             name = TransformKey(name);
             writeToLog("MASKING: " + name);
-            lock (orderedKeyLock) makedvars.Add(name);
+            lock (maskedVars) maskedVars.Add(name);
         }
 
         /// <summary>
@@ -1694,11 +1712,11 @@ namespace RTParser.Variables
 
         public string grabSettingOrDefault(string name, string fallback)
         {
-            HashSet<ISettingsDictionary> noGo = new HashSet<ISettingsDictionary>() { this };
-            foreach (ParentProvider overide in _overides)
+            //HashSet<ISettingsDictionary> noGo = new HashSet<ISettingsDictionary>() { this };
+            foreach (ParentProvider overide in GraphMaster.CopyOf(_overides))
             {
                 ISettingsDictionary dict = overide();
-                if (!noGo.Add(dict)) continue;
+              //  if (!noGo.Add(dict)) continue;
                 if (dict.containsLocalCalled(name))
                 {
                     string v = grabSettingOrDefault(dict, name, fallback);
@@ -1713,7 +1731,7 @@ namespace RTParser.Variables
                 if (this.settingsHash.ContainsKey(normalizedName))
                 {
                     string v = this.settingsHash[normalizedName];
-                    if (makedvars.Contains(normalizedName))
+                    if (IsMaskedVar(normalizedName))
                     {
                         SettingsLog("MASKED RETURNLOCAL '" + name + "=NULL instead of" + str(v));
                         return null;
@@ -1725,7 +1743,7 @@ namespace RTParser.Variables
                 {
                     ISettingsDictionary firstFallBack = null;
                     bool returnIt;
-                    Unifiable u = CheckFallbacks(noGo, Fallbacks, name, normalizedName, ref firstFallBack, out returnIt);
+                    Unifiable u = CheckFallbacks(Fallbacks, name, normalizedName, ref firstFallBack, out returnIt);
                     if (returnIt) return u;
                     if (firstFallBack != null)
                     {
@@ -1743,7 +1761,7 @@ namespace RTParser.Variables
             }
         }
 
-        private Unifiable CheckFallbacks(HashSet<ISettingsDictionary> noGo, IEnumerable<ISettingsDictionary> fallbacks, string name, string normalizedName, ref ISettingsDictionary firstFallBack, out bool returnIt)
+        private Unifiable CheckFallbacks(IEnumerable<ISettingsDictionary> fallbacks, string name, string normalizedName, ref ISettingsDictionary firstFallBack, out bool returnIt)
         {
             if (LoopingOn(name, "fallback"))
             {
@@ -1752,7 +1770,7 @@ namespace RTParser.Variables
             }
             foreach (ISettingsDictionary list in fallbacks)
             {
-                if (!noGo.Add(list)) continue;
+               // if (!noGo.Add(list)) continue;
                 firstFallBack = firstFallBack ?? list;
                 object watch = LockInfo.Watch(list);
                 lock (watch)
@@ -1763,7 +1781,7 @@ namespace RTParser.Variables
                     ;
                     if (v == null) continue;
 
-                    if (makedvars.Contains(normalizedName))
+                    if (IsMaskedVar(normalizedName))
                     {
                         SettingsLog("MASKED PARENT '" + name + "=NULL instead of" + str(v));
                         list.IsTraced = prev;
@@ -1791,18 +1809,18 @@ namespace RTParser.Variables
 
         public Unifiable grabSetting0(string name)
         {
-            bool mayUseOverides = true;
+            this.mayUseOverides = true;
             if (LoopingOn(name, "override"))
             {
                 mayUseOverides = false;
             }
-            HashSet<ISettingsDictionary> noGo = new HashSet<ISettingsDictionary>() {this};
+            //HashSet<ISettingsDictionary> noGo = new HashSet<ISettingsDictionary>() {this};
             if (this.mayUseOverides)
             {
                 foreach (ParentProvider overide in GraphMaster.CopyOf(_overides))
                 {
                     ISettingsDictionary dict = overide();
-                    if (!noGo.Add(dict)) continue;
+                    //if (!noGo.Add(dict)) continue;
                     if (dict.containsSettingCalled(name))
                     {
                         Unifiable v = dict.grabSetting(name);
@@ -1811,12 +1829,14 @@ namespace RTParser.Variables
                     }
                 }
             }
+            bool isMaskedVar = IsMaskedVar(name);
             bool needsUnlock = System.Threading.Monitor.TryEnter(orderedKeys, TimeSpan.FromSeconds(2));
             string normalizedName = TransformKey(name);
             try
             {
                 if (containsLocalCalled0(name))
                 {
+                    if (isMaskedVar) throw new InvalidOperationException("conatins a masked var!");
                     Unifiable v = localValue(name, normalizedName);
                     if (IsMissing(v))
                     {
@@ -1838,13 +1858,21 @@ namespace RTParser.Variables
                     ISettingsDictionary firstFallBack = null;
 
                     bool returnIt;
-                    Unifiable u = CheckFallbacks(noGo, Fallbacks, name, normalizedName, ref firstFallBack, out returnIt);
-                    if (returnIt) return u;
+                    Unifiable u = CheckFallbacks(Fallbacks, name, normalizedName, ref firstFallBack, out returnIt);
+                    if (returnIt)
+                    {
+                        if (isMaskedVar && !Unifiable.IsNull(u))
+                        {
+                            throw new InvalidOperationException("conatins a masked var too!");
+                        } 
+                        return u;
+                    }
                     if (firstFallBack != null)
                     {
                         var v0 = firstFallBack.grabSetting(name);
                         if (!IsMissing(v0))
                         {
+                            if (isMaskedVar) throw new InvalidOperationException("conatins a masked var three!"); 
                             SettingsLog("RETURN FALLBACK0 '" + name + "'=" + str(v0));
                             return v0;
                         }
@@ -1870,7 +1898,7 @@ namespace RTParser.Variables
             {
                 Unifiable v = this.settingsHash[normalizedName];
                 v = TransformValueOut(v);
-                if (makedvars.Contains(normalizedName))
+                if (IsMaskedVar(normalizedName))
                 {
                     SettingsLog("MASKED RETURNLOCAL '" + name + "=NULL instead of" + str(v));
                     return null;
@@ -1925,7 +1953,7 @@ namespace RTParser.Variables
             name = TransformName(name);
             string normalizedName = TransformKey(name);
 
-            if (makedvars.Contains(normalizedName)) return true;
+            if (IsMaskedVar(normalizedName)) return false;
 
             if (normalizedName.Length > 0)
             {
@@ -2656,7 +2684,7 @@ namespace RTParser.Variables
 
         public void SetValue(ICollectionRequester requester, string name, object value)
         {
-            addSetting(name, Unifiable.Create(value));
+            updateSetting(name, Unifiable.Create(value));
         }
 
         public bool AcceptsNewKeys

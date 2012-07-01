@@ -1217,6 +1217,7 @@ namespace RTParser
                 guser.Predicates.clearHierarchy();
                 guser.Predicates.InsertFallback(() => HeardPredicates);
                 guser.Predicates.maskSetting("name");
+                ///guser.Predicates.maskSetting("currentaction");
                 guser.Predicates.maskSetting("id");
 
                 // try a safe default setting for the settings xml file

@@ -29,6 +29,21 @@ namespace RTParser.Database
             gName = RTPBot.GetAttribValue(node, "global_name", gName);
 
             string realName0;
+
+
+            var vv = ScriptManager.GetGroup(query.TargetBot.ObjectRequester, subject, name);
+            {
+                if (vv != null)
+                    if (vv.Count == 0)
+                    {
+                        succeed = true;
+                        realName = name;
+                        return "";
+                    }
+                succeed = true;
+                realName = name;
+                return Unifiable.Create(vv);
+            }
             Unifiable resultGet = SettingsDictionary.grabSettingDefaultDict(udict, name, out realName0);
 
             if (ReferenceEquals(resultGet, null))
