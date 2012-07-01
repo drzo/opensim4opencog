@@ -41,6 +41,12 @@
 %
 %
 %---------------------------------------------------------------------
+%
+
+% workaround for swipl bug
+user:cli_fmt(A,B,C):-swicli:cli_fmt(A,B,C).
+
+
 
 :-set_prolog_flag(double_quotes,string).
 
