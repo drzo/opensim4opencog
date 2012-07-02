@@ -18,7 +18,7 @@ namespace PrologScriptEngine
         public static BotVarProvider CreateBotVarProvider(PlTerm bot, PlTerm nameSpace, PlTerm getter, PlTerm setter, PlTerm keyGetter)
         {
             BotVarProvider provider = new BotVarProvider("user", nameSpace.Name, getter.Name, setter.Name, keyGetter.Name);
-            ScriptManager.AddGroupProvider((ICollectionRequester) PrologClient.GetInstance(bot), provider);
+            ScriptManager.AddGroupProvider((ICollectionRequester) PrologCLR.GetInstance(bot), provider);
             return provider;
         }
 
@@ -44,14 +44,14 @@ namespace PrologScriptEngine
 
         public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
         {
-            return PrologClient.InvokeFromC(
+            return PrologCLR.InvokeFromC(
                 () =>
                     {
                         if (IsEmpty(KeyGetter)) return null;
                         List<string> names = new List<string>();
                         var plVar = PlTerm.PlVar();
                         var query = new PlQuery(Module, KeyGetter,
-                                                new PlTermV(PrologClient.ToProlog(requester), PlTerm.PlString(NameSpace),
+                                                new PlTermV(PrologCLR.ToProlog(requester), PlTerm.PlString(NameSpace),
                                                             plVar));
                         while (query.NextSolution())
                         {
@@ -68,14 +68,14 @@ namespace PrologScriptEngine
 
         public void SetValue(ICollectionRequester requester, string name, object value)
         {
-            PrologClient.InvokeFromC(
+            PrologCLR.InvokeFromC(
                 () =>
                     {
                         if (IsEmpty(Setter)) return false;
                         var plVar = PlTerm.PlVar();
                         var query = new PlQuery(Module, Setter,
-                                                new PlTermV(PrologClient.ToProlog(requester), PlTerm.PlString(NameSpace), PlTerm.PlString(name),
-                                                            PrologClient.ToProlog(value)));
+                                                new PlTermV(PrologCLR.ToProlog(requester), PlTerm.PlString(NameSpace), PlTerm.PlString(name),
+                                                            PrologCLR.ToProlog(value)));
                         while (query.NextSolution())
                         {
                             
@@ -96,18 +96,18 @@ namespace PrologScriptEngine
 
         public ICollection GetGroup(ICollectionRequester requester, string name)
         {
-            return PrologClient.InvokeFromC(
+            return PrologCLR.InvokeFromC(
                 () =>
                     {
                         if (IsEmpty(Getter)) return null;
                         var plVar = PlTerm.PlVar();
                         List<object> results = new List<object>();
                         var query = new PlQuery(Module, Getter,
-                                                new PlTermV(PrologClient.ToProlog(requester), PlTerm.PlString(NameSpace), PlTerm.PlString(name),
+                                                new PlTermV(PrologCLR.ToProlog(requester), PlTerm.PlString(NameSpace), PlTerm.PlString(name),
                                                             plVar));
                         while (query.NextSolution())
                         {
-                            object res = PrologClient.GetInstance(query.Args[3]);
+                            object res = PrologCLR.GetInstance(query.Args[3]);
                             if (!results.Contains(res)) results.Add(res);
                         }
                         return results.Count == 0 ? null : results;
@@ -121,7 +121,7 @@ namespace PrologScriptEngine
         public static ICollectionProvider CreateBotVarProvider(PlTerm bot, PlTerm nameSpace, PlTerm getter, PlTerm setter, PlTerm keyGetter)
         {
             var provider = new BotVarProviderCallN(nameSpace, getter, setter, keyGetter);
-            ScriptManager.AddGroupProvider((ICollectionRequester) PrologClient.GetInstance(bot), provider);
+            ScriptManager.AddGroupProvider((ICollectionRequester) PrologCLR.GetInstance(bot), provider);
             return provider;
         }
 
@@ -145,7 +145,7 @@ namespace PrologScriptEngine
 
         public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
         {
-            return PrologClient.InvokeFromC(
+            return PrologCLR.InvokeFromC(
                 () =>
                 {
                     PlTerm callback = AllCallbacks.Args[2];
@@ -171,7 +171,7 @@ namespace PrologScriptEngine
 
         public void SetValue(ICollectionRequester requester, string name, object value)
         {
-            PrologClient.InvokeFromC(
+            PrologCLR.InvokeFromC(
                 () =>
                 {
                     PlTerm callback = AllCallbacks.Args[1];
@@ -179,7 +179,7 @@ namespace PrologScriptEngine
                     var plVar = PlTerm.PlVar();
                     var query = new PlQuery("call",
                                             new PlTermV(callback, PlTerm.PlString(NameSpace), PlTerm.PlString(name),
-                                                        PrologClient.ToProlog(value)));
+                                                        PrologCLR.ToProlog(value)));
                     return query.NextSolution();
                 }, DiscardFrames);
         }
@@ -196,7 +196,7 @@ namespace PrologScriptEngine
 
         public ICollection GetGroup(ICollectionRequester requester, string name)
         {
-            return PrologClient.InvokeFromC(
+            return PrologCLR.InvokeFromC(
                 () =>
                 {
                     PlTerm callback = AllCallbacks.Args[0];
@@ -208,7 +208,7 @@ namespace PrologScriptEngine
                                                         plVar));
                     while (query.NextSolution())
                     {
-                        object res = PrologClient.GetInstance(query.Args[3]);
+                        object res = PrologCLR.GetInstance(query.Args[3]);
                         if (!results.Contains(res)) results.Add(res);
                     }
                     return results.Count == 0 ? null : results;
@@ -226,11 +226,11 @@ namespace PrologScriptEngine
             PrologScriptInterpreter pscript = new PrologScriptInterpreter(null);
             pscript.Init(pscript);
             pscript.Intern("pscript", pscript);
-            PrologClient.Main0(args);
+            PrologCLR.Main0(args);
         }
         ///<summary>
         ///</summary>
-        public PrologClient prologClient;
+        public PrologCLR prologClient;
 
         public override bool LoadsFileType(string filename)
         {
@@ -267,7 +267,7 @@ namespace PrologScriptEngine
                     var list = list0;
                     DLRConsole.SafelyRun(() =>
                     {
-                        if (AutoInternMethods) PrologClient.InternMethod(module, PrologClient.ToPrologCase(list.Name), list);
+                        if (AutoInternMethods) PrologCLR.InternMethod(module, PrologCLR.ToPrologCase(list.Name), list);
                         if (deeper)
                         {
                             foreach (var s in list.GetParameters())
@@ -300,7 +300,7 @@ namespace PrologScriptEngine
             : base()
         {
             Init(self);
-            PrologClient.PlNamed("MyBot");
+            PrologCLR.PlNamed("MyBot");
         }
 
         static private readonly object GroupInitLock = new object();
@@ -310,7 +310,7 @@ namespace PrologScriptEngine
         {
             lock (GroupInitLock)
             {
-                prologClient = prologClient ?? new PrologClient();
+                prologClient = prologClient ?? new PrologCLR();
                 if (!IsInited)
                 {
                     IsInited = true;

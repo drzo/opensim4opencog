@@ -519,6 +519,7 @@
       </Configuration>
 
       <ReferencePath>../../../../bin</ReferencePath>
+      <Reference name="Swicli.Library" localCopy="false"/>
       <Reference name="System" localCopy="false"/>
       <Reference name="System.Core" localCopy="false"/>
       <Reference name="System.Data" localCopy="false"/>
