@@ -24,6 +24,13 @@ register_listeners :-
 user:handle_im(A,B,C):-events:handle_im(A,B,C).
 
 handle_im(Origin, Object, IMEventArgs) :-
+	handle_im_without_spam(Origin, Object, IMEventArgs).
+
+handle_im_without_spam(_, _, _) :-
+	botvar_get(bot, imdebugspam , X),
+	X \= "true".
+handle_im_without_spam(Origin, Object, IMEventArgs) :-
+	botvar_get(bot, imdebugspam , "true"),
         nl,
 	cli_to_str(Origin, OriginStr),
 	cli_to_str(Object, ObjectStr),
