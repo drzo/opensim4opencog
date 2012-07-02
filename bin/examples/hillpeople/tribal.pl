@@ -41,7 +41,6 @@
 set_current_action(Name, Action) :-
 	writeq(Action),nl,
 	with_output_to(string(S), writeq(Action)),
-	botvar_set(bot, 'currentAction', S),
 	retractall(tribal_dyn:current_action(Name, _)),
 	assert(tribal_dyn:current_action(Name, S)).
 
@@ -49,7 +48,6 @@ set_current_action(Name, Action) :-
 set_current_action(Name, ActionFormat, Args) :-
 	format(string(S), ActionFormat, Args),!,
 	writeln(S),
-	botvar_set(bot, 'currentAction', S),
 	retractall(tribal_dyn:current_action(Name, _)),
 	assert(tribal_dyn:current_action(Name, S)).
 set_current_action(_, ActionFormat, Args) :-
@@ -88,6 +86,24 @@ be_tribal(Name) :-
 	    ]).
 
 
+%%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%	bail when the user asks us to
+%
+%%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+be_tribal(
+    _Loc,
+    Name,
+    _Status) :-
+	botvar_get(bot, byebye, "true"),
+	botvar_set(bot, byebye, "false"),
+	say_ref('I am going byebye', []),
+	format('#################################~n~w is going byebye~n', [Name]),
+	thread_self(ID),
+	thread_detach(ID).
+
+
+
 %%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                  Termination actions
 %                  actions that are needed to 'get out of' a superplan
@@ -100,12 +116,11 @@ be_tribal(
     Loc,
     Name,
     Status) :-
-	\+ botvar_get(bot, 'superPlan', rest),
+	\+ (botvar_get(bot, 'superPlan', X), X = "rest"),
 	on_bed(Name),
 	botcmd('standup'),
 	set_current_action(Name, "getting up from sleep"),
 	be_tribal(Loc, Name, Status).
-
 
 
 %%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -239,7 +254,7 @@ be_tribal(
 	say_format('cur_plan went to ~w Remaining: ~w', [H,T]),
 	say_ref('Move', MoveStat),
 	say_ref('Wait', WaitStat),
-	select(cur_plan(_), Status, cur_plan(T) , NewStatus),
+	replace_plan(Status, T, NewStatus),
 	be_tribal(H, Name, NewStatus).
 
 %%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -273,16 +288,16 @@ be_tribal(
     _Loc,
     Name,
     Status) :-
-	botvar_get(bot, 'superPlan', rest),
-	\+ botvar_get(bot, going_home, "true"),
-	botvar_set(bot, going_home, "true"),
+	botvar_get(bot, 'superPlan', "rest"),
 	home(Name, Home),
 	name_to_location_ref(Home, Obj),
 	distance_to(Obj, D),
-	D > 5.0,
+	D > 8.0,
 	nearest_waypoint(WPName, _),
 	waypoint_path(WPName, Home, Path),
-	select(cur_plan(_), Status, cur_plan(Path) , NewStatus),
+	\+ botvar_get(bot, goinghome, "true"),
+	botvar_set(bot, goinghome, "true"),
+	replace_plan(Status, Path, NewStatus),
 	set_current_action(Name, 'Planning to go rest at ~w', [Home]),
 	botcmd(say("Aborting my currentAction, heading home to rest")),
 	be_tribal(WPName, Name, NewStatus).
@@ -294,14 +309,14 @@ be_tribal(
     Loc,
     Name,
     Status) :-
-	botvar_get(bot, 'superPlan', rest),
+	botvar_get(bot, 'superPlan', "rest"),
 	home(Name, Home),
 	name_to_location_ref(Home, Obj),
 	distance_to(Obj, D),
-	D =< 5.0,
+	D =< 8.0,
 	\+ on_bed(Name),
 	set_current_action(Name, "laying down to sleep"),
-	botvar_set(bot, going_home, "false"),
+	botvar_set(bot, goinghome, "false"),
 	bed_for_name(Name, BedName),
 	format(string(S), 'sit ~w 1', [BedName]),
 	botcmd(S),
@@ -321,7 +336,7 @@ be_tribal(
     Loc,
     Name,
     Status) :-
-	botvar_get(bot, 'superPlan' , rest),
+	botvar_get(bot, 'superPlan' , "rest"),
 	on_bed(Name),
 	sleep(10),
 	be_tribal(Loc, Name, Status).
@@ -343,9 +358,10 @@ be_tribal(
     Loc,
     Name,
     Status) :-
-	memberchk(cur_plan([remove(Atom)|_]), Status),
+	memberchk(cur_plan([remove(Atom)|T]), Status),
 	select(Atom, Status, NewStatus),
-	be_tribal(Loc, Name, NewStatus).
+	replace_plan(NewStatus, T, NNStatus),
+	be_tribal(Loc, Name, NNStatus).
 
 %
 % Die if yer starved
@@ -455,6 +471,24 @@ be_tribal(
     say_format('~w in trouble, no valid action at ~w~n~w~n',
 	   [Name, Location, Status]),
     sleep(10),
-       be_tribal(Location, Name, Status).
+    gtrace_by_botvar,
+    be_tribal(Location, Name, Status).
 
+
+gtrace_by_botvar :-
+    \+ botvar_get(bot, breakontrouble, "true"),
+    !.
+gtrace_by_botvar :-
+       gtrace.
+
+%
+% given a status, replace the cur_plan(_) with
+% cur_plan(Plan), binding NewStatus. If cur_plan(_)
+% doesn't exist, just add the new plan
+%
+replace_plan(Status, Plan, NewStatus) :-
+	memberchk(cur_plan(_), Status),
+	select(cur_plan(_), Status, cur_plan(Plan) , NewStatus).
+replace_plan(Status, Plan, [cur_plan(Plan) | Status]) :-
+	\+ memberchk(cur_plan(_), Status).
 
