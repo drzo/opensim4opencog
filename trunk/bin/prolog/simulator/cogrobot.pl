@@ -121,7 +121,7 @@ cache_cogbot_types:-
 % some type layout conversions (to make cleaner code)
 %
 %  Layouts are records - it's a field layout
-%  cli_to_from_layout is a way to register an automagic conversion type
+%  cli_add_layout is a way to register an automagic conversion type
 %  cli_add_layout adds a conversion between C# type and Prolog type
 %------------------------------------------------------------------------------
 
@@ -131,7 +131,7 @@ add_layouts:-
   cli_add_layout('Vector4',v4('X','Y','Z','W')),
   cli_add_layout('Quaternion',quat('X','Y','Z','W')),
  %%  cli_add_layout('UUID',uuid('_guid')),
- cli_to_from_layout('UUID',uuid('ToString'),'Parse'),
+ cli_add_layout('UUID',uuid('ToString'),'Parse'),
  %%  cli_add_layout('Guid',guid(string)),
   !.
 
@@ -484,7 +484,7 @@ obj2Npl(O,npl(66,O)).
 npl2Obj(npl(66,O),O).
 
 registerNamedParamRecomposer:-!.
-registerNamedParamRecomposer:-cli_to_from_recomposer('System.Collections.Generic.IList'('MushDLR223.ScriptEngines.NamedParam'),'npl'(_,_),obj2Npl,npl2Obj).
+registerNamedParamRecomposer:-cli_add_recomposer('System.Collections.Generic.IList'('MushDLR223.ScriptEngines.NamedParam'),'npl'(_,_),obj2Npl,npl2Obj).
 
 :-app_init(registerNamedParamRecomposer).
 
@@ -1118,28 +1118,6 @@ ppList2Arg(A,BB):- concat_atom([_,_|_],"Out",A),!,A=B,cap_word(B,BB1),concat_ato
 ppList2Arg(A,BB):- concat_atom([_,_|_],"In",A),A=B,!,cap_word(B,BB1),concat_atom([+,BB1],'',BB).
 ppList2Arg(A,BB):-concat_atom([A],'',B),cap_word(B,BB).
 
-/*
-:-use_module(library(pldoc)).
-:-doc_server(57007,[workers(5)]).
-:-portray_text(true). 
-*/
-
-
-% cli_docs:- predicate_property(swicli:P,file(_)),P=P,!.
-cli_docs:- cli_find_type('Swicli.Library.PrologClient',T),
-   cli_get(static(T),'AutoDocInfos',SRF),cli_map(SRF,K,V),P=V,cli_get(P,'GetParameters',PPs),
-   bot_params_to_list(PPs,PP),cli_member_doc(P,_Doc,_XML),
-    concat_atom([FC,AC],"/",K),atom_number(AC,A),string_to_atom(FC,F),
-    ppList2Args(PP,Args),PRED=..[F|Args],A=A,
-    cli_to_str(V,VS),
-   %% cli_to_str(F/A=eval(cli_get(V,name)):PRED:Doc,TSTR),
-    %%term_to_atom(TSTR,ASTR),string_to_atom(STR,ASTR),
-    'format'('~n%% ~w',[PRED]),
-    %%'format'('% ~w~n',[Doc]),
-    VS==VS, %%'format'('%       Foreign call to ~w~n',[VS]),
-    fail.
-
-
 %------------------------------------------------------------------------------
 % scans and export predicates defined from this module.. 
 %  if a predicate has wbot* at the front it is exported..
@@ -1167,7 +1145,7 @@ scan_and_export_wb.
 end_of_file.
 
 ?- cli_find_type('SbsSW.SwiPlCs.PlEngine',T),cli_get(static(T),'SavedRegisterForeign',SRF),cli_map(SRF,K,V),cli_get(V,'Method',M),cli_writeln(V=M).
-cli_find_type('Swicli.Library.PrologClient',T),cli_get(static(T),'AutoDocInfos',SRF),cli_map(SRF,K,V),cli_writeln(K=V),fail.
+cli_find_type('Swicli.Library.PrologCLR',T),cli_get(static(T),'AutoDocInfos',SRF),cli_map(SRF,K,V),cli_writeln(K=V),fail.
 
 
 
