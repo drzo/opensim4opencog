@@ -35,11 +35,16 @@
 
 :- dynamic tribal_dyn:current_action/2.
 
+dump_action(Action) :-
+	botvar_get(bot, dumpaction, "true"),
+	write(Action),nl.
+dump_action(_).
+
 %
 % Set the botvar for the current bot action
 %
 set_current_action(Name, Action) :-
-	writeq(Action),nl,
+	dump_action(Action),
 	with_output_to(string(S), writeq(Action)),
 	retractall(tribal_dyn:current_action(Name, _)),
 	assert(tribal_dyn:current_action(Name, S)).
@@ -47,10 +52,11 @@ set_current_action(Name, Action) :-
 % as for format/2
 set_current_action(Name, ActionFormat, Args) :-
 	format(string(S), ActionFormat, Args),!,
-	writeln(S),
+	dump_action(S),
 	retractall(tribal_dyn:current_action(Name, _)),
 	assert(tribal_dyn:current_action(Name, S)).
 set_current_action(_, ActionFormat, Args) :-
+	dump_action("Illegal call to set_current_action"),
 	format('Illegal: set_current_action/3 requires 2nd and 3rd arg as for format/2, you supplied ~w  ~w~n', [ActionFormat, Args]).
 
 bv:hook_botvar_get(BotID, bot, 'currentAction', X) :-
@@ -75,6 +81,7 @@ be_tribal(Name) :-
 	set_current_bot(ID),
 	sex(Name, Sex),
 	age(Name, Age),
+	botvar_set(bot, 'superPlan', "wander"),
 	be_tribal(
 	    _,
 	    Name,
@@ -97,6 +104,7 @@ be_tribal(
     _Status) :-
 	botvar_get(bot, byebye, "true"),
 	botvar_set(bot, byebye, "false"),
+	set_current_action(Name, "I am going byebye"),
 	say_ref('I am going byebye', []),
 	format('#################################~n~w is going byebye~n', [Name]),
 	thread_self(ID),
@@ -159,8 +167,8 @@ be_tribal(_,
 	  Name,
 	  Status) :-
 	memberchk(requested_inventory, Status),
-	set_current_action(Name, "waiting for inventory to arrive"),
 	\+ has_inventory,
+	set_current_action(Name, "waiting for inventory to arrive"),
 	sleep(5),
 	be_tribal(home, Name, Status).
 
@@ -204,11 +212,11 @@ be_tribal(
 	\+ memberchk(cur_plan(_), Status),
 	nearest_waypoint(WP, Dist),
 	Dist >= 3.0,
-	botcmd(moveto(WP, 1), MoveStat),
-	botcmd(waitpos(10, WP, 1), WaitStat),
 	set_current_action(Name,
 		   'too far from nearest waypoint, moving to~w',[WP]),
 	say_format('too far from nearest waypoint, moving to~w',[WP]),
+	botcmd(moveto(WP, 1), MoveStat),
+	botcmd(waitpos(10, WP, 1), WaitStat),
 	say_ref('Move', MoveStat),
 	say_ref('Wait', WaitStat),
 	be_tribal(WP, Name, Status).
@@ -273,6 +281,7 @@ be_tribal(
     Status) :-
 	memberchk(cur_plan([]), Status),
 	select(cur_plan([]), Status, NewStatus),
+	set_current_action(Name, "cur_plan empty, removing it"),
 	say_format('cur_plan empty, removing it', []),
 	be_tribal(Loc, Name, NewStatus).
 
@@ -323,6 +332,7 @@ be_tribal(
 	be_tribal(Loc, Name, Status).
 
 on_bed(Name) :-
+	gtrace_by_botvar(breakonbed),
 	bed_for_name(Name, BedName),
 	botID(Name, ID),
 	wbot_sitting_on(ID, BedRef),
@@ -338,6 +348,7 @@ be_tribal(
     Status) :-
 	botvar_get(bot, 'superPlan' , "rest"),
 	on_bed(Name),
+	set_current_action(Name, "Sleeping"),
 	sleep(10),
 	be_tribal(Loc, Name, Status).
 
@@ -471,14 +482,14 @@ be_tribal(
     say_format('~w in trouble, no valid action at ~w~n~w~n',
 	   [Name, Location, Status]),
     sleep(10),
-    gtrace_by_botvar,
+    gtrace_by_botvar(breakontrouble),
     be_tribal(Location, Name, Status).
 
 
-gtrace_by_botvar :-
-    \+ botvar_get(bot, breakontrouble, "true"),
+gtrace_by_botvar(Var) :-
+    \+ botvar_get(bot, Var, "true"),
     !.
-gtrace_by_botvar :-
+gtrace_by_botvar(_) :-
        gtrace.
 
 %
