@@ -227,7 +227,8 @@ world_ref(Sys):-cli_get('Cogbot.WorldObjects','GridMaster',Sys).
 %
 world_get(Field,Value):-world_ref(Sys),cli_get(Sys,Field,Value).
 
-% % get each SimObject
+%% grid_object(?Ele).
+% get each SimObject derezed or not
 % this is every primitive, linked or not, as a complex term
 % it's a partially marshalled object from the simulator
 % cli_col iterates thru elements
@@ -236,30 +237,29 @@ grid_object(Ele):-world_get('SimObjects',Objs),cli_col(Objs,Ele),not(cli_is_type
 %------------------------------------------------------------------------------
 % ways of iterating in world objects
 %------------------------------------------------------------------------------
+
+%% world_object(?Ele).
+% get each SimObject in world except attachments
 world_object(Ele):-grid_object(Ele),cli_get(Ele,isattachment,@(false)).
 
+%% world_root_object(?Ele).
+% get each SimObject in world except child objects
 world_root_object(Ele):-world_get('SimRootObjects',Objs),cli_col(Objs,Ele).
 
-% % get each SimAvatar
-%
-% this is the set of av's that are known to the simulator, they are only
-% actually present if they have a prim
-%
-% grid_object and world_avatar handle the complexity of sim crossings
-%
+%% world_avatar(Ele)
+% this is the set of av's that are known to the simulator, they are only actually present if they have a prim
 world_avatar(Ele):-grid_account(Ele),cli_get(Ele,hasprim,@(true)).
 
-%
-% a grid_account/1 is like world_avatar (they are avatars known about in system..
-%    including friends not logged in)
-%
+%% grid_account(?Ele)
+% a grid_account/1 is like world_avatar (they are avatars known about in system.  including friends not logged in)
 grid_account(Ele):-world_get('SimAvatars',Objs),cli_col(Objs,Ele).
 
-%
-% a grid_region returns all regions known to cogbot
-%
+%% grid_region(?Ele)
+% returns all regions known to cogbot
 grid_region(Ele):-cli_get('Cogbot.World.SimRegion','CurrentRegions',Objs),cli_col(Objs,Ele).
 
+%% grid_parcels(?Ele)
+%  returns all parcels known to cogbot
 grid_parcels(Ele):-grid_region(Sim),cli_get(Sim,parcels,Objs),cli_col(Objs,Ele).
 
 %% client_manager_ref(-SingleInstance)
@@ -271,7 +271,8 @@ grid_parcels(Ele):-grid_region(Sim),cli_get(Sim,parcels,Objs),cli_col(Objs,Ele).
 %  botconfig is run from Clientmanager
 client_manager_ref(SingleInstance):-cli_get('Cogbot.ClientManager','SingleInstance',SingleInstance).
 
-% given an object and a property returns value for the avatar
+%% botget(+Property,-Value).
+% given a property list returns value for the avatar
 %
 % walks down property tree
 % botget([name,length,X)
@@ -283,6 +284,7 @@ client_manager_ref(SingleInstance):-cli_get('Cogbot.ClientManager','SingleInstan
 % botget([a,b,c,d],X).
 % botget([a,b,c,d],X). = mybot.a.b.c.d
 % prolog botget([a,b,c,d],X). = c# object X = myBotClient.a.b.c.d
+% ==
 % botget(['Inventory','Store',rootfolder,name],Y).
 % Y = "My Inventory".
 %
@@ -302,8 +304,11 @@ client_manager_ref(SingleInstance):-cli_get('Cogbot.ClientManager','SingleInstan
 
 wbotget(BotID,Property,Value):-cli_get(BotID,Property,Value),!.
 
-% a way to call a method on c#
+% a way to call a method on c#?
+% cli_call('System.Console.Out',writeline("32"),Y).
 % cli_call('System',printf(32),Y).
+
+
 
 wbotcall(BotID,Call):-wbotcall(BotID,Call,Res),cli_writeln(Res).
 wbotcall(BotID,[P|N],Value):-!,cli_get(BotID,P,Mid),cli_get(Mid,N,Value).
@@ -803,7 +808,7 @@ wbot_safe_namespace(BotID,bot,NS1):-!,wbotname(BotID,NS),wbot_safe_namespace(Bot
 wbot_safe_namespace(BotID,"bot",NS1):-!,wbotname(BotID,NS),wbot_safe_namespace(BotID,NS,NS1).
 wbot_safe_namespace(_,NS,NS1):-global_tokey(NS,NS1).
 
-global_tokey(Name,Key):-var(Name),trace,Key=Name.
+global_tokey(Name,Key):-var(Name),Key=Name.
 global_tokey(Name,Key):-cli_call('MushDLR223.ScriptEngines.ScriptManager','ToKey',[Name],Key),!.
 
 wbot_samekey(_BotID,Name1,Name2):-ground(Name1),Name1=Name2,!.

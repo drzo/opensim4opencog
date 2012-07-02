@@ -39,7 +39,7 @@ namespace Cogbot.Actions.System
                 ManualResetEvent mre = new ManualResetEvent(false);
                 Client.InvokeGUI(true, () =>
                                      {
-                                         o = PrologClient.InvokeFromC(() =>
+                                         o = PrologCLR.InvokeFromC(() =>
                                                                       {
                                                                           cmd = pse.prologClient.Read(text, null) as Nullable<PlTerm>;
                                                                           o = pse.prologClient.Eval(cmd);
@@ -47,7 +47,7 @@ namespace Cogbot.Actions.System
                                                                           return o;
                                                                       }, false);
                                      });
-                PrologClient.RegisterCurrentThread();
+                PrologCLR.RegisterCurrentThread();
                 mre.WaitOne();
                 if (o == null) return Success("swip: " + cmd.Value);
                 return Success("swip: " + cmd.Value + " " + o);
