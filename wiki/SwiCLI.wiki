@@ -1,6 +1,8 @@
 = SWI-Prolog 2-Way interface to Common Language Infrastructure (.NET) =
 
+
 == [http://code.google.com/p/opensim4opencog/downloads/list Download] ==
+ The File named (SWICLI-xxx-DIST-xxxx.zip)
 
 == [https://github.com/logicmoo/swicli Sourcecode] ==
 
