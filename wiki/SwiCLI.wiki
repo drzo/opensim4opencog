@@ -6,7 +6,7 @@
 
 == [http://logicmoo.github.com/swicli/api.html PlDocs] ==
 
-== [http://logicmoo.github.com/swicli/overview.html Overview] (PlDocs better) ==
+== [http://logicmoo.github.com/swicli/documentation.html Old Docs] ==
 
 
 == Introduction ==
