@@ -937,7 +937,7 @@ bot_cms(N,Doc,PP):-bot_cms0(N,_Y,P),cli_get(P,'GetParameters',PPs),bot_params_to
 
 bot_params_to_list(PPs,PNs):-findall(T:N,(cli_col(PPs,PI),bot_param(PI,T,N)),PNs).
 
-bot_param(PI,T,N):-cli_get(PI,'ParameterType',TR),cli_typespec(TR,T),cli_get(PI,'Name',N).
+bot_param(PI,T,N):-cli_get(PI,'ParameterType',TR),cli_type_to_typespec(TR,T),cli_get(PI,'Name',N).
 
 
 %------------------------------------------------------------------------------

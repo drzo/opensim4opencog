@@ -43,7 +43,7 @@ l2:-logon_bot('Nephrael','Rae','abc123', "https://login.agni.lindenlab.com/cgi-b
 
 :-set_num_bots(1).
 :-set_tribe('Dougstribe').
-:-logon_bots.
+%:-logon_bots.
 %%:-current_bot(Obj),cli_add_event_handler(Obj,'EachSimEvent',c(A,(attach_console,'format'(user_error,'EV = ~q.~n',[A]))),_Out).
 
 /*
