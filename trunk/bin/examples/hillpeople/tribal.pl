@@ -37,6 +37,7 @@
 
 dump_action(Action) :-
 	botvar_get(bot, dumpaction, "true"),
+	write('A:'),
 	write(Action),nl.
 dump_action(_).
 
@@ -75,6 +76,29 @@ bv:hook_botvar_key(_, bot, 'currentAction').
 bv:hook_botvar_desc(_, bot, 'currentAction',
      "ReadOnly - The currentAction performed by the bot").
 
+%%	%%%%%%%%
+
+bv:hook_botvar_get(BotID, bot, amonbed, X) :-
+	@(am_i_on_bed(BotID, X), tribal).
+
+am_i_on_bed(BotID, yup) :-
+	botID(Name, BotID),
+	on_bed(Name),!.
+am_i_on_bed(BotID, nope) :-
+	botID(Name, BotID),
+	\+ on_bed(Name),!.
+am_i_on_bed(_, idunno).
+
+bv:hook_botvar_set(_, bot, amonbed, _) :-
+	format('the botvar \'amonbed\' is readonly~n', []).
+
+bv:hook_botvar_key(_, bot, amonbed).
+
+bv:hook_botvar_desc(_, bot, amonbed,
+     "ReadOnly - yup if the bot is on the bed, nope otherwise").
+
+%%	%%%%%%%%%%
+
 be_tribal(Name) :-
 	botID(Name, ID),
 	register_listeners,
@@ -90,8 +114,8 @@ be_tribal(Name) :-
 		age(Age),
 		cal(10.0),
 		pro(10.0)
-	    ]).
-
+	    ]),
+	format('~w be_tribal thread exiting~n', [Name]).
 
 %%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -106,11 +130,7 @@ be_tribal(
 	botvar_set(bot, byebye, "false"),
 	set_current_action(Name, "I am going byebye"),
 	say_ref('I am going byebye', []),
-	format('#################################~n~w is going byebye~n', [Name]),
-	thread_self(ID),
-	thread_detach(ID).
-
-
+	format('#################################~n~w is going byebye~n', [Name]).
 
 %%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                  Termination actions
@@ -125,8 +145,9 @@ be_tribal(
     Name,
     Status) :-
 	\+ (botvar_get(bot, 'superPlan', X), X = "rest"),
+	set_current_action(Name, "not resting, will test to see if on bed"),
 	on_bed(Name),
-	botcmd('standup'),
+	botcmd(stand),
 	set_current_action(Name, "getting up from sleep"),
 	be_tribal(Loc, Name, Status).
 
