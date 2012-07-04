@@ -105,7 +105,7 @@ be_tribal(Name) :-
 	set_current_bot(ID),
 	sex(Name, Sex),
 	age(Name, Age),
-	botvar_set(bot, 'superPlan', "wander"),
+	botvar_set(bot, superplan, "wander"),
 	be_tribal(
 	    _,
 	    Name,
@@ -144,7 +144,7 @@ be_tribal(
     Loc,
     Name,
     Status) :-
-	\+ (botvar_get(bot, 'superPlan', X), X = "rest"),
+	\+ (botvar_get(bot, superplan, X), X = "rest"),
 	set_current_action(Name, "not resting, will test to see if on bed"),
 	on_bed(Name),
 	botcmd(stand),
@@ -166,6 +166,17 @@ be_tribal(_,
 	tribal_land(Loc),
 	botcmd(teleport(Loc)),
 	be_tribal(home, Name, [on_sim|Status]).
+
+be_tribal(_,
+	  Name,
+	  Status) :-
+	botvar_get(bot, knockitoff, "true"),
+	botvar_set(bot, knockitoff, "false"),
+	set_current_action(Name, "flushing plan at user request"),
+	write('flushing plan per knockitoff directive'),nl,
+	replace_plan(Status, [], NewStatus),
+	be_tribal(home, Name, NewStatus).
+
 
 %
 %       if we don't have our inventory, get it
@@ -217,7 +228,7 @@ be_tribal(_,
 %  In test_wander_mode they just wander from point to point
 %
 test_wander_mode :-
-	botvar_get(bot, 'superPlan', "wander").
+	botvar_get(bot, superplan, "wander").
 
 %
 % in test_wander_mode, if we don't have a plan,
@@ -318,7 +329,7 @@ be_tribal(
     _Loc,
     Name,
     Status) :-
-	botvar_get(bot, 'superPlan', "rest"),
+	botvar_get(bot, superplan, "rest"),
 	home(Name, Home),
 	name_to_location_ref(Home, Obj),
 	distance_to(Obj, D),
@@ -339,7 +350,7 @@ be_tribal(
     Loc,
     Name,
     Status) :-
-	botvar_get(bot, 'superPlan', "rest"),
+	botvar_get(bot, superplan, "rest"),
 	home(Name, Home),
 	name_to_location_ref(Home, Obj),
 	distance_to(Obj, D),
@@ -367,7 +378,7 @@ be_tribal(
     Loc,
     Name,
     Status) :-
-	botvar_get(bot, 'superPlan' , "rest"),
+	botvar_get(bot, superplan , "rest"),
 	on_bed(Name),
 	set_current_action(Name, "Sleeping"),
 	sleep(10),
