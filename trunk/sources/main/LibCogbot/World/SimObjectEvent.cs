@@ -93,7 +93,7 @@ namespace Cogbot.World
         }
         public object[] GetArgs()
         {
-            object[] os = new object[Parameters.Count];
+            object[] os = new object[Parameters.Length];
             int a = 0;
             foreach (NamedParam pair in Parameters)
             {
@@ -159,7 +159,7 @@ namespace Cogbot.World
 
         public object GetTypeParam(Type t, int after)
         {
-            for (int i = after; i < Parameters.Count; i++)
+            for (int i = after; i < Parameters.Length; i++)
             {
                 var o = Parameters[i];
                 if (t.IsInstanceOfType(o.Value)) return o.Value;
@@ -175,7 +175,7 @@ namespace Cogbot.World
         [XmlArrayItem]
         public string Verb;
         [XmlArrayItem]
-        public IList<NamedParam> Parameters;
+        public NamedParam[] Parameters;
         [XmlArrayItem]
         public SimEventType EventType;
         [XmlArrayItem]
@@ -187,22 +187,23 @@ namespace Cogbot.World
         {
             eventName = string.Intern(eventName);
             Verb = eventName;
-            Parameters = new List<NamedParam>(args);
+            Parameters = NamedParam.ToArray(args);
             EventType = type;
             EventStatus = status;
             EventClass = clazz;
-           // ParameterNames();
+            CheckStructure();
         }
+
 
         public SimObjectEvent(SimEventStatus status, string eventName, SimEventType type, SimEventClass clazz, params NamedParam[] args)
         {
             eventName = string.Intern(eventName);
             Verb = eventName;
-            Parameters = new List<NamedParam>(args);
+            Parameters = NamedParam.ToArray(args);
             EventType = type;
             EventStatus = status;
             EventClass = clazz;
-           // ParameterNames();
+            CheckStructure();
         }
 
         public SimObjectEvent(SimEventType type, SimEventClass clazz, string name, IEnumerable paramz)
@@ -213,7 +214,7 @@ namespace Cogbot.World
             Verb = name;
             EventClass = clazz;
             Parameters = NamedParam.ObjectsToParams(paramz);
-           // ParameterNames();
+            CheckStructure();
         }
 
         [XmlArrayItem]
@@ -280,7 +281,7 @@ namespace Cogbot.World
 
         public int GetArity()
         {
-            return Parameters.Count;
+            return Parameters.Length;
         }
 
         public object GetArg(int n)
@@ -331,9 +332,9 @@ namespace Cogbot.World
             if (EventStatus != SE.EventStatus) return false;
             if (Parameters == null) return SE.Parameters == null;
             if (SE.Parameters == null) return Parameters == null;
-            if (Parameters.Count != SE.Parameters.Count) return false;
-            IList<NamedParam> other = SE.Parameters;
-            for (int i = 0; i < other.Count; i++)
+            if (Parameters.Length != SE.Parameters.Length) return false;
+            NamedParam[] other = SE.Parameters;
+            for (int i = 0; i < other.Length; i++)
             {
                 NamedParam otheri = other[i];
                 if (otheri.Value == null)
@@ -363,10 +364,15 @@ namespace Cogbot.World
             return typeof(NullType);
         }
 
+        public void CheckStructure()
+        {
+            ParameterNames();
+        }
         public String[] ParameterNames()
         {
-            string[] names = new string[Parameters.Count];
-            for (int i = 0; i < Parameters.Count; i++)
+            int len = Parameters.Length;
+            string[] names = new string[len];
+            for (int i = 0; i < len; i++)
             {
                 var o = Parameters[i];
                 if (o.Value is Vector3)
@@ -405,7 +411,10 @@ namespace Cogbot.World
                     }
                     names[i] = string.Intern(string.Format("sim{0}", s));
                 }
-
+                if (o.Key == null)
+                {
+                    DLRConsole.DebugWriteLine("Got null in Key {0}", this);
+                }
             }
             //ToEventString();
             return names;
@@ -430,7 +439,10 @@ namespace Cogbot.World
 
         public void AddParam(string name, object value)
         {
-            Parameters.Add(new NamedParam(name, value));
+            var old = new List<NamedParam>(Parameters);
+            old.Add(new NamedParam(name, value));
+            Parameters = old.ToArray();
+            CheckStructure();
         }
 
         public object this[string target]
