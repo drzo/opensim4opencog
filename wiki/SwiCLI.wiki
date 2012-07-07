@@ -1,3 +1,4 @@
+#labels Featured,Phase-Deploy,Phase-Implementation
 = SWI-Prolog 2-Way interface to Common Language Infrastructure (.NET) =
 
 == [http://code.google.com/p/opensim4opencog/downloads/list Download] ==
@@ -91,9 +92,14 @@ Type = @'C#516939520',
 Name = 'System.Collections.Generic.List`1[[System.String, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]'.
 }}}
 {{{
-?- cli_get_type($Obj,Type), cli_typespec(Type,Name).
+?- cli_get_type($Obj,Type), cli_to_typespec(Type,Name).
 Type = @'C#516939520',
 Name = 'System.Collections.Generic.List'('String').
+
+?- cli_get_typespec($Obj,Type).
+Type = 'System.Collections.Generic.List'('String').
+
+
 }}}
 {{{
 ?- cli_shorttype(stringl,'System.Collections.Generic.List'('String')).
