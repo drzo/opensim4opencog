@@ -205,9 +205,15 @@ namespace Cogbot
         {
             get { return LockInfo.Watch(UUIDTypeObject); }
         }
+
+        static private object fakeUUID2ObjLock = new object();
         public static object UUIDTypeObjectRealLock
         {
-            get { return LockInfo.Watch(UUIDTypeObjectReal); }
+            get
+            {
+                return fakeUUID2ObjLock;
+                return LockInfo.Watch(UUIDTypeObjectReal);
+            }
         }
 
         private static int CountnumAvatars;
@@ -1832,7 +1838,7 @@ namespace Cogbot
             if (obj0 != null) return obj0;
             simulator = simulator ?? client.Network.CurrentSim;
             lock (GetSimLock(simulator ?? client.Network.CurrentSim))
-                lock (UUIDTypeObjectLock)
+                //lock (UUIDTypeObjectLock)
                    // lock (SimObjects)
                      //   lock (SimAvatars)
                         {

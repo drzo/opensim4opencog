@@ -221,6 +221,7 @@ namespace Cogbot.Actions
             }
             var cmd = (Command) CmdTypeConstructor.Invoke(new object[] {client});
             cmd.TheBotClient = client;
+            WithBotClient = cmd;
             return cmd;
         }
 
