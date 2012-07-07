@@ -148,7 +148,7 @@ namespace MushDLR223.ScriptEngines
         private static string ToKey(string s)
         {
             if (s == null) return null;
-            return string.Intern(s);
+            return Intern(s);
         }
 
         public KeyValuePair<string, object> Pair
@@ -264,7 +264,7 @@ namespace MushDLR223.ScriptEngines
         public string Key
         {
             get { return _key; }
-            set { _key = value; }
+            set { _key = string.Intern(value); }
         }
 
         public override string ToString()
@@ -308,9 +308,17 @@ namespace MushDLR223.ScriptEngines
             return base.GetHashCode();
         }
 
-        public static List<NamedParam> ObjectsToParams(IEnumerable paramz)
+        static public T[] ToArray<T>(IEnumerable<T> args)
+        {
+            if (args is T[]) return (T[])args;
+            if (args is List<T>) return ((List<T>)args).ToArray();
+            return new List<T>(args).ToArray();
+        }
+
+        public static NamedParam[] ObjectsToParams(IEnumerable paramz)
         {
             List<NamedParam> Parameters = new List<NamedParam>();
+            int pn = 0;
             foreach (var v in paramz)
             {
                 if (v is NamedParam)
@@ -319,10 +327,11 @@ namespace MushDLR223.ScriptEngines
                 }
                 else
                 {
-                    Parameters.Add(new NamedParam(null, v));
+                    Parameters.Add(new NamedParam("p" + pn, v));
                 }
+                pn++;
             }
-            return Parameters;
+            return Parameters.ToArray();
         }
 
         public static void SetMemberValue(MemberInfo field, object o, object value)
@@ -392,10 +401,17 @@ namespace MushDLR223.ScriptEngines
         public static NamedParam Optional(string name, Type type, string description)
         {
             NamedParam namedParam = new NamedParam(name, type);
-            namedParam.Comment = description;
+            namedParam.Comment = Intern(description);
             namedParam.IsOptional = true;
             return namedParam;
         }
+
+        private static string Intern(string s)
+        {
+            if (s == null) return null;
+            return string.Intern(s);
+        }
+
         public static NamedParam Rest(string name, Type type, string description)
         {
             NamedParam namedParam = new NamedParam(name, type);

@@ -564,11 +564,12 @@ namespace MushDLR223.Utilities
             try
             {
                 TcpClient client = new TcpClient();
-                client.Connect("localhost", port);
+                client.Connect("localhost", port);            
+                client.Close();
             }
             catch (Exception exception)
             {
-                DLRConsole.DebugWriteLine("Listener workarround: " + exception.Message);
+               // DLRConsole.DebugWriteLine("Listener workarround: " + exception.Message);
             }
         }
     }
