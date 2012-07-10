@@ -80,3 +80,89 @@ ok, confusion solved on voice.
 [11:55:03 PM] Anne Ogborn: Not to mention, if I'm gonna spend a year of my life making this thing I'll spend a lot of time staring into it, and I don't want it to look ugly or work awkwardly  8cD
 
 }}}
+
+
+
+== convo from skype, 7/10/2012 ==
+
+{{{
+
+[7/9/2012 11:59:30 PM | Edited 11:59:42 PM] Douglas R. Miles: 1) getting from SL initial state aligned to what the planner can inerpret
+[12:00:52 AM] Douglas R. Miles: 2) perhaps mapping what differnt objects are that arent always already in the world
+[12:01:10 AM | Edited 12:01:32 AM] Douglas R. Miles: such as "live fish" -> "raw fish"->"cooked fish"->"fish bones"
+[12:02:09 AM | Edited 12:02:17 AM] Douglas R. Miles: obviously it only has to be as elablerate as to provide support for "what the bot can do"
+[12:02:35 AM] Douglas R. Miles: right now to me it is unknown to how elaborate it might have to become
+[12:02:53 AM | Edited 12:03:08 AM] Douglas R. Miles: to support descriptions of states as used by a plan definitopn
+[12:03:49 AM | Edited 12:04:07 AM] Douglas R. Miles: for example "happy-well-fed-robot" might be something that makes sense as a affecct blessed onto a robot
+[12:04:37 AM] Douglas R. Miles: in order to explain the result state that a plan will create
+[12:05:40 AM] Douglas R. Miles: so i supposed a description of that "world rez" DSL is to be capable of at least describing state when there is no description of action yet
+[12:06:29 AM] Douglas R. Miles: but i am hopefull that "description of action" will tell us the min/max scope of the world state language
+[12:07:10 AM] Douglas R. Miles: i just know that those two context taken individually can be just as insteasting to design a UI/Language arround
+[12:07:23 AM] Douglas R. Miles: sometimes it is easier to design arround world state descriptiuon
+[12:07:33 AM] Douglas R. Miles: that has been where the most research has been done
+[12:08:26 AM] Douglas R. Miles: KNext is an example of "Knowledge Representation" that is far richer than the world of action
+[12:09:24 AM | Edited 12:09:28 AM] Douglas R. Miles: still tremendous overlap to the world of action
+[12:11:39 AM] Douglas R. Miles: (oh yes i forgot to say that Annie had a fair recap)
+[9:17:32 AM] Anne Ogborn: let me suggest that (1) should always be 'reactive', in the sense that the bot should never depend on the world state being a certain thing, but rather perceive the state of the world.
+[9:30:28 AM] Anne Ogborn: I'd expect to support a condensed syntax for describing state transformations
+[9:31:56 AM] Anne Ogborn: My rational for this is that it makes the system far less brittle. Experience with game AI and Rodney Brooks' work both show that this is the only way to deal with a chaotic environment
+[9:32:12 AM] Anne Ogborn: the other day we came out of a restaurant, three of us together.
+[9:32:32 AM] Anne Ogborn: there were 4  one dollar bills laying on the sidewalk
+[9:32:48 AM] Anne Ogborn: the other people stared at them, I picked them up
+[9:33:04 AM] Anne Ogborn: I'm $4 richer fro being more reactive
+[9:40:27 AM] Anne Ogborn: as for making Anglobot 'run the world', I definitely think it shouldn't.
+[9:42:01 AM] Anne Ogborn: That is the responsibility of other systems. Now, given the nature of SL, we may need some collusion with low level actions - eg to put the fish in the pan in SL you might detach the fish and the empty pan and attach pan_with_fish.
+[9:43:08 AM] Anne Ogborn: But, a 'purer' way to do it is for the fish to present a dialog when touched. If you select 'put in pan', it sends a message to the pan to make a fish already in the pan visible, and then detaches itself.
+[9:46:21 AM] Anne Ogborn: I can indeed imagine there being a construct in the language like
+[9:49:18 AM] Anne Ogborn: Sitting on the fish1 poseball adds 1 raw_fish to fishing_basket average 1 hour.
+[9:51:42 AM] Anne Ogborn: (should explain, these people fish by 'noodling' - holding their hands underwater, grabbing a fish and tossing it into a semi-submerged 'fishing basket' .  The fishing basket is fixed in place. They carry the fish by moving them to a 'basket'.)
+[9:52:32 AM] Anne Ogborn: fishing_basket is a container.
+[9:53:25 AM] Anne Ogborn: Touching fishing_basket moves all contents to basket 1 dist < 5 meters.
+[9:54:24 AM] Anne Ogborn: basket is a carryable container
+
+to me, the DSL  shouldn't describe world state at all , if by world state you mean 'the hoe is in the hut'
+[7/9/2012 11:59:05 PM] Douglas R. Miles: well that "hut1" - "hut5" are type  "hut" and type "dwelling"
+
+Yes - this I agree we should do.
+In Hindi there's a 'habitual' tense for things that are always true -
+kursi kamre mein hai  - the chair is in the room
+kursi saman hote hain - chairs are possessions
+
+I see us representing only habitual facts
+hut1 is a hut
+hut1 is a dwelling
+
+during rain it is good to be in a hut.
+
+to change a raw_fish into a cooked_fish
+    be near fire
+    have a raw_fish
+    have a stick
+    Touch stick
+    select "Cook Fish" from dialog
+    // presumably the stick plays animation of spitting the fish and cooking it
+    raw_fish will remove
+    cooked_fish will be in stick
+    
+Why only 'habitual' actions?  Because we want to be reactive. Vast experience in game AI and robotics
+shows that the darnedest things will happen. So we don't want to assert fluents.
+
+admittedly, I'm talking thru my hat - the hut might burn down. BUT, we're in a VW, not in RL. We know darn well
+that the hut can't burn down unless Annie makes a burn down animation. So we have a closed universe of possible actions.
+
+Still, we're representing 'what hillpeople know', in the sense of representing their world model.
+
+That is, suppose the hill people believe they can bring rain by doing the rain dance. If we encode that 'knowledge', they'll
+dance when they want rain. Is that 'accurate knowledge'? Depends on your world view.
+
+Is this 'intelligent'? no. But it's a way to represent and use knowledge. Unsolved is how you obtain knowledge.
+But getting this far seems to be consistent with our overall path.
+
+Certainly the next stage beyond this is removing the hand generation of knowledge. But I'm OK with putting that off until we have
+a happy representation.
+
+I'm continuing to be puzzled by your (Douglas') clinging to the term 'world rez'.  I can't imagine the utility of a tool to generate a world. 
+by a 'world rez' language I would mean editing in viewer, an OAR file, and LSL scripts.
+And I really, really know that asserting 'the hoe is in the hut' is really fragile (seen this way too many times in game AI contexts).
+
+}}}
