@@ -51,3 +51,32 @@ Skein - like Inform 7  (how do we 'reset')?
 GUI tool to observe sysvars, botvars
 
 
+
+
+
+== the convo on skype ==
+
+{{{
+ok, confusion solved on voice.
+[11:46:23 PM] Anne Ogborn: we;'ve been speaking of Inform 7 as a model for how to make Anglobot
+[11:46:42 PM | Edited 11:46:54 PM] Douglas R. Miles: recap: when i said world rezzing . i was referning to the size of the DSL arround world state vs DSL size arround defining bot actions
+[11:46:49 PM] Anne Ogborn: By that, I've been meaning more the development cycle and tools
+[11:47:12 PM] Anne Ogborn: Inform 7 has two primary functions - define initial world state and define mutators
+[11:47:21 PM] Anne Ogborn: that's not useful for us
+[11:47:41 PM] Anne Ogborn: it's defined by the OAR and LSL files, not by anglobot
+[11:48:03 PM] Anne Ogborn: instead, we need a system that can define utility
+[11:48:16 PM] Anne Ogborn: and PDDL like snippets
+[11:48:38 PM] Anne Ogborn: the interpreter than makes a plan that maximizes utility using the snippets
+[11:49:11 PM] Anne Ogborn: because PDDL can be awkward, we give help by defining ontological relationships, like 'the hoe is carryable'
+[11:50:15 PM] Anne Ogborn: and then the compiler knows what PDDL snippets about the hoe to generate (at least notionally, I assume we do some more efficient implementation)
+[11:50:24 PM] Anne Ogborn: SWo, how are we like Inform 7?
+[11:50:53 PM] Anne Ogborn: We have a 'wide' problem - a problem of generating much code that isn't very clever, just blorted out.
+[11:51:23 PM] Anne Ogborn: that means having  a syntax that supports lots of not clever code.
+[11:51:42 PM] Anne Ogborn: the pseudo english of Inform 7 demonstrably does that in it's domain
+[11:52:17 PM] Anne Ogborn: also, the IDE for Inform 7 focuses on the RUN part of the debug-run-compile cycle.
+[11:53:00 PM] Anne Ogborn: we need to do the same - have really great tools for setting the bots back where they were, and for changing a rule on the fly without restarting the world.
+[11:53:21 PM] Anne Ogborn: (I think of games, which include script engines for the same reason)
+[11:54:21 PM] Anne Ogborn: finally, if we're spendinb a lot of time writing this 'informish' language, we should have a good environment in which to do it, so the beauty and elegance of the inform 7 environment add real productiveity value
+[11:55:03 PM] Anne Ogborn: Not to mention, if I'm gonna spend a year of my life making this thing I'll spend a lot of time staring into it, and I don't want it to look ugly or work awkwardly  8cD
+
+}}}
