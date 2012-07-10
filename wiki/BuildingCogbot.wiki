@@ -1,7 +1,10 @@
-#How to build Cogbot
+#How to build Cogbot (with Chatbot components)
   
   # checkout from svn
-  # Open a command window and cd to your root cogbot directory. Run runprebuild.bat.
+  # Open a command window and cd to your root cogbot directory. 
+  # Run include-chatbot.bat.
+  # Run runprebuild.bat.
+  # In VisualStudio 2008 or 2010 (full versions) Open Cogbot_VS9_ChatBot.sln
   # right click on swicli project in SwiProlog folder, choose properties
   # under Common Properties, you will see one or two missing references. 
   # Remove them, then add Swicli.Library and SWICLITestDLL by clicking 'Add New Reference...' button and on Projects tab select these.
@@ -9,6 +12,7 @@
   # rebuild the Solution
   # rebuild swicli.library
   # rebuild swicli
+  # set starup project to Cogbot.exe
   
   
 
