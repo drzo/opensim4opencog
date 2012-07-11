@@ -110,4 +110,20 @@ bundle(aiml, files,
 	url(logicmoo('cogbot-aiml.zip')),
 	to(program(.))]).
 
+bundle(prolog, files,
+       'Cogbot Prolog Files',
+       [from(temp('cogbot-prolog.zip')),
+	url(logicmoo('cogbot-prolog.zip')),
+	to(program(.))]).
 
+bundle(documents, files,
+       'Cogbot Document Files',
+       [from(temp('cogbot-documents.zip')),
+	url(logicmoo('cogbot-documents.zip')),
+	to(program(.))]).
+
+bundle(docs, files,
+       'Cogbot Source Files',
+       [from(temp('cogbot-sources.zip')),
+	url(logicmoo('cogbot-sources.zip')),
+	to(program(.))]).
