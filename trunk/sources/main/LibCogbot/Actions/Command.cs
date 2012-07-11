@@ -214,7 +214,7 @@ namespace Cogbot.Actions
         {
             if (WithBotClient != null)
             {
-                if (WithBotClient.TheBotClient == client)
+                if (WithBotClient._mClient == client)
                 {
                     return WithBotClient;
                 }
@@ -468,7 +468,7 @@ namespace Cogbot.Actions
         {
         }
 
-        private BotClient _mClient = null;
+        internal BotClient _mClient = null;
 
         public BotClient Client
         {
