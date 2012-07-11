@@ -101,18 +101,21 @@ write_component_list(Out, [H|T]) :-
 	write_component_list(Out, T).
 
 
+bundle_for(aiml, aiml).
 bundle(aiml, files,
        'Cogbot AIML Big Files',
        [from(temp('cogbot-aiml.zip')),
 	url(logicmoo('cogbot-aiml.zip')),
 	to(program(.))]).
 
+bundle_for(prolog, prolog).
 bundle(prolog, files,
        'Cogbot Prolog Files',
        [from(temp('cogbot-prolog.zip')),
 	url(logicmoo('cogbot-prolog.zip')),
 	to(program(.))]).
 
+bundle_for(docs, docs).
 bundle(docs, files,
        'Cogbot Document Files',
        [from(temp('cogbot-documents.zip')),
