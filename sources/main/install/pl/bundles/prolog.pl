@@ -61,8 +61,8 @@ find_prolog_question(X) :-
 		 ' swi-Prolog install (something like C:\Program Files\pl):'
 		]),
 	    input([
-		name=prolog_info,
-		id=prolog_info,
+		name=prolog_location,
+		id=prolog_location,
 		type=text,
 		value=Home
 		  ],[])
