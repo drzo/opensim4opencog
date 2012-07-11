@@ -28,7 +28,7 @@ namespace ABCLScriptEngine
             if (args[0] is Condition)
             {
                 Condition cond = (Condition)args[0];
-                String s = "DESC:\r\n" + cond.getDescription().writeToString() + "\r\nMESG:\r\n" + cond.getMessage() + "\r\nRPRT:\r\n" + cond.getConditionReport() + "\r\n";
+                String s = "DESC:\r\n" + cond.getDescription().princToString() + "\r\nMESG:\r\n" + cond.getMessage() + "\r\nRPRT:\r\n" + cond.getConditionReport() + "\r\n";
                 DLRConsole.DebugWriteLine(s);
                // if (true) return previous.execute(args);
                 if (args[0] is UndefinedFunction)
@@ -56,7 +56,7 @@ namespace ABCLScriptEngine
                     }
                 }
             }
-            throw new ConditionThrowable(Lisp.javaString(args[0]));
+            throw new MissingMethodException(Lisp.javaString(args[0]));
         } // method: execute
 
     }
@@ -150,7 +150,7 @@ namespace ABCLScriptEngine
                 }
 
             }
-            throw new ConditionThrowable("no function binding for " + s);
+            throw new MissingMethodException("no function binding for " + s);
         } // method: findSymbol
 
         static public ABCLInterpreter COMMON_ABCLInterpreter = null;
@@ -201,7 +201,7 @@ namespace ABCLScriptEngine
         internal void Execute(string command)
         {
             LispObject result = Evaluate(command);
-            WriteText(result.writeToString() + "\r\n");
+            WriteText(result.princToString() + "\r\n");
         }
 
 
@@ -233,7 +233,7 @@ namespace ABCLScriptEngine
                 econsole = command;
                 ///new Thread(new ThreadStart(EConsole)).Start();
                 LispObject lo = Evaluate(econsole);
-                WriteText("==> " + lo.writeToString() + "\r\n");
+                WriteText("==> " + lo.princToString() + "\r\n");
             }
             getInterpreter();
             return;
@@ -242,7 +242,7 @@ namespace ABCLScriptEngine
         internal void EConsole()
         {
             LispObject lo = Evaluate(econsole);
-            WriteText("==> " + lo.writeToString() + "\r\n");
+            WriteText("==> " + lo.princToString() + "\r\n");
         }
         internal void Yield()
         {
@@ -349,14 +349,14 @@ namespace ABCLScriptEngine
                 allExceptFor.Add(mask);
                 LispObject vtemp = s.getSymbolValue();
                 s.setSymbolValue(s);
-                JavaObject jclass =  Lisp.makeNewJavaObject(ic);
+                var jclass =  JavaObject.getInstance(ic);
                 Lisp.eval(Lisp.list4(fun, new SimpleString(p),s,jclass));
                 s.setSymbolValue(vtemp);
                 depth++;
             }
             if (globalcogbotTextForm != null)
             {
-                JavaObject jo = Lisp.makeNewJavaObject(globalcogbotTextForm);
+                LispObject jo = JavaObject.getInstance(globalcogbotTextForm);
                 s.setSymbolValue(jo);
 
                 if (exceptFor.Contains(globalcogbotTextForm)) return s;
@@ -476,7 +476,7 @@ namespace ABCLScriptEngine
         {
             if (x is LispObject)
             {
-                return ((LispObject)x).writeToString();
+                return ((LispObject)x).princToString();
             }
             return x.ToString();
         }
@@ -627,7 +627,7 @@ namespace ABCLScriptEngine
                 s = s.Substring(indexOf + 1);
                 indexOf = s.IndexOf(".");
             }
-            throw new ConditionThrowable("no function binding for " + target + " .  " + s + " arg= " + args);
+            throw new MissingMethodException("no function binding for " + target + " .  " + s + " arg= " + args);
         }
 
         internal LispObject clojEval(LateSymbolPrimitive lsp, String s, LispObject[] args)
@@ -657,12 +657,12 @@ namespace ABCLScriptEngine
 
                 s = s.Substring(indexOf + 1);
                 Object o = clojExecute(target, s, args);
-                return Lisp.makeNewJavaObject(o);
+                return JavaObject.getInstance(o);
             } else {
             String s1 = s;
             target = findSymbol(target, s1);
             Object o = clojExecute(target, "", args);
-            return Lisp.makeNewJavaObject(o);
+            return JavaObject.getInstance(o);
             }
         }
     }
