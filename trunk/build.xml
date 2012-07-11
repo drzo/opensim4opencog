@@ -1,0 +1,87 @@
+<project name="PackageCogbot" default="all" basedir=".">
+
+<target name="cogbot-core" description="Generate the distribution executable files" >
+<!-- Create the distribution directory -->
+<jar destfile="cogbot-core.zip">
+<fileset dir="." casesensitive="false">
+    <include name="bin/*.dll"/> 
+    <include name="bin/*.exe"/>
+    <include name="bin/*.dynlib"/>
+    <include name="bin/*.so"/>
+    <include name="bin/*.cloj"/> 
+    <include name="bin/*.lisp"/> 
+    <include name="bin/bin-x86/**"/> 
+    <include name="bin/bin-x64/**"/> 
+    <include name="bin/*.json"/> 
+    <include name="bin/openmetaverse_data/**"/> 
+    <include name="bin/character/**"/> 
+    <include name="bin/bvh_files/**"/> 
+    <include name="bin/shader_data/**"/>
+    <include name="bin/*.xml"/>
+    <include name="bin/*.config"/>
+    <include name="bin/*.ini"/> 
+    <exclude name="bin/personal*.lisp"/>
+</fileset>
+</jar>
+</target>
+
+
+<target name="cogbot-aiml" description="Generate the distribution AIML files" >
+<!-- Create the distribution directory -->
+<jar destfile="cogbot-aiml.zip">
+<fileset dir="." casesensitive="false">
+ <include  name="bin/bgm/**"/> 
+ <include  name="bin/lucenedb/**"/> 
+ <include  name="bin/config/**"/> 
+ <include name="bin/wordnet30/**"/> 
+ <include name="bin/webroot/**"/> 
+ <include name="bin/wikilink/**"/> 
+ <include name="bin/trn/**"/> 
+ <include  name="bin/aiml/**"/> 
+ <exclude name="bin/aiml/users/**"/>
+</fileset>
+</jar>
+</target>
+
+
+<target name="cogbot-prolog" description="Generate the distribution Prolog files" >
+<!-- Create the distribution directory -->
+<jar destfile="cogbot-prolog.zip">
+<fileset dir="." casesensitive="false">
+    <include name="bin/examples/**"/> 
+    <include name="bin/prolog/**"/> 
+    <include name="test/**"/> 
+</fileset>
+</jar>
+</target>
+
+<target name="cogbot-documents" description="Generate the distribution document files" >
+<!-- Create the distribution directory -->
+<jar destfile="cogbot-documents.zip">
+<fileset dir="." casesensitive="false">
+    <include name="documents/**"/> 
+</fileset>
+</jar>
+</target>
+
+
+
+<target name="cogbot-sources" description="Generate the distribution source files" >
+<!-- Create the distribution directory -->
+<jar destfile="cogbot-sources.zip">
+<fileset dir="." casesensitive="false">
+    <include name="sources/main/**"/> 
+    <include name="sources/external/**"/> 
+    <include name="sources/chatbot/**"/> 
+    <include name="sources/modules/**"/> 
+    <include name="*.sln"/> 
+    <include name="*.suo"/> 
+</fileset>
+</jar>
+</target>
+
+<target name="all" description="Generate ALL files" depends="cogbot-core,cogbot-prolog,cogbot-aiml,cogbot-documents,cogbot-sources" >
+</target>
+
+</project>
+
