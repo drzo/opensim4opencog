@@ -286,6 +286,47 @@ namespace AltAIMLbot.Utils
         }
 
         /// <summary>
+        /// Returns the value of a setting given the name of the setting
+        /// </summary>
+        /// <param name="name">the name of the setting whose value we're interested in</param>
+        /// <returns>the value of the setting</returns>
+        public string grabSetting(string name, bool useBlackboad)
+        {
+            string normalizedName = MakeCaseInsensitive.TransformInput(name);
+            // check blackboard
+            if (useBlackboad)
+            {
+                if ((bbPrefix != null) && (this.bot.myChemistry != null))
+                {
+                    string bbKey = bbPrefix + normalizedName.ToLower();
+                    string bbValue = this.bot.myChemistry.m_cBus.getHash(bbKey);
+                    //Console.WriteLine("*** grabSetting from BB : {0} ={1}", bbKey, bbValue);
+                    if (bbValue.Length > 0)
+                    {
+                        // update local value
+                        if (this.orderedKeys.Contains(normalizedName))
+                        {
+                            this.removeFromHash(normalizedName);
+                            this.settingsHash.Add(normalizedName, bbValue);
+                        }
+                        return bbValue;
+                    }
+
+                    //Console.WriteLine("*** grabSetting use internal: {0}",name);
+                }
+            }
+            if (this.containsSettingCalled(normalizedName))
+            {
+                return (string)this.settingsHash[normalizedName];
+            }
+            else
+            {
+                return string.Empty;
+            }
+
+        }
+
+        /// <summary>
         /// Checks to see if a setting of a particular name exists
         /// </summary>
         /// <param name="name">The setting name to check</param>

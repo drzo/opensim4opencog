@@ -49,62 +49,73 @@ namespace AltAIMLbot.AIMLTagHandlers
                 catch (Exception e)
                 {
                     graphName = "*";
-                }            
+                }
 
-                if (this.templateNode.InnerText.Length > 0)
+                if (this.request.depth < this.request.depthMax)
                 {
-                    if (this.templateNode.Attributes.Count > 0)
+                    if (this.templateNode.InnerText.Length > 0)
                     {
-                        string myTopic = "";
-                        string myState = "";
-                        if (this.templateNode.Attributes["topic"] != null)
+                        if (this.templateNode.Attributes.Count > 0)
                         {
-                            myTopic = this.templateNode.Attributes["topic"].Value;
-                        }
-                        if (this.templateNode.Attributes["state"] != null)
-                        {
-                            myState = this.templateNode.Attributes["state"].Value;
-                        }
-                        if ((myTopic.Length > 0) || (myState.Length > 0))
-                        {
-                            // Extended SRAI with explicit topic and state attributes
+                            string myTopic = "";
+                            string myState = "";
+                            if (this.templateNode.Attributes["topic"] != null)
+                            {
+                                myTopic = this.templateNode.Attributes["topic"].Value;
+                            }
+                            if (this.templateNode.Attributes["state"] != null)
+                            {
+                                myState = this.templateNode.Attributes["state"].Value;
+                            }
+                            if ((myTopic.Length > 0) || (myState.Length > 0))
+                            {
+                                // Extended SRAI with explicit topic and state attributes
 
-                            // remember this level
-                            string localTopic = this.user.Topic;
-                            string localState = this.user.State;
-                            // pass through anything not specified
-                            if (myTopic.Length == 0) { myTopic = localTopic; }
-                            if (myState.Length == 0) { myState = localState; }
-                            // insert the args
-                            this.user.Predicates.updateSetting("topic", myTopic);
-                            this.user.Predicates.updateSetting("state", myState);
-                            // make the call
-                            Request subRequest0 = new Request(this.templateNode.InnerText, this.user, this.bot);
-                            subRequest0.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
-                            Result subQuery0 = this.bot.Chat(subRequest0,graphName);
-                            this.request.hasTimedOut = subRequest0.hasTimedOut;
-                            // restore this level values
-                            this.user.Predicates.updateSetting("topic", localTopic);
-                            this.user.Predicates.updateSetting("state", localState);
-                            Console.WriteLine(" --- SRAI: RETURNA [{0}]", subQuery0.Output);
+                                // remember this level
+                                string localTopic = this.user.Topic;
+                                string localState = this.user.State;
+                                // pass through anything not specified
+                                if (myTopic.Length == 0) { myTopic = localTopic; }
+                                if (myState.Length == 0) { myState = localState; }
+                                // insert the args
+                                this.user.Predicates.updateSetting("topic", myTopic);
+                                this.user.Predicates.updateSetting("state", myState);
+                                // make the call
+                                Request subRequest0 = new Request(this.templateNode.InnerText, this.user, this.bot);
+                                subRequest0.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
+                                subRequest0.depth = this.request.depth + 1;
+                                Result subQuery0 = this.bot.Chat(subRequest0, graphName);
+                                this.request.hasTimedOut = subRequest0.hasTimedOut;
+                                // restore this level values
+                                this.user.Predicates.updateSetting("topic", localTopic);
+                                this.user.Predicates.updateSetting("state", localState);
+                                Console.WriteLine(" --- SRAI: RETURNA [{0}]", subQuery0.Output);
 
-                            return subQuery0.Output;
+                                return subQuery0.Output;
+                            }
                         }
-                    }
-                    //else
-                    //{
+                        //else
+                        //{
                         // Plain old SRAI
                         Request subRequest = new Request(this.templateNode.InnerText, this.user, this.bot);
                         subRequest.StartedOn = this.request.StartedOn; // make sure we don't keep adding time to the request
-                        Result subQuery = this.bot.Chat(subRequest,graphName);
+                        subRequest.depth = this.request.depth + 1;
+                        Result subQuery = this.bot.Chat(subRequest, graphName);
                         this.request.hasTimedOut = subRequest.hasTimedOut;
                         Console.WriteLine(" --- SRAI: RETURNB [{0}]", subQuery.Output);
                         return subQuery.Output;
-                    //}
+                        //}
+                    }
                 }
+
+                Console.WriteLine(" --- SRAI: RETURNC EMPTY!!!");
+                return string.Empty;
             }
-            Console.WriteLine(" --- SRAI: RETURNC EMPTY!!!");
-            return string.Empty;
+            else
+            {
+                Console.WriteLine(" --- SRAI: RETURND RECURSION DEPTH EXCEEDED!!!");
+                return string.Empty;
+            }
         }
     }
 }

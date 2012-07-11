@@ -35,6 +35,9 @@ namespace AltAIMLbot
         private User _responderUser;
         public Request ParentRequest { get; set; }
 
+        public int depth=0;
+        public int depthMax = 128;
+
         /// <summary>
         /// The user who is the target of this request
         /// </summary>
@@ -102,6 +105,8 @@ namespace AltAIMLbot
             this.user = user;
             this.bot = bot;
             this.StartedOn = DateTime.Now;
+            this.depth = 0;
+            this.depthMax = 128;
         }
         public TimeSpan _Durration = TimeSpan.Zero;
         /// <summary>

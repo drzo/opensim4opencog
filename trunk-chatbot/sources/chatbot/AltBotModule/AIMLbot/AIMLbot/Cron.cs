@@ -89,7 +89,7 @@ namespace AltAIMLbot
 
                         if (myBot.isAcceptingUserInput)
                         {
-                            if (!myBot.inCritical)
+                            if ((!myBot.inCritical) && (!myBot.blockCron ))
                             {
                                 now = DateTime.Now;
                                 checkProcesses(now);

@@ -19,6 +19,7 @@ namespace AltAIMLbot
         public static string startUpPath = null;
         public static Servitor ourServitor = null;
         public static string serverRoot = "http://localhost:8123/";
+        public static int serverPort = 8123;
         public static string kpfile = @".\wikilink\phraseScore";
         public static string wsfile = @".\wikilink\count.phrase.sense.txt";
         public static string bslfile = @".\wikilink\behavior.stoplist.txt";
@@ -27,6 +28,11 @@ namespace AltAIMLbot
         public static Dictionary<string, int> senseCount = new Dictionary<string, int>();
         public static Dictionary<string, string> senseLink = new Dictionary<string, string>();
         public static string[] behaviorStoplist = null;
+
+        public static bool IsMicrosoftCLR()
+        {
+            return (Type.GetType("Mono.Runtime") == null);
+        }
 
         public static void beginService(Servitor theServitor)
         {
@@ -40,27 +46,55 @@ namespace AltAIMLbot
                 return;
             }
             ourServitor = theServitor;
-            listener.Start();
             
             //listener.Prefixes.Add("http://192.168.2.141:8123/");
             //listener.Prefixes.Add("http://192.168.0.145:8123/");
-            try
+            lock (listener)
             {
-                listener.Prefixes.Add(serverRoot);
+                string pfadd = "";
+                try
+                {
+
+                    //listener.Prefixes.Add(serverRoot);
+                    //Console.WriteLine("Listener Adding:" + serverRoot);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("FAIL Listener Adding:" + serverRoot);
+                    Console.WriteLine(e.Message);
+                }
+                try
+                {
+                    if (IsMicrosoftCLR())
+                    {
+                        pfadd = "http://+:" + serverPort.ToString() + "/";
+                    }
+                    else
+                    {
+                        pfadd = "http://*:" + serverPort.ToString() + "/";
+                    }
+                    listener.Prefixes.Add(pfadd);
+                    Console.WriteLine("Listener Adding:" + pfadd);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("FAIL Listener Adding:" + pfadd);
+                    Console.WriteLine(e.Message);
+                }
+                try
+                {
+                    listener.Start();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("FAIL listener.Start()");
+                    Console.WriteLine(e.Message);
+                }
+
+                loadAnalyzer();
+                Thread t = new Thread(new ThreadStart(clientListener));
+                t.Start();
             }
-            catch (Exception)
-            {
-            }
-            try
-            {
-                listener.Prefixes.Add("http://+:8123/");
-            }
-            catch(Exception )
-            {
-            }
-            loadAnalyzer();
-            Thread t = new Thread(new ThreadStart(clientListener));
-            t.Start();
         }
 
         public static void clientListener()

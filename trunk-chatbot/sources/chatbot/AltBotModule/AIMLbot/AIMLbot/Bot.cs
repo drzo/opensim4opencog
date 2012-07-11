@@ -61,6 +61,7 @@ namespace AltAIMLbot
         public BehaviorSet myBehaviors = new BehaviorSet();
         public Cron myCron = null;
         public bool inCritical = false;
+        public bool blockCron = false;
         public RandomMemory myRandMem = new RandomMemory();
 
         public WordNetEngine wordNetEngine =null;
@@ -789,6 +790,12 @@ namespace AltAIMLbot
         {
             outputQueue.Clear();
             myBehaviors.logText("BOT flushOutputQueue:");
+            string flushsignal = GlobalSettings.grabSetting("flushsignal", false);
+            if ((flushsignal != null) && (flushsignal.Length > 2))
+            {
+                postOutput(flushsignal);
+            }
+
         }
 
         Regex SentRegex = new Regex(@"(\S.+?[.!?,\)])(?=\s+|$)");
@@ -873,171 +880,172 @@ namespace AltAIMLbot
         /// <returns>the result to be output to the user</returns>
         public Result Chat(Request request,string graphID)
         {
-            
-            Node ourGraphMaster;
-            if (Graphs.ContainsKey(graphID))
-            {
-                ourGraphMaster = Graphs[graphID];
-            }
-            else
-            {
-                ourGraphMaster = Graphmaster;
-            }
-
-            Result result = new Result(request.user, this, request);
-
-            if (this.isAcceptingUserInput)
-            {
-                // Mark the input time
-                myBehaviors.keepTime("lastchatinput",RunStatus.Success );
-                myBehaviors.activationTime("lastchatinput", RunStatus.Success);
-
-                // Normalize the input
-                AIMLLoader loader = new AIMLLoader(this);
-                AltAIMLbot.Normalize.SplitIntoSentences splitter = new AltAIMLbot.Normalize.SplitIntoSentences(this);
-                string[] rawSentences = splitter.Transform(request.rawInput);
-
-               
-                if (rapStoreDirectory != null)
+                Node ourGraphMaster;
+                if (Graphs.ContainsKey(graphID))
                 {
-                    if (chatDB == null)
-                    {
-                        chatDB = new ExternDB(rapStoreDirectory);
-                        chatDB.bot = this;
-                        chatDB._dbdir = rapStoreDirectory;
-                        if (rapStoreSlices > 0) chatDB.slices = rapStoreSlices;
-                        if (rapStoreSlices > 0) chatDB.trunkLevel = rapStoreTrunkLevel;
-                        chatDB.OpenAll();
-                    }
-                }
-                if (request.user.Qstate.Count == 0)
-                {
-                    Console.WriteLine("DEBUG:Using Normal Search");
-                    // Standard operation
-                    foreach (string sentence in rawSentences)
-                    {
-                        result.InputSentences.Add(sentence);
-                        string path = loader.generatePath(sentence, request.user.getLastBotOutput(), request.user.Topic, request.user.State, request.user.State, true);
-                        result.NormalizedPaths.Add(path);
-                        Console.WriteLine("DEBUG: path = " + path);
-                    }
+                    ourGraphMaster = Graphs[graphID];
                 }
                 else
                 {
-                    // non-deterministic search
-                    Console.WriteLine("DEBUG:Using non-deterministic Search");
-                    foreach (string sentence in rawSentences)
+                    ourGraphMaster = Graphmaster;
+                }
+
+                Result result = new Result(request.user, this, request);
+
+            lock (ExternDB.mylock)
+            {
+                if (this.isAcceptingUserInput)
+                {
+                    // Mark the input time
+                    myBehaviors.keepTime("lastchatinput", RunStatus.Success);
+                    myBehaviors.activationTime("lastchatinput", RunStatus.Success);
+
+                    // Normalize the input
+                    AIMLLoader loader = new AIMLLoader(this);
+                    AltAIMLbot.Normalize.SplitIntoSentences splitter = new AltAIMLbot.Normalize.SplitIntoSentences(this);
+                    string[] rawSentences = splitter.Transform(request.rawInput);
+
+
+                    if (rapStoreDirectory != null)
                     {
-                        result.InputSentences.Add(sentence);
-                        // see which state would give the best score and keep that path
-                        // one problem might be a "_" in a <state> overriding other patterns
-                        // but that's the semantics
-
-                        // The dictionary could contain probability values associated with
-                        // the states, so you could use that information in the selection process
-                        // or to order the choices (given two paths of equal score use the
-                        // state probability as the tie breaker)
-                        string bestpath = "";
-                        string beststate = "";
-                        double bestv = -1;
-                        foreach (string nstate in request.user.Qstate.Keys)
+                        if (chatDB == null)
                         {
-                            string path = loader.generatePath(sentence, request.user.getLastBotOutput(), request.user.Topic, nstate, nstate, true);
-                            //double statev = this.Graphmaster.getPathScore(path);
-                            double statev = ourGraphMaster.getPathScore(path);
+                            chatDB = new ExternDB(rapStoreDirectory);
+                            chatDB.bot = this;
+                            chatDB._dbdir = rapStoreDirectory;
+                            if (rapStoreSlices > 0) chatDB.slices = rapStoreSlices;
+                            if (rapStoreSlices > 0) chatDB.trunkLevel = rapStoreTrunkLevel;
+                            chatDB.OpenAll();
+                        }
+                    }
+                    if (request.user.Qstate.Count == 0)
+                    {
+                        Console.WriteLine("DEBUG:Using Normal Search");
+                        // Standard operation
+                        foreach (string sentence in rawSentences)
+                        {
+                            result.InputSentences.Add(sentence);
+                            string path = loader.generatePath(sentence, request.user.getLastBotOutput(), request.user.Topic, request.user.State, request.user.State, true);
+                            result.NormalizedPaths.Add(path);
+                            Console.WriteLine("DEBUG: path = " + path);
+                        }
+                    }
+                    else
+                    {
+                        // non-deterministic search
+                        Console.WriteLine("DEBUG:Using non-deterministic Search");
+                        foreach (string sentence in rawSentences)
+                        {
+                            result.InputSentences.Add(sentence);
+                            // see which state would give the best score and keep that path
+                            // one problem might be a "_" in a <state> overriding other patterns
+                            // but that's the semantics
 
-                            if (statev == bestv)
+                            // The dictionary could contain probability values associated with
+                            // the states, so you could use that information in the selection process
+                            // or to order the choices (given two paths of equal score use the
+                            // state probability as the tie breaker)
+                            string bestpath = "";
+                            string beststate = "";
+                            double bestv = -1;
+                            foreach (string nstate in request.user.Qstate.Keys)
                             {
-                                if (request.user.Qstate[nstate] > request.user.Qstate[beststate])
+                                string path = loader.generatePath(sentence, request.user.getLastBotOutput(), request.user.Topic, nstate, nstate, true);
+                                //double statev = this.Graphmaster.getPathScore(path);
+                                double statev = ourGraphMaster.getPathScore(path);
+
+                                if (statev == bestv)
+                                {
+                                    if (request.user.Qstate[nstate] > request.user.Qstate[beststate])
+                                    {
+                                        bestpath = path;
+                                        beststate = nstate;
+                                        bestv = statev;
+                                    }
+                                }
+                                else if (statev > bestv)
                                 {
                                     bestpath = path;
                                     beststate = nstate;
                                     bestv = statev;
                                 }
                             }
-                            else if (statev > bestv)
-                            {
-                                bestpath = path;
-                                beststate = nstate;
-                                bestv = statev;
-                            }
+                            result.NormalizedPaths.Add(bestpath);
+                            Console.WriteLine("DEBUG: path = " + bestpath);
                         }
-                        result.NormalizedPaths.Add(bestpath);
-                        Console.WriteLine("DEBUG: path = " + bestpath);
-                    }                
 
 
-                }
-
-                // grab the templates for the various sentences from the graphmaster
-                foreach (string path in result.NormalizedPaths)
-                {
-                    Utils.SubQuery query = new SubQuery(path);
-                    if (chatDB == null)
-                    {
-                        query.Template = ourGraphMaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
                     }
-                    else
-                    {
-                        Node dbGraphMaster = chatDB.fetchNode("", true);
-                        query.Template = dbGraphMaster.evaluateDB(path, query, request, MatchState.UserInput, new StringBuilder(), "", chatDB);
-                    }
-                    //query.Template = this.Graphmaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
-                    //query.Template = ourGraphMaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
-                    Console.WriteLine("DEBUG: TemplatePath = " + query.TemplatePath);
-                    Console.WriteLine("DEBUG: Template = " + query.Template);
-                    myBehaviors.logText("CHAT QueryPath:" + path);
-                    myBehaviors.logText("CHAT TemplatePath:" + query.TemplatePath);
-                    myBehaviors.logText("CHAT Template:\n" + query.Template);
-                    
-                    result.SubQueries.Add(query);
-                }
-                if (rapStoreDirectory != null)
-                {
-                    if (chatDB != null)
-                    {
-                        chatDB.prune(1024);
-                        //chatDB.Close();
-                        //chatDB = null;
-                    }
-                }
 
-                // process the templates into appropriate output
-                foreach (SubQuery query in result.SubQueries)
-                {
-                    if (query.Template.Length > 0)
+                    // grab the templates for the various sentences from the graphmaster
+                    foreach (string path in result.NormalizedPaths)
                     {
-                        try
+                        Utils.SubQuery query = new SubQuery(path);
+                        if (chatDB == null)
                         {
-                            XmlNode templateNode = AIMLTagHandler.getNode(query.Template);
-                            string outputSentence = this.processNode(templateNode, query, request, result, request.user);
-                            if (outputSentence.Length > 0)
-                            {
-                                result.OutputSentences.Add(outputSentence);
-                            }
+                            query.Template = ourGraphMaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
                         }
-                        catch (Exception e)
+                        else
                         {
-                            if (this.WillCallHome)
+                            Node dbGraphMaster = chatDB.fetchNode("", true);
+                            query.Template = dbGraphMaster.evaluateDB(path, query, request, MatchState.UserInput, new StringBuilder(), "", chatDB);
+                        }
+                        //query.Template = this.Graphmaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
+                        //query.Template = ourGraphMaster.evaluate(path, query, request, MatchState.UserInput, new StringBuilder());
+                        Console.WriteLine("DEBUG: TemplatePath = " + query.TemplatePath);
+                        Console.WriteLine("DEBUG: Template = " + query.Template);
+                        myBehaviors.logText("CHAT QueryPath:" + path);
+                        myBehaviors.logText("CHAT TemplatePath:" + query.TemplatePath);
+                        myBehaviors.logText("CHAT Template:\n" + query.Template);
+
+                        result.SubQueries.Add(query);
+                    }
+                    if (rapStoreDirectory != null)
+                    {
+                        if (chatDB != null)
+                        {
+                            chatDB.prune(1024);
+                            //chatDB.Close();
+                            //chatDB = null;
+                        }
+                    }
+
+                    // process the templates into appropriate output
+                    foreach (SubQuery query in result.SubQueries)
+                    {
+                        if (query.Template.Length > 0)
+                        {
+                            try
                             {
-                                this.phoneHome(e.Message, request);
+                                XmlNode templateNode = AIMLTagHandler.getNode(query.Template);
+                                string outputSentence = this.processNode(templateNode, query, request, result, request.user);
+                                if (outputSentence.Length > 0)
+                                {
+                                    result.OutputSentences.Add(outputSentence);
+                                }
                             }
-                            this.writeToLog("WARNING! A problem was encountered when trying to process the input: " + request.rawInput + " with the template: \"" + query.Template + "\"");
-                            Console.WriteLine("ERR:" + e.Message);
-                            Console.WriteLine("ERR:" + e.StackTrace);
+                            catch (Exception e)
+                            {
+                                if (this.WillCallHome)
+                                {
+                                    this.phoneHome(e.Message, request);
+                                }
+                                this.writeToLog("WARNING! A problem was encountered when trying to process the input: " + request.rawInput + " with the template: \"" + query.Template + "\"");
+                                Console.WriteLine("ERR:" + e.Message);
+                                Console.WriteLine("ERR:" + e.StackTrace);
+                            }
                         }
                     }
                 }
-            }
-            else
-            {
-                result.OutputSentences.Add(this.NotAcceptingUserInputMessage);
-            }
+                else
+                {
+                    result.OutputSentences.Add(this.NotAcceptingUserInputMessage);
+                }
 
-            // populate the Result object
-            result.Duration = DateTime.Now - request.StartedOn;
-            request.user.addResult(result);
-
+                // populate the Result object
+                result.Duration = DateTime.Now - request.StartedOn;
+                request.user.addResult(result);
+            }
             return result;
         }
 

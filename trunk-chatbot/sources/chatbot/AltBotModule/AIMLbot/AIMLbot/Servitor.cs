@@ -126,14 +126,21 @@ namespace AltAIMLbot
                 myBot.sayProcessor = outputDelegate;
                 Console.WriteLine(" using external sayProcessorDelegate");
             }
+            Console.WriteLine("Servitor loadSettings");
+
             myBot.loadSettings();
+
+            Console.WriteLine("Servitor User");
             User myUser = new User(UserID, myBot);
 
             curUser = myUser;
             myBot.isAcceptingUserInput = false;
             myBot.inCritical = initialCritical;
+
+            Console.WriteLine("Servitor startMtalkWatcher");
             startMtalkWatcher();
             Thread.Sleep(600);
+            Console.WriteLine("Servitor checkNewPersonality");
 
             bool personDefined=false;
             if (!skipPersonalityCheck) personDefined= checkNewPersonality();
@@ -148,16 +155,30 @@ namespace AltAIMLbot
 
             myBot.isAcceptingUserInput = true;
 
+            Console.WriteLine("Servitor startFSMEngine");
             startFSMEngine();
+            Console.WriteLine("Servitor startBehaviorEngine");
             startBehaviorEngine();
+            Console.WriteLine("Servitor startCronEngine");
             startCronEngine();
             curBot.myBehaviors.keepTime("activation", RunStatus.Success);
             curBot.myBehaviors.activationTime("activation", RunStatus.Success);
-            string servRoot = curBot.GlobalSettings.grabSetting("serverRoot");
+            string servRoot = curBot.GlobalSettings.grabSetting("serverRoot",false);
             if ((servRoot != null) && (servRoot.Length >7))
             {
                 WebServitor.serverRoot = servRoot;
             }
+            string servPort = curBot.GlobalSettings.grabSetting("serverPort", false);
+            if (servPort != null)
+            {
+                try
+                {
+                    WebServitor.serverPort = int.Parse(servPort);
+                }
+                catch { }
+            }
+
+            Console.WriteLine("Servitor WebServitor.beginService");
             WebServitor.beginService(this);
 
             Console.WriteLine(" Servitor startup complete");
@@ -190,6 +211,7 @@ namespace AltAIMLbot
                 curBot.lastBehaviorUser = curUser;
                 //curBot.myBehaviors.runEventHandler("onchat");
                 curBot.flushOutputQueue();
+
                 //curBot.myBehaviors.queueEvent("onchat");
                 //curBot.processOutputQueue();
 
@@ -339,6 +361,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
+                Console.WriteLine("{0}\n{1}", e.Message, e.StackTrace);
             }
         }
         #region FSM
@@ -356,6 +379,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
+                Console.WriteLine("{0}\n{1}", e.Message, e.StackTrace);
             }
 
         }
@@ -402,6 +426,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
+                Console.WriteLine("{0}\n{1}", e.Message, e.StackTrace);
             }
 
         }
@@ -465,6 +490,7 @@ namespace AltAIMLbot
             }
             catch (Exception e)
             {
+                Console.WriteLine("{0}\n{1}", e.Message, e.StackTrace);
             }
         }
         public  bool checkNewPersonality()
@@ -616,7 +642,10 @@ namespace AltAIMLbot
                             lastUtterance = myInput;
                         }
                     }
-                    catch (Exception e) { }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("{0}\n{1}", e.Message, e.StackTrace);
+                    }
 
 
                 }

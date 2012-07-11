@@ -80,88 +80,92 @@ namespace AltAIMLbot.Utils
         /// <param name="filename">The name of the file to process</param>
         public void loadAIMLFile(string filename)
         {
-            this.bot.writeToLog("Processing AIML file: " + filename);
-            if (this.bot.rapStoreDirectory != null)
+            //lock (ExternDB.mylock)
             {
+
+                this.bot.writeToLog("Processing AIML file: " + filename);
+                if (this.bot.rapStoreDirectory != null)
+                {
+                    if (extDB != null)
+                    {
+                        extDB.Close();
+                        extDB = null;
+                    }
+                    if (extDB == null)
+                    {
+                        extDB = new ExternDB(this.bot.rapStoreDirectory);
+                        extDB.bot = this.bot;
+                    }
+                }
+                XmlTextReader reader = new XmlTextReader(filename);
+                XmlDocument doc = new XmlDocument();
+                try
+                {
+                    // load the document
+                    //doc.Load(filename);
+                    doc.Load(reader);
+                    this.loadAIMLFromXML(doc, filename);
+                }
+
+                catch (XmlException e)
+                {
+                    Console.WriteLine("================= XML ERROR ==========================");
+                    Console.WriteLine(" FILENAME:" + filename);
+                    if (reader != null)
+                    {
+                        Console.WriteLine("XmlReader Line, pos: (" + reader.LineNumber + "," + reader.LinePosition + ")");
+                        Console.WriteLine("XmlReader Value, value: (" + reader.Value + ")");
+                        Console.WriteLine("XmlReader Value, LocalName: (" + reader.LocalName + ")");
+                        Console.WriteLine("XmlReader Value, ReadState: (" + reader.ReadState.ToString() + ")");
+                    }
+                    if ((doc != null) && (doc.ParentNode != null))
+                    {
+                        Console.WriteLine("doc, ParentNode: (" + doc.ParentNode.ToString() + ")");
+                    }
+                    Console.WriteLine(" XmlException Error:" + e.Message + " " + e.StackTrace);
+                    Console.WriteLine(" Exception object Line, pos: (" + e.LineNumber + "," + e.LinePosition + ")");
+                    Console.WriteLine(" XmlReader Line, source: (" + e.Source + ")");
+                    Console.WriteLine(" XmlException Source:" + e.Source);
+                    if ((e.InnerException != null) && (e.InnerException.Message != null))
+                    {
+                        Console.WriteLine(" XmlException InnerException.Message:" + e.InnerException.Message);
+
+                    }
+                    Console.WriteLine("================= XML ERROR ==========================");
+
+                    Thread.Sleep(5000);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("General Error:" + e.Message + " " + e.StackTrace);
+                    if (reader != null)
+                    {
+                        Console.WriteLine("XmlReader Line, pos: (" + reader.LineNumber + "," + reader.LinePosition + ")");
+                        Console.WriteLine("XmlReader Value, value: (" + reader.Value + ")");
+                        Console.WriteLine("XmlReader Value, LocalName: (" + reader.LocalName + ")");
+                        Console.WriteLine("XmlReader Value, ReadState: (" + reader.ReadState.ToString() + ")");
+                    }
+                    if ((doc != null) && (doc.ParentNode != null))
+                    {
+                        Console.WriteLine("doc, ParentNode: (" + doc.ParentNode.ToString() + ")");
+                    }
+                    Console.WriteLine(" XmlReader Line, pos: (" + reader.LineNumber + "," + reader.LinePosition + ")");
+                    Console.WriteLine(" XmlReader Line, source: (" + e.Source + ")");
+                    Console.WriteLine(" XmlException Source:" + e.Source);
+                    if ((e.InnerException != null) && (e.InnerException.Message != null))
+                    {
+                        Console.WriteLine(" XmlException InnerException.Message:" + e.InnerException.Message);
+
+                    }
+                    Thread.Sleep(5000);
+                }
+                //extDB.SaveIndex();
                 if (extDB != null)
                 {
                     extDB.Close();
                     extDB = null;
                 }
-                if (extDB == null)
-                {
-                    extDB = new ExternDB(this.bot.rapStoreDirectory);
-                    extDB.bot = this.bot;
-                }
             }
-           XmlTextReader reader = new XmlTextReader(filename);
-           XmlDocument doc = new XmlDocument();
-           try
-            {
-                // load the document
-                //doc.Load(filename);
-                doc.Load(reader);
-                this.loadAIMLFromXML(doc, filename);
-            }
-
-           catch (XmlException e)
-           {
-               Console.WriteLine("================= XML ERROR ==========================");
-               Console.WriteLine(" FILENAME:" + filename);
-               if (reader != null)
-               {
-                   Console.WriteLine("XmlReader Line, pos: (" + reader.LineNumber + "," + reader.LinePosition + ")");
-                   Console.WriteLine("XmlReader Value, value: (" + reader.Value + ")");
-                   Console.WriteLine("XmlReader Value, LocalName: (" + reader.LocalName + ")");
-                   Console.WriteLine("XmlReader Value, ReadState: (" + reader.ReadState.ToString() + ")");
-               }
-               if ((doc !=null) && (doc.ParentNode !=null))
-               {
-                Console.WriteLine("doc, ParentNode: (" + doc.ParentNode.ToString() + ")");
-               }
-               Console.WriteLine(" XmlException Error:" + e.Message + " " + e.StackTrace);
-               Console.WriteLine(" Exception object Line, pos: (" + e.LineNumber + "," + e.LinePosition + ")");
-               Console.WriteLine(" XmlReader Line, source: (" + e.Source+ ")");
-               Console.WriteLine(" XmlException Source:"+ e.Source);
-               if ((e.InnerException != null) && (e.InnerException.Message != null))
-               {
-                   Console.WriteLine(" XmlException InnerException.Message:" + e.InnerException.Message);
-
-               }
-               Console.WriteLine("================= XML ERROR ==========================");
-
-               Thread.Sleep(5000);
-           }
-            catch (Exception e)
-            {
-                Console.WriteLine("General Error:"+ e.Message + " " + e.StackTrace);
-                if (reader != null)
-                {
-                    Console.WriteLine("XmlReader Line, pos: (" + reader.LineNumber + "," + reader.LinePosition + ")");
-                    Console.WriteLine("XmlReader Value, value: (" + reader.Value + ")");
-                    Console.WriteLine("XmlReader Value, LocalName: (" + reader.LocalName + ")");
-                    Console.WriteLine("XmlReader Value, ReadState: (" + reader.ReadState.ToString() + ")");
-                }
-                if ((doc != null) && (doc.ParentNode != null))
-                {
-                    Console.WriteLine("doc, ParentNode: (" + doc.ParentNode.ToString() + ")");
-                }
-                Console.WriteLine(" XmlReader Line, pos: (" + reader.LineNumber + "," + reader.LinePosition + ")");
-                Console.WriteLine(" XmlReader Line, source: (" + e.Source + ")");
-                Console.WriteLine(" XmlException Source:" + e.Source);
-                if ((e.InnerException != null) && (e.InnerException.Message != null))
-                {
-                    Console.WriteLine(" XmlException InnerException.Message:" + e.InnerException.Message);
-
-                }
-                Thread.Sleep(5000);
-            }       
-           //extDB.SaveIndex();
-           if (extDB != null)
-           {
-               extDB.Close();
-               extDB = null;
-           }
         }
 
         /// <summary>
@@ -171,95 +175,99 @@ namespace AltAIMLbot.Utils
         /// <param name="filename">Where the XML document originated</param>
         public void loadAIMLFromXML(XmlDocument doc, string filename)
         {
-            if (this.bot.rapStoreDirectory != null)
+            lock (ExternDB.mylock)
             {
-                if (extDB != null)
-                {
-                    //     extDB.Close();
-                    //     extDB = null;
-                }
-                if (extDB == null)
-                {
-                    extDB = new ExternDB(this.bot.rapStoreDirectory);
-                    extDB.bot = this.bot;
-                }
-            }
-            // Get a list of the nodes that are children of the <aiml> tag
-            // these nodes should only be either <topic> or <category>
-            // the <topic> nodes will contain more <category> nodes
-            XmlNodeList rootChildren = doc.DocumentElement.ChildNodes;
 
-            // find the name of the graph or set to default "*"
-            string graphName = "*";
-            if ((doc.Attributes !=null)&& (doc.Attributes.Count == 1) && (doc.Attributes[0].Name == "graph"))
-            {
-                graphName = doc.Attributes["name"].Value;
-                this.graphName =graphName;
-            }
-            if (this.bot.rapStoreDirectory != null)
-            {
-                if ((filename.Contains("\\") || filename.Contains("/")) && (extDB.wasLoaded(filename)))
+                if (this.bot.rapStoreDirectory != null)
                 {
-                    // We loaded that file
+                    if (extDB != null)
+                    {
+                        //     extDB.Close();
+                        //     extDB = null;
+                    }
+                    if (extDB == null)
+                    {
+                        extDB = new ExternDB(this.bot.rapStoreDirectory);
+                        extDB.bot = this.bot;
+                    }
+                }
+                // Get a list of the nodes that are children of the <aiml> tag
+                // these nodes should only be either <topic> or <category>
+                // the <topic> nodes will contain more <category> nodes
+                XmlNodeList rootChildren = doc.DocumentElement.ChildNodes;
+
+                // find the name of the graph or set to default "*"
+                string graphName = "*";
+                if ((doc.Attributes != null) && (doc.Attributes.Count == 1) && (doc.Attributes[0].Name == "graph"))
+                {
+                    graphName = doc.Attributes["name"].Value;
+                    this.graphName = graphName;
+                }
+                if (this.bot.rapStoreDirectory != null)
+                {
+                    if ((filename.Contains("\\") || filename.Contains("/")) && (extDB.wasLoaded(filename)))
+                    {
+                        // We loaded that file
+                        extDB.Close();
+                        extDB = null;
+                        return;
+                    }
+                    else
+                    {
+                        extDB._dbdir = this.bot.rapStoreDirectory;
+                        if (this.bot.rapStoreSlices > 0) extDB.slices = this.bot.rapStoreSlices;
+                        if (this.bot.rapStoreTrunkLevel > 0) extDB.trunkLevel = this.bot.rapStoreTrunkLevel;
+                        extDB.OpenAll();
+                    }
+                }
+                // process each of these child nodes
+                foreach (XmlNode currentNode in rootChildren)
+                {
+                    if (currentNode.Name == "ser")
+                    {
+                        processSer(currentNode, filename);
+                        continue;
+                    }
+                    if (currentNode.Name == "topic")
+                    {
+                        this.processTopic(currentNode, filename);
+                    }
+                    if (currentNode.Name == "state")
+                    {
+                        this.processState(currentNode, filename);
+                    }
+                    else if (currentNode.Name == "category")
+                    {
+                        this.processCategory(currentNode, filename);
+                    }
+                    if ((currentNode.Name == "behavior") || (currentNode.Name == "rbehavior"))
+                    {
+                        processImmediate(currentNode, filename);
+                    }
+                    if (currentNode.Name == "crontag")
+                    {
+                        processImmediate(currentNode, filename);
+                    }
+                    if (currentNode.Name == "scxml")
+                    {
+                        processImmediate(currentNode, filename);
+                    }
+                    if (currentNode.Name == "task")
+                    {
+                        processImmediate(currentNode, filename);
+                    }
+                    if (currentNode.Name == "subaiml")
+                    {
+                        processImmediate(currentNode, filename);
+                    }
+                }
+
+                if (this.bot.rapStoreDirectory != null)
+                {
+                    extDB.rememberLoaded(filename);
                     extDB.Close();
                     extDB = null;
-                    return;
                 }
-                else
-                {
-                    extDB._dbdir = this.bot.rapStoreDirectory;
-                    if (this.bot.rapStoreSlices > 0) extDB.slices = this.bot.rapStoreSlices;
-                    if (this.bot.rapStoreTrunkLevel > 0) extDB.trunkLevel = this.bot.rapStoreTrunkLevel;
-                    extDB.OpenAll();
-                }
-            }
-            // process each of these child nodes
-            foreach (XmlNode currentNode in rootChildren)
-            {
-                if (currentNode.Name == "ser")
-                {
-                    processSer(currentNode, filename);
-                    continue;
-                }
-                if (currentNode.Name == "topic")
-                {
-                    this.processTopic(currentNode, filename);
-                }
-                if (currentNode.Name == "state")
-                {
-                    this.processState(currentNode, filename);
-                }
-                else if (currentNode.Name == "category")
-                {
-                    this.processCategory(currentNode, filename);
-                }
-                if ((currentNode.Name == "behavior")||(currentNode.Name == "rbehavior"))
-                {
-                    processImmediate(currentNode, filename);
-                }
-                if (currentNode.Name == "crontag")
-                {
-                    processImmediate(currentNode, filename);
-                }
-                if (currentNode.Name == "scxml")
-                {
-                    processImmediate(currentNode, filename);
-                }
-                if (currentNode.Name == "task")
-                {
-                    processImmediate(currentNode, filename);
-                }
-                if (currentNode.Name == "subaiml")
-                {
-                    processImmediate(currentNode, filename);
-                }
-            }
-
-            if (this.bot.rapStoreDirectory != null)
-            {
-                extDB.rememberLoaded(filename);
-                extDB.Close();
-                extDB = null;
             }
         }
 

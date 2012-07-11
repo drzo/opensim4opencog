@@ -1853,14 +1853,14 @@ namespace AltAIMLbot
                         
                         continueflag = false;
                         bot.myBehaviors.queueEvent("onabort");
-                        bot.outputQueue.Clear();
+                        bot.flushOutputQueue();
                     }
                     if (peekstr == "break")
                     {
 
                         continueflag = false;
                         bot.myBehaviors.queueEvent("onbreak");
-                        bot.outputQueue.Clear();
+                        bot.flushOutputQueue();
                     }
                     bot.myBehaviors.processOneEventQueue();
                 }

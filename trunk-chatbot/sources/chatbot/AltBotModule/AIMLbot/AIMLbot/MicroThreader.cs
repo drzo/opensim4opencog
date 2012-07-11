@@ -546,6 +546,15 @@ namespace AltAIMLbot
                     writer.WriteLine("<defined name=\"{0}\" value=\"{1}\"/>", query, v4);
                     break;
 
+                case "blockcron":
+                    servitor.curBot.blockCron = true;
+                    break;
+
+                case "unblockcron":
+                    servitor.curBot.blockCron = false;
+                    break;
+
+
                  default  :
                     writer.WriteLine("<error action=\"{0}\" query=\"{1}\" behaviorName=\"{2}\" />", action, query, behaviorName);
  

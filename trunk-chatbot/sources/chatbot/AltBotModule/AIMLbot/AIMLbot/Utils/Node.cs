@@ -1351,6 +1351,7 @@ namespace AltAIMLbot.Utils
         public bool verify = true;
         public AltBot bot = null;
         public string _dbdir = "";
+        public static object mylock = new object ();
 
         public ExternDB()
         {
