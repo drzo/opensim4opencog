@@ -61,7 +61,7 @@ namespace CogbotRadegastPluginModule
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.rtbChat = new System.Windows.Forms.RichTextBox();
+            this.rtbChat = new RRichTextBox();
             this.cbxInput = new System.Windows.Forms.ComboBox();
             this.btnSay = new System.Windows.Forms.Button();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
@@ -801,7 +801,7 @@ namespace CogbotRadegastPluginModule
 
         #endregion
 
-        private System.Windows.Forms.RichTextBox rtbChat;
+        private RRichTextBox rtbChat;
         private System.Windows.Forms.ComboBox cbxInput;
         private System.Windows.Forms.Button btnSay;
         private System.Windows.Forms.SplitContainer splitContainer1;
