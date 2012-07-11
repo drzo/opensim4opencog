@@ -62,6 +62,12 @@ bundle(getgridcreds,
 		input([type=text, name=loginuri, id=loginuri,
 		    value='https://login.agni.lindenlab.com/cgi-bin/login.cgi'],
 		  [])
+	      ]),
+	    p([
+		label([for=autologin], 'Login bot at startup?'),
+		input([type=checkbox, name=autologin, id=autologin,
+		       checked=checked],
+		  [])
 	      ])
 	    ])]).
 
