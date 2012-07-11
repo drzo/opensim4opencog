@@ -116,7 +116,7 @@ do_plan([Name|T], Config) :-
 %
 do_plan([Name|T], Config) :-
 	bundle(Name, desktop, _, Args),!,
-	gtrace,
+	%%gtrace,
 	memberchk(path(ExePath), Args),
 	memberchk(icon(IconPath), Args),
 	id_abs_path(ExePath, Config, PLExe),
