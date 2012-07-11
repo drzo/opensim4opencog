@@ -21,6 +21,9 @@
     <include name="bin/*.config"/>
     <include name="bin/*.ini"/> 
     <exclude name="bin/personal*.lisp"/>
+    <exclude name="**/CVS/*"/> 
+    <exclude name="**/.svn/*"/> 
+    <exclude name="**/.git/*"/> 
 </fileset>
 </jar>
 </target>
@@ -39,6 +42,9 @@
  <include name="bin/trn/**"/> 
  <include  name="bin/aiml/**"/> 
  <exclude name="bin/aiml/users/**"/>
+ <exclude name="**/CVS/*"/> 
+ <exclude name="**/.svn/*"/> 
+ <exclude name="**/.git/*"/> 
 </fileset>
 </jar>
 </target>
@@ -51,6 +57,9 @@
     <include name="bin/examples/**"/> 
     <include name="bin/prolog/**"/> 
     <include name="test/**"/> 
+    <exclude name="**/CVS/*"/> 
+    <exclude name="**/.svn/*"/> 
+    <exclude name="**/.git/*"/> 
 </fileset>
 </jar>
 </target>
@@ -60,6 +69,9 @@
 <jar destfile="cogbot-documents.zip">
 <fileset dir="." casesensitive="false">
     <include name="documents/**"/> 
+    <exclude name="**/CVS/*"/> 
+    <exclude name="**/.svn/*"/> 
+    <exclude name="**/.git/*"/> 
 </fileset>
 </jar>
 </target>
@@ -70,17 +82,28 @@
 <!-- Create the distribution directory -->
 <jar destfile="cogbot-sources.zip">
 <fileset dir="." casesensitive="false">
+    <include name="bin/Prebuild.exe"/> 
     <include name="sources/main/**"/> 
     <include name="sources/external/**"/> 
     <include name="sources/chatbot/**"/> 
     <include name="sources/modules/**"/> 
     <include name="*.sln"/> 
     <include name="*.suo"/> 
+    <include name="*.xml"/> 
+    <include name="*.bat"/> 
+    <include name="*.sh"/> 
+    <exclude name="**/CVS/*"/> 
+    <exclude name="**/.svn/*"/> 
+    <exclude name="**/.git/*"/> 
+    <exclude name="**/bin/*"/> 
+    <exclude name="**/obj/*"/> 
+    <exclude name="**/swicli-inst/*"/> 
 </fileset>
 </jar>
 </target>
 
 <target name="all" description="Generate ALL files" depends="cogbot-core,cogbot-prolog,cogbot-aiml,cogbot-documents,cogbot-sources" >
+    <copy todir="."><fileset dir="${src}" includes="**/images/*" excludes="**/*.gif" /></copy>
 </target>
 
 </project>
