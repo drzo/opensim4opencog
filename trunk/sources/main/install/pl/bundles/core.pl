@@ -79,7 +79,7 @@ edit_botconfig(Config) :-
 		write(Out, '))')
 	    ),
 	    close(Out)
-	).
+	),!.
 
 write_config_stream(_, []).
 write_config_stream(Out, [HK=HV|T]) :-
