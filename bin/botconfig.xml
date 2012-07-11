@@ -77,6 +77,7 @@
 
    ;;; Settings that are ran in ClientManager such as create-botclient
     (load "personalAccts.lisp")
+    (load "personalInstallConfig.lisp")
 
   </startupLisp>
   <startupClientLisp>
@@ -91,7 +92,7 @@
     (setj UseGUI  False)
     '(setj MasterName "Nephrael Rajesh")
 
-    (load "personalSettingsInstall.lisp")
+    (load "personalInstallConfig.lisp")
 
     '(if UseGUI (thisClient.ExecuteCommand "showgui tray")) ;; minimize radegast to tray - not good on mono becasue the hwnd not created
 
