@@ -70,15 +70,12 @@ bundle(getgridcreds,
 %  writes the include file for botconfig
 %
 edit_botconfig(Config) :-
-	execute:id_abs_path(program('bin\\startupLisp.lisp'), Config, Loc),
+	execute:id_abs_path(program('bin\\personalInstallConfig.lisp'), Config, Loc),
 	setup_call_cleanup(
 	    open(Loc, write, Out),
-	    (	write(Out, '(setj installer_data \'('),
-	        write_config_stream(Out, Config),
-		write(Out, '))'),
-		nl(Out),
+	    (   write_config_stream(Out, Config),
 		write(Out, '(setj installed_components \'('),
-		write_components(Out),
+                write_components(Out),
 		write(Out, '))')
 	    ),
 	    close(Out)
@@ -88,7 +85,7 @@ write_config_stream(_, []).
 write_config_stream(Out, [HK=HV|T]) :-
 	uri_encoded(path, HK, UHK),
 	uri_encoded(path, HV, UHV),
-	'format'(Out, ' ("~w" "~w") ', [UHK, UHV]),
+	'format'(Out, ' (setj INSTALLER_~w "~w") ~n', [UHK, UHV]),
 	write_config_stream(Out, T).
 
 :- use_module(component, [component_will_install/1]).
@@ -116,14 +113,19 @@ bundle(prolog, files,
 	url(logicmoo('cogbot-prolog.zip')),
 	to(program(.))]).
 
-bundle(documents, files,
+bundle(docs, files,
        'Cogbot Document Files',
        [from(temp('cogbot-documents.zip')),
 	url(logicmoo('cogbot-documents.zip')),
 	to(program(.))]).
+/*
 
-bundle(docs, files,
+Right now leave out sources
+
+bundle(sources, files,
        'Cogbot Source Files',
        [from(temp('cogbot-sources.zip')),
 	url(logicmoo('cogbot-sources.zip')),
 	to(program(.))]).
+
+*/
