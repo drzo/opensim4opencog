@@ -1,9 +1,9 @@
-#How to build Cogbot on windows (with Chatbot components) this 
+#How to build Cogbot on a 64 bit Windows (with Chatbot components) 
 
-  # install a cmdline svn client
+  # Install .NET 2.0 and 3.5 (.NET 2.0 might be optional.. i dont know) (2.0 came with visual studio 2005 and 3.5 comes with visual studio 2008)
   # install swi-prolog development version 64 and 32 bit
   # make sure c:\program files\pl\lib\swipl.lib is there
-  # make sure you have installed .NET 2.0 and 3.5 (.NET 2.0 might be optional.. i dont know)  
+  # install a cmdline svn client
   # checkout trunk from svn into a folder like c:\development\opensim4opencog\current\
   # Open a command window and cd to your root cogbot directory. 
   # Run include-chatbot.bat.
