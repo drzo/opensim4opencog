@@ -1,4 +1,4 @@
-#How to build Cogbot on a 64 bit Windows (with Chatbot components) 
+== How to build Cogbot on a 64 bit Windows (with Chatbot components) ==
 
   # Install .NET 2.0 and 3.5 (.NET 2.0 might be optional.. i dont know) (2.0 came with visual studio 2005 and 3.5 comes with visual studio 2008)
   # install swi-prolog development version 64 and 32 bit
