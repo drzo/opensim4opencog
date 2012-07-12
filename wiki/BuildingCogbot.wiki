@@ -3,7 +3,8 @@
   # install a cmdline svn client
   # install swi-prolog development version 64 and 32 bit
   # make sure c:\program files\pl\lib\swipl.lib is there
-  # make sure you have installed .NET 3.5 (and possibly 2.0)  
+  # make sure you have installed .NET 2.0 and 3.5 
+         (.NET 2.0 might be optional.. i dont know)  
   # checkout trunk from svn into a folder like
       c:\development\opensim4opencog\current\
   # Open a command window and cd to your root cogbot directory. 
