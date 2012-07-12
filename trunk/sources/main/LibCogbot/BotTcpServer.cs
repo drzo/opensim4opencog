@@ -340,8 +340,7 @@ namespace Cogbot.Utilities
             {
                 p = "TCPDEBUG: " + p;
             }
-            DLRConsole.SYSTEM_ERR_WRITELINE_REAL(p);
-            botclient.WriteLine(p);
+            botclient.WriteLineDebug(p);
         }
 
 
@@ -586,7 +585,6 @@ namespace Cogbot.Utilities
         private void WriteLine(string s)
         {
             s = "TCPDEBUG: " + s;
-            DLRConsole.SYSTEM_ERR_WRITELINE_REAL(s);
             parent.WriteLine(s);
         }
 

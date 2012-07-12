@@ -833,6 +833,19 @@ namespace Cogbot
                 Logger.Log(GetName() + " WriteLine Exception " + ex, Helpers.LogLevel.Error, ex);
             }
         }
+        public void WriteLineDebug(string str, params object[] args)
+        {
+            try
+            {
+                if (str == null) return;
+                if (args != null && args.Length > 0) str = String.Format(str, args);
+               // Logger.Log(str + " " + GetName(), Helpers.LogLevel.Debug);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(GetName() + " WriteLine Exception " + ex, Helpers.LogLevel.Error, ex);
+            }
+        }
         // for lisp to call
         public void output(string txt)
         {
