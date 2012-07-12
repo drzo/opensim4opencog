@@ -380,7 +380,7 @@ namespace Cogbot.Actions
         public Command()
             : this(null)
         {
-            if (this is BotStatefullCommand)
+            if (this is BotStatefullCommand && !(this is SystemApplicationCommand))
             {
                 DLRConsole.DebugWriteLine("" + this + " is not a BotStatefullCommand?!");                
             }

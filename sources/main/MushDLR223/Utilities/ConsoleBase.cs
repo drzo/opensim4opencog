@@ -400,12 +400,13 @@ namespace MushDLR223.Utilities
         public static bool AllocedConsole = false;
         public static bool NoConsoleVisible = false;
         [ConfigSetting(Description="if false, Print method name with error messages. Printing them is expensive.")]
-        public static bool SkipStackTraces = true;
+        public static bool SkipStackTraces = false;
         private static readonly object[] NOARGS = new object[0];
         //public static bool PrintToSystemConsole = true;
         public static DLRConsole SingleInstance = new DLRConsole();
         public static bool HasWinforms = false;
         public static bool IsOnMonoUnix = true;
+        public static bool AlwaysWrite = true;
         public static bool SafelyRun(MethodInvoker call)
         {
             return SafelyRun(call, Error);
@@ -586,7 +587,7 @@ namespace MushDLR223.Utilities
             //Application.VisualStyleState
             //var v0 = InitialConsoleOut;
             //AddOutput(v0);
-            ///SystemConsole.SetOut(ConsoleOut);
+           // SystemConsole.SetOut(NULL_OUTPUT);
         }
 
 
@@ -1102,7 +1103,7 @@ namespace MushDLR223.Utilities
                 try
                 {
                     ForegroundColor = color;
-                    SystemWrite0(text);
+                    SystemConsole.Write(text);
                     Flush();
                     ResetColor();
                 }
@@ -1228,6 +1229,8 @@ namespace MushDLR223.Utilities
         {
             string outText = text;
 
+            bool needsPrefix = true;
+
             if (level != LOGLEVEL_NONE)
             {
                 string regex = @"^(?<Front>.*?)\[(?<Category>[^\]]+)\]:?(?<End>.*)";
@@ -1244,6 +1247,7 @@ namespace MushDLR223.Utilities
                     WriteColorText(DeriveColor(matches[0].Groups["Category"].Value),
                             matches[0].Groups["Category"].Value);
                     System.Console.Write("]:");
+                    needsPrefix = false;
                 }
             }
 
@@ -1251,6 +1255,12 @@ namespace MushDLR223.Utilities
                 WriteColorText(ConsoleColor.Red, outText);
             else if (level == "warn")
                 WriteColorText(ConsoleColor.Yellow, outText);
+            else if (needsPrefix)
+            {
+                string sender;
+                string getCallerFormat = GetCallerFormat(outText, out sender);
+                WriteNewLine(DeriveColor(sender), sender, ConsoleColor.Gray, "{0}", outText);
+            }
             else
                 System.Console.Write(outText);
 
@@ -1510,13 +1520,14 @@ namespace MushDLR223.Utilities
             }
         }
 
-
+        private static int DebugLevel = 0;
         public static void DebugWriteLine(string format, params object[] args)
         {
             string printStr = TheConsole.SafeFormat(format, args);
             if (!TheGlobalLogFilter.ShouldPrint(printStr))
             {
-                CALL_SYSTEM_ERR_WRITELINE("!shouldprint- " + printStr);
+                if (DebugLevel > 5)
+                    CALL_SYSTEM_ERR_WRITELINE("!shouldprint- " + printStr);
                 return;
             }
             if (printStr == null) return;
@@ -1600,7 +1611,7 @@ namespace MushDLR223.Utilities
         private static void SystemWriteLine0(string format, params object[] args)
         {
             var Outputs = DLRConsole.Outputs;
-            if (Outputs.Count == 0 || IsOnMonoUnix)
+            if (Outputs.Count == 0 || IsOnMonoUnix || AlwaysWrite)
             {
                 var sformat = SafeFormat(format, args);
                 if (String.IsNullOrEmpty(sformat)) return;
@@ -1644,6 +1655,7 @@ namespace MushDLR223.Utilities
             }
             format = GetFormat(format).TrimEnd();
             PauseIfTraced(format);
+            SystemConsole.WriteLine(format);
             foreach (TextWriter o in Outputs)
             {
                 try
@@ -1834,7 +1846,7 @@ namespace MushDLR223.Utilities
         internal static void SystemWrite000(string format)
         {
             format = GetFormat(format);
-            if (IsOnMonoUnix)
+            if (IsOnMonoUnix || AlwaysWrite)
             {
                 SystemConsole.Write(format);
             }
@@ -1914,6 +1926,8 @@ namespace MushDLR223.Utilities
         public static readonly HashSet<MemberInfo> OpacheCallers = new HashSet<MemberInfo>()
                                                               {
                                                               };
+
+        private TextWriter NULL_OUTPUT = new NULL_OUTPUT_TW();
 
         protected static List<TextWriter> Outputs
         {
@@ -2159,6 +2173,27 @@ namespace MushDLR223.Utilities
         {
             return prefix.Replace("{", "(").Replace("}", ")");
 
+        }
+    }
+
+    public class NULL_OUTPUT_TW : TextWriter
+    {
+        public override void Write(char[] buffer, int index, int count)
+        {
+            //base.Write(buffer, index, count);
+        }
+        public NULL_OUTPUT_TW()
+        {
+
+        }
+        protected NULL_OUTPUT_TW(IFormatProvider formatProvider)
+            : base(formatProvider)
+        {
+
+        }
+        public override Encoding Encoding
+        {
+            get { return Encoding.Default; }
         }
     }
 }

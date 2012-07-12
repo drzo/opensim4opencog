@@ -296,8 +296,7 @@ namespace MushDLR223.Utilities
             DebugLevel = 3;
             // If we don't have a high resolution timer then Stopwatch will fall back
             // to DateTime, which is much less reliable
-            if (DebugLevel > 2) if (Stopwatch.IsHighResolution)
-                DLRConsole.DebugWriteLine("We have a high resolution timer available");
+            //if (DebugLevel > 2) if (Stopwatch.IsHighResolution) DLRConsole.DebugWriteLine("We have a high resolution timer available");
 
             long frequency = Stopwatch.Frequency;
             if (DebugLevel > 1) DLRConsole.DebugWriteLine(" Timer frequency in ticks per second = {0}", frequency);

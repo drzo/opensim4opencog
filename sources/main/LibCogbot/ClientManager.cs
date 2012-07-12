@@ -325,7 +325,7 @@ namespace Cogbot
             }
             if (string.IsNullOrEmpty(text)) return null;
             CmdResult res = ExecuteBotsCommand(text, session, WriteLine);
-            if (res != null && res.Success) return res;
+            if (res != null) return res;
             res = ExecuteSystemCommand(text, session, WriteLine);
             if (res != null) return res;
             WriteLine("I don't understand the ExecuteCommand " + text + ".");
@@ -501,6 +501,7 @@ namespace Cogbot
         }
         public void DebugWriteLine(Helpers.LogLevel level, string str, params object[] args)
         {
+            if (!(Settings.LOG_LEVEL >= OpenMetaverse.Helpers.LogLevel.Debug)) return;
             WriteLine(str, args);
         }
         static  string lastStr = "";
@@ -570,13 +571,13 @@ namespace Cogbot
                     LispTaskInterperterNeedLoad = false;
                     try
                     {
-                        WriteLine("Start Loading Main TaskInterperter ... '" + taskInterpreterType + "' \n");
+                        DebugWriteLine(OpenMetaverse.Helpers.LogLevel.Debug, "Start Loading Main TaskInterperter ... '" + taskInterpreterType + "' \n");
                         _lispTaskInterperter = ScriptManager.LoadScriptInterpreter(taskInterpreterType, this);
                         _lispTaskInterperter.LoadFile("cogbot.lisp",WriteLine);
                         _lispTaskInterperter.Intern("clientManager", this);
                         _scriptEventListener = new ScriptEventListener(_lispTaskInterperter, null);
                         ///_lispTaskInterperter.Intern("thisClient", this);
-                        WriteLine("Completed Loading TaskInterperter '" + taskInterpreterType + "'\n");
+                        DebugWriteLine(OpenMetaverse.Helpers.LogLevel.Debug,"Completed Loading TaskInterperter '" + taskInterpreterType + "'\n");
                         // load the initialization string
                     }
                     catch (Exception e)
