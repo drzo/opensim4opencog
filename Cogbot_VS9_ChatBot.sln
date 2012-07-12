@@ -1,9 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Cogbot.Plugins", "Cogbot.Plugins", "{55FDAD2F-6A7E-417E-80F5-2C4858BC0709}"
-	ProjectSection(SolutionItems) = preProject
-		sources\modules\ABCLInterpreterModule\ABCLInterpreterModule.csproj = sources\modules\ABCLInterpreterModule\ABCLInterpreterModule.csproj
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LAIR", "LAIR", "{1406540A-5156-41BB-B4F0-162A63D67AAB}"
 EndProject

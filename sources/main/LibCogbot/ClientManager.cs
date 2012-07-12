@@ -55,6 +55,7 @@ namespace Cogbot
 
     public class ClientManager : IDisposable,ScriptExecutorGetter
     {
+        public static DLRConsole consoleBase;
         static ClientManager()
         {
            // SingleInstance = SingleInstance ?? new ClientManager();
@@ -1154,7 +1155,7 @@ namespace Cogbot
             while (Running)
             {
                 ;
-                string input = Program.consoleBase.CmdPrompt(GetPrompt());
+                string input = consoleBase.CmdPrompt(GetPrompt());
                 if (string.IsNullOrEmpty(input)) continue;
                 CmdResult executeCommand = ExecuteCommand(input, null, WriteLine);
                 FlushWriter(System.Console.Out);
@@ -1319,7 +1320,7 @@ namespace Cogbot
             {
                 return;
             }
-            var cb = Program.consoleBase;
+            var cb = consoleBase;
             if (cb != null)
             {
                 cb.Output(check);

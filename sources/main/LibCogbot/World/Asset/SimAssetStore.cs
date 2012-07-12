@@ -1299,7 +1299,7 @@ namespace Cogbot.World
 
         public static void WriteLine(string s, params object[] args)
         {
-            Program.WriteLine("[ASSETS] "+s, args);
+            /// ClientManager.GlobalWriteLine("[ASSETS] " + s, args);
         }
 
 
