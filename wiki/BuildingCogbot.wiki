@@ -1,6 +1,11 @@
-#How to build Cogbot (with Chatbot components)
-  
-  # checkout from svn
+#How to build Cogbot on windows (with Chatbot components) this 
+
+  # install a cmdline svn client
+  # install swi-prolog development version 64 and 32 bit
+  # make sure c:\program files\pl\lib\swipl.lib is there
+  # make sure you have installed .NET 3.5 (and possibly 2.0)  
+  # checkout trunk from svn into a folder like
+      c:\development\opensim4opencog\current\
   # Open a command window and cd to your root cogbot directory. 
   # Run include-chatbot.bat.
   # Run runprebuild.bat.
@@ -13,7 +18,7 @@
   # rebuild the Solution
   # rebuild swicli.library
   # rebuild swicli
-  # set starup project to Cogbot.exe
+  # set startup project to Cogbot.exe
   
   
 
