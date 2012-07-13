@@ -3,14 +3,16 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ABCLScriptEngine.UI;
 using Cogbot;
 using MushDLR223.ScriptEngines;
 #if RTPARSER_INCLUDED
 using RTParser.Utils;
 using RTParser.Variables;
-#endif 
+#endif
+using MushDLR223.Utilities;
 using SomeInterp = ABCLScriptEngine.ABCLInterpreter;
-using Maestro.AddIn.Scripting.UI;
+using ABCLScriptEngine.UI;
 namespace ABCLScriptEngine
 {
     ///<summary>
@@ -39,7 +41,18 @@ namespace ABCLScriptEngine
         {
             modInterp = new SomeInterp(parent);
             ScriptManager.AddInterpreter(modInterp);
-            parent.AddTab("ABCL Lisp", "ABCL", new TextWindow("ABCL Lisp"),OnClose);
+            parent.InvokeGUI((() =>
+            {
+                try
+                {
+                    parent.AddTab("ABCL Lisp", "ABCL", new TextWindow("ABCL Lisp"), OnClose);
+                }
+                catch (Exception e)
+                {
+                    DLRConsole.DebugWriteLine("" + e);
+                }
+            }
+             ));
         }
 
         private void OnClose(object sender, EventArgs e)

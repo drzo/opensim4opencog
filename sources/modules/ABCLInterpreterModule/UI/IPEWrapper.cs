@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 
-namespace Maestro.AddIn.Scripting.UI
+namespace ABCLScriptEngine.UI
 {
     public delegate void Response(string text);
   

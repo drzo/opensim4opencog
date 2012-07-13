@@ -29,7 +29,7 @@ using System.Collections.Specialized;
 using System.Text;
 
 
-namespace Maestro.AddIn.Scripting.UI
+namespace ABCLScriptEngine.UI
 {
     namespace Paths
     {

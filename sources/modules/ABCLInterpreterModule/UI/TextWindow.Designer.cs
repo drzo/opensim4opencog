@@ -1,6 +1,6 @@
 ﻿using System.Windows.Forms;
 
-namespace Maestro.AddIn.Scripting.UI
+namespace ABCLScriptEngine.UI
 {
     partial class TextWindow
     {
@@ -13,7 +13,7 @@ namespace Maestro.AddIn.Scripting.UI
         /// Clean up any resources being used.
         /// </summary>
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        protected override void Dispose(bool disposing)
+        protected void Dispose(bool disposing)
         {
             if (disposing && (components != null))
             {
@@ -51,7 +51,7 @@ namespace Maestro.AddIn.Scripting.UI
             this.ClientSize = new System.Drawing.Size(624, 442);
             this.Controls.Add(this.txtBox);
             this.Name = "TextWindow";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+           // this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "TextWindow";
             this.ResumeLayout(false);
             this.PerformLayout();
