@@ -5,7 +5,7 @@ using org.armedbear.lisp;
 using System.Threading;
 using System.IO;
 
-namespace Maestro.AddIn.Scripting.UI
+namespace ABCLScriptEngine.UI
 {
 
 

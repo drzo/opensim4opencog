@@ -26,7 +26,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
-namespace Maestro.AddIn.Scripting.UI
+namespace ABCLScriptEngine.UI
 {
     public partial class TextWindow : UserControl
     {
@@ -34,6 +34,11 @@ namespace Maestro.AddIn.Scripting.UI
         {
             InitializeComponent();
             txtBox.Text = text;
+        }
+
+        public void ShowDialog()
+        {
+            throw new NotImplementedException();
         }
     }
 }

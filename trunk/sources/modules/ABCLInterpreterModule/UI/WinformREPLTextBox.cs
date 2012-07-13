@@ -34,14 +34,16 @@ using System.Data;
 using System.Text;
 using System.Windows.Forms;
 using System.ComponentModel;//ToolboxItem
-using System.Drawing;       //ToolboxBitmap
+using System.Drawing;
+
+//ToolboxBitmap
 /*using IronPython.Runtime;   //PythonDictionary
 using IronPython.Hosting;   //PythonEngine
 using Microsoft.Scripting;  //ScriptDomainManager
 using Microsoft.Scripting.Hosting;
 */
 
-namespace Maestro.AddIn.Scripting.UI
+namespace ABCLScriptEngine.UI
 {
     #region IronTextBox Class
     [ToolboxItem(true)]
