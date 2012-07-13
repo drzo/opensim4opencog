@@ -10,6 +10,7 @@ using RTParser.Utils;
 using RTParser.Variables;
 #endif 
 using SomeInterp = ABCLScriptEngine.ABCLInterpreter;
+using Maestro.AddIn.Scripting.UI;
 namespace ABCLScriptEngine
 {
     ///<summary>
@@ -38,6 +39,12 @@ namespace ABCLScriptEngine
         {
             modInterp = new SomeInterp(parent);
             ScriptManager.AddInterpreter(modInterp);
+            parent.AddTab("ABCL Lisp", "ABCL", new TextWindow("ABCL Lisp"),OnClose);
+        }
+
+        private void OnClose(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
 #if RTPARSER_INCLUDED
