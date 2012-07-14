@@ -184,7 +184,7 @@ Attracting a community of users will prevent the 'toy problem' problem in our AI
 
 2) Implement a BDI planner that is capable of processing the content produced by the comunity. #1 challenges the competency of #2 and allows us to learn the the nuances of the optimization problem around compiling that info. How to do that is an open question in AI.
 
-3) To make the system practicable for real users it needs a rudimentary controlled dialog system. *Additionally, our longer term goal, outside the scope of this project, is to use the BDI planner to create more robust dialog*
+3) To make the system practicable for real users it needs a rudimentary controlled dialog system. Additionally, our longer term goal, outside the scope of this project, is to use the BDI planner to create more robust dialog
 
 4) To make the system practicable for real users it needs support for common actions (eg. carryable objects, moving along paths) without forcing the user to explain the details each time.
 
@@ -192,7 +192,14 @@ Attracting a community of users will prevent the 'toy problem' problem in our AI
 
 === Overall Objective ===
 
-How do we know when we've succeeded?  What operationalizes success here.
+We can do the example scenarios.
+
+To have a LF conversation with robot that results in demonstration of the robot predicting user mental model and using a prescribed behavour.  Each step produced in that process should be able to be read homeocentrically (in the terms of the robot using self in the LF)
+Douglas R. Miles: (commitsGreeting Bot1 Annie1)
+That output of those steps when converted with phases will constitute what we currently belive in pyschology to be what the mind's ear is hearing that is proof that AGI has been acheived.
+
+LF = logicform
+
 
 === Example Use Cases ===
 
@@ -336,8 +343,6 @@ We feed these new requirements into the top and loop again (usually the range of
 == Acceptance ==
 
 We're all happy with the design. We build it. The world applauds, and/or the project dissolves in blame and recriminations.
-
-
 
 
 
