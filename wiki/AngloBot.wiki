@@ -166,3 +166,181 @@ by a 'world rez' language I would mean editing in viewer, an OAR file, and LSL s
 And I really, really know that asserting 'the hoe is in the hut' is really fragile (seen this way too many times in game AI contexts).
 
 }}}
+
+= Design Process =
+
+On Friday, 7/13/12, Douglas and Annie started doing a formal design process for Anglobot. I (Annie) have added this section to this page as a form to fill in for anglobot.
+
+Design process comes from industrial/visual design. It's a formal set of steps that, while a bit corny or corporate feeling, can help make sure that what we build is what we wanted to build.
+
+I'd note that, because I initiated this, it's got the stamp of 'my' concerns on it. We need to fix that. Before we work more on the acutal process, we should spend a little while on meta-process and figure out what I've left out by being blind to some of the AI-ish issues.
+
+== Definition of problem ==
+
+=== Purpose of Building Anglobot ===
+
+1) To implement a productive development environment for plan definitions for virtual world bot plans for less technical Subject MAtter Experts.
+Attracting a community of users will prevent the 'toy problem' problem in our AI research. With real users using the system to create bots in the virtual world. Promote the sharing of user generated content.
+
+2) Implement a BDI planner that is capable of processing the content produced by the comunity. #1 challenges the competency of #2 and allows us to learn the the nuances of the optimization problem around compiling that info. How to do that is an open question in AI.
+
+3) To make the system practicable for real users it needs a rudimentary controlled dialog system. *Additionally, our longer term goal, outside the scope of this project, is to use the BDI planner to create more robust dialog*
+
+4) To make the system practicable for real users it needs support for common actions (eg. carryable objects, moving along paths) without forcing the user to explain the details each time.
+
+5) 1 thru 4 allows us to test mapping the domain files to a controlled dialog system. This dialog system is the fundimental langauge of the internal dialog that a single agent thinks in expressed in PAM and SAM software from 1977(aka 'Schanks hypothesis') from the book "Script, Plans and goals"
+
+=== Overall Objective ===
+
+How do we know when we've succeeded?  What operationalizes success here.
+
+=== Example Use Cases ===
+
+==== Hillpeople ====
+
+*Annie will continue to add complexity to the Hillpeople world in a way that stretches the capability of the system. Douglas and Andrew will expand the system to handle Annie's additions. So, for example, Annie might add a tool that's useful for many tasks (a basket) but have only one available. When the system can handle this situation, she adds a second basket.*
+
+==== Afghan Village ====
+
+*A notional military use case is to train users to interact with Afghan civilians in a culturally appropriate way. Such a system would place heavy demands on psychosociocultural models (the americans are resented as outside interlopers) and on dialog.*
+
+*Can we do Afghan Village with our target design?  Should we be able to?*
+
+==== 18th Century London ====
+
+*A history teacher wants to recreate a portion of 18th century London, including bots who can interact with visitors and explain their actions.*
+
+=== Constraints ===
+
+What constraints and conditions are there on the solution?
+
+== Analysis ==
+
+=== Fun ===
+
+What parts of the task do each of us see as fun? Boring? Difficult?
+
+What are our secret agendas?
+
+*Annie sez her secret agenda is to make beautiful things that are a delight to use, to get street cred in the VW community, and to learn a s`**`tload about software from Douglas and Andrew. She told a friend this was her year to learn to program*
+
+=== Research ===
+
+What research tasks should be performed before proceeding with the design?
+
+=== User Interviews ===
+
+Can we interview potential users?
+
+=== Feasibility ===
+
+Can we do this?
+
+=== Planners ===
+
+We're operating at the edge of known algorithm space. What constraints
+does that impose?
+
+Perhaps this phase involves some prototype coding.
+
+=== Similar Projects ===
+
+Identify software (and non software?) we can take ideas from.
+
+Identify software we can take code from.
+
+=== Needed design features  ===
+
+ * Encourage sharing of content
+ * No restart of bots
+
+*who controls the bots?*
+
+=== Tradeoffs ===
+
+What are the important tradeoffs in the design?
+
+=== Method ===
+
+How will we build it?
+
+How will we test it?
+
+How will we package and deliver it?
+
+What OSes and modes (headless, interactive) and such are needed?
+
+How will users install it?
+
+How will users learn to use it?
+
+=== Support Services ===
+
+What support services are needed?
+
+== Ideation ==
+
+Whoot - finally we get to spew out ideas.
+
+Should we separate this into two pieces, one for the user facing design, and one for the underlying algorithms?
+
+Our objective is to generate MANY possible designs.
+
+=== Brainstorming ===
+
+A time limited period where we avoid owning ideas and avoid criticizing ideas. Brainstorming should work on single questions.
+
+
+    Focus on quantity: This rule is a means of enhancing divergent production, aiming to facilitate problem solving through the maxim quantity breeds quality. The assumption is that the greater the number of ideas generated, the greater the chance of producing a radical and effective solution.
+    Withhold criticism: In brainstorming, criticism of ideas generated should be put 'on hold'. Instead, participants should focus on extending or adding to ideas, reserving criticism for a later 'critical stage' of the process. By suspending judgment, participants will feel free to generate unusual ideas.
+    Welcome unusual ideas: To get a good and long list of ideas, unusual ideas are welcomed. They can be generated by looking from new perspectives and suspending assumptions. These new ways of thinking may provide better solutions.
+    Combine and improve ideas: Good ideas may be combined to form a single better good idea, as suggested by the slogan "1+1=3". It is believed to stimulate the building of ideas by a process of association.[1]
+
+
+=== Exhaustion ===
+
+== Solution Selection ==
+
+Select a solution. If we're lucky we've arrived at this point without having strongly 'owned' solutions (tell the Ali Baba Slots story here).
+
+== Implement ==
+
+=== Engineering Requirements Document ===
+
+This doesn't mean final code. It means draw up a detailed (enough) design document gthat we're clear what our solution is.
+
+=== Prototypes of Major Algorithms ===
+
+Some toy code to demo specific algorithms.
+
+== Critique ==
+
+Examine our solution critically. Did something get left out? Will it work?
+
+=== User Review ===
+
+Show our design to potential users. Will it fullfill their needs?
+
+=== Peer Review ===
+
+Show our design to peers in the AI community. Defend our design.
+
+=== Compile Design Casualties ===
+
+By this point we should have some pretty clear ideas how our design has areas wanting improvement. 
+
+We have probably identified new design requirements.
+
+We feed these new requirements into the top and loop again (usually the range of designs is much narrower on subsequent passes, and the whole process much faster).
+
+== Acceptance ==
+
+We're all happy with the design. We build it. The world applauds, and/or the project dissolves in blame and recriminations.
+
+
+
+
+
+
+
+
