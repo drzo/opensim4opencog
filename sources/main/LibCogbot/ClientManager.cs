@@ -572,7 +572,7 @@ namespace Cogbot
                     try
                     {
                         DebugWriteLine(OpenMetaverse.Helpers.LogLevel.Debug, "Start Loading Main TaskInterperter ... '" + taskInterpreterType + "' \n");
-                        _lispTaskInterperter = ScriptManager.LoadScriptInterpreter(taskInterpreterType, this);
+                        _lispTaskInterperter = ScriptManager.LoadScriptInterpreter(taskInterpreterType, this, null);
                         _lispTaskInterperter.LoadFile("cogbot.lisp",WriteLine);
                         _lispTaskInterperter.Intern("clientManager", this);
                         _scriptEventListener = new ScriptEventListener(_lispTaskInterperter, null);

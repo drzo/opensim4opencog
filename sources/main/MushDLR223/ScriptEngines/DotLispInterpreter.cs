@@ -21,6 +21,7 @@ namespace MushDLR223.ScriptEngines
         {
             var v = new DotLispInterpreter();
             v._dotLispInterpreter = new Interpreter(_dotLispInterpreter);
+            v.EnsureInit();
             v.Intern("*SELF*", self);
             return v;
         } // method: newInterpreter
@@ -186,7 +187,7 @@ namespace MushDLR223.ScriptEngines
         /// </summary>
         /// <returns></returns>
         /// 
-        public abstract DotLispInterpreterBase MakeInterp(object self);
+        public abstract DotLispInterpreterBase MakeInterp(object selt);
 
         public override ScriptInterpreter newInterpreter(object self)
         {

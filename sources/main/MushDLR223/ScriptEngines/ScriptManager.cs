@@ -370,7 +370,7 @@ namespace MushDLR223.ScriptEngines
         }
 
 
-        public static ScriptInterpreter LoadScriptInterpreter(string type, object self)
+        public static ScriptInterpreter LoadScriptInterpreter(string type, object self, ScriptInterpreter parent)
         {
 
             try
@@ -383,7 +383,7 @@ namespace MushDLR223.ScriptEngines
                         si.Self = self;
                         return si;
                     } 
-                    si = LoadScriptInterpreter0(type, self);
+                    si = LoadScriptInterpreter0(type, self, parent);
                     StartScanningAppDomain();
                     return si;
                 }
@@ -445,7 +445,7 @@ namespace MushDLR223.ScriptEngines
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static ScriptInterpreter LoadScriptInterpreter0(string type, object self)
+        public static ScriptInterpreter LoadScriptInterpreter0(string type, object self, ScriptInterpreter parent)
         {
             var Interpreters = ScriptManager.Interpreters;
             lock (Interpreters)
@@ -783,9 +783,9 @@ namespace MushDLR223.ScriptEngines
             return objs;
         }
 
-        public static object EvalScriptInterpreter(string src, string lang, object seff, OutputDelegate wl)
+        public static object EvalScriptInterpreter(string src, string lang, object seff, ScriptInterpreter parent, OutputDelegate wl)
         {
-            var si = LoadScriptInterpreter(lang, seff);
+            var si = LoadScriptInterpreter(lang, seff, parent);
             object so = si.Read("EvalScriptInterpreter read: " + src, new StringReader(src.ToString()), wl);
             if (so is CmdResult) return (CmdResult) so;
             if (so == null) return new CmdResult("void", true, new Dictionary<string, object>());

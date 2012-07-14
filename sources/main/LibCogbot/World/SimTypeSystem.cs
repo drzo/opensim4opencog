@@ -528,9 +528,13 @@ namespace Cogbot.World
         }
 
         private static ScriptInterpreter ScriptInterpreter0 = null;
+        private static ScriptInterpreter ScriptInterpreterParent
+        {
+            get { return ClientManager.SingleInstance.TaskInterperter; }
+        }
         private static ScriptInterpreter GetScriptInterpreter()
         {
-            if (ScriptInterpreter0 == null) ScriptInterpreter0 = ScriptManager.LoadScriptInterpreter("lisp", null);
+            if (ScriptInterpreter0 == null) ScriptInterpreter0 = ScriptManager.LoadScriptInterpreter("lisp", null, ScriptInterpreterParent);
             return ScriptInterpreter0;
         }
 
@@ -652,7 +656,7 @@ namespace Cogbot.World
             StreamReader r = new StreamReader(f);
             r.BaseStream.Seek(0, SeekOrigin.Begin);
             TextReader tr = r;
-            Interpreter interp = new Interpreter(null);
+            Interpreter interp = ScriptInterpreterParent.Impl as Interpreter;
             while (tr.Peek() != -1)
             {
                 Object read = interp.Read(filename, tr);

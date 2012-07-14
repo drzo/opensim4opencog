@@ -518,7 +518,7 @@ namespace Cogbot
                 DLRConsole.DebugWriteLine(p);
                 return;
             }
-            if (Settings.LOG_LEVEL != Helpers.LogLevel.None)
+            if (Settings.LOG_LEVEL == Helpers.LogLevel.Debug)
             {
                 DLRConsole.DebugWriteLine(p);
             }

@@ -92,7 +92,7 @@ namespace Cogbot
                 {
                     if (_LispTaskInterperter != null) return;
                     //WriteLine("Start Loading TaskInterperter ... '" + TaskInterperterType + "' \n");
-                    _LispTaskInterperter = ScriptManager.LoadScriptInterpreter(taskInterperterType, this);
+                    _LispTaskInterperter = ClientManager.SingleInstance.TaskInterperter.newInterpreter(this);
                     _LispTaskInterperter.LoadFile("cogbot.lisp", DebugWriteLine);
                     Intern("clientManager", ClientManager);
                     Intern("client", this);
@@ -749,7 +749,7 @@ namespace Cogbot
         }
         public CmdResult ExecuteTask(string scripttype, TextReader reader, OutputDelegate WriteLine)
         {
-            var si = ScriptManager.LoadScriptInterpreter(scripttype, this);
+            var si = ScriptManager.LoadScriptInterpreter(scripttype, this, _LispTaskInterperter);
             object o = si.Read(scripttype, reader, WriteLine);
             if (o is CmdResult) return (CmdResult)o;
             if (o == null) return new CmdResult("void", true);

@@ -45,7 +45,7 @@ namespace ABCLScriptEngine
             {
                 try
                 {
-                    parent.AddTab("ABCL Lisp", "ABCL", new TextWindow("ABCL Lisp"), OnClose);
+                    parent.AddTab("ABCL Lisp", "ABCL", new IronTextBoxControl(), OnClose);
                 }
                 catch (Exception e)
                 {
