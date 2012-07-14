@@ -14,7 +14,7 @@ public class Interpreter
     public Interpreter(Interpreter parent)
 		{
         this.Parent = parent;
-		globalenv = new Env(null,null,null);
+		globalenv = new Env(null,null,null,this);
 		reader = new Reader(this);
         symbolTable = new SymbolTable(this);
 
@@ -23,7 +23,7 @@ public class Interpreter
 			{
 			addTypesFrom(a);
 			}
-
+        addTypesFrom(Assembly.LoadWithPartialName("System.Web"));
 		internBuiltins();
 		Primitives.internAll(this);
 		// MEH: EX was not set to null

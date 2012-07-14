@@ -20,7 +20,7 @@ internal class Closure: IFunction, IExpression
 		this.loc = loc;
 		ArgSpecs specs = analyzeArgSpec((Cons)args.first,env,loc);
 		//create an env expanded by params in which to analyze body
-		Env env2 = new Env(specs.parameters, null, env);
+		Env env2 = new Env(specs.parameters, null, env, interpreter);
 
 		this.argSpecs = specs;
 		this.body = interpreter.analyze(new Cons(interpreter.BLOCK,args.rest), env2,loc);
@@ -42,7 +42,7 @@ internal class Closure: IFunction, IExpression
 		try
 			{
 			return body.eval(
-								 new Env(argSpecs.parameters, buildParamArray(args,0,env), env));
+                                 new Env(argSpecs.parameters, buildParamArray(args, 0, env), env, interpreter));
 			}
 		catch(Exception ex)
 			{

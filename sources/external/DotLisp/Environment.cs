@@ -6,14 +6,15 @@ using System.Collections;
 namespace DotLisp{
 internal class Env
 	{
-
+    private Interpreter interp;
 	Env parent;
 	Parameter[] vars;
 	Object[] vals;
 
-	internal Env(Parameter[] vars, Object[] vals, Env parent)
+	internal Env(Parameter[] vars, Object[] vals, Env parent, Interpreter interp)
 		{
 		this.vars = vars; this.vals = vals; this.parent = parent;
+	    this.interp = interp;
 		}
 
 	internal Object lookup(Symbol var) 
