@@ -256,6 +256,10 @@ Identify software (and non software?) we can take ideas from.
 
 Identify software we can take code from.
 
+=== Why Did Others Fail?  ===
+
+Other people have done this sort of thing, why did they fail?
+
 === Needed design features  ===
 
  * Encourage sharing of content
@@ -343,8 +347,6 @@ We feed these new requirements into the top and loop again (usually the range of
 == Acceptance ==
 
 We're all happy with the design. We build it. The world applauds, and/or the project dissolves in blame and recriminations.
-
-
 
 
 
