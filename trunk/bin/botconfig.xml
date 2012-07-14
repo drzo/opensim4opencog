@@ -79,6 +79,17 @@
     (load "personalAccts.lisp")
     (load "personalInstallConfig.lisp")
 
+	(interpreter.InternTypesFrom (System.Reflection.Assembly:LoadWithPartialName "System.Web"))
+
+
+(if (.Contains (.table (.symbolTable interpreter)) "INSTALLER_botname")
+    (and 
+     (setj INSTALLER_firstname (0 (.Split (System.Web.HttpUtility:UrlDecode INSTALLER_botname) (vector (0 " ")))))
+     (setj INSTALLER_lastname (1(.Split (System.Web.HttpUtility:UrlDecode INSTALLER_botname) (vector (0 " ")))))
+     (setj INSTALLER_url (System.Web.HttpUtility:UrlDecode INSTALLER_loginuri))
+     (create-botclient INSTALLER_firstname INSTALLER_lastname (System.Web.HttpUtility:UrlDecode INSTALLER_botpassword) INSTALLER_url "last")
+    ))
+
   </startupLisp>
   <startupClientLisp>
 
@@ -90,7 +101,7 @@
     (setj UsePrologScripting False)
     (setj UseAutoLogin False)
     (setj UseGUI  False)
-    '(setj MasterName "Nephrael Rajesh")
+    (setj MasterName "Nephrael Rajesh")
 
     (load "personalInstallConfig.lisp")
 
@@ -98,6 +109,8 @@
 
     (thisClient.ExecuteCommand "debug Debug")
     (thisClient.ExecuteCommand "load CogbotRadegastPluginModule")
+    (thisClient.ExecuteCommand "load ABCLInterpreterModule")
+    
 
     (if UsePrologScripting (thisClient.ExecuteCommand "load PrologBotModule"))
 
