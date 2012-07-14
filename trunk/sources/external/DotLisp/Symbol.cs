@@ -105,8 +105,18 @@ internal class SymbolTable
 	internal Symbol intern(String name)
 		{
 	    var table = this.table;
-		Symbol result = (Symbol)table[name];
-		if(result == null)
+        Symbol result = (Symbol)table[name];
+        if (result == null)
+        {
+            var p = Parent;
+            while (p != null)
+            {
+                Symbol result2 = p.table[name] as Symbol;
+                if (result2 != null) return result2;
+                p = p.Parent;
+            }
+        }
+	    if(result == null)
 			{
 			if(name.StartsWith(":"))
 				{
@@ -175,7 +185,7 @@ internal class SymbolTable
                     //add the name to both the full and shortNames
                     //should be no dupes in fullNames
                     //    Console.WriteLine(" internType :" + t.ToString() + " fn=" + t.FullName + " sn=" + t.Name);
-                    if (fullNamesToTypes[t.FullName] == null)
+                    if (!fullNamesToTypes.Contains(t.FullName))
                     {
                         fullNamesToTypes[t.FullName] = t;
                         ArrayList arr = GetTypeCache(t.Name);
