@@ -108,6 +108,8 @@ load_cogbot_assembly:-loaded_cogbot_assembly,!.
 load_cogbot_assembly:-assert(loaded_cogbot_assembly),current_prolog_flag(address_bits,32) -> cli_load_assembly('Cogbot32.exe') ; cli_load_assembly('Cogbot.exe').
 :-app_init(load_cogbot_assembly).
 
+:-cli_set('Cogbot.ClientManagerConfig','DoNotCreateBotClientsFromBotConfig','@'(true)).
+
 % % cache the type names
 % prevents us having to use long names for things like SimAvatar
 %
@@ -167,7 +169,6 @@ wbotname(BotID,Name) :- wbotcall(BotID,'GetName',X),string_to_atom(X,Name).
 % ------------------------------------------------------------------------------
 cogbot_throw(Error):-throw(cogbot_user_error(Error)).
 
-
 %------------------------------------------------------------------------------
 % syncronously log a bot onto simulator and set the current_bot/1
 % PUBLIC    
@@ -191,7 +192,8 @@ ahook_bot_event(BotID,B,C):-forall(catch(bv:hook_bot_event(BotID,B,C),_,true),tr
 % ------------------------------------------------------------------------------
 create_bot(First, Last, Password, Loginuri, Location, BotID):-        
 	client_manager_ref(CM),
-	cli_call(CM,'CreateBotClient'(First, Last, Password, Loginuri, Location), BotID),
+        %% DoNotCreateBotClientsFromLispScript
+	cli_call(CM,'CreateBotClientNonScript'(First, Last, Password, Loginuri, Location), BotID),
         asserta(bot_client_db(First, Last, Password, Loginuri, Location, BotID)),
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % register our examples
@@ -270,6 +272,7 @@ grid_parcels(Ele):-grid_region(Sim),cli_get(Sim,parcels,Objs),cli_col(Objs,Ele).
 %  Clientmanager binds radegast to the Client
 %  botconfig is run from Clientmanager
 client_manager_ref(SingleInstance):-cli_get('Cogbot.ClientManager','SingleInstance',SingleInstance).
+
 
 %% botget(+Property,-Value).
 % given a property list returns value for the avatar
@@ -467,6 +470,7 @@ run_sl:-asserta(ran_sl),!,
    cli_set('MushDLR223.Utilities.DLRConsole','NoConsoleVisible','@'(true)),
    cli_set('ABuildStartup.Program','UseApplicationExit','@'(false)),
    cli_set('Cogbot.ClientManagerConfig','noGUI','@'(true)),
+   cli_set('Cogbot.ClientManagerConfig','DoNotCreateBotClientsFromBotConfig','@'(true)),   
    cli_call('ABuildStartup.Program','Main',[],_).
 
 % assert_once is assert a new grounded atomic fact only if the predicate

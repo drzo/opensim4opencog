@@ -102,7 +102,7 @@ namespace CogbotRadegastPluginModule
 
         private void MainForm_Shown(object sender, EventArgs e)
         {
-            if (ClientManager.StartLispThreadAtPluginInit)
+            if (ClientManagerConfig.StartLispThreadAtPluginInit)
             {
                 RunClientManagerStartupLisp();
             }
@@ -179,7 +179,7 @@ namespace CogbotRadegastPluginModule
                 return;
             }
             plugInitCalledEver = true;
-            if (ClientManager.StartLispThreadAtPluginInit)
+            if (ClientManagerConfig.StartLispThreadAtPluginInit)
             {
                 RunClientManagerStartupLisp();
             }
@@ -213,7 +213,7 @@ namespace CogbotRadegastPluginModule
         private void netcom_ClientLoggingIn(object sender, OverrideEventArgs e)
         {
             if (!AllowRadegastUIControl) e.Cancel = true;
-            if (ClientManager.StartLispThreadAtPluginInit)
+            if (ClientManagerConfig.StartLispThreadAtPluginInit)
             {
                 RunClientManagerStartupLisp();
             }

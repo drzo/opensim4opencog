@@ -36,7 +36,7 @@ namespace ABuildStartup
         public static void Main()
         {
             string[] use = Environment.GetCommandLineArgs() ?? new string[0];
-            ClientManager.StartLispThreadAtPluginInit = true;
+            ClientManagerConfig.StartLispThreadAtPluginInit = true;
             if (use.Length > 0)
             {
                 string arg0 = use[0].ToLower();
@@ -291,7 +291,7 @@ namespace ABuildStartup
             if (ClientManagerConfig.arguments.GetWithout("--noconfig", out oArgs))
             {
                 ClientManagerConfig.arguments = new Parser(oArgs);
-                ClientManager.NoLoadConfig = true;
+                ClientManagerConfig.NoLoadConfig = true;
             }
             if (ClientManagerConfig.arguments.GetWithout("--console", out oArgs))
             {

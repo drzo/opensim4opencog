@@ -57,7 +57,7 @@ namespace ABCLScriptEngine
 
         private void OnClose(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
+          //  throw new NotImplementedException();
         }
 
 #if RTPARSER_INCLUDED

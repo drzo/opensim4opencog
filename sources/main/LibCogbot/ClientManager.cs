@@ -51,6 +51,9 @@ namespace Cogbot
         private static Parser _arguments;
         public static bool noGUI = false;
         public static bool GlobalRadegastInstanceGCUsed;
+        public static bool StartLispThreadAtPluginInit = false;
+        public static bool DoNotCreateBotClientsFromBotConfig = false;
+        public static bool NoLoadConfig = false;
     }
 
     public class ClientManager : IDisposable,ScriptExecutorGetter
@@ -61,7 +64,6 @@ namespace Cogbot
            // SingleInstance = SingleInstance ?? new ClientManager();
         }
 
-        public static bool StartLispThreadAtPluginInit = false;
         public static readonly TaskQueueHandler OneAtATimeQueue = new TaskQueueHandler("ClientManager.OneAtATime", new TimeSpan(0, 0, 0, 0, 10), true, false);
         public static readonly TaskQueueHandler PostAutoExec = new TaskQueueHandler("ClientManager.PostAutoExec", new TimeSpan(0, 0, 0, 0, 10), false, false);
         public static object SingleInstanceLock = new object();
@@ -681,11 +683,23 @@ namespace Cogbot
         public static readonly object _wasFirstGridClientLock = new object();
         public BotClient CreateBotClient(string first, string last, string passwd, string simurl, string location)
         {
+            string fullName = string.Format("{0} {1}", first, last);
+            if (ClientManagerConfig.DoNotCreateBotClientsFromBotConfig)
+            {
+                WriteLine("DoNotCreateBotClientsFromBotConfig: {0}", fullName);
+                return null;
+            }
+            return CreateBotClientNonScript(first, last, passwd, simurl, location);
+          
+        }
+        public BotClient CreateBotClientNonScript(string first, string last, string passwd, string simurl, string location)
+        {
+
             BotClient bc = CreateBotClient0(first, last, passwd, simurl, location);
             LastRefBotClient = bc;
             PostAutoExecEnqueue(() => MakeRunning(bc));
             StartUpLisp();
-            return bc;            
+            return bc;   
         }
 
         public BotClient CreateBotClient0(string first, string last, string passwd, string simurl, string location)
@@ -693,11 +707,6 @@ namespace Cogbot
             lock (OneAtATime)
             {
                 string fullName = string.Format("{0} {1}", first, last);
-                if (DoNotCreateBotClientsFromLispScript)
-                {
-                    WriteLine("DoNotCreateBotClientsFromLispScript: {0}", fullName);
-                    return null;
-                }
                 WriteLine("CreateBotClient: {0}", fullName);
                 StarupLispCreatedBotClients = true;
                 BotClient bc = GetBotByName(fullName);
@@ -893,8 +902,6 @@ namespace Cogbot
 
         string version = "1.0.0";
         public bool StarupLispCreatedBotClients;
-
-        public static bool DoNotCreateBotClientsFromLispScript = false;
 
         /// <summary>
         /// 
@@ -1174,7 +1181,6 @@ namespace Cogbot
 
         private static bool RanAutoExec = false;
         private static object RunningAutoExec = new object();
-        public static bool NoLoadConfig;
         public static Thread MainThread;
 
         public static OutputDelegate Filter = null;
@@ -1350,7 +1356,7 @@ namespace Cogbot
                 string config1 = config.GetValue("startupLisp", string.Empty);
                 if (config1.Length > 1)
                 {
-                    if (!NoLoadConfig)
+                    if (!ClientManagerConfig.NoLoadConfig)
                     {
                         try
                         {
@@ -1678,13 +1684,13 @@ namespace Cogbot
 
             if (ClientManagerConfig.arguments["file"] != null)
             {
-                DoNotCreateBotClientsFromLispScript = true;
+                ClientManagerConfig.DoNotCreateBotClientsFromBotConfig = true;
                 string file = String.Empty;
                 file = ClientManagerConfig.arguments["file"];
                 LoadAcctsFromFile(file);
             } else if (ClientManagerConfig.arguments["first"] != null && ClientManagerConfig.arguments["last"] != null && ClientManagerConfig.arguments["pass"] != null)
             {
-                ClientManager.DoNotCreateBotClientsFromLispScript = true;
+                ClientManagerConfig.DoNotCreateBotClientsFromBotConfig = true;
                 // Taking a single login off the command-line
                 var account = FindOrCreateAccount(ClientManagerConfig.arguments["first"], ClientManagerConfig.arguments["last"]);
             }
@@ -1693,7 +1699,7 @@ namespace Cogbot
                 return false;
             } else
             {
-                DoNotCreateBotClientsFromLispScript = false;
+                ClientManagerConfig.DoNotCreateBotClientsFromBotConfig = false;
             }
             return true;
         }
