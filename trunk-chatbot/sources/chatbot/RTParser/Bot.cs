@@ -1836,8 +1836,9 @@ The AIMLbot program.
                 try
                 {
                     object self = user;
-                    ScriptInterpreter si = ScriptManager.LoadScriptInterpreter(langu, self);
-                    object o = ScriptManager.EvalScriptInterpreter(cmd.ToValue(user.CurrentQuery), langu, self, writeToLog);
+                    ScriptInterpreter parent = null;
+                    ScriptInterpreter si = ScriptManager.LoadScriptInterpreter(langu, self, parent);
+                    object o = ScriptManager.EvalScriptInterpreter(cmd.ToValue(user.CurrentQuery), langu, self, parent, writeToLog);
                     string siStr = si.Str(o);
                     return Unifiable.Create(siStr);
                 }
