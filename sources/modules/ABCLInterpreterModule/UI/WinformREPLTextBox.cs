@@ -780,7 +780,7 @@ namespace ABCLScriptEngine.UI
             //Create the scope for the ScriptEngine
             scope = engine;//.CreateScope();
             //Expose our host application
-            scope.Intern("app", this);
+            if (scope != null) scope.Intern("app", this);
             //IronTextBox's CommandEntered event
             CommandEntered += new EventCommandEntered(irontextboxControl_CommandEntered);
         }
