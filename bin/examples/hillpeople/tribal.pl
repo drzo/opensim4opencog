@@ -402,17 +402,12 @@ be_tribal(
     Loc,
     Name,
     Status) :-
-	settable_gtrace(gtsleeping),
+	gtrace_by_botvar(gtsleeping),
 	botvar_get(bot, superplan , "rest"),
 	on_bed(Name),
 	set_current_action(Name, "Sleeping"),
 	sleep(10),
 	be_tribal(Loc, Name, Status).
-
-settable_gtrace(Topic) :-
-	botvar_get(bot, Topic, "true"),!,
-	gtrace.
-settable_gtrace(_).
 
 %
 % this makes home/2 det
