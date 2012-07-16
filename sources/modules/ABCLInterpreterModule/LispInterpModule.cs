@@ -124,7 +124,7 @@ namespace ABCLScriptEngine
 
         public IEnumerable<string> SettingNames(ICollectionRequester requester, int depth)
         {
-            throw new NotImplementedException();
+            return new String[0];// throw new NotImplementedException();
         }
 
         #endregion
@@ -179,17 +179,17 @@ namespace ABCLScriptEngine
 
         public void SetValue(ICollectionRequester requester, string name, object value)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
 
         public bool AcceptsNewKeys
         {
-            get { throw new NotImplementedException(); }
+            get { return false; }
         }
 
         public ICollection GetGroup(ICollectionRequester requester, string name)
         {
-            throw new NotImplementedException();
+            return null;
         }
 
         #endregion
