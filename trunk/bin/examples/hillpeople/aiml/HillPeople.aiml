@@ -32,7 +32,12 @@
 
 <category>
     <pattern>SET SUPER PLAN *</pattern>
-    <template>Setting superplan <star/><think><set dict="bot" name="superPlan"><star/></set></think></template>
+    <template>My highest goal is to <star/><think><set dict="bot" name="superPlan"><star/></set></think></template>
+</category>
+
+<category>
+    <pattern>SET SUPERPLAN *</pattern>
+    <template>My highest goal is to <star/><think><set dict="bot" name="superPlan"><star/></set></think></template>
 </category>
 
 <category>

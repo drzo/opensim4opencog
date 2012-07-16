@@ -351,7 +351,7 @@ be_tribal(
     Name,
     Status) :-
 	botvar_get(bot, superplan, "rest"),
-	home(Name, Home),
+	sleeps_at(Name, Home),
 	name_to_location_ref(Home, Obj),
 	distance_to(Obj, D),
 	D > 8.0,
@@ -372,7 +372,7 @@ be_tribal(
     Name,
     Status) :-
 	botvar_get(bot, superplan, "rest"),
-	home(Name, Home),
+	sleeps_at(Name, Home),
 	name_to_location_ref(Home, Obj),
 	distance_to(Obj, D),
 	D =< 8.0,
@@ -392,6 +392,9 @@ on_bed(Name) :-
 	cli_get(BedRef, [properties, name], BedNameO),
 	cli_unify(BedName, BedNameO).
 
+% TODO backup bed_for_name to provide a bed if they don't have one
+% TODO what if somebody's already sleeping there?
+
 %
 % sleep
 %
@@ -399,11 +402,24 @@ be_tribal(
     Loc,
     Name,
     Status) :-
+	settable_gtrace(gtsleeping),
 	botvar_get(bot, superplan , "rest"),
 	on_bed(Name),
 	set_current_action(Name, "Sleeping"),
 	sleep(10),
 	be_tribal(Loc, Name, Status).
+
+settable_gtrace(Topic) :-
+	botvar_get(bot, Topic, "true"),!,
+	gtrace.
+settable_gtrace(_).
+
+%
+% this makes home/2 det
+%
+sleeps_at(Name, Location) :-
+	home(Name, Location),!.
+sleeps_at(_, hut3) :- !.
 
 %
 % add something to status
@@ -470,7 +486,7 @@ be_tribal(
     Status) :-
 	is_night,
 	\+ memberchk(Location, [hut1, hut2, hut3]),
-	home(Name, Home),
+	sleeps_at(Name, Home),
 	nearest_waypoint(Name, WP),
 	waypoint_path(WP, Home, Path),
 	navigate(
@@ -489,7 +505,7 @@ be_tribal(
     Name,
     Status) :-
 	is_night,
-	home(Name, Location),
+	sleeps_at(Name, Location),
 	\+ sitting_on(Name, sleeping_mat),
 	sit_on(Name, sleeping_mat),
 	be_tribal(
@@ -505,7 +521,7 @@ be_tribal(
     Name,
     Status) :-
 	is_night,
-	home(Name, Location),
+	sleeps_at(Name, Location),
 	sitting_on(Name, sleeping_mat),
 	play_sound(Name, snore),
 	basal_metabolism(Status, NewStatus, 30, 0.20),
