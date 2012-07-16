@@ -137,7 +137,7 @@ tribal_land('annies haven II/164/135/21').
 :-dynamic(tribe_size/1).
 
 set_num_bots(Value):-retractall(tribe_size(_)),assert(tribe_size(Value)).
-:-set_num_bots(6).
+:-set_num_bots(1).
 
 
 %%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -265,9 +265,6 @@ start_wearing(opthamologist, [
 			     'opthamologist Shape',
 			     'opthamologist Skin'
 			    ]).
-
-
-home(_, hut3). % fallback, stay in 3 if you don't know
 
 % fallback, people's beds are named af_otopopo_bed
 bed_for_name(Name, BedName) :-

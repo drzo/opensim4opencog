@@ -17,9 +17,9 @@ say_format(Format, Args) :-
     botvar_get(bot, yakk, "true"),
     'format'(string(Contents), Format, Args),
 %    'format'(string(QContents), '"~s"', [Contents]),
-    botcmd(say(Contents)).
-say_format(_, _) :-
-    \+ botvar_get(bot, yakk, "true").
+    botcmd(say(Contents)),!.
+say_format(_, _) :- !.
+
 
 % DEBUG TODO
 %  Douglas - what's up here? why are we quoting, and why is it failing?
