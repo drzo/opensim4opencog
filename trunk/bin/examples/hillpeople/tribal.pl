@@ -189,8 +189,9 @@ be_tribal(_,
 	\+ has_inventory,
 	set_current_action(Name, "getting starting inventory"),
 	botcmd(touch('inventory_giver')),
+	get_time(Time),
 	sleep(3),
-	be_tribal(home, Name, [requested_inventory|Status]).
+	be_tribal(home, Name, [requested_inventory(Time)|Status]).
 
 %
 %       continue to wait until we get our inventory
@@ -198,11 +199,31 @@ be_tribal(_,
 be_tribal(_,
 	  Name,
 	  Status) :-
-	memberchk(requested_inventory, Status),
+	memberchk(requested_inventory(Time), Status),
 	\+ has_inventory,
+	get_time(CurTime),
+	CurTime < Time + 30,
 	set_current_action(Name, "waiting for inventory to arrive"),
 	sleep(5),
 	be_tribal(home, Name, Status).
+
+%
+%       Ask for it again every 30 sec
+%
+be_tribal(_,
+	  Name,
+	  Status) :-
+	memberchk(requested_inventory(Time), Status),
+	\+ has_inventory,
+	get_time(CurTime),
+	CurTime >= Time + 30,
+	set_current_action(Name, "retrying getting starting inventory"),
+	botcmd(touch('inventory_giver')),
+	sleep(5),
+	select(requested_inventory(_), Status,
+	       requested_inventory(CurTime), NewStatus),
+	be_tribal(home, Name, NewStatus).
+
 
 %
 %       dress in starter outfit

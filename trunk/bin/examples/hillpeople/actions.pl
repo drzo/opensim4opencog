@@ -14,9 +14,12 @@
 :- use_module(hillpeople(navigation)).
 
 say_format(Format, Args) :-
+    botvar_get(bot, yakk, "true"),
     'format'(string(Contents), Format, Args),
 %    'format'(string(QContents), '"~s"', [Contents]),
     botcmd(say(Contents)).
+say_format(_, _) :-
+    \+ botvar_get(bot, yakk, "true").
 
 % DEBUG TODO
 %  Douglas - what's up here? why are we quoting, and why is it failing?
@@ -30,7 +33,6 @@ say_format(_, _) :- !.
 say_ref(Prompt, Ref) :-
     once(cli_to_str(Ref, S) ; S = "Darn cli_to_str failed"),
     say_format('~w = ~s', [Prompt, S]), !.
-
 
 inventory_folder_name("hillpeople example rev5").
 
