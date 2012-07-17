@@ -332,9 +332,9 @@ wabcall(Call):-once(((thread_self(TID),current_bot_db(TID,Save))->TODO=set_curre
 % wrappered execute command in a convenience pred
 % botcmd(say("hi"))
 %
-wbotcmd(BotID,StrIn):-wbotcmd(BotID,StrIn,Out),cli_get(Out,success,@(true)).
-wbotcmd(BotID,StrIn,Out):-cmdargs_to_atomstr(StrIn,Str),wbotcmd(BotID,Str,{pluggable_callback(botcmd)},Out).
-wbotcmd(BotID,StrIn,WriteDelegate,Out):-cmdargs_to_atomstr(StrIn,Str),cli_call(BotID,executeCommand(Str,BotID,WriteDelegate),Out).
+wbotcmd(BotID,StrIn):-wbotcmd(BotID,StrIn,Out),cli_get(Out,success,@(true)),!.
+wbotcmd(BotID,StrIn,Out):-cmdargs_to_atomstr(StrIn,Str),wbotcmd(BotID,Str,{pluggable_callback(botcmd)},Out),!.
+wbotcmd(BotID,StrIn,WriteDelegate,Out):-cmdargs_to_atomstr(StrIn,Str),cli_call(BotID,executeCommand(Str,BotID,WriteDelegate),Out),!.
 
 
 % wrappered execute command in a convenience pred
