@@ -1,7 +1,14 @@
-I am working on uses a method that is a narrative process that is an internal dialog. Imagine you having a printer plugged into your brain and everything you are thinking comes out printed and readable in something similar to English. The "similar to English" and the output that comes out is what I am designing.. Sure that sounds hard? but actually imagine a computerized poetry or story generator simply randomly constructing stories. Everything that the inner voice says has to be consistent and hopefully relevant to the rest of the system. This is actually very simple in implementation.  Imagine the speed in which a system operates even in the real world is only the speed of the internal voice.. This might actually be possible?
-
 = Introduction =
-This document will attempt to layout according to myself Douglas R. Miles how AI will work and then be built.
+
+In artificial intelligence, a procedural reasoning system (PRS) is a framework for constructing real-time reasoning systems that can perform complex tasks in dynamic environments. It is based on the notion of a rational agent or intelligent agent using the belief–desire–intention software model.
+
+A user application is predominately defined, and provided to a PRS system is a set of knowledge areas. Each knowledge area is a piece of procedural knowledge that specifies how to do something, e.g., how to navigate down a corridor, or how to plan a path (in contrast with robotic architectures where the programmer just provides a model of what the states of the world are and how the agent's primitive actions affect them). Such a program, together with a PRS interpreter, is used to control the agent.
+
+The interpreter is responsible for maintaining beliefs about the world state, choosing which goals to attempt to achieve next, and choosing which knowledge area to apply in the current situation. How exactly these operations are performed might depend on domain-specific meta-level knowledge areas. Unlike traditional AI planning systems that generate a complete plan at the beginning, and replan if unexpected things happen, PRS interleaves planning and doing actions in the world. At any point, the system might only have a partially specified plan for the future.
+
+PRS is based on the BDI or belief–desire–intention framework for intelligent agents. Beliefs consist of what the agent believes to be true about the current state of the world, desires consist of the agent's goals, and intentions consist of the agent's current plans for achieving those goals. Furthermore, each of these three components is typically explicitly represented somewhere within the memory of the PRS agent at runtime, which is in contrast to purely reactive systems, such as the subsumption architecture.
+
+And application might be one that defines a narrative process that is an "internal dialog" like a computerized poetry or story generator simply constructing stories. Everything that the inner voice says has to be consistent and hopefully relevant to the rest of the system. The speed in which a system operates even in the real world processing is only at the speed of the internal voice.
 
 = Assumptions =
 
