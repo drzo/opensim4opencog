@@ -38,6 +38,7 @@ p('Most users will want the 64 bit version of Cogbot. Only install 32 bit Cogbot
 p(['Cogbot also requires ',
    a(href='http://www.microsoft.com/download/en/details.aspx?id=21',
      'Microsoft .NET Framework 3.5'), ' (most users will already have this installed']),
+p(['If you will be running your bot on the free Second Life service, you will need to ', a(href='http://www.secondlife.com', 'sign up for an account. '), 'If you will be running your bot on another grid, you will need your account name (first and last), password, and the grid&amp;s login uri']),
 	  \start_action_bar
        ]).
 
