@@ -37,34 +37,36 @@ bundle(find_prolog_install,
 find_prolog_question(X) :-
 	    architecture(32),
 	    current_prolog_flag(home, Home),
+	    prolog_to_os_filename(Home, OSHome),
 	    X = [
 	    label(for=prolog_location,
 		  [
 		   'Location of your ', em('32 bit'),
-		   'swi-Prolog install home (something like C:\Program Files (x86)\pl):'
+		   'swi-Prolog install home (something like C:\\Program Files (x86)\\pl):'
 		  ]),
 	    input([
 		name=prolog_location,
 		id=prolog_location,
 		type=text,
-		value=Home
+		value=OSHome
 		  ],[])
 	     ].
 
 find_prolog_question(X) :-
 	    architecture(64),
 	    current_prolog_flag(home, Home),
+	    prolog_to_os_filename(Home, OSHome),
 	  X = [
 	    label(for=prolog_location,
 	        [
 		 'Location of your ', b(em('64 bit')),
-		 ' swi-Prolog install (something like C:\Program Files\pl):'
+		 ' swi-Prolog install (something like C:\\Program Files\\pl):'
 		]),
 	    input([
 		name=prolog_location,
 		id=prolog_location,
 		type=text,
-		value=Home
+		value=OSHome
 		  ],[])
 	     ].
 
