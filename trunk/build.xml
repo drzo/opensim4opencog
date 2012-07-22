@@ -48,6 +48,7 @@
     <include  name="bin/config/**"/> 
     <include  name="bin/aiml/default_bot/**"/> 
     <include  name="bin/aiml/shared_aiml/**"/> 
+    <exclude name="bin/Swi*"/> 
     <exclude name="bin/personal*.lisp"/>
     <exclude name="**/CVS/*"/> 
     <exclude name="**/.svn/*"/> 
