@@ -20,6 +20,9 @@
     <include name="bin/*.xml"/>
     <include name="bin/*.config"/>
     <include name="bin/*.ini"/> 
+    <include  name="bin/config/**"/> 
+    <include  name="bin/aiml/default_bot/**"/> 
+    <include  name="bin/aiml/shared_aiml/**"/> 
     <exclude name="bin/personal*.lisp"/>
     <exclude name="**/CVS/*"/> 
     <exclude name="**/.svn/*"/> 
@@ -102,8 +105,7 @@
 </jar>
 </target>
 
-<target name="all" description="Generate ALL files" depends="cogbot-core,cogbot-prolog,cogbot-aiml,cogbot-documents,cogbot-sources" >
-    <copy todir="."><fileset dir="${src}" includes="**/images/*" excludes="**/*.gif" /></copy>
+<target name="all" description="Generate ALL files" depends="cogbot-core,cogbot-prolog,cogbot-aiml,cogbot-documents" >
 </target>
 
 </project>
