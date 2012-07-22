@@ -35,6 +35,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.ComponentModel;//ToolboxItem
 using System.Drawing;
+using MushDLR223.Utilities;
 
 //ToolboxBitmap
 /*using IronPython.Runtime;   //PythonDictionary
@@ -222,8 +223,15 @@ namespace ABCLScriptEngine.UI
         /// <returns>Returns currentline's text string</returns>
         public string GetTextAtPrompt()
         {
-            if (GetCurrentLine() != "")
-                return GetCurrentLine().Substring(prompt.Length);
+            string getCurrentLine = GetCurrentLine();
+            if (getCurrentLine != "")
+            {
+                if (getCurrentLine.StartsWith(prompt))
+                {
+                    getCurrentLine = getCurrentLine.Substring(prompt.Length);
+                }
+                return getCurrentLine;
+            }
             else
             {
                 string mystring = (string)this.Lines.GetValue(this.Lines.Length - 2);
@@ -420,6 +428,17 @@ namespace ABCLScriptEngine.UI
         /// <param name="sender">object</param>
         /// <param name="e">KeyPressEventArgs</param>
         private void consoleTextBox_KeyPress(object sender, System.Windows.Forms.KeyPressEventArgs e)
+        {
+            try
+            {
+                consoleTextBox_KeyPress0(sender, e);
+            }
+            catch (Exception exception)
+            {
+                DLRConsole.DebugWriteLine("Key Press Error " + exception);
+            }
+        }
+        private void consoleTextBox_KeyPress0(object sender, System.Windows.Forms.KeyPressEventArgs e)
         {
             //If current key is a backspace and is just before prompt, then stay put!
             if (e.KeyChar == (char)8 && IsCaretJustBeforePrompt())
@@ -771,12 +790,12 @@ namespace ABCLScriptEngine.UI
         /// <summary>
         /// IronTextBoxControl
         /// </summary>
-        public IronTextBoxControl()
+        public IronTextBoxControl(MushDLR223.ScriptEngines.ScriptInterpreter si)
         {
+            //Create the ScriptRuntime
+            engine = si;// Python.CreateEngine(); //ScriptRuntime.Create().GetEngine("py");
             InitializeComponent();
 
-            //Create the ScriptRuntime
-            engine = null;// Python.CreateEngine(); //ScriptRuntime.Create().GetEngine("py");
             //Create the scope for the ScriptEngine
             scope = engine;//.CreateScope();
             //Expose our host application
@@ -795,7 +814,8 @@ namespace ABCLScriptEngine.UI
         {
            /* ScriptSource source = engine.CreateScriptSourceFromFile(pyfile);
            return source.Execute(scope);*/
-            throw new NotImplementedException();
+            var source = engine;
+            return source.LoadFile(pyfile, WriteText);
         }
 
         /// <summary>
@@ -806,9 +826,8 @@ namespace ABCLScriptEngine.UI
         /// <returns>object</returns>
         object DoIPExecute(string pycode)
         {
-            throw new NotImplementedException();
-/*            ScriptSource source = engine.CreateScriptSourceFromString(pycode, SourceCodeKind.SingleStatement);
-            return source.Execute(scope);*/
+            var source = engine;
+            return source.Eval(pycode);
         }
 
         /// <summary>
@@ -819,9 +838,8 @@ namespace ABCLScriptEngine.UI
         /// <returns>object</returns>
         object DoIPEvaluate(string pycode)
         {
-            throw new NotImplementedException();
-           // ScriptSource source = engine.CreateScriptSourceFromString(pycode, SourceCodeKind.Expression);
-           // return source.Execute(scope);
+            var source = engine;
+            return source.Eval(pycode);
         }
 
         /// <summary>
@@ -1175,9 +1193,9 @@ namespace ABCLScriptEngine.UI
         /// Send text to the IronTextBox.
         /// </summary>
         /// <param name="text"></param>
-        public void WriteText(string text)
+        public void WriteText(string text, params object[] args)
         {
-            consoleTextBox.WriteText(text);
+            consoleTextBox.WriteText(DLRConsole.SafeFormat(text, args));
         }
 
         /// <summary>
@@ -1383,7 +1401,7 @@ namespace ABCLScriptEngine.UI
             //Browse to the file...
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.InitialDirectory = Paths.MiscDirs.vs_Projects;
-            ofd.Filter = "Python files (*.py)|*.py|All files (*.*)|*.*";
+            ofd.Filter = "Lisp files (*.lisp)|*.lisp|All files (*.*)|*.*";
             ofd.ShowDialog();
 
             DoIPExecuteFile(ofd.FileName);

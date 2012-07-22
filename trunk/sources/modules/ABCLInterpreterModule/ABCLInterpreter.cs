@@ -521,14 +521,19 @@ namespace ABCLScriptEngine
             interpreter.run();
         }
 
+        public bool UseStreams = false;
         private void StartInstanceBlocked()
         {
             if (interpreter == null)
             {
-                /// outStream = getOutputStream();
-                //  inStream = getInputStream();
-                //                interpreter = Interpreter.createJLispInstance(inStream, outStream, ".", VersionString);
-               interpreter = Interpreter.createDefaultInstance(new String[0]);//inStream, outStream, ".", VersionString);
+                if (UseStreams)
+                {
+                    outStream = getOutputStream();
+                    inStream = getInputStream();
+                    interpreter = Interpreter.createJLispInstance(inStream, outStream, ".", VersionString);
+                    return;
+                }
+                interpreter = Interpreter.createDefaultInstance(new String[0]);
             }
         }
 
