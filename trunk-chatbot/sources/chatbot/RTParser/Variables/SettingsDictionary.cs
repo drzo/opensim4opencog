@@ -1333,9 +1333,64 @@ namespace RTParser.Variables
             }
         }
 
+        public static int generation
+        {
+            get
+            {
+                return MushDLR223.ScriptEngines.ScriptManager.Generation;
+            }
+        }
+
+        [ThreadStatic]
+        private Dictionary<string, Dictionary<string, int>> checkingFallbacksOfN = null;
         public bool LoopingOn(string name, string type)
         {
-            return ScriptManager.LoopingOn(NameSpace + "." + name + "aiml", type);
+            if (LoopingOn0(name, type))
+            {
+                if (LoopingOn0(name, type + "1"))
+                {
+                    if (ScriptManager.GettingDeeper(NameSpace + "." + name, type + "-aiml",
+                                                   (new System.Diagnostics.StackTrace(true)).FrameCount))
+                    {
+                        return true;
+                    }
+                    return true;
+                }
+                      
+            }
+            return false;
+        }
+        public bool LoopingOn0(string name, string type)
+        {
+            Dictionary<string, int> fallbacksOf;
+            if (checkingFallbacksOfN == null)
+            {
+                checkingFallbacksOfN = new Dictionary<string, Dictionary<string, int>>();
+            }
+            lock (checkingFallbacksOfN)
+            {
+                if (!checkingFallbacksOfN.TryGetValue(type, out fallbacksOf))
+                {
+                    fallbacksOf = checkingFallbacksOfN[type] = new Dictionary<string, int>();
+                }
+            }
+            int gen, ggen = generation;
+            lock (fallbacksOf)
+            {
+                if (!fallbacksOf.TryGetValue(name, out gen))
+                {
+                    fallbacksOf[name] = ggen;
+                }
+                else if (gen == generation)
+                {
+                    return true;
+                }
+                else
+                {
+                    fallbacksOf[name] = ggen;
+                }
+            }
+            return false;
         }
 
         public Unifiable TransformValueIn(Unifiable value)
