@@ -6,7 +6,7 @@ namespace MushDLR223.ScriptEngines
     public delegate void OutputDelegate(string s, params object[] args);
 
     public interface ScriptInterpreter : IDisposable
-    {
+    {        
         bool LoadFile(string filename, OutputDelegate WriteLine);
 
         bool LoadsFileType(string filenameorext, object self);

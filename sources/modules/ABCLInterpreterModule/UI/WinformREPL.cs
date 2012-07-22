@@ -394,7 +394,7 @@ namespace ABCLScriptEngine.UI
         LispObject lastPackage = Lisp.NIL;
         Symbol varPackage = null;
 
-        private Interpreter interpreter = Interpreter.getInstance();
+        private Interpreter interpreter = null;//Interpreter.getInstance();
         Thread jlispThread = null;
         void StartJLISP()
         {

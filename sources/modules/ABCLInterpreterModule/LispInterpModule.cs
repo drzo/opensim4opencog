@@ -32,7 +32,14 @@ namespace ABCLScriptEngine
             }
         }
 
+        public override void InvokeCommand(string cmd, OutputDelegate output)
+        {
+            InitCommand = cmd;
+        }
+
         public SomeInterp modInterp;
+        private string InitCommand;
+
         ///<summary>
         ///</summary>
         ///<param name="parent"></param>
@@ -40,19 +47,6 @@ namespace ABCLScriptEngine
             : base(parent)
         {
             modInterp = new SomeInterp(parent);
-            ScriptManager.AddInterpreter(modInterp);
-            parent.InvokeGUI((() =>
-            {
-                try
-                {
-                    parent.AddTab("ABCL Lisp", "ABCL", new IronTextBoxControl(), OnClose);
-                }
-                catch (Exception e)
-                {
-                    DLRConsole.DebugWriteLine("" + e);
-                }
-            }
-             ));
         }
 
         private void OnClose(object sender, EventArgs e)
@@ -145,7 +139,20 @@ namespace ABCLScriptEngine
         ///<exception cref="NotImplementedException"></exception>
         public override void StartupListener()
         {
+            modInterp.Init(client);
             ScriptManager.AddInterpreter(modInterp);
+            client.InvokeGUI((() =>
+                                  {
+                                      try
+                                      {
+                                          client.AddTab("ABCL Lisp", "ABCL", new IronTextBoxControl(modInterp), OnClose);
+                                      }
+                                      catch (Exception e)
+                                      {
+                                          DLRConsole.DebugWriteLine("" + e);
+                                      }
+                                  }
+                             ));
         }
 
         /// <summary>
