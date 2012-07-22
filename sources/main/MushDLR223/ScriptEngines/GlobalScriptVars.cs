@@ -73,11 +73,50 @@ namespace MushDLR223.ScriptEngines
 
         [ThreadStatic]
         static private Dictionary<string, Dictionary<string, int>> checkingFallbacksOfN = null;
+        static private Dictionary<string, Dictionary<string, int>> frameDepthFallbacksOfN = null;
         static public bool LoopingOn(string name, string type)
         {
-            if (LoopingOn0(name, type))
+            int fc = (new System.Diagnostics.StackTrace(true)).FrameCount;
+            if (GettingDeeper(name, type, fc))
             {
-                return LoopingOn0(name, type + "1");
+                if (LoopingOn0(name, type))
+                {
+                    return LoopingOn0(name, type + "1");
+                }
+            }
+            return false;
+        }
+        static public bool GettingDeeper(string name, string type, int fc)
+        {
+            Dictionary<string, int> framebacksOf;
+
+            if (frameDepthFallbacksOfN == null)
+            {
+                frameDepthFallbacksOfN = new Dictionary<string, Dictionary<string, int>>();
+            }
+            lock (frameDepthFallbacksOfN)
+            {
+                if (!frameDepthFallbacksOfN.TryGetValue(type, out framebacksOf))
+                {
+                    framebacksOf = frameDepthFallbacksOfN[type] = new Dictionary<string, int>();
+                }
+            }
+            int fgen, fggen = fc;
+            lock (framebacksOf)
+            {
+                if (!framebacksOf.TryGetValue(name, out fgen))
+                {
+                    framebacksOf[name] = fggen;
+                }
+                else if (fgen < fggen)
+                {
+                    framebacksOf.Remove(name);
+                    return true;
+                }
+                else
+                {
+                    framebacksOf[name] = fggen;
+                }
             }
             return false;
         }
@@ -129,10 +168,6 @@ namespace MushDLR223.ScriptEngines
             if (CodeRegistrars.TryGetValue(varname, out defaultProvider) && defaultProvider != null)
             {
                 ICollection v = defaultProvider.GetGroup(requester, varname);
-                if (varname.ToLower() == "currentaction")
-                {
-                    
-                }
                 return v;
             }
 
