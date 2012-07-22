@@ -26,6 +26,8 @@ before(core, fixbotconfig).
 deps(core, fixbotconfig).
 deps(fixbotconfig, getgridcreds).
 before(fixbotconfig, desktop).
+deps(coregroup, corepatch).
+before(core, corepatch).
 
 bundle(cogbot_license,
        license,
@@ -36,6 +38,12 @@ bundle(core, files,
        'Cogbot Core',
        [from(temp('cogbot-core.zip')),
 	url(logicmoo('cogbot-core.zip')),
+	to(program(.))]).
+
+bundle(corepatch, files,
+       'Cogbot Core Patches',
+       [from(temp('cogbot-core-patches.zip')),
+	url(logicmoo('cogbot-core-patches.zip')),
 	to(program(.))]).
 
 bundle(fixbotconfig,
