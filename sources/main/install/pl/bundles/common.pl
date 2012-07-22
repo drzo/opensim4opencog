@@ -58,16 +58,25 @@ bundle(ask_filelocs,
         win_folder(appdata, AppDir),
 	prolog_to_os_filename(AppDir, OSAppDir),
 	'format'(atom(TempDir), '~w\\Cogbot\\InstallerFiles\\', [OSAppDir]),
-	(   architecture(64) ->
-	    getenv('programW6432', InstallBase) ;
-	    getenv('programFiles(x86)', InstallBase)),
+	install_base(InstallBase),
 	atomic_concat(InstallBase, '\\Cogbot\\', Install).
 
-% TODO make this get the data from the OS some day
+app_data_folder(OSAppDir) :-
+	win_folder(appdata, AppDir),
+	prolog_to_os_filename(AppDir, OSAppDir).
 
-% TODO implement inc() in bundle(_, config, _, _)
-% TODO convert the directory paths to prolog form and make sure the directories
-% exist (make them if needed)
+app_data_folder('C:\\Documents and Settings').
+
+install_base(InstallBase) :-
+	architecture(64),
+	getenv('programW6432', InstallBase),!.
+
+install_base(InstallBase) :-
+	architecture(32),
+	getenv('programFiles(x86)', InstallBase),!.
+
+install_base('C:\\Program Files').
+
 
 before(licensepage, configpage).
 before(licensepage, ask_filelocs).

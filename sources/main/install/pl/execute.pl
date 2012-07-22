@@ -158,8 +158,8 @@ file_unzip(From, To) :-
 	working_directory(CWD, CWD),
 	prolog_to_os_filename(CWD, WindowsCWD),
 
-	format(string(S), '~w\\cogzip.bat "~w" "~w"~n',
-	       [WindowsCWD, FromWindows, ToWindows]),
+	format(string(S), '"~w\\cogzip.bat" "~w" "~w" "~w"~n',
+	       [WindowsCWD, FromWindows, ToWindows, WindowsCWD]),
 	thread_signal(main, format(user_error, '~s~n', [S])),
 	string_to_atom(S, A),
 	(
