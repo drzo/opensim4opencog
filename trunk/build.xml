@@ -31,6 +31,21 @@
 </jar>
 </target>
 
+<target name="cogbot-core-patches" description="Generate the distribution executable files" >
+<!-- Create the distribution directory -->
+<jar destfile="cogbot-core-patches.zip">
+<fileset dir="." casesensitive="false">
+    <include name="bin/Cogbot*.dll"/> 
+    <include name="bin/Cogbot*.exe"/> 
+    <include name="bin/*Module*.dll"/> 
+    <include name="bin/*.xml"/>
+    <exclude name="bin/personal*.lisp"/>
+    <exclude name="**/CVS/*"/> 
+    <exclude name="**/.svn/*"/> 
+    <exclude name="**/.git/*"/> 
+</fileset>
+</jar>
+</target>
 
 <target name="cogbot-aiml" description="Generate the distribution AIML files" >
 <!-- Create the distribution directory -->
@@ -80,6 +95,19 @@
 </target>
 
 
+<target name="cogbot-installer" description="Generate the distribution installer files" >
+<!-- Create the distribution directory -->
+<jar destfile="cogbot-installer.zip">
+<fileset dir="sources/main/install" casesensitive="false">
+    <include name="pl/**"/> 
+    <exclude name="**/CVS/*"/> 
+    <exclude name="**/.svn/*"/> 
+    <exclude name="**/.git/*"/> 
+</fileset>
+</jar>
+</target>
+
+
 
 <target name="cogbot-sources" description="Generate the distribution source files" >
 <!-- Create the distribution directory -->
@@ -105,7 +133,7 @@
 </jar>
 </target>
 
-<target name="all" description="Generate ALL files" depends="cogbot-core,cogbot-prolog,cogbot-aiml,cogbot-documents" >
+<target name="all" description="Generate ALL files" depends="cogbot-core,cogbot-prolog,cogbot-aiml,cogbot-documents,cogbot-core-patches,cogbot-installer" >
 </target>
 
 </project>
