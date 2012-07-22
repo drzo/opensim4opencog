@@ -217,6 +217,182 @@ LF = logicform
 
 *A history teacher wants to recreate a portion of 18th century London, including bots who can interact with visitors and explain their actions.*
 
+{{{
+Ryan's Use Cases
+
+	+ The Revival
+	
+	Creation of The Revival, a video game based on a multipolar world
+	with complex political coalitions and interagent cooperation.
+	
+	+ Mini-Games
+	
+	Creation of minigames and playable demos to test out and develop
+	aspects of The Revival.
+	
+Jess's Use Cases
+
+	+ Jason/Perl Integration
+
+	Implement a Perl interface to Jason.
+
+Joey's Use Cases
+
+	+ AIML Cyn Cyc bot
+
+	+ Network Security?
+
+Sara's Use Cases
+
+	+ funfunctions Math Tutor
+
+	Virtual world for protoype of interactive RL game that teaches Navigation.
+
+CW's Use Cases
+
+	+ Game Development / Programming Instruction
+
+	Provide an environment for students to learn programming skills
+	and develop games.
+
+Andrew's Use Cases
+
+	+ Free Life Planning Coach
+	
+	The free life planner called action planner intends to be a
+	decision support system for analyzing a person's life and helping
+	them to improve their wellbeing.  It models factors such as
+	health, food security, financial security, and provides tools to
+	help manage the user's plans and commitments.  It is heavily
+	related to the cell-phone based interactive execution monitor.
+	
+	My goal is to model, within a symbolic environment, these factors
+	and to build agents that are good at solving the associated
+	problems, with the goal of making these tools available open
+	source to the public and developing polished interfaces.
+	
+	+ Homeless at CMU survival simulator
+	
+	While pursuing the development of AI I was forced into a
+	difficult position where I was living homeless at CMU.  During
+	that time I was pursuing the development of a PDDL planning
+	system for modeling the state of the world and planning my
+	actions within it.  I failed to develop the system in time to be
+	useful to me there, but I made progress.
+	
+	I regard the problem as unsolved and wish to make a video game
+	simulation out of it in order to complete its development.  I
+	intend it to lead to solutions that can help the homeless (and as
+	such it is related to the free life planning coach).  It can also
+	be a fun game.  The idea is to develop a conformant plan that
+	satisfies the requirements of life of the simulated homeless
+	person.  Future work may involve adding deontic logics to
+	constrain the morality.  Ideally it would provide the homeless
+	the means of survival while meeting the needs of the rest of the
+	community - with all conflicts being analyzed.
+	
+	This simulation involves the use of exogenous events.  For
+	instance, a person may have taken up a hidden sleeping place, and
+	someone may exogenously walk into the room, pinning the user
+	down.  We might eventually be able to simulate the motivations,
+	beliefs, and strategies of the various agents.
+	
+	+ SPSE2 Cell phone based task management
+	
+	I am developing a cell phone based system which includes a speech
+	interface, in which the user can assert new goals, and a planning
+	component and interactive execution monitor which walks the user
+	through the plans.  This is a tactical system and works with the
+	life planner to achieve long and short range planning.  The idea
+	is to model the environment to the degree that, wrt certain
+	criteria, plans are more or fully optimal.
+	
+	The system involves location logic, which is similar to Douglas'
+	SecondLife2Kif converter, and includes predicates which explicate
+	the users trajectory and provide material for handlers such as
+	detecting that one is exiting a movie theatre and so could be
+	expected to want to unsilence their phone.
+	
+	The system is explained here:
+	
+	http://frdcsa.org/~andrewdo/writings/Temporal-Planning-and-Inferencing-for-Personal-Task-Management-with-SPSE2.pdf
+	
+	The use case here is to use SL to simulate the real world and
+	debug the software by running the actual Android software on an
+	ARM emulator, and running the FRDCSA software on a suitable
+	remote machine.
+	
+	+ Ireland History Game
+	
+	Since the Battle of Kinsale on Christmas Eve of 1601, the Gaelic
+	way of life seen somewhat of a decline.  The goal of the Ireland
+	History game is model with AI technology various aspects of Irish
+	History and Culture, and become a resource for those seeking to
+	learn about the past and promote the Gaelic revival.  As such,
+	lots of Irish language integration, such as the Gramadoir grammar
+	checker, etc, tools for learners of the Irish Language, virtual
+	libraries containing public domain works regarding the Irish
+	langauge.  Modeling of Kings and Bards as AI agents that are
+	knowledgeable in what they would be knowledgeable such as their
+	lineages and territories.  Theorem proving regarding Irish
+	History.  Role playing and interaction with NPCs.  Historical and
+	ahistorical simulations/games.
+	
+	+ InContext/InConcert like Agent Based OS
+	
+	For some time I have been trying to implement agents that can
+	execute system administration tasks as well as compose software.
+	The use of natural language processing tools like KNext to
+	develop models of what actions agents can take (when reading
+	documentation), the automatical construction of PDDL domains from
+	text using tools like the one mentioned here:
+	
+	Saeed Hassanpour, Martin J. O’Connor, Amar K. Das, “A Framework
+	for the Automatic Extraction of Rules from Online Text”,
+	Proceedings of the 5th International Symposium on Rules, pp
+	266-280, Barcelona, Spain, 2011.
+	
+	They should handle plan failure well and make use of numerous
+	tools in the agent literature, perhaps including the Plexil
+	system.
+	
+	+ Cyc Integration with the FRDCSA
+	
+	While the FRDCSA has a few CycL modules, the integration is much,
+	much less than the integration witnessed with dmiles' work.  The
+	goal here is to play catchup and get access to such tools.
+	
+	+ Agent-based NLU
+	
+	Formalizing text using various tools, but specifically,
+	developing a system to interpret text artifacts based on a
+	researching defeasible agent.
+	
+	+ General Environment / Agent Ontology and Instantiator
+	
+	Translation between domains, such as blocksworld, and
+	other environments e.g. integration with GGP game rules,
+	Jason environments, SL, PDDL domains etc.  Multiple
+	agents/reasoners, such as Cadiaplayer, Jason, OpenCog,
+	LPG-TD, Soar, Oscar, Golem, and (an RTS solver). Ontology
+	models which reasoners are applicable to which
+	environments.  System to formalize descriptions of worlds
+	into concrete worlds based upon NLU and argumentation
+	frameworks.
+	
+	+ Setanta Instrusion Prevention System
+	
+	Similar to CycSecure (I'm guessing).  Automatic asset
+	inventorying, transport to different machines, uses previously
+	mentioned system administration to maintain network defenses.
+	
+	http://frdcsa.org/frdcsa/internal/setanta/index.html
+
+	+ Jason/FRDCSA Integration
+
+	Implement a Perl interface to Jason.
+}}}
+
 === Constraints ===
 
 What constraints and conditions are there on the solution?
@@ -347,7 +523,5 @@ We feed these new requirements into the top and loop again (usually the range of
 == Acceptance ==
 
 We're all happy with the design. We build it. The world applauds, and/or the project dissolves in blame and recriminations.
-
-
 
 
