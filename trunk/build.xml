@@ -1,9 +1,6 @@
 <project name="PackageCogbot" default="all" basedir=".">
-
-<target name="cogbot-core" description="Generate the distribution executable files" >
-<!-- Create the distribution directory -->
-<jar destfile="cogbot-core.zip">
-<fileset dir="." casesensitive="false">
+<!--
+<selector id="selector-core">
     <include name="bin/*.dll"/> 
     <include name="bin/*.exe"/>
     <include name="bin/*.dynlib"/>
@@ -27,6 +24,42 @@
     <exclude name="**/CVS/*"/> 
     <exclude name="**/.svn/*"/> 
     <exclude name="**/.git/*"/> 
+</selector>
+!-->
+
+
+<patternset id="core-files">
+    <include name="bin/*.dll"/> 
+    <include name="bin/*.exe"/>
+    <include name="bin/*.dynlib"/>
+    <include name="bin/*.so"/>
+    <include name="bin/*.cloj"/> 
+    <include name="bin/*.lisp"/> 
+    <include name="bin/bin-x86/**"/> 
+    <include name="bin/bin-x64/**"/> 
+    <include name="bin/*.json"/> 
+    <include name="bin/openmetaverse_data/**"/> 
+    <include name="bin/character/**"/> 
+    <include name="bin/bvh_files/**"/> 
+    <include name="bin/shader_data/**"/>
+    <include name="bin/*.xml"/>
+    <include name="bin/*.config"/>
+    <include name="bin/*.ini"/> 
+    <include  name="bin/config/**"/> 
+    <include  name="bin/aiml/default_bot/**"/> 
+    <include  name="bin/aiml/shared_aiml/**"/> 
+    <exclude name="bin/personal*.lisp"/>
+    <exclude name="**/CVS/*"/> 
+    <exclude name="**/.svn/*"/> 
+    <exclude name="**/.git/*"/> 
+</patternset>
+
+<target name="cogbot-core" description="Generate the distribution executable files" >
+<!-- Create the distribution directory -->
+<jar destfile="cogbot-core.zip">
+<fileset dir="." casesensitive="false">
+    <date datetime="07/21/2012 12:00 AM" when="before"/>
+    <patternset refid="core-files"/>
 </fileset>
 </jar>
 </target>
@@ -35,14 +68,8 @@
 <!-- Create the distribution directory -->
 <jar destfile="cogbot-core-patches.zip">
 <fileset dir="." casesensitive="false">
-    <include name="bin/Cogbot*.dll"/> 
-    <include name="bin/Cogbot*.exe"/> 
-    <include name="bin/*Module*.dll"/> 
-    <include name="bin/*.xml"/>
-    <exclude name="bin/personal*.lisp"/>
-    <exclude name="**/CVS/*"/> 
-    <exclude name="**/.svn/*"/> 
-    <exclude name="**/.git/*"/> 
+    <date datetime="07/21/2012 12:00 AM" when="after"/>
+    <patternset refid="core-files"/>
 </fileset>
 </jar>
 </target>
@@ -133,7 +160,7 @@
 </jar>
 </target>
 
-<target name="all" description="Generate ALL files" depends="cogbot-core,cogbot-prolog,cogbot-aiml,cogbot-documents,cogbot-core-patches,cogbot-installer" >
+<target name="all" description="Generate ALL files" depends="cogbot-prolog,cogbot-aiml,cogbot-documents,cogbot-core-patches,cogbot-installer" >
 </target>
 
 </project>
