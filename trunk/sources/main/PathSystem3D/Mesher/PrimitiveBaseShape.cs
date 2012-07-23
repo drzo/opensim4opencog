@@ -140,7 +140,7 @@ namespace THIRDPARTY.OpenSim.Framework
 
                 if (!Enum.IsDefined(typeof(HollowShape), hollowShapeByte))
                 {
-                    Console.WriteLine(
+                    CollisionPlane.Debug(
                         "[SHAPE]: Attempt to set a ProfileCurve with a hollow shape value of {0}, which isn't a valid enum.  Replacing with default shape.",
                         hollowShapeByte);
 
@@ -156,7 +156,7 @@ namespace THIRDPARTY.OpenSim.Framework
 
                 if (!Enum.IsDefined(typeof(ProfileShape), profileShapeByte))
                 {
-                    Console.WriteLine(
+                    CollisionPlane.Debug(
                         "[SHAPE]: Attempt to set a ProfileCurve with a profile shape value of {0}, which isn't a valid enum.  Replacing with square.",
                         profileShapeByte);
 

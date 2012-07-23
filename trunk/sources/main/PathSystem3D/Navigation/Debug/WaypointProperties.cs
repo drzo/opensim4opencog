@@ -75,7 +75,7 @@ namespace PathSystem3D.Navigation.Debug
             }
             catch (Exception ex)
             {
-                Console.WriteLine("" + ex);
+                CollisionPlane.Debug(ex);
             }
         }
 

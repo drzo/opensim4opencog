@@ -167,7 +167,7 @@ namespace PathSystem3D.Navigation.Debug
             }
             catch (Exception e)
             {
-                Console.WriteLine("" + e);
+                CollisionPlane.Debug(e);
             }
         }
 
@@ -184,7 +184,7 @@ namespace PathSystem3D.Navigation.Debug
             }
             catch (Exception e)
             {
-                Console.WriteLine("" + e);
+                CollisionPlane.Debug( e);
             }
         }
 
@@ -1430,7 +1430,8 @@ namespace PathSystem3D.Navigation.Debug
             }
             catch (Exception e)
             {
-                Console.WriteLine("CollisionPlaneListUpdate {0}", e);
+                CollisionPlane.Debug(e);
+                CollisionPlane.Debug("CollisionPlaneListUpdate {0}", e);
             }
         }
 

@@ -15,14 +15,14 @@ dbgfmt(F,A):-'format'(F,A).
 
 :-use_module(library(swicli)).
 
-/*
+
 :-use_module('../test/movesupport').
 :-use_module('../test/acctsupport').
 :-use_module('../test/testpathfind').
 :-use_module('../test/testsupport').
-*/
 
-:-use_module('examples/hillpeople/hillpeople.pl').
+
+%% :-use_module('examples/hillpeople/hillpeople.pl').
 
 :-use_module(cogbot(cogrobot)).
 
@@ -41,7 +41,7 @@ l2:-logon_bot('Nephrael','Rae','abc123', "https://login.agni.lindenlab.com/cgi-b
 :-cli_load_assembly('IKVM.OpenJDK.Core.dll').
 
 
-%%:-set_num_bots(6).
+:-set_num_bots(1).
 :-set_tribe('Dougstribe').
 %%:-logon_bots.
 %%:-logon_bots,ebt.

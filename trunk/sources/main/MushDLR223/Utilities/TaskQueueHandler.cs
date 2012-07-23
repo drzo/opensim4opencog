@@ -293,7 +293,7 @@ namespace MushDLR223.Utilities
 
         static TaskQueueHandler()
         {
-            DebugLevel = 3;
+            DebugLevel = 0;
             // If we don't have a high resolution timer then Stopwatch will fall back
             // to DateTime, which is much less reliable
             //if (DebugLevel > 2) if (Stopwatch.IsHighResolution) DLRConsole.DebugWriteLine("We have a high resolution timer available");

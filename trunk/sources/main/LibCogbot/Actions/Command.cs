@@ -382,7 +382,7 @@ namespace Cogbot.Actions
         {
             if (this is BotStatefullCommand && !(this is SystemApplicationCommand))
             {
-                DLRConsole.DebugWriteLine("" + this + " is not a BotStatefullCommand?!");                
+               // DLRConsole.DebugWriteLine("" + this + " is not a BotStatefullCommand?!");                
             }
         } // constructor
 

@@ -134,7 +134,7 @@ namespace PathSystem3D.Mesher
         {
             if (pathStore == null)
             {
-                Console.WriteLine(String.Format("Cant UpdatePathOccupied for {0}", this));// + " pos " + RootObject.DistanceVectorString(RootObject));
+                CollisionPlane.Debug("Cant UpdatePathOccupied for {0}", this);// + " pos " + RootObject.DistanceVectorString(RootObject));
                 return false;
             }
             if (!UpdateMeshPaths) return false;
@@ -157,7 +157,7 @@ namespace PathSystem3D.Mesher
                        // t1 = Environment.TickCount - tc;
                         InnerBoxes = null;
                         PathStore.AddedCount++;
-                        //  Console.WriteLine("t1 vs t2 = " + t1 );
+                        //  CollisionPlane.Debug("t1 vs t2 = " + t1 );
                         return true;
                     }
                 }
@@ -359,7 +359,7 @@ namespace PathSystem3D.Mesher
             {
                 if (InnerBoxes.Count == 0)
                 {
-                    Console.WriteLine("using outerbox for " + this);
+                    CollisionPlane.Debug("using outerbox for " + this);
                     return true;
                 }
                 foreach (CollisionObject box in InnerBoxes)
@@ -374,7 +374,7 @@ namespace PathSystem3D.Mesher
         {
             if (InnerBoxes.Count == 0)
             {
-                Console.WriteLine("using outerbox for " + this);
+                CollisionPlane.Debug("using outerbox for " + this);
                 OuterBox.SetOccupied(p, SimZLevel, SimZMaxLevel, detail);
                 return;
             }
@@ -391,7 +391,7 @@ namespace PathSystem3D.Mesher
         {
             if (InnerBoxes.Count == 0)
             {
-                Console.WriteLine("using outerbox for " + this);
+                CollisionPlane.Debug("using outerbox for " + this);
                 OuterBox.SetOccupied(p, MinMaxZ, detail);
                 return;
             }
