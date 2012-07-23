@@ -3,6 +3,7 @@ using System.Threading;
 using OpenMetaverse;
 using PathSystem3D.Mesher;
 using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 
 #if COLLIDER_ODE
 using THIRDPARTY.OpenSim.Framework;
@@ -110,15 +111,15 @@ namespace PathSystem3D.Navigation
             set
             {
                 if (value > MaxZ)
-                {                   
-                    Console.WriteLine("Resizing {0} < {1} ", this, value);
+                {
+                    Debug("Resizing {0} < {1} ", this, value);
                     HeightMapNeedsUpdate = true;
                     MaxZ = value;
                 }
                 else if (value < MinZ)
                 {
-                      Console.WriteLine("Resizing {0} > {1} > ", this, value);
-                      HeightMapNeedsUpdate = true;
+                    Debug("Resizing {0} > {1} > ", this, value);
+                    HeightMapNeedsUpdate = true;
                     MinZ = value;
                 }
                 if ((MaxZ - MinZ) > 5)
@@ -318,10 +319,10 @@ namespace PathSystem3D.Navigation
                 int MaxTries = 100;
                 while (fallingPrims > 0 && MaxTries-- > 0)
                 {
-                    //   Console.WriteLine("fallingPrims=" + fallingPrims);
+                    //   CollisionPlane.Debug("fallingPrims=" + fallingPrims);
                     ps.Simulate(0.133f);
                 }
-                //Console.WriteLine("fallingPrims left over {0} MaxTries Left over = {1}", fallingPrims, MaxTries);
+                //CollisionPlane.Debug("fallingPrims left over {0} MaxTries Left over = {1}", fallingPrims, MaxTries);
                 ps.Simulate(0.133f); // for removal of remainders or not needed?
                 if (fallingPrims < 10)
                 {
@@ -329,11 +330,11 @@ namespace PathSystem3D.Navigation
                 }
                 if (fallingPrims != 0)
                 {
-                    Console.WriteLine("fallingPrims left over {0} MaxTries Left over = {1}", fallingPrims, MaxTries);
+                    CollisionPlane.Debug("fallingPrims left over {0} MaxTries Left over = {1}", fallingPrims, MaxTries);
                 }
                 else if (y % 100 == 0)
 
-                    Console.WriteLine("Y={0} MaxTries Left over = {1}", y, MaxTries);
+                    CollisionPlane.Debug("Y={0} MaxTries Left over = {1}", y, MaxTries);
             }
         }
         //public class FallingPrim
@@ -514,7 +515,7 @@ namespace PathSystem3D.Navigation
                 float[,] Heights = HeightMap;
                 float[,] GroundPlane = PathStore.GroundPlane;
 
-                Console.WriteLine("\nStart UpdateCollisionPlane: {0} for {1}", PathStore, this);
+                Debug("Start UpdateCollisionPlane: {0} for {1}", PathStore, this);
                 for (int y = MaxYPt - 1; y > 0; y--)
                 {
                     for (int x = MaxXPt - 1; x > 0; x--)
@@ -540,7 +541,7 @@ namespace PathSystem3D.Navigation
                 }
                 AddEdgeBlocking(ToMatrix);
                 AddAdjacentBlocking(ToMatrix, SimPathStore.BLOCKED, 1, SimPathStore.MAYBE_BLOCKED, SimPathStore.BLOCKED);
-                Console.WriteLine("\nEnd UpdateCollisionPlane: {0} for {1}", PathStore, this);
+                Debug("End UpdateCollisionPlane: {0} for {1}", PathStore, this);
             }
         }
 
@@ -680,7 +681,7 @@ namespace PathSystem3D.Navigation
             }
             //            _HeightMap = null;
             RenderGroundPlane();
-            Console.WriteLine("\nStart RenderHeightMap: {0} for {1}", PathStore, this);
+            Debug("Start RenderHeightMap: {0} for {1}", PathStore, this);
             CollisionIndex[,] MeshIndex = PathStore.MeshIndex;
             MatrixNeedsUpdate = true;
             //byte[,] ToMatrix = ByteMatrix;
@@ -696,7 +697,7 @@ namespace PathSystem3D.Navigation
             }
 
 #endif
-            Console.WriteLine("\nEnd RenderHeightMap: {0} for {1}", PathStore, this);
+            Debug("End RenderHeightMap: {0} for {1}", PathStore, this);
         }
 
 
@@ -722,7 +723,7 @@ namespace PathSystem3D.Navigation
             float LowestCared = MinZ - 2f;
             float[,] heights = HeightMap;
             float[,] GLevels = PathStore.GroundPlane;
-            Console.WriteLine("\nStart RenderGroundPlane: {0} for {1} LowestCared={2}", PathStore, this, LowestCared);
+            Debug("Start RenderGroundPlane: {0} for {1} LowestCared={2}", PathStore, this, LowestCared);
             for (int y = MaxYPt; y >= 0; y--)
             {
                 for (int x = MaxXPt; x >= 0; x--)
@@ -738,9 +739,20 @@ namespace PathSystem3D.Navigation
                      //   heights[x, y] = LowestCared;
                 }
             }
-            Console.WriteLine("\nEnd RenderGroundPlane: {0} for {1}", PathStore, this);
+            Debug("End RenderGroundPlane: {0} for {1}", PathStore, this);
         }
-     
+
+        public static bool DebugCollisionPlanes = false;
+                           
+        public static void Debug(string f, params object [] a)
+        {
+            if (DebugCollisionPlanes) DLRConsole.DebugWriteLine(f, a);
+        }
+        public static void Debug(Exception f)
+        {
+            DLRConsole.DebugWriteLine("" + f);
+        }
+
         void AddFieldEffects(byte[,] from, byte[,] to, byte when, int iterations, byte step)
         {
             byte fronteer = when;

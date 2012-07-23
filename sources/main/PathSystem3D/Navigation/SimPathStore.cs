@@ -906,7 +906,7 @@ namespace PathSystem3D.Navigation
                                            {
                                                CollisionEventUpdate arg = (CollisionEventUpdate)args;
                                                //simhinfo 58 58 30
-                                               Console.WriteLine("oprim OnCollisionUpdate " + args);
+                                               CollisionPlane.Debug("oprim OnCollisionUpdate " + args);
                                                falling = false;
                                            };
            
@@ -2392,7 +2392,7 @@ namespace PathSystem3D.Navigation
                 DebugDelegate(String.Format("[SimPathStore] {0}", format), arg);
             }
             if (DebugLevel > 0)
-                Console.WriteLine(String.Format("[SimPathStore] {0}", format), arg);
+                CollisionPlane.Debug(String.Format("[SimPathStore] {0}", format), arg);
         }
 
 
@@ -2632,7 +2632,7 @@ namespace PathSystem3D.Navigation
         internal CollisionPlane CreateMoverPlane(float Z)
         {
             CollisionPlane found = new CollisionPlane(MAPSPACE, MAPSPACE, Z, this);
-            Console.WriteLine("Created matrix[{0}] {1} for {2}", Z, found, this);
+            CollisionPlane.Debug("Created matrix[{0}] {1} for {2}", Z, found, this);
             DropOldMatrixes(6);
             lock (Matrixes) Matrixes.Add(found);
             if (PanelGUI != null) (new Thread(()=>     

@@ -70,7 +70,7 @@ namespace PathSystem3D.Navigation
 
         public void CreateDefaultRoutes()
         {
-            Console.WriteLine("CreateDefaultRoutes <{0},{1}>-<{2},{3}> StepSize={4}", StartX, StartY, EndX, EndY, StepSize);
+            CollisionPlane.Debug("CreateDefaultRoutes <{0},{1}>-<{2},{3}> StepSize={4}", StartX, StartY, EndX, EndY, StepSize);
             return;
             double W = 0.75f;
             int made = 0;
@@ -100,7 +100,7 @@ namespace PathSystem3D.Navigation
                     AddNewArcs(sw10, sw01, W); //dirrection  /
                 }
             }
-            Console.WriteLine("CreateDefaultRoutes Made {0} waypoints", made);
+            CollisionPlane.Debug("CreateDefaultRoutes Made {0} waypoints", made);
         }
 
         private SimWaypoint CreateXYZ(int x, int y)
@@ -149,7 +149,7 @@ namespace PathSystem3D.Navigation
         public SimRoute Intern2Arc(SimWaypoint s, SimWaypoint e, double W)
         {
             InternArc(e, s, W);
-            Console.WriteLine("Intern2Arc: " + s + " <-> " + e);
+            CollisionPlane.Debug("Intern2Arc: " + s + " <-> " + e);
             return InternArc(s, e, W);
         }
 
@@ -815,7 +815,7 @@ namespace PathSystem3D.Navigation
     //    {
     //        if (Vector3d.Distance(WayPoint, point) > MovedAllot / 3)
     //        {
-    //            Console.WriteLine("WAYPOINT " + WayPoint + " -> " + point);
+    //            CollisionPlane.Debug("WAYPOINT " + WayPoint + " -> " + point);
     //            SimWaypoint tieIn1 = Store.CreateClosestWaypoint(point);
     //            SimWaypoint tieIn2 = Store.CreateClosestWaypoint(WayPoint);
     //            Store.Intern2Arc(tieIn1, tieIn2, 0.01f); //Cheap

@@ -26,7 +26,7 @@ namespace PathSystem3D.Navigation
     //        {
     //            return AddTrianglesV2(tl, tc, OuterBox, PadXYZ);
     //        }
-    //        // Console.WriteLine(InnerBoxes.Count);
+    //        // CollisionPlane.Debug(InnerBoxes.Count);
     //    }
 
     //    private static List<Box3Fill> AddTrianglesV1(List<Triangle> triangles, int len, Box3Fill OuterBox, float PadXYZ)
@@ -321,7 +321,7 @@ namespace PathSystem3D.Navigation
     //        SimPathStore PathStore = GetPathStore(localStart);
     //        CollisionPlane CP = PathStore.GetCollisionPlane(localStart.Z);
 
-    //        Console.WriteLine("very bad fake route for " + CP);
+    //        CollisionPlane.Debug("very bad fake route for " + CP);
     //        return route;
     //    }
 
@@ -349,7 +349,7 @@ namespace PathSystem3D.Navigation
     //                if (b < SimPathStore.BLOCKED) return v3;
     //            }
     //        }
-    //        Console.WriteLine("Clearing area " + swp);
+    //        CollisionPlane.Debug("Clearing area " + swp);
     //        SetNodeQualityTimer(v3, SimPathStore.MAYBE_BLOCKED, 30);
     //        for (float distance = PathStore.StepSize; distance < useDist * 1.5; distance += PathStore.StepSize)
     //        {
@@ -483,7 +483,7 @@ namespace PathSystem3D.Navigation
     //        float dist = Vector3.Distance(v3, swp.GetSimPosition());
     //        if (!swp.Passable)
     //        {
-    //            Console.WriteLine("CreateClosestWaypoint: " + v3 + " <- " + dist + " -> " + swp + " " + this);
+    //            CollisionPlane.Debug("CreateClosestWaypoint: " + v3 + " <- " + dist + " -> " + swp + " " + this);
     //        }
     //        return swp;
     //    }
@@ -506,7 +506,7 @@ namespace PathSystem3D.Navigation
     //            // if (TerrainBaked) return;
     //            TerrainBaked = true;
 
-    //            Console.WriteLine("ScanTerrainBlockages: {0}", RegionName);
+    //            CollisionPlane.Debug("ScanTerrainBlockages: {0}", RegionName);
     //            float WH = WaterHeight;
     //            float LastHieght = GetGroundLevel(0, 0);
     //            return;

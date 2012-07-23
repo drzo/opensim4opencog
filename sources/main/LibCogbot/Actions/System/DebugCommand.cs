@@ -27,7 +27,7 @@ namespace Cogbot.Actions.System
                 return Success("Logging is " + Settings.LOG_LEVEL);
 
             string match = args[0].ToLower();
-            int level = -1;
+            int level = -2;
             foreach (var s in typeof(Helpers.LogLevel).GetFields(BindingFlags.Static | BindingFlags.Public))
             {
                 level++;

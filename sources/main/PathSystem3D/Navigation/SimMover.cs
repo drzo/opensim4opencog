@@ -414,7 +414,7 @@ namespace PathSystem3D.Navigation
         public void Debug(string p, params object[] args)
         {
             string s = String.Format(String.Format("[MOVER] {0} for {1}", p, this.ToString()), args);
-            //Console.WriteLine(Mover+ "> " +s);            
+            //CollisionPlane.Debug(Mover+ "> " +s);            
             Mover.Debug(s);
         }
 

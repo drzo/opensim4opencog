@@ -602,7 +602,7 @@ namespace PathSystem3D.Navigation
                 Vector3d GlobalPos = PathStore.LocalToGlobal(from);
                 if (GlobalPos.X < 256 || GlobalPos.Y < 256)
                 {
-                    Console.WriteLine("bad global " + GlobalPos);
+                    CollisionPlane.Debug("bad global " + GlobalPos);
                 }
                 WP = new SimWaypointImpl(from, GlobalPos, CI, CP, PathStore);
                 WP.IsPassable = true;

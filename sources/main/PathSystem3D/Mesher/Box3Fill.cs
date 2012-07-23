@@ -425,7 +425,7 @@ namespace PathSystem3D.Mesher
             int t2 = Environment.TickCount;
             int c0 = s0.Count;
             int c1 = s1.Count;
-            Console.WriteLine("\nSimplify {0} S0={1}/{2}  S1={3}/{4}  ", bc, t1 - t0, c0, t2 - t1, c1);
+            CollisionPlane.Debug("Simplify {0} S0={1}/{2}  S1={3}/{4}  ", bc, t1 - t0, c0, t2 - t1, c1);
             if (c1 < c0) return s1;
             return s0;
         }

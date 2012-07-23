@@ -944,6 +944,10 @@ namespace MushDLR223.Utilities
 
         static public void WriteNewLine(ConsoleColor senderColor, string sender, ConsoleColor color, string format, params object[] args)
         {
+            if (sender=="COMMAND")
+            {
+                var c = CurrentCaller;
+            }
             lock (cmdline) lock (m_syncRoot)
                 {
                     if (m_cursorYPosition != -1)
@@ -1684,7 +1688,8 @@ namespace MushDLR223.Utilities
             if (!format.StartsWith("["))
             {
                 int fc = format.IndexOf(":");
-                if (fc > 1)
+                var formatlow = format.ToLower();
+                if (fc > 1 && !formatlow.StartsWith("succ") && !formatlow.StartsWith("fail"))
                 {
                     prefix = format.Substring(0, fc);
                     if (prefix.Contains(" "))
@@ -1745,9 +1750,9 @@ namespace MushDLR223.Utilities
         private static bool SkipStackTracesBusy = false;
         public static string FindCallerInStack(HashSet<MemberInfo> transparentCallers, HashSet<MemberInfo> opacheCallers, bool useMethodName)
         {
-            if (SkipStackTraces) return "FindCallerInStack";
+            if (SkipStackTraces) return "SkipFindCallerInStack";
             if (SkipStackTracesBusy) return "FindCallerInStackBusy";
-            SkipStackTracesBusy = true;
+            //SkipStackTracesBusy = true;
             var st = new System.Diagnostics.StackTrace(true).GetFrames();
             if (st == null)
             {
@@ -1755,7 +1760,9 @@ namespace MushDLR223.Utilities
                 return "NULL";
             }
             {
-                for (int i = 0; i < st.Length; i++)
+                int startAt = transparentCallers == null ? 0 : 2;
+                MemberInfo typeSkipped = null;
+                for (int i = startAt; i < st.Length; i++)
                 {
                     StackFrame s = st[i];
                     var m = s.GetMethod();
@@ -1763,6 +1770,8 @@ namespace MushDLR223.Utilities
                     {
                         var caller = ResolveType(m);
                         if (caller == null) continue;
+                        if (typeSkipped == caller) continue;
+                        typeSkipped = caller;
                         if (opacheCallers == null) opacheCallers = OpacheCallers;
                         lock (opacheCallers)
                         {
@@ -1776,7 +1785,12 @@ namespace MushDLR223.Utilities
                         }
                     }
                     SkipStackTracesBusy = false;
-                    return CallerName(s, useMethodName);
+                    string cn = CallerName(s, useMethodName);
+                    if (cn=="COMMAND")
+                    {
+                        continue;
+                    }
+                    return cn;
                 }
             }
             SkipStackTracesBusy = false;
@@ -1837,10 +1851,13 @@ namespace MushDLR223.Utilities
 
         private static MemberInfo ResolveType(MemberInfo type)
         {
+            bool foundType = false;
             while (type.DeclaringType != null && type.DeclaringType != type)
             {
+                foundType = true;
                 type = type.DeclaringType;
             }
+            if (foundType) return type;
             while (type.ReflectedType != null && type.ReflectedType != type)
             {
                 type = type.ReflectedType;
@@ -1948,6 +1965,8 @@ namespace MushDLR223.Utilities
                                                                           typeof (MethodBase),
                                                                           typeof (TaskQueueHandler),
                                                                           typeof (ExecutionContext),
+                                                                          typeof (EventHandler),
+                                                                          typeof (EventHandler<>)
                                                                       };
 
         public static readonly HashSet<MemberInfo> OpacheCallers = new HashSet<MemberInfo>()
