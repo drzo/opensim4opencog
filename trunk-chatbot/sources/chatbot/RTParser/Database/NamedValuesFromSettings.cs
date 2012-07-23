@@ -68,7 +68,7 @@ namespace RTParser.Database
                 writeToLog("SETTINGS OVERRIDE " + gResult);
                 succeed = true;
                 realName = realNameG;
-                return gResult;
+               // return gResult;
             }
             string sresultGet = resultGet.ToValue(query);
 
