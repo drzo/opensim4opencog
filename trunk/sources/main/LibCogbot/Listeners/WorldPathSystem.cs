@@ -32,6 +32,7 @@ namespace Cogbot
 
         public static readonly List<ulong> MaintainSimCollisionsList = new List<ulong>();
         public static GridClient GridClientMaster;
+        public static bool DebugPathSystem = false;
 
         public static bool MaintainSimCollisions(ulong handle)
         {
@@ -140,7 +141,7 @@ namespace Cogbot
                         }
                     }
                     occUpdate++;
-                    if (occUpdate % 100 == 0)
+                    if (occUpdate % 100 == 0 && DebugPathSystem)
                     {
                         DLRConsole.DebugWrite("." + occUpdate);
                         DLRConsole.SystemFlush();
@@ -157,18 +158,18 @@ namespace Cogbot
 
         private static void Debug(string p)
         {
-            DLRConsole.DebugWriteLine(p);
+            if (DebugPathSystem) DLRConsole.DebugWriteLine(p);
         }
 
         private void Error(string p)
         {
             DLRConsole.DebugWriteLine(p);
-            throw new NotImplementedException();
         }
 
         internal void UpdateFromImage(System.Drawing.Image I)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException("UpdateFromImage we use 3d not 2d " + 
+            I);
         }
 
         public void Dispose()
