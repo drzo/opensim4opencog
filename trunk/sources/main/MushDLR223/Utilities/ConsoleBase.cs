@@ -1761,16 +1761,19 @@ namespace MushDLR223.Utilities
                     var m = s.GetMethod();
                     if (m != null)
                     {
-                        MemberInfo caller = m.ReflectedType ?? m.DeclaringType;
+                        var caller = ResolveType(m);
                         if (caller == null) continue;
-                        caller = ResolveType(m);
-
+                        if (opacheCallers == null) opacheCallers = OpacheCallers;
+                        lock (opacheCallers)
+                        {
+                            if (IsTypeOf(caller, opacheCallers)) return CallerName(s, useMethodName);
+                        }
                         if (transparentCallers == null)
                             transparentCallers = TransparentCallers;
-                        lock (transparentCallers) if (transparentCallers.Contains(caller)) continue;
-                        if (opacheCallers != null)
-                            lock (opacheCallers) if (opacheCallers.Contains(caller))
-                                    return CallerName(s, useMethodName);
+                        lock (transparentCallers)
+                        {
+                            if (IsTypeOf(caller, transparentCallers)) continue;
+                        }
                     }
                     SkipStackTracesBusy = false;
                     return CallerName(s, useMethodName);
@@ -1778,6 +1781,26 @@ namespace MushDLR223.Utilities
             }
             SkipStackTracesBusy = false;
             return CallerName(st[st.Length - 1], useMethodName);
+        }
+
+        private static bool IsTypeOf(MemberInfo caller, HashSet<MemberInfo> transparentCallers)
+        {
+            if (transparentCallers.Contains(caller)) return true;
+            Type ct = caller as Type;
+            if (ct != null)
+            {
+                bool cont = false;
+                foreach (MemberInfo set in transparentCallers)
+                {
+                    Type t = set as Type;
+                    if (t == null) continue;
+                    if (t.IsAssignableFrom(ct))
+                    {
+                        return true;
+                    }
+                }          
+            }
+            return false;
         }
 
         private static string CallerName(StackFrame frame, bool useMethodName)
@@ -1920,11 +1943,16 @@ namespace MushDLR223.Utilities
                                                                           typeof (SystemConsole),
                                                                           typeof (OutputDelegateWriter),
                                                                           typeof (TextFilter),
+                                                                          typeof (RuntimeMethodHandle),
+                                                                          typeof (MethodInfo),
+                                                                          typeof (MethodBase),
                                                                           typeof (TaskQueueHandler),
+                                                                          typeof (ExecutionContext),
                                                                       };
 
         public static readonly HashSet<MemberInfo> OpacheCallers = new HashSet<MemberInfo>()
                                                               {
+                                                                  typeof (ScriptedCommand),
                                                               };
 
         private TextWriter NULL_OUTPUT = new NULL_OUTPUT_TW();

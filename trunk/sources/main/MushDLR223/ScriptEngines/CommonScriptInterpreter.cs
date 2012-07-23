@@ -7,6 +7,10 @@ using MushDLR223.Utilities;
 
 namespace MushDLR223.ScriptEngines
 {
+    public interface ScriptedCommand
+    {
+    }
+
     abstract public class CommonScriptInterpreter
     {
 

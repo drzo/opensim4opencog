@@ -200,7 +200,6 @@ namespace Cogbot
             lock (col)
             {
                 col.Add(typeof(BotClient));
-                col.Add(typeof(Command));
                 col.Add(typeof(ClientManager));
                 col.Add(typeof(Cogbot.SimEventMulticastPipeline));
                 col.Add(typeof(Cogbot.SimEventTextSubscriber));
