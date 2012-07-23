@@ -115,7 +115,7 @@ namespace Cogbot.Actions
     public interface BotStatefullCommand : BotCommand, IDisposable
     {
     }
-    public interface BotCommand
+    public interface BotCommand : MushDLR223.ScriptEngines.ScriptedCommand
     {
     }
 
