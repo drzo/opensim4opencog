@@ -599,7 +599,7 @@ namespace Cogbot.World
                  {
                      if (!IsSitting && Vector3.Distance(pos, theAvatar.Position) > 3)
                      {
-                         Debug("wrong pos");
+                         if (Debug != null) Debug("wrong pos");
                          return false;
                      }
                  }
