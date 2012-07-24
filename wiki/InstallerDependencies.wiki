@@ -60,9 +60,7 @@ root@titan current]# pwd
 /mnt/enki/development/opensim4opencog/current
 
 
-[root@titan current]# rsync --inplace -vc *.zip root@pathwayslms.com:/var/www/co                                              gbot/install/cogbot/
-root@pathwayslms.com's password:
-Permission denied, please try again.
+[root@titan current]# rsync --inplace -vc *.zip root@pathwayslms.com:/var/www/cogbot/install/cogbot/
 root@pathwayslms.com's password:
 cogbot-core-patches.zip
 cogbot-prolog.zip
@@ -70,4 +68,5 @@ cogbot-prolog.zip
 sent 3751279 bytes  received 22256 bytes  82934.84 bytes/sec
 total size is 121918864  speedup is 32.31
 
+[root@titan current]#
 }}}
