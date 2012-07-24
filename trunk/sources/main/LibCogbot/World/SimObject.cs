@@ -1070,21 +1070,84 @@ namespace Cogbot.World
                 return needUpdate;
             }
         }
-        private void EnsureProperties()
+        public bool EnsureProperties(TimeSpan block)
         {
             if (needUpdate)
             {
-                if (_propertiesCache != null) UpdateProperties(_propertiesCache);
-                else
+                if (_propertiesCache != null)
                 {
-
+                    UpdateProperties(_propertiesCache);
+                    return true;
+                }
+                else                {
                     if (RegionHandle != 0 && _Prim0 != null)
                     {
-                        WorldObjects.EnsureSelected(LocalID, GetSimulator());
+                        Simulator simulator = GetSimulator();
+                        if (!WorldObjects.NeverSelect(LocalID, simulator)) return true;
+                        return WaitForUpdate(() => WorldObjects.ReallyEnsureSelected(GetSimulator(), LocalID), block);  
                     }
+                    return false;
                 }
+            } else
+            {
+                return ForceUpdateIfOld(block);
             }
         }
+
+        private bool WaitForUpdate(Action action, TimeSpan block)
+        {
+            if (block == default(TimeSpan) || block == TimeSpan.MinValue)
+            {
+                action();
+                return true;
+            }
+            var mre = new ManualResetEvent(false);
+            EventHandler<ObjectPropertiesEventArgs> foo = (s, e) =>
+                                                              {
+                                                                  if (e.Properties.ObjectID == ID)
+                                                                  {
+                                                                      try
+                                                                      {
+                                                                          mre.Set();
+                                                                      }
+                                                                      catch (Exception)
+                                                                      {
+                                                                      }
+                                                                  }
+                                                              };
+            Client.Objects.ObjectProperties += foo;
+            try
+            {
+                action();
+            }
+            finally
+            {
+                Client.Objects.ObjectProperties -= foo;
+            }
+            return mre.WaitOne(block);
+        }
+
+        [ConfigSetting(Description = "how long properties last before being considered needing re-select")]
+        public static TimeSpan PropertiesStaleTime = TimeSpan.FromSeconds(30);
+        private DateTime LastUpdateTime = DateTime.MinValue;
+        public bool ForceUpdateIfOld(TimeSpan block)
+        {
+            if (DateTime.Now.Subtract(LastUpdateTime) < PropertiesStaleTime) return true;
+            return ForceUpdate(block);
+        }
+
+        public bool ForceUpdate(TimeSpan block)
+        {
+
+            if (RegionHandle != 0 && _Prim0 != null)
+            {
+                needUpdate = true;
+                _propertiesCache = null;
+                return WaitForUpdate(() => WorldObjects.ReallyEnsureSelected(GetSimulator(), LocalID), block);                
+            }
+            return false;
+        }
+
         protected bool WasKilled;
 
         public virtual bool IsKilled
@@ -1378,6 +1441,7 @@ namespace Cogbot.World
                     _propertiesCache = objectProperties;
                     if (Prim != null && Prim.Properties == null) Prim.Properties = objectProperties;
                     needUpdate = false;
+                    LastUpdateTime = DateTime.Now;
                     Affordances.UpdateFromProperties(objectProperties);
                     AddInfoMap(objectProperties, "ObjectProperties");
                 }
@@ -2016,6 +2080,7 @@ namespace Cogbot.World
 
         public virtual bool Matches(string name)
         {
+            EnsureProperties(default(TimeSpan));
             string toString1 = ToString();
             return SimTypeSystem.MatchString(toString1, name);
         }
@@ -2093,6 +2158,7 @@ namespace Cogbot.World
 
         public virtual string GetName()
         {
+            EnsureProperties(default(TimeSpan));
             if (_propertiesCache != null)
             {
                 String s = _propertiesCache.Name;
@@ -2689,6 +2755,9 @@ namespace Cogbot.World
             /// </summary>
             public float scaleOnNeeds = 1.11F;
 
+            [ConfigSetting(Description = "how long affordance system will wait for object properties")]
+            public static TimeSpan AffordanceWaitProps = TimeSpan.FromSeconds(5);
+
             public SimObjectType IsTypeOf(SimObjectType superType)
             {
                 return ObjectType.IsSubType(superType);
@@ -2707,7 +2776,7 @@ namespace Cogbot.World
             public List<SimObjectUsage> GetUsages()
             {
                 List<SimObjectUsage> uses = new List<SimObjectUsage>();
-                thiz.EnsureProperties();
+                thiz.EnsureProperties(AffordanceWaitProps);
                 foreach (SimTypeUsage typeUse in ObjectType.GetTypeUsages())
                 {
                     uses.Add(new SimObjectUsage(typeUse, thiz));
@@ -2732,14 +2801,14 @@ namespace Cogbot.World
 
             public BotNeeds GetActualUpdate(string pUse)
             {
-                thiz.EnsureProperties();
+                thiz.EnsureProperties(AffordanceWaitProps);
                 return ObjectType.GetUsageActual(pUse).Magnify(scaleOnNeeds);
             }
 
 
             public SimTypeUsage GetBestUse(BotNeeds needs)
-            {                
-                thiz.EnsureProperties();
+            {
+                thiz.EnsureProperties(AffordanceWaitProps);
 
                 IList<SimTypeUsage> all = ObjectType.GetTypeUsages();
                 if (all.Count == 0) return null;
@@ -2764,7 +2833,7 @@ namespace Cogbot.World
 
             public BotNeeds GetProposedUpdate(string pUse)
             {
-                thiz.EnsureProperties();
+                thiz.EnsureProperties(AffordanceWaitProps);
                 return ObjectType.GetUsagePromise(pUse).Magnify(scaleOnNeeds);
             }
 
@@ -3402,5 +3471,7 @@ namespace Cogbot.World
         bool IsTemporary { get; set; }
 
         void StartGetTaskInventory();
+
+        bool EnsureProperties(TimeSpan block);
     }
 }
