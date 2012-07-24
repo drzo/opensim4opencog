@@ -1276,6 +1276,7 @@ namespace Cogbot
             string str = string.Empty;
             if (simObject != null)
             {
+                simObject.EnsureProperties(detailed ? TimeSpan.FromSeconds(10) : default(TimeSpan));
                 if (detailed) str += simObject.DebugInfo();
                 else str += simObject.ToString();
                 str += String.Format("\n {0}", TheSimAvatar.DistanceVectorString(simObject));
@@ -1613,7 +1614,7 @@ namespace Cogbot
             return false;
         }
 
-        private static void ReallyEnsureSelected(Simulator simulator, uint LocalID)
+        public static void ReallyEnsureSelected(Simulator simulator, uint LocalID)
         {
             if (LocalID == 0) return;
             ulong Handle = simulator.Handle;
