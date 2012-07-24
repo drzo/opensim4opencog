@@ -1119,12 +1119,12 @@ namespace Cogbot.World
             try
             {
                 action();
+                return mre.WaitOne(block);
             }
             finally
             {
                 Client.Objects.ObjectProperties -= foo;
             }
-            return mre.WaitOne(block);
         }
 
         [ConfigSetting(Description = "how long properties last before being considered needing re-select")]
