@@ -152,9 +152,13 @@ add_layouts:-
 % though current_bot(OldBot) may throw if not bot is set
 % ------------------------------------------------------------------------------
 %
+
+throw_on_nobj(Var,_Why):-cli_is_object(Var),!.
+throw_on_nobj(Var,Why):-cogbot_throw(throw_on_nobj(Var,Why)).
+
 :-dynamic current_bot_db/2.
 current_bot(BotID):-thread_self(TID),current_bot_db(TID,BotID),!.
-current_bot(BotID):-client_manager_ref(Man),cli_get(Man,'LastBotClient',BotID).
+current_bot(BotID):-client_manager_ref(Man),cli_get(Man,'LastBotClient',BotID),throw_on_nobj(BotID,current_bot/1).
 
 set_current_bot(BotID):-thread_self(TID),retractall(current_bot_db(TID,_)),asserta(current_bot_db(TID,BotID)).
 
@@ -271,7 +275,7 @@ grid_parcels(Ele):-grid_region(Sim),cli_get(Sim,parcels,Objs),cli_col(Objs,Ele).
 %
 %  Clientmanager binds radegast to the Client
 %  botconfig is run from Clientmanager
-client_manager_ref(SingleInstance):-cli_get('Cogbot.ClientManager','SingleInstance',SingleInstance).
+client_manager_ref(SingleInstance):-cli_get('Cogbot.ClientManager','SingleInstance',SingleInstance),!,throw_on_nobj(SingleInstance,client_manager_ref/1).
 
 
 %% botget(+Property,-Value).
@@ -340,6 +344,7 @@ wbotcmd(BotID,StrIn,WriteDelegate,Out):-cmdargs_to_atomstr(StrIn,Str),cli_call(B
 % wrappered execute command in a convenience pred
 % cmdargs_to_atomstr(say("hi"),Out)
 %
+cmdargs_to_atomstr(C,C):-var(C),!,cogbot_throw(instantiation_error(command(C))).
 cmdargs_to_atomstr([C|Cmd],Out):-toStringableArgs(Cmd,SCmd),!,concat_atom([C|SCmd],' ',Str),cmdargs_to_atomstr(Str,Out).
 %cmdargs_to_atomstr(C,Out):-compound(C),C=..[F,A|B],is_movement_proc(F),\+ is_vector(A),\+ cli_is_type(A,'SimPosition'),
 %    name_to_location_ref(A,AA),cli_get(AA,'ID',AAA),!,CC=..[F,AAA|B],cmdargs_to_atomstr(CC,Out).
