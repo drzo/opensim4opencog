@@ -2,6 +2,7 @@
 
   # Install .NET 2.0 and 3.5 (.NET 2.0 might be optional.. i dont know) (2.0 came with visual studio 2005 and 3.5 comes with visual studio 2008)
   # install swi-prolog development version 64 and 32 bit (use at least 6.1.9)
+  # if they offer to install in c:\Program files*\swipl\ choose c:\Program files*\pl\ (we are developers so we'll just do this)
   # make sure c:\program files\pl\lib\libswipl.dll.a is there
   # make sure c:\program files (x86)\pl\lib\libswipl.dll.a is there
   # install a cmdline svn client
