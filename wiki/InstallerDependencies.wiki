@@ -62,15 +62,6 @@ root@titan current]# pwd
 
 [root@titan current]# rsync --inplace -vc *.zip root@pathwayslms.com:/var/www/co                                              gbot/install/cogbot/
 root@pathwayslms.com's password:
-cogbot-core-patches.zip
-cogbot-prolog.zip
-
-sent 5009846 bytes  received 22478 bytes  101663.11 bytes/sec
-total size is 121946507  speedup is 24.23
-[root@titan current]# name_to_location_ref('renameMe',X),cli_get(X,[prim,propert                                              ies,name],Y).
--bash: syntax error near unexpected token `'renameMe',X'
-[root@titan current]# rsync --inplace -vc *.zip root@pathwayslms.com:/var/www/co                                              gbot/install/cogbot/
-root@pathwayslms.com's password:
 Permission denied, please try again.
 root@pathwayslms.com's password:
 cogbot-core-patches.zip
