@@ -24,7 +24,7 @@ bin\\startupLisp.lisp
 
   * the server must serve http://cogbot.logicmoo.com/install/cogbot/swicli.zip which is expanded into prolog home.
 
-== building ==
+= Building to http://cogbot.logicmoo.com/install/cogbot/  =
 Douglas from windows after building on his system
 
 {{{
