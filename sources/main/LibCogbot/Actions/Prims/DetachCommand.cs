@@ -13,8 +13,8 @@ namespace Cogbot.Actions.Objects
     {
         public DetachCommand(BotClient testClient)
         {
-            Name = "attach";
-            Description = "detach a prim from specified (or default) attachment point from the world";
+            Name = "detach";
+            Description = "detach prims or specified attachment point";
             Details = "detach <all|attachmentPoint|prim> Example: /detach prim98922187";
             Category = CommandCategory.Objects;
             Parameters = new[] { new NamedParam(typeof(SimObject), typeof(UUID)) };
