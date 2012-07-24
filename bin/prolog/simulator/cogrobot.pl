@@ -157,8 +157,10 @@ throw_on_nobj(Var,_Why):-cli_is_object(Var),!.
 throw_on_nobj(Var,Why):-cogbot_throw(throw_on_nobj(Var,Why)).
 
 :-dynamic current_bot_db/2.
-current_bot(BotID):-thread_self(TID),current_bot_db(TID,BotID),!.
-current_bot(BotID):-client_manager_ref(Man),cli_get(Man,'LastBotClient',BotID),throw_on_nobj(BotID,current_bot/1).
+current_bot_nt(BotID):-thread_self(TID),current_bot_db(TID,BotID),!.
+current_bot_nt(BotID):-client_manager_ref(Man),cli_get(Man,'LastBotClient',BotID).
+
+current_bot(BotID):-current_bot_nt(BotID),throw_on_nobj(BotID,current_bot/1).
 
 set_current_bot(BotID):-thread_self(TID),retractall(current_bot_db(TID,_)),asserta(current_bot_db(TID,BotID)).
 
@@ -492,6 +494,7 @@ register_on_first_bot_client:- cli_add_event_handler('Cogbot.ClientManager','Bot
 %------------------------------------------------------------------------------
 :-dynamic(ran_sl).
 
+run_sl:-current_bot_nt(BotID),cli_is_object(BotID),wbotcmd(BotID,show_gui),!.
 run_sl:-ran_sl,!.
 % this is so you can reconsult this file without restarting radegast
 run_sl:-asserta(ran_sl),!,
