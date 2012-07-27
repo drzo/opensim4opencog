@@ -51,6 +51,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\main\Cogbot\Cogbot.csproj">
+      <Project>{1292F1A3-389E-4F2E-A27C-DD63E343DF1A}</Project>
+      <Name>Cogbot %28Cogbot\Cogbot%29</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\main\LibCogbot\Cogbot.Library.csproj">
       <Project>{14E63630-E828-446E-AE6F-F6E642DDE36D}</Project>
       <Name>Cogbot.Library</Name>

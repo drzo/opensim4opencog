@@ -34,13 +34,15 @@ do_plan_in_thread(Plan, Config) :-
 	make_directories_exist(Config),
 	retractall(current_progress_data(_)),
 	assert(current_progress_data([])),
-	do_plan_or_dont(Plan, Config),
+	do_plan_or_dont(Plan, Config).
+/*  TODO at end fix this
 	thread_create(do_plan_or_dont(Plan, Config),
 		      _,
 		      [
 		       alias(plan_execution_thread),
 		       at_exit(execute:execution_done),
 		       detached(true)]).
+*/
 
 execution_done :-
 	append_progress(finished).
@@ -60,7 +62,6 @@ append_progress_core(Item) :-
 	assert(current_progress_data(New)).
 
 do_plan_or_dont(Plan, Config) :-
-	attach_console,
 	do_plan(Plan, Config),!.
 
 do_plan_or_dont(Plan, _) :-
@@ -197,6 +198,7 @@ file_unzip(From, To) :-
 %
 
 id_abs_path(program(.), Config, NoTrail) :-
+	gtrace,
 	memberchk(install=Loc, Config),
 	prolog_to_os_filename(PLLoc, Loc),
 	trailing_slash(NoTrail, PLLoc).
@@ -315,11 +317,15 @@ plan_config_entries([Name|T] , ConfigHTML) :-
 	plan_config_entries(T, ConfigHTML).
 
 debugout(Format, Args) :-
+	format(string(S), Format, Args),
+	debug(S).
+/*
 	thread_self(main),
 	format(user_error, Format, Args).
 
 debugout(Format, Args) :-
 	thread_signal(main, format(user_error, Format, Args)).
+*/
 
 % TODO make this handle errors gracefully
 debug_exec(Plan, Config) :-
