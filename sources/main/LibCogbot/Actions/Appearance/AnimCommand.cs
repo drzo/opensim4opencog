@@ -15,6 +15,7 @@ namespace Cogbot.Actions.Appearance
         {
             TheBotClient = testClient;
             Name = "anim";
+            if (Reloading(testClient)) return;
             Description = "List or do animation or gesture on Simulator.";
             Details = AddUsage("anim", "just lists anims currently running") +
                     AddUsage("anim stopall +HOVER 5 +23423423423-4234234234-234234234-23423423 10 -CLAP",
@@ -22,12 +23,14 @@ namespace Cogbot.Actions.Appearance
 
             Category = CommandCategory.Appearance;
             ParameterVersions = CreateParamVersions(
-                CreateParams(),
                 CreateParams(
                     Optional("stopall", typeof (bool), "stops all current anims"),
                     Optional("anim_0-N", typeof (SimAnimation), "+/-animuuid"),
                     Optional("seconds", typeof (int), "how long to pause for"),
                     Optional("gesture_0-N", typeof (SimGesture), "gesture to play at this step")));
+
+            AddVersion(CreateParams(), "just lists anims currently running");
+
             ResultMap = CreateParams(
                 "ranSteps", typeof (List<string>), "list of ran steps",
                 "message", typeof (string), "if success was false, the reason why",

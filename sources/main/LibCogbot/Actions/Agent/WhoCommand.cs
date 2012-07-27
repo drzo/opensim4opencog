@@ -38,6 +38,7 @@ namespace Cogbot.Actions.Agent
         public WhoCommand(BotClient testClient)
         {
             Name = "Who";
+            if (Reloading(testClient)) return;
             Description = "Lists seen avatars.";
             Category = CommandCategory.Other;
             AddVersion(CreateParams(), Description);
