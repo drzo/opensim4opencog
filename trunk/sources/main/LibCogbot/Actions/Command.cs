@@ -227,7 +227,7 @@ namespace Cogbot.Actions
 
     }
 
-    public abstract class Command : IComparable
+    public abstract partial class Command : IComparable
     {
         public bool IsStateFull;
         public CommandCategory Category;
@@ -931,6 +931,16 @@ namespace Cogbot.Actions
                 usage += " " + argstring;
             }
             return AddUsage(usage, description);
+        }
+
+        protected bool Reloading(BotClient client)
+        {
+            return false;
+        }
+
+        protected void DefaultResultMap()
+        {
+           /// throw new NotImplementedException();
         }
     }
 }

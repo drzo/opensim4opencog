@@ -77,6 +77,7 @@
 
    ;;; Settings that are ran in ClientManager such as create-botclient
     (load "personalAccts.lisp")
+    (setj installed_components '())
     (load "personalInstallConfig.lisp")
 
 	(interpreter.InternTypesFrom (System.Reflection.Assembly:LoadWithPartialName "System.Web"))
@@ -93,17 +94,17 @@
   </startupLisp>
   <startupClientLisp>
 
-  
+    (setj installed_components '())
+    (load "personalInstallConfig.lisp")
+
     (setj UseAIMLBotModule False)
     (setj UseCycWorldModule False)
     (setj UseTheSimiansModule False)
-    (setj UseIRCModule False)
+    (setj UseIRCModule (member "irc" installed_components))
     (setj UsePrologScripting False)
-    (setj UseAutoLogin False)
+    (setj UseAutoLogin True)
     (setj UseGUI  False)
     (setj MasterName "Nephrael Rajesh")
-
-    (load "personalInstallConfig.lisp")
 
     '(if UseGUI (thisClient.ExecuteCommand "showgui tray")) ;; minimize radegast to tray - not good on mono becasue the hwnd not created
 

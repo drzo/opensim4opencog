@@ -50,13 +50,13 @@ namespace Cogbot.Actions.Agent
         {
 
             Name = "Profile Clone";
+            if (Reloading(testClient)) return;
+
             Description = "Copies another avatars profile as closely as possible onto your existing profile. WARNING: This command will destroy your existing profile!";
             Category = CommandCategory.Other;
             AddVersion(CreateParams("agent", typeof(UUID), "agent you are going to " + Name),
                        "copies the profile specified by agent's uuid");
-            ResultMap = CreateParams(
-                "reason", typeof(string), "if success was false, the reason why",
-                "success", typeof(bool), "true if command was successful");
+             DefaultResultMap();
         }
 
         #region Implementation of IDisposable
