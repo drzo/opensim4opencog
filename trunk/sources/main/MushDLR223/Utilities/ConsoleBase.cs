@@ -971,9 +971,12 @@ namespace MushDLR223.Utilities
                     string[] safeFormatSplit = safeFormat.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
                     foreach (var argsFmt in safeFormatSplit)
                     {
-                        WriteEachLine(senderColor, sender, color, argsFmt.Trim(trim));
-                        if (m_cursorYPosition != -1)
-                            m_cursorYPosition = CursorTop;
+                        ExecWithMaxTime(() =>
+                                            {
+                                                WriteEachLine(senderColor, sender, color, argsFmt.Trim(trim));
+                                                if (m_cursorYPosition != -1)
+                                                    m_cursorYPosition = CursorTop;
+                                            }, 2000);
                     }
                 }
         }
@@ -1524,7 +1527,7 @@ namespace MushDLR223.Utilities
             }
         }
 
-        private static int DebugLevel = 0;
+        public static int DebugLevel = 0;
         public static void DebugWriteLine(string format, params object[] args)
         {
             string printStr = TheConsole.SafeFormat(format, args);
@@ -1537,7 +1540,7 @@ namespace MushDLR223.Utilities
             if (printStr == null) return;
             string sender;
             string getCallerFormat = GetCallerFormat(printStr, out sender);
-            WriteNewLine(DeriveColor(sender), sender, ConsoleColor.Gray, "{0}", printStr);
+            ExecWithMaxTime(() => WriteNewLine(DeriveColor(sender), sender, ConsoleColor.Gray, "{0}", printStr), 2000);
             return;
         }
 
