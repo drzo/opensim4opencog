@@ -1,5 +1,23 @@
 :-module(testpathfind, [tpf_method/1, tpf/0, tpf/1, tpf1/0,tpf2/0,tpfi/0, makePipe/2, tpfa/0]).
 
+%
+% Change this line to cd to cogbot/bin directory on your system
+%  the exists_file is so it doesn't do it again when reconsulted
+:- exists_file('testpathfind.pl') -> cd('../bin') ; true.
+
+%% add to search paths
+assertIfNewRC(Gaf):-catch(call(Gaf),_,fail),!.
+assertIfNewRC(Gaf):-asserta(Gaf).
+
+%
+%  These lines need adjusted if you've moved this file
+%
+:- assertIfNewRC(user:file_search_path(library, '.')).
+:- assertIfNewRC(user:file_search_path(test, '../test')).
+:- assertIfNewRC(user:file_search_path(cogbot, './prolog/simulator')).
+:- assertIfNewRC(user:file_search_path(cogbot, './prolog')).
+:- assertIfNewRC(user:file_search_path(library, './prolog')).
+
 
 :- use_module(test(testsupport)).
 :-use_module(library(swicli)).
@@ -57,7 +75,7 @@ move_test(N, Time , Start , End) :-
         dbgFmt('starting test ~w~n',[N]),
         start_test(N),
 	goByMethod(Loc),
-        botapi(waitpos(Time,End)).        
+        botapi(waitpos(Time,End)).
 
 
 % this is just to debug the test framework with
