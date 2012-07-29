@@ -32,6 +32,7 @@ with these items
  * Bug list reasonably clean 
  * Sims working
  * some tale-spinnish thing
+ * termified botCmd returns
 
 ==== TODO GENERAL ====
 
