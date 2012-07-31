@@ -78,19 +78,19 @@ redir_to_start(Request) :-
 	user:body//2.
 
 user:head(cogbot_web_style , Head) -->
-	html([\Head,
+	html(head([], [\Head,
 	      \html_head
-	     ]).
+	     ])).
 
 user:body(cogbot_web_style , Body) -->
-	html([
+	html(body([], [
 	    div(id=surround, [
 		        div(id=content, [
 			    \nav,
 			    \Body
 			])
 		    ])
-	     ]).
+	     ])).
 
 user:head(cogbot_web_style_refresh , Head) -->
 	html([\Head,
