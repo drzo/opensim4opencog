@@ -255,12 +255,13 @@ namespace Cogbot
 
 
         readonly Dictionary<Assembly, List<Listener>> KnownAssembies = new Dictionary<Assembly, List<Listener>>();
+        private readonly HashSet<Type> UsedAutoLoad = new HashSet<Type>();
         public void InvokeAssembly(Assembly assembly, string args, OutputDelegate output)
         {
-            RegisterAssembly(assembly);
+            LoadListeners(assembly);
             InvokeNext("", () =>
                                {
-                                   foreach (Listener item in RegisterAssembly(assembly))
+                                   foreach (Listener item in LoadListeners(assembly))
                                    {
                                        item.InvokeCommand(args, output);
                                        RegisterListener(item);
@@ -298,7 +299,7 @@ namespace Cogbot
             return found;
         }
 
-        public List<Listener> RegisterAssembly(Assembly assembly)
+        public List<Listener> LoadListeners(Assembly assembly)
         {
             ClientManager.RegisterAssembly(assembly);
             List<Listener> items = null;
@@ -317,8 +318,16 @@ namespace Cogbot
             {
                 try
                 {
-                    if (t.IsSubclassOf(typeof(WorldObjectsModule)))
+                    if (t.IsSubclassOf(typeof(WorldObjectsModule)) && !typeof(NotAutoLoaded).IsAssignableFrom(t))
                     {
+                        if (typeof(YesAutoLoad).IsAssignableFrom(t))
+                        {
+                            lock(UsedAutoLoad)
+                            {
+                                if (UsedAutoLoad.Contains(t)) continue;
+                                UsedAutoLoad.Add(t);
+                            }
+                        }
                         ConstructorInfo info = t.GetConstructor(new Type[] { typeof(BotClient) });
                         try
                         {
@@ -655,6 +664,47 @@ namespace Cogbot
                             _gridClient = gc;
                         }
                     }
+                }
+                try
+                {
+                    if (t.IsSubclassOf(typeof(WorldObjectsModule)) && typeof(YesAutoLoad).IsAssignableFrom(t))
+                    {
+                        ConstructorInfo info = t.GetConstructor(new Type[] { typeof(BotClient) });
+                        try
+                        {
+                            InvokeNext("AutoLoad WorldObjectsModule " + t, () =>
+                            {
+                                try
+                                {
+                                    lock (UsedAutoLoad)
+                                    {
+                                        if (UsedAutoLoad.Contains(t))
+                                        {
+                                            return;
+                                        }
+                                        UsedAutoLoad.Add(t);
+                                    }
+                                    Listener item = (Listener)info.Invoke(new object[] { this });
+                                    RegisterListener(item);
+                                }
+                                catch (Exception e1)
+                                {
+                                    e1 = ScriptManager.InnerMostException(e1);
+                                    LogException("ERROR! RegisterListener: " + e1 + "\n In " + Thread.CurrentThread.Name, e1);
+                                }
+                            });
+
+                        }
+                        catch (Exception e)
+                        {
+                            e = ScriptManager.InnerMostException(e);
+                            LogException("ERROR! RegisterListener: " + e + "\n In " + t.Name, e);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    WriteLine(e.ToString());
                 }
             }
             catch (Exception e)

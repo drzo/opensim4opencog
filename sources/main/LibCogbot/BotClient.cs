@@ -363,13 +363,14 @@ namespace Cogbot
             VoiceManager = new VoiceManager(gridClient);
             //manager.AddBotClientToTextForm(this);
 
-            botPipeline = new SimEventMulticastPipeline(GetName());
-            OneAtATimeQueue = new TaskQueueHandler(this, new TimeSpan(0, 0, 0, 0, 10), true, true);
+            botPipeline = new SimEventMulticastPipeline(this);
+            OneAtATimeQueue = new TaskQueueHandler(new NamedPrefixThing("OneAtATimeQueue", GetName), new TimeSpan(0, 0, 0, 0, 10),
+                                                   true, true);
 
             SetSecurityLevel(OWNERLEVEL, null, BotPermissions.Owner);
             ClientManager.PostAutoExecEnqueue(OneAtATimeQueue.Start);
 
-            botPipeline.AddSubscriber(new SimEventTextSubscriber(WriteLine, this));
+            botPipeline.AddSubscriber(new SimEventTextSubscriber(SimEventWriteLine, this));
             // SingleInstance = this;
             ///this = this;// new GridClient();
 
@@ -819,6 +820,10 @@ namespace Cogbot
             {
                 Logger.Log(GetName() + " WriteLine Exception " + ex, Helpers.LogLevel.Error, ex);
             }
+        }
+        public void SimEventWriteLine(string str, params object[] args)
+        {
+            WriteLine(str, args);
         }
         public void WriteLine(string str, params object[] args)
         {

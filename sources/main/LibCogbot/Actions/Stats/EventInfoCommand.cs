@@ -24,7 +24,7 @@ namespace Cogbot.Actions.Inventory
                 "object", typeof (PrimSpec),
                 "The objects whose events we want, as specified in " + Htmlize.WikiBC("Prim Spec"));
             ResultMap = CreateParams(
-                 "events", typeof(List<SimObjectEvent>), "List of events that transpired on the objects",
+                 "events", typeof(List<CogbotEvent>), "List of events that transpired on the objects",
                  "message", typeof(string), "if success was false, the reason why",
                  "success", typeof(bool), "true if we got the events");
         }
@@ -94,7 +94,7 @@ namespace Cogbot.Actions.Inventory
                 lock (ActionEventQueue)
                 {
                     s += " ActionCount= " + ActionEventQueue.Count;
-                    foreach (SimObjectEvent s1 in ActionEventQueue)
+                    foreach (CogbotEvent s1 in ActionEventQueue)
                     {
                         wl(s1.ToEventString());
                     }

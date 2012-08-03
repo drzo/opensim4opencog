@@ -63,13 +63,7 @@ namespace Cogbot.Actions
         Money,
         Security
     }
-    /// <summary>
-    /// Ensure the reflection API is not used to load this command
-    /// The command is loaded likely byu the plugin 
-    /// </summary>
-    public interface NotAutoLoaded : BotCommand
-    {
-    }
+
     /// <summary>
     /// An interface for commands is only invoked on Region mastering bots
     /// Such as terrain uploads and simulator info (10 bots doing the command at once will create problems)

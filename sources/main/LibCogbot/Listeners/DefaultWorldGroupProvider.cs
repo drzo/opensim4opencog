@@ -109,7 +109,7 @@ namespace Cogbot
         private static IList GetTargetInEvent(List<SimPosition> v, SimObject master)
         {
             var ae = ((SimObject)master).ActionEventQueue;
-            if (ae != null) foreach (SimObjectEvent e in ae)
+            if (ae != null) foreach (CogbotEvent e in ae)
                 {
                     var t = e["target"] as SimPosition;
                     if (t != null)

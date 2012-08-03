@@ -52,8 +52,15 @@ namespace MushDLR223.Utilities
         public readonly List<Thread> InteruptableThreads = new List<Thread>();
 
         //public delegate ThreadStart NameThreadStart(string named, ThreadStart action);
-
-        public object Name;
+        public string Name
+        {
+            get
+            {
+                if (_Name is Func<string>) return ((Func<string>) _Name)();
+                return "" + _Name;
+            }
+        }
+        public object _Name;
         //static private readonly TASK NOP;
         private readonly AutoResetEvent WaitingOn = new AutoResetEvent(false);
         //private readonly AutoResetEvent IsCurrentTaskStarted = new AutoResetEvent(false);
@@ -240,7 +247,7 @@ namespace MushDLR223.Utilities
             : this(str, TimeSpan.FromMilliseconds(msWaitBetween), true)
         {
         }
-        */
+        */        
 
         public TaskQueueHandler(object named, TimeSpan msWaitBetween, bool autoStart)
             : this(named, msWaitBetween, TimeSpan.MaxValue, autoStart, true)
@@ -255,6 +262,7 @@ namespace MushDLR223.Utilities
 
         public TaskQueueHandler(object str, TimeSpan msWaitBetween, TimeSpan maxPerOperation, bool autoStart, bool doDebug)
         {
+            _Name = str;
             System.Diagnostics.Debug.Listeners.Clear();
             NeverStart = !doDebug;
             NeverStart = false;
@@ -270,7 +278,6 @@ namespace MushDLR223.Utilities
             lock (TaskQueueHandlers)
             {
                 SinceLastTaskStarted.End = SinceLastTaskStarted.Start;
-                Name = str;
                 TaskQueueHandlers.Add(this);
 
                 // 1ms min - ten minutes max

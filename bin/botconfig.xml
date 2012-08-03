@@ -110,32 +110,34 @@
 
     (thisClient.ExecuteCommand "debug Debug")
     (thisClient.ExecuteCommand "load CogbotRadegastPluginModule")
+    (thisClient.ExecuteCommand "load RoboKindAvroQPIDPluginModule")
     (thisClient.ExecuteCommand "load ABCLInterpreterModule")
     
 
+
     (if UsePrologScripting (thisClient.ExecuteCommand "load PrologBotModule"))
 
-    (if UseIRCModule 
-      (progn 
-         (thisClient.ExecuteCommand "load IrcRegionModule")
-        (thisClient.ExecuteCommand "thread irc #logicmoo-cogbot cogbot_ irc.freenode.net")  ;; to connect to IRC
-        ))
-
-
-     (if UseCycWorldModule (thisClient.ExecuteCommand "load CycWorldModule"))
-     (if UseTheSimiansModule (thisClient.ExecuteCommand "load TheSimiansModule"))
-     (thisClient.ExecuteCommand "debug Debug")
-
-
-
-;; log into Secondlife
-(if UseAutoLogin
+    (if UseIRCModule
     (progn
-        (thisClient.ExecuteCommand "login")  ;; does the login if the user didnt press the button
-        (thisClient.ExecuteCommand "waitforlogin 60") ;; wait for the auto-login (1 minute)
+    (thisClient.ExecuteCommand "load IrcRegionModule")
+    (thisClient.ExecuteCommand "thread irc #logicmoo-cogbot cogbot_ irc.freenode.net")  ;; to connect to IRC
     ))
 
-</startupClientLisp>
+
+    (if UseCycWorldModule (thisClient.ExecuteCommand "load CycWorldModule"))
+    (if UseTheSimiansModule (thisClient.ExecuteCommand "load TheSimiansModule"))
+    (thisClient.ExecuteCommand "debug Debug")
+
+
+
+    ;; log into Secondlife
+    (if UseAutoLogin
+    (progn
+    (thisClient.ExecuteCommand "login")  ;; does the login if the user didnt press the button
+    (thisClient.ExecuteCommand "waitforlogin 60") ;; wait for the auto-login (1 minute)
+    ))
+
+  </startupClientLisp>
   <onLogin>
 
  (if UseAIMLBotModule

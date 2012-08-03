@@ -42,8 +42,30 @@ namespace Cogbot.World
     {
     }
 
+    public interface CogbotEvent : BotMentalAspect
+    {
+        string Verb { get; }
+        SimEventStatus EventStatus { get; }
+        NamedParam[] Parameters { get; }
+        SimEventType EventType { get; }
+        SimEventClass EventClass { get; }
+        string EventName { get; }
+        long Serial { get; set; }
+        DateTime Time { get; }
+        void AddParam(string name, object value);
+        object[] GetArgs();
+        object GetArg(int i);
+        object this[string target] { get; }
+        bool SameAs(CogbotEvent lastEvent);
+        string ToEventString();
+        void SendTo(SimEventSubscriber subscriber);
+        string GetVerb();
+        string[] ParameterNames();
+        object Sender { get; set; }
+    }
+
     [XmlType(TypeName = "simObjectEvt")]
-    public class SimObjectEvent : EventArgs, BotMentalAspect
+    public class ACogbotEvent : EventArgs, CogbotEvent
     {
         public UUID ID
         {
@@ -70,14 +92,14 @@ namespace Cogbot.World
         }
 
         [XmlArrayItem]
-        public readonly DateTime Time = DateTime.UtcNow;
+        public DateTime Time { get; private set; }
 
         // string eventName;
         // object[] args;
         readonly List<SimEventSubscriber> receiversSent = new List<SimEventSubscriber>();
         //SimObjectEvent original = null;
 
-        internal void SendTo(SimEventSubscriber subscriber)
+        public void SendTo(SimEventSubscriber subscriber)
         {
             lock (receiversSent)
             {
@@ -173,20 +195,31 @@ namespace Cogbot.World
         }
 
         [XmlArrayItem]
-        public string Verb;
+        public string Verb { get; set; }
         [XmlArrayItem]
-        public NamedParam[] Parameters;
+        public NamedParam[] Parameters { get; set; }
         [XmlArrayItem]
-        public SimEventType EventType;
+        public SimEventType EventType { get; set; }
         [XmlArrayItem]
-        public SimEventStatus EventStatus;
+        public SimEventStatus EventStatus { get; set; }
         [XmlArrayItem]
-        public readonly SimEventClass EventClass;
-
-        public SimObjectEvent(SimEventStatus status, string eventName, SimEventType type, SimEventClass clazz, IEnumerable<NamedParam> args)
+        public SimEventClass EventClass { get; private set; }
+        /*
+        public ACogbotEvent(SimEventStatus status, string eventName, SimEventType type, SimEventClass clazz, IEnumerable<NamedParam> args)
         {
-            eventName = string.Intern(eventName);
-            Verb = eventName;
+            SetVerb(eventName);
+            Parameters = NamedParam.ToArray(args);
+            EventType = type;
+            EventStatus = status;
+            EventClass = clazz;
+            CheckStructure();
+        }
+        */
+
+        public ACogbotEvent(object sender, SimEventStatus status, string eventName, SimEventType type, SimEventClass clazz, params NamedParam[] args)
+        {
+            Sender = sender;
+            SetVerb(eventName);
             Parameters = NamedParam.ToArray(args);
             EventType = type;
             EventStatus = status;
@@ -194,27 +227,22 @@ namespace Cogbot.World
             CheckStructure();
         }
 
-
-        public SimObjectEvent(SimEventStatus status, string eventName, SimEventType type, SimEventClass clazz, params NamedParam[] args)
+        public ACogbotEvent(object sender, SimEventType type, SimEventClass clazz, string name, IEnumerable paramz)
         {
-            eventName = string.Intern(eventName);
-            Verb = eventName;
-            Parameters = NamedParam.ToArray(args);
-            EventType = type;
-            EventStatus = status;
-            EventClass = clazz;
-            CheckStructure();
-        }
-
-        public SimObjectEvent(SimEventType type, SimEventClass clazz, string name, IEnumerable paramz)
-        {
-            name = string.Intern(name);
+            Sender = sender;
+            SetVerb(name);
             EventType = type;
             EventStatus = SimEventStatus.Once;
-            Verb = name;
             EventClass = clazz;
             Parameters = NamedParam.ObjectsToParams(paramz);
             CheckStructure();
+        }
+
+        private void SetVerb(string name)
+        {
+            name = string.Intern(name);
+            Verb = name;
+            Time = DateTime.UtcNow;
         }
 
         [XmlArrayItem]
@@ -326,7 +354,7 @@ namespace Cogbot.World
         //}
 
 
-        internal bool SameAs(SimObjectEvent SE)
+        public bool SameAs(CogbotEvent SE)
         {
             if (Verb != SE.Verb) return false;
             if (EventStatus != SE.EventStatus) return false;
@@ -420,6 +448,11 @@ namespace Cogbot.World
             return names;
         }
 
+        public object Sender
+        {
+            get; set;
+        }
+
         private string _EVETSTRING;
         public string ToEventString()
         {
@@ -460,6 +493,15 @@ namespace Cogbot.World
                 return null;
                 //throw new ArgumentOutOfRangeException(target);
             }
+        }
+
+        public static CogbotEvent CreateEvent(object sender, SimEventStatus status, string eventName, SimEventType type, SimEventClass eventScope, params NamedParam[] pzs)
+        {
+            return new ACogbotEvent(sender, status, eventName, type, eventScope, pzs);
+        }
+        public static CogbotEvent CreateEvent(object sender, SimEventType type, SimEventClass eventScope, string eventName, IEnumerable pzs)
+        {
+            return new ACogbotEvent(sender,type, eventScope , eventName, pzs);
         }
     }
 }

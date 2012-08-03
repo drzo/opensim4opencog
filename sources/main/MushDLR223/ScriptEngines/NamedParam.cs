@@ -6,6 +6,22 @@ using System.Runtime.InteropServices;
 using System.Xml.Serialization;
 using MushDLR223.Utilities;
 using KeyType = System.String;
+
+
+namespace MushDLR223.Utilities
+{
+    public interface YesAutoLoad
+    {
+    }
+    /// <summary>
+    /// Ensure the reflection API is not used to load this command
+    /// The command is loaded likely byu the plugin 
+    /// </summary>
+    public interface NotAutoLoaded
+    {
+    }
+}
+
 namespace MushDLR223.ScriptEngines
 {
     public struct NullType
