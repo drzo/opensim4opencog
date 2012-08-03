@@ -6,21 +6,11 @@ The CogbotEvent class (formerly SimObjectEvent)
 
 Events in general are:
 
-# Simulator Packet  "parent id changed"
-# LibOMV Event  "on sit changed"
-# Cogbot Salient Event "Joe sat down"
-# MethodInvoke "Please Make Beep"
-# GUI Event "Use maximized App" 
-# Command Sent  "@joe standup"
-# Command Result Received "you are not joe!"
-# Module Raised Event "user is has typed (sending commands)"
-
-Add your content here.
-
-
-= Details =
-
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+ # Simulator Packet  "parent id changed"
+ # LibOMV Event  "on sit changed"
+ # Cogbot Salient Event "Joe sat down"
+ # MethodInvoke "Please Make Beep"
+ # GUI Event "Use maximized App" 
+ # Command Sent  "@joe standup"
+ # Command Result Received "you are not joe!"
+ # Module Raised Event "user is has typed (sending commands)"
