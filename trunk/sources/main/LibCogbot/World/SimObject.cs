@@ -2253,7 +2253,7 @@ namespace Cogbot.World
         }
 
 
-        public virtual void AddCanBeTargetOf(int ArgN, SimObjectEvent evt)
+        public virtual void AddCanBeTargetOf(int ArgN, CogbotEvent evt)
         {
             if (ArgN == 1)
             {
@@ -2282,10 +2282,10 @@ namespace Cogbot.World
         }
 
         public static int MaxEventSize = 10; // Keeps only last 9 events
-        public Queue<SimObjectEvent> ActionEventQueue { get; set; }
-        public SimObjectEvent lastEvent = null;
+        public Queue<CogbotEvent> ActionEventQueue { get; set; }
+        public CogbotEvent lastEvent = null;
 
-        public readonly Dictionary<string, SimObjectEvent> LastEventByName = new Dictionary<string, SimObjectEvent>();
+        public readonly Dictionary<string, CogbotEvent> LastEventByName = new Dictionary<string, CogbotEvent>();
 
 
         public bool ShouldEventSource
@@ -2298,13 +2298,13 @@ namespace Cogbot.World
         /// </summary>
         /// <param name="SE"></param>
         /// <returns></returns>
-        public virtual bool LogEvent(SimObjectEvent SE)
+        public virtual bool LogEvent(CogbotEvent SE)
         {
             // string eventName = SE.Verb;
             object[] args1_N = SE.GetArgs();
             bool saveevent = true;
             object[] args0_N = PushFrontOfArray(ref args1_N, this);
-            if (ActionEventQueue == null) ActionEventQueue = new Queue<SimObjectEvent>(MaxEventSize);
+            if (ActionEventQueue == null) ActionEventQueue = new Queue<CogbotEvent>(MaxEventSize);
             lock (ActionEventQueue)
             {
                 int ActionEventQueueCount = ActionEventQueue.Count;
@@ -2680,9 +2680,9 @@ namespace Cogbot.World
                 return objectinventory;
             }
         }
-        public virtual bool OnEffect(string effectType, object t, object p, float duration, UUID id)
+        public virtual bool OnEffect(object evSender, string effectType, object t, object p, float duration, UUID id)
         {
-            SimObjectEvent newSimObjectEvent = new SimObjectEvent(SimEventStatus.Once, effectType, SimEventType.EFFECT, SimEventClass.REGIONAL,
+            CogbotEvent newSimObjectEvent = ACogbotEvent.CreateEvent(evSender, SimEventStatus.Once, effectType, SimEventType.EFFECT, SimEventClass.REGIONAL,
                                                                     WorldObjects.ToParameter("doneBy", this),
                                                                     WorldObjects.ToParameter("objectActedOn", t),
                                                                     WorldObjects.ToParameter("eventPartiallyOccursAt", p),
@@ -3431,13 +3431,13 @@ namespace Cogbot.World
 
         // void AddPossibleAction(string textualActionName, params object[] args);
 
-        void AddCanBeTargetOf(int argN, SimObjectEvent evt);
+        void AddCanBeTargetOf(int argN, CogbotEvent evt);
 
-        bool LogEvent(SimObjectEvent evt);
+        bool LogEvent(CogbotEvent evt);
 
         void OnSound(UUID soundID, float gain);
 
-        bool OnEffect(string effectType, object t, object p, float duration, UUID id);
+        bool OnEffect(object evSender, string effectType, object t, object p, float duration, UUID id);
 
         SimObject GetGroupLeader();
 
@@ -3463,7 +3463,7 @@ namespace Cogbot.World
         SimHeading GetHeading();
         bool TryGetGlobalPosition(out Vector3d pos);
         void UpdatePosition(ulong handle, Vector3 pos);
-        Queue<SimObjectEvent> ActionEventQueue { get; set; }
+        Queue<CogbotEvent> ActionEventQueue { get; set; }
         List<InventoryBase> TaskInventory { get;  }
         string MissingData { get; }
         bool TaskInventoryLikely { get; }

@@ -90,7 +90,7 @@ namespace CycWorldModule.DotCYC
         static readonly object SimCyclifierLock = new object();
         static bool IsCycDead;
         // ReSharper restore InconsistentNaming
-        public void OnEvent(SimObjectEvent evt)
+        public void OnEvent(CogbotEvent evt)
         {
             if (cycAccess == null)
             {
@@ -118,7 +118,7 @@ namespace CycWorldModule.DotCYC
             SharedTaskQueueHandler.Enqueue(() => OnEvent0(evt));
         }
 
-        static public void OnEvent0(SimObjectEvent evt)
+        static public void OnEvent0(CogbotEvent evt)
         {
             if (!ProcessEvents) return;
             try
@@ -1010,7 +1010,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
             return FindOrCreateCycFort(WorldObjects.GridMaster.GetSimObject(simObj));
         }
 
-        public CycFort FindOrCreateCycFort(SimObjectEvent evt)
+        public CycFort FindOrCreateCycFort(CogbotEvent evt)
         {
             Dictionary<object, object> newDictionary = new Dictionary<object, object>(CompareKeys);
             CycFort predUsed;

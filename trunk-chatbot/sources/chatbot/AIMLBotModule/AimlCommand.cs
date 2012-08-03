@@ -222,9 +222,9 @@ namespace AIMLBotModule
 
         #region SimEventSubscriber Members
 
-        public void OnEvent(SimObjectEvent evt)
+        public void OnEvent(CogbotEvent evt)
         {
-            String s = evt.GetVerb().ToLower();
+            String s = evt.Verb.ToLower();
             if (s.StartsWith("on-chat"))
             {
                 return;

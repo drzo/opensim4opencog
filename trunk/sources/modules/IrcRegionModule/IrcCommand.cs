@@ -6,6 +6,7 @@ using Cogbot.Actions;
 using Cogbot;
 using Meebey.SmartIrc4net;
 using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using OpenMetaverse;
 
 namespace IrcRegionModule

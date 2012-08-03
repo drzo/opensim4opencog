@@ -39,13 +39,13 @@ namespace Cogbot
 
         #region Implementation of SimEventSubscriber
 
-        public void OnEvent(SimObjectEvent evt)
+        public void OnEvent(CogbotEvent evt)
         {
             if (!EventsEnabled || Skipped(evt)) return;
             Next.OnEvent(evt);
         }
 
-        private bool Skipped(SimObjectEvent evt)
+        private bool Skipped(CogbotEvent evt)
         {
             return (SkippedVerb(evt.Verb) || SkippedVerb(evt.EventType.ToString()) || SkippedVerb(evt.EventName));
         }
@@ -83,7 +83,7 @@ namespace Cogbot
 
         #region SimEventSubscriber Members
 
-        void SimEventSubscriber.OnEvent(SimObjectEvent evt)
+        void SimEventSubscriber.OnEvent(CogbotEvent evt)
         {
             if (!EventsEnabled) return;
             if (evt.EventType == SimEventType.DATA_UPDATE) return;
@@ -129,7 +129,7 @@ namespace Cogbot
     public interface SimEventSubscriber
     {
         // fired when SendEvent is invoke and this subscriber is downstream in the pipeline
-        void OnEvent(SimObjectEvent evt);
+        void OnEvent(CogbotEvent evt);
         void Dispose();
         bool EventsEnabled { get; set; }
     }
@@ -137,9 +137,9 @@ namespace Cogbot
     public interface SimEventPublisher
     {
         // this publisher will SendEvent to some SimEventPipeline after the Event params have been casted to the correct types
-        SimObjectEvent CreateEvent(SimEventType type,SimEventClass clazz, string eventName, params object[] args);
+        CogbotEvent CreateEvent(SimEventType type,SimEventClass clazz, string eventName, params object[] args);
         // this object will propogate the event AS-IS 
-        void SendEvent(SimObjectEvent evt);
+        void SendEvent(CogbotEvent evt);
         void AddSubscriber(SimEventSubscriber sub);
         void RemoveSubscriber(SimEventSubscriber sub);
         void Dispose();
@@ -149,11 +149,13 @@ namespace Cogbot
     {
         #region SimEventMulticastPipeline Members
 
+        private object Publisher;
         readonly List<SimEventSubscriber> subscribers = new List<SimEventSubscriber>();
         readonly TaskQueueHandler taskQueue;
-        public SimEventMulticastPipeline(string name)
+        public SimEventMulticastPipeline(object publisher)
         {
-            taskQueue = new TaskQueueHandler("SimEventMulticastPipeline " + name);
+            Publisher = publisher;
+            taskQueue = new TaskQueueHandler(new NamedPrefixThing("SimEventMulticastPipeline ", publisher.ToString));
             EventsEnabled = true;
         }
 
@@ -183,40 +185,35 @@ namespace Cogbot
 
         #region SimEventPublisher Members
 
-        public SimObjectEvent CreateEvent(SimEventType type, SimEventClass clazz, string eventName, params object[] args)
+        public CogbotEvent CreateEvent(SimEventType type, SimEventClass clazz, string eventName, params object[] args)
         {
-            return new SimObjectEvent(type,clazz, eventName, args);
+            return new ACogbotEvent(Publisher, type, clazz, eventName, args);
         }
 
         public static bool UseQueue = false;
         public static bool ExecSynchronous = true;
-        SimObjectEvent LastEvent = null;
+        [ThreadStatic]
+        CogbotEvent LastEvent = null;
+        CogbotEvent LastEventAW = null;
         public bool EventsEnabled { get; set; }
 
         // this pipelike will fire OnEvent to the subscriber list 
-        public void SendEvent(SimObjectEvent simObjectEvent)
+        public void SendEvent(CogbotEvent simObjectEvent)
         {
             if (!EventsEnabled) return;
             if (LastEvent != null && simObjectEvent.SameAs(LastEvent))
             {
                 return;
             }
+            if (LastEventAW != null && simObjectEvent.SameAs(LastEventAW))
+            {
+                return;
+            }
             LastEvent = simObjectEvent;
-            ThreadStart start = () =>
-                                    {
-                                        foreach (SimEventSubscriber subscriber in GetSubscribers())
-                                        {
-                                            SimEventSubscriber sub = subscriber;
-                                            try
-                                            {
-                                                simObjectEvent.SendTo(sub);
-                                            }
-                                            catch (Exception e)
-                                            {
-                                                DLRConsole.DebugWriteLine(e);
-                                            }
-                                        }
-                                    };
+            LastEventAW = simObjectEvent;
+
+            ThreadStart start = () => SendNow(simObjectEvent);
+
             if (ExecSynchronous)
             {
                 start();
@@ -229,17 +226,30 @@ namespace Cogbot
             else taskQueue.Enqueue(start);
         }
 
+        private void SendNow(CogbotEvent simObjectEvent)
+        {
+            foreach (SimEventSubscriber subscriber in GetSubscribers())
+            {
+                SimEventSubscriber sub = subscriber;
+                try
+                {
+                    simObjectEvent.SendTo(sub);
+                }
+                catch (Exception e)
+                {
+                    DLRConsole.DebugWriteLine(e);
+                }
+            }
+        }
+
         #endregion
 
         #region SimEventSubscriber Members
 
-        public void OnEvent(SimObjectEvent simObjectEvent)
+        public void OnEvent(CogbotEvent simObjectEvent)
         {
             if (!EventsEnabled) return;
-            foreach (SimEventSubscriber subscriber in GetSubscribers())
-            {
-                simObjectEvent.SendTo(subscriber);
-            }
+            SendNow(simObjectEvent);
         }
 
         #endregion

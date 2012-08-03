@@ -44,16 +44,16 @@ namespace Cogbot
     {
 
         /// <summary>The event subscribers. null if no subcribers</summary>
-        private EventHandler<SimObjectEvent> m_EachSimEvent;
+        private EventHandler<EventArgs> m_EachSimEvent;
 
         /// <summary>Raises the EachSimEvent event</summary>
         /// <param name="e">An EachSimEventEventArgs object containing the
         /// data returned from the data server</param>
-        protected virtual void OnEachSimEvent(SimObjectEvent e)
+        protected virtual void OnEachSimEvent(CogbotEvent e)
         {
             if (e.Verb == "On-Log-Message") return;
             if (ExpectConnected == false) return;
-            EventHandler<SimObjectEvent> handler = m_EachSimEvent;
+            EventHandler<EventArgs> handler = m_EachSimEvent;
             if (handler == null) return;
             List<Delegate> todo = new List<Delegate>();
             lock (m_EachSimEventLock)
@@ -62,16 +62,18 @@ namespace Cogbot
                 if (handler == null) return;
                 AddTodo(handler.GetInvocationList(), todo);
             }
+
+            object sender = e.Sender ?? this;
             bool async = todo.Count > 3;
 
             foreach (var d in todo)
             {
-                var del = (EventHandler<SimObjectEvent>)d;
+                var del = (EventHandler<EventArgs>)d;
                 ThreadStart task = () =>
                 {
                     try
                     {
-                        del(this, e);
+                        del(sender, (EventArgs) e);
                     }
                     catch (Exception ex)
                     {
@@ -94,7 +96,7 @@ namespace Cogbot
         /// <summary>Triggered when Each Sim Event packet is received,
         /// telling us what our avatar is currently wearing
         /// <see cref="RequestAgentWearables"/> request.</summary>
-        public event EventHandler<SimObjectEvent> EachSimEvent
+        public event EventHandler<EventArgs> EachSimEvent
         {
             add { lock (m_EachSimEventLock) { m_EachSimEvent += value; } }
             remove { lock (m_EachSimEventLock) { m_EachSimEvent -= value; } }
@@ -132,12 +134,12 @@ namespace Cogbot
                     args[0] = ((BotClient)args[0]).GetAvatar();
                 }
             }
-            SimObjectEvent evt = botPipeline.CreateEvent(type, SimEventClass.PERSONAL, eventName, args);
+            CogbotEvent evt = botPipeline.CreateEvent(type, SimEventClass.PERSONAL, eventName, args);
             evt.AddParam("recipientOfInfo", GetAvatar());
             SendPipelineEvent(evt);
         }
 
-        public void SendPipelineEvent(SimObjectEvent evt)
+        public void SendPipelineEvent(CogbotEvent evt)
         {
             OnEachSimEvent(evt);
             botPipeline.SendEvent(evt);
@@ -172,9 +174,9 @@ namespace Cogbot
 
         #endregion
 
-        void SimEventSubscriber.OnEvent(SimObjectEvent evt)
+        void SimEventSubscriber.OnEvent(CogbotEvent evt)
         {
-            if (evt.GetVerb() == "On-Execute-Command")
+            if (evt.Verb == "On-Execute-Command")
             {
                 ExecuteCommand(evt.GetArgs()[0].ToString(), null, WriteLine);
             }

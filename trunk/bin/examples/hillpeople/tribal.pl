@@ -41,6 +41,10 @@ dump_action(Action) :-
 	write(Action),nl.
 dump_action(_).
 
+
+time_goal(Goal):-call(Goal).
+%time_goal(Goal):-'format'('TIME GOAL: ~q~n',[Goal]),time(Goal).
+
 %
 % Set the botvar for the current bot action
 %
@@ -50,15 +54,15 @@ set_current_action(Name, Action) :-
 	retractall(tribal_dyn:current_action(Name, _)),
 	assert(tribal_dyn:current_action(Name, S)).
 
-% as for format/2
+% as for 'format'/2
 set_current_action(Name, ActionFormat, Args) :-
-	format(string(S), ActionFormat, Args),!,
+	'format'(string(S), ActionFormat, Args),!,
 	dump_action(S),
 	retractall(tribal_dyn:current_action(Name, _)),
 	assert(tribal_dyn:current_action(Name, S)).
 set_current_action(_, ActionFormat, Args) :-
 	dump_action("Illegal call to set_current_action"),
-	format('Illegal: set_current_action/3 requires 2nd and 3rd arg as for format/2, you supplied ~w  ~w~n', [ActionFormat, Args]).
+	'format'('Illegal: set_current_action/3 requires 2nd and 3rd arg as for format/2, you supplied ~w  ~w~n', [ActionFormat, Args]).
 
 bv:hook_botvar_get(BotID, bot, 'currentAction', X) :-
 	@(get_current_action(BotID, X), tribal).
@@ -69,7 +73,7 @@ get_current_action(BotID, X) :-
 get_current_action(_, "nothing").
 
 bv:hook_botvar_set(_, bot, 'currentAction', _) :-
-	format('the botvar \'currentAction\' is readonly~n', []).
+	'format'('the botvar \'currentAction\' is readonly~n', []).
 
 bv:hook_botvar_key(_, bot, 'currentAction').
 
@@ -90,7 +94,7 @@ am_i_on_bed(BotID, nope) :-
 am_i_on_bed(_, idunno).
 
 bv:hook_botvar_set(_, bot, amonbed, _) :-
-	format('the botvar \'amonbed\' is readonly~n', []).
+	'format'('the botvar \'amonbed\' is readonly~n', []).
 
 bv:hook_botvar_key(_, bot, amonbed).
 
@@ -106,7 +110,7 @@ be_tribal(Name) :-
 	sex(Name, Sex),
 	age(Name, Age),
 	botvar_set(bot, superplan, "wander"),
-	be_tribal(
+	be_tribal_loop(
 	    _,
 	    Name,
 	    [
@@ -115,7 +119,20 @@ be_tribal(Name) :-
 		cal(10.0),
 		pro(10.0)
 	    ]),
-	format('~w be_tribal thread exiting~n', [Name]).
+	'format'('~w be_tribal thread exiting~n', [Name]).
+
+:-dynamic(be_tribal_status/3).
+
+be_tribal_loop(Loc0, Name, Status0):-
+      be_tribal_next(Loc0, Name, Status0),
+       repeat,
+         retract(be_tribal_status(Loc, Name, Status)),
+          once(time_goal(be_tribal(Loc, Name, Status))),fail.
+
+be_tribal_next(Loc, Name, Status):-
+       retractall(be_tribal_status(_Loc, Name, _Status)),
+       assert(be_tribal_status(Loc, Name, Status)).
+
 
 %%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -130,7 +147,7 @@ be_tribal(
 	botvar_set(bot, byebye, "false"),
 	set_current_action(Name, "I am going byebye"),
 	say_ref('I am going byebye', []),
-	format('#################################~n~w is going byebye~n', [Name]).
+	'format'('#################################~n~w is going byebye~n', [Name]).
 
 %%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                  Termination actions
@@ -149,7 +166,7 @@ be_tribal(
 	on_bed(Name),
 	botcmd(stand),
 	set_current_action(Name, "getting up from sleep"),
-	be_tribal(Loc, Name, Status).
+	be_tribal_next(Loc, Name, Status).
 
 
 %%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -165,7 +182,7 @@ be_tribal(_,
         set_current_action(Name, "teleporting to start location"),
 	tribal_land(Loc),
 	botcmd(teleport(Loc)),
-	be_tribal(home, Name, [on_sim|Status]).
+	be_tribal_next(home, Name, [on_sim|Status]).
 
 be_tribal(_,
 	  Name,
@@ -175,7 +192,7 @@ be_tribal(_,
 	set_current_action(Name, "flushing plan at user request"),
 	write('flushing plan per knockitoff directive'),nl,
 	replace_plan(Status, [], NewStatus),
-	be_tribal(home, Name, NewStatus).
+	be_tribal_next(home, Name, NewStatus).
 
 
 %
@@ -191,7 +208,7 @@ be_tribal(_,
 	botcmd(touch('inventory_giver')),
 	get_time(Time),
 	sleep(3),
-	be_tribal(home, Name, [requested_inventory(Time)|Status]).
+	be_tribal_next(home, Name, [requested_inventory(Time)|Status]).
 
 %
 %       continue to wait until we get our inventory
@@ -205,7 +222,7 @@ be_tribal(_,
 	CurTime < Time + 30,
 	set_current_action(Name, "waiting for inventory to arrive"),
 	sleep(5),
-	be_tribal(home, Name, Status).
+	be_tribal_next(home, Name, Status).
 
 %
 %       Ask for it again every 30 sec
@@ -222,7 +239,7 @@ be_tribal(_,
 	sleep(5),
 	select(requested_inventory(_), Status,
 	       requested_inventory(CurTime), NewStatus),
-	be_tribal(home, Name, NewStatus).
+	be_tribal_next(home, Name, NewStatus).
 
 
 %
@@ -238,7 +255,7 @@ be_tribal(_,
 	set_current_action(Name, "getting dressed in starter outfit"),
 	start_wearing(Name, Items),
 	wear_list(Items),
-	be_tribal(home, Name, [inited|Status]).
+	be_tribal_next(home, Name, [inited|Status]).
 
 
 
@@ -272,7 +289,7 @@ be_tribal(
 	botcmd(waitpos(10, WP, 1), WaitStat),
 	say_ref('Move', MoveStat),
 	say_ref('Wait', WaitStat),
-	be_tribal(WP, Name, Status).
+	be_tribal_next(WP, Name, Status).
 
 %
 %  Set up a path in test_wander_mode
@@ -292,7 +309,7 @@ be_tribal(
 	waypoint_path(Start, End, Path),
 	say_format('No Path, new ~w to ~w is ~w',
 	       [Start, End, Path]),
-	be_tribal(Start, Name, [cur_plan(Path) | Status]).
+	be_tribal_next(Start, Name, [cur_plan(Path) | Status]).
 
 
 %%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -316,7 +333,7 @@ be_tribal(
 	say_ref('Move', MoveStat),
 	say_ref('Wait', WaitStat),
 	replace_plan(Status, T, NewStatus),
-	be_tribal(H, Name, NewStatus).
+	be_tribal_next(H, Name, NewStatus).
 
 %%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %        Replan
@@ -336,7 +353,7 @@ be_tribal(
 	select(cur_plan([]), Status, NewStatus),
 	set_current_action(Name, "cur_plan empty, removing it"),
 	say_format('cur_plan empty, removing it', []),
-	be_tribal(Loc, Name, NewStatus).
+	be_tribal_next(Loc, Name, NewStatus).
 
 %%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %        Rest
@@ -362,7 +379,7 @@ be_tribal(
 	replace_plan(Status, Path, NewStatus),
 	set_current_action(Name, 'Planning to go rest at ~w', [Home]),
 	botcmd(say("Aborting my currentAction, heading home to rest")),
-	be_tribal(WPName, Name, NewStatus).
+	be_tribal_next(WPName, Name, NewStatus).
 
 %
 % lay down
@@ -371,7 +388,7 @@ be_tribal(
     Loc,
     Name,
     Status) :-
-	botvar_get(bot, superplan, "rest"),
+	time_goal(botvar_get(bot, superplan, "rest")),
 	sleeps_at(Name, Home),
 	name_to_location_ref(Home, Obj),
 	distance_to(Obj, D),
@@ -379,17 +396,17 @@ be_tribal(
 	\+ on_bed(Name),
 	set_current_action(Name, "laying down to sleep"),
 	botvar_set(bot, goinghome, "false"),
-	bed_for_name(Name, BedName),
-	format(string(S), 'sit ~w 1', [BedName]),
-	botcmd(S),
-	be_tribal(Loc, Name, Status).
+	time_goal(bed_for_name(Name, BedName)),
+	'format'(string(S), 'sit ~w 1', [BedName]),
+	time_goal(botcmd(S)),
+	be_tribal_next(Loc, Name, Status).
 
 on_bed(Name) :-
 	gtrace_by_botvar(breakonbed),
 	bed_for_name(Name, BedName),
 	botID(Name, ID),
 	wbot_sitting_on(ID, BedRef),
-	cli_get(BedRef, [properties, name], BedNameO),
+	cli_get(BedRef, [properties, name], BedNameO),!,
 	cli_unify(BedName, BedNameO).
 
 % TODO backup bed_for_name to provide a bed if they don't have one
@@ -402,12 +419,12 @@ be_tribal(
     Loc,
     Name,
     Status) :-
-	gtrace_by_botvar(gtsleeping),
+	ignore(gtrace_by_botvar(gtsleeping)),
 	botvar_get(bot, superplan , "rest"),
 	on_bed(Name),
 	set_current_action(Name, "Sleeping"),
 	sleep(10),
-	be_tribal(Loc, Name, Status).
+	be_tribal_next(Loc, Name, Status).
 
 %
 % this makes home/2 det
@@ -424,7 +441,7 @@ be_tribal(
     Name,
     Status) :-
 	memberchk(cur_plan([add(Atom)|_]), Status),
-	be_tribal(Loc, Name, [Atom | Status]).
+	be_tribal_next(Loc, Name, [Atom | Status]).
 
 %
 %  remove statuses with the remove action
@@ -436,7 +453,7 @@ be_tribal(
 	memberchk(cur_plan([remove(Atom)|T]), Status),
 	select(Atom, Status, NewStatus),
 	replace_plan(NewStatus, T, NNStatus),
-	be_tribal(Loc, Name, NNStatus).
+	be_tribal_next(Loc, Name, NNStatus).
 
 %
 % Die if yer starved
@@ -503,7 +520,7 @@ be_tribal(
 	sleeps_at(Name, Location),
 	\+ sitting_on(Name, sleeping_mat),
 	sit_on(Name, sleeping_mat),
-	be_tribal(
+	be_tribal_next(
 	    Location,
 	    Name,
 	    Status).
@@ -522,7 +539,7 @@ be_tribal(
 	basal_metabolism(Status, NewStatus, 30, 0.20),
 	      % 20% because we're sleeping
 	sleep(30),
-	be_tribal(
+	be_tribal_next(
 	    Location,
 	    Name,
 	    NewStatus).
@@ -547,7 +564,7 @@ be_tribal(
 	   [Name, Location, Status]),
     sleep(10),
     gtrace_by_botvar(breakontrouble),
-    be_tribal(Location, Name, Status).
+    be_tribal_next(Location, Name, Status).
 
 
 gtrace_by_botvar(Var) :-

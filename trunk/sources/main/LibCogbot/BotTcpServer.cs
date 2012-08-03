@@ -205,7 +205,7 @@ namespace Cogbot.Utilities
 
         #region SimEventSubscriber Members
 
-        public void OnEvent(SimObjectEvent evt)
+        public void OnEvent(CogbotEvent evt)
         {
             if (!EventsEnabled) return; 
             try
@@ -616,14 +616,14 @@ namespace Cogbot.Utilities
 
         #region SimEventSubscriber Members
 
-        void SimEventSubscriber.OnEvent(SimObjectEvent evt)
+        void SimEventSubscriber.OnEvent(CogbotEvent evt)
         {
             if (!EventsEnabled) return;
             if (DisableEventStore) return;
             whileClientIsAway.Enqueue(EventToString(evt, parent));
         }
 
-        static internal string EventToString(SimObjectEvent evt, BotClient parent)
+        static internal string EventToString(CogbotEvent evt, BotClient parent)
         {
             return string.Format("({0} {1})", evt.GetVerb(), parent.argsListString(evt.GetArgs()));
         }

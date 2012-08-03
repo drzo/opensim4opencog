@@ -21,7 +21,7 @@ namespace Cogbot.Actions.System
                 "eventName",typeof(string),Htmlize.Wiki("SimObjectEvents", "Sim Object Events") + " for info about the format",
                 Optional("command", typeof(BotCommand),"The command to execute asynchronously"));
             ResultMap = CreateParams(
-                 "event", typeof(SimObjectEvent), "The unblocking event that took place",
+                 "event", typeof(CogbotEvent), "The unblocking event that took place",
                  "message", typeof(string), "if success was false, the reason why",
                  "success", typeof(bool), "true if we got the events");
         }

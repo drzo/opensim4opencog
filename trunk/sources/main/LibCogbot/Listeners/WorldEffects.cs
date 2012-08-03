@@ -89,7 +89,7 @@ namespace Cogbot
                 });
         }
 
-        public SimObjectEvent SendPipelineEvent(SimObjectEvent param1)
+        public CogbotEvent SendPipelineEvent(CogbotEvent param1)
         {
             client.SendPipelineEvent(param1);
             return param1;
@@ -152,13 +152,13 @@ namespace Cogbot
                         //object[] eventArgs = new object[] { user, newSit, oldSit };
                         if (oldSit != null)
                             oldSit.AddCanBeTargetOf(1, SendPipelineEvent(
-                                                           new SimObjectEvent(SimEventStatus.Stop, newSitName,
+                                                           ACogbotEvent.CreateEvent(sender, SimEventStatus.Stop, newSitName,
                                                                               SimEventType.SIT, SimEventClass.REGIONAL,
                                                                               ToParameter("doneBy", avatar),
                                                                               ToParameter("objectActedOn", oldSit))));
                         if (newSit != null)
                             newSit.AddCanBeTargetOf(1, SendPipelineEvent(
-                                                           new SimObjectEvent(SimEventStatus.Start, newSitName,
+                                                           ACogbotEvent.CreateEvent(sender, SimEventStatus.Start, newSitName,
                                                                               SimEventType.SIT, SimEventClass.REGIONAL,
                                                                               ToParameter("doneBy", avatar),
                                                                               ToParameter("objectActedOn", newSit))));
@@ -172,7 +172,7 @@ namespace Cogbot
             if (user !=null)
             {
                 user.Parent = null;
-                user.LogEvent(SendPipelineEvent(new SimObjectEvent(updown, p, SimEventType.SIT, SimEventClass.REGIONAL, args)));
+                user.LogEvent(SendPipelineEvent(ACogbotEvent.CreateEvent(client, updown, p, SimEventType.SIT, SimEventClass.REGIONAL, args)));
             }
             //DLRConsole.WriteLine(user + " " + p + " " + ScriptEngines.ScriptEventListener.argsListString(args));
         }
@@ -304,7 +304,7 @@ namespace Cogbot
                         //   WriteLine(perpAv.Name + " bumped into $bot like " + type);
                         // else if (perpAv.Name == client.Self.Name)
                         //   WriteLine("$bot bumped into " + victimAv.Name + " like " + type);   
-                        SimObjectEvent newSimObjectEvent = new SimObjectEvent(SimEventStatus.Once,
+                        CogbotEvent newSimObjectEvent = ACogbotEvent.CreateEvent(sender, SimEventStatus.Once,
                                                     "MeanCollisionType-" + e.Type, SimEventType.SOCIAL, SimEventClass.REGIONAL,
                                                     ToParameter("primaryObjectMoving", perpAv),
                                                     ToParameter("objectActedOn", victimAv),
@@ -500,11 +500,11 @@ namespace Cogbot
                                             }
                                             if (source != null)
                                             {
-                                                source.OnEffect(effectType, t, p, duration, id);
+                                                source.OnEffect(client, effectType, t, p, duration, id);
                                             }
                                             else
                                             {
-                                                SimObjectEvent evt = new SimObjectEvent(SimEventStatus.Once, effectType,
+                                                CogbotEvent evt = ACogbotEvent.CreateEvent(client, SimEventStatus.Once, effectType,
                                                                                         SimEventType.EFFECT, SimEventClass.REGIONAL,
                                                                                         ToParameter("doneBy", s),
                                                                                         ToParameter("objectActedOn", t),

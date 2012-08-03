@@ -20,7 +20,7 @@ using Thread = MushDLR223.Utilities.SafeThread;
 
 namespace CogbotRadegastPluginModule
 {
-    public class CogbotRadegastPlugin : IRadegastPlugin
+    public class CogbotRadegastPlugin : IRadegastPlugin, YesAutoLoad
     {
         public CogbotRadegastPlugin(RadegastInstance instance)
         {
