@@ -45,6 +45,16 @@ namespace RoboKindAvroQPIDModule
             if (!cogbotSendersToNotSendToCogbot.Contains(sender)) cogbotSendersToNotSendToCogbot.Add(sender);
             string ss = evt.ToEventString();
             var im = RK_publisher.CreateTextMessage(ss);
+            foreach (var s in evt.Parameters)
+            {
+                im.Headers.SetString(s.Key, "" + s.Value);
+            }
+            im.Headers.SetString("verb", "" + evt.Verb);
+            im.Headers.SetString("evclass", "" + evt.EventClass);
+            im.Headers.SetString("evstatus", "" + evt.EventStatus);
+            im.Headers.SetString("evtype", "" + evt.EventType);
+            im.Timestamp = evt.Time.ToFileTime();
+            im.Type = "" + evt.EventClass;
             RK_publisher.SendMessage(im);
             return false;
         }
@@ -114,7 +124,7 @@ namespace RoboKindAvroQPIDModule
 
             }
             DLRConsole.DebugWriteLine("msg=" + msg);
-          //  return ACogbotEvent.CreateEvent(sender, SimEventType.UNKNOWN, SimEventClass.PERSONAL, msg.Type, null);
+            return ACogbotEvent.CreateEvent(sender,SimEventStatus.Once, msg.Type, SimEventType.UNKNOWN, SimEventClass.PERSONAL);
         }
     }
 }
