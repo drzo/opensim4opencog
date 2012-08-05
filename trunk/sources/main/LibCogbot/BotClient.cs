@@ -1422,7 +1422,7 @@ namespace Cogbot
 
         #region Implementation of HasInstancesOfType
 
-        public bool TryGetInstance(Type type, out object obj)
+        public bool TryGetInstance(Type type, int depth, out object obj)
         {
             if (typeof(SimObject).IsAssignableFrom(type))
             {
@@ -1437,9 +1437,15 @@ namespace Cogbot
                     if (type.IsInstanceOfType(type)) return true;
                 }
             }
+            if (depth < 0)
+            {
+                obj = null;
+                return false;
+            }
             var ctx = this;
             foreach (var s in ctx.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
+                if (ConfigSettingAttribute.HasAttribute(s, typeof(SkipMemberTree))) continue;
                 if (type.IsAssignableFrom(s.PropertyType))
                 {
                     obj = s.GetValue(ctx, null);
@@ -1454,16 +1460,19 @@ namespace Cogbot
                             // odity
                             return true;
                         }
-                        obj = ConfigSettingAttribute.FindValueOfType(obj, type, 0);
+                        if (obj == null) continue;
+                        obj = ConfigSettingAttribute.FindValueOfType(obj, type, depth - 1);
                         if (type.IsInstanceOfType(obj)) return true;
                     }
                 }
             }
             foreach (var s in ctx.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
+                if (ConfigSettingAttribute.HasAttribute(s, typeof(SkipMemberTree))) continue;
                 obj = s.GetValue(ctx);
+                if (obj == null) continue;
                 if (type.IsInstanceOfType(obj)) return true;
-                obj = ConfigSettingAttribute.FindValueOfType(obj, type, 0);
+                obj = ConfigSettingAttribute.FindValueOfType(obj, type, depth - 1);
                 if (type.IsInstanceOfType(obj)) return true;
             }
             obj = null;

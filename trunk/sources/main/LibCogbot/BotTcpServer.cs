@@ -33,7 +33,7 @@ namespace Cogbot.Utilities
         }
     }
 
-    public class SingleBotTcpClient : SimEventSubscriber
+    public class SingleBotTcpClient : SimEventSubscriber, NotContextualSingleton
     {
         private StreamReader tcpStreamReader = null;// = new StreamReader(ns);        
         private StreamWriter tcpStreamWriter = null;// = new StreamWriter(ns);        

@@ -414,6 +414,7 @@ namespace Cogbot
             
         }
 
+        [SkipMemberTree]
         public SimAvatarClient TheSimAvatar
         {
             get
