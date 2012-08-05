@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
+using System.Xml;
 using Cogbot;
 using Cogbot.World;
 using Cogbot.Utilities;
@@ -15,7 +17,7 @@ namespace Cogbot.Actions.System
 {
     public class SysVarCommand : Cogbot.Actions.Command, BotSystemCommand
     {
-        public SysVarCommand(BotClient client)
+        public SysVarCommand(BotClient client): base(client)
         {
             Name = "sysvar";
             Description = "Manipulates system variables." +
@@ -45,7 +47,7 @@ namespace Cogbot.Actions.System
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("<table><tr><th>Variable Name</th><th>current value</th><th>Description</th></tr>");
-            foreach (var sv in LockInfo.CopyOf(ScriptManager.SysVars))
+            foreach (var sv in GetSysVars())
             {
                 IKeyValuePair<string,object> svv = sv;
                 sb.AppendLine(string.Format("<tr name=\"{0}\" id='{0}'><td>{0}</td><td>{1}</td><td>{2}</td></tr>", Htmlize.NoEnts(svv.Key), Htmlize.NoEnts("" + svv.Value), Htmlize.NoEnts(svv.Comments)));
@@ -54,42 +56,104 @@ namespace Cogbot.Actions.System
             return sb.ToString();
         }
 
+        public int LoadSysVarHtml(Stream content)
+        {
+            var sysvars = GetSysVars();
+            var doc = new XmlDocumentLineInfo().ReadNode(XmlReader.Create(content));
+            if (doc == null) return -1;
+            if (doc.Name == "html") doc = doc.FirstChild;
+            if (doc == null) return -1;
+            if (doc.Name == "head") doc = doc.NextSibling;
+            if (doc == null) return -1;
+            if (doc.Name == "body") doc = doc.FirstChild;
+            if (doc == null) return -1;
+            if (doc.Name == "table") doc = doc.FirstChild;
+            if (doc == null) return -1;
+            int lineCount = 0;
+            while (doc != null && doc.Name == "tr")
+            {
+                var fc = doc.FirstChild;
+                if (fc.Name == "td")
+                {
+                    string svname = fc.InnerText;
+                    var sc = fc.NextSibling;
+                    string svalue = sc.InnerText;
+                    bool found = false;
+                    foreach (var s in ScriptManager.FindMatchingSysvars(sysvars, svname, true, true))
+                    {
+                        found = true;
+                        lineCount++;
+                        s.Value = svalue;
+                    }
+                    if (!found) Failure("Cant set: " + svname + "  " + svalue);
+                }
+                doc = doc.NextSibling;
+            }
+            return lineCount;
+        }
+
+        private IList<IKeyValuePair<string, object>> GetSysVars()
+        {
+            return LockInfo.CopyOf(ScriptManager.GetSysVars(TheBotClient));
+        }
+
+
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
-            int used = 0;
-            var sysvars = LockInfo.CopyOf(ScriptManager.SysVars);
-            if (args.Length == 0)
+            string filename;
+            if (args.TryGetValue("save", out filename))
             {
-                foreach (var sv in LockInfo.CopyOf(ScriptManager.SysVars))
+                File.WriteAllText(filename,SysVarHtml());
+                return Success("Wrote " + filename);
+            }
+            if (args.TryGetValue("load", out filename))
+            {
+                LoadSysVarHtml(File.OpenRead(filename));
+                return Success("Loaded " + filename);
+            }
+            if (args.ContainsFlag("htmldoc"))
+            {
+                return Success(SysVarHtml());
+            }
+
+            bool exactMatch = args.ContainsFlag("--exact");
+            bool caseSensitive = args.ContainsFlag("--case");
+
+            int used = 0;
+            var sysvars = GetSysVars();
+
+            string find;
+            if (!args.TryGetValue("key", out find))
+            {
+                // display all
+                foreach (var sv in sysvars)
                 {
                     var svv = sv;
                     WriteLine(string.Format("{0}={1} //{2}", (svv.Key), svv.Value, svv.Comments));
                 }
-                return Success("count=" + ScriptManager.SysVars.Count);
+                return Success("count=" + sysvars.Count);
             }
-            List<IKeyValuePair<string,object>> setThese = new List<IKeyValuePair<string, object>>();
+            if (!caseSensitive) find = find.ToLower();
+            var setThese = ScriptManager.FindMatchingSysvars(sysvars, find, exactMatch, caseSensitive);
             int found = 0;
-            string find = args[0].ToLower();
-            foreach (var sv in sysvars)
+            foreach (var svv in setThese)
             {
-                var svv = sv;
-                if (svv.Key.ToLower().Contains(find))
                 {
                     found++;
-                    WriteLine(svv.Key + ": " + svv.DebugInfo);
-                    setThese.Add(svv);
+                    WriteLine(svv.DebugInfo);
                 }
             }
-            if (args.Length == 1)
+            string value;
+            if (!args.TryGetValue("value", out value))
             {
-                return Success("Found sysvars: " + found);
+                return Success("Found sysvars: " + found);             
             }
             int changed = 0;
             foreach(var one in setThese)
             {
                 try
                 {
-                    one.Value = args[1];
+                    one.Value = value;
                     AddSuccess("Set sysvar: " + one.Key + " to " + one.Value);
                     changed++;
                 } catch(Exception e)
