@@ -1017,7 +1017,8 @@ namespace Cogbot
         {
             // Cogbot[listener.GetModuleName()] = listener;
             string mname = listener.GetModuleName();
-            ScriptManager.LoadSysVars(listener.GetType());
+            Type lt = listener.GetType();
+            ConfigSettingAttribute.AddSingletonClass(lt);
             string taskName = "LISTENER STARTUP: " + mname;
             OneAtATimeQueue.NamedTask(taskName, () =>
                                         {

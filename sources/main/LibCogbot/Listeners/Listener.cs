@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using MushDLR223.ScriptEngines;
+using MushDLR223.Utilities;
 using OpenMetaverse; //using libsecondlife;
 
 namespace Cogbot
@@ -35,7 +36,7 @@ namespace Cogbot
         public abstract void Dispose();
     }
 
-    public interface Listener : IDisposable
+    public interface Listener : IDisposable, ContextualSingleton
     {
         string GetModuleName();
         void StartupListener();
