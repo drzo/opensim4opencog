@@ -1565,13 +1565,12 @@ namespace AltAIMLbot
     }
 
 
-
     public class InvertedIndex
     {
         public int docs = 0;
         public SerializableDictionary<string, List<int>> index;
         public SerializableDictionary<int, string> Externindex;
-        public PorterStemmer stemmer = new Lucene.Net.Analysis.PorterStemmer();
+        public AltPorterStemmer stemmer = new AltPorterStemmer();
 
         public InvertedIndex()
         {
