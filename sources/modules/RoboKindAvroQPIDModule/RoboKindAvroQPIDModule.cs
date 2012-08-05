@@ -91,13 +91,52 @@ namespace RoboKindAvroQPIDModule
 
         public override void StartupListener()
         {
-            var uri = RoboKindAvroQPIDModuleMain.RK_QPID_URI;
-            this.RK_listener = new RoboKindListener(uri);
-            RK_publisher = new RoboKindPublisher(uri);
-            RK_listener.OnAvroMessage = AvroReceived;
+            EnsureLoginToQIPD();
             client.AddBotMessageSubscriber(this);
             EventsEnabled = true;
             client.EachSimEvent += SendEachSimEvent;
+        }
+
+        private void EnsureLoginToQIPD()
+        {
+            if (RK_listener!=null) return;
+            var uri = RoboKindAvroQPIDModuleMain.RK_QPID_URI;
+            try
+            {
+                LoginToQPID(uri);
+            }
+            catch (Exception e)
+            {
+                System.Diagnostics.Process proc = new System.Diagnostics.Process(); // Declare New Process
+                proc.StartInfo.FileName = @"QPIDServer\StartQPID.bat";
+                proc.StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Minimized;
+                proc.StartInfo.CreateNoWindow = false;
+                proc.StartInfo.ErrorDialog = true;
+                //proc.StartInfo.Domain = AppDomain.CurrentDomain.Id;
+                proc.Start();
+                Thread.Sleep(10000);
+                LoginToQPID(uri);
+            }
+        }
+
+        private void LoginToQPID(string uri)
+        {
+            if (RK_listener != null)
+            {
+                RK_listener.OnAvroMessage -= AvroReceived;
+            }
+            try
+            {
+                RK_listener = new RoboKindListener(uri);
+                RK_publisher = new RoboKindPublisher(uri);
+                RK_listener.OnAvroMessage += AvroReceived;
+            }
+            catch (Exception e)
+            {
+                RK_listener = null;
+                RK_publisher = null;
+                throw e;
+            }
         }
 
         private void SendEachSimEvent(object sender, EventArgs e)

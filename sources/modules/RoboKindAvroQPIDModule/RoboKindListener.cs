@@ -56,7 +56,7 @@ namespace RoboKindAvroQPIDModule
         /// <summary>
         /// Fired when a message is received from the broker by the consumer
         /// </summary>
-        public MessageReceivedDelegate OnAvroMessage { get; set; }
+        public event MessageReceivedDelegate OnAvroMessage;// { get; set; }
 
         /// <summary> Creates a topic listener using the specified broker URL. </summary>
         /// 
