@@ -2259,19 +2259,19 @@ namespace Cogbot.World
             {
                 SimObjectType simTypeSystemCreateObjectUse = SimTypeSystem.CreateObjectType(evt.Verb);
                 SimTypeUsage usage = simTypeSystemCreateObjectUse.CreateObjectUsage(evt.Verb);
-                if (evt.EventType == SimEventType.SIT)
+                if (evt.IsEventType(SimEventType.SIT))
                 {
                     usage.UseSit = true;
                 }
-                if (evt.EventType == SimEventType.TOUCH)
+                if (evt.IsEventType(SimEventType.TOUCH))
                 {
                     usage.UseGrab = true;
                 }
-                if (evt.EventType == SimEventType.ANIM)
+                if (evt.IsEventType(SimEventType.ANIM))
                 {
                     usage.UseAnim = evt.Verb;
                 }
-                if (evt.EventType == SimEventType.EFFECT)
+                if (evt.IsEventType(SimEventType.EFFECT))
                 {
                     //todo need to parse the EffectType
                     usage.UseGrab = true;
@@ -2682,7 +2682,8 @@ namespace Cogbot.World
         }
         public virtual bool OnEffect(object evSender, string effectType, object t, object p, float duration, UUID id)
         {
-            CogbotEvent newSimObjectEvent = ACogbotEvent.CreateEvent(evSender, SimEventStatus.Once, effectType, SimEventType.EFFECT, SimEventClass.REGIONAL,
+            CogbotEvent newSimObjectEvent = ACogbotEvent.CreateEvent(evSender, SimEventType.Once ,effectType,
+                SimEventType.EFFECT | SimEventType.REGIONAL,
                                                                     WorldObjects.ToParameter("doneBy", this),
                                                                     WorldObjects.ToParameter("objectActedOn", t),
                                                                     WorldObjects.ToParameter("eventPartiallyOccursAt", p),

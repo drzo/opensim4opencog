@@ -102,7 +102,7 @@ namespace Cogbot.ScriptEngines
 
         private KeyValuePair<object, CogbotEvent> taskFromCodeTree(object lispObject)
         {
-            CogbotEvent evt = new ACogbotEvent(taskInterperter,SimEventType.UNKNOWN, SimEventClass.PERSONAL, "enqueue", new[] { lispObject });
+            CogbotEvent evt = new ACogbotEvent(taskInterperter, SimEventType.SCRIPT | SimEventType.PERSONAL, "enqueue", new[] { lispObject });
             return new KeyValuePair<object, CogbotEvent>(lispObject, evt);
         }
 
@@ -429,7 +429,7 @@ namespace Cogbot.ScriptEngines
 
         void SimEventSubscriber.OnEvent(CogbotEvent evt)
         {
-            if (taskInterperter != null && taskInterperter.IsSubscriberOf(evt.GetVerb()))
+            if (taskInterperter != null && taskInterperter.IsSubscriberOf(evt.Verb))
             {
                 object lispCode = lispCodeFromEvent(evt);
                 taskQueue.Enqueue(new KeyValuePair<object, CogbotEvent>(lispCode, evt));
@@ -438,7 +438,7 @@ namespace Cogbot.ScriptEngines
 
         private object lispCodeFromEvent(CogbotEvent evt)
         {
-            return genLispCodeTree("(" + evt.GetVerb().ToLower() + " " + argsListString(evt.GetArgs()) + ")");
+            return genLispCodeTree("(" + evt.Verb.ToLower() + " " + argsListString(evt.GetArgs()) + ")");
         }
 
         void SimEventSubscriber.Dispose()

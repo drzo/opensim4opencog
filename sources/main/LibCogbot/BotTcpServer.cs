@@ -625,7 +625,7 @@ namespace Cogbot.Utilities
 
         static internal string EventToString(CogbotEvent evt, BotClient parent)
         {
-            return string.Format("({0} {1})", evt.GetVerb(), parent.argsListString(evt.GetArgs()));
+            return string.Format("({0} {1})", evt.Verb, parent.argsListString(evt.GetArgs()));
         }
 
         void SimEventSubscriber.Dispose()

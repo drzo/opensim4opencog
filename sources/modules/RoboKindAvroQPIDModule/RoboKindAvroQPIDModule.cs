@@ -50,11 +50,10 @@ namespace RoboKindAvroQPIDModule
                 im.Headers.SetString(s.Key, "" + s.Value);
             }
             im.Headers.SetString("verb", "" + evt.Verb);
-            im.Headers.SetString("evclass", "" + evt.EventClass);
+            im.Headers.SetBoolean("personal", evt.IsPersonal != null);
             im.Headers.SetString("evstatus", "" + evt.EventStatus);
-            im.Headers.SetString("evtype", "" + evt.EventType);
             im.Timestamp = evt.Time.ToFileTime();
-            im.Type = "" + evt.EventClass;
+            im.Type = "" + evt.EventType1;
             RK_publisher.SendMessage(im);
             return false;
         }
@@ -72,6 +71,7 @@ namespace RoboKindAvroQPIDModule
 
         public void OnEvent(CogbotEvent evt)
         {
+            if (evt.IsEventType(SimEventType.DATA_UPDATE)) return;
             LogEventFromCogbot(evt.Sender, evt);
         }
 
@@ -124,7 +124,7 @@ namespace RoboKindAvroQPIDModule
 
             }
             DLRConsole.DebugWriteLine("msg=" + msg);
-            return ACogbotEvent.CreateEvent(sender,SimEventStatus.Once, msg.Type, SimEventType.UNKNOWN, SimEventClass.PERSONAL);
+            return ACogbotEvent.CreateEvent(sender, SimEventType.Once, msg.Type, SimEventType.UNKNOWN | SimEventType.PERSONAL | SimEventType.DATA_UPDATE);
         }
     }
 }

@@ -137,42 +137,42 @@ namespace Cogbot
                     if (user != null)
                     {
                         if (oldSeat != 0)
-                            LogSitEvent(user, SimEventStatus.Stop, oldSitName,
+                            LogSitEvent(user, SimEventType.Stop, oldSitName,
                                         ToParameter("doneBy", user),
                                         ToParameter("objectActedOn", oldSit));
                         if (sittingOn != 0)
-                            LogSitEvent(user, SimEventStatus.Start, newSitName,
+                            LogSitEvent(user, SimEventType.Start, newSitName,
                                         ToParameter("doneBy", user),
                                         ToParameter("objectActedOn", newSit));
                         if (sittingOn + oldSeat == 0)
-                            LogSitEvent(user, SimEventStatus.Once, "SitChangedUnknown", ToParameter("doneBy", user));
+                            LogSitEvent(user, SimEventType.Once, "SitChangedUnknown", ToParameter("doneBy", user));
                     }
                     else
                     {
                         //object[] eventArgs = new object[] { user, newSit, oldSit };
                         if (oldSit != null)
                             oldSit.AddCanBeTargetOf(1, SendPipelineEvent(
-                                                           ACogbotEvent.CreateEvent(sender, SimEventStatus.Stop, newSitName,
-                                                                              SimEventType.SIT, SimEventClass.REGIONAL,
+                                                           ACogbotEvent.CreateEvent(sender, SimEventType.Stop, newSitName,
+                                                                              SimEventType.SIT | SimEventType.REGIONAL,
                                                                               ToParameter("doneBy", avatar),
                                                                               ToParameter("objectActedOn", oldSit))));
                         if (newSit != null)
                             newSit.AddCanBeTargetOf(1, SendPipelineEvent(
-                                                           ACogbotEvent.CreateEvent(sender, SimEventStatus.Start, newSitName,
-                                                                              SimEventType.SIT, SimEventClass.REGIONAL,
+                                                           ACogbotEvent.CreateEvent(sender, SimEventType.Start, newSitName,
+                                                                              SimEventType.SIT | SimEventType.REGIONAL,
                                                                               ToParameter("doneBy", avatar),
                                                                               ToParameter("objectActedOn", newSit))));
                     }
                 });
         }
 
-        private void LogSitEvent(SimObject user, SimEventStatus updown, string p, params NamedParam[] args)
+        private void LogSitEvent(SimObject user, SimEventType updown, string p, params NamedParam[] args)
         {
             if (!MaintainActions) return;
             if (user !=null)
             {
                 user.Parent = null;
-                user.LogEvent(SendPipelineEvent(ACogbotEvent.CreateEvent(client, updown, p, SimEventType.SIT, SimEventClass.REGIONAL, args)));
+                user.LogEvent(SendPipelineEvent(ACogbotEvent.CreateEvent(client, p, updown | SimEventType.SIT | SimEventType.REGIONAL, args)));
             }
             //DLRConsole.WriteLine(user + " " + p + " " + ScriptEngines.ScriptEventListener.argsListString(args));
         }
@@ -304,8 +304,8 @@ namespace Cogbot
                         //   WriteLine(perpAv.Name + " bumped into $bot like " + type);
                         // else if (perpAv.Name == client.Self.Name)
                         //   WriteLine("$bot bumped into " + victimAv.Name + " like " + type);   
-                        CogbotEvent newSimObjectEvent = ACogbotEvent.CreateEvent(sender, SimEventStatus.Once,
-                                                    "MeanCollisionType-" + e.Type, SimEventType.SOCIAL, SimEventClass.REGIONAL,
+                        CogbotEvent newSimObjectEvent = ACogbotEvent.CreateEvent(sender,
+                                                    "MeanCollisionType-" + e.Type, SimEventType.Once | SimEventType.SOCIAL | SimEventType.REGIONAL,
                                                     ToParameter("primaryObjectMoving", perpAv),
                                                     ToParameter("objectActedOn", victimAv),
                                                     ToParameter("initialSpeedOfPrimaryObjectMoving", "MetersPerSecond", e.Magnitude));
@@ -504,8 +504,8 @@ namespace Cogbot
                                             }
                                             else
                                             {
-                                                CogbotEvent evt = ACogbotEvent.CreateEvent(client, SimEventStatus.Once, effectType,
-                                                                                        SimEventType.EFFECT, SimEventClass.REGIONAL,
+                                                CogbotEvent evt = ACogbotEvent.CreateEvent(client, effectType,
+                                                                                        SimEventType.Once | SimEventType.EFFECT | SimEventType.REGIONAL,
                                                                                         ToParameter("doneBy", s),
                                                                                         ToParameter("objectActedOn", t),
                                                                                         ToParameter(
