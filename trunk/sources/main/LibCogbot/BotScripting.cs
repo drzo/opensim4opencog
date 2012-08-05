@@ -85,6 +85,14 @@ namespace Cogbot
 
         private MethodInvoker CatchUpInterns = () => { };
 
+        private void DiscoverMoreSysvars()
+        {
+            foreach (var ms in LockInfo.CopyOf(Plugins).Values)
+            {
+                ConfigSettingAttribute.AddSingletonClass(ms.GetType());
+            }
+        }
+
         private void LoadTaskInterpreter()
         {
             lock (LispTaskInterperterLock)
@@ -129,6 +137,7 @@ namespace Cogbot
                         LoadTaskInterpreter();
                         //InvokeJoin("Waiting on StartupClientLisp");
                         evalLispString("(progn " + startupClientLisp + ")");
+                        DiscoverMoreSysvars();
                     }
                     catch (Exception ex)
                     {

@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using MushDLR223.ScriptEngines;
 
@@ -119,8 +120,25 @@ namespace MushDLR223.Utilities
 
         public static bool IsSingletonClass(Type type)
         {
+            lock (SingletonClasses) if (SingletonClasses.Contains(type)) return true;
             var fnd = type.GetMember("SingleInstance");
-            return (fnd != null && fnd.Length > 0);
+            if (AtLeastOne(fnd) || typeof(ContextualSingleton).IsAssignableFrom(type))
+            {
+                lock (SingletonClasses) SingletonClasses.Add(type);
+                return true;
+            }
+            return false;
+        }
+
+        public static HashSet<Type> SingletonClasses = new HashSet<Type>();
+        public static void AddSingletonClass(Type type)
+        {
+            lock (SingletonClasses)
+            {
+                // already seen
+                if (!SingletonClasses.Add(type)) return;
+            }
+            ScriptManager.LoadSysVars(type);
         }
 
         private MemberInfo member;
@@ -506,6 +524,10 @@ namespace MushDLR223.Utilities
 
     }
 
+    public interface ContextualSingleton
+    {
+    }
+
     public class MemberTree : Attribute
     {
         public string ChildName;
@@ -513,7 +535,7 @@ namespace MushDLR223.Utilities
     public class ExactMemberTree : Attribute
     {
     }
-    public interface HasInstancesOfType
+    public interface HasInstancesOfType: ContextualSingleton
     {
         bool TryGetInstance(Type type, out object fnd);
     }

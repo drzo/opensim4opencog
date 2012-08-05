@@ -26,7 +26,7 @@ namespace Cogbot
         }
     }
 
-    public partial class WorldObjects : AllEvents
+    public partial class WorldObjects : AllEvents, ContextualSingleton
     {
         public static bool AssumeOwner = false;
 
