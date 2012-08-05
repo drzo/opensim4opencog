@@ -63,7 +63,8 @@ using Thread = MushDLR223.Utilities.SafeThread;
 
 namespace Cogbot
 {
-    public partial class BotClient : IDisposable
+    [MemberTree]
+    public partial class BotClient : IDisposable, HasInstancesOfType
     {
 
         public static implicit operator GridClient(BotClient m)
@@ -77,6 +78,7 @@ namespace Cogbot
 
         /// <summary>Settings class including constant values and changeable
         /// parameters for everything</summary>
+        [MemberTree(ChildName="settings")]
         public Settings Settings /* = new Settings(new GridClient());//*/ { get { return gridClient.Settings; } }
         /// <summary>Parcel (subdivided simulator lots) subsystem</summary>
         public ParcelManager Parcels { get { return gridClient.Parcels; } }
@@ -1014,8 +1016,8 @@ namespace Cogbot
         private void RegisterListener(Listener listener)
         {
             // Cogbot[listener.GetModuleName()] = listener;
-
             string mname = listener.GetModuleName();
+            ScriptManager.LoadSysVars(listener.GetType());
             string taskName = "LISTENER STARTUP: " + mname;
             OneAtATimeQueue.NamedTask(taskName, () =>
                                         {
@@ -1416,6 +1418,58 @@ namespace Cogbot
                 //Application.Run(new Form(_debugWindow));
             });
         }
+
+        #region Implementation of HasInstancesOfType
+
+        public bool TryGetInstance(Type type, out object obj)
+        {
+            if (typeof(SimObject).IsAssignableFrom(type))
+            {
+                obj = WorldSystem.m_TheSimAvatar;// TheSimAvatar;
+                return true;
+            }
+            if (typeof(AListener).IsAssignableFrom(type))
+            {
+                foreach (var ms in LockInfo.CopyOf(Plugins).Values)
+                {
+                    obj = ms;
+                    if (type.IsInstanceOfType(type)) return true;
+                }
+            }
+            var ctx = this;
+            foreach (var s in ctx.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                if (type.IsAssignableFrom(s.PropertyType))
+                {
+                    obj = s.GetValue(ctx, null);
+                    if (type.IsInstanceOfType(obj)) return true;
+                }
+                else
+                {
+                    {
+                        obj = s.GetValue(ctx, null);
+                        if (type.IsInstanceOfType(obj))
+                        {
+                            // odity
+                            return true;
+                        }
+                        obj = ConfigSettingAttribute.FindValueOfType(obj, type, 0);
+                        if (type.IsInstanceOfType(obj)) return true;
+                    }
+                }
+            }
+            foreach (var s in ctx.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                obj = s.GetValue(ctx);
+                if (type.IsInstanceOfType(obj)) return true;
+                obj = ConfigSettingAttribute.FindValueOfType(obj, type, 0);
+                if (type.IsInstanceOfType(obj)) return true;
+            }
+            obj = null;
+            return false;
+        }
+
+        #endregion
     }
 
     public delegate void InstantMessageSentArgs(object sender, IMessageSentEventArgs args);

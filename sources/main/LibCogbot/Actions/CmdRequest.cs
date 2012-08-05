@@ -171,6 +171,12 @@ namespace Cogbot
             object ovalue;
             if (!ParamMap.TryGetValue(name, out ovalue))
             {
+                string[] foo;
+                if (base.GetAfter(name, out foo))
+                {
+                    value = (T)(object)foo[0];
+                    return true;
+                }
                 value = default(T);
                 return false;
             }

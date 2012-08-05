@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Reflection;
 using MushDLR223.ScriptEngines;
 
@@ -20,13 +21,100 @@ namespace MushDLR223.Utilities
             if (!UseSingleton) return;
             if (_singleton == null)
             {
-                var fnd = member.DeclaringType.GetMember("SingleInstance");
+                var fnd = Member.DeclaringType.GetMember("SingleInstance");
                 if (fnd != null && fnd.Length > 0)
                 {
                     var fnd0 = fnd[0];
                     _singleton = FindValue(fnd0, null);
                 }
             }
+            if (_singleton == null)
+            {
+                if (sysvarCtx != null)
+                {
+                    _singleton = FindValueOfType(sysvarCtx, Member.DeclaringType, 1);
+                }
+            }
+        }
+
+        public static object FindValueOfType(object ctx, Type type, int depth)
+        {
+            if (type.IsInstanceOfType(ctx)) return ctx;
+            if (depth < 0) return null;
+            object obj;
+            bool mustBeTagged = ctx is ExactMemberTree;
+            if (ctx is HasInstancesOfType)
+            {
+                HasInstancesOfType hit = (HasInstancesOfType) ctx;
+                if (hit.TryGetInstance(type, out obj))
+                {
+                    if (!type.IsInstanceOfType(obj))
+                    {
+                        // trace this
+                        return null;
+                    }
+                    return obj;
+                }
+                if (mustBeTagged)
+                {
+                    // trace this
+                    return null;
+                }
+            }
+            foreach (var s in ctx.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                if (mustBeTagged && !AtLeastOne(s.GetCustomAttributes(typeof(MemberTree), true))) continue;
+                if (type.IsAssignableFrom(s.PropertyType))
+                {
+                    obj = s.GetValue(ctx, null);
+                    if (type.IsInstanceOfType(obj)) return obj;
+                }
+                else
+                {
+                    if (depth > 0)
+                    {
+                        obj = s.GetValue(ctx, null);
+                        if (type.IsInstanceOfType(obj))
+                        {
+                            // trace this
+                            return obj;
+                        }
+                        obj = FindValueOfType(obj, type, depth - 1);
+                        if (type.IsInstanceOfType(obj)) return obj;
+                    }
+                }
+            }
+            foreach (var s in ctx.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                if (mustBeTagged && !AtLeastOne(s.GetCustomAttributes(typeof(MemberTree), true))) continue;
+                obj = s.GetValue(ctx);
+                if (type.IsInstanceOfType(obj)) return obj;
+                if (depth > 0)
+                {
+                    obj =  FindValueOfType(obj, type, depth - 1);
+                    if (type.IsInstanceOfType(obj)) return obj;
+                }
+            }
+            if (ctx is IEnumerable)
+            {
+                IEnumerable hit = (IEnumerable)ctx;
+                foreach (var e in hit)
+                {
+                    obj = e;
+                    if (type.IsInstanceOfType(obj)) return obj;
+                    if (depth > 0)
+                    {
+                        obj = FindValueOfType(obj, type, depth - 1);
+                        if (type.IsInstanceOfType(obj)) return obj;
+                    }
+                }
+            }
+            return null;
+        }
+
+        private static bool AtLeastOne(object[] attributes)
+        {
+            return attributes != null && attributes.Length > 0;
         }
 
         public static bool IsSingletonClass(Type type)
@@ -38,8 +126,21 @@ namespace MushDLR223.Utilities
         private MemberInfo member;
         private object initialValue;
         private object saveValue;
+        [NonSerialized]
+        [ThreadStatic]
         private object _singleton;
+        [NonSerialized]
+        [ThreadStatic]
+        public static object sysvarCtx;
         public bool UseSingleton;
+        public MemberInfo Member
+        {
+            get
+            {
+                return member;
+            }
+        }
+            
         public object Singleton
         {
             get
@@ -69,7 +170,11 @@ namespace MushDLR223.Utilities
             {
                 if (_name == null)
                 {
-                    return "" + member.DeclaringType.Name + ":" + member.Name;
+                    if (!IsStatic)
+                    {
+                        return "" + Member.DeclaringType.Name + ".this." + Member.Name;
+                    }
+                    return "" + Member.DeclaringType.Name + ":" + Member.Name;
                 }
                 return _name;
             }
@@ -78,14 +183,14 @@ namespace MushDLR223.Utilities
 
         private string _description;
         public bool IsStatic;
-
+        
         public string Description
         {
             get
             {
                 if (_description == null)
                 {
-                    return "Member setter " + member + " for " + member.DeclaringType.FullName;
+                    return "Member setter " + Member + " for " + Member.DeclaringType.FullName;
                 }
                 return _description;
             }
@@ -94,12 +199,12 @@ namespace MushDLR223.Utilities
         public override bool Equals(object obj)
         {
             var other = obj as ConfigSettingAttribute;
-            return other != null && other.member == member;
+            return other != null && other.Member == Member;
         }
         public override int GetHashCode()
         {
-            if (member == null) return -1;
-            return member.GetHashCode();
+            if (Member == null) return -1;
+            return Member.GetHashCode();
         }
 
         /// <summary>
@@ -116,6 +221,12 @@ namespace MushDLR223.Utilities
         public void SetMember(MemberInfo member0)
         {
             member = member0;
+            if (IsReadOnlyMember(member0))
+            {
+                // cant restore?
+                // SkipSaveOnExit = true;
+                ReadOnly = true;
+            }
             IsStatic = TestIsStatic(member0);
             UseSingleton = !IsStatic;
         }
@@ -141,6 +252,7 @@ namespace MushDLR223.Utilities
                 string comments = "";
                 if (SkipSaveOnExit) comments += " SkipSavedOnExit";
                 if (ReadOnly) comments += " ReadOnly";
+                if (!IsStatic) comments += " Virtual";
                 if (!string.IsNullOrEmpty(_description)) comments += " " + _description;
                 return comments;
             }
@@ -154,13 +266,13 @@ namespace MushDLR223.Utilities
         {
             get
             {
-                var m = this.member;
+                var m = this.Member;
                 object target = null;
                 if (UseSingleton && !IsStatic)
                 {
                     target = Singleton;
                     if (target == null)
-                        return "lost the race";
+                        return "(unknown singleton)";
                 }
                 try
                 {
@@ -171,49 +283,69 @@ namespace MushDLR223.Utilities
                 {
                     var ie = ScriptManager.InnerMostException(e);
                     if (ie != null) e = ie;
-                    return e.Message;
+                    return "(excpt " + e.Message + ")";
                 }
                 return "(unknown)";
             }
-            set
-            {
+            set {
                 if (ReadOnly)
                 {
+                    if (Value == value) return;
                     throw new InvalidOperationException("ReadOnly cannot set " + ToString() + " to " + value);
                     return;
                 }
-                var m = this.member;
                 saveValue = value;
-                object target = null;
-                if (UseSingleton && !IsStatic) target = Singleton;
-                if (m is FieldInfo)
+                try
                 {
-                    var inf = m as FieldInfo;
-                    if (inf.IsStatic || HasSingleton)
-                    {
-                        object tvalue = ChangeType(value, inf.FieldType);
-                        inf.SetValue(target, tvalue);
-                        return;
-                    }
+                   if(SetValue(value)) return;
+                   if (Value == value) return;
                 }
-                if (m is PropertyInfo)
+                catch (Exception e)
                 {
-                    var inf = m as PropertyInfo;
-                    m = inf.GetSetMethod();
+                    throw new InvalidOperationException("Error setting " + ToString() + " to " + value, e);
                 }
-                if (m is MethodInfo)
-                {
-                    var inf = m as MethodInfo;
-                    if (inf.IsStatic || HasSingleton)
-                    {
-                        object tvalue = ChangeType(value, inf.GetParameters()[0].ParameterType);
-                        inf.Invoke(target, new object[] { tvalue });
-                        return;
-                    }
-                }
-                if (Value == value) return;
                 throw new InvalidOperationException("cannot find how to set " + ToString() + " to " + value);
             }
+        }
+
+        private bool SetValue(object value)
+        {
+            var m = Member;
+            object target = null;
+            if (UseSingleton && !IsStatic) target = Singleton;
+            if (m is FieldInfo)
+            {
+                var inf = m as FieldInfo;
+                if (inf.IsStatic || HasSingleton)
+                {
+                    object tvalue = ChangeType(value, inf.FieldType);
+                    inf.SetValue(target, tvalue);
+                    return true;
+                }
+            }
+            if (m is PropertyInfo)
+            {
+                var inf = m as PropertyInfo;
+                m = inf.GetSetMethod();
+                if (m == null)
+                {
+                    // @todo trace
+                    object tvalue = ChangeType(value, inf.PropertyType);
+                    inf.SetValue(target, value, null);
+                    return true;
+                }
+            }
+            if (m is MethodInfo)
+            {
+                var inf = m as MethodInfo;
+                if (inf.IsStatic || HasSingleton)
+                {
+                    object tvalue = ChangeType(value, inf.GetParameters()[0].ParameterType);
+                    inf.Invoke(target, new object[] { tvalue });
+                    return true;
+                }
+            }
+            return false;            
         }
 
         private static object ChangeType(object value, Type type)
@@ -309,7 +441,23 @@ namespace MushDLR223.Utilities
             }
             return false;
         }
-
+        public static Type MemberValueType(MemberInfo info)
+        {
+            if (info.DeclaringType.IsEnum) return info.DeclaringType;
+            {
+                var inf = info as FieldInfo;
+                if (inf != null) return inf.FieldType;
+            }
+            {
+                var inf = info as PropertyInfo;
+                if (inf != null) return inf.PropertyType;
+            }
+            {
+                var inf = info as MethodInfo;
+                if (inf != null) return inf.ReturnType;
+            }
+            return info.DeclaringType;
+        }
         public static bool TestIsStatic(MemberInfo info)
         {
             if (info.DeclaringType.IsEnum) return true;
@@ -343,6 +491,31 @@ namespace MushDLR223.Utilities
             if (type.IsVisible && type.IsValueType) return true;
             return false;
         }
+
+        static public bool IsReadOnlyMember(MemberInfo member)
+        {
+            if (member != null)
+            {
+                var fi = member as FieldInfo;
+                if (fi != null) return fi.IsLiteral || fi.IsInitOnly;
+                var pi = member as PropertyInfo;
+                if (pi != null) return !pi.CanWrite;
+            }
+            return false;
+        }
+
+    }
+
+    public class MemberTree : Attribute
+    {
+        public string ChildName;
+    }
+    public class ExactMemberTree : Attribute
+    {
+    }
+    public interface HasInstancesOfType
+    {
+        bool TryGetInstance(Type type, out object fnd);
     }
 
     public interface IKeyValuePair<K, V> : IDisposable

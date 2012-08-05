@@ -15,7 +15,8 @@ namespace Cogbot
         {
             //botclient = _parent;
             client = _parent;//.CurrentClient;
-            client.Plugins[this.GetModuleName()] = this;
+            Dictionary<string, Listener> clientPlugins = client.Plugins;
+            lock (clientPlugins) clientPlugins[this.GetModuleName()] = this;
         }
 
         /// <summary>

@@ -514,7 +514,7 @@ namespace MushDLR223.ScriptEngines
             return p.ToArray();
         }
 
-        private int IndexOf(string flag)
+        protected int IndexOf(string flag)
         {
             int i = 0;
             flag = ToKey(flag);
