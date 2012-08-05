@@ -13,12 +13,13 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.World
 {
-    public class SimAssetStore
+    public class SimAssetStore : ContextualSingleton
     {
 
         //internal static readonly Dictionary<UUID, object> uuidAsset = new Dictionary<UUID, object>();
 
-        static internal object uuidAsset
+        [NotConfigurable]
+        static internal object uuidAssetLock
         {
             get { return WorldObjects.UUIDTypeObject; }
         }
@@ -139,14 +140,14 @@ namespace Cogbot.World
             Enqueue(() => LoadItemOrFolder(e.Item));
         }
 
-        private bool downloadAssetFoldersComplete = false;
+        private bool ensuredDownloadAssetFoldersComplete = false;
         [ConfigSetting(SkipSaveOnExit = true)]
         public static bool downloadedAssetFoldersComplete = false;
         private void Ensure_Downloaded(object sender, SimConnectedEventArgs e)
         {
             if (!WorldObjects.GleanAssetsFromInventory) return;
-            if (downloadAssetFoldersComplete) return;
-            downloadAssetFoldersComplete = true;
+            if (ensuredDownloadAssetFoldersComplete) return;
+            ensuredDownloadAssetFoldersComplete = true;
             Inventory = Manager.Store;
             Inventory.InventoryObjectAdded += Store_OnInventoryObjectAdded;
             Inventory.InventoryObjectUpdated += Store_OnInventoryObjectUpdated;
@@ -250,11 +251,12 @@ namespace Cogbot.World
 
         static internal void FillAssetNames()
         {
-            if (FilledInAssets) return;
-            lock (uuidAsset)
+            if (FilledInAssetsComplete) return;
+            lock (uuidAssetLock)
             {
-                if (FilledInAssets) return; 
-                FilledInAssets = true;
+                if (FilledInAssetsComplete) return;
+                if (StartedToFillInAssets) return;
+                StartedToFillInAssets = true;
                 var wasDownloadAssetDefault = EnableDownloadAssetDefault;
                 SimAssetStore.EnableDownloadAssetDefault = false;
                 AddTexture("alpha_gradient", "e97cf410-8e61-7005-ec06-629eba4cd1fb","Used for generating the texture for the ground dynamically. Also used for creating the *invisiprim* that hides avatars, prims with alpha values less than 1.0 and particle effects");
@@ -1121,6 +1123,7 @@ namespace Cogbot.World
                 EnableDownloadAssetDefault = wasDownloadAssetDefault;
                 SimAnimation.ClassifyAnims();
                 SaveAssetFile("AssetMapping3.xml", false);
+                FilledInAssetsComplete = true;
 #if SPAMMY_DEBUG
                 //lock (SimAssets) 
                     foreach (SimAsset A in SimAssets)
@@ -1687,7 +1690,8 @@ namespace Cogbot.World
 
         internal readonly static ListAsSet<SimAsset> SimAssets = new ListAsSet<SimAsset>();
         internal readonly static Dictionary<string, string> nameNameMap = new Dictionary<string, string>();
-        static private bool FilledInAssets;
+        static private bool FilledInAssetsComplete;
+        static private bool StartedToFillInAssets;
         public static bool EnableDownloadAssetDefault = true;
         public static bool DisableQueue = false;
 

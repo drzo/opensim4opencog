@@ -42,12 +42,29 @@ namespace RoboKindAvroQPIDModule
         public bool LogEventFromCogbot(object sender, CogbotEvent evt)
         {
             if (evt.Sender == this) return false;
+            if (!IsQPIDRunning) return false;
             if (!cogbotSendersToNotSendToCogbot.Contains(sender)) cogbotSendersToNotSendToCogbot.Add(sender);
             string ss = evt.ToEventString();
             var im = RK_publisher.CreateTextMessage(ss);
+            int num = 0;
             foreach (var s in evt.Parameters)
             {
-                im.Headers.SetString(s.Key, "" + s.Value);
+                string sKey = s.Key;
+                if (!im.Headers.Contains(sKey))
+                {
+                    num = 0;
+                }
+                else
+                {
+                    num++;
+                    sKey = sKey + "_" + num;
+                    while (im.Headers.Contains(sKey))
+                    {
+                        num++;
+                        sKey = s.Key + "_" + num;
+                    }
+                }
+                im.Headers.SetString(sKey, "" + s.Value);
             }
             im.Headers.SetString("verb", "" + evt.Verb);
             im.Headers.SetBoolean("personal", evt.IsPersonal != null);
@@ -56,6 +73,11 @@ namespace RoboKindAvroQPIDModule
             im.Type = "" + evt.EventType1;
             RK_publisher.SendMessage(im);
             return false;
+        }
+
+        protected bool IsQPIDRunning
+        {
+            get { return RK_listener != null && RK_publisher != null; }
         }
 
         public bool LogEventFromRoboKind(object sender, CogbotEvent evt)
@@ -79,7 +101,10 @@ namespace RoboKindAvroQPIDModule
         {
             EventsEnabled = false;
             RK_listener.Shutdown();
+            RK_listener.OnAvroMessage -= AvroReceived;
+            RK_listener = null;
             RK_publisher.Shutdown();
+            RK_publisher = null;
         }
 
         public bool EventsEnabled { get; set; }
@@ -92,14 +117,14 @@ namespace RoboKindAvroQPIDModule
         public override void StartupListener()
         {
             EnsureLoginToQIPD();
+            client.EachSimEvent += SendEachSimEvent;
             client.AddBotMessageSubscriber(this);
             EventsEnabled = true;
-            client.EachSimEvent += SendEachSimEvent;
         }
 
         private void EnsureLoginToQIPD()
         {
-            if (RK_listener!=null) return;
+            if (RK_listener != null) return;
             var uri = RoboKindAvroQPIDModuleMain.RK_QPID_URI;
             try
             {
@@ -141,6 +166,7 @@ namespace RoboKindAvroQPIDModule
 
         private void SendEachSimEvent(object sender, EventArgs e)
         {
+            if (!IsQPIDRunning || !EventsEnabled) return;
             if (e is CogbotEvent)
             {
                 CogbotEvent cbe = (CogbotEvent)e;

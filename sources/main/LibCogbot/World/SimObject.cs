@@ -19,7 +19,8 @@ using Thread = MushDLR223.Utilities.SafeThread;
 namespace Cogbot.World
 {
     //TheSims-like object
-    public class SimObjectImpl : SimPosition, BotMentalAspect,  SimObject, MeshableObject, IEquatable<SimObjectImpl>
+    public class SimObjectImpl : SimPosition, BotMentalAspect,  SimObject, MeshableObject, IEquatable<SimObjectImpl>,
+        NotContextualSingleton
     {
         public override bool Equals(object obj)
         {
@@ -3319,7 +3320,8 @@ namespace Cogbot.World
         }
     }
 
-    public interface SimObjectAffordance {
+    public interface SimObjectAffordance : NotContextualSingleton
+    {
         // Afordance system
         bool IsTyped { get; }
         SimObjectType IsTypeOf(SimObjectType superType);

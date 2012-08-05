@@ -6,7 +6,7 @@
   <tcpIPAddress>0.0.0.0</tcpIPAddress>
   <firstName>ExampleBot</firstName>
   <lastName>Resident</lastName> 
-  <simURL>http://nourl.osgrid.org/</simURL>
+  <simURL>agni</simURL>
   <password>pass123</password>
   <startupLisp>
     (setj WorldObjects:MaintainCollisions true)
@@ -224,6 +224,7 @@
     (thisClient.ExecuteCommand (@ "im $master I am located in {0}" (str thisClient.Network.CurrentSim.Name)) )
     (thisClient.ExecuteCommand "say Cilent Startup complete!")
     (thisClient.ExecuteCommand "debug Info")
+    (thisClient.ExecuteCommand "sysvars save foo.xml")
 
   </onLogin>
 </Configuration>

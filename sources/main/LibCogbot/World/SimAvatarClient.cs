@@ -17,7 +17,7 @@ using System.Drawing;
 
 namespace Cogbot.World
 {
-    public partial class SimAvatarClient : SimAvatarImpl, SimMover, SimAvatar, SimActor, SimControllableAvatar
+    public partial class SimAvatarClient : SimAvatarImpl, SimMover, SimAvatar, SimActor, SimControllableAvatar, ContextualSingleton
     {
 
         public static SimAvatarClient SingleInstance;

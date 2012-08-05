@@ -418,7 +418,8 @@ namespace Cogbot
         {
             get { return Self.AgentID; }
         }
-        
+
+        [SkipMemberTree]
         public SimAvatarClient TheSimAvatar
         {
             get

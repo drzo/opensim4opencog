@@ -33,8 +33,12 @@ namespace MushDLR223.Utilities
             {
                 if (sysvarCtx != null)
                 {
-                    _singleton = FindValueOfType(sysvarCtx, Member.DeclaringType, 1);
+                    _singleton = FindValueOfType(sysvarCtx, Member.DeclaringType, 2);
                 }
+            }
+            if (_singleton == null)
+            {
+                return;
             }
         }
 
@@ -47,7 +51,7 @@ namespace MushDLR223.Utilities
             if (ctx is HasInstancesOfType)
             {
                 HasInstancesOfType hit = (HasInstancesOfType) ctx;
-                if (hit.TryGetInstance(type, out obj))
+                if (hit.TryGetInstance(type, depth - 1, out obj))
                 {
                     if (!type.IsInstanceOfType(obj))
                     {
@@ -61,10 +65,12 @@ namespace MushDLR223.Utilities
                     // trace this
                     return null;
                 }
+                return null;
             }
             foreach (var s in ctx.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
-                if (mustBeTagged && !AtLeastOne(s.GetCustomAttributes(typeof(MemberTree), true))) continue;
+                if (mustBeTagged && !HasAttribute(s, typeof(MemberTree))) continue;
+                if (HasAttribute(s, typeof(SkipMemberTree))) continue;
                 if (type.IsAssignableFrom(s.PropertyType))
                 {
                     obj = s.GetValue(ctx, null);
@@ -87,7 +93,8 @@ namespace MushDLR223.Utilities
             }
             foreach (var s in ctx.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
-                if (mustBeTagged && !AtLeastOne(s.GetCustomAttributes(typeof(MemberTree), true))) continue;
+                if (mustBeTagged && !HasAttribute(s, typeof(MemberTree))) continue;
+                if (HasAttribute(s, typeof(SkipMemberTree))) continue;
                 obj = s.GetValue(ctx);
                 if (type.IsInstanceOfType(obj)) return obj;
                 if (depth > 0)
@@ -113,16 +120,38 @@ namespace MushDLR223.Utilities
             return null;
         }
 
-        private static bool AtLeastOne(object[] attributes)
+        public static bool AtLeastOne(object[] attributes)
         {
             return attributes != null && attributes.Length > 0;
         }
-
+        public static bool HasAttribute(MemberInfo info, Type type)
+        {
+            return AtLeastOne(info.GetCustomAttributes(type, true));
+        }
         public static bool IsSingletonClass(Type type)
         {
             lock (SingletonClasses) if (SingletonClasses.Contains(type)) return true;
-            var fnd = type.GetMember("SingleInstance");
-            if (AtLeastOne(fnd) || typeof(ContextualSingleton).IsAssignableFrom(type))
+            if (typeof(NotContextualSingleton).IsAssignableFrom(type) && !typeof(ContextualSingleton).IsAssignableFrom(type)) return false;
+            bool singleton = typeof(ContextualSingleton).IsAssignableFrom(type);
+            if (!singleton)
+            {
+                singleton = AtLeastOne(type.GetMember("SingleInstance"));
+            }
+            if (!singleton)
+            {
+                foreach (var set in type.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static))
+                {
+                    if (set is MethodBase) continue;
+                    if (set is EventInfo) continue;
+                    if (set is Type) continue;
+                    if (MemberValueType(set) == set.DeclaringType)
+                    {
+                        //singleton = true;
+                        break;
+                    }    
+                }
+            }
+            if (singleton)
             {
                 lock (SingletonClasses) SingletonClasses.Add(type);
                 return true;
@@ -527,7 +556,12 @@ namespace MushDLR223.Utilities
     public interface ContextualSingleton
     {
     }
-
+    public interface NotContextualSingleton
+    {
+    }
+    public class NotConfigurable : Attribute
+    {
+    }
     public class MemberTree : Attribute
     {
         public string ChildName;
@@ -535,9 +569,12 @@ namespace MushDLR223.Utilities
     public class ExactMemberTree : Attribute
     {
     }
+    public class SkipMemberTree : Attribute
+    {
+    }
     public interface HasInstancesOfType: ContextualSingleton
     {
-        bool TryGetInstance(Type type, out object fnd);
+        bool TryGetInstance(Type type, int depth, out object fnd);
     }
 
     public interface IKeyValuePair<K, V> : IDisposable
