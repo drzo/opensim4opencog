@@ -103,12 +103,12 @@ namespace CycWorldModule.DotCYC
                 IsCycDead = false;
             }
             if (IsCycDead) return;
-            if (evt.EventType == SimEventType.UNKNOWN)
+            if (evt.IsEventType(SimEventType.UNKNOWN))
             {
                 return;
             }
-            if (evt.EventType == SimEventType.NETWORK && !StoreInfrastructureEvents) return;
-            if (evt.EventClass == SimEventClass.PERSONAL && !StorePersonalEvents) return;
+            if (evt.IsEventType(SimEventType.NETWORK) && !StoreInfrastructureEvents) return;
+            if (evt.IsPersonal != null && !StorePersonalEvents) return;
             //if (SkipVerbs.Contains(evt.Verb.ToLower())) return;
             if (!UseQueue)
             {
@@ -124,7 +124,7 @@ namespace CycWorldModule.DotCYC
             try
             {
                 if (Master.IsDisposing) return;
-                if (evt.EventType == SimEventType.DATA_UPDATE)
+                if (evt.IsEventType(SimEventType.DATA_UPDATE))
                 {
                     foreach (var v in evt.GetArgs())
                     {
@@ -132,7 +132,7 @@ namespace CycWorldModule.DotCYC
                     }
                     return;
                 }
-                if (evt.EventType == SimEventType.EFFECT)
+                if (evt.IsEventType(SimEventType.EFFECT))
                 {
                     if (evt.Verb == "LookAtType-Idle") return;
                     if (evt.Verb == "LookAtType-FreeLook") return;
@@ -1014,7 +1014,7 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
         {
             Dictionary<object, object> newDictionary = new Dictionary<object, object>(CompareKeys);
             CycFort predUsed;
-            if (evt.EventType == SimEventType.DATA_UPDATE)
+            if (evt.IsEventType(SimEventType.DATA_UPDATE))
             {
                 return null;
             }
@@ -1025,14 +1025,14 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
                 {
                     if (cycTerms.TryGetValue(evt, out constant)) return constant;
                     //   object[] forts = ToForts(simObj.Parameters);
-                    cycTerms[evt] = constant = createIndividualFn("SimEvent-" + evt.EventType,
+                    cycTerms[evt] = constant = createIndividualFn("SimEvent-" + evt.EventStatus,
                                                                   evt.ToEventString(),
                                                                   evt.ToString(),
                                                                   "SimVocabularyMt",
                                                                   "SimObjectEvent");
                 }
                 bool wasNew;
-                CycFort col = createTerm(evt.GetVerb().Replace(" ", "-"),
+                CycFort col = createTerm(evt.Verb.Replace(" ", "-"),
                                                "Event subtype of #$SimObjectEvent", "SimVocabularyMt", "Collection",
                                                out wasNew);
                 if (wasNew)
@@ -1045,13 +1045,13 @@ sbhl conflict: (genls BodyMovementEvent SimAnimation) TRUE SimVocabularyMt
                 string datePred;
                 switch (evt.EventStatus)
                 {
-                    case SimEventStatus.Start:
+                    case SimEventType.Start:
                         datePred = (TimeRep == 2 ? "startingPoint" : "startingDate");
                         break;
-                    case SimEventStatus.Stop:
+                    case SimEventType.Stop:
                         datePred = (TimeRep == 2 ? "endingPoint" : "endingDate");
                         break;
-                    case SimEventStatus.Once:
+                    case SimEventType.Once:
                     default:
                         datePred = (TimeRep == 2 ? "timePoint" : "dateOfEvent");
                         break;

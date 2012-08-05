@@ -1015,7 +1015,7 @@ namespace Cogbot.World
                         if (evt.Verb == "Flying")
                         {
                             LastEventByName[evt.EventName] = evt;
-                            if (evt.EventStatus != SimEventStatus.Start) continue;
+                            if (evt.IsEventType(SimEventType.Start)) continue;
                         }
                         if (evt.Verb == "StandingStill")
                         {
@@ -1038,7 +1038,7 @@ namespace Cogbot.World
                         //    object old = GetLastEvent("MovingStart", 2); 
                         //    evt.Verb = "MoveTo"; 
                         //} 
-                        if (SimEventStatus.Start == evt.EventStatus)
+                        if (evt.IsEventType(SimEventType.Start))
                         {
                             SetPosture(evt);
                         }
@@ -1056,7 +1056,7 @@ namespace Cogbot.World
                             {
                                 if (RemovedThisEventUnsent.ContainsKey(uuid.Key))
                                 {
-                                    var evt = AnimEvent(uuid.Key, SimEventStatus.Stop, seq);
+                                    var evt = AnimEvent(uuid.Key, SimEventType.Stop, seq);
                                     bool sent = LogEvent(evt);
                                     if (!sent && ShouldEventSource)
                                     {
@@ -1075,7 +1075,7 @@ namespace Cogbot.World
                             {
                                 if (AddedThisEventUnsent.ContainsKey(uuid.Key))
                                 {
-                                    var evt = AnimEvent(uuid.Key, SimEventStatus.Start, seq);
+                                    var evt = AnimEvent(uuid.Key, SimEventType.Start, seq);
                                     bool sent = LogEvent(evt);
                                     if (!sent && ShouldEventSource)
                                     {
@@ -1133,19 +1133,19 @@ namespace Cogbot.World
             /// SendNewEvent("On-Avatar-Animation", avatar, names); 
         }
 
-        private CogbotEvent AnimEvent(UUID uuid, SimEventStatus status, int serial)
+        private CogbotEvent AnimEvent(UUID uuid, SimEventType status, int serial)
         {
             SimAsset a = SimAssetStore.FindOrCreateAsset(uuid, AssetType.Animation);
 
             string headingString;
             switch (status)
             {
-                case SimEventStatus.Start:
+                case SimEventType.Start:
                     {
                         headingString = "eventOccursAt";
                         break;
                     }
-                case SimEventStatus.Stop:
+                case SimEventType.Stop:
                     {
                         headingString = "toLocation";
                         break;
@@ -1157,7 +1157,7 @@ namespace Cogbot.World
                     }
             }
             object m = a.GetMeaning();
-            CogbotEvent oe = CreateAEvent(status, "OnAnim", SimEventType.ANIM, SimEventClass.REGIONAL,
+            CogbotEvent oe = CreateAEvent(status, "OnAnim", SimEventType.ANIM | SimEventType.REGIONAL,
                                       WorldObjects.ToParameter("doneBy", this),
                                       WorldObjects.ToParameter("isa", a),
                                       WorldObjects.ToParameter(headingString, GetHeading()));
@@ -1167,9 +1167,9 @@ namespace Cogbot.World
         }
 
 
-        public CogbotEvent CreateAEvent(SimEventStatus status, string eventName, SimEventType type, SimEventClass eventScope, params NamedParam[] pzs)
+        public CogbotEvent CreateAEvent(SimEventType status, string eventName, SimEventType type, params NamedParam[] pzs)
         {
-            return ACogbotEvent.CreateEvent(this, status, eventName, type, eventScope, pzs);
+            return ACogbotEvent.CreateEvent(this, status | type,eventName, pzs);
         }
 
         private void SetPosture(CogbotEvent evt)
@@ -1181,15 +1181,15 @@ namespace Cogbot.World
                     // was the same 
                     if (PostureType == evt.Verb) return;
                     CogbotEvent ending = new ACogbotEvent(evt.Sender,
-                        SimEventStatus.Stop,
+                        SimEventType.Stop | SimEventType.ANIM | SimEventType.REGIONAL,
                         PostureType + (IsFlying ? "-Flying" : ""),
-                        SimEventType.ANIM, SimEventClass.REGIONAL, evt.Parameters) { Serial = LastPostureEvent.Serial };
+                        evt.Parameters) { Serial = LastPostureEvent.Serial };
                     LogEvent(ending);
                     PostureType = evt.Verb;
                     CogbotEvent starting = new ACogbotEvent(evt.Sender,
-                        SimEventStatus.Start,
+                                                SimEventType.Start | SimEventType.ANIM | SimEventType.REGIONAL,
                         PostureType + (IsFlying ? "-Flying" : ""),
-                        SimEventType.ANIM, SimEventClass.REGIONAL, evt.Parameters) { Serial = evt.Serial };
+                        evt.Parameters) { Serial = evt.Serial };
                     LogEvent(starting);
                 }
                 PostureType = evt.Verb;
@@ -1249,7 +1249,7 @@ namespace Cogbot.World
             if (wasStarted != 0 && wasStopped != 0) return;
             if (wasStarted != 0)
             {
-                CogbotEvent simEvent = CreateAEvent(SimEventStatus.Start, name, SimEventType.ANIM, SimEventClass.REGIONAL,
+                CogbotEvent simEvent = CreateAEvent(SimEventType.Start, name, SimEventType.ANIM | SimEventType.REGIONAL,
                                                              WorldObjects.ToParameter("doneBy", this),
                                                              WorldObjects.ToParameter("eventOccursAt", GetHeading()));
                 simEvent.Serial = wasStarted;
@@ -1257,7 +1257,7 @@ namespace Cogbot.World
             }
             if (wasStopped != 0)
             {
-                CogbotEvent simEvent = CreateAEvent(SimEventStatus.Stop, name, SimEventType.ANIM, SimEventClass.REGIONAL,
+                CogbotEvent simEvent = CreateAEvent(SimEventType.Stop, name, SimEventType.ANIM | SimEventType.REGIONAL,
                                                              WorldObjects.ToParameter("doneBy", this),
                                                              WorldObjects.ToParameter("toLocation", GetHeading()));
                 simEvent.Serial = wasStopped;

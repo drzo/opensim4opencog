@@ -293,7 +293,7 @@ namespace Cogbot
             {
                 parms[i] = new NamedParam(paramNames[i], paramTypes[i],parameters[i]);
             }
-            CogbotEvent evt = ACogbotEvent.CreateEvent(client, SimEventStatus.Once, eventName, SimEventType.UNKNOWN, SimEventClass.REGIONAL, parms);
+            CogbotEvent evt = ACogbotEvent.CreateEvent(client, eventName, SimEventType.Once | SimEventType.UNKNOWN | SimEventType.REGIONAL, parms);
             client.SendPipelineEvent(evt);
             return true;
         }
@@ -1266,7 +1266,7 @@ namespace Cogbot
 
         public void SendNewRegionEvent(SimEventType type, string eventName, params object[] args)
         {
-            client.SendPipelineEvent(ACogbotEvent.CreateEvent(this, type, SimEventClass.REGIONAL, eventName, args));
+            client.SendPipelineEvent(ACogbotEvent.CreateEvent(this, type | SimEventType.REGIONAL, eventName, args));
         }
 
         public string describePrim(Primitive target, bool detailed)

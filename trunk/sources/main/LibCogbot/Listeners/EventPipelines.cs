@@ -47,7 +47,7 @@ namespace Cogbot
 
         private bool Skipped(CogbotEvent evt)
         {
-            return (SkippedVerb(evt.Verb) || SkippedVerb(evt.EventType.ToString()) || SkippedVerb(evt.EventName));
+            return (SkippedVerb(evt.Verb) || SkippedVerb(evt.EventType1.ToString()) || SkippedVerb(evt.EventName));
         }
 
         private bool SkippedVerb(string verb)
@@ -86,14 +86,15 @@ namespace Cogbot
         void SimEventSubscriber.OnEvent(CogbotEvent evt)
         {
             if (!EventsEnabled) return;
-            if (evt.EventType == SimEventType.DATA_UPDATE) return;
+            const SimEventType du = SimEventType.DATA_UPDATE;
+            if (evt.IsEventType(du)) return;
 
-            if (evt.EventType == SimEventType.EFFECT)
+            if (evt.IsEventType(SimEventType.EFFECT))
             {
                 if (evt.Verb == "LookAtType-Idle") return;
                 if (evt.Verb == "LookAtType-FreeLook") return;
             }
-            String eventName = evt.GetVerb();
+            String eventName = evt.Verb;
             object[] args = evt.GetArgs();
 
             String msg = "["+ From.GetName() + ": " + eventName.ToLower()+"]";
@@ -137,7 +138,7 @@ namespace Cogbot
     public interface SimEventPublisher
     {
         // this publisher will SendEvent to some SimEventPipeline after the Event params have been casted to the correct types
-        CogbotEvent CreateEvent(SimEventType type,SimEventClass clazz, string eventName, params object[] args);
+        CogbotEvent CreateEvent(SimEventType type, string eventName, params object[] args);
         // this object will propogate the event AS-IS 
         void SendEvent(CogbotEvent evt);
         void AddSubscriber(SimEventSubscriber sub);
@@ -185,9 +186,9 @@ namespace Cogbot
 
         #region SimEventPublisher Members
 
-        public CogbotEvent CreateEvent(SimEventType type, SimEventClass clazz, string eventName, params object[] args)
+        public CogbotEvent CreateEvent(SimEventType type, string eventName, params object[] args)
         {
-            return new ACogbotEvent(Publisher, type, clazz, eventName, args);
+            return new ACogbotEvent(Publisher, type, eventName, args);
         }
 
         public static bool UseQueue = false;

@@ -229,7 +229,7 @@ namespace AIMLBotModule
             {
                 return;
             }
-            string aimlCall = string.Format("SimEvent {0} {1}", evt.GetVerb(), argsListString(evt.GetArgs()));
+            string aimlCall = string.Format("SimEvent {0} {1}", evt.Verb, argsListString(evt.GetArgs()));
             //DLRConsole.DebugWriteLine(aimlCall);
             //Result r = AimlBot.Chat(aimlCall,"EventSystem");
         }
