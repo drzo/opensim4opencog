@@ -103,7 +103,7 @@ namespace Cogbot
         {
             lock (EnsuringRadegastLock)
             {
-                if (MainProgram.CommandLine == null) MainProgram.CommandLine = new CommandLine();
+                if (MainProgram.CommandLine == null) MainProgram.CommandLine = new Radegast.CommandLine();
                 instance = bc.TheRadegastInstance = instance ??
                                                     bc.TheRadegastInstance ?? new RadegastInstance(bc.gridClient);
                 var mf = instance.MainForm;

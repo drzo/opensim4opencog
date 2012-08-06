@@ -1642,8 +1642,10 @@ namespace Cogbot
         public bool ProcessCommandArgs()
         {
             SetIfPresent(DefaultAccount, "FirstName", ClientManagerConfig.arguments["first"]);
-            if (ClientManagerConfig.arguments["last"] != null) DefaultAccount.LastName = ClientManagerConfig.arguments["last"];
-            if (ClientManagerConfig.arguments["pass"] != null) DefaultAccount.Password = ClientManagerConfig.arguments["pass"];
+            if (ClientManagerConfig.arguments["last"] != null)
+                DefaultAccount.LastName = ClientManagerConfig.arguments["last"];
+            if (ClientManagerConfig.arguments["pass"] != null)
+                DefaultAccount.Password = ClientManagerConfig.arguments["pass"];
             DefaultAccount.GroupCommands = true;
 
             if (ClientManagerConfig.arguments["masterkey"] != null)
@@ -1666,7 +1668,7 @@ namespace Cogbot
                 char sep = '/';
                 string[] startbits = ClientManagerConfig.arguments["startpos"].Split(sep);
                 DefaultAccount.Start = NetworkManager.StartLocation(startbits[0], Int32.Parse(startbits[1]),
-                        Int32.Parse(startbits[2]), Int32.Parse(startbits[3]));
+                                                                    Int32.Parse(startbits[2]), Int32.Parse(startbits[3]));
             }
 
             if (ClientManagerConfig.arguments["scriptfile"] != null)
@@ -1690,16 +1692,20 @@ namespace Cogbot
                 string file = String.Empty;
                 file = ClientManagerConfig.arguments["file"];
                 LoadAcctsFromFile(file);
-            } else if (ClientManagerConfig.arguments["first"] != null && ClientManagerConfig.arguments["last"] != null && ClientManagerConfig.arguments["pass"] != null)
+            }
+            else if (ClientManagerConfig.arguments["first"] != null && ClientManagerConfig.arguments["last"] != null &&
+                     ClientManagerConfig.arguments["pass"] != null)
             {
                 ClientManagerConfig.DoNotCreateBotClientsFromBotConfig = true;
                 // Taking a single login off the command-line
-                var account = FindOrCreateAccount(ClientManagerConfig.arguments["first"], ClientManagerConfig.arguments["last"]);
+                var account = FindOrCreateAccount(ClientManagerConfig.arguments["first"],
+                                                  ClientManagerConfig.arguments["last"]);
             }
             else if (ClientManagerConfig.arguments["help"] != null)
             {
                 return false;
-            } else
+            }
+            else
             {
                 ClientManagerConfig.DoNotCreateBotClientsFromBotConfig = false;
             }

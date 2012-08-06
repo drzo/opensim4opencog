@@ -35,44 +35,27 @@ namespace Cogbot
         [STAThread]
         public static void Main(string[] args)
         {
-            RunInSTAThread(() => RunCurrent(args), true);
+            var state = Parser.ParseArgs(args).GetWithout("mta", out args) ? ApartmentState.MTA : ApartmentState.STA;
+            ProgramUtil.RunInThread(state, () => Run(args), true);
         }
 
         /// <summary>
         /// Non Blocking
         /// </summary>
         /// <param name="args"></param>
-        public static void Run(string[] args)
+        public static void Start(string[] args)
         {
-            RunInSTAThread(() => RunCurrent(args), false);
-        }
-
-        /// <summary>
-        /// runs in a STA thread (by creating one)  Does not "join"
-        /// </summary>
-        /// <param name="args"></param>        
-        public static void RunInSTAThread(ThreadStart runMain, bool blocking)
-        {
-            if (!blocking || Thread.CurrentThread.ApartmentState != ApartmentState.STA)
-            {
-                Thread newThread = new Thread(runMain);
-                newThread.SetApartmentState(ApartmentState.STA);
-                newThread.Start();
-                if (blocking) newThread.Join();
-                return;
-            }
-            else
-            {
-                runMain();
-            }
+            var state = Parser.ParseArgs(args).GetWithout("mta", out args) ? ApartmentState.MTA : ApartmentState.STA;
+            ProgramUtil.RunInThread(state, () => Run(args), false);
         }
 
         /// <summary>
         /// runs in current thread
         /// </summary>
         /// <param name="args"></param>
-        public static void RunCurrent(string[] args)
+        public static void Run(string[] args)
         {
+            var orig = args;
             args = ProgramUtil.SetAllCommandLineOptions(args);
 
             string[] oArgs;
@@ -127,15 +110,17 @@ namespace Cogbot
         {
             DoAndExit(() =>
             {
-                Type t = Type.GetType(c, false, false);
-                if (t == null) t = Type.GetType(c, false, true);
+                Type t = FindTypeByName(c, Assembly.GetCallingAssembly());
                 if (t == null && c.Contains(":"))
                 {
                     var ds = c.Split(':');
                     c = ds[1];
                     Assembly asem = AppDomain.CurrentDomain.Load(ds[0]);
-                    t = asem.GetType(c, false, false);
-                    if (t == null) t = asem.GetType(c, false, true);
+                    t = FindTypeByName(c, asem);
+                }
+                if (t == null)
+                {
+                    t = FindTypeByName(c, Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly());
                 }
                 if (t != null)
                 {
@@ -146,6 +131,27 @@ namespace Cogbot
                     throw new Exception("Class not found: " + c);
                 }
             });
+        }
+
+        private static Type FindTypeByName(string c, Assembly assem)
+        {
+            Type t = Type.GetType(c, false, false) ?? Type.GetType(c, false, true);
+            if (t != null || assem == null) return t;
+            t = assem.GetType(c, false, false) ?? assem.GetType(c, false, true);
+            if (t != null)
+            {
+                return t;
+            }
+            foreach (var an in assem.GetReferencedAssemblies())
+            {
+                var asem = Assembly.Load(an);
+                t = asem.GetType(c, false, false) ?? asem.GetType(c, false, true);
+                if (t != null)
+                {
+                    return t;
+                }
+            }
+            return null;
         }
 
         private static void RunType(Type t, string[] newArgs)
@@ -166,20 +172,20 @@ namespace Cogbot
                 DoAndExit(() => mi.Invoke(null, new object[] { }));
                 return;
             }
-            foreach (var s in t.GetMethods(BindingFlags.Static | BindingFlags.NonPublic))
+            var mainOrRun = new List<string>(new[] {"main", "run", "start", "exec"});
+            foreach (var s in t.GetMethods(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public))
             {
-                if (s.Name.ToLower() == "main")
+                if (mainOrRun.Contains(s.Name.ToLower()))
                 {
                     var ps = s.GetParameters();
                     if (ps.Length == 0)
                     {
-
-                        DoAndExit(() => s.Invoke(null, new object[] { }));
+                        DoAndExit(() => s.Invoke(null, new object[] {}));
                         return;
                     }
                     if (ps.Length == 1)
                     {
-                        DoAndExit(() => s.Invoke(null, new object[] { newArgs }));
+                        DoAndExit(() => s.Invoke(null, new object[] {newArgs}));
                         return;
                     }
                 }
