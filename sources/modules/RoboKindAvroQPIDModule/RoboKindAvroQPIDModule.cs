@@ -37,6 +37,7 @@ namespace RoboKindAvroQPIDModule
         public static string REPORT_REQUEST = "REPORT_REQUEST";
         private RoboKindListener RK_listener;
         private RoboKindPublisher RK_publisher;
+        public bool DisableSpam = true;
 
 
         public bool LogEventFromCogbot(object sender, CogbotEvent evt)
@@ -44,6 +45,7 @@ namespace RoboKindAvroQPIDModule
             if (evt.Sender == this) return false;
             if (!IsQPIDRunning) return false;
             if (!cogbotSendersToNotSendToCogbot.Contains(sender)) cogbotSendersToNotSendToCogbot.Add(sender);
+            if (DisableSpam) return false;           
             string ss = evt.ToEventString();
             var im = RK_publisher.CreateTextMessage(ss);
             int num = 0;
@@ -177,6 +179,7 @@ namespace RoboKindAvroQPIDModule
 
         private void AvroReceived(IMessage msg)
         {
+            //if (DisableSpam) return;
             LogEventFromRoboKind(this, MsgToCogEvent(this, msg));
         }
 
