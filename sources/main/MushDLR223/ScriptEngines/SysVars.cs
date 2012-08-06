@@ -31,26 +31,25 @@ namespace MushDLR223.ScriptEngines
         {
             lock (SysVars0)
             {
+                ConfigSettingAttribute pca = ConfigSettingAttribute.FindConfigSetting(t, false);
+                bool allMembers = pca != null;
                 foreach (
                     var s in
                         t.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
                                      BindingFlags.Static))
                 {
                     ConfigSettingAttribute cs0;
-                    if (!s.IsDefined(typeof(ConfigSettingAttribute), false))
+                    if (!s.IsDefined(typeof(ConfigSettingAttribute), true))
                     {
-                        if (!ConfigSettingAttribute.IsGoodForConfig(s)) continue;
-                        cs0 = ConfigSettingAttribute.CreateSetting(s);
+                        if (!ConfigSettingAttribute.IsGoodForConfig(s, true, allMembers, true, allMembers))
+                            continue;
+                        cs0 = ConfigSettingAttribute.FindConfigSetting(s, true);
                     }
                     else
                     {
-                        var cs = s.GetCustomAttributes(typeof(ConfigSettingAttribute), false);
-                        if (cs == null) continue;
-                        if (cs.Length == 0) continue;
-                        cs0 = (ConfigSettingAttribute)cs[0];
-                        cs0.SetMember(s);
+                        cs0 = ConfigSettingAttribute.FindConfigSetting(s, true);
                     }
-                    if (!SysVars0.Contains(cs0)) SysVars0.Add(cs0);
+                    if (!cs0.IsNonValue && !SysVars0.Contains(cs0)) SysVars0.Add(cs0);
                     //  WriteLine("Setting: " + cs0.Description);
                 }
                 var st = t.BaseType;
@@ -78,6 +77,31 @@ namespace MushDLR223.ScriptEngines
             }
             return match;
         }
+
+        public static object ChangeType(object value, Type type)
+        {
+            if (type.IsInstanceOfType(value)) return value;
+            if (type.IsEnum)
+            {
+                if (value is String)
+                {
+                    string vs = (String)value;
+                    try
+                    {
+                        var e = Enum.Parse(type, vs, false);
+                        if (e != null) return e;
+                        e = Enum.Parse(type, vs, true);
+                        if (e != null) return e;
+                    }
+                    catch (ArgumentException)
+                    {
+
+                    }
+                }
+            }
+            return Convert.ChangeType(value, type);
+        }
+
     }
 
     public class SysVarsDict : IDictionary<string, object>
@@ -427,7 +451,7 @@ namespace MushDLR223.ScriptEngines
             object value;
             if (TryGetValue(key, out value))
             {
-                return (T)Convert.ChangeType(value, typeof(T));
+                return (T)ScriptManager.ChangeType(value, typeof(T));
             }
             return i;
         }

@@ -8,8 +8,62 @@ using MushDLR223.Utilities;
 
 namespace MushDLR223.ScriptEngines
 {
-    public class Parser
+    public class CmdRequest : Parser, ParseInfo
     {
+        public static implicit operator string[](CmdRequest request)
+        {
+            return request.tokens;
+        }
+        public object CallerAgent;
+        public OutputDelegate Output;
+
+        public CmdRequest(CmdRequest other, String[] args)
+            : base(args)
+        {
+            CallerAgent = other.CallerAgent;
+            Output = other.Output;
+            SetCmdInfo(other);
+        }
+
+
+        public CmdRequest(string[] text, object callerIDORZero, OutputDelegate writeLine, ParseInfo command)
+            : base(text)
+        {
+            CallerAgent = callerIDORZero;
+            Output = writeLine;
+            SetCmdInfo(command);
+        }
+        public CmdRequest AdvanceArgs(int used)
+        {
+            StartArg += used;
+            tokens = SplitOff(tokens, used);
+            ParseTokens();
+            return this;
+        }
+    }
+
+    public class Parser : ParseInfo
+    {
+
+        protected int StartArg;
+        private IDictionary<string, object> ParamMap
+        {
+            get
+            {
+                return prepPhrases;
+            }
+        }
+        public T GetValue<T>(string Param)
+        {
+            Param = ToKey(Param);
+            return (T)ParamMap[Param];
+        }
+        public void SetValue<T>(string Param, T value)
+        {
+            Param = ToKey(Param);
+            ParamMap[Param] = value;
+        }
+
         public static string[] ParseArguments(string str)
         {
             List<string> list = new List<string>();
@@ -42,7 +96,7 @@ namespace MushDLR223.ScriptEngines
                         escaped = false;
                     }
                     else
-                    {      
+                    {
                         trimmed = current.Trim();
                         if (trimmed.StartsWith("\"") && trimmed.EndsWith("\""))
                         {
@@ -110,7 +164,7 @@ namespace MushDLR223.ScriptEngines
             if (p >= args.Length) return string.Empty;
             if (p == args.Length) return args[p];
             string newstring = args[p];
-            for (int i = p+1; i < args.Length; i++)
+            for (int i = p + 1; i < args.Length; i++)
             {
                 newstring += " ";
                 newstring += EscapeIfNeeded(args[i]);
@@ -133,7 +187,7 @@ namespace MushDLR223.ScriptEngines
 
         static string[] preps = { "of", "to", "in", "for", "with", "as", "by", "at", "from", "on", "is" };
 
-        public readonly Dictionary<string,object >/*NameValueCollection*/ prepPhrases;
+        public readonly Dictionary<string, object>/*NameValueCollection*/ prepPhrases;
         public string objectPhrase;
         public string str;
         public string[] tokens;
@@ -157,7 +211,11 @@ namespace MushDLR223.ScriptEngines
             {
                 Param = ToKey(Param);
                 object obj;
-                if (!prepPhrases.TryGetValue(Param, out obj) || ReferenceEquals(null, obj)) return null;
+                if (!prepPhrases.TryGetValue(Param, out obj) || ReferenceEquals(null, obj))
+                {
+                    
+                    return null;
+                }
                 return obj.ToString();
             }
             set
@@ -217,7 +275,7 @@ namespace MushDLR223.ScriptEngines
                 }
                 else if (prep.Contains(":"))
                 {
-                    splitter = ":";                    
+                    splitter = ":";
                 }
                 else
                 {
@@ -251,7 +309,7 @@ namespace MushDLR223.ScriptEngines
                     }
                     lastPrep = null;
                 }
-                
+
 
                 if (prep.Contains(splitter))
                 {
@@ -302,18 +360,20 @@ namespace MushDLR223.ScriptEngines
             try
             {
                 return new Parser(args);
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 DLRConsole.DebugWriteLine("" + e);
-                
+
                 return null;
             }
-        }
+        }
+
         public static string[] Parse(string command)
         {
-            return Parser.ParseArguments(command);	
+            return Parser.ParseArguments(command);
         }
-        private int Count
+        private int CountNever
         {
             get
             {
@@ -425,7 +485,7 @@ namespace MushDLR223.ScriptEngines
         {
             return;
             string[] s = GetAfterIndex(0);
-            OutputDelegate d = DLRConsole.DebugWriteLine;	
+            OutputDelegate d = DLRConsole.DebugWriteLine;
             foreach (var a in s)
             {
                 d(a);
@@ -435,18 +495,11 @@ namespace MushDLR223.ScriptEngines
                 d(a);
             }
             DLRConsole.SystemFlush();
-            if(s.Length == tokens.Length)
+            if (s.Length == tokens.Length)
             {
-                
+
             }
         }
-
-        public bool TryGetValue(string name, out string value)
-        {
-            value = this[name];
-            return value != null;
-        }
-
 
         private bool ContainsKey(string k)
         {
@@ -518,7 +571,7 @@ namespace MushDLR223.ScriptEngines
         {
             int i = 0;
             flag = ToKey(flag);
-            foreach(string key in tokens)
+            foreach (string key in tokens)
             {
                 if (ToKey(key).Equals(flag)) return i;
                 i++;
@@ -527,26 +580,46 @@ namespace MushDLR223.ScriptEngines
 
         }
 
-        private string[] GetWithoutIndex(int i)
+        private string[] GetWithoutIndex(int i, int len)
         {
             if (i == -1) return tokens;
             var p = new List<string>();
             for (int j = 0; j < i; j++)
             {
-                p.Add(tokens[i]);
+                p.Add(tokens[j]);
             }
-            for (int j = i + 1; j < Count; j++)
+            for (int j = i + 1 + len; j < tokens.Length; j++)
             {
-                p.Add(tokens[i]);
+                p.Add(tokens[j]);
             }
-            return p.ToArray();
+            return ModArgs = p.ToArray();
         }
 
         public bool GetWithout(string key, out string[] args)
         {
             int i = IndexOf(key);
-            args = GetWithoutIndex(i);
+            if (i < 0)
+            {
+                args = tokens;
+                return false;
+            }
+            ModArgs = args = GetWithoutIndex(i, 0);
             return i != -1;
+        }
+
+        private string[] accume = null;
+        public bool Destructive = false;
+        protected string[] ModArgs
+        {
+            get
+            {
+                return accume;
+            }
+            set
+            {
+                if (Destructive) tokens = value;
+                accume = value;
+            }
         }
 
         public bool GetAfter(string key, out string[] args)
@@ -558,7 +631,7 @@ namespace MushDLR223.ScriptEngines
             {
                 return false;
             }
-            args = GetAfterIndex(i);
+            ModArgs = args = GetAfterIndex(i);
             return true;
 
         }
@@ -585,7 +658,7 @@ namespace MushDLR223.ScriptEngines
             if (IsTrueString(v))
             {
                 value = true;
-                return true;                
+                return true;
             }
             return false;
         }
@@ -595,9 +668,9 @@ namespace MushDLR223.ScriptEngines
             return tokens;
         }
 
-        public void	 ParseParams(object[] parameters)
+        public void ParseParams(object[] parameters)
         {
-           // throw new NotImplementedException();
+            // throw new NotImplementedException();
         }
 
         public T GetValue<T>(string key, T i)
@@ -605,10 +678,170 @@ namespace MushDLR223.ScriptEngines
             string value;
             if (TryGetValue(key, out value))
             {
-                return (T)Convert.ChangeType(value, typeof(T));
+                return ChangeType<T>(value);
             }
             return i;
         }
 
+        private T ChangeType<T>(object value)
+        {
+            return (T)ScriptManager.ChangeType(value, typeof(T));
+        }
+
+        public bool TryGetValue<T>(string name, out T value)
+        {
+            int len;
+            return TryGetValueInt<T>(name, out value, out len) >= 0;
+        }
+
+
+        public bool TryGetValueWithout(string key, out string value, out string[] strings)
+        {
+            int len;
+            int at = TryGetValueInt(key, out value, out len);
+            if (at <= 0)
+            {
+                strings = tokens;
+                return false;
+            }
+            else
+            {
+                ModArgs = strings = GetWithoutIndex(at, len);
+                return true;
+            }
+        }
+
+        public int TryGetValueInt<T>(string name, out T value, out int len)
+        {
+            len = 1;
+            int found = IndexOf(name);
+            object ovalue;
+            if (!ParamMap.TryGetValue(name, out ovalue))
+            {
+                if (found < 0)
+                {
+                    value = default(T);
+                    len = 0;
+                    return -1;
+                }
+                value = ChangeType<T>(GetAfterIndex(found)[0]);
+                return found;
+            }
+            value = ChangeType<T>(ovalue);
+            return found;
+        }
+
+        public void SetCmdInfo(ParseInfo info)
+        {
+            Parameters = info.Parameters;
+            ParameterVersions = info.ParameterVersions;
+            //ParamMap = new Dictionary<string, object>();
+            SelectVersion();
+            ParseTokens();
+        }
+
+
+        public NamedParam[][] ParameterVersions { get; set; }
+        public NamedParam[] Parameters { get; set; }
+        private ParseInfo CmdInfo { get { return this; } }
+
+        protected NamedParam[] VersionSelected;
+        private void SelectVersion()
+        {
+            if (VersionSelected != null) return;
+            VersionSelected = Parameters;
+            if (ParameterVersions == null || ParameterVersions.Length == 0) return;
+            int tokenLen = tokens.Length;
+            if (ParameterVersions.Length > 1)
+            {
+                foreach (var vchck in ParameterVersions)
+                {
+                    if (VersionSelected.Length == tokenLen)
+                    {
+                        VersionSelected = vchck;
+                    }
+                }
+            }
+            int skip = this.StartArg;
+            int argCurrent = 0;
+            foreach (NamedParam param in VersionSelected)
+            {
+                if (skip > 0)
+                {
+                    skip--;
+                    continue;
+                }
+                string name = ToKey(param.Key);
+                if (!ParamMap.ContainsKey(name))
+                    ParamMap[name] = null;
+            }
+        }
+
+        protected void ParseTokens()
+        {
+            int tokenLen = tokens.Length;
+            int skip = this.StartArg;
+            int argCurrent = 0;
+            if (VersionSelected == null)
+            {
+                return;
+            }
+            foreach (NamedParam param in VersionSelected)
+            {
+                if (skip > 0)
+                {
+                    skip--;
+                    continue;
+                }
+                if (argCurrent >= tokenLen) return;
+                string name = ToKey(param.Key);
+
+                if (param.IsOptional)
+                {
+                    bool wasBool = typeof(bool) == param.Type;
+                    if (!KeyMatches(tokens[argCurrent], param))
+                    {
+                        if (wasBool)
+                        {
+                            ParamMap[name] = false;
+                            continue;
+                        }
+                        ParamMap[name] = null;
+                        continue;
+                    }
+                    if (wasBool)
+                    {
+                        ParamMap[name] = true;
+                        argCurrent++;
+                        continue;
+                    }
+                }
+                int argsStart = argCurrent;
+                int argsUsed;
+                object value = ParseArg(param, param.Type, tokens, argsStart, out argsUsed);
+                argCurrent += argsUsed;
+                ParamMap[name] = value;
+            }
+        }
+
+        static private bool KeyMatches(string token, NamedParam param)
+        {
+            var k1 = ToKey(token);
+            var k2 = ToKey(param.Key);
+            return k1 == k2;
+        }
+
+        private object ParseArg(NamedParam param, Type parseFor, string[] text, int start, out int argsUsed)
+        {
+            argsUsed = 1;
+            return text[start];
+        }
+
+    }
+
+    public interface ParseInfo
+    {
+        NamedParam[][] ParameterVersions { get; }
+        NamedParam[] Parameters { get; }
     }
 }

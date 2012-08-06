@@ -131,7 +131,7 @@ namespace CogbotRadegastPluginModule
             AddRadegastEvents();
             CogbotContextMenuListener = new CogbotContextMenuListener();
             CogbotNoticeuListener = new CogbotNotificationListener();
-            if (ClientManagerConfig.UsingRadgastFromCogbot)
+            if (ClientManagerConfig.UsingRadegastFromCogbot)
             {
                 // just unregister events for now
                 inst.Netcom.Dispose();
@@ -144,7 +144,7 @@ namespace CogbotRadegastPluginModule
                 {
                     CogbotGUI.GlobalRadegastInstance = inst;
                 }
-                ClientManagerConfig.UsingCogbotFromRadgast = true;
+                ClientManagerConfig.UsingCogbotFromRadegast = true;
                 clientManager = ClientManager.SingleInstance ?? new ClientManager();
             }
             BotClient bc = clientManager.EnsureBotByGridClient(inst.Client);
@@ -224,11 +224,7 @@ namespace CogbotRadegastPluginModule
             if (!AllowRadegastUIControl) e.Cancel = true;
         }
 
-        protected bool AllowRadegastUIControl
-        {
-            get { return true; }
-            set { throw new NotImplementedException(); }
-        }
+        public bool AllowRadegastUIControl = true;
 
         private void netcom_ClientLoggedOut(object sender, EventArgs e)
         {

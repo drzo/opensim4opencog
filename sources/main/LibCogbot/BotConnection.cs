@@ -412,7 +412,7 @@ namespace Cogbot
                 throw new NullReferenceException("GEtName");
             }
             return string.Format("{0} {1}", BotLoginParams.FirstName, BotLoginParams.LastName);
-        }
+        } 
 
         protected UUID TheAvatarID
         {
@@ -424,14 +424,15 @@ namespace Cogbot
         {
             get
             {
+                if (CogbotHelpers.IsNullOrZero(Self.AgentID) && WorldSystem.m_TheSimAvatar == null) return null;
                 return (SimAvatarClient)WorldSystem.TheSimAvatar;
             }
         }
         internal object GetAvatar()
         {
-            if (gridClient.Self.AgentID != UUID.Zero)
+            if (!CogbotHelpers.IsNullOrZero(Self.AgentID) || WorldSystem.m_TheSimAvatar != null)
             {
-                if (WorldSystem.m_TheSimAvatar != null) return TheSimAvatar;
+                return TheSimAvatar;
             }
             return this;
         }
