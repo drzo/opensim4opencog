@@ -12,7 +12,7 @@ using Console = MushDLR223.Utilities.DLRConsole;
 
 namespace Cogbot
 {
-    public class Program
+    public class ConsoleApp
     {
         private static void Usage()
         {
@@ -24,10 +24,10 @@ namespace Cogbot
 
 
         [STAThread]
-        internal static void Main(string[] args)
+        public static void MainApp(string[] args)
         {
-            ClientManagerConfig.UsingCogbotFromRadgast = false;
-            ClientManagerConfig.UsingRadgastFromCogbot = true;
+            ClientManagerConfig.UsingCogbotFromRadegast = false;
+            ClientManagerConfig.UsingRadegastFromCogbot = true;
            // MainProgram.CommandLine = new CommandLine {DisableSound = false};
 
             if (!ClientManager.AllocedConsole)
@@ -42,13 +42,13 @@ namespace Cogbot
             //  NativeMethods.AllocConsole();
             // Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            MainRun(args);
+            ConsoleLoop(args);
         }
 
-        public static void MainRun(string[] args)
+        public static void ConsoleLoop(string[] args)
         {
             ClientManagerConfig.arguments = new Parser(args);
-            consoleBase = new DLRConsole("textform");
+            consoleBase = consoleBase ?? new DLRConsole("textform");
             ClientManager manager = ClientManager.SingleInstance;
             manager.outputDelegate = new OutputDelegate(WriteLine);
             if (!manager.ProcessCommandArgs())

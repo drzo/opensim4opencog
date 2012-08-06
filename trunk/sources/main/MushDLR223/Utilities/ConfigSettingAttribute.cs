@@ -126,7 +126,7 @@ namespace MushDLR223.Utilities
         }
         public static bool HasAttribute(MemberInfo info, Type type)
         {
-            return AtLeastOne(info.GetCustomAttributes(type, true));
+            return info.IsDefined(type, true);
         }
         public static bool IsSingletonClass(Type type)
         {
@@ -201,7 +201,73 @@ namespace MushDLR223.Utilities
             }
         }
         public bool ReadOnly { get; set; }
-        public bool SkipSaveOnExit { get; set; }
+        public bool SkipSaveOnExit
+        {
+            set { VSkipSaveOnExit = value; }
+            get
+            {
+                if (!VSkipSaveOnExit.HasValue)
+                {
+                    SkipSaveOnExit = SkipOnExit(Member);
+                }
+                return VSkipSaveOnExit.Value;
+            }
+        }
+
+        static bool SkipOnExit(MemberInfo s)
+        {
+            ConfigSettingAttribute cs0 = FindConfigSetting(s, false);
+            if (cs0.VSkipSaveOnExit.HasValue)
+            {
+                return cs0.VSkipSaveOnExit.Value;
+            }
+            ConfigSettingAttribute cs1 = FindConfigSetting(s.DeclaringType, false);
+            if (cs1 != null && cs1.VSkipSaveOnExit.HasValue)
+            {
+                return cs1.VSkipSaveOnExit.Value;
+            }
+            return false;
+        }
+
+        public static Dictionary<MemberInfo, ConfigSettingAttribute> M2C = new Dictionary<MemberInfo, ConfigSettingAttribute>();
+
+        public static ConfigSettingAttribute FindConfigSetting(MemberInfo s, bool forceCreate)
+        {
+            const bool createIfDeclared = true;
+            ConfigSettingAttribute cs0;
+            lock (M2C)
+            {
+                if (!M2C.TryGetValue(s, out cs0))
+                {
+                    if (createIfDeclared)
+                    {
+                        if (s.IsDefined(typeof (ConfigSettingAttribute), true))
+                        {
+                            var cs = s.GetCustomAttributes(typeof (ConfigSettingAttribute), true);
+                            if (cs != null && cs.Length > 0)
+                            {
+                                cs0 = (ConfigSettingAttribute) cs[0];
+                                cs0.SetMember(s);
+                            }
+                            else
+                            {
+                                cs0 = null;
+                            }
+                        }
+                        M2C[s] = cs0;
+                    }
+                }
+                if (cs0 == null && forceCreate)
+                {
+                    cs0 = new ConfigSettingAttribute();
+                    cs0.SetMember(s);
+                    M2C[s] = cs0;
+                }
+            }
+            return cs0;
+        }
+
+        public Nullable<bool> VSkipSaveOnExit { get; set; }
 
         public void Save()
         {
@@ -230,7 +296,8 @@ namespace MushDLR223.Utilities
 
         private string _description;
         public bool IsStatic;
-        
+        public bool IsNonValue;
+
         public string Description
         {
             get
@@ -267,6 +334,15 @@ namespace MushDLR223.Utilities
 
         public void SetMember(MemberInfo member0)
         {
+            lock(M2C)
+            {
+                M2C[member0] = this;
+            }
+            if (member0 is Type)
+            {
+                IsNonValue = true;
+                return;
+            }
             member = member0;
             if (IsReadOnlyMember(member0))
             {
@@ -395,28 +471,9 @@ namespace MushDLR223.Utilities
             return false;            
         }
 
-        private static object ChangeType(object value, Type type)
+        public static object ChangeType(object value, Type type)
         {
-            if (type.IsInstanceOfType(value)) return value;
-            if (type.IsEnum)
-            {
-                if (value is String)
-                {
-                    string vs = (String) value;
-                    try
-                    {
-                        var e = Enum.Parse(type, vs, false);
-                        if (e != null) return e;
-                        e = Enum.Parse(type, vs, true);
-                        if (e != null) return e;
-                    }
-                    catch (ArgumentException)
-                    {
-
-                    }
-                }
-            }
-            return Convert.ChangeType(value, type);
+            return ScriptManager.ChangeType(value,type);
         }
 
         static object FindValue(MemberInfo m, object target)
@@ -439,19 +496,15 @@ namespace MushDLR223.Utilities
             return null;
         }
 
-        public static ConfigSettingAttribute CreateSetting(MemberInfo s)
+        public static bool IsPossibleConfig(MemberInfo info)
         {
-            ConfigSettingAttribute attr = new ConfigSettingAttribute();
-            attr.SetMember(s);
-            return attr;
-        }
+            if (HasAttribute(info, typeof(ConfigSettingAttribute))) return true;
+            if (HasAttribute(info, typeof(NotConfigurable))) return false;
 
-        public static bool IsGoodForConfig(MemberInfo info)
-        {
             if (info.DeclaringType.IsEnum) return false;
             {
                 var inf = info as FieldInfo;
-                if (inf != null && (inf.IsStatic || IsSingletonClass(inf.DeclaringType)) && inf.IsPublic &&
+                if (inf != null && (inf.IsStatic || IsSingletonClass(inf.DeclaringType)) && 
                     !inf.IsInitOnly && !inf.IsLiteral)
                 {
                     if (IsSettableType(inf.FieldType))
@@ -472,12 +525,65 @@ namespace MushDLR223.Utilities
                     info = inf.GetGetMethod();
                     var inf0 = info as MethodInfo;
                     if (inf0 != null && (inf0.IsStatic || IsSingletonClass(inf0.DeclaringType))
-                        && inf0.IsPublic && inf.CanRead && inf.CanWrite)
+                         && inf.CanRead && inf.CanWrite)
                     {
                         if (IsSettableType(inf.PropertyType))
                         {
                             if (inf0.DeclaringType.IsValueType)
                             {
+                                return false;
+                            }
+                            return true;
+                        }
+                        ;
+                    }
+                }
+            }
+            return false;       
+        }
+        public static bool IsGoodForConfig(MemberInfo info, bool notDeclaredOK, bool notPublicOK, bool notWriteableOK, bool notFromStringOK)
+        {
+            if (HasAttribute(info, typeof(ConfigSettingAttribute))) return true;
+            if (HasAttribute(info, typeof(NotConfigurable))) return false;
+            if (!notDeclaredOK) return false;
+
+            if (info.DeclaringType.IsEnum) return false;
+            {
+                var inf = info as FieldInfo;
+                if (inf != null)
+                {
+                    bool readOnly = inf.IsInitOnly || inf.IsLiteral;
+                    if ((inf.IsStatic || IsSingletonClass(inf.DeclaringType)) && (notPublicOK || inf.IsPublic) &&
+                        (notWriteableOK || !readOnly))
+                    {
+                        if (readOnly) notFromStringOK = true;
+                        if (notFromStringOK || IsSettableType(inf.FieldType))
+                        {
+                            if (inf.DeclaringType.IsValueType)
+                            {
+                                if (readOnly) return false;
+                                return false;
+                            }
+                            return true;
+                        }
+                    }
+                }
+            }
+            {
+                var inf = info as PropertyInfo;
+                if (inf != null)
+                {
+                    MethodInfo m = inf.GetGetMethod(true) ?? inf.GetSetMethod(true);
+                    if ((m.IsStatic || IsSingletonClass(inf.DeclaringType))
+                        && (notPublicOK || m.IsPublic) && inf.CanRead && (notWriteableOK || inf.CanWrite))
+                    {
+                        bool readOnly = !inf.CanWrite;
+                        if (readOnly) notFromStringOK = true;
+                        if (notFromStringOK || IsSettableType(inf.PropertyType))
+                        {
+                            if (inf.DeclaringType.IsValueType)
+                            {
+                                if (readOnly) return false;
                                 return false;
                             }
                             return true;
@@ -519,7 +625,7 @@ namespace MushDLR223.Utilities
                 var inf = info as PropertyInfo;
                 if (inf != null)
                 {
-                    info = inf.GetSetMethod();
+                    info = inf.GetSetMethod() ?? inf.GetSetMethod();
                     var inf0 = info as MethodInfo;
                     if (inf0 != null && inf0.IsStatic)
                     {
@@ -533,9 +639,13 @@ namespace MushDLR223.Utilities
         private static bool IsSettableType(Type type)
         {
             if (type == null) return false;
-            if (type == typeof (string)) return true;
+            if (type == typeof(string)) return true;
             if (type.IsArray) return false;
             if (type.IsVisible && type.IsValueType) return true;
+            if (type == typeof(TimeSpan) || type == typeof(DateTime))
+            {
+                return true;
+            }
             return false;
         }
 
@@ -553,6 +663,7 @@ namespace MushDLR223.Utilities
 
     }
 
+    [ConfigSetting]
     public interface ContextualSingleton
     {
     }

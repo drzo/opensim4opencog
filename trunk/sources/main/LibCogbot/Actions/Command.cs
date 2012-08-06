@@ -221,7 +221,7 @@ namespace Cogbot.Actions
 
     }
 
-    public abstract partial class Command : IComparable
+    public abstract partial class Command : IComparable, ParseInfo
     {
         public bool IsStateFull;
         public CommandCategory Category;
@@ -275,7 +275,7 @@ namespace Cogbot.Actions
         /// <summary>
         /// Introspective Parameters for calling command from code
         /// </summary>
-        public NamedParam[][] ParameterVersions;
+        public NamedParam[][] ParameterVersions { get; set; }
         public NamedParam[] Parameters
         {
             get
@@ -553,14 +553,14 @@ namespace Cogbot.Actions
         public virtual CmdResult Execute(string[] args, UUID fromAgentID, OutputDelegate WriteLine)
         {
             this.WriteLineDelegate = WriteLine;
-            CallerID = fromAgentID;
+            CallerID = CogbotHelpers.NonZero(fromAgentID, UUID.Zero);            
             return ExecuteRequest(new CmdRequest(args, fromAgentID, WriteLine, this));
         }
 
         virtual public CmdResult ExecuteRequest(CmdRequest args)
         {
             Results.Clear();
-            CallerID = args.CallerAgent;
+            CallerID = CogbotHelpers.NonZero((UUID)args.CallerAgent, UUID.Zero);
             success = failure = 0;
             var wlpre = this.WriteLineDelegate;
             this.WriteLineDelegate = args.Output;

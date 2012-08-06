@@ -28,10 +28,12 @@ namespace Cogbot
 {
     public delegate void DescribeDelegate(bool detailed, OutputDelegate WriteLine);
     enum Modes { normal, tutorial };
-    public static class ClientManagerConfig
+
+    [ConfigSetting(SkipSaveOnExit = true)]
+    public static class ClientManagerConfig 
     {
-        public static bool UsingCogbotFromRadgast = false;
-        public static bool UsingRadgastFromCogbot = false;
+        public static bool UsingCogbotFromRadegast = false;
+        public static bool UsingRadegastFromCogbot = false;
         public static bool IsVisualStudio;
 
         public static Parser arguments
@@ -49,11 +51,13 @@ namespace Cogbot
         }
 
         private static Parser _arguments;
-        public static bool noGUI = false;
+        public static bool NoGUI = false;
         public static bool GlobalRadegastInstanceGCUsed;
         public static bool StartLispThreadAtPluginInit = false;
         public static bool DoNotCreateBotClientsFromBotConfig = false;
         public static bool NoLoadConfig = false;
+        [ConfigSetting(SkipSaveOnExit = false)]
+        public static bool DosBox;
     }
 
     public class ClientManager : IDisposable,ScriptExecutorGetter
@@ -744,7 +748,7 @@ namespace Cogbot
                                                if (bc.InvokedMakeRunning) return;
                                                bc.InvokedMakeRunning = true;
                                            }
-                                           if (ClientManagerConfig.UsingCogbotFromRadgast)
+                                           if (ClientManagerConfig.UsingCogbotFromRadegast)
                                                CogbotGUI.SetRadegastLoginOptions(bc.TheRadegastInstance, bc);
                                            AddTypesToBotClient(bc);
                                            bc.StartupClientLisp();
@@ -752,7 +756,7 @@ namespace Cogbot
                                        };
             PostAutoExecEnqueue(() =>
                                      {
-                                         if (ClientManagerConfig.UsingCogbotFromRadgast) CogbotGUI.SetRadegastLoginOptions(bc.TheRadegastInstance, bc);
+                                         if (ClientManagerConfig.UsingCogbotFromRadegast) CogbotGUI.SetRadegastLoginOptions(bc.TheRadegastInstance, bc);
                                          // in-case someoine hits the login button
                                          bc.Network.LoginProgress += (s, e) =>
                                                                          {
@@ -1015,7 +1019,7 @@ namespace Cogbot
                     account.Client = client;
                 }
                 GridClient gc = null;
-                if (ClientManagerConfig.UsingCogbotFromRadgast)
+                if (ClientManagerConfig.UsingCogbotFromRadegast)
                 {
                     if (!ClientManagerConfig.GlobalRadegastInstanceGCUsed)
                     {
@@ -1162,7 +1166,7 @@ namespace Cogbot
             while (Running)
             {
                 ;
-                string input = Program.consoleBase.CmdPrompt(GetPrompt());
+                string input = ConsoleApp.consoleBase.CmdPrompt(GetPrompt());
                 if (string.IsNullOrEmpty(input)) continue;
                 CmdResult executeCommand = ExecuteCommand(input, null, WriteLine);
                 FlushWriter(System.Console.Out);
@@ -1186,7 +1190,6 @@ namespace Cogbot
         public static OutputDelegate Real = DLRConsole.DebugWriteLine;
 
         public static bool AllocedConsole;
-        public static bool dosBox;
 
         private static void VeryRealWriteLine(string s, params object[] args)
         {
@@ -1326,7 +1329,7 @@ namespace Cogbot
             {
                 return;
             }
-            var cb = Program.consoleBase;
+            var cb = ConsoleApp.consoleBase;
             if (cb != null)
             {
                 cb.Output(check);
