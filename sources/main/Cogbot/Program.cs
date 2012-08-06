@@ -24,7 +24,7 @@ using CommandLine.Text;
 using Thread = MushDLR223.Utilities.SafeThread;
 #endif
 
-namespace ABuildStartup
+namespace Cogbot
 {
 
     public static class Program
@@ -33,10 +33,17 @@ namespace ABuildStartup
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        public static void Main()
+        public static void Main(string[] args)
         {
+            string[] use = PreparseCommandArgs();
+            Main0(args, false);
+        }
+
+        private static string[] StartupPreparsed = null;
+        public static string[] PreparseCommandArgs()
+        {
+            if (StartupPreparsed != null) return StartupPreparsed;
             string[] use = Environment.GetCommandLineArgs() ?? new string[0];
-            ClientManagerConfig.StartLispThreadAtPluginInit = true;
             if (use.Length > 0)
             {
                 string arg0 = use[0].ToLower();
@@ -45,6 +52,8 @@ namespace ABuildStartup
                     ClientManagerConfig.IsVisualStudio = true;
                     arg0 = arg0.Replace(".vshost.exe", ".exe");
                 }
+                ClientManagerConfig.StartLispThreadAtPluginInit = true;
+
                 if (arg0.EndsWith(Application.ExecutablePath.ToLower()))
                 {
                     var n = new List<string>();
@@ -56,7 +65,8 @@ namespace ABuildStartup
                     use = n.ToArray();
                 }
             }
-            Main0(use);
+            StartupPreparsed = use;
+            return use;
         }
 
         static public Exception _appException = null;
@@ -165,7 +175,7 @@ namespace ABuildStartup
             public string NoGUI = null;
 
             [Option(null, "lcd", HelpText = "locally change the dirrectory")]
-            public string LocalChanfgeDir = "unset";
+            public string LocalChangeDir = "unset";
 
             public HelpText GetHeader()
             {
@@ -192,15 +202,20 @@ namespace ABuildStartup
         /// runs in a STA thread (by creating one)  Does not "join"
         /// </summary>
         /// <param name="args"></param>        
-        public static void Main0(string[] args)
+        public static void Main0(string[] args, bool alwaysNewThread)
         {
-            if (true || Thread.CurrentThread.ApartmentState == ApartmentState.STA)
+            var runMain = new ThreadStart(() => Main1(args));
+
+            if (alwaysNewThread || Thread.CurrentThread.ApartmentState != ApartmentState.STA)
             {
-                Thread newThread = new Thread(new ThreadStart(() => Main1(args)));
+                Thread newThread = new Thread(runMain);
                 newThread.SetApartmentState(ApartmentState.STA);
                 newThread.Start();
                 //newThread.Join();
                 return;
+            } else
+            {
+                runMain();
             }
         }
 
@@ -241,15 +256,29 @@ namespace ABuildStartup
             }
 
             ClientManagerConfig.arguments = new Parser(args);
+            ClientManagerConfig.arguments.Destructive = true;
             string[] oArgs;
             // Change current working directory to Program install dir?
-            if (ClientManagerConfig.arguments.GetAfter("--lcd", out oArgs))
+            if (ClientManagerConfig.arguments.GetWithout("--lcd", out oArgs))
             {
-                Directory.SetCurrentDirectory(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+                Program.ChangeLCD = true;
             }
-            if (!ClientManagerConfig.arguments.GetAfter("--noexcpt", out oArgs))
+            string newDir;
+            // Change current working directory to  --cd whatnot
+            if (ClientManagerConfig.arguments.TryGetValueWithout("--cd", out newDir, out oArgs))
             {
-                SetExceptionHandlers(true);
+                ChangeLCD = false;
+                Directory.SetCurrentDirectory(newDir);
+            }
+            if (ClientManagerConfig.arguments.GetWithout("--noexcpt", out oArgs))
+            {
+                SetExceptionHandlers(false);
+            }
+            else SetExceptionHandlers(true);
+
+            if (ClientManagerConfig.arguments.GetWithout("--console", out oArgs))
+            {
+                ClientManagerConfig.DosBox = true;
             }
             if (ClientManagerConfig.arguments.GetAfter("--aiml", out oArgs))
             {
@@ -280,27 +309,22 @@ namespace ABuildStartup
                 RunType("PrologBotModule:PrologScriptEngine.PrologScriptInterpreter", newArgs);
                 return;
             }
-            if (ClientManagerConfig.arguments.GetAfter("--main", out oArgs))
+            if (ClientManagerConfig.arguments.TryGetValueWithout("--main", out newDir, out oArgs))
             {
                 string[] newArgs = oArgs;
-                AllocConsole();
-                string c = ClientManagerConfig.arguments["--main"];
-                RunType(c, newArgs);
+                RunType(newDir, newArgs);
                 return;
             }
+
             if (ClientManagerConfig.arguments.GetWithout("--noconfig", out oArgs))
             {
                 ClientManagerConfig.arguments = new Parser(oArgs);
                 ClientManagerConfig.NoLoadConfig = true;
             }
-            if (ClientManagerConfig.arguments.GetWithout("--console", out oArgs))
-            {
-                ClientManager.dosBox = true;
-                ClientManagerConfig.arguments = new Parser(oArgs);
-            }
             if (ClientManagerConfig.arguments.GetWithout("--nogui", out oArgs))
             {
-                ClientManagerConfig.noGUI = true;
+                ClientManagerConfig.NoGUI = true;
+                ClientManagerConfig.DosBox = true;
             } else
             {
                 try
@@ -311,27 +335,34 @@ namespace ABuildStartup
                 catch (Exception)
                 {
                     // X windows missing
-                    ClientManagerConfig.noGUI = true;
+                    ClientManagerConfig.NoGUI = true;
                 }
             }
-            if (ClientManager.dosBox) AllocConsole();
+            if (ClientManagerConfig.DosBox) AllocConsole();
 
             DoAndExit(() =>
                           {
                               MainProgram.CommandLine = new Radegast.CommandLine();
                               ClientManagerConfig.arguments = new Parser(args);
-                              if (ClientManagerConfig.noGUI)
+                              if (ClientManagerConfig.NoGUI)
                               {
-                                  ClientManagerConfig.UsingRadgastFromCogbot = true;
-                                  Cogbot.Program.MainRun(args);
+                                  ClientManagerConfig.UsingRadegastFromCogbot = true;
+                                  ResizeThreadPools();
+                                  if (ChangeLCD) SetCurrentDirectory(typeof (Cogbot.ConsoleApp));                                  
+                                  Cogbot.ConsoleApp.MainApp(args);
                               }
                               else
                               {
-                                  ClientManagerConfig.UsingCogbotFromRadgast = true;
+                                  ClientManagerConfig.UsingCogbotFromRadegast = true;
                                   RadegastMain(args);
                               }
                           });
 
+        }
+
+        public static void SetCurrentDirectory(Type type)
+        {
+            Directory.SetCurrentDirectory(Path.GetDirectoryName(type.Assembly.Location));
         }
 
         public static void AllocConsole()
@@ -354,6 +385,9 @@ namespace ABuildStartup
 
         public static void RadegastMain(string[] args)
         {
+            // Increase the number of IOCP threads available. Mono defaults to a tragically low number
+            ResizeThreadPools();
+
             // Read command line options
             Radegast.CommandLine CommandLine = MainProgram.CommandLine = new Radegast.CommandLine();
             CommandLineParser parser = new CommandLineParser(new CommandLineParserSettings(DLRConsole.Out));
@@ -363,37 +397,30 @@ namespace ABuildStartup
             }
 
             // Change current working directory to Radegast install dir
-            Directory.SetCurrentDirectory(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+            if (ChangeLCD) SetCurrentDirectory(typeof(RadegastInstance));
 
             if (DLRConsole.HasWinforms)
             {
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
             }
-
-            // Create main Radegast instance
-
-            // See if we only wanted to display list of grids
-            if (CommandLine.ListGrids)
-            {
-                DLRConsole.SystemWriteLine(CommandLine.GetHeader());
-                DLRConsole.SystemWriteLine();
-                Radegast.GridManager grids = new Radegast.GridManager();
-                DLRConsole.SystemWriteLine("Use Grid ID as the parameter for --grid");
-                DLRConsole.SystemWriteLine("{0,-25} - {1}", "Grid ID", "Grid Name");
-                DLRConsole.SystemWriteLine("========================================================");
-
-                for (int i = 0; i < grids.Count; i++)
-                {
-                    DLRConsole.SystemWriteLine("{0,-25} - {1}", grids[i].ID, grids[i].Name);
-                }
-
-                Environment.Exit(0);
-            }
-
-            if (false) Cogbot.ClientManager.SingleInstance.ProcessCommandArgs();
+            ClientManager.SingleInstance.ProcessCommandArgs();
             ClientManager.InSTAThread(StartRadegast, "StartExtraRadegast").Join();
             //StartRadegast();
+        }
+
+        // Increase the number of IOCP threads available. Mono defaults to a tragically low number
+        private static void ResizeThreadPools()
+        {
+            int workerThreads, iocpThreads;
+            System.Threading.ThreadPool.GetMaxThreads(out workerThreads, out iocpThreads);
+
+            if (workerThreads < 500 || iocpThreads < 1000)
+            {
+                if (workerThreads < 500) workerThreads = 500;
+                if (iocpThreads < 1000) iocpThreads = 1000;
+                System.Threading.ThreadPool.SetMaxThreads(workerThreads, iocpThreads);
+            }
         }
 
         public static void StartRadegast()
@@ -410,6 +437,7 @@ namespace ABuildStartup
 
         public static bool UsingExceptionHandlers = false;
         public static bool UseApplicationExit = true;
+        private static bool ChangeLCD = true;
 
         public static void SetExceptionHandlers(bool use)
         {
@@ -508,18 +536,20 @@ namespace ABuildStartup
 
         private static void RunType(Type t, string[] newArgs)
         {
+            if (ChangeLCD)
+            {
+                SetCurrentDirectory(t);
+            }
             MethodInfo mi = t.GetMethod("Main", new Type[] { typeof(string[]) });
             if (mi != null)
             {
-                mi.Invoke(null, new object[] { newArgs });
+                DoAndExit(() => mi.Invoke(null, new object[] { newArgs }));
                 return;
             }
             mi = t.GetMethod("Main", new Type[] { });
             if (mi != null)
             {
-
-                // Environment.CommandLine = "foo";
-                mi.Invoke(null, new object[] { });
+                DoAndExit(() => mi.Invoke(null, new object[] { }));
                 return;
             }
             foreach (var s in t.GetMethods(BindingFlags.Static | BindingFlags.NonPublic))
@@ -530,12 +560,12 @@ namespace ABuildStartup
                     if (ps.Length == 0)
                     {
 
-                        s.Invoke(null, new object[] { });
+                        DoAndExit(() => s.Invoke(null, new object[] { }));
                         return;
                     }
                     if (ps.Length == 1)
                     {
-                        mi.Invoke(null, new object[] { newArgs });
+                        DoAndExit(() => s.Invoke(null, new object[] { newArgs }));
                         return;
                     }
                 }
