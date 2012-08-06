@@ -1,4 +1,4 @@
-=== CycWorldModule Purpose === 
+=== Introduction === 
 
 CYC has a notion of per-understood content: Agents, Hair, Walking, Being Surprised, PortableObjects like Shovels and Pants.
 
@@ -31,7 +31,7 @@ A  bird flying in the air is only a transparent cube with an animated gif.
     * (containsScript Bird-Individual777 "DontTouchMe.lsl")
     * (containsScript Bird-Individual777 "BoringBirdFlyPattern.lsl")
 
-=== CycL KE's can but not required to ===
+=== CycL KE's can (but not required to) ===
 
     * "LeaveScatScript.lsl" => Animal, performsFrequentlyFn whatnot
     * "DontTouchMe.lsl" => make assertions that will describe cause-effect
@@ -39,21 +39,20 @@ A  bird flying in the air is only a transparent cube with an animated gif.
     * Bird-Individual777 and is probably #$isa #$Bird a low amount cleanliness based on its name.
     * TransparentCube -> means the simShape is not important
 
-=== Cyc's job is to deduce: ===
+=== CYC's job is to deduce: ===
 
     * try to avoid being under the bird
     * may throw stones at the bird to make it squawk. 
 
-Does this sound like a lot of KE work
+Does this sound like a lot of KE work?!
 
-Easier to map existing content then it is the create new content that you *still* have map CYC.
+Easier to map existing content then it is the create new content, since you *still* have map CYC.
 
-DOUGLAS TODO: (Postponed - but can be Postponed)
+=== DOUGLAS TODO: (Postponed - but can be Postponed) ===
 
- 1)  Ontologically Engineer a House (Room by Room) With objects and Salient scripted actions with agendas.
+ * Ontologically Engineer a House (Room by Room) With objects and Salient scripted actions with agendas.
+ * Extend CycWorldModule to "make it so" n OpenSim/SecondLife.
 
- 2)  Then extend CycWorldModule to "make it so" n OpenSim/SecondLife.
+Strangely,  ther first is harder than it sounds. (Has Cycorp already done this)
 
-Strangely,  Number 1 is harder than it sounds. (Has Cycorp already done this)
-
-If 1. is done, 2. is actually easier. (OK, not easy, but only 80 hours of work)
+Second is easier. (OK, not easy!  But only 80-160 hours of  work).. But, requires the first to be done to make it worth the while to me.
