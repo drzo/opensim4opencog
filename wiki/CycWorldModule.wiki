@@ -1,4 +1,3 @@
-
 = Introduction =
 
 CYC has a notion of per-understood content:   Agents, Hair, Walking, Being Surprised, PortableObjects like Shovels and Pants.
@@ -22,20 +21,32 @@ That bird has coded into it:
 
 SimCycifier's job is to pick up on some of these facts and assert them into CYC:
 
- # filthy bird is Bird-Individual777 and is probably a Bird a low amount  cleanliness.
- # Object has a found in location and is moving
- # "AnimatedWings.gif" means it is probably a visible.
- # (containsScript Bird-Individual777 "LeaveScatScript.lsl")
- # (containsScript Bird-Individual777 "DontTouchMe.lsl")
 
-CycL KE's Job:
+ * (isa Bird-Individual777 AnimatedAgent)
+ * (simShape Bird-Individual777 TransparentCube)
+ * (simNamed Bird-Individual777 "filthy bird 777")
+ * (simLocatedAt Bird-Individual777 (PointFn 125 128 30))
+ * (texturedWith Bird-Individual777 "AnimatedWings.gif")
+ * (containsScript Bird-Individual777 "LeaveScatScript.lsl")
+ * (containsScript Bird-Individual777 "DontTouchMe.lsl")
+
+CycL KE's can but not required to:
+
  * "LeaveScatScript.lsl" => Animal, performsFrequentlyFn whatnot
  * "DontTouchMe.lsl" => make assertions that will describe cause-effect
+ * texturedWith -> PartlyTangbleObject
+ * Bird-Individual777 and is probably #$isa #$Bird a low amount  cleanliness based on its name.
+ * TransparentCube -> means the simShape is not important
 
-Cyc's job is to deduce
+Cyc's job is to deduce:
 
- try to avoid being under the bird
- may throw stones at the bird to make it squawk.
+ * try to avoid being under the bird
+ * may throw stones at the bird to make it squawk.
+
+Does this sound like a lot of KE work?
+
+Easier to map existing content then it is the create new content that you will have map anyways to Cyc.
+
 
 
 
