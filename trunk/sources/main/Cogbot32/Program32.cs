@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ABuildStartup
+namespace Cogbot
 {
 
     public class Program32
@@ -9,9 +9,9 @@ namespace ABuildStartup
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        public static void Main()
+        public static void Main(string[] args)
         {
-			Program.Main();
+            Program.Main(args);
 		}
 
         static public int SizeOfIntPtr()
