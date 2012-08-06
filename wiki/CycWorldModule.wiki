@@ -1,58 +1,57 @@
-= Introduction =
+CYC has a notion of per-understood content: Agents, Hair, Walking, Being Surprised, PortableObjects? like Shovels and Pants.
 
-CYC has a notion of per-understood content:   Agents, Hair, Walking, Being Surprised, PortableObjects like Shovels and Pants.
+Also has a notion for committing actions: PointingAtSomething?, Movement-TranslationEvent?, SittingOnFurnature?.
 
-Also has a notion for committing actions:  PointingAtSomething, Movement-TranslationEvent, SittingOnFurnature.
+Obviously these things have been designed to reflect a WorldLikeOurs?. And OpenSim?/Secondlife was also designed to be as well.
 
-Obviously these things have been designed to reflect a WorldLikeOurs.  And OpenSim/Secondlife was also designed to be as well. 
+The purpose of the CycWorldModule is to easily use and understand (aline) existing OpenSim? and SecondLife? worlds with prebuilt content into CYC KBs.
 
-The purpose of the CycWorldModule is to easily use and understand (aline) existing OpenSim and SecondLife worlds with prebuilt content into CYC KBs.
+Video games are not represented at some atom by atom basis (good or bad Knowledge Engineering).
 
-
-People observe that the content used in Video games is not represented at some atom by atom basis (good or bad Knowledge Engineering?).  That somehow the video game programmers cheated by making a bird flying in the air is only a transparent cube with an animated gif.
+A  bird flying in the air is only a transparent cube with an animated gif.
 
 That bird has coded into it:
- # A Name: "filthy bird 777"
- # A natural flying pattern (albeit only a low circle around the sky-box)
- # Uses texture: "AnimatedWings.gif"
- # Drops poop at random intervals ("rezzes" a new object "poop" effected by gravity) contains: "LeaveScatScript.lsl" 
- # If the bird is contacted by another object it squawks in complaint: contains: "DontTouchMe.lsl"
 
+   * A Name: "filthy bird 777"
+   * A natural flying pattern (albeit only a low circle around the sky-box) "BoringBirdFlyPattern.lsl"
+   * Uses texture: "AnimatedWings?.gif"
+   * Drops poop at random intervals ("rezzes" a new object "poop" effected by gravity) contains: "LeaveScatScript?.lsl"
+   * If the bird is contacted by another object it squawks in complaint: contains: "DontTouchMe?.lsl" 
 
-SimCycifier's job is to pick up on some of these facts and assert them into CYC:
+SimCycifier?'s job is to pick up on some of these facts and assert them into CYC:
 
-
- * (isa Bird-Individual777 AnimatedAgent)
- * (simShape Bird-Individual777 TransparentCube)
- * (simNamed Bird-Individual777 "filthy bird 777")
- * (simLocatedAt Bird-Individual777 (PointFn 125 128 30))
- * (texturedWith Bird-Individual777 "AnimatedWings.gif")
- * (containsScript Bird-Individual777 "LeaveScatScript.lsl")
- * (containsScript Bird-Individual777 "DontTouchMe.lsl")
+    * (isa Bird-Individual777 AnimatedAgent?)
+    * (simShape Bird-Individual777 TransparentCube?)
+    * (simNamed Bird-Individual777 "filthy bird 777")
+    * (simLocatedAt Bird-Individual777 (PointFn? 125 128 30))
+    * (texturedWith Bird-Individual777 "AnimatedWings?.gif")
+    * (containsScript Bird-Individual777 "LeaveScatScript.lsl")
+    * (containsScript Bird-Individual777 "DontTouchMe?.lsl")
+    * (containsScript Bird-Individual777 "BoringBirdFlyPattern.lsl")
 
 CycL KE's can but not required to:
 
- * "LeaveScatScript.lsl" => Animal, performsFrequentlyFn whatnot
- * "DontTouchMe.lsl" => make assertions that will describe cause-effect
- * texturedWith -> PartlyTangbleObject
- * Bird-Individual777 and is probably #$isa #$Bird a low amount  cleanliness based on its name.
- * TransparentCube -> means the simShape is not important
+    * "LeaveScatScript.lsl" => Animal, performsFrequentlyFn whatnot
+    * "DontTouchMe?.lsl" => make assertions that will describe cause-effect
+    * texturedWith -> PartlyTangbleObject?
+    * Bird-Individual777 and is probably #$isa #$Bird a low amount cleanliness based on its name.
+    * TransparentCube? -> means the simShape is not important
 
 Cyc's job is to deduce:
 
- * try to avoid being under the bird
- * may throw stones at the bird to make it squawk.
+    try to avoid being under the bird
+    may throw stones at the bird to make it squawk. 
 
 Does this sound like a lot of KE work?
 
-Easier to map existing content then it is the create new content that you will have map anyways to Cyc.
+Easier to map existing content then it is the create new content that you *still* have map CYC.
 
+DOUGLAS TODO: (Postponed - but can be Postponed)
 
+ 1)  Ontologically Engineer a House (Room by Room?) With objects and Salient scripted actions with agendas.
 
+ 2)  Then extend CycWorldModule to "make it so" n OpenSim/SecondLife.
 
+Strangely,  Number 1 is harder than it sounds. (Has Cycorp already done this?)
 
-= Content Debate =
-
-Such as what is found at http://www.hypergridbusiness.com/2011/06/where-to-get-content-for-opensim/
-
-Freebie stores available for any purpose, including commercial. Clothing, hair, furniture, buildings, textures, animations, landscaping, scripts — everything you need to get a new grid going. Can be used to jump-start both private and educational worlds.
+If 1. is done, 2. is actually easier. (OK, not easy, but only 80 hours of work)
