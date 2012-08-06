@@ -48,7 +48,7 @@ Does this sound like a lot of KE work?!
 
 Easier to map existing content then it is the create new content, since you *still* have map CYC.
 
-=== DOUGLAS TODO: (Postponed - but can be Postponed) ===
+=== DOUGLAS TODO: (Postponed - but can be undone) ===
 
  * Ontologically Engineer a House (Room by Room) With objects and Salient scripted actions with agendas.
  * Extend CycWorldModule to "make it so" n OpenSim/SecondLife.
