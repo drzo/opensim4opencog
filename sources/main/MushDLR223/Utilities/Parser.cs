@@ -369,6 +369,20 @@ namespace MushDLR223.ScriptEngines
             }
         }
 
+        public static Parser ParseArgs(string[] args)
+        {
+            try
+            {
+                return new Parser(args);
+            }
+            catch (Exception e)
+            {
+                DLRConsole.DebugWriteLine("" + e);
+
+                return null;
+            }
+        }
+
         public static string[] Parse(string command)
         {
             return Parser.ParseArguments(command);
@@ -699,7 +713,7 @@ namespace MushDLR223.ScriptEngines
         {
             int len;
             int at = TryGetValueInt(key, out value, out len);
-            if (at <= 0)
+            if (at < 0)
             {
                 strings = tokens;
                 return false;

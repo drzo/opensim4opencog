@@ -31,7 +31,6 @@ namespace Cogbot
         {
             ClientManagerConfig.UsingCogbotFromRadegast = false;
             ClientManagerConfig.UsingRadegastFromCogbot = true;
-            args = SetAllCommandLineOptions(args);
             ConsoleLoop(args);
         }
 
@@ -118,13 +117,11 @@ namespace Cogbot
             args = SetAllCommandLineOptions(args);
             if (ClientManagerConfig.NoGUI)
             {
-                ClientManagerConfig.UsingRadegastFromCogbot = true;
                 if (ChangeLCD) SetCurrentDirectory(typeof(Cogbot.ConsoleApp));
                 RunConsoleApp(args);
             }
             else
             {
-                ClientManagerConfig.UsingCogbotFromRadegast = true;
                 RadegastMain(args);
             }
         }
@@ -362,6 +359,7 @@ namespace Cogbot
         [STAThread]
         public static void RadegastMain(string[] args)
         {
+            ClientManagerConfig.UsingCogbotFromRadegast = true;
             // Increase the number of IOCP threads available. Mono defaults to a tragically low number
             args = SetAllCommandLineOptions(args);
             // Change current working directory to Radegast install dir
@@ -500,6 +498,26 @@ namespace Cogbot
         {
             _appException = (Exception)e.ExceptionObject;
             FilteredWriteLine("!!HandleUnhandledException!! " + e.ExceptionObject);
+        }
+
+        /// <summary>
+        /// runs in a STA thread (by creating one)  Does not "join"
+        /// </summary>
+        /// <param name="args"></param>        
+        public static void RunInThread(ApartmentState must, ThreadStart runMain, bool blocking)
+        {
+            if (!blocking || Thread.CurrentThread.ApartmentState != must)
+            {
+                Thread newThread = new Thread(runMain);
+                newThread.SetApartmentState(must);
+                newThread.Start();
+                if (blocking) newThread.Join();
+                return;
+            }
+            else
+            {
+                runMain();
+            }
         }
     }
 }
