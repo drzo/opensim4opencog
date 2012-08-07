@@ -25,7 +25,7 @@ Cogbot.exe [opts]
 {{{
 }}}
  * --noconfig    Do not load the default botconfig.xml
- * --botconfig <FileName>  Use FileName instead of botconfig.xml
+ * --botconfig `<`FileName`>`  Use FileName instead of botconfig.xml
 {{{
 }}}
  * --tcpIPAddress `<`ip addr`>`  defaults to 0.0.0.0 - needed if you have multiple network adapters and wish to bind to only one
