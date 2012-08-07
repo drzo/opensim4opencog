@@ -72,14 +72,19 @@ namespace CogbotRadegastPluginModule
           //  return;
             try
             {
-                //inst.MainForm.Invoke(new MethodInvoker(() => StartPlugin0(inst)));                 
                 SetLoginButton("cogbot start...", false);
-                StartPlugin0(RadegastInstance);
+               GUIInvoke(() => StartPlugin0(inst));
+
             }
             catch (Exception ex)
             {
                 Logger.Log("[COGBOT PLUGIN] exception " + ex, Helpers.LogLevel.Error, ex);
             }
+        }
+
+        private void GUIInvoke(MethodInvoker action)
+        {
+            DLRConsole.InvokeControl(RadegastInstance.MainForm, action);
         }
 
         private void cogWorld(object sender, EventArgs e)
@@ -163,7 +168,7 @@ namespace CogbotRadegastPluginModule
             //if (ClientManager.UsingRadgastFromCogbot) return;
             inst.Client.Settings.MULTIPLE_SIMS = true;
             clientManager.outputDelegate = System.Console.Out.WriteLine;
-            inst.MainForm.Invoke(new MethodInvoker(() => SetupRadegastGUI(inst)));
+            GUIInvoke(() => SetupRadegastGUI(inst));
             DLRConsole.SafelyRun(() => clientManager.ProcessCommandArgs());
             chatConsole.StartWriter();
             if (!bc.IsLoggedInAndReady)
@@ -320,7 +325,7 @@ namespace CogbotRadegastPluginModule
 
         public void SetLoginButton(String text, bool enabled)
         {
-            DLRConsole.InvokeControl(RadegastInstance.MainForm, () => SetLoginButton0(text, enabled));
+            GUIInvoke(() => SetLoginButton0(text, enabled));
         }
 
         private string OldLoginText = null;

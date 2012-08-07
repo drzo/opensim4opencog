@@ -630,6 +630,7 @@ namespace Cogbot.Utilities
 
         void SimEventSubscriber.Dispose()
         {
+            if (!IsDisposing) parent.RemoveBotMessageSubscriber(this);
             IsDisposing = true;
             ((BotTcpServer)this).closeTcpListener();
         }

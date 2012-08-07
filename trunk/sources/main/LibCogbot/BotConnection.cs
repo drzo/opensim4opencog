@@ -134,7 +134,7 @@ namespace Cogbot
 
         private void LoginViaRadegast(bool blocking)
         {
-            CogbotGUI.SetRadegastLoginOptions(TheRadegastInstance, this);
+            CogbotGUI.SetRadegastLoginOptionsFromCogbot(TheRadegastInstance, this);
             var LoginEvent = BotLoginParams.LoginEvent;
             LoginEvent.Reset();
             // non blocking

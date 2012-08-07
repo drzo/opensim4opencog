@@ -145,6 +145,8 @@ namespace Cogbot
                     }
                 }
                 DebugWriteLine("Ran StartupClientLisp");
+                ClientManager.MakeRunning(this);
+                ClientManager.DoClientTodo(this);
             }
         }
         public void RunOnLogin()
