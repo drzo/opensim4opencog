@@ -140,7 +140,7 @@ namespace Cogbot
             }
         }
 
-        static public void SetRadegastLoginOptions(RadegastInstance instance, BotClient TheBot)
+        static public void SetRadegastLoginOptionsFromCogbot(RadegastInstance instance, BotClient TheBot)
         {
             if (instance == null) return;           
             var BotLoginParams = TheBot.BotLoginParams;
@@ -292,7 +292,7 @@ namespace Cogbot
             }
             BotLoginParams.Version = from.Version;
             BotLoginParams.Channel = from.Channel;
-            SetRadegastLoginOptions(instance, TheBot);
+            SetRadegastLoginOptionsFromCogbot(instance, TheBot);
         }
 
         public static void WriteDebugLine(string mesg, Color color, string timeStamp, string named)

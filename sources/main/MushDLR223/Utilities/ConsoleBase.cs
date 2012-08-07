@@ -944,7 +944,8 @@ namespace MushDLR223.Utilities
 
         static public void WriteNewLine(ConsoleColor senderColor, string sender, ConsoleColor color, string format, params object[] args)
         {
-            if (sender=="COMMAND")
+            if (NoConsoleVisible) return;
+            if (sender == "COMMAND")
             {
                 var c = CurrentCaller;
             }
@@ -973,7 +974,7 @@ namespace MushDLR223.Utilities
                     {
                         ExecWithMaxTime(() =>
                                             {
-                                                WriteEachLine(senderColor, sender, color, argsFmt.Trim(trim));
+                                                WriteNewLine_Helper(senderColor, sender, color, argsFmt.Trim(trim));
                                                 if (m_cursorYPosition != -1)
                                                     m_cursorYPosition = CursorTop;
                                             }, 2000);
@@ -1002,7 +1003,7 @@ namespace MushDLR223.Utilities
             return trimmed;
         }
 
-        static void WriteEachLine(ConsoleColor senderColor, string sender, ConsoleColor color, string trimmed)
+        static void WriteNewLine_Helper(ConsoleColor senderColor, string sender, ConsoleColor color, string trimmed)
         {
             if (m_cursorYPosition != -1)
                 m_cursorYPosition = CursorTop;
@@ -1015,6 +1016,7 @@ namespace MushDLR223.Utilities
 
         static public void WriteNewLine(ConsoleColor color, string format, params object[] args)
         {
+            if (NoConsoleVisible) return;
             lock (cmdline) lock (m_syncRoot)
                 {
                     if (m_cursorYPosition != -1)
@@ -1039,6 +1041,7 @@ namespace MushDLR223.Utilities
 
         static public void WriteConsoleLine(ConsoleColor color, string format, params object[] args)
         {
+            if (NoConsoleVisible) return;
             try
             {
                 lock (m_syncRoot)
@@ -1070,6 +1073,7 @@ namespace MushDLR223.Utilities
         private static string omittedPrefix = "";
         static private void WritePrefixLine(ConsoleColor color, string sender)
         {
+            if (NoConsoleVisible) return; 
             try
             {
                 lock (m_syncRoot)
@@ -1105,6 +1109,7 @@ namespace MushDLR223.Utilities
 
         public static void WriteColorText(ConsoleColor color, string text)
         {
+            if (NoConsoleVisible) return;
             lock (m_syncRoot)
             {
                 try
@@ -1339,14 +1344,14 @@ namespace MushDLR223.Utilities
             }
         }
 
-        public string CmdPrompt(string p)
+        public string CmdPrompt(Func<string> p)
         {
-            return ReadLine(String.Format("{0}: ", p), false, true);
+            return ReadLine(String.Format("{0}: ", p()), false, true);
         }
 
-        public string CmdPrompt(string p, string def)
+        public string CmdPrompt(Func<string> p, string def)
         {
-            string ret = ReadLine(String.Format("{0} [{1}]: ", p, def), false, true);
+            string ret = ReadLine(String.Format("{0} [{1}]: ", p(), def), false, true);
             if (ret == String.Empty)
                 ret = def;
 
@@ -1354,7 +1359,7 @@ namespace MushDLR223.Utilities
         }
 
         // Displays a command prompt and returns a default value, user may only enter 1 of 2 options
-        public string CmdPrompt(string prompt, string defaultresponse, string OptionA, string OptionB)
+        public string CmdPrompt(Func<string> prompt, string defaultresponse, string OptionA, string OptionB)
         {
             bool itisdone = false;
             string temp = CmdPrompt(prompt, defaultresponse);
@@ -1530,6 +1535,7 @@ namespace MushDLR223.Utilities
         public static int DebugLevel = 0;
         public static void DebugWriteLine(string format, params object[] args)
         {
+            if (DebugLevel == 0) return;
             string printStr = TheConsole.SafeFormat(format, args);
             if (!TheGlobalLogFilter.ShouldPrint(printStr))
             {

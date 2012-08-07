@@ -8,7 +8,7 @@ using MushDLR223.ScriptEngines;
 
 namespace Cogbot.Actions.System
 {
-    public class AtCommand : Command, BotSystemCommand
+    public class AtCommand : Command, SystemApplicationCommand
     {
         public AtCommand(BotClient testClient)
         {

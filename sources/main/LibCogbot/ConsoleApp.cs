@@ -40,8 +40,9 @@ namespace Cogbot
             consoleBase = consoleBase ?? new DLRConsole("textform");
             ClientManager manager = ClientManager.SingleInstance;
             manager.outputDelegate = new OutputDelegate(WriteLine);
-
             manager.Run();
+            //bool onlyConsole = !ClientManagerConfig.ShowRadegast;
+            //RunInThread(Thread.CurrentThread.ApartmentState, manager.Run, onlyConsole);
         }
 
 
@@ -115,15 +116,18 @@ namespace Cogbot
         public static void Main(string[] args)
         {
             args = SetAllCommandLineOptions(args);
-            if (ClientManagerConfig.NoGUI)
+            if (!ClientManagerConfig.UsingCogbotFromRadegast)
             {
                 if (ChangeLCD) SetCurrentDirectory(typeof(Cogbot.ConsoleApp));
-                RunConsoleApp(args);
             }
-            else
+            if (!ClientManagerConfig.UsingRadegastFromCogbot)
             {
-                RadegastMain(args);
+                if (ClientManagerConfig.ShowRadegast || ClientManagerConfig.UsingCogbotFromRadegast)
+                {
+                    RadegastMain(args);
+                }
             }
+            RunConsoleApp(args);
         }
 
         private static string[] StartupPreparsed = null;
@@ -304,6 +308,7 @@ namespace Cogbot
             if (ClientManagerConfig.arguments.GetWithout("--console", out oArgs))
             {
                 ClientManagerConfig.DosBox = true;
+                ClientManagerConfig.CogbotREPL = true;
             }
 
             if (ClientManagerConfig.arguments.GetWithout("--noconfig", out oArgs))
@@ -313,7 +318,7 @@ namespace Cogbot
             }
             if (ClientManagerConfig.arguments.GetWithout("--nogui", out oArgs))
             {
-                ClientManagerConfig.NoGUI = true;
+                ClientManagerConfig.ShowRadegast = false;
                 ClientManagerConfig.DosBox = true;
             }
             else
@@ -326,8 +331,22 @@ namespace Cogbot
                 catch (Exception)
                 {
                     // X windows missing
-                    ClientManagerConfig.NoGUI = true;
+                    ClientManagerConfig.ShowRadegast = false;
                 }
+            }
+            
+            if (!ClientManagerConfig.ShowRadegast) ClientManagerConfig.CogbotREPL = true;
+            if (ClientManagerConfig.arguments.GetWithout("--gui", out oArgs))
+            {
+                ClientManagerConfig.ShowRadegast = true;
+            }
+            if (ClientManagerConfig.arguments.GetWithout("--repl", out oArgs))
+            {
+                ClientManagerConfig.CogbotREPL = true;
+            }
+            if (ClientManagerConfig.arguments.GetWithout("--norepl", out oArgs))
+            {
+                ClientManagerConfig.CogbotREPL = false;
             }
 
             args = ClientManagerConfig.arguments.tokens;
@@ -359,13 +378,18 @@ namespace Cogbot
         [STAThread]
         public static void RadegastMain(string[] args)
         {
-            ClientManagerConfig.UsingCogbotFromRadegast = true;
+            if (!ClientManagerConfig.UsingRadegastFromCogbot)
+            {
+                ClientManagerConfig.UsingCogbotFromRadegast = true;
+                ClientManagerConfig.UsingRadegastFromCogbot = false;
+            }
             // Increase the number of IOCP threads available. Mono defaults to a tragically low number
             args = SetAllCommandLineOptions(args);
             // Change current working directory to Radegast install dir
             if (ChangeLCD) SetCurrentDirectory(typeof(RadegastInstance));
 
-            ClientManager.InSTAThread(StartRadegast, "StartExtraRadegast");
+            Thread t = ClientManager.InSTAThread(StartRadegast, "StartExtraRadegast");
+            if (ClientManagerConfig.UsingCogbotFromRadegast) t.Join();
             //StartRadegast();
         }
 

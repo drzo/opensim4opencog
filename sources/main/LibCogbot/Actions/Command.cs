@@ -495,10 +495,11 @@ namespace Cogbot.Actions
             }
         }
 
-        public static ClientManager ClientManager
+        public ClientManager ClientManager
         {
             get
             {
+                if (_mClient != null) return _mClient.ClientManager;
                 return ClientManager.SingleInstance;
             }
         }

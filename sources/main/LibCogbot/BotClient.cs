@@ -177,6 +177,8 @@ namespace Cogbot
             }
         }
 
+        public event Action OnDispose;
+
         private readonly IList<Thread> botCommandThreads = new ListAsSet<Thread>();
         readonly public XmlScriptInterpreter XmlInterp;
         public UUID GroupID = UUID.Zero;
@@ -483,6 +485,7 @@ namespace Cogbot
                     UtilitiesTcpServer.ServerPortIncr = poff;
                     UtilitiesTcpServer.startSocketListener();
                     ClientManager.nextTcpPort = UtilitiesTcpServer.ServerPort + UtilitiesTcpServer.ServerPortIncr;
+                    this.OnDispose += ((SimEventSubscriber)UtilitiesTcpServer).Dispose;
                 });
             }
 
@@ -518,6 +521,10 @@ namespace Cogbot
                 {
                     lispEventProducer = new LispEventProducer(this, LispTaskInterperter);
                 }
+            });
+            ClientManager.PostAutoExecEnqueue(() =>
+            {
+                ClientManager.EnsureREPLNotPaused();
             });
 
         }
@@ -964,6 +971,7 @@ namespace Cogbot
                 {
                     ms.Dispose();
                 }
+                if (OnDispose != null) OnDispose();
                 ClientManager.Remove(this);
             }
         }
@@ -1243,9 +1251,10 @@ namespace Cogbot
         }
 
         bool TalkingAllowed = true;
-        public bool IsEnsuredRunning;
         public bool EnsuredRadegastRunning;
-        public bool InvokedMakeRunning;
+        public bool RanEnsuredMakeRunning;
+        public bool RanMakeRunning;
+        public bool RanPostClientLispTODOs;        
         public bool AddingTypesToBotClientNow;
         private bool NeedRunOnLogin = true;
 

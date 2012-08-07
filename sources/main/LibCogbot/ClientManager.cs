@@ -51,13 +51,17 @@ namespace Cogbot
         }
 
         private static Parser _arguments;
-        public static bool NoGUI = false;
+        public static bool ShowRadegast = true;
         public static bool GlobalRadegastInstanceGCUsed;
         public static bool StartLispThreadAtPluginInit = false;
         public static bool DoNotCreateBotClientsFromBotConfig = false;
         public static bool NoLoadConfig = false;
         [ConfigSetting(SkipSaveOnExit = false)]
         public static bool DosBox;
+        [ConfigSetting(SkipSaveOnExit = false)]
+        public static bool CogbotREPL = false;
+
+        public static bool REPLPaused = true;
     }
 
     public class ClientManager : IDisposable,ScriptExecutorGetter
@@ -163,7 +167,17 @@ namespace Cogbot
 
         public static int debugLevel = 2;
 
-        public BotClient OnlyOneCurrentBotClient;
+        public BotClient OnlyOneCurrentBotClient
+        {
+            get
+            {
+                //if (Set_OnlyOneCurrentBotClient != null) return Set_OnlyOneCurrentBotClient;
+                var bcs = BotClients;
+                if (bcs.Count == 1) foreach (var bc in bcs) return bc;
+                return Set_OnlyOneCurrentBotClient;
+            }
+        }
+        public BotClient Set_OnlyOneCurrentBotClient;
 
         public List<Type> registrationTypes;
         public List<Type> registeredSystemApplicationCommandTypes = new List<Type>();
@@ -257,17 +271,17 @@ namespace Cogbot
         }
 
 
-        public void SetOnlyOneCurrentBotClient(string currentBotClient)
+        public void SetOnlyOneCurrentREPLBotClient(string currentBotClient)
         {
             if (string.IsNullOrEmpty(currentBotClient))
             {
-                OnlyOneCurrentBotClient = null;
+                Set_OnlyOneCurrentBotClient = null;
                 return;
             }
             BotClient oBotClient = GetBotByName(currentBotClient);
             if (oBotClient == null)
                 WriteLine("SetOnlyOneCurrentBotClient to unkown bot: " + currentBotClient);
-            else OnlyOneCurrentBotClient = oBotClient;
+            else Set_OnlyOneCurrentBotClient = oBotClient;
 
         }
 
@@ -333,7 +347,7 @@ namespace Cogbot
             if (res != null) return res;
             res = ExecuteSystemCommand(text, session, WriteLine);
             if (res != null) return res;
-            WriteLine("I don't understand the ExecuteCommand " + text + ".");
+            WriteLine("I don't understand the ExecuteCommand \"" + text + "\".");
             return null;
         }
 
@@ -366,6 +380,7 @@ namespace Cogbot
                 return OnlyOneCurrentBotClient.ExecuteBotCommand(text, session, WriteLine);
 
             }
+            var BotClients = this.BotClients;
             string res = null;
             int success = 0;
             int failure = 0;
@@ -373,7 +388,9 @@ namespace Cogbot
                 if (currentClient != null)
                 {
                     CmdResult t = currentClient.ExecuteBotCommand(text, session, WriteLine);
-                    if (t==null) continue;
+                    if (BotClients.Count < 2) return t;
+
+                    if (t == null) continue;
                     if (t.Success)
                     {
                         success++; 
@@ -473,8 +490,7 @@ namespace Cogbot
             foreach (BotClient CurrentClient in BotClients)
                 try
                 {
-                    if (CurrentClient.Network.Connected)
-                        CurrentClient.Network.Logout();
+                    CurrentClient.logout();
                 }
                 catch (Exception) { }
             try
@@ -602,6 +618,7 @@ namespace Cogbot
 
         public void enqueueLispTask(object p)
         {
+            initTaskInterperter();
             _scriptEventListener.enqueueLispTask(p);
         }
 
@@ -731,32 +748,60 @@ namespace Cogbot
             }
         }
 
+        public static List<Action<BotClient>> PostClientLisp = new List<Action<BotClient>>();
+        public void AddClientTodo(Action<BotClient> action)
+        {
+            lock (PostClientLisp) PostClientLisp.Add(action);
+            foreach (var bc in BotClients)
+            {
+                if (bc.RanPostClientLispTODOs) action(bc);
+            }
+        }
+
+        public static void DoClientTodo(BotClient bc)
+        {
+            lock (PostClientLisp)
+            {
+                if (bc.RanPostClientLispTODOs) return;
+                bc.RanPostClientLispTODOs = true;
+                foreach (var action in PostClientLisp)
+                {
+                    action(bc);
+                }
+            }
+        }
+
+        private void EnsureMakeRunning(BotClient bc)
+        {
+            lock (InvokedMakeRunningLock)
+            {
+                if (bc.RanEnsuredMakeRunning) return;
+                bc.RanEnsuredMakeRunning = true;
+            }
+            if (ClientManagerConfig.ShowRadegast)
+                CogbotGUI.SetRadegastLoginOptionsFromCogbot(bc.TheRadegastInstance, bc);
+            AddTypesToBotClient(bc);
+            bc.StartupClientLisp();
+            DoClientTodo(bc);
+        }
 
         object MakeRunningLock = new object();
         object InvokedMakeRunningLock = new object();
-        private void MakeRunning(BotClient bc)
+        internal void MakeRunning(BotClient bc)
         {
             lock (MakeRunningLock)
             {
-                if (bc.IsEnsuredRunning) return;
-                bc.IsEnsuredRunning = true;
+                if (bc.RanMakeRunning) return;
+                bc.RanMakeRunning = true;
             }
-            ThreadStart invoker0 = () =>
-                                       {
-                                           lock (InvokedMakeRunningLock)
-                                           {
-                                               if (bc.InvokedMakeRunning) return;
-                                               bc.InvokedMakeRunning = true;
-                                           }
-                                           if (ClientManagerConfig.UsingCogbotFromRadegast)
-                                               CogbotGUI.SetRadegastLoginOptions(bc.TheRadegastInstance, bc);
-                                           AddTypesToBotClient(bc);
-                                           bc.StartupClientLisp();
-                                           //System.Threading.Thread.CurrentThread.Abort();
-                                       };
+            ThreadStart invoker0 = () => EnsureMakeRunning(bc);
+
             PostAutoExecEnqueue(() =>
                                      {
-                                         if (ClientManagerConfig.UsingCogbotFromRadegast) CogbotGUI.SetRadegastLoginOptions(bc.TheRadegastInstance, bc);
+                                         if (ClientManagerConfig.ShowRadegast)
+                                         {
+                                             CogbotGUI.SetRadegastLoginOptionsFromCogbot(bc.TheRadegastInstance, bc);
+                                         }
                                          // in-case someoine hits the login button
                                          bc.Network.LoginProgress += (s, e) =>
                                                                          {
@@ -768,6 +813,7 @@ namespace Cogbot
                                          PostAutoExecEnqueue((() => InSTAThread(invoker0, "StartupClientLisp: " + bc.GetName())));
                                      });
         }
+
 
         public static Thread InSTAThread(ThreadStart invoker, string fullName) {
 
@@ -887,7 +933,7 @@ namespace Cogbot
             InSTAThread(mi, "AddTypesToBotClient: " + bc);
         }
         
-        public Utilities.BotTcpServer CreateHttpServer(int port, string botname)
+        public Utilities.BotTcpServer CreateTelnetServer(int port, string botname)
         {
             BotClient cl = GetBotByName(botname);
             lock (OneAtATime2)
@@ -1155,6 +1201,12 @@ namespace Cogbot
             return client;
         }
 
+
+        internal static void EnsureREPLNotPaused()
+        {
+            ClientManagerConfig.REPLPaused = false;
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -1165,8 +1217,12 @@ namespace Cogbot
 
             while (Running)
             {
-                ;
-                string input = ConsoleApp.consoleBase.CmdPrompt(GetPrompt());
+                if (!ClientManagerConfig.CogbotREPL || ClientManagerConfig.REPLPaused)
+                {
+                    Thread.Sleep(1000);
+                    continue;
+                }
+                string input = ConsoleApp.consoleBase.CmdPrompt(GetPrompt);
                 if (string.IsNullOrEmpty(input)) continue;
                 CmdResult executeCommand = ExecuteCommand(input, null, WriteLine);
                 FlushWriter(System.Console.Out);
@@ -1380,13 +1436,24 @@ namespace Cogbot
         {
             int online = 0;
             int offline = 0;
+            int botClients = 0;
+            BotClient firstWorking = null;
             foreach (BotClient client in BotClients)
             {
-                if (client.Network.Connected) online++;
+                firstWorking = client;
+                if (client.IsLoggedInAndReady) online++;
                 else offline++;
+                botClients++;
             }
+            BotClient one = OnlyOneCurrentBotClient;
+            if (botClients == 1 && one == null) one = firstWorking;
+
+            if (botClients == 1 && one != null)
+                return one.GetName() + (one.IsLoggedInAndReady ? "" : "(offine)");
+
             string result = (online + " avatars online");
-            if (offline > 0) result += " " + offline + " avatars offline";
+            if (offline > 0) result += " " + offline + " offline";
+            if (one != null) result += "[" + one.GetName() + (one.IsLoggedInAndReady ? "" : "(offine)") + "]";
             return result;
         }
 
@@ -1434,7 +1501,7 @@ namespace Cogbot
                     WriteLine("You must login at least one bot to use the help command");
                 }
             }
-            else if (firstToken == "script")
+            else if (false && firstToken == "script")
             {
                 // No reason to pass this to all bots, and we also want to allow it when there are no bots
                 ScriptCommand command = new ScriptCommand(null);
@@ -1442,6 +1509,8 @@ namespace Cogbot
             }
             else
             {
+                CmdResult res = ExecuteSystemCommand(cmd, fromAgentID, WriteLine);
+                if (res != null) return;               
                 // Make an immutable copy of the Clients dictionary to safely iterate over
                 int completed = 0;
 
@@ -1468,7 +1537,7 @@ namespace Cogbot
         /// <param name="CurrentClient"></param>
         public void Logout(BotClient client)
         {
-            client.Network.Logout();
+            client.logout();
         }
 
 
@@ -1671,6 +1740,23 @@ namespace Cogbot
                                                                     Int32.Parse(startbits[2]), Int32.Parse(startbits[3]));
             }
 
+            // this script file is ran after bots are created
+            var botscriptFile = ClientManagerConfig.arguments["botscriptfile"];
+            if (!string.IsNullOrEmpty(botscriptFile))
+            {
+                if (!File.Exists(botscriptFile))
+                {
+                    Logger.Log(String.Format("File {0} Does not exist", botscriptFile), Helpers.LogLevel.Error);
+                } else
+                {
+                    AddClientTodo(
+                        (bc) =>
+                        bc.ExecuteCommand(String.Format("botscript {0}", botscriptFile), UUID.Zero, GlobalWriteLine));
+                    
+                }
+            }
+
+            // this script file is ran before bots are created
             if (ClientManagerConfig.arguments["scriptfile"] != null)
             {
                 string scriptFile = String.Empty;
@@ -1681,10 +1767,11 @@ namespace Cogbot
                     return false;
                 }
                 if (!string.IsNullOrEmpty(scriptFile))
+                {
                     DoCommandAll(String.Format("script {0}", scriptFile), UUID.Zero, GlobalWriteLine);
+                }
                 // Then Run the ClientManager normally
             }
-
 
             if (ClientManagerConfig.arguments["file"] != null)
             {
