@@ -16,7 +16,7 @@ Cogbot.exe [opts]
 
  * --aiml          Runs just the AIML interpreter
  * --swipl         Runs just the SWIPL interpreter
- * --main      `<`StringNameOfClassWithMain`>`
+ * --main      `<`StringNameOfClassWithMain`>`  (like --main "Cogbot.ConsoleApp" )
 
 === Cogbot options ===
  * --nogui      Don't use Radegast (command console operation)
