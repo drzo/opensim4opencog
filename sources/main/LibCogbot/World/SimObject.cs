@@ -85,7 +85,7 @@ namespace Cogbot.World
             get { return (float) (double) WorldObjects.GetZHeading(SimRotation); }
         }
 
-        [ConvertTo(ToType = typeof(SimHeading))]
+        [ConvertTo]
         public SimHeading GetHeading()
         {
             lock (HasPrimLock)
@@ -3601,6 +3601,7 @@ namespace Cogbot.World
         bool TaskInventoryLikely { get; }
         Primitive Prim0 { get; }
         bool IsTemporary { get; set; }
+        bool IsAvatar { get; }
 
         void StartGetTaskInventory();
 
