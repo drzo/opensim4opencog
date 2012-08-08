@@ -2478,6 +2478,9 @@ namespace PathSystem3D.Navigation
         internal PathFinderDemo PanelGUI;
         public SimMover LastSimMover;
 
+        [ConfigSetting(Description ="When comparing distances if the Z distance is below this thresahold pretend the Z in the same")] 
+        public static double ZDistToIgnore = 5;
+
         public void ShowDebugger()
         {
             if (PanelGUI == null)
@@ -2759,7 +2762,8 @@ namespace PathSystem3D.Navigation
 
         public static double DistanceNoZ(Vector3d target, Vector3d position)
         {
-            target.Z = position.Z;
+            double zDist = Math.Abs( target.Z - position.Z);
+            if (zDist < SimPathStore.ZDistToIgnore) target.Z = position.Z;
             return Vector3d.Distance(target, position);
         }
 

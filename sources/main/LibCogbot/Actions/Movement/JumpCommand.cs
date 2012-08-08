@@ -28,7 +28,6 @@ namespace Cogbot.Actions.Movement
             Thread.Sleep(500);
             Client.Self.Jump(false);
 
-            TheBotClient.describeNext = true;
             return Success("$bot jumped.");
         }
     }

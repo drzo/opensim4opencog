@@ -53,7 +53,7 @@ namespace Cogbot.Actions.Agent
 			StringBuilder result = new StringBuilder();
             if (args.Length > 0)
             {
-                foreach(var A in  WorldObjects.SimAvatars)
+                foreach (var A in WorldObjects.SimAvatars)
                 {
                     result.AppendLine(A.ToString());
                 }

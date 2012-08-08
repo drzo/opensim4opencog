@@ -13,13 +13,21 @@ using Simulator = OpenMetaverse.Simulator;
 
 namespace Cogbot.Actions
 {
-    
-    public class PrimSpec : List<SimObject>
+
+    public class PrimSpec : DenotingAnotherType
     {
+        public Type ImplementationType
+        {
+            get { return typeof(List<SimObject>); }
+        }
     }
 
-    public class AgentSpec : List<SimAvatar>
+    public class AgentSpec : DenotingAnotherType
     {
+        public Type ImplementationType
+        {
+            get { return typeof(List<SimAvatar>); }
+        }
     }
 
     static public class Htmlize

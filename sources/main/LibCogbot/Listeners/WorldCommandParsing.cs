@@ -460,7 +460,7 @@ namespace Cogbot
                 argsUsed = 0;
                 return prims;
             }
-            ICollection filterSimObjects = FilterSimObjects(args, out argsUsed, SimObjects.CopyOf());
+            ICollection filterSimObjects = FilterSimObjects(args, out argsUsed, SimObjects.CopyOf(), false, TheSimAvatar);
 
             AsPrimitives(prims, filterSimObjects);
 
@@ -496,11 +496,11 @@ namespace Cogbot
             argsUsed = 0;
             return null;
         }
-        public List<SimObject> FilterSimObjects(string[] args, out int argsUsed, ListAsSet<SimObject> prims)
+        public List<SimObject> FilterSimObjects(string[] args, out int argsUsed, ListAsSet<SimObject> prims, bool removeMatches, MixinSubObjects relativeTo)
         {
-            lock (prims) return FilterSimObjects(args, out argsUsed, prims.CopyOf());
+            lock (prims) return FilterSimObjects(args, out argsUsed, prims.CopyOf(), removeMatches, relativeTo);
         }
-        public List<SimObject> FilterSimObjects(string[] args, out int argsUsed, List<SimObject> prims)
+        public List<SimObject> FilterSimObjects(string[] args, out int argsUsed, List<SimObject> prims, bool removeMatches, MixinSubObjects relativeTo)
         {
             int consume = args.Length;
             if (consume == 0)
@@ -509,60 +509,18 @@ namespace Cogbot
                 return prims;
             }
             string arg0Lower = args[0].ToLower();
+
+            // Negation
+            if (arg0Lower == "not")
+            {
+                return FilterSimObjects(args, out argsUsed, prims, !removeMatches, relativeTo);
+            }
             // Terminals
 
+            if (arg0Lower.EndsWith("dist")) arg0Lower += "ance";
 
-            if (arg0Lower == "dist")
-            {
-                prims.Clear();
-                double dist = TheSimAvatar.SightRange;
-                int used = 1;
-                if (double.TryParse(args[1], out dist))
-                {
-                    used++;
-                }
-                prims = GetNearByObjects(TheSimAvatar.GlobalPosition, TheSimAvatar, dist, false);
-                argsUsed = used;
-                return prims;
-            }
             // filters
-            if (arg0Lower == "family")
-            {
-                prims = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, prims);
-                argsUsed++;
-                prims = GetRelations(prims).CopyOf();
-            }
-            else if (arg0Lower == "parentof")
-            {
-                prims = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, prims);
-                argsUsed++;
-                prims = GetParents(prims);
-            }
-            else if (arg0Lower == "maxdist")
-            {
-                double dist = TheSimAvatar.SightRange;
-                int used = 1;
-                if (double.TryParse(args[1], out dist))
-                {
-                    used++;
-                }
-                prims = FilterSimObjects(Parser.SplitOff(args, used), out argsUsed, prims);
-                int i = prims.RemoveAll(p => p.Distance(TheSimAvatar) > dist);
-                argsUsed += used;
-            }
-            else if (arg0Lower == "mindist")
-            {
-                double dist = TheSimAvatar.SightRange;
-                int used = 1;
-                if (double.TryParse(args[1], out dist))
-                {
-                    used++;
-                }
-                prims = FilterSimObjects(Parser.SplitOff(args, used), out argsUsed, prims);
-                prims.RemoveAll(p => p.Distance(TheSimAvatar) < dist);
-                argsUsed += used;
-            }
-            else if (arg0Lower == "max")
+            if (arg0Lower == "max")
             {
                 int nth = 30;
                 int used = 1;
@@ -570,7 +528,7 @@ namespace Cogbot
                 {
                     used++;
                 }
-                prims = FilterSimObjects(Parser.SplitOff(args, used), out argsUsed, prims);
+                prims = FilterSimObjects(Parser.SplitOff(args, used), out argsUsed, prims, removeMatches, relativeTo);
                 if (prims.Count > nth)
                 {
                     prims.RemoveRange(nth, prims.Count - nth);
@@ -585,7 +543,7 @@ namespace Cogbot
                 {
                     used++;
                 }
-                prims = FilterSimObjects(Parser.SplitOff(args, used), out argsUsed, prims);
+                prims = FilterSimObjects(Parser.SplitOff(args, used), out argsUsed, prims, removeMatches, relativeTo);
                 List<SimObject> prims0 = new List<SimObject>();
                 if (prims.Count >= nth)
                 {
@@ -597,28 +555,34 @@ namespace Cogbot
             else if (arg0Lower == "matches")
             {
                 string nth = args[1].ToLower();
-                prims = FilterSimObjects(Parser.SplitOff(args, 2), out argsUsed, prims);
+                prims = FilterSimObjects(Parser.SplitOff(args, 2), out argsUsed, prims, removeMatches, relativeTo);
                 argsUsed += 1;
                 prims.RemoveAll(p => !SMatches(p, nth));
             }
             else if (arg0Lower == "!matches")
             {
                 string nth = args[1].ToLower();
-                prims = FilterSimObjects(Parser.SplitOff(args, 2), out argsUsed, prims);
+                prims = FilterSimObjects(Parser.SplitOff(args, 2), out argsUsed, prims, removeMatches, relativeTo);
                 argsUsed += 1;
                 prims.RemoveAll(p => SMatches(p, nth));
             }
             else if (arg0Lower == "childsof")
             {
-                prims = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, prims);
+                prims = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, prims, removeMatches, relativeTo);
                 argsUsed++;
                 prims = GetChildren(prims);
+            }
+            else if (arg0Lower == "rootonly")
+            {
+                prims = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, prims, removeMatches, relativeTo);
+                argsUsed++;
+                prims = RetainAll(prims, o => o.IsRoot);
             }
             else if (arg0Lower == "ownedby")
             {
                 string ownedBy = args[1].ToLower();
 
-                var owners = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, SimObjects);
+                var owners = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, SimObjects, removeMatches, relativeTo);
                 argsUsed++;
                 List<SimObject> keep = new List<SimObject>();
                 foreach (var owner in owners)
@@ -635,16 +599,16 @@ namespace Cogbot
             }
             else if (arg0Lower == "bydistance")
             {
-                prims = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, prims);
+                prims = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, prims, removeMatches, relativeTo);
                 argsUsed++;
                 List<SimObject> objs = new List<SimObject>();
                 AsPrimitives(objs, prims);
-                objs.Sort(TheSimAvatar.CompareDistance);
+                objs.Sort(((SimObject)relativeTo).CompareDistance);
                 prims = objs;
             }
             else if (arg0Lower == "not")
             {
-                var notprims = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, prims);
+                var notprims = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, prims, removeMatches, relativeTo);
                 argsUsed++;
                 foreach (SimObject o in LockInfo.CopyOf(prims))
                 {
@@ -679,7 +643,7 @@ namespace Cogbot
                 else
                 {
                     //return new List<SimObject>();
-                    prims = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, prims);
+                    prims = FilterSimObjects(Parser.SplitOff(args, 1), out argsUsed, prims, removeMatches, relativeTo);
                     argsUsed += 1;
                     prims.RemoveAll(p => !SMatches(p, arg0Lower));
                 }
@@ -687,6 +651,17 @@ namespace Cogbot
             return prims;
         }
 
+        private List<SimObject> RetainAll(ICollection primitives, Func<SimObject, bool> func)
+        {
+            var more = new List<SimObject>();
+            foreach (var OP in primitives)
+            {
+                SimObject O = AsSimObject(OP);
+                if (O == null) continue;
+                if (func(O)) if (!more.Contains(O)) more.Add(O);
+            }
+            return more;
+        }
         public List<SimObject> GetAllSimObjects(string name)
         {
             List<SimObject> matches = new List<SimObject>();

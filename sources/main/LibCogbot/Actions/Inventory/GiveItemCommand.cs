@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Cogbot.World;
 using OpenMetaverse;
 
 using MushDLR223.ScriptEngines;
@@ -14,20 +15,30 @@ namespace Cogbot.Actions.Inventory.Shell
         public GiveItemCommand(BotClient client)
         {
             Name = "give";
-            Description = "Gives items from the current working directory to an avatar.";
+            Description = "Gives items from the current working directory to an avatar or object.";
             Category = CommandCategory.Inventory;
         }
         public override CmdResult ExecuteRequest(CmdRequest args)
         {
             if (args.Length < 2)
             {
-                return ShowUsage();// " give <agent uuid> <item1> [item2] [item3] [...]";
+                return ShowUsage();// "give <agent/primSpec> <item1> [item2] [item3] [...]";
             }
             UUID dest = UUID.Zero;
+
+            List<SimObject> allTargets = new List<SimObject>();
+            int prepLocatedAt = args.IndexOf("to");
             int argsUsed;
+            foreach (var VARIABLE in arg)
+            {
+                
+            }
+            List<SimObject> PS = WorldSystem.GetPrimitives(args, out argsUsed);
+
+
             if (!UUIDTryParse(args, 0, out dest, out argsUsed))
             {
-                return Failure( "First argument expected agent UUID.");
+                return Failure( "First argument expected agent or object UUID.");
             }
             InventoryManager Manager = Client.Inventory;
             if (Client.CurrentDirectory == null)
@@ -47,7 +58,7 @@ namespace Cogbot.Actions.Inventory.Shell
             return Success(ret);
         }
 
-        private string GiveMatches(InventoryManager manager, string inventoryName, IEnumerable<InventoryBase> contents, UUID dest)
+        private string GiveMatches(InventoryManager manager, string inventoryName, IEnumerable<InventoryBase> contents, SimObject dest)
         {
             string found = "";
             if (contents != null)

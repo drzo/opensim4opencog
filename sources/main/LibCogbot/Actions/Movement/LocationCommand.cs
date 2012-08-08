@@ -59,7 +59,7 @@ namespace Cogbot.Actions.Movement
 
                     // Absolute
                     WriteLine(" SimPosition = " + Vector3Str(position.SimPosition));
-                    WriteLine(" SimRotation = {0:0.#}*", WorldObjects.GetZHeading(position.SimRotation)*RAD2DEG);
+                    WriteLine(" SimRotation = {0:0.#}*", WorldObjects.GetZHeading(position.SimRotation) * RAD2DEG);
 
                     // Relative
                     WriteLine(" RelSimPosition = {0} ", Vector3Str(offset));

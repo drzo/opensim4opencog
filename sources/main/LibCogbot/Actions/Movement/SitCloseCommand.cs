@@ -64,8 +64,6 @@ namespace Cogbot.Actions.Movement
                 //Client.Objects.OnAvatarSitChanged += Objects_OnAvatarSitChanged;
             }
 
-            TheBotClient.describeNext = true;
-
             if (args.Length == 0)
             {
                 sittingOnGround = WorldSystem.TheSimAvatar.SitOnGround();

@@ -220,12 +220,12 @@ internal class SymbolTable
     internal Type[] findTypes(String name)
     {
         string noDot = name.TrimStart('.');
-        if (name.TrimStart('.') == "IDataObject") return new Type[] { typeof(System.Windows.Forms.IDataObject) };
-        if (name.TrimStart('.') == "Enum") return new Type[] { typeof(System.Enum) };
-        if (name.TrimStart('.') == "Convert") return new Type[] { typeof(System.Convert) };
-        if (name.TrimStart('.') == "Type") return new Type[] { typeof(System.Type) };
-        if (name.TrimStart('.') == "String") return new Type[] { typeof(System.String) };
-        if (name.TrimStart('.') == "Array") return new Type[] { typeof(System.Array) };
+        if (noDot == "IDataObject") return new Type[] { typeof(System.Windows.Forms.IDataObject) };
+        if (noDot == "Enum") return new Type[] { typeof(System.Enum) };
+        if (noDot == "Convert") return new Type[] { typeof(System.Convert) };
+        if (noDot == "Type") return new Type[] { typeof(System.Type) };
+        if (noDot == "String") return new Type[] { typeof(System.String) };
+        //if (noDot == "WorldObjects") name = "BotClient";
         if (name.IndexOf(".") > -1)	//namespace qualified
         {
             Type t = (Type)fullNamesToTypes[name];
